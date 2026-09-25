@@ -77,8 +77,10 @@ fn a_page_checked_against_its_own_bless_holds_without_opening_a_gpu() {
 
 /// A page in a state (task-69 checkpoint b) is blessed and checked as a
 /// page is: the Silences with the review open, by the rules, from the
-/// Claude's fixture, that fixture adapted (task-70), and both changed by
-/// an intent asked through the row (task-70 phase 2), holds against its
+/// Claude's fixture, that fixture adapted (task-70), both changed by an
+/// intent asked through the row (task-70 phase 2), and the rules' review
+/// with a sequence offered and then made one action (task-70 phase 3),
+/// holds against its
 /// own bless with no frame drawn; its baseline is named by the state, its
 /// projection holds the surface beside the fixed screen, and it settled.
 /// Adapted, the detection the fixed screen offers is not the surface's.
@@ -111,6 +113,16 @@ fn a_page_in_a_state_checked_against_its_own_bless_holds() {
             "Silences, review by the Claude (fixture), too much, in portuguese",
             "silences-review-by-the-claude-fixture-too-much-in-portuguese@core@1280x800",
             "review.cut_item[1].actions",
+        ),
+        (
+            "Silences, review by the rules, a sequence repeated",
+            "silences-review-by-the-rules-a-sequence-repeated@core@1280x800",
+            "silences_surface.composite",
+        ),
+        (
+            "Silences, review by the rules, the sequence as one action",
+            "silences-review-by-the-rules-the-sequence-as-one-action@core@1280x800",
+            "proposed.silences.cut[1].actions.preview_segment_then_apply_cut",
         ),
     ] {
         let b = bless(root.path(), state, "core");

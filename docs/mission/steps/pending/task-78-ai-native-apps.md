@@ -45,9 +45,10 @@ pesquisa, sem critério de aceite neste programa.
 1. app de referência (o urnaui estendido ou um app novo, decisão no
    briefing): pergunta sobre um corpus `.urna`, resposta de um LLM local em
    streaming com as fontes citadas, visualização dos trechos no grafo.
-2. inferência em processo: comparação de bibliotecas (candle, bindings de
-   llama.cpp, burn ou outra) por tamanho, velocidade e wasm; decisão por
-   ADR com o brenner; modelos fora do repositório.
+2. inferência em processo: comparação entre candle (com tokio para o
+   streaming) e burn, as duas que o brenner escolheu (2026-09-25), por
+   tamanho, velocidade e wasm; decisão por ADR com o brenner; modelos fora
+   do repositório.
 3. streaming de tokens para a view: shaping e layout incrementais (depende
    da 73); latência de token até pixel medida.
 4. GPU compute no mesmo device do renderer para algo que a UI mostra (por
@@ -55,9 +56,9 @@ pesquisa, sem critério de aceite neste programa.
    CPU quando não precisa.
 5. vídeo: frames decodificados direto para textura; áudio: captura e
    reprodução (o microfone vem da task-76).
-6. comparação honesta com um equivalente Electron com o mesmo recorte de
-   funcionalidade: memória, startup, latência de token até pixel, tempo de
-   frame sob streaming. metodologia escrita antes de medir.
+6. medição do app de referência: memória, startup, latência de token até
+   pixel, tempo de frame sob streaming. metodologia escrita antes de medir.
+   sem comparação com Electron (decisão do brenner, 2026-09-25).
 
 ## fora de escopo
 
@@ -86,7 +87,7 @@ as próprias.
 
 - app de referência rodando no macOS com modelo local em streaming e fontes
   citadas.
-- tabela de medição contra o equivalente Electron, com metodologia.
+- tabela de medição do app de referência, com metodologia.
 - `./script/gate` verde (o app, se depender de coisa fora do workspace,
   segue o modelo do urnaui: workspace próprio e perna opcional no gate).
 
@@ -98,8 +99,6 @@ interface falsa; testes de streaming para a view (sem frame velho).
 ## riscos e perguntas abertas
 
 - tamanho de modelo e binário; wasm provavelmente fora para inferência.
-- a comparação com Electron precisa de um equivalente justo; se não houver,
-  a limitação é escrita.
 
 ## commits esperados
 

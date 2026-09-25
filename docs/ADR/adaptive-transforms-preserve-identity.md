@@ -398,3 +398,148 @@ both cuts in the window; "I can't compare these" refused with why. the
 else moved. local gate green, 2894 passed, 0 failed (was 2861); regress
 173 unchanged. the real Claude answering a change is the orchestrator's
 proof, next.
+
+## addition: phase 3, composite capabilities (2026-09-24)
+
+### context
+
+phases 1 and 2 gave the operations on a surface and who asks for them.
+the other half of task-70 was left: the system notices a sequence a
+person repeats and offers it as one capability (the thesis, section 16:
+review, approve, publish becoming "[approve and publish]"). what existed:
+the one `Dispatcher` of an app with its `ReceiptSink`s, the session
+recorder of task-63 (`.monster`, a stage event per stage), the inspector
+of task-64, and the phase 1 `promote`.
+
+### decision
+
+#### the detector reads the stages, live and recorded, the same way
+
+`propose::compose::Detector` takes the stream of stages of one
+dispatcher, `(id, request, stage)`, in order: live through a `Listener`
+(a `ReceiptSink` sharing the detector with the app), recorded from the
+session's `Kind::Stage` events of one origin, in the order of the file.
+one entry, one answer (a test records a real session of the gallery,
+reads it back and finds what the live detector found). a request enters
+the history when it ends, in the order of its id, so a step that started
+and ends later keeps its place. a request taken while a composite of
+the same actor runs is one of that composite's steps and does not
+enter. the history is bounded (64 requests).
+
+#### when two steps are the same
+
+the same action on the same node, or on items of the same collection
+(an id that ends with a key: `silences.cut[3]` and `silences.cut[4]` are
+items of `silences.cut`), with one item for all the item steps of one
+run. the whole sequence is one actor's, contiguous: another actor's
+action in the middle cuts it. two steps or more, not a repetition of a
+shorter one; the shortest found N times in a row at the end is the one.
+only a step that completed, without a parameter, that never waited for a
+person and is not a composite enters as a step; anything else cuts. the
+parameter never enters: a composite becomes a button, whose `activate`
+sends none, and keeping a value to replay would keep what a person
+typed. so the detector keeps no value of any parameter, secret or not:
+the actor, the node and the action's name. N is the app's; the Silences
+asks 2 (its seed has two cuts).
+
+#### a composite is an action of the app
+
+`Composite` (name: the steps' actions joined by `_then_`; label: their
+labels joined by ", then ") is declared by the app after its own
+projection, from what it declared there: `SnapshotBuilder::declared` and
+`reopen`, the one addition to `sem` (two methods; no type changes). over
+items it is declared on every item whose steps the app declares; exact,
+on the node of its first step. it reads what its steps read, is on when
+its first step is (a later step may need the one before it: publishing
+needs the approval), and its policy is the narrowest of its steps': the
+actors every step lets ask, the strongest confirmation, destructive when
+one step is. so a sequence through an action kept from agents is a
+composite an agent cannot ask, refused `not_authorized` before any step.
+being in the projection, it is in the registry: a surface binds it, the
+verifier checks it, the port shows it, and a review the rules propose
+after shows it on each item by itself (they make a button of every action
+with no parameter that every item declares alike). no registry of
+composites in the dispatcher.
+
+#### the person accepts, and only the person
+
+`Composer` keeps, for one session and in memory, the detector, the offer,
+what was declined and what was installed. an offer is nobody's request,
+so the `confirm`/`decline` of `sem` (answers to a request that waits)
+does not fit; the acceptance is the person's own request: `install` and
+`dismiss` on the offer's node, `PERSON_ONLY` (a person, assistive
+technology, a test; an agent is refused `not_authorized`). the Silences
+shows the offer as a band under the proposing row
+(`silences_surface.composite`), only while one stands, so no baseline
+moved. declined, the sequence is not offered again in the session. the
+app offers only sequences of its own capabilities.
+
+#### the button in a surface: promote into the item's template
+
+with a surface open, installing promotes the composite there (the phase
+1 operation, verified, with its inverse in the history), into the
+container that holds the control of one of its steps. a composite over
+items binds the template's target (`silences.cut[{item}]`) inside the
+item's template, one button per item; the verifier already binds that
+when every node that fits declares the action alike. the phase 1
+promote looks the action up by the exact target, so the host gives it a
+registry where the template is one more member, with the actions of a
+real one (`surface::host::registry`), for that operation only.
+
+#### the chain
+
+the composite's request goes through `dispatch`; its `execute` answers
+`Started` and the app keeps a `Chain`, advanced in the same lending of
+the dispatcher and again from the app's wake when a step that started
+ends. each step is a request of the composite's actor: the first
+observed right after the composite's dispatch (what its actor saw, which
+the composite's reads covered), every next one observed on the state the
+step before left and dispatched when that step ends. what moved in
+between makes it stale, with the delta and who acted (tasks 83, 90, 91).
+the first step refused, failed or left waiting for a person stops the
+chain; the composite's receipt ends `failed` with which step (number,
+action, node, request) and why; when all complete, it completes with
+`steps` and `requests`. `Stage` and `Rejection` have no place for "which
+step" and a new variant would break whoever matches on them, so the
+composite says it in words and each step's receipt keeps its refusal
+whole.
+
+#### no rollback
+
+what ran stays run. no capability of the Silences offers to undo (apply
+and reject change a decision but never back to pending; the preview
+moves the instant shown), and the only undo in the system is the host's,
+for transformations, not app actions. no transaction was needed.
+
+### consequences
+
+- a step that starts and whose own effect lands later can make the next
+  one stale; the chain stops with the reason rather than act on a state
+  it did not see.
+- the promoted button takes the button's default size beside the rules'
+  small ones: the promote does not read its siblings.
+- composites do not nest, and are not learned across sessions; naming
+  them is by rules (the steps' labels), no model.
+- a step that asks for a confirmation stops the chain: nobody confirms
+  for the person in the middle of it.
+
+### integração (fase 3)
+
+proposed by task-70 phase 3 (`task/70c-composites`); the orchestrator
+accepts it.
+
+### integração da fase 3
+
+accepted on 2026-09-24 by the orchestrator (merge of
+`task/70c-composites`). the whole diff read: `sem` gained two methods on
+`SnapshotBuilder` and changed no type; a composite's policy is the
+narrowest of its steps', so an agent never runs one with a step kept from
+it; the chain observes each step on the state the one before left. the
+images seen: the offer under the row after "preview segment, then apply
+cut" twice, and the composite's button on each cut once accepted. debt
+recorded: the host lends `promote` a registry where the item template
+counts as one more member of the collection (`registry` in
+`crates/surface/src/host.rs`); the right place is `uir`'s `promote`
+understanding a template, and then that detour goes (P2).
+local gate green, 2932 passed, 0 failed (was 2894); regress 175
+unchanged (2 new).

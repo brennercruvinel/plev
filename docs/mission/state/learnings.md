@@ -389,7 +389,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ### 2026-09-23, checkpoint a, segunda rodada
 
-fonte: `steps/ongoing/task-62-ide-human-agent-proof.md`, "resultado da
+fonte: `steps/checked/task-62-ide-human-agent-proof-done.md`, "resultado da
 segunda rodada"; saídas em `target/agents/exp2/`.
 
 - **confirmado de novo, com o app corrigido:** três agentes LLM
@@ -482,7 +482,7 @@ fonte: `steps/checked/task-84-ide-refresh-never-goes-back-done.md`,
 
 ### 2026-09-23, checkpoint a (task-62 fase c)
 
-fonte: `steps/ongoing/task-62-ide-human-agent-proof.md`, "resultado da fase
+fonte: `steps/checked/task-62-ide-human-agent-proof-done.md`, "resultado da fase
 c"; saídas em `target/agents/exp/`.
 
 - **confirmado (H1, H2, H3, H5):** um agente LLM sem contexto do repositório

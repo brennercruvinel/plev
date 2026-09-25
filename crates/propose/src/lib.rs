@@ -37,10 +37,15 @@
 //! "bigger" and "undo", in english and portuguese; `Llm` asks the model
 //! for `{"ops": [...]}` and sends back the operation refused.
 //!
+//! and the sequence of actions a person repeats becomes a proposal of one
+//! action that runs them (task-70 phase 3, `compose`): a detector over the
+//! stages of the app's dispatcher, live or recorded.
+//!
 //! pure, like `uir`: no engine, no widgets, no network.
 
 mod adapt;
 mod change;
+pub mod compose;
 mod error;
 mod ids;
 mod list;

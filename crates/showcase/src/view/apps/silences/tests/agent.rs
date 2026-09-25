@@ -18,12 +18,12 @@ use super::super::worker::Worker;
 use super::TURN;
 use crate::view::ShowcaseView;
 
-fn sid(text: &str) -> SemId {
+pub(super) fn sid(text: &str) -> SemId {
     SemId::parse(text).unwrap()
 }
 
 /// A private directory for the test's socket, removed after.
-struct Dir(PathBuf);
+pub(super) struct Dir(pub PathBuf);
 
 impl Drop for Dir {
     fn drop(&mut self) {
@@ -40,7 +40,7 @@ fn frame(view: &mut ShowcaseView) -> Compositor {
 /// Runs `agent` against the gallery on the Silences page (the fake worker
 /// answering the probe), serving the port the way the shell does: the
 /// wake, `serve_agent`, a tick, a new frame after an act.
-fn gallery<T: Send + 'static>(
+pub(super) fn gallery<T: Send + 'static>(
     dir: &Path,
     agent: impl FnOnce(PathBuf) -> T + Send + 'static,
 ) -> (T, ShowcaseView) {
@@ -76,14 +76,19 @@ fn gallery<T: Send + 'static>(
     (agent.join().unwrap(), view)
 }
 
-fn snapshot(reply: Reply) -> wire::SnapshotReply {
+pub(super) fn snapshot(reply: Reply) -> wire::SnapshotReply {
     match reply {
         Reply::Snapshot(s) => s,
         other => panic!("a snapshot: {other:?}"),
     }
 }
 
-fn act(c: &mut Client, target: &str, action: &str, r: sem::Revision) -> Vec<&'static str> {
+pub(super) fn act(
+    c: &mut Client,
+    target: &str,
+    action: &str,
+    r: sem::Revision,
+) -> Vec<&'static str> {
     let act = Act::from_revision(sid(target), ActionName::parse(action).unwrap(), r);
     c.act(act, |_| {})
         .unwrap()
