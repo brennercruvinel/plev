@@ -1,4 +1,4 @@
-text audit: shaping with the embedded faces only (2713068 bytes of fonts), 16px, wrap 80px
+text audit: shaping with the embedded faces only (6935964 bytes of fonts), 16px, wrap 80px
 
 script | family | chars | glyphs | notdef | width | lines@80 | starts | runs | faces
 01-latin-diacritics | Inclusive Sans | 60 | 60 | 0 | 457.4 | 7 | 0|8|20|31|42|52|63 | L0:0..71 | Inclusive Sans
