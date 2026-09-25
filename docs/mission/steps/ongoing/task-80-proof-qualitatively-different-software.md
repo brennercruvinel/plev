@@ -977,3 +977,153 @@ evento a evento) e em todos os eventos:
   desenho da gravação (a task-63 grava o estado), não um vazamento da
   promessa sobre o input, e fica anotado para quem decidir se um campo de
   intenção deve ser secreto.
+
+## fase 1: handoff (2026-09-25)
+
+```text
+Goal: task-80 fase 1, o método das cinco demos antes de rodar, o que já
+      estava provado com a fonte, e as demos 3 e 4 de ponta a ponta
+Status: pronto para o orquestrador, na branch task/80a-proof
+```
+
+### commits
+
+- `e44e4234` task-80: the probe, the five demos against what exists,
+  recording with no window, the bug for demo 3 and how its test catches it
+- `c8a6c3a9` task-80: the method of the five demos, written before any new
+  demo runs (a prova de que o método veio antes: nenhuma sessão nova foi
+  gravada antes deste commit)
+- `f008c897` task-80: what was already proven, demo by demo, with its source
+- `46f272d3` task-80: demo 3, the task-84 race as a recorded bug report,
+  and the test it becomes
+- `b26dc988` task-80: demo 3 result, the bug report read at the instant and
+  the proof that its test catches the race
+- `ae5be30e` task-80: demo 4, the review born from an intent, turned into
+  the comparison and closed, recorded with no window and held to the
+  method's criterion
+- `677b1ad9` task-80: demo 4 result, the recording read by the inspector,
+  the comparison against the fixed screen and the privacy check
+- o commit deste texto, com o ADR
+
+a branch descartável `task/80a-bug84` (`84161012`, a corrida de volta, e
+`034b951d`, o teste por cherry-pick) fica local, fora do merge; pode ser
+apagada depois da validação.
+
+### resumo
+
+- a sonda (seção "fase 1: sonda"): a demo 5 pede funcionalidade nova (nem
+  o ide nem o urnaui têm `SurfaceHost`), proposta como task-96; gravar sem
+  janela funciona pelo showcase e pelo laboratório; o bug da demo 3 é a
+  corrida da task-84 (o porto da 92 e a regra da 89 são do `wire`, fora do
+  caminho do rerun); "não consigo comparar" é recusado pelas regras na
+  Silences.
+- o método (seção "o método das cinco demos"), com roteiro, controle,
+  critério e o que derruba, para as cinco.
+- o que já estava provado (seção "o que já estava provado"): a 1 pela
+  task-62, a 2 só com pessoa roteirizada, a 3 em parte pela task-64, a 4
+  pela task-69 e pelo checkpoint b, a 5 nada.
+- a demo 3: o bug report gravado sem janela na branch com a corrida,
+  lido no instante (as oito perguntas pelo arquivo), o trecho de 43.916
+  bytes virando teste no gate; falha com a corrida (3 marcas divergem),
+  passa sem ela (dez de dez); o rerun em repouso não a vê.
+- a demo 4: o teste grava a revisão nascendo da intenção, a pessoa
+  decidindo nela, a recusa de "I can't compare these", a comparação no
+  lugar e o close; pela gravação, a superfície só existe entre o propose e
+  o close e vem toda do materializador; em 1200 por 800 a gerada mostra as
+  cinco peças dos dois cortes e o original ao lado do resultado, onde a
+  fixa ao lado mostra nenhum corte e a fixa sozinha um corte de dois.
+- a privacidade das duas gravações: input só como tipo e controle,
+  nenhum segredo (nada a redigir nestas páginas), nenhuma câmera, nenhuma
+  preferência de accessibility como estado; o texto de um campo de
+  intenção fica gravado como estado (anotado).
+
+### arquivos
+
+- `docs/mission/steps/ongoing/task-80-proof-qualitatively-different-software.md`:
+  sonda, método, provado, demos 3 e 4, handoff.
+- `docs/ADR/generative-runtime-results.md` (novo, proposed).
+- `crates/ide/tests/rerun/inflight.rs` (novo): a fixture `InFlight` e o
+  teste do trecho.
+- `crates/ide/tests/rerun/lab.rs`: `answer_while` e `take` (o `drain` usa
+  o mesmo), `fixture` público no módulo. `crates/ide/tests/rerun/main.rs`:
+  o módulo novo.
+- `crates/ide/tests/fixtures/sessions/bug84.monster` (43.916 bytes) e
+  `bug84.marks`.
+- `crates/showcase/tests/ephemeral.rs` (novo): a demo 4.
+
+nenhum código de produção, nenhum `Cargo.toml`, nenhuma linha do
+`Cargo.lock`, nenhum baseline.
+
+### interfaces
+
+nenhuma adicionada nem alterada fora dos testes. o `Fixture` do harness,
+as marcas e o relatório estão como estavam.
+
+### validação
+
+com o ambiente do briefing (o `PLEV_CLAUDE` no stub) e
+`CARGO_NET_OFFLINE=true` em todo comando cargo:
+
+- `./script/gate`: verde (exit 0, 03:17 a 03:19), com a perna urnaui e o
+  check wasm com `-D warnings`. workspace 2927 passam, 0 falham, 26
+  ignorados (157 suítes); urnaui 85 passam, 0 falham, 1 ignorado (6
+  suítes). total 3012 passam e 27 ignorados, contra 3010 e 27 na base: os
+  dois testes novos. `df -h /`: 16 GB livres antes e depois.
+- `cargo run --offline -p showcase --example regress -- check` (com o
+  `main.rs` tocado): 176 baselines, 176 iguais, nenhum frame desenhado,
+  nenhuma GPU aberta.
+- `cargo test -p ide --test rerun inflight`: dez de dez em
+  `task/80a-proof`; `cargo test -p showcase --test ephemeral`: dez de dez.
+- na `task/80a-bug84`: o teste novo falha, o do a2ppa passa, os quatro da
+  task-84 falham (saídas na demo 3).
+- nenhuma janela aberta, nenhum clique ou tecla sintética, nenhuma chamada
+  ao `claude`, nenhum ffmpeg nos testes.
+
+### linha para o índice de ADRs
+
+```text
+| 2026-09-25 | [generative-runtime-results](generative-runtime-results.md) | proposed | o método das cinco demos escrito antes de rodar (roteiro, controle, critério, o que derruba); a 1 provada pela task-62; a 3 feita: a corrida da task-84 gravada como bug report, lida no instante pelo plev-inspect e virando teste no gate que a pega, com uma fixture que assenta só as execuções; a 4 feita: a revisão nasce da intenção, vira comparação e some, medida pela gravação contra a tela fixa; faltam a 2 e a pergunta do núcleo (brenner), a 5 (task-96) e o Claude de verdade (orquestrador) (task-80 fase 1) |
+```
+
+### decisões
+
+- a demo 3 pela corrida da task-84, não pelo porto da 92 nem pela regra
+  da 89: as duas são do `wire`, e o rerun despacha no workbench.
+- o trecho do teste cortado antes do submit: o bug mudou o veredito dele,
+  e o harness compara o veredito com o gravado. as marcas dizem o que a
+  view precisa ter.
+- a `InFlight` em teste, ao lado da fixture do ide, e não uma opção do
+  harness: o contrato do harness fica como estava.
+- a demo 4 como teste no gate, não como exemplo: mede pela gravação e
+  guarda a propriedade efêmera. a comparação é "compare the original with
+  the cuts" (a que existe na Silences); "I can't compare these" entra
+  como a recusa medida.
+- K2 com dois controles: a fixa ao lado da gerada (o que o método
+  escreveu) e a fixa sozinha, antes da superfície, porque ao lado dela a
+  fixa fica com meia largura.
+
+### limitações
+
+- a demo 4 só pelas regras, da semente, com frames sintéticos; "à vista"
+  conta presença no frame, não quão bem uma pessoa decide.
+- a demo 3 cobre o cenário do stage da corrida; os testes à mão da
+  task-84 cobrem quatro.
+- a recusa de "I can't compare these" na Silences continua (o app não
+  declara uma lista de números).
+- os dois achados da task-69 fase 4c continuam: o ato pela superfície
+  gravado como a capacidade do app, e a observação da pessoa não colocada.
+
+### o que falta, e com quem
+
+- a demo 1, os dois braços de controle (agente por screenshot, que pede
+  um caminho de clique por pixel no laboratório; agente por snapshot de
+  accessibility de terceiros): o orquestrador, com o Claude de verdade.
+- a demo 2, o handoff com o brenner na janela do ide: o brenner, com o
+  orquestrador.
+- a pergunta do núcleo (checkpoint c): o brenner.
+- a demo 5: a task-96 (proposta na sonda), aberta pelo orquestrador.
+- o Claude de verdade nas superfícies da demo 4, e uma pessoa de fora nas
+  demos 2 e 4: o orquestrador.
+- P3, para o orquestrador decidir: a opção de assentar só as execuções no
+  harness (se ele virar crate); marcar um veredito esperado; a lista de
+  durações na Silences; se um campo de intenção deve ser secreto.
