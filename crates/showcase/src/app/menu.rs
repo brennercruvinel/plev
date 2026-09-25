@@ -310,6 +310,22 @@ mod tests {
             .collect()
     }
 
+    /// The toasts and the modal the view projects over the page (task-75
+    /// phase 2a) are on screen for a moment: the bar stays the page's.
+    #[test]
+    fn the_bar_leaves_the_toasts_and_the_modal_out() {
+        let (mut app, fake) = app("Todo");
+        let before = shown(&fake);
+        let theme = app.view.theme.clone();
+        app.view
+            .toasts
+            .push("saved", comps::prelude::Intent::Constructive, &theme);
+        app.sync_menu();
+        let bar = shown(&fake);
+        assert!(bar.find(&sid("toasts[0]"), "dismiss", None).is_none());
+        assert_eq!(bar, before, "the same bar");
+    }
+
     #[test]
     fn the_bar_shows_the_shell_and_the_active_page_and_a_click_runs_through_the_view() {
         let (mut app, fake) = app("Todo");
