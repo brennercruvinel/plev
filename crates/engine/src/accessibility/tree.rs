@@ -41,8 +41,13 @@
 //!   `live`). The focus never moves for it.
 //! - actions: `Click` when the node has a primary action (see
 //!   `action::primary`), `Focus` when it is focusable and not inert,
-//!   `SetValue`, `Increment` and `Decrement` when it declares
-//!   `set_value`, `increment` and `decrement`.
+//!   `SetValue` when it has a setter (`action::setter`: its `set_value`,
+//!   or a select's `select`), `Increment` and `Decrement` when it
+//!   declares `increment` and `decrement`.
+//! - an item of a collection holds, as controls of their own, the actions
+//!   its own node does not reach (`present`): its toggle as a checkbox,
+//!   every other action without a parameter as a button. They are in the
+//!   tree only, with no bounds, and a click on one is the item's action.
 //! - focus is the snapshot's `focused`, or the window.
 
 use accesskit::{Action, Live, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
@@ -51,6 +56,7 @@ use sem::{Node, Role, SemId, Snapshot, StateKey, Value};
 
 use super::action;
 use super::ids::{NodeIds, ROOT};
+use super::present::{self, Kind, Presented};
 use super::role;
 use crate::compositor::{Binding, Compositor, intersect_rects};
 
@@ -83,7 +89,21 @@ pub fn build(
     chrome: &Chrome<'_>,
 ) -> (TreeUpdate, NodeIds) {
     let order = tree_order(snapshot);
-    let ids = NodeIds::assign(order.iter().map(|n| &n.id));
+    let presented: Vec<Vec<Presented<'_>>> = order
+        .iter()
+        .map(|n| present::presented_in(n, snapshot))
+        .collect();
+    let mut ids = NodeIds::assign(
+        order
+            .iter()
+            .map(|n| &n.id)
+            .chain(presented.iter().flatten().map(|p| &p.id)),
+    );
+    for (node, list) in order.iter().zip(&presented) {
+        for p in list {
+            ids.stand_for(p.id.clone(), node.id.clone(), p.decl.name.clone());
+        }
+    }
     let at: FxHashMap<&SemId, usize> = order.iter().enumerate().map(|(i, n)| (&n.id, i)).collect();
     let bounds = placement(snapshot, &order, &at, compositor, chrome.scale);
 
@@ -98,18 +118,25 @@ pub fn build(
     nodes.push((ROOT, root));
 
     let mut described: Vec<AkNode> = Vec::with_capacity(order.len());
-    for (node, placed) in order.iter().zip(&bounds) {
+    for ((node, placed), list) in order.iter().zip(&bounds).zip(&presented) {
         let mut out = describe(node);
-        out.set_children(children(snapshot.children(&node.id), &ids));
+        let mut kids = children(snapshot.children(&node.id), &ids);
+        kids.extend(list.iter().filter_map(|p| ids.node(&p.id)));
+        out.set_children(kids);
         if let Some(rect) = placed {
             out.set_bounds(*rect);
         }
         described.push(out);
     }
     select_children(snapshot, &order, &at, &mut described);
-    for (node, out) in order.iter().zip(described) {
+    for ((node, out), list) in order.iter().zip(described).zip(&presented) {
         if let Some(id) = ids.node(&node.id) {
             nodes.push((id, out));
+        }
+        for p in list {
+            if let Some(id) = ids.node(&p.id) {
+                nodes.push((id, describe_presented(node, p)));
+            }
         }
     }
 
@@ -236,8 +263,11 @@ fn describe(n: &Node) -> AkNode {
     if n.inert {
         out.set_hidden();
     }
+    let holds_toggle = present::holds_toggle(n);
     let toggled = toggled_key(n);
-    if let Some(Value::Bool(on)) = toggled.and_then(|k| n.state.get(k)) {
+    if let Some(Value::Bool(on)) = toggled.and_then(|k| n.state.get(k))
+        && !holds_toggle
+    {
         out.set_toggled(Toggled::from(*on));
     }
     if let Some(Value::Bool(open)) = n.state.get("expanded") {
@@ -252,14 +282,16 @@ fn describe(n: &Node) -> AkNode {
         value(n, &mut out);
         live(n, &mut out);
     }
-    if action::primary(n).is_some() {
+    if action::primary(n).is_some() && !holds_toggle {
         out.add_action(Action::Click);
     }
     if n.focusable && !n.inert {
         out.add_action(Action::Focus);
     }
+    if action::setter(n).is_some() {
+        out.add_action(Action::SetValue);
+    }
     for (name, act) in [
-        ("set_value", Action::SetValue),
         ("increment", Action::Increment),
         ("decrement", Action::Decrement),
     ] {
@@ -270,9 +302,34 @@ fn describe(n: &Node) -> AkNode {
     out
 }
 
+/// A control presented inside the item `item` (`present`): a checkbox
+/// checked by the bool the toggle reads, or a button; named, off while
+/// its action or the item is off, pressed by a click while on. No focus
+/// of its own: a reader walks to it, and a click on it is the item's
+/// action.
+fn describe_presented(item: &Node, p: &Presented<'_>) -> AkNode {
+    let role = match p.kind {
+        Kind::Checkbox => accesskit::Role::CheckBox,
+        Kind::Button => accesskit::Role::Button,
+    };
+    let mut out = AkNode::new(role);
+    out.set_label(p.label.as_str());
+    if p.kind == Kind::Checkbox
+        && let Some(Value::Bool(on)) = toggled_key(item).and_then(|k| item.state.get(k))
+    {
+        out.set_toggled(Toggled::from(*on));
+    }
+    if p.decl.enabled && item.enabled {
+        out.add_action(Action::Click);
+    } else {
+        out.set_disabled();
+    }
+    out
+}
+
 /// The key of the bool that says whether the node is on: the one its own
 /// `toggle` action reads, else `checked` or `on`.
-fn toggled_key(n: &Node) -> Option<&StateKey> {
+pub(crate) fn toggled_key(n: &Node) -> Option<&StateKey> {
     let read = n
         .actions
         .iter()

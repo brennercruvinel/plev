@@ -12,11 +12,14 @@
 //! todo page's own screen reader tests; here the tree and the contract
 //! are held to each other.
 //!
-//! What the pages do not give a reader yet is listed, not fixed (task-75
-//! phase 2 opens the widgets and the pages): the pages that project no
-//! meaning, the actions no adapter can offer, the focus a page takes
-//! without projecting it. Each list is exact, so a page that starts
-//! projecting, or a new gap, shows here.
+//! What the pages do not give a reader yet is listed, not fixed: the
+//! pages that project no meaning (the component pages, task-75 phase 2b)
+//! and what phase 2a left with its reason. Each list is exact, so a page
+//! that starts projecting, or a new gap, shows here. Phase 2a emptied the
+//! others: an item's actions its own node does not reach are controls the
+//! tree presents inside it (`accessibility::present`), a select is
+//! pressed open and set by its value, the pages project the focus they
+//! take, and a press is offered only while its action is on.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use engine::accessibility::accesskit::{
@@ -25,7 +28,7 @@ use engine::accessibility::accesskit::{
 };
 use engine::accessibility::{self, Assist, Chrome, Shown, focus};
 use engine::compositor::Compositor;
-use sem::{Actor, Request, Role, SemId, Value};
+use sem::{Actor, Request, Role, SemId, StateKey, Value};
 use showcase::view::{PAGES, ShowcaseView};
 
 /// The pages that project their meaning, in sidebar order ("Toggle
@@ -110,6 +113,12 @@ impl Seen {
             None => panic!("{id} is in the tree and not in the snapshot"),
         }
     }
+
+    /// The item and the action a control the tree presents stands for;
+    /// `None` for a node of the snapshot.
+    fn presented(&self, id: &SemId) -> Option<(&SemId, &str)> {
+        self.shown.ids.presented(id)
+    }
 }
 
 fn projecting() -> impl Iterator<Item = Seen> {
@@ -162,6 +171,13 @@ fn every_control_has_a_name_and_takes_focus_and_no_group_is_empty() {
     for seen in projecting() {
         let title = seen.view.page_title();
         for (_, id, n) in seen.walk() {
+            if seen.presented(id).is_some() {
+                assert!(
+                    n.label().is_some_and(|l| !l.trim().is_empty()),
+                    "{title}: {id} is a presented control without a name"
+                );
+                continue;
+            }
             let node = seen.sem(id);
             let control = node.role.is_interactive() || n.supports_action(Action::Focus);
             if control {
@@ -313,37 +329,25 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
         .is_some_and(AkNode::is_disabled)
 }
 
-/// The actions the pages declare that no action of the tree reaches: a
-/// row with several actions (AccessKit's custom actions are in the
-/// contract of 0.24, and no adapter of the lock implements them), a
-/// select's `select` with the option as a parameter (its options are not
-/// projected as nodes a reader could press), a file drop, and a row's
-/// `remove` beside its `toggle`. Each is the page's to project as a
-/// control of its own (phase 2).
-const UNREACHABLE: &[&str] = &[
-    "Files: files.drop drop_files",
-    "Silences: silences.cut[1] apply_cut",
-    "Silences: silences.cut[1] preview_segment",
-    "Silences: silences.cut[1] reject_cut",
-    "Silences: silences.cut[2] apply_cut",
-    "Silences: silences.cut[2] preview_segment",
-    "Silences: silences.cut[2] reject_cut",
-    "Silences: silences_surface.proposer close",
-    "Silences: silences_surface.proposer open",
-    "Silences: silences_surface.proposer select",
-    "Surface: surface_page.proposer close",
-    "Surface: surface_page.proposer open",
-    "Surface: surface_page.proposer select",
-    "Surface: todo.item[1] remove",
-    "Surface: todo.item[2] remove",
-    "Surface: todo.item[3] remove",
-    "Todo: todo.item[1] remove",
-    "Todo: todo.item[2] remove",
-    "Todo: todo.item[3] remove",
-    "Toggle Group: todo.item[1] remove",
-    "Toggle Group: todo.item[2] remove",
-    "Toggle Group: todo.item[3] remove",
-];
+/// The actions the pages declare that no action of the tree reaches. Phase
+/// 1 listed 22: a row's `remove` beside its `toggle`, the three actions
+/// of a cut, a select's `open`, `close` and `select`, and the file drop.
+/// Phase 2a reaches all but the drop: a row's and a cut's actions are
+/// controls the tree presents inside them, a select is pressed open (and
+/// shut, while open) and set by its value. The drop stays: a reader does
+/// not drag a file, and `files.open` reaches the same files.
+const UNREACHABLE: &[&str] = &["Files: files.drop drop_files"];
+
+/// The node with its list `expanded` the other way: a select's press is
+/// `open` while shut and `close` while open, so both are reached by it.
+fn flipped(node: &sem::Node) -> sem::Node {
+    let mut other = node.clone();
+    let open = matches!(node.state.get("expanded"), Some(Value::Bool(true)));
+    if let Ok(key) = StateKey::parse("expanded") {
+        other.state.insert(key, Value::Bool(!open));
+    }
+    other
+}
 
 #[test]
 fn the_actions_no_reader_can_reach_are_the_known_ones() {
@@ -351,13 +355,24 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
     for seen in projecting() {
         let title = seen.view.page_title();
         for (_, id, n) in seen.walk() {
+            if seen.presented(id).is_some() {
+                continue;
+            }
             let node = seen.sem(id);
-            let reached: Vec<&str> = [
+            let other = flipped(node);
+            let mut reached: Vec<&str> = [
                 (
                     Action::Click,
                     accessibility::primary(node).map(|d| d.name.as_str()),
                 ),
-                (Action::SetValue, Some("set_value")),
+                (
+                    Action::Click,
+                    accessibility::primary(&other).map(|d| d.name.as_str()),
+                ),
+                (
+                    Action::SetValue,
+                    accessibility::setter(node).map(|d| d.name.as_str()),
+                ),
                 (Action::Increment, Some("increment")),
                 (Action::Decrement, Some("decrement")),
             ]
@@ -365,6 +380,18 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
             .filter(|(a, _)| n.supports_action(*a))
             .filter_map(|(_, name)| name)
             .collect();
+            // the controls the tree presents inside it, each its action
+            for child in n.children() {
+                let owned = seen
+                    .shown
+                    .ids
+                    .sem(*child)
+                    .and_then(|c| seen.presented(c))
+                    .filter(|(item, _)| *item == id);
+                if let Some((_, action)) = owned {
+                    reached.push(action);
+                }
+            }
             for decl in &node.actions {
                 if !reached.contains(&decl.name.as_str()) {
                     unreachable.push(format!("{title}: {id} {}", decl.name));
@@ -387,6 +414,10 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
     for seen in projecting() {
         let title = seen.view.page_title();
         for (_, id, n) in seen.walk() {
+            if seen.presented(id).is_some() {
+                assert_eq!(n.live(), None, "{title}: {id} is not live");
+                continue;
+            }
             let node = seen.sem(id);
             let politeness = match node.role {
                 Role::Status => Live::Polite,

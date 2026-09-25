@@ -17,7 +17,7 @@
 
 use accesskit::NodeId;
 use rustc_hash::{FxHashMap, FxHashSet};
-use sem::SemId;
+use sem::{ActionName, SemId};
 
 /// The window, the root of every tree this module builds.
 pub const ROOT: NodeId = NodeId(0);
@@ -46,11 +46,15 @@ pub fn hash(text: &str, attempt: u32) -> u64 {
     h
 }
 
-/// The node ids of one frame's tree, both ways.
+/// The node ids of one frame's tree, both ways, and what each control
+/// the tree presents stands for (`present`).
 #[derive(Debug, Default)]
 pub struct NodeIds {
     by_sem: FxHashMap<SemId, NodeId>,
     by_node: FxHashMap<NodeId, SemId>,
+    /// A presented control's id: the item it is inside and the item's
+    /// action a click on it asks for.
+    stands_for: FxHashMap<SemId, (SemId, ActionName)>,
 }
 
 impl NodeIds {
@@ -125,6 +129,20 @@ impl NodeIds {
     /// this frame does not hold.
     pub fn sem(&self, node: NodeId) -> Option<&SemId> {
         self.by_node.get(&node)
+    }
+
+    /// Records that the presented control `id` stands for `action` of
+    /// `item` (the id itself is assigned with the others).
+    pub(crate) fn stand_for(&mut self, id: SemId, item: SemId, action: ActionName) {
+        self.stands_for.insert(id, (item, action));
+    }
+
+    /// The item and the action a presented control stands for; `None`
+    /// for a node of the snapshot.
+    pub fn presented(&self, id: &SemId) -> Option<(&SemId, &str)> {
+        self.stands_for
+            .get(id)
+            .map(|(item, action)| (item, action.as_str()))
     }
 
     /// How many nodes have an id (the root not counted).

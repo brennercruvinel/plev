@@ -127,12 +127,30 @@ fn the_tree_is_the_todo_page_under_the_window() {
     assert_eq!(n("todo.filter[active]").is_selected(), Some(false));
     assert_eq!(n("todo.filter[active]").label(), Some("Active"));
 
+    // a row holds its toggle as a checkbox and its remove as a button
+    // (task-75 phase 2a: no adapter has custom actions)
     let item = n("todo.item[3]");
     assert_eq!(item.role(), AkRole::ListItem);
     assert_eq!(item.label(), Some("Port the todo domain (tested first)"));
-    assert_eq!(item.toggled(), Some(Toggled::True));
-    assert_eq!(n("todo.item[1]").toggled(), Some(Toggled::False));
-    assert!(item.supports_action(Action::Click));
+    assert_eq!(item.toggled(), None);
+    assert!(!item.supports_action(Action::Click));
+    assert_eq!(
+        item.children(),
+        ids(&["todo.item[3][toggle]", "todo.item[3][remove]"])
+    );
+    let done = n("todo.item[3][toggle]");
+    assert_eq!(
+        (done.role(), done.label(), done.toggled()),
+        (AkRole::CheckBox, Some("completed"), Some(Toggled::True))
+    );
+    assert!(done.supports_action(Action::Click));
+    assert_eq!(n("todo.item[1][toggle]").toggled(), Some(Toggled::False));
+    let remove = n("todo.item[3][remove]");
+    assert_eq!(
+        (remove.role(), remove.label()),
+        (AkRole::Button, Some("remove"))
+    );
+    assert!(remove.supports_action(Action::Click));
     assert_eq!(n("todo.counter").role(), AkRole::Status);
     assert_eq!(n("todo.counter").label(), Some("2 active · 1 done"));
 
@@ -148,8 +166,8 @@ fn the_tree_is_the_todo_page_under_the_window() {
     assert_eq!(u.focus, engine::accessibility::ROOT, "nothing focused yet");
 }
 
-/// The acceptance: an AccessKit `Click` on a row reaches the same state
-/// as a person's click on its checkbox, and the receipt names assistive
+/// The acceptance: an AccessKit `Click` on a row's checkbox reaches the
+/// same state as a person's click on it, and the receipt names assistive
 /// technology.
 #[test]
 fn a_screen_reader_click_toggles_a_row_as_a_person_does() {
@@ -165,8 +183,9 @@ fn a_screen_reader_click_toggles_a_row_as_a_person_does() {
 
     let (mut reader, c) = todo_view();
     let (_, shown) = show(&reader, &c);
-    let req = request(ask(&shown, "todo.item[1]", Action::Click, None));
+    let req = request(ask(&shown, "todo.item[1][toggle]", Action::Click, None));
     assert_eq!(req.actor, Actor::Assistive);
+    assert_eq!(req.target, sid("todo.item[1]"), "the row's own toggle");
     assert_eq!(req.action.as_str(), "toggle");
     let Some(receipt) = reader.act(req) else {
         panic!("the todo page takes the request");
@@ -180,9 +199,34 @@ fn a_screen_reader_click_toggles_a_row_as_a_person_does() {
     reader.render(&mut c);
     let (u, shown) = show(&reader, &c);
     assert_eq!(
-        node(&u, &shown, "todo.item[1]").toggled(),
+        node(&u, &shown, "todo.item[1][toggle]").toggled(),
         Some(Toggled::True)
     );
+}
+
+/// The row's remove, which no action of the row reached before phase 2a:
+/// a reader presses the button the tree presents, and the row is gone
+/// as a person's click on its delete takes it.
+#[test]
+fn a_screen_reader_removes_a_row_through_its_presented_button() {
+    let (mut view, c) = todo_view();
+    let (_, shown) = show(&view, &c);
+    let req = request(ask(&shown, "todo.item[2][remove]", Action::Click, None));
+    assert_eq!(
+        (req.target.as_str(), req.action.as_str(), &req.actor),
+        ("todo.item[2]", "remove", &Actor::Assistive)
+    );
+    let total = view.panes.todo.model.counts().total;
+    let Some(receipt) = view.act(req) else {
+        panic!("the todo page takes the request");
+    };
+    assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
+    assert_eq!(view.panes.todo.model.counts().total, total - 1);
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let (_, shown) = show(&view, &c);
+    assert_eq!(shown.ids.node(&sid("todo.item[2]")), None);
+    assert_eq!(shown.ids.node(&sid("todo.item[2][remove]")), None);
 }
 
 #[test]
@@ -197,7 +241,7 @@ fn with_a_modal_open_the_same_request_comes_back_inert() {
     assert!(node(&u, &now, "todo.item[1]").is_hidden());
 
     for seen in [&before, &now] {
-        let req = request(ask(seen, "todo.item[1]", Action::Click, None));
+        let req = request(ask(seen, "todo.item[1][toggle]", Action::Click, None));
         let Some(receipt) = view.act(req) else {
             panic!("the todo page takes the request");
         };

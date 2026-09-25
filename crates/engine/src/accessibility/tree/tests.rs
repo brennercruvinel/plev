@@ -187,8 +187,10 @@ fn states_become_values_toggles_and_flags() {
 
     assert_eq!(n("form.gift").toggled(), Some(Toggled::True));
     assert!(n("form.gift").supports_action(Action::Click));
+    // an item that toggles holds its toggle as a checkbox (`present`)
+    assert_eq!(n("form.task").toggled(), None);
     assert_eq!(
-        n("form.task").toggled(),
+        n("form.task[toggle]").toggled(),
         Some(Toggled::False),
         "the bool its toggle reads"
     );
@@ -330,7 +332,12 @@ fn node_ids_are_stable_across_frames_whose_layout_differs() {
     };
     let (narrow, a) = build(&s, &place(0.0, 360.0), &CHROME);
     let (wide, b) = build(&s, &place(240.0, 900.0), &CHROME);
-    assert_eq!(a.len(), s.len());
+    // every node, and the checkbox the task holds (`present`)
+    assert_eq!(a.len(), s.len() + 1);
+    assert_eq!(
+        a.node(&sid("form.task[toggle]")),
+        b.node(&sid("form.task[toggle]"))
+    );
     for id in s.nodes().keys() {
         assert_eq!(a.node(id), b.node(id), "{id}");
         let text = id.as_str();
