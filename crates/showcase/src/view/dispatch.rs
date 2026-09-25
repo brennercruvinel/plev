@@ -7,7 +7,7 @@ use engine::compositor::Compositor;
 use engine::input::FileDrop;
 use engine::platform::capture::Capture;
 use engine::theme::Theme;
-use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, Value};
+use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
 
 use super::components::toast;
 use super::{Layers, Pane, ShowcaseView, panel};
@@ -350,12 +350,33 @@ impl ShowcaseView {
     }
 
     /// What the active page means, when it projects it (the todo page,
-    /// the surface over it, the silences, the files, the capture): the snapshot
-    /// assistive technology is shown. A page without a projection has no
-    /// tree yet. While the page shows in a window of its own too, the
-    /// projection carries that window (`with_window`); with one window it
-    /// is the page's alone.
+    /// the surface over it, the silences, the files, the capture), and
+    /// what the view shows over it while it does (`overlay`: the toasts on
+    /// screen, the modal or the context menu that holds the pointer): the
+    /// snapshot assistive technology is shown (`reader_semantics` builds
+    /// on it) and the port serves with the shell. A page without a
+    /// projection has no tree but its overlays. While the page shows in a
+    /// window of its own too, the projection carries that window
+    /// (`with_window`); with one window and nothing over it, it is the
+    /// page's alone, byte for byte.
     pub fn semantics(&self) -> Option<Snapshot> {
+        let page = self.page_semantics();
+        if !self.overlays_shown() {
+            return page;
+        }
+        let mut b = SnapshotBuilder::new();
+        if let Some(page) = &page {
+            detached::extend(&mut b, page);
+        }
+        self.project_overlays(&mut b);
+        b.finish()
+            .inspect_err(|e| log::warn!("the overlays' projection does not validate: {e}"))
+            .ok()
+            .or(page)
+    }
+
+    /// The active page's projection alone (see `semantics`).
+    fn page_semantics(&self) -> Option<Snapshot> {
         let snapshot = match self.pane() {
             Some(Pane::Todo) => self.panes.todo.snapshot(),
             Some(Pane::Surface) => self.panes.surface.snapshot(&self.panes.todo),
@@ -385,6 +406,9 @@ impl ShowcaseView {
     pub fn act(&mut self, req: Request) -> Option<Receipt> {
         if self.is_shell(&req.target) {
             return self.act_shell(req);
+        }
+        if self.is_overlay(&req.target) {
+            return self.act_overlay(req);
         }
         match self.pane() {
             Some(Pane::Todo) => {
@@ -434,8 +458,12 @@ impl ShowcaseView {
     }
 
     /// Keyboard focus from assistive technology to a node of the active
-    /// page; `false` when the page does not take it.
+    /// page, or of the overlay that holds the pointer; `false` when
+    /// neither takes it.
     pub fn assist_focus(&mut self, id: &SemId) -> bool {
+        if self.is_overlay(id) {
+            return self.focus_overlay(id);
+        }
         match self.pane() {
             Some(Pane::Todo) => {
                 let inert = self.overlay_holds_pointer();
@@ -508,6 +536,15 @@ mod agent;
 /// view's side of the second window.
 mod detached;
 pub use detached::Detached;
+
+/// The view's own layer over the page, projected and run through the
+/// gallery's dispatcher (task-75 phase 2a): the toasts, the modal, the
+/// context menu.
+pub(super) mod overlay;
+
+/// What a screen reader is shown (task-75 phase 2a): the view's
+/// projection and what only a reader hears.
+mod reader;
 
 /// The shell's capabilities (task-76 item 4): the page, the theme, the
 /// page in a window of its own and the recording's save, projected and

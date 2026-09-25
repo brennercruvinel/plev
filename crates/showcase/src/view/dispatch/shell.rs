@@ -184,6 +184,11 @@ impl Shell {
     pub fn id(&self, target: ShellTarget) -> Option<SemId> {
         self.ids.as_ref().map(|ids| ids.of(target).clone())
     }
+
+    /// The last thing the shell told the person on its own (`shell:notice`).
+    pub(super) fn notice(&self) -> &str {
+        &self.notice
+    }
 }
 
 /// What of the view the shell projects from.

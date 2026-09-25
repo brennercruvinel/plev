@@ -59,7 +59,8 @@ const CHROME: Chrome<'static> = Chrome {
 };
 
 /// A page as the shell shows it to a reader: the view on the page, one
-/// frame drawn, and the tree of that frame.
+/// frame drawn, and the tree of that frame, built from what the bridge is
+/// given (`reader_semantics`).
 struct Seen {
     view: ShowcaseView,
     update: TreeUpdate,
@@ -77,7 +78,7 @@ fn see(title: &str) -> Seen {
 fn look(mut view: ShowcaseView) -> Seen {
     let mut c = Compositor::new();
     view.render(&mut c);
-    let snapshot = view.semantics().unwrap_or_default();
+    let snapshot = view.reader_semantics().unwrap_or_default();
     let (update, ids) = accessibility::build(&snapshot, &c, &CHROME);
     Seen {
         view,

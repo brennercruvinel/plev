@@ -1,92 +1,14 @@
 //! The window's outside actors, desktop only: a screen reader (the
 //! AccessKit bridge) and agents (the port), and how their threads wake the
-//! event loop; and what the screen reader is shown (`shown`).
+//! event loop. What the screen reader is shown is the view's
+//! (`ShowcaseView::reader_semantics`): the page, the toasts and the
+//! overlay over it, and what only a reader hears (task-75 phase 2a).
 
-use sem::{SemId, Snapshot, SnapshotBuilder};
 use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
 use winit::window::Window;
 
 use super::{TITLE, UserEvent};
 use crate::view::ShowcaseView;
-
-/// What the screen reader is shown this frame: the page's meaning
-/// ([`ShowcaseView::semantics`], what agents, tests and the baselines
-/// read) and, while a toast is on screen, the gallery's toasts as `comps`
-/// projects them ([`comps::prelude::ToastManager::project`]: `toasts`, a
-/// region, with a `Status` per toast, or an `Alert` for a destructive
-/// one, named by its message). The engine makes a status a polite live
-/// region and an alert an assertive one, so a reader hears a toast
-/// arrive and the focus stays where it is (task-75 phase 1). With no
-/// toast on screen the snapshot is the page's, untouched.
-///
-/// The toasts belong in the view's own projection, where an agent would
-/// read them too; until the pages open (phase 2) the shell adds them
-/// here, the one place the reader's tree is asked for.
-pub(super) fn shown(view: &ShowcaseView) -> Option<Snapshot> {
-    let page = view.semantics();
-    if view.toasts.visible().all(|t| t.is_closing()) {
-        return page;
-    }
-    let id = match SemId::name("toasts") {
-        Ok(id) => id,
-        Err(e) => {
-            log::warn!("accessibility: the toasts' id: {e}");
-            return page;
-        }
-    };
-    let mut b = SnapshotBuilder::new();
-    if let Some(page) = &page {
-        redeclare(&mut b, page);
-    }
-    view.toasts.project(&mut b, &id, "notifications", None);
-    match b.finish() {
-        Ok(snapshot) => Some(snapshot),
-        Err(e) => {
-            log::warn!("accessibility: the page with its toasts does not validate: {e}");
-            page
-        }
-    }
-}
-
-/// Every node of `page` declared again into `b`, with its parent,
-/// description, state, constraints, flags, actions and the focus (the
-/// view's `detached::extend` does the same for the page's own window;
-/// `sem` has no way to carry a finished snapshot into another). What the
-/// rebuild loses is each node's `source`, which the reader never sees.
-fn redeclare(b: &mut SnapshotBuilder, page: &Snapshot) {
-    for node in page.nodes().values() {
-        let mut n = b.node(&node.id, node.role, node.label.clone());
-        if let Some(parent) = &node.parent {
-            n.parent(parent);
-        }
-        if let Some(text) = &node.description {
-            n.description(text.clone());
-        }
-        for (key, value) in &node.state {
-            n.state(key, value.clone());
-        }
-        n.constraints(node.constraints.clone())
-            .enabled(node.enabled)
-            .inert(node.inert)
-            .focusable(node.focusable);
-        for decl in &node.actions {
-            let mut a = n.action(&decl.name);
-            if let Some(label) = &decl.label {
-                a.label(label.clone());
-            }
-            a.enabled(decl.enabled).policy(decl.policy);
-            for at in &decl.reads {
-                a.reads(at.clone());
-            }
-            if let Some(spec) = &decl.param {
-                a.param(*spec);
-            }
-        }
-    }
-    if let Some(focused) = page.focused() {
-        b.focus(focused);
-    }
-}
 
 /// The window's outside actors (a screen reader, agents through the port)
 /// and how their threads wake the event loop.
@@ -145,13 +67,16 @@ impl Access {
 
 #[cfg(test)]
 mod tests {
+    //! What the bridge is shown (`ShowcaseView::reader_semantics`) as the
+    //! tree it sends: the toasts, the counter and the shell's notice are
+    //! heard where they are, and the focus stays.
+
     use comps::prelude::Intent;
     use engine::accessibility::accesskit::{Live, Node, TreeUpdate};
     use engine::accessibility::{self, Chrome, NodeIds};
     use engine::compositor::Compositor;
     use sem::{Role, SemId, Snapshot};
 
-    use super::shown;
     use crate::view::ShowcaseView;
 
     const CHROME: Chrome<'static> = Chrome {
@@ -177,7 +102,7 @@ mod tests {
     fn tree(view: &mut ShowcaseView) -> (TreeUpdate, NodeIds, Snapshot) {
         let mut c = Compositor::new();
         view.render(&mut c);
-        let snapshot = shown(view).unwrap_or_default();
+        let snapshot = view.reader_semantics().unwrap_or_default();
         let (u, ids) = accessibility::build(&snapshot, &c, &CHROME);
         (u, ids, snapshot)
     }
@@ -206,16 +131,21 @@ mod tests {
     }
 
     #[test]
-    fn with_no_toast_the_reader_is_shown_the_page_as_it_is() {
+    fn with_nothing_over_the_page_the_reader_is_shown_the_page_as_it_is() {
         let view = view_on("todo");
-        assert_eq!(shown(&view), view.semantics());
+        assert_eq!(view.reader_semantics(), view.semantics());
         let view = view_on("button");
-        assert_eq!(shown(&view), None, "a page without meaning: the window");
+        assert_eq!(
+            view.reader_semantics(),
+            None,
+            "a page without meaning: the window"
+        );
     }
 
     /// The acceptance of task-75 item 3: a person types in the todo field,
     /// a toast arrives, and the reader hears it (polite; an error,
-    /// assertive) while the focus stays in the field.
+    /// assertive) while the focus stays in the field. Since phase 2a the
+    /// toasts are the view's projection, the one agents read too.
     #[test]
     fn a_toast_is_announced_and_the_focus_stays_in_the_field() {
         let mut view = view_on("todo");
@@ -246,12 +176,13 @@ mod tests {
             ]
         );
         assert_eq!(s.get(&sid("toasts[1]")).map(|n| n.role), Some(Role::Alert));
-        // the page is all there, as the page projects it
-        let page = view.semantics().unwrap_or_default();
-        for n in page.nodes().values() {
-            assert_eq!(s.get(&n.id), Some(n), "{} is the page's", n.id);
-        }
-        assert_eq!(s.focused(), page.focused());
+        // the toasts are the view's projection: an agent reads them too
+        let gallery = view.gallery_semantics().unwrap_or_default();
+        assert_eq!(
+            gallery.get(&sid("toasts[0]")).map(|n| n.label.as_str()),
+            Some("saved")
+        );
+        assert_eq!(s.focused(), Some(&sid("todo.input")));
     }
 
     /// The counter under the list is a status too: when a row is done,
@@ -294,5 +225,38 @@ mod tests {
         );
         assert_eq!(node(&u, &ids, "toasts").label(), Some("notifications"));
         assert_eq!(u.focus, accessibility::ROOT);
+    }
+
+    /// The shell's notice (what it told the person on its own, a job that
+    /// ended while no window had the focus) is a status in the reader's
+    /// tree: heard when it changes, the focus where it was. The port
+    /// reads it as the shell's state, and the view's projection does not
+    /// carry it.
+    #[test]
+    fn the_shells_notice_is_a_status_a_reader_hears() {
+        let mut view = view_on("todo");
+        assert!(view.assist_focus(&sid("todo.input")));
+        view.set_notice("silences detected: 2 cuts");
+        let (u, ids, s) = tree(&mut view);
+        let notice = node(&u, &ids, "shell.notice");
+        assert_eq!(notice.live(), Some(Live::Polite));
+        assert_eq!(notice.value(), Some("silences detected: 2 cuts"));
+        assert_eq!(notice.label(), Some("silences detected: 2 cuts"));
+        assert_eq!(Some(u.focus), ids.node(&sid("todo.input")));
+        assert!(s.get(&sid("todo")).is_some(), "the page is all there");
+        assert!(
+            view.semantics()
+                .is_some_and(|p| p.get(&sid("shell.notice")).is_none())
+        );
+        let gallery = view.gallery_semantics().unwrap_or_default();
+        let said = gallery
+            .value(&sem::StateRef::parse("shell:notice").unwrap_or_else(|e| panic!("{e}")))
+            .cloned();
+        assert_eq!(said, Some(sem::Value::from("silences detected: 2 cuts")));
+        // a page without meaning hears it too
+        let mut view = view_on("button");
+        view.set_notice("done");
+        let (u, ids, _) = tree(&mut view);
+        assert_eq!(node(&u, &ids, "shell.notice").value(), Some("done"));
     }
 }
