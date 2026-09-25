@@ -1077,3 +1077,110 @@ continuam abertos no critério: o roteiro de IME executado (fase 4, pede
 o brenner) e o benchmark de um milhão de linhas (fase 7).
 
 o agente gastou uns 235 mil tokens.
+
+## fase 7: a sonda
+
+documentos grandes no editor: o que ele faz hoje com N linhas, onde entram
+o layout virtualizado e o cache de shaping por linha, e o que o rope já dá.
+os números vêm do benchmark desta fase (`crates/comps/tests/editor_large_bench.rs`,
+comando no fim da seção), em release, num Apple M4 com 16 GB, macOS 26.6.2.
+
+### (a) o que o editor faz por frame com N linhas
+
+- já é virtualizado na emissão. `render` percorre só `visible_lines()`
+  (`crates/comps/src/editor/view.rs:288`, laço em `:299-339`), que é a
+  conta pura de `visible_line_range` (`view.rs:468-483`): as linhas que
+  cortam a viewport mais `overscan_lines` (8) de cada lado. a altura total
+  vem da contagem de linhas, sem medir nenhuma
+  (`view.rs:98`, `len_lines() * line_height`).
+- por linha visível: o texto sai do rope (`view.rs:134-140`,
+  `rope.line(n)`, O(log n)); o número da margem é medido com
+  `TextMeasurer::measure_styled` (`view.rs:304-305`), que tem cache LRU de
+  2048 entradas por conteúdo (`crates/engine/src/text/measure.rs:24`,
+  `:327-346`); o texto vira um nó `SceneNode::Text` com o conteúdo como
+  chave.
+- quem molda o texto desenhado é o `TextSystem`, na hora de montar o frame:
+  `ensure_shaped` (`crates/engine/src/text/system.rs:253-289`) molda uma
+  vez por chave, num mapa por conteúdo, e `finish_frame` (`system.rs:346-352`)
+  joga fora o que o frame não usou. isso já é o shaping por linha com cache
+  do desenho, limitado às linhas da tela.
+- o que o editor molda de novo a cada frame, sem cache: a linha de cada
+  caret na tela (`view.rs:343-360`, `caret_x` em `:145-147`) e cada linha
+  visível com seleção (`view.rs:319-329`, `selection_boxes_on_line` em
+  `:423-441`). as duas passam por `VisualLine::new`
+  (`crates/comps/src/form/text_input/visual.rs:51-52`), que chama
+  `TextMeasurer::clusters_styled` (`measure.rs:400-414`): esse molda toda
+  vez, é o único caminho de shaping do measure sem cache.
+- a geometria das linhas é f32 contra o topo do documento:
+  `line_top` (`view.rs:129-131`) faz `line as f32 * lh - offset`,
+  `hit_test_point` (`view.rs:150-163`) faz `y - bounds.y + offset`, e o
+  `scroll_to_cursor` (`view.rs:166-178`) também. com a linha de 19,6 px do
+  tema, um milhão de linhas dá 19,6 milhões de px, acima dos 16,7 milhões
+  que o f32 guarda com passo de 1 px. medido com os testes novos
+  (`editor/tests_large.rs`), antes da correção: o passo entre duas linhas
+  sai 19,5 na linha 99.990 e 20 na linha 499.963, e um clique a 31,1 px do
+  topo, no fim do documento, cai na linha 999.972 em vez da 999.971.
+
+custo medido antes de mudar (média / p99, ms; `scene` para no
+`Compositor::resolve_scene`, sem GPU; `frame` passa pelo
+`headless::Renderer::draw`, que molda, rasteriza e submete como a janela):
+
+| linhas | até | abrir | roda, 3 linhas por frame | arrasto da barra | roda, tudo selecionado | editar no meio | heap mantido (MiB) | pico ao abrir (MiB) |
+|---|---|---|---|---|---|---|---|---|
+| 10 mil | scene | 0,3 | 0,021 / 0,026 | 0,055 / 0,060 | 0,589 / 0,629 | 0,028 / 0,033 | 0,6 | 1,1 |
+| 100 mil | scene | 2,0 | 0,021 / 0,025 | 0,088 / 0,099 | 0,590 / 0,636 | 0,030 / 0,034 | 6,2 | 11,8 |
+| 1 milhão | scene | 22,8 | 0,021 / 0,025 | 0,092 / 0,101 | 0,590 / 0,628 | 0,029 / 0,034 | 64,2 | 121,3 |
+| 10 mil | frame | 1,0 | 0,364 / 0,585 | 0,701 / 0,907 | 0,932 / 1,063 | 0,262 / 0,341 | 0,6 | 1,5 |
+| 100 mil | frame | 3,1 | 0,357 / 0,573 | 1,007 / 1,119 | 0,919 / 1,001 | 0,280 / 0,393 | 6,2 | 11,8 |
+| 1 milhão | frame | 23,3 | 0,357 / 0,544 | 1,194 / 2,884 | 0,946 / 2,026 | 0,311 / 1,071 | 64,2 | 121,3 |
+
+o frame não depende de N: rolar e editar custam o mesmo com 10 mil e com
+um milhão de linhas. só abrir cresce com o documento, e o pico ao abrir é
+quase o dobro do que fica, porque `Document::load` copia o texto inteiro
+antes de montar o rope (`crates/rope/src/document.rs:51-62`, o
+`text.into()`). com tudo selecionado, a cena custa 28 vezes a da roda
+simples: é o `clusters_styled` moldando de novo cada linha da tela a cada
+frame.
+
+### (b) onde entram o layout virtualizado e o cache por linha
+
+- layout virtualizado: a emissão já é. o que falta é a geometria aguentar
+  um milhão de linhas. a posição de cada linha passa a ser calculada em
+  f64 contra o deslocamento da rolagem e só o resultado, pequeno, volta a
+  f32 (`line_top`, `hit_test_point`, `scroll_to_cursor` e a faixa
+  visível). o `ScrollState` guarda o deslocamento em f32
+  (`crates/engine/src/input/scroll.rs:42-56`) e é do engine, fora dos
+  arquivos desta fase: perto do fim de um milhão de linhas ele anda em
+  passos de 2 px. isso vira pendência, não mudança de API.
+- cache de shaping por linha: no `clusters_styled` do measure, ao lado
+  do cache de medida que já existe. chave: o texto da linha e o estilo
+  (os mesmos campos do `MeasureKey`, com a largura exata). invalidação
+  numa edição: a chave é o conteúdo, então só a linha cujo texto mudou
+  deixa de bater; uma quebra de linha que empurra um milhão de linhas
+  para baixo não invalida nenhuma, porque a chave não carrega o índice.
+  limite de memória: orçamento em bytes (texto mais clusters de cada
+  entrada), com despejo da menos usada. fica no engine e não no editor
+  porque o que se repete é o shaping dentro do `clusters_styled`, e o
+  editor não consegue guardar o `VisualLine` entre frames (ele empresta o
+  texto e mora em `form/`, fora dos arquivos permitidos). o `TextField`
+  ganha o mesmo cache sem mudar nada. o cache do desenho
+  (`TextSystem`) continua como está.
+- abrir: `Document::load` deixa de copiar o texto quando não há `\r`.
+
+### (c) o que o rope já dá
+
+o rope é o ropey 1.6, uma árvore B com contagem de linhas nos nós:
+`line(n)`, `line_to_byte` e `byte_to_line` são O(log n) e `len_lines` é
+O(1). uma edição é uma `Transaction` (`crates/rope/src/transaction.rs:91-105`):
+para cada trecho, `byte_to_char`, `remove` e `insert`, todos O(log n). o
+inverso guarda só o texto removido (`transaction.rs:110-124`), e o
+histórico guarda a transação e o inverso, sem cópia do documento. inserir
+e apagar um caractere na linha 500 mil não custa nada linear; o benchmark
+confirma (a coluna de edição é a mesma com 10 mil e com um milhão).
+
+### como reproduzir
+
+```sh
+export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
+cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+```
