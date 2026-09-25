@@ -262,15 +262,39 @@ pub fn render(
     )
 }
 
+/// [`render`] with the frame's `TextSystem` holding `faces`:
+/// `Faces::Embedded` draws, on a desktop, what wasm and mobile draw.
+pub fn render_with(
+    faces: Faces,
+    specimens: &[Specimen],
+    logical_w: u32,
+    logical_h: u32,
+    raster_scale: f32,
+) -> Option<Rendered> {
+    super::fonts::with_text_system_faces(faces.set(), || {
+        render(specimens, logical_w, logical_h, raster_scale)
+    })
+}
+
 /// The faces a run is shaped against.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Faces {
     /// The embedded faces alone: what wasm, android and ios shape with.
     Embedded,
-    /// The embedded faces over this machine's system fonts: what the
-    /// desktop `TextSystem` and `TextMeasurer` shape with. The result
-    /// depends on the fonts installed here.
+    /// What this target's `TextSystem` and `TextMeasurer` shape with: on a
+    /// desktop the embedded faces over this machine's system fonts (the
+    /// result depends on the fonts installed here), elsewhere the same as
+    /// `Embedded`.
     Desktop,
+}
+
+impl Faces {
+    fn set(self) -> super::fonts::FaceSet {
+        match self {
+            Faces::Embedded => super::fonts::FaceSet::Embedded,
+            Faces::Desktop => super::fonts::FaceSet::Target,
+        }
+    }
 }
 
 /// One glyph of a shaped run, as the layout places it.
@@ -334,16 +358,11 @@ struct AuditFonts {
 
 impl AuditFonts {
     fn new(faces: Faces) -> Self {
-        let mut system = match faces {
-            Faces::Embedded => {
-                FontSystem::new_with_locale_and_db("en-US".to_string(), fontdb::Database::new())
-            }
-            Faces::Desktop => FontSystem::new(),
-        };
-        let embedded = super::fonts::register_embedded_fonts(system.db_mut())
-            .into_iter()
-            .collect();
-        Self { system, embedded }
+        let (system, embedded) = super::fonts::font_system(faces.set());
+        Self {
+            system,
+            embedded: embedded.into_iter().collect(),
+        }
     }
 }
 

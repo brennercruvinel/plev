@@ -111,24 +111,9 @@ impl MeasureContext {
 }
 
 fn new_font_system() -> FontSystem {
-    #[cfg(all(
-        not(target_arch = "wasm32"),
-        not(target_os = "android"),
-        not(target_os = "ios")
-    ))]
-    let mut font_system = FontSystem::new();
-
-    #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-    let mut font_system = {
-        let db = cosmic_text::fontdb::Database::new();
-        FontSystem::new_with_locale_and_db("en-US".to_string(), db)
-    };
-
     // Exactly the faces TextSystem::new registers, so measurements match
     // what is rasterized regardless of installed system fonts.
-    super::fonts::register_embedded_fonts(font_system.db_mut());
-
-    font_system
+    super::fonts::font_system(super::fonts::FaceSet::Target).0
 }
 
 fn attrs_for(style: &TextStyle) -> Attrs<'_> {
