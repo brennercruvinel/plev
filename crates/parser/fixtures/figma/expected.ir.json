@@ -1,0 +1,624 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "settings",
+    "title": "settings",
+    "root": {
+      "sem": "settings.root",
+      "props": {
+        "shape": "pill"
+      },
+      "size": {
+        "min": "modal_max_w",
+        "max": "modal_max_w"
+      },
+      "children": [
+        {
+          "sem": "settings.root.status_bar",
+          "layout": {
+            "stack": {
+              "axis": "horizontal"
+            }
+          },
+          "size": {
+            "min": "modal_max_w",
+            "max": "modal_max_w"
+          },
+          "children": [
+            {
+              "sem": "settings.root.status_bar.time",
+              "size": {
+                "min": "field_min_w",
+                "max": "field_min_w"
+              },
+              "children": [
+                {
+                  "sem": "settings.root.status_bar.time.time",
+                  "component": "text",
+                  "label": "9:41",
+                  "props": {
+                    "color": "text"
+                  }
+                }
+              ]
+            },
+            {
+              "sem": "settings.root.status_bar.levels",
+              "size": {
+                "min": "field_min_w",
+                "max": "field_min_w"
+              },
+              "children": [
+                {
+                  "sem": "settings.root.status_bar.levels.connection_levels",
+                  "size": {
+                    "min": "sidebar_rail_w",
+                    "max": "sidebar_rail_w"
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.status_bar.levels.connection_levels.battery",
+                      "children": [
+                        {
+                          "sem": "settings.root.status_bar.levels.connection_levels.battery.border"
+                        },
+                        {
+                          "sem": "settings.root.status_bar.levels.connection_levels.battery.capacity",
+                          "props": {
+                            "background": "text"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "sem": "settings.root.frame_2147223349",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "align": "center"
+            }
+          },
+          "size": {
+            "min": "card_w",
+            "max": "card_w"
+          },
+          "children": [
+            {
+              "sem": "settings.root.frame_2147223349.frame_2147224273",
+              "props": {
+                "padding": "sm"
+              },
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "align": "center"
+                }
+              },
+              "size": {
+                "min": "sidebar_rail_w",
+                "max": "sidebar_rail_w"
+              },
+              "children": [
+                {
+                  "sem": "settings.root.frame_2147223349.frame_2147224273.arrow_left_02"
+                }
+              ]
+            },
+            {
+              "sem": "settings.root.frame_2147223349.title",
+              "component": "text",
+              "label": "Settings",
+              "props": {
+                "color": "text"
+              }
+            },
+            {
+              "sem": "settings.root.frame_2147223349.trailing",
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "align": "start"
+                }
+              },
+              "children": [
+                {
+                  "sem": "settings.root.frame_2147223349.trailing.badge",
+                  "props": {
+                    "padding": "xs"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "xs",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147223349.trailing.badge.icon",
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147223349.trailing.badge.icon.star_pro"
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147223349.trailing.badge.p_r_o",
+                      "component": "text",
+                      "label": "PRO",
+                      "props": {
+                        "color": "text"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "sem": "settings.root.frame_2147224297",
+          "props": {
+            "padding": "sm"
+          },
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "gap": "sm",
+              "align": "center"
+            }
+          },
+          "size": {
+            "min": "card_w",
+            "max": "card_w"
+          },
+          "children": [
+            {
+              "sem": "settings.root.frame_2147224297.type_logo_default_component_logo",
+              "size": {
+                "min": "sidebar_rail_w",
+                "max": "sidebar_rail_w"
+              }
+            },
+            {
+              "sem": "settings.root.frame_2147224297.ur_a_i_pro",
+              "component": "text",
+              "label": "UrAI Pro",
+              "props": {
+                "typography": "base_2m",
+                "color": "text"
+              }
+            },
+            {
+              "sem": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+              "component": "text",
+              "label": "Unlock limitless image creation, all styles, and more experience.",
+              "props": {
+                "color": "text"
+              }
+            },
+            {
+              "sem": "settings.root.frame_2147224297.tab_button_base",
+              "props": {
+                "padding": "sm"
+              },
+              "layout": {
+                "stack": {
+                  "axis": "horizontal",
+                  "align": "center"
+                }
+              },
+              "size": {
+                "min": "toast_w",
+                "max": "toast_w"
+              },
+              "children": [
+                {
+                  "sem": "settings.root.frame_2147224297.tab_button_base.text",
+                  "component": "text",
+                  "label": "Upgrade Now",
+                  "props": {
+                    "typography": "base_2m"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "sem": "settings.root.frame_2147224275",
+          "layout": {
+            "stack": {
+              "axis": "vertical",
+              "align": "stretch"
+            }
+          },
+          "size": {
+            "min": "card_w",
+            "max": "card_w"
+          },
+          "children": [
+            {
+              "sem": "settings.root.frame_2147224275.frame_2147224240",
+              "layout": {
+                "stack": {
+                  "axis": "vertical",
+                  "gap": "sm",
+                  "align": "stretch"
+                }
+              },
+              "children": [
+                {
+                  "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234",
+                  "props": {
+                    "padding": "md"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236",
+                      "props": {
+                        "padding": "sm",
+                        "shape": "dropdown"
+                      },
+                      "layout": {
+                        "stack": {
+                          "axis": "horizontal",
+                          "align": "center"
+                        }
+                      },
+                      "size": {
+                        "min": "sidebar_rail_w",
+                        "max": "sidebar_rail_w"
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02",
+                          "children": [
+                            {
+                              "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02.elements"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233",
+                      "layout": {
+                        "stack": {
+                          "axis": "vertical",
+                          "align": "start"
+                        }
+                      },
+                      "size": {
+                        "flex": 1
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+                          "component": "text",
+                          "label": "Notifications",
+                          "props": {
+                            "typography": "base_m",
+                            "color": "text"
+                          }
+                        },
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply",
+                          "component": "text",
+                          "label": "Lorem Ipsum is simply",
+                          "props": {
+                            "typography": "caption_r"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235",
+                  "props": {
+                    "padding": "md"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237",
+                      "props": {
+                        "padding": "sm",
+                        "shape": "dropdown"
+                      },
+                      "layout": {
+                        "stack": {
+                          "axis": "horizontal",
+                          "align": "center"
+                        }
+                      },
+                      "size": {
+                        "min": "sidebar_rail_w",
+                        "max": "sidebar_rail_w"
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01",
+                          "children": [
+                            {
+                              "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01.elements"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238",
+                      "layout": {
+                        "stack": {
+                          "axis": "vertical",
+                          "align": "start"
+                        }
+                      },
+                      "size": {
+                        "flex": 1
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+                          "component": "text",
+                          "label": "Share",
+                          "props": {
+                            "typography": "base_m",
+                            "color": "text"
+                          }
+                        },
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply",
+                          "component": "text",
+                          "label": "Lorem Ipsum is simply",
+                          "props": {
+                            "typography": "caption_r"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236",
+                  "props": {
+                    "padding": "md"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237",
+                      "props": {
+                        "padding": "sm",
+                        "shape": "dropdown"
+                      },
+                      "layout": {
+                        "stack": {
+                          "axis": "horizontal",
+                          "align": "center"
+                        }
+                      },
+                      "size": {
+                        "min": "sidebar_rail_w",
+                        "max": "sidebar_rail_w"
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off",
+                          "children": [
+                            {
+                              "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off.elements"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238",
+                      "layout": {
+                        "stack": {
+                          "axis": "vertical",
+                          "align": "start"
+                        }
+                      },
+                      "size": {
+                        "flex": 1
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+                          "component": "text",
+                          "label": "Restore Purchase",
+                          "props": {
+                            "typography": "base_m",
+                            "color": "text"
+                          }
+                        },
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply",
+                          "component": "text",
+                          "label": "Lorem Ipsum is simply",
+                          "props": {
+                            "typography": "caption_r"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237",
+                  "props": {
+                    "padding": "md"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237",
+                      "props": {
+                        "padding": "sm",
+                        "shape": "dropdown"
+                      },
+                      "layout": {
+                        "stack": {
+                          "axis": "horizontal",
+                          "align": "center"
+                        }
+                      },
+                      "size": {
+                        "min": "sidebar_rail_w",
+                        "max": "sidebar_rail_w"
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left",
+                          "children": [
+                            {
+                              "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left.elements"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238",
+                      "layout": {
+                        "stack": {
+                          "axis": "vertical",
+                          "align": "start"
+                        }
+                      },
+                      "size": {
+                        "flex": 1
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+                          "component": "text",
+                          "label": "Terms of Service",
+                          "props": {
+                            "typography": "base_m",
+                            "color": "text"
+                          }
+                        },
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply",
+                          "component": "text",
+                          "label": "Lorem Ipsum is simply",
+                          "props": {
+                            "typography": "caption_r"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238",
+                  "props": {
+                    "padding": "md"
+                  },
+                  "layout": {
+                    "stack": {
+                      "axis": "horizontal",
+                      "gap": "md",
+                      "align": "center"
+                    }
+                  },
+                  "children": [
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237",
+                      "props": {
+                        "padding": "sm",
+                        "shape": "dropdown"
+                      },
+                      "layout": {
+                        "stack": {
+                          "axis": "horizontal",
+                          "align": "center"
+                        }
+                      },
+                      "size": {
+                        "min": "sidebar_rail_w",
+                        "max": "sidebar_rail_w"
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237.document_validation"
+                        }
+                      ]
+                    },
+                    {
+                      "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238",
+                      "layout": {
+                        "stack": {
+                          "axis": "vertical",
+                          "align": "start"
+                        }
+                      },
+                      "size": {
+                        "flex": 1
+                      },
+                      "children": [
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+                          "component": "text",
+                          "label": "Privacy Policy",
+                          "props": {
+                            "typography": "base_m",
+                            "color": "text"
+                          }
+                        },
+                        {
+                          "sem": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply",
+                          "component": "text",
+                          "label": "Lorem Ipsum is simply",
+                          "props": {
+                            "typography": "caption_r"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

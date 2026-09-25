@@ -1,0 +1,116 @@
+{
+  "plev_ir": 1,
+  "surface": {
+    "id": "note_card",
+    "title": "Note card",
+    "root": {
+      "sem": "note_card.root",
+      "props": {
+        "padding": "lg",
+        "background": "surface",
+        "shape": "pill"
+      },
+      "layout": {
+        "stack": {
+          "axis": "vertical",
+          "gap": "sm"
+        }
+      },
+      "size": {
+        "min": "card_w",
+        "max": "card_w"
+      },
+      "children": [
+        {
+          "sem": "note_card.root.meta",
+          "component": "text",
+          "label": "Field note",
+          "props": {
+            "typography": "caption_r",
+            "color": "text_mid"
+          }
+        },
+        {
+          "sem": "note_card.root.title",
+          "component": "text",
+          "label": "Tokens over literals",
+          "props": {
+            "typography": "title",
+            "color": "text"
+          }
+        },
+        {
+          "sem": "note_card.root.content",
+          "component": "text",
+          "label": "Every value a widget draws comes from the theme.",
+          "props": {
+            "typography": "base_r",
+            "color": "text_mid"
+          }
+        },
+        {
+          "sem": "note_card.root.actions",
+          "layout": {
+            "stack": {
+              "axis": "horizontal",
+              "gap": "md",
+              "align": "center"
+            }
+          },
+          "children": [
+            {
+              "sem": "note_card.root.actions.reply",
+              "component": "text_field",
+              "label": "Reply",
+              "bind": {
+                "actions": {
+                  "set_value": {
+                    "target": "note_card.props",
+                    "action": "reply"
+                  }
+                }
+              }
+            },
+            {
+              "sem": "note_card.root.actions.open",
+              "component": "button",
+              "label": "Open",
+              "bind": {
+                "actions": {
+                  "activate": {
+                    "target": "note_card.props",
+                    "action": "open"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "sem": "note_card.root.badge",
+          "component": "text",
+          "label": "New",
+          "props": {
+            "typography": "caption_r",
+            "color": "text"
+          }
+        },
+        {
+          "sem": "note_card.root.tags",
+          "children": [
+            {
+              "sem": "note_card.root.tags.text",
+              "component": "text",
+              "label": "ui"
+            },
+            {
+              "sem": "note_card.root.tags.text_2",
+              "component": "text",
+              "label": "ir"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

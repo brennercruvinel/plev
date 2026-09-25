@@ -33,6 +33,17 @@ fn attr<'a>(p: &'a ParserNode, name: &str) -> Option<&'a AttrValue> {
         .map(|a| &a.value)
 }
 
+/// The attribute `name` as the source writes it (`onClick={onOpen}`,
+/// `onclick="open()"`).
+fn written(p: &ParserNode, name: &str) -> String {
+    p.origin
+        .attrs
+        .iter()
+        .find(|a| a.name == name)
+        .map(|a| a.src.what.clone())
+        .unwrap_or_else(|| name.to_string())
+}
+
 fn attr_text(p: &ParserNode, name: &str) -> Option<String> {
     match attr(p, name)? {
         AttrValue::Text(t) if !t.trim().is_empty() => Some(t.clone()),
@@ -208,8 +219,11 @@ impl Cx<'_> {
         }
         self.label_children(p, id);
         let why = match handler {
-            Some(AttrValue::Ident(h)) => {
-                format!("`onClick={{{h}}}`: the app's action behind the handler")
+            Some(AttrValue::Ident(_)) => {
+                format!(
+                    "`{}`: the app's action behind the handler",
+                    written(p, "onClick")
+                )
             }
             Some(_) => "an inline onClick: the app's action, named after the label".into(),
             None => "a <button> with no handler: the source does not say what it does".into(),
@@ -267,6 +281,64 @@ impl Cx<'_> {
                 _ => self.lost_subtree(child, "a control holds no children in the IR"),
             }
         }
+    }
+
+    /// An `<img>`: the `image` component named by its `alt` (or, with
+    /// none, by its class, approximated), sized as a container is. The IR
+    /// carries no picture: `src` is reported as impossible.
+    pub(super) fn image(&mut self, p: &ParserNode, id: &str) -> Result<IrNode, ParserError> {
+        let mut node = self.new_node(id)?;
+        node.component = Some(Component::Image);
+        let alt = attr_text(p, "alt");
+        let name = sanitize(&snake_case(&p.origin.name), "image");
+        node.label = Some(alt.clone().unwrap_or_else(|| name.clone()));
+        self.origin_entries(p, id, Verdict::Transformed {
+            ir: "component image".into(),
+            rule: "an <img> is the image component, role image: its place, size and name, never its pixels".into(),
+        });
+        if alt.is_none()
+            && let Some(at) = p.origin.src.clone()
+        {
+            self.ledger.add(
+                &at,
+                Some(id),
+                Verdict::Approximated {
+                    ir: "label".into(),
+                    difference: format!(
+                        "an image with no alt text is named `{name}`, after its class"
+                    ),
+                },
+            );
+        }
+        self.attrs(
+            p,
+            id,
+            &[
+                (
+                    "alt",
+                    Verdict::Transformed {
+                        ir: "label".into(),
+                        rule: "the alt text names the image".into(),
+                    },
+                ),
+                (
+                    "src",
+                    Verdict::Impossible {
+                        reason: "the IR carries no image data: the picture is the app's".into(),
+                    },
+                ),
+            ],
+        );
+        let c = super::props::container(&p.props, self.tokens);
+        node.props = c.props;
+        node.size = c.size;
+        for d in &c.decisions {
+            self.decided(d, id);
+        }
+        for child in &p.children {
+            self.lost_subtree(child, "an image holds no children in the IR");
+        }
+        Ok(node)
     }
 
     fn field(&mut self, p: &ParserNode, id: &str) -> Result<IrNode, ParserError> {
@@ -356,8 +428,11 @@ impl Cx<'_> {
             self.lost_subtree(child, "a control holds no children in the IR");
         }
         let why = match handler {
-            Some(AttrValue::Ident(h)) => {
-                format!("`onChange={{{h}}}`: the app's action behind the handler")
+            Some(AttrValue::Ident(_)) => {
+                format!(
+                    "`{}`: the app's action behind the handler",
+                    written(p, "onChange")
+                )
             }
             Some(_) => "an inline onChange: the app's action, named after the field".into(),
             None => {

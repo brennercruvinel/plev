@@ -374,8 +374,13 @@ pub(crate) fn spacing(v: f32, t: &Tokens) -> Option<(SpacingToken, Near<SpacingT
 /// The spacings between consecutive children of a stack (0 where the
 /// rewrite put no spacer), each with the declarations behind it -> the
 /// stack's one gap, the smallest spacing's token, so the IR never adds room
-/// the source does not have.
-pub(crate) fn gap(pairs: &[(f32, Vec<Src>)], t: &Tokens) -> (Option<SpacingToken>, Vec<Decision>) {
+/// the source does not have. `what` names the spacing in the rule (the
+/// margin below a child, a flex gap).
+pub(crate) fn gap(
+    pairs: &[(f32, Vec<Src>)],
+    what: &str,
+    t: &Tokens,
+) -> (Option<SpacingToken>, Vec<Decision>) {
     if pairs.iter().all(|(_, s)| s.is_empty()) {
         return (None, Vec::new());
     }
@@ -414,7 +419,7 @@ pub(crate) fn gap(pairs: &[(f32, Vec<Src>)], t: &Tokens) -> (Option<SpacingToken
             let verdict = if *h == tv {
                 Verdict::Transformed {
                     ir: ir.clone(),
-                    rule: format!("the margin below a child is the stack's gap, {name}"),
+                    rule: format!("{what} is the stack's gap, {name}"),
                 }
             } else {
                 Verdict::Approximated {
@@ -438,6 +443,9 @@ pub(crate) struct Container {
     pub size: Size,
     pub row: bool,
     pub align: Option<Align>,
+    /// A `gap(v)`, with its constructs: decided with the children, by the
+    /// container (`emit_ir::Cx::container`).
+    pub gap: Option<(f32, Vec<Src>)>,
     pub decisions: Vec<Decision>,
 }
 
@@ -447,6 +455,12 @@ pub(crate) fn container(props: &[Prop], t: &Tokens) -> Container {
     let mut sides = Sides::default();
     for p in props {
         if sides.set(p) {
+            continue;
+        }
+        if p.name == "gap"
+            && let Some(v) = length(p.args.first(), t)
+        {
+            out.gap = Some((v, p.src.clone()));
             continue;
         }
         let d = match p.name {
@@ -459,6 +473,14 @@ pub(crate) fn container(props: &[Prop], t: &Tokens) -> Container {
                 out.align = Some(Align::Center);
                 decide(&p.src, supported("layout.stack.align = center"))
             }
+            "align_items" => match align(p.args.first()) {
+                Some(a) => {
+                    out.align = Some(a);
+                    let ir = format!("layout.stack.align = {}", a.as_str());
+                    decide(&p.src, supported(ir))
+                }
+                None => decide(&p.src, impossible(lost("align_items"))),
+            },
             "grow" => {
                 let (v, d) = flex(p);
                 out.size.flex = v;
@@ -495,6 +517,20 @@ pub(crate) fn container(props: &[Prop], t: &Tokens) -> Container {
     out.props.padding = padding;
     out.decisions.extend(d);
     out
+}
+
+/// `Align::Start` (the builder's) -> the stack's align.
+fn align(arg: Option<&Arg>) -> Option<Align> {
+    let Some(Arg::Token(e)) = arg else {
+        return None;
+    };
+    match e.strip_prefix("Align::")? {
+        "Start" => Some(Align::Start),
+        "Center" => Some(Align::Center),
+        "End" => Some(Align::End),
+        "Stretch" => Some(Align::Stretch),
+        _ => None,
+    }
 }
 
 /// Every prop of a text run: its style and its color.
@@ -633,15 +669,16 @@ mod tests {
 
     #[test]
     fn gaps_take_the_smallest_spacing() {
-        let (g, d) = gap(&[(8.0, vec![src(1)]), (24.0, vec![src(2)])], &t());
+        let what = "the margin below a child";
+        let (g, d) = gap(&[(8.0, vec![src(1)]), (24.0, vec![src(2)])], what, &t());
         assert_eq!(g, Some(SpacingToken::Sm));
         assert_eq!(d[0].verdict.category(), Category::Transformed);
         assert_eq!(d[1].verdict.category(), Category::Approximated);
-        let (g, d) = gap(&[(8.0, vec![src(1)]), (0.0, vec![])], &t());
+        let (g, d) = gap(&[(8.0, vec![src(1)]), (0.0, vec![])], what, &t());
         assert_eq!(g, None);
         assert_eq!(d.len(), 1);
         assert_eq!(d[0].verdict.category(), Category::Impossible);
-        assert_eq!(gap(&[(0.0, vec![])], &t()).0, None);
+        assert_eq!(gap(&[(0.0, vec![])], what, &t()).0, None);
     }
 
     #[test]

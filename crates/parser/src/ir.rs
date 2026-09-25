@@ -191,6 +191,9 @@ pub enum DropKind {
     Lost,
     /// A documented rewrite carries its effect (`why` names the rewrite).
     Rewritten,
+    /// A documented rule carries something close to it (`why` says the
+    /// difference): the Figma position rule (task-71 phase 2).
+    Approximated,
 }
 
 impl Dropped {
@@ -206,6 +209,12 @@ impl Dropped {
     /// The entry of a construct a documented rewrite replaced.
     pub fn rewritten(mut self) -> Self {
         self.kind = DropKind::Rewritten;
+        self
+    }
+    /// The entry of a construct a documented rule carries approximately;
+    /// `why` is the difference.
+    pub fn approximated(mut self) -> Self {
+        self.kind = DropKind::Approximated;
         self
     }
     /// The entry also answers for `sites`.

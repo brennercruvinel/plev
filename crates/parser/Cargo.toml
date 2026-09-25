@@ -17,6 +17,10 @@ thiserror.workspace = true
 # report's JSON form.
 uir.workspace = true
 serde_json.workspace = true
+# task-71 phase 2: the HTML/CSS subset importer reads HTML and CSS with
+# their tree-sitter grammars (html.rs), pinned as approved.
+tree-sitter-html = "=0.23.2"
+tree-sitter-css = "=0.25.0"
 
 [dev-dependencies]
 # janela do preview ao vivo (examples/preview.rs)
