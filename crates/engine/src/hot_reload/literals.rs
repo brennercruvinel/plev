@@ -22,6 +22,10 @@
 //! `span-locations`), so a text in the window leads back to the literal
 //! that holds it ([`sites_of`]). A file saved with only literals, comments
 //! or whitespace changed keeps its positions as they are on disk now.
+//!
+//! The way back ([`write`]): a text the person typed over a literal in the
+//! window replaces exactly that literal in its file, only while the file's
+//! code is still the baseline's, and is then applied as any save is.
 
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -36,6 +40,9 @@ use rustc_hash::FxHasher;
 use super::Site;
 use crate::color::Color;
 use crate::compositor::SceneNode;
+
+mod write;
+pub use write::{Refused, write};
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum Lit {
@@ -298,7 +305,7 @@ pub fn apply_change(path: &Path) -> Change {
         base.insert(path.to_path_buf(), now);
         return Change::Code;
     };
-    if before.skeleton != now.skeleton || before.lits.len() != now.lits.len() {
+    if !same_code(before, &now) {
         return Change::Code;
     }
     let delta: Vec<(Lit, Lit)> = before
@@ -308,9 +315,6 @@ pub fn apply_change(path: &Path) -> Change {
         .filter(|(a, b)| a != b)
         .map(|(a, b)| (a.clone(), b.clone()))
         .collect();
-    if delta.iter().any(|(a, _)| matches!(a, Lit::Other(_))) {
-        return Change::Code;
-    }
     let n = delta.len();
     let mut deltas = DELTAS.lock().unwrap_or_else(|e| e.into_inner());
     let was = deltas.get(path).map_or(0, Vec::len);
@@ -329,6 +333,19 @@ pub fn apply_change(path: &Path) -> Change {
     } else {
         Change::Literals(n)
     }
+}
+
+/// `now` differs from `before` in strings and hex colors at most: the same
+/// skeleton, as many literals, every other literal (numbers, chars, bytes)
+/// as it was. Anything else is code, which only the compiler applies.
+fn same_code(before: &Snapshot, now: &Snapshot) -> bool {
+    before.skeleton == now.skeleton
+        && before.lits.len() == now.lits.len()
+        && before
+            .lits
+            .iter()
+            .zip(&now.lits)
+            .all(|(a, b)| !matches!(a, Lit::Other(_)) || a == b)
 }
 
 /// Every string literal whose value is `text`, ordered by file, line and
