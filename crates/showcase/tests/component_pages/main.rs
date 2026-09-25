@@ -20,3 +20,7 @@ mod harness;
 
 /// Buttons: a press, and the focus a reader leaves.
 mod buttons;
+
+/// Toggles and values: a checkbox, a switch, a chip, a slider, a field, a
+/// select.
+mod values;

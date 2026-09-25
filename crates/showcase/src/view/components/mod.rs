@@ -52,6 +52,15 @@ pub(crate) fn root_id(name: &str) -> Option<SemId> {
         .ok()
 }
 
+/// The key of `id` under `parent` (`3` for `<parent>[3]`), which the
+/// comps gives the children it projects; `None` for any other id.
+pub(crate) fn key_under<'a>(parent: &SemId, id: &'a SemId) -> Option<&'a str> {
+    id.as_str()
+        .strip_prefix(parent.as_str())?
+        .strip_prefix('[')?
+        .strip_suffix(']')
+}
+
 /// `<root>.<name>`, a widget's id or the stem of a keyed family of them;
 /// `None` without a root, or, logged, when the name does not parse.
 pub(crate) fn child_id(root: Option<&SemId>, name: &str) -> Option<SemId> {

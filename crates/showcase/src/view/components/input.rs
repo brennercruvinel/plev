@@ -2,25 +2,51 @@
 //! live value preview line. The page owns the keyboard focus: a click in
 //! a field places the caret, Tab cycles the fields, Escape blurs; the
 //! characters and editing keys the shell forwards go to the focused one.
+//!
+//! Projected (task-75 phase 2b): each field, `input_page.field[<i>]`, as the
+//! comps projects it, named by its placeholder; `set_value` puts its text
+//! as typing would. The preview line is a label, `input_page.preview`. The
+//! focus a reader asks for is the page's own (the caret).
 
 use comps::form::TextField;
 use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
+use sem::{Request, Role, SemId, SnapshotBuilder, Value};
 
-use super::{EditKey, text};
+use super::{After, Component, EditKey, child_id, root_id, text, under};
 
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
 
+/// What each field asks for: its placeholder and its name.
+const LABELS: [&str; COUNT] = ["Full name", "Email address", "Project codename"];
+
 pub struct InputPage {
+    root: Option<SemId>,
     fields: [TextField; COUNT],
 }
 
 impl InputPage {
     pub fn new() -> Self {
-        let fields = ["Full name", "Email address", "Project codename"].map(TextField::new);
-        Self { fields }
+        let root = root_id("input_page");
+        let family = child_id(root.as_ref(), "field");
+        let mut i = 0;
+        let fields = LABELS.map(|label| {
+            let field = TextField::new(label);
+            let id = family.as_ref().map(|f| f.key(i.to_string()));
+            i += 1;
+            match id {
+                Some(id) => field.sem(id),
+                None => field,
+            }
+        });
+        Self { root, fields }
+    }
+
+    /// The field behind `id`.
+    fn at(&self, id: &SemId) -> Option<usize> {
+        self.fields.iter().position(|f| f.sem_id() == Some(id))
     }
 
     /// Field rects stacked under the content's top-left, `field_max_w`
@@ -160,6 +186,51 @@ impl InputPage {
             last.y + last.h + theme.spacing.sm,
             theme.colors.text_dim.0,
         );
+    }
+}
+
+impl Component for InputPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (field, label) in self.fields.iter().zip(LABELS) {
+            if let Some(id) = field.sem_id() {
+                field.project(b, id, label, Some(root));
+            }
+        }
+        if let Some(preview) = child_id(Some(root), "preview") {
+            b.node(&preview, Role::Label, self.preview()).parent(root);
+        }
+        let focused = self.focused().and_then(|i| self.fields.get(i));
+        if let Some(id) = focused.and_then(TextField::sem_id) {
+            b.focus(id);
+        }
+    }
+
+    /// A field's `set_value` puts its text, as typing it would.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        match (self.at(&req.target), req.action.as_str(), &req.param) {
+            (Some(i), "set_value", Some(Value::Text(text))) => {
+                self.fields[i].set_text(text);
+                Ok(After::Nothing)
+            }
+            _ => Err(format!(
+                "the input page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    /// A field takes the page's focus (its caret); another node of the page
+    /// takes it from the fields.
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        self.set_focused(self.at(id));
+        true
     }
 }
 

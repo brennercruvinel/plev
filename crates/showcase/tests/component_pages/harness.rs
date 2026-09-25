@@ -10,7 +10,7 @@ use comps::prelude::WidgetEvent;
 use engine::accessibility::accesskit::{Action, ActionData, ActionRequest, TreeId, TreeUpdate};
 use engine::accessibility::{self, Assist, Chrome, Shown};
 use engine::compositor::Compositor;
-use sem::{ActionName, Node, SemId, Stage, Value};
+use sem::{ActionName, Node, SemId, Stage, StateRef, Value};
 use showcase::view::ShowcaseView;
 use wire::{Act, AgentPort, Client, Config, Observe, Reply};
 
@@ -55,11 +55,24 @@ impl Gallery {
         snapshot.nodes().values().cloned().collect()
     }
 
+    pub(crate) fn value(&self, at: &str) -> Option<Value> {
+        let at = StateRef::parse(at).unwrap_or_else(|e| panic!("{at}: {e}"));
+        self.view.semantics()?.value(&at).cloned()
+    }
+
     /// The person clicks the middle of where `id` is bound.
     pub(crate) fn click(&mut self, id: &str) {
         let (x, y) = self.middle(id);
         self.view.handle_event(&WidgetEvent::MouseDown { x, y });
         self.view.handle_event(&WidgetEvent::MouseUp { x, y });
+        self.frame();
+    }
+
+    /// The person types `text` into what has the keys.
+    pub(crate) fn type_in(&mut self, text: &str) {
+        for ch in text.chars() {
+            assert!(self.view.handle_key(&ch.to_string()), "{ch} is taken");
+        }
         self.frame();
     }
 
@@ -121,6 +134,14 @@ pub(crate) fn ask(target: &'static str, action: &'static str) -> Ask {
         target,
         action,
         param: None,
+    }
+}
+
+pub(crate) fn ask_with(target: &'static str, action: &'static str, param: Value) -> Ask {
+    Ask {
+        target,
+        action,
+        param: Some(param),
     }
 }
 

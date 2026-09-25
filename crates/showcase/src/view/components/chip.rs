@@ -1,28 +1,55 @@
-//! Chip page: selected, per intent, and one interactive chip that
-//! toggles on click.
+//! Chip page: selected, per intent, and one chip that toggles on click
+//! (a filter chip, `selectable`: the widget flips itself).
+//!
+//! Projected (task-75 phase 2b): each chip, `chip_page.chip[<i>]`, as the
+//! comps projects it: the tags are labels, the last one a toggle whose
+//! `toggle` flips it as a click does.
 
 use comps::prelude::{Chip, EventResult, Rect, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::{Intent, Theme};
+use sem::{Request, SemId, SnapshotBuilder};
 
-use super::flow;
+use super::{After, Component, child_id, flow, root_id, under};
 
 pub struct ChipPage {
+    root: Option<SemId>,
     chips: Vec<Chip>,
+    /// The chip a screen reader focused (a chip draws no ring); Escape or
+    /// a click lets it go.
+    focus: Option<usize>,
 }
 
 impl ChipPage {
     pub fn new() -> Self {
+        let root = root_id("chip_page");
+        let family = child_id(root.as_ref(), "chip");
+        let chips = vec![
+            Chip::new("exact"),
+            Chip::new("ann").selected(true),
+            Chip::new("bm25").intent(Intent::Constructive),
+            Chip::new("missing").intent(Intent::Destructive),
+            Chip::new("beta").intent(Intent::Informational),
+            Chip::new("click me").selectable(true),
+        ];
+        let chips = chips
+            .into_iter()
+            .enumerate()
+            .map(|(i, c)| match &family {
+                Some(f) => c.sem(f.key(i.to_string())),
+                None => c,
+            })
+            .collect();
         Self {
-            chips: vec![
-                Chip::new("exact"),
-                Chip::new("ann").selected(true),
-                Chip::new("bm25").intent(Intent::Constructive),
-                Chip::new("missing").intent(Intent::Destructive),
-                Chip::new("beta").intent(Intent::Informational),
-                Chip::new("click me").interactive(true),
-            ],
+            root,
+            chips,
+            focus: None,
         }
+    }
+
+    /// The chip behind `id`.
+    fn at(&self, id: &SemId) -> Option<usize> {
+        self.chips.iter().position(|c| c.sem_id() == Some(id))
     }
 
     /// The interactive chip's state, for the tests.
@@ -52,10 +79,12 @@ impl ChipPage {
     ) -> EventResult {
         let (rects, _) = self.layout(content, theme);
         let mut result = EventResult::IGNORED;
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.blur() {
+            result = EventResult::changed();
+        }
         for (chip, rect) in self.chips.iter_mut().zip(rects) {
             let r = chip.handle_event(event, rect);
             if r.clicked {
-                chip.selected = !chip.selected;
                 return EventResult::clicked();
             }
             result = result.merge(r);
@@ -68,6 +97,50 @@ impl ChipPage {
         for (chip, rect) in self.chips.iter().zip(rects) {
             chip.render(c, rect, theme);
         }
+    }
+}
+
+impl Component for ChipPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for chip in &self.chips {
+            if let Some(id) = chip.sem_id() {
+                chip.project(b, id, Some(root));
+            }
+        }
+        let focused = self.focus.and_then(|i| self.chips.get(i));
+        if let Some(id) = focused.and_then(Chip::sem_id) {
+            b.focus(id);
+        }
+    }
+
+    /// A filter chip's `toggle` flips it, as its click does.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        match (self.at(&req.target), req.action.as_str()) {
+            (Some(i), "toggle") if self.chips[i].selectable => {
+                self.chips[i].selected = !self.chips[i].selected;
+                Ok(After::Nothing)
+            }
+            _ => Err(format!(
+                "the chip page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        self.focus = self.at(id).filter(|i| self.chips[*i].selectable);
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        self.focus.take().is_some()
     }
 }
 

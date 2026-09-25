@@ -1,27 +1,56 @@
 //! Slider page: continuous, stepped and disabled, with the live value
 //! beside each. Tab moves the focus ring over the enabled ones.
+//!
+//! Projected (task-75 phase 2b): each slider, `slider_page.slider[<i>]`, as
+//! the comps projects it ("continuous", "stepped", "disabled"): `set_value`
+//! moves it where a drag would, and the stepped one also takes
+//! `increment` and `decrement`. The focus a reader asks for is the page's
+//! own (the ring Tab moves).
 
 use comps::prelude::{EventResult, Rect, Slider, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::{ControlSize, Theme};
+use sem::{Request, SemId, SnapshotBuilder, Value};
 
-use super::{EditKey, Focus, text};
+use super::{After, Component, EditKey, Focus, child_id, root_id, text, under};
+
+/// What each slider is called: what the page shows it for.
+const LABELS: [&str; 3] = ["continuous", "stepped", "disabled"];
 
 pub struct SliderPage {
+    root: Option<SemId>,
     sliders: [Slider; 3],
     focus: Focus,
 }
 
 impl SliderPage {
     pub fn new() -> Self {
+        let root = root_id("slider_page");
+        let family = child_id(root.as_ref(), "slider");
+        let sliders = [
+            Slider::new(0.0, 100.0, 65.0),
+            Slider::new(0.0, 10.0, 4.0).step(1.0),
+            Slider::new(0.0, 100.0, 30.0).disabled(true),
+        ];
+        let mut i = 0;
+        let sliders = sliders.map(|s| {
+            let id = family.as_ref().map(|f| f.key(i.to_string()));
+            i += 1;
+            match id {
+                Some(id) => s.sem(id),
+                None => s,
+            }
+        });
         Self {
-            sliders: [
-                Slider::new(0.0, 100.0, 65.0),
-                Slider::new(0.0, 10.0, 4.0).step(1.0),
-                Slider::new(0.0, 100.0, 30.0).disabled(true),
-            ],
+            root,
+            sliders,
             focus: Focus::default(),
         }
+    }
+
+    /// The slider behind `id`.
+    fn at(&self, id: &SemId) -> Option<usize> {
+        self.sliders.iter().position(|s| s.sem_id() == Some(id))
     }
 
     /// The value caption's gutter to the right of every slider.
@@ -100,5 +129,60 @@ impl SliderPage {
                 theme.colors.text_mid.0,
             );
         }
+    }
+}
+
+impl Component for SliderPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (slider, label) in self.sliders.iter().zip(LABELS) {
+            if let Some(id) = slider.sem_id() {
+                slider.project(b, id, label, Some(root));
+            }
+        }
+        let focused = self.focus.slot.and_then(|i| self.sliders.get(i));
+        if let Some(id) = focused.and_then(Slider::sem_id) {
+            b.focus(id);
+        }
+    }
+
+    /// `set_value` moves the slider to the value (in its range, on its
+    /// step), where a drag would leave it; `increment` and `decrement` move
+    /// the stepped one a step.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        let Some(i) = self.at(&req.target) else {
+            return Err(format!("the slider page has no {}", req.target));
+        };
+        let slider = &mut self.sliders[i];
+        match (req.action.as_str(), &req.param) {
+            ("set_value", Some(Value::Num(v))) => slider.set_value(*v as f32),
+            ("increment", None) => {
+                slider.increment();
+            }
+            ("decrement", None) => {
+                slider.decrement();
+            }
+            _ => {
+                return Err(format!(
+                    "the slider page has no {} on {}",
+                    req.action, req.target
+                ));
+            }
+        }
+        Ok(After::Nothing)
+    }
+
+    /// An enabled slider takes the page's focus (its ring, the slot Tab
+    /// moves from); another node of the page takes it from the sliders.
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        let slot = self.at(id).filter(|i| !self.sliders[*i].disabled);
+        self.set_focus(slot);
+        true
     }
 }

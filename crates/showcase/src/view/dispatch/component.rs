@@ -107,9 +107,15 @@ macro_rules! components {
 
 components! {
     Button => button,
+    Checkbox => checkbox,
+    Chip => chip,
     Dialog => dialog,
     IconButton => icon_button,
+    Input => input,
+    Select => select,
+    Slider => slider,
     Spinner => spinner,
+    Switch => switch,
     Toast => toast,
     Tooltip => tooltip,
 }

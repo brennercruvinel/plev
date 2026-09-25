@@ -41,12 +41,22 @@ const PROJECTING: &[&str] = &[
     "Alert Dialog",
     "Button",
     "Button Group",
+    "Checkbox",
+    "Chip",
+    "Combobox",
     "Dialog",
+    "Field",
     "Hover Card",
     "Icon Button",
+    "Input",
+    "Label",
     "Popover",
+    "Select",
+    "Slider",
     "Spinner",
+    "Switch",
     "Toast",
+    "Toggle",
     "Toggle Group",
     "Tooltip",
     "Todo",
@@ -109,22 +119,10 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("the charts: an image with a text alternative, or a table of the data"),
     ),
     (
-        "Checkbox",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Chip",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Code Block",
         Unprojected("CodeBlock: a label with the code, named by its caption"),
     ),
     ("Collapsible", PLACEHOLDER),
-    (
-        "Combobox",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Command", PLACEHOLDER),
     (
         "Context Menu",
@@ -148,16 +146,8 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
     (
-        "Field",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Graph",
         Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
-    ),
-    (
-        "Input",
-        Unprojected("phase 2b: the next commits of this phase"),
     ),
     ("Input Group", PLACEHOLDER),
     ("Input OTP", PLACEHOLDER),
@@ -167,10 +157,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     (
         "Kbd",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Label",
         Unprojected("phase 2b: the next commits of this phase"),
     ),
     ("Marker", PLACEHOLDER),
@@ -207,10 +193,6 @@ const SILENT: &[(&str, Why)] = &[
         "Scroll Area",
         Unprojected("phase 2b: the next commits of this phase"),
     ),
-    (
-        "Select",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     ("Separator", Nothing("rules between captions")),
     (
         "Sheet",
@@ -225,16 +207,8 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
     ),
     (
-        "Slider",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Stat",
         Unprojected("Stat: a label with its value, unit and delta"),
-    ),
-    (
-        "Switch",
-        Unprojected("phase 2b: the next commits of this phase"),
     ),
     (
         "Table",
@@ -245,10 +219,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("phase 2b: the next commits of this phase"),
     ),
     ("Textarea", PLACEHOLDER),
-    (
-        "Toggle",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
     (
         "Tree",
         Unprojected("phase 2b: the next commits of this phase"),
