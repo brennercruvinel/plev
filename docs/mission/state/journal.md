@@ -14,6 +14,17 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-64 fechada
+
+- fase b integrada: a janela `plev-inspector` (crate `inspector`) abre uma
+  sessão gravada, com timeline e scrub, o frame gravado com os contornos
+  dos controles e o painel do controle clicado. o critério 1 roda na
+  sessão a2ppa (a recusa com `removed src/session.rs`, depois o aceite e o
+  sha); um teste mostra que nenhum caminho da janela cria request.
+- o agente (Opus) gastou uns 360 mil tokens. pendências no arquivo da
+  task: o tamanho da janela na sessão, a caixa da imagem de fluxo, a
+  coluna dos valores no painel.
+
 ### task-77 fechada
 
 - web e iOS em todas as 82 páginas: web 79 iguais em todo byte, iOS 78 só
