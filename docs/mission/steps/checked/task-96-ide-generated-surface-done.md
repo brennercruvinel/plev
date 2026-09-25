@@ -543,3 +543,122 @@ rastro ao fechar, e a demo 5 medida contra o painel fixo (misto: melhor
 nos arquivos, pior no diff). fica com o orquestrador e o brenner: a
 prova com o Claude de verdade e a demo 5 com janela. o que faltou para o
 diff (um componente de diff no vocabulário do IR) vira task nova.
+
+## fase b (2026-09-25): o título do cartão do diff e a coluna só com superfície
+
+a validação da task-97 abriu as imagens da demo 5 e viu dois defeitos
+que os testes não pegam, porque contam linhas e atos: o cartão do diff,
+à direita da revisão gerada, tem como título o id cru do commit
+(`stacks.commit[847f583aab69146fe62a5936…`); e sem superfície aberta a
+coluna da linha de intenção ocupa 368 px da janela e aperta as vistas
+fixas. branch `task/96b-ide-surface-polish`, base `main` @ `8704ba3a`.
+
+### sonda (antes de qualquer código)
+
+só leitura, e uma corrida do laboratório na base para as imagens de
+antes (`ide-lab --arm review --out <scratchpad>/demo5b/before`, sem
+janela, os mesmos números da task-97: 14, 7 e 18 linhas no painel fixo;
+14, 7 e 14 na superfície). toda afirmação sobre código tem arquivo e
+linha.
+
+#### (a) de onde vem o título do cartão do diff
+
+- não é o rótulo do nó nem o materializador: é um texto da região que as
+  regras põem primeiro e no tipo de título. a revisão faz da região que
+  as ações dos itens leem fora deles um cartão
+  (`crates/propose/src/review.rs:458-479`, `regions`, e `:433-445`,
+  `region`): os textos dela primeiro, depois os números, as listas por
+  último. o primeiro texto ganha `Base2sm`, o tipo do que nomeia
+  (`review.rs:304-312`). a região é `diff`, e o primeiro estado dela é
+  `target`, o id do nó cujo diff aparece
+  (`crates/ide/src/workbench/project.rs:152-157`): num commit,
+  `stacks.commit[<sha>]`. é o estado que o `show_diff` de cada commit lê
+  (`project.rs:204`, `:231`), a palavra do dispatcher para "qual item",
+  não a de uma pessoa.
+- o rótulo do cartão é o da região, `"diff"` (`review.rs:440`), mas um
+  `card` não desenha o rótulo (`crates/surface/src/draw.rs:291-297`, só o
+  painel); um `text` desenha o valor ligado, ou o rótulo quando não liga
+  nada (`draw.rs:71-76`, `:317-329`).
+- a palavra certa que a projeção tem, sem inventar estado: a mensagem do
+  commit que o diff mostra existe, como o rótulo e o `summary` do nó que
+  `target` nomeia (`project.rs:217-227`), mas num outro nó. o IR liga um
+  estado por uma referência fixa (`uir::Bind`,
+  `crates/uir/src/ir.rs:112`), e nenhum componente segue um valor até o
+  rótulo de outro nó (`text` mostra o `text` ligado,
+  `crates/uir/src/vocab.rs:332`). um texto pode mostrar "o summary de
+  `stacks.commit[847f…]`", não "o summary do commit que `diff:target`
+  nomeia agora". a mensagem que muda com o diff pediria um estado novo na
+  região (a projeção muda, e o golden
+  `crates/uir/fixtures/ide-workbench.snapshot.json` com ela) ou o
+  `surface` seguindo a referência: os dois fora desta fase. escrever na
+  proposta a mensagem que `target` nomeia na hora também não serve: o
+  diff segue o `target` e o rótulo fixo não, e depois do próximo "show
+  diff" o título mentiria. o painel fixo mostra a mensagem no cabeçalho
+  (`crates/ide/src/views/diff_view.rs:84-92`), que não é projetado.
+- então a palavra é o rótulo da região, `"diff"` (`project.rs:153`), o
+  que o cartão mostra. o que muda, só em `review.rs`: um texto da região
+  que as ações dos itens leem, cujo valor é o id de um nó do app (ou
+  vazio), é o ponteiro do dispatcher e não aparece; uma região sem texto
+  próprio abre com o rótulo dela num texto no tipo de título, primeiro no
+  cartão. esse texto não liga nada, então o `Namer` não o guarda entre
+  duas propostas (`crates/propose/src/ids.rs:98-113`: guarda os nós
+  ligados e os containers com filhos); a revisão procura na superfície
+  aberta o texto sem ligação que abre o cartão da mesma região e mantém o
+  id dele. o ato da pessoa não muda: o request é observado no snapshot
+  do app (`crates/surface/src/surface.rs:386`), e um estado que a
+  superfície não mostra é lido como o app o guarda
+  (`crates/surface/src/project.rs:26-28`).
+
+#### (b) onde a coluna nasce e o desenho mínimo
+
+- a coluna nasce ligada ao bloco: `host_surfaces_over`
+  (`crates/ide/src/workbench/generated.rs:59-64`) e o `lay_out`
+  (`:103-112`) dão ao workspace a janela menos `column_w`
+  (`crates/ide/src/generated/row.rs:61-70`): a largura de um card
+  (`size.card_w`, 368 px no hoff, `crates/engine/src/theme/scales.rs:291`)
+  sem superfície, metade da janela com uma. `Workbench::resize`
+  (`generated.rs:93-99`) refaz o mesmo a cada tamanho. a coluna vai de
+  cima a baixo, a linha em cima e a superfície embaixo (`row.rs:73-82`).
+  a janela liga o bloco sempre (`crates/ide/src/main.rs:565`).
+- o que isso custa sem superfície: o workspace tem 912 de 1280 px. o
+  `apply_panel_widths` (`crates/ide/src/views/workspace/mod.rs:380-392`)
+  guarda as larguras de changes e de diff e dá o resto a stacks, então é
+  a coluna de stacks que perde os 368 px, e a mensagem de cada commit sai
+  cortada (`crates/ide/src/views/multi_stack_view.rs:272-276`). na
+  imagem de antes `demo5b/before/fixed.png`: "readme: how…", "login
+  rememb…", "session timeo…".
+- o desenho mínimo: a linha numa faixa ao longo de baixo da janela, na
+  largura inteira, e a coluna só com superfície aberta. sem superfície o
+  workspace recebe a largura inteira da janela, a de antes da task-96, e
+  só a altura da faixa a menos; com superfície, a coluna à direita, em
+  cima da faixa, metade da janela, como hoje. na faixa: o campo (um card
+  de largura, no máximo), o proponente, propor e fechar numa linha, e a
+  mensagem ao lado deles enquanto a largura dá, embaixo deles quando não
+  dá. tudo pelo `resize` do workspace; nenhum arquivo de
+  `crates/ide/src/views/**` muda.
+- por que embaixo e não em cima: o header do workspace desenha em y = 0
+  (`crates/ide/src/views/workspace/render.rs:28-40`), e deslocar a origem
+  é o `set_frame` (`views/workspace/mod.rs:252-257`), que liga o modo
+  embutido e tira o header: mudaria uma vista fixa. dentro do header
+  também não: ele centra o repositório e a branch
+  (`crates/ide/src/views/header.rs:91-100`), e a linha passaria por cima.
+- o que a faixa embaixo pede: o proponente é o `Select` do comps, que
+  abre o painel embaixo do retângulo que recebe
+  (`crates/comps/src/form/select/panel.rs:73-86`), e embaixo da faixa
+  não há janela. o comps está fora desta fase; a linha dá ao `Select`,
+  para o painel, o retângulo do controle levantado pela altura do painel
+  e pelas duas folgas (o `dropdown_rect` dá as duas), então o painel abre
+  para cima, por cima do workspace, com o controle desenhado e clicado
+  onde está. um `Select` que abre para cima quando falta espaço embaixo
+  é o jeito limpo, no comps (fica como P3).
+- o que não muda: os mesmos widgets, os mesmos ids, a mesma projeção
+  (`crates/ide/src/generated/mod.rs:255-313`); só os retângulos se movem.
+  a pessoa chega à linha pelo clique no campo, um agente pela porta
+  (`set_value` e `propose` em `ide_surface.*`, `Workbench::dispatch`),
+  o teclado como hoje (`crates/ide/src/keys.rs:70-95`: com o campo
+  focado, as teclas são dele, Enter propõe, Escape solta).
+- o preço: a altura da faixa, uns 60 px de 800, tirada das vistas fixas,
+  que rolam na vertical; o diff mais longo da demo (18 linhas) cabe
+  inteiro nas duas alturas. as imagens de antes e depois de cada caso
+  (sem superfície, com superfície) ficam em `demo5b/`, citadas no
+  handoff desta fase.
