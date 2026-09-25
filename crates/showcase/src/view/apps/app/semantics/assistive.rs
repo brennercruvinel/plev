@@ -332,7 +332,7 @@ fn the_keyboard_order_of_the_page_follows_its_snapshot() {
 #[test]
 fn a_page_without_a_projection_has_no_tree_yet() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.jump_to_page("Button");
+    view.jump_to_page("Card");
     assert!(view.semantics().is_none());
     let Some(req) = todo_view()
         .0

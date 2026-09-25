@@ -106,8 +106,12 @@ macro_rules! components {
 }
 
 components! {
+    Button => button,
     Dialog => dialog,
+    IconButton => icon_button,
+    Spinner => spinner,
     Toast => toast,
+    Tooltip => tooltip,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

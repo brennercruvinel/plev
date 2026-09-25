@@ -39,9 +39,16 @@ use showcase::view::{PAGES, ShowcaseView};
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
     "Alert Dialog",
+    "Button",
+    "Button Group",
     "Dialog",
+    "Hover Card",
+    "Icon Button",
+    "Popover",
+    "Spinner",
     "Toast",
     "Toggle Group",
+    "Tooltip",
     "Todo",
     "Surface",
     "Silences",
@@ -90,14 +97,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Bubble",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    (
-        "Button",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Button Group",
-        Unprojected("phase 2b: the next commits of this phase"),
     ),
     ("Calendar", PLACEHOLDER),
     (
@@ -157,14 +156,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
     ),
     (
-        "Hover Card",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Icon Button",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Input",
         Unprojected("phase 2b: the next commits of this phase"),
     ),
@@ -203,10 +194,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("PanelHeader: a heading with its blurb and badge"),
     ),
     (
-        "Popover",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
     ),
@@ -242,10 +229,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("phase 2b: the next commits of this phase"),
     ),
     (
-        "Spinner",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
         "Stat",
         Unprojected("Stat: a label with its value, unit and delta"),
     ),
@@ -264,10 +247,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Textarea", PLACEHOLDER),
     (
         "Toggle",
-        Unprojected("phase 2b: the next commits of this phase"),
-    ),
-    (
-        "Tooltip",
         Unprojected("phase 2b: the next commits of this phase"),
     ),
     (
