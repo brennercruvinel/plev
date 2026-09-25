@@ -103,8 +103,18 @@ impl<T: Interpolate> Tween<T> {
         }
     }
 
+    /// Advances the tween by `dt` seconds. With the thread's motion
+    /// reduced (`super::reduced_motion`) a tween with an end reaches it
+    /// at once, its delay included; one that repeats forever runs on.
     pub fn tick(&mut self, dt: f32) {
         if self.state != TweenState::Running {
+            return;
+        }
+        if super::reduced_motion()
+            && let Some(total) = self.total_play_time()
+        {
+            self.elapsed = self.delay + total;
+            self.state = TweenState::Completed;
             return;
         }
         self.elapsed += dt;
