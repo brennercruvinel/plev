@@ -310,3 +310,163 @@ entradas do relatório. sem adaptador de GPU o teste pula.
 - Figma: um export salvo da API REST (JSON de frames, auto layout e
   estilos) como fixture, nunca rede no teste; frames e auto layout viram
   `stack`/`grid`, estilos viram token pela mesma medida de (d).
+
+## handoff da fase 1 (2026-09-25, agente, branch task/71a-compiler-target)
+
+Goal: task-71 fase 1, o parser emite plev IR verificado com relatório em
+quatro categorias e `binding required`.
+Status: pronto para validação do orquestrador. nada no `uir`, no
+`surface`, no `sem` nem no código builder emitido mudou.
+
+### commits
+
+1. `0c08e77a` a sonda (a) a (f), acima.
+2. `9f7e9cfd` o `ParserNode` carrega a origem de cada construção.
+3. `14cd3dfd` o segundo emissor, `ParserNode` para plev IR, com o
+   relatório em quatro categorias.
+4. `7a240577` controles da fonte viram componente com role, `binding
+   required`; a fixture react da fase.
+5. `9707a2a6` o IR materializado e comparado por pixel com o código
+   builder.
+6. este commit: ADR `importers-target-plev-ir` (proposed) e este handoff.
+
+### o emissor e o que se perde
+
+- `crates/parser/src/emit_ir/` (`mod.rs`, `props.rs`, `control.rs`) lê o
+  mesmo `Resolution` do `emit.rs` e escreve `uir::Ir`. o `emit.rs` não
+  mudou. a origem entrou de forma aditiva (`ir.rs`: `Origin`, `Prop::src`
+  fora do `PartialEq`, `Note`, `DropKind`, `covers`).
+- código builder igual byte a byte: o golden do gpui passa; o card do
+  corpus e 128 componentes react reais (três apps locais) emitidos antes e
+  depois dão o mesmo código (conferido trocando os fontes do parser pelos
+  da `main` no próprio worktree e voltando).
+- a droplist ganhou entradas para dois silêncios do parse: filho
+  `{expressão}` que não é identificador e estilo de texto que nenhum texto
+  recebe (26 dos 128 componentes; o código deles não muda). card do corpus
+  e separador sem mudança (51/38 e 18/6).
+- o que o IR v1 não diz e vira `impossible`: tamanho fora de token (a
+  altura de 160 do preview), borda, sombra solta, blur, clip, padding por
+  lado com 0, justify, shrink, slot de elemento, variante por prop, media
+  query, hover, animação, atributo sem uso (`role`).
+
+### o relatório e o formato
+
+- `crates/parser/src/report.rs`: uma entrada por construção com `at`,
+  `construct` e a categoria (`supported`+`ir`, `transformed`+`ir`+`rule`,
+  `approximated`+`ir`+`difference`, `impossible`+`reason`), `covers` nas
+  entradas de bloco, `bindings` à parte. JSON `plev_report: 1`, nomes
+  fixos, chaves em ordem sem depender da feature do `serde_json`.
+  documentado no módulo e no ADR.
+- a droplist inteira está no relatório, na mesma linha (perdida como
+  `impossible` com o `why`; as duas reescritas do separador como
+  `transformed`).
+- prova: o censo do parse (tsx, sass, chamadas do gpui) contra o
+  relatório, e todo nó do IR com entrada (`tests/ir.rs`).
+- contagens: separador 8 supported, 9 transformed, 3 approximated, 6
+  impossible; note card 8, 32, 16, 19; card do corpus (ao vivo) 10, 33,
+  15, 45.
+
+### a tolerância medida
+
+metade da distância do token ao vizinho mais próximo de outro valor, no
+`Theme::hoff()`. cor em níveis de 8 bits com alfa (medida do ADR
+`what-identical-means`): `bg` e `surface` 1, `bg_hover` e `divider` 3,5,
+`text_mid` 25,5, `text` 31,9. espaço: 2 px de `xs` a `lg`, 4 px em `xl`
+e `xxl`. raio `pill` 4 px, largura `card_w` 16 px, `caption_r` 1 px. o
+teste `the_tolerances_measured_on_hoff` fixa esses números. distância 0 é
+`transformed`, dentro da tolerância `approximated`, fora `impossible`.
+padding e gap tomam o token do menor valor (o IR nunca põe espaço que a
+fonte não tem).
+
+### binding required
+
+controle (`<button>`, `onClick`, `<input>` de texto, `textarea`) vira
+`button` ou `text_field` ligado a uma ação em `<superfície>.props`
+nomeada pelo handler (`onOpen` vira `open`) ou pelo rótulo; parâmetro de
+texto liga `text` a `<superfície>.props:<nome>`. com registro vazio o
+verificador recusa uma vez por ligação, nomeando cada uma (regras 4 e 5),
+e o relatório lista as mesmas; com o registro que o teste declara (como o
+app), verifica. note card: `title`, `content` (estado), `reply` (texto) e
+`open`; separador: `label`; card do corpus: `title`, `content`,
+`discover`.
+
+### fixtures e pixels
+
+- react: `crates/parser/fixtures/react/` escrita para a fase, não copiada
+  (forma do card do corpus mais um campo e um botão com `onClick`); o card
+  do corpus segue fora do repo e roda ao vivo quando existe. gpui: o
+  separador de sempre. goldens novos: `expected.ir.json`,
+  `expected.report.json` (os dois) e `expected.rs` (react).
+- pixels (`tests/pixels.rs`, headless, escala 1, `Theme::hoff()`, M4
+  metal): separador, 1266 pixels diferentes (max 164); a linha fica 6 px
+  mais baixa porque o separador do surface ocupa 36 px numa linha; movido
+  de volta, sobram 750 (max 18), só nas duas linhas da reta (o surface
+  centra a reta em 17,5) e 4 px de reta a mais de cada lado do rótulo
+  (padding `xs` contra 8); o rótulo é o mesmo pixel. note card, 99001
+  pixels (max 197): tudo abaixo do preview sobe 160 px e vai 16 px para a
+  esquerda; título e conteúdo são os mesmos pixels, só movidos; a linha
+  meta difere em 217 pixels por no máximo 5 níveis (cor aproximada); campo
+  e botão são widgets do comps; o card fica 180 px mais baixo, cada px
+  explicado. os testes afirmam a estrutura, não as contagens.
+
+### diff do lock (só o pacote parser)
+
+```text
+@@ -3489,14 +3489,19 @@ dependencies = [
+ name = "parser"
+ version = "0.1.0"
+ dependencies = [
++ "comps",
+  "criterion",
+  "engine",
+  "env_logger",
+  "pollster",
++ "sem",
++ "serde_json",
++ "surface",
+  "thiserror 2.0.18",
+  "tree-sitter",
+  "tree-sitter-rust",
+  "tree-sitter-typescript",
++ "uir",
+ ]
+```
+
+`uir` e `serde_json` em `[dependencies]`; `surface`, `sem` e `comps` em
+`[dev-dependencies]`. nenhum pacote novo.
+
+### validação
+
+- `./script/gate` verde, pernas wasm e urnaui: 2990 passam, 0 falham, 27
+  ignorados (antes 2960 e 26: +30 testes, +1 ignorado, o diagnóstico que
+  escreve os pngs). disco com 16 GB livres.
+- `cargo run --offline -p showcase --example regress -- check`: 175
+  baselines, 175 iguais.
+- no parser: 29 testes de unidade, 11 em `tests/ir.rs`, 2 em
+  `tests/pixels.rs` (pulam sem adaptador de GPU).
+
+### linha para o índice de ADR
+
+`| 2026-09-25 | [importers-target-plev-ir](importers-target-plev-ir.md) | proposed | o parser ganha o segundo emissor, ParserNode para plev IR, ao lado do código builder (que não muda um byte); relatório em quatro categorias com arquivo:linha que estende a droplist, forma JSON fixa; tolerância por token medida no tema (metade da distância ao vizinho); controle vira componente com role ligado a uma ação nomeada em <superfície>.props (binding required: registro vazio recusado dizendo o que falta); pixels contra o builder com cada diferença explicada (task-71 fase 1) |`
+
+### limitações e riscos
+
+- o card do corpus não tem golden (está fora do repo); o gate roda a
+  fixture escrita para a fase.
+- o builder alinha filhos no início, o stack do IR estica: explica a
+  largura do `<input>` na comparação.
+- `Tokens` é preenchido por quem chama (o parser não depende do engine);
+  os testes preenchem do `Theme::hoff()`. um token sem valor vira
+  `impossible`, nunca silêncio (`Tokens::missing`).
+- os números de pixel são desta máquina; os testes valem por estrutura em
+  outra GPU.
+- um `<input>` de outro tipo (checkbox, range) não é inferido na fase 1 e
+  o relatório diz.
+
+### fase 2
+
+HTML/CSS pede uma grammar nova (tree-sitter-html ou parecida, a aprovar)
+e um leitor de CSS; Figma pede um export salvo da API REST como fixture,
+nunca rede no teste. os dois passam pelo mesmo resolve e pelos dois
+emissores. SwiftUI e Flutter ficam registrados; controles do gpui
+(`on_click`) e listas do react (`items.map` como `repeat`) também.
