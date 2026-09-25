@@ -40,6 +40,7 @@ pub(crate) struct VisualLine<'a> {
     by_start: Vec<usize>,
     /// Every grapheme boundary, left to right.
     stops: Vec<Stop>,
+    rtl: bool,
 }
 
 impl<'a> VisualLine<'a> {
@@ -64,6 +65,7 @@ impl<'a> VisualLine<'a> {
             clusters,
             by_start,
             stops: Vec::new(),
+            rtl,
         };
         let mut stops: Vec<Stop> = text
             .grapheme_indices(true)
@@ -74,6 +76,11 @@ impl<'a> VisualLine<'a> {
         stops.sort_by(|a, b| a.order.total_cmp(&b.order).then(a.pos.cmp(&b.pos)));
         line.stops = stops;
         line
+    }
+
+    /// The paragraph runs right to left.
+    pub(crate) fn is_rtl(&self) -> bool {
+        self.rtl
     }
 
     /// Where the caret for byte offset `pos` draws, px from the origin.
