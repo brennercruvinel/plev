@@ -777,3 +777,301 @@ Claude.
 
 nada pede mudar o protocolo v1, o vocabulário ou o verifier do IR, nem o
 comps. a mudança em `crates/uir/src/transform/look.rs` é a da (f).
+
+### handoff da fase 2 (2026-09-24)
+
+```text
+Goal: task-70 fase 2: uma intenção em palavras, com uma superfície
+      aberta, vira operações (pelas regras ou pelo Claude), verificadas e
+      aplicadas pelo dispatcher do app como request, com o ator no
+      histórico e desfazer pelo mesmo caminho; a política por superfície;
+      ênfase em stat e badge; as três lacunas do checkpoint b
+Status: pronto para o orquestrador; adição ao ADR proposta
+```
+
+#### commits
+
+- 793adf98 task-70: the probe of phase 2, the transformation proposer
+- c01021a4 task-70: a transformer answers operations, and only a verified surface comes out
+- bdb828ea task-70: the rules read a change of the surface shown, in english and portuguese
+- 66b5abd5 task-70: the Claude answers a change as operations, and a refused one goes back with why
+- 38426a12 task-70: a change asked through the row's propose, by the rules or the Claude, and the policy kept per surface
+- e80d33dd task-70: a stat grows by its typography and a badge fills by its background
+- 19fea13d task-70: the review by the rules shows what each item is, its numbers named and its decision as a badge
+- 5d1ca12f task-70: the demo, too much information and can't compare over the open review, in a test and in the regress
+- o commit deste texto e do ADR
+
+#### a sonda
+
+está na seção "sonda" da fase 2, acima, de (a) a (f), com as lacunas.
+nenhuma condição de parada aconteceu: nada pediu mudar o protocolo v1,
+o vocabulário ou o verifier do IR, nem o comps; nenhum baseline fora da
+revisão gerada mudou. a única mudança em `crates/uir/src/transform/**`
+é a da (f): `look.rs` ganhou as escadas de stat e badge.
+
+um desvio do desenho que a pergunta sugeria, na (d): não há ação nova
+(`silences_surface.adapt`, `undo`). um nó ou uma ação nova na linha muda
+o `semantics.json` de toda baseline que mostra a linha (o `regress`
+compara a projeção antes dos pixels), inclusive as da revisão do Claude
+e as duas da tela fixa. o pedido é o mesmo `propose` (o que o ADR da
+fase 1 já dizia: "through the same `Proposer` path"), e o desfazer é a
+intenção "undo"/"desfazer" por ele.
+
+#### o proponente, a gramática e o prompt
+
+- `crates/propose/src/adapt.rs`: `Adapt` (`:28`), `Adaptation`
+  (`:57`), `Transformer` (`:66`), `Transformed` (`:72`) e
+  `transform_verified` (`:98`), que aplica cada operação em ordem pelo
+  `Adapted::apply` e só devolve as operações com o `Adapted` verificado
+  que elas fazem; a primeira recusa sai como `ProposeError::Unapplied`
+  com o lugar; nenhuma operação é `NoChange`. erros novos em
+  `crates/propose/src/error.rs:55` a `80`.
+- a gramática: `crates/propose/src/change.rs` (menos, comparar com
+  dificuldade, maior, desfazer, em inglês e português;
+  `reads_as_change` para a página). as regras por estrutura e registro:
+  `crates/propose/src/reshape.rs` (`less`, `compare`, `bigger`, e o
+  `impl Transformer for Rules`). nenhuma cita app.
+- o prompt: `crates/propose/src/ops.rs` (o prompt da mudança, a leitura
+  de `{"ops": [...]}` e o reparo com "attempt N was refused"), e o
+  `impl Transformer for Llm` em `crates/propose/src/llm.rs:129`. o
+  `SYSTEM` do `claude-model` serve como está (não mudou).
+
+testes: `crates/propose/tests/adapt.rs` (a saída verificada, a recusa
+com o lugar, o desfazer, a promoção conferida por quem pede),
+`tests/change.rs` (as regras em inglês e português: menos sobre a
+revisão do Claude e sobre o todo, comparar que troca uma tabela de
+números por gráfico e que recusa na Silences com o motivo, maior em
+textos de número e em stats, desfazer, e o que não é mudança),
+`tests/llm_change.rs` (resposta boa aplicada, resposta recusada volta
+com o motivo e o modelo responde de novo, três recusas devolvem os
+motivos e nada muda, o prompt com as operações, o registro com o valor
+secreto como tamanho e nunca o texto, a superfície e o que está de
+lado, e um agente que não promove ação só da pessoa).
+
+#### o caminho pela página e pelo port
+
+`crates/showcase/src/view/apps/surface_page/proposing/changing.rs`,
+compartilhado pela página Surface e pela Silences: com uma superfície
+aberta, o `propose` lê a intenção como mudança primeiro. pelas regras,
+aplica na hora pelo `SurfaceHost::apply_all` com o ator da request, e a
+request termina com `steps` e `ops` (as operações em linha); "desfazer"
+é `undo_asked`. pelo Claude, quando a intenção lê como mudança, o worker
+(`surface_page/asking.rs`, `Job::Change`) pede operações fora da thread
+do app, a request fica `Started`, a linha mostra "asking the Claude for
+...: attempt n of 3, s", e o `settle` aplica quando chegam, com
+`attempts`, `seconds` e `cost_usd`; "undo" não chama modelo. o que não é
+mudança segue para a proposta da 69. a linha diz o que houve ("changed
+by the rules for "...", 3 steps", "changed by the Claude for "...", 1
+step, in 2.1 s, 1 attempt, 0.050 USD", "undone: the last change, 3
+steps"), e o status projeta `steps` ou `undone`.
+
+testes: `crates/showcase/src/view/apps/silences/tests/generated/change.rs`
+(uma pessoa pede menos e desfaz, byte a byte; um agente pede pelo
+`act`, as mudanças são dele; comparar recusa e nada muda; uma intenção
+de superfície ainda propõe uma; e com o `claude` falso: a mudança fora
+da thread, com custo; uma resposta recusada pedida de novo; três
+recusas não mudam nada; "undo" sem prompt novo) e
+`crates/showcase/src/view/apps/surface_page/tests/agent.rs` (um agente
+pelo port de verdade escreve "too much", propõe, e depois "undo": as
+requests são dele, o protocolo é o do `propose`).
+
+#### a política
+
+`crates/surface/src/host.rs`: `open_under` e `transform_under` guardam a
+política com que a superfície foi verificada; `open` e `transform`
+guardam a padrão (a das formas da página Surface, que não é minha).
+`apply(id, op, by, app)` e `undo(id, app)` não recebem mais política:
+usam a da superfície. `apply_all` (tudo ou nada, uma forma, um pedido),
+`undo_asked`, `last_ask`, `current` e `policy`. as páginas mostram uma
+proposta com a política dela (`GenerationPolicy::by` do autor).
+testes: `crates/surface/tests/policy.rs` (a operação de um agente
+verificada sob a política da pessoa que escreveu a superfície; os
+pedidos tudo ou nada e desfeitos inteiros) e os de `tests/adapt.rs`,
+no desenho novo.
+
+#### a ênfase
+
+`crates/surface/src/draw.rs` e `token.rs`: o stat lê `typography` como
+o tamanho do valor (`StatSize` `Sm`, `Md`, `Lg`), o badge lê
+`background` como a intenção do formato preenchido (`Badge::count`);
+`crates/uir/src/transform/look.rs`: a escada do stat (`base_m`, `title`,
+`headline`) e a do badge (preenchido com o accent). o badge ganha peso,
+não tamanho: o comps não tem badge maior, e mudá-lo seria parada.
+testes: `crates/surface/tests/emphasis.rs` e o teste de `look.rs`.
+
+#### as três lacunas, antes e depois
+
+1. o `READS` (`crates/propose/src/prompt.rs:75` a `89`) diz que revisar
+   itens é ver o que cada um é (a imagem, o nome, os números com nome,
+   o estado) e que "só o que a intenção precisa" não tira isso; teste
+   de texto em `crates/propose/tests/llm.rs`, sem nome de app.
+2. e 3. a linha do item das regras por sentido
+   (`crates/propose/src/row.rs`): o que o item é (frame, faixa, e a
+   decisão como badge, porque `apply_cut` e `reject_cut` leem só ela,
+   `list.rs`), os números como stat pequeno com o nome do estado
+   ("start", "end", "duration"), as ações em botões pequenos numa linha.
+
+| | antes (`main` @ 3dde4976) | depois |
+| --- | --- | --- |
+| core 1280x800 | `git show 3dde4976:crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
+| hoff 1280x800 | idem, `@hoff@1280x800` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@hoff@1280x800/frame.png` |
+| core 1200x800 | idem, `@core@1200x800` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1200x800/frame.png` |
+
+no antes, cada corte é "3.02 5.02 2 0:03.0 to 0:05.0 pending" sem nome,
+e em 1200 "reject cut" desce sozinho. no depois, cada corte tem o frame,
+a faixa e o selo "pending"; embaixo "3.02 5.02 2" com "start end
+duration"; embaixo os três botões numa linha, também em 1200. os dois
+cortes cabem na janela. aceitei as três depois de olhar cada uma.
+
+#### a demo
+
+pelas regras, com a revisão aberta, em teste
+(`crates/showcase/src/view/apps/silences/tests/generated/demo.rs`) e no
+regress (três estados novos em `examples/regress/state.rs`, pedidos pela
+linha como um agente pede):
+
+| estado | antes | depois |
+| --- | --- | --- |
+| "tem informação demais" sobre a revisão do Claude | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture-too-much-in-portuguese@core@1280x800/frame.png` |
+| "too much information" sobre a revisão das regras | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-rules-too-much-information@core@1280x800/frame.png` |
+| "I can't compare these" sobre a revisão das regras | o mesmo antes | `crates/showcase/fixtures/regress/silences-review-by-the-rules-can-t-compare@core@1280x800/frame.png` |
+
+- "tem informação demais" na revisão do Claude: saem o cartão do vídeo
+  e o das contagens (contexto, nenhuma ação), os três botões de cada
+  corte viram um grupo, o espaçamento aperta; os dois cortes, que
+  estavam abaixo da dobra, ficam dentro de 1280x800, cada um com faixa,
+  selo, duração e frame. 4 passos, do harness.
+- "too much information" na revisão das regras: saem o vídeo grande e
+  as contagens, aperta; a linha já vem agrupada. 3 passos.
+- "I can't compare these": recusado, a linha diz por quê em vermelho
+  (`proposed.silences.cuts` repete os itens sobre `silences:cuts`, e
+  nenhuma lista de números aparece), a revisão fica como estava. a troca
+  para gráfico é provada numa superfície com uma lista de números
+  (`crates/propose/tests/change.rs`).
+- o estado do que continua (`demo.rs`): um corte aplicado antes continua
+  aplicado, no app e no selo da gerada; um slider do Claude no meio do
+  arraste continua o arraste no lugar novo depois que um agente pede
+  "too much information" (-45, -36, e -12 dB depois da mudança).
+
+#### baselines
+
+- novos (3): `silences-review-by-the-rules-too-much-information@core@1280x800`,
+  `silences-review-by-the-claude-fixture-too-much-in-portuguese@core@1280x800`,
+  `silences-review-by-the-rules-can-t-compare@core@1280x800`, com imagem.
+- mudaram (3), pela regra do item 7: `silences-review-by-the-rules@core@1280x800`,
+  `@hoff@1280x800` e `@core@1200x800`. nenhum outro.
+
+#### contagem do gate e o regress
+
+| | workspace | perna urnaui | total |
+| --- | --- | --- | --- |
+| antes, `main` @ 3dde4976 (a contagem da fase 1) | 2776 passam, 25 ignorados (142 suítes) | 85 passam, 1 ignorado (6 suítes) | 2861 |
+| depois, esta branch @ 5d1ca12f (`./script/gate` offline, saída 0, 22:50:45 a 22:52:58) | 2809 passam, 0 falhas, 25 ignorados (147 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2894 |
+
+33 testes novos e cinco suítes (`propose`: `adapt`, `change`,
+`llm_change`; `surface`: `policy`, `emphasis`); o gate inteiro verde,
+com a perna urnaui e o check wasm com `-D warnings`. `df -h /`: 19 GB
+livres antes e depois. `cargo run --offline -p showcase --example
+regress -- check` (com o `main.rs` tocado): 173 baselines, 173 iguais,
+nenhum frame desenhado, nenhuma GPU aberta (167 iguais aos da `main`,
+3 abençoados de novo pela regra do item 7, 3 novos).
+
+#### um incidente
+
+na primeira bênção do estado da fixture em português, o harness não
+escolhia o proponente antes de pedir, e o seletor do regress escolhe o
+`claude` que estiver no PATH: o `propose` da mudança começou pelo
+Claude, e o processo do regress saiu logo depois (a request ficou
+`Executing` e o estado falhou). não achei nenhum `claude -p` rodando
+logo depois (`ps`), mas não consigo garantir que nenhuma chamada tenha
+começado: no máximo uma, com o teto de 0,5 USD do `claude-model`. o
+harness agora escolhe "rules" antes de todo pedido
+(`examples/regress/state.rs`, `ask`), e nenhum teste do gate alcança o
+programa de verdade (`Claude::find` não procura nos testes do crate).
+
+#### roteiro para o orquestrador provar com o Claude de verdade
+
+na janela de 1200x800 do checkpoint b, com o binário desta branch (ou
+da `main` depois de integrar):
+
+```text
+cargo build -p showcase                     # e copiar o binário, como no checkpoint
+PLEV_AGENT=1 PLEV_MIRROR=1 PLEV_BACKGROUND=1 PLEV_RECORD=1 <showcase> Silences
+
+# a revisão pelo Claude (a cota é do orquestrador)
+plev act silences_surface.proposer select --param '"claude"' --app showcase --name orquestrador
+plev act silences_surface.intent set_value --param '"cut the silences of this video, then I want to review the cuts"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message   # até a resposta
+cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-01-review.png
+
+# a mudança pelo Claude
+plev act silences_surface.intent set_value --param '"tem informação demais"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message,steps,attempt,cost_usd
+cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-02-less-claude.png
+
+# comparar e números maiores pelo Claude
+plev act silences_surface.intent set_value --param '"I can'"'"'t compare these"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message
+plev act silences_surface.intent set_value --param '"números maiores"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message
+cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-03-bigger-claude.png
+
+# desfazer (sem modelo) e as mesmas frases pelas regras
+plev act silences_surface.intent set_value --param '"desfazer"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+plev act silences_surface.proposer select --param '"rules"' --app showcase --name orquestrador
+plev act silences_surface.intent set_value --param '"too much information"' --app showcase --name orquestrador
+plev act silences_surface.propose propose --app showcase --name orquestrador
+cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-04-less-rules.png
+```
+
+o que olhar: na 01, se a revisão nova mantém o frame de cada corte (a
+lacuna 1 do prompt); na 02, as operações que o Claude escolhe (o
+`steps` e o `ops` do receipt, o custo e as tentativas na linha), se os
+cortes ficam dentro da janela e se nada do que a pessoa decide saiu; em
+"I can't compare these", se o Claude recusa com `{"ops": []}` ou tenta
+um `swap_view` que o host recusa (três tentativas no máximo, a
+superfície intacta); em "números maiores", se sobe os stats; "desfazer"
+não gasta chamada; pelas regras, o mesmo resultado da baseline
+`...-too-much-information`. e pelo port, que cada receipt é do
+`orquestrador`.
+
+#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+
+| 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 2: `propose::Transformer` ao lado do `Proposer`, `transform_verified` só devolve operações com o `Adapted` verificado; a gramática de mudanças das regras (menos, comparar com dificuldade, maior, desfazer, en e pt) por estrutura e registro; o prompt de mudança com `{"ops": [...]}` e reparo; o mesmo `propose` da linha com uma superfície aberta, sem ação nova (a projeção das baselines não muda); o host guarda a política de cada superfície e os pedidos (`apply_all`, `undo_asked`); ênfase de stat por `typography` e de badge por `background`; a linha do item das regras por sentido, a decisão como badge (task-70 fase 2) |
+
+#### o que a fase 3 precisa desta
+
+- `SurfaceHost::changes` com o ator e `last_ask` (o que um pedido fez),
+  ao lado dos receipts da 63; um pedido é uma request `propose` com
+  `steps` e `ops` no outcome, então o detector de sequência também lê
+  os receipts.
+- instalar uma composta é um `promote` depois que o app a declarar; o
+  prompt de mudança já descreve o `promote` e a recusa por ator.
+
+#### o que ficou aberto
+
+- comparar na Silences: recusado com o motivo. para trocar por gráfico,
+  o app teria que declarar uma lista de durações (a Silences, fora
+  daqui).
+- o Claude só recebe uma mudança quando a gramática das regras lê a
+  intenção como mudança ("put the cuts first" iria para a proposta de
+  superfície); crescer a gramática, ou deixar o modelo escolher entre
+  mudança e superfície numa chamada só, é decisão do orquestrador.
+- `PERSON_ONLY` pelo port: nem a Silences nem o todo têm ação só da
+  pessoa, então a promoção recusada para um agente está provada no
+  `propose` (o transformador e o `Llm`) e no host (fase 1), não pelo
+  port de uma página.
+- não há refazer; "undo" desfaz o último pedido inteiro, e o `undo` do
+  host ainda desfaz uma operação.
+- a ênfase do badge é de peso (preenchido), não de tamanho.
+- a legenda da página Surface (`surface_page.rs`, fora da minha lista)
+  não fala de mudança: depois de uma mudança ela continua dizendo o que
+  dizia.
+- "reduz densidade": segui o briefing, `density denser` (o espaçamento
+  aperta); se a intenção deveria afrouxar, é uma linha em `reshape.rs`.
+- a adição ao ADR está como proposta; o índice é do orquestrador.
