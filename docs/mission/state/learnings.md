@@ -12,6 +12,16 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, o prazo do Claude
+
+- **um prazo curto não economiza, desperdiça:** a chamada morta em 180 s
+  já tinha gastado o que gastou. o custo é limitado pelo teto por chamada
+  (`--max-budget-usd`); o prazo só decide se o gasto vira resposta. regra:
+  quando o prompt pede mais saída, o prazo acompanha a mais lenta medida.
+  para achar a causa sem gastar, um stub no `PLEV_CLAUDE` que só grava a
+  stdin mostra o prompt exato. fonte: `crates/claude-model/src/lib.rs`,
+  `TIMEOUT`.
+
 ### 2026-09-24, task-70 fase 2
 
 - **"nunca chame o claude" no briefing não basta:** o agente não chamou,
