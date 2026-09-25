@@ -204,25 +204,13 @@ fn every_control_has_a_name_and_takes_focus_and_no_group_is_empty() {
 }
 
 /// The focus a page takes and does not project: the reader moved it,
-/// the page agreed, and the tree still says the window has it. The pages
-/// project `focused` for most of their controls; not for the todo's
-/// filter tabs, the quick todo's filter buttons and checkboxes, the
-/// proposer selects, and the Silences page's detect and apply all.
-const FOCUS_NOT_PROJECTED: &[&str] = &[
-    "silences.apply_all",
-    "silences.detect",
-    "silences_surface.proposer",
-    "surface_page.proposer",
-    "todo.filter[active]",
-    "todo.filter[all]",
-    "todo.filter[completed]",
-    "todo_panel.filter.active",
-    "todo_panel.filter.all",
-    "todo_panel.filter.completed",
-    "todo_panel.item[1].done",
-    "todo_panel.item[2].done",
-    "todo_panel.item[3].done",
-];
+/// the page agreed, and the tree still says the window has it. Phase 1
+/// listed 13 (the todo's filter tabs, the quick todo's filters and
+/// checkboxes, the proposer selects, the Silences page's detect and apply
+/// all); since phase 2a every page projects the focus it takes (the todo
+/// keeps its tab, the Surface and Silences pages the surface's node, the
+/// proposing row its select and buttons, the Silences page its buttons).
+const FOCUS_NOT_PROJECTED: &[&str] = &[];
 
 #[test]
 fn tab_and_the_reader_walk_the_same_order_and_the_page_takes_the_focus() {
@@ -451,4 +439,57 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
             "todo.counter",
         ]
     );
+}
+
+/// The focus a reader leaves on a control the page draws no focus of its
+/// own for (a filter tab, a checkbox of the quick todo, the proposer, the
+/// detect button) is the page's until something else takes it: Escape
+/// lets it go, a click of the person moves it where the click went.
+#[test]
+fn the_focus_a_reader_leaves_goes_with_escape_and_with_a_click() {
+    for (page, id) in [
+        ("Todo", "todo.filter[active]"),
+        ("Surface", "todo_panel.filter.active"),
+        ("Surface", "todo_panel.item[2].done"),
+        ("Surface", "surface_page.proposer"),
+        ("Silences", "silences.detect"),
+        ("Silences", "silences_surface.proposer"),
+    ] {
+        let sid = |t: &str| SemId::parse(t).unwrap_or_else(|e| panic!("{t}: {e}"));
+        let focused = |view: &ShowcaseView| {
+            view.semantics()
+                .and_then(|s| s.focused().map(ToString::to_string))
+        };
+        let mut seen = see(page);
+        assert!(seen.view.assist_focus(&sid(id)), "{page}: {id}");
+        assert_eq!(
+            focused(&seen.view).as_deref(),
+            Some(id),
+            "{page}: projected"
+        );
+        assert!(seen.view.close_top_overlay(), "{page}: Escape lets it go");
+        assert_eq!(focused(&seen.view), None, "{page}: {id} after Escape");
+
+        assert!(seen.view.assist_focus(&sid(id)));
+        let mut c = Compositor::new();
+        seen.view.render(&mut c);
+        let field = match page {
+            "Silences" => "silences_surface.intent",
+            "Surface" => "surface_page.intent",
+            _ => "todo.input",
+        };
+        let Some([x, y, w, h]) = c.binding(&sid(field)).map(|b| b.rect) else {
+            panic!("{page}: {field} is bound");
+        };
+        let (x, y) = (x + w / 2.0, y + h / 2.0);
+        seen.view
+            .handle_event(&comps::prelude::WidgetEvent::MouseDown { x, y });
+        seen.view
+            .handle_event(&comps::prelude::WidgetEvent::MouseUp { x, y });
+        assert_eq!(
+            focused(&seen.view).as_deref(),
+            Some(field),
+            "{page}: the click moved it to the field"
+        );
+    }
 }

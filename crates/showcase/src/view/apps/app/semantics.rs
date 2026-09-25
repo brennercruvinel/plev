@@ -195,6 +195,8 @@ impl Semantics for TodoPage {
             .state("done", count(counts.completed));
         if self.input.is_focused() {
             b.focus(&ids.input);
+        } else if let Some(f) = self.tab_focus {
+            b.focus(ids.tab(f));
         }
     }
 }
@@ -299,9 +301,10 @@ impl TodoPage {
     /// screen reader's focus, or a Tab resolved in the semantic order.
     /// Focus is editing, not a capability, so it does not go through the
     /// dispatcher, the same as a click into the field. The field takes it;
-    /// another node of the page takes it from the field (the pills and
-    /// the rows hold no focus of their own). `false` for an id the page
-    /// does not project, and while inert.
+    /// a filter tab takes it, and the page keeps it for the tab (the pills
+    /// draw none) and projects it; another node of the page takes it from
+    /// both (the rows hold no focus). `false` for an id the page does not
+    /// project, and while inert.
     pub(crate) fn focus(&mut self, id: &SemId) -> bool {
         let Some(ids) = &self.ids else {
             return false;
@@ -309,16 +312,19 @@ impl TodoPage {
         if self.inert {
             return false;
         }
+        let tab = ids.tabs.iter().zip(Filter::ALL).find(|(t, _)| *t == id);
         if *id == ids.input {
+            self.tab_focus = None;
             self.input.focus();
             return true;
         }
         let ours = *id == ids.todo
             || *id == ids.filter
             || *id == ids.counter
-            || ids.tabs.contains(id)
+            || tab.is_some()
             || ids.item_of(id).is_some();
         if ours {
+            self.tab_focus = tab.map(|(_, f)| f);
             self.input.unfocus();
         }
         ours

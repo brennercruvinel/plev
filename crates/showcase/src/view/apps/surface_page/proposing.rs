@@ -52,6 +52,7 @@ use sem::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 use super::asking::{Claude, POLL, Pending};
 
 pub(crate) mod changing;
+mod focus;
 
 /// The ids the page's own capabilities project and bind.
 pub(crate) struct Ids {
@@ -421,8 +422,8 @@ impl Proposing {
             _ => {}
         }
         changing::project(self.said.as_ref(), &mut status);
-        if self.intent.is_focused() {
-            b.focus(&ids.intent);
+        if let Some(id) = self.focused(ids, ready, waiting) {
+            b.focus(id);
         }
     }
 
@@ -514,6 +515,9 @@ impl Proposing {
             return (EventResult::IGNORED, Asked::default());
         }
         self.refresh();
+        if matches!(event, WidgetEvent::MouseDown { .. }) {
+            self.let_go();
+        }
         if self.proposer.is_open() {
             let panel = self.proposer.handle_event(event, row.proposer, theme);
             let asked = Asked {

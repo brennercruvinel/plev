@@ -108,6 +108,10 @@ pub struct SurfacePage {
     forms: Tabs,
     /// The intent field and the propose button.
     proposing: Proposing,
+    /// A node of the surface that is not a field and that a screen reader
+    /// moved the focus to: the `surface` crate keeps the focus of its
+    /// fields only, so the page keeps this one and projects it.
+    surface_focus: Option<SemId>,
 }
 
 /// The todo page as the surface reaches it: its one dispatcher and its
@@ -181,6 +185,7 @@ impl SurfacePage {
             form: 0,
             forms: Tabs::new(FORMS.iter().map(|f| f.label)),
             proposing: Proposing::new(REGION),
+            surface_focus: None,
         };
         let Ok(app) = todo.snapshot() else {
             page.refused = Some("the todo page does not project".to_owned());
@@ -316,6 +321,9 @@ impl SurfacePage {
         inert: bool,
     ) -> EventResult {
         self.set_inert(inert, todo);
+        if matches!(event, WidgetEvent::MouseDown { .. }) {
+            self.surface_focus = None;
+        }
         let h = self.halves(content, theme, todo);
         let (mut r, asked) = self.proposing.handle_event(event, &h.row, theme);
         if asked.propose {
@@ -386,11 +394,10 @@ impl SurfacePage {
     }
 
     pub fn handle_escape(&mut self, todo: &mut TodoPage) -> bool {
-        if self.proposing.escape() {
+        if self.proposing.escape() || self.proposing.blur() {
             return true;
         }
-        if self.proposing.intent.is_focused() {
-            self.proposing.intent.unfocus();
+        if self.surface_focus.take().is_some() {
             return true;
         }
         let surface = self.host.iter_mut().any(|s| s.handle_escape());
@@ -469,6 +476,11 @@ impl SurfacePage {
         todo.project(&mut b);
         self.host.project(&mut b);
         self.proposing.project(&mut b);
+        if let Some(id) = &self.surface_focus
+            && b.declared().iter().any(|n| n.id == *id)
+        {
+            b.focus(id);
+        }
         b.finish()
     }
 
@@ -530,31 +542,31 @@ impl SurfacePage {
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus from outside: the intent field, a node of the
-    /// surface (its field, or away from the fields), or the todo.
+    /// Keyboard focus from outside: a node of the proposing row, a node
+    /// of the surface (its field; any other node the page keeps and
+    /// projects), or the todo.
     pub(crate) fn focus(&mut self, id: &SemId, todo: &mut TodoPage, inert: bool) -> bool {
         self.set_inert(inert, todo);
         if self.proposing.holds(id) {
             if inert {
                 return false;
             }
-            let intent = self.proposing.ids.as_ref().map(|ids| &ids.intent);
-            if intent == Some(id) {
-                self.proposing.intent.focus();
-            } else {
-                self.proposing.intent.unfocus();
-            }
+            self.proposing.focus(id);
+            self.surface_focus = None;
             todo.handle_escape();
             for s in self.host.iter_mut() {
                 s.handle_escape();
             }
             return true;
         }
-        self.proposing.intent.unfocus();
+        self.proposing.blur();
         if self.host.iter_mut().any(|s| s.focus(id)) {
             todo.handle_escape();
+            let field = self.host.iter().any(|s| s.focused() == Some(id));
+            self.surface_focus = (!field).then(|| id.clone());
             return true;
         }
+        self.surface_focus = None;
         let taken = todo.focus(id);
         if taken {
             for s in self.host.iter_mut() {

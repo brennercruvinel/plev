@@ -41,7 +41,7 @@ use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
 use super::generated::page::{Page, project_all};
 use super::jobs::frame_ref;
 use super::worker::Job;
-use super::{Said, SilencesPage};
+use super::{Focus, Said, SilencesPage};
 use crate::view::apps::app::TodoPage;
 
 /// The ids the page projects and binds, parsed once.
@@ -290,10 +290,15 @@ impl Semantics for SilencesPage {
             .parent(&ids.region)
             .state("message", message)
             .state("busy", busy);
-        match self.focus {
-            Some(Which::Threshold) => b.focus(&ids.threshold),
-            Some(Which::MinDuration) => b.focus(&ids.min_duration),
-            None => {}
+        let focused = match self.focus {
+            Some(Focus::Slider(Which::Threshold)) => Some(&ids.threshold),
+            Some(Focus::Slider(Which::MinDuration)) => Some(&ids.min_duration),
+            Some(Focus::Detect) => (!busy).then_some(&ids.detect),
+            Some(Focus::ApplyAll) => some.then_some(&ids.apply_all),
+            None => None,
+        };
+        if let Some(id) = focused {
+            b.focus(id);
         }
         // the composites the person installed (task-70 phase 3), on the
         // cuts they run on, from what the page declared above
@@ -460,33 +465,34 @@ impl SilencesPage {
         todo.receipt(id).cloned()
     }
 
-    /// Keyboard focus asked from outside the page's pointer handling: the
-    /// intent field takes it; a node of the surface (its field, or away
-    /// from the fields); a slider takes it; another node of the page
-    /// takes it from the sliders. `false` for an id the page does not
-    /// project, and while inert.
+    /// Keyboard focus asked from outside the page's pointer handling: a
+    /// node of the row (`Proposing::focus`); another node of the block
+    /// or of the surface (a field takes it; any other the block keeps
+    /// and projects); a slider or a button of the page takes it; another
+    /// node of the page takes it from them. `false` for an id the page
+    /// does not project, and while inert.
     pub(crate) fn focus(&mut self, id: &SemId) -> bool {
         if self.inert {
             return false;
         }
-        if self.generated.holds(id) {
-            let intent = self.generated.proposing.ids.as_ref().map(|ids| &ids.intent);
-            if intent == Some(id) {
-                self.generated.proposing.intent.focus();
-            } else {
-                self.generated.proposing.intent.unfocus();
-            }
-            self.set_focus(None);
-            for s in self.generated.host.iter_mut() {
+        let generated = &mut self.generated;
+        if generated.holds(id) {
+            generated.proposing.focus(id);
+            generated.focus = (!generated.proposing.holds(id)).then(|| id.clone());
+            for s in generated.host.iter_mut() {
                 s.handle_escape();
             }
-            return true;
-        }
-        self.generated.proposing.intent.unfocus();
-        if self.generated.host.iter_mut().any(|s| s.focus(id)) {
             self.set_focus(None);
             return true;
         }
+        generated.proposing.blur();
+        if generated.host.iter_mut().any(|s| s.focus(id)) {
+            let field = generated.host.iter().any(|s| s.focused() == Some(id));
+            generated.focus = (!field).then(|| id.clone());
+            self.set_focus(None);
+            return true;
+        }
+        generated.focus = None;
         let Some(ids) = &self.ids else {
             return false;
         };
@@ -496,14 +502,15 @@ impl SilencesPage {
         for s in self.generated.host.iter_mut() {
             s.handle_escape();
         }
-        let which = if *id == ids.threshold {
-            Some(Which::Threshold)
-        } else if *id == ids.min_duration {
-            Some(Which::MinDuration)
-        } else {
-            None
-        };
-        self.set_focus(which);
+        let focus = [
+            (&ids.threshold, Focus::Slider(Which::Threshold)),
+            (&ids.min_duration, Focus::Slider(Which::MinDuration)),
+            (&ids.detect, Focus::Detect),
+            (&ids.apply_all, Focus::ApplyAll),
+        ]
+        .into_iter()
+        .find_map(|(at, f)| (at == id).then_some(f));
+        self.set_focus(focus);
         true
     }
 
@@ -564,13 +571,6 @@ impl SilencesPage {
             Which::Threshold => &mut self.threshold,
             Which::MinDuration => &mut self.min_duration,
         }
-    }
-
-    pub(super) fn set_focus(&mut self, which: Option<Which>) {
-        self.focus = which;
-        self.threshold.set_focused(which == Some(Which::Threshold));
-        self.min_duration
-            .set_focused(which == Some(Which::MinDuration));
     }
 
     /// `2 silences, 1 applied, 0 rejected, 2.0 s cut`.

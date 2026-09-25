@@ -53,6 +53,10 @@ pub(super) struct Generated {
     pub offer: Offer,
     /// The person's accessibility band, and whether it is open.
     pub access: Access,
+    /// A node of the block or of the surface that holds no focus of its
+    /// own (the close, a band's button, a surface's checkbox) and that a
+    /// screen reader moved the focus to: kept here and projected.
+    pub focus: Option<SemId>,
 }
 
 /// Where each part goes in the page's content: the row, the close
@@ -100,6 +104,7 @@ impl Generated {
             close_id,
             offer,
             access,
+            focus: None,
         }
     }
 
@@ -139,6 +144,11 @@ impl Generated {
         node.action("close").enabled(open);
         self.offer.project(b, &ids.region);
         self.access.project(b, &ids.region);
+        if let Some(id) = &self.focus
+            && b.declared().iter().any(|n| n.id == *id)
+        {
+            b.focus(id);
+        }
     }
 
     /// `close` on the close button, when `req` asks it.
@@ -223,6 +233,9 @@ impl Generated {
         theme: &Theme,
     ) -> (EventResult, RowAsked) {
         self.close.disabled = !self.open();
+        if matches!(event, WidgetEvent::MouseDown { .. }) {
+            self.focus = None;
+        }
         let (r, asked) = self.proposing.handle_event(event, &h.row, theme);
         if asked.taken {
             return (
