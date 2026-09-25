@@ -14,6 +14,31 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-80 fase 1: o método e as demos 3 e 4
+
+- **integrada:** `task/80a-proof` (8 commits, agente no Opus). o método
+  das cinco demos commitado antes de qualquer demo nova rodar; o que já
+  estava provado reunido com a fonte; demo 3: a corrida do `Refresh` da
+  task-84 gravada no laboratório com o bug de volta (branch descartável
+  `task/80a-bug84`, só local, fora do merge), lida no instante pelo
+  `plev-inspect` e virando teste no gate (`crates/ide/tests/rerun/inflight.rs`)
+  que falha com o bug e passa sem; demo 4: a revisão nasce da intenção,
+  vira comparação e fecha, gravada sem janela (`crates/showcase/tests/ephemeral.rs`).
+- **validação:** diff inteiro lido; nenhum código de produção mudou (só
+  testes, uma fixture de 43.916 bytes e docs). gate local verde, 3012
+  passam (antes 3010); regress 176 sem mudança.
+- **decisão autônoma:** a demo 5 pede superfície gerada num app real, e
+  nem o ide nem o urnaui têm `SurfaceHost`; abri a task-96 (pendente,
+  onda 8) em vez de atalho, como a task-80 manda.
+- **observação de privacidade (não é defeito):** a gravação guarda o
+  texto do campo de intenção como estado, porque é estado do app; se a
+  pessoa digitar ali, o texto dela vai para a gravação que ela mesma
+  pediu. o input continua gravado só como tipo e controle. se o campo
+  deve ser secreto é pergunta para o brenner, sem pressa.
+- **com o brenner:** a demo 2 (ele assume o trabalho do agente), a
+  pergunta do núcleo, e o gasto do Claude de verdade para os braços de
+  controle da demo 1.
+
 ### task-70 fase 4 e a task-70 fechada
 
 - **integrada:** `task/70d-a11y-transforms` (9 commits, agente no Opus).

@@ -131,6 +131,7 @@ o que a tese precisa e o que existe hoje:
 | task-78 | aplicações AI-native | trilha | 73 (streaming), 66 |
 | task-79 | cena por socket | trilha | 61 (transporte), 66 |
 | task-80 | prova de software qualitativamente diferente | 8 | 62, 64, 69, 70 |
+| task-96 | uma superfície gerada no ide (a demo 5 da task-80) | 8 | 68, 69, 70, 63, 64 |
 
 ## 5. grafo de dependências
 
@@ -215,7 +216,7 @@ quando as superfícies (seção 8) são disjuntas.
   em `refs/`) pode rodar a partir da onda 4, porque não integra nada.
 - checkpoint b depois da task-69.
 - onda 7: task-70, task-71.
-- onda 8: task-80.
+- onda 8: task-80; a task-96 (superfície gerada no ide) antes da demo 5.
 - trilhas (72, 74, 75, 76, 77, 78, 79): liberadas pelo orquestrador quando
   a dependência está integrada e a superfície está livre. são longas e não
   bloqueiam o núcleo.
@@ -436,3 +437,4 @@ atualizado em cada integração.
 | task-72 | fase 1 integrada: o inventário medido (primeiro frame headless 79 ms em debug: device 26, fontes ~23 pela varredura das 805 do sistema duas vezes, shaders 2,7, ícones 0,17, imagens 0); nenhum asset saiu do runtime pelo número; WGSL validado no gate com arquivo, linha e coluna | merge da `task/72a-asset-compiler` | fase 2: interação gravada como asset e container do monster depois da task-63; ícones medidos em release; a varredura de fontes vai para a task-74; o teste antigo de WGSL em `gpu/tests.rs` ficou redundante e o `3Dscene.wgsl` é órfão (P3) |
 | task-75 | fase 1 integrada (trilha): a matriz do AccessKit por plataforma lida no lock (macOS roda; windows e linux esperam o alvo; iOS e web sem adapter; android fora do lock; nenhum adapter com custom actions); a árvore das 82 páginas testada (só 6 projetam significado); botão com uma ação só é apertado por ela, grupo mudo vira estrutura; status polida e alerta assertivo sem mover o foco, o toast na árvore do leitor; 301 pares de contraste, 102 falham, listados sem mudar cor; reduced motion no `engine::animation`, lido do macOS pela ponte | merge da `task/75a-a11y` | fase 2: as páginas de componente projetam, as ações de linha e os selects viram controles, o foco pedido volta na projeção, o toast e o `shell:notice` na projeção da view, spinner e skeleton seguem o reduced motion, teclado completo; do brenner: o web (espelho DOM ou nada), as cores que falham, o roteiro do VoiceOver; o `defaults` no lugar da API do AppKit (sandbox) |
 | task-71 | fase 1 integrada (onda 7): o parser escreve plev IR ao lado do código builder (que não mudou um byte), relatório em quatro categorias com arquivo:linha provado por um censo do parse, tolerância de token medida no tema, `binding required` para botão, `onClick` e campo de texto, comparação de pixels com cada diferença explicada | merge da `task/71a-compiler-target` | fase 2: a fonte nova (HTML/CSS pede grammar nova; Figma pede export real), do brenner |
+| task-80 | fase 1 integrada (onda 8): o método das cinco demos escrito antes de rodar; a 1 pela task-62 (cinco rodadas), a 4 pela 69 e o checkpoint b no que cobrem; demo 3: a corrida da task-84 gravada com o bug de volta numa branch descartável, lida no instante pelo `plev-inspect` (oito perguntas da tese respondidas pelo arquivo; os lapsos de 29 e 24 ms escapam a um vídeo de 30 fps), virando teste no gate que falha com o bug e passa sem, dez de dez; demo 4: a revisão nasce da intenção, vira comparação e fecha, gravada sem janela, nada dela depois do close | merge da `task/80a-proof` | a demo 2 e a pergunta do núcleo com o brenner; a demo 5 pede a task-96 (superfície gerada no ide); os braços de controle da demo 1 (agente por screenshot, por snapshot de accessibility de terceiros) e o Claude de verdade com o orquestrador; a lista de durações na Silences (P3) |

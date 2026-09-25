@@ -12,6 +12,19 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 
 ## produto e tese
 
+### 2026-09-25, task-80 fase 1
+
+- **um teste que espera tudo assentar não vê corrida:** o rerun da
+  task-64 drenava toda leitura antes de cada ato, e com isso a corrida da
+  task-84 passava. só uma fixture que deixa as leituras em voo, como a
+  janela deixa, pegou o bug. regra: teste de concorrência reproduz o
+  ritmo de quem usa, não o repouso. fonte:
+  `crates/ide/tests/rerun/inflight.rs`.
+- **a gravação semântica vê o que o vídeo não vê:** os lapsos da corrida
+  duraram 29 e 24 ms, menos que um quadro a 30 fps; o `plev-inspect`
+  respondeu as oito perguntas da tese só pelo arquivo. fonte: a demo 3 no
+  arquivo da task-80.
+
 ### 2026-09-25, task-70 fase 4
 
 - **privacidade e accessibility puxam para lados opostos na mesma
