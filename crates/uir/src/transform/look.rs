@@ -213,6 +213,15 @@ const FOREGROUND: [ColorRole; 8] = [
     ColorRole::Info,
 ];
 
+/// the fills a badge takes: its filled shape, in the intent each role
+/// stands for (the accent the neutral one), its text in contrast to it.
+const BADGE_FILLS: [ColorRole; 4] = [
+    ColorRole::Accent,
+    ColorRole::Success,
+    ColorRole::Danger,
+    ColorRole::Info,
+];
+
 /// the roles a container is filled with.
 const BACKGROUND: [ColorRole; 5] = [
     ColorRole::Bg,
@@ -227,9 +236,11 @@ fn roles(list: &[ColorRole]) -> String {
     names.join(", ")
 }
 
-/// `Restyle`: a text's color (`props.color`) or a container's or a
-/// list's fill (`props.background`), the two colors the IR sets that a
-/// surface draws; the role one of the ones that part takes.
+/// `Restyle`: the ink of the text the surface draws for a node
+/// (`props.color`: a text's, and, since phase 4, a slider's label and
+/// value, a table's rows, an image's label), a container's or a list's
+/// fill, or a badge's fill (`props.background`: the filled shape instead
+/// of the glass tag); the role one of the ones that part takes.
 pub(super) fn restyle(
     d: &mut Draft,
     id: &SemId,
@@ -239,8 +250,11 @@ pub(super) fn restyle(
     let before = look(node);
     let what = name(node.component);
     let (slot, fits, part) = match node.component {
-        Some(Component::Text) => (&mut node.props.color, &FOREGROUND[..], "color"),
+        Some(Component::Text | Component::Slider | Component::Table | Component::Image) => {
+            (&mut node.props.color, &FOREGROUND[..], "color")
+        }
         None | Some(Component::List) => (&mut node.props.background, &BACKGROUND[..], "fill"),
+        Some(Component::Badge) => (&mut node.props.background, &BADGE_FILLS[..], "fill"),
         Some(_) => {
             return Err(refused(format!(
                 "a {what} is drawn in the theme's own colors: no role of the IR restyles it"
