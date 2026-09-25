@@ -14,6 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-75 fase 2b: as páginas de componente projetam
+
+- **disparada e integrada:** `task/75c-a11y-component-pages` (9 commits,
+  agente no Opus, base `3048b320`). 30 páginas de componente projetam por
+  um trait `Component` e uma tabela de 19 panes; cada pedido do leitor e
+  do agente pelo dispatcher da galeria, o clique da pessoa no widget. a
+  pessoa, o leitor e um agente pelo port de verdade chegam ao mesmo
+  estado (teste por tipo de widget). a barra de menu deixa essas páginas
+  de fora. páginas que projetam: 6 para 36; as 46 que ficam têm motivo.
+  gate local verde, 3103 passam (antes 3086); regress 176 iguais.
+- **baselines:** 60 re-abençoadas (30 páginas, core e hoff): um
+  `semantics.json` novo cada e, no `scene.json`, os blocos `semantics` e
+  `bindings`. o nome da camada da página também mudou (`z0` virou
+  `<página>_page`), porque o regress dá nome à camada pelas raízes dos
+  ids ligados nela. conferido por script do orquestrador: z, hash,
+  contagem de nós e limites iguais nas 60, nenhum `frame.png`. aceito como
+  espelho das ligações, como a revisão na fase 2a.
+- **anexo tirado:** o agente colou cerca de 3100 linhas de JSON no arquivo
+  da task (o briefing pedia um diff por tipo); o orquestrador trocou por
+  um ponteiro para o commit.
+
 ### task-75 fase 2a: as páginas que projetam, para o leitor de tela
 
 - **integrada:** `task/75b-a11y-pages` (12 commits, agente no Opus). as
