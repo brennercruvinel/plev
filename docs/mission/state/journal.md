@@ -14,6 +14,27 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-96: uma superfície gerada no ide, e a demo 5
+
+- **integrada:** `task/96a-ide-surface` (14 commits, agente no Opus). uma
+  coluna ao lado das vistas fixas do ide com a linha de intenção e o
+  host; "review these three commits" pelas regras; cada ato pelo
+  dispatcher do workbench; o Claude pelo caminho do showcase, vendo só os
+  commits pedidos (testado com o falso). a task fechou (`checked/`).
+- **validação:** diff inteiro lido; o lock só ganhou arestas do pacote
+  `ide` para crates do workspace (`uir`, `propose`, `surface`,
+  `claude-model`), autorizadas no briefing. uma mudança no `surface`: a
+  tabela de altura limitada recorta as linhas (a primeira gravação mostrou
+  linhas por cima do resto); baselines iguais. gate local verde, 3036
+  passam (antes 3012); regress 176 sem mudança.
+- **a demo 5 deu misto, e fica misto:** melhor para ver os arquivos dos
+  três commits (3 de uma vez contra no máximo 1), pior para ler o diff (5
+  linhas sem cor contra o diff inteiro). pelo critério escrito antes, cai
+  no diff.
+- **decisão autônoma:** o que faltou é um componente de código e diff no
+  vocabulário do IR, não algo do ide; abri a task-97 (pendente, onda 8)
+  para pôr um e medir a demo 5 de novo pelo mesmo critério.
+
 ### task-80 fase 1: o método e as demos 3 e 4
 
 - **integrada:** `task/80a-proof` (8 commits, agente no Opus). o método

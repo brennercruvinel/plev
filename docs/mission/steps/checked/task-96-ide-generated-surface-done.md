@@ -1,7 +1,7 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: ongoing
+status: done
 last-updated: 2026-09-25
 domain: generative-runtime
 task: task-96
@@ -534,3 +534,12 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 - P3: um estado de diff por commit (os três diffs de uma vez); um
   componente de código ou diff no vocabulário (widget no comps e ADR); a
   linha de intenção num lugar comum ao showcase e ao ide.
+
+## fechamento (2026-09-25, orquestrador)
+
+integrada. os critérios cumpridos pelas regras: a revisão de três
+commits gerada e verificada, operada pelo dispatcher do workbench, sem
+rastro ao fechar, e a demo 5 medida contra o painel fixo (misto: melhor
+nos arquivos, pior no diff). fica com o orquestrador e o brenner: a
+prova com o Claude de verdade e a demo 5 com janela. o que faltou para o
+diff (um componente de diff no vocabulário do IR) vira task nova.

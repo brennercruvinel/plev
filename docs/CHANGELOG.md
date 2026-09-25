@@ -9,6 +9,19 @@ status: living
 
 ## unreleased
 
+- a generated surface in the ide (2026-09-25, task-96): beside its
+  panels, the ide has a line where a person writes what they want to see.
+  "review these three commits" (or "revise estes três commits") gives a
+  verified surface with one card per commit (its message, author, files
+  and a button that shows its diff) and the diff beside them. every
+  click on it is a request through the ide's own dispatcher, so an agent
+  can press the same button and a stale one is refused as anywhere else;
+  closing it leaves nothing behind. the rules make it; the Claude can be
+  chosen and is shown only the commits the review names. measured against
+  the fixed panel for the same review: better at seeing the files of all
+  three commits at once, worse at reading a diff, which the surface shows
+  five lines at a time without color.
+
 - the proof starts (2026-09-25, task-80 phase 1): the method of the five
   demonstrations is written down before any new one ran, each with its
   script, the alternative it is compared against and what would knock it
