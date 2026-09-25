@@ -1,0 +1,1064 @@
+{
+  "name": "Artify App",
+  "document": {
+    "id": "0:0",
+    "name": "Document",
+    "type": "DOCUMENT",
+    "children": [
+      {
+        "id": "0:1",
+        "name": "\u21b3 \ud83c\udf19 Dark Theme",
+        "type": "CANVAS",
+        "children": [
+          {
+            "id": "2051:18964",
+            "name": "settings",
+            "type": "SECTION",
+            "absoluteBoundingBox": {"x": 38702, "y": -3053, "width": 1892, "height": 1052},
+            "children": [
+              {
+                "id": "2051:21322",
+                "name": "settings",
+                "type": "FRAME",
+                "absoluteBoundingBox": {"x": 39235, "y": -2953, "width": 393, "height": 852},
+                "fills": [{"type": "SOLID", "color": {"r": 0.1333, "g": 0.1216, "b": 0.1216, "a": 1}}],
+                "cornerRadius": 30,
+                "clipsContent": true,
+                "children": [
+                  {
+                    "id": "2051:21323",
+                    "name": "Ellipse 2316",
+                    "type": "ELLIPSE",
+                    "opacity": 0.41,
+                    "absoluteBoundingBox": {"x": 39401, "y": -2293, "width": 281, "height": 281},
+                    "fills": [{"type": "SOLID", "color": {"r": 0.5843, "g": 0.6275, "b": 0.6431, "a": 1}}],
+                    "effects": [{"type": "FOREGROUND_BLUR", "radius": 284}]
+                  },
+                  {
+                    "id": "2051:21324",
+                    "name": "Ellipse 2315",
+                    "type": "ELLIPSE",
+                    "opacity": 0.41,
+                    "absoluteBoundingBox": {"x": 39071, "y": -3073, "width": 281, "height": 281},
+                    "fills": [{"type": "SOLID", "color": {"r": 0.5843, "g": 0.6275, "b": 0.6431, "a": 1}}],
+                    "effects": [{"type": "FOREGROUND_BLUR", "radius": 284}]
+                  },
+                  {
+                    "id": "2051:21325",
+                    "name": "Status Bar",
+                    "type": "INSTANCE",
+                    "absoluteBoundingBox": {"x": 39235, "y": -2953, "width": 393, "height": 59},
+                    "clipsContent": true,
+                    "componentId": "1:28",
+                    "children": [
+                      {
+                        "id": "I2051:21325;1:29",
+                        "name": "iOS Material",
+                        "type": "INSTANCE",
+                        "visible": false,
+                        "absoluteBoundingBox": {"x": 39235, "y": -2953, "width": 393, "height": 59},
+                        "fills": [{"type": "SOLID", "color": {"r": 0.1451, "g": 0.1451, "b": 0.1451, "a": 1}, "opacity": 0.82}, {"type": "SOLID", "color": {"r": 0.549, "g": 0.549, "b": 0.549, "a": 1}}],
+                        "effects": [{"type": "BACKGROUND_BLUR", "radius": 50}],
+                        "clipsContent": true,
+                        "componentId": "1:20",
+                        "unappliedOverrides": [{"path": "4294:1633", "fields": ["styleIdForEffect", "styleIdForFill"], "matched": true}]
+                      },
+                      {
+                        "id": "I2051:21325;1:30",
+                        "name": "Levels",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39488, "y": -2953, "width": 140.5, "height": 59},
+                        "children": [
+                          {
+                            "id": "I2051:21325;1:31",
+                            "name": "Connection Levels",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39518, "y": -2930.6, "width": 78.33, "height": 14.2},
+                            "children": [
+                              {
+                                "id": "I2051:21325;1:32",
+                                "name": "Battery",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39569, "y": -2930.6, "width": 27.33, "height": 14.2},
+                                "clipsContent": true,
+                                "children": [
+                                  {
+                                    "id": "I2051:21325;1:33",
+                                    "name": "Border",
+                                    "type": "RECTANGLE",
+                                    "opacity": 0.35,
+                                    "absoluteBoundingBox": {"x": 39569, "y": -2930.6, "width": 25, "height": 14.2},
+                                    "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "strokeWeight": 1,
+                                    "cornerRadius": 4.3
+                                  },
+                                  {
+                                    "id": "I2051:21325;1:34",
+                                    "name": "Cap",
+                                    "type": "VECTOR",
+                                    "opacity": 0.4,
+                                    "absoluteBoundingBox": {"x": 39595, "y": -2925.38, "width": 1.33, "height": 4.45},
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                                  },
+                                  {
+                                    "id": "I2051:21325;1:35",
+                                    "name": "Capacity",
+                                    "type": "RECTANGLE",
+                                    "absoluteBoundingBox": {"x": 39571, "y": -2928.41, "width": 21, "height": 9.83},
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "cornerRadius": 2.5
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "I2051:21325;1:36",
+                                "name": "Wifi",
+                                "type": "VECTOR",
+                                "absoluteBoundingBox": {"x": 39544.7, "y": -2929.9, "width": 17.14, "height": 13.47},
+                                "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                              },
+                              {
+                                "id": "I2051:21325;1:37",
+                                "name": "Cellular Connection",
+                                "type": "VECTOR",
+                                "absoluteBoundingBox": {"x": 39518, "y": -2930.01, "width": 19.2, "height": 13.36},
+                                "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I2051:21325;1:38",
+                        "name": "Dynamic Island",
+                        "type": "FRAME",
+                        "visible": false,
+                        "absoluteBoundingBox": {"x": 39369, "y": -2942, "width": 125, "height": 37},
+                        "fills": [{"type": "SOLID", "color": {"r": 0, "g": 0, "b": 0, "a": 1}}],
+                        "cornerRadius": 18.5,
+                        "clipsContent": true,
+                        "children": [
+                          {
+                            "id": "I2051:21325;1:39",
+                            "name": "Ellipse 1",
+                            "type": "ELLIPSE",
+                            "visible": false,
+                            "absoluteBoundingBox": {"x": 39450, "y": -2927, "width": 6, "height": 6},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.5059, "g": 0.8, "b": 0.451, "a": 1}}]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "I2051:21325;1:40",
+                        "name": "Time",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39235, "y": -2953, "width": 140.5, "height": 59},
+                        "children": [
+                          {
+                            "id": "I2051:21325;1:41",
+                            "name": "Time",
+                            "type": "TEXT",
+                            "absoluteBoundingBox": {"x": 39287, "y": -2953, "width": 37, "height": 59},
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                            "characters": "9:41",
+                            "style": {"fontFamily": "SF Pro", "fontWeight": 600, "fontSize": 17, "lineHeightPx": 22, "textAlignHorizontal": "CENTER", "textAutoResize": "NONE"}
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "2051:21356",
+                    "name": "Frame 2147224275",
+                    "type": "FRAME",
+                    "absoluteBoundingBox": {"x": 39256, "y": -2545, "width": 352, "height": 402},
+                    "layoutMode": "VERTICAL",
+                    "itemSpacing": 8,
+                    "primaryAxisSizingMode": "AUTO",
+                    "counterAxisSizingMode": "FIXED",
+                    "children": [
+                      {
+                        "id": "2051:21357",
+                        "name": "Frame 2147224240",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39256, "y": -2545, "width": 352, "height": 402},
+                        "layoutMode": "VERTICAL",
+                        "itemSpacing": 8,
+                        "primaryAxisAlignItems": "CENTER",
+                        "primaryAxisSizingMode": "AUTO",
+                        "counterAxisSizingMode": "FIXED",
+                        "layoutAlign": "STRETCH",
+                        "children": [
+                          {
+                            "id": "2051:21358",
+                            "name": "Frame 2147224234",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39256, "y": -2545, "width": 352, "height": 74},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 12,
+                            "paddingLeft": 14,
+                            "paddingRight": 14,
+                            "paddingTop": 14,
+                            "paddingBottom": 14,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "AUTO",
+                            "layoutAlign": "STRETCH",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                            "cornerRadius": 14,
+                            "children": [
+                              {
+                                "id": "2051:21359",
+                                "name": "Frame 2147224236",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39270, "y": -2531, "width": 46, "height": 46},
+                                "layoutMode": "HORIZONTAL",
+                                "itemSpacing": 10,
+                                "paddingLeft": 11,
+                                "paddingRight": 11,
+                                "paddingTop": 10,
+                                "paddingBottom": 10,
+                                "primaryAxisAlignItems": "CENTER",
+                                "counterAxisAlignItems": "CENTER",
+                                "primaryAxisSizingMode": "FIXED",
+                                "counterAxisSizingMode": "FIXED",
+                                "fills": [{"type": "SOLID", "color": {"r": 0.2667, "g": 0.2745, "b": 0.2784, "a": 1}}],
+                                "cornerRadius": 191,
+                                "children": [
+                                  {
+                                    "id": "2051:21481",
+                                    "name": "school-bell-02",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39281, "y": -2520, "width": 24, "height": 24},
+                                    "clipsContent": true,
+                                    "componentId": "55:6614",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21481;55:6615",
+                                        "name": "elements",
+                                        "type": "FRAME",
+                                        "absoluteBoundingBox": {"x": 39284, "y": -2517, "width": 18, "height": 18},
+                                        "clipsContent": true,
+                                        "children": [
+                                          {
+                                            "id": "I2051:21481;55:6616",
+                                            "name": "Vector 4618",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39284, "y": -2511, "width": 12, "height": 12},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21481;55:6617",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39296, "y": -2503, "width": 4, "height": 4},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21481;55:6618",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39284, "y": -2515, "width": 4, "height": 4},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21481;55:6619",
+                                            "name": "Vector 4619",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39294, "y": -2517, "width": 8, "height": 8},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21481;55:6620",
+                                            "name": "Ellipse 1590",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39285, "y": -2504, "width": 4, "height": 4},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21364",
+                                "name": "Frame 2147224233",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39328, "y": -2528, "width": 266, "height": 40},
+                                "layoutMode": "VERTICAL",
+                                "primaryAxisSizingMode": "AUTO",
+                                "counterAxisSizingMode": "FIXED",
+                                "layoutGrow": 1,
+                                "children": [
+                                  {
+                                    "id": "2051:21365",
+                                    "name": "Notifications",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2528, "width": 266, "height": 24},
+                                    "layoutAlign": "STRETCH",
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "characters": "Notifications",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 16, "lineHeightPx": 24, "letterSpacing": -0.18, "textAutoResize": "HEIGHT"}
+                                  },
+                                  {
+                                    "id": "2051:21366",
+                                    "name": "Lorem Ipsum\u00a0is simply",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2504, "width": 126, "height": 16},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6017, "g": 0.628, "b": 0.6806, "a": 1}}],
+                                    "characters": "Lorem Ipsum\u00a0is simply",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 400, "fontSize": 12, "lineHeightPx": 16, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "2051:21367",
+                            "name": "Frame 2147224235",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39256, "y": -2463, "width": 352, "height": 74},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 12,
+                            "paddingLeft": 14,
+                            "paddingRight": 14,
+                            "paddingTop": 14,
+                            "paddingBottom": 14,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "AUTO",
+                            "layoutAlign": "STRETCH",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                            "cornerRadius": 14,
+                            "children": [
+                              {
+                                "id": "2051:21368",
+                                "name": "Frame 2147224237",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39270, "y": -2449, "width": 46, "height": 46},
+                                "layoutMode": "HORIZONTAL",
+                                "itemSpacing": 10,
+                                "paddingLeft": 11,
+                                "paddingRight": 11,
+                                "paddingTop": 10,
+                                "paddingBottom": 10,
+                                "primaryAxisAlignItems": "CENTER",
+                                "counterAxisAlignItems": "CENTER",
+                                "primaryAxisSizingMode": "FIXED",
+                                "counterAxisSizingMode": "FIXED",
+                                "fills": [{"type": "SOLID", "color": {"r": 0.2667, "g": 0.2745, "b": 0.2784, "a": 1}}],
+                                "cornerRadius": 191,
+                                "children": [
+                                  {
+                                    "id": "2051:21476",
+                                    "name": "share-01",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39281, "y": -2438, "width": 24, "height": 24},
+                                    "clipsContent": true,
+                                    "componentId": "55:6638",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21476;55:6639",
+                                        "name": "elements ",
+                                        "type": "FRAME",
+                                        "absoluteBoundingBox": {"x": 39283, "y": -2435, "width": 20, "height": 19},
+                                        "clipsContent": true,
+                                        "children": [
+                                          {
+                                            "id": "I2051:21476;55:6640",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39287, "y": -2433, "width": 16, "height": 10},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21476;55:6641",
+                                            "name": "Rectangle 1702",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39283, "y": -2435, "width": 19, "height": 19},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21373",
+                                "name": "Frame 2147224238",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39328, "y": -2446, "width": 266, "height": 40},
+                                "layoutMode": "VERTICAL",
+                                "primaryAxisSizingMode": "AUTO",
+                                "counterAxisSizingMode": "FIXED",
+                                "layoutGrow": 1,
+                                "children": [
+                                  {
+                                    "id": "2051:21374",
+                                    "name": "Share",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2446, "width": 266, "height": 24},
+                                    "layoutAlign": "STRETCH",
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "characters": "Share",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 16, "lineHeightPx": 24, "letterSpacing": -0.18, "textAutoResize": "HEIGHT"}
+                                  },
+                                  {
+                                    "id": "2051:21375",
+                                    "name": "Lorem Ipsum\u00a0is simply",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2422, "width": 126, "height": 16},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6017, "g": 0.628, "b": 0.6806, "a": 1}}],
+                                    "characters": "Lorem Ipsum\u00a0is simply",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 400, "fontSize": 12, "lineHeightPx": 16, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "2051:21429",
+                            "name": "Frame 2147224236",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39256, "y": -2381, "width": 352, "height": 74},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 12,
+                            "paddingLeft": 14,
+                            "paddingRight": 14,
+                            "paddingTop": 14,
+                            "paddingBottom": 14,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "AUTO",
+                            "layoutAlign": "STRETCH",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                            "cornerRadius": 14,
+                            "children": [
+                              {
+                                "id": "2051:21430",
+                                "name": "Frame 2147224237",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39270, "y": -2367, "width": 46, "height": 46},
+                                "layoutMode": "HORIZONTAL",
+                                "itemSpacing": 10,
+                                "paddingLeft": 11,
+                                "paddingRight": 11,
+                                "paddingTop": 10,
+                                "paddingBottom": 10,
+                                "primaryAxisAlignItems": "CENTER",
+                                "counterAxisAlignItems": "CENTER",
+                                "primaryAxisSizingMode": "FIXED",
+                                "counterAxisSizingMode": "FIXED",
+                                "fills": [{"type": "SOLID", "color": {"r": 0.2667, "g": 0.2745, "b": 0.2784, "a": 1}}],
+                                "cornerRadius": 191,
+                                "children": [
+                                  {
+                                    "id": "2051:21470",
+                                    "name": "repeat-off",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39281, "y": -2356, "width": 24, "height": 24},
+                                    "componentId": "55:6643",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21470;55:6644",
+                                        "name": "elements",
+                                        "type": "FRAME",
+                                        "absoluteBoundingBox": {"x": 39283, "y": -2353, "width": 20, "height": 18},
+                                        "clipsContent": true,
+                                        "children": [
+                                          {
+                                            "id": "I2051:21470;55:6645",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39283, "y": -2353, "width": 16, "height": 13},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21470;55:6646",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39287, "y": -2348, "width": 16, "height": 13},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21470;55:6647",
+                                            "name": "Vector 3659",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39290, "y": -2344, "width": 6, "height": 0},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21435",
+                                "name": "Frame 2147224238",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39328, "y": -2364, "width": 266, "height": 40},
+                                "layoutMode": "VERTICAL",
+                                "primaryAxisSizingMode": "AUTO",
+                                "counterAxisSizingMode": "FIXED",
+                                "layoutGrow": 1,
+                                "children": [
+                                  {
+                                    "id": "2051:21436",
+                                    "name": "Restore Purchase",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2364, "width": 266, "height": 24},
+                                    "layoutAlign": "STRETCH",
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "characters": "Restore Purchase",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 16, "lineHeightPx": 24, "letterSpacing": -0.18, "textAutoResize": "HEIGHT"}
+                                  },
+                                  {
+                                    "id": "2051:21437",
+                                    "name": "Lorem Ipsum\u00a0is simply",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2340, "width": 126, "height": 16},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6017, "g": 0.628, "b": 0.6806, "a": 1}}],
+                                    "characters": "Lorem Ipsum\u00a0is simply",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 400, "fontSize": 12, "lineHeightPx": 16, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "2051:21438",
+                            "name": "Frame 2147224237",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39256, "y": -2299, "width": 352, "height": 74},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 12,
+                            "paddingLeft": 14,
+                            "paddingRight": 14,
+                            "paddingTop": 14,
+                            "paddingBottom": 14,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "AUTO",
+                            "layoutAlign": "STRETCH",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                            "cornerRadius": 14,
+                            "children": [
+                              {
+                                "id": "2051:21439",
+                                "name": "Frame 2147224237",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39270, "y": -2285, "width": 46, "height": 46},
+                                "layoutMode": "HORIZONTAL",
+                                "itemSpacing": 10,
+                                "paddingLeft": 11,
+                                "paddingRight": 11,
+                                "paddingTop": 10,
+                                "paddingBottom": 10,
+                                "primaryAxisAlignItems": "CENTER",
+                                "counterAxisAlignItems": "CENTER",
+                                "primaryAxisSizingMode": "FIXED",
+                                "counterAxisSizingMode": "FIXED",
+                                "fills": [{"type": "SOLID", "color": {"r": 0.2667, "g": 0.2745, "b": 0.2784, "a": 1}}],
+                                "cornerRadius": 191,
+                                "children": [
+                                  {
+                                    "id": "2051:21463",
+                                    "name": "text-align-left",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39283, "y": -2272, "width": 20, "height": 20},
+                                    "clipsContent": true,
+                                    "componentId": "50:6297",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21463;50:6298",
+                                        "name": "elements",
+                                        "type": "FRAME",
+                                        "absoluteBoundingBox": {"x": 39285.5, "y": -2269.5, "width": 15, "height": 15},
+                                        "clipsContent": true,
+                                        "children": [
+                                          {
+                                            "id": "I2051:21463;50:6299",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39285.5, "y": -2269.5, "width": 15, "height": 0},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21463;50:6300",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "opacity": 0.4,
+                                            "absoluteBoundingBox": {"x": 39285.5, "y": -2264.5, "width": 6.67, "height": 0},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21463;50:6301",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39285.5, "y": -2259.5, "width": 15, "height": 0},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          },
+                                          {
+                                            "id": "I2051:21463;50:6302",
+                                            "name": "Vector",
+                                            "type": "VECTOR",
+                                            "absoluteBoundingBox": {"x": 39285.5, "y": -2254.5, "width": 6.67, "height": 0},
+                                            "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                            "strokeWeight": 1.5
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21444",
+                                "name": "Frame 2147224238",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39328, "y": -2282, "width": 266, "height": 40},
+                                "layoutMode": "VERTICAL",
+                                "primaryAxisSizingMode": "AUTO",
+                                "counterAxisSizingMode": "FIXED",
+                                "layoutGrow": 1,
+                                "children": [
+                                  {
+                                    "id": "2051:21445",
+                                    "name": "Terms of Service",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2282, "width": 266, "height": 24},
+                                    "layoutAlign": "STRETCH",
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "characters": "Terms of Service",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 16, "lineHeightPx": 24, "letterSpacing": -0.18, "textAutoResize": "HEIGHT"}
+                                  },
+                                  {
+                                    "id": "2051:21446",
+                                    "name": "Lorem Ipsum\u00a0is simply",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2258, "width": 126, "height": 16},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6017, "g": 0.628, "b": 0.6806, "a": 1}}],
+                                    "characters": "Lorem Ipsum\u00a0is simply",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 400, "fontSize": 12, "lineHeightPx": 16, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "id": "2051:21447",
+                            "name": "Frame 2147224238",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39256, "y": -2217, "width": 352, "height": 74},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 12,
+                            "paddingLeft": 14,
+                            "paddingRight": 14,
+                            "paddingTop": 14,
+                            "paddingBottom": 14,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "AUTO",
+                            "layoutAlign": "STRETCH",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                            "cornerRadius": 14,
+                            "children": [
+                              {
+                                "id": "2051:21448",
+                                "name": "Frame 2147224237",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39270, "y": -2203, "width": 46, "height": 46},
+                                "layoutMode": "HORIZONTAL",
+                                "itemSpacing": 10,
+                                "paddingLeft": 11,
+                                "paddingRight": 11,
+                                "paddingTop": 10,
+                                "paddingBottom": 10,
+                                "primaryAxisAlignItems": "CENTER",
+                                "counterAxisAlignItems": "CENTER",
+                                "primaryAxisSizingMode": "FIXED",
+                                "counterAxisSizingMode": "FIXED",
+                                "fills": [{"type": "SOLID", "color": {"r": 0.2667, "g": 0.2745, "b": 0.2784, "a": 1}}],
+                                "cornerRadius": 191,
+                                "children": [
+                                  {
+                                    "id": "2051:21456",
+                                    "name": "document-validation",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39281, "y": -2192, "width": 24, "height": 24},
+                                    "componentId": "55:6631",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21456;55:6632",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "opacity": 0.4,
+                                        "absoluteBoundingBox": {"x": 39295.99, "y": -2186.5, "width": 4, "height": 3},
+                                        "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                        "strokeWeight": 1.5
+                                      },
+                                      {
+                                        "id": "I2051:21456;55:6633",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "opacity": 0.4,
+                                        "absoluteBoundingBox": {"x": 39293, "y": -2190, "width": 10, "height": 10},
+                                        "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                        "strokeWeight": 1.5
+                                      },
+                                      {
+                                        "id": "I2051:21456;55:6634",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "absoluteBoundingBox": {"x": 39288, "y": -2179, "width": 4, "height": 0},
+                                        "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                        "strokeWeight": 1.5
+                                      },
+                                      {
+                                        "id": "I2051:21456;55:6635",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "absoluteBoundingBox": {"x": 39288, "y": -2175, "width": 8, "height": 0},
+                                        "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                        "strokeWeight": 1.5
+                                      },
+                                      {
+                                        "id": "I2051:21456;55:6636",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "absoluteBoundingBox": {"x": 39282.99, "y": -2190, "width": 18, "height": 20},
+                                        "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                        "strokeWeight": 1.5
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21453",
+                                "name": "Frame 2147224238",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39328, "y": -2200, "width": 266, "height": 40},
+                                "layoutMode": "VERTICAL",
+                                "primaryAxisSizingMode": "AUTO",
+                                "counterAxisSizingMode": "FIXED",
+                                "layoutGrow": 1,
+                                "children": [
+                                  {
+                                    "id": "2051:21454",
+                                    "name": "Privacy Policy",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2200, "width": 266, "height": 24},
+                                    "layoutAlign": "STRETCH",
+                                    "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                    "characters": "Privacy Policy",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 16, "lineHeightPx": 24, "letterSpacing": -0.18, "textAutoResize": "HEIGHT"}
+                                  },
+                                  {
+                                    "id": "2051:21455",
+                                    "name": "Lorem Ipsum\u00a0is simply",
+                                    "type": "TEXT",
+                                    "absoluteBoundingBox": {"x": 39328, "y": -2176, "width": 126, "height": 16},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6017, "g": 0.628, "b": 0.6806, "a": 1}}],
+                                    "characters": "Lorem Ipsum\u00a0is simply",
+                                    "style": {"fontFamily": "SF Pro", "fontWeight": 400, "fontSize": 12, "lineHeightPx": 16, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "2051:21418",
+                    "name": "Frame 2147223349",
+                    "type": "FRAME",
+                    "absoluteBoundingBox": {"x": 39254, "y": -2894, "width": 353, "height": 51},
+                    "layoutMode": "HORIZONTAL",
+                    "itemSpacing": 180,
+                    "primaryAxisAlignItems": "SPACE_BETWEEN",
+                    "counterAxisAlignItems": "CENTER",
+                    "primaryAxisSizingMode": "FIXED",
+                    "counterAxisSizingMode": "AUTO",
+                    "children": [
+                      {
+                        "id": "2051:21419",
+                        "name": "Frame 2147224273",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39254, "y": -2894, "width": 51, "height": 51},
+                        "layoutMode": "HORIZONTAL",
+                        "itemSpacing": 8.36,
+                        "paddingLeft": 9.2,
+                        "paddingRight": 9.2,
+                        "paddingTop": 10.03,
+                        "paddingBottom": 10.03,
+                        "primaryAxisAlignItems": "CENTER",
+                        "counterAxisAlignItems": "CENTER",
+                        "primaryAxisSizingMode": "FIXED",
+                        "counterAxisSizingMode": "FIXED",
+                        "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                        "cornerRadius": 83.61,
+                        "children": [
+                          {
+                            "id": "2051:21420",
+                            "name": "arrow-left-02",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39268.5, "y": -2879.5, "width": 22, "height": 22},
+                            "children": [
+                              {
+                                "id": "2051:21421",
+                                "name": "Vector",
+                                "type": "VECTOR",
+                                "absoluteBoundingBox": {"x": 39272.17, "y": -2868.5, "width": 14.67, "height": 0},
+                                "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                "strokeWeight": 1.38
+                              },
+                              {
+                                "id": "2051:21422",
+                                "name": "Vector",
+                                "type": "VECTOR",
+                                "absoluteBoundingBox": {"x": 39272.17, "y": -2873.08, "width": 4.58, "height": 9.17},
+                                "strokes": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                "strokeWeight": 1.38
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "2051:21423",
+                        "name": "Title",
+                        "type": "TEXT",
+                        "absoluteBoundingBox": {"x": 39379.5, "y": -2883.5, "width": 79, "height": 30},
+                        "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                        "characters": "Settings",
+                        "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 20, "lineHeightPx": 30, "textAlignHorizontal": "CENTER", "textAutoResize": "WIDTH_AND_HEIGHT"}
+                      },
+                      {
+                        "id": "2051:21533",
+                        "name": "Trailing",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39533, "y": -2884.5, "width": 74, "height": 32},
+                        "layoutMode": "HORIZONTAL",
+                        "itemSpacing": 8,
+                        "primaryAxisSizingMode": "AUTO",
+                        "counterAxisSizingMode": "AUTO",
+                        "children": [
+                          {
+                            "id": "2051:21534",
+                            "name": "Badge",
+                            "type": "FRAME",
+                            "absoluteBoundingBox": {"x": 39533, "y": -2884.5, "width": 74, "height": 32},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 4,
+                            "paddingLeft": 4,
+                            "paddingRight": 8,
+                            "paddingTop": 2,
+                            "paddingBottom": 2,
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "AUTO",
+                            "counterAxisSizingMode": "FIXED",
+                            "fills": [{"type": "SOLID", "color": {"r": 0.6588, "g": 0.5922, "b": 1, "a": 1}}],
+                            "children": [
+                              {
+                                "id": "2051:21535",
+                                "name": "Icon",
+                                "type": "FRAME",
+                                "absoluteBoundingBox": {"x": 39537, "y": -2880.5, "width": 24, "height": 24},
+                                "clipsContent": true,
+                                "children": [
+                                  {
+                                    "id": "2051:21536",
+                                    "name": "Vector",
+                                    "type": "VECTOR",
+                                    "absoluteBoundingBox": {"x": 39537, "y": -2880.5, "width": 24, "height": 24},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.3569, "g": 0.1725, "b": 0.7882, "a": 1}}]
+                                  },
+                                  {
+                                    "id": "2051:21537",
+                                    "name": "Vector",
+                                    "type": "VECTOR",
+                                    "absoluteBoundingBox": {"x": 39537.7, "y": -2879.8, "width": 22.61, "height": 22.61},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.4914, "g": 0.3232, "b": 0.9568, "a": 1}}]
+                                  },
+                                  {
+                                    "id": "2051:21538",
+                                    "name": "Vector",
+                                    "type": "VECTOR",
+                                    "absoluteBoundingBox": {"x": 39539.43, "y": -2878.07, "width": 19.13, "height": 19.13},
+                                    "fills": [{"type": "SOLID", "color": {"r": 0.6588, "g": 0.5922, "b": 1, "a": 1}}]
+                                  },
+                                  {
+                                    "id": "2051:21539",
+                                    "name": "Star Pro",
+                                    "type": "INSTANCE",
+                                    "absoluteBoundingBox": {"x": 39542, "y": -2874.5, "width": 13, "height": 13},
+                                    "clipsContent": true,
+                                    "componentId": "16:4566",
+                                    "children": [
+                                      {
+                                        "id": "I2051:21539;16:4567",
+                                        "name": "Vector",
+                                        "type": "VECTOR",
+                                        "absoluteBoundingBox": {"x": 39543.08, "y": -2873.96, "width": 10.77, "height": 11.87},
+                                        "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "id": "2051:21540",
+                                "name": "PRO",
+                                "type": "TEXT",
+                                "absoluteBoundingBox": {"x": 39565, "y": -2879.5, "width": 34, "height": 22},
+                                "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                                "characters": "PRO",
+                                "style": {"fontFamily": "NewYork", "fontWeight": 400, "fontSize": 17, "lineHeightPx": 22, "letterSpacing": 0.68, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                              }
+                            ]
+                          },
+                          {
+                            "id": "2051:21541",
+                            "name": "Icon Settings",
+                            "type": "FRAME",
+                            "visible": false,
+                            "absoluteBoundingBox": {"x": 39618, "y": -2884.5, "width": 32, "height": 32},
+                            "layoutMode": "HORIZONTAL",
+                            "itemSpacing": 8,
+                            "primaryAxisAlignItems": "CENTER",
+                            "counterAxisAlignItems": "CENTER",
+                            "primaryAxisSizingMode": "FIXED",
+                            "counterAxisSizingMode": "FIXED",
+                            "cornerRadius": 100
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "2051:21489",
+                    "name": "Frame 2147224297",
+                    "type": "FRAME",
+                    "absoluteBoundingBox": {"x": 39256, "y": -2824, "width": 352, "height": 252},
+                    "layoutMode": "VERTICAL",
+                    "itemSpacing": 8,
+                    "paddingLeft": 10,
+                    "paddingRight": 10,
+                    "paddingTop": 10,
+                    "paddingBottom": 10,
+                    "primaryAxisAlignItems": "CENTER",
+                    "counterAxisAlignItems": "CENTER",
+                    "primaryAxisSizingMode": "AUTO",
+                    "counterAxisSizingMode": "FIXED",
+                    "fills": [{"type": "SOLID", "color": {"r": 0.2078, "g": 0.2, "b": 0.2, "a": 1}}],
+                    "cornerRadius": 14,
+                    "children": [
+                      {
+                        "id": "2051:21530",
+                        "name": "Type=Logo Default, Component=Logo",
+                        "type": "INSTANCE",
+                        "absoluteBoundingBox": {"x": 39392, "y": -2814, "width": 80, "height": 80},
+                        "cornerRadius": 1000,
+                        "componentId": "31:12037",
+                        "unappliedOverrides": [{"path": "1127:18207", "fields": ["parameterConsumptionMap", "variableConsumptionMap"], "matched": true}, {"path": "4032:52135", "fields": ["styleIdForFill"], "matched": true}],
+                        "children": [
+                          {
+                            "id": "I2051:21530;31:12038",
+                            "name": "Vector",
+                            "type": "VECTOR",
+                            "absoluteBoundingBox": {"x": 39394.67, "y": -2811.33, "width": 74.67, "height": 74.67},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.5176, "g": 0.9216, "b": 0.7059, "a": 1}}]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "2051:21504",
+                        "name": "UrAI Pro",
+                        "type": "TEXT",
+                        "absoluteBoundingBox": {"x": 39389.5, "y": -2726, "width": 85, "height": 32},
+                        "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                        "characters": "UrAI Pro",
+                        "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 14, "lineHeightPx": 20, "letterSpacing": -0.08, "textAlignHorizontal": "RIGHT", "textAutoResize": "WIDTH_AND_HEIGHT"}
+                      },
+                      {
+                        "id": "2051:21506",
+                        "name": "Unlock limitless image creation, all styles, and more experience.",
+                        "type": "TEXT",
+                        "absoluteBoundingBox": {"x": 39299, "y": -2686, "width": 266, "height": 42},
+                        "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                        "characters": "Unlock limitless image creation, all styles, and more experience.",
+                        "style": {"fontFamily": "SF Pro", "fontWeight": 300, "fontSize": 14, "lineHeightPx": 21, "letterSpacing": -0.08, "textAlignHorizontal": "CENTER", "textAutoResize": "HEIGHT"}
+                      },
+                      {
+                        "id": "2051:21516",
+                        "name": "_Tab button base",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 39266, "y": -2636, "width": 332, "height": 54},
+                        "layoutMode": "HORIZONTAL",
+                        "itemSpacing": 8,
+                        "paddingLeft": 12,
+                        "paddingRight": 12,
+                        "paddingTop": 8,
+                        "paddingBottom": 8,
+                        "primaryAxisAlignItems": "CENTER",
+                        "counterAxisAlignItems": "CENTER",
+                        "primaryAxisSizingMode": "FIXED",
+                        "counterAxisSizingMode": "FIXED",
+                        "layoutAlign": "STRETCH",
+                        "fills": [{"type": "SOLID", "color": {"r": 0.7608, "g": 0.9608, "b": 0.8549, "a": 1}}],
+                        "cornerRadius": 100,
+                        "clipsContent": true,
+                        "children": [
+                          {
+                            "id": "2051:21518",
+                            "name": "Text",
+                            "type": "TEXT",
+                            "absoluteBoundingBox": {"x": 39386, "y": -2619, "width": 92, "height": 20},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.0533, "g": 0.0693, "b": 0.1067, "a": 1}}],
+                            "characters": "Upgrade Now",
+                            "style": {"fontFamily": "SF Pro", "fontWeight": 500, "fontSize": 14, "lineHeightPx": 20, "letterSpacing": -0.08, "textAutoResize": "WIDTH_AND_HEIGHT"}
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
