@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-74 fase 7 integrada
+
+- um milhão de linhas no editor, com números: abrir 21 ms, rolar 0,36
+  ms, editar no meio 0,27 ms. a task-74 agora só espera o roteiro de IME
+  (o brenner).
+- o agente (Opus) gastou uns 190 mil tokens.
+
 ### task-74 fase 5 integrada
 
 - emoji colorido: Noto Color Emoji em bitmap, 640 glifos, pelo atlas de

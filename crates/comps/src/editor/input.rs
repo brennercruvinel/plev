@@ -278,11 +278,13 @@ impl EditorView {
             MouseEvent::Wheel { dy } => {
                 // Whole lines only: a fractional offset leaves the top
                 // line cut in half, which reads as a layout bug.
+                // Snapped in f64, as the rows are placed (`view::line_y`).
                 let before = self.scroll.offset();
-                let lh = self.config.line_height;
                 self.scroll.scroll_by(dy);
-                let snapped = (self.scroll.offset() / lh).round() * lh;
-                self.scroll.scroll_to(snapped);
+                let lh = f64::from(self.config.line_height);
+                let line = (f64::from(self.scroll.offset()) / lh).round() as usize;
+                self.scroll
+                    .scroll_to(super::view::line_y(line, self.config.line_height) as f32);
                 self.scroll.offset() != before
             }
         }

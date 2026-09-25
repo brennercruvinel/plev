@@ -20,6 +20,7 @@ use crate::layout::ComputedBounds;
 use crate::perf::stages::{self, Stage};
 
 use super::backend::TextStyle;
+use super::cluster_cache::{CLUSTER_CACHE_BUDGET, ClusterCache, ClusterKey};
 
 const MEASURE_CACHE_CAPACITY: usize = 2048;
 const VMETRICS_CACHE_CAPACITY: usize = 256;
@@ -36,6 +37,8 @@ struct MeasureContext {
     cache: LruCache<MeasureKey, (f32, f32)>,
     // Vertical metrics per style (small: one entry per distinct style).
     vmetrics_cache: LruCache<VMetricsKey, LineMetrics>,
+    // Shaped clusters per line of text (see `super::cluster_cache`).
+    clusters: ClusterCache,
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -94,6 +97,7 @@ impl MeasureContext {
             scratch,
             cache: LruCache::new(NonZeroUsize::new(MEASURE_CACHE_CAPACITY).unwrap()),
             vmetrics_cache: LruCache::new(NonZeroUsize::new(VMETRICS_CACHE_CAPACITY).unwrap()),
+            clusters: ClusterCache::new(CLUSTER_CACHE_BUDGET),
         }
     }
 
@@ -108,6 +112,12 @@ impl MeasureContext {
             .set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
         self.scratch.shape_until_scroll(fs, false);
     }
+}
+
+/// Lines in this thread's cluster cache (tests read the cache through it).
+#[cfg(test)]
+pub(super) fn cached_cluster_lines() -> usize {
+    MEASURE_CTX.with(|ctx| ctx.borrow().clusters.len())
 }
 
 fn new_font_system() -> FontSystem {
@@ -396,7 +406,8 @@ impl TextMeasurer {
     /// The shaped clusters of `text` with their boxes and bidi levels,
     /// line by line, left to right (see [`ClusterBox`]). Visual caret
     /// movement and selection in mixed-direction text read this; empty
-    /// text has none.
+    /// text has none. Cached by text and style, so a line shapes once
+    /// until its text changes.
     pub fn clusters_styled(
         text: &str,
         style: &TextStyle,
@@ -407,8 +418,14 @@ impl TextMeasurer {
         }
         MEASURE_CTX.with(|ctx| {
             let ctx = &mut *ctx.borrow_mut();
+            let key = ClusterKey::new(text, style, max_width);
+            if let Some(hit) = ctx.clusters.get(&key) {
+                return hit;
+            }
             ctx.prepare(text, style, max_width);
-            clusters_in(&ctx.scratch, &line_starts(text))
+            let clusters = clusters_in(&ctx.scratch, &line_starts(text));
+            ctx.clusters.put(key, clusters.clone());
+            clusters
         })
     }
 

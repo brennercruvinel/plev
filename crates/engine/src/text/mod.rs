@@ -1,6 +1,7 @@
 mod atlas;
 pub mod backend;
 mod cache;
+mod cluster_cache;
 mod fonts;
 pub mod measure;
 #[cfg(not(target_arch = "wasm32"))]

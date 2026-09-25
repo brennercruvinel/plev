@@ -125,9 +125,12 @@ impl EditorView {
         )
     }
 
-    /// Top Y of `line` in window coordinates.
+    /// Top Y of `line` in window coordinates. The distance from the
+    /// document's top is taken in f64 and only the on-screen result comes
+    /// back to f32 (see [`line_y`]).
     fn line_top(&self, line: usize) -> f32 {
-        self.bounds.y + line as f32 * self.config.line_height - self.scroll.offset()
+        let from_offset = line_y(line, self.config.line_height) - f64::from(self.scroll.offset());
+        self.bounds.y + from_offset as f32
     }
 
     /// Line content without its trailing newline.
@@ -149,8 +152,8 @@ impl EditorView {
     /// Window point -> byte offset in the document, honoring scroll.
     pub fn hit_test_point(&self, x: f32, y: f32) -> usize {
         let rope = self.document.rope();
-        let lh = self.config.line_height;
-        let rel_y = y - self.bounds.y + self.scroll.offset();
+        let lh = f64::from(self.config.line_height);
+        let rel_y = f64::from(y - self.bounds.y) + f64::from(self.scroll.offset());
         let line = ((rel_y / lh).floor().max(0.0) as usize).min(rope.len_lines() - 1);
         let text = self.line_text(line);
         let rel_x = (x - self.text_origin_x()).max(0.0);
@@ -166,14 +169,14 @@ impl EditorView {
     pub fn scroll_to_cursor(&mut self) {
         let head = self.document.selections().primary().head;
         let line = self.document.rope().byte_to_line(head);
-        let lh = self.config.line_height;
-        let top = line as f32 * lh;
-        let bottom = top + lh;
-        let offset = self.scroll.offset();
+        let top = line_y(line, self.config.line_height);
+        let bottom = top + f64::from(self.config.line_height);
+        let offset = f64::from(self.scroll.offset());
+        let view_h = f64::from(self.bounds.height);
         if top < offset {
-            self.scroll.scroll_to(top);
-        } else if bottom > offset + self.bounds.height {
-            self.scroll.scroll_to(bottom - self.bounds.height);
+            self.scroll.scroll_to(top as f32);
+        } else if bottom > offset + view_h {
+            self.scroll.scroll_to((bottom - view_h) as f32);
         }
     }
 
@@ -461,6 +464,16 @@ impl EditorView {
         }
         boxes
     }
+}
+
+/// Distance from the document's top to the top of `line`, in f64. A
+/// million lines of 19.6 px are 19.6 million px, past the 2^24 an f32
+/// holds to the pixel: an f32 product there moves rows by up to 2 px and a
+/// click lands on the neighbouring line. Every row position is taken from
+/// this and the scroll offset in f64, and only the small on-screen
+/// difference goes back to f32.
+pub(crate) fn line_y(line: usize, line_height: f32) -> f64 {
+    line as f64 * f64::from(line_height)
 }
 
 /// Pure virtualization math: the range of lines to shape for a scroll
