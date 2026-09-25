@@ -79,7 +79,7 @@ static GLOBAL: Counting = Counting;
 const VIEW_W: f32 = 1200.0;
 const VIEW_H: f32 = 800.0;
 
-/// Code-like lines of 60 to 80 bytes, none equal to another (the line
+/// Code-like lines of 44 to 65 bytes, none equal to another (the line
 /// number is in the text), so no two lines share a shaping.
 fn document_text(lines: usize) -> String {
     let mut text = String::with_capacity(lines * 72);

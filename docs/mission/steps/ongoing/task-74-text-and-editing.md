@@ -1190,7 +1190,7 @@ cargo test --offline --release -p comps --test editor_large_bench -- --ignored -
 mesmo teste, mesma máquina (Apple M4, 16 GB, macOS 26.6.2), perfil
 release, depois das três mudanças (linhas em f64, `Document::load` sem
 cópia, cache de clusters por linha). o documento gerado tem linhas de
-código de 45 a 80 bytes, todas diferentes; com um milhão de linhas são
+código de 44 a 65 bytes, todas diferentes; com um milhão de linhas são
 57 MiB de texto. cada cenário: a roda anda 3 linhas por frame por 2000
 frames; o arrasto da barra vai do topo ao fim em 300 frames, cada um numa
 viewport nova; a roda com tudo selecionado são 1000 frames depois de
@@ -1230,7 +1230,7 @@ linhas saía errado em até 0,4 px e o clique perto do fim caía na linha
 vizinha.
 
 cada tabela é a segunda de duas rodadas seguidas. entre rodadas, as
-médias variam menos de 10%; o p99 do `frame` varia até o dobro, porque
+médias variam até uns 15%; o p99 do `frame` varia até o dobro, porque
 passa pela submissão à GPU (a primeira rodada de antes deu 1,973 ms de
 p99 na roda com 10 mil linhas; a segunda, 0,585). a memória é só o heap
 da CPU, contado por um alocador no próprio teste; o atlas de glifos na GPU
@@ -1242,3 +1242,122 @@ para reproduzir (o disco precisa de uns 2 GB para o perfil release):
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
 ```
+
+## handoff da fase 7: documentos grandes
+
+fecha o item "benchmark de um milhão de linhas com números" do critério
+de aceite: o editor abre, rola até o fim e edita no meio um documento de
+um milhão de linhas, com o frame abaixo de 1,3 ms no p99 em release, e o
+que ele desenha bate com o documento.
+
+### commits
+
+- `e7427780` a sonda, com os números de antes e o benchmark
+- `71e0a6f2` as linhas posicionadas em f64 e o `Document::load` sem cópia
+- `8b4c58e9` o cache de clusters por linha, com orçamento em bytes
+- `727c378e` o benchmark depois, e a tabela de antes e depois
+- o commit desta seção: o handoff
+
+### a sonda, curta
+
+o editor já era virtualizado na emissão: por frame, só as linhas da tela
+mais 8 de cada lado viram nós de cena, e a altura vem da contagem de
+linhas. o texto desenhado já tinha shaping por linha com cache no
+`TextSystem`. o rope (ropey) já ia à linha n e editava no meio em O(log
+n). o que faltava: a posição das linhas era f32 e errava a partir da
+linha 100 mil; a linha do caret e as linhas com seleção eram moldadas de
+novo a cada frame (`clusters_styled` sem cache); e abrir copiava o texto
+inteiro antes de montar o rope.
+
+### o que mudou
+
+- `crates/comps/src/editor/view.rs`: `line_y` calcula em f64 a distância
+  do topo do documento até a linha; `line_top`, `hit_test_point` e
+  `scroll_to_cursor` usam essa conta, e só a diferença pequena, na tela,
+  volta a f32. `input.rs`: o encaixe da roda em linhas inteiras usa a
+  mesma conta. para um documento pequeno com rolagem zero, o resultado é
+  bit a bit o de antes (as 176 baselines iguais confirmam).
+- `crates/rope/src/document.rs`: `Document::load` monta o rope direto do
+  `&str` e só copia quando há `\r` para normalizar.
+- `crates/engine/src/text/cluster_cache.rs` (novo): o cache de
+  `TextMeasurer::clusters_styled`. chave: o texto e o estilo, com a
+  largura exata; sem índice de linha, então uma edição invalida só as
+  linhas cujo texto mudou, e uma quebra de linha que empurra o resto do
+  documento não invalida nada. limite: 4 MiB contados por entrada (chave
+  e clusters), sai a menos usada; uma linha maior que o orçamento inteiro
+  não entra. `measure.rs` só consulta e guarda (633 linhas).
+- nenhuma API pública mudou; nada foi removido.
+
+### números, um milhão de linhas, release, Apple M4
+
+| | antes | depois |
+|---|---|---|
+| abrir até o primeiro frame (ms) | 23,3 | 21,0 |
+| pico de heap ao abrir (MiB) | 121,3 | 65,0 |
+| roda, frame, média / p99 (ms) | 0,357 / 0,544 | 0,360 / 0,587 |
+| arrasto da barra, frame (ms) | 1,194 / 2,884 | 1,042 / 1,241 |
+| roda com tudo selecionado, frame (ms) | 0,946 / 2,026 | 0,482 / 0,568 |
+| editar no meio até o frame seguinte (ms) | 0,311 / 1,071 | 0,268 / 0,343 |
+
+as tabelas completas (10 mil, 100 mil e um milhão, cena e frame) estão na
+sonda e na seção do benchmark. comando:
+
+```sh
+export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
+cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+```
+
+### testes (8 novos, 1 benchmark ignorado)
+
+- `crates/comps/src/editor/tests_large.rs`, com um milhão de linhas, em
+  debug e no gate: abre e rola até o fim; rola por onze pontos do
+  documento; clica perto do fim e cai na linha sob o ponteiro; insere,
+  apaga e quebra linha no meio. cada frame confere que cada nó de texto é
+  a linha do documento naquela posição, que as linhas estão a uma altura
+  de linha uma da outra e que a margem numera as linhas certas. os quatro
+  falhavam antes da correção de f64.
+- `crates/engine/src/text/cluster_cache.rs`: acerto e chave, despejo da
+  menos usada no orçamento, linha maior que o orçamento e troca contada
+  uma vez. `tests_measure.rs`: `clusters_styled` molda uma vez por texto
+  de linha e uma edição molda só a linha editada.
+- `crates/comps/tests/editor_large_bench.rs`: o benchmark, `#[ignore]`.
+- os testes do editor pequeno, do bidi (fase 3) e do `TextField` passam
+  sem mudança.
+
+### gate e regress
+
+`./script/gate` verde com o ambiente do briefing: `cargo test
+--workspace` 3144 passed, 0 failed, 28 ignored (eram 3136 e 27: mais os
+8 testes e o benchmark); clippy, fmt e wasm verdes; perna urnaui 85
+passed, 0 failed, 1 ignored. `regress -- check` depois de tocar
+`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+fora do gate: `cargo check -p engine -p comps --target
+aarch64-apple-ios-sim` com `-D warnings` verde; `cargo ndk -t arm64-v8a
+check -p showcase --lib` compila, com os dois avisos antigos de código
+morto. disco: 9,3 GB livres.
+
+### pendências
+
+- o `ScrollState` guarda o deslocamento em f32 (engine, fora desta fase).
+  com um milhão de linhas de 19,6 px, perto do fim ele anda em passos de
+  2 px: um delta de trackpad menor que 1 px se perde, e o fim do
+  documento fica a até 1 px da borda. as linhas entre si ficam certas
+  (a conta delas é f64). resolver pede o deslocamento em f64 no
+  `ScrollState` ou um deslocamento do editor em linha mais fração; os
+  dois mudam API pública, então é decisão.
+- com tudo selecionado a cena ainda custa 7 vezes a da roda simples
+  (0,148 contra 0,021 ms): o shaping saiu, mas o `VisualLine` refaz as
+  paradas do caret de cada linha a cada frame. guardar o `VisualLine`
+  pede um construtor a partir dos clusters em
+  `crates/comps/src/form/text_input/visual.rs`, fora dos arquivos desta
+  fase.
+- linha muito longa (um arquivo minificado de megabytes numa linha só)
+  não foi medida: o editor molda a linha inteira, sem virtualização
+  horizontal, e uma linha acima de 4 MiB de clusters não entra no cache.
+- o editor não quebra linha: a virtualização depende da altura fixa por
+  linha. quebra suave num documento grande pede um índice de alturas;
+  medido sem quebra, como o briefing pede.
+- abrir continua O(n) no texto (17,5 ms de cena para 57 MiB) e o chamador
+  segura o `String` e o rope ao mesmo tempo enquanto abre; carregar em
+  pedaços, direto do arquivo, não foi feito.
+- o IME (fase 4) continua aberto e pede o brenner.
