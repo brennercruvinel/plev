@@ -514,25 +514,4 @@ pub(crate) fn propose(review: &Review, ask: &Ask<'_>) -> Result<Ir, ProposeError
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn a_review_reads_its_number_in_both_languages() {
-        let en = read("review these three commits").unwrap();
-        let pt = read("revise estes três commits").unwrap();
-        assert_eq!(en.count, Some(3));
-        assert_eq!(pt.count, Some(3));
-        assert_eq!(en.words, [("commits".to_owned(), "commit".to_owned())]);
-        assert_eq!(pt.words, en.words);
-        assert_eq!(read("review the last 2 files").unwrap().count, Some(2));
-        assert_eq!(
-            read("revisar os dois últimos commits").unwrap().count,
-            Some(2)
-        );
-        assert_eq!(read("review the commits").unwrap().count, None);
-        for none in ["the items", "compare the original with the cuts", "tudo"] {
-            assert_eq!(read(none), None, "{none}");
-        }
-    }
-}
+mod tests;

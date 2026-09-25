@@ -1,15 +1,115 @@
-//! The review of items by the rules (task-96): "review these three
+//! the review of items by the rules (task-96): "review these three
 //! commits" over a workbench with four commits, the same in portuguese,
 //! the files of the ide's own golden, and every refusal with why.
 
-// shared with the other test binaries: this one reads less of it.
-#[allow(dead_code)]
-mod support;
-
-use propose::{ProposeError, Rules, propose_verified};
 use sem::{Confirm, Policy, Role, Snapshot, SnapshotBuilder};
-use support::{Asking, bindings, ids, nodes};
-use uir::{Component, IrNode, Layout, SizeToken, VerifiedIr};
+use uir::{Capabilities, Component, GenerationPolicy, IrNode, Layout, SizeToken, VerifiedIr};
+
+use super::read;
+use crate::error::ProposeError;
+use crate::rules::Rules;
+use crate::{Ask, propose_verified};
+
+#[test]
+fn a_review_reads_its_number_in_both_languages() {
+    let en = read("review these three commits").unwrap();
+    let pt = read("revise estes três commits").unwrap();
+    assert_eq!(en.count, Some(3));
+    assert_eq!(pt.count, Some(3));
+    assert_eq!(en.words, [("commits".to_owned(), "commit".to_owned())]);
+    assert_eq!(pt.words, en.words);
+    assert_eq!(read("review the last 2 files").unwrap().count, Some(2));
+    assert_eq!(
+        read("revisar os dois últimos commits").unwrap().count,
+        Some(2)
+    );
+    assert_eq!(read("review the commits").unwrap().count, None);
+    for none in ["the items", "compare the original with the cuts", "tudo"] {
+        assert_eq!(read(none), None, "{none}");
+    }
+}
+
+/// the ide workbench projected, as `crates/uir/fixtures` pins it.
+fn ide() -> Snapshot {
+    serde_json::from_str(include_str!(
+        "../../../uir/fixtures/ide-workbench.snapshot.json"
+    ))
+    .unwrap()
+}
+
+/// what the rules are asked about `app`.
+struct Asking {
+    app: Snapshot,
+    caps: Capabilities,
+    policy: GenerationPolicy,
+    current: Option<VerifiedIr>,
+}
+
+impl Asking {
+    fn new(app: Snapshot) -> Asking {
+        Asking {
+            caps: Capabilities::from_snapshot(&app),
+            app,
+            policy: GenerationPolicy::default(),
+            current: None,
+        }
+    }
+
+    fn over(mut self, current: VerifiedIr) -> Asking {
+        self.current = Some(current);
+        self
+    }
+
+    fn ask<'a>(&'a self, intent: &'a str) -> Ask<'a> {
+        Ask {
+            intent,
+            caps: &self.caps,
+            app: &self.app,
+            current: self.current.as_ref(),
+            policy: &self.policy,
+        }
+    }
+}
+
+/// every node of a tree, depth first.
+fn nodes(root: &IrNode) -> Vec<&IrNode> {
+    let mut out = Vec::new();
+    let mut stack = vec![root];
+    while let Some(n) = stack.pop() {
+        out.push(n);
+        stack.extend(n.children.iter().rev());
+    }
+    out
+}
+
+/// the ids of a tree, depth first.
+fn ids(root: &IrNode) -> Vec<String> {
+    nodes(root).iter().map(|n| n.sem.to_string()).collect()
+}
+
+/// `(id, what it binds)` of every bound node: each state as
+/// `<prop>=<ref>`, each action as `<event>=<target> <action>`.
+fn bindings(root: &IrNode) -> Vec<(String, Vec<String>)> {
+    nodes(root)
+        .into_iter()
+        .filter(|n| !n.bind.is_empty())
+        .map(|n| {
+            let mut b: Vec<String> = n
+                .bind
+                .state
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect();
+            b.extend(
+                n.bind
+                    .actions
+                    .iter()
+                    .map(|(k, c)| format!("{k}={} {}", c.target, c.action)),
+            );
+            (n.sem.to_string(), b)
+        })
+        .collect()
+}
 
 /// The commits of the stacks, newest first: sha, subject, files.
 const COMMITS: [(&str, &str, &[&str]); 4] = [
@@ -203,7 +303,7 @@ fn a_review_of_the_files_shows_what_a_file_takes_and_never_a_destructive_action(
         ]
     );
     // the ide's own golden reviews the same way
-    let golden = Asking::new(support::ide());
+    let golden = Asking::new(ide());
     let files = review(&golden, "review the three files").expect("verified");
     assert_eq!(files.ir().surface.root.children[0].children.len(), 3);
 }
