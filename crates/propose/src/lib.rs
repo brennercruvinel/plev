@@ -40,16 +40,19 @@
 //! pure, like `uir`: no engine, no widgets, no network.
 
 mod adapt;
+mod change;
 mod error;
 mod ids;
 mod list;
 mod llm;
 mod parts;
 mod prompt;
+mod reshape;
 mod rules;
 mod words;
 
 pub use adapt::{Adapt, Adaptation, Transformed, Transformer, transform_verified};
+pub use change::{CHANGES, reads_as_change};
 pub use error::ProposeError;
 pub use llm::{Llm, Model, ModelError};
 pub use prompt::prompt;

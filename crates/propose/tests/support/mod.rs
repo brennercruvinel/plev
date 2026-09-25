@@ -215,3 +215,19 @@ pub fn agent() -> sem::Actor {
         name: "claude".to_owned(),
     }
 }
+
+/// The Silences projected, as `crates/uir/fixtures` pins it.
+pub fn silences() -> Snapshot {
+    serde_json::from_str(&read("../uir/fixtures/showcase-silences.snapshot.json")).unwrap()
+}
+
+/// The Claude's review of the checkpoint b's first round, as IR (the
+/// cuts in a flat row: range, decision, duration, frame, three buttons).
+pub fn claude_review() -> String {
+    read("../showcase/fixtures/ir/silences-review-claude.ir.json")
+}
+
+/// The ids of the nodes set aside on `adapted`, in id order.
+pub fn aside(adapted: &uir::Adapted) -> Vec<String> {
+    adapted.aside().map(|a| a.node.sem.to_string()).collect()
+}

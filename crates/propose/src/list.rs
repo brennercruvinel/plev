@@ -76,6 +76,26 @@ fn last_key(id: &str) -> Option<(&str, String)> {
     Some((id.get(..start)?, key))
 }
 
+/// true when the `List` or `Set` at `at` holds the keys of its node's
+/// children of one kind, all of them: a list of items, whose values are
+/// ids, not measures.
+pub(crate) fn is_items(app: &Snapshot, at: &StateRef) -> bool {
+    let values: BTreeSet<&str> = match app.value(at) {
+        Some(Value::List(v)) => v.iter().map(String::as_str).collect(),
+        Some(Value::Set(s)) => s.iter().map(String::as_str).collect(),
+        _ => return false,
+    };
+    let mut kinds: BTreeMap<&str, BTreeSet<String>> = BTreeMap::new();
+    for child in app.children(&at.node) {
+        if let Some((prefix, key)) = last_key(child.id.as_str()) {
+            kinds.entry(prefix).or_default().insert(key);
+        }
+    }
+    kinds
+        .values()
+        .any(|keys| keys.len() == values.len() && keys.iter().all(|k| values.contains(k.as_str())))
+}
+
 /// every list of `app` whose items show or accept something; an action
 /// counts when `usable` says the author may bind it; a text `frame` says
 /// is a frame ref shows as an image.
