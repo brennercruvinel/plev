@@ -541,3 +541,239 @@ desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 - o estado novo do regress depende do `claude` no PATH de quem abençoa,
   como os dois de antes (o seletor do proponente).
 - o ADR está como proposto; o índice é do orquestrador.
+
+## fase 2: o proponente de transformação
+
+branch `task/70b-transform-proposer`, sobre a `main` em `3dde4976`. a
+fase 2 é isto: uma intenção em palavras, com uma superfície aberta, vira
+operações da fase 1 (pelas regras, sem modelo, ou pelo Claude), cada uma
+verificada e aplicada como um `Request` pelo dispatcher do app, com o
+ator no histórico e desfazer pelo mesmo caminho; a política de cada
+superfície guardada pelo host; ênfase em `stat` e `badge`; e as três
+lacunas do checkpoint b na revisão gerada.
+
+### sonda (antes do primeiro tipo, 2026-09-24)
+
+#### (a) o proponente de transformação
+
+o `Proposer` (`crates/propose/src/lib.rs:74` a `76`) devolve um `Ir`, e
+a saída é `propose_verified` (`:82` a `88`), que só deixa sair
+`VerifiedIr`. a task-69 usa os dois pelas páginas
+(`crates/showcase/src/view/apps/silences/generated/page.rs:218`,
+`crates/showcase/src/view/apps/surface_page/page.rs:244`, e o worker do
+Claude em `surface_page/asking.rs:260`). mexer no `Proposer` mexeria em
+tudo isso.
+
+o desenho: um trait irmão no mesmo crate, sem tocar no `Proposer`.
+
+- `Adapt<'a>`: o que se pede a um transformador. a intenção, o registro
+  (`Capabilities`), o snapshot, a superfície como está (`&Adapted`, o
+  `VerifiedIr` e o que está de lado, `crates/uir/src/transform/mod.rs:197`),
+  a política com que ela foi verificada e quem pediu (`&Actor`, que o
+  `promote` lê, `mod.rs:257` a `261`).
+- `Transformer::transform(&mut self, &Adapt) -> Result<Adaptation,
+  ProposeError>`, onde `Adaptation` é `Ops(Vec<Op>)` ou `Undo` (desfazer
+  não é uma operação: é o host que sabe o que foi a última mudança).
+- `transform_verified(t, ask) -> Result<Transformed, ProposeError>`:
+  pede ao transformador e aplica cada operação, em ordem, sobre o
+  `Adapted` da pergunta (`Adapted::apply`, que verifica,
+  `mod.rs:241` a `264`); devolve `Changed { ops, adapted }` só quando
+  todas aplicaram e o resultado é um `Adapted` verificado, ou `Undo`.
+  lista vazia é erro (nada a mudar). é o par do `propose_verified`:
+  nada sai sem passar pelo verifier.
+- `Rules` e `Llm<M>` implementam os dois traits. o `Model` é o mesmo.
+
+#### (b) a gramática das regras
+
+`words.rs` lê as intenções de superfície (`Part`, `Form`, "compare",
+"everything", `crates/propose/src/words.rs:17` a `230`). as de mudança
+entram num leitor irmão, com o mesmo `fold` (caixa, acento, plural,
+`:132`) e as mesmas duas línguas:
+
+- **menos** ("too much", "cluttered", "busy", "simpler", "less";
+  "demais", "poluído", "mais simples", "menos"): esconde o que não é da
+  tarefa, agrupa, e aperta o espaçamento (`density denser`).
+- **comparar** ("compare", "comparar") só com uma palavra de dificuldade
+  ("can't", "cannot", "hard"; "não consigo", "difícil", "dificuldade"):
+  "compare the original with the cuts" continua sendo a comparação de
+  vistas da mídia da 69 (`words.rs:106` a `116`, `rules.rs:85` a `99`).
+- **maior** ("bigger", "larger", "grow"; "maior", "maiores", "grande",
+  "aumentar"), e "não consigo ler/enxergar" ("can't see", "can't read";
+  "enxergar", "ler" com dificuldade): `emphasize`.
+- **desfazer** ("undo", "revert"; "desfazer", "voltar"): a última
+  mudança pedida, inteira.
+
+o resto da intenção: palavras de enchimento das duas línguas, ou
+palavras do app (as mesmas de `Parts::words`, `parts.rs:257`), que
+escolhem o alvo de "maior" e "comparar". uma palavra que não é nada
+disso, ou nenhuma palavra de mudança, e a intenção não é mudança: segue
+pelo caminho da 69 (uma superfície nova, `Rules::propose`).
+
+como as regras escolhem o alvo, pela estrutura e pelo registro, nunca
+por nome de app:
+
+- **a tarefa** é o que liga ação (um nó com `bind.actions`, ou que tem
+  um assim abaixo, um `repeat` inteiro). **contexto** é um bloco que
+  liga estado e nenhuma ação na sua subárvore (um vídeo grande, um
+  cartão de contagens). "menos" esconde cada bloco de contexto,
+  descendo da raiz só pelos contêineres que guardam a tarefa, nunca
+  dentro de um `repeat` (o item é a tarefa inteira), nunca filho de
+  `split`; nada se a superfície não liga ação nenhuma. depois agrupa:
+  num contêiner que mistura leituras e controles em fila (dois controles
+  ou mais e uma leitura ou mais), os controles vão para um grupo novo
+  (`<pai>.actions`, que no template carrega o `[{item}]` do pai). por
+  fim `density denser`. cada operação é tentada em sequência sobre o
+  `Adapted`; a recusada é pulada; nenhuma aplicada é erro com o motivo.
+- **comparar**: um nó ligado a um `List`/`Set` mostrado como `table` vira
+  gráfico de barras quando todo valor da lista lê como número e a lista
+  não é a chave dos filhos do seu nó (a estrutura de `list.rs:1` a `15`:
+  uma lista de itens é de ids, não de medidas); um gráfico vira tabela.
+  uma lista com `repeat` não troca (a sonda da fase 1: os ids do
+  template sairiam sem `hide`, `view.rs:70` a `75`). nada que caiba:
+  recusa, dizendo o que há e por que não troca. **na Silences não cabe**,
+  como a fase 1 achou (o único `List` do app são os ids dos cortes; a
+  duração é um `num` por corte): a demo mostra a recusa com o motivo, e
+  a troca é provada numa superfície com uma lista de números.
+- **maior**: `emphasize` em cada `stat` e em cada `text` ligado a um
+  `int` ou `num` (os que as palavras do app nomeiam, quando nomeiam
+  algum); num template vale para todo item; recusa no topo da escada.
+
+#### (c) o Claude
+
+`Llm<M>` (`crates/propose/src/llm.rs:36` a `118`) implementa o
+`Transformer` com um prompt próprio, num arquivo novo ao lado de
+`prompt.rs` (que já tem 341 linhas), reaproveitando o que é igual: as
+regras do verifier (`prompt.rs:21` a `67`), os componentes (`:119` a
+`173`) e o registro (`:186` a `229`, onde um valor secreto já sai como o
+tamanho que o `sem` guarda, `crates/sem/src/redact.rs:1` a `15`, e uma
+imagem é um texto `<id>@<segundos>`, nunca pixel). o que é novo: a
+superfície aberta (o JSON do IR e os nós de lado, por id e pai), as
+nove operações no JSON da fase 1 com o que cada uma faz e recusa, as
+regras de identidade (todo id na árvore ou de lado, só `hide` tira, o
+`into` novo, `[{item}]` no template, id de instância recusado), as
+famílias do `swap_view`, e a resposta: um objeto `{"ops": [...]}`, sem
+prosa.
+
+a resposta é lida do primeiro `{` ao último `}` (como `llm.rs:78` a
+`85`), e cada operação é tentada em ordem sobre o `Adapted`, verificada;
+a primeira recusa, com o índice e o motivo, volta ao modelo junto com a
+resposta ("attempt N was refused", a mesma frase que o `claude` falso
+lê, `crates/claude-model/tests/fake-claude`), no máximo
+`Llm::ATTEMPTS` vezes; esgotado, o erro traz os motivos da última e a
+superfície não muda. o `SYSTEM` (`crates/claude-model/src/lib.rs:55`)
+já diz "responda exatamente o que ele pede, na forma que ele pede":
+serve às operações sem mudança.
+
+#### (d) o caminho pela página
+
+o desenho que a pergunta sugeria era uma ação nova (`silences_surface.adapt`
+e `undo`). não cabe sem mudar baseline fora do que o item 7 deixa: o
+`regress` compara a projeção antes dos pixels (`crates/showcase/examples/regress/compare.rs:74`,
+`Snapshot::diff`), e um nó novo na linha, ou uma ação nova num nó dela,
+muda o `semantics.json` de toda baseline que mostra a linha. a linha é
+projetada em `surface_page/proposing.rs:340` a `394`: com a superfície
+aberta, as baselines da revisão do Claude (fixture), a adaptada da fase
+1 e a revisão pelas regras mudariam, e sem superfície as duas da tela
+fixa (`silences@core`, `silences@hoff`) também, se o nó aparecesse
+sempre.
+
+o caminho que não muda nada disso é o que o ADR da fase 1 já escreveu
+("through the same `Proposer` path"): o mesmo `propose`
+(`proposing.rs:396` a `415`, `generated/page.rs:194` a `248`,
+`surface_page/page.rs:221` a `273`). com uma superfície aberta, a
+intenção é lida primeiro como mudança:
+
+- pelas regras: `transform_verified(Rules)`; `Changed` aplica as
+  operações de uma vez pelo host, com o ator da request; `Undo` desfaz a
+  última mudança pedida; "não é mudança" segue para `propose_verified`
+  (a 69, uma forma nova no lugar); outra recusa deixa a superfície como
+  está e a linha diz por quê.
+- pelo Claude: se o leitor da (b) diz que é mudança, o worker do Claude
+  (`surface_page/asking.rs:159` a `276`) roda `transform_verified(Llm)`
+  fora da thread do app, o `propose` responde `Execution::Started`, a
+  linha mostra a tentativa e os segundos, e o `settle` aplica as
+  operações e encerra a request com as tentativas, os segundos e o custo
+  (como a 69). "desfazer" não chama o Claude. se não é mudança, é a 69.
+- um agente pede pelo port como pede o `propose`: `set_value` na
+  intenção e `propose`. o protocolo não muda; o ator da request vai no
+  `Change.by`. o desfazer é a intenção "undo"/"desfazer", pelo mesmo
+  `propose`.
+
+#### (e) a política por superfície
+
+o host recebe a política a cada `apply` e `undo`
+(`crates/surface/src/host.rs:201` a `259`) porque o `VerifiedIr` não
+guarda a sua, e o `VerifiedIr` é do verifier (proibido). o host guarda
+a política de cada superfície ao abrir e ao trocar de forma:
+`open_under(ir, app, policy)` e `transform_under(ir, app, policy)`;
+`open` e `transform` (`host.rs:123` e `:143`) ficam com a assinatura e
+guardam `GenerationPolicy::default()`, a política com que a página
+Surface verifica as suas formas (`surface_page.rs:190` e `:268`, fora
+da minha lista), então ela não muda. `apply(id, op, by, app)` e
+`undo(id, app)` usam a da superfície; `policy(id)` a lê. as páginas
+abrem uma proposta com a política da proposta (`GenerationPolicy::by`
+do autor).
+
+e o histórico por pedido: `apply_all(id, ops, by, app)` aplica a lista
+inteira sobre o `Adapted` antes de tocar na superfície (tudo ou nada),
+toma a forma uma vez (uma reconciliação, uma transição) e guarda cada
+`Change` com a fronteira do pedido; `undo_asked(id, app)` desfaz o
+último pedido inteiro. `apply` é um pedido de uma operação; `undo`
+continua desfazendo uma.
+
+#### (f) `stat` e `badge`
+
+o materializador desenha o `stat` com `Stat::new(valor, rótulo)` sem
+tamanho (`crates/surface/src/draw.rs:83` a `86`, `:139` e `:305`), e o
+`badge` com `Badge::tag(texto)` (`:138` e `:304`); o `emphasize` recusa
+os dois (`crates/uir/src/transform/look.rs:108` a `112`). o comps já tem
+o que falta, sem mudança:
+
+- `Stat` tem `StatSize` `Sm`, `Md`, `Lg`, com o valor em `base_m`,
+  `title` e `headline` (`crates/comps/src/content/stat.rs:15` a `23` e
+  `:61` a `68`). o token é o `typography` do nó, o mesmo da rampa do
+  texto: até `base` é `Sm`, `title` (o de hoje, sem token) é `Md`,
+  `headline` e acima é `Lg`. a escada do `emphasize` num stat: `base_m`,
+  `title`, `headline`, topo.
+- `Badge` tem dois formatos, `Tag` (o vidro) e `Count` (preenchido com
+  a cor da intenção, texto em contraste,
+  `crates/comps/src/action/badge.rs:17` a `24` e `:88` a `101`). o token
+  é o `background` do nó: sem ele é `Tag`; com um papel de intenção
+  (`accent`, `success`, `danger`, `info`) é o `Count` com essa intenção.
+  a ênfase de um badge é ele preenchido (`accent`); o topo é ter fundo.
+  maior de tamanho o comps não faz, e mudar o comps é parada: a ênfase
+  do badge é de peso, não de tamanho.
+
+o `emphasize` ganha as duas linhas em `look.rs`: é a falta que a sonda
+mostra no `crates/uir/src/transform/**`. o vocabulário e o verifier não
+mudam (nenhuma regra olha `props`, só o tipo).
+
+#### as três lacunas do checkpoint b
+
+1. o `READS` (`crates/propose/src/prompt.rs:73` a `83`) ganha: revisar
+   itens é ver o que cada um é (a imagem do item, quando o registro tem
+   uma, e o seu estado), e "só o que a intenção precisa" não tira isso.
+   sem nome de app.
+2. a linha do item das regras (`crates/propose/src/rules.rs:381` a
+   `440`, sobre `list.rs:153` a `242`) põe todo texto e número numa fila
+   só, sem rótulo. passa a separar por sentido: o que o item é (imagem,
+   texto que não é número, selo), os números (`stat` pequeno, com a
+   chave do estado como rótulo, `typography: base_m`, como os `Count` já
+   fazem com a chave, `parts.rs:225`), as ações (checkbox, botões). cada
+   sentido com dois nós ou mais vira um grupo, com id do template
+   (`[{item}]`); uma linha com um nó por sentido (o todo: texto e
+   checkbox) fica como está.
+3. o estado de poucos valores: um estado de texto que duas ações ou mais
+   sem parâmetro do mesmo item leem, e só ele (as `reads` da declaração,
+   como o `flip` do checkbox em `list.rs:185` a `194`), é uma decisão:
+   sai como `badge`. na Silences, `decision`, que `apply_cut` e
+   `reject_cut` leem; o `status` do ide não (o `stage` lê dois estados).
+
+as baselines que mudam por isso são só as da revisão pelas regras
+(`silences-review-by-the-rules@*`). nada disso toca a fixture do
+Claude.
+
+#### nenhuma parada
+
+nada pede mudar o protocolo v1, o vocabulário ou o verifier do IR, nem o
+comps. a mudança em `crates/uir/src/transform/look.rs` é a da (f).
