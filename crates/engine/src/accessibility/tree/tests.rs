@@ -386,6 +386,120 @@ fn a_group_that_names_and_does_nothing_is_only_structure() {
     assert_eq!(role("panel.list"), accesskit::Role::List, "a group alone");
 }
 
+/// A page with a counter, a status line that keeps its words in
+/// `message`, a toast and an error, and a field with the focus.
+fn announcing(counter: &str, message: &str, focus: bool) -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    b.node("page", Role::Region, "page");
+    b.node("page.name", Role::TextInput, "name")
+        .parent("page")
+        .state("text", "ada");
+    b.node("page.counter", Role::Status, counter)
+        .parent("page")
+        .state("done", 1_i64);
+    b.node("page.status", Role::Status, "status")
+        .parent("page")
+        .state("message", message)
+        .state("busy", false);
+    b.node("toasts", Role::Region, "notifications");
+    b.node("toasts[0]", Role::Status, "saved")
+        .parent("toasts")
+        .action("dismiss");
+    b.node("toasts[1]", Role::Alert, "push failed")
+        .parent("toasts")
+        .action("dismiss");
+    b.node("page.level", Role::Status, "level")
+        .parent("page")
+        .state("value", 0.5);
+    b.node("page.form", Role::Group, "form").parent("page");
+    if focus {
+        b.focus("page.name");
+    }
+    finish(b)
+}
+
+#[test]
+fn a_status_is_a_polite_live_region_and_an_alert_an_assertive_one() {
+    let (u, ids) = build(
+        &announcing("2 active", "detecting", true),
+        &unbound(),
+        &CHROME,
+    );
+    assert_valid(&u);
+    let n = |id: &str| node(&u, &ids, id);
+    for id in ["page.counter", "page.status", "toasts[0]", "page.level"] {
+        assert_eq!(n(id).live(), Some(Live::Polite), "{id}");
+    }
+    assert_eq!(n("toasts[1]").live(), Some(Live::Assertive));
+    for id in ["page", "page.name", "toasts", "page.form"] {
+        assert_eq!(n(id).live(), None, "{id} is not live");
+    }
+    // what a reader hears: the label, or the message a status keeps
+    assert_eq!(n("page.counter").value(), Some("2 active"));
+    assert_eq!(
+        n("page.counter").label(),
+        Some("2 active"),
+        "the name stays"
+    );
+    assert_eq!(n("page.status").value(), Some("detecting"));
+    assert_eq!(n("page.status").label(), Some("status"));
+    assert_eq!(n("toasts[0]").value(), Some("saved"));
+    assert_eq!(n("toasts[1]").value(), Some("push failed"));
+    // a status with a value of its own keeps it
+    assert_eq!(n("page.level").numeric_value(), Some(0.5));
+    assert_eq!(n("page.level").value(), None);
+}
+
+#[test]
+fn an_empty_message_says_nothing() {
+    let (u, ids) = build(&announcing("2 active", "", false), &unbound(), &CHROME);
+    let status = node(&u, &ids, "page.status");
+    assert_eq!(status.live(), Some(Live::Polite));
+    assert_eq!(status.value(), None, "no words, nothing to announce");
+    assert_eq!(status.label(), Some("status"));
+}
+
+/// A live region is heard where it is: a status that changes, or a
+/// toast that arrives, leaves the focus on the field the person is in,
+/// and the field's node is the same one.
+#[test]
+fn an_announcement_never_moves_the_focus() {
+    let (before, a) = build(&announcing("2 active", "", true), &unbound(), &CHROME);
+    let (after, b) = build(
+        &announcing("3 active", "done: 2 cuts", true),
+        &unbound(),
+        &CHROME,
+    );
+    assert_eq!(Some(before.focus), a.node(&sid("page.name")));
+    assert_eq!(after.focus, before.focus);
+    assert_eq!(b.node(&sid("page.name")), a.node(&sid("page.name")));
+    assert_eq!(node(&after, &b, "page.counter").value(), Some("3 active"));
+    assert_eq!(
+        node(&after, &b, "page.status").value(),
+        Some("done: 2 cuts")
+    );
+    let (none, _) = build(&announcing("3 active", "done", false), &unbound(), &CHROME);
+    assert_eq!(
+        none.focus, ROOT,
+        "nothing focused: the window, not a status"
+    );
+}
+
+/// A secret is never read out, not even by a live region.
+#[test]
+fn a_secret_status_is_not_announced() {
+    let mut b = SnapshotBuilder::new();
+    b.node("pin", Role::Status, "1234")
+        .constraints(Constraints {
+            secret: true,
+            ..Constraints::default()
+        });
+    let (u, ids) = build(&finish(b), &unbound(), &CHROME);
+    let pin = node(&u, &ids, "pin");
+    assert_eq!(pin.value(), None);
+    assert_eq!(pin.live(), None);
+}
+
 #[test]
 fn with_no_meaning_the_tree_is_the_window() {
     let (u, ids) = build(&Snapshot::default(), &unbound(), &CHROME);

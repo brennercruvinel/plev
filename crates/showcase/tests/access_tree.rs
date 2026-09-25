@@ -20,11 +20,12 @@
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use engine::accessibility::accesskit::{
-    Action, ActionData, ActionRequest, Node as AkNode, NodeId, Role as AkRole, TreeId, TreeUpdate,
+    Action, ActionData, ActionRequest, Live, Node as AkNode, NodeId, Role as AkRole, TreeId,
+    TreeUpdate,
 };
 use engine::accessibility::{self, Assist, Chrome, Shown, focus};
 use engine::compositor::Compositor;
-use sem::{Actor, Request, SemId};
+use sem::{Actor, Request, Role, SemId, Value};
 use showcase::view::{PAGES, ShowcaseView};
 
 /// The pages that project their meaning, in sidebar order ("Toggle
@@ -373,4 +374,50 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
     }
     unreachable.sort();
     assert_eq!(unreachable, UNREACHABLE);
+}
+
+/// Every status line of every page is a polite live region, and an
+/// alert an assertive one, that says its words: the message a status
+/// keeps (`silences.status`, `surface_page.status`, the Files and
+/// Capture lines), or its label (the todo's counter, the Silences
+/// counts). What announces a toast is `app/access.rs`, tested there.
+#[test]
+fn every_status_line_is_a_live_region_that_says_its_words() {
+    let mut lines = Vec::new();
+    for seen in projecting() {
+        let title = seen.view.page_title();
+        for (_, id, n) in seen.walk() {
+            let node = seen.sem(id);
+            let politeness = match node.role {
+                Role::Status => Live::Polite,
+                Role::Alert => Live::Assertive,
+                _ => {
+                    assert_eq!(n.live(), None, "{title}: {id} is not live");
+                    continue;
+                }
+            };
+            assert_eq!(n.live(), Some(politeness), "{title}: {id}");
+            let words = match node.state.get("message") {
+                Some(Value::Text(m)) if !m.is_empty() => Some(m.as_str()),
+                Some(_) => None,
+                None => Some(node.label.as_str()),
+            };
+            assert_eq!(n.value(), words, "{title}: {id} says its words");
+            lines.push(id.to_string());
+        }
+    }
+    lines.sort();
+    lines.dedup();
+    assert_eq!(
+        lines,
+        [
+            "capture.status",
+            "files.status",
+            "silences.counts",
+            "silences.status",
+            "silences_surface.status",
+            "surface_page.status",
+            "todo.counter",
+        ]
+    );
 }

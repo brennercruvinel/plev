@@ -35,13 +35,17 @@
 //!   `expanded`; a bool `selected` is `selected`; a text `selected` on a
 //!   container names the key of its selected child (`todo.filter` holds
 //!   `all`, so `todo.filter[all]` is selected and its siblings are not).
+//! - a status is a polite live region and an alert an assertive one (a
+//!   secret one is neither), and what a reader hears when it changes is
+//!   the node's value: its own, else its `message`, else its label (see
+//!   `live`). The focus never moves for it.
 //! - actions: `Click` when the node has a primary action (see
 //!   `action::primary`), `Focus` when it is focusable and not inert,
 //!   `SetValue`, `Increment` and `Decrement` when it declares
 //!   `set_value`, `increment` and `decrement`.
 //! - focus is the snapshot's `focused`, or the window.
 
-use accesskit::{Action, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
+use accesskit::{Action, Live, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
 use rustc_hash::{FxHashMap, FxHashSet};
 use sem::{Node, Role, SemId, Snapshot, StateKey, Value};
 
@@ -246,6 +250,7 @@ fn describe(n: &Node) -> AkNode {
     }
     if !secret {
         value(n, &mut out);
+        live(n, &mut out);
     }
     if action::primary(n).is_some() {
         out.add_action(Action::Click);
@@ -299,6 +304,40 @@ fn value(n: &Node, out: &mut AkNode) {
         // the value of an int beyond 2^53 rounds to the nearest f64.
         Some(Value::Int(v)) => numeric(n, out, *v as f64),
         _ => {}
+    }
+}
+
+/// A status is a polite live region and an alert an assertive one: a
+/// screen reader says what changed in it, and the focus stays where it
+/// is (nothing here touches the update's focus). What it says is its
+/// value, the one the node already has, else its `message` when it keeps
+/// its words in one (a status named "status" whose line is the message),
+/// else its label (a toast, a counter). An empty message says nothing.
+///
+/// Value and name both: macOS announces a live node's value
+/// (accesskit_macos 0.26.1 event.rs:35-44, 236-239, 298-306), Windows and
+/// AT-SPI its name (accesskit_windows 0.32.1 adapter.rs:225-232, 271-281;
+/// accesskit_atspi_common 0.18.1 adapter.rs:71-76, node.rs:543-556). The
+/// label stays the name, so a node whose words are its label is heard on
+/// all three, and one whose words are a message is heard on macOS alone
+/// until its label follows the message.
+fn live(n: &Node, out: &mut AkNode) {
+    let politeness = match n.role {
+        Role::Status => Live::Polite,
+        Role::Alert => Live::Assertive,
+        _ => return,
+    };
+    out.set_live(politeness);
+    if out.value().is_some() || out.numeric_value().is_some() {
+        return;
+    }
+    let words = match n.state.get("message") {
+        Some(Value::Text(message)) => message.as_str(),
+        Some(_) => "",
+        None => n.label.as_str(),
+    };
+    if !words.is_empty() {
+        out.set_value(words);
     }
 }
 
