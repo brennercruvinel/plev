@@ -18,6 +18,16 @@
 //! draws each frame there as it comes; `b` turns the bindings on and off,
 //! Escape closes it.
 //!
+//! A click answers (task-79 phase 2): in the window a left click, and
+//! headless `--click x,y` after the first frame, finds the control under
+//! the point in the frame shown (`Viewer::hit`) and presses it through
+//! the app's semantic contract (`Hand`): an act on that control, as an
+//! agent named "mirror", resting on the mirror's last look at the app;
+//! never an event, never a coordinate. What the app answers is said: done,
+//! refused (an action kept for a person, a scene the app moved on from),
+//! or waiting for the person at the app to confirm. A point on no control
+//! sends nothing.
+//!
 //! The socket is local: `$TMPDIR/plev/<app>-<pid>.sock`, mode 0600 in a
 //! directory of this user; nothing leaves the machine.
 
@@ -59,15 +69,22 @@ mod cli {
     pub const USAGE: &str = "\
 usage: mirror [--app <name | socket path>] [--window main|page]
               [--frames <n>] [--png <file>] [--no-bindings] [--show]
+              [--click <x>,<y>]
 watches the scene of a window of a plev app whose agent port is on
-(PLEV_AGENT=1 in a debug build) and draws it: headless by default, one
-line per frame with the bytes that came and the hash of the pixels drawn;
---show in a window the size of the app's (b: bindings on and off,
-Escape: close). --app names the app (its socket in $TMPDIR/plev) or gives
-a socket's path; alone, the one app listening. --window: main (default)
-or page (the page's own window). --frames stops after that many frames,
-and --png then writes the last one drawn (headless). --no-bindings draws
-the app's frame alone.";
+(PLEV_AGENT=1 PLEV_MIRROR=1 in a debug build) and draws it: headless by
+default, one line per frame with the bytes that came and the hash of the
+pixels drawn; --show in a window the size of the app's (b: bindings on
+and off, Escape: close, a left click presses the control under it).
+--app names the app (its socket in $TMPDIR/plev) or gives a socket's
+path; alone, the one app listening. --window: main (default) or page (the
+page's own window). --frames stops after that many frames, and --png then
+writes the last one drawn (headless). --no-bindings draws the app's frame
+alone. --click presses the control at x,y (logical pixels of the app's
+window) after the first frame (headless), as a click in the window does:
+an act through the app's contract, as the agent \"mirror\".";
+
+    /// The name the mirror says `hello` with, on the watch and the hand.
+    pub const NAME: &str = "mirror";
 
     pub struct Opts {
         pub app: Option<String>,
@@ -76,6 +93,7 @@ the app's frame alone.";
         pub png: Option<PathBuf>,
         pub bindings: bool,
         pub show: bool,
+        pub click: Option<(f32, f32)>,
     }
 
     pub fn parse(args: &[String]) -> Result<Option<Opts>, String> {
@@ -86,6 +104,7 @@ the app's frame alone.";
             png: None,
             bindings: true,
             show: false,
+            click: None,
         };
         let mut it = args.iter();
         while let Some(arg) = it.next() {
@@ -105,6 +124,13 @@ the app's frame alone.";
                 "--png" => opts.png = Some(PathBuf::from(value("--png")?)),
                 "--no-bindings" => opts.bindings = false,
                 "--show" => opts.show = true,
+                "--click" => {
+                    let at = value("--click")?;
+                    let point = at
+                        .split_once(',')
+                        .and_then(|(x, y)| Some((x.trim().parse().ok()?, y.trim().parse().ok()?)));
+                    opts.click = Some(point.ok_or_else(|| format!("--click {at}: x,y"))?);
+                }
                 other => return Err(format!("unknown option {other}")),
             }
         }
@@ -124,10 +150,10 @@ the app's frame alone.";
 mod headless {
     use engine::gpu::RenderConfig;
     use engine::window::WindowHost;
-    use showcase::app::mirror::Viewer;
+    use showcase::app::mirror::{Hand, Pressed, Viewer, said};
     use wire::{Client, Reply, WireError, encode_server};
 
-    use crate::cli::{self, Opts};
+    use crate::cli::{self, NAME, Opts};
 
     /// FNV-1a 64 over the frame's RGBA8.
     pub fn hash(rgba: &[u8]) -> u64 {
@@ -152,9 +178,10 @@ mod headless {
     pub fn run(opts: &Opts) -> Result<(), String> {
         let path = cli::socket(opts.app.as_deref())?;
         let mut c = Client::connect(&path).map_err(|e| e.to_string())?;
-        c.hello("mirror").map_err(|e| e.to_string())?;
+        c.hello(NAME).map_err(|e| e.to_string())?;
         c.watch_scene(&opts.window).map_err(|e| e.to_string())?;
         println!("watching {} of {}", opts.window, path.display());
+        let mut click = opts.click;
         let mut viewer = Viewer::new();
         let mut host: Option<(WindowHost, (u32, u32, u32))> = None;
         let mut came = Came::default();
@@ -223,6 +250,9 @@ mod headless {
             );
             came = Came::default();
             frames += 1;
+            if let Some((x, y)) = click.take() {
+                press(&path, &viewer, x, y)?;
+            }
             if opts.frames.is_some_and(|n| frames >= n) {
                 if let Some(png) = &opts.png {
                     frame.write_png(png).map_err(|e| e.to_string())?;
@@ -231,5 +261,24 @@ mod headless {
                 return Ok(());
             }
         }
+    }
+
+    /// The control at `(x, y)` in the frame drawn, pressed by a hand of
+    /// its own that looks at the app first; each stage that comes, and
+    /// what came of it, said. A point on no control sends nothing.
+    fn press(path: &std::path::Path, viewer: &Viewer, x: f32, y: f32) -> Result<(), String> {
+        let Some(target) = viewer.hit(x, y).cloned() else {
+            println!("click at ({x}, {y}): {}", Pressed::Nothing.said());
+            return Ok(());
+        };
+        let mut hand = Hand::connect(path, NAME)?;
+        hand.look()?;
+        let pressed = hand.press(&target, |action, reply| {
+            if !reply.is_terminal() {
+                println!("  {}", said(&target, action, &reply.stage));
+            }
+        });
+        println!("click at ({x}, {y}): {}", pressed.said());
+        Ok(())
     }
 }

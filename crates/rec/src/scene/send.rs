@@ -11,6 +11,7 @@ use engine::compositor::{Compositor, Layer, SceneNode};
 
 use super::asset::{self, Pixels};
 use super::bytes::fnv;
+use super::mask::{self, Mask};
 use super::node::{self, Drawn, Head, Props};
 
 /// one layer of a frame as the sender wrote it.
@@ -60,6 +61,13 @@ impl Sender {
     /// travels as its size and place only, never its pixels, under a key
     /// its frames share, so a new frame of it moves nothing.
     pub fn frame(&mut self, compositor: &Compositor, head: Head) -> Frame {
+        self.frame_masked(compositor, head, &[])
+    }
+
+    /// [`Sender::frame`], with the drawing of every place `masks` names
+    /// left out of its layer and a box in its stead (`scene::mask`): what
+    /// a secret draws is in no body, patch, hash or asset of the frame.
+    pub fn frame_masked(&mut self, compositor: &Compositor, head: Head, masks: &[Mask]) -> Frame {
         let mut assets: Vec<(u64, Arc<[u8]>)> = Vec::new();
         let mut kept: HashMap<u64, Arc<[u8]>> = HashMap::new();
         let mut layers = Vec::with_capacity(compositor.layers().len());
@@ -70,8 +78,12 @@ impl Sender {
         stack.sort_by_key(|l| l.z_order);
         for layer in stack {
             let key = layer.id.0;
-            let nodes: Vec<Drawn> = layer
-                .nodes()
+            let hidden: Vec<[f32; 4]> = masks
+                .iter()
+                .filter(|m| m.layer == key)
+                .map(|m| m.rect)
+                .collect();
+            let nodes: Vec<Drawn> = mask::hide(layer.nodes(), &hidden)
                 .iter()
                 .map(|n| self.drawn(n, &mut kept, &mut assets))
                 .collect();

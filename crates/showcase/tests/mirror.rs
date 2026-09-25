@@ -20,6 +20,12 @@
 //! the viewer, its atlas does not grow). The bytes each frame took are
 //! printed: the band.
 //!
+//! The mirror answers (task-79 phase 2): the viewer finds the control
+//! under a point as the app's hit test does, on every page; over the
+//! socket, a click at the viewer goes to the app child as an act of the
+//! agent "mirror" and reaches the frame and the revision an agent's act
+//! reaches. The click's other cases, in process, are `mirror_input.rs`.
+//!
 //! Desktop only, like the port; skips without a GPU adapter.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
@@ -38,7 +44,7 @@ use engine::platform::capture::FakeCapture;
 use engine::window::WindowHost;
 use rec::scene::{Head, Sender};
 use sem::{Actor, Request};
-use showcase::app::mirror::{MAIN, Scenes, Viewer, offer};
+use showcase::app::mirror::{Hand, MAIN, Pressed, Scenes, Viewer, offer};
 use showcase::view::{PAGES, ShowcaseView};
 use wire::{AgentPort, Client, Config, Reply, WireError, encode_server};
 
@@ -196,6 +202,52 @@ fn the_bindings_are_drawn_over_the_mirror_where_the_controls_are() {
     assert!(changed > 1000, "{changed} pixels changed");
 }
 
+/// The viewer finds under a point the control the app's own hit test
+/// finds there (`Compositor::hit`), from the bindings the frame carries
+/// alone: every page in both main themes, at the center of each bound
+/// control and on a 20 px grid over the window. No GPU: the scene is
+/// built into a plain compositor.
+#[test]
+fn the_viewer_hits_the_control_the_app_hits() {
+    let (mut points, mut controls) = (0, 0);
+    for theme in ["core", "hoff"] {
+        for p in PAGES {
+            let mut view = ShowcaseView::new(WIDTH as f32, HEIGHT as f32);
+            view.jump_to_page(p.title);
+            view.apply_theme(theme);
+            view.resize(WIDTH as f32, HEIGHT as f32, 1.0);
+            settle(&mut view);
+            let mut c = engine::compositor::Compositor::new();
+            view.render(&mut c);
+            let mut server = watched(1);
+            let frame = Sender::new().frame(&c, head([0.0; 4]));
+            let mut viewer = Viewer::new();
+            for out in server.offer_scene(MAIN, &offer(frame, &c)) {
+                viewer.take(out.msg.reply).expect("the frame reads");
+            }
+            let mut at: Vec<(f32, f32)> = c
+                .visible_bindings()
+                .map(|(_, [x, y, w, h])| (x + w / 2.0, y + h / 2.0))
+                .collect();
+            for y in (0..HEIGHT).step_by(20) {
+                for x in (0..WIDTH).step_by(20) {
+                    at.push((x as f32 + 0.5, y as f32 + 0.5));
+                }
+            }
+            for (x, y) in at {
+                let app = c.hit(x, y);
+                assert_eq!(viewer.hit(x, y), app, "{} / {theme} at ({x}, {y})", p.title);
+                points += 1;
+                controls += usize::from(app.is_some());
+            }
+        }
+    }
+    assert!(
+        controls > 1000,
+        "{controls} of {points} points on a control"
+    );
+}
+
 /// A server whose scenes the app's person shares (`PLEV_MIRROR=1`).
 fn shared_server() -> wire::Server {
     let mut server = wire::Server::new("mirror", 8);
@@ -264,8 +316,10 @@ const SAID: &str = "@mirror ";
 /// each frame offered to the port's watches after it is drawn and after
 /// each drain, as the shell does. Commands on stdin, one per line:
 /// `page <title>|<theme>`, `hover <x> <y>`, `camera`, `wake`, `redraw`,
-/// `quit`; each command that draws prints `drawn <hash>`. Does nothing
-/// unless run by the parent (`PLEV_MIRROR_CHILD` set).
+/// `quit`; each command that draws prints `drawn <hash>`. A drain that
+/// dispatched an act (an agent's, the mirror's click) draws the frame
+/// the act left, as the shell does, and prints `acted <hash>`. Does
+/// nothing unless run by the parent (`PLEV_MIRROR_CHILD` set).
 #[test]
 #[ignore = "the app's side of the socket test, run by it"]
 fn app_child() {
@@ -312,9 +366,16 @@ fn app_child() {
     let mut last = host.read().expect("the app reads").rgba;
     loop {
         if woke.recv_timeout(Duration::from_millis(2)).is_ok() {
-            view.serve_agent(&mut port, host.compositor());
+            if view.serve_agent(&mut port, host.compositor()) {
+                settle(&mut view);
+                let drawn = draw(&mut view, &mut host);
+                last = host.read().expect("the app reads").rgba;
+                println!("{SAID}acted {drawn:016x}");
+            }
             let clear = view.theme.colors.bg.to_linear_array();
-            scenes.offer(&mut port, MAIN, host.compositor(), head(clear));
+            scenes.offer(&mut port, MAIN, host.compositor(), head(clear), || {
+                view.gallery_semantics().ok()
+            });
         }
         let Ok(cmd) = cmds.try_recv() else {
             continue;
@@ -359,7 +420,9 @@ fn app_child() {
         println!("{SAID}drawn {drawn:016x}");
         let clear = view.theme.colors.bg.to_linear_array();
         let at = Instant::now();
-        scenes.offer(&mut port, MAIN, host.compositor(), head(clear));
+        scenes.offer(&mut port, MAIN, host.compositor(), head(clear), || {
+            view.gallery_semantics().ok()
+        });
         println!("{SAID}offered {}", at.elapsed().as_micros());
     }
 }
@@ -702,7 +765,9 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         frames.len() >= 3,
         "the app drew the camera's frames: {shown:x?}"
     );
-    for n in 0..16 {
+    // every color a frame of the fake takes (its frame number mod 200,
+    // which the clock sets, not only the first frames)
+    for n in 0..200 {
         assert!(
             !w.carried(FakeCapture::pixel(n)),
             "the bytes of camera frame {n} went out on the watch"
@@ -745,6 +810,130 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
     for line in band {
         println!("  {line}");
     }
+}
+
+/// The watch and the hand of a viewer on the app child's socket, both
+/// under the name "mirror".
+fn viewer_on(path: &str, host: WindowHost) -> (Watch, Hand) {
+    let path = std::path::Path::new(path);
+    let mut c = Client::connect(path).expect("the viewer connects");
+    c.set_timeout(Some(60_000)).expect("a timeout");
+    c.hello("mirror").expect("the viewer names itself");
+    c.watch_scene(MAIN).expect("the watch goes");
+    let mut hand = Hand::connect(path, "mirror").expect("the hand connects");
+    hand.set_timeout(Some(60_000)).expect("a timeout");
+    let w = Watch {
+        c,
+        viewer: Viewer::new(),
+        host,
+        wire: Vec::new(),
+        parts: Vec::new(),
+    };
+    (w, hand)
+}
+
+/// `name` acts `action` on `target` over its own connection, from what
+/// it observes first; the terminal stage.
+fn agent_act(path: &str, name: &str, target: &str, action: &str) -> wire::StageReply {
+    let mut c = Client::connect(std::path::Path::new(path)).expect("the agent connects");
+    c.set_timeout(Some(60_000)).expect("a timeout");
+    c.hello(name).expect("hello");
+    let Reply::Snapshot(seen) = c.observe(wire::Observe::default()).expect("observed") else {
+        panic!("a snapshot");
+    };
+    let target = sem::SemId::parse(target).expect("an id");
+    let act = wire::Act::from_revision(target, action.parse().expect("an action"), seen.revision);
+    let mut stages = c.act(act, |_| {}).expect("its stages");
+    stages.pop().expect("a terminal stage")
+}
+
+/// The input's acceptance between two processes: the viewer here, the
+/// app in a child, over the socket. A click on a Todo item at the mirror
+/// goes to the app as the agent "mirror" and toggles it; the frame it
+/// left comes back to the mirror with the app's hash. An agent then
+/// toggles the item back (the frame of before) and again: it lands on
+/// the frame and the revision the mirror's click reached. A click on the
+/// camera's switch, kept for a person, is refused and said, and the app
+/// draws nothing new.
+#[test]
+fn the_app_takes_the_mirror_s_click_over_the_socket() {
+    let Some(view_host) = host() else {
+        return;
+    };
+    let tmp = tempfile::tempdir().expect("a temporary directory");
+    let mut app = App::spawn(&tmp.path().join("plev"));
+    if app.said("drawn").is_none() {
+        app.quit();
+        return;
+    }
+    let path = app.said("socket").expect("the port opens");
+    let (mut w, mut hand) = viewer_on(&path, view_host);
+    w.next();
+    let (before, _) = app.tell("page Todo|core");
+    w.next();
+    assert_eq!(w.hash(), before);
+    hand.look().expect("the hand looks");
+
+    let [x, y, bw, bh] = w
+        .viewer
+        .bounds()
+        .iter()
+        .find(|b| b.id.as_str() == "todo.item[1]")
+        .expect("the first item")
+        .rect;
+    let pressed = hand.click(&w.viewer, x + bw / 2.0, y + bh / 2.0, |_, _| {});
+    assert_eq!(pressed.said(), "todo.item[1]: toggle done");
+    let clicked =
+        u64::from_str_radix(&app.said("acted").expect("the app acted"), 16).expect("a hash");
+    assert_ne!(clicked, before, "the item drawn done");
+    w.next();
+    assert_eq!(
+        w.hash(),
+        clicked,
+        "the mirror shows the frame the click left"
+    );
+    let by_mirror = match &pressed {
+        Pressed::Acted { stages, .. } => stages.last().and_then(|s| s.revision),
+        other => panic!("the act went: {other:?}"),
+    };
+
+    let back = agent_act(&path, "claude", "todo.item[1]", "toggle");
+    assert_eq!(back.stage.name(), "completed");
+    let drawn = u64::from_str_radix(&app.said("acted").expect("acted"), 16).expect("a hash");
+    assert_eq!(drawn, before, "toggled back: the frame of before");
+    w.next();
+    let again = agent_act(&path, "claude", "todo.item[1]", "toggle");
+    let drawn = u64::from_str_radix(&app.said("acted").expect("acted"), 16).expect("a hash");
+    assert_eq!(drawn, clicked, "the agent's act lands where the click did");
+    assert_eq!(again.revision, by_mirror, "on the same revision");
+    w.next();
+    assert_eq!(w.hash(), clicked);
+
+    // an action kept for a person: refused, said, nothing drawn anew
+    let (capture, _) = app.tell("page Capture|core");
+    w.next();
+    hand.look().expect("the hand looks");
+    let [x, y, bw, bh] = w
+        .viewer
+        .bounds()
+        .iter()
+        .find(|b| b.id.as_str() == "capture.camera")
+        .expect("the camera's switch")
+        .rect;
+    let refused = hand.click(&w.viewer, x + bw / 2.0, y + bh / 2.0, |_, _| {});
+    assert_eq!(
+        refused.stage(),
+        Some(&sem::Stage::Rejected(sem::Rejection::NotAuthorized {
+            actor: Actor::Agent {
+                name: "mirror".into()
+            }
+        }))
+    );
+    assert!(refused.said().contains("refused: only a person asks it"));
+    let drawn = u64::from_str_radix(&app.said("acted").expect("acted"), 16).expect("a hash");
+    assert_eq!(drawn, capture, "the camera stayed off");
+    assert!(w.quiet(300), "an unchanged frame sent nothing");
+    app.quit();
 }
 
 // -- The band -------------------------------------------------------------------
