@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-19 fechada pelo orquestrador, sem agente
+
+- o app compila, instala e abre no simulador; a janela nascia com o
+  tamanho do desktop (o winit do iOS faz dele o frame da UIWindow), e o
+  `capture-ios` não achava o tamanho da tela nos perfis do Xcode 26. os
+  dois corrigidos. frame igual ao desktop fora da barra de status; ida e
+  volta do segundo plano no mesmo processo.
+- pendências: a área segura na galeria; a rotação, que pede a janela do
+  Simulator.app. custo: só tokens do orquestrador.
+
 ### task-20 fechada pelo orquestrador, sem agente
 
 - **instalado com o ok do brenner:** `trunk`, `wasm-bindgen-cli 0.2.123`,

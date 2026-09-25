@@ -363,7 +363,7 @@ impl ApplicationHandler<UserEvent> for App {
             return;
         }
 
-        #[allow(unused_mut)] // mut needed for cfg(not(wasm)) inner_size
+        #[allow(unused_mut)] // mut needed on the desktop (inner size, visibility)
         let mut attrs = WindowAttributes::default().with_title(TITLE);
         #[cfg(target_os = "macos")]
         {
@@ -379,8 +379,10 @@ impl ApplicationHandler<UserEvent> for App {
         // Desktop gets a fixed initial size. On the web the canvas size is
         // owned by CSS (100vw/100vh in index.html): setting an inner size
         // here would pin inline styles on the canvas and stop it from
-        // tracking the browser window.
-        #[cfg(not(target_arch = "wasm32"))]
+        // tracking the browser window. On iOS winit makes the size the
+        // UIWindow's frame (a 1200x800 window on a 402x874 phone, cropped
+        // on the right and short at the bottom); mobile takes the screen.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         {
             attrs = attrs.with_inner_size(winit::dpi::LogicalSize::new(1200u32, 800u32));
         }

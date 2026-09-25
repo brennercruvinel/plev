@@ -82,7 +82,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 | task | descricao | status |
 |------|-----------|--------|
 | task-18 | android build & device test | parcial (apk buildando no emulador via task-50; device fisico pendente) |
-| task-19 | ios simulator test | parcial (rodando no simulador via task-50; device fisico + link xcode completo pendentes) |
+| task-19 | ios simulator test | concluída (2026-09-25): o frame do simulador igual ao desktop fora da barra de status; arquivo em `checked/` |
 | task-20 | WASM visual validation | concluída (2026-09-25): 12 capturas web iguais ao desktop em todo byte; arquivo em `checked/` |
 
 ### fase 3, polish (p2), parcial
@@ -180,7 +180,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 
 ### prioridade 3, mobile/WASM
 - task-18: APK wrapper + deploy + lifecycle tests (bloqueado: APK wrapper ainda pendente)
-- task-19: ios link (bloqueado: requer xcode.app, nao apenas cli tools)
+- task-19: concluída (2026-09-25), ver `checked/task-19-ios-simulator-test-done.md`
 - task-20: concluída (2026-09-25), ver `checked/task-20-wasm-visual-validation-done.md`
 
 ### prioridade 4, futuro
@@ -214,7 +214,7 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 - [x] effects integrados com layers, task-16
 - [x] input layer-aware hit-testing, task-17
 - [x] android .so build (cargo-ndk, GPU host), task-18 parcial (deploy pendente)
-- [x] ios check (aarch64-apple-ios-sim), task-19 parcial
+- [x] ios build, deploy e captura no simulador, task-19
 - [x] WASM trunk build release (2.4mb) e validação visual, task-20
 - [x] documentacao DSL (EBNF, 30 modifiers), task-21
 - [x] error suggestions (levenshtein), task-22 parcial
