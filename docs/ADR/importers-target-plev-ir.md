@@ -1,7 +1,7 @@
 ---
 type: adr
 status: proposed
-tags: [parser, importer, compiler-target, plev-ir, uir, report, droplist, tokens, tolerance, binding, surface, headless, generative-runtime]
+tags: [parser, importer, compiler-target, plev-ir, uir, report, droplist, tokens, tolerance, binding, surface, headless, generative-runtime, html, css, figma]
 date: 2026-09-25
 ---
 
@@ -185,6 +185,58 @@ the bounds), not the counts, so another GPU passes them.
 - SwiftUI and Flutter, registered; gpui controls (`on_click`), a React list
   (`items.map`) as a `repeat`.
 
+## phase 2: HTML/CSS and Figma (2026-09-25)
+
+two more sources through the same `Resolution` and both emitters, each
+with a fixture, goldens (IR, report, builder code) and a census test.
+
+- HTML/CSS subset: `html.rs` reads the document with tree-sitter-html and
+  the CSS of `<style>` and `style=""` with tree-sitter-css (both pinned,
+  `=0.23.2` and `=0.25.0`, in `crates/parser` only). `resolve_html/`
+  cascades `.class`, `#id` and tag rules by specificity then order, as a
+  browser does, and lets text styles inherit to every run below. the
+  subset: `div`, `section`, `header`, `p`, `span`, `h1` to `h3`, `label`,
+  `ul`, `li`, `img`, the controls, and flex (`display`, `flex-direction`,
+  `gap`, `align-items`, `justify-content`, `flex-grow`). what CSS writes
+  and the corpus sass does not (hex and named colors, `bold`) is
+  normalized in `html_map.rs` so the declarations both share still go
+  through `css_map::map_decl`, and react's output does not move. grid,
+  position, float, media queries, pseudo-classes, selectors that are not
+  simple, `<script>`, other `on*` handlers and the browser's default
+  styles the stylesheet does not replace are each an impossible entry.
+  `onclick="open()"` and `oninput="reply(this.value)"` name their action,
+  so the HTML note card binds the same app as the react one.
+- Figma: `script/figma-fixture` (python stdlib) reads the .fig (a zip of
+  fig-kiwi: the kiwi schema in raw deflate, the message in zstd) and
+  writes one screen in the REST API's shape, only what the importer reads,
+  one key per line, so `figma.rs` gives every key its line (serde_json
+  keeps none). instances are expanded from their component, overrides
+  matched by `guidPath` (one guid per instance level); what it cannot
+  apply is written in `unappliedOverrides` and reported. a color bound to
+  a variable is the variable's value in the mode in force, as the design
+  tool shows it (the settings screen's status bar is dark in the light
+  mode and white in the dark one). `resolve_figma/` maps auto layout to
+  the stack, a fixed size to a size token (not a size that hugs, grows or
+  stretches), a text to a run, a solid fill to a color. the test never
+  reads the .fig nor the network.
+- the position rule, `approximated`: a frame with no auto layout whose
+  children do not overlap along y is a column in y order (along x, a row
+  in x order); each child's offset from where the stack puts it is the
+  difference, in px. children that overlap are impossible, in source
+  order. vectors and ellipses have no IR component and are impossible.
+- additive, and no source that existed produces it: the `gap` and
+  `align_items(Align::..)` props (the builder's; the code emitter imports
+  `Align` when used), `DropKind::Approximated` for a rule a resolver
+  applies approximately, and `<img>` as the `image` component named by
+  its `alt` (its `src` impossible: the IR carries no picture). a binding's
+  `why` quotes the handler as the source writes it, which for react is the
+  same text as before. the react and gpui goldens are unchanged.
+- counts: the HTML note card 32 supported, 22 transformed, 17
+  approximated, 13 impossible, two bindings (`reply`, `open`); the Figma
+  settings screen 251, 27, 119, 196, no binding (a design names no
+  capability; its IR verifies with nothing declared and invents no
+  control).
+
 ## avoid
 
 - a literal in the IR: a value is a token, or it is reported.
@@ -192,3 +244,6 @@ the bounds), not the counts, so another GPU passes them.
   something else so the IR verifies with nothing declared.
 - a tolerance chosen by eye: it is the table's own measure.
 - a construct in no entry: the census test fails.
+- a layout read from positions without its rule and its difference in the
+  report, or an override, a variable or an image dropped by the export
+  without a mark.

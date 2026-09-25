@@ -621,3 +621,110 @@ lugar e o tamanho ficam em `absoluteBoundingBox`, composto das
 translações; uma rotação fica em `rotation` e vai ao relatório. não
 cobre: geometria de vetor, máscara, constraints, propriedades de
 componente, variáveis e modos.
+
+## handoff da fase 2 (2026-09-25, agente, branch task/71b-importers)
+
+Goal: task-71 fase 2, duas fontes novas no parser, HTML/CSS (subset) e
+Figma, cada uma com fixture, goldens e relatório em quatro categorias.
+Status: pronto para validação do orquestrador. fecha os critérios 3 e 4;
+com a integração, a task-71 vai para `checked`. nada no `uir`, no
+`surface`, no `sem` nem no código builder das fontes antigas mudou.
+
+### commits
+
+1. `e3201af7` a sonda (a) a (d), acima.
+2. `6e99cec8` as duas dependências.
+3. `7ca7d41e` o importer HTML/CSS com a fixture (`fixtures/html/`).
+4. `0cb09a90` o `script/figma-fixture` e a tela exportada
+   (`fixtures/figma/settings.json`).
+5. `4e16c349` o importer Figma, os goldens e o desenho headless das duas.
+6. este commit: a adição da fase 2 no ADR e este handoff.
+
+### as duas fontes
+
+- HTML/CSS: `html.rs` (parse), `html_map.rs` (o subset de CSS),
+  `resolve_html/` (cascata por especificidade, herança de texto, a
+  moldura do documento). a fixture é o note card escrito como página, a
+  mesma forma do react; liga o mesmo app (`reply`, `open`). relatório: 32
+  supported, 22 transformed, 17 approximated, 13 impossible, 2 bindings.
+- Figma: `figma.rs` (JSON e a linha de cada chave), `resolve_figma/`. a
+  tela "settings" da página "Dark Theme" (98 nós, instâncias expandidas).
+  relatório: 251 supported, 27 transformed, 119 approximated, 196
+  impossible, nenhum binding (o design não nomeia capacidade; o IR
+  verifica sem nada declarado e não inventa controle).
+- a regra de posição (approximated): frame sem auto layout com filhos que
+  não se sobrepõem em y vira coluna na ordem de y (em x, linha); o
+  deslocamento de cada filho vai ao relatório em px. sobreposto é
+  impossible.
+- o script resolve cor ligada a variável no modo da tela (a status bar
+  sai branca no modo dark); o que não aplica fica em
+  `unappliedOverrides` e vira impossible. o emoji do nome da página fica
+  escapado no JSON e no relatório.
+- aditivo, que nenhuma fonte antiga produz: props `gap` e
+  `align_items(Align::..)`, `DropKind::Approximated`, `<img>` como
+  componente `image`. os goldens react e gpui passam sem regravar.
+
+### PNGs (headless, não são golden)
+
+`cargo test -p parser --test pixels -- --ignored write_the_frames`
+escreve em `/Users/nn/Dev/hoff/plevdev/target/agents/one/tmp/`:
+`html-note-card-ir.png`, `figma-settings-ir.png` (o IR materializado) e
+`html-note-card-builder.png`, `figma-settings-builder.png` (o código
+builder). o IR do Figma desenha só texto: os fundos da tela estão fora da
+tolerância dos tokens (impossible) e os ícones são vetores.
+
+### diff do lock
+
+```text
+@@ -3514,6 +3514,8 @@ dependencies = [
+  "surface",
+  "thiserror 2.0.18",
+  "tree-sitter",
++ "tree-sitter-css",
++ "tree-sitter-html",
+  "tree-sitter-rust",
+  "tree-sitter-typescript",
+  "uir",
+@@ -4836,6 +4838,26 @@ dependencies = [
++[[package]]
++name = "tree-sitter-css"
++version = "0.25.0"
++dependencies = [ "cc", "tree-sitter-language" ]
++
++[[package]]
++name = "tree-sitter-html"
++version = "0.23.2"
++dependencies = [ "cc", "tree-sitter-language" ]
+```
+
+arestas novas: `parser -> tree-sitter-html`, `parser -> tree-sitter-css`;
+as duas usam `cc` 1.2.63 e `tree-sitter-language` 0.1.7, que o lock já
+tinha. nenhum outro pacote.
+
+### validação
+
+- `./script/gate` verde, pernas wasm e urnaui: 3163 passam, 0 falham, 28
+  ignorados. o parser foi de 49 para 69 testes (+20), nenhum removido.
+  disco com 13 GB livres no fim.
+- `cargo run --offline -p showcase --example regress -- check`: 176
+  baselines, 176 iguais.
+
+### linha para o índice de ADR
+
+`| 2026-09-25 | [importers-target-plev-ir](importers-target-plev-ir.md) | proposed | o parser ganha o segundo emissor, ParserNode para plev IR, ao lado do código builder (que não muda um byte); relatório em quatro categorias com arquivo:linha que estende a droplist, forma JSON fixa; tolerância por token medida no tema (metade da distância ao vizinho); controle vira componente com role ligado a uma ação nomeada em <superfície>.props (binding required); pixels contra o builder com cada diferença explicada (task-71 fase 1); fase 2: HTML/CSS subset (tree-sitter-html e -css) e Figma (export REST de um .fig por script/figma-fixture) pelo mesmo Resolution e os mesmos emissores, regra de posição approximated, cor por variável no modo da tela |`
+
+### pendências
+
+- no IR do Figma, "Terms of Service" quebra em duas linhas e desenha
+  por cima do subtítulo: é a medida de altura de texto quebrado do
+  `surface` numa coluna estreita, fora deste escopo.
+- ícone e forma (vetor, elipse) não têm componente no IR; o `src` de uma
+  imagem também não. crescem com o vocabulário do `uir`.
+- HTML: fluxo inline vira coluna (approximated), unidades `em`/`rem`/`%`
+  não são lidas, `<a>`, `<form>`, `<select>` e checkbox ficam fora do
+  subset.
+- Figma: propriedades de componente, variável de biblioteca, constraints
+  e geometria de vetor não entram; a regra de posição só vale sem
+  sobreposição.
+- um `<img>` do card do corpus react passaria a `image` (só no IR); o
+  corpus não está neste checkout, então não foi conferido.
