@@ -212,6 +212,35 @@ fn states_become_values_toggles_and_flags() {
     assert_eq!(n("form.name").is_selected(), None);
 }
 
+/// A table says which row is selected in `selected_row` (the comps
+/// table's key, task-75 phase 2b): that row is selected, the others not;
+/// with none selected (an empty key), no row says either.
+#[test]
+fn a_table_s_selected_row_is_selected() {
+    let table = |selected: &str| {
+        let mut b = SnapshotBuilder::new();
+        b.node("grid", Role::Table, "files")
+            .state("count", 3_i64)
+            .state("selected_row", selected);
+        for key in ["0", "1", "2"] {
+            let id = format!("grid[{key}]");
+            let mut row = b.node(id.as_str(), Role::Row, key);
+            row.parent("grid");
+            row.action("select").reads("grid:selected_row");
+        }
+        finish(b)
+    };
+    let (u, ids) = build(&table("1"), &unbound(), &CHROME);
+    assert_valid(&u);
+    let selected = |id: &str| node(&u, &ids, id).is_selected();
+    assert_eq!(selected("grid[1]"), Some(true));
+    assert_eq!(selected("grid[0]"), Some(false));
+    assert_eq!(selected("grid[2]"), Some(false));
+    assert_eq!(selected("grid"), None);
+    let (u, ids) = build(&table(""), &unbound(), &CHROME);
+    assert_eq!(node(&u, &ids, "grid[1]").is_selected(), None);
+}
+
 #[test]
 fn focusable_nodes_take_focus_and_inert_ones_are_hidden() {
     let mut b = SnapshotBuilder::new();

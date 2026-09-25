@@ -1,0 +1,57 @@
+{
+  "nodes": [
+    {
+      "id": "toast_page",
+      "role": "region",
+      "label": "Toast"
+    },
+    {
+      "id": "toast_page.button[neutral]",
+      "role": "button",
+      "label": "Neutral",
+      "parent": "toast_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toast_page.button[success]",
+      "role": "button",
+      "label": "Success",
+      "parent": "toast_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toast_page.button[error]",
+      "role": "button",
+      "label": "Error",
+      "parent": "toast_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toast_page.button[info]",
+      "role": "button",
+      "label": "Info",
+      "parent": "toast_page",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

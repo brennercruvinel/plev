@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "5514cfa19cba0b3f",
+    "nodes": 4
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "checkbox_page",
       "z": 0,
       "hash": "09f22aa36b48a71d",
       "nodes": 12,
@@ -51,5 +54,54 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "checkbox_page.box[0]",
+      "layer": "checkbox_page",
+      "rect": [
+        288.0,
+        134.2,
+        360.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "checkbox_page.box[1]",
+      "layer": "checkbox_page",
+      "rect": [
+        288.0,
+        170.2,
+        360.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "checkbox_page.box[2]",
+      "layer": "checkbox_page",
+      "rect": [
+        288.0,
+        206.2,
+        360.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

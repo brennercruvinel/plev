@@ -1,20 +1,32 @@
 //! Resizable page: a split pane with a draggable divider.
+//!
+//! Projected (task-75 phase 2b): the split, `resizable_page.split`, named
+//! "panes", as the comps projects it, described by the first pane's share;
+//! `set_ratio` moves the divider where a drag would. A reader has no way
+//! to ask it yet: the tree sets a value only through `set_value` (and a
+//! select's `select`), and the contract has no splitter role.
 
 use comps::prelude::{EventResult, Rect, SplitDirection, SplitPane, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::Theme;
+use sem::{Request, SemId, SnapshotBuilder, Value};
 
-use super::{panel, text};
+use super::{After, Component, child_id, panel, root_id, text, under};
 
 pub struct ResizablePage {
+    root: Option<SemId>,
     split: SplitPane,
 }
 
 impl ResizablePage {
     pub fn new(theme: &Theme) -> Self {
-        Self {
-            split: SplitPane::new(SplitDirection::Horizontal, 0.35, theme),
-        }
+        let root = root_id("resizable_page");
+        let split = SplitPane::new(SplitDirection::Horizontal, 0.35, theme);
+        let split = match child_id(root.as_ref(), "split") {
+            Some(id) => split.sem(id),
+            None => split,
+        };
+        Self { root, split }
     }
 
     fn rect(content: Rect, theme: &Theme) -> Rect {
@@ -60,6 +72,42 @@ impl ResizablePage {
             theme.colors.text_mid.0,
         );
         self.split.render(c, rect, theme);
+    }
+}
+
+impl Component for ResizablePage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        if let Some(id) = self.split.sem_id() {
+            let share = (self.split.ratio() * 100.0).round();
+            self.split
+                .project(b, id, "panes", Some(root))
+                .description(format!("the first pane takes {share}%"));
+        }
+    }
+
+    /// `set_ratio` moves the divider, as a drag does.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        let on_split = self.split.sem_id() == Some(&req.target);
+        match (req.action.as_str(), &req.param) {
+            ("set_ratio", Some(Value::Num(r))) if on_split => {
+                self.split.set_ratio(*r as f32);
+                Ok(After::Nothing)
+            }
+            _ => Err(format!(
+                "the resizable page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    /// Nothing of the split takes focus; the page's nodes are its own all
+    /// the same.
+    fn focus(&mut self, id: &SemId) -> bool {
+        self.root.as_ref().is_some_and(|root| under(root, id))
     }
 }
 

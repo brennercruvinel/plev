@@ -1,0 +1,69 @@
+{
+  "nodes": [
+    {
+      "id": "breadcrumb_page",
+      "role": "region",
+      "label": "Breadcrumb"
+    },
+    {
+      "id": "breadcrumb_page.trail[0]",
+      "role": "link",
+      "label": "crates",
+      "parent": "breadcrumb_page.trail",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "breadcrumb_page.trail[1]",
+      "role": "link",
+      "label": "comps",
+      "parent": "breadcrumb_page.trail",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "breadcrumb_page.trail[2]",
+      "role": "link",
+      "label": "src",
+      "parent": "breadcrumb_page.trail",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "breadcrumb_page.trail[3]",
+      "role": "link",
+      "label": "content",
+      "parent": "breadcrumb_page.trail",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "breadcrumb_page.trail[4]",
+      "role": "label",
+      "label": "table.rs",
+      "parent": "breadcrumb_page.trail"
+    },
+    {
+      "id": "breadcrumb_page.trail",
+      "role": "group",
+      "label": "path",
+      "parent": "breadcrumb_page"
+    }
+  ]
+}

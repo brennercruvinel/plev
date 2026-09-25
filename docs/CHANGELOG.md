@@ -9,6 +9,16 @@ status: living
 
 ## unreleased
 
+- the component pages speak to a screen reader and to agents (2026-09-25,
+  task-75 phase 2b): 30 pages of the gallery (buttons, checkboxes,
+  switches, chips, sliders, fields, the select, tabs, the tree, the table,
+  the long list, the breadcrumb, the navigation links, the split, the
+  dialog and toast pages) now say what they show. a person's click, a
+  screen reader's press and an agent's act through the port reach the
+  same state on each of them. the menu bar leaves them out. the other 46
+  pages are listed with why (24 need their widget to learn to describe
+  itself, 22 show nothing to operate).
+
 - a screen reader reaches what the mouse reaches on the pages that
   project (2026-09-25, task-75 phase 2a): inside each row of the todo a
   reader finds a "completed" checkbox and a "remove" button, inside each

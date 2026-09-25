@@ -609,6 +609,19 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-25, o regress espelha as ligações em mais de um lugar
+
+- **ligar um widget muda o `scene.json` em três pontos:** o bloco
+  `semantics`, o `bindings` e o nome da camada (o regress nomeia a camada
+  pelas raízes dos ids ligados nela). a regra do briefing para baseline
+  que passa a projetar: `frame.png` igual e, em `layers`, z, hash,
+  contagem de nós e limites iguais; nome, `semantics` e `bindings` podem
+  mudar. o orquestrador confere por script, não pelo relato.
+- **"cole o diff inteiro" de arquivo novo despeja o arquivo:** o briefing
+  pediu um diff por tipo de widget e o arquivo da task ganhou 3100 linhas
+  de JSON. para baseline, pedir a lista, um resumo por tipo e o sha do
+  commit; o diff mora no git.
+
 ### 2026-09-25, antes de dizer onde a correção mora, ver quem lê
 
 - **o briefing da task-75 fase 2a mandou a página projetar as ações da

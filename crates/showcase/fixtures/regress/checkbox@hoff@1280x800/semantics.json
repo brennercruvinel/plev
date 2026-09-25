@@ -1,0 +1,73 @@
+{
+  "nodes": [
+    {
+      "id": "checkbox_page",
+      "role": "region",
+      "label": "Checkbox"
+    },
+    {
+      "id": "checkbox_page.box[0]",
+      "role": "checkbox",
+      "label": "Autosave on focus loss",
+      "parent": "checkbox_page",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "checkbox_page.box[0]:checked"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "checkbox_page.box[1]",
+      "role": "checkbox",
+      "label": "Share anonymous usage data",
+      "parent": "checkbox_page",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "checkbox_page.box[1]:checked"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "checkbox_page.box[2]",
+      "role": "checkbox",
+      "label": "Managed by your organization",
+      "parent": "checkbox_page",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "checkbox_page.box[2]:checked"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    }
+  ]
+}

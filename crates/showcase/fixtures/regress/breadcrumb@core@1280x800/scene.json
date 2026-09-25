@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "a0a1dd29ac4a13d0",
+    "nodes": 7
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "breadcrumb_page",
       "z": 0,
       "hash": "d6bde8e1a47aa959",
       "nodes": 13,
@@ -51,5 +54,102 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "breadcrumb_page.trail",
+      "layer": "breadcrumb_page",
+      "rect": [
+        288.0,
+        134.2,
+        360.0,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[0]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        288.0,
+        134.2,
+        36.6275,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[1]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        348.6275,
+        134.2,
+        40.131157,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[2]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        412.75867,
+        134.2,
+        18.186796,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[3]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        454.94547,
+        134.2,
+        44.721016,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "breadcrumb_page.trail[4]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        523.6665,
+        134.2,
+        43.72469,
+        18.199999
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

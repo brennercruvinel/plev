@@ -1,29 +1,54 @@
 //! Switch page: two live spring toggles and a disabled one, each with a
 //! caption. Tab moves the focus ring over the enabled ones.
+//!
+//! Projected (task-75 phase 2b): each switch, `switch_page.switch[<i>]`, as
+//! the comps projects it, named by its caption; `toggle` flips it (the
+//! knob springs) as a click does. The focus a reader asks for is the
+//! page's own (the ring Tab moves).
 
 use comps::prelude::{EventResult, Rect, Switch, WidgetEvent};
 use engine::compositor::Compositor;
 use engine::theme::{ControlSize, Theme};
+use sem::{Request, SemId, SnapshotBuilder};
 
-use super::{EditKey, Focus, text};
+use super::{After, Component, EditKey, Focus, child_id, root_id, text, under};
 
 const LABELS: [&str; 3] = ["Focus mode", "Wrap long lines", "Disabled switch"];
 
 pub struct SwitchPage {
+    root: Option<SemId>,
     switches: [Switch; 3],
     focus: Focus,
 }
 
 impl SwitchPage {
     pub fn new(theme: &Theme) -> Self {
+        let root = root_id("switch_page");
+        let family = child_id(root.as_ref(), "switch");
+        let switches = [
+            Switch::new(true).with_motion(&theme.motion),
+            Switch::new(false).with_motion(&theme.motion),
+            Switch::new(false).with_motion(&theme.motion).disabled(true),
+        ];
+        let mut i = 0;
+        let switches = switches.map(|s| {
+            let id = family.as_ref().map(|f| f.key(i.to_string()));
+            i += 1;
+            match id {
+                Some(id) => s.sem(id),
+                None => s,
+            }
+        });
         Self {
-            switches: [
-                Switch::new(true).with_motion(&theme.motion),
-                Switch::new(false).with_motion(&theme.motion),
-                Switch::new(false).with_motion(&theme.motion).disabled(true),
-            ],
+            root,
+            switches,
             focus: Focus::default(),
         }
+    }
+
+    /// The switch behind `id`.
+    fn at(&self, id: &SemId) -> Option<usize> {
+        self.switches.iter().position(|s| s.sem_id() == Some(id))
     }
 
     fn rects(content: Rect, theme: &Theme) -> [Rect; 3] {
@@ -104,5 +129,48 @@ impl SwitchPage {
                 },
             );
         }
+    }
+}
+
+impl Component for SwitchPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (switch, label) in self.switches.iter().zip(LABELS) {
+            if let Some(id) = switch.sem_id() {
+                switch.project(b, id, label, Some(root));
+            }
+        }
+        let focused = self.focus.slot.and_then(|i| self.switches.get(i));
+        if let Some(id) = focused.and_then(Switch::sem_id) {
+            b.focus(id);
+        }
+    }
+
+    /// A switch's `toggle` flips it, as its click does.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        match (self.at(&req.target), req.action.as_str()) {
+            (Some(i), "toggle") => {
+                self.switches[i].toggle();
+                Ok(After::Nothing)
+            }
+            _ => Err(format!(
+                "the switch page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    /// An enabled switch takes the page's focus (its ring, the slot Tab
+    /// moves from); another node of the page takes it from the switches.
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        let slot = self.at(id).filter(|i| !self.switches[*i].disabled);
+        self.set_focus(slot);
+        true
     }
 }

@@ -1,0 +1,179 @@
+{
+  "nodes": [
+    {
+      "id": "table_page",
+      "role": "region",
+      "label": "Table"
+    },
+    {
+      "id": "table_page.table[0]",
+      "role": "row",
+      "label": "crates/comps/src/file_0.rs, modified, 3 KB, 0000000",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[1]",
+      "role": "row",
+      "label": "crates/comps/src/file_1.rs, added, 40 KB, e3779ba",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[2]",
+      "role": "row",
+      "label": "crates/comps/src/file_2.rs, renamed, 77 KB, c6ef375",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[3]",
+      "role": "row",
+      "label": "crates/comps/src/file_3.rs, modified, 114 KB, aa66d30",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[4]",
+      "role": "row",
+      "label": "crates/comps/src/file_4.rs, added, 151 KB, 8dde6eb",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[5]",
+      "role": "row",
+      "label": "crates/comps/src/file_5.rs, renamed, 188 KB, 71560a6",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[6]",
+      "role": "row",
+      "label": "crates/comps/src/file_6.rs, modified, 225 KB, 54cda61",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[7]",
+      "role": "row",
+      "label": "crates/comps/src/file_7.rs, added, 262 KB, 384541c",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[8]",
+      "role": "row",
+      "label": "crates/comps/src/file_8.rs, renamed, 299 KB, 1bbcdd7",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[9]",
+      "role": "row",
+      "label": "crates/comps/src/file_9.rs, modified, 336 KB, ff34791",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table[10]",
+      "role": "row",
+      "label": "crates/comps/src/file_10.rs, added, 373 KB, e2ac14c",
+      "parent": "table_page.table",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.table:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.table",
+      "role": "table",
+      "label": "files",
+      "parent": "table_page",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 2000
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    }
+  ]
+}

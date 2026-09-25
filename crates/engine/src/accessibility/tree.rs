@@ -37,7 +37,8 @@
 //!   reads (else `checked` or `on`) is `toggled`; a bool `expanded` is
 //!   `expanded`; a bool `selected` is `selected`; a text `selected` on a
 //!   container names the key of its selected child (`todo.filter` holds
-//!   `all`, so `todo.filter[all]` is selected and its siblings are not).
+//!   `all`, so `todo.filter[all]` is selected and its siblings are not),
+//!   and so does a table's `selected_row` (the comps table's key for it).
 //! - a status is a polite live region and an alert an assertive one (a
 //!   secret one is neither), and what a reader hears when it changes is
 //!   the node's value: its own, else its `message`, else its label (see
@@ -447,7 +448,8 @@ fn numeric(n: &Node, out: &mut AkNode, v: f64) {
 /// A container whose text `selected` names one of its children by key
 /// marks that child selected and its other children not (a child with a
 /// bool `selected` of its own keeps it). A text that names no child (a
-/// select holds its option's label) marks nothing.
+/// select holds its option's label) marks nothing. A table says it in
+/// `selected_row` (`comps::content::Table::project`, task-75 phase 2b).
 fn select_children(
     snapshot: &Snapshot,
     order: &[&Node],
@@ -455,7 +457,11 @@ fn select_children(
     described: &mut [AkNode],
 ) {
     for node in order {
-        let Some(Value::Text(key)) = node.state.get("selected") else {
+        let says = match node.role {
+            Role::Table => "selected_row",
+            _ => "selected",
+        };
+        let Some(Value::Text(key)) = node.state.get(says) else {
             continue;
         };
         let chosen = node.id.key(key.as_str());

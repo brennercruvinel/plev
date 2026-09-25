@@ -13,13 +13,15 @@
 //! are held to each other.
 //!
 //! What the pages do not give a reader yet is listed, not fixed: the
-//! pages that project no meaning (the component pages, task-75 phase 2b)
-//! and what phase 2a left with its reason. Each list is exact, so a page
+//! pages that project no meaning, each with its reason (`SILENT`), and
+//! what phases 2a and 2b left with theirs. Each list is exact, so a page
 //! that starts projecting, or a new gap, shows here. Phase 2a emptied the
 //! others: an item's actions its own node does not reach are controls the
 //! tree presents inside it (`accessibility::present`), a select is
 //! pressed open and set by its value, the pages project the focus they
-//! take, and a press is offered only while its action is on.
+//! take, and a press is offered only while its action is on. Phase 2b
+//! made every component page whose widgets project in comps project what
+//! it shows (`view::dispatch::component`).
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use engine::accessibility::accesskit::{
@@ -31,16 +33,182 @@ use engine::compositor::Compositor;
 use sem::{Actor, Request, Role, SemId, StateKey, Value};
 use showcase::view::{PAGES, ShowcaseView};
 
-/// The pages that project their meaning, in sidebar order ("Toggle
-/// Group" shows the todo page's example). Every other page is the
-/// window alone to a reader.
-const PROJECTING: [&str; 6] = [
+/// The pages that project their meaning, in sidebar order: since phase
+/// 2b every component page whose widgets project in comps ("Alert
+/// Dialog" shows the Dialog page, "Toggle Group" the todo page's
+/// example), and the apps of phase 1. Every other page is in `SILENT`.
+const PROJECTING: &[&str] = &[
+    "Alert Dialog",
+    "Breadcrumb",
+    "Button",
+    "Button Group",
+    "Checkbox",
+    "Chip",
+    "Combobox",
+    "Data Table",
+    "Dialog",
+    "Field",
+    "Hover Card",
+    "Icon Button",
+    "Input",
+    "Item",
+    "Kbd",
+    "Label",
+    "Navigation Menu",
+    "Popover",
+    "Resizable",
+    "Scroll Area",
+    "Select",
+    "Slider",
+    "Spinner",
+    "Switch",
+    "Table",
+    "Tabs",
+    "Toast",
+    "Toggle",
     "Toggle Group",
+    "Tooltip",
+    "Tree",
     "Todo",
     "Surface",
     "Silences",
     "Files",
     "Capture",
+];
+
+/// Why a page is the window alone to a reader.
+#[derive(Clone, Copy, Debug)]
+enum Why {
+    /// It shows a widget with no projection in comps: what it would need
+    /// (task-75, "fase 2b: a sonda", group 2). The next phase.
+    Unprojected(&'static str),
+    /// Nothing to operate and nothing to read but a sample of drawing
+    /// (group 3): it projects nothing.
+    Nothing(&'static str),
+}
+
+use Why::{Nothing, Unprojected};
+
+const PLACEHOLDER: Why = Nothing("a placeholder: no widget in comps yet");
+
+/// The pages that project nothing, in sidebar order, each with its
+/// reason. With `PROJECTING`, every page of the table.
+const SILENT: &[(&str, Why)] = &[
+    (
+        "Theme",
+        Unprojected("the palette cards are drawn by hand: options pressed by shell.theme"),
+    ),
+    ("Typography", Nothing("a type specimen")),
+    ("Icons", Nothing("a grid of icons, hover only")),
+    ("Effects", Nothing("samples of shadow, blur and gradient")),
+    ("Accordion", PLACEHOLDER),
+    ("Alert", PLACEHOLDER),
+    ("Aspect Ratio", PLACEHOLDER),
+    ("Attachment", PLACEHOLDER),
+    (
+        "Avatar",
+        Unprojected("Avatar: an image named by the person, online or not"),
+    ),
+    ("Badge", Unprojected("Badge: a label with its count or tag")),
+    (
+        "Bubble",
+        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+    ),
+    ("Calendar", PLACEHOLDER),
+    (
+        "Card",
+        Unprojected("Card: a group per variant with its words and numbers"),
+    ),
+    ("Carousel", PLACEHOLDER),
+    (
+        "Chart",
+        Unprojected("the charts: an image with a text alternative, or a table of the data"),
+    ),
+    (
+        "Code Block",
+        Unprojected("CodeBlock: a label with the code, named by its caption"),
+    ),
+    ("Collapsible", PLACEHOLDER),
+    ("Command", PLACEHOLDER),
+    (
+        "Context Menu",
+        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
+    ),
+    ("Date Picker", PLACEHOLDER),
+    (
+        "Drawer",
+        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
+    ),
+    (
+        "Dropdown Menu",
+        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
+    ),
+    (
+        "Empty",
+        Unprojected("EmptyState: a group named by its title, its message, its call to action"),
+    ),
+    (
+        "Graph",
+        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
+    ),
+    ("Input Group", PLACEHOLDER),
+    ("Input OTP", PLACEHOLDER),
+    ("Marker", PLACEHOLDER),
+    ("Menubar", PLACEHOLDER),
+    (
+        "Message",
+        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+    ),
+    (
+        "Message Scroller",
+        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+    ),
+    ("Pagination", PLACEHOLDER),
+    ("Panel", Nothing("the glass surface alone")),
+    (
+        "Panel Header",
+        Unprojected("PanelHeader: a heading with its blurb and badge"),
+    ),
+    (
+        "Progress",
+        Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
+    ),
+    ("Questionnaire", PLACEHOLDER),
+    ("Radio Group", PLACEHOLDER),
+    ("Separator", Nothing("rules between captions")),
+    (
+        "Sheet",
+        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
+    ),
+    (
+        "Sidebar",
+        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
+    ),
+    (
+        "Skeleton",
+        Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
+    ),
+    (
+        "Stat",
+        Unprojected("Stat: a label with its value, unit and delta"),
+    ),
+    ("Textarea", PLACEHOLDER),
+    (
+        "Dock",
+        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+    ),
+    (
+        "Editor",
+        Unprojected("EditorView: a multiline text input with its selection"),
+    ),
+    (
+        "Git",
+        Unprojected("the ide's views: the ide is out of this task"),
+    ),
+    (
+        "Builder",
+        Unprojected("the builder's elements: a button per hit region, the count as a status"),
+    ),
 ];
 
 /// The actions a reader can ask of a node: what the tree offers.
@@ -152,24 +320,31 @@ fn assert_valid(title: &str, u: &TreeUpdate) {
     assert!(listed.binary_search(&u.focus).is_ok(), "{title}: focus");
 }
 
+/// Every page is a valid tree; the pages that project are `PROJECTING`,
+/// and the ones a reader meets empty are `SILENT`, each with its reason.
+/// Phase 1 counted 76 silent; phase 2b leaves the ones whose widgets have
+/// no projection in comps, and the samples with nothing to operate.
 #[test]
-fn every_page_is_a_valid_tree_and_six_project_their_meaning() {
+fn every_page_is_a_valid_tree_and_the_silent_ones_are_the_known_ones() {
     let mut projected = Vec::new();
+    let mut silent = Vec::new();
     for page in PAGES {
         let seen = see(page.title);
         assert_valid(page.title, &seen.update);
         if seen.shown.snapshot.is_empty() {
             assert_eq!(seen.update.nodes.len(), 1, "{}: the window", page.title);
+            silent.push(page.title);
         } else {
             projected.push(page.title);
         }
     }
     assert_eq!(projected, PROJECTING);
-    assert_eq!(
-        PAGES.len() - projected.len(),
-        76,
-        "the pages a reader meets empty"
-    );
+    let known: Vec<&str> = SILENT.iter().map(|(title, _)| *title).collect();
+    assert_eq!(silent, known);
+    for (title, why) in SILENT {
+        let (Unprojected(reason) | Nothing(reason)) = why;
+        assert!(!reason.is_empty(), "{title}: say why");
+    }
 }
 
 #[test]
@@ -326,8 +501,15 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// Phase 2a reaches all but the drop: a row's and a cut's actions are
 /// controls the tree presents inside them, a select is pressed open (and
 /// shut, while open) and set by its value. The drop stays: a reader does
-/// not drag a file, and `files.open` reaches the same files.
-const UNREACHABLE: &[&str] = &["Files: files.drop drop_files"];
+/// not drag a file, and `files.open` reaches the same files. Phase 2b
+/// adds the Resizable page's split: a group whose `set_ratio` no action of
+/// the tree reaches (a value is set through `set_value` or a select's
+/// `select`, and the contract has no splitter role, AccessKit's
+/// `Splitter`); an agent asks it, and a person drags.
+const UNREACHABLE: &[&str] = &[
+    "Files: files.drop drop_files",
+    "Resizable: resizable_page.split set_ratio",
+];
 
 /// Whether the node's press is off now: its primary action, or the node,
 /// is disabled, so the tree does not offer the press until it is on (a

@@ -10,10 +10,13 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "d67b3531a8b56fb4",
+    "nodes": 2
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "tooltip_page",
       "z": 0,
       "hash": "d71e16d7daa1642e",
       "nodes": 8,
@@ -51,5 +54,22 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "tooltip_page.button",
+      "layer": "tooltip_page",
+      "rect": [
+        288.0,
+        134.2,
+        139.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
 }

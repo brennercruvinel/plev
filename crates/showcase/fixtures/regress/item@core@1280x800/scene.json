@@ -10,7 +10,10 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "b68f922ea8585dbf",
+    "nodes": 21
+  },
   "layers": [
     {
       "name": "z0",
@@ -25,7 +28,7 @@
       ]
     },
     {
-      "name": "z10",
+      "name": "scroll_area_page",
       "z": 10,
       "hash": "2122db04dd575ef4",
       "nodes": 57,
@@ -56,5 +59,193 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "scroll_area_page.list",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        180.83,
+        720.0,
+        559.17
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[0]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        180.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[1]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        216.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[2]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        252.83,
+        720.0,
+        36.000015
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[3]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        288.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[4]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        324.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[5]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        360.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[6]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        396.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[7]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        432.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[8]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        468.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[9]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        504.83002,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[10]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        540.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[11]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        576.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[12]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        612.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[13]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        648.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[14]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        684.83,
+        720.0,
+        36.0
+      ],
+      "clip": null
+    },
+    {
+      "id": "scroll_area_page.list[15]",
+      "layer": "scroll_area_page",
+      "rect": [
+        288.0,
+        720.83,
+        720.0,
+        19.169983
+      ],
+      "clip": null
+    }
+  ]
 }
