@@ -1,0 +1,1003 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Silences, review by the rules, a sequence repeated",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "afb067f82d15433c",
+    "nodes": 60
+  },
+  "layers": [
+    {
+      "name": "silences_surface+silences+proposed",
+      "z": 0,
+      "hash": "fa9e10a00fbd9bf1",
+      "nodes": 192,
+      "bounds": [
+        283.0,
+        49.0,
+        965.0,
+        711.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "41dc04b6fa7988ef",
+      "nodes": 46,
+      "bounds": [
+        0.0,
+        0.0,
+        248.0,
+        800.0
+      ]
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "silences_surface",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        288.0,
+        134.2,
+        874.0,
+        100.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.intent",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        288.0,
+        134.2,
+        655.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.proposer",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        951.0,
+        134.2,
+        101.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.propose",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1060.0,
+        136.2,
+        102.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.cancel",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1070.0,
+        186.2,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.status",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        288.0,
+        198.885,
+        774.0,
+        14.63
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.close",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1170.0,
+        138.2,
+        70.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.composite",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        288.0,
+        234.2,
+        952.0,
+        44.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.composite.install",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1005.0,
+        234.2,
+        142.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences_surface.composite.dismiss",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1155.0,
+        234.2,
+        85.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        288.0,
+        278.2,
+        460.0,
+        985.01996
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.video",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        298.2,
+        420.0,
+        236.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.threshold",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        715.46,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.min_duration",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        782.09,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.detect",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        830.09,
+        420.0,
+        40.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.status",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        882.09,
+        420.0,
+        14.63
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.counts",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        968.72003,
+        301.0,
+        38.5
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.apply_all",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        641.0,
+        968.72003,
+        87.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.cut[1]",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        1019.22003,
+        420.0,
+        112.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "silences.cut[2]",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        308.0,
+        1131.22,
+        420.0,
+        112.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.card",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        780.0,
+        278.2,
+        460.0,
+        933.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.video.original",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        298.2,
+        420.0,
+        140.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cuts",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        450.2,
+        420.0,
+        281.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1]",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        450.2,
+        420.0,
+        135.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].about",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        450.2,
+        420.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].frame",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        450.2,
+        92.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].range",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        900.0,
+        465.2,
+        267.0,
+        22.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].decision",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1175.0,
+        466.2,
+        45.0,
+        20.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].numbers",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        506.2,
+        420.0,
+        39.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].start",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        506.2,
+        31.0,
+        39.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].end",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        839.0,
+        506.2,
+        31.0,
+        39.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].duration",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        878.0,
+        506.2,
+        38.0,
+        39.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].actions",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        549.2,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].preview_segment",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        549.2,
+        137.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].apply_cut",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        945.0,
+        549.2,
+        92.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[1].reject_cut",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1045.0,
+        549.2,
+        93.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2]",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        597.2,
+        420.0,
+        134.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].about",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        597.2,
+        420.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].frame",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        597.2,
+        92.0,
+        52.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].range",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        900.0,
+        612.2,
+        267.0,
+        23.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].decision",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1175.0,
+        613.2,
+        45.0,
+        21.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].numbers",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        653.2,
+        420.0,
+        38.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].start",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        653.2,
+        28.0,
+        38.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].end",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        836.0,
+        653.2,
+        35.0,
+        38.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].duration",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        879.0,
+        653.2,
+        38.0,
+        38.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].actions",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        696.2,
+        420.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].preview_segment",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        696.2,
+        137.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].apply_cut",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        945.0,
+        696.2,
+        92.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.cut[2].reject_cut",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        1045.0,
+        696.2,
+        93.0,
+        36.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.counts",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        743.2,
+        420.0,
+        448.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.video.duration",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        743.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.video.shown",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        794.2,
+        420.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.threshold.value",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        844.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.min_duration.value",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        895.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.counts.total",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        946.2,
+        420.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.counts.applied",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        996.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.counts.rejected",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        1047.2,
+        420.0,
+        42.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.counts.pending",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        1097.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    },
+    {
+      "id": "proposed.silences.counts.cut_secs",
+      "layer": "silences_surface+silences+proposed",
+      "rect": [
+        800.0,
+        1148.2,
+        420.0,
+        43.0
+      ],
+      "clip": [
+        248.0,
+        134.2,
+        1032.0,
+        625.8
+      ]
+    }
+  ]
+}

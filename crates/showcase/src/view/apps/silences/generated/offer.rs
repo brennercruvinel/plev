@@ -158,7 +158,7 @@ impl Offer {
         let found = self.composer.offered()?;
         let label = self.label.clone().unwrap_or_else(|| words(found));
         Some(format!(
-            "you did \"{label}\"{} {} times in a row",
+            "you did \"{label}\"{}, {} times in a row",
             on(&found.shape),
             found.repeats
         ))
@@ -286,13 +286,13 @@ fn words(found: &Found) -> String {
     steps.join(", then ")
 }
 
-/// ", on each cut" for a sequence over the items of `silences.cut`.
+/// " on each cut" for a sequence over the items of `silences.cut`.
 fn on(shape: &Shape) -> String {
     let each = shape.steps.iter().find_map(|s| match &s.target {
         Target::Item(base) => base.as_str().rsplit('.').next().map(str::to_owned),
         Target::Node(_) => None,
     });
-    each.map_or_else(String::new, |each| format!(", on each {each}"))
+    each.map_or_else(String::new, |each| format!(" on each {each}"))
 }
 
 impl SilencesPage {

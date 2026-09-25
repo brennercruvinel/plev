@@ -5,6 +5,7 @@
 //! the session. Installed, it is an action of the app on every cut, and,
 //! with the review open, a button in each cut of it.
 
+use engine::compositor::Compositor;
 use engine::gpu::image::load_image_rgba;
 use sem::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
 use uir::{Capabilities, GenerationPolicy, verify_json};
@@ -14,6 +15,7 @@ use super::super::generated::page::Page;
 use super::super::semantics::ms;
 use super::agent::{Dir, act, gallery, sid, snapshot};
 use super::{TURN, center, click, dispatch_as_test, frame, setup, stage, tester, wide};
+use crate::view::ShowcaseView;
 use crate::view::apps::app::TodoPage;
 use engine::theme::Theme;
 
@@ -428,4 +430,78 @@ fn a_cut_rejected_while_its_frame_decodes_stops_the_composite_with_why() {
     let middle = page.model.cut(cut).unwrap().segment().middle();
     assert_eq!(page.model.shown(), middle);
     assert!(page.generated.offer.chains.is_empty());
+}
+
+/// The demo, as the regress stages it (`examples/regress/state.rs`): the
+/// rules' review open at 1280x800, the harness looks at each cut and
+/// applies it through the gallery; the offer shows under the row, inside
+/// the window, and made one action a button comes into each cut of the
+/// review, beside the cut's own buttons, and the offer goes.
+#[test]
+fn the_demo_offers_the_sequence_then_a_button_in_each_cut_of_the_review() {
+    fn act(view: &mut ShowcaseView, target: &str, action: &str, text: Option<&str>) {
+        let seen = view.semantics().expect("the page projects");
+        let param = text.map(|t| Value::Text(t.to_owned()));
+        let harness = Actor::Test {
+            name: "regress".to_owned(),
+        };
+        let req = Request::observe(&seen, harness, target, action, param).unwrap();
+        let receipt = view.act(req).expect("taken");
+        assert!(
+            matches!(receipt.stage(), Some(Stage::Completed(_))),
+            "{target} {action}: {receipt:?}"
+        );
+    }
+    fn settle(view: &mut ShowcaseView) -> Compositor {
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        for _ in 0..600 {
+            if !view.tick(TURN) {
+                break;
+            }
+            view.render(&mut c);
+        }
+        c
+    }
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    view.jump_to_page("silences");
+    view.stage_silences_frames(&mut |_| {
+        load_image_rgba(4, 4, vec![128; 64]).map_err(|e| e.to_string())
+    });
+    let intent = Some("the list with the video and the counts");
+    act(&mut view, "silences_surface.intent", "set_value", intent);
+    act(
+        &mut view,
+        "silences_surface.proposer",
+        "select",
+        Some("rules"),
+    );
+    act(&mut view, "silences_surface.propose", "propose", None);
+    for cut in ["silences.cut[1]", "silences.cut[2]"] {
+        act(&mut view, cut, "preview_segment", None);
+        act(&mut view, cut, "apply_cut", None);
+    }
+    let c = settle(&mut view);
+    let band = c.binding(&sid(BAND)).expect("the offer is drawn").rect;
+    assert!(band[1] + band[3] <= 800.0, "inside the window: {band:?}");
+    for id in [INSTALL, DISMISS] {
+        assert!(c.binding(&sid(id)).is_some(), "{id} is drawn");
+    }
+
+    act(&mut view, INSTALL, "install", None);
+    let c = settle(&mut view);
+    assert!(c.binding(&sid(BAND)).is_none(), "answered, the band goes");
+    let snap = view.semantics().expect("the page projects");
+    let buttons: Vec<&SemId> = snap
+        .nodes()
+        .keys()
+        .filter(|id| id.as_str().ends_with(&format!(".{COMPOSITE}")))
+        .collect();
+    assert_eq!(buttons.len(), 2, "one per cut: {buttons:?}");
+    for button in buttons {
+        assert!(button.as_str().starts_with("proposed."), "{button}");
+        let node = snap.get(button).unwrap();
+        assert_eq!(node.label, "preview segment, then apply cut");
+        assert!(c.binding(button).is_some(), "{button} is drawn");
+    }
 }

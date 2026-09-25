@@ -15,8 +15,11 @@
 //! one; and, since task-70 phase 2, the review changed by an intent asked
 //! through the row after it opened, as a person or an agent asks ("too
 //! much information" over the rules' review, "tem informação demais" over
-//! the Claude's, and "I can't compare these", refused with why). The
-//! frames the page shows are synthetic, made here from their
+//! the Claude's, and "I can't compare these", refused with why); and,
+//! since task-70 phase 3, the review by the rules with a sequence the
+//! harness repeated (it looks at each cut and applies it): offered to the
+//! person under the row, and made one action, a button in each cut of the
+//! review. The frames the page shows are synthetic, made here from their
 //! instant, so no ffmpeg runs and the frame is the same on every machine
 //! (a layer hashes an image by its size, `hash.rs`).
 
@@ -55,7 +58,8 @@ pub struct Asked {
 
 /// A page in a state: its name, the page it is of, the intent typed in
 /// the row, how its surface is proposed, the operations applied to it
-/// then (`uir::Op` in JSON, in order), and the intents asked after them.
+/// then (`uir::Op` in JSON, in order), the intents asked after them, and
+/// the actions taken last (target and action, through the port's path).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct State {
     pub name: &'static str,
@@ -64,6 +68,7 @@ pub struct State {
     pub proposal: Proposal,
     pub ops: &'static [&'static str],
     pub asks: &'static [Asked],
+    pub acts: &'static [(&'static str, &'static str)],
 }
 
 /// The intent of the checkpoint's rules round.
@@ -80,6 +85,7 @@ pub const STATES: &[State] = &[
         proposal: Proposal::Rules,
         ops: &[],
         asks: &[],
+        acts: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture)",
@@ -88,6 +94,7 @@ pub const STATES: &[State] = &[
         proposal: Proposal::Fixture(CLAUDE_REVIEW),
         ops: &[],
         asks: &[],
+        acts: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture), adapted",
@@ -99,6 +106,7 @@ pub const STATES: &[State] = &[
             r#"{"op": "hide", "id": "review.controls"}"#,
         ],
         asks: &[],
+        acts: &[],
     },
     State {
         name: "Silences, review by the rules, too much information",
@@ -110,6 +118,7 @@ pub const STATES: &[State] = &[
             intent: "too much information",
             taken: true,
         }],
+        acts: &[],
     },
     State {
         name: "Silences, review by the Claude (fixture), too much, in portuguese",
@@ -121,6 +130,7 @@ pub const STATES: &[State] = &[
             intent: "tem informação demais",
             taken: true,
         }],
+        acts: &[],
     },
     State {
         name: "Silences, review by the rules, can't compare",
@@ -132,7 +142,43 @@ pub const STATES: &[State] = &[
             intent: "I can't compare these",
             taken: false,
         }],
+        acts: &[],
     },
+    State {
+        name: "Silences, review by the rules, a sequence repeated",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[],
+        acts: &REVIEWED,
+    },
+    State {
+        name: "Silences, review by the rules, the sequence as one action",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[],
+        acts: &COMPOSED,
+    },
+];
+
+/// Each cut looked at, then applied: the sequence a person repeats.
+const REVIEWED: [(&str, &str); 4] = [
+    ("silences.cut[1]", "preview_segment"),
+    ("silences.cut[1]", "apply_cut"),
+    ("silences.cut[2]", "preview_segment"),
+    ("silences.cut[2]", "apply_cut"),
+];
+
+/// The same, then the offer made one action.
+const COMPOSED: [(&str, &str); 5] = [
+    REVIEWED[0],
+    REVIEWED[1],
+    REVIEWED[2],
+    REVIEWED[3],
+    ("silences_surface.composite.install", "install"),
 ];
 
 /// The state named `name`, whatever the case.
@@ -271,6 +317,9 @@ impl StagedState {
         }
         for asked in state.asks {
             ask(&mut view, asked).map_err(|e| format!("{}: {e}", state.name))?;
+        }
+        for (target, action) in state.acts {
+            act(&mut view, target, action, None).map_err(|e| format!("{}: {e}", state.name))?;
         }
         view.stage_silences_frames(&mut synthetic);
         let mut compositor = Compositor::new();
