@@ -250,6 +250,75 @@ fn the_primary_action_follows_the_documented_order() {
     assert_eq!(PRIMARY, ["activate", "toggle", "submit", "select"]);
 }
 
+/// The buttons the sonda of task-75 found a screen reader could focus
+/// and not press (`propose`, `detect_silence`, `open_file`): a button, a
+/// link or a menu item with one action without a parameter is pressed by
+/// it. Two such actions, or another role, and a click has no action.
+#[test]
+fn a_button_with_one_action_of_its_own_is_pressed_by_it() {
+    let mut b = SnapshotBuilder::new();
+    b.node("propose", Role::Button, "propose").action("propose");
+    b.node("docs", Role::Link, "docs").action("follow");
+    b.node("quit", Role::MenuItem, "quit").action("quit");
+    let mut both = b.node("both", Role::Button, "both");
+    both.action("apply");
+    both.action("reject");
+    let mut named = b.node("named", Role::Button, "named");
+    named.action("preview");
+    named.action("activate");
+    let mut param = b.node("param", Role::Button, "param");
+    param.action("rename").param(ParamSpec {
+        kind: ValueKind::Text,
+        constrained: false,
+    });
+    param.action("go");
+    b.node("cut", Role::ListItem, "cut").action("apply_cut");
+    let s = match b.finish() {
+        Ok(s) => s,
+        Err(e) => panic!("{e}"),
+    };
+    let pick = |id: &str| s.get(&sid(id)).and_then(primary).map(|a| a.name.as_str());
+    assert_eq!(pick("propose"), Some("propose"));
+    assert_eq!(pick("docs"), Some("follow"));
+    assert_eq!(pick("quit"), Some("quit"));
+    assert_eq!(pick("both"), None, "two of its own: a click would guess");
+    assert_eq!(pick("named"), Some("activate"), "the named one first");
+    assert_eq!(pick("param"), Some("go"), "the one without a parameter");
+    assert_eq!(pick("cut"), None, "a list item is not pressed");
+
+    // what the tree offers is what the request carries
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let chrome = Chrome {
+        title: "t",
+        scale: 1.0,
+        size: (0, 0),
+    };
+    let (u, ids) = tree::build(&s, &c, &chrome);
+    let offers = |id: &str| {
+        let node = ids.node(&sid(id)).unwrap_or(ROOT);
+        u.nodes
+            .iter()
+            .find(|(n, _)| *n == node)
+            .is_some_and(|(_, n)| n.supports_action(Action::Click))
+    };
+    assert!(offers("propose") && !offers("both") && !offers("cut"));
+    let shown = Shown { snapshot: s, ids };
+    let req = ActionRequest {
+        action: Action::Click,
+        target_tree: TreeId::ROOT,
+        target_node: shown.ids.node(&sid("propose")).unwrap_or(ROOT),
+        data: None,
+    };
+    match translate(&req, &shown) {
+        Ok(Assist::Request(r)) => {
+            assert_eq!(r.action.as_str(), "propose");
+            assert_eq!(r.actor, Actor::Assistive);
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
 #[test]
 fn set_value_increment_and_decrement_reach_the_app() {
     let mut shop = Shop::default();

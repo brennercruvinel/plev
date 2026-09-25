@@ -5,7 +5,11 @@
 //!
 //! - `Click` asks for the node's primary action: the first of
 //!   `activate`, `toggle`, `submit` and `select` it declares without a
-//!   parameter (a click carries none).
+//!   parameter (a click carries none). A button, a link or a menu item
+//!   that declares none of them and exactly one action without a
+//!   parameter (`propose`, `open_file`, `detect_silence`) is pressed by
+//!   that one, as a person's click presses it; with two or more, a click
+//!   would have to guess, and it has none.
 //! - `SetValue` asks for `set_value` with the value as the parameter, in
 //!   the kind the action declares (a number for a slider, a text for a
 //!   field).
@@ -27,7 +31,7 @@
 use std::fmt;
 
 use accesskit::{Action, ActionData, ActionRequest, NodeId, TreeId};
-use sem::{ActionDecl, Actor, Node, Request, SemError, SemId, Value, ValueKind};
+use sem::{ActionDecl, Actor, Node, Request, Role, SemError, SemId, Value, ValueKind};
 
 use super::tree::Shown;
 
@@ -86,13 +90,29 @@ impl fmt::Display for Unmapped {
 
 impl std::error::Error for Unmapped {}
 
-/// The action a click on `node` asks for (see `PRIMARY`).
+/// The action a click on `node` asks for: the first of `PRIMARY` it
+/// declares without a parameter, else, on a node whose role exists to be
+/// pressed, its one action without a parameter.
 pub fn primary(node: &Node) -> Option<&ActionDecl> {
-    PRIMARY.iter().find_map(|name| {
+    let named = PRIMARY.iter().find_map(|name| {
         node.actions
             .iter()
             .find(|a| a.name.as_str() == *name && a.param.is_none())
-    })
+    });
+    named.or_else(|| sole(node))
+}
+
+/// The one action without a parameter of a button, a link or a menu
+/// item; `None` for any other role, or when there are two or more.
+fn sole(node: &Node) -> Option<&ActionDecl> {
+    if !matches!(node.role, Role::Button | Role::Link | Role::MenuItem) {
+        return None;
+    }
+    let mut bare = node.actions.iter().filter(|a| a.param.is_none());
+    match (bare.next(), bare.next()) {
+        (Some(one), None) => Some(one),
+        _ => None,
+    }
 }
 
 /// Reads `req` back against what the screen reader was shown.

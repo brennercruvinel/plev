@@ -485,3 +485,10 @@ mod tests {
         }
     }
 }
+
+// The contrast of every text and control of the four themes against what
+// it sits on, WCAG 2.2 AA (task-75 phase 1): a file of its own, declared
+// from here.
+#[cfg(test)]
+#[path = "tests_contrast.rs"]
+mod tests_contrast;

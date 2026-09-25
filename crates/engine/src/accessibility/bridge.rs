@@ -13,6 +13,12 @@
 //! wakes the app, the platform shows its placeholder, and the next frame
 //! sends the full tree.
 //!
+//! The bridge also carries the system's "reduce motion" to the app's
+//! transitions (task-75 phase 1): it reads it when it attaches and each
+//! time the window takes the focus again, and sets the event loop
+//! thread's motion (`motion::follow_system`), so a shell that has a bridge
+//! has it with no line of its own.
+//!
 //! Native only: AccessKit has no browser adapter, so a wasm build never
 //! compiles this file (task-75 owns the web).
 
@@ -81,7 +87,8 @@ impl Bridge {
     /// Attaches to `window`, which must not have been shown yet. `title`
     /// labels the root (the window's own title); `wake` is called, from
     /// any thread, when the screen reader starts listening or asks for an
-    /// action.
+    /// action. Call it on the event loop's thread: it sets that thread's
+    /// motion from the system (see the module docs).
     pub fn new(
         event_loop: &ActiveEventLoop,
         window: &Window,
@@ -91,6 +98,7 @@ impl Bridge {
         if window.is_visible() == Some(true) {
             return Err(BridgeError::WindowVisible);
         }
+        super::motion::follow_system();
         let (activation, actions, deactivation, inbox) = handlers(Arc::new(wake));
         let adapter = accesskit_winit::Adapter::with_direct_handlers(
             event_loop,
@@ -108,8 +116,13 @@ impl Bridge {
     }
 
     /// Lets the adapter see a window event (focus of the window, on some
-    /// platforms more). Call it before the app handles the event.
+    /// platforms more). Call it before the app handles the event. The
+    /// window taking the focus again reads the system's "reduce motion"
+    /// once more: the person may have changed it while away.
     pub fn process_event(&mut self, window: &Window, event: &WindowEvent) {
+        if matches!(event, WindowEvent::Focused(true)) {
+            super::motion::follow_system();
+        }
         self.adapter.process_event(window, event);
     }
 
