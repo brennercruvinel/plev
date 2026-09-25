@@ -4,7 +4,10 @@
 //! Projected (task-75 phase 2b): the list, `scroll_area_page.list`, named
 //! "items", with an item per row it holds (never the 10,000), as the comps
 //! projects them, each named by its text; an item's `select` selects it as
-//! a click does.
+//! a click does. One item is the list's stop in the Tab sequence; the
+//! arrow keys move the focus along the items, the list scrolling to keep
+//! the focused one in view, and the focus follows the wheel (task-75
+//! phase 2d).
 
 use comps::icons;
 use comps::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
@@ -43,6 +46,13 @@ impl ScrollAreaPage {
         self.list.visible_range().contains(&row).then_some(row)
     }
 
+    /// The item behind `id`, `scroll_area_page.list[<index>]`, held or
+    /// not: the focus may go to any, and the list scrolls to it.
+    fn item_at(&self, id: &SemId) -> Option<usize> {
+        let row: usize = key_under(self.list.sem_id()?, id)?.parse().ok()?;
+        (row < self.list.item_count()).then_some(row)
+    }
+
     /// The list's bounds: the readable width, the viewport's height.
     pub fn bounds(content: Rect, theme: &Theme) -> Rect {
         Rect::new(
@@ -64,8 +74,14 @@ impl ScrollAreaPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        self.list
-            .handle_event(event, Self::bounds(content, theme), theme)
+        let blurred = matches!(event, WidgetEvent::MouseDown { .. }) && self.blur();
+        let r = self
+            .list
+            .handle_event(event, Self::bounds(content, theme), theme);
+        if blurred {
+            return r.merge(EventResult::changed());
+        }
+        r
     }
 
     /// Scrollbar fade. `true` while animating.
@@ -149,8 +165,12 @@ impl Component for ScrollAreaPage {
     }
 
     fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
-        if let Some(id) = self.list.sem_id() {
-            self.list.project(b, id, "items", Some(root), row_text);
+        let Some(id) = self.list.sem_id() else {
+            return;
+        };
+        self.list.project(b, id, "items", Some(root), row_text);
+        if let Some(at) = self.list.focused() {
+            b.focus(id.key(at.to_string()));
         }
     }
 
@@ -168,9 +188,19 @@ impl Component for ScrollAreaPage {
         }
     }
 
-    /// Nothing of the list takes focus (an item does not); the page's
-    /// nodes are its own all the same.
+    /// An item takes the focus (its ring), scrolled into view; another
+    /// node of the page takes it from the list.
     fn focus(&mut self, id: &SemId) -> bool {
-        self.root.as_ref().is_some_and(|root| under(root, id))
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        self.list.set_focused(self.item_at(id));
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        let had = self.list.focused().is_some();
+        self.list.set_focused(None);
+        had
     }
 }

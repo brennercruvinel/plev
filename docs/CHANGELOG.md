@@ -13,7 +13,8 @@ status: living
   tab and shift-tab walk every control in the order a screen reader
   walks, with a focus ring; the arrows move in tabs, trees, menus, selects
   and sliders; enter and space press; a modal keeps the focus inside and
-  gives it back when it closes. tables and lists come next.
+  gives it back when it closes. tables and lists take the focus one
+  row at a time, and the arrows walk the rows.
 
 - edit a text in the running gallery and it lands in the source
   (2026-09-25, task-65): in a debug build, cmd+shift+click on a text that

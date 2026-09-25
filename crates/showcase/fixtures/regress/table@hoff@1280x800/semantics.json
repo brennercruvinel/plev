@@ -17,7 +17,8 @@
             "table_page.table:selected_row"
           ]
         }
-      ]
+      ],
+      "focusable": true
     },
     {
       "id": "table_page.table[1]",

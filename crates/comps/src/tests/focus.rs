@@ -257,6 +257,37 @@ fn a_focused_tab_and_a_focused_tree_row_ring_inside_themselves() {
 }
 
 #[test]
+fn a_focused_list_row_rings_inside_itself_and_a_table_row_too() {
+    let theme = Theme::hoff();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 240.0);
+    let mut list = VirtualList::new(24.0);
+    list.set_item_count(100);
+    let draw = |list: &mut VirtualList| {
+        rings_of(&nodes(|c, t| {
+            list.render_with(c, bounds, t, |_, _, _, _, _| {});
+        }))
+    };
+    assert!(draw(&mut list).is_empty());
+    list.set_focused(Some(2));
+    let inflate = theme.control.focus_ring_offset + theme.control.focus_ring_width;
+    let row = list.item_rect(2).inset(inflate);
+    let rings = draw(&mut list);
+    assert_eq!(
+        rings,
+        vec![(row.x - 4.0, row.y - 4.0, row.w + 8.0, row.h + 8.0)]
+    );
+    assert!(rings[0].1 >= 48.0, "inside the row, clear of the one above");
+
+    let mut table = Table::new(vec![Column::new("name", &theme)], &theme);
+    table.set_row_count(40);
+    table.rows.set_focused(Some(1));
+    let rings = rings_of(&nodes(|c, t| {
+        table.render_with(c, bounds, t, |_, _, _, _| {})
+    }));
+    assert_eq!(rings.len(), 1, "the focused row of a table rings");
+}
+
+#[test]
 fn the_modal_rings_the_button_it_is_told_and_reports_it() {
     let mut modal = Modal::new("Apply?", "It reloads.", "Apply", "Cancel");
     let draw = |m: &Modal| nodes(|c, t| m.render(c, LayerId::DEFAULT, t, 800.0, 600.0));
