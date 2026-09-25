@@ -3,5 +3,6 @@
 //! repository keeps (`crates/ide/tests/fixtures/sessions`) and on sessions
 //! recorded here the way an app records them.
 
+mod accept;
 mod model;
 mod support;
