@@ -1871,3 +1871,27 @@ linha file_2.rs.
   foco fica nas linhas em vista.
 - o roteiro do VoiceOver pode ganhar um passo de teclado (Tab, setas,
   listas e o modal), para o brenner rodar.
+
+## fase 2d integrada (orquestrador, 2026-09-25)
+
+o item "teclado completo nas páginas de componente, com teste" fecha em
+29 das 30 páginas: listas e tabelas (Table, Data Table, Scroll Area,
+Item) recebem o foco uma linha por vez, as setas andam nas linhas, Home e
+End às pontas, Enter e Espaço selecionam, e o foco segue a rolagem. o
+teste percorre as 29 com Tab. a Resizable fica de fora: o split pede um
+papel de splitter no contrato do `sem` (pendência).
+
+validação do orquestrador: as 8 baselines de listas e tabelas mudam só o
+significado (a linha ou o item 0 focável); os PNGs são idênticos byte a
+byte. a primeira entrega também fazia de abas e árvore uma parada só de
+Tab, mas isso tirava o `Focus` do leitor dos outros itens (regressão para
+quem usa leitor de tela); voltou ao comportamento da fase 2c, e a parada
+única por widget composto ficou como pendência (pede no contrato um
+focável fora da sequência de Tab). o PNG aberto: o anel na linha
+`file_2.rs` depois de Tab e duas setas.
+
+o que continua aberto na task: o roteiro com o leitor real (o brenner
+roda), as cores que falham no contraste (decisão do brenner) e as
+pendências de contrato acima.
+
+o agente gastou uns 500 mil tokens (a entrega e a correção).

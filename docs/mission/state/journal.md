@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-75 fase 2d integrada
+
+- listas e tabelas recebem o foco uma linha por vez; o teclado chega a 29
+  das 30 páginas de componente. a parada única de abas e árvore foi
+  recusada na validação (tirava o foco do leitor de tela) e voltou.
+- o agente (Opus) gastou uns 500 mil tokens, com a correção.
+
 ### task-75 fase 2c integrada
 
 - teclado nas páginas de componente: Tab na ordem da projeção, setas,
