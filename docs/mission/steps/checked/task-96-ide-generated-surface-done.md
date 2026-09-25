@@ -662,3 +662,173 @@ linha.
   inteiro nas duas alturas. as imagens de antes e depois de cada caso
   (sem superfície, com superfície) ficam em `demo5b/`, citadas no
   handoff desta fase.
+
+### handoff da fase b (2026-09-25)
+
+```text
+Goal: task-96 fase b, o título do cartão do diff e a coluna só com superfície
+Status: pronto para o orquestrador, na branch task/96b-ide-surface-polish
+```
+
+#### commits
+
+- `e71222cf` task-96: the probe of phase b, the diff card's title and the
+  column only with a surface
+- `3959d958` task-96: the diff card says what it shows, "diff", never the
+  id of the commit it shows
+- `4be4bb2f` task-96: the line in a strip under the fixed views, and a
+  column only while a surface is open
+- `e42bd571` task-96: the laboratory says how many of the three commits'
+  messages the stacks panel cuts (a gravação da demo nomeia este build)
+- `a427d2b8` task-96: the line's test finds each repository's own commit
+  card (o primeiro gate pegou: dois repositórios, dois shas; o teste só
+  passava quando os dois commits caíam no mesmo segundo)
+- o commit deste handoff (esta seção e a demo 5 na task-80)
+
+um commit a mais que os quatro do briefing: a medida nova do laboratório
+foi para um commit próprio antes da gravação, para a gravação nomear um
+build com ela.
+
+#### a sonda
+
+a seção "sonda" acima, (a) e (b), escrita antes do código.
+
+#### o título
+
+- `crates/propose/src/review.rs`: um texto da região que as ações dos
+  itens leem, cujo valor é o id de um nó do app ou vazio (`diff:target`),
+  não aparece; uma região sem texto próprio abre com o rótulo dela
+  (`"diff"`), no tipo de título (`Base2sm`), sem ligar nada. o `Namer`
+  não guarda um nó sem ligação e sem filhos entre duas propostas, então a
+  revisão procura na superfície aberta o texto sem ligação que abre o
+  cartão da mesma região e mantém o id (`proposed.diff.heading`); um nó
+  assim o `Namer` nunca entrega, então o id não sai duas vezes.
+- por que "diff" e não a mensagem do commit: a sonda (a). a mensagem
+  pediria um estado novo na região ou o `surface` seguindo a referência.
+- o botão "show diff" de cada commit na superfície passou a ler
+  `diff:target` como o app o guarda, porque a superfície não mostra mais
+  esse estado (`crates/surface/src/project.rs:26-28`); o stale é o mesmo
+  (`crates/ide/tests/review_acts.rs` passa sem mudança).
+- testes: `crates/propose/src/review/tests.rs`
+  (`the_region_says_what_it_shows_never_the_id_of_the_commit_it_shows`,
+  novo; o da revisão de três commits confere o título e que nada liga
+  `diff:target`; o de propor de novo confere que o id do título fica em
+  duas propostas seguidas) e `crates/ide/tests/review.rs`
+  (`the_diff_card_says_diff_never_the_id_of_the_commit_it_shows`, novo:
+  para cada um dos três diffs aberto pela superfície, o cartão abre com
+  "diff" e nenhum nó da superfície tem o id do commit no nome ou no
+  estado).
+
+#### a coluna
+
+- a linha numa faixa ao longo de baixo da janela, na largura inteira
+  (`crates/ide/src/generated/row.rs`, `place`, `row`): o campo (um card de
+  largura, no máximo), o proponente, propor e fechar numa linha e a
+  mensagem ao lado deles enquanto a largura deixa a ela o mínimo de um
+  card; a mensagem embaixo deles quando não; os três embaixo do campo
+  numa janela estreita. a faixa tem 60 px numa janela de 1280 por 800.
+- sem superfície: o workspace tem a janela inteira de largura e a altura
+  menos a faixa. com superfície: a coluna à direita, do topo até a faixa,
+  metade da janela como antes. fechar devolve a largura. tudo pelo
+  `resize` do workspace (`crates/ide/src/workbench/generated.rs`,
+  `lay_out`); nenhum arquivo de `crates/ide/src/views/**` mudou.
+- o proponente abre o painel para cima: a linha dá ao `Select` do comps,
+  para o painel, o controle levantado pela altura do painel e pelas duas
+  folgas (`row.rs`, `lifted`); o controle é desenhado e clicado onde está.
+- a linha continua a mesma para a pessoa, o agente e o teclado: os mesmos
+  widgets, ids e projeção; só os retângulos mudaram
+  (`crates/ide/src/workbench/column.rs`).
+- testes: `crates/ide/tests/line.rs` (novo, seis testes): sem superfície,
+  as vistas fixas no mesmo x e com a mesma largura de um workbench sem a
+  linha, e a linha inteira na faixa; a superfície abre na coluna e fechar
+  devolve a largura; a pessoa chega à linha pelo clique e pelas teclas
+  (Enter propõe, Escape solta); o painel do proponente abre acima do
+  controle, dentro da janela, e a opção é escolhida pelo clique; a linha
+  quebra na faixa em três larguras (1280, 800, 480) e o workspace fica com
+  a largura inteira; um agente pela porta vê a linha na faixa (os
+  retângulos da observação) e escreve, propõe e fecha por ela.
+  `crates/ide/tests/surface.rs` mudou as asserções da coluna para a
+  faixa.
+
+#### a demo 5 de novo
+
+gravada sem janela no build `e42bd571`, lida pelo `plev-inspect`; o
+resultado inteiro na task-80, seção "de novo, com a linha embaixo
+(task-96, fase b)". em resumo: nenhum número do critério mudou de lado
+(atos, arquivos, linhas do diff à vista e cortadas na largura iguais; o
+tempo varia de corrida a corrida). o que mudou: no painel fixo as três
+mensagens dos commits agora aparecem inteiras (0 de 3 cortadas, eram 3 de
+3, medido pelo dado novo do laboratório sobre o layout de antes), e o
+cartão do diff na superfície abre com "diff". o teste
+`crates/ide/tests/lab_review.rs` segura as 0 mensagens cortadas.
+
+#### as imagens
+
+na scratchpad da sessão, `demo5b/`:
+
+- antes (base `8704ba3a`): `before/fixed.png` (sem superfície: a coluna
+  de 368 px, as mensagens cortadas), `before/surface.png` e
+  `before/surface-diff.png` (com superfície: o título
+  `stacks.commit[847f…`), `before/closed.png`.
+- depois (build `e42bd571`): `after/fixed.png` (sem superfície: a
+  largura inteira, as mensagens inteiras, a linha na faixa),
+  `after/surface.png` e `after/surface-diff.png` (com superfície: a coluna
+  do topo até a faixa, o cartão abrindo com "diff"), `after/closed.png`.
+- `proposer/proposer-open.png`: o painel do proponente aberto para cima
+  (uma corrida descartável do laboratório com um clique no proponente,
+  fora do git).
+- `before-measure/report.json`: a medida nova do laboratório sobre o
+  layout de antes (3 de 3 mensagens cortadas).
+
+#### validação
+
+com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
+`target/agents/one`, `CARGO_INCREMENTAL=0`, debug `line-tables-only`, o
+`PLEV_CLAUDE` no stub que só sai com erro) e `--offline`
+(`CARGO_NET_OFFLINE=true` no gate):
+
+- `./script/gate` em `a427d2b8`: verde (exit 0, 05:55 a 05:58), com a
+  perna urnaui e o check wasm com `-D warnings`. workspace 2977 passam, 0
+  falham, 26 ignorados (165 suítes); urnaui 85 passam, 1 ignorado (6
+  suítes). total 3062 e 27, contra 3054 e 27 na base: os 8 testes novos.
+  `df -h /`: 28 GB livres antes e depois.
+- um gate anterior, em `e42bd571`, caiu em `crates/ide/tests/line.rs`
+  (o teste que o `a427d2b8` corrige); o que rodou antes dele passava.
+- `cargo run --offline -p showcase --example regress -- check`, com o
+  `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
+  nenhuma GPU aberta.
+- `cargo test -p ide --test line` cinco vezes seguidas: verde.
+- nenhuma janela aberta (o binário `ide` não rodou), nenhum clique ou
+  tecla do sistema (os cliques são pelo `Workbench::click`, no meio do
+  retângulo que o frame ligou), nenhuma chamada ao `claude -p`, nenhuma
+  dependência nova, `Cargo.toml` e `Cargo.lock` iguais.
+
+#### decisões
+
+- a faixa embaixo, não em cima: em cima pediria tirar o header do
+  workspace (o modo embutido), uma vista fixa.
+- a linha fica na faixa também com a superfície aberta: ela não pula de
+  lugar quando uma superfície abre ou fecha.
+- "diff" e não a mensagem do commit: sem estado novo, o título não
+  consegue seguir o diff.
+- o painel do proponente para cima por um retângulo levantado, sem mudar
+  o comps.
+- o id do título guardado em `review.rs`, porque `ids.rs` está fora da
+  lista de arquivos.
+
+#### limitações e o que fica aberto
+
+- o painel para cima é um arranjo em cima do `Select` do comps; um
+  `Select` que abre para cima quando falta espaço embaixo é o jeito limpo
+  (comps, P3).
+- a faixa cresce quando a mensagem pede mais linhas do que ela tem (uma
+  recusa longa numa janela estreita): o workspace perde esses pixels e os
+  controles sobem junto. em 1280 de largura, uma mensagem de até duas
+  linhas cabe na altura do campo; três linhas somam uns 4 px.
+- sem coluna depois de fechar, o que resta da superfície some por cima
+  do workspace (a área acima da faixa) durante o fade.
+- as vistas fixas perdem 60 px de altura com a linha ligada.
+- a mensagem do commit no título do cartão do diff pede um estado por
+  região (junto do P3 dos três diffs de uma vez).
+- seguem com o orquestrador e o brenner: a prova com o Claude de verdade
+  e a demo 5 com janela.
