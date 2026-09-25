@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- arabic, hebrew, devanagari, chinese, japanese and korean text draws on
+  the web and on phones (2026-09-25, task-74): Noto Sans subsets, regular
+  and bold, are now built in (from 1.7 MB to 6.9 MB of fonts); these
+  scripts used to show empty boxes there. the desktop keeps using the
+  system's fonts for them. emoji comes later.
+
 - the parser imports HTML/CSS and Figma (2026-09-25, task-71): a page
   (a subset: flex, color, radius, type, buttons and fields) and a Figma
   screen become plev IR with the same four-way report as react and gpui.

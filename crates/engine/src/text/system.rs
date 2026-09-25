@@ -79,22 +79,10 @@ const GLYPH_CACHE_CAPACITY: usize = 32768;
 
 impl TextSystem {
     pub fn new(device: &wgpu::Device, text_bind_group_layout: &wgpu::BindGroupLayout) -> Self {
-        // System fonts (desktop) are fallback only; the embedded faces below
-        // are the source of truth so rasterization matches `TextMeasurer`.
-        #[cfg(all(
-            not(target_arch = "wasm32"),
-            not(target_os = "android"),
-            not(target_os = "ios")
-        ))]
-        let mut font_system = FontSystem::new();
-
-        #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
-        let mut font_system = FontSystem::new_with_locale_and_db(
-            "en-US".to_string(),
-            cosmic_text::fontdb::Database::new(),
-        );
-
-        let embedded_fonts = super::fonts::register_embedded_fonts(font_system.db_mut());
+        // The same constructor as `TextMeasurer`, so rasterization matches
+        // measurement; the text probe can ask for the embedded faces alone.
+        let (font_system, embedded_fonts) =
+            super::fonts::font_system(super::fonts::text_system_faces());
 
         let allocator = BucketedAtlasAllocator::new(size2(
             INITIAL_ATLAS_SIZE as i32,

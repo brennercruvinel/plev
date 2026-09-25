@@ -13,17 +13,22 @@
 //! moves; `TEXT_AUDIT_UPDATE=1` rewrites `tests/text_audit.txt` after a
 //! change that was meant.
 //!
+//! `decided_scripts_have_no_tofu` (phase 2) holds the scripts the embedded
+//! Noto faces cover to zero `.notdef` glyphs, in every UI weight.
+//!
 //! `pixels_match_the_measured_width` renders every phrase through the
-//! frame path and compares the ink with the width the measurer promised.
-//! It needs a GPU adapter (skips without one), writes one PNG per family
-//! to `TEXT_AUDIT_OUT` (default: the OS temp dir under `plev-text-audit`)
-//! and records the engine's once-per-face fallback warning.
+//! frame path, once with the desktop faces and once with the embedded
+//! faces alone (what wasm and mobile draw), and compares the ink with the
+//! width the measurer promised. It needs a GPU adapter (skips without
+//! one), writes one PNG per family and face set to `TEXT_AUDIT_OUT`
+//! (default: the OS temp dir under `plev-text-audit`) and records the
+//! engine's once-per-face fallback warning.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use engine::text::probe::{Faces, Rendered, ShapeReport, Specimen, render, shape_report};
+use engine::text::probe::{Faces, Rendered, ShapeReport, Specimen, render_with, shape_report};
 use engine::text::{TextMeasurer, TextStyle};
 
 const FONT_SIZE: f32 = 16.0;
@@ -34,6 +39,19 @@ const WRAP_WIDTH: f32 = 80.0;
 /// `(label, TextStyle::font_family)` of the embedded families used for
 /// text. Codicons is an icon font and shapes no text.
 const FAMILIES: [(&str, Option<&str>); 2] = [("Inclusive Sans", None), ("Inter", Some("Inter"))];
+/// Corpus files (stems) of the scripts phase 2 decided to embed, the bidi
+/// file included: its right-to-left half is Hebrew and Arabic.
+const DECIDED: [&str; 7] = [
+    "04-arabic",
+    "05-hebrew",
+    "06-devanagari",
+    "07-chinese",
+    "08-japanese",
+    "09-korean",
+    "11-bidi-mixed",
+];
+/// The weights the typography scale requests.
+const UI_WEIGHTS: [u16; 4] = [400, 500, 600, 700];
 
 const SCALE: f32 = 2.0;
 const ORIGIN_X: f32 = 20.0;
@@ -272,7 +290,11 @@ fn embedded_font_bytes() -> u64 {
         .map(|entries| {
             entries
                 .flatten()
-                .filter(|e| e.path().extension().is_some_and(|x| x == "ttf"))
+                .filter(|e| {
+                    e.path()
+                        .extension()
+                        .is_some_and(|x| x == "ttf" || x == "otf")
+                })
                 .filter_map(|e| e.metadata().ok())
                 .map(|m| m.len())
                 .sum()
@@ -326,6 +348,42 @@ fn shaping_matches_the_golden() {
         "the text audit moved; run with TEXT_AUDIT_UPDATE=1 if the change was \
          meant.\n--- expected ({})\n{expected}\n--- actual\n{actual}",
         path.display()
+    );
+}
+
+/// Phase 2: the embedded faces shape every decided script without a tofu,
+/// in both text families and every UI weight (500 and 600 reach the Noto
+/// Regular and Bold through cosmic-text's last fallback step).
+#[test]
+fn decided_scripts_have_no_tofu() {
+    let mut seen: Vec<String> = Vec::new();
+    for p in corpus()
+        .iter()
+        .filter(|p| DECIDED.contains(&p.script.as_str()))
+    {
+        if !seen.contains(&p.script) {
+            seen.push(p.script.clone());
+        }
+        for (label, family) in FAMILIES {
+            for weight in UI_WEIGHTS {
+                let st = style(family).with_weight(weight);
+                let shape = shape_report(&p.text, &st, None, Faces::Embedded);
+                assert_eq!(
+                    shape.notdef(),
+                    0,
+                    "{} in {label} {weight}: {} tofu in {:?} ({})",
+                    p.script,
+                    shape.notdef(),
+                    p.text,
+                    faces_used(&shape)
+                );
+            }
+        }
+    }
+    assert_eq!(
+        seen.len(),
+        DECIDED.len(),
+        "a decided script left the corpus"
     );
 }
 
@@ -422,69 +480,95 @@ fn band_ink(img: &Rendered, i: usize) -> (usize, Option<(f32, f32)>) {
     (band.ink(), edges)
 }
 
-/// One sheet per family: every phrase on its own row, rendered through the
-/// frame path. Ink is compared with the width the measurer promised for the
-/// same style; the sheet is written as PNG; the render is repeated to show
-/// it is deterministic; the once-per-face fallback warnings are counted.
+/// One sheet per family and face set: every phrase on its own row,
+/// rendered through the frame path, with the desktop faces and with the
+/// embedded faces alone. Ink is compared with the width the measurer
+/// promised for the same style and faces; the sheet is written as PNG; the
+/// render is repeated to show it is deterministic; the once-per-face
+/// fallback warnings are counted. On the embedded sheets every phrase of a
+/// decided script must leave ink.
 #[test]
 fn pixels_match_the_measured_width() {
     let _ = recorder();
     let phrases = corpus();
     let height = (phrases.len() as f32 * ROW + ROW) as u32;
     let mut report = String::new();
-    report.push_str("script | family | text | measured | ink px | ink left..right | verdict\n");
+    report.push_str(
+        "script | faces | family | text | measured | ink px | ink left..right | verdict\n",
+    );
 
-    for (label, family) in FAMILIES {
-        let st = style(family);
-        let scene: Vec<Specimen> = phrases
-            .iter()
-            .enumerate()
-            .map(|(i, p)| {
-                Specimen::new(p.text.clone(), st.clone(), ORIGIN_X, 10.0 + i as f32 * ROW)
-            })
-            .collect();
-        let Some(img) = render(&scene, SHEET_W, height, SCALE) else {
-            eprintln!("no GPU adapter; skipping");
-            return;
-        };
-        let Some(again) = render(&scene, SHEET_W, height, SCALE) else {
-            return;
-        };
-        let png = img.write_png(out_dir().join(format!("{}.png", label.replace(' ', "-"))));
-        assert!(png.is_ok(), "cannot write the {label} sheet: {png:?}");
-        assert_eq!(
-            img.rgba, again.rgba,
-            "{label}: two renders of the same corpus differ"
-        );
-
-        for (i, p) in phrases.iter().enumerate() {
-            let measured = TextMeasurer::measure_styled(&p.text, &st, None).0;
-            let (ink, edges) = band_ink(&img, i);
-            let verdict = match edges {
-                None if measured > 0.0 => "measured width without ink",
-                None => "empty",
-                Some((left, _)) if left < -1.0 => "ink before the origin",
-                Some((_, right)) if right > measured + 1.0 => "ink past the measured width",
-                Some((_, right)) if right < measured - FONT_SIZE => "ink well short of the width",
-                Some(_) => "ok",
+    for (faces, suffix) in [(Faces::Desktop, ""), (Faces::Embedded, "-embedded")] {
+        for (label, family) in FAMILIES {
+            let st = style(family);
+            let scene: Vec<Specimen> = phrases
+                .iter()
+                .enumerate()
+                .map(|(i, p)| {
+                    Specimen::new(p.text.clone(), st.clone(), ORIGIN_X, 10.0 + i as f32 * ROW)
+                })
+                .collect();
+            let Some(img) = render_with(faces, &scene, SHEET_W, height, SCALE) else {
+                eprintln!("no GPU adapter; skipping");
+                return;
             };
-            report.push_str(&format!(
-                "{} | {} | {} | {:.1} | {} | {} | {}\n",
-                p.script,
-                label,
-                p.text,
-                measured,
-                ink,
-                edges.map_or("-".to_string(), |(l, r)| format!("{l:.1}..{r:.1}")),
-                verdict
-            ));
-            assert!(
-                edges.is_none_or(|(left, right)| left >= -1.0 && right <= measured + 1.0),
-                "{label} {}: ink spans {edges:?} logical px from the origin but the \
-                 measurer promised {measured:.1}px (layout sizes shapes around this \
-                 text too small)",
-                p.script
+            let Some(again) = render_with(faces, &scene, SHEET_W, height, SCALE) else {
+                return;
+            };
+            let name = format!("{}{suffix}.png", label.replace(' ', "-"));
+            let png = img.write_png(out_dir().join(name));
+            assert!(png.is_ok(), "cannot write the {label} sheet: {png:?}");
+            assert_eq!(
+                img.rgba, again.rgba,
+                "{label} {faces:?}: two renders of the same corpus differ"
             );
+
+            for (i, p) in phrases.iter().enumerate() {
+                let measured = match faces {
+                    Faces::Desktop => TextMeasurer::measure_styled(&p.text, &st, None).0,
+                    Faces::Embedded => shape_report(&p.text, &st, None, faces).width,
+                };
+                let (ink, edges) = band_ink(&img, i);
+                let verdict = match edges {
+                    None if measured > 0.0 => "measured width without ink",
+                    None => "empty",
+                    Some((left, _)) if left < -1.0 => "ink before the origin",
+                    Some((_, right)) if right > measured + 1.0 => "ink past the measured width",
+                    Some((_, right)) if right < measured - FONT_SIZE => {
+                        "ink well short of the width"
+                    }
+                    Some(_) => "ok",
+                };
+                report.push_str(&format!(
+                    "{} | {} | {} | {} | {:.1} | {} | {} | {}\n",
+                    p.script,
+                    if faces == Faces::Desktop {
+                        "desktop"
+                    } else {
+                        "embedded"
+                    },
+                    label,
+                    p.text,
+                    measured,
+                    ink,
+                    edges.map_or("-".to_string(), |(l, r)| format!("{l:.1}..{r:.1}")),
+                    verdict
+                ));
+                assert!(
+                    edges.is_none_or(|(left, right)| left >= -1.0 && right <= measured + 1.0),
+                    "{label} {faces:?} {}: ink spans {edges:?} logical px from the origin \
+                     but the measurer promised {measured:.1}px (layout sizes shapes around \
+                     this text too small)",
+                    p.script
+                );
+                assert!(
+                    faces == Faces::Desktop
+                        || !DECIDED.contains(&p.script.as_str())
+                        || verdict == "ok",
+                    "{label} embedded {}: {verdict} for {:?}",
+                    p.script,
+                    p.text
+                );
+            }
         }
     }
 
