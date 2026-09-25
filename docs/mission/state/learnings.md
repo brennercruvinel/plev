@@ -609,6 +609,16 @@ c"; saídas em `target/agents/exp/`.
 
 ## processo
 
+### 2026-09-25, teste de privacidade procura tudo, não amostra
+
+- **o teste da câmera da fase 1 da task-79 procurava 16 das 200 cores da
+  câmera falsa:** passava porque os frames daquela rodada caíam nessas
+  cores; na fase 2 os frames tinham outras, e o teste seguia verde sem
+  provar nada. o agente da fase 2 achou e trocou por todas. regra para
+  briefing e para a revisão: um teste de que algo não atravessa procura o
+  conjunto inteiro do que não pode atravessar (todas as cores, a string
+  inteira, todo byte do fio), nunca uma amostra.
+
 ### 2026-09-25, o regress espelha as ligações em mais de um lugar
 
 - **ligar um widget muda o `scene.json` em três pontos:** o bloco
