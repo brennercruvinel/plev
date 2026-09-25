@@ -1056,3 +1056,24 @@ compila, com os dois avisos antigos de código morto. disco: 12 GB livres.
   (Apple Color Emoji, sbix, no macOS), que antes reservava o avanço sem
   tinta. o desktop e o embutido desenham emoji com faces diferentes,
   como já era com as escritas.
+
+## fase 5 integrada (orquestrador, 2026-09-25)
+
+fecha o item "emoji colorido com pixel medido": Noto Color Emoji em
+bitmap (CBDT v2.051; o COLRv1 atual do Google Fonts o swash do lock não
+desenha), subset de 640 glifos (1,4 MB) por `script/font-subset`; o
+atlas continua R8, com o emoji em quatro texels por pixel e o `u`
+negativo como marca no shader, que desenha a cor do emoji e só a
+opacidade do texto. o audit: 0 notdef nas linhas de emoji e pixel de cor
+medido em cada uma (família 374, polegar com tom 599, sorriso 921,
+coração 819; as outras linhas dão zero).
+
+validação do orquestrador: diff lido (o glifo de máscara não muda, o
+`TextVertex` não ganhou campo); o PNG aberto: família, polegar com tom,
+sorriso e coração em cor, o resto do corpus como antes; 176 baselines
+iguais.
+
+continuam abertos no critério: o roteiro de IME executado (fase 4, pede
+o brenner) e o benchmark de um milhão de linhas (fase 7).
+
+o agente gastou uns 235 mil tokens.

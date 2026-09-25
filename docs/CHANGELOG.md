@@ -9,6 +9,11 @@ status: living
 
 ## unreleased
 
+- emoji in color (2026-09-25, task-74): Noto Color Emoji (640 emoji,
+  with skin tones and families, 1.4 MB) is built in, and the glyph atlas
+  draws a color glyph with its own colors. emoji used to be empty boxes on
+  the web and phones, and invisible on the desktop.
+
 - the keyboard on the gallery's component pages (2026-09-25, task-75):
   tab and shift-tab walk every control in the order a screen reader
   walks, with a focus ring; the arrows move in tabs, trees, menus, selects
