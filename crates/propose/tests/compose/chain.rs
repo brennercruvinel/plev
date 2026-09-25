@@ -181,3 +181,34 @@ fn a_composite_asked_of_a_node_it_is_not_declared_on_is_unknown() {
     assert!(asked.is_err(), "not declared on the refresh");
     assert!(bench.desk.chains.is_empty());
 }
+
+/// A chain on its own, over a request that stands for the composite (a
+/// fetch, which starts and stays open): a step that asks a person to
+/// confirm it stops the chain, stays waiting for the person, and the
+/// composite says so; nobody confirms for the person in the middle.
+#[test]
+fn a_step_that_waits_for_a_person_stops_the_chain_and_stays_waiting() {
+    use propose::compose::Chain;
+    use sem::{ActionName, SemId};
+
+    let mut bench = Bench::new(3);
+    let stand_in = bench.act(person(), "desk.doc[1]", "fetch");
+    assert_eq!(bench.stage(stand_in), Stage::Executing);
+    let doc = SemId::parse("desk.doc[2]").unwrap();
+    let calls = ["review", "shred"]
+        .map(|a| (doc.clone(), ActionName::parse(a).unwrap()))
+        .to_vec();
+    let mut chain = Chain::new(stand_in, person(), calls);
+    bench.now += 10;
+    let ended = chain.advance(&mut bench.dispatcher, &mut bench.desk, bench.now);
+    assert!(ended);
+    let why = failed(&bench, stand_in);
+    assert!(
+        why.starts_with("stopped at step 2 of 2, shred on desk.doc[2]"),
+        "{why}"
+    );
+    assert!(why.contains("waits for a person to confirm it"), "{why}");
+    let shred = chain.asked()[1];
+    assert_eq!(bench.stage(shred), Stage::AwaitingConfirmation);
+    assert_eq!(bench.desk.status(2), "draft", "not shredded");
+}
