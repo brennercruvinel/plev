@@ -9,6 +9,12 @@ status: living
 
 ## unreleased
 
+- the caret and the selection follow mixed text (2026-09-25, task-74):
+  in a field or the editor holding hebrew or arabic next to latin, the
+  arrows move across the screen, the caret sits where the next letter will
+  appear, and a selection that crosses directions highlights exactly the
+  text it holds, in one or more pieces.
+
 - arabic, hebrew, devanagari, chinese, japanese and korean text draws on
   the web and on phones (2026-09-25, task-74): Noto Sans subsets, regular
   and bold, are now built in (from 1.7 MB to 6.9 MB of fonts); these

@@ -855,3 +855,21 @@ compila, com os dois avisos antigos de código morto. disco: 11 GB livres.
   bidi.
 - o `TextInput` tira a ordem das setas do estilo padrão, porque a ordem
   vem só dos níveis bidi do texto; o x do caret usa o estilo do dono.
+
+## fase 3 integrada (orquestrador, 2026-09-25)
+
+fecha o item "testes de movimento bidi" do critério de aceite: 25 testes
+novos no rope (ordem lógica), no engine (a leitura por cluster,
+`TextMeasurer::clusters_styled`), no `TextInput`/`TextField` e no editor
+(setas na tela, caret nas fronteiras, seleção cruzando direções, clique,
+latim igual a antes).
+
+validação do orquestrador: diff lido (o engine só ganha uma leitura; nada
+do que existia mudou); o PNG aberto: o caret depois de `hello ` fica no
+lado do parágrafo, a seleção que cruza as direções desenha em duas faixas
+com o `123` de fora, e a frase em hebraico começa na borda direita.
+
+continuam abertos no critério: roteiro de IME executado (fase 4, pede o
+brenner), emoji colorido (fase 5), um milhão de linhas (fase 7).
+
+o agente gastou uns 260 mil tokens.

@@ -14,6 +14,12 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### task-74 fase 3 integrada
+
+- bidi no cursor e na seleção, no campo de texto e no editor, com 25
+  testes. faltam IME (pede o brenner), emoji e um milhão de linhas.
+- o agente (Opus) gastou uns 260 mil tokens.
+
 ### task-74 fase 2 integrada
 
 - Noto Sans embutida para árabe, hebraico, devanágari, SC, JP e KR
