@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-24
 
+### task-70 fase 2: a prova com o Claude de verdade não saiu
+
+- **tentativa:** o showcase da `main` depois do PR #94, pelo contrato e
+  pelo espelho, como no checkpoint b. a proposta da revisão ("cut the
+  silences of this video, then I want to review the cuts") estourou o
+  limite de 180 s duas vezes seguidas (o processo do `claude` foi morto
+  nas duas). na segunda rodada do checkpoint a mesma frase levou 126 s.
+- **decisão:** parar de gastar. suspeitas, sem prova ainda: o agente da
+  fase 3 rodando no Opus ao mesmo tempo, na mesma conta, e o prompt um
+  pouco maior (a orientação nova de itens). a prova volta com nenhum
+  agente rodando, uma tentativa só; se estourar de novo, medir o tamanho
+  do prompt antes de chamar outra vez.
+
 ### task-70 fase 2: uma mudança pedida em palavras
 
 - **integrada:** `task/70b-transform-proposer` (9 commits, agente no
