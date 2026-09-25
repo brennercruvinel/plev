@@ -1734,6 +1734,10 @@ mudou, nenhuma cor de tema mudou, nenhuma leitura nova do sistema,
 nenhum baseline existente mudou, nenhuma dependência nova, o disco ficou
 em 16 GB livres.
 
+um arquivo fora da lista, só aditivo: `crates/uir/src/lib.rs` ganhou o
+`pub use` de `Preferences`, `Preference`, `Preferred` e `Applied` (sem
+ele o `surface` não vê os tipos novos de `uir::transform`).
+
 o que a sonda achou e mudou o desenho: uma ação `PERSON_ONLY` sempre
 projetada na página mudaria as 14 baselines da Silences (o regress
 compara a projeção), o menu da página e a lista do leitor; por isso a
