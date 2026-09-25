@@ -151,8 +151,11 @@ impl Tree {
     /// nested as the tree nests them: a root's parent is the tree, a
     /// child's parent is its branch's item. Each item carries `selected`
     /// and a `select` that reads it; a branch also carries `expanded` and
-    /// a `toggle_expanded` that reads it. Hover is never projected. It only
-    /// reads the widget; the app owns it and runs the actions
+    /// a `toggle_expanded` that reads it. One row takes the focus, the
+    /// tree's one stop in the Tab sequence: the focused row, else the
+    /// selected one, else the first, among the rows that show; the arrow
+    /// keys move the focus along the others. Hover is never projected. It
+    /// only reads the widget; the app owns it and runs the actions
     /// ([`Tree::toggle`], `selected`). Pass the id given to [`Tree::sem`]
     /// so the nodes and the bindings name the same controls. Returns the
     /// tree's node for the app to add to.
@@ -164,6 +167,12 @@ impl Tree {
         label: impl Into<String>,
         parent: Option<&SemId>,
     ) -> NodeBuilder<'b> {
+        let shows: Vec<u64> = self.visible_rows().iter().map(|r| r.id).collect();
+        let stop = [self.focused, self.selected]
+            .into_iter()
+            .flatten()
+            .find(|n| shows.contains(n))
+            .or(shows.first().copied());
         // Depth first, siblings in order: the order the rows draw in.
         let mut stack: Vec<(&TreeNode, SemId)> =
             self.roots.iter().rev().map(|n| (n, id.clone())).collect();
@@ -171,6 +180,7 @@ impl Tree {
             let item = id.key(node.id.to_string());
             let mut row = b.node(&item, Role::TreeItem, node.label.as_str());
             row.parent(&owner)
+                .focusable(stop == Some(node.id))
                 .state("selected", self.selected == Some(node.id));
             if node.is_branch() {
                 row.state("expanded", node.expanded);
