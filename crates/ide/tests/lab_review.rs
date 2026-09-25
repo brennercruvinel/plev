@@ -6,12 +6,14 @@
 //! file is read back here the way `plev-inspect` reads it.
 //!
 //! What it holds the demo to, the criterion of task-80: the acts of each
-//! side; the files of the three at once on the surface; every act of the
-//! surface a request of the person, completed, through the dispatcher,
-//! recorded as the capability it stands for; the surface in the recorded
-//! state only between its proposal and its close, every node of it from
-//! the materializer; and nothing of it after the close: no node, no
-//! binding, no surface in the host.
+//! side; the files of the three at once on the surface, and each commit's
+//! message whole on the fixed panel, which keeps the window's width with
+//! no surface open (task-96, phase b); every act of the surface a request
+//! of the person, completed, through the dispatcher, recorded as the
+//! capability it stands for; the surface in the recorded state only
+//! between its proposal and its close, every node of it from the
+//! materializer; and nothing of it after the close: no node, no binding,
+//! no surface in the host.
 
 #![cfg(unix)]
 
@@ -74,6 +76,11 @@ fn the_demo_reviews_three_commits_with_the_fixed_panel_and_with_the_surface() {
     assert!(
         n(&report["fixed"]["files_at_once"]) <= 1,
         "one diff at a time"
+    );
+    assert_eq!(
+        n(&report["fixed"]["summaries_cut_at_the_width"]),
+        0,
+        "no surface open, the stacks keep the window's width: every message whole"
     );
     for side in ["fixed", "surface"] {
         let commits = report[side]["commits"].as_array().expect("commits");

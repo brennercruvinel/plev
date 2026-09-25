@@ -1,10 +1,11 @@
-//! A person's pointer and keys on the column of the generated surface
-//! (task-96), and its drawing: a click there is the line's widgets and
-//! then the surface's, each act a request through the one dispatcher (the
-//! line's buttons observed on the whole projection as the person, the
-//! surface's widgets building their own, `surface::Surface::handle_event`);
-//! the wheel and the hover the same way; the keys while the intent field
-//! or a field of a surface has the keyboard.
+//! A person's pointer and keys on the line of the generated surface and
+//! on the column of an open one (task-96), and their drawing: a click on
+//! the strip is the line's widgets, on the column the surface's, each act
+//! a request through the one dispatcher (the line's buttons observed on
+//! the whole projection as the person, the surface's widgets building
+//! their own, `surface::Surface::handle_event`); the wheel and the hover
+//! the same way; the keys while the intent field or a field of a surface
+//! has the keyboard. Where they sit is `crate::generated::row`.
 
 use comps::form::EditKey;
 use comps::prelude::{EventResult, WidgetEvent};
@@ -68,12 +69,12 @@ impl Workbench {
         }
     }
 
-    /// A pointer event on the column, when it is the column's: the line's
-    /// widgets, then the surface's. `None` when the block is off, an
-    /// overlay of the workspace holds the screen, or the point is outside
-    /// the column and no panel of the line is open; a move reaches the
-    /// column's widgets wherever it lands, so what it left stops being
-    /// hovered.
+    /// A pointer event on the line or on the column of an open surface,
+    /// when it is theirs: the line's widgets, then the surface's. `None`
+    /// when the block is off, an overlay of the workspace holds the
+    /// screen, or the point is on neither and no panel of the line is
+    /// open; a move reaches their widgets wherever it lands, so what it
+    /// left stops being hovered.
     fn point_column(&mut self, events: &[WidgetEvent]) -> Option<EventResult> {
         let g = self.generated.as_ref()?;
         let first = events.first()?;
@@ -82,16 +83,17 @@ impl Workbench {
             return None;
         }
         let theme = self.workspace.theme().clone();
-        let col = g.column(self.window.0, self.window.1, &theme);
+        let place = g.place(self.window.0, self.window.1, &theme);
         let moving = matches!(first, WidgetEvent::MouseMove { .. });
-        if !col.rect.contains(x, y) && !g.proposer.is_open() && !moving {
+        let on = place.strip.contains(x, y) || place.column.is_some_and(|c| c.contains(x, y));
+        if !on && !g.proposer.is_open() && !moving {
             return None;
         }
         let mut result = EventResult::IGNORED;
         let mut asked = Asked::default();
         for event in events {
             let g = self.generated.as_mut()?;
-            let (r, a) = g.handle_row(event, &col.row, &theme);
+            let (r, a) = g.handle_row(event, &place.row, &theme);
             result = result.merge(r);
             asked.propose |= a.propose;
             asked.close |= a.close;
@@ -113,7 +115,7 @@ impl Workbench {
         if asked.close && self.ask_line(close, "close") {
             result = result.merge(EventResult::changed());
         }
-        if col.surface.contains(x, y) || moving {
+        if place.surface.is_some_and(|s| s.contains(x, y)) || moving {
             let surface = self.with_host(|host, bench| {
                 let mut app = App(bench);
                 let mut r = EventResult::IGNORED;
@@ -129,9 +131,9 @@ impl Workbench {
         Some(result)
     }
 
-    /// A left click on the column, as a press and a release there (the
-    /// workspace takes a click on the press); `None` when it is not the
-    /// column's. A click on the workspace blurs the intent field.
+    /// A left click on the line or the column, as a press and a release
+    /// there (the workspace takes a click on the press); `None` when it is
+    /// neither's. A click on the workspace blurs the intent field.
     pub(super) fn click_column(&mut self, x: f32, y: f32) -> Option<bool> {
         let events = [
             WidgetEvent::MouseDown { x, y },
@@ -155,9 +157,9 @@ impl Workbench {
             .is_some_and(|r| r.changed)
     }
 
-    /// The wheel at `(x, y)`: the column's (the proposer's panel, a
-    /// surface's table) or the workspace's panel under it. `true` when an
-    /// offset moved.
+    /// The wheel at `(x, y)`: the line's or the column's (the proposer's
+    /// panel, a surface's table or code) or the workspace's panel under
+    /// it. `true` when an offset moved.
     pub fn scroll(&mut self, x: f32, y: f32, delta: f32) -> bool {
         match self.point_column(&[WidgetEvent::Scroll { x, y, delta }]) {
             Some(r) => r.changed,
@@ -248,13 +250,14 @@ impl Workbench {
         g.host.iter_mut().any(|s| s.handle_escape())
     }
 
-    /// Draws the column over the frame the workspace drew.
+    /// Draws the line and the column of an open surface beside the frame
+    /// the workspace drew.
     pub(super) fn render_column(&mut self, compositor: &mut Compositor) {
         let theme = self.workspace.theme().clone();
         let (w, h) = self.window;
         if let Some(g) = self.generated.as_mut() {
-            let col = g.column(w, h, &theme);
-            g.render_column(compositor, &col, &theme);
+            let place = g.place(w, h, &theme);
+            g.render_place(compositor, &place, &theme);
         }
     }
 }

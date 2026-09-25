@@ -25,11 +25,15 @@
 //! kind of each), and its lines on screen are counted by the code block's
 //! geometry; each side also says how many of the lines on screen are cut
 //! at the width, the panel's by its own gutters, the code's by its
-//! padding. the criterion is the one written before.
+//! padding. since task-96's phase b the line sits in a strip under the
+//! fixed views, which keep the window's width with no surface open, and
+//! the fixed side also says how many of the three commits' messages the
+//! stacks panel cuts at its cards' width. the criterion is the one
+//! written before.
 
 use std::path::{Path, PathBuf};
 
-use comps::content::{CodeBlock, CodeLine};
+use comps::content::{Avatar, CodeBlock, CodeLine};
 use comps::nav::PanelHeader;
 use engine::text::TextMeasurer;
 use engine::theme::Theme;
@@ -251,6 +255,26 @@ impl Demo {
         Ok(out)
     }
 
+    /// how many of `commits` the stacks panel shows with the message cut
+    /// at its card's width: the room its text column has once the avatar
+    /// and the card's paddings are taken, in the style the message is
+    /// drawn with (`crates/ide/src/views/multi_stack_view.rs`, `render`).
+    fn summaries_cut(&self, commits: &[Commit], theme: &Theme) -> Result<usize, String> {
+        let pad = theme.spacing.md;
+        let (avatar, _) = Avatar::new(String::new()).preferred_size(theme);
+        let style = theme.typography.base_2sm();
+        let mut n = 0;
+        for c in commits {
+            let [_, _, w, _] = self
+                .whole(&c.id)
+                .ok_or_else(|| format!("{} is not whole on screen", c.id))?;
+            let room = w - avatar - pad * 3.0;
+            let wide = TextMeasurer::measure_styled(&c.subject, &style, None).0;
+            n += usize::from(wide > room + 0.5);
+        }
+        Ok(n)
+    }
+
     /// the three commits' cards whole in the frame on screen.
     fn cards(&self, commits: &[Commit], prefix: &str) -> Result<usize, String> {
         let mut n = 0;
@@ -314,6 +338,7 @@ impl Demo {
             "acts": { "clicks": commits.len(), "keys": 0 },
             "ms_to_all": last - started,
             "files_at_once": at_once,
+            "summaries_cut_at_the_width": self.summaries_cut(commits, &theme)?,
             "commits": each,
         }))
     }

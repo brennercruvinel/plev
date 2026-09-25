@@ -26,13 +26,13 @@
 //! change counts its time from the change, not from the last frame. Keys
 //! go through the keymap (`keys.rs`).
 //!
-//! Beside the panels, a column holds the intent line and the surface it
-//! generates (task-96, `Workbench::host_surfaces`): a person writes what
-//! they want to see ("review these three commits"), the rules propose a
-//! verified surface, and every act on it is a request through the same
-//! dispatcher. The shell gives the workbench the window's size, the wheel
-//! and the hover, and its keys while the line or a surface's field has
-//! the keyboard (`keys.rs`).
+//! Under the panels, a strip holds the intent line, and the surface it
+//! generates opens in a column beside them (task-96,
+//! `Workbench::host_surfaces`): a person writes what they want to see
+//! ("review these three commits"), the rules propose a verified surface,
+//! and every act on it is a request through the same dispatcher. The shell
+//! gives the workbench the window's size, the wheel and the hover, and its
+//! keys while the line or a surface's field has the keyboard (`keys.rs`).
 //!
 //! With `PLEV_RECORD=1` in a debug build the shell records the session
 //! for the inspector (`ide::record`): the receipts, who observed what
@@ -561,7 +561,7 @@ fn main() {
     };
     let workdir = git.workdir().to_path_buf();
     let mut bench = Workbench::new(1280.0, 800.0);
-    // The intent line and its generated surface, beside the panels.
+    // The intent line under the panels, and its generated surface beside them.
     bench.host_surfaces();
     // Initial data load (results stream in as user events).
     bench.connect(git);
