@@ -544,3 +544,271 @@ inspector mostrando que a superfície nunca foi tela.
 
 nenhuma superfície gerada num app que já existe (sonda, item a). a demo
 espera a task-96.
+
+## fase 1: demo 3, inspectability (feita)
+
+o bug: a corrida do `Refresh` da task-84. a correção é o `6500f2dc`; na
+branch descartável `task/80a-bug84` (nunca no merge) o commit `84161012`
+põe a corrida de volta: em `GitSession::apply`
+(`crates/ide/src/session.rs:266-269`) a resposta continua contada, mas é
+aplicada mesmo quando foi lida antes de uma mutação que a view já mostra.
+
+### a sessão
+
+gravada sem janela e sem modelo, no build da branch descartável:
+
+```text
+ide-lab --arm scripted --human none --out <scratch>/bug84-none --app ide80 --timeout 60
+```
+
+exit 0, sessão x git MATCH, os três arquivos commitados. mas com ninguém
+além do agente, o primeiro submit (request 6) voltou `stale`: "changes:
+added [tests/login_test.rs]", `acted` vazio. a sessão tem 81.862 bytes,
+47 eventos, 10 frames (sha256 `bedd9e73...`, igual antes e depois de
+cada leitura e export).
+
+dois trechos exportados por `plev-inspect --export`:
+
+- o bug report, `--export 0 120`: 71.580 bytes, 37 eventos, 9 frames, do
+  começo até a recusa. fica fora do git (na scratchpad da sessão), é o que
+  se manda.
+- o trecho do teste, `--export 0 92`: 43.916 bytes, 25 eventos, 7
+  frames, do começo até o form aberto, antes do submit. entra no git em
+  `crates/ide/tests/fixtures/sessions/bug84.monster` (abaixo de 1 MB).
+
+### a leitura no inspector, no instante
+
+o resumo e o trecho da timeline que importa (`plev-inspect <sessão>`, e
+`--timeline`):
+
+```text
+session   rec 0.1.0, built from 84161012
+span      +0.000s to +0.173s, 47 events, 10 frames
+actors    agent:scripted: 8 observations, 7 requests, 28 stages
+requests  7
+  +0.018s  request 1  agent:scripted  unstage on changes.file[README.md]          completed
+  +0.036s  request 2  agent:scripted  stage on changes.file[src/session.rs]       completed
+  +0.065s  request 3  agent:scripted  stage on changes.file[tests/login_test.rs]  completed
+  +0.091s  request 4  agent:scripted  open on commit.form                         completed
+  +0.093s  request 5  agent:scripted  set_value on commit.message                 completed
+  +0.096s  request 6  agent:scripted  submit on commit.submit                     rejected: stale
+  +0.128s  request 7  agent:scripted  submit on commit.submit                     completed: commit = "936ede1c...", files = [src/login.rs, src/session.rs, tests/login_test.rs]
+refusals  1
+  request 6, submit on commit.submit by agent:scripted, rejected at +0.113s: stale
+    changes:staged: added tests/login_test.rs
+
++0.036s     stage     request 2 executing (agent:scripted, stage on changes.file[src/session.rs])
++0.036s     changes   changes:staged: added src/session.rs; changes.file[src/session.rs]:staged: false -> true; ...
++0.048s     changes   changes:staged: removed src/session.rs; changes.file[src/session.rs]:staged: true -> false; ...
++0.064s     stage     request 2 completed (agent:scripted, stage on changes.file[src/session.rs])
++0.065s     stage     request 3 executing (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.065s     changes   changes:staged: added tests/login_test.rs; changes.file[tests/login_test.rs]:staged: false -> true; ...
++0.077s     changes   changes:staged: added src/session.rs; removed tests/login_test.rs; ...
++0.089s     stage     request 3 completed (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.090s     observed  agent:scripted observed the whole app, revision 0267c905f7e90383
+...
++0.096s     stage     request 6 accepted (agent:scripted, submit on commit.submit)
++0.096s     stage     request 6 executing (agent:scripted, submit on commit.submit)
++0.101s     snapshot  keyframe, 14 nodes: ... changes:staged: added tests/login_test.rs; changes.file[tests/login_test.rs]:status: "untracked" -> "added"; ...
++0.113s     stage     request 6 rejected: stale (agent:scripted, submit on commit.submit)
+```
+
+no bug report, os dois instantes (`--control`, cortado):
+
+```text
+$ plev-inspect bug84-report.monster --control 'changes.file[src/session.rs]' --at 50
+control changes.file[src/session.rs] at +0.050s
+  node          changes.file[src/session.rs]: list_item "src/session.rs", enabled
+  state         status = "modified", staged = false, unstaged = true
+  source        crates/ide/src/workbench/project.rs:88:26, in build 84161012
+  requests      1 touched it up to +0.050s (their target, or a state they read)
+  request 2 (origin 0): stage on changes.file[src/session.rs] by agent:scripted, at +0.036s
+    observed      not recorded at revision 6bb666e6c0b67ed8: ... the revision it acted on came another way, such as the last stage of an earlier act
+                  the recorded state was at revision 6bb666e6c0b67ed8 last at +0.018s
+    stages        +0.036s requested / accepted / executing
+    result        not finished: still executing (since +0.036s)
+
+$ plev-inspect bug84-report.monster --control 'changes.file[tests/login_test.rs]' --at 90
+control changes.file[tests/login_test.rs] at +0.090s
+  state         status = "untracked", staged = false, unstaged = true
+  request 3 (origin 0): stage on changes.file[tests/login_test.rs] by agent:scripted, at +0.065s
+    observed      not recorded at revision 6bb666e6c0b67ed8: ...
+                  the recorded state was at revision 6bb666e6c0b67ed8 last at +0.048s
+    stages        +0.065s requested, accepted, executing; +0.089s completed
+    result        completed at +0.089s
+```
+
+e o submit que a corrida enganou (`--why 6`, inteiro menos a nota):
+
+```text
+request 6 (origin 0): submit on commit.submit by agent:scripted, at +0.096s
+  control       commit.submit: button "Commit", enabled
+  state         none of its own
+  initiated by  agent:scripted
+  action        submit, no parameter
+  observed      +0.095s, the whole app, at revision 3ce76fd8e2065683
+  precondition  what the action reads, as agent:scripted saw it:
+                  changes:staged = {src/login.rs, src/session.rs}
+                  commit.message:text = "fix login session timeout"
+  before        from the observation (+0.095s) to the request (+0.096s):
+                  changes:staged did not move
+                  commit.message:text did not move
+  stages        +0.096s requested
+                +0.096s accepted
+                +0.096s executing
+                +0.113s rejected: stale
+  verdict       accepted at +0.096s
+                refused at the point of truth, after it started: stale
+  what changed  changes:staged: added tests/login_test.rs
+  acted         the refusal names nobody
+  result        nothing ran: the point of truth refused it before the effect
+```
+
+as oito perguntas da tese (`generative-runtime-thesis.md:893-900`),
+respondidas só pelo arquivo:
+
+| pergunta | resposta do inspector |
+| --- | --- |
+| qual controle era esse | `changes` e as linhas `changes.file[src/session.rs]` e `changes.file[tests/login_test.rs]`, projetadas em `crates/ide/src/workbench/project.rs:74` e `:88` |
+| qual era seu estado | a +0.050 s, `src/session.rs` com `staged = false` enquanto o próprio stage executava; a +0.090 s, `tests/login_test.rs` com `staged = false`, 1 ms depois de o stage dele concluir |
+| qual foi a sequência anterior | stage de `src/session.rs` executando a +0.036 s, o arquivo sai do `changes:staged` a +0.048 s, o stage conclui a +0.064 s; o mesmo com `tests/login_test.rs` a +0.065, +0.077 e +0.089 s |
+| qual ação ocorreu | `stage` (requests 2 e 3), depois o `submit` (request 6) |
+| quem iniciou | o agente, em todos os requests; as duas saídas do arquivo não têm request nenhum (a timeline não tem estágio de ninguém a +0.048 e +0.077 s), e o único ator da sessão é `agent:scripted` |
+| qual era a precondição | o `submit` leu `changes:staged = {src/login.rs, src/session.rs}`, como o agente viu a +0.095 s: dois arquivos, depois de pôr três |
+| o que mudou | no ponto de verdade, `changes:staged: added tests/login_test.rs`: o index do git tinha o arquivo o tempo todo |
+| qual foi o resultado | nada rodou: o `CommitIf` recusou antes do efeito; o segundo submit commitou os três |
+
+o que leva ao código: uma mudança do `changes:staged` sem request, com um
+stage do mesmo arquivo em execução, e a revisão que o `completed` do
+request 2 carregou (`6bb666e6...`, em que o request 3 se apoiou) é a
+mesma que o app tinha antes do request 2 (a +0.018 s) e de novo a +0.048
+s: a view voltou a um estado que já tinha deixado. o único lugar que
+troca a lista inteira pelo que o git leu é `GitSession::apply`
+(`crates/ide/src/session.rs:271-275`, `set_files`), e a resposta que
+chegou ali foi lida antes do stage.
+
+### o controle (i): os frames sozinhos
+
+a trilha visual guarda a cena e as ligações de cada frame, nada de
+estágio, ator ou request (`crates/rec/src/visual.rs:1-23`). pelos frames,
+um vídeo mostraria a linha do arquivo mudando de grupo e voltando:
+responde, no máximo, qual controle, o estado desenhado e que algo mudou
+(3 das 8). não diz que um stage estava em execução, que ninguém agiu,
+qual era a precondição do submit nem que o ponto de verdade recusou. e os
+dois lapsos duraram 29 ms (+0.048 a +0.077 s) e 24 ms (+0.077 a +0.101
+s), menos que um quadro de um vídeo a 30 fps (33 ms): uma gravação de
+tela pode não ter nem o quadro.
+
+### o teste
+
+`crates/ide/tests/rerun/inflight.rs` (novo), no binário `rerun` do ide
+(`cargo test -p ide --test rerun`):
+
+- `InFlight`: a fixture do ide (`Lab`) assentada só até as execuções. o
+  `settle` aplica as respostas do worker uma por vez, na ordem, enquanto
+  algum request despachado no rerun está `executing`; os refreshes
+  pedidos no caminho ficam em voo. `Lab` ganhou `answer_while` (e o
+  `drain` passou a usar o mesmo `take`), e `fixture` ficou público no
+  módulo; nada no `harness`, no `Fixture`, nas marcas nem no relatório
+  mudou.
+- `the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight`:
+  o trecho `bug84.monster` com as marcas de `bug84.marks` (seis: o
+  staged de partida e o que a view tem de guardar depois de cada stage,
+  o form aberto no fim). as marcas dizem o que a view precisa ter, não o
+  que a gravação teve; todo veredito gravado estava certo.
+
+em `task/80a-proof` (`46f272d3`), verde, e dez de dez seguidas:
+
+```text
+rerun of an excerpt recorded by rec 0.1.0, built from 84161012: 4 requests, 6 marks
+  same      request 1 (origin 0, rerun as 1): unstage on changes.file[README.md] by agent:scripted: completed
+  same      request 2 (origin 0, rerun as 2): stage on changes.file[src/session.rs] by agent:scripted: completed
+  same      request 3 (origin 0, rerun as 3): stage on changes.file[tests/login_test.rs] by agent:scripted: completed
+  same      request 4 (origin 0, rerun as 4): open on commit.form by agent:scripted: completed
+  held      line 18: at 0  changes:staged = {"README.md", "src/login.rs"}
+  held      line 22: after request 1  changes:staged = {"src/login.rs"}
+  held      line 23: after request 2  changes:staged = {"src/login.rs", "src/session.rs"}
+  held      line 24: after request 3  changes:staged = {"src/login.rs", "src/session.rs", "tests/login_test.rs"}
+  held      line 25: after request 3  changes.file[tests/login_test.rs]:staged = true
+  held      line 26: after request 4  commit.form:open = true
+nothing diverged
+test inflight::the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight ... ok
+```
+
+### a prova de que ele pega a quebra
+
+na branch descartável `task/80a-bug84` (`84161012`, a corrida de volta,
+mais o commit do teste escolhido por cherry-pick como `034b951d`):
+
+```text
+thread 'inflight::the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight' panicked at crates/ide/tests/rerun/inflight.rs:103:5:
+rerun of an excerpt recorded by rec 0.1.0, built from 84161012: 4 requests, 6 marks
+  same      request 1 (origin 0, rerun as 1): unstage on changes.file[README.md] by agent:scripted: completed
+  same      request 2 (origin 0, rerun as 2): stage on changes.file[src/session.rs] by agent:scripted: completed
+  same      request 3 (origin 0, rerun as 3): stage on changes.file[tests/login_test.rs] by agent:scripted: completed
+  same      request 4 (origin 0, rerun as 4): open on commit.form by agent:scripted: completed
+  held      line 18: at 0  changes:staged = {"README.md", "src/login.rs"}
+  held      line 22: after request 1  changes:staged = {"src/login.rs"}
+  DIVERGED  line 23: after request 2  changes:staged = {"src/login.rs", "src/session.rs"}
+            found     {"src/login.rs"}
+  DIVERGED  line 24: after request 3  changes:staged = {"src/login.rs", "src/session.rs", "tests/login_test.rs"}
+            found     {"src/login.rs", "src/session.rs"}
+  DIVERGED  line 25: after request 3  changes.file[tests/login_test.rs]:staged = true
+            found     false
+  held      line 26: after request 4  commit.form:open = true
+the rerun diverged: 0 request(s), 3 mark(s)
+test inflight::the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight ... FAILED
+test result: FAILED. 9 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+```
+
+os controles, na mesma branch com a corrida:
+
+- (ii) o rerun em repouso não vê a corrida: o do a2ppa passa
+  ("nothing diverged", os nove requests `same`), e o mesmo trecho
+  `bug84` com a fixture de sempre também passou, as seis marcas `held`
+  (um teste descartável, não commitado).
+- (iii) os quatro testes à mão da task-84 falham como falhavam na base
+  dela (`a_status_read_before_a_stage_never_takes_the_file_back_out`:
+  `left: Set({"A"})`, `right: Set({"A", "B"})`, e os outros três).
+
+### privacidade da gravação
+
+a sessão do laboratório não tem input de pessoa (`--human none`: tipos
+`observed` 3, `snapshot` 3, `changes` 7, `stage` 24 no bug report; um
+ator só, `agent:scripted`, com `inputs: 0`), o ide não projeta campo
+secreto, não há câmera, e a preferência de accessibility não é estado do
+ide (nenhum nó ou chave com "secret", "redact", "camera", "contrast",
+"text_scale" ou "density" no `--timeline --json` do bug report).
+
+### resultado contra o critério
+
+- **K1:** as oito perguntas respondidas pelo trecho sozinho, conferidas
+  contra o código (`crates/ide/src/session.rs:266-275`); os frames
+  sozinhos respondem no máximo três, e os lapsos são mais curtos que um
+  quadro de vídeo a 30 fps.
+- **K2:** o teste falha na branch com a corrida (3 marcas divergem) e
+  passa em `task/80a-proof`, dez de dez; o controle em repouso passa nas
+  duas.
+- **K3:** 43.916 bytes no git; o bug report inteiro, 71.580.
+- **K4:** para ter o teste: o trecho exportado por um comando, 26 linhas
+  de marcas (6 marcas), e a `InFlight`, que serve a qualquer sessão do
+  laboratório. os testes à mão da task-84 são 146 linhas de Rust
+  (`crates/ide/tests/human_agent.rs:466-611`) e cobrem quatro cenários
+  (stage, unstage da pessoa, discard, watcher); o do trecho cobre o do
+  stage, duas vezes.
+
+nada derrubou a demo. o que ela achou, para o orquestrador:
+
+- o `settle` do harness da task-64 esconde toda corrida entre uma
+  resposta do worker e o próximo ato; a `InFlight` resolve para o ide sem
+  mexer no contrato do harness. se o harness virar crate (task-64,
+  "fechamento da fase c"), assentar só as execuções pode virar opção da
+  fixture, com uma linha no ADR sessions-become-regression-tests. P3.
+- um trecho gravado com o bug tem os vereditos do bug (aqui, o request 6
+  aceito no check e recusado no ponto de verdade), e o harness sempre
+  compara o veredito com o gravado: o trecho do teste foi cortado antes
+  do submit. marcar um veredito esperado, como as marcas já marcam um
+  valor, deixaria o bug report inteiro virar teste. P3.
+- o ponto de verdade segurou: com a view mentindo, o `CommitIf` recusou o
+  commit de dois arquivos. a segunda checagem é o que fez a corrida custar
+  uma recusa, não um commit errado.
