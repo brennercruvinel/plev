@@ -7,6 +7,8 @@
 //! structure, in the todo and in the ide, keeping the template's ids
 //! (task-95).
 
+// shared with the other test binaries: this one reads less of it.
+#[allow(dead_code)]
 mod support;
 
 use propose::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};

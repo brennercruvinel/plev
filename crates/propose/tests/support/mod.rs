@@ -113,3 +113,105 @@ pub fn bindings(root: &IrNode) -> Vec<(String, Vec<String>)> {
         })
         .collect()
 }
+
+/// Who may ask for the vault's actions: a person, at the screen or
+/// through assistive technology, and a test; never an agent (the
+/// showcase's `PERSON_ONLY`).
+pub const PERSON_ONLY: sem::Actors = sem::Actors {
+    human: true,
+    agent: false,
+    assistive: true,
+    test: true,
+};
+
+/// A vault whose lock and open are kept from agents, and a secret code.
+pub fn vault() -> Snapshot {
+    use sem::{Constraints, Policy, Role, SnapshotBuilder};
+    let kept = Policy {
+        actors: PERSON_ONLY,
+        ..Policy::default()
+    };
+    let mut b = SnapshotBuilder::new();
+    b.node("vault", Role::Region, "vault");
+    let mut lock = b.node("vault.lock", Role::Toggle, "locked");
+    lock.parent("vault").state("on", true);
+    lock.action("toggle").reads("vault.lock:on").policy(kept);
+    let mut open = b.node("vault.open", Role::Button, "open the vault");
+    open.parent("vault");
+    open.action("open").policy(kept);
+    b.node("vault.note", Role::Label, "note")
+        .parent("vault")
+        .state("text", "the key is in the drawer");
+    let mut code = b.node("vault.code", Role::TextInput, "code");
+    code.parent("vault")
+        .state("text", "hunter2-swordfish")
+        .constraints(Constraints {
+            editable: true,
+            secret: true,
+            ..Constraints::default()
+        });
+    b.finish().expect("the vault projects")
+}
+
+/// A surface a person wrote over the vault: its note and its lock.
+pub const VAULT_PANEL: &str = r#"{"plev_ir": 1, "surface": {"id": "vault_panel", "title": "vault",
+    "root": {"sem": "vault_panel.root", "layout": {"stack": {"axis": "vertical", "gap": "md"}},
+      "children": [
+        {"sem": "vault_panel.note", "component": "text", "bind": {"state": {"text": "vault.note:text"}}},
+        {"sem": "vault_panel.lock", "component": "checkbox", "label": "locked",
+         "bind": {"state": {"checked": "vault.lock:on"},
+                  "actions": {"toggle": {"target": "vault.lock", "action": "toggle"}}}}
+      ]}}}"#;
+
+/// What a transformer is asked about a surface of `app`.
+pub struct Changing {
+    pub app: Snapshot,
+    pub caps: Capabilities,
+    pub policy: GenerationPolicy,
+    pub current: uir::Adapted,
+    pub by: sem::Actor,
+}
+
+impl Changing {
+    /// `ir` over `app`, verified under the default policy, asked by a
+    /// person.
+    pub fn over(app: Snapshot, ir: &str) -> Changing {
+        Changing::under(app, ir, GenerationPolicy::default())
+    }
+
+    /// `ir` over `app`, verified under `policy`, asked by a person.
+    pub fn under(app: Snapshot, ir: &str, policy: GenerationPolicy) -> Changing {
+        let caps = Capabilities::from_snapshot(&app);
+        let verified = verify_json(ir, &caps, &policy).unwrap_or_else(|e| panic!("{e:#?}"));
+        Changing {
+            app,
+            caps,
+            policy,
+            current: uir::Adapted::new(verified),
+            by: sem::Actor::Human,
+        }
+    }
+
+    pub fn by(mut self, by: sem::Actor) -> Changing {
+        self.by = by;
+        self
+    }
+
+    pub fn ask<'a>(&'a self, intent: &'a str) -> propose::Adapt<'a> {
+        propose::Adapt {
+            intent,
+            caps: &self.caps,
+            app: &self.app,
+            current: &self.current,
+            policy: &self.policy,
+            by: &self.by,
+        }
+    }
+}
+
+/// An agent, as the port names one.
+pub fn agent() -> sem::Actor {
+    sem::Actor::Agent {
+        name: "claude".to_owned(),
+    }
+}
