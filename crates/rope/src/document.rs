@@ -48,14 +48,18 @@ impl Document {
     }
 
     /// Load text, normalizing CRLF line endings to LF.
+    ///
+    /// The text is read once into the rope; it is copied first only when
+    /// it has a `\r` to normalize (a million-line document otherwise
+    /// peaked at twice its size while opening).
     pub fn load(text: &str) -> Self {
-        let text = if text.contains('\r') {
-            text.replace("\r\n", "\n")
+        let rope = if text.contains('\r') {
+            Rope::from_str(&text.replace("\r\n", "\n"))
         } else {
-            text.into()
+            Rope::from_str(text)
         };
         Self {
-            rope: Rope::from_str(&text),
+            rope,
             selections: SelectionSet::caret(0),
             history: History::new(),
         }
