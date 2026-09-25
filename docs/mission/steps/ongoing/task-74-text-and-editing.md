@@ -1184,3 +1184,61 @@ confirma (a coluna de edição é a mesma com 10 mil e com um milhão).
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
 ```
+
+## fase 7: o benchmark
+
+mesmo teste, mesma máquina (Apple M4, 16 GB, macOS 26.6.2), perfil
+release, depois das três mudanças (linhas em f64, `Document::load` sem
+cópia, cache de clusters por linha). o documento gerado tem linhas de
+código de 45 a 80 bytes, todas diferentes; com um milhão de linhas são
+57 MiB de texto. cada cenário: a roda anda 3 linhas por frame por 2000
+frames; o arrasto da barra vai do topo ao fim em 300 frames, cada um numa
+viewport nova; a roda com tudo selecionado são 1000 frames depois de
+`select_all`; a edição insere e apaga um caractere na linha do meio, 200
+vezes cada, medindo até o frame seguinte montado. média / p99 em ms.
+
+| linhas | até | abrir | roda, 3 linhas por frame | arrasto da barra | roda, tudo selecionado | editar no meio | heap mantido (MiB) | pico ao abrir (MiB) |
+|---|---|---|---|---|---|---|---|---|
+| 10 mil | scene | 0,2 | 0,021 / 0,025 | 0,054 / 0,064 | 0,146 / 0,177 | 0,019 / 0,022 | 0,6 | 0,6 |
+| 100 mil | scene | 1,6 | 0,021 / 0,025 | 0,086 / 0,099 | 0,146 / 0,159 | 0,020 / 0,024 | 6,2 | 6,2 |
+| 1 milhão | scene | 17,5 | 0,021 / 0,029 | 0,095 / 0,126 | 0,148 / 0,185 | 0,020 / 0,040 | 64,2 | 64,2 |
+| 10 mil | frame | 0,8 | 0,365 / 0,593 | 0,673 / 0,826 | 0,495 / 0,607 | 0,304 / 0,771 | 0,6 | 1,5 |
+| 100 mil | frame | 3,1 | 0,368 / 0,625 | 1,019 / 1,227 | 0,481 / 0,558 | 0,258 / 0,317 | 6,2 | 7,1 |
+| 1 milhão | frame | 21,0 | 0,360 / 0,587 | 1,042 / 1,241 | 0,482 / 0,568 | 0,268 / 0,343 | 64,2 | 65,0 |
+
+antes e depois, com um milhão de linhas (os números de antes estão na
+sonda):
+
+| um milhão de linhas | antes | depois |
+|---|---|---|
+| abrir até o primeiro frame (ms) | 23,3 | 21,0 |
+| pico de heap ao abrir (MiB) | 121,3 | 65,0 |
+| heap mantido pelo documento e pelo editor (MiB) | 64,2 | 64,2 |
+| roda, frame, média / p99 (ms) | 0,357 / 0,544 | 0,360 / 0,587 |
+| arrasto da barra, frame (ms) | 1,194 / 2,884 | 1,042 / 1,241 |
+| roda com tudo selecionado, cena (ms) | 0,590 / 0,628 | 0,148 / 0,185 |
+| roda com tudo selecionado, frame (ms) | 0,946 / 2,026 | 0,482 / 0,568 |
+| editar no meio até o frame seguinte (ms) | 0,311 / 1,071 | 0,268 / 0,343 |
+
+leitura: o frame já não dependia de N antes e continua sem depender; o
+pior frame medido, com um milhão de linhas, fica abaixo de 1,3 ms no
+p99, longe dos 16,7 ms de 60 Hz. o que mudou foi o pico ao abrir (a
+cópia do texto saiu), o custo de redesenhar linhas com seleção (o shaping
+dos clusters deixou de se repetir a cada frame) e, fora da tabela, a
+posição das linhas: antes, a partir da linha 100 mil, o passo entre duas
+linhas saía errado em até 0,4 px e o clique perto do fim caía na linha
+vizinha.
+
+cada tabela é a segunda de duas rodadas seguidas. entre rodadas, as
+médias variam menos de 10%; o p99 do `frame` varia até o dobro, porque
+passa pela submissão à GPU (a primeira rodada de antes deu 1,973 ms de
+p99 na roda com 10 mil linhas; a segunda, 0,585). a memória é só o heap
+da CPU, contado por um alocador no próprio teste; o atlas de glifos na GPU
+não entra.
+
+para reproduzir (o disco precisa de uns 2 GB para o perfil release):
+
+```sh
+export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
+cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+```
