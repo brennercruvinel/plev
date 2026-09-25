@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
-last-updated: 2026-09-23
+status: ongoing
+last-updated: 2026-09-25
 domain: generative-runtime
 task: task-80
 wave: 8
@@ -119,3 +119,13 @@ de resultado.
 
 - uma demo exigir funcionalidade que nenhuma task entregou (vira task, não
   atalho).
+
+## fase 1 (aberta em 2026-09-25)
+
+aberta pelo orquestrador com as tasks 62, 63, 64, 69 e 70 integradas. o
+método das cinco demos escrito antes de rodar, o que já está provado
+reunido com a fonte, e as demos 3 (inspectability, teste no gate) e 4
+(interface efêmera). ficam de fora: a demo 2 com o brenner, a pergunta do
+núcleo, uma pessoa de fora e qualquer chamada ao Claude de verdade. a
+demo 5 vira task nova se pedir superfície gerada num app que ainda não
+tem.
