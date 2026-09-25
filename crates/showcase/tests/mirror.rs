@@ -765,7 +765,9 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         frames.len() >= 3,
         "the app drew the camera's frames: {shown:x?}"
     );
-    for n in 0..16 {
+    // every color a frame of the fake takes (its frame number mod 200,
+    // which the clock sets, not only the first frames)
+    for n in 0..200 {
         assert!(
             !w.carried(FakeCapture::pixel(n)),
             "the bytes of camera frame {n} went out on the watch"

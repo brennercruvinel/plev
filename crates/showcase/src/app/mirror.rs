@@ -428,9 +428,10 @@ impl Hand {
         }
     }
 
-    /// The revision of the last look.
-    pub fn seen(&self) -> Option<Revision> {
-        self.seen.as_ref().map(|s| s.revision)
+    /// What the last look showed: the observation a press rests on, as
+    /// the port served it (a secret as its length).
+    pub fn shown(&self) -> Option<&SnapshotReply> {
+        self.seen.as_ref()
     }
 
     /// The control under `(x, y)` in the viewer's last frame, pressed
@@ -665,6 +666,94 @@ mod tests {
         assert_eq!(v.hit(120.0, 120.0), Some(&sid("dialog.ok")));
         assert_eq!(v.hit(250.0, 120.0), Some(&sid("page.button")));
         assert_eq!(v.hit(10.0, 10.0), None, "the hidden layer shows nothing");
+    }
+
+    /// Who watches stays in the log and the recording, and now so does
+    /// what the mirror does (task-79 phase 2): its look is an
+    /// observation of the agent "mirror" beside its watch, and its click
+    /// a receipt of the agent "mirror", in the session the shell records,
+    /// as any agent's.
+    #[test]
+    fn the_recording_keeps_the_mirror_s_look_and_click_under_its_name() {
+        let tmp = tempfile::tempdir().expect("a temporary directory");
+        let mut app = app(tmp.path());
+        // the sink on the gallery's dispatcher, as the shell puts it
+        if let Some(recording) = &app.recording {
+            recording.attach(&mut app.view);
+        }
+        let path = app
+            .access
+            .agent
+            .as_ref()
+            .expect("the port")
+            .path()
+            .to_owned();
+        let side = std::thread::spawn(move || {
+            let mut c = Client::connect(&path).expect("the watch connects");
+            c.set_timeout(Some(20_000)).expect("a timeout");
+            c.hello("mirror").expect("hello");
+            c.watch_scene(MAIN).expect("the watch goes");
+            let mut v = Viewer::new();
+            while v
+                .take(c.recv().expect("a frame").reply)
+                .expect("reads")
+                .is_none()
+            {}
+            let mut hand = Hand::connect(&path, "mirror").expect("the hand connects");
+            hand.set_timeout(Some(20_000)).expect("a timeout");
+            hand.look().expect("the hand looks");
+            let [x, y, w, h] = v
+                .bounds()
+                .iter()
+                .find(|b| b.id.as_str() == "todo.item[1]")
+                .expect("the item")
+                .rect;
+            hand.click(&v, x + w / 2.0, y + h / 2.0, |_, _| {})
+        });
+        let deadline = Instant::now() + Duration::from_secs(30);
+        while !side.is_finished() {
+            assert!(Instant::now() < deadline, "the mirror did not finish");
+            app.serve_agent();
+            std::thread::sleep(Duration::from_millis(2));
+        }
+        let pressed = side.join().expect("the mirror's thread");
+        assert_eq!(pressed.stage().map(Stage::name), Some("completed"));
+        let mirror = Actor::Agent {
+            name: "mirror".into(),
+        };
+        let session = app
+            .recording
+            .as_ref()
+            .expect("a recording")
+            .recorder()
+            .snapshot_window();
+        let looked = session
+            .events()
+            .iter()
+            .filter(|e| matches!(&e.kind, rec::Kind::Observed { actor, .. } if *actor == mirror))
+            .count();
+        assert_eq!(looked, 2, "the watch and the look");
+        let acted: Vec<(String, &str)> = session
+            .events()
+            .iter()
+            .filter_map(|e| match &e.kind {
+                rec::Kind::Stage { request, stage, .. } if request.actor == mirror => Some((
+                    format!("{} {}", request.target, request.action),
+                    stage.name(),
+                )),
+                _ => None,
+            })
+            .collect();
+        let toggle = "todo.item[1] toggle".to_owned();
+        assert_eq!(
+            acted,
+            [
+                (toggle.clone(), "requested"),
+                (toggle.clone(), "accepted"),
+                (toggle.clone(), "executing"),
+                (toggle, "completed"),
+            ]
+        );
     }
 
     #[test]
