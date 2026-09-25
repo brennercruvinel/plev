@@ -15,12 +15,17 @@
 //! theme and layout, and asks for frames until it settles (`Motion::wake`);
 //! at rest nothing is asked. with reduced motion every change is
 //! instant: nothing fades, nothing slides, nothing is kept after it left.
+//! it is reduced when the surface is told so (`set_reduced`) or when the
+//! thread's motion is (`engine::animation::reduced_motion`, the system's
+//! preference the bridge sets, task-75): then no transition is made at
+//! all, so the first frame after a change already shows the new form (a
+//! spring made here would land only at the next tick, one frame late).
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 use comps::{Rect, Wake};
-use engine::animation::{Easing, Spring, Tween};
+use engine::animation::{self, Easing, Spring, Tween};
 use engine::compositor::{Compositor, LayerId, SceneNode};
 use engine::theme::Theme;
 use sem::{SemId, Snapshot};
@@ -254,11 +259,18 @@ impl Motion {
         }
     }
 
+    /// true when every change shows at once: the surface's preference
+    /// or the thread's.
+    fn reduced(&self) -> bool {
+        self.reduced || animation::reduced_motion()
+    }
+
     /// the form changed: the next frame draws it and starts what it
     /// shows. `born` are the ids with a new widget.
     pub fn changed(&mut self, born: impl IntoIterator<Item = (SemId, f32)>) {
+        let reduced = self.reduced();
         let pending = self.pending.get_or_insert_with(BTreeMap::new);
-        if !self.reduced {
+        if !reduced {
             pending.extend(born);
         }
     }
@@ -266,7 +278,7 @@ impl Motion {
     /// `node` left (or its widget did): its picture fades out from
     /// `rect`, unless motion is reduced.
     pub fn leave(&mut self, node: Node, widget: Widget, rect: Rect, shown: &Arc<Snapshot>) {
-        if self.reduced {
+        if self.reduced() {
             return;
         }
         let from = self.opacity(&node.id);
@@ -297,7 +309,7 @@ impl Motion {
 
     /// `id` is born in this frame, from the opacity `from`.
     pub fn enter(&mut self, id: &SemId, from: f32, theme: &Theme) {
-        if !self.reduced && from < 1.0 {
+        if !self.reduced() && from < 1.0 {
             self.entering.insert(id.clone(), spring(from, 1.0, theme));
         }
     }
@@ -305,7 +317,7 @@ impl Motion {
     /// `id`, drawn at `was` before the change, is laid out at `to` in
     /// this frame: it slides there.
     pub fn slide(&mut self, id: &SemId, was: Rect, to: Rect, theme: &Theme) {
-        if self.reduced || same(was, to) {
+        if self.reduced() || same(was, to) {
             self.sliding.remove(id);
             return;
         }

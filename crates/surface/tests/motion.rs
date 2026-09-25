@@ -329,3 +329,38 @@ fn a_dismissal_fades_the_surface_out_and_then_lets_it_go() {
     );
     assert_eq!(host.wake(TURN), Wake::idle());
 }
+
+/// The thread's reduced motion (task-75: the system's, which the bridge
+/// sets on the loop's thread) makes a change instant too, with nothing
+/// told to the surface: the first frame after the change draws the new
+/// form, the born node whole and nothing of the gone one, and no turn
+/// after it asks for another; a dismissal lets go at once. A thread
+/// starts with motion (`engine::animation::set_reduced_motion`).
+#[test]
+fn the_thread_s_reduced_motion_makes_the_change_instant_from_its_first_frame() {
+    assert!(
+        !engine::animation::reduced_motion(),
+        "a thread starts with motion"
+    );
+    engine::animation::set_reduced_motion(true);
+    let theme = Theme::hoff_core();
+    let (app, mut surface, _) = mixer_left(&theme);
+    to_right(&mut surface, &app);
+    assert!(surface.wake(TURN).now, "the change asks for its frame");
+    let c = frame(&mut surface, &theme);
+    assert_eq!(ink(&c, "reset"), None, "nothing of the gone node");
+    let hint = ink(&c, "drag to set the volume").expect("the hint");
+    assert_eq!(hint, 1.0, "the born node whole on the first frame");
+    for _ in 0..120 {
+        assert_eq!(surface.wake(TURN), Wake::idle());
+    }
+    let now = app.snapshot();
+    let mut host = SurfaceHost::new();
+    let panel = id("mix_panel");
+    host.open(verified_local(MIXER_LEFT, &now), &now)
+        .expect("opens");
+    frame(host.get_mut(&panel).expect("open"), &theme);
+    assert!(host.close(&panel));
+    assert_eq!(host.wake(TURN), Wake::idle(), "let go at once");
+    engine::animation::set_reduced_motion(false);
+}
