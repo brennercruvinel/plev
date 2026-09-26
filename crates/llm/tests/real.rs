@@ -66,3 +66,16 @@ fn candle_generates_sixteen_tokens() {
     let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
     assert!(answer.contains("Paris"), "{answer:?}");
 }
+
+#[cfg(feature = "burn")]
+#[test]
+#[ignore = "needs the model in PLEV_LLM_MODEL"]
+fn burn_generates_sixteen_tokens() {
+    let Some(dir) = model_dir() else {
+        eprintln!("PLEV_LLM_MODEL not set; skipped");
+        return;
+    };
+    let model = llm::burn::load(&dir, device()).expect("load");
+    let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
+    assert!(answer.contains("Paris"), "{answer:?}");
+}

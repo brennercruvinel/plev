@@ -18,6 +18,8 @@ pub mod chat;
 #[cfg(feature = "text")]
 pub mod text;
 
+#[cfg(feature = "burn")]
+pub mod burn;
 #[cfg(feature = "candle")]
 pub mod candle;
 
