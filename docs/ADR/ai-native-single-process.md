@@ -143,3 +143,52 @@ burn e candle", and, about burn needing a newer wgpu than plev has,
 - the licence chain of the burn model code (burn-lm, adapted from Meta's
   Llama 3 reference code, `crates/llm/NOTICE`) is looked at before any
   public release (task-41).
+
+## the shared device (task-78 phase 2)
+
+plev moved to wgpu 29.0.4, and the 1312 desktop frames of `regress
+capture` (82 pages, 4 themes, 4 scales) came out equal in every byte to
+the wgpu 28 capture taken before the move. then burn went onto the
+renderer's device:
+
+- the engine hands out what cubecl's `init_device` takes:
+  `GpuContext::instance()` and `adapter()`, by addition, beside the
+  `device` and `queue` fields it already had.
+- `RenderConfig::compute`, `None` by default, asks the device for the
+  adapter's limits and for the non-experimental features the adapter has.
+  cubecl picks its kernels by the adapter's features (f16, i64, subgroups)
+  and sizes buffers by the device's limits, so a device with the
+  renderer's defaults would reject them (TinyLlama's embedding alone
+  outgrows the default 256 MB buffer). without it the renderer asks for
+  what it asked before.
+- `crates/llm`, feature `plev`: `llm::plev::device` wraps the four
+  handles in a `WgpuSetup`, and `llm::plev::load` loads the model on that
+  device through burn's wgsl path.
+
+what it shows. one process, one wgpu device, one queue. in
+`crates/llm/tests/plev.rs` the headless renderer's device goes to burn,
+a matmul on it reads back equal to the cpu's, and the same renderer then
+draws a frame equal in every byte to one from a renderer burn never
+touched. with the model present (`tests/real.rs`, ignored by default),
+TinyLlama answers "The capital of France is Paris." in f16 on the
+engine's device, then the same device draws a frame. two runs of that
+process, load and 16 tokens included, took 8.7 and 7.6 s, with a peak
+footprint of 4.3 and 4.0 GB.
+
+what it does not show:
+
+- no tensor reaches a frame. the test reads the matmul back to the cpu
+  to compare it; drawing from a burn buffer without that copy, the second
+  half of scope item 4, is not built.
+- no speed. the phase 1 numbers are burn on its own device through msl;
+  this is the wgsl path on a shared device, not measured, and neither is
+  a frame and a decode taking turns on one queue.
+- burn with the `metal` feature does not run here: it compiles to msl
+  through passthrough shaders, an experimental wgpu 29 feature the
+  engine's device does not enable. `llm::plev::device` refuses that pair.
+- after a device loss the engine rebuilds its device, and the device
+  burn holds is gone with the old one. the caller has to register the new
+  one; nothing tests that with burn yet.
+- only the headless path ran. a window's device comes from the same
+  descriptor, but no windowed app has burn on it.
+- candle still makes its own Metal device.

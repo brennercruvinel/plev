@@ -377,7 +377,7 @@ que pegou o plev:
   `WindowEvent::Occluded(false)` já desenha um novo ao descobrir.
 - `Instance::new` recebe o `InstanceDescriptor` por valor, e ele perdeu o
   `Default` (wgpu src/api/instance.rs:63; wgpu-types src/instance.rs:64-75,
-  `new_without_display_handle`). `gpu/context.rs:276`.
+  `new_without_display_handle`). `gpu/context.rs:295`.
 - `PipelineLayoutDescriptor::bind_group_layouts` é
   `&[Option<&BindGroupLayout>]` (wgpu src/api/pipeline_layout.rs:38).
   `gpu/pipelines.rs` (7) e `effects/pipelines.rs` (4).
@@ -401,3 +401,58 @@ cargo run --offline -p showcase --example regress -- capture \
 no wgpu 29.0.4: 1312 de 1312 `equal` contra a base do wgpu 28 (os mesmos
 bytes RGBA, frame a frame), e 1312 `equal` entre os dois contextos do
 processo. nenhum `requested`, `silent` ou `resized`.
+
+## fase 2: handoff
+
+commits na `task/78b-wgpu29`: `4a04d454` a base de pixel no wgpu 28;
+`8839f3c8` o wgpu 29 e as mudanças de API; `bcf0a205` a sonda e a prova
+de pixel; `06df04c8` o lint do wire (com o ok do orquestrador);
+`496c6ffa` o device do engine para o burn; `002debd4` o burn no device
+do engine e os testes; `9e46ce7a` o teste real diz o dtype; este, o ADR e
+o handoff.
+
+a API do wgpu 29 que pegou o plev está na sonda acima: a textura da
+superfície virou `CurrentSurfaceTexture` (`window/frame.rs:70`,
+`window/render.rs:219`, 12 exemplos do engine, o editor do comps, o
+preview do parser e o prime), o
+`InstanceDescriptor` sem `Default` e por valor (`gpu/context.rs:295`,
+dois testes), os layouts com `Option` (11 no engine, 1 no scene3d) e o
+depth do scene3d. o `rust-version` 1.87 pediu o `is_multiple_of` em
+seis lugares da raiz (um no wire) e em três do `crates/llm`.
+
+a prova de pixel: 1312 de 1312 `equal` contra a base do wgpu 28, no
+commit do wgpu 29 e de novo na ponta da branch, depois do device para o
+burn. `regress check`: 176 iguais.
+
+o device dividido: o engine dá `instance()` e `adapter()` por acréscimo,
+e `RenderConfig::compute` (`None` por padrão) pede os limites e as
+features do adaptador (`gpu/config.rs:44`, `gpu/context.rs:309`). no
+`crates/llm`, a feature `plev` põe o engine como dependência de caminho
+e `llm::plev` entrega os quatro handles ao `init_device`. o
+`tests/plev.rs` roda sem janela: matmul no device do engine igual ao da
+CPU, e depois o mesmo device desenha um frame igual byte a byte ao de um
+renderer sem burn. o teste ignorado com o TinyLlama respondeu "The
+capital of France is Paris." em f16 no device do engine, em 7,6 s, com
+4,0 GB de pico de footprint. o que isso não mostra está no ADR, seção
+"the shared device".
+
+o que compila: macOS (gate), wasm (gate, raiz e urnaui), android
+(`aarch64-linux-android`, com o clang do NDK 27.2 do SDK apontado por
+variável, porque o NDK não está no PATH) e iOS (`aarch64-apple-ios-sim`).
+
+gate verde com as pernas urnaui e wasm: 3272 passados (3186 na raiz e 86
+no urnaui), eram 3268; os 4 a mais são os testes novos do engine. o
+`crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados; clippy
+verde também com `burn`, `candle,burn,metal` e `burn,plev,metal`.
+
+pendências:
+- o `rust-conventions.md` e o `clippy.toml` ainda dizem 1.85, e o
+  `AGENTS.md:17` diz wgpu 28 (o orquestrador corrige na integração).
+- o tensor ainda não chega ao frame sem voltar para a CPU (item 4).
+- burn com `metal` no device do engine pede os shaders passthrough, que
+  são experimentais no wgpu 29; hoje o `llm::plev::device` recusa.
+- depois de uma perda de device, quem usa o burn tem que registrar o
+  device novo; não há teste disso.
+- avisos antigos só no android e no iOS: `event_loop_proxy` sem uso
+  (`engine/src/window/mod.rs:57`) e `window` sem uso
+  (`showcase/src/app.rs:408`).
