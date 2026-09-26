@@ -126,3 +126,65 @@ v1.0 (Apache-2.0), commit `fe8a4ea1` do repositório no Hugging Face,
 o TinyLlama porque o candle (`candle-transformers`, llama) e o burn (a
 implementação do `burn-lm-llama`) rodam o mesmo modelo, e a comparação só
 é justa assim.
+
+## fase 1: a sonda
+
+fontes: o registro do cargo nas versões travadas (`candle-*-0.11.0`,
+`burn-*-0.21.0`) e o clone do burn-lm no commit `a53baab`.
+
+(a) candle 0.11 com o TinyLlama:
+
+- o `config.json` desserializa em `LlamaConfig` (candle-transformers
+  src/models/llama.rs:39-54, GQA em :57, `into_config` em :67); o
+  flash-attn é só cuda (Cargo.toml:48-51), `false` no Metal.
+- os nomes do safetensors do Hugging Face entram sem remapear
+  (llama.rs:515-525); um tensor faltando vira panic (`unwrap()`, :524).
+- dtype: `VarBuilder::from_mmaped_safetensors` converte o bf16 no dtype
+  pedido (candle-nn src/var_builder.rs:642, `unsafe` pelo mmap): f16 no
+  Metal, f32 na CPU. a atenção sobe q, k, v para f32 (llama.rs:337-340) e
+  o rope nasce em f32 (:200-207); o f16 não perde posição.
+- device `Device::new_metal(0)` (candle-core src/device.rs:258); o kv em
+  `Cache::new` (llama.rs:164); `forward` devolve os logits f32 da última
+  posição (:503-512).
+- o template não está no candle: vem do `tokenizer_config.json`
+  (`<|user|>\n{prompt}</s>\n<|assistant|>\n`); o `<s>` é do pós-processador
+  do `tokenizer.json`; o eos é o id 2.
+
+(b) o `burn-lm-llama` no burn 0.21:
+
+- o código segue o burn da main, sem o parâmetro de backend: `Tensor<1,
+  Int>` e `Device` soltos (src/nn/llama/inference.rs:30-39), `Transformer`
+  sem `<B>` (src/nn/transformer.rs:78-85). no 0.21 é `Tensor<B, D, K>`
+  (burn-tensor src/tensor/api/base.rs:76-80). o port é mecânico.
+- os pesos: o burn-lm lê um `.mpk` próprio (nn/llama/base.rs:237-246) ou
+  `.pth` pelo `burn_import` (nn/llama/import.rs:2, :90), nunca o
+  safetensors. o burn-store lê (`SafetensorsStore::from_file`,
+  src/safetensors/store.rs:115), remapeia por regex (:294) e transpõe o
+  `Linear` (`PyTorchToBurnAdapter`, src/adapter.rs:318, :416-418), mas não
+  renomeia o peso do `RmsNorm` (:374-378) nem converte o dtype
+  (src/applier.rs:240). faltam um adaptador bf16 para o float do backend e
+  o remapeamento do import.rs:35-88.
+- o rope do burn pareia vizinhos (burn-nn src/modules/rope_encoding.rs:185-188)
+  e calcula as posições no float do backend (:249-251); o burn-lm permuta
+  `wq` e `wk` para caber (import.rs:94-127). em f16 o ângulo perde precisão
+  com a posição. troco pelo rope do Hugging Face com tabelas f32 feitas na
+  CPU, como o candle, e some a permutação.
+- quanto é: umas 600 linhas de produção com o `<B>` de volta, o carregador
+  e o rope. não é reescrita, a arquitetura fica. o burn-lm foi arquivado
+  (README.md:3-4): o código do modelo passa a ser nosso.
+
+(c) a GPU:
+
+- o burn 0.21 usa o cubecl-wgpu 0.10, que puxa o wgpu 29 (cubecl-wgpu
+  Cargo.toml:183-195); o plev está no 28 (`Cargo.lock` da raiz). o burn
+  aceita um device de fora, `init_device(WgpuSetup { instance, adapter,
+  device, queue })` (cubecl-wgpu src/runtime.rs:210-232), mas só do mesmo
+  wgpu: dividir o device do renderer pede o plev no 29.
+- o candle fala com o Metal pelo objc2-metal 0.3 (candle-core
+  Cargo.toml:45-50, :227) e cria o próprio device e fila
+  (src/metal_backend/mod.rs:2025-2027), sem construtor para um device de
+  fora. o wgpu-hal 28 usa o crate `metal` 0.33 (Cargo.toml:386-388); o 29
+  passou ao objc2-metal 0.3.2 (Cargo.toml:409-410). dividir buffer seria
+  interop `unsafe` pelo hal, mesma GPU, filas separadas.
+- para o item 4, os dois apontam para o wgpu 29; só o burn tem porta
+  oficial para o mesmo device.
