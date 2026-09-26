@@ -30,7 +30,8 @@ members = [
     "crates/uir",
     "crates/wire",
 ]
-exclude = ["crates/urnaui"]
+# llm too: candle and burn (burn on wgpu 29) live in its own workspace and lock.
+exclude = ["crates/urnaui", "crates/llm"]
 
 # Metadata inherited by every crate (`version.workspace = true`;
 # `description` stays per crate). Private: `publish = false` on each one.

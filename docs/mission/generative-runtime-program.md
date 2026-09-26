@@ -387,8 +387,15 @@ abertas:
     biblioteca, por ADR. baixar os crates é do orquestrador, num
     workspace à parte como o do urnaui, para o `Cargo.lock` da raiz não
     mudar. sem comparação com Electron (brenner, 2026-09-25: "tira
-    eletron"): a task mede o app de referência sozinho. o modelo a baixar
-    ainda espera o brenner.
+    eletron"): a task mede o app de referência sozinho. o modelo: o
+    TinyLlama 1.1B Chat, fora do repositório (2026-09-26).
+16. candle e burn, os dois (2026-09-26, brenner, depois da medição da
+    task-78 fase 1: "vamos manter o burn e candle"; sobre o burn pedir o
+    wgpu 29: "implementa"): `crates/llm` fica com as duas implementações
+    atrás da mesma interface, e o plev sobe do wgpu 28 para o 29, para o
+    burn rodar no device do renderer (item 4 da task-78). a subida vem
+    antes do app de referência e não pode mudar pixel. ADR
+    `ai-native-single-process` aceito.
 
 ## 12. estado
 
@@ -442,3 +449,4 @@ atualizado em cada integração.
 | task-96 | concluída (2026-09-25; arquivo em `checked/`): uma superfície gerada no ide, numa coluna ao lado das vistas fixas; "review these three commits" pelas regras; cada ato pelo dispatcher do workbench (pessoa, agente pelo port, stale recusado); nada depois de fechar; o Claude pelo caminho do showcase, vendo só os commits pedidos; a demo 5 da task-80 gravada sem janela e medida: melhor nos arquivos (3 commits de uma vez contra 1), pior no diff (5 linhas sem cor contra o diff inteiro) | merge da `task/96a-ide-surface` | um componente de diff no vocabulário do IR (task nova); a linha de intenção comum ao ide e ao showcase (P3); a prova com o Claude de verdade e a demo 5 com janela |
 | task-97 | concluída (2026-09-25; arquivo em `checked/`): o componente `code` no vocabulário do IR, desenhado pelo `CodeBlock` com o tipo de cada linha pelos tokens do tema (AA nos quatro temas) e rolagem; o ide projeta `diff:kinds`; a revisão das regras mostra o diff nele; a demo 5 medida de novo pelo mesmo critério: 14, 7 e 14 linhas coloridas à vista contra 5, 5 e 5 sem cor, e o painel fixo ainda ganha em 4 linhas de um commit e no número de linha | merge da `task/97a-code-in-ir` | um token de altura para bloco de leitura ou um nó que ocupa o que sobra (decisão do brenner); número de linha na projeção; os dois defeitos visuais corrigidos pela task-96 fase b; três temas nomeados (tokyo-night, gruvbox, one-dark) abaixo de AA na linha adicionada (P3) |
 | task-96 fase b | integrada (2026-09-25): o cartão do diff diz "diff", nunca o id do commit; a linha de intenção numa faixa embaixo das vistas fixas, a coluna só com superfície aberta, então sem superfície o workspace tem a largura inteira (perde 60 px de altura); a demo 5 medida de novo: nenhum número do critério mudou de lado, e o painel fixo deixou de cortar as mensagens dos commits | merge da `task/96b-ide-surface-polish` | a mensagem do commit no título pede um estado novo por região; um `Select` do comps que abre para cima sozinho (P3) |
+| task-78 | fase 1 integrada (2026-09-26): inferência em processo, candle e burn atrás de uma interface de streaming no workspace próprio `crates/llm`, medidos com o TinyLlama 1.1B no M4 (Metal f16: 37,1 contra 26,2 tok/s; primeiro token de um processo novo 90 ms contra 0,9 s; binário 6,8 contra 33 MB; pico 5,2 contra 4,3 GB); o brenner decidiu manter os dois (decisão 16); próxima: o plev no wgpu 29, depois o app de referência | merge da `task/78a-inference` | o código do modelo no burn vem do burn-lm (arquivado), adaptado do código de referência da Meta: licença a olhar antes de publicar (task-41); o tokenizer não compila para wasm (falta o `fancy-regex` 0.14 no cache) |
