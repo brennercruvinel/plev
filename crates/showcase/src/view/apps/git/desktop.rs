@@ -8,6 +8,7 @@ use engine::theme::Theme;
 
 use super::super::text;
 use super::{GitWake, NavKey};
+use crate::view::clipboard::Keys;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 use git::{GitClient, GitEvent};
@@ -143,6 +144,15 @@ impl GitPage {
         }
         self.frame(content);
         self.bench.right_click(x, y)
+    }
+
+    /// The visible commit form's field has the keys (a chord, the
+    /// field's menu).
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        match self.bench.workspace_mut().commit_form.typing_field() {
+            Some(field) => Keys::Field(field),
+            None => Keys::Nobody,
+        }
     }
 
     /// Plain characters: the visible commit form takes them as text;

@@ -59,6 +59,7 @@ use surface::{Dispatch, SurfaceHost};
 
 use super::app::TodoPage;
 use super::{EditKey, panel};
+use crate::view::clipboard::Keys;
 use generated::{Generated, Halves, page::Page};
 use layout::{compute, row_parts};
 use semantics::{Ids, Target, Which};
@@ -413,6 +414,30 @@ impl SilencesPage {
         self.with_host(|host, page| {
             let mut app = App { page, todo };
             host.iter_mut().any(|s| s.handle_text(key, &mut app))
+        })
+    }
+
+    /// Who has the keys (a chord, the field's menu): the intent field or
+    /// a field of the surface; nobody while an overlay holds the page.
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        if self.inert {
+            return Keys::Nobody;
+        }
+        if self.generated.proposing.intent.is_focused() {
+            return Keys::Field(&mut self.generated.proposing.intent);
+        }
+        if self.generated.host.iter().any(|s| s.focused().is_some()) {
+            return Keys::Surface;
+        }
+        Keys::Nobody
+    }
+
+    /// Select all in the field of the surface that has the keys.
+    pub(in crate::view) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
+        let all = comps::form::EditKey::SelectAll;
+        self.with_host(|host, page| {
+            let mut app = App { page, todo };
+            host.iter_mut().any(|s| s.handle_edit_key(all, &mut app))
         })
     }
 

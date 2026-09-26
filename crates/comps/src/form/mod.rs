@@ -11,5 +11,5 @@ pub use checkbox::Checkbox;
 pub use select::Select;
 pub use slider::Slider;
 pub use switch::Switch;
-pub use text_field::{EditKey, TextField};
+pub use text_field::{ClipKey, EditKey, TextField};
 pub use text_input::TextInput;

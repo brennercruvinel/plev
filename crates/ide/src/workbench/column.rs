@@ -7,8 +7,10 @@
 //! the same way; the keys while the intent field or a field of a surface
 //! has the keyboard. Where they sit is `crate::generated::row`.
 
-use comps::form::EditKey;
+use comps::form::text_input::single_line;
+use comps::form::{ClipKey, EditKey};
 use comps::prelude::{EventResult, WidgetEvent};
+use engine::clipboard::ClipboardProvider;
 use engine::compositor::Compositor;
 use sem::{Actor, Receipt, Request, SemId, Snapshot};
 use surface::SurfaceHost;
@@ -213,6 +215,28 @@ impl Workbench {
             host.iter_mut().any(|s| s.handle_edit_key(key, &mut app))
         })
         .unwrap_or(false)
+    }
+
+    /// A clipboard key (the person's cmd or ctrl with c, x, v or a) for
+    /// the field that has the keyboard: the intent field takes all four; a
+    /// field of a surface takes a paste as typing and select all as its
+    /// editing key (its copy and cut are the `surface` crate's, not there
+    /// yet). `false` when nothing happened.
+    pub fn clip(&mut self, key: ClipKey, clipboard: &mut dyn ClipboardProvider) -> bool {
+        let Some(g) = self.generated.as_mut() else {
+            return false;
+        };
+        if g.intent.is_focused() {
+            return g.intent.clip(key, clipboard);
+        }
+        match key {
+            ClipKey::Paste => {
+                let text = single_line(&clipboard.get_text().unwrap_or_default());
+                !text.is_empty() && self.type_text(&text)
+            }
+            ClipKey::SelectAll => self.edit_key(EditKey::SelectAll),
+            ClipKey::Copy | ClipKey::Cut => false,
+        }
     }
 
     /// Enter: in the intent field the person proposes; in a field of a

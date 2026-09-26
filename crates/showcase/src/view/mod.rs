@@ -8,6 +8,7 @@
 //! one module per pane.
 
 mod apps;
+mod clipboard;
 mod components;
 mod dispatch;
 mod draw;
@@ -105,6 +106,9 @@ pub struct ShowcaseView {
 
     /// One struct per pane, the pages' state.
     panes: panes::Panes,
+    /// The clipboard of the text fields, made on first use
+    /// (`clipboard.rs`).
+    clipboard: Option<Box<dyn engine::clipboard::ClipboardProvider>>,
 }
 
 #[derive(Clone, Copy)]
@@ -162,6 +166,7 @@ impl ShowcaseView {
             active_overlay: None,
             overlay_focus: None,
             shift: false,
+            clipboard: None,
         }
     }
 

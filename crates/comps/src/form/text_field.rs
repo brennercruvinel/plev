@@ -18,6 +18,7 @@
 //! draws and hit-tests with, and [`TextField::project`] declares the
 //! field in a semantic projection; the app still owns the field.
 
+use engine::clipboard::ClipboardProvider;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Theme};
@@ -47,6 +48,32 @@ pub enum EditKey {
     SelectRight,
     SelectHome,
     SelectEnd,
+}
+
+/// The clipboard keys of a field: the primary modifier (cmd on macOS,
+/// ctrl elsewhere) with c, x, v or a. Apps map their chords onto these
+/// ([`ClipKey::of`]) and hand the field their clipboard
+/// ([`TextField::clip`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ClipKey {
+    Copy,
+    Cut,
+    Paste,
+    SelectAll,
+}
+
+impl ClipKey {
+    /// The clipboard key a character names with the primary modifier held
+    /// (either case); `None` for any other.
+    pub fn of(key: &str) -> Option<Self> {
+        Some(match key {
+            "c" | "C" => Self::Copy,
+            "x" | "X" => Self::Cut,
+            "v" | "V" => Self::Paste,
+            "a" | "A" => Self::SelectAll,
+            _ => return None,
+        })
+    }
 }
 
 /// Retained single-line text field over a [`TextInput`].
@@ -210,6 +237,52 @@ impl TextField {
             EditKey::SelectEnd => self.input.handle_select_end(),
         }
         true
+    }
+
+    /// Copy the selection to `clipboard` (the person's keys or menu; a
+    /// field gives an agent no way to it). `false` with nothing selected,
+    /// unfocused or disabled.
+    pub fn copy(&self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_copy(clipboard)
+    }
+
+    /// Copy the selection, then delete it. `false` with nothing selected,
+    /// unfocused or disabled.
+    pub fn cut(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_cut(clipboard)
+    }
+
+    /// Type what `clipboard` holds over the selection, on one line: its
+    /// line breaks and tabs become spaces
+    /// ([`single_line`](crate::form::text_input::single_line)). `false`
+    /// with an empty clipboard, unfocused or disabled.
+    pub fn paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_paste(clipboard)
+    }
+
+    /// Select the whole text. `false` when unfocused or disabled.
+    pub fn select_all(&mut self) -> bool {
+        self.edit(EditKey::SelectAll)
+    }
+
+    /// A clipboard key: [`copy`](Self::copy), [`cut`](Self::cut),
+    /// [`paste`](Self::paste) or [`select_all`](Self::select_all). `true`
+    /// when it did something.
+    pub fn clip(&mut self, key: ClipKey, clipboard: &mut dyn ClipboardProvider) -> bool {
+        match key {
+            ClipKey::Copy => self.copy(clipboard),
+            ClipKey::Cut => self.cut(clipboard),
+            ClipKey::Paste => self.paste(clipboard),
+            ClipKey::SelectAll => self.select_all(),
+        }
+    }
+
+    /// Some text is selected: what copy and cut take.
+    pub fn has_selection(&self) -> bool {
+        self.input
+            .buffer
+            .selected_text()
+            .is_some_and(|t| !t.is_empty())
     }
 
     /// IME commit / preedit, forwarded to the core.

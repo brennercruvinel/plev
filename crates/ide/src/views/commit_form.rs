@@ -7,8 +7,9 @@
 //! sits inside the form's binding instead of carrying a second id.
 
 use comps::action::{Button, ButtonVariant};
-use comps::form::{EditKey, TextField};
+use comps::form::{ClipKey, EditKey, TextField};
 use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::clipboard::ClipboardProvider;
 use engine::compositor::{Compositor, SceneNode};
 use engine::theme::Theme;
 use sem::SemId;
@@ -131,6 +132,23 @@ impl CommitForm {
         }
     }
 
+    /// The message field while the form shows, focused as typing
+    /// focuses it (`append_char`): what the clipboard keys and the
+    /// field's menu reach. `None` while hidden.
+    pub fn typing_field(&mut self) -> Option<&mut TextField> {
+        if !self.visible {
+            return None;
+        }
+        self.field.focus();
+        Some(&mut self.field)
+    }
+
+    /// A clipboard key on the message field while the form shows (the
+    /// person's keys only). `false` hidden, or when it did nothing.
+    pub fn clip(&mut self, key: ClipKey, clipboard: &mut dyn ClipboardProvider) -> bool {
+        self.typing_field().is_some_and(|f| f.clip(key, clipboard))
+    }
+
     /// Advance the caret blink: while the form shows, the field's ask (a
     /// frame when the caret flipped, the time to the next flip while it
     /// is focused); hidden, nothing.
@@ -208,5 +226,33 @@ impl CommitForm {
 impl Default for CommitForm {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use comps::form::ClipKey;
+    use engine::clipboard::{ClipboardProvider, LocalClipboard};
+
+    use super::CommitForm;
+
+    /// The message field's clipboard keys (task-74), on a
+    /// `LocalClipboard`: only while the form shows.
+    #[test]
+    fn the_message_takes_the_clipboard_keys_while_the_form_shows() {
+        let mut board = LocalClipboard::new();
+        board.set_text("fix the\r\nbuild");
+        let mut form = CommitForm::new();
+        assert!(!form.clip(ClipKey::Paste, &mut board), "hidden");
+        form.show();
+        assert!(form.clip(ClipKey::Paste, &mut board));
+        assert_eq!(form.message(), "fix the build");
+        assert!(form.clip(ClipKey::SelectAll, &mut board));
+        assert!(form.clip(ClipKey::Cut, &mut board));
+        assert_eq!(form.message(), "");
+        assert_eq!(board.get_text().as_deref(), Some("fix the build"));
+        form.hide();
+        assert!(!form.clip(ClipKey::Paste, &mut board));
+        assert_eq!(form.message(), "");
     }
 }

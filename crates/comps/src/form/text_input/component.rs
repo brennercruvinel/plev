@@ -16,6 +16,7 @@
 
 use std::ops::Range;
 
+use engine::clipboard::ClipboardProvider;
 use engine::text::TextStyle;
 
 use super::buffer::TextBuffer;
@@ -309,6 +310,46 @@ impl TextInput {
         self.preedit.take().is_some()
     }
 
+    /// Copy the selection to `clipboard`. `false`, the clipboard left as
+    /// it was, with nothing selected or unfocused.
+    pub fn handle_copy(&self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        if !self.focused {
+            return false;
+        }
+        match self.buffer.selected_text() {
+            Some(text) if !text.is_empty() => {
+                clipboard.set_text(text);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// Copy the selection, then delete it. `false` with nothing selected.
+    pub fn handle_cut(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        if !self.handle_copy(clipboard) {
+            return false;
+        }
+        self.buffer.delete_selection();
+        self.reset_blink();
+        true
+    }
+
+    /// Type what `clipboard` holds, over the selection, on one line (see
+    /// [`single_line`]). `false` with an empty clipboard or unfocused.
+    pub fn handle_paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        if !self.focused {
+            return false;
+        }
+        let text = single_line(&clipboard.get_text().unwrap_or_default());
+        if text.is_empty() {
+            return false;
+        }
+        self.buffer.insert_str(&text);
+        self.reset_blink();
+        true
+    }
+
     /// Focus and place the caret at `local_x` (px from the text origin),
     /// hit-tested with the same `style` the owner draws the text with.
     pub fn handle_click(&mut self, local_x: f32, style: &TextStyle) {
@@ -324,4 +365,18 @@ impl TextInput {
         self.buffer.set_cursor(pos);
         self.reset_blink();
     }
+}
+
+/// Text pasted into a single-line field: the line breaks at its ends go,
+/// each one inside (`\r\n` counts as one) and each tab becomes a space,
+/// and any other control character is dropped.
+pub fn single_line(text: &str) -> String {
+    let text = text.trim_matches(['\r', '\n']).replace("\r\n", "\n");
+    text.chars()
+        .filter_map(|c| match c {
+            '\n' | '\r' | '\t' => Some(' '),
+            c if c.is_control() => None,
+            c => Some(c),
+        })
+        .collect()
 }

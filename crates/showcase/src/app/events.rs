@@ -8,7 +8,7 @@
 use comps::prelude::WidgetEvent;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::{Key, NamedKey};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::WindowId;
 
 use super::App;
@@ -98,6 +98,13 @@ impl App {
                     // (the view stays winit-free).
                     Key::Named(named) => {
                         if keys::handle_named(&mut self.view, named, self.modifiers.shift_key()) {
+                            self.changed();
+                        }
+                    }
+                    // With cmd or ctrl held a letter is never typed: a
+                    // focused field's clipboard keys (`view/clipboard.rs`).
+                    Key::Character(c) if chord(self.modifiers) => {
+                        if self.view.handle_chord(c.as_str(), primary(self.modifiers)) {
                             self.changed();
                         }
                     }
@@ -241,5 +248,43 @@ impl App {
     }
 }
 
+/// cmd or ctrl is held, and not as AltGr (ctrl with alt), which types.
+fn chord(modifiers: ModifiersState) -> bool {
+    modifiers.super_key() || (modifiers.control_key() && !modifiers.alt_key())
+}
+
+/// The platform's primary modifier is held: cmd on macOS, ctrl elsewhere
+/// (the print keys' rule, `print.rs`).
+fn primary(modifiers: ModifiersState) -> bool {
+    if cfg!(target_os = "macos") {
+        modifiers.super_key()
+    } else {
+        modifiers.control_key()
+    }
+}
+
 /// The input method (task-74 phase 4).
 mod ime;
+
+#[cfg(test)]
+mod tests {
+    use winit::keyboard::ModifiersState as M;
+
+    use super::{chord, primary};
+
+    /// cmd or ctrl makes a chord, AltGr (ctrl with alt) does not; the
+    /// primary is cmd on macOS and ctrl elsewhere.
+    #[test]
+    fn a_chord_is_cmd_or_ctrl_and_the_primary_is_the_platforms() {
+        assert!(chord(M::SUPER) && chord(M::CONTROL));
+        assert!(chord(M::SUPER | M::SHIFT) && chord(M::SUPER | M::ALT));
+        assert!(!chord(M::CONTROL | M::ALT), "AltGr types");
+        assert!(!chord(M::SHIFT) && !chord(M::ALT) && !chord(M::empty()));
+        let (mine, other) = if cfg!(target_os = "macos") {
+            (M::SUPER, M::CONTROL)
+        } else {
+            (M::CONTROL, M::SUPER)
+        };
+        assert!(primary(mine) && !primary(other));
+    }
+}

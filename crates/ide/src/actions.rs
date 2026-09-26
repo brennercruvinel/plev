@@ -14,6 +14,7 @@ engine::actions!(nav, [Up, Down]);
 engine::actions!(file, [ShowDiff, Stage, Discard]);
 engine::actions!(commit, [OpenForm, Submit, Cancel, Backspace]);
 engine::actions!(overlay, [Close]);
+engine::actions!(edit, [Copy, Cut, Paste, SelectAll]);
 
 /// All actions the app can dispatch, in palette-friendly order.
 pub fn registry() -> ActionRegistry {
@@ -30,6 +31,10 @@ pub fn registry() -> ActionRegistry {
     registry.register_default::<Cancel>();
     registry.register_default::<Backspace>();
     registry.register_default::<Close>();
+    registry.register_default::<Copy>();
+    registry.register_default::<Cut>();
+    registry.register_default::<Paste>();
+    registry.register_default::<SelectAll>();
     registry
 }
 
@@ -115,6 +120,36 @@ mod tests {
             ),
             MatchResult::Complete("overlay::Close".into())
         );
+    }
+
+    /// The commit form's clipboard keys: cmd on macOS, ctrl elsewhere
+    /// (both bound; the dispatch keeps the platform's), only while the
+    /// form is open.
+    #[test]
+    fn the_commit_form_binds_the_clipboard_keys() {
+        let mut matcher = KeymapMatcher::new(default_keymap());
+        let form = ["Workspace", "CommitForm"];
+        for (key, action) in [
+            ("cmd-c", "edit::Copy"),
+            ("ctrl-c", "edit::Copy"),
+            ("cmd-x", "edit::Cut"),
+            ("ctrl-x", "edit::Cut"),
+            ("cmd-v", "edit::Paste"),
+            ("ctrl-v", "edit::Paste"),
+            ("cmd-a", "edit::SelectAll"),
+            ("ctrl-a", "edit::SelectAll"),
+        ] {
+            assert_eq!(
+                resolve(&mut matcher, key, &form),
+                MatchResult::Complete(action.into()),
+                "binding for `{key}`"
+            );
+            assert_eq!(
+                resolve(&mut matcher, key, &["Workspace"]),
+                MatchResult::None,
+                "`{key}` with the form closed"
+            );
+        }
     }
 
     /// While the commit form is open, list navigation is disabled (`null`

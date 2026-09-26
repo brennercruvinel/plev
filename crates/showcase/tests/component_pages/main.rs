@@ -37,5 +37,9 @@ mod keyboard;
 /// and the IME off with no field focused.
 mod ime;
 
+/// The clipboard keys in the text fields (task-74, the person's
+/// request).
+mod clipboard;
+
 /// The privacy promises: no case on these pages, guarded.
 mod promises;

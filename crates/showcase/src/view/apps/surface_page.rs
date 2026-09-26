@@ -60,6 +60,7 @@ use uir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::EditKey;
 use super::app::TodoPage;
+use crate::view::clipboard::Keys;
 use page::Page;
 use proposing::{Proposing, Row, Said};
 
@@ -361,6 +362,26 @@ impl SurfacePage {
             }
         }
         todo.handle_text(key)
+    }
+
+    /// Who has the keys (a chord, the field's menu): the intent field, a
+    /// field of the surface, or the todo's.
+    pub(in crate::view) fn keys<'a>(&'a mut self, todo: &'a mut TodoPage) -> Keys<'a> {
+        if self.proposing.intent.is_focused() {
+            return Keys::Field(&mut self.proposing.intent);
+        }
+        if self.host.iter().any(|s| s.focused().is_some()) {
+            return Keys::Surface;
+        }
+        todo.keys()
+    }
+
+    /// Select all in the field of the surface that has the keys.
+    pub(in crate::view) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
+        let all = comps::form::EditKey::SelectAll;
+        self.host
+            .iter_mut()
+            .any(|s| s.handle_edit_key(all, &mut Todo(todo)))
     }
 
     pub fn handle_edit_key(&mut self, key: EditKey, todo: &mut TodoPage) -> bool {

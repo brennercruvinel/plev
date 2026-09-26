@@ -17,6 +17,7 @@ use sem::{Request, Role, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, EditKey, child_id, root_id, text, under};
 use crate::view::ImeEvent;
+use crate::view::clipboard::Keys;
 
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
@@ -155,6 +156,14 @@ impl InputPage {
         match self.focused() {
             Some(i) => self.fields[i].compose(committed, preedit, cursor),
             None => false,
+        }
+    }
+
+    /// The focused field has the keys (a chord, the field's menu).
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        match self.focused() {
+            Some(i) => Keys::Field(&mut self.fields[i]),
+            None => Keys::Nobody,
         }
     }
 
