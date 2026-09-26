@@ -1528,3 +1528,79 @@ changed. disco: 8,4 GB livres.
 - o ide e o urnaui não ligam o IME (o mesmo fio).
 - os frames gravados mostram o que está na tela, com a composição, como
   mostram o texto digitado.
+
+## handoff: a área de transferência e o menu do campo (pedido do brenner)
+
+nenhum item do critério da task: as duas partes são pedido do brenner.
+custo aproximado: o IME uns 290 mil tokens, a parte A uns 65 mil, a
+parte B uns 30 mil.
+
+### commits
+
+- `f44c834b` copiar, recortar, colar e selecionar tudo no campo
+- `6215bddf` o menu do campo
+
+### parte A: a área de transferência
+
+- `TextInput` e `TextField` copiam, recortam e colam por um
+  `ClipboardProvider` que o dono do campo passa (o campo segue `Clone`);
+  `ClipKey` nomeia cmd (ctrl fora do macOS) com c, x, v, a. colar é
+  digitar, numa linha só: as quebras das pontas saem, as de dentro
+  (`\r\n` conta uma) e os tabs viram espaço, e outros caracteres de
+  controle saem.
+- galeria: com cmd ou ctrl apertado nenhuma letra entra num campo (o
+  cmd+v não escreve mais "v"). com um campo com as teclas, as quatro vão
+  para ele: Input, Todo, os campos de intenção do Surface e do Silences
+  e o formulário de commit do Git. o campo de uma superfície gerada
+  aceita colar e selecionar tudo. sem campo focado, tudo como antes. a
+  view tem uma área de transferência, feita no primeiro uso; os testes
+  põem uma `LocalClipboard`.
+- ide: a linha de intenção e os campos das superfícies na coluna; o
+  formulário de commit por ações `edit::` no contexto `CommitForm` do
+  keymap (cmd e ctrl ligados, só o principal da plataforma age).
+- privacidade: o colar é gravado como texto, nunca o texto. nenhum
+  pedido pelo dispatcher chega à área de transferência. o texto colado
+  vira o texto do campo, que é estado do app e aparece na projeção,
+  como o digitado; a área de transferência em si não aparece.
+- testes: 18 (7 no comps, 6 na galeria, 4 no ide, 1 no shell).
+
+### parte B: o menu do campo
+
+- o clique direito num campo da página Input dá as teclas ao campo (um
+  campo com seleção a mantém) e abre ali o mesmo `ContextMenu` da página
+  Context Menu, com o mesmo overlay e a mesma projeção (`context_menu`);
+  o teclado é o do menu (setas, Enter, Escape). itens: Cut, Copy, Paste,
+  Select all. cada um fica desligado sem nada para agir.
+- a escolha do item, pelo ponteiro, pelas teclas ou por um leitor de
+  tela, roda a tecla da área de transferência no campo depois do
+  dispatch. a escolha de um agente falha, porque a área de transferência
+  é da pessoa. a projeção ainda declara o `activate` dos itens com a
+  política padrão (o `ContextMenu` do comps não tem política por menu);
+  a recusa vem na execução.
+- testes: 4 na galeria.
+- PNG: `/Users/nn/Dev/hoff/plevdev/target/agents/one/task-74h/field-menu.png`,
+  o menu aberto sobre o campo com `Ada Lovelace` selecionado, Paste
+  desligado. para refazer:
+  `FIELD_MENU_OUT=<dir> cargo test -p showcase --test component_pages a_right_click_opens`.
+  o `ime-field.png` foi refeito na mesma pasta.
+
+### gate e regress
+
+a parte A foi validada sozinha: tests 3178 no workspace e 86 no urnaui,
+clippy, fmt e wasm verdes, 176 baselines iguais. depois da parte B:
+`./script/gate` verde, 3268 passed (3182 no workspace, 86 no urnaui),
+0 failed, 29 ignored; clippy, fmt e wasm verdes. `regress -- check`:
+176 unchanged. disco: 11 GB livres.
+
+### pendências
+
+- o menu do campo só existe na página Input; no Todo, no Surface, no
+  Silences e no Git o clique direito segue como antes. no ide o menu
+  ficou de fora.
+- copiar e recortar num campo de uma superfície gerada pedem API no
+  crate `surface`.
+- um item só da pessoa na projeção pediria uma política por menu no
+  `ContextMenu` do comps.
+- enquanto o menu está aberto, a projeção mostra se o Paste está ligado,
+  ou seja, se a área de transferência está vazia; o conteúdo nunca
+  aparece.
