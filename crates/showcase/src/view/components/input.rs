@@ -143,10 +143,11 @@ impl InputPage {
     pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         let (committed, preedit, cursor) = match ime {
             ImeEvent::Disabled => {
-                return self
-                    .fields
-                    .iter_mut()
-                    .fold(false, |any, f| f.end_compose() || any);
+                let mut dropped = false;
+                for field in &mut self.fields {
+                    dropped |= field.end_compose();
+                }
+                return dropped;
             }
             ImeEvent::Preedit(text, cursor) => ("", text, cursor),
             ImeEvent::Commit(text) => (text, "", None),
