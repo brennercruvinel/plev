@@ -12,6 +12,21 @@ brenner, integração, decisão autônoma, bug relevante, agente disparado ou
 devolvido, publicação. o mais novo em cima. o detalhe fica no arquivo da
 task; aqui fica o que aconteceu e onde ler.
 
+## 2026-09-26
+
+### task-78 fase 1 integrada; candle e burn ficam
+
+- a inferência em processo medida com o mesmo modelo nas duas: o candle
+  mais rápido (37 contra 26 tok/s no Metal, primeiro token em 90 ms
+  contra 0,9 s), o burn com menos memória e o caminho para a GPU do
+  renderer. o ADR recomendava o candle; o brenner decidiu manter as duas
+  e levar o plev ao wgpu 29 (decisão 16).
+- a sessão do Claude Code caiu no meio da rodada; o agente foi retomado
+  com limites de memória (4 jobs de build, um processo com o modelo por
+  vez) e terminou uma biblioteca por vez, como o brenner pediu.
+- o agente (Opus) gastou uns 360 mil tokens depois da retomada; o trecho
+  antes da queda não ficou contado.
+
 ## 2026-09-25
 
 ### IME no campo, copiar e colar, e o menu do campo integrados

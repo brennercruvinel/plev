@@ -322,3 +322,23 @@ pendências:
 - o pico de footprint inclui o arquivo mapeado durante a carga; medir o
   residente depois da carga, se a memória pesar na decisão.
 - depois da decisão, tirar a implementação que não ficar.
+
+## fase 1 integrada (orquestrador, 2026-09-26)
+
+validação do orquestrador: diff lido (a interface de streaming, as duas
+implementações, o NOTICE do código trazido do burn-lm); os testes do
+`crates/llm` com as duas features verdes (24, mais 2 com o modelo real,
+`#[ignore]`); o gate da raiz verde com os mesmos 3268; o `Cargo.lock` da
+raiz igual ao de main; nenhum peso no git.
+
+decisão do brenner (2026-09-26), depois de ler os números: "vamos manter
+o burn e candle", e, sobre o burn pedir um wgpu mais novo que o do plev,
+"implementa". o ADR `ai-native-single-process` foi aceito com isso
+(decisão 16 do programa).
+
+próximo passo, na ordem: o plev do wgpu 28 para o 29 (o do burn 0.21),
+sem mudar pixel, para o burn poder usar o device do renderer (item 4);
+depois o app de referência (item 1 do critério).
+
+o agente gastou uns 360 mil tokens depois da retomada; o trecho antes da
+queda da sessão não ficou contado.

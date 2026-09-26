@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- a local language model in process (2026-09-26, task-78): `crates/llm`
+  streams an answer token by token from a model on disk (TinyLlama 1.1B
+  for now), with candle or burn behind one interface. on an M4's gpu,
+  candle does 37 tokens a second and burn 26, and both give the same
+  answer. both stay; plev moves to wgpu 29 next so burn can share the
+  renderer's gpu.
+
 - copy, cut, paste and select all in text fields (2026-09-25, task-74):
   cmd+c, x, v and a (ctrl elsewhere) work in the gallery's fields and in
   the ide's intent line and commit form; a key with cmd or ctrl never

@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [ai-native, llm, inference, candle, burn, tokio, streaming, metal, wgpu, wasm, single-process, generative-runtime]
 date: 2026-09-26
 ---
@@ -128,4 +128,18 @@ trait keeps the door open: burn stays a feature of `crates/llm` until the
 decision, and can come back if the shared device or the browser gpu
 becomes the priority.
 
-the decision is brenner's. until he decides, this adr stays `proposed`.
+## decision (brenner, 2026-09-26)
+
+both stay. read the numbers above, then brenner decided: "vamos manter o
+burn e candle", and, about burn needing a newer wgpu than plev has,
+"implementa". so:
+
+- `crates/llm` keeps the two implementations behind the one `Model`
+  trait, each behind its feature. the reference app can run either one.
+- plev moves from wgpu 28 to 29, the version burn 0.21 is on, so that
+  burn can run on the renderer's own device (`WgpuSetup`), as scope item
+  4 asks. that is the next step of task-78. it lands before the
+  reference app, and pixel identity has to hold.
+- the licence chain of the burn model code (burn-lm, adapted from Meta's
+  Llama 3 reference code, `crates/llm/NOTICE`) is looked at before any
+  public release (task-41).
