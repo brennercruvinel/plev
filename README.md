@@ -1,20 +1,30 @@
 # plev
 
-a gpu-first compositing engine in rust. one codebase, one pixel-identical
-frame on every target: macOS on Metal, the browser on WebGPU, iOS on Metal,
-Android on Vulkan.
+a gpu-first compositing engine in rust. one codebase draws the same frame
+on macOS (Metal), in the browser (WebGPU), on iOS (Metal) and on Android
+(Vulkan). the gallery has been captured in the browser and on the iOS
+simulator and compared with the desktop byte for byte. in the browser 79
+of its 82 pages match, and the other three show different content on
+purpose, because the browser has no Claude and no git.
 
-a scene is rebuilt every frame, the compositor resolves only the layers
-that changed, and everything lands on an srgb surface. glass, backdrop
-blur, analytic shadows, content-driven layout, real text shaping, HiDPI
-rasterization at native scale. render on demand: no change, no frame, and
-an unchanged layer is not redrawn, though every frame drawn still
-composites every visible layer (task-73). a caret or a toast at rest
-asks for a deadline, not for frames (task-82): a focused, untouched field
-draws two frames a second, an idle app none. what still draws with
-nothing visible changed is recorded as debt (the accessibility bridge's
-wakes, a toast's spring settling below a pixel). the apps consume the
-engine and nothing bypasses it.
+a scene is rebuilt every frame, the compositor redraws only the layers
+that changed, and everything lands on an srgb surface. it has glass,
+backdrop blur, analytic shadows and layout that follows the content. text
+is shaped for real, rasterized at the screen's scale, and covers latin,
+arabic, hebrew, devanagari, chinese, japanese, korean and color emoji,
+with bidi carets, input methods, and an editor that opens a million lines
+in about 20 ms in a release build. when nothing changes, nothing is drawn:
+a focused, untouched field costs two frames a second for its caret, and an
+idle app costs none.
+the apps consume the engine and nothing bypasses it.
+
+every control an app draws is also data: an id, a role, its state and its
+actions. a screen reader, an agent outside the process and a recorded
+session all read that same contract. an agent acts through the same
+dispatcher as a click, and only on state it was shown; an act on
+something that changed since then is refused, naming who changed it. a
+screen can be generated from an intent as a verified IR, and a recorded
+session opens in an inspector or runs again as a test.
 
 ## why this exists
 
@@ -47,9 +57,10 @@ if any of this resonates, come build with me.
 ## run
 
 rust edition 2024 through [rustup](https://rustup.rs), which reads
-`rust-toolchain.toml` (stable, rustfmt, clippy, the wasm32 target). a
-Homebrew rust ignores that file and ships no wasm32 std, so the web legs
-only work with rustup.
+`rust-toolchain.toml` (stable, rustfmt, clippy, the wasm32 target). the
+workspace needs rust 1.87 or later, the floor of wgpu 29. a Homebrew rust
+ignores that file and ships no wasm32 std, so the web legs only work with
+rustup.
 
 ```
 cargo build --release --workspace
@@ -58,6 +69,7 @@ cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, 
 cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
 cargo run -p showcase --example regress -- check   # structural regression over crates/showcase/fixtures/regress: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
+cargo run -p showcase --example regress -- capture   # every page in 4 themes at 4 scales through the real frame path; `--against <dir>` compares byte for byte with an earlier capture
 cargo run -p ide --bin ide [path]      # plev-native git client; with PLEV_AGENT=1 (debug) its window opens the agent port as app ide, with PLEV_RECORD=1 it records its session (cmd-shift-s, on close, on a panic) for plev-inspect
 cargo run -p ide --bin ide-lab -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
 cargo run -p prime                     # prime-coherence particle swarm
@@ -73,9 +85,13 @@ cargo run -p claude-model --example propose -- --app todo "show the filter as ch
 every debug build is its own dev loop: save a `.wgsl`, a string or a hex
 color anywhere in the sources and the open window shows it, state intact;
 save code and the bin rebuilds and relaunches (same pid, same terminal).
-no flag, no macro, no watcher tool; release builds do none of it.
+in the gallery, cmd+click on a control or a text opens the line of source
+that made it, and cmd+shift+click on a text edits that string literal in
+place: Enter writes it back to the `.rs` file, only while the file still
+holds the code the build came from. there is no flag, macro or watcher
+tool to set up, and release builds do none of it.
 
-web, same pixels as desktop (`cargo install trunk` first):
+web, the desktop's pixels in the browser (`cargo install trunk` first):
 
 ```
 ./script/web
@@ -103,6 +119,20 @@ previews need `ffmpeg` on PATH (the blob is read in place, never copied).
 the reference corpus is the 38k-card
 [mtg-urna-benchmark](https://huggingface.co/datasets/brennercruvinel/mtg-urna-benchmark).
 
+`crates/llm` runs a language model inside the app's own process and
+streams its answer token by token, with candle or burn behind one
+interface. it is its own workspace too, because burn brings a dependency
+tree the engine does not need. the weights stay outside the repository:
+point `PLEV_LLM_MODEL` or `--model` at a directory with a llama-family
+checkpoint as Hugging Face ships it (`config.json`, `tokenizer.json`,
+`model.safetensors`); the measurements used TinyLlama 1.1B Chat. with the `plev`
+feature, burn runs on the renderer's own gpu device.
+
+```
+cargo test --manifest-path crates/llm/Cargo.toml --features candle,burn
+cargo run --release --manifest-path crates/llm/Cargo.toml --features candle,metal --bin llm-bench -- --impl candle --model <dir> --device metal
+```
+
 mobile: the showcase runs natively on iOS and Android from the same
 engine. there is no kotlin or swift ui, every pixel is drawn by plev. iOS
 needs xcode, the `aarch64-apple-ios-sim` target and `xcodegen`; Android
@@ -111,6 +141,8 @@ needs the sdk/ndk, a jdk 17 and `cargo-ndk`.
 ```
 cd ios/showcase && ./build_ios.sh && ./run_ios.sh   # simulator: build, install, launch, screenshot
 cd android && ./build_android.sh                    # -> app/build/outputs/apk/debug/app-debug.apk
+script/capture-web --all                            # every gallery page in the browser, each classified against the desktop's frame
+script/capture-ios --all                            # the same on the simulator
 ```
 
 ## workspace
@@ -121,10 +153,11 @@ demos are the engine's (and comps') examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, perf, hot_reload, platform |
+| engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, clipboard, perf, hot_reload, platform |
 | comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
-| crates | `crates/` | claude-model, git, ide, inspect, inspector, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, urnaui, wire |
-| examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters and svg2monster clis |
+| crates | `crates/` | claude-model, git, ide, inspect, inspector, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, wire |
+| own workspaces | `crates/urnaui`, `crates/llm` | the `.urna` explorer and the in-process language model, each with its own `Cargo.lock` |
+| examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters, svg2monster and text_probe clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
 owns; they take `&Theme` and read every color, radius, height, padding,
@@ -133,12 +166,21 @@ the whole app at once. the showcase and the ide are framed by
 `comps::shell::AppShell`: full sidebar on a desktop, a rail in a narrow
 window, a drawer behind a menu button on a phone.
 
+the text field in `comps` composes input-method text inline, moves its
+caret by what the screen shows in mixed-direction text, and copies, cuts
+and pastes through the person's clipboard. the text still being composed
+is only drawn: it stays out of the field's value, the recording and what
+an agent reads. only the person's keys and menu reach the clipboard; an
+agent can neither read it nor write to it.
+
 `sem` is the semantic contract: each control's persistent id, role,
 state, actions and constraints as pure data, projected from app state on
 demand ([docs/ADR/semantic-contract-as-pure-projection.md](docs/ADR/semantic-contract-as-pure-projection.md)).
 `rec` records a session as data in a bounded ring (who observed what, the
 state, every receipt, the frames on screen) and reads it back; replay
-never creates a request.
+never creates a request. `inspect` answers the questions a session raises
+(what the agent saw, why a request was refused, what a control held at an
+instant) and `inspector` is its window; neither runs anything.
 `wire` lets an agent outside the process observe and operate an app
 through that contract only, over a local socket in json lines: scoped and
 incremental observations, and actions that go through the same dispatcher
@@ -154,7 +196,7 @@ runs the `claude -p` of Claude Code as a child process, with no tools and
 no saved session, and kills it past a timeout; the network is the
 child's, the crate holds no key.
 
-two of the crates are pipelines: a foreign format in, our format out.
+some crates are pipelines, with a foreign format in and ours out.
 
 `monster` is a binary animation format, magic `MON0`, container version
 0 (the v0 spec), its golden fixtures frozen.
@@ -164,10 +206,11 @@ converts a lottie json into it once, `svg` imports a still through the
 same door, and no foreign runtime is ever embedded. the decision record is
 [docs/ADR/monster-format-v0.md](docs/ADR/monster-format-v0.md).
 
-`parser` turns ui source from another framework into plev builder code.
-it maps colors to theme tokens, obeys the engine contracts, and reports
-every construct it cannot represent, with file and line. it never drops
-a construct silently.
+`parser` reads ui source from React, gpui, a subset of HTML and CSS, or a
+Figma export, and writes plev builder code and plev IR from it. colors
+become the nearest theme token. every construct in the source lands in
+the report as supported, transformed, approximated or impossible, with
+its file and line, so nothing is dropped without a trace.
 
 ```
 cargo run -p engine --example lot2monsters in.json out.monster
@@ -190,8 +233,10 @@ violations are defects even when the pixels look right.
   only width source is the shaper, never an arithmetic estimate.
 - srgb decode once entering gpu work, encode once at the surface write.
 - container geometry derives from available space, never from constants.
-- a visible state change implies invalidation. no silent redraws, no
-  silent stale frames.
+- a visible state change implies invalidation, with no silent redraws and
+  no stale frames.
+- an agent acts only through the app's dispatcher, the same path as a
+  click, and only on state it was shown.
 
 a guard test scans the repo and fails if any code draws text by
 constructing a raw key instead of going through the one-TextStyle path.
@@ -199,19 +244,21 @@ constructing a raw key instead of going through the one-TextStyle path.
 ## gate
 
 ```
-./script/gate       # test, clippy, fmt, wasm check; stops on the first red
+./script/gate       # test (the wgsl shaders included), clippy, fmt and the wasm check, plus the urnaui leg when ../urna is there; stops on the first red
 cargo bench -p rope # criterion, one crate
 ```
 
 benches sit on the hot path of each crate: `engine` scene build, `rope`
 edits, `monster` codec, `lot` conversion, `parser` transpile.
+`crates/llm` measures inference with its own `llm-bench`.
 
 ## docs
 
 - [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/ADR/](docs/ADR/): the decision records.
 - [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/how-to/](docs/how-to/): pixel validation, the web target, orchestrating agents.
-- [docs/mission/generative-runtime-program.md](docs/mission/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime. the thesis, the task graph (task-57 to task-80) and the rules every agent follows sit next to it.
+- [docs/mission/generative-runtime-program.md](docs/mission/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
+- [docs/CHANGELOG.md](docs/CHANGELOG.md): what changed, newest first.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license

@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [parser, importer, compiler-target, plev-ir, uir, report, droplist, tokens, tolerance, binding, surface, headless, generative-runtime, html, css, figma]
 date: 2026-09-25
 ---

@@ -9,6 +9,15 @@ status: living
 
 ## unreleased
 
+- plev on wgpu 29, and burn on the renderer's gpu (2026-09-26, task-78):
+  the whole workspace moved from wgpu 28 to 29, and every gallery page in
+  4 themes at 4 scales (1312 frames) draws the same bytes as before. a
+  covered window on macOS now skips its frame and redraws when it shows
+  again. the engine hands its own gpu device to a library that computes
+  on it: with `crates/llm`'s `plev` feature, burn runs on that device,
+  a matrix product on it matches the cpu, and TinyLlama answers there.
+  the workspace now needs rust 1.87.
+
 - a local language model in process (2026-09-26, task-78): `crates/llm`
   streams an answer token by token from a model on disk (TinyLlama 1.1B
   for now), with candle or burn behind one interface. on an M4's gpu,

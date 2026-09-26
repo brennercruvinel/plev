@@ -14,9 +14,10 @@ suggestion.
 
 ## project
 
-plev: a gpu-first compositing engine in rust (wgpu 28, winit 0.30,
-cosmic-text 0.18, taffy 0.9). one codebase, identical rendering on macos,
-browser (webgpu/wasm), and android + ios (the showcase runs on both via the
+plev: a gpu-first compositing engine in rust (wgpu 29, winit 0.30,
+cosmic-text 0.18, taffy 0.9). one codebase and one renderer on macos, the
+browser (webgpu/wasm), and android + ios, each target's frames compared with
+the desktop's (adr what-identical-means) (the showcase runs on both via the
 native shells in android/ and ios/showcase/; see "## running"). linux/windows
 pending. the design system is crates/comps (every widget, recipe, icon,
 chart, overlay, the editor and the app shell), reading every visual value
