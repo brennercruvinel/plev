@@ -1604,3 +1604,28 @@ clippy, fmt e wasm verdes, 176 baselines iguais. depois da parte B:
 - enquanto o menu está aberto, a projeção mostra se o Paste está ligado,
   ou seja, se a área de transferência está vazia; o conteúdo nunca
   aparece.
+
+## fase 4 no campo, área de transferência e menu integrados (orquestrador, 2026-09-25)
+
+validação do orquestrador: diff lido commit por commit. a composição
+fica fora do buffer e da projeção; um teste lê os bytes da gravação
+salva e não acha nela a composição. o commit segue o caminho da
+digitação, e uma seleção só é trocada no commit. a área de
+transferência só é alcançada pelas teclas e pelo menu da pessoa, e a
+escolha de um agente é recusada. os dois PNGs abertos: `にほんご`
+sublinhado depois de `日本語!` confirmado, com o valor ao vivo mostrando
+só o confirmado; o menu aberto sobre o campo com o texto selecionado.
+176 baselines iguais.
+
+mudança do orquestrador (`5e56db92`): o Paste do menu fica sempre
+ligado. desligado com a área de transferência vazia, ele contava à
+projeção, e daí ao agente e à gravação, se a área de transferência da
+pessoa tinha algo. colar nada não faz nada. a pendência da parte B
+sobre isso fecha.
+
+continua aberto no critério: o roteiro de IME num campo da página Input,
+que o brenner roda (japonês `nihongo`, espaço, Enter; chinês `zhongwen`,
+espaço). com ele, todos os itens do critério batem e a task fecha.
+
+o agente gastou uns 390 mil tokens nas três partes (o IME uns 290 mil,
+a área de transferência uns 65 mil, o menu uns 30 mil).
