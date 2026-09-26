@@ -50,7 +50,11 @@ fn sixteen_tokens<M: Model + 'static>(model: M, text: Text) -> String {
     assert!(count > 0, "no token");
     assert!(stop == Stop::Length && count == NEW || stop == Stop::Eos);
     assert!(!answer.trim().is_empty());
-    eprintln!("{}: {answer:?}", engine.info().expect("info").backend);
+    let info = engine.info().expect("info");
+    eprintln!(
+        "{} {} {}: {answer:?}",
+        info.backend, info.device, info.dtype
+    );
     answer
 }
 
