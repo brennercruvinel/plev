@@ -62,6 +62,10 @@ impl Field {
             EditKey::Right => comps::form::EditKey::Right,
             EditKey::Home => comps::form::EditKey::Home,
             EditKey::End => comps::form::EditKey::End,
+            EditKey::SelectLeft => comps::form::EditKey::SelectLeft,
+            EditKey::SelectRight => comps::form::EditKey::SelectRight,
+            EditKey::SelectHome => comps::form::EditKey::SelectHome,
+            EditKey::SelectEnd => comps::form::EditKey::SelectEnd,
             EditKey::Enter | EditKey::Tab => return false,
         };
         self.input.edit(key)
@@ -75,5 +79,26 @@ impl Field {
 
     pub fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
         self.input.render(c, rect, theme);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Shift with the arrows, Home and End extends the selection, which
+    /// the next deletion takes.
+    #[test]
+    fn the_select_keys_extend_the_selection() {
+        let mut field = Field::new("query");
+        field.input.focus();
+        assert!(field.insert("hello"));
+        assert!(field.edit(EditKey::SelectLeft));
+        assert!(field.edit(EditKey::SelectLeft));
+        assert!(field.edit(EditKey::Backspace));
+        assert_eq!(field.text(), "hel");
+        assert!(field.edit(EditKey::SelectHome));
+        assert!(field.edit(EditKey::Delete));
+        assert_eq!(field.text(), "");
     }
 }

@@ -35,6 +35,11 @@ pub enum EditKey {
     Right,
     Home,
     End,
+    /// The four keys above with Shift: extend a field's selection.
+    SelectLeft,
+    SelectRight,
+    SelectHome,
+    SelectEnd,
 }
 
 /// Top-level screens, all reachable from the tab strip.

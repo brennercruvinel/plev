@@ -27,6 +27,25 @@ pub enum EditKey {
     Right,
     Home,
     End,
+    /// The four keys above with Shift: a focused text field extends its
+    /// selection; anywhere else they move as the key without Shift.
+    SelectLeft,
+    SelectRight,
+    SelectHome,
+    SelectEnd,
+}
+
+impl EditKey {
+    /// The key without Shift (itself when it is no `Select` key).
+    pub fn unshifted(self) -> Self {
+        match self {
+            Self::SelectLeft => Self::Left,
+            Self::SelectRight => Self::Right,
+            Self::SelectHome => Self::Home,
+            Self::SelectEnd => Self::End,
+            other => other,
+        }
+    }
 }
 
 /// The field-level subset. Tab is focus traversal, never an edit, so it
@@ -40,6 +59,10 @@ impl From<EditKey> for comps::form::EditKey {
             EditKey::Right => Self::Right,
             EditKey::Home => Self::Home,
             EditKey::End => Self::End,
+            EditKey::SelectLeft => Self::SelectLeft,
+            EditKey::SelectRight => Self::SelectRight,
+            EditKey::SelectHome => Self::SelectHome,
+            EditKey::SelectEnd => Self::SelectEnd,
             EditKey::Tab => unreachable!("Tab is focus traversal, handled by the page"),
         }
     }
@@ -158,18 +181,21 @@ impl ShowcaseView {
     /// the platform shell. On a component page, or over the modal or the
     /// menu, Tab walks the projection and the arrows, Home and End move in
     /// the widget the focus is in (`dispatch::keyboard`), unless a focused
-    /// text field edits with them; on an app page, the page's own.
+    /// text field edits with them; on an app page, the page's own. A
+    /// `Select` key the page does not take moves as the key without Shift.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        let plain = key.unshifted();
         if !self.walks() {
-            return self.page_edit_key(key);
+            return self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
         }
-        let walk = match key {
+        let walk = match plain {
             EditKey::Tab => return self.walk(Walk::Tab),
             EditKey::Left => Walk::Left,
             EditKey::Right => Walk::Right,
             EditKey::Home => Walk::Home,
             EditKey::End => Walk::End,
-            EditKey::Backspace | EditKey::Delete => return self.page_edit_key(key),
+            // Backspace and Delete (`plain` is never a `Select` key).
+            _ => return self.page_edit_key(key),
         };
         self.page_edit_key(key) || self.walk(walk)
     }

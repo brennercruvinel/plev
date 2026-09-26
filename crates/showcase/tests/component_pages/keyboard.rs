@@ -545,3 +545,49 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert!(!said(&g, "Delete repository?"));
     assert_eq!(g.focused().as_deref(), Some(opener), "back on the opener");
 }
+
+/// Shift with the arrows, Home and End selects in a focused field: two
+/// Shift-Left take the last two letters, and Backspace deletes them.
+#[test]
+fn shift_with_the_arrows_selects_in_a_field() {
+    let field = "input_page.field[0]";
+    let mut g = gallery("Input");
+    g.tab_to(field);
+    g.type_in("hello");
+    assert!(g.key(EditKey::SelectLeft));
+    assert!(g.key(EditKey::SelectLeft));
+    assert!(g.key(EditKey::Backspace));
+    assert_eq!(
+        g.value(&format!("{field}:text")),
+        Some(Value::Text("hel".into()))
+    );
+    assert!(g.key(EditKey::SelectHome));
+    assert!(g.key(EditKey::Delete));
+    assert_eq!(
+        g.value(&format!("{field}:text")),
+        Some(Value::Text(String::new())),
+        "Shift-Home took the rest"
+    );
+}
+
+/// Outside a field Shift changes nothing: Shift-Right walks the tab list
+/// as Right does.
+#[test]
+fn shift_with_an_arrow_walks_as_the_arrow_outside_a_field() {
+    let mut g = gallery("Tabs");
+    g.tab_to("tabs_page.tabs[0]");
+    assert!(g.key(EditKey::SelectRight));
+    assert_eq!(g.focused().as_deref(), Some("tabs_page.tabs[1]"));
+    assert!(g.key(EditKey::SelectEnd));
+    assert_eq!(g.focused().as_deref(), Some("tabs_page.tabs[2]"));
+}
+
+/// On an app page too: with no field taking the keys, Shift-Right nudges
+/// the focused slider as Right does.
+#[test]
+fn shift_with_an_arrow_nudges_a_slider_as_the_arrow() {
+    let mut g = gallery("Silences");
+    assert!(g.key(EditKey::Tab));
+    assert!(g.key(EditKey::SelectRight));
+    assert_eq!(g.value("silences.threshold:value"), Some(Value::Num(-29.0)));
+}

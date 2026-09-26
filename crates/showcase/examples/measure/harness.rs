@@ -65,7 +65,7 @@ impl Surface for ShowcaseView {
             Input::Named(NamedKey::Escape) => self.close_top_overlay(),
             Input::Named(named) => {
                 self.handle_editor_key(&Key::Named(*named), none)
-                    || showcase::keys::handle_named(self, named)
+                    || showcase::keys::handle_named(self, named, none.shift_key())
             }
             Input::Char(c) => {
                 let text = c.to_string();

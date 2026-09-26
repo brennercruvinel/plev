@@ -84,7 +84,7 @@ impl App {
             Key::Named(NamedKey::Enter) => bench.enter(),
             Key::Named(NamedKey::Escape) => bench.escape(),
             Key::Named(NamedKey::Space) => bench.type_text(" "),
-            Key::Named(named) => match edit_key(*named) {
+            Key::Named(named) => match edit_key(*named, self.modifiers.shift_key()) {
                 Some(key) => bench.edit_key(key),
                 None => false,
             },
@@ -152,15 +152,46 @@ impl App {
     }
 }
 
-/// The editing key a named key is for a field.
-fn edit_key(named: NamedKey) -> Option<EditKey> {
-    Some(match named {
-        NamedKey::Backspace => EditKey::Backspace,
-        NamedKey::Delete => EditKey::Delete,
-        NamedKey::ArrowLeft => EditKey::Left,
-        NamedKey::ArrowRight => EditKey::Right,
-        NamedKey::Home => EditKey::Home,
-        NamedKey::End => EditKey::End,
+/// The editing key a named key is for a field; with `shift` the arrows,
+/// Home and End extend the selection.
+fn edit_key(named: NamedKey, shift: bool) -> Option<EditKey> {
+    Some(match (named, shift) {
+        (NamedKey::Backspace, _) => EditKey::Backspace,
+        (NamedKey::Delete, _) => EditKey::Delete,
+        (NamedKey::ArrowLeft, false) => EditKey::Left,
+        (NamedKey::ArrowLeft, true) => EditKey::SelectLeft,
+        (NamedKey::ArrowRight, false) => EditKey::Right,
+        (NamedKey::ArrowRight, true) => EditKey::SelectRight,
+        (NamedKey::Home, false) => EditKey::Home,
+        (NamedKey::Home, true) => EditKey::SelectHome,
+        (NamedKey::End, false) => EditKey::End,
+        (NamedKey::End, true) => EditKey::SelectEnd,
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Shift turns the moves into selection; the deletions stay deletions.
+    #[test]
+    fn shift_selects_with_the_moves_only() {
+        assert_eq!(
+            edit_key(NamedKey::ArrowLeft, true),
+            Some(EditKey::SelectLeft)
+        );
+        assert_eq!(
+            edit_key(NamedKey::ArrowRight, true),
+            Some(EditKey::SelectRight)
+        );
+        assert_eq!(edit_key(NamedKey::Home, true), Some(EditKey::SelectHome));
+        assert_eq!(edit_key(NamedKey::End, true), Some(EditKey::SelectEnd));
+        assert_eq!(edit_key(NamedKey::ArrowLeft, false), Some(EditKey::Left));
+        assert_eq!(
+            edit_key(NamedKey::Backspace, true),
+            Some(EditKey::Backspace)
+        );
+        assert_eq!(edit_key(NamedKey::Enter, true), None);
+    }
 }
