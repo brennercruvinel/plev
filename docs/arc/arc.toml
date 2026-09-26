@@ -9,7 +9,7 @@
 
 [project]
 name = "plev"
-kind = "gpu-first compositing engine"
+kind = "gpu-first compositing engine with a semantic contract that people, screen readers and agents operate"
 language = "rust (edition 2024)"
 stack = ["wgpu 29", "winit 0.30", "cosmic-text 0.18", "taffy 0.9", "lyon"]
 
@@ -28,7 +28,7 @@ root = "virtual workspace (Cargo.toml = members + workspace.package/deps/lints/p
 engine = "crates/engine"
 knowledge = "docs (adr + arc + how-to + mission + refs; this file lives at docs/arc/arc.toml)"
 web = "web (Trunk.toml + index.html + dist output; script/web is the dev loop; web/urnaui + script/web-urnaui for the urnaui target)"
-scripts = "script (gate = the four-part gate, web = trunk dev loop, web-urnaui = urnaui trunk dev loop on :8081)"
+scripts = "script (gate = the gate: test, clippy, fmt, wasm check, urnaui leg; web = trunk dev loop; web-urnaui = urnaui trunk dev loop on :8081; capture-web, capture-ios, capture-android = one gallery page or all of them on a target, classified against the desktop frame (capture-common.sh shared); figma-fixture = a .fig screen to the parser's Figma fixture; font-subset = the embedded Noto subsets, reproducible, --check compares byte for byte)"
 contracts = ".contracts (.agents/AGENTS.md instruction source; .mantras/.code/.lang/.rust tool configs + conventions)"
 
 # ---------------------------------------------------------------------------
@@ -37,7 +37,7 @@ contracts = ".contracts (.agents/AGENTS.md instruction source; .mantras/.code/.l
 
 [modules.gpu]
 path = "crates/engine/src/gpu"
-role = "wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (gpu/shaders)"
+role = "wgpu device/surface/pipelines; srgb view formats; image atlas; GpuVec buffers (vec); texture_pool; wgsl shaders (gpu/shaders); a lost device recovers in place (recover); GpuContext::instance and adapter with device and queue are what a library that computes on the renderer's device takes (burn through cubecl, crates/llm feature plev), and RenderConfig::compute (off by default) asks the adapter's limits and the features granted for it"
 contracts = ["srgb-view-formats", "surface_render_view-only"]
 
 [modules.compositor]
@@ -47,7 +47,7 @@ depends = ["gpu", "sem"]
 
 [modules.text]
 path = "crates/engine/src/text"
-role = "cosmic-text shaping, gpu glyph atlas (rasterized at the hidpi raster scale, warns once per non-embedded font), TextMeasurer (the only width source)"
+role = "cosmic-text shaping, gpu glyph atlas (rasterized at the hidpi raster scale, warns once per non-embedded font; color glyphs as four R8 texels per pixel, marked by a negative u, drawn with their own colors), TextMeasurer (the only width source; clusters_styled gives each cluster's box and bidi level for carets and selections), one FontSystem constructor for the embedded faces (Inclusive Sans, Inter, codicons, then Noto Sans for arabic, hebrew, devanagari, SC, JP and KR, and Noto Color Emoji last; fonts.rs, adr embedded-fonts-by-script), a shaping cache per line of text under a byte budget (cluster_cache.rs) for large documents"
 depends = ["gpu"]
 contracts = ["one-textstyle-measure-and-draw", "glyphs-rasterize-at-raster-scale-hidpi", "warn-once-on-non-embedded-font"]
 
@@ -149,12 +149,12 @@ role = "the gpu-first compositing engine itself (the modules above): rendering, 
 
 [crates.comps]
 path = "crates/comps"
-role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, one crate over the engine, every visual value read from engine::theme::Theme (docs/catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), wake (Wake: what a tick asks of the loop, a frame now and the deadline of the next, merged by earliest; Blink: the caret clock the text widgets share; task-82, adr a-tick-asks-for-a-deadline), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core, checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (GraphView), editor (rope-backed multi-cursor editor view), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (src/tests/matrix.rs). ships the editor example"
+role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, one crate over the engine, every visual value read from engine::theme::Theme (docs/catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), wake (Wake: what a tick asks of the loop, a frame now and the deadline of the next, merged by earliest; Blink: the caret clock the text widgets share; task-82, adr a-tick-asks-for-a-deadline), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core: bidi caret and selection by screen order, an input method's composition drawn inline and kept out of the buffer and the projection, copy, cut, paste and select all through a ClipboardProvider the owner hands in (ClipKey); checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (GraphView), editor (rope-backed multi-cursor editor view: only the visible lines are shaped and drawn, row positions in f64, a million lines open in about 20 ms in release; ime composition inline), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (src/tests/matrix.rs). ships the editor example"
 depends = ["engine", "rope", "sem"]
 
 [crates.showcase]
 path = "crates/showcase"
-role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the Surface page (task-69: the todo as a surface materialized from verified plev IR beside the fixed one, both on the todo's dispatcher; it switches the surface between two verified forms and proposes one from an intent by propose::Rules or by the Claude (claude-model, desktop only: asked off the app's thread with Execution::Started, the wait and the cost shown, a cancel that kills the child; view/apps/surface_page/{proposing,asking,page}.rs), its intent field, proposer select, propose and cancel buttons projected capabilities on the same dispatcher, lent by TodoPage::with_dispatcher), the Capture page (task-76 item 10: camera and microphone as toggles only a person turns on, the frame in a stream image, a level meter, the device released when the page is not seen; view/apps/capture, app/capture.rs), app/links.rs follows plev-showcase:// links as the agent link, only on shell.page and shell.theme, with every refusal on screen (task-76 item 6), the Files page (task-76 items 3 and 8: the file dialog, a drop zone and a system alert as capabilities; open_file and warn only for a person, drop_files for anyone), the Silences page (task-69 phases 4a and 4b: the video editor's fixed screen, model::silences and view::apps::silences with jobs (ffmpeg as a child in a worker) and generated::{page} (the intent row, the generated review or comparison beside the fixed screen, frames through surface::Frames, a close)), the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main; app/record.rs records the session as the ide does (PLEV_RECORD=1, debug, desktop), the shell routes by WindowId over engine::window::Windows and D detaches the current page into a second window over the same state (app/detached.rs, view/dispatch/detached.rs; task-76 item 2), the component pages whose widgets project in comps are projected and run through the gallery's dispatcher by one Component trait and a table of 19 panes (view/dispatch/component.rs, task-75 phase 2b; a person's click stays in the widget and the projection follows it; the menu bar leaves them out), the view projects its toasts, modal and context menu too (view/dispatch/overlay.rs) and gives a screen reader what only a reader hears (view/dispatch/reader.rs, task-75 phase 2a), the shell itself is projected (view/dispatch/shell.rs: shell.page, shell.theme, shell.detach, shell.print, shell.save_session; its keys go through the dispatcher) app/menu.rs mounts the native menu bar from the gallery projection (task-76 item 4), app/tray.rs the tray with the shell menu and shell.show, app/notify.rs the notifications of the Files and of a finished detection through a sink (task-76 item 5), app/sleep.rs routes Occluded and suspend/resume so the gallery neither draws nor settles work while asleep and wakes with the state now (task-76 item 7), app/print.rs and view/dispatch/shell/print.rs print the main window's frame at paper scale on a thread of its own (shell.print, a person only, cmd-p; task-76 item 9), app/entry.rs holds the per-platform entries, examples/regress also compares and classifies frames and captures the desktop against itself (regress compare, regress capture; fixtures/determinism/requested.json is the table of requested differences; task-77), app/mirror.rs offers the windows' scenes to watchers of the agent port when the person launches with PLEV_MIRROR=1 and examples/mirror draws them in another process, live images never crossing (task-79); since task-79 phase 2 the mirror's click goes back as an act through the contract (Viewer::hit over the bindings in stacking order, Hand presses the reader's primary action from its last look, as the agent \"mirror\") and every bound control the port counts as secret (sem::redact::is_secret, failing closed) is masked before the codec writes the layer (rec::scene::Sender::frame_masked, a box that says so), examples/demo drives the video editor demo through the agent port without a window, and fixtures/demo holds the two recorded demos (task-69 phase 4c)"
+role = "design-system gallery app: a sidebar tree of three groups (Foundations: theme, typography, icons, effects; Components: one page per comps widget, alphabetical, with placeholder slots for the widgets comps does not have yet and alias pages that share a neighbour's example while noting what their own still lacks; Apps Demo: the todo app, the Surface page (task-69: the todo as a surface materialized from verified plev IR beside the fixed one, both on the todo's dispatcher; it switches the surface between two verified forms and proposes one from an intent by propose::Rules or by the Claude (claude-model, desktop only: asked off the app's thread with Execution::Started, the wait and the cost shown, a cancel that kills the child; view/apps/surface_page/{proposing,asking,page}.rs), its intent field, proposer select, propose and cancel buttons projected capabilities on the same dispatcher, lent by TodoPage::with_dispatcher), the Capture page (task-76 item 10: camera and microphone as toggles only a person turns on, the frame in a stream image, a level meter, the device released when the page is not seen; view/apps/capture, app/capture.rs), app/links.rs follows plev-showcase:// links as the agent link, only on shell.page and shell.theme, with every refusal on screen (task-76 item 6), the Files page (task-76 items 3 and 8: the file dialog, a drop zone and a system alert as capabilities; open_file and warn only for a person, drop_files for anyone), the Silences page (task-69 phases 4a and 4b: the video editor's fixed screen, model::silences and view::apps::silences with jobs (ffmpeg as a child in a worker) and generated::{page} (the intent row, the generated review or comparison beside the fixed screen, frames through surface::Frames, a close)), the message dock, the embedded editor, the ide git workspace, the builder tour); the table is view::pages::PAGES, one module per page under view/{foundations,components,apps}; the template of the official app pattern, framed by comps::shell::AppShell (full sidebar / rail / drawer by breakpoint, captioned groups that fold); a lib (crate-type lib+cdylib+staticlib) whose app shell (app.rs) exposes per-platform entries run/run_web/android_main/showcase_ios_main; app/record.rs records the session as the ide does (PLEV_RECORD=1, debug, desktop), the shell routes by WindowId over engine::window::Windows and D detaches the current page into a second window over the same state (app/detached.rs, view/dispatch/detached.rs; task-76 item 2), the component pages whose widgets project in comps are projected and run through the gallery's dispatcher by one Component trait and a table of 19 panes (view/dispatch/component.rs, task-75 phase 2b; a person's click stays in the widget and the projection follows it; the menu bar leaves them out), the view projects its toasts, modal and context menu too (view/dispatch/overlay.rs) and gives a screen reader what only a reader hears (view/dispatch/reader.rs, task-75 phase 2a), the shell itself is projected (view/dispatch/shell.rs: shell.page, shell.theme, shell.detach, shell.print, shell.save_session; its keys go through the dispatcher) app/menu.rs mounts the native menu bar from the gallery projection (task-76 item 4), app/tray.rs the tray with the shell menu and shell.show, app/notify.rs the notifications of the Files and of a finished detection through a sink (task-76 item 5), app/sleep.rs routes Occluded and suspend/resume so the gallery neither draws nor settles work while asleep and wakes with the state now (task-76 item 7), app/print.rs and view/dispatch/shell/print.rs print the main window's frame at paper scale on a thread of its own (shell.print, a person only, cmd-p; task-76 item 9), app/entry.rs holds the per-platform entries, examples/regress also compares and classifies frames and captures the desktop against itself (regress compare, regress capture; fixtures/determinism/requested.json is the table of requested differences; task-77), app/mirror.rs offers the windows' scenes to watchers of the agent port when the person launches with PLEV_MIRROR=1 and examples/mirror draws them in another process, live images never crossing (task-79); since task-79 phase 2 the mirror's click goes back as an act through the contract (Viewer::hit over the bindings in stacking order, Hand presses the reader's primary action from its last look, as the agent \"mirror\") and every bound control the port counts as secret (sem::redact::is_secret, failing closed) is masked before the codec writes the layer (rec::scene::Sender::frame_masked, a box that says so), examples/demo drives the video editor demo through the agent port without a window, and fixtures/demo holds the two recorded demos (task-69 phase 4c); the keyboard on the component pages walks the projection's order with Tab and the WAI-ARIA arrows, lists and tables one row at a time, a modal traps the focus and gives it back (view/dispatch/keyboard.rs, task-75); the input method reaches the Input page's focused field and the Editor, the IME on only while one of them takes it (view/ime.rs, app/events/ime.rs); cmd or ctrl with c, x, v and a go to the focused field's clipboard, a chord never types, and a right-click on an Input field opens its Cut, Copy, Paste and Select all menu, an agent's pick refused (view/clipboard.rs, view/field_menu.rs)"
 depends = ["engine", "comps", "rope", "sem", "uir", "surface", "propose", "claude-model (desktop)", "ide (desktop)", "git (desktop)", "wire (desktop)"]
 targets = ["desktop", "web", "android", "ios"]
 
@@ -164,6 +164,11 @@ role = ".urna vector-db explorer app (6 tabs: open/overview/search/chunks/graph/
 depends = ["engine", "comps"]
 external-tools = ["ffmpeg (frame previews, optional)", "python3 + urna/python (text search, optional)"]
 targets = ["desktop", "web"]
+
+[crates.llm]
+path = "crates/llm"
+role = "local language model inference in process: one streaming interface (llm::Model: reset, next id greedily, context; llm::stream: the decode loop on its own thread, tokens on a tokio channel, cancel, always a final Done or Failed) and two implementations behind features, candle (candle-transformers' llama) and burn (model code adapted from burn-lm, crates/llm/NOTICE), on the cpu or the apple gpu (metal); text: the tokenizer, an incremental detokenizer and the chat template; feature plev hands the engine's own device to burn (wgpu 29 on both sides); bin llm-bench measures load, first token, decode rate, memory and binary size. own workspace and Cargo.lock, excluded from the root like urnaui (build with --manifest-path crates/llm/Cargo.toml); the weights live outside the repository (PLEV_LLM_MODEL). adr ai-native-single-process"
+depends = ["engine (feature plev)", "candle 0.11 (feature candle)", "burn 0.21 (feature burn)", "tokenizers", "tokio"]
 
 [crates.prime]
 path = "crates/prime"
@@ -306,6 +311,9 @@ rope = "benches/edit.rs (build + insert/delete roundtrip)"
 monster = "benches/codec.rs (encode/decode/optimize a snapshot scene)"
 lot = "benches/convert.rs (lottie json -> .monster)"
 parser = "benches/transpile.rs (gpui separator transpile end to end)"
+# not criterion: comps' tests/editor_large_bench.rs (ignored, release) opens,
+# scrolls and edits a million-line document; crates/llm's bin llm-bench
+# measures inference.
 
 [knowledge]
 operating-manual = "docs/how-to/code-against-the-plev-engine.md"
@@ -382,6 +390,17 @@ urnaui-media-frames-in-place-via-ffmpeg-subfile, adr
 worker-results-wake-the-event-loop); `prime` the
 prime-coherence particle swarm; `narrate`/`narrate-macro` the experimental
 dsl; `macros` the #[component] proc-macro.
+
+the semantic layer, over the engine: `sem` the contract every control
+projects (id, role, state, actions, constraints; the dispatcher, the
+preconditions and the receipts); `wire` the agent port (observe and act
+over a local socket, through the same dispatcher as a click); `rec` the
+session recorder; `inspect` and `inspector` read a recorded session and
+answer why, and never run anything; `uir` the plev IR and its verifier;
+`surface` a verified IR made into a live surface; `propose` an intent to
+a verified IR, by rules or by a model behind a trait; `claude-model` the
+Claude behind that trait, through the local `claude -p`; `llm` a language
+model in process (candle and burn), its own workspace like urnaui.
 '''
 
 frame-flow = '''
@@ -389,7 +408,9 @@ event -> input state / app state mutation -> invalidate (request_redraw)
 -> build scene (per-frame regeneration, no retained diffing) -> compositor
 resolve (dirty layers only) -> text resolve (atlas) -> encode layer passes
 (quads, sdf, shadows, images, text, backdrop blur, in push order) ->
-composite pass to the srgb surface view -> present. an unchanged layer is
+composite pass to the srgb surface view -> present. a covered window
+draws nothing (the surface answers occluded) and redraws when it shows
+again. an unchanged layer is
 not redrawn, but every frame drawn composites every visible layer
 (task-73). a caret or a toast at rest asks for a deadline, not for frames
 (comps::Wake, task-82): the shells sleep with ControlFlow::WaitUntil and
@@ -399,8 +420,10 @@ settling below a pixel).
 '''
 
 targets = '''
-macos metal (shipping), browser webgpu via trunk/wasm32 (shipping, same
-pixel as desktop), android vulkan and ios metal (both run the showcase: an
+macos metal (shipping), browser webgpu via trunk/wasm32 (shipping; 79
+of the gallery's 82 pages match the desktop byte for byte, the other three
+show different content on purpose, adr what-identical-means), android
+vulkan and ios metal (both run the showcase: an
 apk via a GameActivity host, and the ios simulator via a thin objc shell
 that calls `showcase_ios_main`; see android/ and ios/showcase/),
 linux/windows (untested, wgpu primary backends).
@@ -464,7 +487,7 @@ sequenceDiagram
     T->>G: glyph atlas quads
     C->>G: encode layer passes (quads, sdf, shadow, image, text, backdrop)
     G->>P: composite into srgb view (encode-on-write)
-    P->>P: present (identical pixels on every target)
+    P->>P: present (compared with the desktop per target, adr what-identical-means)
     %% perf (opt-in via RenderConfig): AnimationTick + RenderStats feed
     %% crates/engine/src/perf PerfMonitor after submit; log line every N frames and/or
     %% PerfHud overlay layer drawn by C (hud on = continuous frames)

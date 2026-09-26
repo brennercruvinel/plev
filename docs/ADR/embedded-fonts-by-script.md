@@ -1,6 +1,6 @@
 ---
 type: adr
-status: proposed
+status: accepted
 tags: [fonts, text, noto, cosmic-text, fontdb, fallback, subset, wasm, mobile, determinism, cjk, arabic, hebrew, devanagari, emoji, cbdt, glyph-atlas, generative-runtime]
 date: 2026-09-25
 ---

@@ -81,7 +81,7 @@ kind allowed beyond stating a constraint. `unsafe_op_in_unsafe_fn` is on in
 something becomes its own crate (not a module under `src/`) when it has a
 distinct identity and name, its own dependencies, is independently reusable
 or testable, or must compile separately (proc-macro). short of that it stays
-a module. edition 2024, rust-version 1.85, both inherited from
+a module. edition 2024, rust-version 1.87 (the floor of wgpu 29), both inherited from
 `[workspace.package]`; every crate is `publish = false` with a description.
 
 the ui boundary is fixed: `engine` renders and owns the tokens

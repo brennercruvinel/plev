@@ -7,10 +7,9 @@
 # this file holds clippy's threshold-style tunables only.
 
 # msrv is not set here on purpose: clippy reads it from the single source,
-# `rust-version` in the workspace Cargo.toml (1.85). the codebase keeps to
-# that floor (modulo checks use `% k == 0`, not the 1.87-only
-# u64::is_multiple_of), so clippy's incompatible_msrv lint has nothing to
-# flag and manual_is_multiple_of stays inactive below 1.87.
+# `rust-version` in the workspace Cargo.toml (1.87, the floor of wgpu 29).
+# at that floor clippy's manual_is_multiple_of is active, so a modulo check
+# is written `n.is_multiple_of(k)`, not `n % k == 0`.
 
 # the file-hygiene convention hard-caps 639 lines per source file; clippy's
 # own type-complexity and argument thresholds stay at sane defaults. raise
