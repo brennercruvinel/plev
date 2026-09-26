@@ -12,6 +12,7 @@ mod components;
 mod dispatch;
 mod draw;
 mod foundations;
+mod ime;
 mod input;
 mod pages;
 mod panes;
@@ -21,6 +22,7 @@ mod render;
 mod tests;
 
 pub use apps::git::{GitWake, NavKey};
+pub use ime::ImeEvent;
 pub use input::EditKey;
 pub use pages::{Body, Group, PAGES, Page, Pane};
 

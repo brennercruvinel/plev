@@ -16,6 +16,7 @@ use engine::theme::Theme;
 use sem::{Request, Role, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, EditKey, child_id, root_id, text, under};
+use crate::view::ImeEvent;
 
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
@@ -134,6 +135,33 @@ impl InputPage {
             Some(i) => self.fields[i].edit(key.into()),
             None => false,
         }
+    }
+
+    /// A step of the input method: the focused field composes, and a
+    /// commit is typed into it as `handle_text` types; `Disabled` drops a
+    /// composition wherever one is. `false` when nothing changed.
+    pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let (committed, preedit, cursor) = match ime {
+            ImeEvent::Disabled => {
+                return self
+                    .fields
+                    .iter_mut()
+                    .fold(false, |any, f| f.end_compose() || any);
+            }
+            ImeEvent::Preedit(text, cursor) => ("", text, cursor),
+            ImeEvent::Commit(text) => (text, "", None),
+        };
+        match self.focused() {
+            Some(i) => self.fields[i].compose(committed, preedit, cursor),
+            None => false,
+        }
+    }
+
+    /// Where the input method's candidate window goes: the focused
+    /// field's caret, laid out in `content`. `None` with no field focused.
+    pub fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        let i = self.focused()?;
+        Some(self.fields[i].ime_area(Self::rects(content, theme)[i], theme))
     }
 
     /// Escape blurs the focused field. `false` when none was.

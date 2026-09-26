@@ -2,7 +2,8 @@
 //! page, or the page's own window (`detached.rs`). Keys go to the view
 //! whichever window has the focus; the pointer goes to the page laid out
 //! for the window it is in; a resize or a scale change is that window's
-//! host's; the close and the redraw are answered per window.
+//! host's; the close and the redraw are answered per window. The input
+//! method's events go to the view as well (`ime.rs`).
 
 use comps::prelude::WidgetEvent;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
@@ -194,7 +195,18 @@ impl App {
                 }
             }
 
-            WindowEvent::RedrawRequested => self.redraw(event_loop, id),
+            WindowEvent::RedrawRequested => {
+                self.redraw(event_loop, id);
+                #[cfg(not(any(
+                    target_arch = "wasm32",
+                    target_os = "android",
+                    target_os = "ios"
+                )))]
+                self.sync_ime(id);
+            }
+
+            // The input method: a composition, a commit (`ime.rs`).
+            WindowEvent::Ime(ime) => self.ime(&ime),
 
             // The platform says the window is covered (minimized, or
             // fully behind others), or shows again: its host stops asking
@@ -228,3 +240,6 @@ impl App {
         }
     }
 }
+
+/// The input method (task-74 phase 4).
+mod ime;
