@@ -3,7 +3,7 @@
 //! (the weights live outside the repository); run with
 //! `cargo test --release --features <impl> -- --ignored`.
 
-#![cfg(feature = "text")]
+#![cfg(all(feature = "text", any(feature = "candle", feature = "burn")))]
 
 use std::path::PathBuf;
 
