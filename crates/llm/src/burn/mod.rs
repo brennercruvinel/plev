@@ -44,9 +44,11 @@ fn err(e: impl std::fmt::Display) -> LlmError {
     }
 }
 
-/// The default linear layout per device. on the cpu the transposed view of
-/// `Col` made ndarray's matmul about six times slower than weights
-/// transposed once at load (0.3 against 1.8 tok/s on TinyLlama).
+/// The default linear layout per device, as measured on TinyLlama (the
+/// task-78 file): on the cpu the transposed view of `Col` makes ndarray's
+/// matmul six times slower than weights transposed once at load (0.3
+/// against 1.8 tok/s); on metal `Col` decodes faster (26.3 against 24.4
+/// tok/s) and loads without copying the weights.
 pub fn layout_for(device: Device) -> LinearLayout {
     match device {
         Device::Cpu => LinearLayout::Row,
