@@ -47,12 +47,18 @@ impl Spec {
     }
 }
 
-/// A linear layer without bias whose weight is stored as the checkpoint
-/// stores it, [out, in]; burn transposes the view on load, not the bytes.
-fn linear<B: Backend>(d_in: usize, d_out: usize, device: &B::Device) -> Linear<B> {
+/// A linear layer without bias. With `LinearLayout::Col` the weight keeps
+/// the checkpoint's [out, in] and burn transposes the view on load; with
+/// `Row` the loader transposes the bytes to burn's [in, out].
+fn linear<B: Backend>(
+    d_in: usize,
+    d_out: usize,
+    layout: LinearLayout,
+    device: &B::Device,
+) -> Linear<B> {
     LinearConfig::new(d_in, d_out)
         .with_bias(false)
-        .with_layout(LinearLayout::Col)
+        .with_layout(layout)
         .init(device)
 }
 
@@ -105,9 +111,9 @@ struct Mlp<B: Backend> {
 
 impl<B: Backend> Llama<B> {
     /// The model with lazy, uninitialized weights, ready to be loaded.
-    pub fn init(spec: &Spec, device: &B::Device) -> Self {
+    pub fn init(spec: &Spec, layout: LinearLayout, device: &B::Device) -> Self {
         let layers = (0..spec.layers)
-            .map(|_| Layer::init(spec, device))
+            .map(|_| Layer::init(spec, layout, device))
             .collect();
         Self {
             model: Body {
@@ -115,7 +121,7 @@ impl<B: Backend> Llama<B> {
                 layers,
                 norm: rms(spec, device),
             },
-            lm_head: linear(spec.hidden, spec.vocab, device),
+            lm_head: linear(spec.hidden, spec.vocab, layout, device),
         }
     }
 
@@ -145,23 +151,23 @@ impl<B: Backend> Llama<B> {
 }
 
 impl<B: Backend> Layer<B> {
-    fn init(spec: &Spec, device: &B::Device) -> Self {
+    fn init(spec: &Spec, layout: LinearLayout, device: &B::Device) -> Self {
         let head_dim = spec.head_dim();
         let kv = spec.kv_heads * head_dim;
         Self {
             self_attn: Attention {
-                q_proj: linear(spec.hidden, spec.heads * head_dim, device),
-                k_proj: linear(spec.hidden, kv, device),
-                v_proj: linear(spec.hidden, kv, device),
-                o_proj: linear(spec.heads * head_dim, spec.hidden, device),
+                q_proj: linear(spec.hidden, spec.heads * head_dim, layout, device),
+                k_proj: linear(spec.hidden, kv, layout, device),
+                v_proj: linear(spec.hidden, kv, layout, device),
+                o_proj: linear(spec.heads * head_dim, spec.hidden, layout, device),
                 heads: spec.heads,
                 kv_heads: spec.kv_heads,
                 head_dim,
             },
             mlp: Mlp {
-                gate_proj: linear(spec.hidden, spec.intermediate, device),
-                up_proj: linear(spec.hidden, spec.intermediate, device),
-                down_proj: linear(spec.intermediate, spec.hidden, device),
+                gate_proj: linear(spec.hidden, spec.intermediate, layout, device),
+                up_proj: linear(spec.hidden, spec.intermediate, layout, device),
+                down_proj: linear(spec.intermediate, spec.hidden, layout, device),
             },
             input_layernorm: rms(spec, device),
             post_attention_layernorm: rms(spec, device),

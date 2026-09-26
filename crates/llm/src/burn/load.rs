@@ -6,9 +6,13 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use burn::nn::LinearLayout;
 use burn::tensor::DType;
 use burn::tensor::backend::Backend;
-use burn_store::{ModuleAdapter, ModuleSnapshot, SafetensorsStore, TensorSnapshot};
+use burn_store::{
+    ChainAdapter, ModuleAdapter, ModuleSnapshot, PyTorchToBurnAdapter, SafetensorsStore,
+    TensorSnapshot,
+};
 
 use super::model::{Llama, Spec};
 use crate::LlmError;
@@ -100,20 +104,27 @@ impl ModuleAdapter for CastTo {
     }
 }
 
-/// Loads `model.safetensors` into `model`, casting to `dtype`. Every tensor
-/// of the model must come from the file.
+/// Loads `model.safetensors` into `model`, casting to `dtype`; with
+/// `LinearLayout::Row` the linear weights are transposed on the way in.
+/// Every tensor of the model must come from the file.
 pub fn weights<B: Backend>(
     model: &mut Llama<B>,
     path: &Path,
     dtype: DType,
+    layout: LinearLayout,
 ) -> Result<(), LlmError> {
     if !path.is_file() {
         return Err(LlmError::file(path, "not a file"));
     }
-    let mut store = SafetensorsStore::from_file(path)
+    let store = SafetensorsStore::from_file(path)
         .with_key_remapping(r"(.*norm)\.weight$", "$1.gamma")
-        .with_from_adapter(CastTo(dtype))
         .allow_partial(false);
+    let mut store = match layout {
+        LinearLayout::Row => {
+            store.with_from_adapter(ChainAdapter::new(PyTorchToBurnAdapter, CastTo(dtype)))
+        }
+        LinearLayout::Col => store.with_from_adapter(CastTo(dtype)),
+    };
     let result = model.load_from(&mut store).map_err(|e| LlmError::Backend {
         backend: "burn",
         reason: e.to_string(),

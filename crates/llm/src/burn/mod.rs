@@ -17,6 +17,7 @@ use cache::KvCache;
 use model::Llama;
 use rope::Rope;
 
+pub use burn::nn::LinearLayout;
 pub use model::Spec;
 
 /// burn on the cpu.
@@ -43,18 +44,42 @@ fn err(e: impl std::fmt::Display) -> LlmError {
     }
 }
 
-/// Loads the model on the device the caller asks for.
+/// The default linear layout per device. on the cpu the transposed view of
+/// `Col` made ndarray's matmul about six times slower than weights
+/// transposed once at load (0.3 against 1.8 tok/s on TinyLlama).
+pub fn layout_for(device: Device) -> LinearLayout {
+    match device {
+        Device::Cpu => LinearLayout::Row,
+        Device::Metal => LinearLayout::Col,
+    }
+}
+
+/// Loads the model on the device the caller asks for, in the layout that
+/// device runs fastest.
 pub fn load(dir: &Path, device: Device) -> Result<Box<dyn Model>, LlmError> {
+    load_with(dir, device, layout_for(device))
+}
+
+/// Loads the model with an explicit linear layout: `Col` keeps the
+/// checkpoint's [out, in] and transposes the view, `Row` transposes the bytes
+/// at load into burn's [in, out].
+pub fn load_with(
+    dir: &Path,
+    device: Device,
+    layout: LinearLayout,
+) -> Result<Box<dyn Model>, LlmError> {
     match device {
         Device::Cpu => Ok(Box::new(BurnModel::<Cpu>::load_on(
             dir,
             Default::default(),
+            layout,
             "cpu",
         )?)),
         #[cfg(feature = "metal")]
         Device::Metal => Ok(Box::new(BurnModel::<Gpu>::load_on(
             dir,
             Default::default(),
+            layout,
             "metal",
         )?)),
         #[cfg(not(feature = "metal"))]
@@ -64,14 +89,20 @@ pub fn load(dir: &Path, device: Device) -> Result<Box<dyn Model>, LlmError> {
 
 impl<B: Backend> BurnModel<B> {
     /// Reads `config.json` and `model.safetensors` from `dir` onto `device`,
-    /// in the backend's float. Returns when the weights are on the device.
-    pub fn load_on(dir: &Path, device: B::Device, name: &str) -> Result<Self, LlmError> {
+    /// in the backend's float and the given linear layout. Returns when the
+    /// weights are on the device.
+    pub fn load_on(
+        dir: &Path,
+        device: B::Device,
+        layout: LinearLayout,
+        name: &str,
+    ) -> Result<Self, LlmError> {
         let path = dir.join("config.json");
         let bytes = std::fs::read(&path).map_err(|e| LlmError::file(&path, e))?;
         let spec = load::spec(&bytes)?;
         let dtype = <B::FloatElem as Element>::dtype();
-        let mut llama = Llama::init(&spec, &device);
-        load::weights(&mut llama, &dir.join("model.safetensors"), dtype)?;
+        let mut llama = Llama::init(&spec, layout, &device);
+        load::weights(&mut llama, &dir.join("model.safetensors"), dtype, layout)?;
         let shape = [1, spec.kv_heads, spec.context, spec.head_dim()];
         let cache = (0..spec.layers)
             .map(|_| KvCache::new(shape, &device))
@@ -145,7 +176,7 @@ mod tests {
             rope_theta: 10_000.0,
             context: 8,
         };
-        let llama = Llama::<Cpu>::init(&spec, &device);
+        let llama = Llama::<Cpu>::init(&spec, LinearLayout::Row, &device);
         let rope = Rope::new(spec.head_dim(), spec.context, spec.rope_theta, &device);
         let fresh = || -> Vec<KvCache<Cpu>> {
             (0..spec.layers)

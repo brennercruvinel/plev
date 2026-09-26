@@ -31,6 +31,10 @@ impl CandleModel {
     /// Loads `config.json` and `model.safetensors` from `dir`: f16 on the
     /// gpu, f32 on the cpu. Returns when the weights are on the device.
     pub fn load(dir: &Path, device: Device) -> Result<Self, LlmError> {
+        let name = match device {
+            Device::Cpu => "cpu",
+            Device::Metal => "metal",
+        };
         let (device, dtype) = match device {
             Device::Cpu => (CDevice::Cpu, DType::F32),
             Device::Metal => (CDevice::new_metal(0).map_err(err)?, DType::F16),
@@ -54,7 +58,7 @@ impl CandleModel {
         device.synchronize().map_err(err)?;
         let info = Info {
             backend: "candle",
-            device: format!("{:?}", device.location()).to_lowercase(),
+            device: name.to_string(),
             dtype: if dtype == DType::F16 { "f16" } else { "f32" },
         };
         Ok(Self {
