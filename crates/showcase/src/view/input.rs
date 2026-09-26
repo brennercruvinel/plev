@@ -5,7 +5,7 @@
 //! scroll), and the demo overlays the Dialog and Context Menu pages open.
 
 use comps::overlay::OverlayKind;
-use comps::prelude::{EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use comps::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
 use engine::input::FileDrop;
 use engine::theme::Intent;
 
@@ -277,12 +277,21 @@ impl ShowcaseView {
                 self.open_menu(x, y);
                 true
             }
+            // A text field's own menu (`field_menu.rs`).
+            Some(Pane::Input) => self.open_field_menu(x, y),
             _ => false,
         }
     }
 
     fn open_menu(&mut self, x: f32, y: f32) {
-        let mut widget = context_menu::demo_menu();
+        self.show_menu(context_menu::demo_menu(), x, y);
+    }
+
+    /// `widget` opens as the context menu at `(x, y)`, kept inside the
+    /// viewport: the Context Menu page's demo, or a text field's menu
+    /// (`field_menu.rs`).
+    pub(super) fn show_menu(&mut self, widget: ContextMenu, x: f32, y: f32) {
+        let mut widget = widget;
         if let Some(id) = overlay::id(overlay::MENU) {
             widget = widget.sem(id);
         }

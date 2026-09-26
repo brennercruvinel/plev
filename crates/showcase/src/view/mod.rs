@@ -12,6 +12,7 @@ mod clipboard;
 mod components;
 mod dispatch;
 mod draw;
+mod field_menu;
 mod foundations;
 mod ime;
 mod input;

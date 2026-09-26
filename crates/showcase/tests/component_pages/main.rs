@@ -41,5 +41,8 @@ mod ime;
 /// request).
 mod clipboard;
 
+/// The text field's menu: Cut, Copy, Paste, Select all (task-74).
+mod field_menu;
+
 /// The privacy promises: no case on these pages, guarded.
 mod promises;

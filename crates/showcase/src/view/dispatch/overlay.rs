@@ -29,7 +29,10 @@ use sem::{
     Snapshot, SnapshotBuilder, Value,
 };
 
+use comps::form::ClipKey;
+
 use super::super::components::context_menu;
+use super::super::field_menu;
 use super::super::{ActiveOverlay, ShowcaseView};
 
 /// The ids the view gives its overlays.
@@ -83,6 +86,9 @@ struct Overlays<'a> {
     active: &'a mut Option<ActiveOverlay>,
     focus: Option<&'a SemId>,
     theme: &'a Theme,
+    /// A text field's menu picked: the clipboard key the view runs on
+    /// the field once the dispatch is over (`field_menu.rs`).
+    clip: &'a mut Option<ClipKey>,
 }
 
 /// The toasts on screen and the overlay that holds the pointer, into `b`,
@@ -211,6 +217,24 @@ impl Operable for Overlays<'_> {
                     .insert("confirmed".to_owned(), Value::Bool(confirm));
             }
             Some(Asked::Close(overlay)) => self.mgr.pop_id_animated(overlay),
+            // A text field's menu: the clipboard is the person's, so an
+            // agent's pick is refused and a person's (pointer, keys, a
+            // screen reader) is the field's clipboard key.
+            Some(Asked::Pick(overlay, item)) if field_menu::clip_of(item).is_some() => {
+                if !matches!(req.actor, Actor::Human | Actor::Assistive) {
+                    return Execution::Failed(format!(
+                        "{}: the clipboard is the person's, never an agent's",
+                        req.target
+                    ));
+                }
+                let key = field_menu::clip_of(item);
+                self.mgr.pop_id_animated(overlay);
+                *self.clip = key;
+                let label = key.map_or("", field_menu::label);
+                outcome
+                    .result
+                    .insert("item".to_owned(), Value::Text(label.to_owned()));
+            }
             Some(Asked::Pick(overlay, item)) => {
                 let label = context_menu::menu_label(item);
                 self.mgr.pop_id_animated(overlay);
@@ -275,17 +299,22 @@ impl ShowcaseView {
     /// A request aimed at an overlay, from any actor, through the
     /// gallery's one dispatcher: the receipt as it stands.
     pub(in crate::view) fn act_overlay(&mut self, req: Request) -> Option<Receipt> {
+        let mut clip = None;
         let mut op = Overlays {
             toasts: &mut self.toasts,
             mgr: &mut self.overlay_mgr,
             active: &mut self.active_overlay,
             focus: self.overlay_focus.as_ref(),
             theme: &self.theme,
+            clip: &mut clip,
         };
         let id = self
             .panes
             .todo
             .with_dispatcher(|d, _, now| d.dispatch(&mut op, req, now));
+        if let Some(key) = clip {
+            self.clip_to(Some(key));
+        }
         self.panes.todo.receipt(id).cloned()
     }
 

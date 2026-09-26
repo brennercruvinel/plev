@@ -28,7 +28,9 @@ pub(in crate::view) enum Keys<'a> {
 }
 
 /// The gallery's clipboard, made on first use.
-fn board(clipboard: &mut Option<Box<dyn ClipboardProvider>>) -> &mut dyn ClipboardProvider {
+pub(in crate::view) fn board(
+    clipboard: &mut Option<Box<dyn ClipboardProvider>>,
+) -> &mut dyn ClipboardProvider {
     clipboard.get_or_insert_with(default_clipboard).as_mut()
 }
 

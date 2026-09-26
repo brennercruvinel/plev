@@ -159,6 +159,23 @@ impl InputPage {
         }
     }
 
+    /// A right-click: the field under the pointer takes the keys for its
+    /// menu. One focused with a selection keeps it (the person selected
+    /// what to copy); another takes a caret at the click, as a press
+    /// there. `false` off the fields.
+    pub fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+        let rects = Self::rects(content, theme);
+        let Some(i) = rects.iter().position(|r| r.contains(x, y)) else {
+            return false;
+        };
+        if self.focused() == Some(i) && self.fields[i].has_selection() {
+            return true;
+        }
+        self.set_focused(Some(i));
+        self.fields[i].handle_event(&WidgetEvent::MouseDown { x, y }, rects[i], theme);
+        true
+    }
+
     /// The focused field has the keys (a chord, the field's menu).
     pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
         match self.focused() {
