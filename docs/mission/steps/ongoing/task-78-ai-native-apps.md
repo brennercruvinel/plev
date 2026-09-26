@@ -226,19 +226,31 @@ $CARGO_TARGET_DIR/release/llm-bench --impl candle \
 
 | medida | candle, Metal f16 | burn, Metal f16 | candle, CPU f32 | burn, CPU f32 |
 | --- | --- | --- | --- | --- |
-| carga | 4,33 s | a medir | 3,29 s | a medir |
-| ttft, 1ª rodada do processo | 90 ms | a medir | 990 ms | a medir |
-| ttft, mediana | 52 ms | a medir | 409 ms | a medir |
-| decode, mediana | 37,1 tok/s | a medir | 6,7 tok/s | a medir |
-| pico de RSS | 3264 MB | a medir | 4626 MB | a medir |
-| pico de footprint | 5182 MB | a medir | 4753 MB | a medir |
-| binário (só esta) | 6,8 MB | a medir | o mesmo | o mesmo |
+| carga | 4,33 s | 3,49 s | 3,29 s | 6,14 s |
+| ttft, 1ª rodada do processo | 90 ms | 911 ms | 990 ms | 1489 ms |
+| ttft, mediana | 52 ms | 60 ms | 409 ms | 922 ms |
+| decode, mediana | 37,1 tok/s | 26,2 tok/s | 6,7 tok/s | 1,9 tok/s |
+| pico de RSS | 3264 MB | 2779 MB | 4626 MB | 5212 MB |
+| pico de footprint | 5182 MB | 4325 MB | 4753 MB | 5644 MB |
+| binário (só esta) | 6,8 MB | 33,0 MB | o mesmo | o mesmo |
 
 a frio (primeiro processo depois de compilar, página e shader frios):
-candle no Metal carregou em 9,0 s e deu o primeiro token em 5,2 s.
+candle no Metal carregou em 9,0 s e deu o primeiro token em 5,2 s. o burn
+no Metal, com o cache de autotune vazio, carregou em 4,6 s, deu o
+primeiro token em 10,8 s e decodificou a primeira rodada a 10,7 tok/s. o
+burn grava esse cache em `target/autotune` do `Cargo.toml` mais próximo
+do diretório de trabalho (ou no cache do usuário, fora de um projeto); a
+partir do segundo processo, a primeira rodada cai para perto de 1 s, que
+é a compilação dos kernels.
 
-os 32 primeiros tokens do candle, iguais no Metal f16 e na CPU f32 e em
-todas as rodadas: "In the early hours of a crisp autumn morning, a
+o layout do `Linear` no burn: no Metal, o peso em [out, in] com a vista
+transposta (`Col`) decodifica a 26,3 tok/s e carrega sem copiar; o peso
+transposto na carga (`Row`) decodifica a 24,4 tok/s e carrega em 7,8 s.
+na CPU é o contrário: `Col` fica em 0,3 tok/s, `Row` em 1,8. o padrão é
+`Col` no Metal e `Row` na CPU (`llm::burn::layout_for`).
+
+os 32 primeiros tokens, idênticos nas quatro colunas e em todas as
+rodadas: "In the early hours of a crisp autumn morning, a
 lighthouse keeper named Jack woke up to the sound of the waves crashing
 against" (ids `797, 278, 4688, 6199, 310, 263, 2181, 11936, 1120, 1227,
 7250, 29892, 263, 301, 18919, 1709, 1589, 11356, 4257, 5457, 281, 6946,
