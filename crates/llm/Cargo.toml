@@ -2,15 +2,14 @@
 name = "llm"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 publish = false
 description = "local llm inference in process: one streaming interface, candle and burn behind features"
 
 # llm is NOT a member of the root workspace (see the exclude + comment in the
 # root Cargo.toml): candle and burn pull a dependency tree the engine does not
-# need (burn brings wgpu 29, the engine is on 28), so it keeps its own
-# workspace and its own Cargo.lock. build it with --manifest-path
-# crates/llm/Cargo.toml.
+# need, so it keeps its own workspace and its own Cargo.lock. build it with
+# --manifest-path crates/llm/Cargo.toml.
 [workspace]
 
 [features]
@@ -28,6 +27,9 @@ burn = [
     "dep:serde",
     "dep:serde_json",
 ]
+# burn on the engine's device: the renderer's instance, adapter, device and
+# queue handed to cubecl (wgpu 29 on both sides), burn's wgsl path.
+plev = ["burn", "burn/wgpu", "dep:engine"]
 # the apple gpu for whichever backend is on.
 metal = [
     "candle-core?/metal",
@@ -51,6 +53,8 @@ burn = { version = "0.21", default-features = false, features = ["std"], optiona
 burn-ndarray = { version = "0.21", optional = true }
 burn-store = { version = "0.21", default-features = false, features = ["std", "safetensors", "memmap"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
+# a path dependency, as urnaui has it; no hot reload, no accessibility.
+engine = { path = "../engine", default-features = false, optional = true }
 serde_json = { version = "1", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

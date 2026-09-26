@@ -113,6 +113,7 @@ impl GpuContext {
 
         let mut fresh = Self::from_device(
             instance,
+            adapter.clone(),
             device,
             queue,
             self.surface.take(),

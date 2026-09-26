@@ -51,7 +51,7 @@ const VALUES: [u8; 256] = {
 /// base64 back to bytes; `None` for anything `encode` would not write.
 pub fn decode(text: &str) -> Option<Vec<u8>> {
     let text = text.as_bytes();
-    if text.len() % 4 != 0 {
+    if !text.len().is_multiple_of(4) {
         return None;
     }
     let pad = text.iter().rev().take_while(|c| **c == b'=').count();

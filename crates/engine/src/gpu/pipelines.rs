@@ -22,7 +22,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("quad_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl],
+            bind_group_layouts: &[Some(projection_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -77,7 +77,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("rect_sdf_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl],
+            bind_group_layouts: &[Some(projection_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -132,7 +132,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("shadow_analytic_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl],
+            bind_group_layouts: &[Some(projection_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -188,7 +188,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("text_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl, text_bgl],
+            bind_group_layouts: &[Some(projection_bgl), Some(text_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -244,7 +244,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("image_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl, image_bgl],
+            bind_group_layouts: &[Some(projection_bgl), Some(image_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -304,7 +304,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("backdrop_pipeline_layout"),
-            bind_group_layouts: &[projection_bgl, composite_bgl],
+            bind_group_layouts: &[Some(projection_bgl), Some(composite_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -494,7 +494,7 @@ impl GpuContext {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("composite_pipeline_layout"),
-            bind_group_layouts: &[composite_bgl, opacity_bgl],
+            bind_group_layouts: &[Some(composite_bgl), Some(opacity_bgl)],
             immediate_size: 0,
         });
         device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {

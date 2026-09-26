@@ -97,8 +97,9 @@ impl DemoApp {
             return;
         };
         let output = match surface.get_current_texture() {
-            Ok(t) => t,
-            Err(_) => {
+            engine::wgpu::CurrentSurfaceTexture::Success(t)
+            | engine::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            _ => {
                 gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
                 return;
             }
@@ -206,7 +207,10 @@ impl DemoApp {
         });
         if gpu.config.perf_log
             && gpu.config.perf_log_interval > 0
-            && self.perf.frames() % u64::from(gpu.config.perf_log_interval) == 0
+            && self
+                .perf
+                .frames()
+                .is_multiple_of(u64::from(gpu.config.perf_log_interval))
         {
             log::info!("{}", self.perf.snapshot().log_line());
         }

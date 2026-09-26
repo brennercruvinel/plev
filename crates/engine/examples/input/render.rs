@@ -26,8 +26,9 @@ impl InputDemoApp {
         };
 
         let output = match surface.get_current_texture() {
-            Ok(t) => t,
-            Err(_) => {
+            engine::wgpu::CurrentSurfaceTexture::Success(t)
+            | engine::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            _ => {
                 gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
                 return;
             }

@@ -11,7 +11,7 @@
 name = "plev"
 kind = "gpu-first compositing engine"
 language = "rust (edition 2024)"
-stack = ["wgpu 28", "winit 0.30", "cosmic-text 0.18", "taffy 0.9", "lyon"]
+stack = ["wgpu 29", "winit 0.30", "cosmic-text 0.18", "taffy 0.9", "lyon"]
 
 [project.targets]
 shipping = ["macos-metal", "web-webgpu"]

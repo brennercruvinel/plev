@@ -50,7 +50,11 @@ fn sixteen_tokens<M: Model + 'static>(model: M, text: Text) -> String {
     assert!(count > 0, "no token");
     assert!(stop == Stop::Length && count == NEW || stop == Stop::Eos);
     assert!(!answer.trim().is_empty());
-    eprintln!("{}: {answer:?}", engine.info().expect("info").backend);
+    let info = engine.info().expect("info");
+    eprintln!(
+        "{} {} {}: {answer:?}",
+        info.backend, info.device, info.dtype
+    );
     answer
 }
 
@@ -78,4 +82,37 @@ fn burn_generates_sixteen_tokens() {
     let model = llm::burn::load(&dir, device()).expect("load");
     let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
     assert!(answer.contains("Paris"), "{answer:?}");
+}
+
+/// The same 16 tokens from burn on the engine's device (feature `plev`):
+/// the device the engine's headless renderer made, asked for burn, then a
+/// frame drawn with it after the answer.
+#[cfg(feature = "plev")]
+#[test]
+#[ignore = "needs the model in PLEV_LLM_MODEL"]
+fn burn_on_the_engine_s_device_generates_sixteen_tokens() {
+    use engine::compositor::Compositor;
+    use engine::gpu::RenderConfig;
+    use engine::headless::{Renderer, Viewport};
+
+    let Some(dir) = model_dir() else {
+        eprintln!("PLEV_LLM_MODEL not set; skipped");
+        return;
+    };
+    let config = RenderConfig {
+        compute: Some(llm::plev::features()),
+        ..RenderConfig::default()
+    };
+    let mut renderer = Renderer::new(Viewport::new(64.0, 48.0, 2.0), config).expect("renderer");
+    let model = llm::plev::load(&dir, renderer.gpu()).expect("load");
+    let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
+    assert!(answer.contains("Paris"), "{answer:?}");
+
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.draw_rect(8.0, 8.0, 24.0, 16.0, [1.0, 0.0, 0.0, 1.0]);
+    let frame = renderer
+        .render(&mut c, [0.0, 0.0, 0.0, 1.0])
+        .expect("the frame after the answer reads back");
+    assert_eq!(frame.pixel(40, 30), Some([255, 0, 0, 255]));
 }

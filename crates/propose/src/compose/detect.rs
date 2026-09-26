@@ -257,7 +257,7 @@ fn runs(h: &[&Entry], len: usize, n: usize) -> Option<(Actor, Shape)> {
         }
     }
     let primitive = (1..len)
-        .filter(|d| len % d == 0)
+        .filter(|d| len.is_multiple_of(*d))
         .all(|d| shape.chunks(d).any(|c| c != &shape[..d]));
     primitive.then(|| (actor.clone(), Shape { steps: shape }))
 }

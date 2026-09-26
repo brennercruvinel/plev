@@ -5,7 +5,8 @@
 //! announced. two implementations of the [`Model`] behind it, each behind its
 //! own feature: `candle` and `burn`, on the cpu or, with `metal`, on the apple
 //! gpu. both decode greedily from the same token ids, so their outputs are
-//! comparable token by token.
+//! comparable token by token. with `plev`, burn runs on the engine's own
+//! device, the one the frames are drawn with ([`plev`]).
 //!
 //! the model files live outside the repository; the directory comes in by
 //! argument or through `PLEV_LLM_MODEL`, never fixed in code.
@@ -22,6 +23,8 @@ pub mod text;
 pub mod burn;
 #[cfg(feature = "candle")]
 pub mod candle;
+#[cfg(feature = "plev")]
+pub mod plev;
 
 pub use error::LlmError;
 pub use stream::{Cancel, Event, Model, Request, Stop, Stream, Token};

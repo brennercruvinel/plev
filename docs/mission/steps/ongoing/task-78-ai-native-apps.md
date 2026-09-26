@@ -342,3 +342,140 @@ depois o app de referência (item 1 do critério).
 
 o agente gastou uns 360 mil tokens depois da retomada; o trecho antes da
 queda da sessão não ficou contado.
+
+## fase 2: a base de pixel no wgpu 28
+
+antes de qualquer mudança, na `main` em `82b584d6` (wgpu 28.0.0 no
+`Cargo.lock`), a captura do desktop contra ele mesmo:
+
+```sh
+cargo run --offline -p showcase --example regress -- capture \
+  --out target/determinism/wgpu28
+```
+
+82 páginas, 4 temas, 4 escalas: 1312 frames, 1312 `equal` entre os dois
+contextos de GPU do processo, em 70 s. os 1312 PNGs ficam em
+`target/determinism/wgpu28` (183 MB, fora do git); o sha256 dos PNGs
+concatenados em ordem de nome começa por `2b030e6038253651`. essa é a
+referência de pixel da subida.
+
+## fase 2: a sonda do wgpu 29
+
+fontes: `wgpu-29.0.4`, `wgpu-types-29.0.4`, `wgpu-core-29.0.4`,
+`wgpu-hal-29.0.4` e `wgpu-naga-bridge-29.0.4` no registro do cargo. o
+que pegou o plev:
+
+- `Surface::get_current_texture` devolve `CurrentSurfaceTexture`, não
+  mais `Result<SurfaceTexture, SurfaceError>` (wgpu src/api/surface.rs:120,
+  src/api/surface_texture.rs:55-87). o `suboptimal` saiu da textura e
+  virou variante; `Occluded` e `Validation` são novas. no Metal, o
+  `Occluded` vem quando a `NSWindow` não está visível
+  (wgpu-hal src/metal/surface.rs:144-151); no 28 o frame era desenhado
+  assim mesmo. no engine (`window/frame.rs:70`, `window/render.rs:219`)
+  sucesso e subótimo desenham como antes, perdido e desatualizado seguem
+  o caminho da task-76, e o coberto pula o frame: o
+  `WindowEvent::Occluded(false)` já desenha um novo ao descobrir.
+- `Instance::new` recebe o `InstanceDescriptor` por valor, e ele perdeu o
+  `Default` (wgpu src/api/instance.rs:63; wgpu-types src/instance.rs:64-75,
+  `new_without_display_handle`). `gpu/context.rs:295`.
+- `PipelineLayoutDescriptor::bind_group_layouts` é
+  `&[Option<&BindGroupLayout>]` (wgpu src/api/pipeline_layout.rs:38).
+  `gpu/pipelines.rs` (7) e `effects/pipelines.rs` (4).
+- `DepthStencilState` tem `Option` na escrita e na comparação
+  (wgpu-types src/render.rs:816, :822). só o exemplo `scene3d`.
+- o naga do gate: o wgpu-core agora faz o parse com opções e o validador
+  vem do `wgpu-naga-bridge` (wgpu-core src/device/resource.rs:2278, :2349;
+  wgpu-naga-bridge src/lib.rs:182). `wgpu::naga` segue reexportado
+  (src/lib.rs:172) e o teste `wgsl` dá arquivo, linha e coluna como antes.
+- o `rust-version` 1.87 liga o `manual_is_multiple_of` do clippy em seis
+  lugares; um deles é o `crates/wire/src/b64.rs:54`. o wgpu 28 já pedia
+  1.92 (Cargo.toml:14) com o workspace declarando 1.85.
+
+## fase 2: a prova de pixel
+
+```sh
+cargo run --offline -p showcase --example regress -- capture \
+  --out target/determinism/wgpu29 --against target/determinism/wgpu28 --no-png
+```
+
+no wgpu 29.0.4: 1312 de 1312 `equal` contra a base do wgpu 28 (os mesmos
+bytes RGBA, frame a frame), e 1312 `equal` entre os dois contextos do
+processo. nenhum `requested`, `silent` ou `resized`.
+
+## fase 2: handoff
+
+commits na `task/78b-wgpu29`: `4a04d454` a base de pixel no wgpu 28;
+`8839f3c8` o wgpu 29 e as mudanças de API; `bcf0a205` a sonda e a prova
+de pixel; `06df04c8` o lint do wire (com o ok do orquestrador);
+`496c6ffa` o device do engine para o burn; `002debd4` o burn no device
+do engine e os testes; `9e46ce7a` o teste real diz o dtype; este, o ADR e
+o handoff.
+
+a API do wgpu 29 que pegou o plev está na sonda acima: a textura da
+superfície virou `CurrentSurfaceTexture` (`window/frame.rs:70`,
+`window/render.rs:219`, 12 exemplos do engine, o editor do comps, o
+preview do parser e o prime), o
+`InstanceDescriptor` sem `Default` e por valor (`gpu/context.rs:295`,
+dois testes), os layouts com `Option` (11 no engine, 1 no scene3d) e o
+depth do scene3d. o `rust-version` 1.87 pediu o `is_multiple_of` em
+seis lugares da raiz (um no wire) e em três do `crates/llm`.
+
+a prova de pixel: 1312 de 1312 `equal` contra a base do wgpu 28, no
+commit do wgpu 29 e de novo na ponta da branch, depois do device para o
+burn. `regress check`: 176 iguais.
+
+o device dividido: o engine dá `instance()` e `adapter()` por acréscimo,
+e `RenderConfig::compute` (`None` por padrão) pede os limites e as
+features do adaptador (`gpu/config.rs:44`, `gpu/context.rs:309`). no
+`crates/llm`, a feature `plev` põe o engine como dependência de caminho
+e `llm::plev` entrega os quatro handles ao `init_device`. o
+`tests/plev.rs` roda sem janela: matmul no device do engine igual ao da
+CPU, e depois o mesmo device desenha um frame igual byte a byte ao de um
+renderer sem burn. o teste ignorado com o TinyLlama respondeu "The
+capital of France is Paris." em f16 no device do engine, em 7,6 s, com
+4,0 GB de pico de footprint. o que isso não mostra está no ADR, seção
+"the shared device".
+
+o que compila: macOS (gate), wasm (gate, raiz e urnaui), android
+(`aarch64-linux-android`, com o clang do NDK 27.2 do SDK apontado por
+variável, porque o NDK não está no PATH) e iOS (`aarch64-apple-ios-sim`).
+
+gate verde com as pernas urnaui e wasm: 3272 passados (3186 na raiz e 86
+no urnaui), eram 3268; os 4 a mais são os testes novos do engine. o
+`crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados; clippy
+verde também com `burn`, `candle,burn,metal` e `burn,plev,metal`.
+
+pendências:
+- o `rust-conventions.md` e o `clippy.toml` ainda dizem 1.85, e o
+  `AGENTS.md:17` diz wgpu 28 (o orquestrador corrige na integração).
+- o tensor ainda não chega ao frame sem voltar para a CPU (item 4).
+- burn com `metal` no device do engine pede os shaders passthrough, que
+  são experimentais no wgpu 29; hoje o `llm::plev::device` recusa.
+- depois de uma perda de device, quem usa o burn tem que registrar o
+  device novo; não há teste disso.
+- avisos antigos só no android e no iOS: `event_loop_proxy` sem uso
+  (`engine/src/window/mod.rs:57`) e `window` sem uso
+  (`showcase/src/app.rs:408`).
+
+## fase 2 integrada (orquestrador, 2026-09-26)
+
+validação do orquestrador:
+- diff lido. as mudanças de API do wgpu 29 são mecânicas. o frame da
+  janela coberta (`Occluded`) é pulado, e o `Occluded(false)` que já
+  existia redesenha.
+- o `RenderConfig::compute` vem desligado; só o `crates/llm` com a
+  feature `plev` liga. a linha do wire é só o lint, sem mudar o formato.
+- gate verde com 3272 (eram 3268; os 4 a mais são do engine).
+- `regress check`: 176 iguais.
+- a captura refeita pelo orquestrador contra a base do wgpu 28: todo
+  frame igual.
+- `crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados (os que
+  pedem o modelo).
+
+o que isso fecha e o que não fecha: o pedido do brenner (decisão 16),
+com o plev no wgpu 29 e o burn na GPU do renderer. do item 4 do escopo,
+falta a metade que mostra o resultado do burn na tela sem voltar pela
+CPU. próximo passo: o app de referência (item 1 do critério).
+
+o agente gastou uns 495 mil tokens (uns 185 mil até a parada no wire,
+uns 310 mil depois).

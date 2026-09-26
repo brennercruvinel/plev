@@ -30,6 +30,8 @@ pub struct GpuContext {
     /// The instance the device and the surface came from. The surface
     /// belongs to it, so a recovery asks it for the next adapter.
     pub(crate) instance: wgpu::Instance,
+    /// The adapter `device` was requested from; a recovery replaces both.
+    pub(crate) adapter: wgpu::Adapter,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     /// The lost flag of `device`, raised by wgpu's callback (`gpu::loss`).
@@ -96,7 +98,7 @@ impl GpuContext {
         Self::apply_config(&mut config);
 
         let size = window.inner_size();
-        let instance = Self::instance();
+        let instance = Self::new_instance();
 
         let surface = instance.create_surface(window.clone()).unwrap();
         let adapter = instance
@@ -127,6 +129,7 @@ impl GpuContext {
 
         let gpu = Self::from_device(
             instance,
+            adapter,
             device,
             queue,
             Some(surface),
@@ -150,7 +153,7 @@ impl GpuContext {
     pub async fn new_headless(width: u32, height: u32, mut config: RenderConfig) -> Option<Self> {
         Self::apply_config(&mut config);
 
-        let instance = Self::instance();
+        let instance = Self::new_instance();
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -186,6 +189,7 @@ impl GpuContext {
         };
         Some(Self::from_device(
             instance,
+            adapter,
             device,
             queue,
             None,
@@ -256,8 +260,23 @@ impl GpuContext {
         crate::path::set_default_tolerance(config.path_tolerance);
     }
 
-    fn instance() -> wgpu::Instance {
+    fn new_instance() -> wgpu::Instance {
         Self::instance_on(Self::backends())
+    }
+
+    /// The instance this context's adapter, device and surface came from.
+    /// With [`Self::adapter`] and the `device` and `queue` fields, what a
+    /// library that computes on the renderer's device asks for (burn,
+    /// through cubecl's `init_device`). A recovery (`gpu::recover`)
+    /// replaces the adapter, the device and the queue: a holder of the old
+    /// handles holds a lost device.
+    pub fn instance(&self) -> &wgpu::Instance {
+        &self.instance
+    }
+
+    /// The adapter this context's device was requested from.
+    pub fn adapter(&self) -> &wgpu::Adapter {
+        &self.adapter
     }
 
     /// The backends the constructors ask for.
@@ -273,9 +292,9 @@ impl GpuContext {
     }
 
     pub(super) fn instance_on(backends: wgpu::Backends) -> wgpu::Instance {
-        wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
-            ..Default::default()
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
         })
     }
 
@@ -285,16 +304,21 @@ impl GpuContext {
         adapter: &wgpu::Adapter,
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
+        let timestamps =
+            crate::perf::gpu_time::device_features(adapter.features(), config.gpu_timestamps);
+        let (required_features, required_limits) = match config.compute {
+            None => (timestamps, wgpu::Limits::default()),
+            Some(asked) => {
+                let granted =
+                    asked & (adapter.features() - wgpu::Features::all_experimental_mask());
+                log::debug!("gpu compute: asked {asked:?}, the adapter grants {granted:?}");
+                (timestamps | granted, adapter.limits())
+            }
+        };
         wgpu::DeviceDescriptor {
             label: Some("plev_device"),
-            required_features: crate::perf::gpu_time::device_features(
-                adapter.features(),
-                config.gpu_timestamps,
-            ),
-            #[cfg(not(target_arch = "wasm32"))]
-            required_limits: wgpu::Limits::default(),
-            #[cfg(target_arch = "wasm32")]
-            required_limits: wgpu::Limits::default(),
+            required_features,
+            required_limits,
             memory_hints: wgpu::MemoryHints::Performance,
             trace: Default::default(),
             experimental_features: Default::default(),
@@ -309,6 +333,7 @@ impl GpuContext {
     /// so does a recovery after the device was lost (`gpu::recover`).
     pub(super) fn from_device(
         instance: wgpu::Instance,
+        adapter: wgpu::Adapter,
         device: wgpu::Device,
         queue: wgpu::Queue,
         surface: Option<wgpu::Surface<'static>>,
@@ -435,6 +460,7 @@ impl GpuContext {
 
         Self {
             instance,
+            adapter,
             device,
             queue,
             loss,

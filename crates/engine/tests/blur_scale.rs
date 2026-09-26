@@ -634,7 +634,7 @@ fn glass_and_shadows() -> Compositor {
 
 /// The name and backend of the adapter the headless renderer asks for.
 fn adapter() -> Option<(String, wgpu::Backend)> {
-    let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor::default());
+    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
     let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
         power_preference: wgpu::PowerPreference::HighPerformance,
         compatible_surface: None,

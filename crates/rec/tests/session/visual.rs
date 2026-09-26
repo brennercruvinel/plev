@@ -297,7 +297,7 @@ fn a_chunk_the_codec_refuses_is_split_and_still_reads_back() -> Fallible {
         (0..600)
             .map(|n| {
                 let (x, y) = ((n % 30) as f32 * 10.0, (n / 30) as f32 * 10.0);
-                if (i + n) % 2 == 0 {
+                if (i + n).is_multiple_of(2) {
                     SceneNode::Rect {
                         x,
                         y,

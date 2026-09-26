@@ -56,13 +56,17 @@ pub fn spec(bytes: &[u8]) -> Result<Spec, LlmError> {
     }
     let heads = raw.num_attention_heads;
     let kv_heads = raw.num_key_value_heads.unwrap_or(heads);
-    if heads == 0 || kv_heads == 0 || raw.hidden_size % heads != 0 || heads % kv_heads != 0 {
+    if heads == 0
+        || kv_heads == 0
+        || !raw.hidden_size.is_multiple_of(heads)
+        || !heads.is_multiple_of(kv_heads)
+    {
         return Err(config_err(format!(
             "{heads} heads and {kv_heads} kv heads do not divide {}",
             raw.hidden_size
         )));
     }
-    if (raw.hidden_size / heads) % 2 != 0 {
+    if !(raw.hidden_size / heads).is_multiple_of(2) {
         return Err(config_err("the head width must be even for rope"));
     }
     Ok(Spec {

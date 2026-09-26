@@ -38,7 +38,7 @@ exclude = ["crates/urnaui", "crates/llm"]
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
 repository = "https://github.com/brennercruvinel/plev"
 
@@ -74,7 +74,7 @@ svg = { path = "crates/svg" }
 uir = { path = "crates/uir" }
 wire = { path = "crates/wire" }
 # -- gpu / window
-wgpu = "28"
+wgpu = "29"
 winit = { version = "0.30", features = ["rwh_06"] }
 bytemuck = { version = "1", features = ["derive"] }
 # -- text / layout / vector

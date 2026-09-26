@@ -68,8 +68,8 @@ pub fn present_frame(
 
     let surface = gpu.surface.as_ref()?;
     let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+        wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+        wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
             // A lost device loses its surface too: ask for another frame,
             // which recovers before acquiring. A lost swapchain alone is
             // reconfigured.
@@ -80,12 +80,15 @@ pub fn present_frame(
             }
             return None;
         }
-        Err(wgpu::SurfaceError::Timeout) => {
+        wgpu::CurrentSurfaceTexture::Timeout => {
             log::warn!("{label}: surface timeout");
             return None;
         }
-        Err(e) => {
-            log::error!("{label}: surface error: {e:?}");
+        // A covered window: its `WindowEvent::Occluded(false)` draws the
+        // frame when it shows again.
+        wgpu::CurrentSurfaceTexture::Occluded => return None,
+        wgpu::CurrentSurfaceTexture::Validation => {
+            log::error!("{label}: surface validation error");
             return None;
         }
     };

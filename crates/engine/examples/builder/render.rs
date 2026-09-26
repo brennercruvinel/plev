@@ -20,13 +20,15 @@ pub(crate) fn render(app: &mut App) {
     };
 
     let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(engine::wgpu::SurfaceError::Lost | engine::wgpu::SurfaceError::Outdated) => {
+        engine::wgpu::CurrentSurfaceTexture::Success(t)
+        | engine::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+        engine::wgpu::CurrentSurfaceTexture::Lost
+        | engine::wgpu::CurrentSurfaceTexture::Outdated => {
             gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
             return;
         }
-        Err(engine::wgpu::SurfaceError::Timeout) => return,
-        Err(e) => {
+        engine::wgpu::CurrentSurfaceTexture::Timeout => return,
+        e => {
             log::error!("Surface error: {e:?}");
             return;
         }
