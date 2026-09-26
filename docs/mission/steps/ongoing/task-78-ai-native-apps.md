@@ -358,3 +358,46 @@ contextos de GPU do processo, em 70 s. os 1312 PNGs ficam em
 `target/determinism/wgpu28` (183 MB, fora do git); o sha256 dos PNGs
 concatenados em ordem de nome começa por `2b030e6038253651`. essa é a
 referência de pixel da subida.
+
+## fase 2: a sonda do wgpu 29
+
+fontes: `wgpu-29.0.4`, `wgpu-types-29.0.4`, `wgpu-core-29.0.4`,
+`wgpu-hal-29.0.4` e `wgpu-naga-bridge-29.0.4` no registro do cargo. o
+que pegou o plev:
+
+- `Surface::get_current_texture` devolve `CurrentSurfaceTexture`, não
+  mais `Result<SurfaceTexture, SurfaceError>` (wgpu src/api/surface.rs:120,
+  src/api/surface_texture.rs:55-87). o `suboptimal` saiu da textura e
+  virou variante; `Occluded` e `Validation` são novas. no Metal, o
+  `Occluded` vem quando a `NSWindow` não está visível
+  (wgpu-hal src/metal/surface.rs:144-151); no 28 o frame era desenhado
+  assim mesmo. no engine (`window/frame.rs:70`, `window/render.rs:219`)
+  sucesso e subótimo desenham como antes, perdido e desatualizado seguem
+  o caminho da task-76, e o coberto pula o frame: o
+  `WindowEvent::Occluded(false)` já desenha um novo ao descobrir.
+- `Instance::new` recebe o `InstanceDescriptor` por valor, e ele perdeu o
+  `Default` (wgpu src/api/instance.rs:63; wgpu-types src/instance.rs:64-75,
+  `new_without_display_handle`). `gpu/context.rs:276`.
+- `PipelineLayoutDescriptor::bind_group_layouts` é
+  `&[Option<&BindGroupLayout>]` (wgpu src/api/pipeline_layout.rs:38).
+  `gpu/pipelines.rs` (7) e `effects/pipelines.rs` (4).
+- `DepthStencilState` tem `Option` na escrita e na comparação
+  (wgpu-types src/render.rs:816, :822). só o exemplo `scene3d`.
+- o naga do gate: o wgpu-core agora faz o parse com opções e o validador
+  vem do `wgpu-naga-bridge` (wgpu-core src/device/resource.rs:2278, :2349;
+  wgpu-naga-bridge src/lib.rs:182). `wgpu::naga` segue reexportado
+  (src/lib.rs:172) e o teste `wgsl` dá arquivo, linha e coluna como antes.
+- o `rust-version` 1.87 liga o `manual_is_multiple_of` do clippy em seis
+  lugares; um deles é o `crates/wire/src/b64.rs:54`. o wgpu 28 já pedia
+  1.92 (Cargo.toml:14) com o workspace declarando 1.85.
+
+## fase 2: a prova de pixel
+
+```sh
+cargo run --offline -p showcase --example regress -- capture \
+  --out target/determinism/wgpu29 --against target/determinism/wgpu28 --no-png
+```
+
+no wgpu 29.0.4: 1312 de 1312 `equal` contra a base do wgpu 28 (os mesmos
+bytes RGBA, frame a frame), e 1312 `equal` entre os dois contextos do
+processo. nenhum `requested`, `silent` ou `resized`.
