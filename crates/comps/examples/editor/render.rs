@@ -18,12 +18,12 @@ pub fn present_frame(
         return;
     };
     let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+        wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+        wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
             gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
             return;
         }
-        Err(_) => return,
+        _ => return,
     };
     let surface_view = gpu.surface_render_view(&output);
 

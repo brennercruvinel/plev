@@ -217,11 +217,12 @@ impl WindowHost {
             return Some(Target::Offscreen(gpu.texture_render_view(target)));
         };
         match surface.get_current_texture() {
-            Ok(output) => {
+            wgpu::CurrentSurfaceTexture::Success(output)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(output) => {
                 let view = gpu.surface_render_view(&output);
                 Some(Target::Surface(output, view))
             }
-            Err(wgpu::SurfaceError::Lost | wgpu::SurfaceError::Outdated) => {
+            wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
                 // a lost device loses its surface too: the next requested
                 // frame recovers before acquiring
                 if gpu.poll_device_loss() {
@@ -231,12 +232,15 @@ impl WindowHost {
                 }
                 None
             }
-            Err(wgpu::SurfaceError::Timeout) => {
+            wgpu::CurrentSurfaceTexture::Timeout => {
                 log::warn!("Surface timeout");
                 None
             }
-            Err(e) => {
-                log::error!("Surface error: {e:?}");
+            // a covered window: its `WindowEvent::Occluded(false)` draws
+            // the frame when it shows again
+            wgpu::CurrentSurfaceTexture::Occluded => None,
+            wgpu::CurrentSurfaceTexture::Validation => {
+                log::error!("Surface validation error");
                 None
             }
         }

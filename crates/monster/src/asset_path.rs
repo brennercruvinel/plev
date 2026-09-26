@@ -104,7 +104,7 @@ pub fn unpack(data: &[u8]) -> Option<TessellatedPath> {
     let color = bytes_to_rgba([data[0], data[1], data[2], data[3]]);
     let vcount = usize::from(u16::from_le_bytes([data[4], data[5]]));
     let icount = u32::from_le_bytes([data[6], data[7], data[8], data[9]]) as usize;
-    if data.len() != HEAD + vcount * VERT + icount * IDX || icount % 3 != 0 {
+    if data.len() != HEAD + vcount * VERT + icount * IDX || !icount.is_multiple_of(3) {
         return None;
     }
     let mut vertices = Vec::with_capacity(vcount);

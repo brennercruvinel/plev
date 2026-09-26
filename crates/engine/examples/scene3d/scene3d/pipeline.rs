@@ -57,7 +57,7 @@ impl Pipeline3D {
 
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("3d_layout"),
-            bind_group_layouts: &[&bgl],
+            bind_group_layouts: &[Some(&bgl)],
             immediate_size: 0,
         });
 
@@ -123,15 +123,15 @@ impl Pipeline3D {
 
         let depth_rw = Some(wgpu::DepthStencilState {
             format: depth_fmt,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_write_enabled: Some(true),
+            depth_compare: Some(wgpu::CompareFunction::Less),
             stencil: Default::default(),
             bias: Default::default(),
         });
         let depth_ro = Some(wgpu::DepthStencilState {
             format: depth_fmt,
-            depth_write_enabled: false,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_write_enabled: Some(false),
+            depth_compare: Some(wgpu::CompareFunction::Less),
             stencil: Default::default(),
             bias: Default::default(),
         });

@@ -9,7 +9,7 @@ pub fn is_prime(n: u32) -> bool {
     }
     let mut i = 2u32;
     while i <= n / i {
-        if n % i == 0 {
+        if n.is_multiple_of(i) {
             return false;
         }
         i += 1;

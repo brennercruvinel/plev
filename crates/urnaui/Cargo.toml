@@ -2,7 +2,7 @@
 name = "urnaui"
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.87"
 publish = false
 description = "urnaui — desktop (and web) explorer for .urna vector databases: search, chunks, media frames, spaces, graph, built on plev"
 
@@ -26,7 +26,7 @@ path = "src/main.rs"
 [dependencies]
 engine = { path = "../engine" }
 comps = { path = "../comps" }
-wgpu = "28"
+wgpu = "29"
 winit = { version = "0.30", features = ["rwh_06"] }
 log = "0.4"
 web-time = "1.1"

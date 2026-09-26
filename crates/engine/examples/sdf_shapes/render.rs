@@ -118,12 +118,14 @@ fn submit_gpu(app: &mut App, _vw: f32, _vh: f32) {
         None => return,
     };
     let output = match surface.get_current_texture() {
-        Ok(t) => t,
-        Err(engine::wgpu::SurfaceError::Lost | engine::wgpu::SurfaceError::Outdated) => {
+        engine::wgpu::CurrentSurfaceTexture::Success(t)
+        | engine::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+        engine::wgpu::CurrentSurfaceTexture::Lost
+        | engine::wgpu::CurrentSurfaceTexture::Outdated => {
             gpu.resize(gpu.surface_config.width, gpu.surface_config.height);
             return;
         }
-        Err(_) => return,
+        _ => return,
     };
     let surface_view = gpu.surface_render_view(&output);
     text_system.begin_frame();

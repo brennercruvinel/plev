@@ -18,7 +18,7 @@ impl EffectProcessor {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("blur_pipeline_layout"),
-            bind_group_layouts: &[texture_bgl, uniform_bgl],
+            bind_group_layouts: &[Some(texture_bgl), Some(uniform_bgl)],
             immediate_size: 0,
         });
         create_fullscreen_pipeline(
@@ -47,7 +47,7 @@ impl EffectProcessor {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("scaled_blur_pipeline_layout"),
-            bind_group_layouts: &[texture_bgl, uniform_bgl],
+            bind_group_layouts: &[Some(texture_bgl), Some(uniform_bgl)],
             immediate_size: 0,
         });
         fullscreen_pipeline(
@@ -73,7 +73,7 @@ impl EffectProcessor {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("shadow_pipeline_layout"),
-            bind_group_layouts: &[texture_bgl, uniform_bgl],
+            bind_group_layouts: &[Some(texture_bgl), Some(uniform_bgl)],
             immediate_size: 0,
         });
         create_fullscreen_pipeline(
@@ -99,7 +99,7 @@ impl EffectProcessor {
         });
         let layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("composite_pipeline_layout"),
-            bind_group_layouts: &[texture_bgl, uniform_bgl],
+            bind_group_layouts: &[Some(texture_bgl), Some(uniform_bgl)],
             immediate_size: 0,
         });
         create_fullscreen_pipeline(

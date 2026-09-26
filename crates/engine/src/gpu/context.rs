@@ -273,9 +273,9 @@ impl GpuContext {
     }
 
     pub(super) fn instance_on(backends: wgpu::Backends) -> wgpu::Instance {
-        wgpu::Instance::new(&wgpu::InstanceDescriptor {
+        wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
-            ..Default::default()
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
         })
     }
 

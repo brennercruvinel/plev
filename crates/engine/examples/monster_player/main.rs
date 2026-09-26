@@ -134,9 +134,11 @@ impl MonsterApp {
             self.compositor.push(node);
         }
         let surface = gpu.surface.as_ref().ok_or("the window has no surface")?;
-        let output = surface
-            .get_current_texture()
-            .map_err(|e| format!("surface texture: {e}"))?;
+        let output = match surface.get_current_texture() {
+            engine::wgpu::CurrentSurfaceTexture::Success(t)
+            | engine::wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
+            other => return Err(format!("surface texture: {other:?}")),
+        };
         let view = gpu.surface_render_view(&output);
         draw_frame(
             &mut self.compositor,

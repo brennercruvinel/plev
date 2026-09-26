@@ -1,10 +1,10 @@
 //! Every WGSL file of the engine is valid WGSL, checked in the gate
 //! (task-72 phase 1). `wgpu-core` parses and validates a WGSL module with
 //! naga when the app creates it (`create_shader_module`,
-//! wgpu-core-28.0.1/src/device/resource.rs:2205 and :2275), so a broken
+//! wgpu-core-29.0.4/src/device/resource.rs:2278 and :2349), so a broken
 //! shader otherwise surfaces in the first run that builds its pipeline.
 //! Here the same naga (`wgpu::naga`, the re-export of
-//! wgpu-28.0.0/src/lib.rs:171, on every native target) reads every
+//! wgpu-29.0.4/src/lib.rs:172, on every native target) reads every
 //! `.wgsl` under `src/` and `examples/` from disk, the files the hot
 //! reload of a debug build reads too, and a shader that does not parse or
 //! validate fails `cargo test` with its path, line and column.
@@ -12,7 +12,7 @@
 //! The walk finds the files, so a new shader is checked without being
 //! listed anywhere. The validator gets no optional capability: what
 //! `wgpu-core` gives a device with no optional features
-//! (`create_validator`, wgpu-core-28.0.1/src/device/mod.rs:395), so a
+//! (`create_validator`, wgpu-naga-bridge-29.0.4/src/lib.rs:182), so a
 //! shader that passes here needs nothing a device may lack.
 
 use std::path::{Path, PathBuf};
