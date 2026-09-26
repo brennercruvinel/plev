@@ -33,5 +33,9 @@ mod choices;
 /// every page, the arrows by widget, Enter and Space, the modal's trap.
 mod keyboard;
 
+/// The input method (task-74 phase 4): a field composing, the editor,
+/// and the IME off with no field focused.
+mod ime;
+
 /// The privacy promises: no case on these pages, guarded.
 mod promises;
