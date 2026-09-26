@@ -144,3 +144,89 @@ mod loss {
         assert!(!gpu.device_lost());
     }
 }
+
+/// A library computing on the renderer's device (`RenderConfig::compute`,
+/// `GpuContext::instance` and `adapter`). Skips without an adapter.
+#[cfg(not(target_arch = "wasm32"))]
+mod compute {
+    use crate::gpu::{GpuContext, RenderConfig};
+
+    fn headless(compute: Option<wgpu::Features>) -> Option<GpuContext> {
+        let config = RenderConfig {
+            compute,
+            ..RenderConfig::default()
+        };
+        let gpu = pollster::block_on(GpuContext::new_headless(8, 8, config));
+        if gpu.is_none() {
+            eprintln!("no GPU adapter; skipping");
+        }
+        gpu
+    }
+
+    /// The limits that decide how big a tensor's buffer can be.
+    fn sizes(limits: &wgpu::Limits) -> (u64, u64) {
+        (
+            limits.max_buffer_size,
+            limits.max_storage_buffer_binding_size,
+        )
+    }
+
+    #[test]
+    fn the_renderer_alone_asks_for_the_default_limits_and_no_feature() {
+        let Some(gpu) = headless(None) else {
+            return;
+        };
+        assert_eq!(sizes(&gpu.device.limits()), sizes(&wgpu::Limits::default()));
+        assert_eq!(gpu.device.features(), wgpu::Features::empty());
+        // the handles a compute library takes: the device's own adapter
+        // (its features and limits hold the device's), and the instance
+        // that answers with that adapter again
+        assert!(gpu.adapter().features().contains(gpu.device.features()));
+        let again = pollster::block_on(gpu.instance().request_adapter(&Default::default()))
+            .expect("the instance still answers");
+        assert_eq!(again.get_info().name, gpu.adapter().get_info().name);
+    }
+
+    /// Asked for f16 and f64: the device has the adapter's limits and
+    /// exactly the asked features the adapter has; one it lacks is left
+    /// out, not a failed device.
+    #[test]
+    fn compute_asks_for_the_adapter_limits_and_the_features_it_has() {
+        let asked = wgpu::Features::SHADER_F16 | wgpu::Features::SHADER_F64;
+        let Some(gpu) = headless(Some(asked)) else {
+            return;
+        };
+        let adapter = gpu.adapter().features();
+        assert_eq!(sizes(&gpu.device.limits()), sizes(&gpu.adapter().limits()));
+        assert_eq!(gpu.device.features() & asked, asked & adapter);
+        assert!(!gpu.device.features().intersects(asked - adapter));
+    }
+
+    /// Everything wgpu names: the device gets what the adapter has but
+    /// the experimental features, which would fail the request.
+    #[test]
+    fn asking_for_every_feature_grants_the_adapter_s_but_the_experimental_ones() {
+        let Some(gpu) = headless(Some(wgpu::Features::all())) else {
+            return;
+        };
+        let experimental = wgpu::Features::all_experimental_mask();
+        assert_eq!(
+            gpu.device.features(),
+            gpu.adapter().features() - experimental
+        );
+    }
+
+    /// A recovery asks the new device for what the lost one had.
+    #[test]
+    fn a_recovery_keeps_what_compute_asked_for() {
+        let Some(mut gpu) = headless(Some(wgpu::Features::SHADER_F16)) else {
+            return;
+        };
+        let before = (sizes(&gpu.device.limits()), gpu.device.features());
+        gpu.device.destroy();
+        assert!(gpu.poll_device_loss());
+        gpu.recover().expect("an adapter is there");
+        assert_eq!((sizes(&gpu.device.limits()), gpu.device.features()), before);
+        assert_eq!(sizes(&gpu.device.limits()), sizes(&gpu.adapter().limits()));
+    }
+}

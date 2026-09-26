@@ -34,6 +34,14 @@ pub struct RenderConfig {
     /// off the device asks for no feature. An adapter without them
     /// behaves as off, and the GPU stages stay empty.
     pub gpu_timestamps: bool,
+    /// A library computes on this device too (burn, through cubecl's
+    /// `init_device`, with `GpuContext::instance`, `adapter`, `device`
+    /// and `queue`): the device asks for the adapter's limits in place of
+    /// the defaults (a tensor outgrows the default 256 MB buffer) and for
+    /// these features where the adapter has them (`SHADER_F16` for f16),
+    /// never an experimental one (wgpu's unsafe opt-in). `None`, the
+    /// default, asks for neither, as the renderer alone does.
+    pub compute: Option<wgpu::Features>,
 }
 
 impl Default for RenderConfig {
@@ -46,6 +54,7 @@ impl Default for RenderConfig {
             perf_log_interval: 120,
             perf_hud: false,
             gpu_timestamps: false,
+            compute: None,
         }
     }
 }
@@ -80,6 +89,8 @@ mod tests {
         assert!(!config.perf_hud);
         // No device feature unless measuring asks for it.
         assert!(!config.gpu_timestamps);
+        // Nothing computes on the device unless asked.
+        assert_eq!(config.compute, None);
     }
 
     #[test]
