@@ -1463,3 +1463,68 @@ qualquer outro caso, desligado. a galeria acerta isso a cada frame
 desenhado da janela principal (`events.rs:197`): o foco só muda por um
 evento que pede frame. as outras páginas com texto ficam desligadas,
 como hoje (pendência no handoff).
+
+## handoff da fase 4: o IME no campo de texto
+
+prepara o item "roteiro de IME executado e registrado": o campo compõe
+e a galeria liga o IME. falta o brenner rodar o roteiro num campo da
+página Input (japonês `nihongo`, espaço, Enter; chinês `zhongwen`,
+espaço); aí o item fecha.
+
+### commits
+
+- `3579e5be` a sonda do campo
+- `c4866d15` a composição no `TextInput` e no `TextField`
+- `45c0f909` a galeria liga o IME no campo focado e no editor
+- `a6bfcb24` os testes e o PNG
+- `576417b8` o `Disabled` sem o fold (o clippy)
+
+### o que mudou
+
+- `TextInput` guarda a composição e o caret do IME fora do buffer.
+  `handle_ime(committed, preedit)` mantém a assinatura (e agora guarda a
+  composição); a irmã `handle_ime_at` recebe o caret. perder o foco ou
+  `clear_preedit` largam a composição. `composed`, `preedit_boxes` e
+  `caret_x` usam o mesmo `TextStyle` do desenho.
+- `TextField` desenha o texto composto (a composição no lugar da
+  seleção ou no caret), um sublinhado de `edge_width` em
+  `glass.text_active`, e o caret parado no caret do IME. `compose` passa
+  o commit pelo mesmo `insert` da digitação; `end_compose` e `ime_area`
+  são novos. a projeção lê só o buffer.
+- galeria: `ImeEvent` e `handle_ime`/`ime_area` na view, sem winit; a
+  página Input e a Editor recebem. o shell (`app/events/ime.rs`) passa o
+  `WindowEvent::Ime`, grava o commit como tecla de texto (o tipo, nunca
+  o texto) e, depois de cada frame da janela principal, liga o IME só
+  quando `ime_area` responde. `app.rs` não cresceu.
+
+### testes
+
+sete no comps (`text_input/tests/tests_ime.rs`), quatro na galeria
+(`tests/component_pages/ime.rs`) e um no shell (a gravação guarda um
+`text` para o commit e nada da composição, conferido nos bytes do
+arquivo salvo).
+
+### o PNG
+
+`/Users/nn/Dev/hoff/plevdev/target/agents/one/task-74h/ime-field.png`:
+a página Input a 2x, o primeiro campo com `日本語!` digitado e `にほんご`
+compondo, sublinhado, caret no fim. para refazer:
+`IME_FIELD_OUT=<dir> cargo test -p showcase --test component_pages the_focused_field`.
+
+### gate e regress
+
+`./script/gate` verde: `cargo test --workspace` 3160 passed, 0 failed,
+28 ignored; perna urnaui 86 passed, 1 ignored (3246 no total, eram
+3234); clippy, fmt e wasm verdes. `regress -- check`: 176 unchanged, 0
+changed. disco: 8,4 GB livres.
+
+### pendências
+
+- a janela da página (`D`) não liga o IME: a área da janela de
+  candidatos precisaria do layout da janela da página, fora da rota.
+- Todo, Surface, Silences e o formulário do Git continuam sem IME:
+  o Todo só aceita um caractere por tecla, os campos das superfícies
+  geradas vivem no crate `surface`, e o formulário do Git é do ide.
+- o ide e o urnaui não ligam o IME (o mesmo fio).
+- os frames gravados mostram o que está na tela, com a composição, como
+  mostram o texto digitado.
