@@ -1,8 +1,8 @@
 ---
 project: plev
 audience: [ai-agents, contributors]
-status: pending
-last-updated: 2026-09-23
+status: ongoing
+last-updated: 2026-09-26
 domain: generative-runtime
 task: task-78
 wave: trilha
@@ -108,3 +108,21 @@ grupos por item, `task-78:` no início.
 
 - a decisão de biblioteca de inferência (sempre do brenner);
 - o app escolhido exigir dependência fora do workspace.
+
+## fase 1 aberta (orquestrador, 2026-09-26)
+
+aberta com o ok do brenner ("sim, pode orquestrar com o agente", e o
+espaço em disco liberado por ele). a fase mede o candle contra o burn
+com o mesmo modelo e escreve o ADR com a recomendação; a escolha da
+biblioteca é do brenner (decisão 15 do programa). é o primeiro passo do
+item "app de referência rodando no macOS com modelo local em streaming e
+fontes citadas".
+
+o modelo, baixado pelo orquestrador, fica fora do repositório:
+`~/.cache/plev/models/tinyllama-1.1b-chat-v1.0/`, TinyLlama 1.1B Chat
+v1.0 (Apache-2.0), commit `fe8a4ea1` do repositório no Hugging Face,
+`model.safetensors` com 2.200.119.864 bytes e sha256
+`6e6001da2106d4757498752a021df6c2bdc332c650aae4bae6b0c004dcf14933`.
+o TinyLlama porque o candle (`candle-transformers`, llama) e o burn (a
+implementação do `burn-lm-llama`) rodam o mesmo modelo, e a comparação só
+é justa assim.
