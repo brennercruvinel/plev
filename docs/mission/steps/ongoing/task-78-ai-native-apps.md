@@ -342,3 +342,19 @@ depois o app de referência (item 1 do critério).
 
 o agente gastou uns 360 mil tokens depois da retomada; o trecho antes da
 queda da sessão não ficou contado.
+
+## fase 2: a base de pixel no wgpu 28
+
+antes de qualquer mudança, na `main` em `82b584d6` (wgpu 28.0.0 no
+`Cargo.lock`), a captura do desktop contra ele mesmo:
+
+```sh
+cargo run --offline -p showcase --example regress -- capture \
+  --out target/determinism/wgpu28
+```
+
+82 páginas, 4 temas, 4 escalas: 1312 frames, 1312 `equal` entre os dois
+contextos de GPU do processo, em 70 s. os 1312 PNGs ficam em
+`target/determinism/wgpu28` (183 MB, fora do git); o sha256 dos PNGs
+concatenados em ordem de nome começa por `2b030e6038253651`. essa é a
+referência de pixel da subida.
