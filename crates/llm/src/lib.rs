@@ -18,6 +18,9 @@ pub mod chat;
 #[cfg(feature = "text")]
 pub mod text;
 
+#[cfg(feature = "candle")]
+pub mod candle;
+
 pub use error::LlmError;
 pub use stream::{Cancel, Event, Model, Request, Stop, Stream, Token};
 

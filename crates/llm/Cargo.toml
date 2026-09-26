@@ -18,7 +18,7 @@ default = ["text"]
 # the tokenizer and the chat template: native only (onig is C).
 text = ["dep:tokenizers"]
 # candle on the cpu; add `metal` for the gpu.
-candle = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers"]
+candle = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers", "dep:serde_json"]
 # burn on the cpu (ndarray); add `metal` for the gpu (wgpu with the msl compiler).
 burn = ["dep:burn", "dep:burn-store", "burn/ndarray", "dep:serde", "dep:serde_json"]
 # the apple gpu for whichever backend is on.
