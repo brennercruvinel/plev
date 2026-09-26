@@ -456,3 +456,26 @@ pendências:
 - avisos antigos só no android e no iOS: `event_loop_proxy` sem uso
   (`engine/src/window/mod.rs:57`) e `window` sem uso
   (`showcase/src/app.rs:408`).
+
+## fase 2 integrada (orquestrador, 2026-09-26)
+
+validação do orquestrador:
+- diff lido. as mudanças de API do wgpu 29 são mecânicas. o frame da
+  janela coberta (`Occluded`) é pulado, e o `Occluded(false)` que já
+  existia redesenha.
+- o `RenderConfig::compute` vem desligado; só o `crates/llm` com a
+  feature `plev` liga. a linha do wire é só o lint, sem mudar o formato.
+- gate verde com 3272 (eram 3268; os 4 a mais são do engine).
+- `regress check`: 176 iguais.
+- a captura refeita pelo orquestrador contra a base do wgpu 28: todo
+  frame igual.
+- `crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados (os que
+  pedem o modelo).
+
+o que isso fecha e o que não fecha: o pedido do brenner (decisão 16),
+com o plev no wgpu 29 e o burn na GPU do renderer. do item 4 do escopo,
+falta a metade que mostra o resultado do burn na tela sem voltar pela
+CPU. próximo passo: o app de referência (item 1 do critério).
+
+o agente gastou uns 495 mil tokens (uns 185 mil até a parada no wire,
+uns 310 mil depois).

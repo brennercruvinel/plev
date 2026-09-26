@@ -14,6 +14,15 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-26
 
+### task-78 fase 2 integrada: o plev no wgpu 29
+
+- 1312 de 1312 frames da galeria iguais aos do wgpu 28, conferidos pelo
+  agente e de novo pelo orquestrador. o burn roda no device do renderer:
+  um matmul conferido contra a CPU, e o TinyLlama respondendo nesse
+  device. a linha do `wire` mudou só pelo lint do `rust-version` 1.87,
+  com o ok do orquestrador.
+- o agente (Opus) gastou uns 495 mil tokens.
+
 ### task-78 fase 1 integrada; candle e burn ficam
 
 - a inferência em processo medida com o mesmo modelo nas duas: o candle
