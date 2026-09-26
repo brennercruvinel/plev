@@ -269,3 +269,56 @@ lighthouse keeper named Jack woke up to the sound of the waves crashing
 against" (ids `797, 278, 4688, 6199, 310, 263, 2181, 11936, 1120, 1227,
 7250, 29892, 263, 301, 18919, 1709, 1589, 11356, 4257, 5457, 281, 6946,
 701, 304, 278, 6047, 310, 278, 20037, 8095, 292, 2750`).
+
+## fase 1: handoff
+
+commits na `task/78a-inference`: `6e2fce00` a sonda; `d095aeb5` o
+workspace e a interface; `a60b00c4` o candle; `2f91d01b` o burn;
+`094d53da` o llm-bench e o layout do burn; `94109cd3` a medição do
+candle; `f6ff13fb` a do burn; `0dec09a9` o porquê do layout; `a33b74a7`
+o wasm; `ddd0928c` o ADR; `71993e9c` e `ca7cb9eb` ajustes de feature nos
+testes e no bench; este handoff.
+
+a sonda: o candle lê o checkpoint como vem do Hugging Face; o burn não
+tem llama, e o do burn-lm (arquivado) virou código nosso, umas 300
+linhas, com carregador pelo burn-store e o rope do Hugging Face. na GPU,
+o burn vai pelo wgpu 29 e aceita um device de fora; o candle usa o Metal
+com device e fila próprios.
+
+a tabela ("fase 1: a medição"): no Metal f16, candle a 37,1 tok/s e burn
+a 26,2; primeiro token em 52 e 60 ms, mas 90 ms contra 911 ms na primeira
+rodada de cada processo; footprint de 5,2 e 4,3 GB; binário de 6,8 e 33
+MB. na CPU f32, 6,7 contra 1,9 tok/s. os 32 primeiros tokens são iguais
+nas quatro colunas. os dois compilam para wasm com o getrandom
+configurado; o tokenizer não.
+
+o ADR: `docs/ADR/ai-native-single-process.md`, `proposed`. recomenda o
+candle para o app de referência, com o burn atrás da feature até a
+decisão, que é do brenner.
+
+o comando que reproduz está na seção da medição (`llm-bench --impl
+candle|burn --device metal|cpu`, de dentro do `CARGO_TARGET_DIR`).
+
+testes: `cargo test --offline --manifest-path crates/llm/Cargo.toml
+--features candle,burn` com 24 passados (a interface com o modelo falso,
+o template, o detokenizador, o rope, o prefill contra o passo); clippy e
+fmt verdes com `text`, `candle`, `burn` e `candle,burn,metal`. os dois
+testes `#[ignore]` rodaram no Metal em release e responderam "The
+capital of France is Paris.".
+
+gate da raiz: verde, 3268 passados, a mesma contagem; o `Cargo.lock` da
+raiz igual ao de `origin/main`.
+
+pendências:
+- tokenizer no wasm: o `tokenizers` sem C pede o `fancy-regex` 0.14, fora
+  do cache.
+- o cache de autotune do burn cai em `target/autotune` perto do
+  `Cargo.toml`; um app instalado precisa de um lugar próprio, se o burn
+  ficar.
+- se o burn ficar: a cadeia de licença do llama do burn-lm (código de
+  referência da Meta, segundo o NOTICES dele).
+- o device do renderer (item 4) pede o plev no wgpu 29 antes de qualquer
+  divisão.
+- o pico de footprint inclui o arquivo mapeado durante a carga; medir o
+  residente depois da carga, se a memória pesar na decisão.
+- depois da decisão, tirar a implementação que não ficar.
