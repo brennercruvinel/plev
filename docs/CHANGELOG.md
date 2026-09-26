@@ -9,6 +9,11 @@ status: living
 
 ## unreleased
 
+- shift with the arrows selects in a text field (2026-09-25, task-74):
+  in the gallery, the ide's intent line and urnaui, shift+left, right,
+  home and end extend the selection, as they already did in the editor.
+  the fields knew how; the apps never sent the shift.
+
 - the editor holds a million lines (2026-09-25, task-74): it opens one
   in about 21 ms, scrolls and edits in the middle in under half a
   millisecond per frame, the same as with ten thousand lines; clicks near
