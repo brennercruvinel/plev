@@ -1383,3 +1383,18 @@ pede o brenner. pendência: a rolagem do engine em f32 anda em passos de
 2 px perto do fim de um milhão de linhas (mudar é API pública).
 
 o agente gastou uns 190 mil tokens.
+
+## shift+seta nos apps (orquestrador, 2026-09-25)
+
+fecha a pendência da fase 3 "os apps não mandam shift+seta para o
+campo", com o ok do brenner, que a reproduziu na página Input da
+galeria. a galeria (`showcase/src/keys.rs`), a linha de intenção e os
+campos da superfície do ide (`ide/src/keys.rs`) e o urnaui
+(`urnaui/src/keys.rs`) mandam shift com as setas, Home e End como as
+teclas `Select` do campo; onde nenhum campo as toma, andam como sem shift
+(abas, árvore, os sliders da Silences). testes: três na galeria
+(`tests/component_pages/keyboard.rs`), um no ide, um no urnaui. sem
+agente.
+
+pendência: o formulário de commit do ide não anda com as setas (o
+keymap dele liga só escape, enter e backspace).

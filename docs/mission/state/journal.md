@@ -14,6 +14,16 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### shift+seta seleciona nos campos
+
+- o brenner testou na galeria: shift+seta não selecionava no campo da
+  página Input (pendência da fase 3 da task-74). com o ok dele, o
+  orquestrador fez a correção sem agente: a galeria, a linha de intenção
+  do ide e o urnaui mandam shift+seta, Home e End como seleção; fora de
+  um campo a tecla anda como sem shift. o formulário de commit do ide não
+  anda com as setas de jeito nenhum e ficou como pendência.
+- nenhum agente; custo só do orquestrador.
+
 ### task-74 fase 7 integrada
 
 - um milhão de linhas no editor, com números: abrir 21 ms, rolar 0,36
