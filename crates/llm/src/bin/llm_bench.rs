@@ -90,23 +90,25 @@ fn parse() -> Result<Args> {
 }
 
 fn load(args: &Args) -> Result<Box<dyn Model>> {
-    let (dir, device) = (args.model.as_path(), args.device);
     if args.layout.is_some() && args.imp != "burn" {
         bail!("--layout is for burn only");
     }
     match args.imp.as_str() {
         #[cfg(feature = "candle")]
-        "candle" => Ok(Box::new(llm::candle::CandleModel::load(dir, device)?)),
+        "candle" => Ok(Box::new(llm::candle::CandleModel::load(
+            &args.model,
+            args.device,
+        )?)),
         #[cfg(feature = "burn")]
         "burn" => {
             use llm::burn::LinearLayout;
             let layout = match args.layout.as_deref() {
-                None => llm::burn::layout_for(device),
+                None => llm::burn::layout_for(args.device),
                 Some("row") => LinearLayout::Row,
                 Some("col") => LinearLayout::Col,
                 Some(other) => bail!("layout {other}: row or col"),
             };
-            Ok(llm::burn::load_with(dir, device, layout)?)
+            Ok(llm::burn::load_with(&args.model, args.device, layout)?)
         }
         other => bail!("{other} is not built in; build with --features {other}"),
     }
