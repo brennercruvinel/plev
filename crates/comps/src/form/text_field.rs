@@ -9,6 +9,11 @@
 //! tests clicks and draws the text, so the caret always lands on the
 //! glyph that was clicked.
 //!
+//! An input method's composition ([`TextField::compose`]) draws inline, in
+//! place of the selection or at the caret, underlined, with the caret at
+//! the input method's; it is only drawn: the text, the projection and the
+//! value hold what was committed.
+//!
 //! With a [`SemId`] ([`TextField::sem`]) the render binds the bounds it
 //! draws and hit-tests with, and [`TextField::project`] declares the
 //! field in a semantic projection; the app still owns the field.
@@ -212,6 +217,55 @@ impl TextField {
         self.input.handle_ime(committed, preedit);
     }
 
+    /// An input method's step, with its caret: `committed` is typed, the
+    /// same way as [`insert`](Self::insert) (over the selection), and
+    /// `preedit` draws inline until the next step (see
+    /// [`TextInput::handle_ime_at`]). `false` when unfocused or disabled.
+    pub fn compose(
+        &mut self,
+        committed: &str,
+        preedit: &str,
+        cursor: Option<(usize, usize)>,
+    ) -> bool {
+        if !self.input.focused || self.disabled {
+            return false;
+        }
+        self.insert(committed);
+        self.input.handle_ime_at("", preedit, cursor);
+        true
+    }
+
+    /// The input method went away: the composition is dropped, the text
+    /// stays. `true` when there was one.
+    pub fn end_compose(&mut self) -> bool {
+        self.input.clear_preedit()
+    }
+
+    /// Where an input method puts its candidate window: the caret, the
+    /// preedit's while composing, as a rect in the coordinates of `bounds`,
+    /// one caret wide and one line tall.
+    pub fn ime_area(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let style = Self::text_style(theme);
+        let (x, y, w) = Self::text_box(bounds, &style, theme);
+        Rect::new(
+            x + self.input.caret_x(&style, Some(w)),
+            y,
+            theme.control.focus_ring_width,
+            style.line_height,
+        )
+    }
+
+    /// The text's box inside `bounds`: its origin, `x` and `y`, and its
+    /// width.
+    fn text_box(bounds: Rect, style: &TextStyle, theme: &Theme) -> (f32, f32, f32) {
+        let pad_x = Self::pad_x(theme);
+        (
+            bounds.x + pad_x,
+            bounds.y + TextMeasurer::vertical_center(style, bounds.h),
+            (bounds.w - pad_x * 2.0).max(0.0),
+        )
+    }
+
     /// Advance the caret blink by `dt` seconds. Focused, the ask is the
     /// caret's: a frame when it flipped (`now`) and the time to the next
     /// flip (`next`); blurred, nothing. The owner merges it with its
@@ -282,7 +336,6 @@ impl TextField {
         };
         let focused = self.input.focused;
         let style = Self::text_style(theme);
-        let pad_x = Self::pad_x(theme);
         let radius = theme.shape.nav.min(bounds.h / 2.0);
 
         if focused {
@@ -323,10 +376,12 @@ impl TextField {
             ),
         );
 
-        let text_x = bounds.x + pad_x;
-        let text_y = bounds.y + TextMeasurer::vertical_center(&style, bounds.h);
-        let text_w = (bounds.w - pad_x * 2.0).max(0.0);
-        let text = self.input.buffer.text();
+        let (text_x, text_y, text_w) = Self::text_box(bounds, &style, theme);
+        // While composing, the text as drawn has the preedit in it.
+        let composed = self.input.composed();
+        let text = composed
+            .as_ref()
+            .map_or(self.input.buffer.text(), |(t, _)| t.as_str());
 
         // Selection wash under the text: the accent at the wash alpha, one
         // box per stretch the logical range covers on screen.
@@ -365,6 +420,22 @@ impl TextField {
                     x: text_x,
                     y: text_y,
                     color,
+                },
+            );
+        }
+
+        // The preedit's underline: one edge stroke at the foot of the line
+        // box, under each stretch the preedit covers on screen.
+        let underline = theme.control.edge_width;
+        for (x, w) in self.input.preedit_boxes(&style, Some(text_w)) {
+            c.push_to_layer(
+                layer,
+                SceneNode::Rect {
+                    x: text_x + x,
+                    y: text_y + style.line_height - underline,
+                    w,
+                    h: underline,
+                    color: theme.glass.text_active.0,
                 },
             );
         }

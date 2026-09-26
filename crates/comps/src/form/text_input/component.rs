@@ -1,6 +1,6 @@
 //! TextInput: the editing core of a single-line field. Owns the buffer,
-//! focus, the caret blink, IME commits, click-to-caret mapping and the
-//! caret and selection geometry. It draws nothing:
+//! focus, the caret blink, the input method's composition, click-to-caret
+//! mapping and the caret and selection geometry. It draws nothing:
 //! [`TextField`](crate::form::TextField) wraps it with the HOFF glass
 //! field, and any other look can wrap it the same way.
 //!
@@ -8,6 +8,13 @@
 //! goes forward in the text. Home and End go to the logical ends, and the
 //! `select` variants extend the selection, which stays one logical range
 //! and draws as the boxes it covers (see `super::visual`).
+//!
+//! An input method's preedit (the text still being composed, as in
+//! Japanese or Chinese) is kept apart from the buffer: it draws in place
+//! of the selection, or at the caret, until the input method commits it
+//! as typed text or drops it.
+
+use std::ops::Range;
 
 use engine::text::TextStyle;
 
@@ -25,6 +32,15 @@ pub struct TextInput {
     pub focused: bool,
     pub placeholder: String,
     blink: Blink,
+    preedit: Option<Preedit>,
+}
+
+/// The text an input method is composing and its caret in it (a byte
+/// offset of `text`).
+#[derive(Clone, Debug)]
+struct Preedit {
+    text: String,
+    caret: usize,
 }
 
 impl Default for TextInput {
@@ -40,6 +56,7 @@ impl TextInput {
             focused: false,
             placeholder: String::new(),
             blink: Blink::new(),
+            preedit: None,
         }
     }
 
@@ -48,10 +65,11 @@ impl TextInput {
         self
     }
 
-    /// Caret currently drawn (focused and on the visible half of the
-    /// blink).
+    /// Caret currently drawn: focused and on the visible half of the
+    /// blink, or composing (the caret holds still in a preedit, as in the
+    /// editor).
     pub fn cursor_visible(&self) -> bool {
-        self.focused && self.blink.visible()
+        self.focused && (self.preedit.is_some() || self.blink.visible())
     }
 
     pub fn focus(&mut self) {
@@ -59,8 +77,10 @@ impl TextInput {
         self.blink.reset();
     }
 
+    /// Blur; a composition in progress is dropped with the focus.
     pub fn unfocus(&mut self) {
         self.focused = false;
+        self.preedit = None;
     }
 
     /// Advance the caret blink by `dt` seconds. While focused the answer
@@ -69,7 +89,7 @@ impl TextInput {
     /// a caret at rest, not sixty. Unfocused there is no caret and
     /// nothing pending.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        if !self.focused {
+        if !self.focused || self.preedit.is_some() {
             return Wake::idle();
         }
         self.blink.advance(dt, CURSOR_BLINK_INTERVAL)
@@ -184,19 +204,59 @@ impl TextInput {
 
     /// Where the caret draws, px from the text origin, for the text laid
     /// out with `style` in a box `width` wide (`None`: unbounded; a
-    /// right-to-left paragraph hangs from the box's right edge).
+    /// right-to-left paragraph hangs from the box's right edge). While
+    /// composing, the caret is the input method's, in the preedit, laid
+    /// out in the text as drawn ([`composed`](Self::composed)).
     pub fn caret_x(&self, style: &TextStyle, width: Option<f32>) -> f32 {
-        VisualLine::new(self.buffer.text(), style, width).caret_x(self.buffer.cursor())
+        match (self.composed(), &self.preedit) {
+            (Some((text, span)), Some(p)) => {
+                VisualLine::new(&text, style, width).caret_x(span.start + p.caret)
+            }
+            _ => VisualLine::new(self.buffer.text(), style, width).caret_x(self.buffer.cursor()),
+        }
     }
 
     /// The selection as the boxes it covers on screen, `(x, w)` from the
     /// text origin, left to right: one box in Latin text, more where the
-    /// range crosses a change of direction. Empty without a selection.
+    /// range crosses a change of direction. Empty without a selection,
+    /// and while composing (the preedit draws in its place).
     pub fn selection_boxes(&self, style: &TextStyle, width: Option<f32>) -> Vec<(f32, f32)> {
         let Some((a, b)) = self.buffer.selection() else {
             return Vec::new();
         };
+        if self.preedit.is_some() {
+            return Vec::new();
+        }
         VisualLine::new(self.buffer.text(), style, width).boxes(a.min(b), a.max(b))
+    }
+
+    /// The text the input method is composing; empty when none.
+    pub fn preedit(&self) -> &str {
+        self.preedit.as_ref().map_or("", |p| p.text.as_str())
+    }
+
+    /// The text as drawn while composing: the selection, or the caret,
+    /// replaced by the preedit (what a commit of it would leave), and the
+    /// byte range the preedit takes in it. `None` when not composing.
+    pub fn composed(&self) -> Option<(String, Range<usize>)> {
+        let p = self.preedit.as_ref()?;
+        let text = self.buffer.text();
+        let cursor = self.buffer.cursor();
+        let (lo, hi) = self
+            .buffer
+            .selection()
+            .map_or((cursor, cursor), |(a, b)| (a.min(b), a.max(b)));
+        let composed = format!("{}{}{}", &text[..lo], p.text, &text[hi..]);
+        Some((composed, lo..lo + p.text.len()))
+    }
+
+    /// The preedit as the boxes it covers on screen, `(x, w)` from the
+    /// text origin, for its underline. Empty when not composing.
+    pub fn preedit_boxes(&self, style: &TextStyle, width: Option<f32>) -> Vec<(f32, f32)> {
+        match self.composed() {
+            Some((text, span)) => VisualLine::new(&text, style, width).boxes(span.start, span.end),
+            None => Vec::new(),
+        }
     }
 
     pub fn handle_select_all(&mut self) {
@@ -207,16 +267,46 @@ impl TextInput {
         self.reset_blink();
     }
 
+    /// An input method's step, the preedit's caret at its end (see
+    /// [`handle_ime_at`](Self::handle_ime_at)).
     pub fn handle_ime(&mut self, committed: &str, preedit: &str) {
+        self.handle_ime_at(committed, preedit, None);
+    }
+
+    /// An input method's step: `committed` goes in as typed text (over
+    /// the selection), then `preedit`, the text still being composed,
+    /// shows at the caret until the next step replaces it; an empty one
+    /// ends the composition. `cursor` is the input method's caret in
+    /// `preedit`, a byte range as winit reports it (its start draws);
+    /// `None`, or a range that does not fall on a character, puts it at
+    /// the end. The preedit never enters the buffer. Unfocused, nothing
+    /// happens.
+    pub fn handle_ime_at(
+        &mut self,
+        committed: &str,
+        preedit: &str,
+        cursor: Option<(usize, usize)>,
+    ) {
         if !self.focused {
             return;
         }
         if !committed.is_empty() {
             self.buffer.insert_str(committed);
-            self.reset_blink();
         }
-        // preedit stored for future inline rendering
-        let _ = preedit;
+        self.preedit = (!preedit.is_empty()).then(|| Preedit {
+            text: preedit.to_owned(),
+            caret: match cursor {
+                Some((start, _)) if preedit.is_char_boundary(start) => start,
+                _ => preedit.len(),
+            },
+        });
+        self.reset_blink();
+    }
+
+    /// Drop the composition (the input method went away); the text
+    /// stays. `true` when there was one.
+    pub fn clear_preedit(&mut self) -> bool {
+        self.preedit.take().is_some()
     }
 
     /// Focus and place the caret at `local_x` (px from the text origin),
