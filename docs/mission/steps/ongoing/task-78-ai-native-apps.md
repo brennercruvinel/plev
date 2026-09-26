@@ -188,3 +188,58 @@ fontes: o registro do cargo nas versões travadas (`candle-*-0.11.0`,
   interop `unsafe` pelo hal, mesma GPU, filas separadas.
 - para o item 4, os dois apontam para o wgpu 29; só o burn tem porta
   oficial para o mesmo device.
+
+## fase 1: a medição
+
+metodologia:
+
+- máquina: Apple M4 (4 núcleos P e 6 E, GPU de 10 núcleos, Metal 4),
+  16 GB, macOS 26.6.2, rustc 1.98.1. o Mac não estava ocioso (Finder e
+  outros processos, load average perto de 5).
+- perfil: release do workspace `crates/llm` (lto thin, um codegen unit),
+  um binário `llm-bench` por implementação, com CPU e Metal dentro.
+- modelo: TinyLlama 1.1B Chat v1.0; bf16 no arquivo, f16 no Metal, f32 na
+  CPU. geração gulosa.
+- prompt: "Write a short story about a lighthouse keeper who finds a
+  message in a bottle." no template de chat, 37 tokens; 128 tokens novos
+  por rodada, o eos não para a rodada.
+- protocolo: um processo de aquecimento, descartado (dele sai a linha "a
+  frio"); depois três processos, um por vez, cada um com cinco rodadas; a
+  tabela traz a mediana das três medianas. antes de cada processo, pelo
+  menos 40% de memória livre (`memory_pressure`); nunca compilar e medir
+  ao mesmo tempo. a CPU é referência: um processo só.
+- definições: carga é do arquivo ao modelo pronto no device (config,
+  mmap, conversão de dtype, upload, sync), sem o tokenizer (0,03 s). ttft
+  é da chamada ao primeiro token recebido no canal, com o prefill dos 37
+  tokens. decode é 127 tokens pelo tempo entre o primeiro e o último.
+  pico de RSS é o `ru_maxrss`; pico de footprint é o
+  `ri_lifetime_max_phys_footprint`, que conta a memória do Metal.
+- comando, da raiz do repositório:
+
+```sh
+export CARGO_TARGET_DIR=target/agents/one/llm CARGO_BUILD_JOBS=4
+cargo build --offline --release --manifest-path crates/llm/Cargo.toml \
+  --features candle,metal --bin llm-bench      # ou burn,metal
+$CARGO_TARGET_DIR/release/llm-bench --impl candle \
+  --model ~/.cache/plev/models/tinyllama-1.1b-chat-v1.0 --device metal
+```
+
+| medida | candle, Metal f16 | burn, Metal f16 | candle, CPU f32 | burn, CPU f32 |
+| --- | --- | --- | --- | --- |
+| carga | 4,33 s | a medir | 3,29 s | a medir |
+| ttft, 1ª rodada do processo | 90 ms | a medir | 990 ms | a medir |
+| ttft, mediana | 52 ms | a medir | 409 ms | a medir |
+| decode, mediana | 37,1 tok/s | a medir | 6,7 tok/s | a medir |
+| pico de RSS | 3264 MB | a medir | 4626 MB | a medir |
+| pico de footprint | 5182 MB | a medir | 4753 MB | a medir |
+| binário (só esta) | 6,8 MB | a medir | o mesmo | o mesmo |
+
+a frio (primeiro processo depois de compilar, página e shader frios):
+candle no Metal carregou em 9,0 s e deu o primeiro token em 5,2 s.
+
+os 32 primeiros tokens do candle, iguais no Metal f16 e na CPU f32 e em
+todas as rodadas: "In the early hours of a crisp autumn morning, a
+lighthouse keeper named Jack woke up to the sound of the waves crashing
+against" (ids `797, 278, 4688, 6199, 310, 263, 2181, 11936, 1120, 1227,
+7250, 29892, 263, 301, 18919, 1709, 1589, 11356, 4257, 5457, 281, 6946,
+701, 304, 278, 6047, 310, 278, 20037, 8095, 292, 2750`).
