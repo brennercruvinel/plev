@@ -1417,3 +1417,49 @@ o campo de texto. o `TextInput` joga fora o texto em composição
 o ide ligam o IME (`set_ime_allowed`: só o exemplo do editor chama),
 então lá o japonês sai em letras. depois do código, o brenner roda o
 mesmo roteiro num campo da galeria.
+
+## fase 4: a sonda do campo
+
+winit travado em 0.30.13; as linhas da biblioteca são de
+`winit-0.30.13/src/platform_impl/macos/view.rs`.
+
+### (a) a tecla latina com o IME ligado
+
+com o IME ligado, toda tecla passa por `interpretKeyEvents` (466). o
+`insertText` só manda `Ime::Commit` quando há texto marcado (411-415).
+uma letra comum, sem composição, não marca nada: o estado não muda e o
+`KeyboardInput` sai com o texto (478-497), como hoje. durante a
+composição o estado é `Preedit` e a tecla não vira `KeyboardInput`
+(485); o commit põe o estado em `Committed`, e o Enter que confirmou
+não chega ao app (426-428, 480-483). então cada tecla chega por um
+caminho só: `KeyboardInput` sem composição, `Ime::Preedit` e
+`Ime::Commit` com ela. não insere duas vezes nem perde tecla. o
+`Preedit("")` vem antes de cada commit (412). setas, Tab e Escape sem
+composição passam pelo `doCommandBySelector` e seguem como tecla (430).
+desligar (`set_ime_allowed(false)`) limpa a marca e manda
+`Ime::Disabled` (880-896); trocar a fonte de entrada também (447-451).
+o exemplo do editor já roda assim, e o latim digitado nele funciona.
+
+### (b) onde está o retângulo do campo e o x do caret
+
+o campo focado da página Input é o de `InputPage::focused`, no retângulo
+de `InputPage::rects(content)` (`view/components/input.rs:55`), com
+`content` o `page_rect` da view (`view/mod.rs:284`, já com a rolagem).
+dentro do campo, a origem do texto é `bounds.x + pad_x`, `text_y`
+centrado (`text_field.rs:326-327`), e o caret é `TextInput::caret_x`
+(`component.rs:188`) com o mesmo `TextStyle` do desenho. o campo ganha
+`ime_area(bounds, theme)` com essa conta (o caret do preedit durante a
+composição); a view junta os dois. o editor já dá o seu em
+`EditorView::ime_cursor_rect` (`editor/view.rs:221`).
+
+### (c) quando ligar e desligar
+
+sem campo focado as letras são atalhos: `handle_key` tenta o campo
+(`view/input.rs:80`) e depois o `t` troca o tema (102). com o japonês
+ligado, o `t` viraria composição e o atalho morreria. então o IME fica
+ligado só com um campo focado da página Input, sem overlay por cima, e
+na página Editor (que já toma todas as teclas, `events.rs:93`); em
+qualquer outro caso, desligado. a galeria acerta isso a cada frame
+desenhado da janela principal (`events.rs:197`): o foco só muda por um
+evento que pede frame. as outras páginas com texto ficam desligadas,
+como hoje (pendência no handoff).
