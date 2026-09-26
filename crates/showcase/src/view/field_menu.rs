@@ -3,8 +3,10 @@
 //! the pointer, the context menu the Context Menu page opens: the same
 //! comps menu, the same overlay and projection (`context_menu`), so its
 //! keyboard is that menu's (the arrows, Enter, Escape). Its items are
-//! Cut, Copy, Paste and Select all; one with nothing to act on (Copy with
-//! no selection, Paste with an empty clipboard) is disabled.
+//! Cut, Copy, Paste and Select all; Cut and Copy are disabled with nothing
+//! selected, Select all with no text. Paste is always enabled: whether
+//! the clipboard holds anything is the person's, and the projection an
+//! agent reads would tell it (a paste of nothing does nothing).
 //!
 //! A pick is the person's clipboard key on the field that has the keys
 //! (`clipboard.rs`), whether it came from the pointer, the keyboard or a
@@ -12,10 +14,9 @@
 //! person's (`dispatch/overlay.rs`).
 
 use comps::form::ClipKey;
-use comps::form::text_input::single_line;
 use comps::prelude::{ContextMenu, MenuEntry};
 
-use super::clipboard::{Keys, board};
+use super::clipboard::Keys;
 use super::{Pane, ShowcaseView};
 
 /// The items' ids, apart from the Context Menu page's demo items.
@@ -46,13 +47,14 @@ pub(in crate::view) fn label(key: ClipKey) -> &'static str {
     }
 }
 
-/// The menu, each item enabled when it has something to act on.
-fn menu(selected: bool, pasteable: bool, text: bool) -> ContextMenu {
+/// The menu: Cut and Copy with a selection, Paste always, Select all
+/// with some text.
+fn menu(selected: bool, text: bool) -> ContextMenu {
     let item = |id, key, on: bool| MenuEntry::item(id, label(key)).disabled(!on);
     ContextMenu::new(vec![
         item(CUT, ClipKey::Cut, selected),
         item(COPY, ClipKey::Copy, selected),
-        item(PASTE, ClipKey::Paste, pasteable),
+        item(PASTE, ClipKey::Paste, true),
         MenuEntry::Separator,
         item(SELECT_ALL, ClipKey::SelectAll, text),
     ])
@@ -76,10 +78,8 @@ impl ShowcaseView {
         if !took {
             return false;
         }
-        let held = board(&mut self.clipboard).get_text().unwrap_or_default();
-        let pasteable = !single_line(&held).is_empty();
         let widget = match self.panes.keys(pane) {
-            Keys::Field(field) => menu(field.has_selection(), pasteable, !field.is_empty()),
+            Keys::Field(field) => menu(field.has_selection(), !field.is_empty()),
             _ => return false,
         };
         self.show_menu(widget, x, y);

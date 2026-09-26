@@ -1,8 +1,9 @@
 //! The text field's menu (task-74, the person's request), as the shell
 //! forwards a right-click (`ShowcaseView::handle_right_click`) and the
 //! keys, with no window: the field takes the keys, the Context Menu
-//! page's menu opens with Cut, Copy, Paste and Select all, the ones with
-//! nothing to act on disabled; a click, the arrows and Enter, or Escape
+//! page's menu opens with Cut, Copy, Paste and Select all, Cut and Copy
+//! disabled with nothing selected and Paste always enabled (whether the
+//! clipboard holds anything is never told); a click, the arrows and Enter, or Escape
 //! answer it; an agent's pick is refused, the clipboard being the
 //! person's. Every gallery holds a `LocalClipboard`.
 //!
@@ -88,10 +89,14 @@ impl Gallery {
 fn a_right_click_opens_the_fields_menu_and_a_click_copies() {
     let (mut g, board) = page("Ada Lovelace", None);
     assert!(g.right_click(NAME), "the field's menu opens");
-    assert_eq!(g.focus().as_deref(), Some("context_menu[104]"));
+    assert_eq!(g.focus().as_deref(), Some(PASTE), "the first enabled item");
     assert_eq!(g.enabled(CUT), Some(false), "nothing selected");
     assert_eq!(g.enabled(COPY), Some(false));
-    assert_eq!(g.enabled(PASTE), Some(false), "an empty clipboard");
+    assert_eq!(
+        g.enabled(PASTE),
+        Some(true),
+        "an empty clipboard is not told"
+    );
     assert_eq!(g.enabled(SELECT_ALL), Some(true));
 
     g.click(SELECT_ALL);
@@ -152,6 +157,7 @@ fn an_agents_pick_is_refused() {
     assert!(g.view.handle_edit_key(EditKey::End));
     assert!(g.view.handle_edit_key(EditKey::SelectLeft));
     assert!(g.right_click(NAME));
+    assert_eq!(g.enabled(PASTE), Some(true), "as with an empty one");
     let seen = g.view.semantics().expect("the projection");
     assert!(!seen.nodes().values().any(|n| {
         n.label.contains("secret")
