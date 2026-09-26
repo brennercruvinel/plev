@@ -1398,3 +1398,22 @@ agente.
 
 pendência: o formulário de commit do ide não anda com as setas (o
 keymap dele liga só escape, enter e backspace).
+
+## fase 4: o roteiro do IME no editor (brenner, 2026-09-25)
+
+o brenner rodou o roteiro no macOS, no exemplo do editor
+(`cargo run -p comps --example editor`, o único app que liga o IME:
+`crates/comps/examples/editor/main.rs:153`), com as fontes de entrada
+japonês (Romaji) e chinês simplificado (Pinyin): `nihongo`, espaço e
+Enter para 日本語; `zhongwen` e espaço para 中文. o que ele disse: "no
+editor de código funciona" e, perguntado pelo japonês e pelo chinês,
+"funcionaram". o editor já desenhava a composição sublinhada
+(`comps/src/editor/view.rs:369`) e punha a janela de candidatos no
+caret (`EditorView::ime_cursor_rect`).
+
+o que falta para fechar o item "roteiro de IME executado e registrado":
+o campo de texto. o `TextInput` joga fora o texto em composição
+(`comps/src/form/text_input/component.rs:218-219`), e nem a galeria nem
+o ide ligam o IME (`set_ime_allowed`: só o exemplo do editor chama),
+então lá o japonês sai em letras. depois do código, o brenner roda o
+mesmo roteiro num campo da galeria.

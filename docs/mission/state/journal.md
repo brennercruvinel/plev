@@ -14,6 +14,13 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### o IME passou no editor
+
+- o brenner rodou o roteiro do IME no exemplo do editor, em japonês e
+  chinês: "funcionaram". a fase 4 da task-74 fica aberta só no campo de
+  texto (descarta a composição) e nos apps que não ligam o IME. sem
+  agente.
+
 ### shift+seta seleciona nos campos
 
 - o brenner testou na galeria: shift+seta não selecionava no campo da
