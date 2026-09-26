@@ -233,6 +233,7 @@ $CARGO_TARGET_DIR/release/llm-bench --impl candle \
 | pico de RSS | 3264 MB | 2779 MB | 4626 MB | 5212 MB |
 | pico de footprint | 5182 MB | 4325 MB | 4753 MB | 5644 MB |
 | binário (só esta) | 6,8 MB | 33,0 MB | o mesmo | o mesmo |
+| `wasm32-unknown-unknown`, features de CPU | passa (1) | passa (1) | | |
 
 a frio (primeiro processo depois de compilar, página e shader frios):
 candle no Metal carregou em 9,0 s e deu o primeiro token em 5,2 s. o burn
@@ -248,6 +249,19 @@ transposta (`Col`) decodifica a 26,3 tok/s e carrega sem copiar; o peso
 transposto na carga (`Row`) decodifica a 24,4 tok/s e carrega em 7,8 s.
 na CPU é o contrário: `Col` fica em 0,3 tok/s, `Row` em 1,8. o padrão é
 `Col` no Metal e `Row` na CPU (`llm::burn::layout_for`).
+
+(1) o `cargo check --offline --target wasm32-unknown-unknown
+--no-default-features --features candle` (ou `burn`) falha de primeira no
+`getrandom`, que não tem backend padrão nesse alvo: o 0.3, sob o `rand`
+do candle, e o 0.4, sob o do burn. com a feature `wasm_js` dos dois
+(declarada só para wasm32 no manifesto) e
+`RUSTFLAGS='--cfg getrandom_backend="wasm_js"'`, os dois passam. o
+tokenizer não passa: a feature `text` puxa o `onig_sys`, em C, que não
+acha o `stdlib.h` no alvo wasm; o caminho do `tokenizers` para wasm
+(`unstable_wasm`) pede o `fancy-regex` 0.14, que não está no cache. no
+navegador só o burn tem GPU: a feature `webgpu` (burn-0.21.0
+Cargo.toml:251-255); o candle não tem backend wgpu (candle-core
+Cargo.toml, features `cuda`, `metal`, `mkl`, `accelerate`).
 
 os 32 primeiros tokens, idênticos nas quatro colunas e em todas as
 rodadas: "In the early hours of a crisp autumn morning, a
