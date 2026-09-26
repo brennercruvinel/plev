@@ -4,12 +4,13 @@
 //! name -> registry), and the actions that act on a capability through
 //! the workbench.
 
-use comps::form::EditKey;
+use comps::form::{ClipKey, EditKey};
 use engine::actions::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
+use engine::clipboard::default_clipboard;
 use rec::InputKind;
 use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;
-use winit::keyboard::{Key, NamedKey};
+use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use crate::{App, actions};
 
@@ -53,7 +54,13 @@ impl App {
                     log::warn!("keymap resolved unknown action `{name}`");
                     return false;
                 };
-                self.record_input(InputKind::Key, None);
+                // A paste is typing: recorded as text, never the text.
+                let kind = if action.is::<actions::Paste>() {
+                    InputKind::Text
+                } else {
+                    InputKind::Key
+                };
+                self.record_input(kind, None);
                 self.dispatch(action.as_ref(), event_loop)
             }
             MatchResult::Pending | MatchResult::None => false,
@@ -68,9 +75,21 @@ impl App {
     /// keymap (the session's save). `None` when the column does not have
     /// the keyboard.
     fn column_key(&mut self, key_event: &KeyEvent) -> Option<bool> {
+        if !self.bench.has_keyboard() {
+            return None;
+        }
+        // cmd (ctrl elsewhere) with c, x, v or a: the field's clipboard,
+        // the person's only; recorded as text, never the text.
+        if let Key::Character(text) = &key_event.logical_key
+            && primary(self.modifiers)
+            && let Some(key) = ClipKey::of(text)
+        {
+            self.record_input(InputKind::Text, None);
+            return Some(self.bench.clip(key, default_clipboard().as_mut()));
+        }
         let chord =
             self.modifiers.control_key() || self.modifiers.super_key() || self.modifiers.alt_key();
-        if !self.bench.has_keyboard() || chord {
+        if chord {
             return None;
         }
         let bench = &mut self.bench;
@@ -145,10 +164,41 @@ impl App {
             true
         } else if action.is::<actions::Close>() {
             bench.close_top_overlay()
+        } else if let Some(key) = clip_key(action) {
+            // Both cmd and ctrl are bound; the platform's primary acts.
+            primary(self.modifiers)
+                && bench
+                    .workspace_mut()
+                    .commit_form
+                    .clip(key, default_clipboard().as_mut())
         } else {
             log::warn!("no handler for action {}", action.name());
             false
         }
+    }
+}
+
+/// The platform's primary modifier is held: cmd on macOS, ctrl elsewhere.
+fn primary(modifiers: ModifiersState) -> bool {
+    if cfg!(target_os = "macos") {
+        modifiers.super_key()
+    } else {
+        modifiers.control_key()
+    }
+}
+
+/// The clipboard key an `edit::` action names.
+fn clip_key(action: &dyn Action) -> Option<ClipKey> {
+    if action.is::<actions::Copy>() {
+        Some(ClipKey::Copy)
+    } else if action.is::<actions::Cut>() {
+        Some(ClipKey::Cut)
+    } else if action.is::<actions::Paste>() {
+        Some(ClipKey::Paste)
+    } else if action.is::<actions::SelectAll>() {
+        Some(ClipKey::SelectAll)
+    } else {
+        None
     }
 }
 
@@ -193,5 +243,15 @@ mod tests {
             Some(EditKey::Backspace)
         );
         assert_eq!(edit_key(NamedKey::Enter, true), None);
+    }
+
+    /// Each `edit::` action is its clipboard key; any other action none.
+    #[test]
+    fn the_edit_actions_are_the_clipboard_keys() {
+        assert_eq!(clip_key(&actions::Copy), Some(ClipKey::Copy));
+        assert_eq!(clip_key(&actions::Cut), Some(ClipKey::Cut));
+        assert_eq!(clip_key(&actions::Paste), Some(ClipKey::Paste));
+        assert_eq!(clip_key(&actions::SelectAll), Some(ClipKey::SelectAll));
+        assert_eq!(clip_key(&actions::Submit), None);
     }
 }

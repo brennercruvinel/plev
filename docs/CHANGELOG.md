@@ -9,6 +9,21 @@ status: living
 
 ## unreleased
 
+- copy, cut, paste and select all in text fields (2026-09-25, task-74):
+  cmd+c, x, v and a (ctrl elsewhere) work in the gallery's fields and in
+  the ide's intent line and commit form; a key with cmd or ctrl never
+  types its letter any more (cmd+v used to type "v"). a right-click on
+  a field of the gallery's Input page opens a menu with the same four.
+  the clipboard is the person's: an agent can neither read it nor pick
+  those items.
+
+- Japanese and Chinese input in text fields (2026-09-25, task-74): a
+  field draws what the input method is composing, underlined, and the
+  candidate window sits at the caret; the gallery turns the input method
+  on only while a field or the editor has the focus. what is being
+  composed is never in the field's value, the recording or what an
+  agent reads.
+
 - shift with the arrows selects in a text field (2026-09-25, task-74):
   in the gallery, the ide's intent line and urnaui, shift+left, right,
   home and end extend the selection, as they already did in the editor.

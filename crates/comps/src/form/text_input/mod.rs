@@ -8,7 +8,7 @@ mod component;
 pub(crate) mod visual;
 
 pub use buffer::TextBuffer;
-pub use component::{CURSOR_BLINK_INTERVAL, TextInput};
+pub use component::{CURSOR_BLINK_INTERVAL, TextInput, single_line};
 
 #[cfg(test)]
 mod tests;

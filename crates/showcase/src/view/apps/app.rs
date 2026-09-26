@@ -34,6 +34,7 @@ use sem::Dispatcher;
 use showcase::model::todo::{Filter, TodoModel};
 
 use super::EditKey;
+use crate::view::clipboard::Keys;
 use layout::*;
 use semantics::{Ids, Target};
 
@@ -275,6 +276,15 @@ impl TodoPage {
             }
             _ => false,
         }
+    }
+
+    /// The add field has the keys while focused (a chord), not while an
+    /// overlay holds the page.
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        if self.inert || !self.input.is_focused() {
+            return Keys::Nobody;
+        }
+        Keys::Field(&mut self.input)
     }
 
     /// Editing keys, same route as forms::handle_edit_key. Tab is left to

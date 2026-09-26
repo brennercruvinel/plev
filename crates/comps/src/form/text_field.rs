@@ -9,10 +9,16 @@
 //! tests clicks and draws the text, so the caret always lands on the
 //! glyph that was clicked.
 //!
+//! An input method's composition ([`TextField::compose`]) draws inline, in
+//! place of the selection or at the caret, underlined, with the caret at
+//! the input method's; it is only drawn: the text, the projection and the
+//! value hold what was committed.
+//!
 //! With a [`SemId`] ([`TextField::sem`]) the render binds the bounds it
 //! draws and hit-tests with, and [`TextField::project`] declares the
 //! field in a semantic projection; the app still owns the field.
 
+use engine::clipboard::ClipboardProvider;
 use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::text::{TextMeasurer, TextStyle};
 use engine::theme::{ControlSize, Theme};
@@ -42,6 +48,32 @@ pub enum EditKey {
     SelectRight,
     SelectHome,
     SelectEnd,
+}
+
+/// The clipboard keys of a field: the primary modifier (cmd on macOS,
+/// ctrl elsewhere) with c, x, v or a. Apps map their chords onto these
+/// ([`ClipKey::of`]) and hand the field their clipboard
+/// ([`TextField::clip`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ClipKey {
+    Copy,
+    Cut,
+    Paste,
+    SelectAll,
+}
+
+impl ClipKey {
+    /// The clipboard key a character names with the primary modifier held
+    /// (either case); `None` for any other.
+    pub fn of(key: &str) -> Option<Self> {
+        Some(match key {
+            "c" | "C" => Self::Copy,
+            "x" | "X" => Self::Cut,
+            "v" | "V" => Self::Paste,
+            "a" | "A" => Self::SelectAll,
+            _ => return None,
+        })
+    }
 }
 
 /// Retained single-line text field over a [`TextInput`].
@@ -207,9 +239,104 @@ impl TextField {
         true
     }
 
+    /// Copy the selection to `clipboard` (the person's keys or menu; a
+    /// field gives an agent no way to it). `false` with nothing selected,
+    /// unfocused or disabled.
+    pub fn copy(&self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_copy(clipboard)
+    }
+
+    /// Copy the selection, then delete it. `false` with nothing selected,
+    /// unfocused or disabled.
+    pub fn cut(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_cut(clipboard)
+    }
+
+    /// Type what `clipboard` holds over the selection, on one line: its
+    /// line breaks and tabs become spaces
+    /// ([`single_line`](crate::form::text_input::single_line)). `false`
+    /// with an empty clipboard, unfocused or disabled.
+    pub fn paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
+        !self.disabled && self.input.handle_paste(clipboard)
+    }
+
+    /// Select the whole text. `false` when unfocused or disabled.
+    pub fn select_all(&mut self) -> bool {
+        self.edit(EditKey::SelectAll)
+    }
+
+    /// A clipboard key: [`copy`](Self::copy), [`cut`](Self::cut),
+    /// [`paste`](Self::paste) or [`select_all`](Self::select_all). `true`
+    /// when it did something.
+    pub fn clip(&mut self, key: ClipKey, clipboard: &mut dyn ClipboardProvider) -> bool {
+        match key {
+            ClipKey::Copy => self.copy(clipboard),
+            ClipKey::Cut => self.cut(clipboard),
+            ClipKey::Paste => self.paste(clipboard),
+            ClipKey::SelectAll => self.select_all(),
+        }
+    }
+
+    /// Some text is selected: what copy and cut take.
+    pub fn has_selection(&self) -> bool {
+        self.input
+            .buffer
+            .selected_text()
+            .is_some_and(|t| !t.is_empty())
+    }
+
     /// IME commit / preedit, forwarded to the core.
     pub fn ime(&mut self, committed: &str, preedit: &str) {
         self.input.handle_ime(committed, preedit);
+    }
+
+    /// An input method's step, with its caret: `committed` is typed, the
+    /// same way as [`insert`](Self::insert) (over the selection), and
+    /// `preedit` draws inline until the next step (see
+    /// [`TextInput::handle_ime_at`]). `false` when unfocused or disabled.
+    pub fn compose(
+        &mut self,
+        committed: &str,
+        preedit: &str,
+        cursor: Option<(usize, usize)>,
+    ) -> bool {
+        if !self.input.focused || self.disabled {
+            return false;
+        }
+        self.insert(committed);
+        self.input.handle_ime_at("", preedit, cursor);
+        true
+    }
+
+    /// The input method went away: the composition is dropped, the text
+    /// stays. `true` when there was one.
+    pub fn end_compose(&mut self) -> bool {
+        self.input.clear_preedit()
+    }
+
+    /// Where an input method puts its candidate window: the caret, the
+    /// preedit's while composing, as a rect in the coordinates of `bounds`,
+    /// one caret wide and one line tall.
+    pub fn ime_area(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let style = Self::text_style(theme);
+        let (x, y, w) = Self::text_box(bounds, &style, theme);
+        Rect::new(
+            x + self.input.caret_x(&style, Some(w)),
+            y,
+            theme.control.focus_ring_width,
+            style.line_height,
+        )
+    }
+
+    /// The text's box inside `bounds`: its origin, `x` and `y`, and its
+    /// width.
+    fn text_box(bounds: Rect, style: &TextStyle, theme: &Theme) -> (f32, f32, f32) {
+        let pad_x = Self::pad_x(theme);
+        (
+            bounds.x + pad_x,
+            bounds.y + TextMeasurer::vertical_center(style, bounds.h),
+            (bounds.w - pad_x * 2.0).max(0.0),
+        )
     }
 
     /// Advance the caret blink by `dt` seconds. Focused, the ask is the
@@ -282,7 +409,6 @@ impl TextField {
         };
         let focused = self.input.focused;
         let style = Self::text_style(theme);
-        let pad_x = Self::pad_x(theme);
         let radius = theme.shape.nav.min(bounds.h / 2.0);
 
         if focused {
@@ -323,10 +449,12 @@ impl TextField {
             ),
         );
 
-        let text_x = bounds.x + pad_x;
-        let text_y = bounds.y + TextMeasurer::vertical_center(&style, bounds.h);
-        let text_w = (bounds.w - pad_x * 2.0).max(0.0);
-        let text = self.input.buffer.text();
+        let (text_x, text_y, text_w) = Self::text_box(bounds, &style, theme);
+        // While composing, the text as drawn has the preedit in it.
+        let composed = self.input.composed();
+        let text = composed
+            .as_ref()
+            .map_or(self.input.buffer.text(), |(t, _)| t.as_str());
 
         // Selection wash under the text: the accent at the wash alpha, one
         // box per stretch the logical range covers on screen.
@@ -365,6 +493,22 @@ impl TextField {
                     x: text_x,
                     y: text_y,
                     color,
+                },
+            );
+        }
+
+        // The preedit's underline: one edge stroke at the foot of the line
+        // box, under each stretch the preedit covers on screen.
+        let underline = theme.control.edge_width;
+        for (x, w) in self.input.preedit_boxes(&style, Some(text_w)) {
+            c.push_to_layer(
+                layer,
+                SceneNode::Rect {
+                    x: text_x + x,
+                    y: text_y + style.line_height - underline,
+                    w,
+                    h: underline,
+                    color: theme.glass.text_active.0,
                 },
             );
         }

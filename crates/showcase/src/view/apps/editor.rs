@@ -2,7 +2,8 @@
 //! the content rect, the same widget the `comps --example editor` window
 //! runs. Pointer events arrive through the section contract; the keyboard
 //! goes straight to `EditorView::handle_key` (it wants the winit key and
-//! modifiers) via `ShowcaseView::handle_editor_key`.
+//! modifiers) via `ShowcaseView::handle_editor_key`, and the input method
+//! to `EditorView::handle_ime` via `ShowcaseView::handle_ime`.
 
 use comps::editor::{EditorTheme, EditorView, MouseEvent};
 use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
@@ -10,7 +11,10 @@ use engine::compositor::Compositor;
 use engine::layout::ComputedBounds;
 use engine::theme::Theme;
 use rope::Document;
+use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState};
+
+use crate::view::ImeEvent;
 
 pub struct EditorPage {
     editor: EditorView,
@@ -89,6 +93,23 @@ impl EditorPage {
 
     pub fn handle_key(&mut self, key: &Key, modifiers: ModifiersState) -> bool {
         self.editor.handle_key(key, modifiers)
+    }
+
+    /// A step of the input method, back in winit's form for the editor.
+    pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let ime = match ime {
+            ImeEvent::Preedit(text, cursor) => Ime::Preedit(text.to_owned(), cursor),
+            ImeEvent::Commit(text) => Ime::Commit(text.to_owned()),
+            ImeEvent::Disabled => Ime::Disabled,
+        };
+        self.editor.handle_ime(&ime)
+    }
+
+    /// The editor's caret (the preedit's while composing), where the
+    /// input method's candidate window goes.
+    pub fn ime_area(&self) -> Rect {
+        let r = self.editor.ime_cursor_rect();
+        Rect::new(r.x, r.y, r.width, r.height)
     }
 
     /// Caret blink: a frame on a toggle, the next toggle as the deadline.

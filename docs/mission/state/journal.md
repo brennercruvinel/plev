@@ -14,6 +14,19 @@ task; aqui fica o que aconteceu e onde ler.
 
 ## 2026-09-25
 
+### IME no campo, copiar e colar, e o menu do campo integrados
+
+- task-74 fase 4 no campo: a composição desenhada no campo, a galeria
+  liga o IME só com um campo ou o editor focado. falta o brenner rodar o
+  roteiro num campo da página Input; aí a task fecha pelo critério.
+- a pedido do brenner: cmd+c/x/v/a nos campos da galeria e do ide, e o
+  menu do botão direito no campo da página Input. o orquestrador deixou
+  o Paste sempre ligado, para o menu não contar se a área de
+  transferência está vazia.
+- o agente (Opus) gastou uns 390 mil tokens nas três partes. no meio,
+  parou com o disco em 7,8 GB; o orquestrador limpou o
+  `target/agents/one` (14,3 GiB).
+
 ### o IME passou no editor
 
 - o brenner rodou o roteiro do IME no exemplo do editor, em japonês e

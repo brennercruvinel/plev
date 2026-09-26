@@ -183,6 +183,40 @@ fn the_person_reaches_the_line_by_the_pointer_and_the_keys() {
     assert!(!rig.bench.has_keyboard());
 }
 
+/// The person's clipboard keys in the intent field (task-74): select all
+/// and copy, cut, paste on one line, on a `LocalClipboard`; with no field
+/// focused nothing takes them.
+#[test]
+fn the_intent_field_takes_the_clipboard_keys() {
+    use comps::form::ClipKey;
+    use engine::clipboard::{ClipboardProvider, LocalClipboard};
+
+    let mut rig = Rig::new(&["a.txt"], &[]);
+    rig.bench.host_surfaces_with(None);
+    let mut board = LocalClipboard::new();
+    board.set_text("held");
+    assert!(
+        !rig.bench.clip(ClipKey::Paste, &mut board),
+        "nobody has the keys"
+    );
+    let c = frame(&mut rig);
+    assert!(click(&mut rig, &c, "ide_surface.intent"));
+    for ch in "the items".chars() {
+        assert!(rig.bench.type_text(&ch.to_string()));
+    }
+    assert!(rig.bench.clip(ClipKey::SelectAll, &mut board));
+    assert!(rig.bench.clip(ClipKey::Copy, &mut board));
+    assert_eq!(board.get_text().as_deref(), Some("the items"));
+    assert!(rig.bench.clip(ClipKey::Cut, &mut board));
+    assert_eq!(rig.value("ide_surface.intent:text"), Value::Text("".into()));
+    board.set_text("staged\nfiles");
+    assert!(rig.bench.clip(ClipKey::Paste, &mut board));
+    assert_eq!(
+        rig.value("ide_surface.intent:text"),
+        Value::Text("staged files".into())
+    );
+}
+
 /// The proposer's panel opens upward from the strip, inside the window,
 /// and an option there is chosen by the person's click.
 #[test]

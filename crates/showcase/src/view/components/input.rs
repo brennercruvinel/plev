@@ -16,6 +16,8 @@ use engine::theme::Theme;
 use sem::{Request, Role, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, EditKey, child_id, root_id, text, under};
+use crate::view::ImeEvent;
+use crate::view::clipboard::Keys;
 
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
@@ -134,6 +136,59 @@ impl InputPage {
             Some(i) => self.fields[i].edit(key.into()),
             None => false,
         }
+    }
+
+    /// A step of the input method: the focused field composes, and a
+    /// commit is typed into it as `handle_text` types; `Disabled` drops a
+    /// composition wherever one is. `false` when nothing changed.
+    pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let (committed, preedit, cursor) = match ime {
+            ImeEvent::Disabled => {
+                let mut dropped = false;
+                for field in &mut self.fields {
+                    dropped |= field.end_compose();
+                }
+                return dropped;
+            }
+            ImeEvent::Preedit(text, cursor) => ("", text, cursor),
+            ImeEvent::Commit(text) => (text, "", None),
+        };
+        match self.focused() {
+            Some(i) => self.fields[i].compose(committed, preedit, cursor),
+            None => false,
+        }
+    }
+
+    /// A right-click: the field under the pointer takes the keys for its
+    /// menu. One focused with a selection keeps it (the person selected
+    /// what to copy); another takes a caret at the click, as a press
+    /// there. `false` off the fields.
+    pub fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+        let rects = Self::rects(content, theme);
+        let Some(i) = rects.iter().position(|r| r.contains(x, y)) else {
+            return false;
+        };
+        if self.focused() == Some(i) && self.fields[i].has_selection() {
+            return true;
+        }
+        self.set_focused(Some(i));
+        self.fields[i].handle_event(&WidgetEvent::MouseDown { x, y }, rects[i], theme);
+        true
+    }
+
+    /// The focused field has the keys (a chord, the field's menu).
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        match self.focused() {
+            Some(i) => Keys::Field(&mut self.fields[i]),
+            None => Keys::Nobody,
+        }
+    }
+
+    /// Where the input method's candidate window goes: the focused
+    /// field's caret, laid out in `content`. `None` with no field focused.
+    pub fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        let i = self.focused()?;
+        Some(self.fields[i].ime_area(Self::rects(content, theme)[i], theme))
     }
 
     /// Escape blurs the focused field. `false` when none was.

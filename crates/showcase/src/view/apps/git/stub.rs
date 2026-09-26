@@ -7,6 +7,7 @@ use engine::theme::Theme;
 
 use super::super::text;
 use super::{GitWake, NavKey};
+use crate::view::clipboard::Keys;
 
 pub struct GitPage;
 
@@ -25,6 +26,11 @@ impl GitPage {
 
     pub fn handle_event(&mut self, _event: &WidgetEvent, _content: Rect) -> EventResult {
         EventResult::IGNORED
+    }
+
+    /// No field: nobody has the keys.
+    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+        Keys::Nobody
     }
 
     pub fn handle_right_click(&mut self, _x: f32, _y: f32, _content: Rect) -> bool {
