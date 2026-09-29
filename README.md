@@ -233,6 +233,9 @@ violations are defects even when the pixels look right.
   only width source is the shaper, never an arithmetic estimate.
 - srgb decode once entering gpu work, encode once at the surface write.
 - container geometry derives from available space, never from constants.
+- ui is designed for content, constraints, capabilities and ranges, not
+  screens and devices: fluid scale, component-driven responsiveness,
+  intrinsic layout, relative and semantic values, progressive adaptation.
 - a visible state change implies invalidation, with no silent redraws and
   no stale frames.
 - an agent acts only through the app's dispatcher, the same path as a

@@ -44,7 +44,10 @@ mission, refs). architecture: docs/arc/arc.toml.
    paddings, shadows, breakpoints are `Theme` tokens (engine/src/theme). a
    number that is not a token yet becomes one (scales.rs) in the same
    change
-5. a task of the generative runtime program (task-57 onward) also reads,
+5. a change that touches anything visible follows "## design for ranges,
+   not screens" below, on every platform; its five rules are part of the
+   task's acceptance
+6. a task of the generative runtime program (task-57 onward) also reads,
    before any code: docs/mission/generative-runtime-guidelines.md
    (binding rules for the orchestrator and for agents),
    docs/mission/generative-runtime-program.md (goal, graph,
@@ -113,6 +116,44 @@ behavior.
 - any handler that changes visible state must invalidate (render on demand)
 - accessibility, reduced motion, wcag contrast and cross-density are
   native requirements, not retrofits
+
+## design for ranges, not screens (every visible change, every platform)
+
+design for content, constraints, capabilities and ranges, not screens and
+devices. five rules, binding on web, desktop and mobile; where a rule
+names a web mechanism, the platform's equivalent counts.
+
+- fluid scale: typography, spacing and dimensions scale continuously
+  between limits; they never jump between fixed values per breakpoint.
+  use fluid typography, fluid spacing, `clamp()`, `min()`, `max()`. the
+  scale is defined in design tokens; no loose number inside a component
+- component-driven responsiveness: a component responds to the space,
+  content and context it receives, not to the device or the global
+  viewport. prefer container queries, container units, constraints, size
+  classes. layout breakpoints, not tweakpoints: a breakpoint exists where
+  the composition has to change, never to adjust a few pixels. account
+  for variable content, translation, empty states, overflow, safe areas,
+  split view and resizable windows
+- intrinsic layout: the layout resolves size, distribution, wrapping and
+  proportion by itself. prefer intrinsic sizing, `auto-fit`, `minmax()`,
+  `flex-wrap`, `fit-content`, `aspect-ratio`, constraints. fixed sizing
+  only where the dimension is a real part of the design. the layout stays
+  valid with longer content, font scaling, zoom and other densities
+- relative and semantic values: relative measures, semantic values and
+  relations derived from context. prefer `rem`, `em`, `%`, `fr`,
+  `cqw`/`cqi`, design tokens, logical properties, proportions derived
+  from the geometry. no arbitrary pixel value, no unnecessary physical
+  coordinate, no device-specific rule
+- progressive adaptation: the interface adapts to size, content, input,
+  accessibility and platform capabilities. progressive enhancement;
+  touch, mouse, keyboard, stylus and other input modalities;
+  `prefers-reduced-motion`, high contrast, dynamic type and font scaling;
+  motion derived from proportions, not from breakpoints; tests over
+  continuous ranges of dimensions and states, not only device presets
+
+the same five rules are in the engine manual and, one checkbox each, in
+the pull request template; an edit to one lands in the others in the same
+change (adr design-for-ranges-not-screens-and-devices).
 
 ## the gate (every change passes all four)
 

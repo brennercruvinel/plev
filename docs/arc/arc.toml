@@ -332,6 +332,7 @@ invariants = [
   "one TextStyle per text run, shared by measurement and drawing",
   "srgb decode exactly once entering gpu work; encode exactly once at the surface write (surface_render_view; to_linear_array)",
   "container geometry derives from available space, never from constants",
+  "ui designed for content, constraints, capabilities and ranges, not screens and devices (fluid scale, component-driven responsiveness, intrinsic layout, relative and semantic values, progressive adaptation)",
   "visible state change implies invalidation (render on demand)",
   "clip rects are logical; scale by clip_scale for physical scissors",
   "wasm check must stay green",

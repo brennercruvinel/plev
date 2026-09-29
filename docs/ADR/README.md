@@ -2,7 +2,7 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-09-26
+last-updated: 2026-09-29
 domain: index
 ---
 
@@ -122,6 +122,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | 2026-09-21 | [embed-an-app-view-by-frame-origin](embed-an-app-view-by-frame-origin.md) | accepted | view de app ganha origem de frame (WorkspaceView::set_frame, Sidebar.origin); begin_frame e do host; ide vira lib + bin com GitSession; showcase embute Editor e Git como app sections sem gutter |
 | 2026-09-21 | [showcase-one-page-per-component](showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em docs/mission/steps/checked/sessao-showcase-pages-learnings.md |
 | 2026-09-18 | [comps-one-design-system-crate](comps-one-design-system-crate.md) | accepted | crates/comps e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/catalog.md; aprendizados da sessao em docs/mission/steps/checked/sessao-comps-learnings.md |
+| 2026-09-29 | [design-for-ranges-not-screens-and-devices](design-for-ranges-not-screens-and-devices.md) | accepted | cinco regras para toda mudança visível, em qualquer plataforma: fluid scale, component-driven responsiveness, intrinsic layout, relative and semantic values, progressive adaptation; o texto fica no AGENTS.md (seção design for ranges, not screens) e no manual do engine, com um checkbox por regra no template de PR |
 
 ## runtime de interação generativa (2026)
 

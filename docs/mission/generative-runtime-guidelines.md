@@ -3,7 +3,7 @@ project: plev
 audience: [ai-agents, contributors]
 type: reference
 status: living
-last-updated: 2026-09-23
+last-updated: 2026-09-29
 domain: generative-runtime
 tags: [orchestration, agents, contracts, ownership, commits, handoff, validation]
 ---
@@ -402,6 +402,10 @@ repositório. tudo nele vale para os agentes deste programa, em especial:
 - nenhum literal visual em widget ou tela de app: cor, raio, altura,
   padding, sombra e breakpoint são tokens de `Theme`; número que não é
   token vira token em `crates/engine/src/theme/scales.rs` na mesma mudança.
+- as cinco regras de "design for ranges, not screens": fluid scale,
+  component-driven responsiveness, intrinsic layout, relative and semantic
+  values, progressive adaptation. valem para toda mudança visível, em
+  qualquer plataforma, e entram no aceite da task.
 - antes de implementar, conferir se o engine ou o comps já tem a
   capacidade. widget que falta vai para o comps, nunca para o app.
 - o gate: `./script/gate` (test, clippy `-D warnings`, fmt, wasm check,
@@ -542,6 +546,9 @@ contrato a implementar ou consumir (assinaturas exatas):
 arquivos permitidos:
 arquivos proibidos:
 
+design for ranges (quando a task toca algo visível): as cinco regras do
+  AGENTS.md entram no aceite
+
 aceite:
 testes obrigatórios:
 validação obrigatória (comandos):
@@ -575,6 +582,11 @@ economia (vale para toda rodada):
   ação pelo mesmo `dispatch`, ou alguém abriu um atalho paralelo?
 - nenhuma segunda versão de algo que já existe (theme, hit test, action
   registry, clipboard, text measure).
+- design for ranges, not screens: escala fluida vinda de token, componente
+  que responde ao espaço que recebe, layout intrínseco, valor relativo e
+  semântico, adaptação a input, accessibility e capacidade da plataforma.
+  número solto em componente, breakpoint para ajustar pixel e regra por
+  device voltam para o agente.
 - erro tipado em lib, nenhum panic em caminho de input.
 - testes de comportamento, com caso de erro e de borda, e contagem que não
   caiu.

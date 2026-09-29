@@ -20,3 +20,11 @@ conventional-commits prefix.
 - [ ] structure changes are reflected in `docs/arc/arc.toml` (the tables are canonical)
 - [ ] tests are real (happy + error + one edge), no mocks; visual claims measured by pixel
 - [ ] no new dependency without a one-line justification of what it buys
+
+## design for ranges, not screens (when the change touches anything visible, on any platform)
+
+- [ ] fluid scale: typography, spacing and dimensions scale continuously between limits, from design tokens; no loose number inside a component
+- [ ] component-driven responsiveness: the component responds to the space, content and context it receives, not to the device or the global viewport; a breakpoint only where the composition has to change
+- [ ] intrinsic layout: size, distribution, wrapping and proportion resolve by themselves; fixed sizing only where the dimension is a real part of the design
+- [ ] relative and semantic values: relative measures, tokens and logical properties; no arbitrary pixel value, unnecessary physical coordinate or device-specific rule
+- [ ] progressive adaptation: holds across input modalities, reduced motion, high contrast, font scaling and zoom; checked over continuous ranges of dimensions and states (longer content, translation, empty, overflow), not only device presets

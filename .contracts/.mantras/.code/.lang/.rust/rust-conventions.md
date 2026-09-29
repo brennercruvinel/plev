@@ -124,6 +124,16 @@ rims and toggle geometry, `theme.size` for container widths,
 widget keeps are platform timings (blink, tooltip delay) and pure chart
 geometry, each as a named const with the reason in its doc comment.
 
+## design for ranges
+
+design for content, constraints, capabilities and ranges, not screens and
+devices. five rules bind every change that touches anything visible, on
+every platform: fluid scale, component-driven responsiveness, intrinsic
+layout, relative and semantic values, progressive adaptation. the text is
+in AGENTS.md ("## design for ranges, not screens") and in the engine
+manual; a change that breaks one of them is a defect even when the screen
+looks right.
+
 ## docs
 
 decisions in docs/ADR/ (index docs/ADR/README.md), the changelog in
