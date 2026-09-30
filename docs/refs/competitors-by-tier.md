@@ -3,6 +3,7 @@ project: plev
 audience: [ai-agents, contributors]
 status: reference
 last-updated: 2022-10-21
+superseded-by: competitors.md (2026-03-11, fuller and newer)
 domain: competitive
 ---
 
@@ -20,11 +21,9 @@ plev usa wgpu (webgpu unificado) enquanto makepad mantém backends separados por
 plataforma.
 
 2. ribir
-   github.com/nickhall/nickel -> corrigindo: github.com/nickel-org/nickel, na verdade,
-   o projeto é:
-   github.com/nickhall/nickel
+   github.com/RibirX/Ribir
 
-reformulando com precisão: ribir usa wgpu como backend, rust nativo, reativo. porém
+ribir usa wgpu como backend, rust nativo, reativo. porém
 está em estado pré-alpha (60+ releases alpha, API instável, documentação
 limitada). vosso kdb já o cataloga como concorrente direto mas com maturidade
 inferior.

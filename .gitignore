@@ -27,8 +27,8 @@ ios/showcase/build/
 ios/showcase/ShowcaseDemo.xcodeproj/
 ios/showcase/Info.plist
 
-# Claude Code agent worktrees (keep only commands symlink)
-.claude/worktrees/
+# Claude Code: agent worktrees and local settings
+.claude/
 
 # Claude Code memory (agent-local, not project artifacts)
 memory/
@@ -65,25 +65,19 @@ Thumbs.db
 coverage/
 htmlcov/
 
-# Experiments — source is versioned alongside other examples; build artifacts are not
-
 # Private / experiments (not for public release)
 examples-wip/
-.claude/
-# refs/: clones de estudo ficam fora; a curadoria (study-*.lua, READMEs de amostras) entra
-refs/**
-!refs/*/
-refs/OpenUSD/
-refs/winit/
-!refs/*/study-*.lua
-!refs/anim/swf-samples/
-!refs/anim/swf-samples/README.md
-!refs/lang/min-sized-rust.md
+# /refs/: study clones stay out of git. the curated reference files already
+# tracked stay tracked; a new one goes in with `git add -f`. anchored to the
+# root so docs/refs/ stays versioned.
+/refs/
+
+# Design sources (a .fig is read by script/figma-fixture from outside the repo)
+*.fig
 
 # Environment
 .env
 .env.local
 .env.*.local
 .kimi-code/
-refs/
 TMP/

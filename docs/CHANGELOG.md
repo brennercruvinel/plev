@@ -9,6 +9,17 @@ status: living
 
 ## unreleased
 
+- the repository catches up with itself (2026-09-26): four decision
+  records for what the last rounds settled (the person's composition and
+  clipboard stay the person's, a renderer upgrade is proven by a full
+  capture, the keyboard walks the projection, text moves by screen order
+  and shapes by line), the orchestration and pixel how-tos with the
+  machine limits and the capture method, and a learnings file for the
+  session. the changelogs of closed tasks sit with the closed tasks, the
+  2022 competitor list moved to `docs/refs/`, a Figma file is never
+  committed (`*.fig`), and the zed tasks and the pull request template run
+  `./script/gate`.
+
 - plev on wgpu 29, and burn on the renderer's gpu (2026-09-26, task-78):
   the whole workspace moved from wgpu 28 to 29, and every gallery page in
   4 themes at 4 scales (1312 frames) draws the same bytes as before. a
