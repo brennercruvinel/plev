@@ -88,7 +88,8 @@ etagere = "0.2"
 # svg importer: usvg normalizes a whole svg document (groups, transforms,
 # gradients, use/defs, shape-to-path) into a flat tree we tessellate.
 # default-features off drops fontdb/text-to-path (wasm-safe, deterministic);
-# text is skipped like lot skips it. 0.45 is the last release on msrv 1.85.
+# text is skipped like lot skips it. pinned at 0.45; a newer usvg is a
+# change of its own.
 usvg = { version = "0.45", default-features = false }
 # -- data / util
 serde = { version = "1", features = ["derive"] }

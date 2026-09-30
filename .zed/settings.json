@@ -28,8 +28,7 @@
             "android/app/build",
             "android/build",
             "ios/showcase/build",
-            "ref",
-            "codigo-descartado"
+            "refs"
           ]
         },
         "rustfmt": { "extraArgs": ["+stable"] }
@@ -44,7 +43,6 @@
     "android/build",
     "ios/showcase/build",
     "**/*.monster",
-    "ref",
-    "codigo-descartado"
+    "refs"
   ]
 }

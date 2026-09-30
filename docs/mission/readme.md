@@ -2,54 +2,41 @@
 project: plev
 audience: [ai-agents, contributors]
 status: active
-last-updated: 2026-09-23
+last-updated: 2026-09-26
 domain: project-status
 ---
 
 # plev, estado do projeto
 
-> update 2026-09-23: a direção mudou. o plev vai de GPU UI engine para
-> generative interaction runtime. o programa (goal, grafo, ownership,
-> contratos entre tasks) está em
-> `generative-runtime-program.md`, a tese em
-> `generative-runtime-thesis.md` e as regras obrigatórias em
-> `generative-runtime-guidelines.md`. as tasks são a task-57
-> até a task-80, em `steps/pending/`. o mapa abaixo é histórico.
+o plev é uma engine de composição GPU-first em rust que está virando um
+runtime de interação generativa: cada controle é também dado (um contrato
+semântico), que a pessoa, o leitor de tela e um agente operam pelo mesmo
+dispatcher. o que é, para onde vai e o estado de cada task ficam no
+programa (`generative-runtime-program.md`, seção 12); a tese e as regras
+dos agentes ficam ao lado (`generative-runtime-thesis.md`,
+`generative-runtime-guidelines.md`), e o modo de operação do orquestrador
+em `autonomy.md`. as tasks abertas estão em `steps/ongoing/`, as que ainda
+não começaram em `steps/pending/` e as fechadas em `steps/checked/`.
 
-## o que e
-compositing engine GPU-first em rust. um codebase, seis targets (macos/metal, ios/metal, linux/vulkan, android/vulkan, windows/dx12, browser/webgpu). nao e framework de widgets. e a camada que transforma scene graphs em draw calls na GPU de forma identica em todos os targets.
+este arquivo guarda o mapa histórico das tasks 01 a 56 (de 2021 a
+2026-06-29), a fase anterior ao programa. o estado atual vem em resumo
+logo abaixo; o detalhe é o do programa.
 
-## estado atual (2026-06-29)
+## estado atual (2026-09-26)
 
-> update 2026-08-30: repo publico. 14 crates (entraram svg e nestui, o
-> explorador de bancos .nest em plev). fonte unica inclusive sans embutida
-> (300-700), tracking zerado, texto rasterizado em escala fisica (fix
-> hidpi) com detector de fallback. novos widgets de app real (chip,
-> empty-state, spinner, split-pane, icon-button), charts promovidos a
-> engine, engine::graph + GraphView. showcase com 14 tabs e sidebar com
-> scroll. ci matrix macos+ubuntu+wasm. padrao oficial de app registrado
-> em docs/ADR/official-app-pattern.md. o mapa de tasks abaixo reflete
-> 2026-06-29 e nao foi reescrito.
-
-nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do primeiro push em plevdev). a linha do tempo real do projeto vive na documentacao datada (adr/, este mapa) e no codigo, nao no git.
-
-- 52 tasks concluidas (fase 0 a fase 11); pendentes task-40/41 (release); task-18/19/20, task-39 e task-42 fechadas em 2026-09-25; gap-1 em andamento
-- 12 crates: engine (core) + libs/apps git, ide, lot, macros, monster, narrate, narrate-macro, parser, prime, rope, showcase
-- ~1274 testes verdes no workspace, clippy -D warnings limpo, fmt limpo
-- build nativo no macos (metal), web (webgpu/wasm, pixel-identico ao desktop), android (apk no emulador), ios (no simulador)
-- fase 0 (fundamental) e fase 1 (integracao end-to-end) completas
-- fase 2 (mobile/WASM) parcial, apk buildando, showcase no simulador ios, web rodando; device fisico e link ios completo pendentes
-- fase 3 (polish) parcial, docs, DX, CI/CD feitos, license pendente
-- fase 4 (proof of life) e fase 4b (quick wins) completas
-- fase 5 (paper) parcial, benchmarks e outline feitos, texto pendente
-- fase 6 (extensibilidade) parcial, research de plugins e extracao de padroes feitos
-- fase 8 (formatos) completa, monster codec + lot importer + parser transpiler
-- fase 9 (edicao e apps) completa, rope + git backend + ide git client
-- fase 10 (demos e plataforma) completa, prime creatures + showcase multiplataforma
-- fase 11 (organizacao) completa, workspace restructure + rebrand + modularizacao SRP
-- research completo, 50+ repos analisados, 12 docs, technology radar, pattern extraction
-
----
+- workspace de 23 crates membros, mais dois workspaces próprios
+  (`crates/urnaui`, o explorador de `.urna`, e `crates/llm`, a inferência
+  em processo); wgpu 29, rust 1.87.
+- alvos: macOS e web entregues; android e iOS rodam a galeria (tasks 18,
+  19 e 20 fechadas em 2026-09-25); linux e windows pendentes.
+- abertas em `steps/ongoing/`: task-73 (dependências incrementais, o ADR
+  de desenho espera a escolha do brenner), task-74 (texto: falta o roteiro
+  de IME num campo), task-75 (accessibility: o roteiro do VoiceOver, as
+  cores que falham no contraste e o web), task-78 (AI-native: o app de
+  referência) e task-80 (a prova: a demo 2 e o checkpoint c).
+- pendente em `steps/pending/`: task-41 (licença e release pública).
+- o repositório no GitHub é privado; a licença MIT está em
+  `docs/LICENSE`.
 
 ## mapa de tasks
 
@@ -170,24 +157,9 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 
 ## proximo passo
 
-### prioridade 1, release publica
-- task-41: license + cargo.toml fields + readme screenshot, blocker para qualquer publicacao
-- task-40: texto completo do paper arxiv (outline pronto, benchmarks prontos)
-
-### prioridade 2, arquitetura
-- task-39: component memoization via partialeq (b7) + dirty flag bubbling (b8)
-- c3: stateanimator ja implementado (task-37), animationstate<s, t>
-
-### prioridade 3, mobile/WASM
-- task-18: concluída (2026-09-25), ver `checked/task-18-android-device-test-done.md`
-- task-19: concluída (2026-09-25), ver `checked/task-19-ios-simulator-test-done.md`
-- task-20: concluída (2026-09-25), ver `checked/task-20-wasm-visual-validation-done.md`
-
-### prioridade 4, futuro
-- text migration: parley quando atingir 0.9+ (task-32 recomenda wait)
-- plugin system: extism quando API estabilizar (task-33 recomenda wait)
-
----
+o próximo passo sai do programa (`generative-runtime-program.md`, seções
+9 e 12) e das tasks abertas em `steps/ongoing/`, não deste mapa. a
+release pública é a task-41, em `steps/pending/`.
 
 ## marcos
 - [x] pipeline de quads com alpha blending
@@ -237,11 +209,11 @@ nota de historico: o git so preservou de 2026-06-10 em diante (expurgo antes do 
 ---
 
 ## pesquisa de referencia
-analise de ecossistema com 50+ repos em 12 documentos, ver `mission/knowledge/refs/index.md`
+analise de ecossistema com 50+ repos, em `docs/refs/`
 
 novas tasks derivadas: task-30 (a11y), task-31 (lyon), task-32 (parley assessment), task-33 (WASM plugins)
 
-sintese: `refs/integration-candidates.md` (adopt/evaluate/watch/hold), `refs/technology-radar.md`
+sintese: `docs/refs/integration-candidates.md` (adopt/evaluate/watch/hold), `docs/refs/technology-radar.md`
 
 ## decisoes tecnicas chave
-ver `knowledge/index.md`
+ver `docs/ADR/README.md`

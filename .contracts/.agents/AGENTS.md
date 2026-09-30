@@ -70,8 +70,9 @@ it. the sequence, in order, every time:
    continuous cycle. work outside a task branch still asks the user "ok
    to commit?" with a one-paragraph summary first.
 2. on integration, in the same change set:
-   - rebase on `main`, fast-forward, gate again after the merge; explicit
-     paths when committing (see ## things to avoid)
+   - a pull request merged with a merge commit (never squash, never
+     rebase merge), the gate green before it; explicit paths when
+     committing (see ## things to avoid)
    - docs/ADR/: a new adr when a decision was made or an existing one
      was reversed; update docs/ADR/README.md
    - docs/arc/arc.toml: when structure, crates, modules or contracts
@@ -194,6 +195,10 @@ typos job (non-blocking; the repo is bilingual english/portuguese).
   of inlined media need `ffmpeg` on PATH (read in place via its subfile
   protocol, nothing is copied). `script/web-urnaui` serves its web target
   on 8081.
+- llm (local language model in process): `cargo test --manifest-path
+  crates/llm/Cargo.toml --features candle,burn`. like urnaui it is its own
+  workspace (never `--workspace` or `-p llm`), and the weights stay outside
+  the repository (`PLEV_LLM_MODEL`, or `--model` on `llm-bench`).
 - format pipelines: lot2monsters, svg2monster, monster_player (engine
   examples, foreign format in -> .monster out) and the parser
   (`cargo run -p parser --example transpile index.tsx module.sass

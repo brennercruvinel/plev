@@ -56,8 +56,15 @@ cargo run -p showcase --example regress -- bless [--page Todo | --all] [--theme 
   `bless --png --dir <tmp>` makes a local copy with images when a page
   change needs regions.
 - the hash sees the scene, not the raster: a shader, a font file or the
-  rasterizer change pixels without moving a hash. those still need the
-  sampling below.
+  rasterizer change pixels without moving a hash. those need real frames.
+  for a change that touches every page (a wgpu, winit or text-stack
+  upgrade), capture the whole gallery before and after and compare byte
+  for byte:
+  `regress -- capture --out target/determinism/<base>` on the old code,
+  then `regress -- capture --out target/determinism/<new> --against
+  target/determinism/<base> --no-png` on the new. every frame must be
+  `equal` (docs/ADR/a-renderer-upgrade-is-proven-by-a-full-capture.md);
+  for a narrower change, the sampling below.
 
 ## headless first
 
