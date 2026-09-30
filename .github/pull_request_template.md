@@ -7,18 +7,17 @@ conventional-commits prefix.
 
 <!-- one or two sentences. what changed, and the reason it had to. -->
 
-## the gate (all four must be green)
+## the gate
 
-- [ ] `cargo test --workspace`
-- [ ] `cargo clippy --workspace --all-targets -- -D warnings`
-- [ ] `cargo fmt --check`
-- [ ] `cargo check --target wasm32-unknown-unknown -p showcase`
+- [ ] `./script/gate` green: `cargo test --workspace`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt --check`, `cargo check --target wasm32-unknown-unknown -p showcase`, and the urnaui leg when `../urna` is checked out
+- [ ] `cargo run -p showcase --example regress -- check` unchanged, or the change blessed in the same PR
 
 ## contracts
 
 - [ ] new crate or example is named in `docs/arc/arc.toml` and `README.md` (the arc sync guard enforces this)
 - [ ] structure changes are reflected in `docs/arc/arc.toml` (the tables are canonical)
 - [ ] tests are real (happy + error + one edge), no mocks; visual claims measured by pixel
+- [ ] no production file past 639 lines (the file hygiene guard enforces this)
 - [ ] no new dependency without a one-line justification of what it buys
 
 ## design for ranges, not screens (when the change touches anything visible, on any platform)
