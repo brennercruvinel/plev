@@ -1,0 +1,147 @@
+# engine: plev, the gpu-first compositing engine. one renderer, identical on
+# macos, web (webgpu/wasm), android and ios. the apps (uigallery, idestudio) and the
+# other crates build on top of this one.
+[package]
+name = "engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+description = "plev: a gpu-first compositing engine (wgpu, winit, cosmic-text, taffy)"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[lints]
+workspace = true
+
+[features]
+default = ["accessibility", "hot-reload"]
+accessibility = ["dep:accesskit", "dep:accesskit_winit"]
+# Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
+# Off by default so downstream apps (uigallery, idestudio, ...) can define
+# their own browser entry without colliding with the engine's.
+web-entry = []
+android-game-activity = ["winit/android-game-activity"]
+# Exports the engine's own `android_main` entry on android. Off by default so
+# downstream apps can ship their own GameActivity entry without symbol clash.
+android-entry = []
+# Shader hot reload (and the experimental markup DSL override map). On by
+# default, but build.rs only turns the `hot_reload` cfg on for desktop debug
+# builds: release, wasm and mobile compile the embedded `include_str!` path
+# and never start a watcher. Opt out entirely with `--no-default-features`.
+# `span-locations` gives each literal its line and column (view source for
+# pixels); it reaches only this crate's proc-macro2, never the one the proc
+# macros build with (resolver 2 keeps host features apart).
+hot-reload = [
+    "dep:notify",
+    "dep:notify-debouncer-full",
+    "dep:proc-macro2",
+    "proc-macro2/span-locations",
+]
+
+[dependencies]
+wgpu.workspace = true
+winit.workspace = true
+cosmic-text.workspace = true
+etagere.workspace = true
+bytemuck.workspace = true
+lru.workspace = true
+rustc-hash.workspace = true
+log.workspace = true
+macros.workspace = true
+taffy.workspace = true
+slotmap.workspace = true
+web-time.workspace = true
+indexmap.workspace = true
+lyon_tessellation.workspace = true
+lyon_path.workspace = true
+image.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+unicode-segmentation.workspace = true
+# the semantic contract (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md):
+# the compositor binds each `SemId` to its rect beside the scene.
+accord.workspace = true
+# the widgets' multi-line editor sits on the rope-based editing core.
+editor.workspace = true
+accesskit = { workspace = true, optional = true }
+accesskit_winit = { workspace = true, optional = true }
+
+[dev-dependencies]
+markup.workspace = true
+criterion.workspace = true
+import.workspace = true
+motion.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster.workspace = true
+env_logger.workspace = true
+
+# arboard is a desktop clipboard backend (no android/ios platform impl); mobile
+# falls back to the in-memory clipboard, so it is desktop-only here.
+# rfd is the native file dialog (macos, windows, linux) behind
+# `platform::files`; it has no android/ios backend either, and on wasm it
+# is async and gives bytes, not paths, so it is desktop-only too. its
+# default features are off: they only pick the linux backend (the xdg
+# portal through ashpd, or gtk3), which is the linux bring-up's choice.
+[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
+arboard.workspace = true
+rfd = { version = "0.15", default-features = false }
+# muda is the native menu bar (macos: the app's menu; windows: per hwnd)
+# behind `platform::menu`; no android/ios backend, and nothing native on
+# wasm. its default features (`gtk3`, `libxdo`) only pick the linux
+# backend, which is the linux bring-up's choice, so they are off.
+muda = { version = "0.20", default-features = false }
+
+# tray-icon is the system tray icon (macos: an NSStatusItem; windows: the
+# notification area) behind `platform::tray`, with a `muda` menu as its
+# menu. its default features (`muda-libxdo`, `libappindicator`) only pick
+# the linux backend, and on linux the crate refuses to build without one
+# (libappindicator or ksni), which is the linux bring-up's choice: so it
+# enters on macos and windows alone, and linux gets `NoTray` meanwhile.
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+tray-icon = { version = "0.25", default-features = false }
+# the system notification (`platform::notify`) has no crate here yet: on
+# macos the UserNotifications framework refuses a process without an app
+# bundle (`objc2-user-notifications` 0.3 would enter with the classes it
+# uses, plus `objc2` and `objc2-foundation` directly; see the item 5 probe
+# in docs/log/steps/task-76-platform-integration.md), and the
+# bundle is the platform bring-up's. until then `NativeNotifier` says why.
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger.workspace = true
+
+# file watchers for hot reload: desktop only (the cfg in build.rs matches).
+[target.'cfg(any(target_os = "macos", target_os = "linux", target_os = "windows"))'.dependencies]
+notify = { workspace = true, optional = true }
+notify-debouncer-full = { workspace = true, optional = true }
+# tokenizes source files for the literal hot reload (no syn, no parser).
+proc-macro2 = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
+web-sys.workspace = true
+console_log.workspace = true
+console_error_panic_hook.workspace = true
+
+[package.metadata.android]
+package = "com.plev.engine"
+label = "plev"
+
+[package.metadata.android.sdk]
+min_sdk_version = 28
+target_sdk_version = 35
+
+[package.metadata.android.application]
+debuggable = true
+has_code = false
+theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
+
+[[bench]]
+name = "scene_build"
+harness = false
+

@@ -1,0 +1,9 @@
+#!/bin/sh
+# git pre-commit hook: the fast half of the gate, the part a commit can
+# break without building the world. install with
+#   ln -s ../../tool/tasks/precommit .git/hooks/pre-commit
+# the full gate is tool/tasks/fullcheck.sh.
+set -e
+cd "$(git rev-parse --show-toplevel)"
+cargo fmt --check
+cargo test -q -p tests

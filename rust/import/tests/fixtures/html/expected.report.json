@@ -1,0 +1,646 @@
+{
+  "bindings": [
+    {
+      "action": "reply",
+      "at": "note-card.html:90",
+      "binds": "action",
+      "event": "set_value",
+      "node": "note_card.root.actions.reply",
+      "param": "text",
+      "target": "note_card.props",
+      "why": "`oninput=\"reply(this.value)\"`: the app's action behind the handler"
+    },
+    {
+      "action": "open",
+      "at": "note-card.html:91",
+      "binds": "action",
+      "event": "activate",
+      "node": "note_card.root.actions.open",
+      "param": null,
+      "target": "note_card.props",
+      "why": "`onclick=\"open()\"`: the app's action behind the handler"
+    }
+  ],
+  "counts": {
+    "approximated": 17,
+    "impossible": 13,
+    "supported": 32,
+    "transformed": 22
+  },
+  "entries": [
+    {
+      "at": "note-card.html:1",
+      "category": "supported",
+      "construct": "<!doctype>",
+      "ir": "holds by construction: the document's frame: the component is the body's element"
+    },
+    {
+      "at": "note-card.html:10",
+      "category": "supported",
+      "construct": "<html>",
+      "ir": "holds by construction: the document's frame: the component is the body's element"
+    },
+    {
+      "at": "note-card.html:10",
+      "category": "supported",
+      "construct": "lang=\"en\"",
+      "ir": "holds by construction: an attribute of the document's frame"
+    },
+    {
+      "at": "note-card.html:11",
+      "category": "supported",
+      "construct": "<head>",
+      "ir": "holds by construction: the document's frame: the component is the body's element"
+    },
+    {
+      "at": "note-card.html:12",
+      "category": "transformed",
+      "construct": "<title> \"Note card\"",
+      "ir": "surface `note_card`, title \"Note card\"",
+      "rule": "the component names the surface"
+    },
+    {
+      "at": "note-card.html:13",
+      "category": "supported",
+      "construct": "<style>",
+      "ir": "holds by construction: the stylesheet: each of its rules is reported on its own"
+    },
+    {
+      "at": "note-card.html:15",
+      "category": "supported",
+      "construct": ".note-card { display: flex }",
+      "ir": "layout.stack.axis = vertical",
+      "node": "note_card.root"
+    },
+    {
+      "at": "note-card.html:16",
+      "category": "supported",
+      "construct": ".note-card { flex-direction: column }",
+      "ir": "layout.stack.axis = vertical",
+      "node": "note_card.root"
+    },
+    {
+      "at": "note-card.html:17",
+      "category": "approximated",
+      "construct": ".note-card { gap: 8px }",
+      "difference": "16 px here; the stack's one gap is the smallest spacing's token, theme.spacing.sm (8 px)",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root"
+    },
+    {
+      "at": "note-card.html:18",
+      "category": "transformed",
+      "construct": ".note-card { width: 368px }",
+      "ir": "size.min = size.max = card_w",
+      "node": "note_card.root",
+      "rule": "a fixed width of 368 px is theme.size.card_w (368 px) in the theme"
+    },
+    {
+      "at": "note-card.html:19",
+      "category": "transformed",
+      "construct": ".note-card { padding: 16px }",
+      "ir": "props.padding = lg",
+      "node": "note_card.root",
+      "rule": "16 px is theme.spacing.lg (16 px) in the theme"
+    },
+    {
+      "at": "note-card.html:20",
+      "category": "transformed",
+      "construct": ".note-card { background: #2e2e2e }",
+      "ir": "props.background = surface",
+      "node": "note_card.root",
+      "rule": "`engine::styling::color::Color::rgba(0.18039216, 0.18039216, 0.18039216, 1.0)` is theme.colors.surface in the theme"
+    },
+    {
+      "at": "note-card.html:21",
+      "category": "transformed",
+      "construct": ".note-card { border-radius: 32px }",
+      "ir": "props.shape = pill",
+      "node": "note_card.root",
+      "rule": "a radius of 32 px is theme.shape.pill (32 px) in the theme"
+    },
+    {
+      "at": "note-card.html:22",
+      "category": "impossible",
+      "construct": ".note-card { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) }",
+      "node": "note_card.root",
+      "reason": "the IR's shadows are the theme's elevation stacks, not a single shadow"
+    },
+    {
+      "at": "note-card.html:25",
+      "category": "approximated",
+      "construct": ".meta { font-size: 12px }",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "note_card.root.meta"
+    },
+    {
+      "at": "note-card.html:26",
+      "category": "approximated",
+      "construct": ".meta { line-height: 16px }",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "note_card.root.meta"
+    },
+    {
+      "at": "note-card.html:27",
+      "category": "approximated",
+      "construct": ".meta { color: rgba(248, 248, 248, 0.66) }",
+      "difference": "`engine::styling::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 25.5",
+      "ir": "props.color = text_mid",
+      "node": "note_card.root.meta"
+    },
+    {
+      "at": "note-card.html:30",
+      "category": "supported",
+      "construct": ".title { margin: 0 }",
+      "ir": "holds by construction: margin: 0 is the plev default"
+    },
+    {
+      "at": "note-card.html:31",
+      "category": "transformed",
+      "construct": ".title { font-size: 20px }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "note-card.html:32",
+      "category": "transformed",
+      "construct": ".title { line-height: 24px }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "note-card.html:33",
+      "category": "transformed",
+      "construct": ".title { font-weight: 500 }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "note-card.html:34",
+      "category": "supported",
+      "construct": ".title { color: rgba(248, 248, 248, 0.95) }",
+      "ir": "props.color = text",
+      "node": "note_card.root.title"
+    },
+    {
+      "at": "note-card.html:37",
+      "category": "approximated",
+      "construct": ".content { margin: 0 0 8px }",
+      "difference": "16 px here; the stack's one gap is the smallest spacing's token, theme.spacing.sm (8 px)",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root"
+    },
+    {
+      "at": "note-card.html:38",
+      "category": "transformed",
+      "construct": ".content { font-size: 16px }",
+      "ir": "props.typography = base_r",
+      "node": "note_card.root.content",
+      "rule": "16/24 px weight 400 is theme.typography.base_r (16/24 px weight 400) in the theme"
+    },
+    {
+      "at": "note-card.html:39",
+      "category": "transformed",
+      "construct": ".content { line-height: 1.5 }",
+      "ir": "props.typography = base_r",
+      "node": "note_card.root.content",
+      "rule": "16/24 px weight 400 is theme.typography.base_r (16/24 px weight 400) in the theme"
+    },
+    {
+      "at": "note-card.html:40",
+      "category": "supported",
+      "construct": ".content { color: rgba(248, 248, 248, 0.7) }",
+      "ir": "props.color = text_mid",
+      "node": "note_card.root.content"
+    },
+    {
+      "at": "note-card.html:43",
+      "category": "supported",
+      "construct": ".actions { display: flex }",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "note_card.root.actions"
+    },
+    {
+      "at": "note-card.html:44",
+      "category": "transformed",
+      "construct": ".actions { gap: 12px }",
+      "ir": "layout.stack.gap = md",
+      "node": "note_card.root.actions",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "note-card.html:45",
+      "category": "supported",
+      "construct": ".actions { align-items: center }",
+      "ir": "layout.stack.align = center",
+      "node": "note_card.root.actions"
+    },
+    {
+      "at": "note-card.html:48",
+      "category": "approximated",
+      "construct": ".reply { flex-grow: 1 }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.actions.reply"
+    },
+    {
+      "at": "note-card.html:49",
+      "category": "approximated",
+      "construct": ".reply { padding: 12px 16px }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.actions.reply"
+    },
+    {
+      "at": "note-card.html:50",
+      "category": "approximated",
+      "construct": ".reply { background: rgba(255, 255, 255, 0.05) }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.actions.reply"
+    },
+    {
+      "at": "note-card.html:51",
+      "category": "approximated",
+      "construct": ".reply { border-radius: 16px }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.actions.reply"
+    },
+    {
+      "at": "note-card.html:54",
+      "category": "approximated",
+      "construct": ".open { padding: 12px 32px }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:55",
+      "category": "approximated",
+      "construct": ".open { background: #282828 }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:56",
+      "category": "approximated",
+      "construct": ".open { border-radius: 32px }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:57",
+      "category": "approximated",
+      "construct": ".open { font-size: 16px }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:58",
+      "category": "approximated",
+      "construct": ".open { font-weight: 500 }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:59",
+      "category": "approximated",
+      "construct": ".open { color: rgba(248, 248, 248, 0.7) }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.actions.open"
+    },
+    {
+      "at": "note-card.html:61",
+      "category": "impossible",
+      "construct": ".open:hover",
+      "covers": [
+        "note-card.html:62"
+      ],
+      "reason": "a pseudo-class or pseudo-element selects a state or a generated box; the IR has neither"
+    },
+    {
+      "at": "note-card.html:65",
+      "category": "impossible",
+      "construct": ".badge { position: absolute }",
+      "reason": "the IR has no position: an element follows the flow of its container (the subset is flow only)"
+    },
+    {
+      "at": "note-card.html:66",
+      "category": "impossible",
+      "construct": ".badge { top: 16px }",
+      "reason": "the IR has no position: an element follows the flow of its container (the subset is flow only)"
+    },
+    {
+      "at": "note-card.html:67",
+      "category": "impossible",
+      "construct": ".badge { right: 16px }",
+      "reason": "the IR has no position: an element follows the flow of its container (the subset is flow only)"
+    },
+    {
+      "at": "note-card.html:68",
+      "category": "approximated",
+      "construct": ".badge { font-size: 12px }",
+      "difference": "12/15.6 px weight 400 is 0.36 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "note_card.root.badge"
+    },
+    {
+      "at": "note-card.html:71",
+      "category": "impossible",
+      "construct": ".tags { display: grid }",
+      "reason": "grid layout is outside the subset"
+    },
+    {
+      "at": "note-card.html:72",
+      "category": "impossible",
+      "construct": ".tags { grid-template-columns: 1fr 1fr }",
+      "reason": "grid layout is outside the subset"
+    },
+    {
+      "at": "note-card.html:74",
+      "category": "impossible",
+      "construct": ".note-card p + p",
+      "covers": [
+        "note-card.html:75"
+      ],
+      "reason": "a combinator (descendant, child, sibling) is outside the subset: only .class, #id and a tag"
+    },
+    {
+      "at": "note-card.html:77",
+      "category": "impossible",
+      "construct": "@media (max-width: 767px)",
+      "covers": [
+        "note-card.html:78",
+        "note-card.html:79"
+      ],
+      "reason": "a media query is a responsive variant: the subset imports one layout"
+    },
+    {
+      "at": "note-card.html:84",
+      "category": "supported",
+      "construct": "<body>",
+      "ir": "holds by construction: the document's frame: the component is the body's element"
+    },
+    {
+      "at": "note-card.html:85",
+      "category": "supported",
+      "construct": "<section class=note-card>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root"
+    },
+    {
+      "at": "note-card.html:85",
+      "category": "supported",
+      "construct": "class=\"note-card\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:86",
+      "category": "supported",
+      "construct": "\"Field note\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.meta"
+    },
+    {
+      "at": "note-card.html:86",
+      "category": "transformed",
+      "construct": "<header class=meta>",
+      "ir": "folded into `note_card.root.meta`",
+      "node": "note_card.root.meta",
+      "rule": "an element holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "note-card.html:86",
+      "category": "supported",
+      "construct": "class=\"meta\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:87",
+      "category": "supported",
+      "construct": "\"Tokens over literals\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.title"
+    },
+    {
+      "at": "note-card.html:87",
+      "category": "transformed",
+      "construct": "<h2 class=title>",
+      "ir": "folded into `note_card.root.title`",
+      "node": "note_card.root.title",
+      "rule": "an element holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "note-card.html:87",
+      "category": "supported",
+      "construct": "class=\"title\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:88",
+      "category": "supported",
+      "construct": "\"Every value a widget draws comes from the theme.\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.content"
+    },
+    {
+      "at": "note-card.html:88",
+      "category": "transformed",
+      "construct": "<p class=content>",
+      "ir": "folded into `note_card.root.content`",
+      "node": "note_card.root.content",
+      "rule": "an element holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "note-card.html:88",
+      "category": "supported",
+      "construct": "class=\"content\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:89",
+      "category": "supported",
+      "construct": "<div class=actions>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root.actions"
+    },
+    {
+      "at": "note-card.html:89",
+      "category": "supported",
+      "construct": "class=\"actions\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:90",
+      "category": "transformed",
+      "construct": "<input class=reply>",
+      "ir": "component text_field",
+      "node": "note_card.root.actions.reply",
+      "rule": "an <input> is the text_field component, role text input; what it sets is the app's: binding required"
+    },
+    {
+      "at": "note-card.html:90",
+      "category": "supported",
+      "construct": "class=\"reply\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:90",
+      "category": "transformed",
+      "construct": "oninput=\"reply(this.value)\"",
+      "ir": "bind.actions.set_value = `reply` on `note_card.props`",
+      "node": "note_card.root.actions.reply",
+      "rule": "the handler names the action the app binds: binding required"
+    },
+    {
+      "at": "note-card.html:90",
+      "category": "transformed",
+      "construct": "placeholder=\"Reply\"",
+      "ir": "label",
+      "node": "note_card.root.actions.reply",
+      "rule": "the placeholder names the field"
+    },
+    {
+      "at": "note-card.html:90",
+      "category": "supported",
+      "construct": "type=\"text\"",
+      "ir": "component text_field",
+      "node": "note_card.root.actions.reply"
+    },
+    {
+      "at": "note-card.html:91",
+      "category": "transformed",
+      "construct": "\"Open\"",
+      "ir": "label",
+      "node": "note_card.root.actions.open",
+      "rule": "the text inside a control is its label"
+    },
+    {
+      "at": "note-card.html:91",
+      "category": "transformed",
+      "construct": "<button class=open>",
+      "ir": "component button",
+      "node": "note_card.root.actions.open",
+      "rule": "a <button> is the button component, role button; what it does is the app's: binding required"
+    },
+    {
+      "at": "note-card.html:91",
+      "category": "supported",
+      "construct": "class=\"open\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:91",
+      "category": "transformed",
+      "construct": "onclick=\"open()\"",
+      "ir": "bind.actions.activate = `open` on `note_card.props`",
+      "node": "note_card.root.actions.open",
+      "rule": "the handler names the action the app binds: binding required"
+    },
+    {
+      "at": "note-card.html:93",
+      "category": "supported",
+      "construct": "\"New\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.badge"
+    },
+    {
+      "at": "note-card.html:93",
+      "category": "transformed",
+      "construct": "<span class=badge>",
+      "ir": "folded into `note_card.root.badge`",
+      "node": "note_card.root.badge",
+      "rule": "an element holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "note-card.html:93",
+      "category": "supported",
+      "construct": "class=\"badge\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:93",
+      "category": "approximated",
+      "construct": "style=\"color: #f8f8f8\"",
+      "difference": "`engine::styling::theme::hoff::n2(1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "note_card.root.badge"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "supported",
+      "construct": "\"ir\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.tags.text_2"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "supported",
+      "construct": "\"ui\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.tags.text"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "transformed",
+      "construct": "<li>",
+      "ir": "folded into `note_card.root.tags.text`; folded into `note_card.root.tags.text_2`",
+      "node": "note_card.root.tags.text",
+      "rule": "an element holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "supported",
+      "construct": "<ul class=tags>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root.tags"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "impossible",
+      "construct": "<ul> default list-style",
+      "reason": "the browser's default list-style of <ul> (a marker per item) is not applied: the subset reads only the stylesheet"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "impossible",
+      "construct": "<ul> default margin",
+      "reason": "the browser's default margin of <ul> (1em above and below) is not applied: the subset reads only the stylesheet"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "impossible",
+      "construct": "<ul> default padding",
+      "reason": "the browser's default padding of <ul> (an indent of 40px) is not applied: the subset reads only the stylesheet"
+    },
+    {
+      "at": "note-card.html:94",
+      "category": "supported",
+      "construct": "class=\"tags\"",
+      "ir": "holds by construction: the class selects the element's rules and names its node"
+    },
+    {
+      "at": "note-card.html:96",
+      "category": "impossible",
+      "construct": "<script>",
+      "covers": [
+        "note-card.html:97"
+      ],
+      "reason": "JavaScript is not read: what a control does is the app's (binding required on the control)"
+    }
+  ],
+  "plev_report": 1,
+  "source": "note-card.html",
+  "surface": "note_card"
+}

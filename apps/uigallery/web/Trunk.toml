@@ -1,0 +1,17 @@
+# Trunk config for the web build of the uigallery. run from the repo root:
+# `tool/tasks/webtarget.sh` (wraps `trunk --config apps/uigallery/web serve`).
+#
+# index.html points at apps/uigallery/Cargo.toml (bin "uigallery-web"); trunk
+# runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
+# pinned by Cargo.lock), and emits everything into apps/uigallery/web/dist/.
+
+[build]
+target = "index.html"
+dist = "dist"
+# Engine + cosmic-text in debug wasm is huge and slow; always ship opt.
+release = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8080
+open = false

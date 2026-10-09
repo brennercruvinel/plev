@@ -1,0 +1,43 @@
+# replay: the session inspector (task-64 phase a,
+# docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md). it reads a
+# recorded session (record::Session) and answers the thesis questions about
+# any request or control: what it was, the state, who observed what and
+# when, the request, the verdict with its delta, what happened between the
+# observation and the request and who did it, and the result. it only
+# reads: nothing here can create a request or run an action.
+[package]
+name = "replay"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Session inspector of plev: reads a recorded session and explains any request or control, by time, without running anything; the plev-inspect cli"
+
+# the inspector's command line: a summary, the timeline, a request's causal
+# chain, a control at an instant, as text or json.
+[[bin]]
+name = "plev-inspect"
+path = "src/bin/plev_inspect.rs"
+
+[dependencies]
+# the read side of a recorded session: events, the state at an instant,
+# receipts rebuilt from their stages.
+record.workspace = true
+# with its serde form: the json output carries actors, values, changes,
+# stages and rejections exactly as accord writes them.
+accord = { workspace = true, features = ["serde"] }
+serde.workspace = true
+# the serde names in the plain-english forms, and the cli's --json.
+serde_json.workspace = true
+
+[dev-dependencies]
+# the synthetic sessions of the tests are recorded the way an app records
+# them, and a file test writes one to a temporary directory.
+indexmap.workspace = true
+tempfile.workspace = true
+# the export test records frames with their bindings from a compositor, so
+# the stretch it cuts has both tracks (record already builds on the engine).
+engine.workspace = true
+
+[lints]
+workspace = true

@@ -1,0 +1,59 @@
+# xcodegen spec for the plev uigallery iOS app.
+#
+# The app is a thin shell: `Sources/main.m` calls `uigallery_ios_main`, exported
+# by the Rust staticlib (libuigallery.a, crate-type "staticlib"). winit drives
+# UIApplicationMain from inside that call. Build the staticlib first with
+#   cargo build -p uigallery --lib --target <triple>
+# then point LIBRARY_SEARCH_PATHS at target/<triple>/<profile> (passed by the
+# build script, tool/tasks/mobileapp.sh). Regenerate with `xcodegen generate`
+# in this directory. The Info.plist xcodegen writes goes under build/, next to
+# the rest of the build output, so it never overwrites the tracked Info.plist.
+name: UIGallery
+options:
+  bundleIdPrefix: com.plev
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+targets:
+  UIGallery:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: build/Info.plist
+      properties:
+        CFBundleDisplayName: plev uigallery
+        UILaunchScreen: {}
+        UIRequiredDeviceCapabilities:
+          - metal
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.plev.uigallery
+        # Simulator on Apple Silicon is arm64; the Rust staticlib is arm64 only.
+        ARCHS: arm64
+        EXCLUDED_ARCHS: x86_64
+        ONLY_ACTIVE_ARCH: YES
+        # The Rust staticlib already bundles all Rust deps; only system
+        # frameworks remain. `mobileapp.sh ios` appends the absolute path to
+        # libuigallery.a (linking it by name would pick the cdylib .dylib).
+        OTHER_LDFLAGS:
+          - $(inherited)
+          - -lc++
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Metal.framework
+      - sdk: QuartzCore.framework
+      - sdk: Foundation.framework
+      - sdk: CoreGraphics.framework
+      - sdk: Security.framework

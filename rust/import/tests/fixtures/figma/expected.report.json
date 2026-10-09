@@ -1,0 +1,4317 @@
+{
+  "bindings": [],
+  "counts": {
+    "approximated": 119,
+    "impossible": 196,
+    "supported": 251,
+    "transformed": 27
+  },
+  "entries": [
+    {
+      "at": "settings.json:4",
+      "category": "supported",
+      "construct": "DOCUMENT \"Document\"",
+      "ir": "holds by construction: the page and the section hold the screen; the screen is the surface"
+    },
+    {
+      "at": "settings.json:9",
+      "category": "supported",
+      "construct": "CANVAS \"\\u{21b3} \\u{1f319} Dark Theme\"",
+      "ir": "holds by construction: the page and the section hold the screen; the screen is the surface"
+    },
+    {
+      "at": "settings.json:14",
+      "category": "supported",
+      "construct": "SECTION \"settings\"",
+      "ir": "holds by construction: the page and the section hold the screen; the screen is the surface"
+    },
+    {
+      "at": "settings.json:17",
+      "category": "supported",
+      "construct": "absoluteBoundingBox",
+      "ir": "holds by construction: a page or a section's own place and look are not part of the screen"
+    },
+    {
+      "at": "settings.json:20",
+      "category": "supported",
+      "construct": "FRAME \"settings\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root"
+    },
+    {
+      "at": "settings.json:21",
+      "category": "transformed",
+      "construct": "screen \"settings\"",
+      "ir": "surface `settings`, title \"settings\"",
+      "rule": "the component names the surface"
+    },
+    {
+      "at": "settings.json:23",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 393 x 852",
+      "node": "settings.root",
+      "reason": "a fixed height of 852 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 532 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:23",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39235, -2953",
+      "ir": "holds by construction: the screen's place on the canvas is not part of the screen"
+    },
+    {
+      "at": "settings.json:24",
+      "category": "impossible",
+      "construct": "fills[0] #221F1F",
+      "node": "settings.root",
+      "reason": "`engine::styling::color::Color::rgba(0.13333334, 0.12156863, 0.12156863, 1.0)` has no token: the nearest, theme.colors.surface, is 15 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:25",
+      "category": "approximated",
+      "construct": "cornerRadius 30",
+      "difference": "a radius of 30 px is 2 px from theme.shape.pill (32 px), within its tolerance of 4",
+      "ir": "props.shape = pill",
+      "node": "settings.root"
+    },
+    {
+      "at": "settings.json:26",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:29",
+      "category": "impossible",
+      "construct": "ELLIPSE \"Ellipse 2316\"",
+      "covers": [
+        "settings.json:30",
+        "settings.json:32",
+        "settings.json:33",
+        "settings.json:34",
+        "settings.json:35"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:38",
+      "category": "impossible",
+      "construct": "ELLIPSE \"Ellipse 2315\"",
+      "covers": [
+        "settings.json:39",
+        "settings.json:41",
+        "settings.json:42",
+        "settings.json:43",
+        "settings.json:44"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:47",
+      "category": "supported",
+      "construct": "INSTANCE \"Status Bar\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar"
+    },
+    {
+      "at": "settings.json:50",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 393 x 59",
+      "node": "settings.root.status_bar",
+      "reason": "a fixed height of 59 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 261 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:50",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39235, -2953",
+      "ir": "holds by construction: where the stack puts it: the frame's children do not overlap and keep their order"
+    },
+    {
+      "at": "settings.json:51",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.status_bar",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:52",
+      "category": "supported",
+      "construct": "componentId 1:28",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:55",
+      "category": "transformed",
+      "construct": "INSTANCE \"iOS Material\"",
+      "covers": [
+        "settings.json:56",
+        "settings.json:58",
+        "settings.json:59",
+        "settings.json:60",
+        "settings.json:61",
+        "settings.json:62",
+        "settings.json:63",
+        "settings.json:64"
+      ],
+      "ir": "carried by the rewrite",
+      "rule": "a hidden layer draws nothing: left out, as the design shows it"
+    },
+    {
+      "at": "settings.json:67",
+      "category": "supported",
+      "construct": "FRAME \"Levels\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.levels"
+    },
+    {
+      "at": "settings.json:70",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 140.5 x 59",
+      "node": "settings.root.status_bar.levels",
+      "reason": "a fixed height of 59 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 261 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:70",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39488, -2953",
+      "difference": "at x 253, y 0 in a frame with no auto layout; its children do not overlap, so they are a row in x order, which puts it at x 140.5, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:73",
+      "category": "supported",
+      "construct": "FRAME \"Connection Levels\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.levels.connection_levels"
+    },
+    {
+      "at": "settings.json:76",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 78.33 x 14.2",
+      "node": "settings.root.status_bar.levels.connection_levels",
+      "reason": "a fixed height of 14.2 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 305.8 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:76",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39518, -2930.6",
+      "difference": "at x 30, y 22.4 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:79",
+      "category": "supported",
+      "construct": "FRAME \"Battery\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.levels.connection_levels.battery"
+    },
+    {
+      "at": "settings.json:82",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 27.33 x 14.2",
+      "node": "settings.root.status_bar.levels.connection_levels.battery",
+      "reason": "a fixed width of 27.33 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 44.67 px away, past its tolerance of 44; a fixed height of 14.2 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 305.8 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:82",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39569, -2930.6",
+      "difference": "at x 51, y 0 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:83",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.status_bar.levels.connection_levels.battery",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:86",
+      "category": "supported",
+      "construct": "RECTANGLE \"Border\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.border"
+    },
+    {
+      "at": "settings.json:89",
+      "category": "impossible",
+      "construct": "opacity 0.35",
+      "reason": "the IR has no layer opacity"
+    },
+    {
+      "at": "settings.json:90",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 25 x 14.2",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.border",
+      "reason": "a fixed width of 25 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 47 px away, past its tolerance of 44; a fixed height of 14.2 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 305.8 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:90",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox at 39569, -2930.6",
+      "reason": "the frame's children overlap and the IR has no absolute position: they are stacked in source order"
+    },
+    {
+      "at": "settings.json:91",
+      "category": "impossible",
+      "construct": "strokes[0] #FFFFFF",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.border",
+      "reason": "the IR has no border: a container draws its fill and its elevation only"
+    },
+    {
+      "at": "settings.json:92",
+      "category": "impossible",
+      "construct": "strokeWeight 1",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.border",
+      "reason": "the IR has no border: a container draws its fill and its elevation only"
+    },
+    {
+      "at": "settings.json:93",
+      "category": "impossible",
+      "construct": "cornerRadius 4.3",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.border",
+      "reason": "a radius of 4.3 px has no token: the nearest, theme.shape.micro (6 px), is 1.7 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:96",
+      "category": "impossible",
+      "construct": "VECTOR \"Cap\"",
+      "covers": [
+        "settings.json:97",
+        "settings.json:99",
+        "settings.json:100",
+        "settings.json:101"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:104",
+      "category": "supported",
+      "construct": "RECTANGLE \"Capacity\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.capacity"
+    },
+    {
+      "at": "settings.json:107",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 21 x 9.83",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.capacity",
+      "reason": "a fixed width of 21 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 51 px away, past its tolerance of 44; a fixed height of 9.83 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 310.17 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:107",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox at 39571, -2928.41",
+      "reason": "the frame's children overlap and the IR has no absolute position: they are stacked in source order"
+    },
+    {
+      "at": "settings.json:108",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.background = text",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.capacity"
+    },
+    {
+      "at": "settings.json:109",
+      "category": "impossible",
+      "construct": "cornerRadius 2.5",
+      "node": "settings.root.status_bar.levels.connection_levels.battery.capacity",
+      "reason": "a radius of 2.5 px has no token: the nearest, theme.shape.micro (6 px), is 3.5 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:114",
+      "category": "impossible",
+      "construct": "VECTOR \"Wifi\"",
+      "covers": [
+        "settings.json:115",
+        "settings.json:117",
+        "settings.json:118"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:121",
+      "category": "impossible",
+      "construct": "VECTOR \"Cellular Connection\"",
+      "covers": [
+        "settings.json:122",
+        "settings.json:124",
+        "settings.json:125"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:132",
+      "category": "transformed",
+      "construct": "FRAME \"Dynamic Island\"",
+      "covers": [
+        "settings.json:133",
+        "settings.json:135",
+        "settings.json:136",
+        "settings.json:137",
+        "settings.json:138",
+        "settings.json:139",
+        "settings.json:142",
+        "settings.json:143",
+        "settings.json:145",
+        "settings.json:146",
+        "settings.json:147"
+      ],
+      "ir": "carried by the rewrite",
+      "rule": "a hidden layer draws nothing: left out, as the design shows it"
+    },
+    {
+      "at": "settings.json:152",
+      "category": "supported",
+      "construct": "FRAME \"Time\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.status_bar.time"
+    },
+    {
+      "at": "settings.json:155",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 140.5 x 59",
+      "node": "settings.root.status_bar.time",
+      "reason": "a fixed height of 59 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 261 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:155",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39235, -2953",
+      "ir": "holds by construction: where the stack puts it: the frame's children do not overlap and keep their order"
+    },
+    {
+      "at": "settings.json:158",
+      "category": "supported",
+      "construct": "TEXT \"Time\"",
+      "ir": "component text, its label",
+      "node": "settings.root.status_bar.time.time"
+    },
+    {
+      "at": "settings.json:161",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 37 x 59",
+      "node": "settings.root.status_bar.time.time",
+      "reason": "`.w()` has no IR field; `.h()` has no IR field"
+    },
+    {
+      "at": "settings.json:161",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39287, -2953",
+      "difference": "at x 52, y 0 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:162",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.status_bar.time.time"
+    },
+    {
+      "at": "settings.json:163",
+      "category": "supported",
+      "construct": "characters \"9:41\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.fontSize 17",
+      "node": "settings.root.status_bar.time.time",
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.fontWeight 600",
+      "node": "settings.root.status_bar.time.time",
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.lineHeightPx 22",
+      "node": "settings.root.status_bar.time.time",
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.textAlignHorizontal \"CENTER\"",
+      "reason": "the IR has no text alignment"
+    },
+    {
+      "at": "settings.json:164",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"NONE\"",
+      "node": "settings.root.status_bar.time.time",
+      "reason": "`.w()` has no IR field; `.h()` has no IR field"
+    },
+    {
+      "at": "settings.json:171",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224275\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:174",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox 352 x 402",
+      "difference": "a fixed width of 352 px is 16 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:174",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39256, -2545",
+      "difference": "at x 21, y 408 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 362",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:175",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:176",
+      "category": "supported",
+      "construct": "itemSpacing 8",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:177",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:178",
+      "category": "approximated",
+      "construct": "counterAxisSizingMode FIXED",
+      "difference": "a fixed width of 352 px is 16 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:181",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224240\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:184",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 402",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:184",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2545",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:185",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:186",
+      "category": "transformed",
+      "construct": "itemSpacing 8",
+      "ir": "layout.stack.gap = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240",
+      "rule": "the gap between children is the stack's gap, theme.spacing.sm (8 px)"
+    },
+    {
+      "at": "settings.json:187",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:188",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:189",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:190",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275"
+    },
+    {
+      "at": "settings.json:193",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224234\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:196",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 74",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:196",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2545",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:197",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:198",
+      "category": "transformed",
+      "construct": "itemSpacing 12",
+      "ir": "layout.stack.gap = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "settings.json:199",
+      "category": "approximated",
+      "construct": "paddingLeft 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:200",
+      "category": "approximated",
+      "construct": "paddingRight 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:201",
+      "category": "approximated",
+      "construct": "paddingTop 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:202",
+      "category": "approximated",
+      "construct": "paddingBottom 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:203",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:204",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234"
+    },
+    {
+      "at": "settings.json:205",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:206",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:207",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:208",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:209",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:212",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224236\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:215",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 46 x 46",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:215",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39270, -2531",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:216",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:217",
+      "category": "supported",
+      "construct": "itemSpacing 10",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:218",
+      "category": "approximated",
+      "construct": "paddingLeft 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:219",
+      "category": "approximated",
+      "construct": "paddingRight 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:220",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:221",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:222",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:223",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:224",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 46 px is 26 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:225",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:226",
+      "category": "impossible",
+      "construct": "fills[0] #444647",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236",
+      "reason": "`engine::styling::color::Color::rgba(0.26666668, 0.27450982, 0.2784314, 1.0)` has no token: the nearest, theme.colors.bg_panel, is 12 levels away, past its tolerance of 5.5"
+    },
+    {
+      "at": "settings.json:227",
+      "category": "approximated",
+      "construct": "cornerRadius 191 (drawn 23)",
+      "difference": "a radius of 23 px is 1 px from theme.shape.dropdown (24 px), within its tolerance of 1",
+      "ir": "props.shape = dropdown",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236"
+    },
+    {
+      "at": "settings.json:230",
+      "category": "supported",
+      "construct": "INSTANCE \"school-bell-02\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02"
+    },
+    {
+      "at": "settings.json:233",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 24 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02",
+      "reason": "a fixed width of 24 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 48 px away, past its tolerance of 44; a fixed height of 24 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 296 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:233",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39281, -2520",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:234",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:235",
+      "category": "supported",
+      "construct": "componentId 55:6614",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:238",
+      "category": "supported",
+      "construct": "FRAME \"elements\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02.elements"
+    },
+    {
+      "at": "settings.json:241",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 18 x 18",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02.elements",
+      "reason": "a fixed width of 18 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 54 px away, past its tolerance of 44; a fixed height of 18 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 302 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:241",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39284, -2517",
+      "difference": "at x 3, y 3 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:242",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224236.school_bell_02.elements",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:245",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector 4618\"",
+      "covers": [
+        "settings.json:246",
+        "settings.json:248",
+        "settings.json:249",
+        "settings.json:250"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:253",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:254",
+        "settings.json:256",
+        "settings.json:257",
+        "settings.json:258",
+        "settings.json:259"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:262",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:263",
+        "settings.json:265",
+        "settings.json:266",
+        "settings.json:267",
+        "settings.json:268"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:271",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector 4619\"",
+      "covers": [
+        "settings.json:272",
+        "settings.json:274",
+        "settings.json:275",
+        "settings.json:276",
+        "settings.json:277"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:280",
+      "category": "impossible",
+      "construct": "VECTOR \"Ellipse 1590\"",
+      "covers": [
+        "settings.json:281",
+        "settings.json:283",
+        "settings.json:284",
+        "settings.json:285"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:294",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224233\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233"
+    },
+    {
+      "at": "settings.json:297",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 266 x 40",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:297",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2528",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:298",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233"
+    },
+    {
+      "at": "settings.json:299",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:300",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:301",
+      "category": "supported",
+      "construct": "layoutGrow 1",
+      "ir": "size.flex = 1",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233"
+    },
+    {
+      "at": "settings.json:304",
+      "category": "supported",
+      "construct": "TEXT \"Notifications\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications"
+    },
+    {
+      "at": "settings.json:307",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:307",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2528",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:308",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:309",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications"
+    },
+    {
+      "at": "settings.json:310",
+      "category": "supported",
+      "construct": "characters \"Notifications\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "transformed",
+      "construct": "style.fontSize 16",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "transformed",
+      "construct": "style.fontWeight 500",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.18",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "transformed",
+      "construct": "style.lineHeightPx 24",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:311",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.notifications",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:314",
+      "category": "supported",
+      "construct": "TEXT \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:317",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 126 x 16",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:317",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2504",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:318",
+      "category": "impossible",
+      "construct": "fills[0] #99A0AE",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply",
+      "reason": "`engine::styling::color::Color::rgba(0.6, 0.627451, 0.68235296, 1.0)` has no token: the nearest, theme.colors.success, is 80 levels away, past its tolerance of 38.25"
+    },
+    {
+      "at": "settings.json:319",
+      "category": "supported",
+      "construct": "characters \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:320",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:320",
+      "category": "approximated",
+      "construct": "style.fontSize 12",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:320",
+      "category": "approximated",
+      "construct": "style.fontWeight 400",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:320",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 16",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:320",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:327",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224235\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:330",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 74",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:330",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2463",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:331",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:332",
+      "category": "transformed",
+      "construct": "itemSpacing 12",
+      "ir": "layout.stack.gap = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "settings.json:333",
+      "category": "approximated",
+      "construct": "paddingLeft 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:334",
+      "category": "approximated",
+      "construct": "paddingRight 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:335",
+      "category": "approximated",
+      "construct": "paddingTop 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:336",
+      "category": "approximated",
+      "construct": "paddingBottom 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:337",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:338",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235"
+    },
+    {
+      "at": "settings.json:339",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:340",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:341",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:342",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:343",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:346",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224237\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:349",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 46 x 46",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:349",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39270, -2449",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:350",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:351",
+      "category": "supported",
+      "construct": "itemSpacing 10",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:352",
+      "category": "approximated",
+      "construct": "paddingLeft 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:353",
+      "category": "approximated",
+      "construct": "paddingRight 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:354",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:355",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:356",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:357",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:358",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 46 px is 26 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:359",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:360",
+      "category": "impossible",
+      "construct": "fills[0] #444647",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237",
+      "reason": "`engine::styling::color::Color::rgba(0.26666668, 0.27450982, 0.2784314, 1.0)` has no token: the nearest, theme.colors.bg_panel, is 12 levels away, past its tolerance of 5.5"
+    },
+    {
+      "at": "settings.json:361",
+      "category": "approximated",
+      "construct": "cornerRadius 191 (drawn 23)",
+      "difference": "a radius of 23 px is 1 px from theme.shape.dropdown (24 px), within its tolerance of 1",
+      "ir": "props.shape = dropdown",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237"
+    },
+    {
+      "at": "settings.json:364",
+      "category": "supported",
+      "construct": "INSTANCE \"share-01\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01"
+    },
+    {
+      "at": "settings.json:367",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 24 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01",
+      "reason": "a fixed width of 24 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 48 px away, past its tolerance of 44; a fixed height of 24 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 296 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:367",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39281, -2438",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:368",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:369",
+      "category": "supported",
+      "construct": "componentId 55:6638",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:372",
+      "category": "supported",
+      "construct": "FRAME \"elements \"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01.elements"
+    },
+    {
+      "at": "settings.json:375",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 20 x 19",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01.elements",
+      "reason": "a fixed width of 20 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 52 px away, past its tolerance of 44; a fixed height of 19 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 301 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:375",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39283, -2435",
+      "difference": "at x 2, y 3 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:376",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224237.share_01.elements",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:379",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:380",
+        "settings.json:382",
+        "settings.json:383",
+        "settings.json:384",
+        "settings.json:385"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:388",
+      "category": "impossible",
+      "construct": "VECTOR \"Rectangle 1702\"",
+      "covers": [
+        "settings.json:389",
+        "settings.json:391",
+        "settings.json:392",
+        "settings.json:393"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:402",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224238\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238"
+    },
+    {
+      "at": "settings.json:405",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 266 x 40",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:405",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2446",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:406",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238"
+    },
+    {
+      "at": "settings.json:407",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:408",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:409",
+      "category": "supported",
+      "construct": "layoutGrow 1",
+      "ir": "size.flex = 1",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238"
+    },
+    {
+      "at": "settings.json:412",
+      "category": "supported",
+      "construct": "TEXT \"Share\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share"
+    },
+    {
+      "at": "settings.json:415",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:415",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2446",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:416",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:417",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share"
+    },
+    {
+      "at": "settings.json:418",
+      "category": "supported",
+      "construct": "characters \"Share\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "transformed",
+      "construct": "style.fontSize 16",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "transformed",
+      "construct": "style.fontWeight 500",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.18",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "transformed",
+      "construct": "style.lineHeightPx 24",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:419",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.share",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:422",
+      "category": "supported",
+      "construct": "TEXT \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:425",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 126 x 16",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:425",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2422",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:426",
+      "category": "impossible",
+      "construct": "fills[0] #99A0AE",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply",
+      "reason": "`engine::styling::color::Color::rgba(0.6, 0.627451, 0.68235296, 1.0)` has no token: the nearest, theme.colors.success, is 80 levels away, past its tolerance of 38.25"
+    },
+    {
+      "at": "settings.json:427",
+      "category": "supported",
+      "construct": "characters \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:428",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:428",
+      "category": "approximated",
+      "construct": "style.fontSize 12",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:428",
+      "category": "approximated",
+      "construct": "style.fontWeight 400",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:428",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 16",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:428",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:435",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224236\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:438",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 74",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:438",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2381",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:439",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:440",
+      "category": "transformed",
+      "construct": "itemSpacing 12",
+      "ir": "layout.stack.gap = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "settings.json:441",
+      "category": "approximated",
+      "construct": "paddingLeft 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:442",
+      "category": "approximated",
+      "construct": "paddingRight 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:443",
+      "category": "approximated",
+      "construct": "paddingTop 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:444",
+      "category": "approximated",
+      "construct": "paddingBottom 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:445",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:446",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236"
+    },
+    {
+      "at": "settings.json:447",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:448",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:449",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:450",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:451",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:454",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224237\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:457",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 46 x 46",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:457",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39270, -2367",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:458",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:459",
+      "category": "supported",
+      "construct": "itemSpacing 10",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:460",
+      "category": "approximated",
+      "construct": "paddingLeft 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:461",
+      "category": "approximated",
+      "construct": "paddingRight 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:462",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:463",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:464",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:465",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:466",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 46 px is 26 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:467",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:468",
+      "category": "impossible",
+      "construct": "fills[0] #444647",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237",
+      "reason": "`engine::styling::color::Color::rgba(0.26666668, 0.27450982, 0.2784314, 1.0)` has no token: the nearest, theme.colors.bg_panel, is 12 levels away, past its tolerance of 5.5"
+    },
+    {
+      "at": "settings.json:469",
+      "category": "approximated",
+      "construct": "cornerRadius 191 (drawn 23)",
+      "difference": "a radius of 23 px is 1 px from theme.shape.dropdown (24 px), within its tolerance of 1",
+      "ir": "props.shape = dropdown",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237"
+    },
+    {
+      "at": "settings.json:472",
+      "category": "supported",
+      "construct": "INSTANCE \"repeat-off\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off"
+    },
+    {
+      "at": "settings.json:475",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 24 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off",
+      "reason": "a fixed width of 24 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 48 px away, past its tolerance of 44; a fixed height of 24 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 296 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:475",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39281, -2356",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:476",
+      "category": "supported",
+      "construct": "componentId 55:6643",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:479",
+      "category": "supported",
+      "construct": "FRAME \"elements\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off.elements"
+    },
+    {
+      "at": "settings.json:482",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 20 x 18",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off.elements",
+      "reason": "a fixed width of 20 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 52 px away, past its tolerance of 44; a fixed height of 18 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 302 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:482",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39283, -2353",
+      "difference": "at x 2, y 3 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:483",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224237.repeat_off.elements",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:486",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:487",
+        "settings.json:489",
+        "settings.json:490",
+        "settings.json:491",
+        "settings.json:492"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:495",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:496",
+        "settings.json:498",
+        "settings.json:499",
+        "settings.json:500"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:503",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector 3659\"",
+      "covers": [
+        "settings.json:504",
+        "settings.json:506",
+        "settings.json:507",
+        "settings.json:508",
+        "settings.json:509"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:518",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224238\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238"
+    },
+    {
+      "at": "settings.json:521",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 266 x 40",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:521",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2364",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:522",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238"
+    },
+    {
+      "at": "settings.json:523",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:524",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:525",
+      "category": "supported",
+      "construct": "layoutGrow 1",
+      "ir": "size.flex = 1",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238"
+    },
+    {
+      "at": "settings.json:528",
+      "category": "supported",
+      "construct": "TEXT \"Restore Purchase\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase"
+    },
+    {
+      "at": "settings.json:531",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:531",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2364",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:532",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:533",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase"
+    },
+    {
+      "at": "settings.json:534",
+      "category": "supported",
+      "construct": "characters \"Restore Purchase\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "transformed",
+      "construct": "style.fontSize 16",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "transformed",
+      "construct": "style.fontWeight 500",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.18",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "transformed",
+      "construct": "style.lineHeightPx 24",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:535",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.restore_purchase",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:538",
+      "category": "supported",
+      "construct": "TEXT \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:541",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 126 x 16",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:541",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2340",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:542",
+      "category": "impossible",
+      "construct": "fills[0] #99A0AE",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply",
+      "reason": "`engine::styling::color::Color::rgba(0.6, 0.627451, 0.68235296, 1.0)` has no token: the nearest, theme.colors.success, is 80 levels away, past its tolerance of 38.25"
+    },
+    {
+      "at": "settings.json:543",
+      "category": "supported",
+      "construct": "characters \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:544",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:544",
+      "category": "approximated",
+      "construct": "style.fontSize 12",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:544",
+      "category": "approximated",
+      "construct": "style.fontWeight 400",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:544",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 16",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:544",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:551",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224237\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:554",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 74",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:554",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2299",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:555",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:556",
+      "category": "transformed",
+      "construct": "itemSpacing 12",
+      "ir": "layout.stack.gap = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "settings.json:557",
+      "category": "approximated",
+      "construct": "paddingLeft 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:558",
+      "category": "approximated",
+      "construct": "paddingRight 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:559",
+      "category": "approximated",
+      "construct": "paddingTop 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:560",
+      "category": "approximated",
+      "construct": "paddingBottom 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:561",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:562",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237"
+    },
+    {
+      "at": "settings.json:563",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:564",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:565",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:566",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:567",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:570",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224237\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:573",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 46 x 46",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:573",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39270, -2285",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:574",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:575",
+      "category": "supported",
+      "construct": "itemSpacing 10",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:576",
+      "category": "approximated",
+      "construct": "paddingLeft 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:577",
+      "category": "approximated",
+      "construct": "paddingRight 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:578",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:579",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:580",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:581",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:582",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 46 px is 26 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:583",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:584",
+      "category": "impossible",
+      "construct": "fills[0] #444647",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237",
+      "reason": "`engine::styling::color::Color::rgba(0.26666668, 0.27450982, 0.2784314, 1.0)` has no token: the nearest, theme.colors.bg_panel, is 12 levels away, past its tolerance of 5.5"
+    },
+    {
+      "at": "settings.json:585",
+      "category": "approximated",
+      "construct": "cornerRadius 191 (drawn 23)",
+      "difference": "a radius of 23 px is 1 px from theme.shape.dropdown (24 px), within its tolerance of 1",
+      "ir": "props.shape = dropdown",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237"
+    },
+    {
+      "at": "settings.json:588",
+      "category": "supported",
+      "construct": "INSTANCE \"text-align-left\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left"
+    },
+    {
+      "at": "settings.json:591",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 20 x 20",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left",
+      "reason": "a fixed width of 20 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 52 px away, past its tolerance of 44; a fixed height of 20 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 300 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:591",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39283, -2272",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:592",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:593",
+      "category": "supported",
+      "construct": "componentId 50:6297",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:596",
+      "category": "supported",
+      "construct": "FRAME \"elements\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left.elements"
+    },
+    {
+      "at": "settings.json:599",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 15 x 15",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left.elements",
+      "reason": "a fixed width of 15 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 57 px away, past its tolerance of 44; a fixed height of 15 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 305 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:599",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39285.5, -2269.5",
+      "difference": "at x 2.5, y 2.5 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:600",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224237.text_align_left.elements",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:603",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:604",
+        "settings.json:606",
+        "settings.json:607",
+        "settings.json:608",
+        "settings.json:609"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:612",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:613",
+        "settings.json:615",
+        "settings.json:616",
+        "settings.json:617",
+        "settings.json:618"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:621",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:622",
+        "settings.json:624",
+        "settings.json:625",
+        "settings.json:626"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:629",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:630",
+        "settings.json:632",
+        "settings.json:633",
+        "settings.json:634"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:643",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224238\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238"
+    },
+    {
+      "at": "settings.json:646",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 266 x 40",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:646",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2282",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:647",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238"
+    },
+    {
+      "at": "settings.json:648",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:649",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:650",
+      "category": "supported",
+      "construct": "layoutGrow 1",
+      "ir": "size.flex = 1",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238"
+    },
+    {
+      "at": "settings.json:653",
+      "category": "supported",
+      "construct": "TEXT \"Terms of Service\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service"
+    },
+    {
+      "at": "settings.json:656",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:656",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2282",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:657",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:658",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service"
+    },
+    {
+      "at": "settings.json:659",
+      "category": "supported",
+      "construct": "characters \"Terms of Service\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "transformed",
+      "construct": "style.fontSize 16",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "transformed",
+      "construct": "style.fontWeight 500",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.18",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "transformed",
+      "construct": "style.lineHeightPx 24",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:660",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.terms_of_service",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:663",
+      "category": "supported",
+      "construct": "TEXT \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:666",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 126 x 16",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:666",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2258",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:667",
+      "category": "impossible",
+      "construct": "fills[0] #99A0AE",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply",
+      "reason": "`engine::styling::color::Color::rgba(0.6, 0.627451, 0.68235296, 1.0)` has no token: the nearest, theme.colors.success, is 80 levels away, past its tolerance of 38.25"
+    },
+    {
+      "at": "settings.json:668",
+      "category": "supported",
+      "construct": "characters \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:669",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:669",
+      "category": "approximated",
+      "construct": "style.fontSize 12",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:669",
+      "category": "approximated",
+      "construct": "style.fontWeight 400",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:669",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 16",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:669",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:676",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224238\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:679",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 352 x 74",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:679",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39256, -2217",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:680",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:681",
+      "category": "transformed",
+      "construct": "itemSpacing 12",
+      "ir": "layout.stack.gap = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238",
+      "rule": "the gap between children is the stack's gap, theme.spacing.md (12 px)"
+    },
+    {
+      "at": "settings.json:682",
+      "category": "approximated",
+      "construct": "paddingLeft 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:683",
+      "category": "approximated",
+      "construct": "paddingRight 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:684",
+      "category": "approximated",
+      "construct": "paddingTop 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:685",
+      "category": "approximated",
+      "construct": "paddingBottom 14",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.md (12 px): top 14 is 12, right 14 is 12, bottom 14 is 12, left 14 is 12",
+      "ir": "props.padding = md",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:686",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:687",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238"
+    },
+    {
+      "at": "settings.json:688",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:689",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:690",
+      "category": "supported",
+      "construct": "layoutAlign STRETCH",
+      "ir": "layout.stack.align = stretch",
+      "node": "settings.root.frame_2147224275.frame_2147224240"
+    },
+    {
+      "at": "settings.json:691",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:692",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:695",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224237\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:698",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 46 x 46",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:698",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39270, -2203",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:699",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:700",
+      "category": "supported",
+      "construct": "itemSpacing 10",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:701",
+      "category": "approximated",
+      "construct": "paddingLeft 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:702",
+      "category": "approximated",
+      "construct": "paddingRight 11",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:703",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:704",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 11 is 8, bottom 10 is 8, left 11 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:705",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:706",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:707",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 46 px is 26 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:708",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237",
+      "reason": "a fixed height of 46 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 274 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:709",
+      "category": "impossible",
+      "construct": "fills[0] #444647",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237",
+      "reason": "`engine::styling::color::Color::rgba(0.26666668, 0.27450982, 0.2784314, 1.0)` has no token: the nearest, theme.colors.bg_panel, is 12 levels away, past its tolerance of 5.5"
+    },
+    {
+      "at": "settings.json:710",
+      "category": "approximated",
+      "construct": "cornerRadius 191 (drawn 23)",
+      "difference": "a radius of 23 px is 1 px from theme.shape.dropdown (24 px), within its tolerance of 1",
+      "ir": "props.shape = dropdown",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237"
+    },
+    {
+      "at": "settings.json:713",
+      "category": "supported",
+      "construct": "INSTANCE \"document-validation\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237.document_validation"
+    },
+    {
+      "at": "settings.json:716",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 24 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224237.document_validation",
+      "reason": "a fixed width of 24 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 48 px away, past its tolerance of 44; a fixed height of 24 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 296 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:716",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39281, -2192",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:717",
+      "category": "supported",
+      "construct": "componentId 55:6631",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:720",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:721",
+        "settings.json:723",
+        "settings.json:724",
+        "settings.json:725",
+        "settings.json:726"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:729",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:730",
+        "settings.json:732",
+        "settings.json:733",
+        "settings.json:734",
+        "settings.json:735"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:738",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:739",
+        "settings.json:741",
+        "settings.json:742",
+        "settings.json:743"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:746",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:747",
+        "settings.json:749",
+        "settings.json:750",
+        "settings.json:751"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:754",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:755",
+        "settings.json:757",
+        "settings.json:758",
+        "settings.json:759"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:766",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224238\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238"
+    },
+    {
+      "at": "settings.json:769",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 266 x 40",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:769",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2200",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:770",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238"
+    },
+    {
+      "at": "settings.json:771",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:772",
+      "category": "supported",
+      "construct": "counterAxisSizingMode FIXED",
+      "ir": "holds by construction: its stack sizes it on this axis: it grows or stretches"
+    },
+    {
+      "at": "settings.json:773",
+      "category": "supported",
+      "construct": "layoutGrow 1",
+      "ir": "size.flex = 1",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238"
+    },
+    {
+      "at": "settings.json:776",
+      "category": "supported",
+      "construct": "TEXT \"Privacy Policy\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy"
+    },
+    {
+      "at": "settings.json:779",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 24",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:779",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2200",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:780",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:781",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy"
+    },
+    {
+      "at": "settings.json:782",
+      "category": "supported",
+      "construct": "characters \"Privacy Policy\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "transformed",
+      "construct": "style.fontSize 16",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "transformed",
+      "construct": "style.fontWeight 500",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.18",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "transformed",
+      "construct": "style.lineHeightPx 24",
+      "ir": "props.typography = base_m",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+      "rule": "16/24 px weight 500 is theme.typography.base_m (16/24 px weight 500) in the theme"
+    },
+    {
+      "at": "settings.json:783",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.privacy_policy",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:786",
+      "category": "supported",
+      "construct": "TEXT \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:789",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 126 x 16",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:789",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39328, -2176",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:790",
+      "category": "impossible",
+      "construct": "fills[0] #99A0AE",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply",
+      "reason": "`engine::styling::color::Color::rgba(0.6, 0.627451, 0.68235296, 1.0)` has no token: the nearest, theme.colors.success, is 80 levels away, past its tolerance of 38.25"
+    },
+    {
+      "at": "settings.json:791",
+      "category": "supported",
+      "construct": "characters \"Lorem Ipsum\\u{a0}is simply\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:792",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:792",
+      "category": "approximated",
+      "construct": "style.fontSize 12",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:792",
+      "category": "approximated",
+      "construct": "style.fontWeight 400",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:792",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 16",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+    },
+    {
+      "at": "settings.json:792",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:803",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147223349\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349"
+    },
+    {
+      "at": "settings.json:806",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox 353 x 51",
+      "difference": "a fixed width of 353 px is 15 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147223349"
+    },
+    {
+      "at": "settings.json:806",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39254, -2894",
+      "difference": "at x 19, y 59 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 59",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:807",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147223349"
+    },
+    {
+      "at": "settings.json:808",
+      "category": "supported",
+      "construct": "itemSpacing 180",
+      "ir": "holds by construction: with space between, the spacing is automatic: itemSpacing is not used"
+    },
+    {
+      "at": "settings.json:809",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems SPACE_BETWEEN",
+      "node": "settings.root.frame_2147223349",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:810",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147223349"
+    },
+    {
+      "at": "settings.json:811",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 353 px is 15 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147223349"
+    },
+    {
+      "at": "settings.json:812",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:815",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224273\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:818",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 51 x 51",
+      "node": "settings.root.frame_2147223349.frame_2147224273",
+      "reason": "a fixed height of 51 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 269 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:818",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39254, -2894",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:819",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:820",
+      "category": "supported",
+      "construct": "itemSpacing 8.36",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:821",
+      "category": "approximated",
+      "construct": "paddingLeft 9.2",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10.03 is 8, right 9.2 is 8, bottom 10.03 is 8, left 9.2 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:822",
+      "category": "approximated",
+      "construct": "paddingRight 9.2",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10.03 is 8, right 9.2 is 8, bottom 10.03 is 8, left 9.2 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:823",
+      "category": "approximated",
+      "construct": "paddingTop 10.03",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10.03 is 8, right 9.2 is 8, bottom 10.03 is 8, left 9.2 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:824",
+      "category": "approximated",
+      "construct": "paddingBottom 10.03",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10.03 is 8, right 9.2 is 8, bottom 10.03 is 8, left 9.2 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:825",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147223349.frame_2147224273",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:826",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:827",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 51 px is 21 px from theme.size.sidebar_rail_w (72 px), within its tolerance of 44",
+      "ir": "size.min = size.max = sidebar_rail_w",
+      "node": "settings.root.frame_2147223349.frame_2147224273"
+    },
+    {
+      "at": "settings.json:828",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147223349.frame_2147224273",
+      "reason": "a fixed height of 51 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 269 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:829",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147223349.frame_2147224273",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:830",
+      "category": "impossible",
+      "construct": "cornerRadius 83.61 (drawn 25.5)",
+      "node": "settings.root.frame_2147223349.frame_2147224273",
+      "reason": "a radius of 25.5 px has no token: the nearest, theme.shape.dropdown (24 px), is 1.5 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:833",
+      "category": "supported",
+      "construct": "FRAME \"arrow-left-02\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.frame_2147224273.arrow_left_02"
+    },
+    {
+      "at": "settings.json:836",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 22 x 22",
+      "node": "settings.root.frame_2147223349.frame_2147224273.arrow_left_02",
+      "reason": "a fixed width of 22 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 50 px away, past its tolerance of 44; a fixed height of 22 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 298 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:836",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39268.5, -2879.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:839",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:840",
+        "settings.json:842",
+        "settings.json:843",
+        "settings.json:844"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:847",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:848",
+        "settings.json:850",
+        "settings.json:851",
+        "settings.json:852"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:859",
+      "category": "supported",
+      "construct": "TEXT \"Title\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147223349.title"
+    },
+    {
+      "at": "settings.json:862",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 79 x 30",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:862",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39379.5, -2883.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:863",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147223349.title"
+    },
+    {
+      "at": "settings.json:864",
+      "category": "supported",
+      "construct": "characters \"Settings\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "impossible",
+      "construct": "style.fontSize 20",
+      "node": "settings.root.frame_2147223349.title",
+      "reason": "20/30 px weight 500 has no token: the nearest, theme.typography.title (20/24 px weight 500), is 6 px away, past its tolerance of 2"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "impossible",
+      "construct": "style.fontWeight 500",
+      "node": "settings.root.frame_2147223349.title",
+      "reason": "20/30 px weight 500 has no token: the nearest, theme.typography.title (20/24 px weight 500), is 6 px away, past its tolerance of 2"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "impossible",
+      "construct": "style.lineHeightPx 30",
+      "node": "settings.root.frame_2147223349.title",
+      "reason": "20/30 px weight 500 has no token: the nearest, theme.typography.title (20/24 px weight 500), is 6 px away, past its tolerance of 2"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "impossible",
+      "construct": "style.textAlignHorizontal \"CENTER\"",
+      "reason": "the IR has no text alignment"
+    },
+    {
+      "at": "settings.json:865",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:868",
+      "category": "supported",
+      "construct": "FRAME \"Trailing\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.trailing"
+    },
+    {
+      "at": "settings.json:871",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 74 x 32",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:871",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39533, -2884.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:872",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147223349.trailing"
+    },
+    {
+      "at": "settings.json:873",
+      "category": "supported",
+      "construct": "itemSpacing 8",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147223349.trailing"
+    },
+    {
+      "at": "settings.json:874",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:875",
+      "category": "supported",
+      "construct": "counterAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:878",
+      "category": "supported",
+      "construct": "FRAME \"Badge\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:881",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 74 x 32",
+      "node": "settings.root.frame_2147223349.trailing.badge",
+      "reason": "a fixed height of 32 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 288 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:881",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39533, -2884.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:882",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:883",
+      "category": "transformed",
+      "construct": "itemSpacing 4",
+      "ir": "layout.stack.gap = xs",
+      "node": "settings.root.frame_2147223349.trailing.badge",
+      "rule": "the gap between children is the stack's gap, theme.spacing.xs (4 px)"
+    },
+    {
+      "at": "settings.json:884",
+      "category": "approximated",
+      "construct": "paddingLeft 4",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): top 2 is 4, right 8 is 4, bottom 2 is 4",
+      "ir": "props.padding = xs",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:885",
+      "category": "approximated",
+      "construct": "paddingRight 8",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): top 2 is 4, right 8 is 4, bottom 2 is 4",
+      "ir": "props.padding = xs",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:886",
+      "category": "approximated",
+      "construct": "paddingTop 2",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): top 2 is 4, right 8 is 4, bottom 2 is 4",
+      "ir": "props.padding = xs",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:887",
+      "category": "approximated",
+      "construct": "paddingBottom 2",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.xs (4 px): top 2 is 4, right 8 is 4, bottom 2 is 4",
+      "ir": "props.padding = xs",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:888",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147223349.trailing.badge"
+    },
+    {
+      "at": "settings.json:889",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:890",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147223349.trailing.badge",
+      "reason": "a fixed height of 32 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 288 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:891",
+      "category": "impossible",
+      "construct": "fills[0] #A897FF",
+      "node": "settings.root.frame_2147223349.trailing.badge",
+      "reason": "`engine::styling::color::Color::rgba(0.65882355, 0.5921569, 1.0, 1.0)` has no token: the nearest, theme.colors.text, is 97 levels away, past its tolerance of 31.88"
+    },
+    {
+      "at": "settings.json:894",
+      "category": "supported",
+      "construct": "FRAME \"Icon\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon"
+    },
+    {
+      "at": "settings.json:897",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 24 x 24",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon",
+      "reason": "a fixed width of 24 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 48 px away, past its tolerance of 44; a fixed height of 24 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 296 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:897",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39537, -2880.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:898",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:901",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:902",
+        "settings.json:904",
+        "settings.json:905"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:908",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:909",
+        "settings.json:911",
+        "settings.json:912"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:915",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:916",
+        "settings.json:918",
+        "settings.json:919"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:922",
+      "category": "supported",
+      "construct": "INSTANCE \"Star Pro\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon.star_pro"
+    },
+    {
+      "at": "settings.json:925",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 13 x 13",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon.star_pro",
+      "reason": "a fixed width of 13 px has no token: the nearest, theme.size.sidebar_rail_w (72 px), is 59 px away, past its tolerance of 44; a fixed height of 13 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 307 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:925",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39542, -2874.5",
+      "difference": "at x 5, y 6 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 0",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:926",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147223349.trailing.badge.icon.star_pro",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:927",
+      "category": "supported",
+      "construct": "componentId 16:4566",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:930",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:931",
+        "settings.json:933",
+        "settings.json:934"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:941",
+      "category": "supported",
+      "construct": "TEXT \"PRO\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147223349.trailing.badge.p_r_o"
+    },
+    {
+      "at": "settings.json:944",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 34 x 22",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:944",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39565, -2879.5",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:945",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147223349.trailing.badge.p_r_o"
+    },
+    {
+      "at": "settings.json:946",
+      "category": "supported",
+      "construct": "characters \"PRO\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "impossible",
+      "construct": "style.fontFamily \"NewYork\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "impossible",
+      "construct": "style.fontSize 17",
+      "node": "settings.root.frame_2147223349.trailing.badge.p_r_o",
+      "reason": "17/22 px weight 400 has no token: the nearest, theme.typography.base_r (16/24 px weight 400), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "impossible",
+      "construct": "style.fontWeight 400",
+      "node": "settings.root.frame_2147223349.trailing.badge.p_r_o",
+      "reason": "17/22 px weight 400 has no token: the nearest, theme.typography.base_r (16/24 px weight 400), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "impossible",
+      "construct": "style.letterSpacing 0.68",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "impossible",
+      "construct": "style.lineHeightPx 22",
+      "node": "settings.root.frame_2147223349.trailing.badge.p_r_o",
+      "reason": "17/22 px weight 400 has no token: the nearest, theme.typography.base_r (16/24 px weight 400), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:947",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:952",
+      "category": "transformed",
+      "construct": "FRAME \"Icon Settings\"",
+      "covers": [
+        "settings.json:953",
+        "settings.json:955",
+        "settings.json:956",
+        "settings.json:957",
+        "settings.json:958",
+        "settings.json:959",
+        "settings.json:960",
+        "settings.json:961",
+        "settings.json:962",
+        "settings.json:963"
+      ],
+      "ir": "carried by the rewrite",
+      "rule": "a hidden layer draws nothing: left out, as the design shows it"
+    },
+    {
+      "at": "settings.json:970",
+      "category": "supported",
+      "construct": "FRAME \"Frame 2147224297\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:973",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox 352 x 252",
+      "difference": "a fixed width of 352 px is 16 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:973",
+      "category": "approximated",
+      "construct": "absoluteBoundingBox at 39256, -2824",
+      "difference": "at x 21, y 129 in a frame with no auto layout; its children do not overlap, so they are a column in y order, which puts it at x 0, y 110",
+      "ir": "carried by the rule"
+    },
+    {
+      "at": "settings.json:974",
+      "category": "supported",
+      "construct": "layoutMode VERTICAL",
+      "ir": "layout.stack.axis = vertical",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:975",
+      "category": "transformed",
+      "construct": "itemSpacing 8",
+      "ir": "layout.stack.gap = sm",
+      "node": "settings.root.frame_2147224297",
+      "rule": "the gap between children is the stack's gap, theme.spacing.sm (8 px)"
+    },
+    {
+      "at": "settings.json:976",
+      "category": "approximated",
+      "construct": "paddingLeft 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 10 is 8, bottom 10 is 8, left 10 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:977",
+      "category": "approximated",
+      "construct": "paddingRight 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 10 is 8, bottom 10 is 8, left 10 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:978",
+      "category": "approximated",
+      "construct": "paddingTop 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 10 is 8, bottom 10 is 8, left 10 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:979",
+      "category": "approximated",
+      "construct": "paddingBottom 10",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): top 10 is 8, right 10 is 8, bottom 10 is 8, left 10 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:980",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224297",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:981",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:982",
+      "category": "supported",
+      "construct": "primaryAxisSizingMode AUTO",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:983",
+      "category": "approximated",
+      "construct": "counterAxisSizingMode FIXED",
+      "difference": "a fixed width of 352 px is 16 px from theme.size.card_w (368 px), within its tolerance of 16",
+      "ir": "size.min = size.max = card_w",
+      "node": "settings.root.frame_2147224297"
+    },
+    {
+      "at": "settings.json:984",
+      "category": "impossible",
+      "construct": "fills[0] #353333",
+      "node": "settings.root.frame_2147224297",
+      "reason": "`engine::styling::color::Color::rgba(0.20784314, 0.2, 0.2, 1.0)` has no token: the nearest, theme.colors.bg, is 5 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:985",
+      "category": "impossible",
+      "construct": "cornerRadius 14",
+      "node": "settings.root.frame_2147224297",
+      "reason": "a radius of 14 px has no token: the nearest, theme.shape.item (16 px), is 2 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:988",
+      "category": "supported",
+      "construct": "INSTANCE \"Type=Logo Default, Component=Logo\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224297.type_logo_default_component_logo"
+    },
+    {
+      "at": "settings.json:991",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 80 x 80",
+      "node": "settings.root.frame_2147224297.type_logo_default_component_logo",
+      "reason": "a fixed height of 80 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 240 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:991",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39392, -2814",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:992",
+      "category": "impossible",
+      "construct": "cornerRadius 1000 (drawn 40)",
+      "node": "settings.root.frame_2147224297.type_logo_default_component_logo",
+      "reason": "a radius of 40 px has no token: the nearest, theme.shape.pill (32 px), is 8 px away, past its tolerance of 4"
+    },
+    {
+      "at": "settings.json:993",
+      "category": "supported",
+      "construct": "componentId 31:12037",
+      "ir": "holds by construction: an instance's layers are its component's, expanded by the export"
+    },
+    {
+      "at": "settings.json:994",
+      "category": "impossible",
+      "construct": "unappliedOverrides 1127:18207 [\"parameterConsumptionMap\",\"variableConsumptionMap\"]",
+      "reason": "an override the export could not apply (a style or a variable reference, not a value): the instance shows its component's value"
+    },
+    {
+      "at": "settings.json:994",
+      "category": "impossible",
+      "construct": "unappliedOverrides 4032:52135 [\"styleIdForFill\"]",
+      "reason": "an override the export could not apply (a style or a variable reference, not a value): the instance shows its component's value"
+    },
+    {
+      "at": "settings.json:997",
+      "category": "impossible",
+      "construct": "VECTOR \"Vector\"",
+      "covers": [
+        "settings.json:998",
+        "settings.json:1000",
+        "settings.json:1001"
+      ],
+      "reason": "a vector drawing has no IR component (the IR has no icon or shape): the layer is lost"
+    },
+    {
+      "at": "settings.json:1006",
+      "category": "supported",
+      "construct": "TEXT \"UrAI Pro\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+    },
+    {
+      "at": "settings.json:1009",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 85 x 32",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:1009",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39389.5, -2726",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:1010",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+    },
+    {
+      "at": "settings.json:1011",
+      "category": "supported",
+      "construct": "characters \"UrAI Pro\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "approximated",
+      "construct": "style.fontSize 14",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "approximated",
+      "construct": "style.fontWeight 500",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.08",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 20",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "impossible",
+      "construct": "style.textAlignHorizontal \"RIGHT\"",
+      "reason": "the IR has no text alignment"
+    },
+    {
+      "at": "settings.json:1012",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    },
+    {
+      "at": "settings.json:1015",
+      "category": "supported",
+      "construct": "TEXT \"Unlock limitless image creation, all styles, and more experience.\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience"
+    },
+    {
+      "at": "settings.json:1018",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 266 x 42",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:1018",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39299, -2686",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:1019",
+      "category": "approximated",
+      "construct": "fills[0] #FFFFFF",
+      "difference": "`engine::styling::color::Color::rgba(1.0, 1.0, 1.0, 1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "ir": "props.color = text",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience"
+    },
+    {
+      "at": "settings.json:1020",
+      "category": "supported",
+      "construct": "characters \"Unlock limitless image creation, all styles, and more experience.\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.fontSize 14",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.fontWeight 300",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.08",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.lineHeightPx 21",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.textAlignHorizontal \"CENTER\"",
+      "reason": "the IR has no text alignment"
+    },
+    {
+      "at": "settings.json:1021",
+      "category": "impossible",
+      "construct": "style.textAutoResize \"HEIGHT\"",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
+      "reason": "`.w()` has no IR field"
+    },
+    {
+      "at": "settings.json:1024",
+      "category": "supported",
+      "construct": "FRAME \"_Tab button base\"",
+      "ir": "a container (no component: a group)",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1027",
+      "category": "impossible",
+      "construct": "absoluteBoundingBox 332 x 54",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "a fixed height of 54 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 266 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:1027",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39266, -2636",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:1028",
+      "category": "supported",
+      "construct": "layoutMode HORIZONTAL",
+      "ir": "layout.stack.axis = horizontal",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1029",
+      "category": "supported",
+      "construct": "itemSpacing 8",
+      "ir": "no gap: the stack has fewer than two children to space",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1030",
+      "category": "approximated",
+      "construct": "paddingLeft 12",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): right 12 is 8, left 12 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1031",
+      "category": "approximated",
+      "construct": "paddingRight 12",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): right 12 is 8, left 12 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1032",
+      "category": "approximated",
+      "construct": "paddingTop 8",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): right 12 is 8, left 12 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1033",
+      "category": "approximated",
+      "construct": "paddingBottom 8",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.sm (8 px): right 12 is 8, left 12 is 8",
+      "ir": "props.padding = sm",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1034",
+      "category": "impossible",
+      "construct": "primaryAxisAlignItems CENTER",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "the IR's stack has no justification along its axis; free space stays at its end"
+    },
+    {
+      "at": "settings.json:1035",
+      "category": "supported",
+      "construct": "counterAxisAlignItems CENTER",
+      "ir": "layout.stack.align = center",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1036",
+      "category": "approximated",
+      "construct": "primaryAxisSizingMode FIXED",
+      "difference": "a fixed width of 332 px is 12 px from theme.size.toast_w (320 px), within its tolerance of 20",
+      "ir": "size.min = size.max = toast_w",
+      "node": "settings.root.frame_2147224297.tab_button_base"
+    },
+    {
+      "at": "settings.json:1037",
+      "category": "impossible",
+      "construct": "counterAxisSizingMode FIXED",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "a fixed height of 54 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 266 px away, past its tolerance of 0"
+    },
+    {
+      "at": "settings.json:1038",
+      "category": "impossible",
+      "construct": "layoutAlign STRETCH",
+      "reason": "a child stretched among children aligned otherwise: the IR aligns every child of a stack alike"
+    },
+    {
+      "at": "settings.json:1039",
+      "category": "impossible",
+      "construct": "fills[0] #C2F5DA",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "`engine::styling::color::Color::rgba(0.7607843, 0.9607843, 0.85490197, 1.0)` has no token: the nearest, theme.colors.text, is 54 levels away, past its tolerance of 31.88"
+    },
+    {
+      "at": "settings.json:1040",
+      "category": "impossible",
+      "construct": "cornerRadius 100 (drawn 27)",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "a radius of 27 px has no token: the nearest, theme.shape.dropdown (24 px), is 3 px away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:1041",
+      "category": "impossible",
+      "construct": "clipsContent true",
+      "node": "settings.root.frame_2147224297.tab_button_base",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "settings.json:1044",
+      "category": "supported",
+      "construct": "TEXT \"Text\"",
+      "ir": "component text, its label",
+      "node": "settings.root.frame_2147224297.tab_button_base.text"
+    },
+    {
+      "at": "settings.json:1047",
+      "category": "supported",
+      "construct": "absoluteBoundingBox 92 x 20",
+      "ir": "holds by construction: its size follows the layout: it hugs, grows or stretches"
+    },
+    {
+      "at": "settings.json:1047",
+      "category": "supported",
+      "construct": "absoluteBoundingBox at 39386, -2619",
+      "ir": "holds by construction: a child of an auto layout is placed by its stack"
+    },
+    {
+      "at": "settings.json:1048",
+      "category": "impossible",
+      "construct": "fills[0] #0E121B",
+      "node": "settings.root.frame_2147224297.tab_button_base.text",
+      "reason": "`engine::styling::color::Color::rgba(0.05490196, 0.07058824, 0.105882354, 1.0)` has no token: the nearest, theme.colors.surface, is 32 levels away, past its tolerance of 1"
+    },
+    {
+      "at": "settings.json:1049",
+      "category": "supported",
+      "construct": "characters \"Upgrade Now\"",
+      "ir": "holds by construction: the layer's text is the run's text"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "impossible",
+      "construct": "style.fontFamily \"SF Pro\"",
+      "reason": "font family is engine-global (embedded faces only)"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "approximated",
+      "construct": "style.fontSize 14",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.tab_button_base.text"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "approximated",
+      "construct": "style.fontWeight 500",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.tab_button_base.text"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "impossible",
+      "construct": "style.letterSpacing -0.08",
+      "reason": "the IR has no letter spacing"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "approximated",
+      "construct": "style.lineHeightPx 20",
+      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
+      "ir": "props.typography = base_2m",
+      "node": "settings.root.frame_2147224297.tab_button_base.text"
+    },
+    {
+      "at": "settings.json:1050",
+      "category": "supported",
+      "construct": "style.textAutoResize \"WIDTH_AND_HEIGHT\"",
+      "ir": "holds by construction: it hugs its content on this axis, as a stack's child does"
+    }
+  ],
+  "plev_report": 1,
+  "source": "settings.json",
+  "surface": "settings"
+}

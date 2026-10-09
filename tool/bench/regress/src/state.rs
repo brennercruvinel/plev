@@ -1,0 +1,458 @@
+//! A gallery page in a state, staged for a baseline (task-69 checkpoint
+//! b): the page opened as `uigallery::shell::stage_page` opens it, then a
+//! script run through the gallery's public entries only (the port's
+//! `act`, as an agent acts, and the Silences page's two staging entries),
+//! then settled on the same fixed clock. A state is named, and the name
+//! stands for the page in the baseline's key (`--page "<name>"`), so a
+//! state is blessed and checked as a page is.
+//!
+//! The states are the Silences page with the review of the checkpoint
+//! open beside the fixed screen: proposed by the rules, and shown from
+//! the fixture of the Claude's proposal of the first round
+//! (`fixtures/ir/silences-review-claude.ir.json`), no model asked; and
+//! that fixture adapted by task-70's operations (the cuts first, the
+//! detection the fixed screen offers hidden), applied as the host applies
+//! one; and, since task-70 phase 2, the review changed by an intent asked
+//! through the row after it opened, as a person or an agent asks ("too
+//! much information" over the rules' review, "tem informação demais" over
+//! the Claude's, and "I can't compare these", refused with why); and,
+//! since task-70 phase 3, the review by the rules with a sequence the
+//! harness repeated (it looks at each cut and applies it): offered to the
+//! person under the row, and made one action, a button in each cut of the
+//! review; and, since task-70 phase 4, the review by the rules with the
+//! person's preferences of accessibility on: "accessibility" asked
+//! through the row opens the band, larger text and more contrast pressed
+//! (the harness is a test actor, which the band's `PERSON_ONLY` lets in),
+//! then done. The frames the page shows are synthetic, made here from their
+//! instant, so no ffmpeg runs and the frame is the same on every machine
+//! (a layer hashes an image by its size, `hash.rs`).
+
+use accord::{Actor, Request, Snapshot, Value};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use engine::drawing::headless::{Frame, Renderer, Viewport};
+use uigallery::shell::{RenderError, StagedPage, stage_page};
+use uigallery::views::ShowcaseView;
+
+/// Animation steps a state may take to settle, and one step: the clock of
+/// `stage_page` (120 steps at 60 Hz), so a state settles as a page does.
+const SETTLE_STEPS: usize = 120;
+const SETTLE_DT: f32 = 1.0 / 60.0;
+
+/// The Claude's review of the checkpoint's first round, as IR.
+const CLAUDE_REVIEW: &str =
+    include_str!("../../../../rust/plevir/tests/fixtures/silences-review-claude.ir.json");
+
+/// How a state's surface is proposed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Proposal {
+    /// The rules, through the proposing row by `act`.
+    Rules,
+    /// An IR fixture, verified and shown by the page's staging entry.
+    Fixture(&'static str),
+}
+
+/// An intent asked through the row once the surface is open: written and
+/// proposed, as a person or an agent asks for a change; `taken` when the
+/// page changes the surface for it, else it refuses and says why.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Asked {
+    pub intent: &'static str,
+    pub taken: bool,
+}
+
+/// A page in a state: its name, the page it is of, the intent typed in
+/// the row, how its surface is proposed, the operations applied to it
+/// then (`plevir::Op` in JSON, in order), the intents asked after them, and
+/// the actions taken last (target and action, through the port's path).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct State {
+    pub name: &'static str,
+    pub page: &'static str,
+    pub intent: &'static str,
+    pub proposal: Proposal,
+    pub ops: &'static [&'static str],
+    pub asks: &'static [Asked],
+    pub acts: &'static [(&'static str, &'static str)],
+}
+
+/// The intent of the checkpoint's rules round.
+const RULES: &str = "the list with the video and the counts";
+/// The intent of the checkpoint's Claude round.
+const CLAUDE: &str = "cut the silences of this video, then I want to review the cuts";
+
+/// Every state a baseline may be of.
+pub const STATES: &[State] = &[
+    State {
+        name: "Silences, review by the rules",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the Claude (fixture)",
+        page: "Silences",
+        intent: CLAUDE,
+        proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[],
+        asks: &[],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the Claude (fixture), adapted",
+        page: "Silences",
+        intent: CLAUDE,
+        proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[
+            r#"{"op": "reorder", "parent": "review.root", "ids": ["review.title", "review.cuts_list"]}"#,
+            r#"{"op": "hide", "id": "review.controls"}"#,
+        ],
+        asks: &[],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the rules, too much information",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "too much information",
+            taken: true,
+        }],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the Claude (fixture), too much, in portuguese",
+        page: "Silences",
+        intent: CLAUDE,
+        proposal: Proposal::Fixture(CLAUDE_REVIEW),
+        ops: &[],
+        asks: &[Asked {
+            intent: "tem informação demais",
+            taken: true,
+        }],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the rules, can't compare",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "I can't compare these",
+            taken: false,
+        }],
+        acts: &[],
+    },
+    State {
+        name: "Silences, review by the rules, a sequence repeated",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[],
+        acts: &REVIEWED,
+    },
+    State {
+        name: "Silences, review by the rules, the sequence as one action",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[],
+        acts: &COMPOSED,
+    },
+    State {
+        name: "Silences, review by the rules, larger text and more contrast",
+        page: "Silences",
+        intent: RULES,
+        proposal: Proposal::Rules,
+        ops: &[],
+        asks: &[Asked {
+            intent: "accessibility",
+            taken: true,
+        }],
+        acts: &PREFERRED,
+    },
+];
+
+/// The person's preferences of accessibility, on the band the row opened:
+/// larger text, more contrast, then the band closed.
+const PREFERRED: [(&str, &str); 3] = [
+    ("silences_surface.access.larger_text", "activate"),
+    ("silences_surface.access.more_contrast", "activate"),
+    ("silences_surface.access.done", "activate"),
+];
+
+/// Each cut looked at, then applied: the sequence a person repeats.
+const REVIEWED: [(&str, &str); 4] = [
+    ("silences.cut[1]", "preview_segment"),
+    ("silences.cut[1]", "apply_cut"),
+    ("silences.cut[2]", "preview_segment"),
+    ("silences.cut[2]", "apply_cut"),
+];
+
+/// The same, then the offer made one action.
+const COMPOSED: [(&str, &str); 5] = [
+    REVIEWED[0],
+    REVIEWED[1],
+    REVIEWED[2],
+    REVIEWED[3],
+    ("silences_surface.composite.install", "install"),
+];
+
+/// The state named `name`, whatever the case.
+pub fn find(name: &str) -> Option<&'static State> {
+    STATES.iter().find(|s| s.name.eq_ignore_ascii_case(name))
+}
+
+/// A page staged for a baseline: a gallery page at launch, or a state
+/// (each holds a whole view, so each is boxed).
+pub enum Page {
+    Gallery(Box<StagedPage>),
+    State(Box<StagedState>),
+}
+
+/// A state staged: the view, the scene of its last frame, and how it
+/// came to rest.
+pub struct StagedState {
+    name: &'static str,
+    view: ShowcaseView,
+    compositor: Compositor,
+    steps: usize,
+    settled: bool,
+}
+
+/// Stage `page` (a gallery page's title or a state's name) under `theme`
+/// at `viewport`.
+pub fn stage(viewport: Viewport, page: &str, theme: &str) -> Result<Page, String> {
+    match find(page) {
+        Some(state) => StagedState::stage(state, viewport, theme)
+            .map(Box::new)
+            .map(Page::State),
+        None => stage_page(viewport, page, theme, None)
+            .map(Box::new)
+            .map(Page::Gallery)
+            .map_err(|e| e.to_string()),
+    }
+}
+
+impl Page {
+    /// The page's title as the sidebar shows it, or the state's name.
+    pub fn title(&self) -> String {
+        match self {
+            Page::Gallery(p) => p.title().to_string(),
+            Page::State(s) => s.name.to_string(),
+        }
+    }
+
+    pub fn compositor(&self) -> &Compositor {
+        match self {
+            Page::Gallery(p) => p.compositor(),
+            Page::State(s) => &s.compositor,
+        }
+    }
+
+    pub fn steps(&self) -> usize {
+        match self {
+            Page::Gallery(p) => p.steps(),
+            Page::State(s) => s.steps,
+        }
+    }
+
+    pub fn settled(&self) -> bool {
+        match self {
+            Page::Gallery(p) => p.settled(),
+            Page::State(s) => s.settled,
+        }
+    }
+
+    /// What the page means in this frame; `None` for a page that projects
+    /// nothing.
+    pub fn semantics(&self) -> Result<Option<Snapshot>, String> {
+        match self {
+            Page::Gallery(p) => match p.semantics() {
+                Ok(s) => Ok(Some(s)),
+                Err(RenderError::NoSemantics(_)) => Ok(None),
+                Err(e) => Err(e.to_string()),
+            },
+            Page::State(s) => Ok(s.view.semantics()),
+        }
+    }
+
+    /// The frame by the window's frame path, as `StagedPage::render`.
+    pub fn render(&mut self, renderer: &mut Renderer) -> Result<Frame, String> {
+        match self {
+            Page::Gallery(p) => p.render(renderer).map_err(|e| e.to_string()),
+            Page::State(s) => {
+                let clear = s.view.theme.colors.bg.to_linear_array();
+                renderer
+                    .render(&mut s.compositor, clear)
+                    .map_err(|e| e.to_string())
+            }
+        }
+    }
+}
+
+impl StagedState {
+    fn stage(state: &'static State, viewport: Viewport, theme: &str) -> Result<Self, String> {
+        let mut view = ShowcaseView::new(viewport.width, viewport.height);
+        view.jump_to_page(state.page);
+        if !view.page_title().eq_ignore_ascii_case(state.page) {
+            return Err(format!("{}: no page titled '{}'", state.name, state.page));
+        }
+        view.apply_theme(theme);
+        if view.theme_name != theme {
+            return Err(format!("no theme named '{theme}'"));
+        }
+        view.resize(viewport.width, viewport.height, viewport.scale);
+        // the frames first: the page never asks the worker for one
+        view.stage_silences_frames(&mut synthetic);
+        act(
+            &mut view,
+            "silences_surface.intent",
+            "set_value",
+            Some(state.intent),
+        )?;
+        match state.proposal {
+            Proposal::Rules => {
+                act(
+                    &mut view,
+                    "silences_surface.proposer",
+                    "select",
+                    Some("rules"),
+                )?;
+                act(&mut view, "silences_surface.propose", "propose", None)?;
+            }
+            Proposal::Fixture(json) => {
+                view.stage_silences_ir(json)
+                    .map_err(|e| format!("{}: {e}", state.name))?;
+            }
+        }
+        for json in state.ops {
+            let op: plevir::Op =
+                serde_json::from_str(json).map_err(|e| format!("{}: {json}: {e}", state.name))?;
+            view.stage_silences_op(op, harness())
+                .map_err(|e| format!("{}: {e}", state.name))?;
+        }
+        for asked in state.asks {
+            ask(&mut view, asked).map_err(|e| format!("{}: {e}", state.name))?;
+        }
+        for (target, action) in state.acts {
+            act(&mut view, target, action, None).map_err(|e| format!("{}: {e}", state.name))?;
+        }
+        view.stage_silences_frames(&mut synthetic);
+        let mut compositor = Compositor::new();
+        let (mut steps, mut settled) = (0, false);
+        while steps < SETTLE_STEPS && !settled {
+            let moving = view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
+            view.render(&mut compositor);
+            steps += 1;
+            settled = !moving;
+        }
+        Ok(Self {
+            name: state.name,
+            view,
+            compositor,
+            steps,
+            settled,
+        })
+    }
+}
+
+/// The regression harness, as the test actor that acts and asks.
+fn harness() -> Actor {
+    Actor::Test {
+        name: "regress".to_string(),
+    }
+}
+
+/// `action` on `target` with `text`, by the regression harness as a test
+/// actor, observed on the whole page as it is now; an error unless it
+/// completed.
+fn act(
+    view: &mut ShowcaseView,
+    target: &str,
+    action: &str,
+    text: Option<&str>,
+) -> Result<(), String> {
+    let seen = view
+        .semantics()
+        .ok_or_else(|| "the page projects nothing".to_string())?;
+    let param = text.map(|t| Value::Text(t.to_string()));
+    let req = Request::observe(&seen, harness(), target, action, param)
+        .map_err(|e| format!("{target} {action}: {e}"))?;
+    let receipt = view
+        .act(req)
+        .ok_or_else(|| format!("{target} {action}: not taken"))?;
+    match receipt.stage() {
+        Some(accord::Stage::Completed(_)) => Ok(()),
+        other => Err(format!("{target} {action}: {other:?}")),
+    }
+}
+
+/// `asked` through the row by the regression harness: the rules chosen
+/// (a baseline never asks a model, whatever program the machine has), the
+/// intent written, then `propose`, ending completed when it is `taken`
+/// and failed (the page says why) when not.
+fn ask(view: &mut ShowcaseView, asked: &Asked) -> Result<(), String> {
+    act(view, "silences_surface.proposer", "select", Some("rules"))?;
+    act(
+        view,
+        "silences_surface.intent",
+        "set_value",
+        Some(asked.intent),
+    )?;
+    let seen = view
+        .semantics()
+        .ok_or_else(|| "the page projects nothing".to_string())?;
+    let req = Request::observe(
+        &seen,
+        harness(),
+        "silences_surface.propose",
+        "propose",
+        None,
+    )
+    .map_err(|e| format!("propose: {e}"))?;
+    let receipt = view.act(req).ok_or("propose: not taken")?;
+    match (receipt.stage(), asked.taken) {
+        (Some(accord::Stage::Completed(_)), true) | (Some(accord::Stage::Failed { .. }), false) => {
+            Ok(())
+        }
+        (other, _) => Err(format!("\"{}\": {other:?}", asked.intent)),
+    }
+}
+
+/// A frame of the test video, synthetic: seven bars across 320 by 180,
+/// the colours of the test pattern, and a band under them whose grey
+/// follows the instant, so two instants are two pictures.
+fn synthetic(ms: u64) -> Result<ImageHandle, String> {
+    const BARS: [[u8; 3]; 7] = [
+        [235, 235, 235],
+        [235, 235, 16],
+        [16, 235, 235],
+        [16, 235, 16],
+        [235, 16, 235],
+        [235, 16, 16],
+        [16, 16, 235],
+    ];
+    let (w, h) = (320u32, 180u32);
+    let grey = u8::try_from(40 + (ms / 100) % 200).unwrap_or(120);
+    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
+    for y in 0..h {
+        for x in 0..w {
+            let [r, g, b] = if y >= h * 3 / 4 {
+                [grey; 3]
+            } else {
+                BARS[(x * 7 / w) as usize]
+            };
+            pixels.extend_from_slice(&[r, g, b, 255]);
+        }
+    }
+    load_image_rgba(w, h, pixels).map_err(|e| e.to_string())
+}

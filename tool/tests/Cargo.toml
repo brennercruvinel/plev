@@ -1,0 +1,38 @@
+# architecture tests of the repository: its tree, its names, its file sizes,
+# its dependency graph and the maps that describe it (docs/ATLAS.toml).
+[package]
+name = "tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Architecture tests of the plev repository: the tree, the names, the file paths, the dependency graph and the docs that describe them"
+
+[dependencies]
+
+[dev-dependencies]
+serde_json.workspace = true
+toml = "1"
+
+[[test]]
+name = "test_depsgraph"
+path = "test_depsgraph.rs"
+
+[[test]]
+name = "test_filepaths"
+path = "test_filepaths.rs"
+
+[[test]]
+name = "test_namerules"
+path = "test_namerules.rs"
+
+[[test]]
+name = "test_repoaudit"
+path = "test_repoaudit.rs"
+
+[[test]]
+name = "test_structure"
+path = "test_structure.rs"
+
+[lints]
+workspace = true

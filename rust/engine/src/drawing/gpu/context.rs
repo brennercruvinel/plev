@@ -1,0 +1,537 @@
+use std::sync::Arc;
+use wgpu::util::DeviceExt;
+use winit::window::Window;
+
+use super::config::RenderConfig;
+use super::loss::DeviceLoss;
+use super::presets::{ortho_projection, texture_sampler_bgl, uniform_bgl};
+
+/// Per-pipeline WGSL source: read from disk when `hot-reload` is enabled,
+/// embedded at compile time otherwise.
+macro_rules! shader_src {
+    ($name:literal) => {{
+        #[cfg(hot_reload)]
+        {
+            crate::runtime::hot_reload::shader_source($name)
+        }
+        #[cfg(not(hot_reload))]
+        {
+            std::borrow::Cow::<'static, str>::from(include_str!(concat!("shaders/", $name)))
+        }
+    }};
+}
+
+/// Target format of a headless context. The sRGB variant, so a render
+/// target encodes linear to sRGB on write exactly like the windowed sRGB
+/// view, and RGBA order, so a readback is PNG row data as it lands.
+pub const HEADLESS_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8UnormSrgb;
+
+pub struct GpuContext {
+    /// The instance the device and the surface came from. The surface
+    /// belongs to it, so a recovery asks it for the next adapter.
+    pub(crate) instance: wgpu::Instance,
+    /// The adapter `device` was requested from; a recovery replaces both.
+    pub(crate) adapter: wgpu::Adapter,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    /// The lost flag of `device`, raised by wgpu's callback (`gpu::loss`).
+    pub(crate) loss: DeviceLoss,
+    /// Backends a recovery asks for an adapter on in place of `instance`
+    /// (`gpu::recover`); `None`, the default, is the context's own.
+    pub(crate) recovery_backends: Option<wgpu::Backends>,
+    pub surface: Option<wgpu::Surface<'static>>,
+    pub surface_config: wgpu::SurfaceConfiguration,
+    pub config: RenderConfig,
+    pub projection_buffer: wgpu::Buffer,
+    pub projection_bind_group_layout: wgpu::BindGroupLayout,
+    pub projection_bind_group: wgpu::BindGroup,
+    pub quad_pipeline: wgpu::RenderPipeline,
+    pub rect_sdf_pipeline: wgpu::RenderPipeline,
+    pub shadow_analytic_pipeline: wgpu::RenderPipeline,
+    pub text_pipeline: wgpu::RenderPipeline,
+    pub text_bind_group_layout: wgpu::BindGroupLayout,
+    pub image_pipeline: wgpu::RenderPipeline,
+    pub image_bind_group_layout: wgpu::BindGroupLayout,
+    pub image_atlas: super::image::ImageAtlasGpu,
+    /// Draws blurred-backdrop quads inside layer passes (group 1 reuses
+    /// the composite texture+sampler layout).
+    pub backdrop_pipeline: wgpu::RenderPipeline,
+    // Composite pipeline resources
+    pub composite_pipeline: wgpu::RenderPipeline,
+    pub composite_bind_group_layout: wgpu::BindGroupLayout,
+    pub opacity_bind_group_layout: wgpu::BindGroupLayout,
+    pub composite_sampler: wgpu::Sampler,
+    /// Logical size set via [`set_projection`]; `None` while scene
+    /// coordinates match the physical surface (the default). Used to scale
+    /// `SceneNode::PushClip` rects (logical pixels) into physical scissor
+    /// rects, so clipping holds on HiDPI surfaces.
+    ///
+    /// [`set_projection`]: GpuContext::set_projection
+    pub(crate) logical_size: Option<(f32, f32)>,
+    /// Timestamp queries around the passes of `window::draw_frame`, only
+    /// with `RenderConfig::gpu_timestamps` on a device that has
+    /// `TIMESTAMP_QUERY`; `None` otherwise (see `perf::gpu_time`).
+    pub(crate) timestamps: Option<crate::runtime::perf::gpu_time::GpuTimestamps>,
+    /// Desktop debug builds: watches `src/gpu/shaders/`, see `hot_reload`.
+    #[cfg(hot_reload)]
+    pub(crate) shader_watcher: Option<crate::runtime::hot_reload::ShaderWatcher>,
+    /// Desktop debug builds: literal changes applied in place, code changes
+    /// rebuild and relaunch. It lives here only because this is the one
+    /// constructor every app calls.
+    #[cfg(hot_reload)]
+    pub(super) _source_watcher: Option<crate::runtime::hot_reload::SourceWatcher>,
+}
+
+impl GpuContext {
+    pub async fn new(window: Arc<Window>) -> Self {
+        Self::new_with_config(window, RenderConfig::default()).await
+    }
+
+    /// Sync the image atlas texture with images loaded since the last
+    /// frame. Call once per frame before encoding render passes.
+    pub fn prepare_images(&mut self) {
+        self.image_atlas
+            .prepare(&self.device, &self.queue, &self.image_bind_group_layout);
+    }
+
+    pub async fn new_with_config(window: Arc<Window>, mut config: RenderConfig) -> Self {
+        Self::apply_config(&mut config);
+
+        let size = window.inner_size();
+        let instance = Self::new_instance();
+
+        let surface = instance.create_surface(window.clone()).unwrap();
+        let adapter = instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: Some(&surface),
+                force_fallback_adapter: false,
+            })
+            .await
+            .expect("Failed to find a suitable GPU adapter");
+
+        log::info!("GPU adapter: {}", adapter.get_info().name);
+        log::info!("GPU: requesting device...");
+
+        let (device, queue) = adapter
+            .request_device(&Self::device_descriptor(&adapter, &config))
+            .await
+            .expect("Failed to create device");
+        log::info!(
+            "GPU: device created, configuring surface {}x{}...",
+            size.width,
+            size.height
+        );
+
+        let surface_config =
+            Self::surface_configuration(&surface, &adapter, &config, size.width, size.height);
+        surface.configure(&device, &surface_config);
+
+        let gpu = Self::from_device(
+            instance,
+            adapter,
+            device,
+            queue,
+            Some(surface),
+            surface_config,
+            config,
+        );
+        #[cfg(hot_reload)]
+        let gpu = gpu.with_source_watchers(&window);
+        gpu
+    }
+
+    /// A context with no window and no surface: frames are drawn into an
+    /// offscreen texture of `width x height` physical pixels (see
+    /// `engine::drawing::headless`). `surface_config` holds that size and the
+    /// target format, [`HEADLESS_FORMAT`]; every pipeline is built by the
+    /// same code as the windowed context, in that format.
+    ///
+    /// `None` when the machine has no GPU adapter (or the device request
+    /// fails), so tests and tools can skip instead of failing.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn new_headless(width: u32, height: u32, mut config: RenderConfig) -> Option<Self> {
+        Self::apply_config(&mut config);
+
+        let instance = Self::new_instance();
+        let adapter = match instance
+            .request_adapter(&wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::HighPerformance,
+                compatible_surface: None,
+                force_fallback_adapter: false,
+            })
+            .await
+        {
+            Ok(adapter) => adapter,
+            Err(e) => {
+                log::warn!("headless: no GPU adapter ({e})");
+                return None;
+            }
+        };
+        log::info!("GPU adapter (headless): {}", adapter.get_info().name);
+        let descriptor = Self::device_descriptor(&adapter, &config);
+        let (device, queue) = match adapter.request_device(&descriptor).await {
+            Ok(pair) => pair,
+            Err(e) => {
+                log::warn!("headless: device request failed ({e})");
+                return None;
+            }
+        };
+        let surface_config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            format: HEADLESS_FORMAT,
+            width: width.max(1),
+            height: height.max(1),
+            present_mode: config.present_mode,
+            alpha_mode: wgpu::CompositeAlphaMode::Opaque,
+            view_formats: vec![],
+            desired_maximum_frame_latency: 2,
+        };
+        Some(Self::from_device(
+            instance,
+            adapter,
+            device,
+            queue,
+            None,
+            surface_config,
+            config,
+        ))
+    }
+
+    /// The configuration a window's surface takes on `adapter`: an sRGB
+    /// format when the surface offers one, else the raw format with its
+    /// sRGB variant registered as the view format (WebGPU canvases only
+    /// expose bgra8unorm, and rendering into a plain view would skip the
+    /// linear to sRGB encode every shader and clear color assume: #303030
+    /// measured (8,8,8)); the requested present mode when the surface has
+    /// it, else AutoVsync; the first alpha mode. The constructor and a
+    /// recovery on a fresh adapter both configure the surface with it.
+    pub(super) fn surface_configuration(
+        surface: &wgpu::Surface<'_>,
+        adapter: &wgpu::Adapter,
+        config: &RenderConfig,
+        width: u32,
+        height: u32,
+    ) -> wgpu::SurfaceConfiguration {
+        let surface_caps = surface.get_capabilities(adapter);
+        let surface_format = surface_caps
+            .formats
+            .iter()
+            .find(|f| f.is_srgb())
+            .copied()
+            .unwrap_or(surface_caps.formats[0]);
+        let render_format = surface_format.add_srgb_suffix();
+        let view_formats = if render_format != surface_format {
+            vec![render_format]
+        } else {
+            vec![]
+        };
+
+        let present_mode = if matches!(
+            config.present_mode,
+            wgpu::PresentMode::AutoVsync | wgpu::PresentMode::AutoNoVsync
+        ) || surface_caps.present_modes.contains(&config.present_mode)
+        {
+            config.present_mode
+        } else {
+            log::warn!(
+                "Present mode {:?} unsupported by surface -- falling back to AutoVsync",
+                config.present_mode
+            );
+            wgpu::PresentMode::AutoVsync
+        };
+
+        wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width: width.max(1),
+            height: height.max(1),
+            present_mode,
+            alpha_mode: surface_caps.alpha_modes[0],
+            view_formats,
+            desired_maximum_frame_latency: 2,
+        }
+    }
+
+    /// Clamp the sample count and install the path tolerance, first thing
+    /// in either constructor (before any await).
+    fn apply_config(config: &mut RenderConfig) {
+        config.msaa_samples = config.effective_msaa_samples();
+        crate::drawing::path::set_default_tolerance(config.path_tolerance);
+    }
+
+    fn new_instance() -> wgpu::Instance {
+        Self::instance_on(Self::backends())
+    }
+
+    /// The instance this context's adapter, device and surface came from.
+    /// With [`Self::adapter`] and the `device` and `queue` fields, what a
+    /// library that computes on the renderer's device asks for (burn,
+    /// through cubecl's `init_device`). A recovery (`gpu::recover`)
+    /// replaces the adapter, the device and the queue: a holder of the old
+    /// handles holds a lost device.
+    pub fn instance(&self) -> &wgpu::Instance {
+        &self.instance
+    }
+
+    /// The adapter this context's device was requested from.
+    pub fn adapter(&self) -> &wgpu::Adapter {
+        &self.adapter
+    }
+
+    /// The backends the constructors ask for.
+    fn backends() -> wgpu::Backends {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            wgpu::Backends::PRIMARY
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            wgpu::Backends::BROWSER_WEBGPU
+        }
+    }
+
+    pub(super) fn instance_on(backends: wgpu::Backends) -> wgpu::Instance {
+        wgpu::Instance::new(wgpu::InstanceDescriptor {
+            backends,
+            ..wgpu::InstanceDescriptor::new_without_display_handle()
+        })
+    }
+
+    /// No feature, unless `config` asks for GPU timestamps and the adapter
+    /// has them.
+    pub(super) fn device_descriptor(
+        adapter: &wgpu::Adapter,
+        config: &RenderConfig,
+    ) -> wgpu::DeviceDescriptor<'static> {
+        let timestamps = crate::runtime::perf::gpu_time::device_features(
+            adapter.features(),
+            config.gpu_timestamps,
+        );
+        let (required_features, required_limits) = match config.compute {
+            None => (timestamps, wgpu::Limits::default()),
+            Some(asked) => {
+                let granted =
+                    asked & (adapter.features() - wgpu::Features::all_experimental_mask());
+                log::debug!("gpu compute: asked {asked:?}, the adapter grants {granted:?}");
+                (timestamps | granted, adapter.limits())
+            }
+        };
+        wgpu::DeviceDescriptor {
+            label: Some("plev_device"),
+            required_features,
+            required_limits,
+            memory_hints: wgpu::MemoryHints::Performance,
+            trace: Default::default(),
+            experimental_features: Default::default(),
+        }
+    }
+
+    /// Everything a context builds once it has a device, whatever it draws
+    /// into: the projection, the bind group layouts, every pipeline in the
+    /// render format (the sRGB view format, `surface_format()`), the
+    /// composite sampler. The windowed and the headless constructors both
+    /// end here, so a frame is drawn by the same pipelines either way, and
+    /// so does a recovery after the device was lost (`gpu::recover`).
+    pub(super) fn from_device(
+        instance: wgpu::Instance,
+        adapter: wgpu::Adapter,
+        device: wgpu::Device,
+        queue: wgpu::Queue,
+        surface: Option<wgpu::Surface<'static>>,
+        surface_config: wgpu::SurfaceConfiguration,
+        config: RenderConfig,
+    ) -> Self {
+        let render_format = surface_config
+            .view_formats
+            .first()
+            .copied()
+            .unwrap_or(surface_config.format);
+        let (width, height) = (surface_config.width, surface_config.height);
+
+        // Projection uniform buffer
+        let projection_data = ortho_projection(width as f32, height as f32);
+        let projection_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("projection_buffer"),
+            contents: bytemuck::cast_slice(&projection_data),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let projection_bind_group_layout =
+            uniform_bgl(&device, "projection_bgl", wgpu::ShaderStages::VERTEX);
+
+        let projection_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("projection_bg"),
+            layout: &projection_bind_group_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: projection_buffer.as_entire_binding(),
+            }],
+        });
+
+        // Text atlas bind group layout (group 1)
+        let text_bind_group_layout = texture_sampler_bgl(&device, "text_atlas_bgl");
+
+        // -- Pipelines (extracted for hot-reload support) --
+
+        let quad_pipeline = Self::create_quad_pipeline(
+            &device,
+            &shader_src!("quad.wgsl"),
+            &projection_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        let rect_sdf_pipeline = Self::create_rect_sdf_pipeline(
+            &device,
+            &shader_src!("rect_sdf.wgsl"),
+            &projection_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        let shadow_analytic_pipeline = Self::create_shadow_analytic_pipeline(
+            &device,
+            &shader_src!("shadow_analytic.wgsl"),
+            &projection_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        let text_pipeline = Self::create_text_pipeline(
+            &device,
+            &shader_src!("text.wgsl"),
+            &projection_bind_group_layout,
+            &text_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        // Image atlas bind group layout (group 1 of the image pipeline);
+        // same shape as the text atlas layout but RGBA8 instead of R8.
+        let image_bind_group_layout = texture_sampler_bgl(&device, "image_atlas_bgl");
+
+        let image_pipeline = Self::create_image_pipeline(
+            &device,
+            &shader_src!("image.wgsl"),
+            &projection_bind_group_layout,
+            &image_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        // Composite bind group layouts (struct fields, not recreated on reload)
+        let composite_bind_group_layout = texture_sampler_bgl(&device, "composite_bgl");
+
+        let opacity_bind_group_layout =
+            uniform_bgl(&device, "opacity_bgl", wgpu::ShaderStages::FRAGMENT);
+
+        let composite_pipeline = Self::create_composite_pipeline(
+            &device,
+            &shader_src!("composite.wgsl"),
+            &composite_bind_group_layout,
+            &opacity_bind_group_layout,
+            render_format,
+        );
+
+        let backdrop_pipeline = Self::create_backdrop_pipeline(
+            &device,
+            &shader_src!("backdrop.wgsl"),
+            &projection_bind_group_layout,
+            &composite_bind_group_layout,
+            render_format,
+            config.msaa_samples,
+        );
+
+        let composite_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("composite_sampler"),
+            address_mode_u: wgpu::AddressMode::ClampToEdge,
+            address_mode_v: wgpu::AddressMode::ClampToEdge,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
+
+        let timestamps = if config.gpu_timestamps {
+            crate::runtime::perf::gpu_time::GpuTimestamps::new(&device, &queue)
+        } else {
+            None
+        };
+
+        let loss = DeviceLoss::install(&device);
+
+        Self {
+            instance,
+            adapter,
+            device,
+            queue,
+            loss,
+            recovery_backends: None,
+            surface,
+            surface_config,
+            config,
+            projection_buffer,
+            projection_bind_group_layout,
+            projection_bind_group,
+            quad_pipeline,
+            rect_sdf_pipeline,
+            shadow_analytic_pipeline,
+            text_pipeline,
+            text_bind_group_layout,
+            image_pipeline,
+            image_bind_group_layout,
+            image_atlas: super::image::ImageAtlasGpu::new(),
+            backdrop_pipeline,
+            composite_pipeline,
+            #[cfg(hot_reload)]
+            shader_watcher: None,
+            #[cfg(hot_reload)]
+            _source_watcher: None,
+            composite_bind_group_layout,
+            opacity_bind_group_layout,
+            composite_sampler,
+            logical_size: None,
+            timestamps,
+        }
+    }
+
+    /// Desktop debug builds: start the shader and source watchers, each
+    /// waking `window` when something changed on disk. Only a windowed
+    /// context has someone to wake.
+    #[cfg(hot_reload)]
+    fn with_source_watchers(mut self, window: &Arc<Window>) -> Self {
+        self.shader_watcher = {
+            let dir = crate::runtime::hot_reload::shader_dir();
+            let wake = window.clone();
+            match crate::runtime::hot_reload::ShaderWatcher::new(&dir, move || {
+                wake.request_redraw()
+            }) {
+                Ok(w) => {
+                    log::info!("shader hot reload on: {}", dir.display());
+                    Some(w)
+                }
+                Err(e) => {
+                    log::error!("shader hot reload off: {e}");
+                    None
+                }
+            }
+        };
+        self._source_watcher = {
+            let wake = window.clone();
+            match crate::runtime::hot_reload::SourceWatcher::new(
+                &crate::runtime::hot_reload::source_dirs(),
+                move || wake.request_redraw(),
+            ) {
+                Ok(w) => {
+                    log::info!("source hot reload on: {{rust,apps,demo}}/*/src");
+                    Some(w)
+                }
+                Err(e) => {
+                    log::error!("source hot reload off: {e}");
+                    None
+                }
+            }
+        };
+        self
+    }
+}

@@ -1,0 +1,48 @@
+# import: everything from another format into plev. the formats (lottie,
+# svg, react/tsx + sass, html, figma, gpui) are read, resolved and either
+# converted to a .monster (lottie, svg) or emitted as plev builder code and
+# plev IR (the rest). See src/lib.rs for the parse-resolve-emit stages and
+# the droplist contract.
+[package]
+name = "import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Importers of plev: lottie and svg to the .monster format; react/tsx + sass, html, figma and gpui sources to plev builder code and plev IR, with an honest droplist"
+
+[dependencies]
+engine.workspace = true
+motion.workspace = true
+plevir.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+log.workspace = true
+thiserror.workspace = true
+usvg.workspace = true
+tree-sitter.workspace = true
+tree-sitter-typescript.workspace = true
+tree-sitter-rust.workspace = true
+tree-sitter-html = "=0.23.2"
+tree-sitter-css = "=0.25.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger.workspace = true
+
+[dev-dependencies]
+pollster.workspace = true
+env_logger.workspace = true
+criterion.workspace = true
+screen.workspace = true
+accord.workspace = true
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "lottie"
+harness = false
+
+[[bench]]
+name = "gpui"
+harness = false

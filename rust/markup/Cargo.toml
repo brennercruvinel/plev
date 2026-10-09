@@ -1,0 +1,14 @@
+[package]
+name = "markup"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Experimental declarative UI DSL facade for plev"
+
+[dependencies]
+macros.workspace = true
+engine.workspace = true
+
+[lints]
+workspace = true

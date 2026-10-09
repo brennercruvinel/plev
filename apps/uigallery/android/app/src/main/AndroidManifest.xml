@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application
+        android:allowBackup="false"
+        android:label="plev uigallery"
+        android:theme="@style/Theme.UIGallery">
+        <!-- GameActivity host. `android.app.lib_name` selects the native lib
+             (libuigallery.so); winit drives the surface from android_main. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden|density|uiMode|navigation|keyboard"
+            android:launchMode="singleTop"
+            android:resizeableActivity="true">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="uigallery" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

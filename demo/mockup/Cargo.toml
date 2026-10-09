@@ -1,0 +1,18 @@
+[package]
+name = "mockup"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Live preview: point at any react component (tsx + sass + vars) and a"
+
+[dependencies]
+engine.workspace = true
+import.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+pollster.workspace = true
+env_logger.workspace = true
+
+[lints]
+workspace = true

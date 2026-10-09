@@ -1,0 +1,20 @@
+# Trunk config for the web build of urnadbapp. run from the repo root:
+# `tool/tasks/webtarget.sh urnadbapp` (wraps `trunk --config apps/urnadbapp/web serve`).
+#
+# index.html points at apps/urnadbapp/Cargo.toml (bin "urnadbapp"); trunk
+# runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
+# pinned by apps/urnadbapp/Cargo.lock), and emits everything into
+# apps/urnadbapp/web/dist/. urnadbapp is its own workspace (excluded from the root
+# one); the native urna backend is cfg'd out on wasm, but cargo still
+# reads its manifest, so the sibling urna checkout at ../urna must exist.
+
+[build]
+target = "index.html"
+dist = "dist"
+# Engine + cosmic-text in debug wasm is huge and slow; always ship opt.
+release = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8081
+open = false

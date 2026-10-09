@@ -1,0 +1,627 @@
+{
+  "bindings": [
+    {
+      "at": "index.tsx:26",
+      "binds": "state",
+      "kind": "text",
+      "node": "note_card.root.inner.details.title",
+      "prop": "text",
+      "ref": "note_card.props:title",
+      "why": "`title` is a parameter of the component"
+    },
+    {
+      "at": "index.tsx:27",
+      "binds": "state",
+      "kind": "text",
+      "node": "note_card.root.inner.details.content",
+      "prop": "text",
+      "ref": "note_card.props:content",
+      "why": "`content` is a parameter of the component"
+    },
+    {
+      "action": "reply",
+      "at": "index.tsx:28",
+      "binds": "action",
+      "event": "set_value",
+      "node": "note_card.root.inner.details.reply",
+      "param": "text",
+      "target": "note_card.props",
+      "why": "`onChange={onReply}`: the app's action behind the handler"
+    },
+    {
+      "action": "open",
+      "at": "index.tsx:29",
+      "binds": "action",
+      "event": "activate",
+      "node": "note_card.root.inner.details.button",
+      "param": null,
+      "target": "note_card.props",
+      "why": "`onClick={onOpen}`: the app's action behind the handler"
+    }
+  ],
+  "counts": {
+    "approximated": 16,
+    "impossible": 19,
+    "supported": 8,
+    "transformed": 32
+  },
+  "entries": [
+    {
+      "at": "NoteCard.module.sass:4",
+      "category": "impossible",
+      "construct": ".card { position: relative }",
+      "reason": "no positioning contexts; plev paints in tree order"
+    },
+    {
+      "at": "NoteCard.module.sass:5",
+      "category": "transformed",
+      "construct": ".card { width: 368px }",
+      "ir": "size.min = size.max = card_w",
+      "node": "note_card.root",
+      "rule": "a fixed width of 368 px is theme.size.card_w (368 px) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:6",
+      "category": "supported",
+      "construct": ".card { box-sizing: border-box }",
+      "ir": "holds by construction: plev layout is always border-box"
+    },
+    {
+      "at": "NoteCard.module.sass:7",
+      "category": "impossible",
+      "construct": ".card { overflow: hidden }",
+      "node": "note_card.root",
+      "reason": "the IR does not clip: a container lays its children out inside it but does not cut what they draw"
+    },
+    {
+      "at": "NoteCard.module.sass:8",
+      "category": "impossible",
+      "construct": "@media only screen and (max-width: \"767px\") <.card>",
+      "covers": [
+        "NoteCard.module.sass:9"
+      ],
+      "reason": "responsive variant out of poc scope; desktop instance transpiled"
+    },
+    {
+      "at": "NoteCard.module.sass:12",
+      "category": "transformed",
+      "construct": ".overlay { position: absolute }",
+      "ir": "carried by the rewrite",
+      "rule": "an inset:0 first child is its parent's background layer (overlay merge)"
+    },
+    {
+      "at": "NoteCard.module.sass:13",
+      "category": "transformed",
+      "construct": ".overlay { inset: 0 }",
+      "ir": "carried by the rewrite",
+      "rule": "inset: 0 overlay covers the host box exactly (merge rewrite)"
+    },
+    {
+      "at": "NoteCard.module.sass:14",
+      "category": "transformed",
+      "construct": ".overlay { background-color: rgba(40, 40, 40, 0.8) }",
+      "ir": "props.background = surface",
+      "node": "note_card.root",
+      "rule": "`engine::styling::theme::hoff::CARD_OVERLAY` is theme.colors.surface in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:15",
+      "category": "impossible",
+      "construct": ".overlay { backdrop-filter: blur(50px) }",
+      "node": "note_card.root",
+      "reason": "the IR has no backdrop blur"
+    },
+    {
+      "at": "NoteCard.module.sass:16",
+      "category": "impossible",
+      "construct": ".overlay { box-shadow: inset 2px 4px 16px rgba(248, 248, 248, 0.06) }",
+      "node": "note_card.root",
+      "reason": "the IR has no inner shadow"
+    },
+    {
+      "at": "NoteCard.module.sass:17",
+      "category": "transformed",
+      "construct": ".overlay { border-radius: 32px }",
+      "ir": "props.shape = pill",
+      "node": "note_card.root",
+      "rule": "a radius of 32 px is theme.shape.pill (32 px) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:19",
+      "category": "transformed",
+      "construct": ".overlay:after { content: \"\" }",
+      "ir": "carried by the rewrite",
+      "rule": "pseudo-element marker; merged into the host"
+    },
+    {
+      "at": "NoteCard.module.sass:20",
+      "category": "transformed",
+      "construct": ".overlay:after { position: absolute }",
+      "ir": "carried by the rewrite",
+      "rule": "an inset:0 first child is its parent's background layer (overlay merge)"
+    },
+    {
+      "at": "NoteCard.module.sass:21",
+      "category": "transformed",
+      "construct": ".overlay:after { inset: 0 }",
+      "ir": "carried by the rewrite",
+      "rule": "inset: 0 overlay covers the host box exactly (merge rewrite)"
+    },
+    {
+      "at": "NoteCard.module.sass:22",
+      "category": "impossible",
+      "construct": ".overlay:after { border: 1.5px solid rgba(255, 255, 255, 0.05) }",
+      "node": "note_card.root",
+      "reason": "the IR has no border: a container draws its fill and its elevation only"
+    },
+    {
+      "at": "NoteCard.module.sass:23",
+      "category": "transformed",
+      "construct": ".overlay:after { border-radius: 32px }",
+      "ir": "props.shape = pill",
+      "node": "note_card.root",
+      "rule": "a radius of 32 px is theme.shape.pill (32 px) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:24",
+      "category": "transformed",
+      "construct": ".overlay:after { pointer-events: none }",
+      "ir": "carried by the rewrite",
+      "rule": "merged decorative layers expose no hit target"
+    },
+    {
+      "at": "NoteCard.module.sass:27",
+      "category": "impossible",
+      "construct": ".inner { position: relative }",
+      "reason": "no positioning contexts; plev paints in tree order"
+    },
+    {
+      "at": "NoteCard.module.sass:28",
+      "category": "approximated",
+      "construct": ".inner { padding: 16px 16px 32px }",
+      "difference": "one token for the four sides, the smallest one's, theme.spacing.lg (16 px): bottom 32 is 16",
+      "ir": "props.padding = lg",
+      "node": "note_card.root.inner"
+    },
+    {
+      "at": "NoteCard.module.sass:31",
+      "category": "impossible",
+      "construct": ".preview { height: 160px }",
+      "node": "note_card.root.inner.preview",
+      "reason": "a fixed height of 160 px has no token: the nearest, theme.size.dropdown_max_h (320 px), is 160 px away, past its tolerance of 0"
+    },
+    {
+      "at": "NoteCard.module.sass:32",
+      "category": "transformed",
+      "construct": ".preview { margin-bottom: 16px }",
+      "ir": "layout.stack.gap = lg",
+      "node": "note_card.root.inner",
+      "rule": "the margin below a child is the stack's gap, theme.spacing.lg (16 px)"
+    },
+    {
+      "at": "NoteCard.module.sass:37",
+      "category": "impossible",
+      "construct": ".details { padding: 0 16px }",
+      "node": "note_card.root.inner.details",
+      "reason": "the IR's padding is one token for the four sides; with 0 on a side there is none, so 16 px on the right and 16 px on the left are lost"
+    },
+    {
+      "at": "NoteCard.module.sass:40",
+      "category": "transformed",
+      "construct": ".meta { margin-bottom: 8px }",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root.inner.details",
+      "rule": "the margin below a child is the stack's gap, theme.spacing.sm (8 px)"
+    },
+    {
+      "at": "NoteCard.module.sass:41",
+      "category": "approximated",
+      "construct": ".meta { font-size: 12px }",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "note_card.root.inner.details.meta"
+    },
+    {
+      "at": "NoteCard.module.sass:41",
+      "category": "approximated",
+      "construct": ".meta { line-height: 1.33 }",
+      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "ir": "props.typography = caption_r",
+      "node": "note_card.root.inner.details.meta"
+    },
+    {
+      "at": "NoteCard.module.sass:42",
+      "category": "approximated",
+      "construct": ".meta { color: rgba(248, 248, 248, .66) }",
+      "difference": "`engine::styling::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 25.5",
+      "ir": "props.color = text_mid",
+      "node": "note_card.root.inner.details.meta"
+    },
+    {
+      "at": "NoteCard.module.sass:45",
+      "category": "transformed",
+      "construct": ".title { margin-bottom: 8px }",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root.inner.details",
+      "rule": "the margin below a child is the stack's gap, theme.spacing.sm (8 px)"
+    },
+    {
+      "at": "NoteCard.module.sass:46",
+      "category": "transformed",
+      "construct": ".title { font-size: 20px }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.inner.details.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:46",
+      "category": "transformed",
+      "construct": ".title { font-weight: 500 }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.inner.details.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:46",
+      "category": "transformed",
+      "construct": ".title { line-height: 1.2 }",
+      "ir": "props.typography = title",
+      "node": "note_card.root.inner.details.title",
+      "rule": "20/24 px weight 500 is theme.typography.title (20/24 px weight 500) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:47",
+      "category": "supported",
+      "construct": ".title { color: rgba(248, 248, 248, .95) }",
+      "ir": "props.color = text",
+      "node": "note_card.root.inner.details.title"
+    },
+    {
+      "at": "NoteCard.module.sass:50",
+      "category": "approximated",
+      "construct": ".content { margin-bottom: 16px }",
+      "difference": "16 px here; the stack's one gap is the smallest spacing's token, theme.spacing.sm (8 px)",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root.inner.details"
+    },
+    {
+      "at": "NoteCard.module.sass:51",
+      "category": "transformed",
+      "construct": ".content { font-size: 16px }",
+      "ir": "props.typography = base_r",
+      "node": "note_card.root.inner.details.content",
+      "rule": "16/24 px weight 400 is theme.typography.base_r (16/24 px weight 400) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:51",
+      "category": "transformed",
+      "construct": ".content { line-height: 1.5 }",
+      "ir": "props.typography = base_r",
+      "node": "note_card.root.inner.details.content",
+      "rule": "16/24 px weight 400 is theme.typography.base_r (16/24 px weight 400) in the theme"
+    },
+    {
+      "at": "NoteCard.module.sass:52",
+      "category": "supported",
+      "construct": ".content { color: rgba(248, 248, 248, .7) }",
+      "ir": "props.color = text_mid",
+      "node": "note_card.root.inner.details.content"
+    },
+    {
+      "at": "NoteCard.module.sass:55",
+      "category": "approximated",
+      "construct": ".reply { margin-bottom: 16px }",
+      "difference": "16 px here; the stack's one gap is the smallest spacing's token, theme.spacing.sm (8 px)",
+      "ir": "layout.stack.gap = sm",
+      "node": "note_card.root.inner.details"
+    },
+    {
+      "at": "NoteCard.module.sass:56",
+      "category": "approximated",
+      "construct": ".reply { padding: 12px 16px }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.inner.details.reply"
+    },
+    {
+      "at": "NoteCard.module.sass:57",
+      "category": "approximated",
+      "construct": ".reply { background: rgba(255, 255, 255, 0.05) }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.inner.details.reply"
+    },
+    {
+      "at": "NoteCard.module.sass:58",
+      "category": "approximated",
+      "construct": ".reply { border-radius: 16px }",
+      "difference": "a text field draws its own box from the theme; the source's value is not carried",
+      "ir": "component text field",
+      "node": "note_card.root.inner.details.reply"
+    },
+    {
+      "at": "NoteCard.module.sass:61",
+      "category": "impossible",
+      "construct": ".button { position: relative }",
+      "reason": "no positioning contexts; plev paints in tree order"
+    },
+    {
+      "at": "NoteCard.module.sass:62",
+      "category": "approximated",
+      "construct": ".button { padding: 12px 32px }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:63",
+      "category": "approximated",
+      "construct": ".button { background: rgba(40, 40, 40, .7) }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:64",
+      "category": "approximated",
+      "construct": ".button { border-radius: 32px }",
+      "difference": "a button draws its own box from the theme; the source's value is not carried",
+      "ir": "component button",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:65",
+      "category": "approximated",
+      "construct": ".button { font-size: 16px }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:65",
+      "category": "approximated",
+      "construct": ".button { font-weight: 500 }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:65",
+      "category": "approximated",
+      "construct": ".button { line-height: 1.5 }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:66",
+      "category": "approximated",
+      "construct": ".button { color: rgba(248, 248, 248, .7) }",
+      "difference": "a control draws its label in its own style from the theme; the source's value is not carried",
+      "ir": "label",
+      "node": "note_card.root.inner.details.button"
+    },
+    {
+      "at": "NoteCard.module.sass:67",
+      "category": "impossible",
+      "construct": ".button { cursor: pointer }",
+      "reason": "no per-element cursor control in the builder"
+    },
+    {
+      "at": "NoteCard.module.sass:68",
+      "category": "impossible",
+      "construct": ".button:hover",
+      "covers": [
+        "NoteCard.module.sass:69"
+      ],
+      "reason": "interactive state styles out of poc scope"
+    },
+    {
+      "at": "NoteCard.module.sass:72",
+      "category": "impossible",
+      "construct": ".buttonTitle { position: relative }",
+      "reason": "no positioning contexts; plev paints in tree order"
+    },
+    {
+      "at": "NoteCard.module.sass:73",
+      "category": "impossible",
+      "construct": ".buttonTitle { z-index: 2 }",
+      "reason": "no z-index; plev paints in tree order"
+    },
+    {
+      "at": "NoteCard.module.sass:84",
+      "category": "impossible",
+      "construct": "@keyframes glow",
+      "covers": [
+        "NoteCard.module.sass:85",
+        "NoteCard.module.sass:87"
+      ],
+      "reason": "keyframe animation has no builder equivalent"
+    },
+    {
+      "at": "index.tsx:17",
+      "category": "transformed",
+      "construct": "component NoteCard",
+      "ir": "surface `note_card`, title \"NoteCard\"",
+      "rule": "the component names the surface"
+    },
+    {
+      "at": "index.tsx:18",
+      "category": "supported",
+      "construct": "<div class=card>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root"
+    },
+    {
+      "at": "index.tsx:18",
+      "category": "impossible",
+      "construct": "role=\"article\"",
+      "node": "note_card.root",
+      "reason": "the attribute `role` is not carried by the IR"
+    },
+    {
+      "at": "index.tsx:19",
+      "category": "transformed",
+      "construct": "<div class=overlay>",
+      "ir": "folded into `note_card.root`",
+      "node": "note_card.root",
+      "rule": "an inset:0 first child is its parent's background layer (overlay merge)"
+    },
+    {
+      "at": "index.tsx:20",
+      "category": "supported",
+      "construct": "<div class=inner>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root.inner"
+    },
+    {
+      "at": "index.tsx:21",
+      "category": "supported",
+      "construct": "<div class=preview>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root.inner.preview"
+    },
+    {
+      "at": "index.tsx:21",
+      "category": "impossible",
+      "construct": "conditional class previewPinned (pinned)",
+      "covers": [
+        "NoteCard.module.sass:34"
+      ],
+      "reason": "prop-driven variant not transpiled in the poc; base instance emitted"
+    },
+    {
+      "at": "index.tsx:22",
+      "category": "impossible",
+      "construct": "{children}",
+      "reason": "`{children}` is an element the caller builds at run time: the IR holds no slot for one"
+    },
+    {
+      "at": "index.tsx:24",
+      "category": "supported",
+      "construct": "<div class=details>",
+      "ir": "a container (no component: a group)",
+      "node": "note_card.root.inner.details"
+    },
+    {
+      "at": "index.tsx:25",
+      "category": "supported",
+      "construct": "\"Field note\"",
+      "ir": "component text, its label",
+      "node": "note_card.root.inner.details.meta"
+    },
+    {
+      "at": "index.tsx:25",
+      "category": "transformed",
+      "construct": "<div class=meta>",
+      "ir": "folded into `note_card.root.inner.details.meta`",
+      "node": "note_card.root.inner.details.meta",
+      "rule": "a div holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "index.tsx:26",
+      "category": "transformed",
+      "construct": "<div class=title>",
+      "ir": "folded into `note_card.root.inner.details.title`",
+      "node": "note_card.root.inner.details.title",
+      "rule": "a div holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "index.tsx:26",
+      "category": "transformed",
+      "construct": "{title}",
+      "ir": "component text, bind.state.text",
+      "node": "note_card.root.inner.details.title",
+      "rule": "a text parameter is text the app's state holds: binding required"
+    },
+    {
+      "at": "index.tsx:27",
+      "category": "transformed",
+      "construct": "<div class=content>",
+      "ir": "folded into `note_card.root.inner.details.content`",
+      "node": "note_card.root.inner.details.content",
+      "rule": "a div holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "index.tsx:27",
+      "category": "transformed",
+      "construct": "{content}",
+      "ir": "component text, bind.state.text",
+      "node": "note_card.root.inner.details.content",
+      "rule": "a text parameter is text the app's state holds: binding required"
+    },
+    {
+      "at": "index.tsx:28",
+      "category": "transformed",
+      "construct": "<input class=reply>",
+      "ir": "component text_field",
+      "node": "note_card.root.inner.details.reply",
+      "rule": "an <input> is the text_field component, role text input; what it sets is the app's: binding required"
+    },
+    {
+      "at": "index.tsx:28",
+      "category": "transformed",
+      "construct": "onChange={onReply}",
+      "ir": "bind.actions.set_value = `reply` on `note_card.props`",
+      "node": "note_card.root.inner.details.reply",
+      "rule": "the handler names the action the app binds: binding required"
+    },
+    {
+      "at": "index.tsx:28",
+      "category": "transformed",
+      "construct": "placeholder=\"Reply\"",
+      "ir": "label",
+      "node": "note_card.root.inner.details.reply",
+      "rule": "the placeholder names the field"
+    },
+    {
+      "at": "index.tsx:29",
+      "category": "transformed",
+      "construct": "<button class=button>",
+      "ir": "component button",
+      "node": "note_card.root.inner.details.button",
+      "rule": "a <button> is the button component, role button; what it does is the app's: binding required"
+    },
+    {
+      "at": "index.tsx:29",
+      "category": "transformed",
+      "construct": "onClick={onOpen}",
+      "ir": "bind.actions.activate = `open` on `note_card.props`",
+      "node": "note_card.root.inner.details.button",
+      "rule": "the handler names the action the app binds: binding required"
+    },
+    {
+      "at": "index.tsx:30",
+      "category": "transformed",
+      "construct": "\"Open\"",
+      "ir": "label",
+      "node": "note_card.root.inner.details.button",
+      "rule": "the text inside a control is its label"
+    },
+    {
+      "at": "index.tsx:30",
+      "category": "transformed",
+      "construct": "<span class=buttonTitle>",
+      "ir": "folded into `note_card.root.inner.details.button`",
+      "node": "note_card.root.inner.details.button",
+      "rule": "a div holding only one text run and its text styles is that text run"
+    },
+    {
+      "at": "index.tsx:31",
+      "category": "impossible",
+      "construct": "<span class=buttonGlow> subtree",
+      "covers": [
+        "NoteCard.module.sass:76",
+        "NoteCard.module.sass:77",
+        "NoteCard.module.sass:78",
+        "NoteCard.module.sass:79",
+        "NoteCard.module.sass:80",
+        "NoteCard.module.sass:81"
+      ],
+      "reason": "absolutely positioned decorative subtree; no flow equivalent in plev"
+    }
+  ],
+  "plev_report": 1,
+  "source": "index.tsx + NoteCard.module.sass",
+  "surface": "note_card"
+}

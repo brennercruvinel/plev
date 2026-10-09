@@ -1,0 +1,496 @@
+//! the review of items by the rules (task-96): "review these three
+//! commits" over a workbench with four commits, the same in portuguese,
+//! the files of the ide's own golden, and every refusal with why.
+
+use accord::{Confirm, Policy, Role, Snapshot, SnapshotBuilder};
+use plevir::{
+    Capabilities, Component, GenerationPolicy, IrNode, Layout, SizeToken, TypographyRole,
+    VerifiedIr,
+};
+
+use super::read;
+use crate::error::ProposeError;
+use crate::rules::Rules;
+use crate::{Ask, propose_verified};
+
+#[test]
+fn a_review_reads_its_number_in_both_languages() {
+    let en = read("review these three commits").unwrap();
+    let pt = read("revise estes três commits").unwrap();
+    assert_eq!(en.count, Some(3));
+    assert_eq!(pt.count, Some(3));
+    assert_eq!(en.words, [("commits".to_owned(), "commit".to_owned())]);
+    assert_eq!(pt.words, en.words);
+    assert_eq!(read("review the last 2 files").unwrap().count, Some(2));
+    assert_eq!(
+        read("revisar os dois últimos commits").unwrap().count,
+        Some(2)
+    );
+    assert_eq!(read("review the commits").unwrap().count, None);
+    for none in ["the items", "compare the original with the cuts", "tudo"] {
+        assert_eq!(read(none), None, "{none}");
+    }
+}
+
+/// the ide workbench projected, as `rust/plevir/tests/fixtures` pins it.
+fn ide() -> Snapshot {
+    serde_json::from_str(include_str!(
+        "../../../plevir/tests/fixtures/idestudio-workbench.snapshot.json"
+    ))
+    .unwrap()
+}
+
+/// what the rules are asked about `app`.
+struct Asking {
+    app: Snapshot,
+    caps: Capabilities,
+    policy: GenerationPolicy,
+    current: Option<VerifiedIr>,
+}
+
+impl Asking {
+    fn new(app: Snapshot) -> Asking {
+        Asking {
+            caps: Capabilities::from_snapshot(&app),
+            app,
+            policy: GenerationPolicy::default(),
+            current: None,
+        }
+    }
+
+    fn over(mut self, current: VerifiedIr) -> Asking {
+        self.current = Some(current);
+        self
+    }
+
+    fn ask<'a>(&'a self, intent: &'a str) -> Ask<'a> {
+        Ask {
+            intent,
+            caps: &self.caps,
+            app: &self.app,
+            current: self.current.as_ref(),
+            policy: &self.policy,
+        }
+    }
+}
+
+/// every node of a tree, depth first.
+fn nodes(root: &IrNode) -> Vec<&IrNode> {
+    let mut out = Vec::new();
+    let mut stack = vec![root];
+    while let Some(n) = stack.pop() {
+        out.push(n);
+        stack.extend(n.children.iter().rev());
+    }
+    out
+}
+
+/// the ids of a tree, depth first.
+fn ids(root: &IrNode) -> Vec<String> {
+    nodes(root).iter().map(|n| n.sem.to_string()).collect()
+}
+
+/// `(id, what it binds)` of every bound node: each state as
+/// `<prop>=<ref>`, each action as `<event>=<target> <action>`.
+fn bindings(root: &IrNode) -> Vec<(String, Vec<String>)> {
+    nodes(root)
+        .into_iter()
+        .filter(|n| !n.bind.is_empty())
+        .map(|n| {
+            let mut b: Vec<String> = n
+                .bind
+                .state
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect();
+            b.extend(
+                n.bind
+                    .actions
+                    .iter()
+                    .map(|(k, c)| format!("{k}={} {}", c.target, c.action)),
+            );
+            (n.sem.to_string(), b)
+        })
+        .collect()
+}
+
+/// The commits of the stacks, newest first: sha, subject, files.
+const COMMITS: [(&str, &str, &[&str]); 4] = [
+    (
+        "c3",
+        "readme: how to run the demo",
+        &["Cargo.toml", "README.md"],
+    ),
+    ("c2", "login remembers the user", &["src/login.rs"]),
+    ("c1", "session timeout from the server", &["src/session.rs"]),
+    ("c0", "login form and session store", &["README.md"]),
+];
+
+/// A workbench as the ide projects it, with four commits and one change:
+/// each commit with its summary, author, files and `show_diff`, which
+/// reads the diff's target; the change with its status, its own actions
+/// and a destructive `discard`.
+fn workbench() -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    b.node("changes", Role::List, "changes")
+        .state("files", vec!["notes.txt".to_owned()]);
+    let mut file = b.node("changes.file[notes.txt]", Role::ListItem, "notes.txt");
+    file.parent("changes").state("status", "untracked");
+    file.action("stage").reads("changes.file[notes.txt]:status");
+    file.action("discard")
+        .reads("changes.file[notes.txt]:status")
+        .policy(Policy {
+            confirm: Confirm::ForAgents,
+            destructive: true,
+            ..Policy::default()
+        });
+    file.action("show_diff").reads("diff:target");
+    b.node("diff", Role::Region, "diff")
+        .state("target", "")
+        .state("lines", Vec::<String>::new())
+        .state("kinds", Vec::<String>::new())
+        .state("count", 0i64);
+    b.node("stacks", Role::List, "stacks")
+        .state("branch", "main");
+    for (sha, subject, files) in COMMITS {
+        let files: Vec<String> = files.iter().map(|f| (*f).to_owned()).collect();
+        let mut commit = b.node(
+            format!("stacks.commit[{sha}]").as_str(),
+            Role::ListItem,
+            subject,
+        );
+        commit
+            .parent("stacks")
+            .state("summary", subject)
+            .state("author", "Lab Author")
+            .state("files", files);
+        commit.action("show_diff").reads("diff:target");
+    }
+    b.finish().expect("the workbench projects")
+}
+
+fn review(asking: &Asking, intent: &str) -> Result<VerifiedIr, ProposeError> {
+    propose_verified(&mut Rules, &asking.ask(intent))
+}
+
+fn node<'a>(root: &'a IrNode, id: &str) -> &'a IrNode {
+    nodes(root)
+        .into_iter()
+        .find(|n| n.sem.as_str() == id)
+        .unwrap_or_else(|| panic!("{id} in {:?}", ids(root)))
+}
+
+/// What a node binds, as `bindings` writes it.
+fn bound(root: &IrNode, id: &str) -> Vec<String> {
+    bindings(root)
+        .into_iter()
+        .find(|(at, _)| at == id)
+        .map(|(_, b)| b)
+        .unwrap_or_default()
+}
+
+#[test]
+fn review_these_three_commits_shows_the_three_with_their_files_and_the_diff() {
+    let asking = Asking::new(workbench());
+    let ir = review(&asking, "review these three commits").expect("verified");
+    let surface = &ir.ir().surface;
+    assert_eq!(surface.id.as_str(), "proposed");
+    assert_eq!(surface.title, "review these three commits");
+    let root = &surface.root;
+    assert_eq!(root.component, Some(Component::Card));
+    assert!(
+        matches!(root.layout, Some(Layout::Split { .. })),
+        "{:?}",
+        root.layout
+    );
+    let [list, region] = root.children.as_slice() else {
+        panic!("the items and the region: {:?}", ids(root));
+    };
+    assert_eq!(list.sem.as_str(), "proposed.stacks");
+    let cards: Vec<&str> = list.children.iter().map(|c| c.sem.as_str()).collect();
+    assert_eq!(
+        cards,
+        [
+            "proposed.stacks.commit[c3]",
+            "proposed.stacks.commit[c2]",
+            "proposed.stacks.commit[c1]"
+        ],
+        "the three from the top, in the stacks' order"
+    );
+    for (card, (sha, subject, _)) in list.children.iter().zip(COMMITS) {
+        assert_eq!(card.component, Some(Component::Card));
+        assert_eq!(card.label.as_deref(), Some(subject));
+        let at = |key: &str| format!("{}.{key}", card.sem);
+        let app = format!("stacks.commit[{sha}]");
+        assert_eq!(bound(root, &at("summary")), [format!("text={app}:summary")]);
+        assert_eq!(bound(root, &at("author")), [format!("text={app}:author")]);
+        assert_eq!(bound(root, &at("files")), [format!("rows={app}:files")]);
+        assert_eq!(node(root, &at("files")).component, Some(Component::Table));
+        let show = node(root, &at("show_diff"));
+        assert_eq!(show.component, Some(Component::Button));
+        assert_eq!(show.label.as_deref(), Some("show diff"));
+        assert_eq!(
+            bound(root, &at("show_diff")),
+            [format!("activate={app} show_diff")]
+        );
+    }
+    let head = node(root, "proposed.stacks.commit[c3].head");
+    let head: Vec<&str> = head.children.iter().map(|c| c.sem.as_str()).collect();
+    assert_eq!(
+        head,
+        [
+            "proposed.stacks.commit[c3].summary",
+            "proposed.stacks.commit[c3].show_diff"
+        ],
+        "what names the commit and its action on one line"
+    );
+    assert_eq!(region.sem.as_str(), "proposed.diff");
+    assert_eq!(region.component, Some(Component::Card));
+    let last = region.children.last().map(|c| c.sem.as_str());
+    assert_eq!(
+        last,
+        Some("proposed.diff.lines"),
+        "the lines last, to scroll"
+    );
+    let heading = region.children.first().expect("what opens the card");
+    assert_eq!(heading.sem.as_str(), "proposed.diff.heading");
+    assert_eq!(heading.component, Some(Component::Text));
+    assert_eq!(heading.label.as_deref(), Some("diff"), "the region's label");
+    assert_eq!(heading.props.typography, Some(TypographyRole::Base2sm));
+    assert!(heading.bind.is_empty(), "it binds nothing");
+    assert_eq!(
+        bound(root, "proposed.diff.lines"),
+        ["kinds=diff:kinds", "lines=diff:lines"],
+        "the lines and the kind of each, in one code (task-97)"
+    );
+    assert_eq!(bound(root, "proposed.diff.count"), ["value=diff:count"]);
+    let lines = node(root, "proposed.diff.lines");
+    assert_eq!(lines.component, Some(Component::Code));
+    assert_eq!(lines.label.as_deref(), Some("lines"));
+    assert_eq!(
+        lines.size.max,
+        Some(SizeToken::DropdownMaxH),
+        "bounded in height"
+    );
+    assert!(
+        !ids(root).iter().any(|i| i == "proposed.diff.kinds"),
+        "the kinds are the code's, never a table of their own"
+    );
+    let all = bindings(root);
+    assert!(
+        !all.iter()
+            .flat_map(|(_, b)| b)
+            .any(|b| b.contains("[c0]") || b.contains("changes")),
+        "nothing of the fourth commit or of the working tree: {all:?}"
+    );
+    assert!(
+        !all.iter()
+            .flat_map(|(_, b)| b)
+            .any(|b| b.contains("diff:target")),
+        "which commit the diff shows is the dispatcher's word, never shown: {all:?}"
+    );
+}
+
+/// The diff's `target` names the commit it shows by its id, the word the
+/// commits' `show_diff` reads: the region never shows it and opens with
+/// its label instead, whichever commit it shows. A text the actions do not
+/// read, or one that names no node, is the region's own and opens it as
+/// before.
+#[test]
+fn the_region_says_what_it_shows_never_the_id_of_the_commit_it_shows() {
+    let region = |target: &str, title: Option<&str>| {
+        let mut b = SnapshotBuilder::new();
+        let mut diff = b.node("diff", Role::Region, "diff");
+        diff.state("target", target);
+        if let Some(title) = title {
+            diff.state("title", title);
+        }
+        diff.state("lines", vec!["+x".to_owned()]);
+        b.node("stacks", Role::List, "stacks");
+        for (sha, subject) in [("c1", "one"), ("c2", "two")] {
+            let id = format!("stacks.commit[{sha}]");
+            let mut c = b.node(id.as_str(), Role::ListItem, subject);
+            c.parent("stacks").state("summary", subject);
+            c.action("show_diff").reads("diff:target");
+        }
+        b.finish().expect("projects")
+    };
+    let opening = |target: &str, title: Option<&str>| {
+        let asking = Asking::new(region(target, title));
+        let ir = review(&asking, "review the commits").expect("verified");
+        let root = ir.ir().surface.root.clone();
+        let diff = node(&root, "proposed.diff");
+        let first = diff.children.first().expect("a child").clone();
+        let texts: Vec<String> = diff
+            .children
+            .iter()
+            .filter(|c| c.component == Some(Component::Text))
+            .map(|c| c.sem.to_string())
+            .collect();
+        (first.label, bound(&root, first.sem.as_str()), texts)
+    };
+    for target in ["", "stacks.commit[c1]", "stacks.commit[c2]"] {
+        let (label, binds, texts) = opening(target, None);
+        assert_eq!(label.as_deref(), Some("diff"), "{target:?}");
+        assert!(binds.is_empty(), "{target:?}: {binds:?}");
+        assert_eq!(texts, ["proposed.diff.heading"], "{target:?}");
+    }
+    // a text of its own opens the region, as it always did
+    let (_, binds, texts) = opening("stacks.commit[c1]", Some("the diff of one"));
+    assert_eq!(binds, ["text=diff:title"]);
+    assert_eq!(texts, ["proposed.diff.title"]);
+    // a read text that names no node is a value, shown as one
+    let (_, binds, _) = opening("hello", None);
+    assert_eq!(binds, ["text=diff:target"]);
+}
+
+/// A region's list named `lines` is a code with or without its `kinds`;
+/// a list by any other name stays a table, and `kinds` without `lines`
+/// is a list like any other.
+#[test]
+fn only_the_lines_are_a_code_and_the_kinds_go_with_them() {
+    let region = |states: &[&str]| {
+        let mut b = SnapshotBuilder::new();
+        let mut diff = b.node("diff", Role::Region, "diff");
+        diff.state("target", "");
+        for key in states {
+            diff.state(*key, vec!["x".to_owned()]);
+        }
+        b.node("stacks", Role::List, "stacks");
+        let mut c = b.node("stacks.commit[c1]", Role::ListItem, "one");
+        c.parent("stacks").state("summary", "one");
+        c.action("show_diff").reads("diff:target");
+        b.finish().expect("projects")
+    };
+    let shown = |states: &[&str]| {
+        let asking = Asking::new(region(states));
+        let ir = review(&asking, "review the commits").expect("verified");
+        let root = ir.ir().surface.root.clone();
+        nodes(&root)
+            .iter()
+            .filter(|n| n.sem.as_str().starts_with("proposed.diff."))
+            .filter(|n| n.component.is_some_and(|c| c != Component::Text))
+            .map(|n| (n.sem.to_string(), n.component, bound(&root, n.sem.as_str())))
+            .collect::<Vec<_>>()
+    };
+    let code = |binds: &[&str]| {
+        (
+            "proposed.diff.lines".to_owned(),
+            Some(Component::Code),
+            binds.iter().map(|b| (*b).to_owned()).collect::<Vec<_>>(),
+        )
+    };
+    assert_eq!(shown(&["lines"]), [code(&["lines=diff:lines"])]);
+    assert_eq!(
+        shown(&["lines", "kinds", "notes"]),
+        [
+            code(&["kinds=diff:kinds", "lines=diff:lines"]),
+            (
+                "proposed.diff.notes".to_owned(),
+                Some(Component::Table),
+                vec!["rows=diff:notes".to_owned()]
+            ),
+        ]
+    );
+    let alone = shown(&["kinds"]);
+    assert_eq!(alone.len(), 1);
+    assert_eq!(alone[0].1, Some(Component::Table), "{alone:?}");
+}
+
+#[test]
+fn the_same_review_in_portuguese_is_the_same_surface() {
+    let asking = Asking::new(workbench());
+    let en = review(&asking, "review these three commits").expect("verified");
+    for intent in ["revise estes três commits", "revisar os 3 últimos commits"] {
+        let pt = review(&asking, intent).expect("verified");
+        assert_eq!(pt.ir().surface.root, en.ir().surface.root, "{intent}");
+        assert_eq!(pt.ir().surface.title, intent);
+    }
+    let all = review(&asking, "review the commits").expect("verified");
+    let list = &all.ir().surface.root.children[0];
+    assert_eq!(list.children.len(), 4, "without a number, every one");
+}
+
+#[test]
+fn a_review_of_the_files_shows_what_a_file_takes_and_never_a_destructive_action() {
+    let asking = Asking::new(workbench());
+    let ir = review(&asking, "review the files").expect("verified");
+    let root = &ir.ir().surface.root;
+    let card = "proposed.changes.file[notes.txt]";
+    assert_eq!(
+        bound(root, &format!("{card}.status")),
+        ["text=changes.file[notes.txt]:status"]
+    );
+    let actions: Vec<String> = bindings(root)
+        .into_iter()
+        .flat_map(|(_, b)| b)
+        .filter(|b| b.starts_with("activate="))
+        .collect();
+    assert_eq!(
+        actions,
+        [
+            "activate=changes.file[notes.txt] stage",
+            "activate=changes.file[notes.txt] show_diff"
+        ]
+    );
+    // the ide's own golden reviews the same way
+    let golden = Asking::new(ide());
+    let files = review(&golden, "review the three files").expect("verified");
+    assert_eq!(files.ir().surface.root.children[0].children.len(), 3);
+}
+
+#[test]
+fn a_review_over_the_one_shown_keeps_the_ids_of_what_stays() {
+    let asking = Asking::new(workbench());
+    let three = review(&asking, "review these three commits").expect("verified");
+    let over = Asking::new(workbench()).over(three.clone());
+    let two = review(&over, "review these two commits").expect("verified");
+    assert_eq!(
+        two.ir().surface.id,
+        three.ir().surface.id,
+        "the same surface"
+    );
+    assert_eq!(two.ir().surface.title, three.ir().surface.title);
+    let kept = ids(&two.ir().surface.root);
+    for id in [
+        "proposed.stacks.commit[c3]",
+        "proposed.stacks.commit[c3].show_diff",
+        "proposed.stacks.commit[c2].files",
+        "proposed.diff.heading",
+        "proposed.diff.lines",
+    ] {
+        assert!(kept.iter().any(|k| k == id), "{id} in {kept:?}");
+    }
+    assert!(!kept.iter().any(|k| k.contains("[c1]")));
+    // and again over that one: the heading, which binds nothing, keeps
+    // its id every time
+    let over = Asking::new(workbench()).over(two.clone());
+    let again = review(&over, "review these three commits").expect("verified");
+    let ids = ids(&again.ir().surface.root);
+    assert!(ids.iter().any(|k| k == "proposed.diff.heading"), "{ids:?}");
+    assert!(!ids.iter().any(|k| k.starts_with("proposed.diff.heading_")));
+}
+
+#[test]
+fn what_the_rules_cannot_review_is_refused_with_why() {
+    let asking = Asking::new(workbench());
+    match review(&asking, "review these three potatoes") {
+        Err(ProposeError::NoMatch { words, app }) => {
+            assert_eq!(words, ["potatoes"]);
+            assert!(app.contains(&"commit".to_owned()), "{app:?}");
+            assert!(app.contains(&"file".to_owned()), "{app:?}");
+        }
+        other => panic!("{other:?}"),
+    }
+    let five = review(&asking, "review these five commits").unwrap_err();
+    assert_eq!(five.to_string(), "5 commit asked for, and stacks has 4");
+    let which = review(&asking, "review these three").unwrap_err();
+    assert_eq!(which.to_string(), "say which items to review: file, commit");
+    let none = review(&Asking::new(Snapshot::default()), "review everything").unwrap_err();
+    assert!(none.to_string().contains("nothing to review"), "{none}");
+    // an intent with no word of review reads as it always did
+    assert!(matches!(
+        review(&asking, "these three commits"),
+        Err(ProposeError::NoMatch { .. })
+    ));
+}

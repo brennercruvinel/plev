@@ -1,0 +1,52 @@
+[package]
+name = "idestudio"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Simple IDE test"
+
+[dependencies]
+engine.workspace = true
+gitdrv.workspace = true
+# the workbench: the workspace as a capability every actor reaches
+# through one dispatcher.
+accord.workspace = true
+winit.workspace = true
+log.workspace = true
+env_logger.workspace = true
+pollster.workspace = true
+# Same major as plev's optional hot-reload dep (shared build cache).
+notify.workspace = true
+# the agent port: the lib serves the workbench through it (src/capability/agent.rs,
+# unix only), the idestudio's window opens it with PLEV_AGENT=1 in a debug build,
+# and the laboratory (apps/agenteval) serves it too.
+socket.workspace = true
+# the flight recorder: the lib records the idestudio's session with it
+# (src/interfaces/window/record/, PLEV_RECORD=1 in a debug build), and the laboratory
+# (apps/agenteval) around its workbench. the laboratory's report as json: the
+# lib does not use it; cargo has no per-binary dependencies. its real
+# repository in a temp dir lives in the lib (src/repository/eval_repo.rs), so the
+# tests that rerun a recorded session build the same one.
+record.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+# the generated surface beside the fixed views (task-96): an intent
+# proposed as IR (offers: the rules), verified against the registry the
+# workbench's own projection gives (plevir), and hosted beside the panels,
+# every act through the workbench's dispatcher (screen).
+plevir.workspace = true
+offers.workspace = true
+screen.workspace = true
+# the Claude as a proposer of the line, off the workbench's thread, the
+# way the uigallery asks it (claude -p as a child process; the rules stay
+# the first choice, and a test only ever runs the repository's fake).
+claude.workspace = true
+
+[dev-dependencies]
+# the recording test reads the session back the way plev-inspect does,
+# and asks it why each act of the agent went as it did.
+replay.workspace = true
+
+[lints]
+workspace = true

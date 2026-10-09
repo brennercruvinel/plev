@@ -1,0 +1,90 @@
+[package]
+name = "llmrun"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.87"
+publish = false
+description = "local llm inference in process: one streaming interface, candle and burn behind features"
+
+# llm is NOT a member of the root workspace (see the exclude + comment in the
+# root Cargo.toml): candle and burn pull a dependency tree the engine does not
+# need, so it keeps its own workspace and its own Cargo.lock. build it with
+# --manifest-path rust/llmrun/Cargo.toml.
+[workspace]
+
+[features]
+default = ["text"]
+# the tokenizer and the chat template: native only (onig is C).
+text = ["dep:tokenizers"]
+# candle on the cpu; add `metal` for the gpu.
+candle = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers", "dep:serde_json"]
+# burn on the cpu (ndarray); add `metal` for the gpu (wgpu with the msl compiler).
+burn = [
+    "dep:burn",
+    "dep:burn-store",
+    "dep:burn-ndarray",
+    "burn/ndarray",
+    "dep:serde",
+    "dep:serde_json",
+]
+# burn on the engine's device: the renderer's instance, adapter, device and
+# queue handed to cubecl (wgpu 29 on both sides), burn's wgsl path.
+plev = ["burn", "burn/wgpu", "dep:engine"]
+# the apple gpu for whichever backend is on.
+metal = [
+    "candle-core?/metal",
+    "candle-nn?/metal",
+    "candle-transformers?/metal",
+    "burn?/metal",
+    "burn?/fusion",
+    "burn?/autotune",
+]
+
+[dependencies]
+thiserror = "2"
+tokio = { version = "1", default-features = false, features = ["sync"] }
+tokenizers = { version = "0.22", default-features = false, features = ["onig"], optional = true }
+candle-core = { version = "0.11", optional = true }
+candle-nn = { version = "0.11", optional = true }
+candle-transformers = { version = "0.11", optional = true }
+burn = { version = "0.21", default-features = false, features = ["std"], optional = true }
+# ndarray with its own defaults (simd, multi-threads), which burn's
+# `default-features = false` would otherwise turn off.
+burn-ndarray = { version = "0.21", optional = true }
+burn-store = { version = "0.21", default-features = false, features = ["std", "safetensors", "memmap"], optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+# a path dependency, as urnadbapp has it; no hot reload, no accessibility.
+engine = { path = "../engine", default-features = false, optional = true }
+serde_json = { version = "1", optional = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+anyhow = "1"
+libc = "0.2"
+
+# getrandom (0.3 under candle's rand, 0.4 under burn's) has no default backend
+# on wasm32-unknown-unknown; the `wasm_js` feature, plus RUSTFLAGS='--cfg
+# getrandom_backend="wasm_js"' for 0.3, points it at the browser's crypto.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom-04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
+
+[dev-dependencies]
+tokio = { version = "1", default-features = false, features = ["sync", "rt", "macros"] }
+
+[[bin]]
+name = "llm-bench"
+path = "src/bin/llm_bench.rs"
+required-features = ["text"]
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+
+[lints.clippy]
+uninlined_format_args = "warn"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+[profile.dev.package."*"]
+opt-level = 2

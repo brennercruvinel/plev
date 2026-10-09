@@ -1,0 +1,36 @@
+# inspector: the session inspector's window (task-64 phase b,
+# docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md). it opens a
+# recorded session from a path on the command line and shows it: the
+# timeline with the scrub, the frame on screen at the instant with the
+# outline of each control, and the panel with the thesis answers about the
+# control picked on it. every answer is the `replay` model's; the window
+# only shows it. it only reads: nothing here can create a request or run
+# an action.
+[package]
+name = "inspector"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Session inspector window of plev: timeline and scrub, the recorded frame with its controls, and the thesis answers about a control, read from a session without running anything; the plev-inspector binary"
+
+# the window: `plev-inspector <session.monster>`.
+[[bin]]
+name = "plev-inspector"
+path = "src/main.rs"
+
+[dependencies]
+# the design system: the shell, the scrub, the chips, the code block the
+# panel reads in, and the recipes for the outlines.
+engine.workspace = true
+# the model: the timeline, a control at an instant, the causal chains, and
+# their text.
+replay.workspace = true
+# the session: opened from the file, the frame and where each control
+# showed at any instant.
+record.workspace = true
+# the ids, the times and the actors the model speaks in.
+accord.workspace = true
+
+[lints]
+workspace = true

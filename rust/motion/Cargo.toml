@@ -1,0 +1,38 @@
+# monster: binary animation codec for plev (docs/ref/monster-format-v0.md).
+[package]
+name = "motion"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Binary animation codec for plev (h264-for-vectors): keyframe snapshots plus discovered deltas"
+
+[features]
+# Reserved for the rhai script sidecar (spec decision 8): playback of
+# tweens never requires scripting, so the feature stays empty until the
+# player lands. When wired: rhai with default-features = false,
+# features = ["std", "f32_float"].
+script = []
+
+[dependencies]
+engine.workspace = true
+# per-section checksums in the container (spec: sha256, nest lesson);
+# default-features off keeps the wasm-safe pure-rust path.
+sha2.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# round-trip property tests over generated timelines (spec benchmark
+# gate: decode(encode(t)) structurally identical, property-tested).
+proptest.workspace = true
+# the dense lottie benches (tests/bench_lottie/dense.rs) read the
+# explosion and girl jsons from data/media/lottie at test time.
+serde_json.workspace = true
+criterion.workspace = true
+
+[lints]
+workspace = true
+
+[[bench]]
+name = "codec"
+harness = false
