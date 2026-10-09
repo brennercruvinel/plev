@@ -30,7 +30,7 @@ mesmo conteúdo.
   que aparecem, e os nós `todo.item[<id>]` continuam como são; o nome, o
   tipo (`List` ou `Set`) e se a lista segue o filtro do todo são decisão
   da task, com o motivo;
-- o golden da projeção do todo em `crates/uir/fixtures` acompanha;
+- o golden da projeção do todo em `rust/plevir/tests/fixtures` acompanha;
 - a superfície da página Surface ganha os itens por `repeat` (as duas
   formas verificadas e a proposta), marcar e remover pela superfície
   pelo dispatcher do todo;
@@ -48,13 +48,13 @@ e no ide; o golden atualizado e conferido contra o app; gate verde.
 ## sonda (antes do primeiro tipo, 2026-09-24)
 
 na base, `main` @ bd5f107, por um teste descartável
-(`crates/showcase/src/view/apps/app/tests/probe_95.rs`, rodado com
+(`apps/uigallery/src/views/apps/todo/tests/probe_95.rs`, rodado com
 `cargo test -p showcase --lib probe_95 -- --nocapture` e jogado fora
 depois). ele monta o `TodoPage` real, lista os nós `todo.item[...]` e todo
 estado `List` ou `Set` da projeção, pede o filtro active pelo dispatcher
 do todo (`Actor::Test`) e lista de novo; verifica à mão um IR que repete
 sobre `todo:items`; e lê o golden do workbench do ide
-(`crates/uir/fixtures/ide-workbench.snapshot.json`), verifica e
+(`rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json`), verifica e
 materializa um IR que repete sobre `changes:files`. a saída:
 
 ```text
@@ -124,7 +124,7 @@ a condição de parada (o todo já projetar uma lista) não disparou.
   estado uma superfície gerada mostra o checkbox de cada item e nenhum
   texto: o checkpoint b não teria o mesmo conteúdo para comparar. é o que
   o handoff da fase 1 da task-69 já apontava.
-- aditivo: o diff do golden `crates/uir/fixtures/showcase-todo.snapshot.json`
+- aditivo: o diff do golden `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
   só acrescenta (`todo.state.items` e um `text` em cada item); nenhum id,
   role, estado ou ação que existia muda. a fixture compacta de hoje
   continua verificando contra ele.
@@ -143,8 +143,8 @@ a condição de parada (o todo já projetar uma lista) não disparou.
 problema: `cargo test --workspace --no-fail-fast` com a mudança acima dá
 2372 passam, 1 falha, 13 ignorados. a falha é
 `tests::another_label_in_the_baseline_is_a_semantic_change_of_that_control_only`
-em `crates/showcase/examples/regress/tests.rs` (o briefing não lista
-`crates/showcase/examples/**`; é "o resto do showcase"). o `relabel` do
+em `tool/bench/regress/src/tests.rs` (o briefing não lista
+`apps/uigallery/examples/**`; é "o resto do showcase"). o `relabel` do
 teste troca o texto "Measure text, never estimate it" no JSON inteiro da
 baseline, e agora o texto também está no estado `text` do item, então o
 `check` vê duas mudanças no mesmo controle e o teste espera uma:
@@ -169,7 +169,7 @@ opções:
    um, a instância nomeada pelo id): o repeat existe, o checkpoint b não
    tem o que comparar.
 
-recomendação: 2, e a autorização para `crates/showcase/examples/regress/tests.rs`
+recomendação: 2, e a autorização para `tool/bench/regress/src/tests.rs`
 (só esse teste). a 1 também serve; a 3 esvazia a task.
 
 decisão necessária: qual opção; na 1 ou na 2, a autorização para o
@@ -210,7 +210,7 @@ arquivo.
 ## resolução da parada (orquestrador, 2026-09-24)
 
 opção 2: só o teste `another_label_in_the_baseline_is_a_semantic_change_of_that_control_only`
-de `crates/showcase/examples/regress/tests.rs` muda, e aceita as duas
+de `tool/bench/regress/src/tests.rs` muda, e aceita as duas
 mudanças em `todo.item[2]`. a forma da lista e o `text` aprovados como
 descritos. remover pela superfície sai do escopo: um dialog que abre
 porque o item está feito diz a coisa errada; a superfície mostra e marca,
@@ -223,7 +223,7 @@ goal: task-95, o todo projeta os itens como lista, a superfície gerada
 repete sobre ela e o proponente por regras gera o `repeat`.
 
 status: implementado. `cargo test -p showcase -p propose -p surface -p uir`
-verdes, `./script/gate` verde com a perna urnaui, `regress check` verde,
+verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui, `regress check` verde,
 sobre a `main` @ bd5f107.
 
 ### commits
@@ -255,7 +255,7 @@ a condição de parada não disparou.
 - `todo.item[<id>]:text`, o texto do item como estado: o IR nomeia a
   instância pelo id e não interpola label, e sem ele a superfície não
   mostraria o conteúdo.
-- só cresce: o diff do golden `crates/uir/fixtures/showcase-todo.snapshot.json`
+- só cresce: o diff do golden `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
   acrescenta `todo.state.items` e um `text` por item, e nada que existia
   muda (o teste `uir_fixture` o mantém igual ao app).
 
@@ -282,7 +282,7 @@ a condição de parada não disparou.
   "remoção pedida" para abrir um dialog com sentido, então a superfície
   não liga nenhum; quando um item sai da lista (removido no todo fixo, ou
   filtrado), a instância sai da superfície.
-- `crates/propose/src/ids.rs` ganhou no commit da superfície a âncora de
+- `rust/offers/src/ids.rs` ganhou no commit da superfície a âncora de
   um nó de lista (a lista sobre a qual repete): sem ela, com a fixture de
   duas colunas nova, o teste de continuidade da 3a trocava
   `todo_panel.entry` por `todo_panel.main` num empate.
@@ -322,7 +322,7 @@ o que sai sobre os dois apps:
 - lista vazia, valores que não são filhos, ou filhos que a lista não
   cobre: `Nothing` da parte lista.
 
-testes da 3a: nenhum mudou; os oito de `crates/propose/tests/rules.rs`
+testes da 3a: nenhum mudou; os oito de `rust/offers/tests/rules.rs`
 passam como estavam. o que mudou de saída sem mudar teste: "everything"
 passa a trazer a lista, e o texto da gramática (`GRAMMAR`, que o
 `NotUnderstood` mostra) e o do `Empty` citam a lista.
@@ -377,7 +377,7 @@ superfície pode marcar; o `route` devolve a observação com
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ bd5f107 (`cargo test --workspace` e o `cargo test` do urnaui neste worktree, antes do primeiro código) | 2372 passam, 13 ignorados | 82 passam, 1 ignorado | 2454 |
-| depois, esta branch @ 626576d (`./script/gate`, saída 0) | 2383 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2465 |
+| depois, esta branch @ 626576d (`./tool/tasks/fullcheck.sh`, saída 0) | 2383 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2465 |
 
 11 testes novos: 1 da projeção (`the_items_are_projected_as_a_list_in_the_order_shown`),
 5 da página (`surface_page/tests/items.rs`), 1 unitário do `propose`
@@ -394,7 +394,7 @@ de cada uma: "semantics changed: items none -> [1, 2, 3]", "text none ->
 
 ### arquivo fora da lista
 
-`crates/showcase/examples/regress/tests.rs`, só o teste
+`tool/bench/regress/src/tests.rs`, só o teste
 `another_label_in_the_baseline_is_a_semantic_change_of_that_control_only`
 (decisão do orquestrador): ele troca o texto de um item na baseline, e
 agora vê o label e o estado `text` mudarem, os dois em `todo.item[2]`. é o
@@ -402,12 +402,12 @@ agora vê o label e o estado `text` mudarem, os dois em `todo.item[2]`. é o
 
 ### a seção de ADR
 
-- `docs/ADR/proposers-propose-the-runtime-verifies.md`: adendo datado "the
+- `docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md`: adendo datado "the
   rules propose the items (task-95, proposed)";
-- `docs/ADR/materialized-surfaces-from-verified-ir.md`: adendo datado "the
+- `docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md`: adendo datado "the
   todo's surface shows its items (task-95, proposed)".
 
-linhas do índice para o orquestrador (o `docs/ADR/README.md` é proibido
+linhas do índice para o orquestrador (o `docs/adr/README.md` é proibido
 aqui):
 
 `| 2026-09-24 | [proposers-propose-the-runtime-verifies](proposers-propose-the-runtime-verifies.md) | accepted, adendo da task-95 proposto | task-95: parte items (item, items, itens, list, lista) acha por estrutura uma List ou Set cujos valores são as chaves dos filhos do nó, todos; por item text, checkbox de um bool com ação sem parâmetro que só o lê, botões das outras ações sem parâmetro não destrutivas; o Namer mantém os ids do molde sobre a mesma lista; nunca remove (regra 6) |`
@@ -468,10 +468,10 @@ aqui):
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: as linhas do índice de ADR (acima); o
-  `docs/CHANGELOG.md` (a página Surface mostra e marca os itens; as regras
+  `docs/log/changelog.md` (a página Surface mostra e marca os itens; as regras
   propõem a lista); a consequência do ADR `plev-ir-typed-and-verified.md`
   que diz que o todo não projeta lista (fora da lista de arquivos);
-  `docs/arc/arc.toml`, se quiser citar `todo:items` na entrada do
+  `docs/ATLAS.toml`, se quiser citar `todo:items` na entrada do
   showcase.
 - a fixture de duas colunas mudou de forma (`todo_panel.main` voltou, agora
   num grid): quem a lê por índice de filho precisa conferir; os testes do

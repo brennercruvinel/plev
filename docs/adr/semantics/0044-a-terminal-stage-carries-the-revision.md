@@ -15,7 +15,7 @@ act does not say at which revision the app is now, so to chain one act on
 the next an agent observes only to learn that revision. it was the
 largest cost in round trips left, and round trips are where plev loses to
 a direct `git` (H4). the scripted agent of the laboratory
-(`crates/ide/src/bin/lab/scripted.rs`) did the same.
+(`apps/agenteval/src/arms/scripted.rs`) did the same.
 
 the app already knew the answer. an observation serves a revision by
 projecting the app (`Host::project`) and holding the whole snapshot in
@@ -44,7 +44,7 @@ that path when it ended.
   the host they already had, the end of `Server::handle` and the end of
   `AgentPort::drain`; an app that drains the port changes nothing.
 - it decides nothing. an act resting on it is checked on its reads like
-  any act (`docs/ADR/actions-carry-observed-state.md`), and a stale
+  any act (`docs/adr/semantics/0033-actions-carry-observed-state.md`), and a stale
   refusal still says what moved and who acted.
 - it is not an observation. the agent is given the name of a state, not
   the state: `Traffic::observes_snapshot` and `observes_delta` do not
@@ -71,7 +71,7 @@ that path when it ended.
   instead of 54.5 KB; with the person of the script, 17 instead of 24 and
   45.9 KB instead of 91.5 KB; the stale refusal, the recovery and the
   commit are the same. the table is in
-  `docs/mission/steps/ongoing/task-87-a-terminal-stage-carries-the-revision.md`.
+  `docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md`.
 - the ring is shared by every connection of a port and bounded (16 by
   default). a revision served in a stage takes a place in it as an
   observation does, so a run of acts now pushes out old revisions that
@@ -83,7 +83,7 @@ that path when it ended.
 - the revision is exactly what an observation at that instant would
   serve, no more. where an app's view is still settling when the stage
   goes out, the revision is of the view as it stands. in the ide
-  (`crates/ide/src/workbench`), a `show_diff` completes before the
+  (`apps/idestudio/src/capability`), a `show_diff` completes before the
   worker sends its lines (no action reads them; `since` that revision
   brings them), and a stage or unstage that failed at git leaves the
   view's guess until the refresh the failure sends lands (a commit

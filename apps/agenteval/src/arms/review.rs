@@ -108,7 +108,7 @@ fn cut(texts: &[&str], room: f32, theme: &Theme) -> usize {
 /// the lines of the fixed diff panel at `[x, _, w, _]` cut at its width,
 /// of the first `on_screen`: the room its code column has once the two
 /// gutters of line numbers and the mark's column are taken
-/// (`crates/ide/src/views/diff_view.rs`, `render`).
+/// (`apps/idestudio/src/interfaces/panels/diff.rs`, `render`).
 fn panel_cut(app: &Bench, rect: [f32; 4], on_screen: usize, theme: &Theme) -> usize {
     let lines = &app.bench.workspace().diff.lines;
     let widest = lines
@@ -258,7 +258,7 @@ impl Demo {
     /// how many of `commits` the stacks panel shows with the message cut
     /// at its card's width: the room its text column has once the avatar
     /// and the card's paddings are taken, in the style the message is
-    /// drawn with (`crates/ide/src/views/multi_stack_view.rs`, `render`).
+    /// drawn with (`apps/idestudio/src/interfaces/panels/stacks.rs`, `render`).
     fn summaries_cut(&self, commits: &[Commit], theme: &Theme) -> Result<usize, String> {
         let pad = theme.spacing.md;
         let (avatar, _) = Avatar::new(String::new()).preferred_size(theme);

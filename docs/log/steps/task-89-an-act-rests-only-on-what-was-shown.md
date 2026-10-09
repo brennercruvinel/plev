@@ -41,7 +41,7 @@ a cumpre.
 
 ## estado no código (main)
 
-- `crates/wire/src/server.rs`, `act`: `(None, Some(revision))` pega o
+- `rust/socket/src/server.rs`, `act`: `(None, Some(revision))` pega o
   snapshot inteiro do anel e chama `Request::observe` sobre ele.
 - `observe` serve o recorte (`scoped`, `keys`) mas guarda no anel o
   snapshot inteiro (`self.ring.serve(live)`), sem registrar o que foi
@@ -80,9 +80,9 @@ verde.
 
 a primeira leitura do briefing pedia o histórico por conexão. o agente
 parou e reportou: o `plev` abre uma conexão por comando
-(`crates/wire/src/bin/plev.rs`, `connect`), então por conexão todo
+(`rust/socket/src/bin/plev.rs`, `connect`), então por conexão todo
 `plev act --from-revision` viraria `unknown_revision`, inclusive no
-`crates/wire/tests/cli.rs` e no braço A do laboratório. o orquestrador
+`rust/socket/tests/cli.rs` e no braço A do laboratório. o orquestrador
 decidiu pela opção A: a chave é o ator declarado no `hello`.
 
 ### a regra como ficou
@@ -118,7 +118,7 @@ decidiu pela opção A: a chave é o ator declarado no `hello`.
 
 ### o teste do cenário, antes e depois
 
-`crates/wire/tests/server.rs`,
+`rust/socket/tests/server.rs`,
 `an_act_rests_on_what_was_shown_not_on_the_whole_revision`. o toy ganhou
 `todo.clear`, que lê `todo.counter:done` (estado de outro nó, como o
 `commit.submit` lê `changes:staged`). o agente observa só o counter
@@ -144,7 +144,7 @@ e age com a revisão nova.
 
 ### testes
 
-- `crates/wire/tests/shown.rs` (12, novo): observação que cobre o `read`
+- `rust/socket/tests/shown.rs` (12, novo): observação que cobre o `read`
   depois da mudança (aceito); `read` nunca mostrado (`not_observed`, nada
   despachado, aceito depois de observar); `--keys` que corta a chave;
   encadear numa revisão de estágio (aceito com o `read` observado antes,
@@ -155,7 +155,7 @@ e age com a revisão nova.
   duas conexões é um ator; o 17º ator derruba o mais antigo, que é
   recusado; estágio que termina depois dá a revisão ao ator; `observed`
   explícito inalterado.
-- `crates/wire/tests/server.rs`: o cenário (sai do `#[ignore]` no commit
+- `rust/socket/tests/server.rs`: o cenário (sai do `#[ignore]` no commit
   da correção); `a_row_the_agents_own_act_moved_is_stale_until_it_observes_it`
   (o próprio ato deixa o seguinte stale com `acted` vazio, o agente
   observa, o ato é aceito). mudaram, como a task aceitou:
@@ -163,12 +163,12 @@ e age com a revisão nova.
   encadeia no item 3, que nenhum ato anterior mexeu, em vez do item 1) e
   `stages_reach_only_the_connection_that_asked` (o A observa antes; A e B
   já tinham nomes diferentes, `claude` e `gemini`).
-- `crates/wire/tests/cli.rs`:
+- `rust/socket/tests/cli.rs`:
   `an_act_that_reads_a_node_its_name_never_observed_is_the_error_exit`
   (`plev act todo.clear clear --name fresh` sai 3 com `not_observed`; a
   observação de outro nome não conta; depois de `plev observe --scope
   todo.counter --name fresh`, o mesmo comando completa).
-- `crates/wire/tests/codec.rs`: a forma de `not_observed` fixada e no
+- `rust/socket/tests/codec.rs`: a forma de `not_observed` fixada e no
   roundtrip de toda resposta. `plev`: teste do `--help`.
 
 ### o laboratório
@@ -188,14 +188,14 @@ são as mensagens da task-87 (12 e 17).
 
 ### validação
 
-- `./script/gate` verde depois do rebase na main (`1f16133`), com
+- `./tool/tasks/fullcheck.sh` verde depois do rebase na main (`1f16133`), com
   `df -h /` em 19 GB livres. workspace depois: 2136 passed, 11 ignored.
   antes (a main): 2120 passed, 11 ignored, contado como o total de depois
   menos os 16 testes que a branch adiciona (`git diff main`: 16 `#[test]`
   novos, nenhum removido, nenhum `#[ignore]` novo). perna urnaui: 82
   passed, 1 ignored.
 - `wire`: 60 antes, 76 depois. `ide` e `showcase` verdes (também no gate).
-- `crates/ide/tests/agent_port.rs` (task-86), depois do rebase: os dois
+- `apps/idestudio/tests/agent_port.rs` (task-86), depois do rebase: os dois
   testes verdes, e a regra não muda nada neles. o encadeamento lê o que o
   agente viu na observação inteira e ninguém mexeu, e a recuperação
   observa de novo antes do `submit`.
@@ -206,7 +206,7 @@ são as mensagens da task-87 (12 e 17).
   entrou antes do histórico, para cada commit passar no clippy sem código
   morto; o histórico, o observado montado dele e o uso do erro entraram
   juntos no commit da correção.
-- `Shown` num módulo próprio (`crates/wire/src/shown.rs`), com os valores
+- `Shown` num módulo próprio (`rust/socket/src/shown.rs`), com os valores
   lidos no anel: o histórico guarda escopo, `keys` e os refs que um delta
   trouxe, nunca valor.
 
@@ -224,7 +224,7 @@ são as mensagens da task-87 (12 e 17).
 - o custo por ato (voltar no histórico por `read`) não foi medido; é
   limitado por `cap` revisões por `read`.
 
-### linha de ADR proposta (docs/ADR/README.md)
+### linha de ADR proposta (docs/adr/README.md)
 
 ```text
 | 2026-09-23 | [an-act-rests-on-what-its-actor-was-shown](an-act-rests-on-what-its-actor-was-shown.md) | accepted | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão: dois processos com o mesmo nome são um ator): a revisão tem que ter sido dada a ele, a ação vem dela, e o valor de cada `read` vem da última observação até ela que o mostrou (escopo e `keys`; um delta mostra só o que traz; a revisão de um estágio não mostra estado); um `read` nunca mostrado é recusado antes do dispatch com `not_observed {reads}` (aditivo no v1, `plev` sai 3); `observed` explícito continua sendo a afirmação do agente; limitado como o anel (16 revisões por ator, 16 atores); corrige a promessa do anel no ADR do agent port, furo achado pelo inspector na sessão do A2 (task-89) |

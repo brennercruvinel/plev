@@ -19,7 +19,7 @@ crate-type = ["lib", "cdylib", "staticlib"]
 name = "uigallery"
 path = "src/main.rs"
 
-# the web entry trunk builds (web/index.html): a name of its own, see the file.
+# the web entry trunk builds (apps/uigallery/web/index.html): a name of its own, see the file.
 [[bin]]
 name = "uigallery-web"
 path = "src/bin/web.rs"

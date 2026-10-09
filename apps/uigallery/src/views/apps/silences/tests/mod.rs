@@ -856,7 +856,7 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
 }
 
 /// The app's projection (the fixed screen alone, without the proposing
-/// row) is the golden of `crates/uir/fixtures`, the registry a generated
+/// row) is the golden of `rust/plevir/tests/fixtures`, the registry a generated
 /// surface verifies against and the proposers read: the page as it
 /// opens, seeded, no ffmpeg run, settled as the headless staging settles
 /// it. `UIR_BLESS=1` writes it again.

@@ -3,7 +3,7 @@
 //! The invariant they all serve: **a string renders to the same pixels no
 //! matter what else is on screen**. Glyph caching, atlas packing and atlas
 //! growth are per-frame global state, and every defect in
-//! `docs/ADR/glyph-raster-identity-and-atlas-isolation.md` was a leak of
+//! `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md` was a leak of
 //! that state into one string's pixels.
 //!
 //! These need a GPU adapter. Where there is none they skip rather than fail,

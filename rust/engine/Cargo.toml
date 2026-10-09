@@ -62,7 +62,7 @@ image.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 unicode-segmentation.workspace = true
-# the semantic contract (docs/ADR/semantic-binding-beside-the-scene.md):
+# the semantic contract (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md):
 # the compositor binds each `SemId` to its rect beside the scene.
 accord.workspace = true
 # the widgets' multi-line editor sits on the rope-based editing core.
@@ -108,7 +108,7 @@ tray-icon = { version = "0.25", default-features = false }
 # macos the UserNotifications framework refuses a process without an app
 # bundle (`objc2-user-notifications` 0.3 would enter with the classes it
 # uses, plus `objc2` and `objc2-foundation` directly; see the item 5 probe
-# in docs/mission/steps/checked/task-76-platform-integration-done.md), and the
+# in docs/log/steps/task-76-platform-integration.md), and the
 # bundle is the platform bring-up's. until then `NativeNotifier` says why.
 
 [target.'cfg(target_os = "android")'.dependencies]

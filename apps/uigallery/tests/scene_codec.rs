@@ -2,7 +2,7 @@
 //! showcase in both main themes, written by `rec::scene::Sender`, read
 //! back by a `Mirror` and drawn into a second compositor, holds the same
 //! layers with the same nodes, bit for bit. no GPU: the pixels are
-//! compared in crates/showcase/tests/mirror.rs.
+//! compared in apps/uigallery/tests/mirror.rs.
 
 use engine::drawing::compositor::Compositor;
 use engine::drawing::headless::Viewport;

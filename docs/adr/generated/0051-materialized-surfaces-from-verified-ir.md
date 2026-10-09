@@ -9,26 +9,26 @@ date: 2026-09-24
 
 ## context
 
-task-68 gave the plev IR (`crates/uir`): a surface described by meaning,
+task-68 gave the plev IR (`rust/plevir`): a surface described by meaning,
 a registry of what an app can do built from its own projection
 (`Capabilities::from_snapshot`), and `verify`, the only way to a
-`VerifiedIr` (docs/ADR/plev-ir-typed-and-verified.md). the runtime could
+`VerifiedIr` (docs/adr/generated/0049-plev-ir-typed-and-verified.md). the runtime could
 refuse an IR, but it could not show one: nothing turned a `VerifiedIr`
 into something a person sees and operates, or an agent observes.
 
 what existed to build it from:
 
 - the official app pattern, state in structs with retained widgets
-  (docs/ADR/official-app-pattern.md), and the comps widgets, 19 of them
+  (docs/adr/structure/0023-official-app-pattern.md), and the comps widgets, 19 of them
   with an optional `SemId` that binds the rect they draw and hit-test
-  with (docs/ADR/semantic-binding-beside-the-scene.md);
+  with (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md);
 - the engine's `LayoutEngine` (taffy behind `LayoutStyle`, flex only)
   and every visual value as a `Theme` token;
 - the semantic contract and its one `Dispatcher` for every actor
-  (docs/ADR/semantic-contract-as-pure-projection.md,
-  docs/ADR/actions-carry-observed-state.md), and the rule that an act
+  (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md,
+  docs/adr/semantics/0033-actions-carry-observed-state.md), and the rule that an act
   rests on what its actor was shown
-  (docs/ADR/an-act-rests-on-what-its-actor-was-shown.md).
+  (docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md).
 
 task-69 phase 1 asked for the materializer: layout by the engine, tokens
 by the theme, drawing by the comps widgets, semantics by construction,
@@ -41,7 +41,7 @@ and that the projection comes from the IR, not from the widgets' own
 
 ### a crate of its own
 
-`crates/surface` depends on `uir`, `sem`, `engine` and `comps`. `comps`
+`rust/screen` depends on `uir`, `sem`, `engine` and `comps`. `comps`
 stays a widget library and knows nothing of the IR; `uir` stays pure.
 
 ### only a verified IR materializes
@@ -180,7 +180,7 @@ like any page.
 ## cost
 
 `VerifiedIr` to the first frame, headless, debug build (the gate's),
-apple m4, rustc 1.98.1: `crates/surface/tests/measure.rs`, run by hand with
+apple m4, rustc 1.98.1: `rust/screen/tests/measure.rs`, run by hand with
 `cargo test -p surface --test measure -- --ignored --nocapture`. scene
 is materialize, sync, layout and the scene built into a `Compositor`;
 pixels adds drawing it through the window's frame path into an offscreen
@@ -314,7 +314,7 @@ representation is born, leaves or changes in real time.
   answers whether the surface was open.
 - **the demo.** the Surface page of the showcase switches its surface
   between two forms with a segmented control: compact (the fixture of
-  task-68) and two columns (`crates/surface/tests/fixtures/showcase-todo-columns.ir.json`,
+  task-68) and two columns (`rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`,
   a grid over `field_min_w`, one column at a phone's width), each
   verified against what the todo projects when the person asks for it.
 
@@ -436,7 +436,7 @@ the host to reach the app's cache.
 ### consequences
 
 - the two fixtures of the silences surface,
-  `crates/surface/tests/fixtures/showcase-silences-review.ir.json` and
+  `rust/screen/tests/fixtures/uigallery-silences-review.ir.json` and
   `showcase-silences-compare.ir.json`, verify over the app's golden, draw
   with frames made in memory in the crate's tests and with ffmpeg's in
   the page's ignored test, and transform one into the other keeping
@@ -501,7 +501,7 @@ surface open, so the defect passed every phase.
   page (`stage_silences_frames`, `stage_silences_ir`), with synthetic
   frames; six baselines of the review open (by the rules and from the
   fixture of the Claude's first-round proposal,
-  `crates/showcase/fixtures/ir/silences-review-claude.ir.json`), at
+  `rust/plevir/tests/fixtures/silences-review-claude.ir.json`), at
   1280x800 core and hoff and at 1200x800 core.
 - a wrapped row goes down in order without grouping by meaning ("reject
   cut" alone on a third line at 1200x800); grouping is the structure the
@@ -516,7 +516,7 @@ surface open, so the defect passed every phase.
 
 ### context
 
-the IR gained `code` (docs/ADR/plev-ir-typed-and-verified.md, addendum
+the IR gained `code` (docs/adr/generated/0049-plev-ir-typed-and-verified.md, addendum
 of task-97), so the review of the ide shows its diff with the kind of
 each line instead of in a table. what it takes to draw it was open: the
 kinds' colors had to come from tokens the theme already has, readable at
@@ -543,7 +543,7 @@ WCAG AA over the block, and a diff longer than its room had to scroll.
 - the wash alone is 1.06 to 1.67 against the block, so the kind never
   rests on the hue (WCAG 1.4.1): the row's text is the app's, and a
   diff's text carries its `+` and `-`. the block draws no mark of its own.
-- the surface keeps a `code` in a retained widget (`crates/surface/src/code.rs`):
+- the surface keeps a `code` in a retained widget (`rust/screen/src/code.rs`):
   the block, an `engine` `ScrollState` and the comps `Scrollbar`, the
   pair the fixed diff panel scrolls with. its lines are the block's rows,
   each with the kind its `kinds` names at the same place; the label is

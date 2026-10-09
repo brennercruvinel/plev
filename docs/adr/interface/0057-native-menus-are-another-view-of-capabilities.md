@@ -25,7 +25,7 @@ recording. none of them was projected, so no menu, no screen reader and
 no agent could ask for them.
 
 the probe (the handoff of item 4 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
+docs/log/steps/task-76-platform-integration.md) measured:
 
 - `muda` 0.20 with its default features off resolves offline into the
   root lock as `muda` and `keyboard-types` alone; the features only pick
@@ -143,9 +143,9 @@ docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
   shell's nodes and policies; the keys, the cards and the sidebar
   leaving receipts; an agent switching the theme and the page through
   the port and refused the window; a stale pick refused; the bar over a
-  bare window with a fake menu (`crates/engine/tests/menu.rs`,
-  `crates/showcase/src/view/dispatch/shell/tests.rs`,
-  `crates/showcase/src/app/menu.rs`, `dispatch/agent.rs`). `NoMenu`
+  bare window with a fake menu (`rust/engine/tests/menu.rs`,
+  `apps/uigallery/src/views/dispatcher/shell/tests.rs`,
+  `apps/uigallery/src/shell/system/menu.rs`, `dispatch/agent.rs`). `NoMenu`
   compiles the showcase for wasm; the 161 baselines and the todo golden
   are unchanged.
 - `init_for_nsapp` on the live NSApp was run once with

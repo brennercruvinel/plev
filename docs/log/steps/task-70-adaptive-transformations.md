@@ -89,7 +89,7 @@ não passa por IR, se a análise da task concluir que não cabe.
 
 módulo de transformação junto do IR (68) ou do host (69), conforme o ADR;
 o detector de sequências junto do leitor de sessão (63); proposta de ADR
-`docs/ADR/adaptive-transforms-preserve-identity.md`.
+`docs/adr/generated/0067-adaptive-transforms-preserve-identity.md`.
 
 ## interfaces que consome
 
@@ -109,7 +109,7 @@ as próprias. mudança no IR ou no host passa pelo orquestrador.
   continua fica.
 - composta: sequência repetida detectada, proposta, aceita, executada; um
   passo que envelhece no meio para a sequência com o motivo.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -146,19 +146,19 @@ capacidades compostas (fase 3) ficam fora.
 ### sonda (antes do primeiro tipo, 2026-09-24)
 
 o que existe hoje: a troca de forma inteira. o host recebe um
-`VerifiedIr` novo e reconcilia por `SemId` (`crates/surface/src/host.rs:107`
-a `122`, `SurfaceHost::transform`; `crates/surface/src/surface.rs:141` a
+`VerifiedIr` novo e reconcilia por `SemId` (`rust/screen/src/host/mod.rs:107`
+a `122`, `SurfaceHost::transform`; `rust/screen/src/surface.rs:141` a
 `190`: o widget de um id que continua com o mesmo `Kind` fica, e com ele
 foco, caret e arraste). o `VerifiedIr` só sai do `verify`
-(`crates/uir/src/verify/mod.rs:25` a `50` e `54` a `107`). nenhuma
+(`rust/plevir/src/verify/mod.rs:25` a `50` e `54` a `107`). nenhuma
 operação pequena existe.
 
 #### (a) o IR: o que cada operação mexe e o que o verifier checa depois
 
-o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
+o nó é `IrNode` (`rust/plevir/src/ir.rs:62` a `83`): `sem`, `component`,
 `label`, `description`, `props`, `layout`, `size`, `bind`, `children`,
 `repeat`. o verifier anda a árvore uma vez e aplica as oito regras
-(`crates/uir/src/error.rs:13` a `31`): 1 schema e versão, 2 identidade,
+(`rust/plevir/src/error.rs:13` a `31`): 1 schema e versão, 2 identidade,
 3 vocabulário, 4 estado, 5 ação, 6 política, 7 acesso, 8 limites.
 
 - **`Hide(id)`** tira o nó dos `children` do pai. não pode esconder a
@@ -184,13 +184,13 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
   ordem; o que muda junto é a ordem de foco, que o verifier recalcula na
   ordem da árvore (`verify/mod.rs:39` a `45`), então o foco segue o que
   a pessoa vê. um `repeat` não tem `children`: a ordem das instâncias é a
-  da lista do app (`crates/surface/src/expand.rs:93` a `95`), e o
+  da lista do app (`rust/screen/src/expand.rs:93` a `95`), e o
   `Reorder` recusa.
 - **`Emphasize(id)`** muda só `props`: um degrau acima na escala que o
   componente desenha. o texto sobe a `typography` na rampa do tema
-  (`crates/engine/src/theme/tokens.rs:79` a `183`: small, caption,
+  (`rust/engine/src/styling/theme/tokens.rs:79` a `183`: small, caption,
   base-2, base, title, headline, h4; sem valor é `body`,
-  `crates/surface/src/draw.rs:77` a `81`); o botão e a imagem sobem o
+  `rust/screen/src/draw.rs:77` a `81`); o botão e a imagem sobem o
   `control_size` (`draw.rs:149` a `155` e `:182` a `189`); o card, a
   lista e o contêiner sobem a `elevation` (`draw.rs:199` a `220` e `:264`
   a `270`). stat, badge, tabela, gráfico e os outros controles não
@@ -199,7 +199,7 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
   ênfase nunca falha na verificação; ela falha antes, no topo da escala.
 - **`Density(level)`** muda o `gap` de `stack` e `grid` e o
   `props.padding`, um degrau na escala `xs` a `xxl`
-  (`crates/uir/src/token.rs:36` a `46`), só onde há um token (sem token é
+  (`rust/plevir/src/token.rs:36` a `46`), só onde há um token (sem token é
   o padrão do componente, e ele fica). nunca falha na verificação
   (nenhuma regra olha gap nem padding); recusa quando nada se move (tudo
   já na ponta).
@@ -211,9 +211,9 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
 - **`SwapView(id, component)`** muda `component` e o nome da prop em
   `bind.state`. é aqui que os dados ligados decidem. o `Chart` mostra só
   `data`, e `data` só aceita `List`; ele não é contêiner e precisa de
-  rótulo (`crates/uir/src/vocab.rs:253` a `259`). a superfície desenha
+  rótulo (`rust/plevir/src/vocabulary.rs:253` a `259`). a superfície desenha
   os números em que cada item da lista se converte
-  (`crates/surface/src/draw.rs:443` a `459`, sobre o `Value::List` de
+  (`rust/screen/src/draw.rs:443` a `459`, sobre o `Value::List` de
   texto, `widget.rs:120` a `126`), e o `List` do `sem` não tem tipo de
   item. a `Table` mostra `rows`, `List` ou `Set`, rótulo opcional
   (`vocab.rs:238` a `244`), cada item uma linha de texto (`draw.rs:334` a
@@ -229,10 +229,10 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
   sairiam da árvore sem `Hide`, e a identidade proíbe; e os itens de um
   `repeat` são as chaves das instâncias (`ir.rs:141` a `148`; as regras
   montam a lista sobre um estado cujos valores são as chaves dos filhos,
-  `crates/propose/src/list.rs:1` a `7`), não medidas.
+  `rust/offers/src/list.rs:1` a `7`), não medidas.
   **na Silences não cabe o gráfico das durações.** o único `List` que o
   app declara é `silences:cuts`, com os ids dos cortes (`["1", "2"]` na
-  projeção fixada, `crates/uir/fixtures/showcase-silences.snapshot.json`);
+  projeção fixada, `rust/plevir/tests/fixtures/uigallery-silences.snapshot.json`);
   a duração é um `num` por corte (`silences.cut[1]:duration`), não uma
   lista. um gráfico ligado a `silences:cuts` passaria no verifier e
   desenharia barras de altura 1 e 2, os ids: mentira. para caber, o app
@@ -240,7 +240,7 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
   fase. a demo fica sem o `SwapView` (o briefing previa isso).
 - **`Promote(capability)`** acrescenta nos `children` de um contêiner
   dito um `button` com `activate` ligado à capacidade e o rótulo que o
-  registro dá (`crates/uir/src/caps.rs:31` a `33`). recusa antes quando o
+  registro dá (`rust/plevir/src/capabilities.rs:31` a `33`). recusa antes quando o
   registro não declara a ação, quando a política da ação deixa de fora o
   ator que pediu (`sem::Actors`), quando a superfície já mostra a ação
   (ou a guarda escondida: aí é `Show`), e quando a ação leva parâmetro (o
@@ -251,12 +251,12 @@ o nó é `IrNode` (`crates/uir/src/ir.rs:62` a `83`): `sem`, `component`,
 
 #### (b) onde o módulo mora
 
-no `uir`, em `crates/uir/src/transform/`. motivos: a operação é dado que
+no `uir`, em `rust/plevir/src/transform/`. motivos: a operação é dado que
 viaja pelo gravador e, na fase 2, sai do proponente, e o `propose`
-depende do `uir` e do `sem`, não do engine (`crates/propose/Cargo.toml:19`
+depende do `uir` e do `sem`, não do engine (`rust/offers/Cargo.toml:19`
 a `24`); aplicar é função pura de `Ir` para `Ir` mais o `verify`, que já
 está no `uir`; e o teste de propriedade pede `proptest`, que é
-dev-dependency só do `uir` entre os dois (`crates/uir/Cargo.toml:22` a
+dev-dependency só do `uir` entre os dois (`rust/plevir/Cargo.toml:22` a
 `25`; o `surface` não tem, e o `Cargo.toml` está fora). o host (histórico,
 quem pediu, desfazer, reconciliação) fica no `surface`, em `host.rs`,
 onde a troca de forma já está. o `uir` continua puro: o módulo não chama
@@ -293,9 +293,9 @@ guardado ao lado, no estado da transformação (`uir::transform`): o nó
 inteiro, o pai e a posição. o `Show` e a inversa tiram de lá. o
 vocabulário não tem "escondido": o `IrNode` não tem campo para isso
 (`ir.rs:62` a `83`), o decodificador recusa campo desconhecido
-(`crates/uir/src/decode.rs:23` a `34`), e o único nó que não desenha é o
+(`rust/plevir/src/decode.rs:23` a `34`), e o único nó que não desenha é o
 dialog fechado, que precisa de um estado `open` do app
-(`crates/surface/src/draw.rs:70` a `75`). nenhum campo novo; não há
+(`rust/screen/src/draw.rs:70` a `75`). nenhum campo novo; não há
 parada. a identidade vale sobre os dois juntos: todo id de antes está na
 árvore ou guardado, e só o `Hide` guarda.
 
@@ -303,11 +303,11 @@ parada. a identidade vale sobre os dois juntos: todo id de antes está na
 
 o IR tem o template uma vez, com `[{item}]` no id (`ir.rs:25` a `27`,
 `:141` a `153`); as instâncias só existem na árvore expandida da
-superfície (`crates/surface/src/expand.rs:93` a `95` e `:129` a `146`).
+superfície (`rust/screen/src/expand.rs:93` a `95` e `:129` a `146`).
 então uma operação sobre `review.cut_item[{item}]` vale para todos os
 itens, os de agora e os que vierem. uma operação sobre o id de uma
 instância (`review.cut_apply[1]`) não acha nó no IR: recusa, dizendo o
-template que faz aquele id (`crates/uir/src/item.rs:38` a `71`,
+template que faz aquele id (`rust/plevir/src/item.rs:38` a `71`,
 `Pattern::matches`) e que a operação é sobre ele. mexer em um item só
 exigiria no IR uma sobreposição por item, que o vocabulário não tem: fica
 fora da fase 1. dentro de um template, o `Group` precisa de um `into`
@@ -316,7 +316,7 @@ com `[{item}]`, e o verifier cobra (`verify/mod.rs:233` a `238`).
 #### (e) telas fixas
 
 a tela fixa da Silences e a do todo não são IR: a Silences calcula a
-geometria em código (`crates/showcase/src/view/apps/silences/layout.rs:153`,
+geometria em código (`apps/uigallery/src/views/apps/silences/fixed_page/layout.rs:153`,
 `compute`) e desenha a linha do tempo com as marcas dos cortes
 (`layout.rs:355` a `371`), que nenhum componente do vocabulário
 desenha (`vocab.rs:48` a `93`; um componente novo pede o widget no comps
@@ -324,10 +324,10 @@ e um ADR, `vocab.rs:10` a `11`).
 
 - **opção 1, exprimir a tela fixa em IR.** a fixture do formulário de
   commit da 68 prova que dá: é a tela fixa do ide, com os ids do próprio
-  ide (`crates/uir/fixtures/ide-commit-form.ir.json`;
-  `crates/uir/tests/fixtures.rs:4` a `5`), o verifier deixa um nó com id
+  ide (`rust/plevir/tests/fixtures/idestudio-commit-form.ir.json`;
+  `rust/plevir/tests/golden.rs:4` a `5`), o verifier deixa um nó com id
   do app ligar só as ações daquele nó (`verify/mod.rs:265` a `281`), e a
-  projeção trata esse nó como do app (`crates/surface/src/project.rs:19` a
+  projeção trata esse nó como do app (`rust/screen/src/project.rs:19` a
   `22`). a tela passa a ser uma superfície e todas as nove operações valem
   sobre ela, verificadas, com inversa e histórico, pelo mesmo caminho. o
   custo: cada tela reescrita em IR, e a da Silences perde a linha do
@@ -340,7 +340,7 @@ e um ADR, `vocab.rs:10` a `11`).
   construção, e cada tela vira um caso.
 
 **recomendação: a opção 1**, tela por tela, quando a tela couber no
-vocabulário (o todo cabe: `crates/uir/fixtures/showcase-todo.ir.json`; o
+vocabulário (o todo cabe: `rust/plevir/tests/fixtures/uigallery-todo.ir.json`; o
 formulário de commit cabe), e a tela que não couber fica fixa e sem
 transformação até o componente existir. a opção 2 quebra a promessa de
 que o que se vê é o que se projeta. não é motivo de parada nesta fase: a
@@ -379,7 +379,7 @@ ids dos cortes), então a demo ficou com o `Reorder` e o `Hide`.
 
 #### cada operação, a inversa e onde pode falhar
 
-o código: `crates/uir/src/transform/` (`mod.rs:55` o `Op`, `:197` o
+o código: `rust/plevir/src/transform/` (`mod.rs:55` o `Op`, `:197` o
 `Adapted`, `:241` o `apply`, `:268` o `undo`, `:355` a verificação de
 todo resultado; `shape.rs`, `look.rs`, `view.rs` as operações; `tree.rs`
 o caminho até um nó).
@@ -402,7 +402,7 @@ depois `headline` e `h4`.
 
 #### onde o módulo mora e por quê
 
-no `uir` (`crates/uir/src/transform/`), puro: a operação é dado que o
+no `uir` (`rust/plevir/src/transform/`), puro: a operação é dado que o
 gravador guarda e que o proponente da fase 2 escreve, e o `propose` só
 depende de `uir` e `sem`; aplicar é função de IR para IR seguida do
 `verify`, que está no `uir`; e o `proptest` só é dev-dependency do
@@ -410,7 +410,7 @@ depende de `uir` e `sem`; aplicar é função de IR para IR seguida do
 
 #### o host e o histórico
 
-`crates/surface/src/host.rs`: `apply` (`:201`) confere e verifica a
+`rust/screen/src/host/mod.rs`: `apply` (`:201`) confere e verifica a
 operação contra o registro do app sob a política dada, e a superfície
 toma a forma pelo mesmo caminho da troca inteira (`take_form`, `:166`:
 a colisão com as outras superfícies e o `Surface::transform`,
@@ -422,7 +422,7 @@ e histórico como estavam; `transform` (`:151`) e `close` (`:308`)
 encerram o histórico. o `apply` recebe a política porque o `VerifiedIr`
 não guarda a sua. a reconciliação da 69 não mudou.
 
-o estado retido, testado em `crates/surface/tests/adapt.rs`: um slider
+o estado retido, testado em `rust/screen/tests/adapt.rs`: um slider
 no meio de um arraste continua o arraste depois de um `hide`, de um
 `reorder` e do desfazer do `reorder`; um campo mantém o teclado e o caret
 (a tecla cai três posições atrás) depois de `hide`, `emphasize` e
@@ -435,12 +435,12 @@ sobre um cofre cujo `toggle` e `open` o app guarda de agentes; depois de
 `group`, `reorder`, `swap_view` (checkbox para switch) e `promote` do
 `open`, a página projeta as ações com a política do app (agente
 fora); o `promote` pedido por um agente é recusado. no `uir`
-(`crates/uir/tests/transform.rs`), o mesmo com a ação `admin reset`, e o
+(`rust/plevir/tests/transform.rs`), o mesmo com a ação `admin reset`, e o
 autor agente não liga a ação nem para uma pessoa (regra 6).
 
 #### a identidade
 
-`crates/uir/tests/identity.rs`: superfícies aleatórias que verificam por
+`rust/plevir/tests/identity.rs`: superfícies aleatórias que verificam por
 construção e sequências de até sete operações escolhidas por índice no
 que a superfície tem quando cada uma se aplica (256 casos): toda
 operação que se aplica verifica, nenhum id sai da superfície, só o
@@ -454,10 +454,10 @@ Silences), com o conjunto de tipos aplicados fixado por fixture.
 
 sobre a fixture do Claude da primeira rodada, pelo gancho novo
 `ShowcaseView::stage_silences_op`
-(`crates/showcase/src/view/apps/silences/generated/page.rs:389`), como o
+(`apps/uigallery/src/views/apps/silences/generative/page.rs:389`), como o
 host aplica: `reorder review.root: review.title, review.cuts_list` e
 `hide review.controls`. o teste
-(`crates/showcase/src/view/apps/silences/tests/generated/transform.rs`):
+(`apps/uigallery/src/views/apps/silences/tests/generative/transform.rs`):
 a 1280x800 os dois cortes ficam dentro da janela, acima do vídeo; a
 detecção sai da superfície e continua na tela fixa; o histórico tem as
 duas mudanças pelo `test:regress`; desfazer as duas devolve a fixture
@@ -471,8 +471,8 @@ em core com a imagem.
 
 | | imagem |
 | --- | --- |
-| antes (a fixture do Claude, baseline da 69) | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture@core@1280x800/frame.png` |
-| depois (o `reorder` e o `hide`) | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture-adapted@core@1280x800/frame.png` |
+| antes (a fixture do Claude, baseline da 69) | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture@core@1280x800/frame.png` |
+| depois (o `reorder` e o `hide`) | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture-adapted@core@1280x800/frame.png` |
 
 no antes, a superfície mostra o título, o arquivo, a duração, os dois
 frames e os sliders repetidos, e os cortes ficam abaixo da dobra. no
@@ -494,7 +494,7 @@ projeção não é o caminho: o que se vê e o que se projeta se separam.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ d64b4b85 (a contagem da 69, sem código mudado desde 25633cba) | 2747 passam, 25 ignorados (139 suítes) | 85 passam, 1 ignorado (6 suítes) | 2832 |
-| depois, esta branch @ ec2ab5db (`./script/gate` offline, saída 0, 21:44:23 a 21:46:38) | 2776 passam, 0 falhas, 25 ignorados (142 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2861 |
+| depois, esta branch @ ec2ab5db (`./tool/tasks/fullcheck.sh` offline, saída 0, 21:44:23 a 21:46:38) | 2776 passam, 0 falhas, 25 ignorados (142 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2861 |
 
 29 testes novos (2 do `tree`, 17 de `uir/tests/transform.rs`, 2 de
 `uir/tests/identity.rs`, 5 de `surface/tests/adapt.rs`, 3 da demo) e três
@@ -504,7 +504,7 @@ e depois. `cargo run --offline -p showcase --example regress --
 check` (com o `main.rs` tocado): 170 baselines, 170 iguais, nenhum frame
 desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 
-#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+#### linha de ADR para o índice (o `docs/adr/README.md` não está na minha lista)
 
 | 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | proposed | módulo `uir::transform`, puro: nove operações como dado (`Op`, serde com `op`) sobre um `Adapted` (o `VerifiedIr` e os nós guardados de lado); cada resultado verificado de novo, com a inversa exata (a operação contrária onde ela é exata: hide e show, reorder, swap_view; o pedaço de antes onde não: props e layout de emphasize, restyle e density, o pai de group e promote); identidade: todo id na árvore ou guardado, só o hide tira da árvore, sem campo novo no `IrNode`; operação sobre template vale para todo item, id de instância recusado com o template; swap_view só dentro de uma família (valor, bool, escolha, lista) e nunca de uma lista que repete; promote só de ação que o registro declara para quem pediu; `SurfaceHost::apply` e `undo` com histórico (`Change`: operação, inversa, ator), reconciliado por `SemId` como a troca inteira; telas fixas: exprimir em IR, não transformar a projeção (task-70 fase 1) |
 
@@ -529,9 +529,9 @@ desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 - mexer num item só de um template pede uma sobreposição por item no
   vocabulário (ADR).
 - `emphasize` num botão depois de `md` não muda nada no hoff core: a
-  escada do botão para em 44 px (`crates/surface/src/token.rs:142` a
+  escada do botão para em 44 px (`rust/screen/src/token.rs:142` a
   `154`). stat e badge não desenham token de ênfase
-  (`crates/surface/src/draw.rs:304` e `305`), então "números maiores"
+  (`rust/screen/src/draw.rs:304` e `305`), então "números maiores"
   num stat pede o materializador ler `typography` ali (fase 2, no
   `surface`).
 - não há refazer; o `Inverse` é só `Serialize` (o `Restore` guarda um
@@ -556,11 +556,11 @@ lacunas do checkpoint b na revisão gerada.
 
 #### (a) o proponente de transformação
 
-o `Proposer` (`crates/propose/src/lib.rs:74` a `76`) devolve um `Ir`, e
+o `Proposer` (`rust/offers/src/lib.rs:74` a `76`) devolve um `Ir`, e
 a saída é `propose_verified` (`:82` a `88`), que só deixa sair
 `VerifiedIr`. a task-69 usa os dois pelas páginas
-(`crates/showcase/src/view/apps/silences/generated/page.rs:218`,
-`crates/showcase/src/view/apps/surface_page/page.rs:244`, e o worker do
+(`apps/uigallery/src/views/apps/silences/generative/page.rs:218`,
+`apps/uigallery/src/views/apps/surface/page.rs:244`, e o worker do
 Claude em `surface_page/asking.rs:260`). mexer no `Proposer` mexeria em
 tudo isso.
 
@@ -568,7 +568,7 @@ o desenho: um trait irmão no mesmo crate, sem tocar no `Proposer`.
 
 - `Adapt<'a>`: o que se pede a um transformador. a intenção, o registro
   (`Capabilities`), o snapshot, a superfície como está (`&Adapted`, o
-  `VerifiedIr` e o que está de lado, `crates/uir/src/transform/mod.rs:197`),
+  `VerifiedIr` e o que está de lado, `rust/plevir/src/transform/mod.rs:197`),
   a política com que ela foi verificada e quem pediu (`&Actor`, que o
   `promote` lê, `mod.rs:257` a `261`).
 - `Transformer::transform(&mut self, &Adapt) -> Result<Adaptation,
@@ -586,7 +586,7 @@ o desenho: um trait irmão no mesmo crate, sem tocar no `Proposer`.
 #### (b) a gramática das regras
 
 `words.rs` lê as intenções de superfície (`Part`, `Form`, "compare",
-"everything", `crates/propose/src/words.rs:17` a `230`). as de mudança
+"everything", `rust/offers/src/words.rs:17` a `230`). as de mudança
 entram num leitor irmão, com o mesmo `fold` (caixa, acento, plural,
 `:132`) e as mesmas duas línguas:
 
@@ -640,12 +640,12 @@ por nome de app:
 
 #### (c) o Claude
 
-`Llm<M>` (`crates/propose/src/llm.rs:36` a `118`) implementa o
+`Llm<M>` (`rust/offers/src/llm.rs:36` a `118`) implementa o
 `Transformer` com um prompt próprio, num arquivo novo ao lado de
 `prompt.rs` (que já tem 341 linhas), reaproveitando o que é igual: as
 regras do verifier (`prompt.rs:21` a `67`), os componentes (`:119` a
 `173`) e o registro (`:186` a `229`, onde um valor secreto já sai como o
-tamanho que o `sem` guarda, `crates/sem/src/redact.rs:1` a `15`, e uma
+tamanho que o `sem` guarda, `rust/accord/src/redactor.rs:1` a `15`, e uma
 imagem é um texto `<id>@<segundos>`, nunca pixel). o que é novo: a
 superfície aberta (o JSON do IR e os nós de lado, por id e pai), as
 nove operações no JSON da fase 1 com o que cada uma faz e recusa, as
@@ -658,9 +658,9 @@ a resposta é lida do primeiro `{` ao último `}` (como `llm.rs:78` a
 `85`), e cada operação é tentada em ordem sobre o `Adapted`, verificada;
 a primeira recusa, com o índice e o motivo, volta ao modelo junto com a
 resposta ("attempt N was refused", a mesma frase que o `claude` falso
-lê, `crates/claude-model/tests/fake-claude`), no máximo
+lê, `rust/claude/tests/fakes/claude`), no máximo
 `Llm::ATTEMPTS` vezes; esgotado, o erro traz os motivos da última e a
-superfície não muda. o `SYSTEM` (`crates/claude-model/src/lib.rs:55`)
+superfície não muda. o `SYSTEM` (`rust/claude/src/lib.rs:55`)
 já diz "responda exatamente o que ele pede, na forma que ele pede":
 serve às operações sem mudança.
 
@@ -668,7 +668,7 @@ serve às operações sem mudança.
 
 o desenho que a pergunta sugeria era uma ação nova (`silences_surface.adapt`
 e `undo`). não cabe sem mudar baseline fora do que o item 7 deixa: o
-`regress` compara a projeção antes dos pixels (`crates/showcase/examples/regress/compare.rs:74`,
+`regress` compara a projeção antes dos pixels (`tool/bench/regress/src/compare.rs:74`,
 `Snapshot::diff`), e um nó novo na linha, ou uma ação nova num nó dela,
 muda o `semantics.json` de toda baseline que mostra a linha. a linha é
 projetada em `surface_page/proposing.rs:340` a `394`: com a superfície
@@ -702,7 +702,7 @@ intenção é lida primeiro como mudança:
 #### (e) a política por superfície
 
 o host recebe a política a cada `apply` e `undo`
-(`crates/surface/src/host.rs:201` a `259`) porque o `VerifiedIr` não
+(`rust/screen/src/host/mod.rs:201` a `259`) porque o `VerifiedIr` não
 guarda a sua, e o `VerifiedIr` é do verifier (proibido). o host guarda
 a política de cada superfície ao abrir e ao trocar de forma:
 `open_under(ir, app, policy)` e `transform_under(ir, app, policy)`;
@@ -724,20 +724,20 @@ continua desfazendo uma.
 #### (f) `stat` e `badge`
 
 o materializador desenha o `stat` com `Stat::new(valor, rótulo)` sem
-tamanho (`crates/surface/src/draw.rs:83` a `86`, `:139` e `:305`), e o
+tamanho (`rust/screen/src/draw.rs:83` a `86`, `:139` e `:305`), e o
 `badge` com `Badge::tag(texto)` (`:138` e `:304`); o `emphasize` recusa
-os dois (`crates/uir/src/transform/look.rs:108` a `112`). o comps já tem
+os dois (`rust/plevir/src/transform/look.rs:108` a `112`). o comps já tem
 o que falta, sem mudança:
 
 - `Stat` tem `StatSize` `Sm`, `Md`, `Lg`, com o valor em `base_m`,
-  `title` e `headline` (`crates/comps/src/content/stat.rs:15` a `23` e
+  `title` e `headline` (`rust/engine/src/widgets/content/stat.rs:15` a `23` e
   `:61` a `68`). o token é o `typography` do nó, o mesmo da rampa do
   texto: até `base` é `Sm`, `title` (o de hoje, sem token) é `Md`,
   `headline` e acima é `Lg`. a escada do `emphasize` num stat: `base_m`,
   `title`, `headline`, topo.
 - `Badge` tem dois formatos, `Tag` (o vidro) e `Count` (preenchido com
   a cor da intenção, texto em contraste,
-  `crates/comps/src/action/badge.rs:17` a `24` e `:88` a `101`). o token
+  `rust/engine/src/widgets/content/badge.rs:17` a `24` e `:88` a `101`). o token
   é o `background` do nó: sem ele é `Tag`; com um papel de intenção
   (`accent`, `success`, `danger`, `info`) é o `Count` com essa intenção.
   a ênfase de um badge é ele preenchido (`accent`); o topo é ter fundo.
@@ -745,16 +745,16 @@ o que falta, sem mudança:
   do badge é de peso, não de tamanho.
 
 o `emphasize` ganha as duas linhas em `look.rs`: é a falta que a sonda
-mostra no `crates/uir/src/transform/**`. o vocabulário e o verifier não
+mostra no `rust/plevir/src/transform/**`. o vocabulário e o verifier não
 mudam (nenhuma regra olha `props`, só o tipo).
 
 #### as três lacunas do checkpoint b
 
-1. o `READS` (`crates/propose/src/prompt.rs:73` a `83`) ganha: revisar
+1. o `READS` (`rust/offers/src/prompt.rs:73` a `83`) ganha: revisar
    itens é ver o que cada um é (a imagem do item, quando o registro tem
    uma, e o seu estado), e "só o que a intenção precisa" não tira isso.
    sem nome de app.
-2. a linha do item das regras (`crates/propose/src/rules.rs:381` a
+2. a linha do item das regras (`rust/offers/src/rules.rs:381` a
    `440`, sobre `list.rs:153` a `242`) põe todo texto e número numa fila
    só, sem rótulo. passa a separar por sentido: o que o item é (imagem,
    texto que não é número, selo), os números (`stat` pequeno, com a
@@ -776,7 +776,7 @@ Claude.
 #### nenhuma parada
 
 nada pede mudar o protocolo v1, o vocabulário ou o verifier do IR, nem o
-comps. a mudança em `crates/uir/src/transform/look.rs` é a da (f).
+comps. a mudança em `rust/plevir/src/transform/look.rs` é a da (f).
 
 ### handoff da fase 2 (2026-09-24)
 
@@ -806,7 +806,7 @@ Status: pronto para o orquestrador; adição ao ADR proposta
 está na seção "sonda" da fase 2, acima, de (a) a (f), com as lacunas.
 nenhuma condição de parada aconteceu: nada pediu mudar o protocolo v1,
 o vocabulário ou o verifier do IR, nem o comps; nenhum baseline fora da
-revisão gerada mudou. a única mudança em `crates/uir/src/transform/**`
+revisão gerada mudou. a única mudança em `rust/plevir/src/transform/**`
 é a da (f): `look.rs` ganhou as escadas de stat e badge.
 
 um desvio do desenho que a pergunta sugeria, na (d): não há ação nova
@@ -819,24 +819,24 @@ intenção "undo"/"desfazer" por ele.
 
 #### o proponente, a gramática e o prompt
 
-- `crates/propose/src/adapt.rs`: `Adapt` (`:28`), `Adaptation`
+- `rust/offers/src/adapt.rs`: `Adapt` (`:28`), `Adaptation`
   (`:57`), `Transformer` (`:66`), `Transformed` (`:72`) e
   `transform_verified` (`:98`), que aplica cada operação em ordem pelo
   `Adapted::apply` e só devolve as operações com o `Adapted` verificado
   que elas fazem; a primeira recusa sai como `ProposeError::Unapplied`
   com o lugar; nenhuma operação é `NoChange`. erros novos em
-  `crates/propose/src/error.rs:55` a `80`.
-- a gramática: `crates/propose/src/change.rs` (menos, comparar com
+  `rust/offers/src/error.rs:55` a `80`.
+- a gramática: `rust/offers/src/change.rs` (menos, comparar com
   dificuldade, maior, desfazer, em inglês e português;
   `reads_as_change` para a página). as regras por estrutura e registro:
-  `crates/propose/src/reshape.rs` (`less`, `compare`, `bigger`, e o
+  `rust/offers/src/reshape.rs` (`less`, `compare`, `bigger`, e o
   `impl Transformer for Rules`). nenhuma cita app.
-- o prompt: `crates/propose/src/ops.rs` (o prompt da mudança, a leitura
+- o prompt: `rust/offers/src/operations.rs` (o prompt da mudança, a leitura
   de `{"ops": [...]}` e o reparo com "attempt N was refused"), e o
-  `impl Transformer for Llm` em `crates/propose/src/llm.rs:129`. o
+  `impl Transformer for Llm` em `rust/offers/src/llm.rs:129`. o
   `SYSTEM` do `claude-model` serve como está (não mudou).
 
-testes: `crates/propose/tests/adapt.rs` (a saída verificada, a recusa
+testes: `rust/offers/tests/adapt.rs` (a saída verificada, a recusa
 com o lugar, o desfazer, a promoção conferida por quem pede),
 `tests/change.rs` (as regras em inglês e português: menos sobre a
 revisão do Claude e sobre o todo, comparar que troca uma tabela de
@@ -850,7 +850,7 @@ lado, e um agente que não promove ação só da pessoa).
 
 #### o caminho pela página e pelo port
 
-`crates/showcase/src/view/apps/surface_page/proposing/changing.rs`,
+`apps/uigallery/src/views/apps/surface/offering/changing.rs`,
 compartilhado pela página Surface e pela Silences: com uma superfície
 aberta, o `propose` lê a intenção como mudança primeiro. pelas regras,
 aplica na hora pelo `SurfaceHost::apply_all` com o ator da request, e a
@@ -865,57 +865,57 @@ by the rules for "...", 3 steps", "changed by the Claude for "...", 1
 step, in 2.1 s, 1 attempt, 0.050 USD", "undone: the last change, 3
 steps"), e o status projeta `steps` ou `undone`.
 
-testes: `crates/showcase/src/view/apps/silences/tests/generated/change.rs`
+testes: `apps/uigallery/src/views/apps/silences/tests/generative/change.rs`
 (uma pessoa pede menos e desfaz, byte a byte; um agente pede pelo
 `act`, as mudanças são dele; comparar recusa e nada muda; uma intenção
 de superfície ainda propõe uma; e com o `claude` falso: a mudança fora
 da thread, com custo; uma resposta recusada pedida de novo; três
 recusas não mudam nada; "undo" sem prompt novo) e
-`crates/showcase/src/view/apps/surface_page/tests/agent.rs` (um agente
+`apps/uigallery/src/views/apps/surface/tests/agent.rs` (um agente
 pelo port de verdade escreve "too much", propõe, e depois "undo": as
 requests são dele, o protocolo é o do `propose`).
 
 #### a política
 
-`crates/surface/src/host.rs`: `open_under` e `transform_under` guardam a
+`rust/screen/src/host/mod.rs`: `open_under` e `transform_under` guardam a
 política com que a superfície foi verificada; `open` e `transform`
 guardam a padrão (a das formas da página Surface, que não é minha).
 `apply(id, op, by, app)` e `undo(id, app)` não recebem mais política:
 usam a da superfície. `apply_all` (tudo ou nada, uma forma, um pedido),
 `undo_asked`, `last_ask`, `current` e `policy`. as páginas mostram uma
 proposta com a política dela (`GenerationPolicy::by` do autor).
-testes: `crates/surface/tests/policy.rs` (a operação de um agente
+testes: `rust/screen/tests/policy.rs` (a operação de um agente
 verificada sob a política da pessoa que escreveu a superfície; os
 pedidos tudo ou nada e desfeitos inteiros) e os de `tests/adapt.rs`,
 no desenho novo.
 
 #### a ênfase
 
-`crates/surface/src/draw.rs` e `token.rs`: o stat lê `typography` como
+`rust/screen/src/draw.rs` e `token.rs`: o stat lê `typography` como
 o tamanho do valor (`StatSize` `Sm`, `Md`, `Lg`), o badge lê
 `background` como a intenção do formato preenchido (`Badge::count`);
-`crates/uir/src/transform/look.rs`: a escada do stat (`base_m`, `title`,
+`rust/plevir/src/transform/look.rs`: a escada do stat (`base_m`, `title`,
 `headline`) e a do badge (preenchido com o accent). o badge ganha peso,
 não tamanho: o comps não tem badge maior, e mudá-lo seria parada.
-testes: `crates/surface/tests/emphasis.rs` e o teste de `look.rs`.
+testes: `rust/screen/tests/emphasis.rs` e o teste de `look.rs`.
 
 #### as três lacunas, antes e depois
 
-1. o `READS` (`crates/propose/src/prompt.rs:75` a `89`) diz que revisar
+1. o `READS` (`rust/offers/src/prompt.rs:75` a `89`) diz que revisar
    itens é ver o que cada um é (a imagem, o nome, os números com nome,
    o estado) e que "só o que a intenção precisa" não tira isso; teste
-   de texto em `crates/propose/tests/llm.rs`, sem nome de app.
+   de texto em `rust/offers/tests/llm.rs`, sem nome de app.
 2. e 3. a linha do item das regras por sentido
-   (`crates/propose/src/row.rs`): o que o item é (frame, faixa, e a
+   (`rust/offers/src/row.rs`): o que o item é (frame, faixa, e a
    decisão como badge, porque `apply_cut` e `reject_cut` leem só ela,
    `list.rs`), os números como stat pequeno com o nome do estado
    ("start", "end", "duration"), as ações em botões pequenos numa linha.
 
 | | antes (`main` @ 3dde4976) | depois |
 | --- | --- | --- |
-| core 1280x800 | `git show 3dde4976:crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
-| hoff 1280x800 | idem, `@hoff@1280x800` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@hoff@1280x800/frame.png` |
-| core 1200x800 | idem, `@core@1200x800` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1200x800/frame.png` |
+| core 1280x800 | `git show 3dde4976:tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/frame.png` |
+| hoff 1280x800 | idem, `@hoff@1280x800` | `tool/bench/regress/baselines/silences-review-by-the-rules@hoff@1280x800/frame.png` |
+| core 1200x800 | idem, `@core@1200x800` | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1200x800/frame.png` |
 
 no antes, cada corte é "3.02 5.02 2 0:03.0 to 0:05.0 pending" sem nome,
 e em 1200 "reject cut" desce sozinho. no depois, cada corte tem o frame,
@@ -926,15 +926,15 @@ cortes cabem na janela. aceitei as três depois de olhar cada uma.
 #### a demo
 
 pelas regras, com a revisão aberta, em teste
-(`crates/showcase/src/view/apps/silences/tests/generated/demo.rs`) e no
+(`apps/uigallery/src/views/apps/silences/tests/generative/demo.rs`) e no
 regress (três estados novos em `examples/regress/state.rs`, pedidos pela
 linha como um agente pede):
 
 | estado | antes | depois |
 | --- | --- | --- |
-| "tem informação demais" sobre a revisão do Claude | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture-too-much-in-portuguese@core@1280x800/frame.png` |
-| "too much information" sobre a revisão das regras | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-rules-too-much-information@core@1280x800/frame.png` |
-| "I can't compare these" sobre a revisão das regras | o mesmo antes | `crates/showcase/fixtures/regress/silences-review-by-the-rules-can-t-compare@core@1280x800/frame.png` |
+| "tem informação demais" sobre a revisão do Claude | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture@core@1280x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture-too-much-in-portuguese@core@1280x800/frame.png` |
+| "too much information" sobre a revisão das regras | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-rules-too-much-information@core@1280x800/frame.png` |
+| "I can't compare these" sobre a revisão das regras | o mesmo antes | `tool/bench/regress/baselines/silences-review-by-the-rules-can-t-compare@core@1280x800/frame.png` |
 
 - "tem informação demais" na revisão do Claude: saem o cartão do vídeo
   e o das contagens (contexto, nenhuma ação), os três botões de cada
@@ -947,7 +947,7 @@ linha como um agente pede):
   (`proposed.silences.cuts` repete os itens sobre `silences:cuts`, e
   nenhuma lista de números aparece), a revisão fica como estava. a troca
   para gráfico é provada numa superfície com uma lista de números
-  (`crates/propose/tests/change.rs`).
+  (`rust/offers/tests/change.rs`).
 - o estado do que continua (`demo.rs`): um corte aplicado antes continua
   aplicado, no app e no selo da gerada; um slider do Claude no meio do
   arraste continua o arraste no lugar novo depois que um agente pede
@@ -966,7 +966,7 @@ linha como um agente pede):
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 3dde4976 (a contagem da fase 1) | 2776 passam, 25 ignorados (142 suítes) | 85 passam, 1 ignorado (6 suítes) | 2861 |
-| depois, esta branch @ 5d1ca12f (`./script/gate` offline, saída 0, 22:50:45 a 22:52:58) | 2809 passam, 0 falhas, 25 ignorados (147 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2894 |
+| depois, esta branch @ 5d1ca12f (`./tool/tasks/fullcheck.sh` offline, saída 0, 22:50:45 a 22:52:58) | 2809 passam, 0 falhas, 25 ignorados (147 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2894 |
 
 33 testes novos e cinco suítes (`propose`: `adapt`, `change`,
 `llm_change`; `surface`: `policy`, `emphasis`); o gate inteiro verde,
@@ -1040,7 +1040,7 @@ não gasta chamada; pelas regras, o mesmo resultado da baseline
 `...-too-much-information`. e pelo port, que cada receipt é do
 `orquestrador`.
 
-#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+#### linha de ADR para o índice (o `docs/adr/README.md` não está na minha lista)
 
 | 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 2: `propose::Transformer` ao lado do `Proposer`, `transform_verified` só devolve operações com o `Adapted` verificado; a gramática de mudanças das regras (menos, comparar com dificuldade, maior, desfazer, en e pt) por estrutura e registro; o prompt de mudança com `{"ops": [...]}` e reparo; o mesmo `propose` da linha com uma superfície aberta, sem ação nova (a projeção das baselines não muda); o host guarda a política de cada superfície e os pedidos (`apply_all`, `undo_asked`); ênfase de stat por `typography` e de badge por `background`; a linha do item das regras por sentido, a decisão como badge (task-70 fase 2) |
 
@@ -1091,24 +1091,24 @@ sequência com o receipt dizendo qual passo e por quê.
 #### (a) os receipts, ao vivo e gravados
 
 o `Receipt` guarda o id, o `Request` inteiro, a revisão contra a qual foi
-validado e cada estágio com o tempo (`crates/sem/src/receipt.rs:176` a
+validado e cada estágio com o tempo (`rust/accord/src/receipts.rs:176` a
 `181`); o `Request` guarda o ator, o alvo, a ação, o parâmetro, o que o
-ator viu e a pergunta de um agente (`crates/sem/src/request.rs:75` a
+ator viu e a pergunta de um agente (`rust/accord/src/requests.rs:75` a
 `90`); o estágio final é o último (`receipt.rs:116` a `125`, `:209`).
 ao vivo, todo estágio passa por `ReceiptSink::on_stage` na ordem em que
-acontece (`crates/sem/src/dispatch.rs:54` a `73`, `:338` a `348`), e o
+acontece (`rust/accord/src/dispatch.rs:54` a `73`, `:338` a `348`), e o
 showcase tem um dispatcher só, o do todo, que empresta para as outras
-páginas (`crates/showcase/src/view/apps/app/semantics.rs`,
+páginas (`apps/uigallery/src/views/apps/todo/semantics/mod.rs`,
 `with_dispatcher`; `view/dispatch.rs:420` a `426`, `add_sink`).
 
 o `.monster` da 63 guarda um evento `Kind::Stage` por estágio, na mesma
 ordem: a origem (um por dispatcher), o id, o request e o estágio
-(`crates/rec/src/event.rs:50` a `56`), redigidos contra o estado gravado
-naquele instante (`crates/rec/src/ring.rs:235` a `260`: o parâmetro e os
-valores de um alvo secreto viram o tamanho, `crates/sem/src/redact.rs:84`
+(`rust/record/src/event.rs:50` a `56`), redigidos contra o estado gravado
+naquele instante (`rust/record/src/ring.rs:235` a `260`: o parâmetro e os
+valores de um alvo secreto viram o tamanho, `rust/accord/src/redactor.rs:84`
 a `96`). `Session::receipts` remonta os receipts desses eventos
-(`crates/rec/src/session.rs:236` a `271`) e o inspetor lê por aí
-(`crates/inspect/src/index.rs:72` a `104`).
+(`rust/record/src/session.rs:236` a `271`) e o inspetor lê por aí
+(`rust/replay/src/index.rs:72` a `104`).
 
 sem duas fontes da verdade: o detector come a mesma coisa nos dois
 casos, o fluxo de estágios `(id, request, estágio)` de um dispatcher, na
@@ -1132,7 +1132,7 @@ um passo é o mesmo que outro quando tem a mesma ação e o mesmo alvo, ou
 quando os dois alvos são itens da mesma coleção: o id termina num
 segmento de chave e o resto é o mesmo (`silences.cut[3]` e
 `silences.cut[4]` são itens de `silences.cut`; `SemId::parent_path`,
-`crates/sem/src/id.rs:74` a `99`). numa repetição, todos os passos por
+`rust/accord/src/identity.rs:74` a `99`). numa repetição, todos os passos por
 item são do mesmo item (prévia do corte 3 e aplicar do corte 3); de uma
 repetição para a outra o item muda. um passo cujo alvo é igual em todas
 as repetições fica exato. a sequência inteira é do mesmo ator
@@ -1149,7 +1149,7 @@ pessoa).
 o parâmetro não entra: um passo com parâmetro não é passo de composta.
 "livre" não cabe porque a composta vira um botão, e o `activate` de um
 botão não manda parâmetro (o `promote` recusa uma ação com parâmetro,
-`crates/uir/src/transform/view.rs:164` a `169`). "o mesmo valor" faria o
+`rust/plevir/src/transform/view.rs:164` a `169`). "o mesmo valor" faria o
 detector guardar o que a pessoa digitou para repetir depois, um canal
 novo, e a redação do `sem` só reduz o parâmetro de um alvo secreto
 (`redact.rs:84` a `89`): o texto de um campo comum ficaria guardado como
@@ -1169,16 +1169,16 @@ outra: a composta por item em cada nó que tem todas as ações dos passos
 lê a união do que os passos leem, está ligada quando todos os passos
 estão, e a política é a mais estreita: os atores que todos os passos
 deixam, a confirmação mais forte, destrutiva se algum passo for. como
-está na projeção, está no registro (`crates/uir/src/caps.rs:72` a `93`):
+está na projeção, está no registro (`rust/plevir/src/capabilities.rs:72` a `93`):
 o `promote` a acha e o verifier liga. nenhum `Dispatcher` novo, nenhuma
 tabela de compostas no `sem`: o request da composta passa pelo
 `dispatch` como todo request, o `execute` responde `Started`, e os passos
 passam pelo mesmo dispatcher no mesmo empréstimo, como o cancelar já faz
-(`crates/showcase/src/view/apps/silences/generated/page.rs:67` a `79`);
+(`apps/uigallery/src/views/apps/silences/generative/page.rs:67` a `79`);
 a composta termina por `complete` ou `fail` (`dispatch.rs:242` a `257`).
 
 o mínimo aditivo no `sem`: o `SnapshotBuilder` não deixa ler o que já foi
-declarado nem voltar a um nó (`crates/sem/src/builder.rs:38` a `42`, o
+declarado nem voltar a um nó (`rust/accord/src/assembly.rs:38` a `42`, o
 `NodeBuilder` só existe logo depois de `node`). a composta é declarada
 depois da projeção do app, a partir das ações que o app declarou naquela
 mesma projeção (o que leem, se estão ligadas, a política), então o
@@ -1186,12 +1186,12 @@ builder ganha dois métodos: `declared()`, os nós declarados até ali, e
 `reopen(id)`, continuar declarando um nó declarado antes. sem eles, cada
 projeção seria feita duas vezes. nenhum tipo muda.
 
-o módulo mora em `crates/propose/src/compose/`: o detector, a composta, a
+o módulo mora em `rust/offers/src/compose/`: o detector, a composta, a
 proposta e o encadeamento. só depende do `sem`, que o `propose` já usa
-(`crates/propose/Cargo.toml`), compila para wasm e mobile (o showcase
+(`rust/offers/Cargo.toml`), compila para wasm e mobile (o showcase
 depende do `propose` em todo alvo), e não pede crate novo. não mora no
 `rec` nem no `inspect`: o showcase só tem o `rec` no desktop e o
-`inspect` como dev-dependency (`crates/showcase/Cargo.toml`), e o
+`inspect` como dev-dependency (`apps/uigallery/Cargo.toml`), e o
 detector ao vivo tem que rodar em todo alvo; a sessão gravada chega nele
 pelos eventos do `rec`. não mora no `sem`: é uma proposta para a pessoa,
 não o contrato.
@@ -1200,10 +1200,10 @@ o `promote` e o template. a composta por item é ligada, na superfície,
 dentro do template do item, com o alvo do template
 (`silences.cut[{item}]`), e o verifier já aceita isso quando todo nó que
 cabe no template declara a ação igual
-(`crates/uir/src/verify/bind.rs:169` a `213`). o `promote` da fase 1
+(`rust/plevir/src/verify/bind.rs:169` a `213`). o `promote` da fase 1
 procura a ação pelo alvo exato (`view.rs:154`, `caps.rs:138`), e o
 registro não tem o template. o `uir` está fora desta fase, então o host
-(`crates/surface/src/host.rs`, o mínimo) entrega ao `promote` um registro
+(`rust/screen/src/host/mod.rs`, o mínimo) entrega ao `promote` um registro
 onde o template é mais um membro, com as ações de um membro de verdade:
 a mesma regra do verifier (os membros declaram igual), só para aquela
 operação; o que ela faz é verificado de novo como toda operação. o botão
@@ -1220,7 +1220,7 @@ pedida. o passo k+1 é observado sobre o estado que o passo k deixou, logo
 que o dispatch dele volta, e despachado quando o passo k termina: na
 hora, se ele completou; ou, se ele começou e termina depois (a prévia de
 um frame que ainda não foi decodificado,
-`crates/showcase/src/view/apps/silences/semantics.rs:328` a `340`),
+`apps/uigallery/src/views/apps/silences/fixed_page/semantics.rs:328` a `340`),
 quando o wake da página o encerra (`silences/jobs.rs:99`) e roda a
 sequência adiante.
 
@@ -1228,7 +1228,7 @@ assim cada passo confere as próprias precondições contra o estado depois
 do anterior, e o que mudou nesse meio, por outro ator enquanto a prévia
 decodificava, faz o passo envelhecer: a recusa stale da 83 com o delta, e
 o `acted` da 90/91 nomeando quem agiu (sem olhada, a partir da revisão que
-o passo observou, `crates/sem/src/check.rs:106` a `120`,
+o passo observou, `rust/accord/src/decision.rs:106` a `120`,
 `dispatch.rs:359` a `394`). um passo que começou e cujo próprio efeito
 chega depois também pode envelhecer o seguinte; a sequência para, com o
 motivo, em vez de passar por cima do que não viu.
@@ -1256,7 +1256,7 @@ fez e que espera (`dispatch.rs:195` a `236`). uma oferta não é request de
 ninguém: nenhum ator pediu, e o detector não é ator (`request.rs:14` a
 `19`). o aceite é o request da própria pessoa: `install` e `dismiss` no
 nó da oferta, com a política `PERSON_ONLY` do showcase
-(`crates/showcase/src/view/dispatch/shell.rs:55` a `60`): um agente é
+(`apps/uigallery/src/views/dispatcher/shell/mod.rs:55` a `60`): um agente é
 recusado `not_authorized` pelo `check` (`check.rs:186` a `190`), como nas
 ações só da pessoa do shell; um teste faz as vezes da pessoa, como lá.
 nada instala sozinho: só o `install` instala.
@@ -1321,7 +1321,7 @@ seguinte é conferido quando chega.
 
 #### o detector e a igualdade de passos
 
-`crates/propose/src/compose/detect.rs`: `Detector::stage` (`:102`) lê o
+`rust/offers/src/compose/detect.rs`: `Detector::stage` (`:102`) lê o
 fluxo de estágios `(id, request, estágio)` de um dispatcher; um request
 entra no histórico (`:30`, 64 no máximo) quando termina, na ordem do id;
 um request feito enquanto uma composta do mesmo ator roda é passo dela e
@@ -1334,11 +1334,11 @@ entra como passo o que completou sem parâmetro, sem esperar pessoa e não
 eventos `Kind::Stage` do `rec` na ordem do arquivo, pela mesma chamada.
 o detector não guarda valor de parâmetro nenhum.
 
-testes: `crates/propose/tests/compose/detect.rs` (repetida N vezes
+testes: `rust/offers/tests/compose/detect.rs` (repetida N vezes
 acha; outro ator no meio, outra ordem, um passo recusado, dois itens numa
 repetição, uma ação só repetida, um passo que esperou a pessoa: não
 acha; um passo que termina depois entra na ordem pedida; o parâmetro
-secreto não fica no detector) e `crates/showcase/tests/composites.rs` (a
+secreto não fica no detector) e `apps/uigallery/tests/composites.rs` (a
 sessão real da galeria gravada pelo `rec`, escrita num `.monster`, lida
 de volta: a mesma resposta do detector ao vivo; e a demo gravada da 69,
 `fixtures/demo/silences-demo.monster`, onde o agente repetiu "escolher o
@@ -1347,7 +1347,7 @@ desses passos levam parâmetro).
 
 #### onde a composta mora e o que mudou no `sem`
 
-o módulo é `crates/propose/src/compose/` (sem crate novo, sem
+o módulo é `rust/offers/src/compose/` (sem crate novo, sem
 dependência nova, compila em wasm e mobile). a composta é uma ação do
 app: `Composite::declare` (`composite.rs:57`) a declara depois da
 projeção do app, em cada item que tem as ações dos passos (ou no nó do
@@ -1356,47 +1356,47 @@ pelo primeiro passo, e a política mais estreita (`decl`, `:103`:
 atores que todos deixam, confirmação mais forte, destrutiva se algum
 for). `calls` (`:145`) dá os passos para o nó pedido.
 
-no `sem`, só adição: `SnapshotBuilder::declared` (`crates/sem/src/builder.rs:99`)
-e `reopen` (`:107`), com o teste em `crates/sem/tests/builder.rs`. na
+no `sem`, só adição: `SnapshotBuilder::declared` (`rust/accord/src/assembly.rs:99`)
+e `reopen` (`:107`), com o teste em `rust/accord/tests/assembly.rs`. na
 Silences, `SilencesPage::project` termina com as compostas
-(`crates/showcase/src/view/apps/silences/semantics.rs:300`).
+(`apps/uigallery/src/views/apps/silences/fixed_page/semantics.rs:300`).
 
-no host, o mínimo: `registry` (`crates/surface/src/host.rs:123`, usado
+no host, o mínimo: `registry` (`rust/screen/src/host/mod.rs:123`, usado
 em `apply_all`, `:310`) dá ao `promote` da fase 1 um registro onde o
 template do item (`silences.cut[{item}]`) é mais um membro, com as ações
 de um membro de verdade, só para aquela operação; o verifier confere o
-resto como sempre. testes: `crates/surface/tests/promote.rs` (um botão
+resto como sempre. testes: `rust/screen/tests/promote.rs` (um botão
 por item, cada um pede a composta do seu corte, desfazer volta; um corte
 sem a ação faz o verifier recusar).
 
 #### o aceite
 
-`Composer` (`crates/propose/src/compose/offer.rs`): `offer` (`:53`) só
+`Composer` (`rust/offers/src/compose/offer.rs`): `offer` (`:53`) só
 oferece o que o app admite e que não foi recusado nem instalado na
 sessão; `decline` (`:72`); `accept` (`:82`) instala e diz ao detector
 que a ação é composta. nada instala sozinho. na Silences, a faixa
 `silences_surface.composite` sob a linha de proposta
-(`crates/showcase/src/view/apps/silences/generated/offer.rs`: `band`
+(`apps/uigallery/src/views/apps/silences/generative/offer.rs`: `band`
 `:169`, `project` `:188`), com `install` e `dismiss` `PERSON_ONLY`; a
 resposta roda em `Page::answered`
-(`crates/showcase/src/view/apps/silences/generated/page.rs:309`), que
+(`apps/uigallery/src/views/apps/silences/generative/page.rs:309`), que
 promove o botão na revisão aberta (`promote`, `:360`, dentro do
 contêiner de um passo, `beside`, `offer.rs:252`).
 
-testes (`crates/showcase/src/view/apps/silences/tests/composites.rs`):
+testes (`apps/uigallery/src/views/apps/silences/tests/composites.rs`):
 oferecida e nada instalado; a pessoa aceita com um clique; um agente é
 recusado `not_authorized` e a oferta fica; recusada, some e não volta
 com a mesma sequência; pelo port de verdade, o agente repete os dois
 cortes, vê a oferta e o `install` volta `requested, rejected`;
 instalada com a revisão aberta, é ação de cada corte no registro e botão
 de cada corte na revisão; sem superfície, instala e não promove.
-`crates/propose/tests/compose/offer.rs` e `declare.rs` (o nome e o
+`rust/offers/tests/compose/offer.rs` e `declare.rs` (o nome e o
 rótulo vindos do app, um nome tomado ganha número, uma sequência que
 passa por uma ação só da pessoa vira composta que um agente não pede).
 
 #### o encadeamento e a parada no meio
 
-`Chain::advance` (`crates/propose/src/compose/chain.rs:75`): o `execute`
+`Chain::advance` (`rust/offers/src/compose/chain.rs:75`): o `execute`
 da composta responde `Started` (`start_composite`, `offer.rs:352`) e a
 página roda a cadeia no mesmo empréstimo (`composed`, `offer.rs:334`;
 `semantics.rs:437`) e no wake, quando um passo que começou termina
@@ -1406,7 +1406,7 @@ quando ele termina. a composta completa com `steps` e `requests`, ou
 falha dizendo o passo, o request, o porquê e o que rodou (`stop`,
 `:138`). o que rodou fica rodado.
 
-testes: `crates/propose/tests/compose/chain.rs` (todos os passos, do
+testes: `rust/offers/tests/compose/chain.rs` (todos os passos, do
 ator da composta; um passo que o anterior desligou para, com o motivo, e
 o que rodou fica; um passo cujo estado outro ator mudou enquanto o
 anterior rodava para stale, com o delta e quem agiu; um agente não roda
@@ -1433,9 +1433,9 @@ as regras propõem de novo mostra a composta em cada corte sozinha).
 
 | | imagem |
 | --- | --- |
-| antes (a revisão pelas regras, baseline da fase 2) | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
-| a proposta à vista | `crates/showcase/fixtures/regress/silences-review-by-the-rules-a-sequence-repeated@core@1280x800/frame.png` |
-| a composta instalada | `crates/showcase/fixtures/regress/silences-review-by-the-rules-the-sequence-as-one-action@core@1280x800/frame.png` |
+| antes (a revisão pelas regras, baseline da fase 2) | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/frame.png` |
+| a proposta à vista | `tool/bench/regress/baselines/silences-review-by-the-rules-a-sequence-repeated@core@1280x800/frame.png` |
+| a composta instalada | `tool/bench/regress/baselines/silences-review-by-the-rules-the-sequence-as-one-action@core@1280x800/frame.png` |
 
 na proposta, sob "proposed by the rules for ...", a linha "you did
 "preview segment, then apply cut" on each cut, 2 times in a row" com
@@ -1455,7 +1455,7 @@ instalada, a linha sumiu, e cada corte tem, sob "preview segment",
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ a0330678 (a contagem da fase 2) | 2809 passam, 25 ignorados (147 suítes) | 85 passam, 1 ignorado (6 suítes) | 2894 |
-| depois, esta branch @ f74ce129 (`./script/gate` offline, saída 0, 23:56:01 a 23:58:22) | 2847 passam, 0 falhas, 25 ignorados (150 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2932 |
+| depois, esta branch @ f74ce129 (`./tool/tasks/fullcheck.sh` offline, saída 0, 23:56:01 a 23:58:22) | 2847 passam, 0 falhas, 25 ignorados (150 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2932 |
 
 38 testes novos e três suítes (`propose`: `compose`, 23; `surface`:
 `promote`, 2; `showcase`: `composites`, 2; mais 10 na lib do showcase e
@@ -1467,7 +1467,7 @@ nenhuma GPU aberta (os 173 de antes iguais, 2 novos). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
 chamado.
 
-#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+#### linha de ADR para o índice (o `docs/adr/README.md` não está na minha lista)
 
 | 2026-09-24 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 3: `propose::compose`; o detector lê o fluxo de estágios de um dispatcher, ao vivo (`Listener`, um `ReceiptSink`) e gravado (os `Kind::Stage` do `rec`), pela mesma chamada; passos iguais pela ação e pelo nó, ou por itens da mesma coleção com um item por repetição, do mesmo ator, contíguos; passo com parâmetro, recusado, que esperou pessoa ou composto corta, e nenhum valor de parâmetro fica; a composta é ação do app declarada depois da projeção (`SnapshotBuilder::declared` e `reopen`, a única adição ao `sem`), ligada pelo primeiro passo, com a política mais estreita dos passos; o aceite é o request da pessoa (`install`/`dismiss` `PERSON_ONLY`), não `confirm`; o host promove no template do item com o template como membro do registro; a cadeia roda cada passo como request do mesmo ator, observado sobre o que o anterior deixou, e o primeiro recusado falha a composta dizendo qual passo e por quê; sem rollback (task-70 fase 3) |
 
@@ -1514,30 +1514,30 @@ branch `task/70d-a11y-transforms`, sobre a `main` em `91bade03`.
 ### sonda (antes do primeiro tipo, 2026-09-25)
 
 o que existe hoje: nenhuma preferência além do reduced motion. nada em
-`crates/showcase/src`, `crates/surface/src` ou `crates/uir/src` guarda
+`apps/uigallery/src`, `rust/screen/src` ou `rust/plevir/src` guarda
 texto maior, contraste ou densidade da pessoa (grep). as operações da
 fase 1 que mexem na aparência são três, só por token:
-`crates/uir/src/transform/look.rs`, `emphasize` (`:97` a `144`),
+`rust/plevir/src/transform/look.rs`, `emphasize` (`:97` a `144`),
 `density` (`:160` a `202`) e `restyle` (`:233` a `262`). o host guarda o
-histórico como uma pilha (`crates/surface/src/host.rs:106` a `114`,
+histórico como uma pilha (`rust/screen/src/host/mod.rs:106` a `114`,
 `Adapting`) e desfaz só pelo topo (`take_back`, `:355` a `402`).
 
 #### (a) as preferências: quais, onde moram, quem liga
 
 - **quais.** três nesta fase: texto maior, mais contraste, densidade
   (mais denso ou mais espaçado, uma das duas). o reduced motion já vale
-  desde a 75: o valor é da thread (`crates/engine/src/animation/mod.rs:15`
+  desde a 75: o valor é da thread (`rust/engine/src/compose/animation/mod.rs:15`
   a `40`), e a superfície gerada passa só por `Spring` (a entrada e a
-  saída, `crates/surface/src/motion.rs:41` a `52`) e `Tween` (o deslizar,
+  saída, `rust/screen/src/transition.rs:41` a `52`) e `Tween` (o deslizar,
   `:307` a `316`). falta um frame: a transição nasce no primeiro desenho
-  depois da mudança (`crates/surface/src/surface.rs:295` a `305`, `enter`
+  depois da mudança (`rust/screen/src/surface.rs:295` a `305`, `enter`
   e `slide`) e é lida logo em seguida, antes de qualquer tick
   (`:307` e `:308`; o fantasma, `motion.rs:187` a `197`): o nó que nasce
   sai com opacidade 0, o que mudou de lugar sai no lugar de antes, o que
   saiu sai inteiro; só o tick seguinte (`Motion::wake`, `:345`) pousa. o
   flag do próprio host, que não cria nada disso (`host.rs:505` a `515`,
   `motion.rs:245` a `256`), nenhuma página liga (grep de
-  `set_reduced_motion` em `crates/showcase/src`: nada). a correção cabe
+  `set_reduced_motion` em `apps/uigallery/src`: nada). a correção cabe
   no `surface`: o `Motion` lê também `engine::animation::reduced_motion()`,
   o valor que a ponte já põe; nenhuma leitura nova do sistema.
 - **onde moram.** no app, como valor da pessoa: o `SurfaceHost` guarda as
@@ -1549,26 +1549,26 @@ histórico como uma pilha (`crates/surface/src/host.rs:106` a `114`,
 - **quem liga, e onde.** só a pessoa. a primeira ideia, uma ação
   `PERSON_ONLY` sempre projetada na página, não cabe sem mudar baseline:
   o `semantics.json` de cada baseline guarda as ações de cada nó
-  (`crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/semantics.json`,
+  (`tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/semantics.json`,
   a linha `silences_surface`), e o regress compara a revisão da projeção
-  inteira (`crates/showcase/examples/regress/compare.rs:74` a `96`): as 14
+  inteira (`tool/bench/regress/src/compare.rs:74` a `96`): as 14
   baselines da Silences mudariam. mudaria também o menu da página, que
-  lista as ações simples da Silences (`crates/showcase/src/app/menu.rs:411`
-  a `432`), e a lista do leitor de tela (`crates/showcase/tests/access_tree.rs:323`
+  lista as ações simples da Silences (`apps/uigallery/src/shell/system/menu.rs:411`
+  a `432`), e a lista do leitor de tela (`apps/uigallery/tests/access_tree.rs:323`
   a `339`), fora dos meus arquivos. a shell, onde mora o tema, não entra
   nas baselines, mas está fora dos meus arquivos, e o menu dela mostra o
   estado de um item com a marca, que é o valor.
   o caminho: uma faixa de acessibilidade sob a linha de proposta, como a
-  oferta da fase 3 (`crates/showcase/src/view/apps/silences/generated/offer.rs:1`
+  oferta da fase 3 (`apps/uigallery/src/views/apps/silences/generative/offer.rs:1`
   a `9`), projetada só enquanto está aberta, então nada do que a página
   projeta hoje muda. a pessoa abre escrevendo "accessibility" ou
   "acessibilidade" na linha e pedindo, pelo mesmo `propose` da fase 2;
   um agente que pede isso é recusado ("the accessibility preferences are
   the person's"). na faixa, "larger text", "more contrast", "denser",
   "sparser" e "done", todos `PERSON_ONLY`
-  (`crates/showcase/src/view/dispatch/shell.rs:55` a `60`): um agente é
+  (`apps/uigallery/src/views/dispatcher/shell/mod.rs:55` a `60`): um agente é
   recusado `not_authorized` pelo `check`. cada botão liga ou desliga a
-  sua. arquivos: `crates/showcase/src/view/apps/silences/generated/access.rs`
+  sua. arquivos: `apps/uigallery/src/views/apps/silences/generative/access.rs`
   (novo), `generated.rs`, `generated/page.rs`, `silences.rs` e os testes
   em `silences/tests/`.
 
@@ -1579,36 +1579,36 @@ histórico como uma pilha (`crates/surface/src/host.rs:106` a `114`,
   tema (`look.rs:27` a `57`: sem estilo é `body`, vai a `title`; do topo,
   `h4`, não passa); o stat sobe o tamanho do valor (`base_m`, `title`,
   `headline`, `look.rs:61` a `65`), e o rótulo dele cresce junto
-  (`crates/comps/src/content/stat.rs:72` a `79`). a escada leva o estilo
+  (`rust/engine/src/widgets/content/stat.rs:72` a `79`). a escada leva o estilo
   com peso do degrau (`look.rs:47` a `57`), então o texto também fica
   mais forte. o que não alcança: badge, botão, campo, select, abas,
   slider, tabela, imagem desenham o texto no tamanho do componente, e
-  nenhum lê `typography` (`crates/surface/src/draw.rs:150` a `212`); o
+  nenhum lê `typography` (`rust/screen/src/draw.rs:150` a `212`); o
   que já está no topo fica.
 - **mais contraste**: `restyle` para o papel `text`, a tinta mais forte
   que todo tema desenha: nos quatro temas, `colors.text` passa AA sobre
   as cinco superfícies que a 75 mede (nenhum par de `colors.text` em
-  `KNOWN`, `crates/engine/src/theme/tests_contrast.rs:192` a `398`). o
-  IR não sabe o tema (os tokens são nomes, `crates/uir/src/token.rs:5` a
+  `KNOWN`, `rust/engine/src/styling/theme/tests/contrast.rs:192` a `398`). o
+  IR não sabe o tema (os tokens são nomes, `rust/plevir/src/token.rs:5` a
   `8`), e a mesma superfície desenha em qualquer um dos quatro, então a
   troca é a mesma em todos, e o teste mede. o que vai: um `text` em
   `text_dim` ou `text_mid` (no core as duas são `#7B7B7B`, 4,13 sobre o
   papel, `tests_contrast.rs:196` e `:197`). a Silences não tem nenhum:
   nem as regras nem o Claude da fixture pintam texto
-  (`crates/showcase/fixtures/ir/silences-review-claude.ir.json`), e os
+  (`rust/plevir/tests/fixtures/silences-review-claude.ir.json`), e os
   pares que falham nela são de componentes. dois deles cabem num token,
   e a fase ganha as duas linhas, aditivas: o `restyle` passa a aceitar o
   fundo de um badge (um dos papéis que o materializador já lê como
-  intenção do formato preenchido, `crates/surface/src/token.rs:65` a
+  intenção do formato preenchido, `rust/screen/src/token.rs:65` a
   `73`; o texto dele vem em contraste com o fundo,
-  `crates/comps/src/core.rs:164` a `170`), e a tinta de um slider, de
+  `rust/engine/src/widgets/widget.rs:164` a `170`), e a tinta de um slider, de
   uma tabela e de uma imagem, que o próprio host desenha em `text_mid` e
   `text_dim` (`draw.rs:351` a `361`, `:382` a `390`, `:448` a `457`) e
   passa a ler de `props.color`. assim "mais contraste" enche o badge sem
   fundo (`accent`) e passa slider, tabela e imagem a `text`. o que nenhum
   token faz passar: o rótulo do stat (o comps desenha em `text_dim`,
   `stat.rs:164`, e não recebe cor), o cabeçalho da tabela
-  (`glass.text_faint`, `crates/comps/src/content/table.rs:354`), o texto
+  (`glass.text_faint`, `rust/engine/src/widgets/content/table.rs:354`), o texto
   num papel de intenção (success, danger, warning, info: a cor é o
   sentido; no core o verde dá 2,41), o texto sobre um fundo escuro
   (`accent_dim` no core é `#323232`, e `text` também é escuro), o rótulo
@@ -1620,7 +1620,7 @@ histórico como uma pilha (`crates/surface/src/host.rs:106` a `114`,
   nas pontas, para.
 
 a escolha de cada operação é pura e mora no `uir`
-(`crates/uir/src/transform/prefer.rs`, novo): as preferências viram a
+(`rust/plevir/src/transform/prefer.rs`, novo): as preferências viram a
 lista de operações sobre a superfície como ela está, e cada uma é
 aplicada pelo `Adapted::apply` de sempre, verificada; a que é recusada
 (o topo da escada, nada a mover) fica de fora, e a lista diz qual.
@@ -1662,19 +1662,19 @@ dela.
 a operação de uma preferência entra em nome de quem a ligou: a pessoa
 (`Actor::Human`), a tecnologia assistiva (`Actor::Assistive`) ou um teste
 (`Actor::Test`), os que o `PERSON_ONLY` deixa. nenhuma variante nova de
-`Actor` (`crates/sem/src/request.rs:23` a `28`) e nenhum tipo do `sem`
+`Actor` (`rust/accord/src/requests.rs:23` a `28`) e nenhum tipo do `sem`
 muda. o host recusa um agente também, além da política. o histórico
 mostra a preferência no `Change`, com um campo novo, `preference`, que
-diz qual (`crates/surface/src/host.rs:100` a `104`): `changes` dá as
+diz qual (`rust/screen/src/host/mod.rs:100` a `104`): `changes` dá as
 mudanças pedidas, na ordem, e depois as das preferências; `last_ask`,
 `undo` e `undo_asked` só veem as pedidas ("desfazer" não tira uma
 preferência; desligar tira).
 
 privacidade: a projeção de uma superfície não tem `props`
-(`crates/surface/src/project.rs:1` a `27`), então ela é a mesma com ou
+(`rust/screen/src/project.rs:1` a `27`), então ela é a mesma com ou
 sem preferência; a faixa só existe aberta, e os botões não têm estado. o
 modelo vê a superfície pedida: a mudança já pergunta sobre `current`
-(`crates/showcase/src/view/apps/surface_page/proposing/changing.rs:152`),
+(`apps/uigallery/src/views/apps/surface/offering/changing.rs:152`),
 que passa a ser a pedida, e a proposta de uma superfície nova passa a
 mandar o mesmo (`generated/page.rs:249` a `254` e
 `surface_page/page.rs:265` a `270` leem hoje `Surface::verified`, a
@@ -1685,16 +1685,16 @@ subiria de novo).
 #### (f) o `promote` do template no `uir`
 
 hoje o host empresta ao `promote` um registro onde o template é mais um
-membro da coleção (`registry`, `crates/surface/src/host.rs:116` a `147`,
+membro da coleção (`registry`, `rust/screen/src/host/mod.rs:116` a `147`,
 usado em `apply_all`, `:310`), porque o `promote` procura a ação pelo
-alvo exato (`crates/uir/src/transform/view.rs:154`, `caps.action`). o
+alvo exato (`rust/plevir/src/transform/view.rs:154`, `caps.action`). o
 mínimo no `uir`: quando o alvo carrega o item uma vez (`Pattern::of`,
-`crates/uir/src/item.rs:44` a `54`), a declaração é a do primeiro nó do
+`rust/plevir/src/item.rs:44` a `54`), a declaração é a do primeiro nó do
 registro que cabe no template e declara a ação, a regra com que o
-verifier liga um template (`crates/uir/src/verify/bind.rs:167` a `213`):
+verifier liga um template (`rust/plevir/src/verify/bind.rs:167` a `213`):
 todo nó que cabe declara igual, conferido depois, como sempre. o
 `registry` do host sai. os testes da fase 3
-(`crates/surface/tests/promote.rs`, a composta da Silences) não mudam.
+(`rust/screen/tests/promote.rs`, a composta da Silences) não mudam.
 
 #### nenhuma parada
 
@@ -1734,7 +1734,7 @@ mudou, nenhuma cor de tema mudou, nenhuma leitura nova do sistema,
 nenhum baseline existente mudou, nenhuma dependência nova, o disco ficou
 em 16 GB livres.
 
-um arquivo fora da lista, só aditivo: `crates/uir/src/lib.rs` ganhou o
+um arquivo fora da lista, só aditivo: `rust/plevir/src/lib.rs` ganhou o
 `pub use` de `Preferences`, `Preference`, `Preferred` e `Applied` (sem
 ele o `surface` não vê os tipos novos de `uir::transform`).
 
@@ -1748,9 +1748,9 @@ de slider, tabela e imagem).
 
 #### cada preferência e as operações
 
-o código: `crates/uir/src/transform/prefer.rs` (`Preferences`,
-`Preference`, `Preferences::over`), `crates/uir/src/transform/look.rs`
-(o `restyle` com as duas partes novas), `crates/surface/src/draw.rs` (a
+o código: `rust/plevir/src/transform/prefer.rs` (`Preferences`,
+`Preference`, `Preferences::over`), `rust/plevir/src/transform/look.rs`
+(o `restyle` com as duas partes novas), `rust/screen/src/draw.rs` (a
 tinta de slider, tabela e imagem lida de `props.color`).
 
 | preferência | operação | o que alcança | o que não alcança |
@@ -1759,16 +1759,16 @@ tinta de slider, tabela e imagem lida de `props.color`).
 | mais contraste | `restyle` para `text` de um `text` em `text_dim`/`text_mid` e de todo slider, tabela e imagem; `restyle` do fundo de um badge sem fundo para `accent` | o texto secundário, o rótulo e o valor do slider, as linhas da tabela, o rótulo da imagem, o badge (formato preenchido, o texto em contraste) | o rótulo do stat (`text_dim` do comps), o cabeçalho da tabela, o texto numa cor de intenção, o texto sobre fundo escuro, o rótulo de botão |
 | mais denso / mais espaçado | `density` uma vez | todo gap de stack e grid e todo padding com token | o que não tem token; as pontas |
 
-testes: `crates/uir/tests/prefer.rs` (cada preferência sozinha e todas
+testes: `rust/plevir/tests/prefer.rs` (cada preferência sozinha e todas
 juntas: só operações de aparência, cada resultado verificado de novo,
 nenhum id sai, o JSON do resultado lido de volta só com tokens, as
 inversas da última para a primeira devolvem a superfície byte a byte; o
-que cada uma alcança e deixa; o `restyle` novo), `crates/uir/tests/transform.rs`
+que cada uma alcança e deixa; o `restyle` novo), `rust/plevir/tests/transform.rs`
 (os de antes, iguais).
 
 #### o contraste, antes e depois, par a par
 
-medido como a 75 mede (`crates/showcase/src/view/apps/silences/tests/generated/contrast.rs`):
+medido como a 75 mede (`apps/uigallery/src/views/apps/silences/tests/generative/contrast.rs`):
 a revisão desenhada, cada texto com a tinta composta em luz linear sobre
 os fundos desenhados embaixo dele e o `bg` da página, luminância relativa
 do WCAG, 4,5 (3 para texto grande). no core; o teste confere cada razão.
@@ -1785,7 +1785,7 @@ do WCAG, 4,5 (3 para texto grande). no core; o teste confere cada razão.
 | rótulo do stat (regras: "start", "end", "duration", "shown", "value", "total", "applied", "rejected", "pending", "cut_secs"; Claude: "duration (s)", "total", "applied", "rejected", "pending", "seconds cut") `#7B7B7B` sobre `#FCFCFC` | 4,13 | 4,13, listado |
 
 o par que nenhum token faz passar: o rótulo do stat. o comps desenha em
-`colors.text_dim` (`crates/comps/src/content/stat.rs:164`) e não recebe
+`colors.text_dim` (`rust/engine/src/widgets/content/stat.rs:164`) e não recebe
 cor, e nenhum papel do IR chega nele. passar pede uma cor de rótulo no
 `Stat` do comps ou o `text_dim` do core mais escuro: comps ou tema,
 decisão do brenner. nenhuma cor de tema mudou.
@@ -1793,10 +1793,10 @@ decisão do brenner. nenhuma cor de tema mudou.
 #### desligar
 
 as preferências são a última camada do host
-(`crates/surface/src/host.rs`, `crates/surface/src/host/prefer.rs`): o
+(`rust/screen/src/host/mod.rs`, `rust/screen/src/host/prefer.rs`): o
 host guarda a superfície como foi pedida e desenha as preferências por
 cima, refeitas depois de toda mudança. desligar refaz sem ela. teste
-(`crates/surface/tests/prefer.rs`,
+(`rust/screen/tests/prefer.rs`,
 `turned_off_what_it_changed_goes_back_and_what_an_agent_asked_stays`):
 texto maior e mais contraste ligados, um agente esconde
 `review.detection`, a pessoa desliga uma (a outra fica) e depois as
@@ -1816,13 +1816,13 @@ de `Actor`. o `Change` ganhou `preference: Option<Preference>`:
 `changes` dá as pedidas e depois as das preferências; `last_ask`,
 `undo` e `undo_asked` só veem as pedidas.
 
-na página (`crates/showcase/src/view/apps/silences/generated/access.rs`,
+na página (`apps/uigallery/src/views/apps/silences/generative/access.rs`,
 novo; `generated.rs`, `generated/page.rs`, `silences.rs`): a pessoa
 escreve "accessibility" ou "acessibilidade" na linha e pede; a faixa
 abre sob a linha com "larger text", "more contrast", "denser",
 "sparser" e "done", todos `PERSON_ONLY`, sem estado, rótulo fixo; a
 preferência ligada aparece escura. testes
-(`crates/showcase/src/view/apps/silences/tests/generated/access.rs`): um
+(`apps/uigallery/src/views/apps/silences/tests/generative/access.rs`): um
 agente que pede "accessibility" falha com o motivo; um agente que aperta
 um botão é recusado `not_authorized`; a pessoa liga e desliga, e o
 histórico é dela; pelo port de verdade, com a faixa aberta, o agente vê
@@ -1839,25 +1839,25 @@ falha se voltar a ler).
 
 #### o reduced motion
 
-`crates/surface/src/motion.rs`: o `Motion` lê também
+`rust/screen/src/transition.rs`: o `Motion` lê também
 `engine::animation::reduced_motion()` e não cria transição; o primeiro
 frame depois de uma mudança já é a forma nova. teste em
-`crates/surface/tests/motion.rs` (sem a correção, o primeiro frame
+`rust/screen/tests/transition.rs` (sem a correção, o primeiro frame
 desenha o nó que saiu inteiro: conferido).
 
 #### o `promote` no `uir`
 
-`crates/uir/src/transform/view.rs`, `declared`: no template de um item,
+`rust/plevir/src/transform/view.rs`, `declared`: no template de um item,
 a ação do primeiro nó do registro que cabe e a declara, com o template
 como alvo; o verifier confere o resto. o `registry` saiu do host. teste
-novo em `crates/uir/tests/transform.rs`; os da fase 3
-(`crates/surface/tests/promote.rs`, `crates/showcase/tests/composites.rs`
+novo em `rust/plevir/tests/transform.rs`; os da fase 3
+(`rust/screen/tests/promote.rs`, `apps/uigallery/tests/composites.rs`
 e os de `silences/tests/composites.rs`) passam sem mudança.
 
 #### a demo
 
 o estado novo "Silences, review by the rules, larger text and more
-contrast" (`crates/showcase/examples/regress/state.rs`): a revisão pelas
+contrast" (`tool/bench/regress/src/state.rs`): a revisão pelas
 regras, "accessibility" pela linha, "larger text", "more contrast" e
 "done" pela faixa, como a pessoa (o harness é um ator de teste). em
 teste também:
@@ -1865,8 +1865,8 @@ teste também:
 
 | | imagem |
 | --- | --- |
-| antes (baseline da fase 2) | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1280x800/frame.png` |
-| depois | `crates/showcase/fixtures/regress/silences-review-by-the-rules-larger-text-and-more-contrast@core@1280x800/frame.png` |
+| antes (baseline da fase 2) | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1280x800/frame.png` |
+| depois | `tool/bench/regress/baselines/silences-review-by-the-rules-larger-text-and-more-contrast@core@1280x800/frame.png` |
 
 no depois, a faixa de cada corte ("0:03.0 to 0:05.0") passa de 15 para
 20 px, os números dos cortes e das contagens sobem um tamanho, o selo
@@ -1885,7 +1885,7 @@ par listado). a linha mostra "accessibility", o que a pessoa escreveu.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 91bade03 (o número do briefing) | | | 2990 passam, 27 ignorados |
-| depois, esta branch @ 8124e8a7 (`./script/gate` offline, saída 0, 02:35:14 a 02:37:33) | 2925 passam, 0 falhas, 26 ignorados (156 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 3010 passam, 27 ignorados |
+| depois, esta branch @ 8124e8a7 (`./tool/tasks/fullcheck.sh` offline, saída 0, 02:35:14 a 02:37:33) | 2925 passam, 0 falhas, 26 ignorados (156 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 3010 passam, 27 ignorados |
 
 20 testes novos e três suítes (`uir`: `prefer`, 5, e 1 em `transform`;
 `surface`: `prefer`, 6, e 1 em `motion`; a lib do `showcase`: 5 em
@@ -1897,7 +1897,7 @@ nenhuma GPU aberta (os 175 de antes iguais, 1 novo). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
 chamado (o teste do prompt usa o `claude` falso do repositório).
 
-#### linha de ADR para o índice (o `docs/ADR/README.md` não está na minha lista)
+#### linha de ADR para o índice (o `docs/adr/README.md` não está na minha lista)
 
 | 2026-09-25 | [adaptive-transforms-preserve-identity](adaptive-transforms-preserve-identity.md) | adição proposta | fase 4: `uir::Preferences` (texto maior, mais contraste, densidade) viram operações da fase 1 por token, cada uma verificada (`emphasize` em texto e stat; `restyle` para `text` e badge preenchido, com o `restyle` alcançando o fundo do badge e a tinta de slider, tabela e imagem; `density`); o host desenha as preferências como a última camada, desde o primeiro frame, e desligar deixa o que outros pediram; só a pessoa liga (`SurfaceHost::prefer` recusa agente; a faixa `PERSON_ONLY` da Silences, projetada só aberta, sem estado); a projeção e o prompt são os mesmos com e sem preferência; contraste medido como a 75, o rótulo do stat listado; o reduced motion da thread sem transição no primeiro frame; o `promote` de template no `uir`, sem o `registry` do host (task-70 fase 4) |
 
@@ -1915,7 +1915,7 @@ chamado (o teste do prompt usa o `claude` falso do repositório).
   a marca, que é o valor: decisão.
 - o rótulo do stat fica em 4,13 no core com mais contraste (comps ou
   tema).
-- o prompt de mudança (`crates/propose/src/ops.rs`) não fala das duas
+- o prompt de mudança (`rust/offers/src/operations.rs`) não fala das duas
   partes novas do `restyle`.
 - um leitor de tela ouve "larger text, button" e não se está ligado: é a
   troca que a promessa de privacidade pede; quem usa essas preferências

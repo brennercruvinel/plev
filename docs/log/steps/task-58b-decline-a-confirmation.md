@@ -43,7 +43,7 @@ rejeitado com o motivo.
 - a forma JSON de `Rejection` ganha a variante; os goldens do `sem` são
   atualizados.
 - o ide passa a chamar `decline` quando a pessoa fecha o modal sem
-  confirmar (`crates/ide/src/workbench`), e o toast diz que foi recusado.
+  confirmar (`apps/idestudio/src/capability`), e o toast diz que foi recusado.
 
 ## aceite
 

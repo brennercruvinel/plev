@@ -14,7 +14,7 @@
 //!
 //! A check reads `scene.json` and nothing else while nothing changed: the
 //! revision stands in for the projection (equal revisions are equal
-//! snapshots, docs/ADR/semantic-contract-as-pure-projection.md), and the
+//! snapshots, docs/adr/semantics/0032-semantic-contract-as-pure-projection.md), and the
 //! image is decoded only when a layer's hash moved.
 
 use std::fs;

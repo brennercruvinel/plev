@@ -11,19 +11,19 @@ status: living
 
 ```
 rustup target add wasm32-unknown-unknown   # once; rust-toolchain.toml lists it
-script/web build --release                 # repo root; writes web/dist/
+tool/tasks/webtarget.sh build --release                 # repo root; writes web/dist/
 ```
 
-`script/web` runs `trunk --config web <cmd>`: trunk reads `web/Trunk.toml`
-and `web/index.html` (canvas styled 100vw by 100vh, background #303030 to
+`tool/tasks/webtarget.sh` runs `trunk --config web <cmd>`: trunk reads `apps/uigallery/web/Trunk.toml`
+and `apps/uigallery/web/index.html` (canvas styled 100vw by 100vh, background #303030 to
 avoid a white flash), builds the showcase for wasm32, runs wasm-bindgen
 with the CLI version matching Cargo.lock, and emits hashed artifacts into
 `web/dist/`. a Homebrew rust ignores rust-toolchain.toml and ships no
 wasm32 std; use rustup.
 
-`script/web` with no argument is the development loop (127.0.0.1:8080,
-watch mode). urnaui has its own: `script/web-urnaui` on 8081, from
-`web/urnaui`.
+`tool/tasks/webtarget.sh` with no argument is the development loop (127.0.0.1:8080,
+watch mode). urnaui has its own: `tool/tasks/webtarget.sh urnadbapp` on 8081, from
+`apps/urnadbapp/web`.
 
 ## serve
 
@@ -56,9 +56,9 @@ python3 -m http.server 8090 --directory web/dist
 
 1. `cargo check --target wasm32-unknown-unknown -p showcase` green (the
    gate runs it)
-2. `script/web build --release` succeeds; index, js and wasm respond 200
+2. `tool/tasks/webtarget.sh build --release` succeeds; index, js and wasm respond 200
 3. the browser console shows "GPU context ready (async)"
-4. the background samples 48,48,48 (docs/how-to/validate-visuals-by-pixel.md)
+4. the background samples 48,48,48 (docs/ref/validate-visuals-by-pixel.md)
 5. resizing the window reflows the layout; if it does not, someone
    reintroduced a fixed inner size on wasm (ADR
    async-gpu-init-and-single-wasm-entry)
@@ -67,5 +67,5 @@ python3 -m http.server 8090 --directory web/dist
 
 - a missing favicon logs one 404
 - the showcase handles Escape and CloseRequested with `event_loop.exit()`
-  (`crates/showcase/src/app.rs`); on wasm an exit freezes the canvas until
+  (`apps/uigallery/src/shell/mod.rs`); on wasm an exit freezes the canvas until
   reload. gate the exit off on wasm when touching that code

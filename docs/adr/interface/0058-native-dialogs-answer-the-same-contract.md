@@ -13,7 +13,7 @@ the engine had no native alert ("the disk is full") and no native
 confirmation ("delete this file?"). the ide asks a person to confirm a
 request another actor made (a discard by an agent, `Confirm::ForAgents`;
 an agent's question, `Request::ask`, task-92) in a modal it draws
-itself (`crates/ide/src/workbench/person.rs`: the request in
+itself (`apps/idestudio/src/capability/person.rs`: the request in
 `AwaitingConfirmation` opens `open_confirm_modal(id, title, body,
 confirm)`, and the modal's buttons answer through `confirmed_by_person`
 and `declined_by_person`, which call `Dispatcher::confirm` and
@@ -24,7 +24,7 @@ confirmation of task-58 to be offerable in the system's dialog, as an
 option of the app, without touching the contract.
 
 the probe (the handoff of item 8 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
+docs/log/steps/task-76-platform-integration.md) measured:
 
 - `rfd::MessageDialog::show` is synchronous and modal: on macOS it runs
   `NSAlert::runModal()` on the main thread, a nested modal loop, so the
@@ -126,7 +126,7 @@ docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
   (the shell owns the windows and `app.rs` did not change), so it is a
   free-standing panel, not a sheet.
 - the Files page's projection gained `files.warn` and `files:alert`: the
-  golden `crates/uir/fixtures/showcase-files.snapshot.json` and the two
+  golden `rust/plevir/tests/fixtures/uigallery-files.snapshot.json` and the two
   regress baselines of the page (`files@core`, `files@hoff`) were
   blessed for it; the other 159 baselines are unchanged.
 - `destructive` on the native confirmation follows the node's policy (a

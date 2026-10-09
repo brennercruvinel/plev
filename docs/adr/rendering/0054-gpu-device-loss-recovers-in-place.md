@@ -100,7 +100,7 @@ one flag, one recovery, one place in the frame.
 
 ## consequences
 
-- proven without a window, in `crates/engine/tests/device_loss.rs`
+- proven without a window, in `rust/engine/tests/device_loss.rs`
   through `engine::headless` (the window's frame path into a texture):
   frame A with text, a rounded rect and an image, `Device::destroy`,
   frame B pixel-identical to A (480x280, the image at its place, the

@@ -18,7 +18,7 @@ a demo 5 da task-80 (a revisão de três commits no ide, task-96) ficou
 pior que o painel fixo no diff: a superfície gerada mostra o diff numa
 tabela, cinco linhas por vez e sem cor, contra o diff inteiro do painel.
 o motivo não é do ide: o vocabulário fechado do IR (`uir::Component`,
-`crates/uir/src/vocab.rs`) não tem um componente para código nem para
+`rust/plevir/src/vocabulary.rs`) não tem um componente para código nem para
 diff. esta task põe um, e a demo 5 é medida de novo pelo mesmo critério
 escrito antes.
 
@@ -29,12 +29,12 @@ disse onde a superfície perde); a demo 5 da task-80.
 
 ## estado atual no código
 
-- `comps::content::CodeBlock` (`crates/comps/src/content/code_block.rs`)
+- `comps::content::CodeBlock` (`rust/engine/src/widgets/content/code_block.rs`)
   desenha texto no passo mono da rampa, com legenda; não sabe o que é
   uma linha adicionada ou removida.
 - o painel de diff do ide desenha o próprio diff
-  (`crates/ide/src/views/diff_view.rs`).
-- a revisão das regras (`crates/propose/src/review.rs`) liga o diff a
+  (`apps/idestudio/src/interfaces/panels/diff.rs`).
+- a revisão das regras (`rust/offers/src/review/mod.rs`) liga o diff a
   uma `table`.
 
 ## escopo
@@ -60,9 +60,9 @@ realce de sintaxe por linguagem; edição; o urnaui.
 
 ## superfície sob responsabilidade
 
-`crates/uir/src/**` (vocabulário, verificador, schema), `crates/surface`
-(materializar e desenhar), `crates/comps/src/content/code_block.rs`
-(aditivo), `crates/propose/src/review.rs`, o laboratório do ide para a
+`rust/plevir/src/**` (vocabulário, verificador, schema), `rust/screen`
+(materializar e desenhar), `rust/engine/src/widgets/content/code_block.rs`
+(aditivo), `rust/offers/src/review/mod.rs`, o laboratório do ide para a
 demo, testes.
 
 ## critérios de aceitação
@@ -71,7 +71,7 @@ demo, testes.
   linha pelos tokens, sem cor fora do tema.
 - a demo 5 medida de novo, e o resultado escrito ao lado do primeiro,
   qualquer que seja.
-- os baselines existentes iguais; `./script/gate` verde.
+- os baselines existentes iguais; `./tool/tasks/fullcheck.sh` verde.
 
 ## pare e reporte se
 
@@ -87,7 +87,7 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
 ### (a) o vocabulário: como um componente entra, e o que muda
 
 - um componente é uma variante de `uir::Component`
-  (`crates/uir/src/vocab.rs:50-93`), lida e escrita pelo serde dele
+  (`rust/plevir/src/vocabulary.rs:50-93`), lida e escrita pelo serde dele
   (`rename_all = "snake_case"`, `:48-49`), com um `Spec` como dado
   (`:125-134`): o papel no contrato, se tem filhos, como é nomeado
   (`Named`, `:97-106`), o estado que mostra (`StateProp`, nome e tipos,
@@ -97,31 +97,31 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   `ALL`, cada um uma vez; `role_of` (`:396-407`) só tem caso especial para
   o chip; `is_control` (`:411-413`) é todo papel interativo e a tab strip.
 - o verificador não tem regra por componente: lê o `Spec`. a regra 3
-  (`crates/uir/src/verify/mod.rs:304-357`) recusa filhos, layout e repeat
+  (`rust/plevir/src/verify/mod.rs:304-357`) recusa filhos, layout e repeat
   onde o `Spec` não é container; as regras 4 e 5
-  (`crates/uir/src/verify/bind.rs:35-111`) conferem cada estado ligado
+  (`rust/plevir/src/verify/bind.rs:35-111`) conferem cada estado ligado
   pelo nome e pelos tipos do `StateProp`, e cada evento pelo nome e pelo
-  parâmetro; a regra 7 (`crates/uir/src/verify/access.rs:91-139`) pede o
+  parâmetro; a regra 7 (`rust/plevir/src/verify/access.rs:91-139`) pede o
   rótulo pelo `Named` e põe na ordem de foco o que `is_control` diz. o
-  leitor (`crates/uir/src/decode.rs:128`) passa o `component` ao serde do
+  leitor (`rust/plevir/src/decode.rs:128`) passa o `component` ao serde do
   tipo.
-- o schema do prompt (`crates/uir/src/schema.rs:46-170`) é construído das
+- o schema do prompt (`rust/plevir/src/schema.rs:46-170`) é construído das
   mesmas tabelas: o enum de componentes de `Component::ALL` (`:48-52`,
   `:101-106`) e os nomes que uma ligação pode usar de `names()` (`:47`,
-  `:139-150`). `crates/uir/schema/plev-ir-1.json` é esse valor escrito, e
-  um teste mantém os dois iguais (`crates/uir/tests/fixtures.rs:206-221`,
+  `:139-150`). `rust/plevir/assets/plev-ir-1.json` é esse valor escrito, e
+  um teste mantém os dois iguais (`rust/plevir/tests/golden.rs:206-221`,
   `UIR_BLESS=1`). o prompt do `propose` lista cada componente de
   `Component::ALL` com o papel, o nome e o que mostra
-  (`crates/propose/src/prompt.rs:125-179`) e descreve a regra 7 em texto
+  (`rust/offers/src/prompt.rs:125-179`) e descreve a regra 7 em texto
   (`:49-53`).
 - os testes que fixam o vocabulário: `vocab.rs:439-481` (cada componente
   escreve como o nome, todo interativo é nomeado e manda algo, o papel do
-  chip); `crates/uir/tests/prop.rs` (a estratégia escolhe de
+  chip); `rust/plevir/tests/properties.rs` (a estratégia escolhe de
   `Component::ALL`, `:158`; o round trip, `:282`; o schema aceita, `:275`);
-  `crates/uir/tests/fixtures.rs` (os três IR de fixture verificam, leem e
+  `rust/plevir/tests/golden.rs` (os três IR de fixture verificam, leem e
   escrevem de volta iguais, o schema os aceita, `:88-174`);
-  `crates/propose/tests/llm.rs:168-170` (o prompt nomeia cada componente);
-  `crates/uir/tests/identity.rs:388`, `:554` (o `SwapView` percorre
+  `rust/offers/tests/llm.rs:168-170` (o prompt nomeia cada componente);
+  `rust/plevir/tests/identity.rs:388`, `:554` (o `SwapView` percorre
   `ALL`).
 - o que muda, só por adição: `Component::Code` no fim do enum e no fim de
   `ALL` (24 para 25), o nome `code`, o `Spec` dele (papel `region`, sem
@@ -133,38 +133,38 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   enum de estado, e o arquivo do schema é escrito de novo. nenhuma linha
   do verificador muda: a regra de ligação de sempre decide o `code`. a
   transformação não ganha nada: `code` fica fora das famílias do
-  `SwapView` (`crates/uir/src/transform/view.rs:38-50`) e o `Restyle`
+  `SwapView` (`rust/plevir/src/transform/view.rs:38-50`) e o `Restyle`
   recusa ele como recusa todo componente desenhado nas cores do tema
-  (`crates/uir/src/transform/look.rs:252-262`).
+  (`rust/plevir/src/transform/look.rs:252-262`).
 - um IR de antes continua válido byte a byte: todo nome que ele pode ter
   continua querendo dizer o mesmo, o leitor não muda, os enums do schema
   só crescem no fim. o teste novo lê cada `.ir.json` de
-  `crates/uir/fixtures` e `crates/surface/tests/fixtures`, verifica contra
+  `rust/plevir/tests/fixtures` e `rust/screen/tests/fixtures`, verifica contra
   o registro dele e escreve de volta os mesmos bytes.
 
 ### (b) o estado que o `code` liga
 
 - o ide projeta o diff na região `diff`
-  (`crates/ide/src/workbench/project.rs:129-150`): `target` (o id cujo diff
+  (`apps/idestudio/src/capability/project.rs:129-150`): `target` (o id cujo diff
   aparece), `lines` (as primeiras `DIFF_LINES` = 200, `:43`) e `count`.
   cada linha vai com a marca do diff unificado na frente: `+`, `-` ou
   espaço (`:135-142`); o cabeçalho do hunk vai como é, sem marca
   (`:137`).
 - o tipo de cada linha está na vista (`DiffLine::kind`,
-  `crates/ide/src/views/diff_view.rs:16-30`) e chega à projeção só como a
+  `apps/idestudio/src/interfaces/panels/diff.rs:16-30`) e chega à projeção só como a
   primeira letra. o cabeçalho não tem marca, e num diff de commit com mais
   de um arquivo ele começa pelo caminho (`path: @@ ...`,
-  `crates/git/src/diff.rs:140-156`): um arquivo cujo nome começa com `-`,
+  `rust/gitdrv/src/diff.rs:140-156`): um arquivo cujo nome começa com `-`,
   `+` ou espaço dá um cabeçalho que se lê como uma linha removida,
   adicionada ou de contexto. quem lê o tipo pela letra adivinha.
 - o mínimo aditivo: `diff:kinds`, uma lista do mesmo tamanho de
   `diff:lines`, com o nome do tipo de cada linha (`context`, `added`,
   `removed`, `header`), pelos nomes de `uir::LineKind`. nenhum tipo do
   `sem` muda (é um `Value::List`), nenhuma linha de `lines` muda. o que
-  isso move: o golden `crates/uir/fixtures/ide-workbench.snapshot.json`
+  isso move: o golden `rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json`
   ganha `diff:kinds` (lista vazia ali), escrito de novo por
   `UIR_BLESS=1 cargo test -p ide --test uir_fixture`; o recorte que o
-  Claude vê (`crates/ide/src/generated/scope.rs:63-81`) leva `kinds` na
+  Claude vê (`apps/idestudio/src/generative/scope.rs:63-81`) leva `kinds` na
   mesma condição de `lines` (só enquanto o diff mostra um dos commits
   pedidos), senão um `code` que o Claude propuser não verifica; uma
   observação do ide com um diff aberto fica até 200 palavras curtas mais
@@ -172,7 +172,7 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
 
 ### (c) o desenho
 
-- o `CodeBlock` hoje (`crates/comps/src/content/code_block.rs:13-116`):
+- o `CodeBlock` hoje (`rust/engine/src/widgets/content/code_block.rs:13-116`):
   `code` e `caption`; o fundo `glass.field` no raio `shape.nav` com a borda
   `glass.edge_soft` (`:66-91`); a legenda em `caption_sm` na cor
   `glass.text_faint` (`:94-106`); o código em `typography.mono()` na cor
@@ -188,12 +188,12 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
 - os tokens de cada tipo, só os que o tema já tem: atrás da linha, a
   lavagem de intenção do design system, o matiz do token da intenção no
   alfa `glass.wash_alpha` (como o chip selecionado,
-  `crates/comps/src/action/chip.rs:196-206`, e a barra de progresso,
-  `crates/comps/src/feedback/progress.rs:63-68`): `colors.success` na
+  `rust/engine/src/widgets/content/chip.rs:196-206`, e a barra de progresso,
+  `rust/engine/src/widgets/feedback/progress.rs:63-68`): `colors.success` na
   adicionada, `colors.danger` na removida, `glass.surface_hover` no
   cabeçalho, nada no contexto. o texto de todas em `colors.text`.
 - por que `colors.text` e não o `colors.text_mid` do bloco de hoje: medido
-  como a task-75 mede (`crates/engine/src/theme/tests_contrast.rs`, o
+  como a task-75 mede (`rust/engine/src/styling/theme/tests/contrast.rs`, o
   translúcido composto sobre o fundo em luz linear, a luminância do
   WCAG), o `text_mid` sobre a lavagem verde fica em 3,64 no hoff, e já
   sobre o bloco sem lavagem fica em 4,13 no core, 3,39 no dark e 2,80 no
@@ -209,18 +209,18 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   dito no handoff.
 - a rolagem: o `surface` rola uma lista hoje pela tabela, com a lista
   virtual do comps retida no `Widget::Table`
-  (`crates/surface/src/widget.rs:411-413`, a roda; `:448`, o `wake`),
+  (`rust/screen/src/widget.rs:411-413`, a roda; `:448`, o `wake`),
   recortada à altura quando `size.max` a limita
-  (`crates/surface/src/draw.rs:359-382`, task-96). o `code` faz o mesmo
+  (`rust/screen/src/draw.rs:359-382`, task-96). o `code` faz o mesmo
   com um widget retido novo, `Widget::Code`: um `ScrollState` do engine e
   um `Scrollbar` do comps, o par do painel de diff fixo
-  (`crates/ide/src/views/diff_view.rs:39-40`, `:131-132`, `:221`); a roda
+  (`apps/idestudio/src/interfaces/panels/diff.rs:39-40`, `:131-132`, `:221`); a roda
   sobre o retângulo dele desloca as linhas, o `size.max` limita a altura,
   e a posição da rolagem não é projetada (não invalida ato nenhum).
 
 ### (d) a revisão das regras
 
-- hoje (`crates/propose/src/review.rs:270-318`) toda lista de um item ou
+- hoje (`rust/offers/src/review/mod.rs:270-318`) toda lista de um item ou
   da região vira uma `table` ligada a `rows`; na região (a que as ações
   dos itens leem fora deles, o diff) a tabela é limitada por
   `dropdown_max_h` (`:295-306`) e vem por último (`:400-412`).
@@ -230,12 +230,12 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   são os nomes com que o `code` mostra os dois: o app que projeta `lines`
   e `kinds` fala o vocabulário. toda outra lista segue tabela (os arquivos
   de cada commit). os testes das regras
-  (`crates/propose/src/review/tests.rs:243-259`) mudam para o `code`.
+  (`rust/offers/src/review/tests.rs:243-259`) mudam para o `code`.
 
 ### (e) a demo 5 de novo
 
 - o laboratório: `ide-lab --arm review`
-  (`crates/ide/src/bin/lab/review.rs`), sem janela, só as regras; o painel
+  (`apps/agenteval/src/arms/review.rs`), sem janela, só as regras; o painel
   fixo primeiro (`:224-273`), a superfície depois (`:280-360`), fechar
   (`:364-388`). as linhas do diff à vista na superfície são contadas pela
   geometria da tabela (`:329-335`); passam a ser contadas pela geometria
@@ -245,7 +245,7 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   aplicação real (task-96)"), não muda: atos e tempo para ver os arquivos
   e o diff dos três; o que fica à vista sem rolar; cada ato da superfície
   no dispatcher do workbench, com o receipt da pessoa; nada da superfície
-  depois de fechar. o teste `crates/ide/tests/lab_review.rs` roda o braço
+  depois de fechar. o teste `apps/agenteval/tests/review.rs` roda o braço
   no gate. o resultado novo vai na task-80 ao lado do primeiro, qualquer
   que seja.
 - o que a sonda já prevê, antes de rodar: o `code` limitado por
@@ -294,13 +294,13 @@ execução acrescentou a ela:
 
 - o tipo de linha pede dois tipos novos no comps (`LineKind`,
   `CodeLine`), e o módulo `content::code_block` é privado: eles só saem
-  pela linha de `pub use` em `crates/comps/src/content/mod.rs`. é a única
+  pela linha de `pub use` em `rust/engine/src/widgets/content/mod.rs`. é a única
   linha fora de `code_block.rs` no comps, fora da lista de arquivos
   permitidos; nada do que o comps desenha mudou por ela.
 - a revisão liga pelo nome: o nó que projeta uma lista `lines` e uma
   `kinds` fala o vocabulário do `code`. o `code` é ancorado pelo primeiro
   estado dele, como o `Namer` ancora o nó da superfície que já está
-  aberta (`crates/propose/src/ids.rs`, `anchor`), senão uma revisão sobre
+  aberta (`rust/offers/src/ids.rs`, `anchor`), senão uma revisão sobre
   a aberta trocava o id dele.
 - o layout arredonda o bloco a pixel inteiro: um bloco da altura das
   linhas sai uma fração de pixel mais baixo, e a primeira contagem do
@@ -309,26 +309,26 @@ execução acrescentou a ela:
 
 ### o `code`, lugar por lugar
 
-- `uir` (`crates/uir/src/vocab.rs`): `Component::Code` no fim do enum e
+- `uir` (`rust/plevir/src/vocabulary.rs`): `Component::Code` no fim do enum e
   de `ALL` (25), nome `code`, `Spec` com papel `region`, sem filhos,
   `Named::Always`, estado `lines` (lista ou texto) e `kinds` (lista),
   nenhum evento; `LineKind` (`context`, `added`, `removed`, `header`) com
   `ALL`, `as_str` e `parse`, exportado em `lib.rs`. o verificador não
   mudou uma linha. o schema cresceu só no fim dos enums (`code`, `lines`,
   `kinds`) e o arquivo foi escrito de novo.
-- `propose` (`crates/propose/src/prompt.rs`): o prompt diz o que o
+- `propose` (`rust/offers/src/prompt.rs`): o prompt diz o que o
   `code` mostra, os nomes dos tipos, que ele rola quando o `size` o
   limita e que o rótulo é a legenda; a regra 7 no texto inclui o `code`.
-- `comps` (`crates/comps/src/content/code_block.rs`): `rows`, `scroll`,
+- `comps` (`rust/engine/src/widgets/content/code_block.rs`): `rows`, `scroll`,
   `CodeBlock::lines`, `row_h`, `content_h`, `rows_rect`, `max_scroll`; sem
   linhas o bloco desenha como antes (teste da cena).
-- `surface` (`crates/surface/src/code.rs`, novo; `widget.rs`, `draw.rs`,
+- `surface` (`rust/screen/src/code.rs`, novo; `widget.rs`, `draw.rs`,
   `token.rs`, `lib.rs`): o widget retido `Widget::Code` (o bloco, um
   `ScrollState` e o `Scrollbar`), a altura das linhas como folha, o
   nome do tipo para o tipo do comps num `match` exaustivo em `token.rs`.
   o `project` não mudou: o nó sai como `region` com o rótulo, `lines` e
   `kinds`.
-- testes: `crates/uir/tests/code.rs` (verifica, round trip, o schema
+- testes: `rust/plevir/tests/code.rs` (verifica, round trip, o schema
   aceita, as regras de ligação recusam o que devem, e os oito IR de antes
   leem e escrevem de volta o mesmo documento, os três do `uir` byte a
   byte); o teste do `Spec` em `vocab.rs`; o do prompt em `prompt.rs`.
@@ -336,14 +336,14 @@ execução acrescentou a ela:
 ### o estado do diff
 
 `diff:kinds` ao lado de `diff:lines`
-(`crates/ide/src/workbench/project.rs`): o mesmo tamanho, um nome de
+(`apps/idestudio/src/capability/project.rs`): o mesmo tamanho, um nome de
 `uir::LineKind` por linha, do `DiffLineKind` do painel. nenhum tipo do
 `sem` mudou; nenhuma linha de `diff:lines` mudou. o golden
-`crates/uir/fixtures/ide-workbench.snapshot.json` ganhou só o `kinds`
-vazio. o recorte do Claude (`crates/ide/src/generated/scope.rs`) leva
-`kinds` na mesma condição de `lines` (teste em `crates/ide/tests/claude.rs`,
+`rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json` ganhou só o `kinds`
+vazio. o recorte do Claude (`apps/idestudio/src/generative/scope.rs`) leva
+`kinds` na mesma condição de `lines` (teste em `apps/idestudio/tests/claude.rs`,
 que continua passando e agora confere os dois). teste novo:
-`crates/ide/tests/review.rs`, `the_diff_says_the_kind_of_each_line_beside_it`.
+`apps/idestudio/tests/review.rs`, `the_diff_says_the_kind_of_each_line_beside_it`.
 
 ### o desenho e o contraste de cada tipo de linha
 
@@ -369,17 +369,17 @@ task-75 mede (`every_kind_reads_at_aa_over_its_row`):
 todos passam AA (4,5); o menor é 4,59. a rolagem: a roda sobre o bloco
 limitado desloca as linhas, para na última, fora dele não é dele, a
 posição não é projetada e linhas novas voltam ao topo
-(`crates/surface/tests/code.rs`); o bloco recorta as linhas à área dele e
+(`rust/screen/tests/code.rs`); o bloco recorta as linhas à área dele e
 desenha só as que aparecem (`rows_scroll_inside_the_area_and_stop_at_the_last`).
 
 ### a revisão
 
-`crates/propose/src/review.rs`: uma lista que o nó chama `lines` vira um
+`rust/offers/src/review/mod.rs`: uma lista que o nó chama `lines` vira um
 `code` (limitado por `dropdown_max_h` na região); com uma lista `kinds` no
 mesmo nó ela vai no mesmo `code` e não aparece sozinha; toda outra lista
-segue tabela. testes em `crates/propose/src/review/tests.rs` (o da revisão
+segue tabela. testes em `rust/offers/src/review/tests.rs` (o da revisão
 de três commits e um novo, `only_the_lines_are_a_code_and_the_kinds_go_with_them`)
-e em `crates/ide/tests/review_acts.rs` (o `code` mostra as linhas e os
+e em `apps/idestudio/tests/review_acts.rs` (o `code` mostra as linhas e os
 tipos que o dispatcher pediu).
 
 ### a demo 5 de novo, ao lado da primeira
@@ -400,7 +400,7 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 `target/agents/one`, `CARGO_INCREMENTAL=0`, debug `line-tables-only`, o
 `PLEV_CLAUDE` no stub) e `--offline`:
 
-- `./script/gate` em `19ea59bd`: verde (exit 0, 05:13 a 05:19), com a
+- `./tool/tasks/fullcheck.sh` em `19ea59bd`: verde (exit 0, 05:13 a 05:19), com a
   perna urnaui e o check wasm com `-D warnings`. workspace 2969 passam, 0
   falham, 26 ignorados (164 suítes); urnaui 85 passam, 1 ignorado (6
   suítes). total 3054 e 27, contra 3036 e 27 na base: os 18 testes novos.
@@ -446,7 +446,7 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 - o `code` não entra numa família do `SwapView`.
 - a observação do ide pesa até 200 nomes curtos a mais quando um diff está
   aberto.
-- a linha de `pub use` em `crates/comps/src/content/mod.rs`, fora da lista
+- a linha de `pub use` em `rust/engine/src/widgets/content/mod.rs`, fora da lista
   de arquivos, pelo motivo acima.
 - com a superfície aberta, o painel fixo mais estreito mostra o mesmo diff
   à esquerda: a pessoa vê o diff duas vezes.
@@ -455,7 +455,7 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 
 ## fechamento (2026-09-25, orquestrador)
 
-integrada. aceito o `pub use` em `crates/comps/src/content/mod.rs`, fora
+integrada. aceito o `pub use` em `rust/engine/src/widgets/content/mod.rs`, fora
 da lista do briefing: é a única forma de os tipos novos do `CodeBlock`
 saírem do módulo privado, e nada que o comps desenha mudou. conferido nas
 imagens da demo 5: o diff colorido pelo tipo de linha, 14, 7 e 14 linhas

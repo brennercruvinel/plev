@@ -39,7 +39,7 @@ servidor já sabe, por ator, de qual observação veio o valor de cada
 `read`; a âncora é a mais antiga delas.
 
 superfícies: API nova no `sem` (aditiva), o `wire` (servidor) e os
-`Host` (`crates/ide/src/agent.rs`, o do showcase, o do laboratório). o
+`Host` (`apps/idestudio/src/capability/agent.rs`, o do showcase, o do laboratório). o
 formato das mensagens não muda.
 
 ## aceite
@@ -131,15 +131,15 @@ Implementado:
   ReceiptSink, lib.rs do sem, módulos server.rs e shown.rs; os dois ADRs
 
 Arquivos principais:
-- crates/sem/src/{receipt.rs,dispatch.rs,check.rs,lib.rs}
-- crates/wire/src/{server.rs,shown.rs,proto.rs}
-- crates/ide/src/workbench/notice.rs e tests.rs (só o texto do toast)
-- crates/ide/src/bin/lab/{story.rs,finish.rs} (só a forma dos atos)
-- testes: crates/sem/tests/dispatch.rs, crates/wire/tests/{look.rs
-  (novo),server.rs,shown.rs,traffic.rs}, crates/ide/tests/{human_agent.rs,
+- rust/accord/src/{receipt.rs,dispatch.rs,check.rs,lib.rs}
+- rust/socket/src/{server.rs,shown.rs,proto.rs}
+- apps/idestudio/src/capability/notice.rs e tests.rs (só o texto do toast)
+- apps/agenteval/src/{story.rs,finish.rs} (só a forma dos atos)
+- testes: rust/accord/tests/dispatch.rs, rust/socket/tests/{look.rs
+  (novo),server.rs,shown.rs,traffic.rs}, apps/idestudio/tests/{human_agent.rs,
   lab.rs}
-- docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md,
-  docs/ADR/an-act-rests-on-what-its-actor-was-shown.md, este arquivo
+- docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md,
+  docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md, este arquivo
 
 Interfaces adicionadas/alteradas:
 - sem (aditivo): Mark; Dispatcher::mark; ReceiptSink::attached e
@@ -189,14 +189,14 @@ Testes:
     forma pela contagem; o comentário sobre form foi corrigido
 
 Validação executada:
-- ./script/gate verde, com a perna urnaui: 2256 passed, 0 failed, 12
+- ./tool/tasks/fullcheck.sh verde, com a perna urnaui: 2256 passed, 0 failed, 12
   ignored (90 "test result"). antes, na base 44e5be9 medida neste
   worktree: workspace 2158 passed, 11 ignored (83), mais a perna urnaui
   82 passed, 1 ignored (6), total 2240 e 12. +16 testes, nenhum
   removido, nenhum #[ignore] novo. df -h /: 17 GiB livres
 - cargo test -p sem -p wire -p ide -p rec -p inspect -p showcase:
   verdes (622 passed, 6 ignored, 45 binários)
-- crates/ide/tests/lab.rs dez vezes seguidas: 6 passed nas dez
+- apps/agenteval/tests/experiment.rs dez vezes seguidas: 6 passed nas dez
 - ide-lab --arm scripted --human unstage-before-submit:src/session.rs:
   --scripted observe: exit 0, MATCH, stale_measurement_valid true,
     acts_form "every act on from_revision (--from-revision)" (8 de 8),
@@ -213,7 +213,7 @@ Decisões:
 - o caminho da marca até o dispatcher é o sink, não métodos novos no
   Host. contexto: a direção sugeria Host::mark e um despacho com a
   marca; o Workbench do ide guarda o dispatcher privado e
-  crates/ide/src/workbench/** está fora da lista, então nem o host do
+  apps/idestudio/src/capability/** está fora da lista, então nem o host do
   ide nem o do laboratório leem a marca ou despacham com ela sem mudar o
   Workbench. o único canal do port até o dispatcher que todo host já
   tem é Host::add_sink. razão: dentro da lista, sem mudar o formato, e
@@ -254,24 +254,24 @@ Dependências pendentes:
 
 Riscos de integração (textos fora da lista que descrevem a regra da 90;
 proponho, o orquestrador aplica):
-- crates/wire/src/bin/plev.rs:73-75 (USAGE):
+- rust/socket/src/bin/plev.rs:73-75 (USAGE):
     what moved, and its acted says who, among the app's actors, ran
     something since the agent looked: every request the app took after
     the oldest observation the act rests on, the agent's own included (a
     change no request made, as from outside the app, names nobody).
   (o teste the_help_says_what_makes_an_act_stale procura "its acted says
   who", que fica)
-- docs/how-to/code-against-the-plev-engine.md:64-67: "`acted`: what ran
+- docs/ref/code-against-the-plev-engine.md:64-67: "`acted`: what ran
   since the refused actor looked: with the look the agent port knows
   (task-91), every request taken after it, the actor's own included;
   without one, the actions of other actors from the first request that
   ran on the state it saw (task-83, task-90; a change no request made
   names nobody)"
-- docs/ADR/the-inspector-reads-a-session-never-runs-it.md:25, uma linha
+- docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md:25, uma linha
   datada: "updated on 2026-09-24 (task-91): for an act of the port,
   acted names every request taken after the look it rested on, the
   agent's own included; the recording does not keep the look yet."
-- crates/inspect/src/text/chain.rs:292-300, o texto de um acted vazio:
+- rust/replay/src/prose/chain.rs:292-300, o texto de um acted vazio:
     "(acted names the requests taken after the look the act rested on,
     the author's own included, when the port knew the look; without
     one, other actors' receipts from the first one, of any actor, that
@@ -307,7 +307,7 @@ ADR proposto:
   reescrito (a regra com e sem olhar, a mudança do autor com o motivo,
   o toast, os limites, linha datada 2026-09-24) e uma linha datada em
   an-act-rests-on-what-its-actor-was-shown. linha do índice
-  (docs/ADR/README.md), acrescentada no fim da entrada existente:
+  (docs/adr/README.md), acrescentada no fim da entrada existente:
   "; atualizado pela task-91: com o olhar que o agent port conhece (a
   observação mais antiga de onde vêm as reads do ato, marcada na ordem
   do dispatcher, sem.Mark), o acted nomeia todo request tomado depois

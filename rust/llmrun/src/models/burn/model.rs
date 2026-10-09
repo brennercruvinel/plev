@@ -1,6 +1,6 @@
 // adapted from burn-lm (https://github.com/tracel-ai/burn-lm), commit a53baab,
 // crates/burn-lm-llama/src/nn/{transformer.rs, attention/mha.rs, fftn.rs},
-// MIT OR Apache-2.0; see crates/llm/NOTICE. changes: the backend parameter of
+// MIT OR Apache-2.0; see rust/llmrun/NOTICE. changes: the backend parameter of
 // burn 0.21 back on every type, the fields named as in the Hugging Face
 // checkpoint (so the safetensors load without remapping), the linear weights in
 // the checkpoint's [out, in] layout, the attention in f32 and the output head

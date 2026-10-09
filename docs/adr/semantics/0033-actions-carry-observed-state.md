@@ -9,25 +9,25 @@ date: 2026-09-23
 
 ## context
 
-the ide commits with no check at all. `crates/ide/src/views/workspace/input.rs:47`
+the ide commits with no check at all. `apps/idestudio/src/interfaces/panels/layout/input.rs:47`
 calls `submit_commit`, which pushes `UiRequest::Commit { message }`, which
-becomes `GitCommand::Commit` (`crates/ide/src/session.rs:76`), which runs
-`git commit --message` (`crates/git/src/repo.rs:187`). the index is
+becomes `GitCommand::Commit` (`apps/idestudio/src/repository/git.rs:76`), which runs
+`git commit --message` (`rust/gitdrv/src/repo.rs:187`). the index is
 committed as it is at the instant the worker runs, whatever the person or
 an agent saw when they decided, and the result comes back later as
 `GitEvent::Committed`. the accessibility action handler only logs
-(`crates/engine/src/window/mod.rs:221`).
+(`rust/engine/src/runtime/window/mod.rs:221`).
 
 with an agent in the loop the world moves between observing and acting
 (thesis, section 8): the agent sees A, B and C staged and "fix login",
 decides to commit, and meanwhile the person unstages B. task-57 gave every
 control an identity, a state and, for each action, the state it reads
-(`docs/ADR/semantic-contract-as-pure-projection.md`). what was missing is
+(`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`). what was missing is
 the rule for acting on it.
 
 ## decision
 
-in `crates/sem`, next to the contract:
+in `rust/accord`, next to the contract:
 
 - a `Request` names the actor (`Human`, `Agent { name }`, `Assistive`,
   `Test { name }`), the target, the action, an optional parameter, and an
@@ -101,7 +101,7 @@ in `crates/sem`, next to the contract:
 - updated on 2026-09-23: the point of truth does not run `check`. the
   ide's git worker compares the staged set the actor observed with the
   paths the index stages (`GitRepo::commit_if`,
-  `crates/git/src/repo.rs`), a set comparison of its own: `crates/git`
+  `rust/gitdrv/src/repo.rs`), a set comparison of its own: `rust/gitdrv`
   does not depend on `sem`, and `check` has one caller, the dispatcher.
   it checks `changes:staged` alone; `commit.message:text` is checked once,
   by the dispatcher, and the commit carries the message the request sent.
@@ -152,7 +152,7 @@ modal (task-58b), a confirmation whose second check refused it, one whose
 action ended at once. it waited for the agent's next message, and was
 lost when a `plev act` that only waited gave up and closed its
 connection. the port's sink now wakes the loop when it hears a stage of a
-request the port waits on (`Server::wake_with`, `crates/wire/src/sink.rs`),
+request the port waits on (`Server::wake_with`, `rust/socket/src/sink.rs`),
 so every host that drains after the wake sends it, with no change to its
 shell.
 

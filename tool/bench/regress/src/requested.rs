@@ -1,5 +1,5 @@
 //! The table of the differences the product asks for, per target
-//! (`crates/showcase/fixtures/determinism/requested.json`, versioned with
+//! (`tool/bench/regress/requested.json`, versioned with
 //! the code): what differs between a target's frame and the desktop's by
 //! a decision (the platform draws over a band, the device's scale is the
 //! frame's), each with its reason in one line and whether it was known

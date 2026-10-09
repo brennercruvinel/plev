@@ -11,9 +11,9 @@ date: 2026-09-24
 
 the native file dialog (`rfd`) and the file drop lived only in the
 urnaui, as code of one app: `rfd::FileDialog` called in two places of
-`crates/urnaui/src/view/explorer.rs` (the Browse open, the blob export),
+`apps/urnadbapp/src/view/explorer/mod.rs` (the Browse open, the blob export),
 and `WindowEvent::DroppedFile`, `HoveredFile` and `HoveredFileCancelled`
-translated by `crates/urnaui/src/app.rs` into two view methods. the
+translated by `apps/urnadbapp/src/app.rs` into two view methods. the
 program (task-76, item 3; the thesis, section 22) asks for one
 implementation in `engine::platform`, the urnaui using it, and every
 integration that is an action to be a capability of the contract: the
@@ -21,7 +21,7 @@ integration that is an action to be a capability of the contract: the
 several representations.
 
 the probe (the handoff of item 3 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
+docs/log/steps/task-76-platform-integration.md) measured:
 
 - `rfd` 0.15 has a backend for macos, windows, linux and wasm, none for
   android or ios; on wasm it is asynchronous only and answers bytes (a

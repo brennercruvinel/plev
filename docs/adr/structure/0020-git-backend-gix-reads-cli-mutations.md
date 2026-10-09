@@ -9,7 +9,7 @@ date: 2026-04-01
 
 ## context
 
-plev apps (the native git client in `crates/ide`) need git: history, status,
+plev apps (the native git client in `apps/idestudio`) need git: history, status,
 diffs, staging, commits. two failure modes to avoid. first, doing git work on
 the UI thread blocks the frame loop, a status or diff on a large repo stalls
 rendering. second, assembling the whole porcelain surface (status, unified

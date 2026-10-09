@@ -17,7 +17,7 @@ projection already has, and that a click on either come back through the
 app's one dispatcher as `Actor::Human`, as the bar's items do since item 4.
 
 the probe (the handoff of item 5 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
+docs/log/steps/task-76-platform-integration.md) measured:
 
 - `tray-icon` 0.25.1 with its default features off resolves offline into
   the root lock as itself alone: every dependency (`muda`, `objc2` and the
@@ -128,8 +128,8 @@ docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
   receipt, stale and gone refused, an agent's capability never a button,
   the shell's `shell.show` and its policy, the tray over a bare window
   with a fake, the Files page asking and projecting, the detection's end
-  told with "show" and projected (`crates/engine/tests/{tray,notify}.rs`,
-  `crates/showcase/src/app/{tray,notify}.rs`, `dispatch/shell/tests.rs`,
+  told with "show" and projected (`rust/engine/tests/{tray,notify}.rs`,
+  `apps/uigallery/src/shell/{tray,notify}.rs`, `dispatch/shell/tests.rs`,
   `apps/files/tests.rs`). `NoTray` and `NoNotifier` compile the showcase
   for wasm.
 - no icon and no notification were shown on the machine that wrote this:

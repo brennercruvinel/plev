@@ -9,7 +9,7 @@ date: 2026-09-23
 
 ## context
 
-`docs/ADR/agents-act-through-the-semantic-contract.md` promised that
+`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md` promised that
 `from_revision` rebuilds the observed values of an act "so the stale check
 compares what the agent saw, not a later frame". the code did not keep it.
 the port held the whole snapshot of every revision it served and built the
@@ -39,7 +39,7 @@ nothing else.
   observes in one and acts in the next. `Server::close` forgets the
   connection, not what its actor was shown.
 - the port remembers, per actor, the revisions it gave it and what came
-  with each (`Shown`, `crates/wire/src/shown.rs`): a snapshot shows the
+  with each (`Shown`, `rust/socket/src/shown.rs`): a snapshot shows the
   nodes under its `scope` (every node without one) with the state under
   its `keys`; a delta shows only what it carries, a state that changed and
   the state under its `keys` of a node added or removed, so a state of its
@@ -77,8 +77,8 @@ nothing else.
   and the same remedy, observe and decide again.
 - protocol v1 keeps its version. `not_observed` is additive, as the
   revision of task-87 was; its form is pinned in
-  `crates/wire/tests/codec.rs`. the rule is in the doc of `Act`
-  (`crates/wire/src/proto.rs`) and in `plev act --help`.
+  `rust/socket/tests/codec.rs`. the rule is in the doc of `Act`
+  (`rust/socket/src/protocol.rs`) and in `plev act --help`.
 
 ## the name is the agent
 
@@ -89,7 +89,7 @@ default name of the command line is `plev`, so distinct agents pass
 the name is declared, not authenticated. the boundary stays the one the
 port already has: a local socket of the same user, off unless opted in,
 and opened by `from_env` only in a debug build
-(`docs/ADR/agents-act-through-the-semantic-contract.md`, security
+(`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`, security
 posture).
 
 ## consequences
@@ -111,7 +111,7 @@ posture).
   last giving of its revision); `acted` names what ran after that look,
   the agent's own acts included, so the two consequences above about an
   `acted` that names nobody hold only when there is no look
-  (`docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md`).
+  (`docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`).
 - the scripted agent of the laboratory needed no extra observation: it
   observes the whole workspace before each decision, and each act it
   chains reads the state of its own file, which no act of its own moved.
@@ -127,7 +127,7 @@ posture).
   cost at an act is one walk back over at most `cap` revisions per read,
   with a lookup in the ring and, for a scoped snapshot, a walk up the
   node's parents. it is not measured here.
-- `docs/ADR/a-terminal-stage-carries-the-revision.md` says the revision a
+- `docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md` says the revision a
   stage carries serves `from_revision`: it still does, and it shows no
   state, so an act on it reads what the agent was shown before it.
 

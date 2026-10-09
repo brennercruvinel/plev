@@ -3,7 +3,7 @@
 //! not survive the trip is reported on a droplist, never dropped silently.
 //!
 //! **Experimental** -- a research poc, not a supported app path
-//! (docs/ADR/official-app-pattern.md).
+//! (docs/adr/structure/0023-official-app-pattern.md).
 //!
 //! Three stages, one module each per source language:
 //! 1. parse  (tsx.rs, sass.rs, gpui.rs, html.rs): tree-sitter -> raw
@@ -25,7 +25,7 @@
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
 //! separator); task-71 phase 2 adds an HTML/CSS subset (one document, the
-//! body's element) and a Figma export (one screen). The emitted code obeys docs/how-to/code-against-the-plev-
+//! body's element) and a Figma export (one screen). The emitted code obeys docs/ref/code-against-the-plev-
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 
@@ -79,7 +79,7 @@ pub fn resolve_html(html: (&str, &str)) -> Result<Resolution, ParserError> {
 }
 
 /// Resolve a Figma export (task-71 phase 2): `(file_name, json)`, the REST
-/// API's shape as `script/figma-fixture` writes it. The screen is the first
+/// API's shape as `tool/tasks/figmapull.py` writes it. The screen is the first
 /// layer under the document's page and section.
 pub fn resolve_figma(json: (&str, &str)) -> Result<Resolution, ParserError> {
     let doc = formats::figma::parse::parse_figma(json.1)?;

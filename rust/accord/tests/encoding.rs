@@ -673,7 +673,7 @@ fn a_node_added_has_a_pinned_json_form_and_roundtrips() {
 
     // the form before, a bare id, is not a change: without the snapshot
     // that holds it there is no node. a session reader, which has that
-    // snapshot, converts it (crates/rec/src/persist.rs).
+    // snapshot, converts it (rust/record/src/persist.rs).
     assert!(serde_json::from_str::<Change>(r#"{"node_added":"commit.submit"}"#).is_err());
 }
 

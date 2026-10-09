@@ -31,8 +31,8 @@ clippy, fmt, wasm em CI).
 - foco de teclado por página (Tab, Escape)
 - launch arg é o título da página (`showcase "Data Table" core 1400`)
 - `comps::nav::sidebar` dividido em mod / input / render
-- docs: `docs/adr/` virou `docs/ADR/` com README.md como índice, changelog
-  em `docs/CHANGELOG.md`; typos exclui os docs em português do root
+- docs: `docs/adr/` virou `docs/adr/` com README.md como índice, changelog
+  em `docs/log/changelog.md`; typos exclui os docs em português do root
 
 ## o que mudou de comportamento, de propósito
 - o ciclo de Tab que atravessava os sete widgets do Forms é por página

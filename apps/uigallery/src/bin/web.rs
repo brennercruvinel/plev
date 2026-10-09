@@ -1,4 +1,4 @@
-//! Web binary entry: the one trunk builds (`web/index.html`, `data-bin`).
+//! Web binary entry: the one trunk builds (`apps/uigallery/web/index.html`, `data-bin`).
 //! It has its own name because trunk picks the wasm artifact by target
 //! name, and the lib's cdylib (the android `.so`) and the `showcase` bin
 //! share the name "showcase": built for wasm32, both leave a `.wasm` and

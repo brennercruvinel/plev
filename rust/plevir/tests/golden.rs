@@ -14,8 +14,8 @@
 //!
 //! The registries come from `idestudio-workbench.snapshot.json` and
 //! `uigallery-todo.snapshot.json`, which the projection tests of the ide and
-//! the showcase write (`crates/ide/tests/uir_fixture.rs`,
-//! `crates/showcase/tests/uir_fixture.rs`). The schema file is
+//! the showcase write (`apps/idestudio/tests/plevir_fixture.rs`,
+//! `apps/uigallery/tests/plevir_fixture.rs`). The schema file is
 //! `uir::schema()` written out; `UIR_BLESS=1` writes it again.
 
 // the validator for the keywords the schema uses (no schema dependency).

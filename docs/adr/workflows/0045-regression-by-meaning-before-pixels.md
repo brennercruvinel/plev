@@ -53,11 +53,11 @@ compared).
 ### the harness
 
 `cargo run -p showcase --example regress -- check|bless`
-(`crates/showcase/examples/regress/`), an example of the showcase like
+(`tool/bench/regress/src/`), an example of the showcase like
 `measure`, run by the gate's tests through `[[example]] test = true`.
 
 - a baseline is one (page, theme, viewport) under
-  `crates/showcase/fixtures/regress/<page>@<theme>@<w>x<h>[@<s>x]/`:
+  `tool/bench/regress/baselines/<page>@<theme>@<w>x<h>[@<s>x]/`:
   `scene.json` (format `regress.baseline.v1`, hash `regress.layer.v1`,
   the key, how the page settled, the projection's revision, every layer
   with name, z, hash, node count and bounds, every binding), and
@@ -95,7 +95,7 @@ above one that is created below.
 ### the hash
 
 FNV-1a 64 over a byte encoding written out in
-`crates/showcase/examples/regress/scene.rs`: the version tag, the layer's
+`tool/bench/regress/src/scene.rs`: the version tag, the layer's
 z-order, visibility, opacity, scissor and effects, then every node in
 push order as a tag byte and its fields, each `f32` by its bits. a golden
 value computed by a separate script pins the encoding; another encoding

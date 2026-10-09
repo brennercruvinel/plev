@@ -35,7 +35,7 @@ runtime).
   shipando; android e ios em andamento (tasks 18 e 19); linux e windows
   pendentes.
 - web: AccessKit não tem adapter para navegador.
-- recipe de focus ring em `crates/comps/src/recipe.rs`; reduced motion e
+- recipe de focus ring em `rust/engine/src/widgets/recipe.rs`; reduced motion e
   contraste wcag declarados como requisitos nativos no AGENTS.md.
 
 ## escopo
@@ -69,9 +69,9 @@ como alvo (arc: pendente; esta task só entra lá quando o alvo existir).
 
 ## superfície sob responsabilidade
 
-`crates/engine/src/accessibility/**`, os shells dos apps na parte da
-ponte, `crates/comps` na parte de teclado e foco dos widgets, testes de
-contraste em `crates/engine/src/theme` (só testes), ADRs por decisão.
+`rust/engine/src/control/accessibility/**`, os shells dos apps na parte da
+ponte, `rust/engine/src/widgets` na parte de teclado e foco dos widgets, testes de
+contraste em `rust/engine/src/styling/theme` (só testes), ADRs por decisão.
 
 ## interfaces que consome
 
@@ -79,7 +79,7 @@ a ponte e o construtor de árvore (60), `Snapshot` (57), dispatcher (58).
 
 ## interfaces que pode alterar
 
-`crates/engine/src/accessibility` por inteiro; widgets de comps na parte de
+`rust/engine/src/control/accessibility` por inteiro; widgets de comps na parte de
 teclado com aprovação.
 
 ## critérios de aceitação
@@ -90,7 +90,7 @@ teclado com aprovação.
 - testes automáticos de árvore para toda página do showcase.
 - teste de contraste dos tokens de texto nos temas.
 - teclado completo nas páginas de componente, com teste.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -263,7 +263,7 @@ rodei a projeção de cada página da galeria (82, a tabela inteira de
 medidos como a janela mostra (token translúcido composto sobre o fundo em
 luz linear, como a GPU mistura na superfície sRGB). 102 falham o AA. a
 lista inteira, com a razão de cada par, está em
-`crates/engine/src/theme/tests_contrast.rs` (`KNOWN`) e no handoff
+`rust/engine/src/styling/theme/tests/contrast.rs` (`KNOWN`) e no handoff
 abaixo.
 
 ## fase 1: roteiros manuais
@@ -271,7 +271,7 @@ abaixo.
 ### VoiceOver no macOS (para o brenner rodar)
 
 o que cada passo espera vem da árvore que os testes provam
-(`crates/showcase/tests/access_tree.rs`, `app/access.rs`) e do
+(`apps/uigallery/tests/access_tree.rs`, `app/access.rs`) e do
 mapeamento do `accesskit_macos` 0.26.1; a frase exata é do VoiceOver, e
 o que ele disser de fato é o registro. onde a coluna diz "gap", é o
 comportamento esperado hoje e está na lista da fase 2.
@@ -328,12 +328,12 @@ branch `task/75a-a11y`, sobre `main` em `bd03459d`. sem push.
 1. `1d2aa2eb` a sonda e a matriz, pela fonte do lock (seção "fase 1: a
    sonda" acima).
 2. `20096a0f` os testes de árvore de todas as páginas
-   (`crates/showcase/tests/access_tree.rs`) e as duas correções no
+   (`apps/uigallery/tests/access_tree.rs`) e as duas correções no
    `accessibility`.
 3. `ab951681` live regions: status polida, alerta assertivo, o toast na
    árvore do leitor, o foco parado.
 4. `e7ca19c1` contraste dos quatro temas contra o AA
-   (`crates/engine/src/theme/tests_contrast.rs`).
+   (`rust/engine/src/styling/theme/tests/contrast.rs`).
 5. `d811876f` reduced motion no ponto único de animação, lido pela ponte.
 6. este commit: roteiros, ADR e handoff.
 
@@ -349,7 +349,7 @@ macOS anuncia o value.
 
 82 páginas, 6 projetam (Toggle Group, Todo, Surface, Silences, Files,
 Capture), 76 mostram só a janela. corrigido em
-`crates/engine/src/accessibility/**`:
+`rust/engine/src/control/accessibility/**`:
 
 - sete botões que o leitor focava e não apertava (`surface_page.propose`,
   `silences.detect`, `silences.apply_all`, `silences_surface.propose`,
@@ -481,7 +481,7 @@ respondem `None` (sem mudança) até o alvo ou a dependência. testes: 5 em
 frame, sem a preferência seguem no meio, o laço infinito continua, a
 preferência é da thread), 2 em `accessibility/motion.rs` (a leitura do
 `defaults`, e o `defaults` real responde no macOS sem mudar nada), 3 em
-`crates/showcase/tests/reduced_motion.rs` (switch, toast, modal e a
+`apps/uigallery/tests/reduced_motion.rs` (switch, toast, modal e a
 galeria inteira assentam no primeiro frame; sem a preferência, estão em
 movimento).
 
@@ -494,10 +494,10 @@ o alvo rodar.
 
 ### gate e regress
 
-- antes (em `bd03459d`, rodado aqui): `./script/gate` verde, 2932
+- antes (em `bd03459d`, rodado aqui): `./tool/tasks/fullcheck.sh` verde, 2932
   passam, 26 ignorados, pernas urnaui e wasm rodaram; `regress check`
   175 baselines, 175 iguais.
-- depois (em `d811876f`): `./script/gate` verde, 2960 passam (+28), 26
+- depois (em `d811876f`): `./tool/tasks/fullcheck.sh` verde, 2960 passam (+28), 26
   ignorados, 0 falhas, pernas urnaui e wasm rodaram; `regress check` 175
   baselines, 175 iguais.
 - `Cargo.toml` e `Cargo.lock` intocados (md5 do lock igual), nenhuma
@@ -525,14 +525,14 @@ a fase 2b.
 três coisas leem a projeção de uma página parada, e esta fase não pode
 mexer nelas:
 
-- os goldens do `uir`: `crates/uir/fixtures/showcase-todo.snapshot.json`
+- os goldens do `uir`: `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
   é o `ShowcaseView::semantics()` da Todo parada
-  (`crates/showcase/tests/uir_fixture.rs:32-42`);
+  (`apps/uigallery/tests/plevir_fixture.rs:32-42`);
   `showcase-silences.snapshot.json` e `showcase-files.snapshot.json` são
   o `snapshot()` da Silences e da Files paradas
   (`view/apps/silences/tests.rs:861-893`, `view/apps/files/tests.rs:833-860`).
   o IR da quick todo verifica contra o primeiro, e os testes de
-  `propose`, `surface` e `claude-model` leem os três. `crates/uir/**` é
+  `propose`, `surface` e `claude-model` leem os três. `rust/plevir/**` é
   arquivo proibido nesta fase.
 - o registro de capacidades do runtime generativo:
   `uir::Capabilities::from_snapshot` sobre a projeção da página
@@ -548,7 +548,7 @@ daí a regra desta fase: o que é significado da página muda na página (o
 foco que ela toma, o `value` do nível da Capture); o que existe porque os
 adapters do lock não têm custom actions, ou porque um adapter lê um papel
 de outro jeito, é apresentação e mora na árvore do leitor
-(`crates/engine/src/accessibility/tree.rs`), onde a fase 1 já pôs regras
+(`rust/engine/src/control/accessibility/tree/mod.rs`), onde a fase 1 já pôs regras
 desse tipo (o `GenericContainer`, a ação única de um botão). a árvore
 segue sendo projeção do mesmo snapshot: nada nela vem de geometria, e o
 que o leitor pede a um controle apresentado volta como o pedido da ação
@@ -594,7 +594,7 @@ leitor da view (`ShowcaseView::reader_semantics`, que sucede o `shown` do
      conhece o campo (196-198). correção: a página guarda a aba focada e a
      projeta; o clique da pessoa, o foco no campo e o Escape a soltam.
    - os filtros e checkboxes da quick todo: o `Surface` do crate
-     `surface` só guarda foco de campo (`crates/surface/src/surface.rs:404-415`)
+     `surface` só guarda foco de campo (`rust/screen/src/surface.rs:404-415`)
      e aceita qualquer nó seu (492-501); o crate é proibido. correção, na
      página: a Surface (e a Silences, para a superfície gerada dela)
      guarda o nó que não é campo e que o leitor focou, e o projeta depois
@@ -620,7 +620,7 @@ leitor da view (`ShowcaseView::reader_semantics`, que sucede o `shown` do
      contrato não muda: o agente e o IR seguem pedindo `toggle` em
      `todo.item[n]`.
    - os itens da quick todo: o crate `surface` nomeia uma instância de
-     repeat pela chave (`crates/surface/src/project.rs:38-41`), "1", "2",
+     repeat pela chave (`rust/screen/src/project.rs:38-41`), "1", "2",
      "3", e o IR não interpola rótulo. correção, na árvore: um grupo cujo
      nome é só a chave do próprio id toma o nome dos textos (`Label`)
      filhos dele, o texto do item.
@@ -701,9 +701,9 @@ baselines vai separado, para poder sair sozinho.
 
 ### (c) quem mais lê essas projeções
 
-- `crates/wire` e `crates/ide`: nenhum teste lê a projeção da galeria
+- `rust/socket` e `apps/idestudio`: nenhum teste lê a projeção da galeria
   (grep por `ShowcaseView` e `gallery_semantics`: zero), e o ide não liga
-  a ponte (grep por `Bridge` em `crates/ide/src`: zero). nada muda.
+  a ponte (grep por `Bridge` em `apps/idestudio/src`: zero). nada muda.
 - o port (`gallery_semantics`, `view/dispatch/shell.rs:355-362`): passa a
   ver os toasts e o overlay aberto, como o ADR da fase 1 pedia ("where an
   agent reads them too"); a preferência não entra.
@@ -714,7 +714,7 @@ baselines vai separado, para poder sair sozinho.
 - a gravação (`app/record.rs:164`) lê `semantics()`: uma sessão gravada
   com um toast na tela passa a guardar o toast. a demo gravada
   (`fixtures/demo/*.monster`) é dado; nada relê a projeção viva dela.
-- o laboratório é do ide (`crates/ide/src/bin/lab`) e não lê a galeria.
+- o laboratório é do ide (`apps/agenteval/src`) e não lê a galeria.
 - os testes da galeria: `tests/access_tree.rs` (as listas encolhem, e a
   árvore passa a vir de `reader_semantics`), os testes do `shown` em
   `app/access.rs` (vão para o caminho novo) e
@@ -765,7 +765,7 @@ nada daqui chega a eles, e tudo compila para eles (a ponte é só desktop).
 
 ## fase 2a: o roteiro do VoiceOver (para o brenner rodar)
 
-o que cada passo espera vem dos testes (`crates/showcase/tests/access_tree.rs`,
+o que cada passo espera vem dos testes (`apps/uigallery/tests/access_tree.rs`,
 `view/dispatch/overlay/tests.rs`, `app/access.rs`,
 `view/apps/silences/tests/generated/access.rs`) e do mapeamento do
 `accesskit_macos` 0.26.1; a frase exata é do VoiceOver, e o que ele
@@ -830,13 +830,13 @@ branch `task/75b-a11y-pages`, sobre `main` em `ee67f53c`. sem push.
 
 o briefing propunha a página projetar cada ação de uma linha como um
 controle filho. a sonda mostrou que a projeção de uma página parada é
-golden do `uir` (`crates/uir/fixtures/showcase-{todo,silences,files}.snapshot.json`,
+golden do `uir` (`rust/plevir/tests/fixtures/showcase-{todo,silences,files}.snapshot.json`,
 arquivo proibido nesta fase), é o registro de capacidades que o IR e o
 prompt leem (os controles entrariam como capacidades duplicadas) e entra
 no `scene.json` do regress (revisão e bindings). por isso os controles
 das linhas, o checkbox da linha, o aperto do select, o nome da status, o
 nome dos itens da quick todo e o aperto só com a ação ligada são
-apresentação da árvore, no `crates/engine/src/accessibility/**`
+apresentação da árvore, no `rust/engine/src/control/accessibility/**`
 (`present.rs` novo, `tree.rs`, `action.rs`, `ids.rs`, `mod.rs`); o
 contrato não mudou. o que é significado da página mudou na página (o
 foco, o `value` do nível). o comps mudou só em `feedback/spinner.rs` e
@@ -942,13 +942,13 @@ verde.
 ### gate e regress
 
 - antes (o briefing): 3062 passam, 27 ignorados, 176 baselines.
-- depois, em `f3e9f914`: `./script/gate` verde, pernas urnaui e wasm
+- depois, em `f3e9f914`: `./tool/tasks/fullcheck.sh` verde, pernas urnaui e wasm
   rodaram; 3086 passam (+24: 3001 no workspace, 85 no urnaui), 27
   ignorados, 0 falhas. `regress check`: 176 baselines, 176 iguais.
 - `Cargo.toml` e `Cargo.lock` intocados (md5 do lock igual), nenhuma
-  dependência nova, AccessKit na mesma versão; `crates/uir`,
-  `crates/surface`, `crates/sem`, `crates/wire/src`, `crates/propose` e
-  `crates/ide/src` intocados. sempre com `PLEV_CLAUDE` no stub e
+  dependência nova, AccessKit na mesma versão; `rust/plevir`,
+  `rust/screen`, `rust/accord`, `rust/socket/src`, `rust/offers` e
+  `apps/idestudio/src` intocados. sempre com `PLEV_CLAUDE` no stub e
   `--offline`; nenhuma janela aberta, nenhum leitor ligado, nenhum clique
   sintético, nenhum diálogo nativo.
 
@@ -965,7 +965,7 @@ verde.
   ainda não o prende) e o anel de foco nas pílulas do todo.
 - bounds para os controles apresentados: pede a página ligar um retângulo
   por ação, e isso muda o `scene.json` de baselines existentes.
-- o ide não liga a ponte (`crates/ide/src`: sem `Bridge`); a página Git da
+- o ide não liga a ponte (`apps/idestudio/src`: sem `Bridge`); a página Git da
   galeria não projeta.
 - windows, AT-SPI, iOS e android seguem esperando o alvo ou o adapter.
 
@@ -976,7 +976,7 @@ mesma leitura das fases 1 e 2a: o código com arquivo e linha, o AccessKit
 pela fonte do lock (accesskit_macos 0.26.1, accesskit_windows 0.32.1,
 accesskit_atspi_common 0.18.1). o escopo são as 76 páginas que não
 projetam nada (82 na tabela `view/pages/table.rs`, menos as seis que
-projetam). os caminhos abaixo são relativos a `crates/showcase/src/view`
+projetam). os caminhos abaixo são relativos a `apps/uigallery/src/views`
 quando não dizem o crate.
 
 ### (a) as 76 páginas em três grupos
@@ -1171,12 +1171,12 @@ chegam à mesma projeção.
   mudança. a demo gravada (`fixtures/demo/`) é da Silences, dado.
 - o port (`dispatch/agent.rs:61-67`) serve `gallery_semantics`, que passa a
   levar a página de componente, com os `bounds` das ligações.
-- `crates/wire/tests` e `crates/ide/tests`: nenhum lê a galeria (grep por
+- `rust/socket/tests` e `apps/idestudio/tests`: nenhum lê a galeria (grep por
   `ShowcaseView` e `gallery_semantics`: zero). o laboratório é do ide.
 - os testes da galeria que usam uma página de componente como "página sem
   projeção" mudam de página: `apps/app/semantics/assistive.rs:333-345`
   (Button) e `app/headless.rs:549-560` (Button); o de view source que usa um
-  texto formatado da Data Table (`crates/showcase/tests/view_source.rs:147-151`)
+  texto formatado da Data Table (`apps/uigallery/tests/view_source.rs:147-151`)
   cai dentro de uma linha ligada e muda de exemplo. `tests/access_tree.rs`
   encolhe a lista página por página.
 
@@ -1246,8 +1246,8 @@ o que isso diz às páginas novas:
 
 ## fase 2b: o roteiro do VoiceOver (para o brenner rodar)
 
-o que cada passo espera vem dos testes (`crates/showcase/tests/access_tree.rs`,
-`crates/showcase/tests/component_pages/`, `view/dispatch/component/tests.rs`)
+o que cada passo espera vem dos testes (`apps/uigallery/tests/access_tree.rs`,
+`apps/uigallery/tests/component_pages/`, `view/dispatch/component/tests.rs`)
 e do mapeamento do `accesskit_macos` 0.26.1 (sonda da fase 2b, (e)); a
 frase exata é do VoiceOver, e o que ele disser de fato é o registro. o
 preparo é o da fase 1 (`cargo run -p showcase -- <página>`, VoiceOver com
@@ -1273,7 +1273,7 @@ estes são os das páginas de componente. nenhum passo pede o Claude.
 | escolhas 1 | `-- Tabs` | "sections", grupo de abas; "Account, tab, selecionada, 1 de 3"; VO-Space em "About": selecionada |
 | escolhas 2 | `-- Tree` | "files", outline; as linhas "src", "ui", "widgets.rs"... pelo nome; VO-Space em "main.rs": selecionada |
 | escolhas 3 | na Tree, entrar em "assets" (fechado) | "toggle expanded, button" dentro da linha; VO-Space: os filhos aparecem. "expandido" não é dito (nenhum adapter do lock diz): registrar o que o VoiceOver fala |
-| escolhas 4 | `-- Data Table` | "files", tabela; cada linha pelas células ("crates/comps/src/file_0.rs, modified, 3 KB, 0000000"); VO-Space numa linha: selecionada (novo na árvore) |
+| escolhas 4 | `-- Data Table` | "files", tabela; cada linha pelas células ("rust/engine/src/widgets/file_0.rs, modified, 3 KB, 0000000"); VO-Space numa linha: selecionada (novo na árvore) |
 | escolhas 5 | `-- Scroll Area` | "items", lista; "Item 0", "Item 1"...; VO-Space: selecionada; rolar com o trackpad troca as linhas que a árvore tem |
 | escolhas 6 | `-- Breadcrumb` | "path", grupo; "crates, link", ..., "table.rs" texto; VO-Space em "comps": "clicked crumb 1" anunciado, polido |
 | escolhas 7 | `-- Navigation Menu` | "Workspace, link" com a descrição "1"; "History" com "4"; VO-Space em "Branches": a marca de ativo anda na tela (o "atual" não é dito: gap) |
@@ -1309,7 +1309,7 @@ push.
 
 ### o mecanismo
 
-`crates/showcase/src/view/dispatch/component.rs`: o trait `Component`
+`apps/uigallery/src/views/dispatcher/component/mod.rs`: o trait `Component`
 (raiz, `project`, `run`, `focus`, `blur`), a tabela (uma macro, uma linha
 por pane, 19 linhas) e o `Operable` que empresta o dispatcher do todo. a
 view entra por quatro braços: `page_semantics`, `act`, `assist_focus` e o
@@ -1327,7 +1327,7 @@ método só, `after_component`, chamado pelo clique e pelo pedido.
 | grupo 2 (widget sem projeção) | 24 | 24, na lista `SILENT` com o que falta |
 | grupo 3 (nada a operar) | 22 | 22, na lista `SILENT` com o motivo |
 
-as listas de `crates/showcase/tests/access_tree.rs`: `SILENT` 46 (era 76
+as listas de `apps/uigallery/tests/access_tree.rs`: `SILENT` 46 (era 76
 sem motivo); `UNREACHABLE` 2 (a fase 2a deixou 1; entra `Resizable:
 resizable_page.split set_ratio`); `FOCUS_NOT_PROJECTED` e `OFFERED_DISABLED`
 seguem vazias com as 36 páginas.
@@ -1335,13 +1335,13 @@ seguem vazias com as 36 páginas.
 três correções na página (nada no comps): o chip "click me" virou chip de
 filtro (a projeção dizia botão); o rótulo do Spinner muda com o giro, não
 no quadro; o trilho da Navigation Menu é um `NavLink` próprio sem id. uma
-na árvore (`crates/engine/src/accessibility/tree.rs`): a tabela diz a
+na árvore (`rust/engine/src/control/accessibility/tree/mod.rs`): a tabela diz a
 linha selecionada por `selected_row`.
 
 ### os testes
 
 - por tipo de widget, a pessoa, o leitor e um agente pelo port de verdade
-  no mesmo estado (`crates/showcase/tests/component_pages/`, 10 testes):
+  no mesmo estado (`apps/uigallery/tests/component_pages/`, 10 testes):
   botão (Toast, Dialog, Alert Dialog, Spinner), botão que não faz nada
   (Button, Icon Button, Tooltip), alternância (Checkbox, Switch, Chip,
   Toggle), slider (valor e passo), campo de texto, select, escolha numa
@@ -1423,14 +1423,14 @@ arquivo.
 ### gate e regress
 
 - antes (o briefing): 3086 passam, 27 ignorados, 176 baselines.
-- depois, em `3badee06`: `./script/gate` verde, pernas urnaui e wasm
+- depois, em `3badee06`: `./tool/tasks/fullcheck.sh` verde, pernas urnaui e wasm
   rodaram; 3103 passam (+17: 3018 no workspace, 85 no urnaui), 27
   ignorados, 0 falhas. `regress check`: 176 baselines, 176 iguais (antes
   do bless: 60 mudadas, as desta fase).
 - `Cargo.toml` e `Cargo.lock` intocados (md5 do lock igual), nenhuma
-  dependência nova, AccessKit na mesma versão; `crates/comps`,
-  `crates/uir`, `crates/surface`, `crates/sem`, `crates/wire/src`,
-  `crates/propose` e `crates/ide/src` intocados. sempre com `PLEV_CLAUDE`
+  dependência nova, AccessKit na mesma versão; `rust/engine/src/widgets`,
+  `rust/plevir`, `rust/screen`, `rust/accord`, `rust/socket/src`,
+  `rust/offers` e `apps/idestudio/src` intocados. sempre com `PLEV_CLAUDE`
   no stub e `--offline`; nenhuma janela, nenhum leitor ligado, nenhum
   clique sintético por coordenada de tela, nenhum diálogo nativo.
 
@@ -1464,7 +1464,7 @@ o agente colou aqui um diff inteiro por tipo de widget (cerca de 3100
 linhas de JSON); o orquestrador tirou na integração, porque o diff mora no
 git: o `semantics.json` de cada página é arquivo novo e o `scene.json` muda
 nos blocos `semantics`, `bindings` e no nome das camadas. para ler um tipo:
-`git show 3badee06 -- crates/showcase/fixtures/regress/<página>@core@1280x800/`.
+`git show 3badee06 -- tool/bench/regress/baselines/<página>@core@1280x800/`.
 as páginas escolhidas, uma por tipo:
 
 - botão (Button, IconButton, SubmitButton): `spinner@core@1280x800`
@@ -1487,7 +1487,7 @@ as páginas escolhidas, uma por tipo:
 branch `task/75d-keyboard`, sobre `main` em `73f99094`. o escopo é o
 item 3 do escopo acima nas 30 páginas de componente (os 19 panes da
 tabela em `view/dispatch/component.rs:108-128`). os caminhos são relativos
-a `crates/showcase/src/view` quando não dizem o crate. a leitura de cada
+a `apps/uigallery/src/views` quando não dizem o crate. a leitura de cada
 página foi feita com um teste sem janela que projeta a página, lista
 `focus::order` e aperta Tab pela view (`handle_edit_key(EditKey::Tab)`).
 
@@ -1519,11 +1519,11 @@ o campo focado.
 ### (b) onde a ordem da projeção dirige o Tab
 
 o engine já tem a ordem: `accessibility::focus::order` e `focus::next`
-(`crates/engine/src/accessibility/focus.rs:33-62`) andam o snapshot na
+(`rust/engine/src/control/accessibility/focus.rs:33-62`) andam o snapshot na
 ordem da árvore que o leitor recebe, pulando o que é inerte, desabilitado
 ou não focável, e dão a volta. o teste
 `tab_and_the_reader_walk_the_same_order_and_the_page_takes_the_focus`
-(`crates/showcase/tests/access_tree.rs:397-423`) já prova que essa ordem é
+(`apps/uigallery/tests/access_tree.rs:397-423`) já prova que essa ordem é
 a do leitor em toda página que projeta, e que toda página toma o foco que
 o leitor pede (`assist_focus`, `dispatch.rs:464-495`, que numa página de
 componente chega em `Component::focus`, `dispatch/component.rs:230-241`).
@@ -1547,21 +1547,21 @@ funcionam por cima da sequência de hoje.
 
 | widget (papel) | páginas | padrão | o que já tem | o que falta |
 |---|---|---|---|---|
-| abas (`TabList`, `Tab`) | Tabs | esquerda e direita, Home e End; Enter e Espaço selecionam | `select` na projeção; anel só na faixa inteira (`crates/comps/src/nav/tabs.rs:93-99`, `176-178`) | anel na aba focada |
+| abas (`TabList`, `Tab`) | Tabs | esquerda e direita, Home e End; Enter e Espaço selecionam | `select` na projeção; anel só na faixa inteira (`rust/engine/src/widgets/nav/tabs.rs:93-99`, `176-178`) | anel na aba focada |
 | árvore (`Tree`, `TreeItem`) | Tree | cima e baixo nas linhas visíveis, Home e End; direita abre o ramo fechado ou desce ao primeiro filho; esquerda fecha o ramo aberto ou sobe ao pai; Enter e Espaço selecionam | `select`, `toggle_expanded`, `expanded` e o pai de cada item na projeção | anel na linha (`components/tree.rs:19`: "a row draws no ring") |
-| menu (`Menu`, `MenuItem`) | o menu de contexto, overlay | cima e baixo dão a volta, Home e End; Enter e Espaço acionam | `activate` por item; o destaque do hover (`crates/comps/src/feedback/context_menu.rs:102`) | o destaque seguir o foco |
-| select (`Select`, `Option`) | Select, Combobox | Enter, Espaço, cima ou baixo abrem na opção escolhida; cima e baixo andam as opções, Home e End; Enter e Espaço escolhem; Escape fecha | `open`, `close`, `select`; o destaque por tecla no comps (`crates/comps/src/form/select/panel.rs:163-196`), sem uso | o destaque seguir a opção focada |
-| slider (`Slider`) | Slider | direita e cima sobem, esquerda e baixo descem, Home e End vão aos extremos | `increment` e `decrement` no que tem passo, `set_value` com a faixa (`crates/comps/src/form/slider.rs:74-104`) | o contínuo não tem passo: a tecla pede `set_value` |
+| menu (`Menu`, `MenuItem`) | o menu de contexto, overlay | cima e baixo dão a volta, Home e End; Enter e Espaço acionam | `activate` por item; o destaque do hover (`rust/engine/src/widgets/feedback/context_menu.rs:102`) | o destaque seguir o foco |
+| select (`Select`, `Option`) | Select, Combobox | Enter, Espaço, cima ou baixo abrem na opção escolhida; cima e baixo andam as opções, Home e End; Enter e Espaço escolhem; Escape fecha | `open`, `close`, `select`; o destaque por tecla no comps (`rust/engine/src/widgets/form/select/panel.rs:163-196`), sem uso | o destaque seguir a opção focada |
+| slider (`Slider`) | Slider | direita e cima sobem, esquerda e baixo descem, Home e End vão aos extremos | `increment` e `decrement` no que tem passo, `set_value` com a faixa (`rust/engine/src/widgets/form/slider.rs:74-104`) | o contínuo não tem passo: a tecla pede `set_value` |
 | lista e tabela (`List`, `Table`) | Scroll Area, Item, Table, Data Table | cima e baixo nas linhas | `select` por linha | nenhuma linha é focável na projeção; ver abaixo |
 | radio | nenhuma página de componente | | | |
 
 os outros controles não pedem seta, só anel e acionar: botões (Enter e
 Espaço), caixas e switches (Espaço), links de navegação e crumbs (Enter).
 três desenham o foco hoje sem anel: o chip de filtro
-(`crates/comps/src/action/chip.rs`), o crumb (`crates/comps/src/nav/breadcrumb.rs`)
-e o link de navegação (`crates/comps/src/nav/nav_link.rs`). Enter e Espaço
+(`rust/engine/src/widgets/content/chip.rs`), o crumb (`rust/engine/src/widgets/nav/breadcrumb.rs`)
+e o link de navegação (`rust/engine/src/widgets/nav/nav_link.rs`). Enter e Espaço
 pedem a ação primária do nó focado, a mesma que o clique do leitor pede
-(`crates/engine/src/accessibility/action.rs:102`), pelo dispatcher da
+(`rust/engine/src/control/accessibility/action/mod.rs:102`), pelo dispatcher da
 galeria, como pessoa.
 
 as listas e tabelas: as linhas projetam `select` mas não são focáveis, e a
@@ -1579,7 +1579,7 @@ fase 2b).
   modal. os toasts são live regions, não focáveis.
 - o foco do modal é o cancel, ou o botão que o leitor escolheu
   (`dispatch/overlay.rs:108-115`); o comps `Modal` tem dois `Button` com
-  `set_focused` (`crates/comps/src/feedback/modal.rs:47-48`), mas nenhum
+  `set_focused` (`rust/engine/src/widgets/feedback/modal.rs:47-48`), mas nenhum
   jeito de a view ligar o anel neles.
 - o retorno já sai da projeção: a página guarda o foco dela enquanto o
   modal está aberto, e ele volta a ser o foco da projeção quando o modal
@@ -1593,7 +1593,7 @@ fase 2b).
 ### (e) fora desta fase
 
 os atalhos anunciados: o `sem::Node` não tem campo de atalho
-(`crates/sem/src/node.rs:35-73`), e dizer um atalho ao leitor pede o
+(`rust/accord/src/controls.rs:35-73`), e dizer um atalho ao leitor pede o
 contrato. vai para as pendências.
 
 ## handoff da fase 2c (2026-09-25)
@@ -1626,7 +1626,7 @@ branch `task/75d-keyboard`, sobre `main` em `73f99094`. sem push.
 
 ### o mecanismo
 
-`crates/showcase/src/view/dispatch/keyboard.rs`. a view manda para ele o
+`apps/uigallery/src/views/dispatcher/keyboard/mod.rs`. a view manda para ele o
 Tab, as setas, Home, End, Enter e Espaço quando a página é de componente
 ou quando um overlay segura o ponteiro (`input.rs`, `mod.rs`). o Shift
 vem das teclas modificadoras que a view já recebia; a ponte
@@ -1663,7 +1663,7 @@ de edição.
 
 ### os testes
 
-- `crates/showcase/tests/component_pages/keyboard.rs` (6):
+- `apps/uigallery/tests/component_pages/keyboard.rs` (6):
   - Tab em todas as 30 páginas: cada controle focável é alcançado na
     ordem da projeção, dá a volta, Shift-Tab volta, o foco nunca some, o
     anel aparece no controle focado (um anel a mais no quadro), e o
@@ -1674,9 +1674,9 @@ de edição.
   - o modal: o foco entra no cancel com anel, Tab e Shift-Tab ficam
     dentro, Espaço responde, o foco volta ao botão que abriu; o mesmo
     com Escape.
-- `crates/showcase/src/view/dispatch/keyboard/tests.rs` (1): o menu de
+- `apps/uigallery/src/views/dispatcher/keyboard/tests.rs` (1): o menu de
   contexto com as setas, o destaque, o Tab preso e o Enter.
-- `crates/comps/src/tests/focus.rs` (+5): os anéis e destaques novos.
+- `rust/engine/src/widgets/tests/focus.rs` (+5): os anéis e destaques novos.
 - mudaram dois testes de teclado, nenhum de clique: o de Tab da página
   Input virou "o campo toma o foco que o Tab pede" (o Tab é da view); e
   em `apps/app/tests/semantics.rs` o Enter com o modal aberto agora
@@ -1696,7 +1696,7 @@ o caminho é relativo ao worktree
 
 ### gate e regress
 
-- `./script/gate` verde, pernas urnaui e wasm rodaram: 3213 passam (3128
+- `./tool/tasks/fullcheck.sh` verde, pernas urnaui e wasm rodaram: 3213 passam (3128
   no workspace, 85 no urnaui), 28 ignorados, 0 falhas. a branch soma 13
   testes e não tira nenhum.
 - `regress check`: 176 baselines, 176 iguais. nenhuma baseline mudou.
@@ -1797,7 +1797,7 @@ nunca some. a seta que rola mostra a barra de rolagem, como a roda.
 
 ### os testes
 
-- `crates/showcase/tests/component_pages/keyboard.rs`: o Tab em todas
+- `apps/uigallery/tests/component_pages/keyboard.rs`: o Tab em todas
   as 30 páginas agora chega em 29 (só a Resizable fica sem nó focável),
   e em cada lista e tabela para uma vez só (4 páginas, lista conferida).
   novo `the_arrows_walk_the_rows_of_a_list_and_a_table`, nas 4 páginas:
@@ -1806,12 +1806,12 @@ nunca some. a seta que rola mostra a barra de rolagem, como a roda.
   selecionam como o clique (o estado inteiro igual ao do clique), Escape
   e Tab voltam na selecionada, a roda leva o foco junto e ele nunca
   some. os testes de abas e árvore são os da fase 2c.
-- `crates/comps/src/tests/widgets/semantics/roving.rs` (3): a parada da
+- `rust/engine/src/widgets/tests/widgets/semantics/roving.rs` (3): a parada da
   lista e da tabela; a linha que rola para a vista; o foco seguindo a
   roda.
-- `crates/comps/src/tests/focus.rs` (+1): o anel dentro da linha da lista
+- `rust/engine/src/widgets/tests/focus.rs` (+1): o anel dentro da linha da lista
   e da tabela.
-- `crates/showcase/tests/access_tree.rs` igual à main. digitar num campo,
+- `apps/uigallery/tests/access_tree.rs` igual à main. digitar num campo,
   o clique e o mouse: os testes de 2b e 2c seguem verdes sem mudança.
 
 ### as baselines regravadas
@@ -1844,7 +1844,7 @@ linha file_2.rs.
 
 ### gate e regress
 
-- `./script/gate` verde, pernas urnaui e wasm rodaram: 3218 passam (3133
+- `./tool/tasks/fullcheck.sh` verde, pernas urnaui e wasm rodaram: 3218 passam (3133
   no workspace, 85 no urnaui), 28 ignorados, 0 falhas. a branch soma 5
   testes e não tira nenhum.
 

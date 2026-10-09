@@ -7,7 +7,7 @@
 //!
 //! Set `PROBE_FILL=1` to push enough distinct glyphs through the atlas that
 //! it has to grow mid-frame, the state in which the defects described in
-//! `docs/ADR/glyph-raster-identity-and-atlas-isolation.md` become visible.
+//! `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
 
 use engine::drawing::text::probe::{Specimen, render};

@@ -49,7 +49,7 @@ the open. what it takes for one person to build a small indie engine with
 real memory control, performance first, everything on the GPU, running on
 any device, ready for the LLM era. it already serves beyond the original
 dream: [urna](https://github.com/hoffresearch/urna), a sovereign embedded
-vector database, ships its explorer (`crates/urnaui`) on plev. and the
+vector database, ships its explorer (`apps/urnadbapp`) on plev. and the
 children's app that started all of this is still the next thing to build.
 
 if any of this resonates, come build with me.
@@ -68,7 +68,7 @@ cargo build --release --workspace
 cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
 cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
 cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
-cargo run -p showcase --example regress -- check   # structural regression over crates/showcase/fixtures/regress: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
+cargo run -p showcase --example regress -- check   # structural regression over tool/bench/regress/baselines: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
 cargo run -p showcase --example regress -- capture   # every page in 4 themes at 4 scales through the real frame path; `--against <dir>` compares byte for byte with an earlier capture
 cargo run -p ide --bin ide [path]      # plev-native git client; with PLEV_AGENT=1 (debug) its window opens the agent port as app ide, with PLEV_RECORD=1 it records its session (cmd-shift-s, on close, on a panic) for plev-inspect
 cargo run -p ide --bin ide-lab -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
@@ -94,7 +94,7 @@ tool to set up, and release builds do none of it.
 web, the desktop's pixels in the browser (`cargo install trunk` first):
 
 ```
-./script/web
+./tool/tasks/webtarget.sh
 ```
 
 urnaui, the `.urna` explorer, is its own workspace because its native
@@ -103,8 +103,8 @@ backend path-depends on a sibling checkout of
 `../urna`. with urna cloned next to plev:
 
 ```
-cargo run --manifest-path crates/urnaui/Cargo.toml [file.urna]   # drop a file to open, or Browse…
-./script/web-urnaui                                              # web target on :8081
+cargo run --manifest-path apps/urnadbapp/Cargo.toml [file.urna]   # drop a file to open, or Browse…
+./tool/tasks/webtarget.sh urnadbapp                                              # web target on :8081
 ```
 
 it opens any `.urna` (and the pre-rename `.nest` files) and surfaces the
@@ -119,7 +119,7 @@ previews need `ffmpeg` on PATH (the blob is read in place, never copied).
 the reference corpus is the 38k-card
 [mtg-urna-benchmark](https://huggingface.co/datasets/brennercruvinel/mtg-urna-benchmark).
 
-`crates/llm` runs a language model inside the app's own process and
+`rust/llmrun` runs a language model inside the app's own process and
 streams its answer token by token, with candle or burn behind one
 interface. it is its own workspace too, because burn brings a dependency
 tree the engine does not need. the weights stay outside the repository:
@@ -129,8 +129,8 @@ checkpoint as Hugging Face ships it (`config.json`, `tokenizer.json`,
 feature, burn runs on the renderer's own gpu device.
 
 ```
-cargo test --manifest-path crates/llm/Cargo.toml --features candle,burn
-cargo run --release --manifest-path crates/llm/Cargo.toml --features candle,metal --bin llm-bench -- --impl candle --model <dir> --device metal
+cargo test --manifest-path rust/llmrun/Cargo.toml --features candle,burn
+cargo run --release --manifest-path rust/llmrun/Cargo.toml --features candle,metal --bin llm-bench -- --impl candle --model <dir> --device metal
 ```
 
 mobile: the showcase runs natively on iOS and Android from the same
@@ -139,10 +139,10 @@ needs xcode, the `aarch64-apple-ios-sim` target and `xcodegen`; Android
 needs the sdk/ndk, a jdk 17 and `cargo-ndk`.
 
 ```
-cd ios/showcase && ./build_ios.sh && ./run_ios.sh   # simulator: build, install, launch, screenshot
+cd apps/uigallery/ios && ./build_ios.sh && ./run_ios.sh   # simulator: build, install, launch, screenshot
 cd android && ./build_android.sh                    # -> app/build/outputs/apk/debug/app-debug.apk
-script/capture-web --all                            # every gallery page in the browser, each classified against the desktop's frame
-script/capture-ios --all                            # the same on the simulator
+tool/tasks/screencap.sh web --all                            # every gallery page in the browser, each classified against the desktop's frame
+tool/tasks/screencap.sh ios --all                            # the same on the simulator
 ```
 
 ## workspace
@@ -153,11 +153,11 @@ demos are the engine's (and comps') examples.
 
 | tier | where | what |
 |---|---|---|
-| engine | `crates/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, clipboard, perf, hot_reload, platform |
-| comps | `crates/comps` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/catalog.md](docs/catalog.md) |
+| engine | `rust/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, clipboard, perf, hot_reload, platform |
+| comps | `rust/engine/src/widgets` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/ref/component-catalog.md](docs/ref/component-catalog.md) |
 | crates | `crates/` | claude-model, git, ide, inspect, inspector, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, wire |
-| own workspaces | `crates/urnaui`, `crates/llm` | the `.urna` explorer and the in-process language model, each with its own `Cargo.lock` |
-| examples | `crates/engine/examples/`, `crates/comps/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters, svg2monster and text_probe clis |
+| own workspaces | `apps/urnadbapp`, `rust/llmrun` | the `.urna` explorer and the in-process language model, each with its own `Cargo.lock` |
+| examples | `demo/`, `rust/engine/src/widgets/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters, svg2monster and text_probe clis |
 
 `comps` is the crate an app draws with. widgets are plain structs the app
 owns; they take `&Theme` and read every color, radius, height, padding,
@@ -175,7 +175,7 @@ agent can neither read it nor write to it.
 
 `sem` is the semantic contract: each control's persistent id, role,
 state, actions and constraints as pure data, projected from app state on
-demand ([docs/ADR/semantic-contract-as-pure-projection.md](docs/ADR/semantic-contract-as-pure-projection.md)).
+demand ([docs/adr/semantics/0032-semantic-contract-as-pure-projection.md](docs/adr/semantics/0032-semantic-contract-as-pure-projection.md)).
 `rec` records a session as data in a bounded ring (who observed what, the
 state, every receipt, the frames on screen) and reads it back; replay
 never creates a request. `inspect` answers the questions a session raises
@@ -204,7 +204,7 @@ keyframes are full snapshots so seek is O(1), between them only discovered
 deltas travel, and a node that does not change costs zero bytes. `lot`
 converts a lottie json into it once, `svg` imports a still through the
 same door, and no foreign runtime is ever embedded. the decision record is
-[docs/ADR/monster-format-v0.md](docs/ADR/monster-format-v0.md).
+[docs/ref/monster-format-v0.md](docs/ref/monster-format-v0.md).
 
 `parser` reads ui source from React, gpui, a subset of HTML and CSS, or a
 Figma export, and writes plev builder code and plev IR from it. colors
@@ -223,7 +223,7 @@ cargo run -p parser --example preview    index.tsx module.sass vars.sass
 ```
 
 the frame flow, from event to present, is the `[diagram]` table of
-[docs/arc/arc.toml](docs/arc/arc.toml).
+[docs/ATLAS.toml](docs/ATLAS.toml).
 
 ## contracts
 
@@ -247,26 +247,26 @@ constructing a raw key instead of going through the one-TextStyle path.
 ## gate
 
 ```
-./script/gate       # test (the wgsl shaders included), clippy, fmt and the wasm check, plus the urnaui leg when ../urna is there; stops on the first red
+./tool/tasks/fullcheck.sh       # test (the wgsl shaders included), clippy, fmt and the wasm check, plus the urnaui leg when ../urna is there; stops on the first red
 cargo bench -p rope # criterion, one crate
 ```
 
 benches sit on the hot path of each crate: `engine` scene build, `rope`
 edits, `monster` codec, `lot` conversion, `parser` transpile.
-`crates/llm` measures inference with its own `llm-bench`.
+`rust/llmrun` measures inference with its own `llm-bench`.
 
 ## docs
 
-- [docs/arc/arc.toml](docs/arc/arc.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
-- [docs/ADR/](docs/ADR/): the decision records.
-- [docs/how-to/code-against-the-plev-engine.md](docs/how-to/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/how-to/](docs/how-to/): pixel validation, the web target, orchestrating agents.
-- [docs/mission/generative-runtime-program.md](docs/mission/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
-- [docs/CHANGELOG.md](docs/CHANGELOG.md): what changed, newest first.
+- [docs/ATLAS.toml](docs/ATLAS.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
+- [docs/adr/](docs/adr/): the decision records.
+- [docs/ref/code-against-the-plev-engine.md](docs/ref/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/ref/](docs/ref/): pixel validation, the web target, orchestrating agents.
+- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
+- [docs/log/changelog.md](docs/log/changelog.md): what changed, newest first.
 - [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
 
 ## license
 
-MIT, see [docs/LICENSE](docs/LICENSE).
+MIT, see [LICENSE](LICENSE).
 
 made it simple, but significant.
 

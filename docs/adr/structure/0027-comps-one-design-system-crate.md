@@ -26,11 +26,11 @@ modal width, 248 sidebar width, `TextStyle::new(32.0).with_line_height(40.0)`
 in the card, `blur_radius: 16.0, offset: [2.0, 4.0]` in three places for
 the same key-light. nothing knew a viewport width: no breakpoint, no
 gutter, no sidebar mode; a phone got the desktop layout at a third of the
-width. docs/catalog.md holds the full inventory that opened this change.
+width. docs/ref/component-catalog.md holds the full inventory that opened this change.
 
 ## decision
 
-- one crate, `crates/comps`, is the design system. `engine::ui`,
+- one crate, `rust/engine/src/widgets`, is the design system. `engine::ui`,
   `text_input`, `overlay`, `charts`, the `GraphView` widget and the editor
   view moved into it (git history preserved), organized by category:
   `core`, `recipe`, `icons`, `action`, `form`, `nav`, `content`,
@@ -61,7 +61,7 @@ width. docs/catalog.md holds the full inventory that opened this change.
   `todo` and `text_input` demos are absorbed by the showcase sections
   that already showed the same thing, the other demo palettes are views
   over `Theme::default()`.
-- the matrix test (`crates/comps/src/tests/matrix.rs`) renders every
+- the matrix test (`rust/engine/src/widgets/tests/matrix.rs`) renders every
   widget under every built-in theme at a phone width and a desktop width.
   a new widget joins it in the same change.
 

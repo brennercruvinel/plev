@@ -30,7 +30,7 @@ still running nothing.
 ### re-execution under control, in the tests only
 
 the harness reruns an excerpt against a fixture and compares. it lives in
-`crates/ide/tests/rerun/`, beside the only app fixture that exists today,
+`apps/idestudio/tests/rerun/`, beside the only app fixture that exists today,
 and nowhere in a library:
 
 - not in `rec`: the crate runs nothing, and its `Session` holds no app
@@ -39,7 +39,7 @@ and nowhere in a library:
   side would take exactly that.
 - not in `inspect`: the inspector reads; its sources are checked for every
   type and call that runs an action, and its dependencies are fixed.
-- not in a crate of its own yet: a crate is named in `docs/arc/arc.toml`
+- not in a crate of its own yet: a crate is named in `docs/ATLAS.toml`
   and the readme (the arc sync guard), and one fixture does not make a
   reuse. the second app with a fixture (the showcase's todo page) is the
   moment to move it to a crate, test-only, depending on `rec` and `sem`.
@@ -168,7 +168,7 @@ test is made with it.
 - the probe (in the task file): the nine requests of the third round's
   a2ppa session, rerun on a fresh laboratory repository, give the same
   verdicts and the same stages; so do a1pp, a2ppb and a2ppc.
-- `crates/ide/tests/fixtures/sessions/a2ppa.monster` (184 KB, 65 events,
+- `apps/idestudio/tests/fixtures/sessions/a2ppa.monster` (184 KB, 65 events,
   12 frames) with six marks reruns green in 0.4 s.
 - with `changes:staged` taken out of the submit's `reads` (by hand, never
   committed), the same test fails on request 7: recorded rejected stale on

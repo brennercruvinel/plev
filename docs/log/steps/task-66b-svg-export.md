@@ -40,9 +40,9 @@ ao `SwashCache` (`get_outline_commands`). a string do run vai no
 
 ## superfície
 
-`crates/engine/src/headless/**`, `crates/engine/src/text/system.rs` (só o
-ponto de shaping `pub(crate)`), `crates/engine/src/text/fonts.rs` (só se o
-contorno precisar dos bytes), `crates/engine/src/gpu/image.rs` (só um
+`rust/engine/src/drawing/headless/**`, `rust/engine/src/drawing/text/system.rs` (só o
+ponto de shaping `pub(crate)`), `rust/engine/src/drawing/text/fonts.rs` (só se o
+contorno precisar dos bytes), `rust/engine/src/drawing/gpu/image.rs` (só um
 acessor de pixels para imagem embutida), o CLI do showcase.
 
 ## aceite
@@ -61,7 +61,7 @@ diff inteiro lido (o ponto de shaping é uma extração pura do que
 verde no diretório da task (1969 passed, 0 failed, 6 ignored; a `main`
 tinha 1949), e a comparação visual lado a lado do Todo e da Effects (png
 do engine e raster do svg) conferida pelo orquestrador. ADR:
-`docs/ADR/svg-export-reads-the-scene.md`.
+`docs/adr/rendering/0041-svg-export-reads-the-scene.md`.
 
 aceitos: `export` com o quarto parâmetro `background` (sem ele a página
 sai transparente); `stage_page` recebendo `Viewport` (a projeção não abre
@@ -74,8 +74,8 @@ tipado em vez de texto.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 
-- estado: `showcase --render` existe (`crates/showcase/src/main.rs`, módulo
-  `headless` em `crates/showcase/src/app.rs:498-600`, `render_page`);
+- estado: `showcase --render` existe (`apps/uigallery/src/main.rs`, módulo
+  `headless` em `apps/uigallery/src/shell/mod.rs:498-600`, `render_page`);
   `--semantics` é recusado com "not available yet" (`main.rs:99-103`),
   embora a projeção do todo exista desde a task-59 e o `wire` já sirva a
   forma serde enxuta (task-57b). o `--semantics` sai como a mesma forma
@@ -83,9 +83,9 @@ tipado em vez de texto.
   incluí-lo, igual ao `plev observe`.
 - ownership: a task-62 fase c (ide, wire) e a task-82 (comps form/editor,
   shell do showcase em `app.rs:380-420`) rodam em paralelo. esta task fica
-  em `crates/engine/src/headless/**`, `crates/engine/src/text/system.rs` (o
-  ponto de shaping), `crates/showcase/src/main.rs` e o módulo `headless`
-  de `crates/showcase/src/app.rs`. não toca o loop de eventos do showcase,
+  em `rust/engine/src/drawing/headless/**`, `rust/engine/src/drawing/text/system.rs` (o
+  ponto de shaping), `apps/uigallery/src/main.rs` e o módulo `headless`
+  de `apps/uigallery/src/shell/mod.rs`. não toca o loop de eventos do showcase,
   o ide, o comps nem o wire.
 
 ## estado (agente, 2026-09-23, branch `task/66b-svg-export`)
@@ -104,7 +104,7 @@ passando clippy e fmt:
    deixados de fora com comentário no lugar; tudo no relatório, um item
    por nó, em ordem de push.
 3. `24dede0` o módulo `headless` do showcase vai para
-   `crates/showcase/src/app/headless.rs`, sem mudança (o `app.rs` ia
+   `apps/uigallery/src/shell/window/headless.rs`, sem mudança (o `app.rs` ia
    estourar o limite de 639 linhas).
 4. `1603133` um `ScaleContext` do swash novo por contorno de glifo, como o
    raster já faz: com um só contexto compartilhado a sidebar da página
@@ -143,15 +143,15 @@ Implementado:
   relatório vai para stderr, uma linha por item.
 
 Arquivos principais:
-- `crates/engine/src/headless/svg/{mod,write,shape,text,tests}.rs` (novos)
-- `crates/engine/src/headless/mod.rs` (`pub mod svg`, `Renderer::svg`)
-- `crates/engine/src/text/system.rs` (`ensure_shaped`, `ShapedGlyph`,
+- `rust/engine/src/drawing/headless/svg/{mod,write,shape,text,tests}.rs` (novos)
+- `rust/engine/src/drawing/headless/mod.rs` (`pub mod svg`, `Renderer::svg`)
+- `rust/engine/src/drawing/text/system.rs` (`ensure_shaped`, `ShapedGlyph`,
   `shaped_glyphs`)
-- `crates/showcase/src/app/headless.rs` (movido de `app.rs`, depois
+- `apps/uigallery/src/shell/window/headless.rs` (movido de `app.rs`, depois
   `stage_page`, `StagedPage`, `semantics_json`, testes)
-- `crates/showcase/src/app.rs` (só o `pub use` e o `mod headless;`)
-- `crates/showcase/src/main.rs` (o CLI)
-- `crates/showcase/Cargo.toml`, `Cargo.lock`, `README.md`
+- `apps/uigallery/src/shell/mod.rs` (só o `pub use` e o `mod headless;`)
+- `apps/uigallery/src/main.rs` (o CLI)
+- `apps/uigallery/Cargo.toml`, `Cargo.lock`, `README.md`
 
 Interfaces adicionadas/alteradas:
 - `export` ganhou um quarto parâmetro, `background: Option<[f32; 4]>` em
@@ -161,7 +161,7 @@ Interfaces adicionadas/alteradas:
 - `stage_page` recebe `Viewport`, não `&Renderer`, para a projeção sair
   sem abrir GPU.
 - `RenderError` ganhou `NoSemantics(String)` e `Json(serde_json::Error)`.
-- `crates/showcase/Cargo.toml`: `serde` e `serde_json` nas deps de
+- `apps/uigallery/Cargo.toml`: `serde` e `serde_json` nas deps de
   desktop (o json do `--semantics`), `svg` em dev-dependencies (o
   importador lê os exports de volta nos testes). fora da lista de
   arquivos permitidos, necessário para o item 3 e o teste (a).
@@ -184,7 +184,7 @@ Testes (antes -> depois):
 - `cargo test -p showcase`: 122 + 2 ignorados (lib) + 7 (bin) ->
   127 + 2 ignorados (lib) + 8 (bin); 6 novos no headless, 1 novo no cli
 - do contrato: (a) Todo, Button e Card exportam SVG que o importador
-  `crates/svg` lê de volta, viewBox igual ao viewport, `<g aria-label>` e
+  `rust/import/src/formats/svg` lê de volta, viewBox igual ao viewport, `<g aria-label>` e
   `<rect>` contados, `<g>` balanceado; (b) a soma dos advances de três
   runs (Inclusive Sans 16, Inter 600 14, tracking 1.0 700 20) é a largura
   do `TextMeasurer::measure_styled` (diferença < 0,01 px), e o pen termina
@@ -204,7 +204,7 @@ Validação executada (com `CARGO_TARGET_DIR=target/agents/task-66b`):
   --svg target/agents/t66b-todo.svg --svg-report target/agents/t66b-todo-report.txt
   --semantics target/agents/t66b-todo.json`; o mesmo para Button (core),
   Card (hoff) e Effects (hoff) em `target/agents/t66b-{button,card,effects}.*`
-- `./script/gate`
+- `./tool/tasks/fullcheck.sh`
 - comparação manual: cada svg rasterizado com `rsvg-convert` e medido
   contra o png do engine (1200x800, `magick compare -fuzz 8%`): Todo
   0,13% dos pixels diferem, Button 0,2%, Effects 0,56%, Card 1,07% (as

@@ -1,6 +1,6 @@
 //! the closed component vocabulary, declared as data.
 //!
-//! every `Component` is a widget that exists in `crates/comps` or in the
+//! every `Component` is a widget that exists in `rust/engine/src/widgets` or in the
 //! engine builder, and its `Spec` says what the IR may do with it: the
 //! role it takes in the semantic contract, whether it holds children,
 //! how it is named, the state it can show and the events it can send.

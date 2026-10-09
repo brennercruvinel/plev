@@ -1,5 +1,5 @@
 # rec: the session flight recorder (task-63,
-# docs/ADR/session-recording-replay-not-reexecution.md). it records what an
+# docs/adr/recording/0037-session-recording-replay-not-reexecution.md). it records what an
 # app did as data (observations, snapshots, receipts, input, frames) in a
 # bounded ring, and reads it back. it never creates a request.
 [package]

@@ -16,7 +16,7 @@ origin: a prova da task-86 numa janela real (limitação lida no código e escri
 a task-83 fez a recusa stale dizer quem agiu (`Rejection::Stale.acted`),
 com uma regra exata e limitada: as ações de outros atores validadas
 contra a mesma revisão que o autor viu e que chegaram a rodar
-(`crates/sem/src/dispatch.rs`, `acted`). o ADR
+(`rust/accord/src/dispatch.rs`, `acted`). o ADR
 a-delta-carries-the-node-a-refusal-names-who-acted escreve o limite: de
 uma cadeia de ações de outra pessoa, só a primeira é nomeada.
 
@@ -52,7 +52,7 @@ diz).
 
 ## aceite
 
-teste no `sem` e no ide (`crates/ide/tests/human_agent.rs`) da sequência
+teste no `sem` e no ide (`apps/idestudio/tests/human_agent.rs`) da sequência
 da janela (o agente olha, a pessoa seleciona, a pessoa tira do index, o
 `submit` é recusado): o `acted` nomeia a seleção e o unstage, em ordem
 de id; o texto do toast legível com mais de uma ação (diga o texto antes
@@ -64,10 +64,10 @@ reescritos; gate verde.
 a direção do briefing dizia que, na cena da janela, a seleção e o
 `show_diff` eram validados na revisão que o agente viu. no código não
 são: o clique muda a seleção direto na view
-(`crates/ide/src/views/workspace/input.rs:78-82`, `unassigned.select`
+(`apps/idestudio/src/interfaces/panels/layout/input.rs:78-82`, `unassigned.select`
 antes de `open_file_diff` enfileirar o pedido), a seleção é projetada
-(`changes:selected`, `crates/ide/src/workbench/project.rs:74`), e
-`Workbench::act` (`crates/ide/src/workbench/mod.rs:261-270`) só observa
+(`changes:selected`, `apps/idestudio/src/capability/project.rs:74`), e
+`Workbench::act` (`apps/idestudio/src/capability/mod.rs:261-270`) só observa
 e despacha o `show_diff` depois. uma sonda pelo clique real, sem commit,
 deu:
 
@@ -86,8 +86,8 @@ o orquestrador decidiu a opção A: a regra por id no dispatcher, como a
 regra dentro do processo e reserva da âncora no olhar (task-91); o aceite
 do ide reescrito com duas cenas pelo ponteiro, uma cadeia que começa numa
 ação validada em R e a cena da janela como limite conhecido; liberou
-`crates/sem/src/check.rs` (doc do `Acted`), `crates/sem/src/lib.rs` (doc)
-e o texto da regra em `crates/inspect/src/text/chain.rs`.
+`rust/accord/src/decision.rs` (doc do `Acted`), `rust/accord/src/lib.rs` (doc)
+e o texto da regra em `rust/replay/src/prose/chain.rs`.
 
 ## handoff
 
@@ -125,12 +125,12 @@ Implementado:
   toast, os limites reescritos e a linha datada de origem
 
 Arquivos principais:
-- crates/sem/src/dispatch.rs (acted e docs), crates/sem/src/check.rs
-  (só doc), crates/sem/src/lib.rs (só doc), crates/sem/tests/dispatch.rs
-- crates/ide/src/workbench/notice.rs, crates/ide/src/workbench/tests.rs,
-  crates/ide/tests/human_agent.rs
-- crates/inspect/src/text/chain.rs (só o texto)
-- docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md, este
+- rust/accord/src/dispatch.rs (acted e docs), rust/accord/src/decision.rs
+  (só doc), rust/accord/src/lib.rs (só doc), rust/accord/tests/dispatch.rs
+- apps/idestudio/src/capability/notice.rs, apps/idestudio/src/capability/tests.rs,
+  apps/idestudio/tests/human_agent.rs
+- rust/replay/src/prose/chain.rs (só o texto)
+- docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md, este
   arquivo (movido para ongoing no primeiro commit)
 
 Interfaces adicionadas/alteradas:
@@ -140,7 +140,7 @@ Interfaces adicionadas/alteradas:
   continua um só lugar que preenche (Dispatcher::push)
 
 Testes:
-- sem, crates/sem/tests/dispatch.rs, 4 novos:
+- sem, rust/accord/tests/dispatch.rs, 4 novos:
   a_stale_refusal_names_the_chain_that_ran_since_the_state_the_agent_saw
   (a pessoa move o cursor em R, o agente move o dele, a pessoa tira B em
   R'; nomeia move e unstage da pessoa, em ordem de id, e não o agente),
@@ -163,7 +163,7 @@ Testes:
   C]; para o discard do cleaner na confirmação, [stage do agente,
   unstage B, unstage C]. é o limite que a task remove. os outros dois
   testes da 83 (point of truth, retenção) não mudaram
-- ide, crates/ide/tests/human_agent.rs, 2 novos, pelo ponteiro (clique
+- ide, apps/idestudio/tests/human_agent.rs, 2 novos, pelo ponteiro (clique
   esquerdo na linha, clique direito, clique no primeiro item do menu; o
   menu é posto pelo mesmo widget do comps, meio xs à direita do ponteiro):
   a_chain_the_person_starts_on_what_the_agent_saw_is_named_whole (B
@@ -174,7 +174,7 @@ Testes:
   (a cena da janela: acted vazio, limite conhecido escrito no teste; muda
   na task-91). na regra da 83 o primeiro nomeava só o unstage de B
   (conferido trocando o dispatch.rs pelo da base, depois restaurado)
-- ide, crates/ide/src/workbench/tests.rs, 1 novo:
+- ide, apps/idestudio/src/capability/tests.rs, 1 novo:
   a_stale_refusal_toast_names_each_actors_run_in_order (dois atores)
 - o aceite pedia "acted nomeia os dois"; pelo ponteiro, o segundo
   arquivo só sai do index depois de a linha dele ser selecionada, o que
@@ -195,7 +195,7 @@ O texto do toast (a cadeia do teste do ide):
   the staged files"
 
 Validação executada:
-- ./script/gate verde depois do rebase na main (e45a879), com a perna
+- ./tool/tasks/fullcheck.sh verde depois do rebase na main (e45a879), com a perna
   urnaui: 2225 passed, 0 failed, 12 ignored (88 "test result"). depois a
   main foi para 62026fb, um merge com a mesma árvore de e45a879; a branch
   está em cima dela, e a árvore do código é a do gate. a main
@@ -241,23 +241,23 @@ Dependências pendentes:
 Riscos de integração:
 - textos fora da lista que ainda descrevem a regra da 83 (proponho o
   texto; o orquestrador aplica na integração):
-  - crates/wire/src/proto.rs:108-111 (doc do Act, na main e45a879):
+  - rust/socket/src/protocol.rs:108-111 (doc do Act, na main e45a879):
       /// (`rejected`, `stale`) carries `changes`, what moved, and `acted`, who
       /// among the app's actors ran something since that state, from the first
       /// request that ran on it (the dispatcher knows the requests it took, so
       /// a change no request made, a `git` in a terminal, starts nothing and
       /// names nobody).
-  - crates/wire/src/bin/plev.rs:73-74 (USAGE, na main e45a879):
+  - rust/socket/src/bin/plev.rs:73-74 (USAGE, na main e45a879):
       what moved, and its acted says who, among the app's actors, ran something
       since that state, from the first request that ran on it (a change no
       request made, as from outside the app, starts nothing and names nobody).
     (o teste the_help_says_what_makes_an_act_stale procura "its acted says
     who", que fica)
-  - docs/how-to/code-against-the-plev-engine.md:64-66: "`acted`: the
+  - docs/ref/code-against-the-plev-engine.md:64-66: "`acted`: the
     actions of other actors that ran since the state the refused actor
     saw, from the first request that ran on it (task-83, task-90; a
     change no request made names nobody)"
-  - docs/ADR/the-inspector-reads-a-session-never-runs-it.md:19-22, uma
+  - docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md:19-22, uma
     linha datada embaixo: "updated on 2026-09-23 (task-90): acted names
     the chain from the first receipt that ran on the revision the author
     saw, so an act checked on a later revision is named when a chain
@@ -267,7 +267,7 @@ Riscos de integração:
 
 ADR proposto:
 - nenhum novo; a-delta-carries-the-node-a-refusal-names-who-acted
-  atualizado. linha do índice (docs/ADR/README.md), se o orquestrador
+  atualizado. linha do índice (docs/adr/README.md), se o orquestrador
   quiser marcar a mudança: "... a stale refusal names who acted: the
   other actors' requests that ran since the state the author saw, from
   the first request that ran on it (task-90; a change no request made

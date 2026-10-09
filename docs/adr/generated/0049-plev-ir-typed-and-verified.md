@@ -15,15 +15,15 @@ refuse: a surface described by meaning, not by pixels, where the model
 proposes, the runtime verifies and plev executes (thesis, sections 2, 3
 and 15). what existed:
 
-- `crates/sem`: the semantic contract. every control has a `SemId`, a
+- `rust/accord`: the semantic contract. every control has a `SemId`, a
   closed `Role`, state as `Value`s, and `ActionDecl`s with their
-  `ParamSpec` and `Policy` (docs/ADR/semantic-contract-as-pure-projection.md,
-  docs/ADR/actions-carry-observed-state.md). an app's `Snapshot` already
+  `ParamSpec` and `Policy` (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md,
+  docs/adr/semantics/0033-actions-carry-observed-state.md). an app's `Snapshot` already
   declares everything it can show and run.
-- `crates/comps`: the widgets, each with a `project` that declares its
+- `rust/engine/src/widgets`: the widgets, each with a `project` that declares its
   role, state and actions (task-59), and `engine::theme`: every visual
   value as a token.
-- `crates/parser/src/ir.rs`: `ParserNode`, the IR the transpiler prints
+- `rust/import/src/tree.rs`: `ParserNode`, the IR the transpiler prints
   as builder code. its props are builder method names and its values are
   literals or theme expressions in Rust; it carries no identity and no
   semantics.
@@ -36,7 +36,7 @@ the minimal form.
 
 ## decision
 
-a new pure crate, `crates/uir`. dependencies: `sem` (with its serde
+a new pure crate, `rust/plevir`. dependencies: `sem` (with its serde
 form), serde and serde_json. never engine, comps or wire; it compiles to
 wasm.
 
@@ -186,7 +186,7 @@ target by default; task-69 decides how a `VerifiedIr` becomes widgets.
 ### the JSON schema
 
 `uir::schema()` builds the JSON schema (draft 2020-12) from the same
-tables the types use; `crates/uir/schema/plev-ir-1.json` is that value
+tables the types use; `rust/plevir/assets/plev-ir-1.json` is that value
 written out, kept equal by a test (`UIR_BLESS=1 cargo test -p uir` writes
 it again). it constrains decoding to known components, tokens, fields
 and binding names, and the proportions to their bounds. it does not
@@ -287,7 +287,7 @@ in comps first, then an ADR") is what this addendum follows.
   starts with `-`, `+` or a space would read as a line's mark).
 - an app that projects a list named `lines` and one named `kinds` speaks
   the vocabulary: the rules' review shows them as one `code`
-  (`crates/propose/src/review.rs`).
+  (`rust/offers/src/review/mod.rs`).
 
 ### avoid
 

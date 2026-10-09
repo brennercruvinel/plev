@@ -1,6 +1,6 @@
 //! The workbench without a repository: what it projects, what the render
 //! binds, and which state a commit depends on. The flows against a real
-//! repository live in `crates/ide/tests`.
+//! repository live in `apps/idestudio/tests`.
 
 use std::cell::RefCell;
 use std::rc::Rc;

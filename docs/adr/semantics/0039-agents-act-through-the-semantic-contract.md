@@ -17,20 +17,20 @@ click landed (section 8).
 
 the contract that makes the screen unnecessary already existed. every
 control has an identity, a role, a state and the actions it accepts, as a
-projection of the app (`docs/ADR/semantic-contract-as-pure-projection.md`);
+projection of the app (`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`);
 every action goes through one `Dispatcher` that checks the state its actor
-observed (`docs/ADR/actions-carry-observed-state.md`); the compositor knows
+observed (`docs/adr/semantics/0033-actions-carry-observed-state.md`); the compositor knows
 where each id sits in the frame on screen
-(`docs/ADR/semantic-binding-beside-the-scene.md`); and the showcase shell
+(`docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`); and the showcase shell
 already routes one actor that is not the page's own input, a screen
 reader, through the page's hooks and an `EventLoopProxy`
-(`docs/ADR/accessibility-projects-the-semantic-snapshot.md`). what was
+(`docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md`). what was
 missing was a door: a channel from a process outside, carrying the
 contract and nothing else.
 
 ## decision
 
-a new crate, `crates/wire`. its protocol types, codec, ring and server
+a new crate, `rust/socket`. its protocol types, codec, ring and server
 core are pure (they compile for wasm); the socket (`AgentPort`), the client
 and the `plev` binary are unix only.
 
@@ -40,7 +40,7 @@ JSON lines. every message is one object on one line with `"v": 1`, an
 `"id"` the client picks (a string) and a `"type"`. every reply carries the
 id of the message it answers; an error about a line whose id could not be
 read has a null id. snapshots, changes, requests, observations and stages
-travel in the serde form `sem` pins (`crates/sem/tests/wire.rs`), so the
+travel in the serde form `sem` pins (`rust/accord/tests/encoding.rs`), so the
 protocol adds an envelope and nothing else.
 
 - `hello {name}` names the actor of the connection, `Actor::Agent {
@@ -105,7 +105,7 @@ it), the revisions it gave it and what each one showed; an act on
 that showed it to that actor. a read never shown is refused before the
 dispatcher with `not_observed`. a terminal stage's revision shows no
 state, and a delta shows only what it carries. the rule, its bounds and
-the name as the agent: `docs/ADR/an-act-rests-on-what-its-actor-was-shown.md`.
+the name as the agent: `docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md`.
 
 ### one path, through the host
 
@@ -127,7 +127,7 @@ one thread accepts; per connection one thread reads, decodes and queues,
 one writes. they never touch the app: a message goes into a bounded queue
 and the thread wakes the loop through the closure the shell passed (its
 `EventLoopProxy`, the pattern of
-`docs/ADR/worker-results-wake-the-event-loop.md`); wakes coalesce until
+`docs/adr/rendering/0026-worker-results-wake-the-event-loop.md`); wakes coalesce until
 the next drain. `drain` runs on the app's thread and does every
 projection and every dispatch there (the ide's `Workbench` is not
 `Send`). the app never waits on a socket: a client that does not read its
@@ -213,7 +213,7 @@ dispatches today.
 
 apple m4, rustc 1.98.1, the showcase's todo page served over a real unix
 socket with no window (`agent_port_cost` in
-`crates/showcase/src/view/dispatch.rs`, release, best of 50 acts, three
+`apps/uigallery/src/views/dispatcher/mod.rs`, release, best of 50 acts, three
 runs), and the windowed showcase in a debug build driven by `plev` and by
 a client holding one connection.
 
@@ -248,7 +248,7 @@ verbose form this task shipped, and stay as its record. the lean form of
 task-57b replaced it (see the consequences): a whole observation is now
 2039 B with 3 items and 26237 B with 103, one row 361 B, a delta after
 one toggle still 624 B; the new numbers are in
-`docs/ADR/lean-semantic-form-and-one-redaction.md`, consequences.
+`docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`, consequences.
 
 ## reason
 
@@ -270,7 +270,7 @@ one toggle still 624 B; the new numbers are in
 ## consequences
 
 - the ide's `Workbench` is served as the host by the `ide-lab` binary
-  (task-62 phase c, `crates/ide/src/bin/lab/lab.rs`), not by the ide's
+  (task-62 phase c, `apps/agenteval/src/arms/plev.rs`), not by the ide's
   own shell as planned here. its executions end on the git worker, so the
   lab drains the port also after the worker's wake, for the late stages
   to go out. updated on 2026-09-23 (task-86): the `ide` binary's window
@@ -280,7 +280,7 @@ one toggle still 624 B; the new numbers are in
   stages go out, and draws only when an act ran. the visible part of a
   binding is `Binding::visible_rect` in the engine, read by both hosts.
   proved in a real window with a person's clicks and an agent at once
-  (`docs/mission/steps/checked/task-86-the-ide-opens-the-agent-port-done.md`).
+  (`docs/log/steps/task-86-the-ide-opens-the-agent-port.md`).
   updated on 2026-09-24 (task-92): a stage of an agent's request that
   ends outside a drain (a person's answer to a confirmation, the second
   check refusing, a worker's answer) wakes the port through its sink, so
@@ -295,7 +295,7 @@ one toggle still 624 B; the new numbers are in
   percent of a whole observation, fields at their default about 40 more).
   task-57b made the sem form lean and `source` opt-in on the port
   (`observe {"source": true}`, `plev observe --source`), still protocol
-  v1: `docs/ADR/lean-semantic-form-and-one-redaction.md`.
+  v1: `docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`.
 - the redaction rule of a secret was written twice, in `rec` and in
   `wire`, and had diverged; it lives once now, in `sem::redact` (same
   ADR).
@@ -303,7 +303,7 @@ one toggle still 624 B; the new numbers are in
   served as a snapshot's, a stale refusal names in `acted` who ran
   something on the state the agent saw, and the stale rule is in `plev
   --help` and the doc of `Act`:
-  `docs/ADR/a-delta-carries-the-node-a-refusal-names-who-acted.md`.
+  `docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`.
 - task-87, still protocol v1: a terminal stage (`completed`, `rejected`,
   `failed`) carries `revision`, the revision the app is at when that
   stage goes out. it includes what other actors changed until then, and
@@ -311,11 +311,11 @@ one toggle still 624 B; the new numbers are in
   so the next act needs no observation only to learn it. `forward`
   projects through the `Host` and serves it into the ring as `observe`
   does, once per call; it decides nothing and is not an observation:
-  `docs/ADR/a-terminal-stage-carries-the-revision.md`.
+  `docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md`.
 - task-89, still protocol v1: an act on `from_revision` rests on what its
   actor was shown, never on the whole snapshot of the revision; a read
   never shown is `not_observed`:
-  `docs/ADR/an-act-rests-on-what-its-actor-was-shown.md`.
+  `docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md`.
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.

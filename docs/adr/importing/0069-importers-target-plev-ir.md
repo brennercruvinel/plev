@@ -9,20 +9,20 @@ date: 2026-09-25
 
 ## context
 
-`crates/parser` turns a React component (tsx and sass) and a gpui widget
+`rust/import` turns a React component (tsx and sass) and a gpui widget
 into rust code against `engine::builder`, and reports what it drops on a
-droplist with file:line (docs/ADR/transpiler-reports-every-unmapped-construct.md).
+droplist with file:line (docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md).
 the thesis (sections 3 and 14) asks more of an importer: sources of UI
 converge on plev IR, and every construct is supported, transformed,
 approximated or impossible, never an equivalence claimed in silence. the
-IR exists (task-68, `crates/uir`, docs/ADR/plev-ir-typed-and-verified.md)
-and so does its materialization (task-69, `crates/surface`,
-docs/ADR/materialized-surfaces-from-verified-ir.md). the runtime never
+IR exists (task-68, `rust/plevir`, docs/adr/generated/0049-plev-ir-typed-and-verified.md)
+and so does its materialization (task-69, `rust/screen`,
+docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md). the runtime never
 carries the source's execution model
-(docs/ADR/import-foreign-formats-by-conversion-not-embedding.md).
+(docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md).
 
 the probe of task-71 phase 1 (in
-`docs/mission/steps/checked/task-71-compiler-target-done.md`) found that the
+`docs/log/steps/task-71-compiler-target.md`) found that the
 `ParserNode` loses what the IR needs: the source tag (a `<button>` and a
 `<div>` were one `Tag::Div`), the attributes other than `className`, and
 where each prop came from (the resolvers only counted). the IR itself
@@ -67,7 +67,7 @@ needed no change.
   separator's flank rewrite and `mx_auto`) as `transformed`. an entry that
   drops a block whole lists the lines it answers for in `covers`.
 - `bindings` lists what the IR binds and the source does not declare.
-- the JSON form is a contract (documented in `crates/parser/src/report.rs`):
+- the JSON form is a contract (documented in `rust/import/src/report.rs`):
   `plev_report: 1`, fixed names, keys written in order whatever map
   `serde_json` was built with. it is built with `serde_json`; the parser
   does not take `serde` with derive.
@@ -88,7 +88,7 @@ distance; past it `impossible`, and the IR leaves the field to the
 component's default.
 
 - color: the largest of the four channel differences, 8-bit units, alpha
-  included (the measure of docs/ADR/what-identical-means.md).
+  included (the measure of docs/adr/workflows/0064-what-identical-means.md).
 - spacing, radius, width, height: pixels. typography: the larger of the
   size and line height differences, among the roles of the same weight.
 
@@ -131,7 +131,7 @@ the builder code and the materialized IR are drawn by the same
 `engine::headless::Renderer`, same size, scale 1, `Theme::hoff()`, the
 theme's background, the builder's root in a host column as wide as the
 area (as the surface lays its root). the IR carries no pixel, so the
-verdict is a difference, measured as docs/ADR/what-identical-means.md
+verdict is a difference, measured as docs/adr/workflows/0064-what-identical-means.md
 measures one and explained by the report (apple M4, metal):
 
 - separator: 1266 pixels differ, delta max 164. the IR's row is 36 px (the
@@ -192,7 +192,7 @@ with a fixture, goldens (IR, report, builder code) and a census test.
 
 - HTML/CSS subset: `html.rs` reads the document with tree-sitter-html and
   the CSS of `<style>` and `style=""` with tree-sitter-css (both pinned,
-  `=0.23.2` and `=0.25.0`, in `crates/parser` only). `resolve_html/`
+  `=0.23.2` and `=0.25.0`, in `rust/import` only). `resolve_html/`
   cascades `.class`, `#id` and tag rules by specificity then order, as a
   browser does, and lets text styles inherit to every run below. the
   subset: `div`, `section`, `header`, `p`, `span`, `h1` to `h3`, `label`,
@@ -206,7 +206,7 @@ with a fixture, goldens (IR, report, builder code) and a census test.
   styles the stylesheet does not replace are each an impossible entry.
   `onclick="open()"` and `oninput="reply(this.value)"` name their action,
   so the HTML note card binds the same app as the react one.
-- Figma: `script/figma-fixture` (python stdlib) reads the .fig (a zip of
+- Figma: `tool/tasks/figmapull.py` (python stdlib) reads the .fig (a zip of
   fig-kiwi: the kiwi schema in raw deflate, the message in zstd) and
   writes one screen in the REST API's shape, only what the importer reads,
   one key per line, so `figma.rs` gives every key its line (serde_json

@@ -31,14 +31,14 @@ várias representações).
 
 ## estado atual no código
 
-- clipboard: `crates/engine/src/clipboard.rs` (arboard no desktop,
+- clipboard: `rust/engine/src/runtime/platform/clipboard.rs` (arboard no desktop,
   `LocalClipboard` em teste, wasm e mobile).
 - diálogo de arquivo nativo (rfd) e drop de arquivo: só no urnaui
-  (`crates/urnaui/src/app.rs`, `crates/urnaui/src/view/explorer.rs`).
-- IME básico: `crates/engine/src/platform/ime.rs`.
+  (`apps/urnadbapp/src/app.rs`, `apps/urnadbapp/src/view/explorer/mod.rs`).
+- IME básico: `rust/engine/src/runtime/platform/ime.rs`.
 - lifecycle (estados de app, aviso de memória):
-  `crates/engine/src/platform/lifecycle.rs`; safe areas em
-  `crates/engine/src/platform/mod.rs`.
+  `rust/engine/src/runtime/platform/lifecycle.rs`; safe areas em
+  `rust/engine/src/runtime/platform/mod.rs`.
 - sem menus nativos, tray, notificações do sistema, múltiplas janelas,
   diálogos nativos no engine, impressão, câmera, microfone, deep links,
   sleep e wake, ou recuperação de device de GPU perdido.
@@ -82,7 +82,7 @@ independente; os itens que viram capacidade usam 58.
 
 ## superfície sob responsabilidade
 
-`crates/engine/src/platform/**`, `crates/engine/src/window` na parte de
+`rust/engine/src/runtime/platform/**`, `rust/engine/src/runtime/window` na parte de
 múltiplas janelas e device lost (coordenado com a 60 se ela estiver
 rodando), o urnaui na troca para o diálogo do engine, ADR por item.
 
@@ -195,7 +195,7 @@ pedido com `compatible_surface`. é o que `recover` faz.
 
 ### o sinal
 
-`crates/engine/src/gpu/loss.rs`. `GpuContext::from_device` (o corpo em que
+`rust/engine/src/drawing/gpu/loss.rs`. `GpuContext::from_device` (o corpo em que
 os dois construtores terminam) instala `Device::set_device_lost_callback`
 em todo device. o callback sobe um `AtomicBool` num `Arc` e guarda
 `LostDevice { reason, message }` num `Mutex` ao lado; o frame lê o flag sem
@@ -209,7 +209,7 @@ de uma fila de eventos, e o callback pode vir de qualquer thread.
 
 ### a ordem de recriação e o que sobrevive
 
-`crates/engine/src/gpu/recover.rs`. `GpuContext::recover` (bloqueante,
+`rust/engine/src/drawing/gpu/recover.rs`. `GpuContext::recover` (bloqueante,
 nativo) e `recover_async` (os dois alvos):
 
 1. adapter no `Instance` do próprio contexto (novo campo `instance`;
@@ -263,7 +263,7 @@ pânico). no wasm o frame é pulado e a perda logada uma vez:
 
 ### os testes e os pixels
 
-`crates/engine/tests/device_loss.rs`, headless 240x140 a escala 2
+`rust/engine/tests/device_loss.rs`, headless 240x140 a escala 2
 (480x280), pulam sem adapter:
 
 - `the_frame_after_a_forced_loss_matches_the_frame_before`: frame A com
@@ -292,7 +292,7 @@ text_audit, hot reload, stages) sem mudança de resultado.
 
 ### gate e regress
 
-`./script/gate` verde no worktree (com a perna wasm e a perna urnaui, que
+`./tool/tasks/fullcheck.sh` verde no worktree (com a perna wasm e a perna urnaui, que
 achou `../urna`): antes `cargo test --workspace` 2454 passed, 0 failed,
 16 ignored em 114 binários; depois 2465 passed, 0 failed, 16 ignored em
 115 binários (+11: os testes novos). clippy `-D warnings` e fmt limpos.
@@ -303,10 +303,10 @@ iguais, 0 mudaram, sem frame desenhado. contagem de linhas:
 
 ### ADR
 
-`docs/ADR/gpu-device-loss-recovers-in-place.md` (proposed): o sinal, a
+`docs/adr/rendering/0054-gpu-device-loss-recovers-in-place.md` (proposed): o sinal, a
 ordem de recriação, o que sobrevive e o que não, o que o app faz (nada; a
 exceção é recurso próprio no device). linha pro índice, que é do
-orquestrador (`docs/ADR/README.md` é proibido aqui):
+orquestrador (`docs/adr/README.md` é proibido aqui):
 
 | 2026-09-24 | [gpu-device-loss-recovers-in-place](gpu-device-loss-recovers-in-place.md) | proposed | `GpuContext` instala o callback de device lost em todo device e guarda o flag; `recover` refaz adapter, device, surface config, pipelines e atlas pelo mesmo `from_device`; o frame recupera antes do acquire ou pula com um erro por perda; o store de imagens vira log de uploads com os pixels; provado headless com `Device::destroy` e pixels iguais antes e depois (task-76 fase 1) |
 
@@ -381,7 +381,7 @@ branch `task/76b-file-dialogs`, base `e3dc7e1f` (main). commits, em ordem:
 - (este) task-76: ADR and the item 3 handoff
 
 decisões do orquestrador depois da sonda: `rfd` sem features padrão,
-inline em `crates/engine/Cargo.toml`, na seção do `arboard`, lock com
+inline em `rust/engine/Cargo.toml`, na seção do `arboard`, lock com
 `--offline` (opção B); o shell do showcase ganha um braço só (opção 2);
 `open_file` com `Actors { human, assistive, test: true; agent: false }`;
 posição opcional, junção no `App` do engine, trait síncrono por caminho,
@@ -392,7 +392,7 @@ posição opcional, junção no `App` do engine, trait síncrono por caminho,
 (a) o que o urnaui faz hoje com `rfd` e com os eventos de drop, por
 linha:
 
-- `crates/urnaui/Cargo.toml:45`: `rfd = "0.15"`, features padrão
+- `apps/urnadbapp/Cargo.toml:45`: `rfd = "0.15"`, features padrão
   (`xdg-portal` e `async-std`), na seção
   `[target.'cfg(not(target_arch = "wasm32"))']`. o `rfd` 0.15.4 só tem
   backend para linux/bsd, macos, windows e wasm (`backend.rs:7-45`): em
@@ -401,32 +401,32 @@ linha:
   `not(any(wasm32, android, ios))`, mas declara a dependência para todo
   não-wasm; no engine ela entra na seção do `arboard`, que já exclui
   android e ios.
-- `crates/urnaui/src/view/explorer.rs:400-407`, `Action::PickFile` no
+- `apps/urnadbapp/src/view/explorer/mod.rs:400-407`, `Action::PickFile` no
   desktop: `rfd::FileDialog::new().set_title("Open a .urna corpus")
   .add_filter("urna corpus", &["urna", "nest"]).pick_file()`; `Some(path)`
   vira `open_database(path)`, `None` (cancelado) não faz nada. síncrono,
   modal, sem parent, sem diretório inicial.
-- `crates/urnaui/src/view/explorer.rs:445-476`, `export_blob` no desktop:
+- `apps/urnadbapp/src/view/explorer/mod.rs:445-476`, `export_blob` no desktop:
   `rfd::FileDialog::new().set_title("Export media blob")
   .set_file_name(&name).save_file()`; `Some(dest)` vira
   `UrnaCommand::ExportBlob { index, dest }` e um toast; `None` devolve
   `true` (tratado, nada a fazer). `explorer.rs:478-486`: em wasm, android e
   ios a exportação só toasta "blob export needs the desktop app".
-- `crates/urnaui/src/view/explorer.rs:393-399` e `app.rs:482-488`: em
+- `apps/urnadbapp/src/view/explorer/mod.rs:393-399` e `app.rs:482-488`: em
   wasm `PickFile` marca `pick_requested`; o shell dispara
   `web_picker::trigger` no `about_to_wait`, e o `<input type=file>`
   devolve `UserEvent::FileLoaded { name, bytes }` (bytes, nunca caminho),
   que vira `view.file_picked`. é a entrada de arquivo do alvo web e não
   passa por `rfd`.
-- `crates/urnaui/src/app.rs:362-377` (só não-wasm):
+- `apps/urnadbapp/src/app.rs:362-377` (só não-wasm):
   `WindowEvent::DroppedFile(path)` vira `view.file_dropped(path)` mais
   invalidate; `HoveredFile(_)` vira `view.set_file_hover(true)`, o caminho
   do arquivo pairando é descartado; `HoveredFileCancelled` vira
   `set_file_hover(false)`.
-- `crates/urnaui/src/view/mod.rs:217-233`: `file_dropped(path)` desliga o
+- `apps/urnadbapp/src/view/mod.rs:217-233`: `file_dropped(path)` desliga o
   hover, chama `explorer.open_database(path)` e toasta "opening dropped
   file…"; `set_file_hover(bool)` repassa ao explorer.
-- `crates/urnaui/src/view/explorer.rs:67,121,186-190,869` e
+- `apps/urnadbapp/src/view/explorer/mod.rs:67,121,186-190,869` e
   `open.rs:32-33,414-435`: `file_hover: bool` chega à tela Open como
   `OpenContext.file_hover` e desenha um contorno de acento em volta do
   conteúdo com a dica "release to open". `open.rs:276-279`: a dica de
@@ -457,7 +457,7 @@ linha:
   (Document, Element, HtmlInputElement, HtmlButtonElement,
   HtmlAnchorElement, Window, File, FileList, FileReader, Blob,
   BlobPropertyBag, Url). o engine já tem os quatro crates na seção wasm
-  (`crates/engine/Cargo.toml:97-102`), então o `rfd` compilaria para wasm
+  (`rust/engine/Cargo.toml:97-102`), então o `rfd` compilaria para wasm
   fora da seção de desktop, ao custo das features extras no `web-sys` e
   de um overlay DOM que não é do engine.
 - conclusão: o trait do engine é síncrono e devolve caminho, porque as
@@ -469,7 +469,7 @@ linha:
   `[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"),
   not(target_os = "ios")))']`, a mesma do `arboard`.
 
-(c) o molde do `clipboard.rs` (`crates/engine/src/clipboard.rs`):
+(c) o molde do `clipboard.rs` (`rust/engine/src/runtime/platform/clipboard.rs`):
 
 - `ClipboardProvider` (linhas 9-14): o trait, compilado em todo alvo.
 - `LocalClipboard` (16-36): a implementação em memória, compilada em todo
@@ -480,7 +480,7 @@ linha:
   operações viram no-op com um `log::warn!`.
 - `default_clipboard() -> Box<dyn ClipboardProvider>` (78-89): o `cfg`
   escolhe `SystemClipboard` no desktop e `LocalClipboard` no resto.
-- `crates/engine/Cargo.toml:82-85`: `arboard` só na seção
+- `rust/engine/Cargo.toml:82-85`: `arboard` só na seção
   `cfg(all(not(wasm32), not(android), not(ios)))`.
 - por teste: quem consome guarda `Box<dyn ClipboardProvider>` ou o tipo
   concreto; teste usa `LocalClipboard`. o urnaui constrói
@@ -491,7 +491,7 @@ linha:
   `NoDialogs` (wasm e mobile: `Unsupported`), `default_dialogs()`.
 
 o que entra de dependência (e o motivo da parada): o `Cargo.lock` da raiz
-não tem `rfd`. o urnaui é workspace próprio (`crates/urnaui/Cargo.lock`
+não tem `rfd`. o urnaui é workspace próprio (`apps/urnadbapp/Cargo.lock`
 tem `rfd 0.15.4`); a raiz não. entrando no engine, o lock da raiz ganha:
 
 - `rfd 0.15.4` e `block2 0.6.2` (a raiz só tem `block2 0.5.1`; o 0.6.2
@@ -533,7 +533,7 @@ o que o winit 0.30.13 entrega no drop
   entrega evento a evento à view (urnaui, showcase) recebe um por
   arquivo, como hoje.
 
-o shell do showcase: `crates/showcase/src/app.rs:341-478` não trata
+o shell do showcase: `apps/uigallery/src/shell/mod.rs:341-478` não trata
 `DroppedFile`, `HoveredFile` nem `HoveredFileCancelled`, e o arquivo é
 proibido nesta task. a página Files recebe o drop pelos testes, pelo
 headless e pelo dispatcher; para o drop chegar numa janela de verdade o
@@ -542,7 +542,7 @@ engine a `ShowcaseView::handle_file_drop`.
 
 ### o trait, o falso e o que cada alvo faz
 
-`crates/engine/src/platform/files.rs` (350 linhas de produção).
+`rust/engine/src/runtime/platform/files.rs` (350 linhas de produção).
 `FileDialogs` tem `pick_file`, `pick_files`, `save_file` e `pick_folder`;
 cada um recebe `&DialogRequest` (título, `FileFilter { name, extensions }`
 por `filter(name, &[ext])`, `directory`, `file_name`) e devolve
@@ -566,7 +566,7 @@ diálogo. tudo síncrono e modal na thread que pediu, como o
 - `default_dialogs() -> Box<dyn FileDialogs>`: `NativeDialogs` no
   desktop, `NoDialogs` no resto, pelo mesmo cfg do `default_clipboard`.
 
-`crates/engine/Cargo.toml`: `rfd = { version = "0.15", default-features =
+`rust/engine/Cargo.toml`: `rfd = { version = "0.15", default-features =
 false }` na seção `cfg(all(not(wasm32), not(android), not(ios)))`, ao lado
 do `arboard`, declarado inline (a raiz `Cargo.toml` é proibida). o
 `Cargo.lock` da raiz ganhou `rfd 0.15.4` e `block2 0.6.2` (o `block2
@@ -585,7 +585,7 @@ nada). nenhum teste constrói um painel.
 
 ### o evento de drop
 
-`crates/engine/src/input/drop.rs` (110 de produção): `FileDrop::{Hovered
+`rust/engine/src/control/input/drop.rs` (110 de produção): `FileDrop::{Hovered
 { paths, position }, Dropped { paths, position }, Cancelled}`, posição em
 pixels lógicos e `Option`. `FileDrop::from_window_event(&WindowEvent)`
 é a única tradução: `HoveredFile(p)` vira `Hovered` com um caminho,
@@ -615,42 +615,42 @@ cada fase, junção com a posição, fases diferentes e cancel não juntam) e
 1 em `input/tests.rs` (o drop chega à view sob a posição, com caminhos e
 posição, por hover e por drop; `begin_frame` preserva; sem região ou sem
 posição chega a nenhuma view; o cancel chega; o pointer e o hover não se
-mexem). `crates/engine/examples/input/state.rs` ganhou o braço
+mexem). `demo/inputs/src/state.rs` ganhou o braço
 `InputEvent::FileDrop` que a variante nova exige (único match exaustivo
 no repositório).
 
 ### o que mudou no urnaui
 
-- `crates/urnaui/Cargo.toml`: `rfd` sai (o comentário aponta pro engine).
-  `crates/urnaui/Cargo.lock`: 370 linhas a menos, 35 pacotes fora
+- `apps/urnadbapp/Cargo.toml`: `rfd` sai (o comentário aponta pro engine).
+  `apps/urnadbapp/Cargo.lock`: 370 linhas a menos, 35 pacotes fora
   (`ashpd`, `url`, `icu_*`, `zbus`... a árvore de linux que o `rfd` com
   features padrão trazia); `rfd` continua no lock pelo engine, sem
   features.
-- `crates/urnaui/src/view/explorer.rs`: campo `dialogs: Box<dyn
+- `apps/urnadbapp/src/view/explorer/mod.rs`: campo `dialogs: Box<dyn
   FileDialogs>` (`default_dialogs()`); `set_dialogs`, `opening` e
   `file_hover` sob `cfg(test)`; `Action::PickFile` chama `pick_file` fora
   do wasm (no wasm continua marcando `pick_requested` pro `web_picker`);
   `set_file_hover` perdeu o cfg (compila em todo alvo, a web nunca manda).
   992 linhas de produção (era 1019, congelado pelo guard de higiene).
-- `crates/urnaui/src/view/explorer/dialogs.rs` (novo, 85 linhas):
+- `apps/urnadbapp/src/view/explorer/dialogs.rs` (novo, 85 linhas):
   `pick_file` (título "Open a .urna corpus", filtro "urna corpus" com
   `urna` e `nest`; `Ok(Some)` abre, `Ok(None)` nada, `Err` toasta "the
   file picker needs the desktop app") e `export_blob`, uma versão só
   pra todo alvo (título "Export media blob", `file_name` do blob; `Err`
   toasta "blob export needs the desktop app", o texto que o mobile e a
   web já mostravam). as duas variantes cfg'd de antes viraram uma.
-- `crates/urnaui/src/view/mod.rs`: `handle_file_drop(&FileDrop) -> bool`
+- `apps/urnadbapp/src/view/mod.rs`: `handle_file_drop(&FileDrop) -> bool`
   no lugar de `file_dropped` e `set_file_hover`: `Hovered` liga o hover
   da tela Open, `Cancelled` desliga, `Dropped` desliga e abre cada caminho
   em ordem com o toast "opening dropped file…" (o último ganha, como
   antes). compila em todo alvo.
-- `crates/urnaui/src/app.rs`: os três braços cfg'd de drop saíram; o
+- `apps/urnadbapp/src/app.rs`: os três braços cfg'd de drop saíram; o
   braço `other =>` entrega todo evento não tratado a
   `engine::input::FileDrop::from_window_event` e, se é drop, a
   `view.handle_file_drop` mais `invalidate`. `app.rs` não nomeia
   `DroppedFile`, `HoveredFile` nem `HoveredFileCancelled`; o engine
   decide o que é drop.
-- `crates/urnaui/src/web_picker.rs` não mudou: é a entrada de bytes da
+- `apps/urnadbapp/src/web_picker.rs` não mudou: é a entrada de bytes da
   web, outra capacidade, e o candidato a um `AsyncFileDialog` do engine
   numa fase futura.
 
@@ -667,7 +667,7 @@ liga, cancel desliga, drop desliga, abre e toasta).
 
 ### a página Files (PNG e projeção)
 
-`crates/showcase/src/view/apps/files.rs` (394 linhas), `files/semantics.rs`
+`apps/uigallery/src/views/apps/files/mod.rs` (394 linhas), `files/semantics.rs`
 (289) e `files/tests.rs` (729, 8 testes), grupo Apps Demo, depois de
 Silences, ícone `folder-open`.
 
@@ -705,7 +705,7 @@ registro como a Silences: `Pane::Files` (`pages/mod.rs`), a linha em
 `page_event`, `page_file_drop` novo, `page_render`, `semantics`, `act`,
 `assist_focus`), `input.rs` (`ShowcaseView::handle_file_drop` novo,
 `handle_edit_key`, `handle_enter`, `close_top_overlay`). shell,
-`crates/showcase/src/app.rs:476-485` (aprovado, opção 2): o braço
+`apps/uigallery/src/shell/mod.rs:476-485` (aprovado, opção 2): o braço
 `other =>` do `match` entrega todo evento não tratado a
 `FileDrop::from_window_event` e `view.handle_file_drop`, com `changed()`.
 
@@ -737,13 +737,13 @@ cresce com três arquivos e a altura é a do binding); as rotas da galeria
 assistivo completa, `assist_focus`, Tab, Escape, Enter cancela no falso,
 os quatro bindings, em repouso a página não pede frame); o golden.
 
-golden: `crates/uir/fixtures/showcase-files.snapshot.json` (4 nós,
+golden: `rust/plevir/tests/fixtures/uigallery-files.snapshot.json` (4 nós,
 revision `d7a661b0bdabefd9`), mantido por
 `files::tests::the_page_projection_is_the_uir_golden`; `UIR_BLESS=1
 cargo test -p showcase --lib files::tests::the_page_projection` regrava.
 os testes do `uir` continuam verdes.
 
-baselines: `crates/showcase/fixtures/regress/files@core@1280x800` e
+baselines: `tool/bench/regress/baselines/files@core@1280x800` e
 `files@hoff@1280x800` (`semantics.json`, `scene.json`, `frame.png`; 4
 layers, 4 controles bound, 4 nós, settled em 2 passos), abençoadas com
 `cargo run -p showcase --example regress -- bless --page Files --theme
@@ -761,8 +761,8 @@ acrescenta).
 ### gate e regress
 
 `df -h /` antes de cada gate: 15 GB livres no primeiro, 12 GB no
-segundo. o primeiro `./script/gate` ficou vermelho no
-`file_hygiene_guard`: `crates/urnaui/src/view/explorer.rs` está
+segundo. o primeiro `./tool/tasks/fullcheck.sh` ficou vermelho no
+`file_hygiene_guard`: `apps/urnadbapp/src/view/explorer/mod.rs` está
 congelado em 1019 linhas de produção ("pode encolher, nunca crescer") e
 os diálogos o levaram a 1056; o commit `77800d1b` moveu `pick_file` e
 `export_blob` pra `view/explorer/dialogs.rs` e o arquivo ficou em 992.
@@ -787,12 +787,12 @@ congelado.
 
 ### ADR
 
-`docs/ADR/file-dialogs-and-drops-are-capabilities.md` (proposed): o
+`docs/adr/interface/0055-file-dialogs-and-drops-are-capabilities.md` (proposed): o
 trait e o falso, o `rfd` sem features no desktop, o evento de drop com
 posição opcional e a junção, o drop como request, a regra "diálogo
 nativo só abre por pessoa" na policy, o que o wasm faz, o que os itens 4
 e 8 reaproveitam. linha pro índice, que é do orquestrador
-(`docs/ADR/README.md` é proibido aqui):
+(`docs/adr/README.md` é proibido aqui):
 
 | 2026-09-24 | [file-dialogs-and-drops-are-capabilities](file-dialogs-and-drops-are-capabilities.md) | proposed | `engine::platform::files` (trait síncrono por caminho, `rfd` no desktop sem features padrão, `FakeDialogs` pra teste, `NoDialogs` em wasm e mobile) e `engine::input::FileDrop` (uma tradução dos três eventos do winit, posição opcional, junção dos N por arquivo no `App`); o urnaui usa os dois sem segunda implementação; a página Files do showcase projeta `open_file` só pra pessoa e `drop_files` pra todo ator, pelo dispatcher; diálogo nativo só abre por pessoa (task-76 item 3) |
 
@@ -811,16 +811,16 @@ assinatura existente mudou.
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/engine/examples/input/state.rs`: o braço `InputEvent::FileDrop`
+- `demo/inputs/src/state.rs`: o braço `InputEvent::FileDrop`
   (a variante nova quebrava o match exaustivo; clippy `--all-targets`
   compila o exemplo).
-- `crates/urnaui/src/view/mod.rs`: `file_dropped` e `set_file_hover`
+- `apps/urnadbapp/src/view/mod.rs`: `file_dropped` e `set_file_hover`
   viraram `handle_file_drop` (a tradução do drop do urnaui morava aí
   também, não só em `app.rs`); um teste novo.
-- `crates/urnaui/src/view/explorer/dialogs.rs` (novo): o guard de higiene
+- `apps/urnadbapp/src/view/explorer/dialogs.rs` (novo): o guard de higiene
   congela `explorer.rs`; sem o módulo filho o gate fica vermelho.
-- `crates/showcase/src/app.rs`: o braço aprovado (opção 2).
-- `crates/urnaui/Cargo.lock`: consequência do `Cargo.toml`.
+- `apps/uigallery/src/shell/mod.rs`: o braço aprovado (opção 2).
+- `apps/urnadbapp/Cargo.lock`: consequência do `Cargo.toml`.
 
 ### limitações e decisões, sem esconder
 
@@ -845,7 +845,7 @@ assinatura existente mudou.
   nesta máquina (proibido); a prova é o builder por `Debug` e a leitura
   do `rfd`; a abertura de verdade fica pro orquestrador.
 - `FilesPage::new()` só usa o falso sob `cfg(test)` do próprio crate: um
-  teste de integração em `crates/showcase/tests/` que construísse a view
+  teste de integração em `apps/uigallery/tests/` que construísse a view
   e disparasse `open_file` como pessoa abriria o painel nativo. nenhum
   faz (o `stage_page` nunca dispara nada), e a policy barra o agente
   antes; fica registrado como risco de quem escrever esse teste.
@@ -880,8 +880,8 @@ assinatura existente mudou.
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/task-76
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo test --offline -p engine -p showcase
-CARGO_TARGET_DIR=$CARGO_TARGET_DIR/urnaui cargo test --offline --manifest-path crates/urnaui/Cargo.toml
-./script/gate
+CARGO_TARGET_DIR=$CARGO_TARGET_DIR/urnaui cargo test --offline --manifest-path apps/urnadbapp/Cargo.toml
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 cargo run --offline -p showcase -- --render Files --theme core --out files.png --semantics files.json
 UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
@@ -908,7 +908,7 @@ fundidos em `6da95f2a`: o `App` do engine é o único consumidor do
 (a) o que é "da janela" (morre com ela) e o que é "do app", campo a
 campo, como estava antes desta fase:
 
-- `App` do engine (`crates/engine/src/window/mod.rs:49`): da janela
+- `App` do engine (`rust/engine/src/runtime/window/mod.rs:49`): da janela
   `window`, `state: GpuState` (o `GpuContext` com a surface, o
   `TextSystem`, o `EffectProcessor`, o `TexturePool`: tudo no device
   daquela janela), `compositor` (as layers e a tabela de binding são o
@@ -921,7 +921,7 @@ campo, como estava antes desta fase:
   (Active/Suspended é do processo), `is_animating` (o pedido do app,
   aplicado a cada janela ao abrir), `event_loop_proxy`,
   `narrate_watcher`.
-- shell do showcase (`crates/showcase/src/app.rs:82`): da janela
+- shell do showcase (`apps/uigallery/src/shell/mod.rs:82`): da janela
   `window`, `state: GpuState`, `compositor`, `cursor`, `scale_factor`.
   do app: `view: ShowcaseView` (o estado das páginas, o dispatcher da
   galeria, o tema, o chrome), `clock` e `caught_up` (um relógio do loop:
@@ -934,8 +934,8 @@ campo, como estava antes desta fase:
   `width/height/scale_factor` (o layout de uma janela). elas ficaram na
   view para a janela principal; a segunda janela ganhou as suas em
   `view::dispatch::Detached`.
-- o ide (`crates/ide/src/main.rs:106`) e o urnaui
-  (`crates/urnaui/src/app.rs:75`) repetem a forma do showcase; fora do
+- o ide (`apps/idestudio/src/main.rs:106`) e o urnaui
+  (`apps/urnadbapp/src/app.rs:75`) repetem a forma do showcase; fora do
   escopo, não mudaram (nenhum usa o `App` do engine).
 - o que o briefing supunha e não é: nenhum exemplo do engine usa
   `engine::window::App`. `counter`, `builder`, `charts`, `layers` e os
@@ -947,7 +947,7 @@ campo, como estava antes desta fase:
   comportamento" é verdade por não passarem pelo `App`; o exemplo que
   mudou é o `layers`, de propósito.
 
-(b) `crates/engine/tests/windows.rs`,
+(b) `rust/engine/tests/windows.rs`,
 `two_contexts_draw_two_scenes_in_the_same_loop_and_share_only_the_image_log`
 (ficou como teste real): dois `GpuContext::new_headless` (via
 `headless::Renderer`) com dois compositores, um rect vermelho, o texto
@@ -979,7 +979,7 @@ usam `dummy()` e `from(2)`.
 
 ### o host e o `Windows`
 
-`crates/engine/src/window/host.rs` (551 linhas de produção).
+`rust/engine/src/runtime/window/host.rs` (551 linhas de produção).
 `WindowHost` agrupa o que a sonda (a) disse ser da janela: `window`,
 `gpu: Option<Gpu>` (o contexto e, construídos nele, `TextSystem`,
 `EffectProcessor` e `TexturePool`), `target` (a textura de um host
@@ -1014,7 +1014,7 @@ de layer e HUD, para surface ou target), `device_lost` e
 `recover_or_skip` (por contexto, da fase 1), `suspend` e `resume`
 (android), `purge_caches`, `set_accessibility`.
 
-`crates/engine/src/window/windows.rs` (311). `Windows` guarda
+`rust/engine/src/runtime/window/windows.rs` (311). `Windows` guarda
 `Vec<(WindowId, WindowHost)>` na ordem de abertura (`first()` é a
 principal), mais os hosts suspensos. `open(event_loop, attrs)` cria a
 janela e o host (no nativo com o contexto; no wasm sem, até
@@ -1043,7 +1043,7 @@ o que todo construtor já pagava uma vez. fica registrado, não parei.
 
 ### o `App` do engine e os exemplos
 
-`crates/engine/src/window/mod.rs` (159): o `App` fica com `windows:
+`rust/engine/src/runtime/window/mod.rs` (159): o `App` fica com `windows:
 Windows`, `theme`, `frame_read` e `frame_write`, `lifecycle`,
 `is_animating`, o proxy e o `narrate_watcher`. `GpuState` e `state.rs`
 saíram (o host tem o device). `AppEvent::GpuReady { window, gpu }`
@@ -1060,7 +1060,7 @@ narrate reload, que invalida todas). `render_passes.rs` só trocou
 `impl super::App` por `impl super::host::WindowHost` em
 `apply_layer_effects` (613 linhas, não cresceu).
 
-`crates/engine/examples/layers` (`main.rs` 123, `render.rs` 143): abre
+`demo/layers/src` (`main.rs` 123, `render.rs` 143): abre
 duas janelas em `resumed`. a primeira é a demo de layers de antes (fundo
 de pontos, chrome, o card do foreground que muda a cada 60 frames), com
 `set_animating(true)`; a segunda é um card parado ("the other window")
@@ -1080,7 +1080,7 @@ do orquestrador.
 
 ### o showcase
 
-o shell (`crates/showcase/src/app.rs` 546, `app/events.rs` 195,
+o shell (`apps/uigallery/src/shell/mod.rs` 546, `app/events.rs` 195,
 `app/detached.rs` 96, `app/pace.rs` 158) dirige as janelas por
 `Windows`: `main: Option<WindowId>` e `page_window:
 Option<detached::PageWindow>` (desktop). `resumed` abre a principal por
@@ -1148,7 +1148,7 @@ daquela janela (registrado como limite). o bridge de acessibilidade fica
 na principal; a janela da página não tem (limite). o `regress` e o
 `--render` não mudam: uma janela, `stage_page` sem host.
 
-teste (`crates/showcase/tests/detached.rs`, dois `WindowHost::headless`,
+teste (`apps/uigallery/tests/detached.rs`, dois `WindowHost::headless`,
 1200x800 e 900x640, um `ShowcaseView` na Todo): com uma janela não há nó
 `window`; a página se liga nos dois compositores com dois layouts
 (`binding(todo.item[1])` em cada, rects diferentes) e a principal
@@ -1166,7 +1166,7 @@ e continuam sem GPU.
 
 ### gate e regress
 
-`df -h /` antes do gate: 39 GB livres. `./script/gate` verde no worktree, com a
+`df -h /` antes do gate: 39 GB livres. `./tool/tasks/fullcheck.sh` verde no worktree, com a
 perna wasm e a perna urnaui (`../urna` presente): antes `cargo test
 --workspace` 2485 passed, 0 failed, 16 ignored em 115 binários; depois
 2494 passed, 0 failed, 16 ignored em 117 binários (+9: 7 de
@@ -1195,11 +1195,11 @@ linhas de produção (regra do guard): engine `window/host.rs` 551,
 
 ### ADR
 
-`docs/ADR/windows-are-hosts-the-app-owns-the-state.md` (proposed): o que
+`docs/adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md` (proposed): o que
 é da janela e o que é do app, o host por etapas, o `Windows` e o
 roteamento, render on demand por janela, o fechar, o destacar do
 showcase, o que a projeção diz, os limites. linha pro índice, que é do
-orquestrador (`docs/ADR/README.md` é proibido aqui):
+orquestrador (`docs/adr/README.md` é proibido aqui):
 
 | 2026-09-24 | [windows-are-hosts-the-app-owns-the-state](windows-are-hosts-the-app-owns-the-state.md) | proposed | `engine::window::WindowHost` agrupa o que morre com a janela (a janela, o `GpuContext` com a surface e a perda de device, compositor, `InputState`, touch, IME, escala, área segura, relógio, perf, eventos bufferizados) e `Windows` guarda vários por `WindowId`: `open`, `route` (o dono toma input e resize; close e redraw voltam ao chamador), `close` de uma sem o app, `should_exit` na última (configurável), redraw por janela (parada não desenha enquanto outra anima), deadline mais cedo; o `App` do engine com uma janela sem mudança, o `layers` com duas; o showcase destaca a página atual numa segunda janela sobre o mesmo estado e o mesmo dispatcher, a projeção ganha um nó `window` só enquanto ela existe; provado headless com hosts sob `WindowId::dummy()` (task-76 item 2) |
 
@@ -1231,13 +1231,13 @@ o headless e os outros exemplos compilam sem tocar.
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/showcase/src/view/dispatch/detached.rs` (novo): o destacar
+- `apps/uigallery/src/views/dispatcher/detached.rs` (novo): o destacar
   levou `view/dispatch.rs` a 665 linhas de produção; o módulo filho é a
   forma que `dispatch/agent.rs` já tem, e acessa os métodos privados
   (`pane_render`, `pane_event`) por ser descendente.
-- `crates/showcase/src/app/events.rs` (novo, previsto pelo briefing para
+- `apps/uigallery/src/shell/window/events/mod.rs` (novo, previsto pelo briefing para
   `app.rs` passar de 639): o `window_event` do shell.
-- `crates/engine/src/window/state.rs` removido (o `GpuState` virou o
+- `rust/engine/src/runtime/window/state.rs` removido (o `GpuState` virou o
   `Option<Gpu>` do host).
 
 ### limitações e decisões, sem esconder
@@ -1270,7 +1270,7 @@ o headless e os outros exemplos compilam sem tocar.
 - wasm e mobile: uma janela. `Windows::open` no wasm abre sem device
   (o shell faz o spawn), `D` loga e não abre. o `resume` do android
   passou pelo `Windows` sem ser medido num aparelho.
-- `crates/showcase/src/renderer.rs` (`render_frame`) ficou sem chamador
+- `apps/uigallery/src/renderer.rs` (`render_frame`) ficou sem chamador
   no shell (o `pace.rs` usa `host.present`, o mesmo `present_frame`);
   está fora da lista permitida e ficou.
 - o showcase não passa o pointer por `Windows::route`; o `App` do engine
@@ -1305,7 +1305,7 @@ export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFIL
 cargo test --offline -p engine --test windows
 cargo test --offline -p showcase --test detached
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 cargo run --offline -p engine --example layers          (duas janelas; do orquestrador)
 cargo run --offline -p showcase -- Todo                  (D destaca a página; do orquestrador)
@@ -1327,7 +1327,7 @@ branch `task/76d-menus`, base `8ce7225c` (main). commits, em ordem:
 ### a sonda
 
 (a) o lock, com `muda = { version = "0.20", default-features = false }`
-na seção de desktop não móvel de `crates/engine/Cargo.toml` (a do
+na seção de desktop não móvel de `rust/engine/Cargo.toml` (a do
 `arboard` e do `rfd`), resolvido com `cargo metadata --offline`: "Locking
 2 packages: Adding keyboard-types v0.8.3, Adding muda v0.20.0". o
 `Cargo.lock` da raiz ganhou só esses dois pacotes; `objc2-app-kit 0.3.2`
@@ -1339,7 +1339,7 @@ de windows, `windows-sys 0.61.2`. as features padrão (`gtk3`, `libxdo`)
 ficaram desligadas: no linux o `muda` compila no backend `noop`
 (`platform_impl/mod.rs`) até o bring-up escolher. `cargo tree --offline
 -p engine -i muda` mostra só o engine como consumidor. nada faltou no
-cache; não parei. o `crates/urnaui/Cargo.lock` (workspace próprio, que
+cache; não parei. o `apps/urnadbapp/Cargo.lock` (workspace próprio, que
 depende do engine por caminho) ganhou `muda`, `keyboard-types` e um
 `crossbeam-channel 0.5.17`, como ganhou `rfd` no item 3; a perna urnaui
 do gate o resolveu offline.
@@ -1408,7 +1408,7 @@ sem parâmetro, permitida a `human`):
 
 ### o modelo e o trait
 
-`crates/engine/src/platform/menu.rs` (606 linhas de produção) e
+`rust/engine/src/runtime/platform/menu/mod.rs` (606 linhas de produção) e
 `platform/menu/native.rs` (317). a mesma forma do `files.rs`: trait,
 real sob o cfg do `arboard`, falso em todo alvo, nenhum em wasm e
 mobile, `default_menu(wake)` escolhendo.
@@ -1475,7 +1475,7 @@ depois de cada frame da janela principal (`sync_menu` em `pace.rs`).
 
 ### o shell projetado
 
-`crates/showcase/src/view/dispatch/shell.rs` (430 de produção;
+`apps/uigallery/src/views/dispatcher/shell/mod.rs` (430 de produção;
 `shell/tests.rs` com 7 testes). `Shell` mora em `Panes` no lugar de
 `detach_asked`; o `Operable` é um `ShellOp` que projeta a partir da view
 (tema, página, destacada) e escreve os pedidos (`Asks`), despachado pelo
@@ -1517,7 +1517,7 @@ pedido observado na galeria e roteado por `act`.
 
 ### o menu do showcase
 
-`crates/showcase/src/app/menu.rs` (234 de produção; 2 testes). a barra,
+`apps/uigallery/src/shell/system/menu.rs` (234 de produção; 2 testes). a barra,
 de `gallery_semantics`: "plev" (About, separador, Hide, Hide Others,
 Show All, separador, Quit, como a barra padrão do winit menos Services),
 "view" (submenu "theme" com uma opção por tema e a marca na atual,
@@ -1569,7 +1569,7 @@ continuam verdes.
 
 ### gate e regress
 
-`df -h /` antes do gate: 31 GB livres; 29 GB depois. `./script/gate`
+`df -h /` antes do gate: 31 GB livres; 29 GB depois. `./tool/tasks/fullcheck.sh`
 verde no worktree, com a perna wasm e a perna urnaui (`../urna`
 presente): antes `cargo test --workspace` 2494 passed, 0 failed, 16
 ignored em 117 binários; depois 2520 passed, 0 failed, 16 ignored em 118
@@ -1593,12 +1593,12 @@ linhas de produção (regra do guard): engine `platform/menu.rs` 606,
 
 ### ADR
 
-`docs/ADR/native-menus-are-another-view-of-capabilities.md` (proposed):
+`docs/adr/interface/0057-native-menus-are-another-view-of-capabilities.md` (proposed):
 o modelo puro do menu, o clique como o request do botão, o trait com o
 real, o falso e o nenhum, por app no macOS e por janela onde a
 plataforma diz, o shell projetado e onde ele aparece, a barra do
 showcase, o que o tray e os diálogos reaproveitam. linha pro índice, que
-é do orquestrador (`docs/ADR/README.md` é proibido aqui):
+é do orquestrador (`docs/adr/README.md` é proibido aqui):
 
 | 2026-09-24 | [native-menus-are-another-view-of-capabilities](native-menus-are-another-view-of-capabilities.md) | proposed | `engine::platform::menu`: um `MenuModel` puro que o app monta da própria `Snapshot` (cada item é um `SemId` e uma ação, com label, atalho, habilitado e marca como a projeção diz), `NativeMenu` (`install`, `update`, `poll`) com o `muda` no desktop (macOS: a barra do app, uma pra todas as janelas; windows: por hwnd), `FakeMenu` pra teste e `NoMenu` em wasm e mobile; o clique volta como `Clicked` e vira o mesmo `Request::observe` por `Actor::Human` do botão, pelo mesmo dispatcher; o showcase projeta o shell (`shell.page`, `shell.theme`, `shell.detach` só pessoa, `shell.save_session` só pessoa) na projeção da galeria que a porta serve, e monta a barra dela e da página ativa; a projeção da página não muda (task-76 item 4) |
 
@@ -1620,10 +1620,10 @@ wasm e os exemplos compilam sem tocar.
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/urnaui/Cargo.lock`: consequência do `muda` no `Cargo.toml` do
+- `apps/urnadbapp/Cargo.lock`: consequência do `muda` no `Cargo.toml` do
   engine (o urnaui depende dele por caminho; a perna urnaui do gate
   resolve o lock). o mesmo que o `rfd` fez no item 3.
-- `crates/showcase/src/view/mod.rs` foi tocado num rascunho (um
+- `apps/uigallery/src/views/mod.rs` foi tocado num rascunho (um
   re-export) e voltou ao da base antes do commit: `ShellTarget` fica
   dentro de `view`; o `app` nomeia as capacidades pelos ids
   (`shell.theme`...) e pede o save por `ShowcaseView::request_save`.
@@ -1717,7 +1717,7 @@ cargo metadata --offline --format-version 1 > /dev/null   (o lock resolve offlin
 cargo test --offline -p engine --test menu
 cargo test --offline -p showcase --lib -- dispatch::shell app::menu dispatch::agent
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 PLEV_BACKGROUND=1 RUST_LOG=showcase=info cargo run --offline -p showcase -- Todo   (a barra instala; sem clique aqui)
 cargo run --offline -p showcase -- Todo   (a barra plev / view / Todo; do orquestrador)
@@ -1762,7 +1762,7 @@ branch `task/76e-alerts`, base `0e49f828` (main após o item 4). worktree
   `ask_next_confirmation` de novo. um agente ou um teste que tenta
   confirmar recebe `SemError::ConfirmByMachine` e o modal continua
   (`a_screen_reader_declines_through_the_workbench_and_a_test_cannot`).
-- o que a gravação registra (`crates/ide/tests/record.rs`, o sink do
+- o que a gravação registra (`apps/idestudio/tests/record.rs`, o sink do
   `rec` no dispatcher): cada estágio do receipt, inclusive
   `awaiting_confirmation`, `confirmed { by: human }` ou `rejected {
   declined { by: human } }`; o `plev-inspect` mostra o estágio com
@@ -1802,7 +1802,7 @@ branch `task/76e-alerts`, base `0e49f828` (main após o item 4). worktree
   diálogo de mensagem: `xdg_desktop_portal.rs:273` cai no `zenity` por
   processo). wasm tem `window.alert` e `window.confirm`
   (`backend/wasm.rs:329`), síncronos, mas o `rfd` só entra no engine na
-  seção de desktop não móvel (`crates/engine/Cargo.toml:89`), então wasm
+  seção de desktop não móvel (`rust/engine/Cargo.toml:89`), então wasm
   e mobile ficam com `NoAlerts`. android e ios: nenhum backend.
   `AsyncMessageDialog` existe (mesma builder, `show` devolve um future);
   fica fora deste item.
@@ -1830,7 +1830,7 @@ branch `task/76e-alerts`, base `0e49f828` (main após o item 4). worktree
 
 ### o trait, o falso e o que cada alvo faz
 
-`crates/engine/src/platform/alerts.rs` (449 linhas de produção, 627 com
+`rust/engine/src/runtime/platform/alerts.rs` (449 linhas de produção, 627 com
 os testes), pelo molde do `files.rs`, linha por linha: trait, real sob
 o cfg do `arboard` e do `rfd`, falso em todo alvo, nenhum em wasm e
 mobile, `default_alerts()` escolhendo.
@@ -1875,7 +1875,7 @@ mobile, `default_alerts()` escolhendo.
 
 ### a opção do ide e o que a gravação registra
 
-`crates/ide/src/workbench/mod.rs` (369 linhas), `person.rs` (133),
+`apps/idestudio/src/capability/mod.rs` (369 linhas), `person.rs` (133),
 `main.rs` (588).
 
 - `Workbench::confirm_natively(alerts: Box<dyn Alerts>, parent:
@@ -1919,7 +1919,7 @@ mobile, `default_alerts()` escolhendo.
 
 ### o alerta no showcase
 
-a página Files, sem página nova (`crates/showcase/src/view/apps/files.rs`
+a página Files, sem página nova (`apps/uigallery/src/views/apps/files/mod.rs`
 452 linhas, `files/semantics.rs` 353): um botão "warn" (ícone
 `alert-triangle`) ao lado do "open file", com o status depois dos dois.
 
@@ -1940,7 +1940,7 @@ a página Files, sem página nova (`crates/showcase/src/view/apps/files.rs`
   `set_alerts` (cfg(test)); `FilesPage::new()` usa `default_alerts()` na
   janela e `FakeAlerts` sob `cfg(test)`, como os diálogos.
 - a projeção mudou de propósito: `files:alert` e o nó `files.warn`. o
-  golden `crates/uir/fixtures/showcase-files.snapshot.json` foi regravado
+  golden `rust/plevir/tests/fixtures/uigallery-files.snapshot.json` foi regravado
   (`UIR_BLESS=1`; só cresceu: 27 linhas) e as duas baselines da página
   (`files@core@1280x800`, `files@hoff@1280x800`) foram blessed com
   `--png` (a camada `files` mudou num retângulo de 379x48 em 562,300 no
@@ -1983,7 +1983,7 @@ e lê `files:alert` vazio).
 
 ### gate e regress
 
-`df -h /` antes do gate: 29 GB livres; 29 GB depois. `./script/gate`
+`df -h /` antes do gate: 29 GB livres; 29 GB depois. `./tool/tasks/fullcheck.sh`
 verde no worktree com a perna wasm e a perna urnaui (`../urna`
 presente): antes (o fechamento do item 4, base `0e49f828`) 2520
 passed, 0 failed, 16 ignored em 118 binários; depois 2540 passed, 0
@@ -1993,7 +1993,7 @@ failed, 16 ignored em 120 binários (+20: 9 unitários do
 `tests/*.rs` novos). perna urnaui: 85 passed, 0 failed, 1 ignored em 6
 binários, igual a antes. clippy `-D warnings`, fmt e a checagem wasm
 limpos nas duas pernas (o showcase compila para wasm com `NoAlerts`).
-`Cargo.lock` e `crates/urnaui/Cargo.lock` não mudaram.
+`Cargo.lock` e `apps/urnadbapp/Cargo.lock` não mudaram.
 
 `cargo run -p showcase --example regress -- check`: antes do bless, 161
 baselines, 159 iguais, 2 mudaram (`files@core`, `files@hoff`, o botão
@@ -2008,11 +2008,11 @@ linhas de produção (regra do guard): engine `platform/alerts.rs` 449,
 
 ### ADR
 
-`docs/ADR/native-dialogs-answer-the-same-contract.md` (proposed): o
+`docs/adr/interface/0058-native-dialogs-answer-the-same-contract.md` (proposed): o
 trait com o real, o falso e o nenhum; a confirmação nativa como opção do
 app sobre o mesmo `confirm`/`decline`; o alerta só de pessoa com o texto
 projetado; o que o wasm e o mobile fazem; o que o item 5 e o
-`AsyncMessageDialog` levam daqui. linha pro índice (`docs/ADR/README.md`
+`AsyncMessageDialog` levam daqui. linha pro índice (`docs/adr/README.md`
 está fora da lista, fica para a integração):
 
 ```text
@@ -2032,13 +2032,13 @@ está fora da lista, fica para a integração):
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-nenhum. `crates/engine/src/platform/{alerts.rs,mod.rs}`,
-`crates/engine/tests/alerts.rs`, `crates/ide/src/workbench/{mod.rs,person.rs}`,
-`crates/ide/src/main.rs`, `crates/ide/tests/native_confirm.rs`,
-`crates/showcase/src/view/apps/files.rs`, `files/{semantics.rs,tests.rs}`,
-`crates/uir/fixtures/showcase-files.snapshot.json`,
-`crates/showcase/fixtures/regress/files@{core,hoff}@1280x800/**`, o ADR
-novo e este arquivo. `crates/engine/src/lib.rs` não precisou mudar
+nenhum. `rust/engine/src/runtime/platform/{alerts.rs,mod.rs}`,
+`rust/engine/tests/alerts.rs`, `apps/idestudio/src/capability/{mod.rs,person.rs}`,
+`apps/idestudio/src/main.rs`, `apps/idestudio/tests/native_confirm.rs`,
+`apps/uigallery/src/views/apps/files/mod.rs`, `files/{semantics.rs,tests.rs}`,
+`rust/plevir/tests/fixtures/uigallery-files.snapshot.json`,
+`tool/bench/regress/baselines/files@{core,hoff}@1280x800/**`, o ADR
+novo e este arquivo. `rust/engine/src/lib.rs` não precisou mudar
 (`platform` já é `pub mod`). `record.rs` não mudou (ver a decisão da
 gravação acima).
 
@@ -2104,7 +2104,7 @@ cargo test --offline -p engine --test alerts
 cargo test --offline -p ide --test native_confirm
 cargo test --offline -p showcase --lib files::
 cargo test --offline -p engine -p ide -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 cargo run --offline -p showcase -- --render Files --theme core --out files.png --semantics files.json
 UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
@@ -2134,7 +2134,7 @@ e `objc2-user-notifications = { version = "0.3", default-features =
 false, features = [std, block2, UNUserNotificationCenter,
 UNNotificationContent, UNNotificationRequest, UNNotificationResponse,
 UNNotificationAction, UNNotificationCategory, UNNotification] }` em
-`crates/engine/Cargo.toml`, resolvidos com `cargo metadata --offline`:
+`rust/engine/Cargo.toml`, resolvidos com `cargo metadata --offline`:
 "Locking 2 packages to latest compatible versions: Adding
 objc2-user-notifications v0.3.2, Adding tray-icon v0.25.1". o
 `Cargo.lock` da raiz ganhou só essas duas entradas `[[package]]`; nada
@@ -2159,7 +2159,7 @@ seção de desktop toda: no linux o crate tem `compile_error!` sem a feature
 `libappindicator` ou `ksni` (escolha do bring-up de linux), então o linux
 fica com `NoTray`.
 
-o `crates/urnaui/Cargo.lock` (workspace próprio, depende do engine por
+o `apps/urnadbapp/Cargo.lock` (workspace próprio, depende do engine por
 caminho) não pôde ser resolvido pelo cargo: aquele workspace não declara
 `resolver` e a edição 2024 lhe dá o resolver 3, ciente de MSRV, e qualquer
 relock ali ("Locking 23 packages to latest Rust 1.85 compatible versions")
@@ -2168,7 +2168,7 @@ blocking...) e ainda pede download de um que não está no cache. escrevi a
 entrada do `tray-icon` e as duas arestas (`engine -> tray-icon`,
 `objc2-foundation 0.3.2 -> block2 0.6.2`) à mão, na forma que aquele lock
 usa (`thiserror 2.0.20`, `crossbeam-channel` sem versão), e `cargo check
---locked --offline --manifest-path crates/urnaui/Cargo.toml` aceitou: o
+--locked --offline --manifest-path apps/urnadbapp/Cargo.toml` aceitou: o
 lock é exatamente o que o cargo quer, sem tocar nos outros 22. a perna
 urnaui do gate rodou verde sobre ele. na raiz o `resolver = "2"` explícito
 não tem esse comportamento.
@@ -2241,7 +2241,7 @@ clicar, e "mostrar a janela" é o que quem lê "2 silences found" quer.
 
 ### os dois modelos e o que cada alvo faz
 
-`crates/engine/src/platform/tray.rs` (346 linhas de produção, 562 com os
+`rust/engine/src/runtime/platform/tray/mod.rs` (346 linhas de produção, 562 com os
 testes) e `tray/native.rs` (181), pelo molde do `menu.rs`:
 
 - `TrayImage { width, height, rgba, template }`: `from_rgba(w, h,
@@ -2287,7 +2287,7 @@ testes) e `tray/native.rs` (181), pelo molde do `menu.rs`:
   de `platform`. um id de menu (`sem#action[#param]`) nunca começa com
   `tray:` (id não tem `:`).
 
-`crates/engine/src/platform/notify.rs` (404 de produção, 584 com os
+`rust/engine/src/runtime/platform/notify.rs` (404 de produção, 584 com os
 testes), pelo molde do `alerts.rs`:
 
 - `Action { label, sem, action, param }`: `Action::new(label,
@@ -2313,7 +2313,7 @@ testes), pelo molde do `alerts.rs`:
 
 ### o showcase
 
-- `crates/showcase/src/view/dispatch/shell.rs` (495 de produção):
+- `apps/uigallery/src/views/dispatcher/shell/mod.rs` (495 de produção):
   `shell.show` (Button "show plev", `activate`, `PERSON_ONLY`, `enabled`
   no desktop, não focável); `execute` marca `asks.show`;
   `take_show_request()`. o nó `shell` ganhou `notice` (`shell:notice`):
@@ -2323,7 +2323,7 @@ testes), pelo molde do `alerts.rs`:
   igual para barra, tray e notificação (documentado; não renomeei).
   `ShellTarget` não ganhou `Show`: o `shell.show` só é pedido de fora da
   janela, por `Clicked`.
-- `crates/showcase/src/app/tray.rs` (145 de produção; 1 teste):
+- `apps/uigallery/src/shell/system/tray.rs` (145 de produção; 1 teste):
   `TrayIcon { native, shown }`, `install_tray` (no `resumed`, depois do
   menu; um alvo sem tray é logado), `sync_tray` (depois de cada frame da
   janela principal, junto do `sync_menu`), `tray_clicks` (dispacha pela
@@ -2337,7 +2337,7 @@ testes), pelo molde do `alerts.rs`:
   `UserEvent::Clicked` (era `UserEvent::Menu`), que faz `menu_clicks`,
   `tray_clicks`, `notice_clicks`, depois `show_requested`,
   `save_requested`, `detach_requested`.
-- `crates/showcase/src/app/notify.rs` (205 de produção; 2 testes):
+- `apps/uigallery/src/shell/system/notify.rs` (205 de produção; 2 testes):
   `Notices { notifier: Box<dyn Notifier>, jobs }`; `install_notices`
   (`default_notifier`, no `resumed`) e `set_notices(notifier)` (o teste
   passa o falso), que também põe um `JobSink: ReceiptSink` no dispatcher
@@ -2414,7 +2414,7 @@ volta o fim não é contado; o texto de 1 e 2 cortes).
 
 ### gate e regress
 
-`df -h /` antes do gate: 27 GB livres; 25 GB depois. `./script/gate`
+`df -h /` antes do gate: 27 GB livres; 25 GB depois. `./tool/tasks/fullcheck.sh`
 verde no worktree com `CARGO_NET_OFFLINE=true`, com a perna wasm e a
 perna urnaui (`../urna` presente): antes (o fechamento do item 8, base
 `2f8274e9`) 2540 passed, 0 failed, 16 ignored em 120 binários; depois
@@ -2436,7 +2436,7 @@ mudaram; os `frame.png` são os mesmos), depois 161 iguais, 0 mudaram, sem
 frame desenhado e sem GPU aberta. o bless é dito aqui e o motivo é o
 `files:notice` que o briefing pediu; se a integração preferir o texto só
 no shell, os dois voltam com `git checkout` e o `notice` sai da Files. o
-golden `crates/uir/fixtures/showcase-files.snapshot.json` foi regravado
+golden `rust/plevir/tests/fixtures/uigallery-files.snapshot.json` foi regravado
 (`UIR_BLESS=1`; +4 linhas, o `notice`). o golden da todo e os das
 silences continuam iguais.
 
@@ -2452,10 +2452,10 @@ totais (era 580; a exceção `cfg(test)` desconta), `app/tray.rs` 145,
 
 ### ADR
 
-`docs/ADR/tray-and-notifications-are-capabilities-out-of-the-window.md`
+`docs/adr/interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md`
 (proposed): os dois modelos, o clique de volta como o request do botão,
 a fila com dois donos, quem notifica, o que exige bundle no macOS e o que
-fica para o bring-up, o showcase. linha pro índice (`docs/ADR/README.md`
+fica para o bring-up, o showcase. linha pro índice (`docs/adr/README.md`
 está fora da lista, fica para a integração):
 
 ```text
@@ -2490,10 +2490,10 @@ está fora da lista, fica para a integração):
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/urnaui/Cargo.lock`: consequência do `tray-icon` no
+- `apps/urnadbapp/Cargo.lock`: consequência do `tray-icon` no
   `Cargo.toml` do engine, como `muda` e `rfd` antes; à mão, pelo motivo
   da sonda (a), aceito por `--locked` e pela perna urnaui do gate.
-- nenhum outro. `crates/engine/src/lib.rs` não precisou mudar (`platform`
+- nenhum outro. `rust/engine/src/lib.rs` não precisou mudar (`platform`
   já é `pub mod`). `silences/**` não foi tocado.
 
 ### limitações e decisões, sem esconder
@@ -2572,12 +2572,12 @@ export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 export CARGO_NET_OFFLINE=true
 cargo metadata --offline --format-version 1 > /dev/null   (o lock da raiz resolve offline)
-cargo check --locked --offline --manifest-path crates/urnaui/Cargo.toml   (o lock do urnaui é o que o cargo quer)
+cargo check --locked --offline --manifest-path apps/urnadbapp/Cargo.toml   (o lock do urnaui é o que o cargo quer)
 cargo test --offline -p engine --lib platform::tray platform::notify
 cargo test --offline -p engine --test tray --test notify --test menu
 cargo test --offline -p showcase --lib -- dispatch::shell app::menu app::tray app::notify files::
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
 cargo run --offline -p showcase --example regress -- bless --page Files --theme core   (e --theme hoff; sem --png)
@@ -2627,7 +2627,7 @@ a máquina nunca dormiu):
   que nenhum dos dois consumidores liga (a lista do winit vai de
   `NSAppearance` a `NSWindowTabGroup`, sem ela; a do tray-icon é a barra
   de status). e o engine não tem `objc2-app-kit` como dependência direta
-  (`crates/engine/Cargo.toml` só o cita num comentário do item 5). ligar a
+  (`rust/engine/Cargo.toml` só o cita num comentário do item 5). ligar a
   feature é mudar o manifesto, arquivo proibido aqui: o gancho fica
   registrado, o item segue com o que o winit dá. o que acontece na tela
   quando o monitor dorme ou a tela trava não foi medido (proibido dormir
@@ -2639,7 +2639,7 @@ a máquina nunca dormiu):
   transform; android, wayland e windows: não suportado (`event.rs:420`).
   `suspended`/`resumed` de verdade: android, ios e web.
 
-(b) por teste headless (`crates/engine/tests/sleep_wake.rs`, o commit
+(b) por teste headless (`rust/engine/tests/sleep_wake.rs`, o commit
 `7d88e4f3` era a sonda, substituída pelos testes reais em `f4c03f08`):
 dois `WindowHost::headless` sob `Windows`, a janela A com
 `set_animating(true)` e um deadline, um frame vermelho desenhado.
@@ -2688,7 +2688,7 @@ suspenso ou a janela coberta:
 
 ### os estados e a regra dos frames
 
-`crates/engine/src/window/sleep.rs` (163 linhas), mais dois campos no
+`rust/engine/src/runtime/window/sleep.rs` (163 linhas), mais dois campos no
 host (`host.rs` 571) e um no `Windows` (`windows.rs` 323):
 
 - **coberta** é por janela: `WindowHost::occluded`, de
@@ -2777,7 +2777,7 @@ dormindo não começa, ou começa ao acordar, por app. nenhum worker mudou.
 
 ### os testes e os pixels
 
-- `crates/engine/tests/sleep_wake.rs` (5): janela A animando com deadline,
+- `rust/engine/tests/sleep_wake.rs` (5): janela A animando com deadline,
   `Occluded(true)` roteado: `!needs_redraw`, `!redraw_asked`, `deadline()`
   None, `request_pending_redraws()` 1 (só B), `earliest_deadline` o de B,
   `set_animating`/`invalidate`/`request_redraw` retidos, a mesma palavra
@@ -2796,7 +2796,7 @@ dormindo não começa, ou começa ao acordar, por app. nenhum worker mudou.
   pede o frame então; `suspend()` dorme e o flag segue), `resume` só
   como `wake()` (precisa do laço); o flag é da thread (outra thread lê
   false).
-- `crates/showcase/tests/sleep_wake.rs` (2, desktop): `ShowcaseView` na
+- `apps/uigallery/tests/sleep_wake.rs` (2, desktop): `ShowcaseView` na
   Todo sobre um host headless 1200x800 sob `Windows`; frame; `sleep()`;
   `todo.item[1]` `toggle` por `Actor::Human` pelo dispatcher, `settle`;
   `invalidate_all` não pede, deadline None, a textura guarda o frame de
@@ -2805,7 +2805,7 @@ dormindo não começa, ou começa ao acordar, por app. nenhum worker mudou.
   e diferente dentro do rect do item; em repouso de novo. o mesmo com
   `Occluded(true)`/`Occluded(false)` roteados (coberta não é dormindo:
   `Background::asleep()` false).
-- `crates/showcase/src/app/sleep.rs` (2, o shell sobre janela nua com
+- `apps/uigallery/src/shell/system/sleep.rs` (2, o shell sobre janela nua com
   `FakeNotifier`, sem foco): uma detecção pedida na Silences termina no
   canal na hora (ffmpeg não é procurado nos testes), o `detect` fica
   desabilitado; `sleep()`, cinco `advance`+`catch_up`: segue desabilitado
@@ -2831,7 +2831,7 @@ dormindo não começa, ou começa ao acordar, por app. nenhum worker mudou.
 
 ### gate e regress
 
-`df -h /` antes do gate: 25 GB livres; 24 GB depois. `./script/gate`
+`df -h /` antes do gate: 25 GB livres; 24 GB depois. `./tool/tasks/fullcheck.sh`
 verde no worktree com `CARGO_NET_OFFLINE=true`, com a perna wasm e a
 perna urnaui (`../urna` presente): antes (o fechamento do item 5, base
 `e1386d5a`) 2565 passed, 0 failed, 16 ignored em 122 binários; depois
@@ -2864,11 +2864,11 @@ com os testes). tudo abaixo de 639.
 
 ### ADR
 
-`docs/ADR/a-covered-window-does-not-draw-and-wakes-new.md` (proposed): os
+`docs/adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md` (proposed): os
 três estados e quem os entrega em cada plataforma, a regra dos frames e
 das deadlines, os relógios que saltam, o contrato do `Background` e como
 cada app o aplica, o que o sleep do sistema tem e não tem. linha pro
-índice (`docs/ADR/README.md` está fora da lista, fica para a integração):
+índice (`docs/adr/README.md` está fora da lista, fica para a integração):
 
 ```text
 | 2026-09-24 | [a-covered-window-does-not-draw-and-wakes-new](a-covered-window-does-not-draw-and-wakes-new.md) | proposed | task-76 item 7: `WindowHost` sabe quando está coberta (`WindowEvent::Occluded`, no macOS minimizada, escondida ou totalmente atrás; no iOS o background) e quando o app dorme (`Windows::sleep`/`wake`, e `suspend`/`resume`); enquanto uma das duas, `request_redraw` é retido, `needs_redraw` é false e o `deadline` é None, então nenhum frame nem `WaitUntil` por ela e um `Wake` contínuo espera; ao mostrar ou acordar cada host invalida e pede um frame, construído do estado de então, nunca o de antes; os relógios saltam (o catch-up tica com o tempo real); `engine::window::Background` é o mesmo fato para o trabalho ao lado dos frames (thread-local, um app por processo): resultado que chega dormindo fica no canal e aplica no primeiro wake acordado, o Claude da Surface fica retido em `Pending` e começa ao acordar, o git do ide segue; o desktop não ouve o sleep do sistema (a feature `NSWorkspace` do `objc2-app-kit` não está no lock) e o `suspended` de verdade é do bring-up mobile; provado headless com `Occluded` injetado e byte a byte contra um host de controle |
@@ -2891,11 +2891,11 @@ cada app o aplica, o que o sleep do sistema tem e não tem. linha pro
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-nenhum. `crates/engine/src/window/sleep.rs`, `crates/showcase/src/app/sleep.rs`,
-`crates/engine/tests/sleep_wake.rs` e `crates/showcase/tests/sleep_wake.rs`
-são novos dentro dos diretórios permitidos; `crates/engine/src/lib.rs`
+nenhum. `rust/engine/src/runtime/window/sleep.rs`, `apps/uigallery/src/shell/system/sleep.rs`,
+`rust/engine/tests/sleep_wake.rs` e `apps/uigallery/tests/sleep_wake.rs`
+são novos dentro dos diretórios permitidos; `rust/engine/src/lib.rs`
 não precisou mudar (`window` já é `pub mod`);
-`crates/engine/src/platform/lifecycle.rs` não mudou (o `AppState` do
+`rust/engine/src/runtime/platform/lifecycle.rs` não mudou (o `AppState` do
 `LifecycleManager` já tem `Suspended`, e o `Windows` é onde o estado
 vive agora).
 
@@ -2973,7 +2973,7 @@ cargo test --offline -p engine --test sleep_wake
 cargo test --offline -p showcase --test sleep_wake
 cargo test --offline -p showcase --lib -- app::sleep silences::jobs surface_page::page
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 RUST_LOG=engine=debug cargo run --offline -p showcase -- Spinner   (minimizar e restaurar; do orquestrador)
 ```
@@ -3051,7 +3051,7 @@ construtores (`gpu/context.rs:295`), então `max_texture_dimension_2d` é
 que cabe quando não (uma janela de 2000 de largura imprime a 4,09). o
 atlas de glifos não estourou em nenhuma das duas escalas.
 
-por teste (`crates/engine/tests/print.rs`, `--nocapture`), um run de
+por teste (`rust/engine/tests/print.rs`, `--nocapture`), um run de
 texto de 15 px em 600x80 lógicos, cada peça medida:
 
 ```text
@@ -3082,7 +3082,7 @@ do png para esse caminho.
 
 ### o trait e o que cada alvo faz
 
-`crates/engine/src/platform/print.rs` (470 linhas de produção, 645 com os
+`rust/engine/src/runtime/platform/print/mod.rs` (470 linhas de produção, 645 com os
 testes) e `platform/print/cups.rs` (417, 563 com os testes), pelo molde
 do `alerts.rs` e do `notify.rs`: trait, real sob o cfg, falso em todo
 alvo, nenhum em wasm e mobile, `default_printer()` escolhendo.
@@ -3180,7 +3180,7 @@ a resposta cai. um job por vez: o botão desabilita enquanto um roda.
 
 ### o showcase: o botão, o menu, a projeção
 
-`crates/showcase/src/view/dispatch/shell/print.rs` (528 de produção),
+`apps/uigallery/src/views/dispatcher/shell/print.rs` (528 de produção),
 `shell.rs` (538), `app/print.rs` (62, 189 com os testes), `app/menu.rs`
 (253), `app/pace.rs` (188), `app/events.rs` (219), `app.rs` (567),
 `app/entry.rs` (95, movimento).
@@ -3207,7 +3207,7 @@ a resposta cai. um job por vez: o botão desabilita enquanto um roda.
 
 ### testes
 
-- `crates/engine/src/platform/print.rs` (8): escala e `paper_size`,
+- `rust/engine/src/runtime/platform/print/mod.rs` (8): escala e `paper_size`,
   `fit_scale`, as opções, o `Debug` do documento, o falso (padrão e
   nomeado, `printed`, status), as recusas do falso e os textos dos
   erros, o compartilhado por `Arc<Mutex>`, `NoPrinter` e
@@ -3216,7 +3216,7 @@ a resposta cai. um job por vez: o botão desabilita enquanto um roda.
   vazio desta máquina, sem padrão, a falha do scheduler), os argumentos
   do `lp`, o id do job e o destino dele, a listagem de um job, as
   recusas do `lp` como esta máquina as deu.
-- `crates/engine/tests/print.rs` (7): a sonda (b), o documento a partir do
+- `rust/engine/tests/print.rs` (7): a sonda (b), o documento a partir do
   render (tamanho do frame, dpi, png que decodifica pros mesmos bytes do
   `read()`, `paper_size`, o svg ao lado), e o CUPS sobre `tests/fake-lp`,
   `tests/fake-lpstat` (Office padrão e Home; Office-7 na fila, Home-7
@@ -3229,17 +3229,17 @@ a resposta cai. um job por vez: o botão desabilita enquanto um roda.
   não existe, e o prazo: `fake-lp -t slow` vira `sleep 30`, o prazo de 2
   s mata pelo pid (`kill -0` falha depois) e o documento sai do spool
   também. nenhum `lp` nem `lpstat` real roda.
-- `crates/showcase/src/view/dispatch/shell/tests.rs` (+1, e as listas de
+- `apps/uigallery/src/views/dispatcher/shell/tests.rs` (+1, e as listas de
   ids com `shell.print`): a projeção sem destino (desabilitado, estados
   vazios, `no destination`), o pedido da pessoa recusado `Disabled`, os
   destinos do falso caindo pela thread e habilitando (o padrão é o
   destino), o agente `NotAuthorized` e nada impresso, o `NoPrinter`
   deixando `no destination`.
-- `crates/showcase/src/app/print.rs` (2): as teclas; a barra com o item,
+- `apps/uigallery/src/shell/system/print.rs` (2): as teclas; a barra com o item,
   desabilitado, com `cmd-p`, as teclas pedindo e recusadas, um `p` solto
   é da página, e o item habilitando depois do `set_printer` e do
   `sync_menu`.
-- `crates/showcase/tests/print.rs` (2, GPU, pula sem adapter): a pessoa
+- `apps/uigallery/tests/print.rs` (2, GPU, pula sem adapter): a pessoa
   imprime o Todo com um item marcado pelo falso: `Executing`, `printing
   on Office`, botão desabilitado, o job responde, o receipt `Completed`
   com `Office-1`, 5000x3333, 300 dpi, bytes e segundos; o falso recebeu
@@ -3253,7 +3253,7 @@ a resposta cai. um job por vez: o botão desabilita enquanto um roda.
 
 ### gate e regress
 
-`df -h /` antes do gate: 21 GB livres; 21 GB depois. `./script/gate` verde
+`df -h /` antes do gate: 21 GB livres; 21 GB depois. `./tool/tasks/fullcheck.sh` verde
 no worktree com `CARGO_NET_OFFLINE=true`, com a perna wasm e a perna
 urnaui (`../urna` presente): antes (o fechamento do item 7, base
 `f92e56d1`) 2577 passed, 0 failed, 16 ignored em 124 binários; depois
@@ -3284,10 +3284,10 @@ showcase `app.rs` 567 (era 633; o movimento levou a 561), `app/entry.rs`
 
 ### ADR
 
-`docs/ADR/printing-is-the-frame-on-paper.md` (proposed): o documento como
+`docs/adr/rendering/0061-printing-is-the-frame-on-paper.md` (proposed): o documento como
 render do mesmo frame numa escala de papel, o CUPS como filho, o que é só
 pessoa e trabalho de fundo, o svg como caminho pro PDF, o que fica pro
-bring-up. linha pro índice (`docs/ADR/README.md` está fora da lista, fica
+bring-up. linha pro índice (`docs/adr/README.md` está fora da lista, fica
 para a integração):
 
 ```text
@@ -3312,13 +3312,13 @@ para a integração):
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-nenhum. `crates/showcase/src/app.rs` estava em 633 linhas e recebeu o
+nenhum. `apps/uigallery/src/shell/mod.rs` estava em 633 linhas e recebeu o
 `mod print;` (com doc) e o `install_print()`: o primeiro commit do
 showcase (`84a95b34`) foi só movimento, os quatro entry points de
 plataforma (`run`, `run_web`, `android_main`, `showcase_ios_main`) para
 `app/entry.rs`, palavra por palavra, reexportados; `app.rs` foi a 561 e
 está em 567. `app/events.rs`, `app/menu.rs`, `app/pace.rs` são `app/**`.
-`crates/showcase/src/view/dispatch.rs` (fora da lista) não mudou: por
+`apps/uigallery/src/views/dispatcher/mod.rs` (fora da lista) não mudou: por
 isso o tipo `Last` do `shell/print.rs` não é reexportado e a projeção
 carrega o último job.
 
@@ -3407,7 +3407,7 @@ cargo test --offline -p engine --test print -- --nocapture          (a sonda (b)
 cargo test --offline -p showcase --lib -- dispatch::shell app::print app::menu
 RUST_LOG=showcase=info cargo test --offline -p showcase --test print -- --nocapture --test-threads=1
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check
 cargo run --offline -p showcase -- --render Todo --scale 4.1667 --out todo-paper.png   (o png do papel, sem impressora)
 lpstat -p -d                                                          (esta máquina: No destinations added)
@@ -3462,7 +3462,7 @@ do `-i`.
 ### a sonda
 
 (a) o pipe, com `-re` (o lavfi no ritmo de um dispositivo), medido em
-python e depois nos testes (`crates/engine/tests/capture.rs`,
+python e depois nos testes (`rust/engine/tests/capture.rs`,
 `--nocapture`):
 
 ```text
@@ -3527,7 +3527,7 @@ iguais, e ganhou os dois baselines dela.
 
 ### a imagem de fluxo
 
-`crates/engine/src/gpu/image.rs` (560 de produção, era 411; 898 com os
+`rust/engine/src/drawing/gpu/image.rs` (560 de produção, era 411; 898 com os
 testes) e a reexportação em `gpu/mod.rs` (a linha de `pub use` que o
 rustfmt quebra em três):
 
@@ -3556,7 +3556,7 @@ rustfmt quebra em três):
   (semântica nova, registrada); o `prepare` olha o log em vez do mapa do
   dedupe, o que é o mesmo para imagens fixas.
 - condição 5, dito sem consertar: a gravação (`PLEV_RECORD=1`,
-  `crates/rec`) guarda um asset de imagem por handle que viu, e cada
+  `rust/record`) guarda um asset de imagem por handle que viu, e cada
   frame da câmera é um `id` novo, então um asset por frame gravado, só com
   o tamanho: `put_asset` escreve imagem viva sem pixels, nenhum pixel da
   câmera vai para o `.monster`. a memória do gravador segue o orçamento
@@ -3570,7 +3570,7 @@ rustfmt quebra em três):
 
 ### o trait e os estados
 
-`crates/engine/src/platform/capture.rs` (486 de produção, 609 com os
+`rust/engine/src/runtime/platform/capture/mod.rs` (486 de produção, 609 com os
 testes), `capture/ffmpeg.rs` (218), `capture/ffmpeg/args.rs` (258, 461
 com os testes), `capture/ffmpeg/child.rs` (317):
 
@@ -3663,7 +3663,7 @@ com os testes), `capture/ffmpeg/child.rs` (317):
   compartilhado; a entrada de cada plataforma por índice e nome; a saída;
   os modos e o retry; o `classify` de todas as linhas; o anel; construir
   sem rodar e o programa que não existe.
-- `crates/engine/tests/capture.rs` (10 e 1 ignorado; binário novo): a
+- `rust/engine/tests/capture.rs` (10 e 1 ignorado; binário novo): a
   sonda (câmera, microfone, frames num fluxo e desenhados, a imagem de
   fluxo em três contextos com device recuperado), e o `FfmpegCapture`
   sobre os falsos: frames do tamanho pedido a uns 15 fps com o mais novo
@@ -3683,7 +3683,7 @@ com os testes), `capture/ffmpeg/child.rs` (317):
 - `app::capture` (+1): o shell sobre janela nua, o agente recusado, a
   pessoa liga, coberto solta na hora e cinco ticks sem frame, mostrar
   religa, dormir solta, acordar religa, outra página solta, voltar religa.
-- `crates/showcase/tests/capture.rs` (1, GPU; binário novo): o frame
+- `apps/uigallery/tests/capture.rs` (1, GPU; binário novo): o frame
   desenhado antes do wake mostra a caixa vazia, o primeiro depois do wake
   mostra o frame 0 do falso dentro da caixa, o seguinte o frame 1 no mesmo
   lugar; ligado, um prazo de um período; não visto, a caixa vazia no
@@ -3691,7 +3691,7 @@ com os testes), `capture/ffmpeg/child.rs` (317):
 
 ### gate e regress
 
-`df -h /` antes de cada gate: 18 GB livres; 18 GB depois. `./script/gate`
+`df -h /` antes de cada gate: 18 GB livres; 18 GB depois. `./tool/tasks/fullcheck.sh`
 verde no worktree com `CARGO_NET_OFFLINE=true`, com a perna wasm e a
 perna urnaui (`../urna` presente), duas vezes (a segunda depois de
 `de4a4d98`): antes (a base `9ea37ea9`, medida neste worktree) 2604
@@ -3717,10 +3717,10 @@ um `draw.rs`.
 
 ### ADR
 
-`docs/ADR/capture-is-a-job-the-person-turns-on.md` (proposed): o trait, o
+`docs/adr/interface/0062-capture-is-a-job-the-person-turns-on.md` (proposed): o trait, o
 ffmpeg como filho e por quê, a permissão como estado, só pessoa, a imagem
 de fluxo, coberto ou dormindo solta o dispositivo, o que o bring-up muda.
-linha para o índice (`docs/ADR/README.md` está fora da lista, fica para a
+linha para o índice (`docs/adr/README.md` está fora da lista, fica para a
 integração):
 
 ```text
@@ -3748,18 +3748,18 @@ integração):
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/engine/src/gpu/image.rs` e `crates/engine/src/gpu/mod.rs`:
+- `rust/engine/src/drawing/gpu/image.rs` e `rust/engine/src/drawing/gpu/mod.rs`:
   liberados pelo orquestrador depois da parada (a opção 1).
-- `crates/showcase/src/view/apps/mod.rs`: a linha `pub mod capture;` (e
+- `apps/uigallery/src/views/apps/mod.rs`: a linha `pub mod capture;` (e
   o doc do grupo), sem a qual o diretório novo não é módulo.
-- `crates/showcase/src/app.rs`: `mod capture;` e a chamada
+- `apps/uigallery/src/shell/mod.rs`: `mod capture;` e a chamada
   `self.install_capture();` no `resumed`, ao lado do `install_print()`. a
   lista dizia `app/**`; o `app.rs` é a raiz desse diretório, e o
   `resumed` mora nele.
-- `crates/showcase/fixtures/regress/capture@core@1280x800` e
+- `tool/bench/regress/baselines/capture@core@1280x800` e
   `capture@hoff@1280x800`: os baselines novos da página, que o briefing
   permitia se a sonda (c) mostrasse os outros iguais.
-- `crates/showcase/src/view/dispatch.rs` está na lista pelos braços; além
+- `apps/uigallery/src/views/dispatcher/mod.rs` está na lista pelos braços; além
   deles recebeu a reexportação do `PERSON_ONLY` e os dois métodos de
   `ShowcaseView` que o shell chama (o `view/mod.rs` está fora).
 
@@ -3851,7 +3851,7 @@ cargo test --offline -p engine --test capture -- --ignored --nocapture  (o atlas
 cargo test --offline -p showcase --lib -- apps::capture app::capture
 cargo test --offline -p showcase --test capture
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check              (163 iguais)
 cargo run --offline -p showcase -- --render Capture --out capture.png   (a página em repouso, sem dispositivo)
 ```
@@ -3895,7 +3895,7 @@ nenhum momento: esquema registrado, `open` de um link, `.app`, janela.
 (a) o macOS, por leitura da fonte e por `cargo tree --offline`:
 
 - o engine não tem `objc2`, `objc2-foundation` nem `objc2-app-kit` como
-  dependência direta: `crates/engine/Cargo.toml` só os cita no comentário
+  dependência direta: `rust/engine/Cargo.toml` só os cita no comentário
   do item 5 (o caminho do UserNotifications ficou para o bundle), e a
   entrada `engine` do `Cargo.lock` não os lista. eles estão no lock pelos
   outros: `objc2 0.6.4` (arboard, block2, dispatch2, muda, rfd, tray-icon
@@ -4082,7 +4082,7 @@ página.
 
 ### a gramática e os erros
 
-`crates/engine/src/platform/links.rs` (382 linhas, todas de produção; os
+`rust/engine/src/runtime/platform/links/mod.rs` (382 linhas, todas de produção; os
 testes em `links/tests.rs`) e `links/source.rs` (212 de produção, 333 com
 os testes). `engine::platform::links`:
 
@@ -4187,7 +4187,7 @@ os testes). `engine::platform::links`:
 
 ### o showcase
 
-`crates/showcase/src/app/links.rs` (208 de produção; os testes em
+`apps/uigallery/src/shell/system/links/mod.rs` (208 de produção; os testes em
 `app/links/tests.rs`), `app.rs` 596 (era 571).
 
 - `pub mod links` em `app.rs`, público para o teste de integração:
@@ -4241,7 +4241,7 @@ os testes). `engine::platform::links`:
   `\n`, o `\u{202e}`); o falso em ordem e compartilhado pelo handle;
   `NoLinks` e o `default_links` deste processo (nenhum link nos
   argumentos do harness).
-- `crates/engine/tests/links.rs` (5, binário novo), um app de teste pelo
+- `rust/engine/tests/links.rs` (5, binário novo), um app de teste pelo
   `Dispatcher` com o `FakeLinks`: o link roda por `agent:link` onde o app
   abriu e a lista vem antes; com qualquer lista a policy vale como para
   agente (`NotAuthorized` no só-de-pessoa, `InvalidParam` fora das opções
@@ -4269,7 +4269,7 @@ os testes). `engine::platform::links`:
   `plev-showcase://shell.page` na tela; a gravação tem `observed` e os
   quatro `stage` de `agent:link` e nenhum `input`; a lista é a página e o
   tema, abertos a agente, não destrutivos, sem confirmação.
-- `crates/showcase/tests/links.rs` (2, GPU, binário novo), sobre um host
+- `apps/uigallery/tests/links.rs` (2, GPU, binário novo), sobre um host
   headless 1200x800: o link da câmera na Capture é recusado sem request,
   o toast com a linha é desenhado (mais da metade dos pixels do retângulo
   do toast mudou) e nenhum pixel mudou fora dele e da margem da sombra
@@ -4287,7 +4287,7 @@ e `a_link_to_the_camera_is_refused_and_its_line_is_on_screen`.
 ### gate e regress
 
 `df -h /` antes de cada gate: 17 GB livres (base) e 16 GB (depois); 16 GB
-no fim. `./script/gate` verde no worktree com `CARGO_NET_OFFLINE=true`,
+no fim. `./tool/tasks/fullcheck.sh` verde no worktree com `CARGO_NET_OFFLINE=true`,
 com a perna wasm e a perna urnaui (`../urna` presente): antes (a base
 `bcf6be8e`, medida neste worktree) 2641 passed, 0 failed, 17 ignored em
 128 binários; depois 2672 passed, 0 failed, 17 ignored em 130 binários
@@ -4297,7 +4297,7 @@ shell, 2 de `showcase/tests/links.rs`; +2 binários, os dois
 binários, igual a antes. clippy `-D warnings`, fmt e a checagem wasm
 limpos nas duas pernas; o único aviso no log é o `block v0.1.6` de
 incompatibilidade futura, que já estava. `Cargo.lock`,
-`crates/urnaui/Cargo.lock`, `crates/engine/Cargo.toml` e o `Cargo.toml`
+`apps/urnadbapp/Cargo.lock`, `rust/engine/Cargo.toml` e o `Cargo.toml`
 da raiz sem mudança (`git diff bcf6be8e` vazio neles).
 
 `cargo run --offline -p showcase --example regress -- check`: 163
@@ -4311,12 +4311,12 @@ linhas de produção (`file_hygiene_guard` verde): engine
 
 ### ADR
 
-`docs/ADR/a-link-is-not-a-person.md` (proposed): a gramática, o ator, a
+`docs/adr/interface/0063-a-link-is-not-a-person.md` (proposed): a gramática, o ator, a
 lista aberta, a recusa vista, as fontes, o caminho por plataforma hoje, o
 shell, a gravação, e o bring-up (o `CFBundleURLTypes` no `.app` e o
 handler `GURL` pelo `NSNotificationCenter` com as três dependências, a
 chave do registro do windows, o `.desktop` do linux, a segunda
-instância, iOS e android). linha para o índice (`docs/ADR/README.md` está
+instância, iOS e android). linha para o índice (`docs/adr/README.md` está
 fora da lista, fica para a integração):
 
 ```text
@@ -4339,10 +4339,10 @@ fora da lista, fica para a integração):
 
 ### arquivos tocados fora da lista permitida, e por quê
 
-- `crates/showcase/src/app/links/tests.rs`: os testes do módulo novo
+- `apps/uigallery/src/shell/system/links/tests.rs`: os testes do módulo novo
   `app/links.rs`, num arquivo à parte como `shell/tests.rs` (o guard não
   conta arquivo `tests.rs`). a lista nomeava `app/links.rs` e
-  `crates/showcase/tests/**`.
+  `apps/uigallery/tests/**`.
 - nenhum outro. `app/entry.rs` e `view/dispatch/shell.rs` não precisaram
   mudar (o proxy já está no `Access` antes do `run_app`; o `set_notice`
   já era público).
@@ -4427,9 +4427,9 @@ cargo test --offline -p engine --test links
 cargo test --offline -p showcase --lib app::links
 cargo test --offline -p showcase --test links
 cargo test --offline -p engine -p showcase
-./script/gate
+./tool/tasks/fullcheck.sh
 cargo run --offline -p showcase --example regress -- check   (163 iguais)
-git diff bcf6be8e -- Cargo.lock crates/urnaui/Cargo.lock crates/engine/Cargo.toml Cargo.toml   (vazio)
+git diff bcf6be8e -- Cargo.lock apps/urnadbapp/Cargo.lock rust/engine/Cargo.toml Cargo.toml   (vazio)
 ```
 
 ## fecho da task-76

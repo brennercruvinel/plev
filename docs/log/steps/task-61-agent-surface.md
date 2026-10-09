@@ -49,7 +49,7 @@ em debug), `plev observe` e `plev act`, e o showcase servindo o todo pelo
 mesmo gancho da accessibility, renomeado para `act`. validado pelo agente
 contra o showcase em janela: observe, act concluído e o `submit` de uma
 revisão velha recusado com o delta. ADR:
-`docs/ADR/agents-act-through-the-semantic-contract.md`.
+`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`.
 
 a entrega voltou uma vez. o gate do orquestrador pegou um teste instável
 (`find_names_the_one_live_socket`): no macOS o std marca o socket como
@@ -163,12 +163,12 @@ pixels pelo socket (79), autenticação de agente além do ator declarado.
 
 - crate novo de protocolo e o binário `plev` (nomes aprovados no
   briefing)
-- `crates/showcase/src/app.rs`: só a abertura do `AgentPort` e o `drain`
+- `apps/uigallery/src/shell/mod.rs`: só a abertura do `AgentPort` e o `drain`
   no tick. atenção: a task-60 também toca esse arquivo na mesma onda; o
   orquestrador sequencia os dois commits ou define os blocos de cada um no
   briefing
-- entradas em `Cargo.toml`, `docs/arc/arc.toml`, `README.md`
-- proposta de ADR `docs/ADR/agents-act-through-the-semantic-contract.md`
+- entradas em `Cargo.toml`, `docs/ATLAS.toml`, `README.md`
+- proposta de ADR `docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`
 
 ## interfaces que consome
 
@@ -190,7 +190,7 @@ e nova versão.
 - medir e registrar: bytes por observação completa e por delta na página
   do todo; tempo de ida e volta de um act.
 - sem o env var, nenhum socket é criado (teste).
-- `./script/gate` verde; o crate de protocolo compila em wasm (é puro),
+- `./tool/tasks/fullcheck.sh` verde; o crate de protocolo compila em wasm (é puro),
   o servidor e o CLI só no desktop.
 
 ## testes esperados

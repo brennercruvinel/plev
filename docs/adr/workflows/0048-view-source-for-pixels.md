@@ -13,14 +13,14 @@ task-65 (phases a and b) asks that a pixel of the window lead to the code
 that made it, in a desktop debug build only. what existed:
 
 - `Compositor::hit(x, y)` names the topmost bound `SemId` at a point of
-  the frame on screen (docs/ADR/semantic-binding-beside-the-scene.md).
+  the frame on screen (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md).
 - `Node.source` is the file, line and column of the call that projected
   the node, captured by `#[track_caller]`
-  (docs/ADR/semantic-contract-as-pure-projection.md). the comps helpers
+  (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md). the comps helpers
   that project a widget (`TextField::project`, `Button::sem`, ...) are
   `#[track_caller]` too.
 - the literal hot reload keeps, per source file, a skeleton hash and its
-  literals in order (docs/ADR/hot-reload-on-by-default-in-gpu-context.md),
+  literals in order (docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md),
   but no position: `proc-macro2` was built without `span-locations`.
 - `hot_reload` exists only where the engine's build.rs sets the cfg:
   the `hot-reload` feature (on by default), a debug profile and a desktop

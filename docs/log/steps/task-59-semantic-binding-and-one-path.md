@@ -31,28 +31,28 @@ paralelas para a mesma coisa.
 
 ## estado atual no código
 
-- `ViewId` volta a zero a cada frame (`crates/engine/src/input/mod.rs:50-61`)
-  e `HitRegion` não tem significado (`crates/engine/src/input/types.rs:137-146`).
+- `ViewId` volta a zero a cada frame (`rust/engine/src/control/input/mod.rs:50-61`)
+  e `HitRegion` não tem significado (`rust/engine/src/control/input/events.rs:137-146`).
 - os widgets de comps fazem hit test próprio por `Rect::contains`
   (exemplo: `CommitForm::hit_test_click` em
-  `crates/ide/src/views/commit_form.rs`); `InputState` não é o ponto de
+  `apps/idestudio/src/interfaces/panels/commit_form.rs`); `InputState` não é o ponto de
   verdade do hit test nos apps que shipam.
 - o `Compositor` é o acumulador por frame que todo render recebe
-  (`crates/engine/src/compositor/mod.rs:56-68`, `begin_frame`), e as layers
+  (`rust/engine/src/drawing/compositor/mod.rs:56-68`, `begin_frame`), e as layers
   têm hash de conteúdo para dirty tracking
-  (`crates/engine/src/compositor/layer/mod.rs:43`).
+  (`rust/engine/src/drawing/compositor/layer/mod.rs:43`).
 - o clique dos apps chama a lógica do app direto (no ide:
   `CommitFormAction::Commit` em
-  `crates/ide/src/views/workspace/input.rs:47`); no showcase, o todo app em
-  `crates/showcase/src/view/apps/app.rs` e `app/` sobre o modelo
-  `crates/showcase/src/model`.
-- modal e overlay vivem em `crates/comps/src/feedback` e
-  `crates/comps/src/overlay` (`OverlayManager`).
+  `apps/idestudio/src/interfaces/panels/layout/input.rs:47`); no showcase, o todo app em
+  `apps/uigallery/src/views/apps/todo/mod.rs` e `app/` sobre o modelo
+  `apps/uigallery/src/domain`.
+- modal e overlay vivem em `rust/engine/src/widgets/feedback` e
+  `rust/engine/src/widgets/overlay` (`OverlayManager`).
 
 ## fase b fechada (2026-09-23)
 
 integrada na `main` em `f5b7cee` (nove commits), validada: diff lido,
-escopo só em `crates/comps/src` na primeira rodada, gate verde (1730
+escopo só em `rust/engine/src/widgets` na primeira rodada, gate verde (1730
 testes). os 16 widgets interativos restantes do comps têm `.sem(id)`,
 ligação do rect que desenham e onde testam o hit, e um helper `project`:
 `Chip`, `IconButton`, `SubmitButton`, `Switch`, `Slider`, `Select`, `Tabs`,
@@ -93,7 +93,7 @@ integrada na `main` em `f71dc20` (seis commits), validada: diff lido, gate
 verde (1636 testes), o modelo do todo só muda dentro de `execute`
 (conferido no código), a view mudou só onde a spec permitia
 (`overlay_holds_pointer`, reuso da condição de modal que já existia). ADR:
-`docs/ADR/semantic-binding-beside-the-scene.md`.
+`docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`.
 
 decisões aceitas: a layer da ligação é explícita (`bind` na default,
 `bind_to_layer` na dada), porque inferir pela última escrita erra quando o
@@ -116,8 +116,8 @@ de projeção e matriz.
 esta seção vale sobre o resto do arquivo onde os dois divergirem.
 
 - o `sem` está na `main` com o contrato (57) e o dispatcher (58). leia
-  `docs/mission/steps/checked/task-57-semantic-contract-done.md`,
-  `docs/mission/steps/checked/task-58-actions-preconditions-receipts-done.md`
+  `docs/log/steps/task-57-semantic-contract.md`,
+  `docs/log/steps/task-58-actions-preconditions-receipts.md`
   e os dois ADRs antes de começar. `Operable::execute` recebe o
   `RequestId`; `Actor::Assistive` confirma como uma pessoa.
 - a task roda em duas fases, cada uma um briefing e uma validação:
@@ -153,7 +153,7 @@ esta seção vale sobre o resto do arquivo onde os dois divergirem.
    layer e o clip correntes. a tabela zera em `begin_frame`. ela não entra
    no hash de layer: ligar ou não um id nunca suja uma layer nem muda um
    pixel.
-2. `crates/engine` passa a depender de `sem` (puro, compila em wasm).
+2. `rust/engine` passa a depender de `sem` (puro, compila em wasm).
 3. comps: cada widget interativo aceita um `SemId` opcional
    (`Button::sem(id)`, e o equivalente em `IconButton`, `SubmitButton`,
    `Chip`, `TextField`, `Checkbox`, `Switch`, `Slider`, `Select`, `Tabs`,
@@ -185,7 +185,7 @@ esta seção vale sobre o resto do arquivo onde os dois divergirem.
 - `ViewId` continua como está; `Binding.view` guarda o `ViewId` quando o
   widget registra hit region.
 - `SemId` opcional e helper de projeção nos widgets interativos de comps,
-  com a matriz de testes (`crates/comps/src/tests/matrix.rs`) cobrindo a
+  com a matriz de testes (`rust/engine/src/widgets/tests/matrix.rs`) cobrindo a
   projeção em todo tema, em phone e desktop.
 - o todo app do showcase ligado de ponta a ponta como prova: `todo.input`
   (TextInput, ação `set_value`), `todo.add` (Button, `activate`, reads
@@ -205,19 +205,19 @@ task-57 e task-58 integradas.
 
 ## superfície sob responsabilidade
 
-- `crates/engine/src/compositor/` (só a tabela de ligação e a API de
+- `rust/engine/src/drawing/compositor/` (só a tabela de ligação e a API de
   leitura; nada no caminho de desenho)
-- `crates/engine/Cargo.toml` (dep `sem`)
-- `crates/comps/src/{action,form,nav,content,feedback}` (o `SemId`
-  opcional e os helpers de projeção), `crates/comps/src/tests`
-- `crates/showcase/src/view/apps/app.rs`, `crates/showcase/src/view/apps/app/**`,
-  `crates/showcase/src/model/**` (o todo app)
-- proposta de ADR `docs/ADR/semantic-binding-beside-the-scene.md`
+- `rust/engine/Cargo.toml` (dep `sem`)
+- `rust/engine/src/widgets/{action,form,nav,content,feedback}` (o `SemId`
+  opcional e os helpers de projeção), `rust/engine/src/widgets/tests`
+- `apps/uigallery/src/views/apps/todo/mod.rs`, `apps/uigallery/src/views/apps/todo/**`,
+  `apps/uigallery/src/domain/**` (o todo app)
+- proposta de ADR `docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`
 
-proibido: `crates/engine/src/{accessibility,window}` (task-60),
-`crates/ide`, `crates/git` (task-62), `crates/engine/src/text` e
-`crates/engine/src/text/probe.rs` (task-66 roda em paralelo),
-`crates/showcase/src/app.rs` e o entry point do showcase (task-66).
+proibido: `rust/engine/src/{accessibility,window}` (task-60),
+`apps/idestudio`, `rust/gitdrv` (task-62), `rust/engine/src/drawing/text` e
+`rust/engine/src/drawing/text/probe.rs` (task-66 roda em paralelo),
+`apps/uigallery/src/shell/mod.rs` e o entry point do showcase (task-66).
 
 ## interfaces que consome
 
@@ -254,7 +254,7 @@ comps ou engine precisa de aprovação.
   `SemId`.
 - custo: medir, no showcase, o tempo de projeção e de ligação por frame
   na página do todo e registrar no ADR (sem meta inventada).
-- `./script/gate` verde (o wasm check do showcase agora compila `sem`).
+- `./tool/tasks/fullcheck.sh` verde (o wasm check do showcase agora compila `sem`).
 
 ## testes esperados
 

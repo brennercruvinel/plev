@@ -1,5 +1,5 @@
 //! the burn implementation. burn 0.21 has no llama of its own; the model code
-//! is adapted from burn-lm's `burn-lm-llama` (see crates/llm/NOTICE) and runs
+//! is adapted from burn-lm's `burn-lm-llama` (see rust/llmrun/NOTICE) and runs
 //! on ndarray (cpu, f32) or on wgpu with the msl compiler (metal, f16).
 
 mod cache;

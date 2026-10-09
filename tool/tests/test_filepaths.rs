@@ -4,7 +4,7 @@
 //! hygiene") caps production code at 639 lines per source file, with
 //! test code out of the count. The rule lived only in prose, and three
 //! deliveries in one cycle went past it before anyone counted
-//! (docs/mission/state/learnings.md, process). This test counts, so the
+//! (docs/log/learnings/general.md, process). This test counts, so the
 //! gate says it first.
 //!
 //! What counts as test code, and is left out: files under a `tests` or
@@ -32,7 +32,7 @@ const FROZEN: &[(&str, usize)] = &[
     ("crates/urnaui/src/view/search.rs", 752),
 ];
 
-/// The repository root: this guard lives in `crates/engine`.
+/// The repository root: this guard lives in `rust/engine`.
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")

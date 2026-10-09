@@ -9,7 +9,7 @@
 //! layer encoder. left mouse paints new particles.
 //!
 //! Run: `cargo run -p prime` (desktop). Web: `trunk serve` from
-//! crates/prime (WebGPU only, Chrome/Edge 113+).
+//! demo/primes (WebGPU only, Chrome/Edge 113+).
 
 mod scene;
 

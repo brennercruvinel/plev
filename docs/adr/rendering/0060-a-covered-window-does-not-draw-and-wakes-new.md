@@ -18,7 +18,7 @@ sleep had no hook, and the work that runs beside the frames (the `claude
 worker of the ide) did not know the app slept.
 
 the probe (task-76 item 7, the handoff in
-docs/mission/steps/checked/task-76-platform-integration-done.md) read winit
+docs/log/steps/task-76-platform-integration.md) read winit
 0.30.13 and measured the engine headless:
 
 - on macOS the window delegate's `windowDidChangeOcclusionState:` sends
@@ -108,18 +108,18 @@ three states, one rule for frames, one flag for the work beside them.
 
 - proven without a window and without sleeping the machine, with the
   platform's events injected over headless hosts:
-  `crates/engine/tests/sleep_wake.rs` (a covered window asks for no
+  `rust/engine/tests/sleep_wake.rs` (a covered window asks for no
   frame and has no deadline while another animates; an uncovered window
   draws one frame equal, byte for byte, to a host that was never
   covered, and unequal to its old frame; a sleeping app draws nothing,
   a change asleep asks for nothing, a host inserted asleep sleeps, the
   wake asks for one frame per window and each equals a control's; awake
   is neither covered nor asleep, through every order of the two; the
-  background flag is the thread's), `crates/showcase/tests/sleep_wake.rs`
+  background flag is the thread's), `apps/uigallery/tests/sleep_wake.rs`
   (a `ShowcaseView` on the Todo page: an item toggled through the
   dispatcher while asleep, or while covered, shows on the first frame
   after, byte for byte the frame of a view that never slept),
-  `crates/showcase/src/app/sleep.rs` (the shell over a bare window: a
+  `apps/uigallery/src/shell/system/sleep.rs` (the shell over a bare window: a
   detection that ends asleep is applied, drawn and told only on the
   wake; a covered main window asks for no frame while a toast lives its
   time, and for one as it shows), `surface_page/page.rs` (a propose

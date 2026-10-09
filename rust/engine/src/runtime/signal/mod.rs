@@ -3,7 +3,7 @@
 //! **Experimental** -- not the official app pattern (state in structs +
 //! retained widgets + explicit invalidation is; the showcase is the
 //! template). Do not build new app code on this module without an ADR
-//! (docs/ADR/official-app-pattern.md).
+//! (docs/adr/structure/0023-official-app-pattern.md).
 //!
 //! Thread-local runtime using `SlotMap` for O(1) node storage with generational keys.
 //! Signals, effects, and memos are all `ReactiveNode`s in the same graph.

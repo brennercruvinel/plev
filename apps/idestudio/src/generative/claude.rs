@@ -1,6 +1,6 @@
 //! The Claude asked for a surface off the workbench's thread (task-96),
 //! the way the showcase asks it
-//! (`crates/showcase/src/view/apps/surface_page/asking.rs`): the program
+//! (`apps/uigallery/src/views/apps/surface/asking.rs`): the program
 //! looked for without running it (`ClaudeCli::exists`: `claude`, or what
 //! `PLEV_CLAUDE` names); a thread that runs `propose_verified` with the
 //! `propose::Llm` over a clone of the `ClaudeCli` and reports each attempt

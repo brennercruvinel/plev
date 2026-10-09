@@ -29,7 +29,7 @@ winit 0.30 suporta ios. wgpu usa metal no ios (mesmo backend que macos). o códi
 - [x] `window.rs`: lifecycle handlers (suspended, memory_warning)
 - [x] `window.rs`: ios window attributes (orientations, sem inner_size)
 - [x] `window.rs`: touch event logging
-- [x] `ios/Info.plist`: bundle metadata
+- [x] `apps/uigallery/ios/Info.plist`: bundle metadata
 - [x] `scripts/ios-sim.sh`: build + deploy para simulator
 - [x] compilação `cargo check --target aarch64-apple-ios-sim` sem erros
 - [x] compilação `cargo check --target aarch64-apple-ios` sem erros

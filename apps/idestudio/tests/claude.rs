@@ -1,7 +1,7 @@
 //! The Claude as the proposer of the ide's line (task-96), by the path the
 //! showcase takes (the `propose::Llm` over a `ClaudeCli`, off the
 //! workbench's thread), tested only with the repository's fake
-//! (`crates/claude-model/tests/fake-claude`, which answers from files in
+//! (`rust/claude/tests/fakes/claude`, which answers from files in
 //! its directory and keeps every prompt it was given): no real `claude`
 //! runs here.
 //!

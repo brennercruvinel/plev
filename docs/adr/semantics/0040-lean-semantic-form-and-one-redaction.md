@@ -16,12 +16,12 @@ node, and about 40 percent more was fields written at their default
 (`"description": null`, `"enabled": true`, a `constraints` object with
 seven default fields, a `policy` naming four actors who may all ask).
 none of it carries meaning to an agent that acts by id; all of it costs
-tokens on every observation (`docs/ADR/agents-act-through-the-semantic-contract.md`,
+tokens on every observation (`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`,
 consequences).
 
 the same task left the rule that keeps a secret inside the process
-written twice, once in `crates/wire/src/redact.rs` and once in
-`crates/rec/src/redact.rs`, independently. the two already differed in
+written twice, once in `rust/socket/src/redact.rs` and once in
+`rust/record/src/redact.rs`, independently. the two already differed in
 one point: the port redacted a stale delta only on the nodes of the
 request, the recorder on any node its last snapshot marked secret. a
 security rule with two copies diverges; this one had.
@@ -80,7 +80,7 @@ every case the tests reach, and fails closed with no snapshot.
   it; none exists.
 - a JSON producer outside this repository that wrote the old form keeps
   working; one that reads must accept absent fields as defaults. the
-  pinned forms in `crates/sem/tests/wire.rs` say exactly what is written.
+  pinned forms in `rust/accord/tests/encoding.rs` say exactly what is written.
 - the proto's `SnapshotReply.focused` is still written as `null` when
   there is no focus (15 bytes, outside the sem form); a v2 of the
   protocol may drop it.

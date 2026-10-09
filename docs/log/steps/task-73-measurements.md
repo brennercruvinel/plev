@@ -64,7 +64,7 @@ boundary. stages nest, so a parent's time includes its children.
 | encode and submit | layer passes, composite, submit | draw calls | draw |
 | gpu wait | after submit, only with the gpu sync on | - | frame |
 
-the runner (`crates/showcase/examples/measure/`) drives the gallery
+the runner (`tool/bench/measure/src/`) drives the gallery
 headless through `engine::headless::Renderer`, the window's frame path, with
 the input the window delivers (`showcase::app` routing: pointer events,
 characters, named keys, Escape). a frame is drawn only when an event

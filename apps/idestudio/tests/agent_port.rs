@@ -625,7 +625,7 @@ fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
         "only the port's wake served: {drains:?}"
     );
     // what the person read: the text is born in `Workbench::confirmation`
-    // (crates/ide/src/workbench/notice.rs), from the request's actor,
+    // (apps/idestudio/src/capability/notice.rs), from the request's actor,
     // action and target.
     assert_eq!(
         asked,
@@ -646,7 +646,7 @@ fn an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it() {
 /// declines through the dispatcher as `Actor::Human`, and nothing runs.
 /// Before the P0 the stage waited in the port until the agent's next
 /// message, since a decline sends nothing to the worker and the shell
-/// serves nothing after a person's input (`crates/ide/src/main.rs`,
+/// serves nothing after a person's input (`apps/idestudio/src/main.rs`,
 /// `serve_agent`); a `plev act` that only waits never got it. Now the
 /// port's sink hears it and wakes the loop, and the agent gets it without
 /// sending anything more.

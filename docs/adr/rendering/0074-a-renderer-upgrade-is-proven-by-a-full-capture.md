@@ -57,7 +57,7 @@ what wgpu 29 changed for plev:
   `Option` for its write and compare.
 - wgpu 29 needs rust 1.87, so `rust-version` went to 1.87. at that floor
   clippy's `manual_is_multiple_of` is active: `n % k == 0` becomes
-  `n.is_multiple_of(k)`, one line of it in `crates/wire` (the behaviour and
+  `n.is_multiple_of(k)`, one line of it in `rust/socket` (the behaviour and
   the wire format are the same).
 
 the result: 1312 of 1312 frames equal to the wgpu 28 capture, checked by
@@ -74,6 +74,6 @@ by default, which asks the adapter's limits (a model outgrows the default
 - the next renderer or text-stack upgrade (winit, cosmic-text, swash)
   follows the same six steps.
 - burn's `metal` feature needs wgpu's passthrough shaders, experimental in
-  29, so `crates/llm` refuses it on the engine's device. after a device
+  29, so `rust/llmrun` refuses it on the engine's device. after a device
   loss the handles burn holds are dead: whoever uses burn on the renderer
   registers the new device (no test covers it yet).

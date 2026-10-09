@@ -15,7 +15,7 @@ frame path, and left two things out: a vector export of that frame, and
 projection did not exist. both exist now: every page of the showcase pushes
 `SceneNode`s the compositor keeps per layer, the todo page projects a
 `sem::Snapshot`, and the wire serves that snapshot in the lean serde form
-(`docs/ADR/lean-semantic-form-and-one-redaction.md`).
+(`docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`).
 
 a vector export has one honest source: the scene. tracing pixels would be
 a second renderer; re-shaping text would be a second shaping path, which

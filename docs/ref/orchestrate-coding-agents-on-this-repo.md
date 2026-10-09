@@ -8,7 +8,7 @@ status: living
 # how to orchestrate coding agents on this repo
 
 the binding rules are in
-docs/mission/generative-runtime-guidelines.md (the
+docs/ref/generative-runtime-guidelines.md (the
 orchestrator and agent guidelines, their adaptation to this repo, the
 briefing and handoff templates). this how-to is the short operating
 version plus the lessons that produced it. when the two disagree, the
@@ -17,12 +17,12 @@ guidelines win and this file gets fixed.
 ## the cycle
 
 1. no agent without a plan and a written briefing that names the item of
-   the task's acceptance criterion it closes (docs/mission/autonomy.md,
+   the task's acceptance criterion it closes (docs/ref/autonomy.md,
    "contra gasto de tokens"). the task file sits in
-   docs/mission/steps/ongoing/ while the task is open.
+   docs/log/steps/ while the task is open.
 2. the orchestrator checks that the task's dependencies are merged into
    `main` and that its code surface is free (ownership table in
-   docs/mission/generative-runtime-program.md, section 8).
+   docs/log/generative-runtime-program.md, section 8).
 3. the orchestrator diagnoses first: reads the code the task touches and
    writes the mechanism into the briefing with file:line. prompts that
    carry the mechanism produce root fixes; prompts that carry symptoms
@@ -41,7 +41,7 @@ guidelines win and this file gets fixed.
    before and after.
 8. the orchestrator validates alone: reads the whole diff commit by commit,
    checks scope, ownership, duplication and reuse, runs the task's tests,
-   `./script/gate`, and the consumers' tests. no extra verifier agents: they
+   `./tool/tasks/fullcheck.sh`, and the consumers' tests. no extra verifier agents: they
    cost tokens and the orchestrator is the one accountable.
 9. accepted: a pull request merged with a merge commit (never squash, never
    rebase merge), the gate green locally and said so in the PR while CI
@@ -49,12 +49,12 @@ guidelines win and this file gets fixed.
    this manual and the engine manual when a rule changed). the close-out
    also searches `docs/` and `README.md` for the names of every contract
    the task changed and fixes what became false: close-outs that only
-   wrote new docs left 32 stale claims behind (`docs/mission/state/truth.md`,
+   wrote new docs left 32 stale claims behind (`docs/log/truth.md`,
    section 5). rejected: back to the agent with file, line, what is wrong
    and what is expected.
 10. the next briefing is revised with what this task taught, and
-    `docs/mission/state/learnings.md` gets what the task taught about the
-    product and about the process (`docs/mission/autonomy.md`).
+    `docs/log/learnings/general.md` gets what the task taught about the
+    product and about the process (`docs/ref/autonomy.md`).
 
 ## parallel work
 
@@ -65,17 +65,17 @@ guidelines win and this file gets fixed.
   disjoint and written into each briefing (allowed and forbidden paths).
 - a file two tasks of the same wave must touch is sequenced or split into
   named blocks by the orchestrator before the briefings go out.
-- shared surfaces (`Cargo.toml`, `docs/arc/arc.toml`, `README.md`,
-  `.contracts/`, `docs/ADR/README.md`, `docs/mission/`) belong to the
+- shared surfaces (`Cargo.toml`, `docs/ATLAS.toml`, `README.md`,
+  `.contracts/`, `docs/adr/README.md`, `docs/log/`) belong to the
   orchestrator; an agent that creates a crate adds only its own entry,
-  because `crates/engine/tests/arc_sync_guard.rs` fails the build without
+  because `tool/tests/test_repoaudit.rs` fails the build without
   it.
 
 ## verification discipline
 
 - every briefing ends with mandatory validation: build, targeted tests,
   workspace tests, the wasm check (cheap, catches cfg rot), clippy and fmt:
-  `./script/gate` runs them in order, with the same flags as CI
+  `./tool/tasks/fullcheck.sh` runs them in order, with the same flags as CI
   (`-D warnings` on the wasm legs). every CI leg has its twin in the gate;
   a looser local leg let dead code on wasm32 reach a PR.
 - the urnaui leg needs the sibling `urna` checkout at `../urna` from the
@@ -84,12 +84,12 @@ guidelines win and this file gets fixed.
   leg run there too; without it the leg skips with a warning.
 - the file-hygiene limit (639 lines of production code per source file,
   tests out of the count) is checked by
-  `crates/engine/tests/file_hygiene_guard.rs` in the gate; the files that
+  `tool/tests/test_filepaths.rs` in the gate; the files that
   were past it when the guard came are frozen at their size then.
 - a harness or scripted agent that waits for the app to "settle" before
   acting is a symptom: the wait becomes a bug of the app, filed, never a
   silent workaround (the ide laboratory's wait hid a real race, task-84).
-- visual claims need pixel numbers (docs/how-to/validate-visuals-by-pixel.md).
+- visual claims need pixel numbers (docs/ref/validate-visuals-by-pixel.md).
   a measured check once rejected a branch an approving eyeball would have
   merged (#121212 against a measured #303030).
 - kill tests settle disputed root causes.
@@ -112,7 +112,7 @@ guidelines win and this file gets fixed.
   and judges freshness only by mtime, so a build silently reused an
   artifact compiled from another agent's sources (task-60 caught it with
   a compile error against a variant only task-62 had). the rule: every
-  agent runs every cargo command and `./script/gate` with
+  agent runs every cargo command and `./tool/tasks/fullcheck.sh` with
   `CARGO_TARGET_DIR=<repo>/target/agents/<task-id> CARGO_INCREMENTAL=0
   CARGO_PROFILE_DEV_DEBUG=line-tables-only
   CARGO_PROFILE_TEST_DEBUG=line-tables-only`; incremental off and reduced
@@ -123,8 +123,8 @@ guidelines win and this file gets fixed.
   agents each compiling 10 to 17 GB; check `df -h /` before dispatching
   in parallel.
 - kill a process by its exact pid, never by pattern. with parallel agents
-  every worktree runs the same `script/gate` and the same tools, so
-  `pkill -f "script/gate"` kills a neighbour's work too; it happened in
+  every worktree runs the same `tool/tasks/fullcheck.sh` and the same tools, so
+  `pkill -f "tool/tasks/fullcheck.sh"` kills a neighbour's work too; it happened in
   wave 3 (2026-09-23) and only the orchestrator's own gate on the final
   state proved the neighbour's branch intact
 - memory: this Mac has 16 GB and locked up building candle and burn while
@@ -136,7 +136,7 @@ guidelines win and this file gets fixed.
   command run without `CARGO_TARGET_DIR` looks like; `trash` moves it, and
   the space comes back only when the Trash is emptied. a clean of the whole
   `target/` also takes `target/fonts-noto` (the sources of
-  `script/font-subset`) and `target/determinism/` (pixel captures): move
+  `tool/tasks/subsetter.py`) and `target/determinism/` (pixel captures): move
   what must survive out first.
 - offline: agents build with `--offline`. before a dependency moves, the
   orchestrator checks `cargo fetch --offline --target <t>` for every

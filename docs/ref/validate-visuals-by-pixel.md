@@ -10,7 +10,7 @@ status: living
 "looks the same" approved two broken color systems in this project before
 numeric validation was adopted. the protocol below is how a visual claim
 is settled. the orchestrator applies it to every delivery itself; there is
-no separate verifier agent (docs/mission/generative-runtime-guidelines.md).
+no separate verifier agent (docs/ref/generative-runtime-guidelines.md).
 
 ## principle
 
@@ -26,11 +26,11 @@ sampled. the regression harness below asks in that order.
 
 ## regression: meaning, then layers, then pixels
 
-`crates/showcase/examples/regress` keeps a baseline per page, theme and
-viewport under `crates/showcase/fixtures/regress` (the projection, every
+`tool/bench/regress/src` keeps a baseline per page, theme and
+viewport under `tool/bench/regress/baselines` (the projection, every
 layer under a stable name with a stable content hash, every bound
 control) and checks the tree against it
-(docs/ADR/regression-by-meaning-before-pixels.md):
+(docs/adr/workflows/0045-regression-by-meaning-before-pixels.md):
 
 ```
 cargo run -p showcase --example regress -- check [--page Todo] [--json report.json]
@@ -63,7 +63,7 @@ cargo run -p showcase --example regress -- bless [--page Todo | --all] [--theme 
   `regress -- capture --out target/determinism/<base>` on the old code,
   then `regress -- capture --out target/determinism/<new> --against
   target/determinism/<base> --no-png` on the new. every frame must be
-  `equal` (docs/ADR/a-renderer-upgrade-is-proven-by-a-full-capture.md);
+  `equal` (docs/adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md);
   for a narrower change, the sampling below.
 
 ## headless first
@@ -80,12 +80,12 @@ PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
 `PROBE_FILL=1` pushes enough distinct glyph, size and weight combinations
 through the atlas that it has to grow partway through the frame, the
 state the atlas lifecycle defects only show under
-(docs/ADR/glyph-raster-identity-and-atlas-isolation.md). a probe that
+(docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md). a probe that
 cannot reach the failing state proves nothing.
 
 the renderer behind it is `engine::text::probe` (offscreen texture, real
 `TextSystem`, real shader, readback to RGBA8).
-`crates/engine/tests/text_raster_pixels.rs` asserts through the same
+`rust/engine/tests/text_raster_pixels.rs` asserts through the same
 entry point. tests skip when no GPU adapter is present rather than
 failing.
 
@@ -113,7 +113,7 @@ a live window; an adapter-less machine skips the GPU tests.
   owner name), then `screencapture -l<windowid> out.png`
 - sample with python PIL (`Image.open(p).getpixel((x, y))`) at documented
   coordinates (page background, sidebar, one card) and compare to the
-  tokens in `crates/engine/src/theme/hoff.rs` and `scales.rs`
+  tokens in `rust/engine/src/styling/theme/hoff.rs` and `scales.rs`
 - `screencapture` needs Screen Recording permission; a terminal without it
   gets "could not create image from display". go headless instead
 

@@ -19,7 +19,7 @@ person: any web page, mail or other app can open one, with no one at the
 screen having chosen it.
 
 the probe (the handoff of item 6 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) found:
+docs/log/steps/task-76-platform-integration.md) found:
 
 - windows (a registry key with `URL Protocol` and `"<exe>" "%1"`) and
   linux (a `.desktop` with `x-scheme-handler/<scheme>` and `%u`) start a
@@ -136,11 +136,11 @@ docs/mission/steps/checked/task-76-platform-integration-done.md) found:
 ## consequences
 
 - proven without registering anything and without a window: the grammar
-  case by case (`crates/engine/src/platform/links/tests.rs`), the sources
+  case by case (`rust/engine/src/runtime/platform/links/tests.rs`), the sources
   (`links/source.rs`), the request and the policy on a test app
-  (`crates/engine/tests/links.rs`), and the showcase with a fake source
-  and a bare window (`crates/showcase/src/app/links/tests.rs`) and with a
-  headless frame (`crates/showcase/tests/links.rs`): a page link changes
+  (`rust/engine/tests/links.rs`), and the showcase with a fake source
+  and a bare window (`apps/uigallery/src/shell/system/links/tests.rs`) and with a
+  headless frame (`apps/uigallery/tests/links.rs`): a page link changes
   the page by `agent:link`, the camera, the print, the open-file dialog
   and an id that does not exist are refused and nothing runs, the line
   shows on screen, a link that arrives asleep waits for the wake, the

@@ -10,9 +10,9 @@ date: 2026-09-24
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/ADR/plev-ir-typed-and-verified.md). task-69 phases 1 and 2 turned
+(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 phases 1 and 2 turned
 a `VerifiedIr` into a live surface and let it change form in place,
-reconciled by `SemId` (docs/ADR/materialized-surfaces-from-verified-ir.md
+reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md
 and its addendum). what was missing is the step before: an intent in text
 becoming an IR. the thesis puts it as "the model proposes, the runtime
 verifies, plev executes" (sections 2, 5 and 15). phase 3a builds every
@@ -23,7 +23,7 @@ model or an API) is brenner's decision, phase 3b.
 
 ### a crate of its own
 
-`crates/propose`, pure like `uir`: it depends on `uir`, `sem`,
+`rust/offers`, pure like `uir`: it depends on `uir`, `sem`,
 `serde_json` and `thiserror`, never on the engine, the widgets or the
 network. a proposer is not part of the IR (the IR stays a language and
 its verifier), and phase 3b adds a provider that must not reach `uir`,
@@ -251,7 +251,7 @@ thread, after task-95.
 
 ### decision
 
-- **a crate of its own, `crates/claude-model`.** it depends on `propose`
+- **a crate of its own, `rust/claude`.** it depends on `propose`
   (the trait) and `serde_json` (the child's result), never on `uir`,
   `sem`, the engine, the widgets or an HTTP client. `propose` stays pure.
 - **a child process.** `ClaudeCli` implements `Model` by running the

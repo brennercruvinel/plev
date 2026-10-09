@@ -15,11 +15,11 @@ plev rodando no android emulador (pixel 8, API 35, arm64-v8a) com showcase compl
 - **cargo-ndk** cross-compila `libplev.so` para `aarch64-linux-android`
 - **gradle** empacota o APK com `MainActivity extends GameActivity` (java)
 - **android-activity** crate v0.6.0 + **games-activity** aar 2.0.2 (versões devem coincidir)
-- `android/` dir no repo: `settings.gradle`, `build.gradle`, `app/build.gradle`, `AndroidManifest.xml`, `MainActivity.java`, `styles.xml`
+- `apps/uigallery/android/` dir no repo: `settings.gradle`, `build.gradle`, `app/build.gradle`, `AndroidManifest.xml`, `MainActivity.java`, `styles.xml`
 
 ## comandos
 ```bash
-cargo ndk -t arm64-v8a -o android/app/src/main/jniLibs/ build --features android-game-activity
+cargo ndk -t arm64-v8a -o apps/uigallery/android/app/src/main/jniLibs/ build --features android-game-activity
 cd android && ./gradlew installDebug
 adb shell am start -n com.plev.engine/.MainActivity
 ```

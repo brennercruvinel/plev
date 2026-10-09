@@ -29,7 +29,7 @@ hasheado por layer, gravável com delta).
 ## estado atual no código
 
 - `SceneNode` é dado puro, `Clone + Debug + PartialEq`, sem serde
-  (`crates/engine/src/compositor/scene.rs:6-7`).
+  (`rust/engine/src/drawing/compositor/scene.rs:6-7`).
 - layers com hash: só as sujas precisariam viajar.
 - o monster já sabe codificar cena com delta descoberto (modo B).
 - depois da 61: transporte local e protocolo versionado para o agente.
@@ -64,7 +64,7 @@ streaming de vídeo de pixels; multiusuário.
 o canal de cena no crate de protocolo (com aprovação, porque o protocolo é
 da 61), o visualizador (exemplo ou app), serde ou codec para `SceneNode`
 (mudança no engine, com aprovação), ADR
-`docs/ADR/scene-travels-as-data.md`.
+`docs/adr/recording/0065-scene-travels-as-data.md`.
 
 ## interfaces que consome
 
@@ -81,7 +81,7 @@ codec do monster (63).
   visualizador desktop com pixels iguais (hash de frame renderizado nos
   dois lados).
 - banda medida por página, com e sem mudança.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -109,7 +109,7 @@ processo com dois compositores.
 
 branch `task/79a-scene-socket`, base `8c4ad908`. worktree
 `.claude/worktrees/agent`, target `target/agents/one`. a medição está em
-`crates/rec/tests/scene_probe.rs` (ignorada; `cargo test -p rec --test
+`apps/uigallery/tests/scene_probe.rs` (ignorada; `cargo test -p rec --test
 scene_probe -- --ignored --nocapture`), build de debug: os crates do
 workspace em opt-level 0, as dependências em 2, então os tempos são teto.
 164 frames: as 82 páginas da galeria nos temas core e hoff, a 1280x800
@@ -262,7 +262,7 @@ das espelhadas; o hash comparado com o do app é o do frame sem ela.
 problema: sem ler os pixels de um `ImageHandle` no app, a imagem não
 viaja, e o espelho desenha um buraco onde o app desenha a imagem (o
 Card, nos dois temas; o Capture com a câmera ligada). ler exige mudar
-`crates/engine/src/gpu/image.rs`, que está fora da lista.
+`rust/engine/src/drawing/gpu/image.rs`, que está fora da lista.
 
 opções:
 
@@ -481,7 +481,7 @@ contra a galeria):
 
 `showcase::app::mirror::Viewer` (junta, aplica, desenha, e com `bindings`
 contorna e nomeia cada controle numa layer acima de todas) e
-`crates/showcase/examples/mirror` (diz `hello` como "mirror"; headless
+`apps/mirroring/src` (diz `hello` como "mirror"; headless
 por padrão, uma linha por frame com bytes, layers mandadas e o hash dos
 pixels; `--show` numa janela). rodado headless contra o app filho do
 teste: o hash do frame do exemplo foi o do app (`258ff798e84965ad` na
@@ -652,7 +652,7 @@ cargo run -p showcase --example mirror -- --show
 
 branch `task/79b-mirror-input`, base `8f35c3ee`. worktree
 `.claude/worktrees/agent`, target `target/agents/one`. a medição está em
-`crates/showcase/tests/mirror_probe.rs` (ignorada; `cargo test -p
+`apps/uigallery/tests/mirror_probe.rs` (ignorada; `cargo test -p
 showcase --test mirror_probe -- --ignored --nocapture`): as 82 páginas
 da galeria nos temas core e hoff, 1280x800 @1, sem GPU (a cena montada
 num `Compositor` puro), 164 frames.
@@ -824,7 +824,7 @@ marca.
 ### (c) o segredo de verdade
 
 não existe campo de senha no comps (nenhum "password", "secret" ou
-"obscure" em `crates/comps/src`), e nenhuma página projeta um nó secret.
+"obscure" em `rust/engine/src/widgets`), e nenhuma página projeta um nó secret.
 o menor segredo desenhado, sem widget novo: uma cena de teste com um
 campo desenhado como um campo (o chão, a borda, o texto do segredo, o
 caret, dentro de um clip) ligado a um `SemId` que a projeção do teste
@@ -861,7 +861,7 @@ caminho do shell (as máscaras da projeção, o codec, o `Server`, o
    toggle da câmera pelo espelho volta `not_authorized`, o visualizador
    diz a recusa, e a câmera fica como estava.
 6. a preferência de accessibility da pessoa nunca sai pelo port nem vai
-   para o prompt: `docs/ADR/adaptive-transforms-preserve-identity.md`
+   para o prompt: `docs/adr/generated/0067-adaptive-transforms-preserve-identity.md`
    (fase 4: a faixa do Silences, `PERSON_ONLY`, e a projeção igual com e
    sem preferência), `view/apps/silences/generated/access.rs:12, 182`.
    contra o input: o clique do espelho em "larger text" é recusado, e a
@@ -875,7 +875,7 @@ caminho do shell (as máscaras da projeção, o codec, o `Server`, o
 
 ### (e) quem mais lê o canal de cena
 
-- o laboratório (`crates/ide/src/bin/lab`): fala `observe` e `act`, nunca
+- o laboratório (`apps/agenteval/src`): fala `observe` e `act`, nunca
   `scene`; nada muda.
 - a gravação (`Host::observed`): além do watch, cada olhar do espelho é
   uma observação de "mirror" (uma por frame que chega, coalescida), e
@@ -914,7 +914,7 @@ pelo `Drop` do teste, pelo handle dele; nenhum processo ficou. o
 ### a sonda
 
 a seção "fase 2 (task-79b): a sonda" acima, com a medição em
-`crates/showcase/tests/mirror_probe.rs` (ignorada). em uma linha: o
+`apps/uigallery/tests/mirror_probe.rs` (ignorada). em uma linha: o
 espelho acha o controle pelas ligações em ordem de empilhamento, aperta a
 primária do leitor de tela com um `act` apoiado num olhar que ele faz
 depois de cada frame, numa segunda conexão com o mesmo nome; o app
@@ -1034,7 +1034,7 @@ um teste por promessa da sonda (d), contra o clique e a máscara:
 
 ### o gate e o regress
 
-- `./script/gate` (`scratchpad/gate-79b.txt`): verde, pernas urnaui e
+- `./tool/tasks/fullcheck.sh` (`scratchpad/gate-79b.txt`): verde, pernas urnaui e
   wasm rodaram. 3 120 passados, 0 falhas, 28 ignorados (antes: 3 103 e
   27). +17: 2 unitários do espelho no showcase, 2 no `mirror.rs`, 8 no
   `mirror_input.rs`, 2 no `mirror_mask.rs`, 3 no `rec`; +1 ignorado, a
@@ -1044,7 +1044,7 @@ um teste por promessa da sonda (d), contra o clique e a máscara:
   `rec/scene/send.rs` 163, `examples/mirror/show.rs` 299, `main.rs` 284.
 - nenhuma dependência nova, nenhuma aresta nova no `Cargo.lock`. arquivos
   fora da lista: nenhum (os novos são `rec/src/scene/mask.rs` e
-  `tests_mask.rs`, dentro de `crates/rec/src/scene/**`, e testes).
+  `tests_mask.rs`, dentro de `rust/record/src/scene/**`, e testes).
 
 ### a linha do ADR para o índice
 

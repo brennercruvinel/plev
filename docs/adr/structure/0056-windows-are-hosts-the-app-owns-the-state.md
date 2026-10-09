@@ -10,7 +10,7 @@ date: 2026-09-24
 ## context
 
 every app had one window, and its shell kept the window's things beside
-the app's in one struct: the engine `App` (`crates/engine/src/window`)
+the app's in one struct: the engine `App` (`rust/engine/src/runtime/window`)
 held `window: Option<Arc<Window>>`, a `GpuState` with the context, the
 text system, the effects and the texture pool, a `Compositor`, an
 `InputState`, the IME, the scale factor, the safe area, the frame clock
@@ -22,7 +22,7 @@ panel, an inspector, a dialog of its own) and closes one without closing
 the app.
 
 the probe (task-76 item 2, the handoff in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured
+docs/log/steps/task-76-platform-integration.md) measured
 what a second window would share with the first: two `GpuContext`s with
 two compositors drew two scenes in one loop and each frame showed only
 what was pushed into it (the glyph atlas, the layer textures, the
@@ -103,14 +103,14 @@ routes the second's events as if they were the first's.
 
 ## consequences
 
-- proven without a window (`crates/engine/tests/windows.rs`, headless
+- proven without a window (`rust/engine/tests/windows.rs`, headless
   hosts under `WindowId::dummy()` and a second id): an event reaches its
   owner and no other; a frame is drawn for the window that asked and no
   other while another animates; closing one keeps the other and the
   last closes the app (or not, when told); a device lost under one
   window leaves the other's frame byte-identical and recovers on its own
   next frame; the earliest deadline across windows. and
-  (`crates/showcase/tests/detached.rs`): the same page bound in two
+  (`apps/uigallery/tests/detached.rs`): the same page bound in two
   compositors with two layouts, a click in the page's window toggling
   the item and the main window's next frame showing it (and back), the
   `window` node while open and the same revision as before once closed.

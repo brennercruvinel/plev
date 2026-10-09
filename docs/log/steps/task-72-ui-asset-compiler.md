@@ -32,8 +32,8 @@ anotações: "o monster é pequeno hoje, mas precisa de mais atenção".
 - `lot` (lottie para monster) e `svg` (svg estático para monster, via usvg
   e lyon) já seguem a filosofia; o player não carrega runtime estrangeiro.
 - ícones lucide são tesselados em runtime e cacheados
-  (`crates/comps/src/icons/mod.rs:127`, `tessellate_icon`).
-- fontes: ttf inteiros embutidos (`crates/engine/src/text/fonts.rs:38-52`),
+  (`rust/engine/src/widgets/icons/mod.rs:127`, `tessellate_icon`).
+- fontes: ttf inteiros embutidos (`rust/engine/src/drawing/text/fonts.rs:38-52`),
   raster de glifo em runtime no atlas, determinístico.
 - shaders WGSL carregados e validados em runtime (hot reload lê do disco em
   debug).
@@ -76,9 +76,9 @@ mudança de container esperam a task-63.
 
 ## superfície sob responsabilidade
 
-`crates/lot`, `crates/svg`, o passo de build novo, `crates/comps/src/icons`
+`rust/import/src/formats/lottie`, `rust/import/src/formats/svg`, o passo de build novo, `rust/engine/src/widgets/icons`
 (só a origem dos dados tesselados), proposta de ADR
-`docs/ADR/ui-asset-compiler.md`. `crates/monster/src/container.rs` só
+`docs/adr/importing/0066-ui-asset-compiler.md`. `rust/motion/src/encoding/container.rs` só
 depois da 63.
 
 ## interfaces que consome
@@ -96,7 +96,7 @@ comps.
 - ícones: pixels iguais antes e depois (headless, 66) em todos os tamanhos
   de token.
 - shaders: um erro de sintaxe em WGSL quebra o build com mensagem clara.
-- `./script/gate` verde; build release e wasm continuam.
+- `./tool/tasks/fullcheck.sh` verde; build release e wasm continuam.
 
 ## testes esperados
 
@@ -174,15 +174,15 @@ na criação do pipeline (`load_shader`, :121, :191, :216).
 
 | item | no binário (debug) | no heap |
 | --- | --- | --- |
-| fontes | 1.744.532 bytes, as 9 faces (3,1% do binário) | uma cópia por font system (`.to_vec()` em crates/engine/src/text/fonts.rs:38-52; o fontdb guarda o `Vec` em `Source::Binary`, fontdb-0.23.0/src/lib.rs:195-196): 2 x 1,66 MiB |
+| fontes | 1.744.532 bytes, as 9 faces (3,1% do binário) | uma cópia por font system (`.to_vec()` em rust/engine/src/drawing/text/fonts.rs:38-52; o fontdb guarda o `Vec` em `Source::Binary`, fontdb-0.23.0/src/lib.rs:195-196): 2 x 1,66 MiB |
 | shaders | 21.107 bytes, os 9 que o engine carrega. o `3Dscene.wgsl` de src/gpu/shaders (1.594 bytes) nenhum código carrega; o exemplo scene3d tem a própria cópia | o módulo naga é transitório |
-| ícones | ~3,5 KB de texto de path e de pontos, 42 ícones (crates/comps/src/icons/data.rs) | o cache de geometria: 17,6 KB na página de abertura (505 vértices x 24 B, 1.383 índices x 4 B); 188 KB depois da galeria inteira (5.347 vértices, 14.973 índices) |
+| ícones | ~3,5 KB de texto de path e de pontos, 42 ícones (rust/engine/src/widgets/icons/data.rs) | o cache de geometria: 17,6 KB na página de abertura (505 vértices x 24 B, 1.383 índices x 4 B); 188 KB depois da galeria inteira (5.347 vértices, 14.973 índices) |
 | imagens | 0 no showcase. o engine tem um PNG (`assets/logo-plev.png`, 17.921 bytes) que só o exemplo `visual` usa | decodificado, 4.665.600 bytes RGBA em 0,87 ms |
 
 ### ícones
 
 - os tamanhos dos tokens: `theme.control.icons` = [16, 20, 24]
-  (`ControlTokens::hoff`, crates/engine/src/theme/scales.rs:186), o
+  (`ControlTokens::hoff`, rust/engine/src/styling/theme/scales.rs:186), o
   mesmo em todos os temas (core.rs:76, hoff_core.rs:126, hoff.rs:225);
   os botões pedem 16 e 20 (button.rs:331-385). a tabela tem 42 ícones.
 - o que o showcase pede de fato: na página de abertura, 9 pares (nome,
@@ -190,16 +190,16 @@ na criação do pipeline (`load_shader`, :121, :191, :216).
   em 7 tamanhos: 12 px (1), 14 (1), 16 (13), 18 (1), 20 (23), 22 (42),
   24 (2). 38 dos 83 estão num tamanho de token; os 45 de fora (12, 14,
   18, 22) continuariam tesselados em runtime de qualquer jeito.
-- o que o `tessellate_icon` (crates/comps/src/icons/mod.rs:127) usa: o
+- o que o `tessellate_icon` (rust/engine/src/widgets/icons/mod.rs:127) usa: o
   parser de `d` do próprio comps (icons/svg.rs, o arco pelo apêndice
   B.2.4 da SVG 1.1), o `PathBuilder` do engine
-  (crates/engine/src/path/builder.rs) e o `stroke_round` (builder.rs:190,
+  (rust/engine/src/drawing/path/builder.rs) e o `stroke_round` (builder.rs:190,
   tessellation.rs:94), que é o `StrokeTessellator` do lyon_tessellation
   1.0.20 (tessellation.rs:3-7 e :118; o pacote `lyon_tessellation` no
   Cargo.lock) com cap e join redondos e a tolerância
-  `default_tolerance()` (crates/engine/src/path/mod.rs:14-26: 0,1,
+  `default_tolerance()` (rust/engine/src/drawing/path/mod.rs:14-26: 0,1,
   trocada por `RenderConfig::path_tolerance` em
-  crates/engine/src/gpu/context.rs:256). o ícone não passa pelo `svg`
+  rust/engine/src/drawing/gpu/context.rs:256). o ícone não passa pelo `svg`
   (usvg) nem pelo `lot`.
 - o custo: mediana de 7 a 16 us por tesselação, conforme a carga da
   máquina (duas execuções da sonda); os 42 ícones nos 3 tamanhos somam
@@ -232,7 +232,7 @@ na criação do pipeline (`load_shader`, :121, :191, :216).
 
 ### shaders
 
-- 10 arquivos `.wgsl` em crates/engine/src/gpu/shaders (22.701 bytes) e
+- 10 arquivos `.wgsl` em rust/engine/src/drawing/gpu/shaders (22.701 bytes) e
   1 no exemplo scene3d. o naga no CPU, melhor de 20: o parse de 31 a
   148 us por shader, 707 us os 10; a validação de 2 a 16 us, 66 us os
   10.
@@ -244,7 +244,7 @@ na criação do pipeline (`load_shader`, :121, :191, :216).
   no host. o parse de WGSL vem da feature `wgsl`, default do wgpu
   (`wgsl = ["wgpu-core?/wgsl"]`, wgpu-28.0.0/Cargo.toml:124, e
   `wgsl = ["naga/wgsl-in"]`, wgpu-core-28.0.1/Cargo.toml:102).
-  crates/engine/src/gpu/tests.rs já usa `wgpu::naga`.
+  rust/engine/src/drawing/gpu/tests.rs já usa `wgpu::naga`.
 - um teste do gate que valida todo `.wgsl`: possível sem aresta nova (o
   engine tem o wgpu como dependência normal, e o teste de integração a
   enxerga).
@@ -323,17 +323,17 @@ passaram do limite; o WGSL passou a ser validado no gate.
 pixels iguais e saída determinística: nenhum asset mudou de lugar, então
 não há gerador nem saída para comparar. o `regress capture` da task-77
 não rodou: a branch não muda código de produção (só testes em
-crates/*/tests e crates/comps/src/icons/tests.rs, e docs), e o
+crates/*/tests e rust/engine/src/widgets/icons/tests.rs, e docs), e o
 `regress check` passa nos 163.
 
 ### testes
 
-- crates/engine/tests/wgsl.rs (5, no gate):
+- rust/engine/tests/wgsl.rs (5, no gate):
   `every_engine_shader_parses_and_validates` (os 11 `.wgsl` de src/ e
   examples/, achados pela varredura, com os 9 que o engine carrega
   conferidos entre eles; validador sem capacidade opcional),
   `a_syntax_error_names_the_file_the_line_and_the_column` (o quad.wgsl
-  real com um `;` a menos: `crates/engine/src/gpu/shaders/quad.wgsl:23:5`
+  real com um `;` a menos: `rust/engine/src/drawing/gpu/shaders/quad.wgsl:23:5`
   e a linha `return out;`), `a_validation_error_names_the_file_and_the_line`
   (dois uniforms no mesmo binding: a linha 4),
   `a_validation_error_without_a_place_still_names_the_file` (f64 sem a
@@ -344,7 +344,7 @@ crates/*/tests e crates/comps/src/icons/tests.rs, e docs), e o
 ```text
 1 of 11 shaders are not valid WGSL:
 error: expected `;`, found "return"
-   ┌─ crates/engine/src/gpu/shaders/quad.wgsl:23:5
+   ┌─ rust/engine/src/drawing/gpu/shaders/quad.wgsl:23:5
    │
 23 │     return out;
    │     ^^^^^^ expected `;`
@@ -358,8 +358,8 @@ error: expected `;`, found "return"
 
 | | workspace | perna urnaui | total que passa |
 | --- | --- | --- | --- |
-| antes, main @ 3720ce0b (`./script/gate` neste worktree, antes do primeiro código, saída 0) | 2731 passam, 0 falhas, 23 ignorados | 85 passam, 1 ignorado | 2816 |
-| depois, esta branch @ deee5143 (`./script/gate`, saída 0) | 2736 passam, 0 falhas, 25 ignorados | 85 passam, 1 ignorado | 2821 |
+| antes, main @ 3720ce0b (`./tool/tasks/fullcheck.sh` neste worktree, antes do primeiro código, saída 0) | 2731 passam, 0 falhas, 23 ignorados | 85 passam, 1 ignorado | 2816 |
+| depois, esta branch @ deee5143 (`./tool/tasks/fullcheck.sh`, saída 0) | 2736 passam, 0 falhas, 25 ignorados | 85 passam, 1 ignorado | 2821 |
 
 5 testes novos (wgsl.rs) e 2 ignorados novos (as duas sondas); a
 contagem não cai. clippy `-D warnings`, `cargo fmt --check` e o check
@@ -370,7 +370,7 @@ antes e 2:27 depois (a segunda compilou os testes novos).
 `cargo run --offline -p showcase --example regress -- check`: 163
 baselines, 163 unchanged, nenhum frame desenhado.
 
-### a linha do ADR para o índice (docs/ADR/README.md)
+### a linha do ADR para o índice (docs/adr/README.md)
 
 ```text
 | 2026-09-24 | [ui-asset-compiler](ui-asset-compiler.md) | proposed | task-72 fase 1: um asset só sai do runtime com o número medido (ganho de pelo menos 5% do primeiro frame headless do showcase ou um frame a 60 Hz na sessão, sem o binário crescer mais do que o runtime economiza); o inventário em debug (primeiro frame 79 ms: device 26, fontes ~23 pela varredura do sistema duas vezes, shaders 2,7 com o naga em 0,7, ícones 0,17, imagens 0); os ícones ficam em runtime (~105 KB de tabela para 0,17 ms, 45 dos 83 pares pedidos fora do token); WGSL validado no gate por teste (naga sem capacidade opcional, arquivo, linha e coluna), não por build.rs (aresta nova no lock); quando algo mover, passo de CLI com arquivo versionado, hash no cabeçalho e teste de bytes no gate; fontes ficam para a task-74; interação gravada e container do monster esperam a task-63 |
@@ -406,10 +406,10 @@ baselines, 163 unchanged, nenhum frame desenhado.
 - alguns erros de validação do naga vêm sem span (tipo, estágio): o
   gate nomeia o arquivo, mas não a linha.
 - o teste antigo `all_engine_shaders_are_valid_wgsl`
-  (crates/engine/src/gpu/tests.rs) ficou redundante; está em
-  crates/engine/src/**, fora dos arquivos permitidos, então removê-lo é
+  (rust/engine/src/drawing/gpu/tests.rs) ficou redundante; está em
+  rust/engine/src/**, fora dos arquivos permitidos, então removê-lo é
   decisão da integração.
-- `crates/engine/src/gpu/shaders/3Dscene.wgsl` nenhum código carrega (o
+- `rust/engine/src/drawing/gpu/shaders/3Dscene.wgsl` nenhum código carrega (o
   exemplo scene3d tem a própria cópia); agora é validado, mas continua
   órfão.
 - nenhuma interface pública mudou, nenhuma dependência nova, o

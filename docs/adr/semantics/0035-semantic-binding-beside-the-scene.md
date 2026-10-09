@@ -26,11 +26,11 @@ not draw, which is the one-geometry rule this record exists for.
 ## context
 
 task-57 gave every control a logical identity and a projected meaning
-(`docs/ADR/semantic-contract-as-pure-projection.md`), task-58 the one
+(`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`), task-58 the one
 dispatcher that checks a request against the live state
-(`docs/ADR/actions-carry-observed-state.md`). nothing tied either to the
+(`docs/adr/semantics/0033-actions-carry-observed-state.md`). nothing tied either to the
 pixels. the only identity the engine has is `ViewId`, a per-frame counter
-(`crates/engine/src/input/mod.rs`); the comps widgets hit-test with
+(`rust/engine/src/control/input/mod.rs`); the comps widgets hit-test with
 `Rect::contains` on their own; and every click in the showcase todo page
 called the model directly (`set_filter`, `toggle`, `delete`, `add`), a
 second path next to the dispatcher before the first one had a user.
@@ -45,7 +45,7 @@ technology or a test does.
 
 - the `Compositor` keeps, per frame, `SemId -> Binding { rect, layer,
   clip, order, view }` in logical window pixels
-  (`crates/engine/src/compositor/binding.rs`). `begin_frame` clears it;
+  (`rust/engine/src/drawing/compositor/binding.rs`). `begin_frame` clears it;
   between two frames it answers for the frame on screen, which is what a
   person clicking saw.
 - it lives beside the layers, never in them: a binding is not a scene
@@ -84,7 +84,7 @@ app's projection site. the other interactive widgets follow in phase b.
 
 ### the click becomes a request
 
-the todo page (`crates/showcase/src/view/apps/app.rs`, `app/semantics.rs`)
+the todo page (`apps/uigallery/src/views/apps/todo/mod.rs`, `app/semantics.rs`)
 is the reference. the page is `Semantics + Operable` and owns a
 `Dispatcher`; each capability has one handler, inside `execute`. a click
 on a checkbox, a delete button or a filter pill, and the Enter key, go:
@@ -122,7 +122,7 @@ chrome and the overlay.
 ## cost
 
 measured on the todo page (`semantic_cost_per_frame` in
-`crates/showcase/src/view/apps/app/tests/semantics.rs`, release, apple
+`apps/uigallery/src/views/apps/todo/tests/semantics.rs`, release, apple
 m4, rustc 1.98.1, best of seven rounds of 200 frames):
 
 | items | projection and finish | render with bindings | render without | bindings |

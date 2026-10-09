@@ -21,7 +21,7 @@ plev já contém em embrião e no que essa arquitetura pode se transformar.
 o plano executável (goal, grafo, ordem, contratos entre tasks) está em
 `generative-runtime-program.md`. as regras de trabalho do orquestrador e
 dos agentes estão em `generative-runtime-guidelines.md`. cada goal virou
-uma task em `docs/mission/steps/pending/` (task-57 a task-80).
+uma task em `docs/log/steps/` (task-57 a task-80).
 
 a formulação curta:
 

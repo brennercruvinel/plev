@@ -1,6 +1,6 @@
 //! the one rule that keeps a secret inside the process. a `secret` field
 //! already leaves the snapshot as its length
-//! (docs/ADR/semantic-contract-as-pure-projection.md); what travels beside
+//! (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md); what travels beside
 //! the snapshot does not: a request's parameter goes as given, and so can
 //! an observed value, a stale delta, an outcome or an error text. whoever
 //! carries a request or a stage out of the process (the agent port, the

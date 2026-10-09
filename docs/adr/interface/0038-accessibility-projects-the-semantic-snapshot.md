@@ -21,16 +21,16 @@ them created an adapter. no app that ships exposed a tree.
 
 meanwhile the contract that explains an interface already existed: every
 control has a `SemId`, a role, a label, its state and the actions it
-accepts (`docs/ADR/semantic-contract-as-pure-projection.md`), every action
-goes through one `Dispatcher` (`docs/ADR/actions-carry-observed-state.md`),
+accepts (`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`), every action
+goes through one `Dispatcher` (`docs/adr/semantics/0033-actions-carry-observed-state.md`),
 and the compositor knows where each id sits in the frame
-(`docs/ADR/semantic-binding-beside-the-scene.md`). a structure good enough
+(`docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`). a structure good enough
 for agents explains the interface to assistive technology too (thesis,
 section 21), and assistive technology is one more actor, not a fifth path.
 
 ## decision
 
-`crates/engine/src/accessibility` projects the semantic snapshot. the old
+`rust/engine/src/control/accessibility` projects the semantic snapshot. the old
 path is removed, not kept beside it: `AccessibilityState`, `id_map`, the
 hit-region `FocusGraph` and the hit-region block in `window/render.rs` are
 gone.
@@ -145,9 +145,9 @@ replaces the hit-region `FocusGraph`, which this task removed; what focus
 means for a widget stays the app's.
 
 updated on 2026-09-23: no shell calls `focus::next` yet; its one caller
-is a test (`crates/showcase/src/view/apps/app/semantics/assistive.rs`).
+is a test (`apps/uigallery/src/views/apps/todo/semantics/assistive.rs`).
 Tab in the showcase still follows each page's own cycle
-(`crates/showcase/src/keys.rs`), as the consequences below say.
+(`apps/uigallery/src/keyboard.rs`), as the consequences below say.
 
 ### the bridge (`Bridge`)
 
@@ -183,7 +183,7 @@ fallback. the engine's own `App` uses the same bridge with no projection
 ## cost
 
 measured on the todo page (`tree_cost_per_frame` in
-`crates/showcase/src/view/apps/app/semantics/assistive.rs`, release, apple
+`apps/uigallery/src/views/apps/todo/semantics/assistive.rs`, release, apple
 m4, rustc 1.98.1, best of seven rounds of 200 frames, two runs while other
 builds shared the machine):
 

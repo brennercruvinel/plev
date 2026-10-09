@@ -87,6 +87,6 @@ escrito pra quem for migrar a próxima página do kit, humano ou agente.
   rect, não na janela
 - diff panel vazio do ide: um `EmptyState` ("select a file or commit")
 - `Waker` no engine; enum de tecla no comps; `mods` no `WidgetEvent`
-- `crates/urnaui/src/view/{search,chunks,overview}.rs` e
+- `apps/urnadbapp/src/view/{search,chunks,overview}.rs` e
   `comps/src/editor/tests.rs` passam de 639 linhas; dividir quando forem
   tocados de verdade

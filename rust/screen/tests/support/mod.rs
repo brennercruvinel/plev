@@ -1,5 +1,5 @@
 //! What the surface tests share: the fixtures of task-68 (the IR and the
-//! projections they are written against, read from `crates/uir/fixtures`),
+//! projections they are written against, read from `rust/plevir/tests/fixtures`),
 //! a page that projects an app and its surface as one snapshot, and a
 //! small app with a real `sem::Dispatcher` whose state is the fixture's.
 
@@ -31,7 +31,7 @@ pub const COLUMNS: &str = "uigallery-todo-columns.ir.json";
 pub const MIXER_LEFT: &str = "mixer-left.ir.json";
 pub const MIXER_RIGHT: &str = "mixer-right.ir.json";
 /// The silences app of the showcase (task-69 phase 4a), as
-/// `crates/uir/fixtures` pins its projection, and the two forms of its
+/// `rust/plevir/tests/fixtures` pins its projection, and the two forms of its
 /// generated surface (local fixtures, phase 4b): the review, with the
 /// video's frame and one per cut, and the comparison of the original
 /// with the result, side by side, over the same cuts.

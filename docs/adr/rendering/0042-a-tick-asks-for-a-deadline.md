@@ -56,8 +56,8 @@ does not change.
   says; the ide and urnaui adopt `Wake` in phase b, after task-62's lab
   left the ide surface. it stays in the showcase's Git page too: the
   page lifts the `bool` of `Workbench::tick` to `Wake::moving`
-  (`crates/showcase/src/view/apps/git/desktop.rs`,
-  `crates/showcase/src/view/render.rs`), so with that page visible and
+  (`apps/uigallery/src/views/apps/git/desktop/mod.rs`,
+  `apps/uigallery/src/views/compositor/render.rs`), so with that page visible and
   the commit field focused, or an ide toast up, the showcase draws every
   frame again.
 - an `EditorView` without a focus notion keeps a blink pending while

@@ -10,7 +10,7 @@
 //! `<g aria-label>` holding the string. What has no exact equivalent is
 //! approximated or left out, and every such case enters the report
 //! ([`Approximation`]), one entry per node, the way the svg importer
-//! reports what it cannot carry in the other direction (`crates/svg`).
+//! reports what it cannot carry in the other direction (`rust/import/src/formats/svg`).
 //!
 //! Coordinates are logical pixels: the `viewBox` is the viewport's logical
 //! size and `width` and `height` its physical size, so the file renders at

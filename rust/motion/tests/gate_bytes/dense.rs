@@ -26,7 +26,7 @@ pub fn load(name: &str) -> J {
     serde_json::from_slice(&bytes).expect("ref lottie json parses")
 }
 
-/// The dense benches measure against large lottie json under `refs/lottie`,
+/// The dense benches measure against large lottie json under `data/media/lottie`,
 /// which is gitignored study material (AGENTS.md). when it is absent (a fresh
 /// clone, CI, a sandbox), the bench has nothing to weigh, so it skips with a
 /// notice instead of failing: a missing study fixture is not a regression.

@@ -35,10 +35,10 @@ serve previsibilidade, não vira dogma.
   mix de cor em espaço linear pré-multiplicado nos shaders.
 - raster de glifo determinístico, só fontes embutidas (ADR
   `glyph-raster-identity-and-atlas-isolation`,
-  `crates/engine/src/text/fonts.rs`).
+  `rust/engine/src/drawing/text/fonts.rs`).
 - web declarado igual ao desktop; a validação visual do wasm está em
   andamento (task-20); android e ios em andamento (tasks 18 e 19); linux e
-  windows pendentes (`docs/arc/arc.toml`, targets).
+  windows pendentes (`docs/ATLAS.toml`, targets).
 - depois da 66: render headless no desktop.
 
 ## escopo
@@ -46,7 +46,7 @@ serve previsibilidade, não vira dogma.
 1. harness de captura por alvo, sempre da mesma página, tema, viewport e
    escala: desktop pelo headless (66); web por navegador com WebGPU
    controlado por automação sobre o build do trunk; iOS pelo simulador
-   (`ios/showcase/run_ios.sh` já tira screenshot); Android pelo emulador.
+   (`tool/tasks/mobileapp.sh ios-run` já tira screenshot); Android pelo emulador.
 2. comparação com classificação: igual em bit; diferente por decisão do
    produto (safe area, escala, chrome de plataforma) declarada numa tabela
    versionada; diferente por divergência silenciosa (o que precisa de
@@ -75,7 +75,7 @@ fontes de sistema (decisão da task-74).
 o harness de captura e comparação (exemplo ou binário), scripts de
 captura em `script/`, correções de shader quando a causa for encontrada
 (com aprovação, porque shader é superfície compartilhada), ADR
-`docs/ADR/what-identical-means.md`.
+`docs/adr/workflows/0064-what-identical-means.md`.
 
 ## interfaces que consome
 
@@ -93,7 +93,7 @@ shaders e caminho de cor só com a causa demonstrada e aprovação.
 - toda divergência silenciosa encontrada tem causa escrita ou está
   registrada como aberta.
 - ADR com a definição de idêntico.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -133,7 +133,7 @@ scale 1). toda afirmação sobre biblioteca vem da fonte da versão do
 | alvo | o que existe | o que falta | o que o brenner roda (com rede) | tamanho aproximado |
 |---|---|---|---|---|
 | web | python playwright 1.62 (`/opt/homebrew/bin/playwright`), chrome-headless-shell 151.0.7922.34 em `~/Library/Caches/ms-playwright/chromium_headless_shell-1234`, node 26.7; alvo `wasm32-unknown-unknown` | `trunk`, `wasm-bindgen` (CLI), `wasm-opt`; Chrome.app (só o Safari.app está em /Applications) | `brew install trunk` e `cargo install --locked wasm-bindgen-cli --version 0.2.123` (a versão do lock); `brew install binaryen` só se o build release pedir o wasm-opt | trunk uns 10 MB; wasm-bindgen-cli uns 20 MB (compila alguns minutos); binaryen uns 40 MB |
-| iOS | xcode 27.0 (27A266a), runtimes iOS 26.5 e 27.0, iPhone 17 Pro no 26.5 (`D2B562EB-DEFA-4B56-9AC9-FD6B82614ED2`, desligado), 1206x2622 a 3x (402x874 lógico, do `profile.plist` do device type) | o alvo rust `aarch64-apple-ios-sim`; o `xcodegen`, que o `ios/showcase/build_ios.sh` chama e o orquestrador não listou | `rustup target add aarch64-apple-ios-sim` e `brew install xcodegen` | o rust-std do alvo, algumas dezenas de MB; xcodegen uns 10 MB |
+| iOS | xcode 27.0 (27A266a), runtimes iOS 26.5 e 27.0, iPhone 17 Pro no 26.5 (`D2B562EB-DEFA-4B56-9AC9-FD6B82614ED2`, desligado), 1206x2622 a 3x (402x874 lógico, do `profile.plist` do device type) | o alvo rust `aarch64-apple-ios-sim`; o `xcodegen`, que o `tool/tasks/mobileapp.sh ios` chama e o orquestrador não listou | `rustup target add aarch64-apple-ios-sim` e `brew install xcodegen` | o rust-std do alvo, algumas dezenas de MB; xcodegen uns 10 MB |
 | android | nada: sem SDK em `~/Library/Android/sdk`, sem `emulator`, `adb`, `sdkmanager`, sem JDK (`java` é o stub do macOS, "Unable to locate a Java Runtime"), sem `cargo-ndk`, sem NDK na raiz, sem alvos rust de android | tudo | `brew install --cask temurin@17 android-commandlinetools`; `sdkmanager "platform-tools" "emulator" "platforms;android-35" "system-images;android-35;google_apis;arm64-v8a" "ndk;27.2.12479018"`; `avdmanager create avd -n plev35 -k "system-images;android-35;google_apis;arm64-v8a"`; `cargo install cargo-ndk`; `rustup target add aarch64-linux-android x86_64-linux-android` | uns 4 GB no total (imagem do sistema uns 1,5 GB, NDK uns 1,5 GB, emulador uns 300 MB); o disco tem uns 15 GB livres |
 
 achado da sonda (a): a web está mais perto do que parecia. o
@@ -147,7 +147,7 @@ que mede a GPU.
 
 ### (b) o desktop consigo mesmo
 
-`crates/engine/tests/headless_determinism.rs` (novo): uma cena com cada
+`rust/engine/tests/headless_determinism.rs` (novo): uma cena com cada
 primitivo do frame path (rect, rounded rect com borda, gradiente com
 stop transparente, sombra externa e interna, path preenchido e com
 traço, imagem com raio, texto em três tamanhos dentro de um clip, uma
@@ -173,7 +173,7 @@ determinístico consigo mesmo nesta máquina: não houve parada.
   `Rgba16Float` e, quando dá, `Rgb10a2Unorm`
   (`wgpu-hal-28.0.1/src/metal/adapter.rs:361-372`); o wgpu-core põe os
   sRGB na frente (`wgpu-core-28.0.1/src/device/global.rs:56`); o engine
-  pega o primeiro sRGB (`crates/engine/src/gpu/context.rs`,
+  pega o primeiro sRGB (`rust/engine/src/drawing/gpu/context.rs`,
   `surface_configuration`): `Bgra8UnormSrgb`. `add_srgb_suffix` nele é a
   identidade (`wgpu-types-28.0.0/src/texture/format.rs:1466`), então
   `view_formats` fica vazio. o headless desenha em `Rgba8UnormSrgb`. as
@@ -203,7 +203,7 @@ determinístico consigo mesmo nesta máquina: não houve parada.
   cabe em "o window server trata o conteúdo como sRGB e converte para o
   perfil do display": numa captura de janela, #303030 leu (42,42,42) cru e
   (48,48,48) depois de converter do perfil embutido para sRGB
-  (`docs/how-to/validate-visuals-by-pixel.md`, "color profiles in
+  (`docs/ref/validate-visuals-by-pixel.md`, "color profiles in
   captures"). cinza neutro só testa a curva de transferência, não o gamut.
   se o window server tratasse nil como "já está no espaço do display", um
   vermelho sRGB puro sairia vermelho P3, mais saturado. isso fica aberto:
@@ -369,7 +369,7 @@ pode variar entre GPUs é precisão de função e de blend.
 
 ### o comparador e as classes
 
-`crates/showcase/examples/regress/classify.rs`. dois frames da mesma
+`tool/bench/regress/src/classify.rs`. dois frames da mesma
 página, tema, viewport e escala:
 
 - `Equal`: todo byte igual;
@@ -391,7 +391,7 @@ bordas a 1.25, e a leitura de dois pngs em disco.
 
 ### a tabela
 
-`crates/showcase/fixtures/determinism/requested.json`, formato
+`tool/bench/regress/requested.json`, formato
 `determinism.requested.v1`. JSON e não TOML: o exemplo já lê serde_json, e
 um leitor de TOML seria dependência nova. uma linha por decisão: alvo,
 nome kebab-case, área (`edge`, `rect` ou `size`), `known` ou
@@ -468,12 +468,12 @@ detalhe na seção "as divergências que esta máquina reproduz" acima.
 
 ### os scripts e o que o brenner instala
 
-`script/capture-web`, `script/capture-ios`, `script/capture-android`, com
-`script/capture-common.sh`. cada um checa as ferramentas primeiro e para
+`tool/tasks/screencap.sh web`, `tool/tasks/screencap.sh ios`, `tool/tasks/screencap.sh android`, com
+`tool/tasks/screencap.sh`. cada um checa as ferramentas primeiro e para
 com o comando que instala o que falta (rodados nesta máquina: os três
 param ali, código 2, sem compilar nada). depois compilam pelo caminho das
-tasks 18, 19 e 20 (`android/build_android.sh`, `ios/showcase/build_ios.sh`,
-`script/web build --release`), capturam um frame, desenham o frame do
+tasks 18, 19 e 20 (`tool/tasks/mobileapp.sh android`, `tool/tasks/mobileapp.sh ios`,
+`tool/tasks/webtarget.sh build --release`), capturam um frame, desenham o frame do
 desktop da mesma página, tema, viewport e escala com `regress capture`, e
 classificam com `regress compare --target`. a cadeia desktop mais compare
 foi exercitada com um png do próprio desktop a 402x874 a 3: igual deu 0;
@@ -502,8 +502,8 @@ mais no meio deu `silent 1 px`, código 1.
   85 passaram, 1 ignorado; total 2757.
 - depois: workspace 2687 passaram, 18 ignorados; urnaui 85 e 1; total
   2772. os 15 novos: 13 no exemplo `regress` (31 para 44) e 2 em
-  `crates/engine/tests/headless_determinism.rs`; o ignorado novo é o do
-  blur. `./script/gate` verde com as pernas wasm e urnaui.
+  `rust/engine/tests/headless_determinism.rs`; o ignorado novo é o do
+  blur. `./tool/tasks/fullcheck.sh` verde com as pernas wasm e urnaui.
 - `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
   GPU; a saída é a de antes fora os tempos.
 - `cargo check --target wasm32-unknown-unknown -p showcase --example
@@ -514,7 +514,7 @@ mais no meio deu `silent 1 px`, código 1.
 ### a linha do ADR para o índice
 
 ```text
-| 2026-09-24 | [what-identical-means](what-identical-means.md) | proposed | idêntico por classe de comparação: o desktop contra ele mesmo em todo byte (1312 de 1312 frames, 82 páginas, 4 temas, escalas 1, 2, 1.25 e 1.5, dois contextos e dois processos no M4); outro alvo na mesma GPU em todo byte fora das áreas declaradas; entre GPUs delta de canal medido, proposto em no máximo 2, zero esperado dentro de cor chapada e glifo; entre escalas não se compara por pixel; o veredito é `equal`, `requested`, `silent` (pixels, delta máximo e médio, retângulo) ou `resized`; as decisões de produto numa tabela versionada (`crates/showcase/fixtures/determinism/requested.json`), web, iOS e android `to_confirm`; idêntico para nos bytes da surface, color management do sistema fica fora; `regress compare` e `regress capture` (task-77 fase 1) |
+| 2026-09-24 | [what-identical-means](what-identical-means.md) | proposed | idêntico por classe de comparação: o desktop contra ele mesmo em todo byte (1312 de 1312 frames, 82 páginas, 4 temas, escalas 1, 2, 1.25 e 1.5, dois contextos e dois processos no M4); outro alvo na mesma GPU em todo byte fora das áreas declaradas; entre GPUs delta de canal medido, proposto em no máximo 2, zero esperado dentro de cor chapada e glifo; entre escalas não se compara por pixel; o veredito é `equal`, `requested`, `silent` (pixels, delta máximo e médio, retângulo) ou `resized`; as decisões de produto numa tabela versionada (`tool/bench/regress/requested.json`), web, iOS e android `to_confirm`; idêntico para nos bytes da surface, color management do sistema fica fora; `regress compare` e `regress capture` (task-77 fase 1) |
 ```
 
 ### decisões
@@ -571,7 +571,7 @@ são os do `Cargo.lock`: wgpu 28.0.0, naga 28.0.0, wgpu-hal 28.0.1.
 ### a sonda
 
 feita antes da correção, sobre a base. os números saem de
-`crates/engine/tests/blur_scale.rs`, dois probes ignorados que imprimem
+`rust/engine/tests/blur_scale.rs`, dois probes ignorados que imprimem
 tabelas (`cargo test -p engine --test blur_scale -- --ignored --nocapture
 --test-threads=1`). as três variantes medidas foram protótipos
 descartáveis no mesmo binário, escolhidos por variável de ambiente, fora
@@ -731,7 +731,7 @@ recebe para o `fs_main` do blur, lido do log de debug do wgpu-hal
 (`device.rs:199-204`) com o `monster_player`, tem os mesmos 3339 bytes
 antes e depois, e as opções de compilação não dependem do módulo
 (`device.rs:206-216`: só a versão da linguagem e `preserve_invariance`). um frame de vidro e sombras a 1x gravado na base
-(`crates/engine/tests/fixtures/blur_at_scale_1.png`, 160x96, 10 KB) é o
+(`rust/engine/tests/fixtures/blur_at_scale_1.png`, 160x96, 10 KB) é o
 teste de byte a byte.
 
 recomendação: a opção 1, com uma amostra por texel.
@@ -793,22 +793,22 @@ blur; fica para quando o custo a 3x pedir.
 
 ### a correção, arquivo por arquivo
 
-- `crates/engine/src/effects/types.rs`: `scaled_weights(sigma, scale)`, os
+- `rust/engine/src/drawing/effects/parameters.rs`: `scaled_weights(sigma, scale)`, os
   pesos de `gaussian_weights(sigma)` espalhados por área sobre os texels
   físicos (mesmo corte, soma 1; sigma 0 ou menos é uma amostra), e o
   uniform do caminho novo, `ScaledBlurUniforms`, com 64 pesos
   (`SCALED_WEIGHTS`). o `BlurUniforms` de 16 floats não muda.
-- `crates/engine/src/effects/apply.rs`: `EffectContext.scale`, px físicos
+- `rust/engine/src/drawing/effects/apply.rs`: `EffectContext.scale`, px físicos
   por px lógico, por eixo. `blur_pass` escolhe por eixo: escala
   exatamente 1 usa o `blur_pipeline` com o `BlurUniforms` de antes (os
   mesmos bytes); outra usa o `scaled_blur_pipeline` com `scaled_weights`.
   `apply_shadow` repassa a escala ao blur da silhueta.
-- `crates/engine/src/effects/pipelines.rs` e `processor.rs`: o pipeline do
+- `rust/engine/src/drawing/effects/pipelines.rs` e `processor.rs`: o pipeline do
   `fs_scaled` (o construtor de pipeline de tela cheia ganhou o nome da
   entrada de fragmento), e o hot reload do `blur.wgsl` troca os dois.
-- `crates/engine/src/gpu/shaders/blur.wgsl`: a entrada `fs_scaled` e o seu
+- `rust/engine/src/drawing/gpu/shaders/blur.wgsl`: a entrada `fs_scaled` e o seu
   uniform, abaixo do `fs_main`, que não mudou.
-- `crates/engine/src/window/render_passes.rs`: `scale: gpu.clip_scale()`
+- `rust/engine/src/runtime/window/render_passes.rs`: `scale: gpu.clip_scale()`
   nos três `EffectContext` (o vidro em `resolve_blurred_backdrop`, o
   `Blur` e o `Shadow` em `apply_layer_effects`). são três linhas no
   compositor que chama o efeito; nenhum outro arquivo do engine mudou, e
@@ -816,14 +816,14 @@ blur; fica para quando o custo a 3x pedir.
 
 ### os testes
 
-- `crates/engine/tests/headless_determinism.rs`:
+- `rust/engine/tests/headless_determinism.rs`:
   `a_backdrop_blur_reaches_as_far_in_logical_px_at_every_scale` sem
   `#[ignore]`, verde.
-- `crates/engine/tests/blur_scale.rs`:
+- `rust/engine/tests/blur_scale.rs`:
   - `the_glass_at_scale_1_is_the_glass_of_before_byte_for_byte`: um frame
     de 160x96 a 1x, vidro em sigma 3, 8 e 50 sobre uma borda fracionária,
     listras, imagem, círculo e texto, com sombra analítica de fora e de
-    dentro, contra `crates/engine/tests/fixtures/blur_at_scale_1.png`. o
+    dentro, contra `rust/engine/tests/fixtures/blur_at_scale_1.png`. o
     png foi gravado na base, com `PLEV_RECORD_BLUR_FIXTURE=1`, antes de
     qualquer mudança no engine, e entrou no commit 1: o teste é verde
     antes e depois da correção. bytes dependem da GPU e do compilador, então
@@ -838,7 +838,7 @@ blur; fica para quando o custo a 3x pedir.
     nesse (ele não depende da fase, só do tamanho físico); o teste segura
     a escolha contra um alvo reduzido.
   - os dois probes, ignorados.
-- `crates/engine/src/effects/tests.rs`: `scaled_weights` a 1 dá os pesos
+- `rust/engine/src/drawing/effects/tests.rs`: `scaled_weights` a 1 dá os pesos
   de 1x bit a bit; a 0.5, 1.25, 1.5, 2 e 3 guarda o corte (3, 8, 10, 13 e 19
   amostras por lado) e soma 1; sigma 0 é uma amostra; o uniform limita a 63
   por lado. e `the_layer_blur_and_shadow_reach_as_far_in_logical_px_at_every_scale`:
@@ -915,7 +915,7 @@ delta máximo de 1 a 5).
 - depois: workspace 2696 passaram, 19 ignorados; urnaui 85 e 1; total
   2781. os 9 a mais: o teste de alcance que deixou de ser ignorado, 3 em
   `blur_scale.rs` e 5 em `effects/tests.rs`; os ignorados são 18 menos o
-  de alcance mais os 2 probes. `./script/gate` verde com as pernas wasm e
+  de alcance mais os 2 probes. `./tool/tasks/fullcheck.sh` verde com as pernas wasm e
   urnaui (log em `target/agents/gate-77b.txt`).
 - `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
   GPU; a saída é a da fase 1 fora os tempos.
@@ -958,8 +958,8 @@ delta máximo de 1 a 5).
 fechada pelo critério de aceite, item por item. as ferramentas da web e
 do iOS foram instaladas com o ok do brenner (tasks 20 e 19).
 
-- relatório de todas as páginas: `script/capture-web --all` e
-  `script/capture-ios --all` desenham as 82 páginas do desktop
+- relatório de todas as páginas: `tool/tasks/screencap.sh web --all` e
+  `tool/tasks/screencap.sh ios --all` desenham as 82 páginas do desktop
   (`regress capture`), abrem cada página no alvo (web: a query da URL,
   `?page=…&theme=…`, que o build web agora lê por
   `engine::window::launch_args`; iOS: os argumentos de lançamento) e

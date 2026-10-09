@@ -8,7 +8,7 @@ domain: hot-reload
 
 # hot reload design - plev
 
-> 2026-09-22: what shipped, and why tier 3 (subsecond) was not adopted, is in [hot-reload-on-by-default-in-gpu-context](hot-reload-on-by-default-in-gpu-context.md). tier 1 is live; the literal reload took the place tier 2 was meant for; tier 3 is a no-go for an authorial engine (third-party linker and cli in the loop).
+> 2026-09-22: what shipped, and why tier 3 (subsecond) was not adopted, is in [hot-reload-on-by-default-in-gpu-context](../adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md). tier 1 is live; the literal reload took the place tier 2 was meant for; tier 3 is a no-go for an authorial engine (third-party linker and cli in the loop).
 
 data: 2024-01-22
 task: gap-1

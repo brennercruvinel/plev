@@ -12,7 +12,7 @@ date: 2026-09-23
 checkpoint a (task-62 phase c) had two LLM agents operate the ide through
 the contract only. the contract held, and the agents pointed at three
 gaps, none of which stopped the task
-(`docs/mission/steps/checked/task-62-ide-human-agent-proof-done.md`, "o que o
+(`docs/log/steps/task-62-ide-human-agent-proof.md`, "o que o
 experimento mostrou"):
 
 - a `node_added` in a delta carried only the id
@@ -35,22 +35,22 @@ experimento mostrou"):
 `Change::NodeAdded(Box<Node>)`: the node as the `after` snapshot holds
 it, every field, its state (a `secret` field is already its length
 there) and its `source`. the serde form is `{"node_added": {<the node in
-the lean form of task-57b>}}`, pinned in `crates/sem/tests/wire.rs`.
+the lean form of task-57b>}}`, pinned in `rust/accord/tests/encoding.rs`.
 `Snapshot::diff` lists the same changes in the same order, and nothing
 exactly when the two snapshots are equal; only the payload of
 `node_added` grew. where the node sits among its siblings is still not in
 the change, only its `parent`.
 
 the agent port serves the node of a delta's `node_added` as it serves a
-node of a snapshot. one function (`serve`, `crates/wire/src/server.rs`)
+node of a snapshot. one function (`serve`, `rust/socket/src/server.rs`)
 cuts the state to the observation's `keys` and drops `source` unless the
 agent asked for it (`observe {"source": true}`); both replies go through
-it. this corrects `docs/ADR/lean-semantic-form-and-one-redaction.md`,
+it. this corrects `docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`,
 which said a delta never carried `source` because a `Change` named ids
 and values only: a delta carries it now exactly when a snapshot would.
 
 the recorder still stores a snapshot whole when a node is added
-(`structural` in `crates/rec/src/ring.rs`): what a `Kind::Changes` cannot
+(`structural` in `rust/record/src/ring.rs`): what a `Kind::Changes` cannot
 carry is the place of the new node in the projection order, not the
 node. applying `node_added` in place waits for a change that says where
 the node goes.
@@ -134,7 +134,7 @@ goes through, so the refusal at dispatch, at a confirmation's second
 check, from `execute` (`Execution::Rejected`) and from `reject_at_truth`
 name the same way; whatever a caller put in `acted` is replaced. whoever
 builds a stale refusal outside the dispatcher (`check`, the ide's point
-of truth in `crates/ide/src/workbench/truth.rs`) builds
+of truth in `apps/idestudio/src/capability/truth.rs`) builds
 `Rejection::stale(changes)`, which names nobody. the search reads only
 `open` and `finished`, which were already bounded; the dispatcher keeps
 nothing new.
@@ -146,7 +146,7 @@ there.
 `sem::redact` keeps `acted` as it is: request ids, actors, targets and
 action names quote no secret, and a target id is already in every
 snapshot. it still reduces the delta of a secret node to lengths, for a
-clear target and for a secret one (a test in `crates/sem/src/redact.rs`).
+clear target and for a secret one (a test in `rust/accord/src/redactor.rs`).
 
 the ide's toast adds who acted, with the `who` the notice already used
 and the action in the past tense of the ui: "Refused claude's submit:
@@ -161,7 +161,7 @@ empty the text is the one it was.
 ### the rule, where an agent reads it
 
 `plev --help` (and so `plev act --help`), the doc of the protocol's `Act`
-(`crates/wire/src/proto.rs`) and this ADR say it: an act is refused as
+(`rust/socket/src/protocol.rs`) and this ADR say it: an act is refused as
 stale when a state it reads (the action's `reads`, as an observation
 shows them) changed since the observation it rests on; the revision only
 names what was seen and never decides; `changes` says what moved, and
@@ -182,7 +182,7 @@ never puts `node_added` in a `Kind::Changes`, but a whole snapshot
 (`Kind::Snapshot { snapshot, changes }`) keeps the diff that explains
 it, and that diff holds `node_added` when the step added a node. the
 session reader, which has that snapshot, converts the old line
-(`read_event` in `crates/rec/src/persist.rs`): in a snapshot event, each
+(`read_event` in `rust/record/src/persist.rs`): in a snapshot event, each
 `node_added` written as a bare id becomes the node the event's own
 snapshot holds under that id. nothing is lost, because the node a step
 adds is exactly the node the snapshot of that step holds. an id the
@@ -201,7 +201,7 @@ commit's node in place and their `commit.submit` receipts as recorded
 - measured, bytes of the line the server writes (no `\n`), debug build,
   over a real socket. the showcase's todo, a person adding one item
   through the page (`agent_port_new_row` in
-  `crates/showcase/src/view/dispatch.rs`), the delta since the revision
+  `apps/uigallery/src/views/dispatcher/mod.rs`), the delta since the revision
   before it:
 
   | before the item | delta before | delta after | whole observation after it |
@@ -234,7 +234,7 @@ commit's node in place and their `commit.submit` receipts as recorded
     the diff lines landing from the worker). the change still shows in
     `changes`. with the look it hides nobody after it: the window's
     scene of a click on a new row, then an unstage, names the diff and
-    the unstage (`crates/ide/tests/human_agent.rs`, through the port).
+    the unstage (`apps/idestudio/tests/human_agent.rs`, through the port).
     without a look, when one of them comes first after the look, the
     next receipt is checked on another revision and nobody is named:
     the same scene with the agent in the process is pinned there too.

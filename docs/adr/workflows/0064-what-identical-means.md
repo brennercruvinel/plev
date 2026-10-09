@@ -29,14 +29,14 @@ instead of one tolerance for everything:
 - the rest come from the GPU and its driver: the precision of `pow`,
   `exp` and `sqrt` in the shaders, the sRGB encode and the blend into an
   8-bit target, the MSAA resolve, the bilinear weights. no shader of the
-  engine takes a derivative or dithers (`crates/engine/src/gpu/shaders/`):
+  engine takes a derivative or dithers (`rust/engine/src/drawing/gpu/shaders/`):
   the SDF edge is `1 - smoothstep(-0.5, 0.5, d)` over a distance in logical
   px, a fixed feather of one logical px.
 
 ## decision
 
 a comparison is between two frames of one page, theme, viewport and scale,
-and its verdict is one of four classes (`crates/showcase/examples/regress/
+and its verdict is one of four classes (`tool/bench/regress/src/
 classify.rs`):
 
 - `equal`: every byte the same.
@@ -53,7 +53,7 @@ what identical means, by class of comparison:
 
 | comparison | identical means | measured |
 |---|---|---|
-| the desktop against itself: two GPU contexts, two processes, any order, any resize history | every byte, no tolerance | 1312 of 1312 frames equal (82 pages, 4 themes, scales 1, 2, 1.25, 1.5, apple M4 on metal), and every primitive of the frame path at the four scales (`crates/engine/tests/headless_determinism.rs`) |
+| the desktop against itself: two GPU contexts, two processes, any order, any resize history | every byte, no tolerance | 1312 of 1312 frames equal (82 pages, 4 themes, scales 1, 2, 1.25, 1.5, apple M4 on metal), and every primitive of the frame path at the four scales (`rust/engine/tests/headless_determinism.rs`) |
 | the same target on another machine of the same GPU family | every byte | not yet |
 | another target on the same GPU through another API (the web on dawn over metal, the iOS simulator on the host GPU) | every byte outside the declared areas | not yet; the headless chromium already installed reaches the M4 through dawn with `--use-angle=metal` |
 | across GPUs and drivers (a software adapter in CI, windows, linux, android) | a bounded delta, measured: proposed at a channel delta of at most 2 per pixel. 0 is expected inside flat fills and glyphs away from their edges (one sRGB color decoded by `pow` in the shader and encoded back by the target; glyphs rasterized on the CPU from embedded fonts and sampled at texel centers), and a delta there is named, not absorbed | not yet; the bound is a proposal that the first cross-GPU capture confirms or replaces with its numbers |
@@ -65,7 +65,7 @@ fails a job. a difference inside the bound on an edge is expected; the
 same delta on a flat fill or on text is a cause to find.
 
 what is a decision of the product lives in one versioned table,
-`crates/showcase/fixtures/determinism/requested.json`, one row per
+`tool/bench/regress/requested.json`, one row per
 decision (target, name, area, reason in one line, `known` or
 `to_confirm`), read by the comparator as the target's decisions:
 
@@ -98,7 +98,7 @@ what runs where:
   across two contexts and against a second process. `regress check`
   stays the structural job it is.
 - manual, recorded in the task file with the machine and the adapter:
-  `script/capture-web`, `script/capture-ios`, `script/capture-android`,
+  `tool/tasks/screencap.sh web`, `tool/tasks/screencap.sh ios`, `tool/tasks/screencap.sh android`,
   each against the desktop's frame of the same page, theme, viewport and
   scale. they become jobs when a runner has the tools (trunk and
   wasm-bindgen for the web; xcodegen and the ios-sim target for iOS; the

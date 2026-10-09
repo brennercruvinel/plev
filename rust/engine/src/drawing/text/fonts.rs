@@ -24,7 +24,7 @@
 //! is embedded so the full upstream upright set is available, but no style
 //! slot uses it.
 //!
-//! The non-Latin scripts (docs/ADR/embedded-fonts-by-script.md) come from
+//! The non-Latin scripts (docs/adr/rendering/0071-embedded-fonts-by-script.md) come from
 //! Noto Sans subsets, Regular and Bold: Arabic, Hebrew, Devanagari, SC, JP,
 //! KR. No family names them: a word whose glyphs the requested face lacks
 //! reaches cosmic-text's last fallback step, every face in the database
@@ -53,7 +53,7 @@ use cosmic_text::fontdb::{Database, ID, Source};
 const EMBEDDED_LOCALE: &str = "en-US";
 
 /// Noto Sans subsets (SIL OFL, assets/fonts/LICENSE-Noto-OFL.txt), made by
-/// `script/font-subset`. The order is the fallback order among faces of the
+/// `tool/tasks/subsetter.py`. The order is the fallback order among faces of the
 /// same weight: SC before JP is the Han order, see the module docs.
 const NOTO: [&[u8]; 12] = [
     include_bytes!("../../../assets/fonts/NotoSansArabic-Regular.ttf"),
@@ -71,7 +71,7 @@ const NOTO: [&[u8]; 12] = [
 ];
 
 /// Noto Color Emoji, a CBDT subset (SIL OFL,
-/// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `script/font-subset`.
+/// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `tool/tasks/subsetter.py`.
 const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
 
 /// The faces a font system holds.

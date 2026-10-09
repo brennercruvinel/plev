@@ -81,9 +81,9 @@ outra sessão), benchmarks isolados sem demonstração.
 
 ## superfície sob responsabilidade
 
-roteiros e resultados em `docs/mission/steps/`, gravações de sessão (fora
+roteiros e resultados em `docs/log/`, gravações de sessão (fora
 do git se forem grandes), páginas Apps Demo do showcase para as demos que
-couberem lá, ADR de resultado `docs/ADR/generative-runtime-results.md`.
+couberem lá, ADR de resultado `docs/adr/generated/0070-generative-runtime-results.md`.
 
 ## interfaces que consome
 
@@ -142,11 +142,11 @@ teste novo rodou.
 
 | demo | já medido, e onde | o que falta | quem faz o que falta | funcionalidade nova? |
 | --- | --- | --- | --- | --- |
-| 1, stale-state rejection | o experimento do ide em cinco rodadas, com braços e hipóteses escritos antes: A0 roteirizado, A LLM pelo contrato, B o `git` na linha de comando, C o volume de um screenshot (`checked/task-62-ide-human-agent-proof-done.md`, "os braços", "hipóteses (escritas antes de rodar)", "resultado da fase c" e os resultados da segunda à quinta rodada) | as duas alternativas de controle do escopo que ninguém rodou: um agente por screenshot (o braço C é "comparação de volume, não de capacidade" e "nenhum agente por screenshot foi rodado", mesma task, "as hipóteses", H4) e um agente por snapshot de accessibility de terceiros (programa, seção 10: "se não houver comparação justa, a limitação é registrada") | o orquestrador, com o Claude de verdade | sim, para o braço por screenshot: o `wire` só age por identidade (`Act.target: SemId`, `crates/wire/src/proto.rs:135-146`), e clique por coordenada de tela é proibido aqui; um braço que receba "clique em x, y" do agente e resolva pelo `Compositor::hit` no frame headless é trabalho novo do laboratório (`crates/ide/src/bin/lab/**`). o de accessibility de terceiros pede a janela e a árvore do AccessKit lida por fora (task-60): orquestrador com janela |
+| 1, stale-state rejection | o experimento do ide em cinco rodadas, com braços e hipóteses escritos antes: A0 roteirizado, A LLM pelo contrato, B o `git` na linha de comando, C o volume de um screenshot (`checked/task-62-ide-human-agent-proof-done.md`, "os braços", "hipóteses (escritas antes de rodar)", "resultado da fase c" e os resultados da segunda à quinta rodada) | as duas alternativas de controle do escopo que ninguém rodou: um agente por screenshot (o braço C é "comparação de volume, não de capacidade" e "nenhum agente por screenshot foi rodado", mesma task, "as hipóteses", H4) e um agente por snapshot de accessibility de terceiros (programa, seção 10: "se não houver comparação justa, a limitação é registrada") | o orquestrador, com o Claude de verdade | sim, para o braço por screenshot: o `wire` só age por identidade (`Act.target: SemId`, `rust/socket/src/protocol.rs:135-146`), e clique por coordenada de tela é proibido aqui; um braço que receba "clique em x, y" do agente e resolva pelo `Compositor::hit` no frame headless é trabalho novo do laboratório (`apps/agenteval/src/**`). o de accessibility de terceiros pede a janela e a árvore do AccessKit lida por fora (task-60): orquestrador com janela |
 | 2, handoff humano-agente | com uma pessoa roteirizada, não com o brenner: a quarta e a quinta rodada (a pessoa tira um arquivo antes do submit e responde ao modal; `task-62...`, "resultado da quarta rodada" e "resultado da quinta rodada"); a pessoa de verdade só como CGEvent sintético numa janela real (`checked/task-86-the-ide-opens-the-agent-port-done.md:148-163`) | o roteiro do escopo com o brenner: o agente prepara, ele assume, muda parte, devolve, o agente termina, e cada receipt diz quem fez | o brenner, com o orquestrador (janela, `PLEV_AGENT=1 PLEV_RECORD=1`, o Claude de verdade) | não: a porta na janela do ide (task-86), a gravação do ide (task-63d), a pergunta à pessoa (task-92) e a pessoa que responde no laboratório (task-93) existem |
-| 3, inspectability | a fase a da task-64 achou um defeito real lendo a sessão do A2 da primeira rodada no instante do submit: o `changes:staged` observado "outside the scope observed", o que virou a task-89 (`checked/task-64-session-inspector-and-tests-done.md`, "saídas de aceite" e "fase a integrada"); a fase c transformou a sessão a2ppa em teste de regressão (`crates/ide/tests/rerun/lab.rs:165`) e provou à mão, fora do gate, que ele pega uma precondição quebrada de propósito (mesmo arquivo, "o teste gerado e a prova de que pega regressão") | um bug real do histórico, enviado como trecho, aberto no instante, com as perguntas da tese respondidas, e um teste no gate que pega o bug reintroduzido (a fase c provou com uma quebra provocada, e à mão) | este agente | não, com uma fixture nova só em teste (item c) |
-| 4, interface efêmera | a demo do editor de vídeo gravada sem janela pela 69 fase 4c (`crates/showcase/fixtures/demo/silences-demo.monster`, 186.837 bytes, lida por `crates/showcase/tests/demo.rs`; `checked/task-69-ephemeral-generative-surfaces-done.md`, "a demo (arquivo, tamanho, o que tem dentro)"); o checkpoint b, duas rodadas, a revisão gerada contra a tela fixa na mesma tarefa (mesma task, "checkpoint b, primeira rodada" e "checkpoint b, segunda rodada") | a gravação com o código de hoje (a revisão das regras mudou na task-70 fase 2), a leitura pelo inspector mostrando que a superfície nunca foi tela, e a comparação com critério escrito antes para o passo da comparação, que o checkpoint b não mediu (ele comparou só a revisão) | este agente | não para o que as regras fazem. "não consigo comparar" pelas regras é recusado na Silences: o único `List` do app são os ids dos cortes e a duração é um `num` por corte (`checked/task-70-adaptive-transformations-done.md`, "(b) a gramática das regras" e "a demo"); a comparação que existe na Silences é a da gramática de superfície, "compare the original with the cuts" (`crates/propose/src/change.rs:5-8`). trocar as durações por gráfico pede o app declarar uma lista de durações (task nova, abaixo) |
-| 5, UI generativa em app real | nada: as superfícies geradas vivem só nas páginas Surface e Silences do showcase | uma intenção no ide ("revisa esses três commits") ou no urnaui gerando uma superfície que a pessoa opera | uma task nova | sim: nem o ide nem o urnaui têm `SurfaceHost` (`SurfaceHost` aparece só em `crates/surface/src/host.rs` e em `crates/showcase/src/view/apps/**`; `crates/ide/Cargo.toml` não depende de `surface`, `propose` nem `uir`; `crates/urnaui/Cargo.toml` também não). o que já ajuda: o `uir` tem fixtures no domínio do ide, verificadas contra o registro que a projeção do ide dá (`crates/uir/fixtures/ide-review-commit.ir.json`, `ide-commit-form.ir.json`, `ide-workbench.snapshot.json`, escrito por `crates/ide/tests/uir_fixture.rs`) |
+| 3, inspectability | a fase a da task-64 achou um defeito real lendo a sessão do A2 da primeira rodada no instante do submit: o `changes:staged` observado "outside the scope observed", o que virou a task-89 (`checked/task-64-session-inspector-and-tests-done.md`, "saídas de aceite" e "fase a integrada"); a fase c transformou a sessão a2ppa em teste de regressão (`apps/idestudio/tests/rerun/eval.rs:165`) e provou à mão, fora do gate, que ele pega uma precondição quebrada de propósito (mesmo arquivo, "o teste gerado e a prova de que pega regressão") | um bug real do histórico, enviado como trecho, aberto no instante, com as perguntas da tese respondidas, e um teste no gate que pega o bug reintroduzido (a fase c provou com uma quebra provocada, e à mão) | este agente | não, com uma fixture nova só em teste (item c) |
+| 4, interface efêmera | a demo do editor de vídeo gravada sem janela pela 69 fase 4c (`apps/uigallery/tests/fixtures/sessions/silences-demo.monster`, 186.837 bytes, lida por `apps/uigallery/tests/demo.rs`; `checked/task-69-ephemeral-generative-surfaces-done.md`, "a demo (arquivo, tamanho, o que tem dentro)"); o checkpoint b, duas rodadas, a revisão gerada contra a tela fixa na mesma tarefa (mesma task, "checkpoint b, primeira rodada" e "checkpoint b, segunda rodada") | a gravação com o código de hoje (a revisão das regras mudou na task-70 fase 2), a leitura pelo inspector mostrando que a superfície nunca foi tela, e a comparação com critério escrito antes para o passo da comparação, que o checkpoint b não mediu (ele comparou só a revisão) | este agente | não para o que as regras fazem. "não consigo comparar" pelas regras é recusado na Silences: o único `List` do app são os ids dos cortes e a duração é um `num` por corte (`checked/task-70-adaptive-transformations-done.md`, "(b) a gramática das regras" e "a demo"); a comparação que existe na Silences é a da gramática de superfície, "compare the original with the cuts" (`rust/offers/src/change.rs:5-8`). trocar as durações por gráfico pede o app declarar uma lista de durações (task nova, abaixo) |
+| 5, UI generativa em app real | nada: as superfícies geradas vivem só nas páginas Surface e Silences do showcase | uma intenção no ide ("revisa esses três commits") ou no urnaui gerando uma superfície que a pessoa opera | uma task nova | sim: nem o ide nem o urnaui têm `SurfaceHost` (`SurfaceHost` aparece só em `rust/screen/src/host/mod.rs` e em `apps/uigallery/src/views/apps/**`; `apps/idestudio/Cargo.toml` não depende de `surface`, `propose` nem `uir`; `apps/urnadbapp/Cargo.toml` também não). o que já ajuda: o `uir` tem fixtures no domínio do ide, verificadas contra o registro que a projeção do ide dá (`rust/plevir/tests/fixtures/idestudio-review-commit.ir.json`, `ide-commit-form.ir.json`, `ide-workbench.snapshot.json`, escrito por `apps/idestudio/tests/plevir_fixture.rs`) |
 
 a proposta para a demo 5, que não é implementada aqui:
 
@@ -160,8 +160,8 @@ a proposta para a demo 5, que não é implementada aqui:
   `ide-review-commit.ir.json`); o Claude pelo `propose::Llm` fora da
   thread do app. dependências: 68 (uir), 69 (surface e propose), 70
   (transformação e política), 63d e 64 (gravação e inspector),
-  integradas. superfície: `crates/ide/src/**` (a janela e a projeção),
-  `crates/ide/Cargo.toml` (três dependências de workspace, nenhuma
+  integradas. superfície: `apps/idestudio/src/**` (a janela e a projeção),
+  `apps/idestudio/Cargo.toml` (três dependências de workspace, nenhuma
   externa). o que a derruba: a superfície pior que o painel de stacks
   mais o diff para revisar três commits, pelo critério da demo 5 abaixo.
 - **o gráfico das durações na Silences** (P3, já anotado pelo programa
@@ -174,24 +174,24 @@ a proposta para a demo 5, que não é implementada aqui:
 sim, sem janela e sem GPU, pelos dois caminhos que já existem:
 
 - o showcase: o exemplo `demo` roda a Silences servida pela porta num
-  `Compositor` sem janela (`crates/showcase/examples/demo/main.rs:12-16`,
+  `Compositor` sem janela (`apps/uigallery/examples/videos/main.rs:12-16`,
   `shell.rs:50` `draw`, `:61` `turn`), e grava pelo mesmo gancho do shell,
   `showcase::app::record::Recording::frame`
-  (`crates/showcase/src/app/record.rs:171`), que chama
-  `rec::Recorder::frame` (`crates/rec/src/recorder.rs:105`): a cena e as
+  (`apps/uigallery/src/shell/window/record.rs:171`), que chama
+  `rec::Recorder::frame` (`rust/record/src/recorder.rs:105`): a cena e as
   ligações de cada frame, sem pixel. o teste
-  `crates/showcase/tests/record.rs` faz o mesmo no gate, com a página
+  `apps/uigallery/tests/record.rs` faz o mesmo no gate, com a página
   semeada (nenhum ffmpeg) e uma porta num diretório temporário.
-- o ide: o laboratório (`crates/ide/src/bin/lab/lab.rs:286` `record`)
+- o ide: o laboratório (`apps/agenteval/src/arms/plev.rs:286` `record`)
   grava estado e frame a cada volta em que algo mudou, com o renderer
-  headless (`crates/ide/src/bin/lab/bench.rs:124`), sem janela.
+  headless (`apps/agenteval/src/subject.rs:124`), sem janela.
 
 então a demo 4 grava sem o orquestrador. o que muda na Silences sem o
 ffmpeg: a detecção real e os frames do vídeo. um teste parte da semente
 (os cortes 1 e 2) e põe frames sintéticos no cache pelo gancho público
 `ShowcaseView::stage_silences_frames`
-(`crates/showcase/src/view/apps/silences/generated/page.rs:530`), como o
-`regress` faz (`crates/showcase/examples/regress/state.rs:314`, `:431`).
+(`apps/uigallery/src/views/apps/silences/generative/page.rs:530`), como o
+`regress` faz (`tool/bench/regress/src/state.rs:314`, `:431`).
 nenhuma janela: nada para o orquestrador rodar com `PLEV_BACKGROUND=1`.
 
 ### (c) a demo 3: qual bug, como reproduzir, o inspector e o teste
@@ -203,9 +203,9 @@ mudou, qual foi o resultado. e a seção "sessão vira teste" (`:903`).
 
 o caminho que transforma sessão em teste é o harness da task-64 fase c:
 cada ato do trecho refeito na ordem gravada contra uma `Fixture` do app
-(`crates/ide/tests/rerun/harness.rs:38-65`), e o veredito, o estágio
+(`apps/idestudio/tests/rerun/harness.rs:38-65`), e o veredito, o estágio
 terminal e as marcas comparados com a gravação. a fixture do ide chama
-`Workbench::dispatch` direto (`crates/ide/tests/rerun/lab.rs:102-104`), e
+`Workbench::dispatch` direto (`apps/idestudio/tests/rerun/eval.rs:102-104`), e
 antes de cada ato o harness assenta o app (`harness.rs:329-336`), menos
 onde a gravação tinha uma execução em voo (`harness.rs:242-246`); o
 `settle` da fixture pede um refresh e aplica o worker até todo refresh
@@ -214,8 +214,8 @@ devido responder (`lab.rs:74-96`, `:117-121`).
 os três candidatos:
 
 - **o porto que não acordava (task-92).** a correção é do `wire` (o
-  sink do porto acorda o loop, `crates/wire/src/port.rs:166-172` e
-  `crates/wire/src/sink.rs:33`, `Waits`), e o harness nunca passa pela porta: o rerun despacha no
+  sink do porto acorda o loop, `rust/socket/src/port.rs:166-172` e
+  `rust/socket/src/sink.rs:33`, `Waits`), e o harness nunca passa pela porta: o rerun despacha no
   workbench. um trecho não reproduz a espera; nem a gravação mostra
   quando um estágio chegou ao agente. não serve sem um harness novo, que
   passe pela porta.
@@ -228,12 +228,12 @@ os três candidatos:
   (`checked/task-62-...`, "o que o experimento mostrou além das
   hipóteses"), com a correção conhecida: `6500f2dc` ("task-84: a read
   taken before a mutation the view shows is dropped"), hoje em
-  `crates/ide/src/session.rs:262-269` (a leitura velha descartada em
+  `apps/idestudio/src/repository/git.rs:262-269` (a leitura velha descartada em
   `apply`) sobre `Owed` e `Reads` (`:42-127`). ele mora no workbench, o
   mesmo caminho que o rerun roda, e aparece no estado projetado, que a
   gravação guarda e o inspector lê: um arquivo que o ide aceitou no index
   sai do `changes:staged` sem request nenhum. e o teste escrito à mão da
-  época existe para comparar (`crates/ide/tests/human_agent.rs:491`,
+  época existe para comparar (`apps/idestudio/tests/human_agent.rs:491`,
   `:517`, `:553`, `:578`).
 
 o que o harness de hoje não alcança, e como alcançar sem mudar interface:
@@ -245,7 +245,7 @@ construção. a saída cabe numa fixture nova, só em teste, sobre o mesmo
 por vez e na ordem, até nenhum request despachado estar `executing`) e
 deixar em voo as leituras que o app pediu, como uma janela viva tem
 quando o próximo ato chega. o worker responde em fila
-(`crates/git/src/client.rs:125-130`, pela task-84), então a ordem
+(`rust/gitdrv/src/client.rs:125-130`, pela task-84), então a ordem
 aplicada é determinística. o harness, o `Fixture` e as marcas não mudam;
 na fixture do ide entra um método que aplica uma resposta por vez com a
 mesma conta de refreshes devidos.
@@ -268,7 +268,7 @@ mudou, o teste nasce do mesmo cenário gravado na `main`.
 
 - a branch descartável: `task/80a-bug84`, a partir de `task/80a-proof`,
   nunca no merge. o que volta: o descarte da leitura velha em
-  `GitSession::apply` (`crates/ide/src/session.rs:266-269`, a essência do
+  `GitSession::apply` (`apps/idestudio/src/repository/git.rs:266-269`, a essência do
   `6500f2dc`): a resposta é contada e aplicada mesmo quando é mais velha
   que a view.
 - o teste novo roda nela (falha esperada, com a saída colada) e em
@@ -342,7 +342,7 @@ resultado de cada demo vai como sair, inclusive negativo.
   `plev-inspect` (resumo, `--timeline`, `--control changes --at
   <instante>`, `--why` do ato mais perto) e as oito perguntas da tese são
   respondidas só pelo arquivo; (4) o trecho vira teste em
-  `crates/ide/tests/rerun/`, com marcas e a fixture que assenta só as
+  `apps/idestudio/tests/rerun/`, com marcas e a fixture que assenta só as
   execuções (sonda, item c); se o bug mudou algum veredito gravado, o
   teste nasce do mesmo cenário gravado em `task/80a-proof`; (5) o teste
   roda em `task/80a-bug84` e em `task/80a-proof`, o do a2ppa com o
@@ -352,10 +352,10 @@ resultado de cada demo vai como sair, inclusive negativo.
   do mesmo trecho (a trilha visual, sem a semântica), o que um vídeo
   mostra; (ii) o rerun do harness como está (assenta tudo antes de cada
   ato); (iii) o teste escrito à mão da task-84
-  (`crates/ide/tests/human_agent.rs:491-611`).
+  (`apps/idestudio/tests/human_agent.rs:491-611`).
 - **critério.** K1: das oito perguntas, quantas o `plev-inspect` responde
   pelo trecho sozinho, com a resposta conferida contra o código (o
-  defeito em `crates/ide/src/session.rs`), contra quantas os frames
+  defeito em `apps/idestudio/src/repository/git.rs`), contra quantas os frames
   sozinhos respondem. K2: o teste do trecho falha em `task/80a-bug84` e
   passa em `task/80a-proof`, dez de dez sem oscilar; o controle (ii)
   passa nas duas. K3: o trecho abaixo de 1 MB, dentro do git ao lado do
@@ -368,7 +368,7 @@ resultado de cada demo vai como sair, inclusive negativo.
 
 ### demo 4, interface efêmera (feita nesta fase)
 
-- **roteiro.** um teste em `crates/showcase/tests/` grava, sem janela, a
+- **roteiro.** um teste em `apps/uigallery/tests/` grava, sem janela, a
   Silences em 1200 por 800 (a janela do checkpoint b), servida por uma
   porta de verdade, a partir da semente (os cortes 1 e 2, sem ffmpeg) e
   com frames sintéticos no cache: um agente escolhe as regras, escreve
@@ -399,8 +399,8 @@ resultado de cada demo vai como sair, inclusive negativo.
   - K4, efêmera: os nós da superfície existem no estado gravado só entre
     o propose e o close; depois do close nenhum nó e nenhuma ligação
     dela; o `source` de todo nó dela é o materializador
-    (`crates/surface/src/**`), nunca um arquivo da tela do app, enquanto
-    os nós da fixa apontam para `crates/showcase/src/view/apps/silences/**`;
+    (`rust/screen/src/**`), nunca um arquivo da tela do app, enquanto
+    os nós da fixa apontam para `apps/uigallery/src/views/apps/silences/**`;
   - K5, custo: tempo do propose à superfície pelas regras, nós, bytes e
     frames da gravação;
   - K6, a recusa: "I can't compare these" deixa a superfície como estava
@@ -504,7 +504,7 @@ regressão" e "fechamento da fase c".
   valor que a conexão nunca viu. isso foi um defeito real achado lendo a
   sessão, e virou a task-89.
 - a sessão a2ppa virou teste no gate
-  (`crates/ide/tests/rerun/lab.rs:165`), e com a precondição do `submit`
+  (`apps/idestudio/tests/rerun/eval.rs:165`), e com a precondição do `submit`
   quebrada de propósito o teste falhou dizendo onde (à mão, repetido pelo
   orquestrador; no gate quem guarda o caso é o brinquedo).
 
@@ -521,9 +521,9 @@ e "checkpoint b, segunda rodada"; `checked/task-70-adaptive-transformations-done
 "a demo" da fase 2.
 
 - a demo do editor de vídeo foi gravada sem janela, pelas regras e pelo
-  Claude (`crates/showcase/fixtures/demo/silences-demo.monster`, 186.837
+  Claude (`apps/uigallery/tests/fixtures/sessions/silences-demo.monster`, 186.837
   B; `silences-demo-claude.monster`, 861.354 B), e
-  `crates/showcase/tests/demo.rs` confere no gate que a superfície está no
+  `apps/uigallery/tests/demo.rs` confere no gate que a superfície está no
   estado e nas ligações no instante do apply e sumiu no fim.
 - checkpoint b, primeira rodada: a gerada saiu pior (a linha do corte
   quebrada pelas regras; pelo Claude a tarefa por último, sliders sem
@@ -550,7 +550,7 @@ espera a task-96.
 o bug: a corrida do `Refresh` da task-84. a correção é o `6500f2dc`; na
 branch descartável `task/80a-bug84` (nunca no merge) o commit `84161012`
 põe a corrida de volta: em `GitSession::apply`
-(`crates/ide/src/session.rs:266-269`) a resposta continua contada, mas é
+(`apps/idestudio/src/repository/git.rs:266-269`) a resposta continua contada, mas é
 aplicada mesmo quando foi lida antes de uma mutação que a view já mostra.
 
 ### a sessão
@@ -574,7 +574,7 @@ dois trechos exportados por `plev-inspect --export`:
   se manda.
 - o trecho do teste, `--export 0 92`: 43.916 bytes, 25 eventos, 7
   frames, do começo até o form aberto, antes do submit. entra no git em
-  `crates/ide/tests/fixtures/sessions/bug84.monster` (abaixo de 1 MB).
+  `apps/idestudio/tests/fixtures/sessions/bug84.monster` (abaixo de 1 MB).
 
 ### a leitura no inspector, no instante
 
@@ -620,7 +620,7 @@ $ plev-inspect bug84-report.monster --control 'changes.file[src/session.rs]' --a
 control changes.file[src/session.rs] at +0.050s
   node          changes.file[src/session.rs]: list_item "src/session.rs", enabled
   state         status = "modified", staged = false, unstaged = true
-  source        crates/ide/src/workbench/project.rs:88:26, in build 84161012
+  source        apps/idestudio/src/capability/project.rs:88:26, in build 84161012
   requests      1 touched it up to +0.050s (their target, or a state they read)
   request 2 (origin 0): stage on changes.file[src/session.rs] by agent:scripted, at +0.036s
     observed      not recorded at revision 6bb666e6c0b67ed8: ... the revision it acted on came another way, such as the last stage of an earlier act
@@ -669,7 +669,7 @@ respondidas só pelo arquivo:
 
 | pergunta | resposta do inspector |
 | --- | --- |
-| qual controle era esse | `changes` e as linhas `changes.file[src/session.rs]` e `changes.file[tests/login_test.rs]`, projetadas em `crates/ide/src/workbench/project.rs:74` e `:88` |
+| qual controle era esse | `changes` e as linhas `changes.file[src/session.rs]` e `changes.file[tests/login_test.rs]`, projetadas em `apps/idestudio/src/capability/project.rs:74` e `:88` |
 | qual era seu estado | a +0.050 s, `src/session.rs` com `staged = false` enquanto o próprio stage executava; a +0.090 s, `tests/login_test.rs` com `staged = false`, 1 ms depois de o stage dele concluir |
 | qual foi a sequência anterior | stage de `src/session.rs` executando a +0.036 s, o arquivo sai do `changes:staged` a +0.048 s, o stage conclui a +0.064 s; o mesmo com `tests/login_test.rs` a +0.065, +0.077 e +0.089 s |
 | qual ação ocorreu | `stage` (requests 2 e 3), depois o `submit` (request 6) |
@@ -684,13 +684,13 @@ request 2 carregou (`6bb666e6...`, em que o request 3 se apoiou) é a
 mesma que o app tinha antes do request 2 (a +0.018 s) e de novo a +0.048
 s: a view voltou a um estado que já tinha deixado. o único lugar que
 troca a lista inteira pelo que o git leu é `GitSession::apply`
-(`crates/ide/src/session.rs:271-275`, `set_files`), e a resposta que
+(`apps/idestudio/src/repository/git.rs:271-275`, `set_files`), e a resposta que
 chegou ali foi lida antes do stage.
 
 ### o controle (i): os frames sozinhos
 
 a trilha visual guarda a cena e as ligações de cada frame, nada de
-estágio, ator ou request (`crates/rec/src/visual.rs:1-23`). pelos frames,
+estágio, ator ou request (`rust/record/src/visuals/mod.rs:1-23`). pelos frames,
 um vídeo mostraria a linha do arquivo mudando de grupo e voltando:
 responde, no máximo, qual controle, o estado desenhado e que algo mudou
 (3 das 8). não diz que um stage estava em execução, que ninguém agiu,
@@ -701,7 +701,7 @@ tela pode não ter nem o quadro.
 
 ### o teste
 
-`crates/ide/tests/rerun/inflight.rs` (novo), no binário `rerun` do ide
+`apps/idestudio/tests/rerun/inflight.rs` (novo), no binário `rerun` do ide
 (`cargo test -p ide --test rerun`):
 
 - `InFlight`: a fixture do ide (`Lab`) assentada só até as execuções. o
@@ -741,7 +741,7 @@ na branch descartável `task/80a-bug84` (`84161012`, a corrida de volta,
 mais o commit do teste escolhido por cherry-pick como `034b951d`):
 
 ```text
-thread 'inflight::the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight' panicked at crates/ide/tests/rerun/inflight.rs:103:5:
+thread 'inflight::the_bug84_excerpt_keeps_every_staged_file_with_the_reads_in_flight' panicked at apps/idestudio/tests/rerun/inflight.rs:103:5:
 rerun of an excerpt recorded by rec 0.1.0, built from 84161012: 4 requests, 6 marks
   same      request 1 (origin 0, rerun as 1): unstage on changes.file[README.md] by agent:scripted: completed
   same      request 2 (origin 0, rerun as 2): stage on changes.file[src/session.rs] by agent:scripted: completed
@@ -783,7 +783,7 @@ ide (nenhum nó ou chave com "secret", "redact", "camera", "contrast",
 ### resultado contra o critério
 
 - **K1:** as oito perguntas respondidas pelo trecho sozinho, conferidas
-  contra o código (`crates/ide/src/session.rs:266-275`); os frames
+  contra o código (`apps/idestudio/src/repository/git.rs:266-275`); os frames
   sozinhos respondem no máximo três, e os lapsos são mais curtos que um
   quadro de vídeo a 30 fps.
 - **K2:** o teste falha na branch com a corrida (3 marcas divergem) e
@@ -793,7 +793,7 @@ ide (nenhum nó ou chave com "secret", "redact", "camera", "contrast",
 - **K4:** para ter o teste: o trecho exportado por um comando, 26 linhas
   de marcas (6 marcas), e a `InFlight`, que serve a qualquer sessão do
   laboratório. os testes à mão da task-84 são 146 linhas de Rust
-  (`crates/ide/tests/human_agent.rs:466-611`) e cobrem quatro cenários
+  (`apps/idestudio/tests/human_agent.rs:466-611`) e cobrem quatro cenários
   (stage, unstage da pessoa, discard, watcher); o do trecho cobre o do
   stage, duas vezes.
 
@@ -815,7 +815,7 @@ nada derrubou a demo. o que ela achou, para o orquestrador:
 
 ## fase 1: demo 4, interface efêmera (feita)
 
-o teste `crates/showcase/tests/ephemeral.rs` (novo, no gate:
+o teste `apps/uigallery/tests/ephemeral.rs` (novo, no gate:
 `cargo test -p showcase --test ephemeral`) roda o roteiro do método sem
 janela, sem ffmpeg e sem Claude: a Silences em 1200 por 800 servida por
 uma porta de verdade num diretório temporário, a partir da semente
@@ -877,7 +877,7 @@ lugar, o close tira tudo.
 $ plev-inspect showcase-ephemeral-test.monster --control proposed --at 50
 control proposed at +0.050s
   node          proposed: region "the list with the video and the counts", enabled
-  source        crates/surface/src/project.rs:96:11, in build b26dc988
+  source        rust/screen/src/project.rs:96:11, in build b26dc988
 
 $ plev-inspect showcase-ephemeral-test.monster --control proposed --at 130
 control proposed at +0.130s
@@ -887,13 +887,13 @@ $ plev-inspect showcase-ephemeral-test.monster --control 'proposed.silences.cut[
 control proposed.silences.cut[1].apply_cut at +0.050s
   node          proposed.silences.cut[1].apply_cut: button "apply cut", enabled
   actions       activate (reads proposed.silences.cut[1].decision:text)
-  source        crates/surface/src/project.rs:104:23, in build b26dc988
+  source        rust/screen/src/project.rs:104:23, in build b26dc988
   requests      0 touched it up to +0.050s (their target, or a state they read)
 
 $ plev-inspect showcase-ephemeral-test.monster --control 'silences.cut[1]' --at 130
 control silences.cut[1] at +0.130s
   state         ... decision = "apply", frame = "silences.video@4.017052"
-  source        crates/showcase/src/view/apps/silences/semantics.rs:256:30, in build b26dc988
+  source        apps/uigallery/src/views/apps/silences/fixed_page/semantics.rs:256:30, in build b26dc988
   requests      1 touched it up to +0.130s (their target, or a state they read)
 
 $ plev-inspect showcase-ephemeral-test.monster --why 4
@@ -910,12 +910,12 @@ request 4 (origin 0): apply_cut on silences.cut[1] by human, at +0.052s
 ```
 
 a superfície e cada controle dela vêm do materializador
-(`crates/surface/src/project.rs`), nunca de um arquivo da tela do app; o
+(`rust/screen/src/project.rs`), nunca de um arquivo da tela do app; o
 controle do app que a decisão mudou vem de
-`crates/showcase/src/view/apps/silences/semantics.rs`, e é ele que guarda
+`apps/uigallery/src/views/apps/silences/fixed_page/semantics.rs`, e é ele que guarda
 a decisão depois que a superfície some. o teste confere isso nó a nó: os
-40 nós da superfície carregam `source`, todos em `crates/surface/src/`; os
-9 da tela fixa, todos em `crates/showcase/src/view/apps/silences`.
+40 nós da superfície carregam `source`, todos em `rust/screen/src/`; os
+9 da tela fixa, todos em `apps/uigallery/src/views/apps/silences`.
 
 dois achados da task-69 fase 4c continuam como estavam, e o inspector os
 mostra aqui: o ato pela superfície chega ao dispatcher como a capacidade
@@ -959,7 +959,7 @@ evento a evento) e em todos os eventos:
 - a entrada da pessoa: dois inputs, `pointer_down` e `pointer_up`, com o
   controle sob eles (`proposed.silences.cut[1].apply_cut`) e a posição;
   o tipo do evento não tem campo para conteúdo
-  (`crates/rec/src/event.rs:57-63`, `:79-91`).
+  (`rust/record/src/event.rs:57-63`, `:79-91`).
 - segredo: nenhum nó com `constraints.secret` na Silences, então nada a
   redigir nesta gravação; a redação de valor secreto como tamanho não foi
   exercida aqui (ela é da `sem::redact`, com testes próprios).
@@ -967,7 +967,7 @@ evento a evento) e em todos os eventos:
   aberta pela página.
 - accessibility: a faixa das preferências não abriu, então nenhum nó
   dela está na gravação; aberta, os botões dela não têm estado
-  (`crates/showcase/src/view/apps/silences/generated/access.rs:169-186`),
+  (`apps/uigallery/src/views/apps/silences/generative/access.rs:169-186`),
   e o teste confere que um nó de accessibility, se houver, não guarda
   estado.
 - uma observação: o texto da intenção fica gravado como valor do campo
@@ -983,7 +983,7 @@ evento a evento) e em todos os eventos:
 rodada pelo laboratório sem janela, `ide-lab --arm review`, no build
 `2e6c9e9a` da branch `task/96a-ide-surface`, sobre o repositório da
 revisão do laboratório (`Repo::build_review` em
-`crates/ide/src/lab_repo.rs`: o commit inicial, três commits por cima em
+`apps/idestudio/src/repository/eval_repo.rs`: o commit inicial, três commits por cima em
 datas fixas, os shas iguais em toda corrida, e um `notes.txt` na árvore
 que nenhum commit tem). só as regras: sem porta, sem agente, sem Claude.
 a pessoa roteirizada clica no meio de cada controle como o frame na tela
@@ -992,7 +992,7 @@ como a resposta dela na task-93) e digita a intenção uma tecla por vez.
 primeiro o controle: os três cartões de commit do painel de stacks, um
 clique cada, o diff no painel de diff. depois a superfície: o campo da
 linha, "review these three commits", propor, o "show diff" de cada
-commit na superfície, fechar. o teste `crates/ide/tests/lab_review.rs`
+commit na superfície, fechar. o teste `apps/agenteval/tests/review.rs`
 roda o mesmo braço no gate.
 
 ### a gravação
@@ -1044,7 +1044,7 @@ linhas de estágio e com as 26 teclas numa linha só:
 $ plev-inspect review.monster --control proposed --at 100
 control proposed at +0.100s
   node          proposed: region "review these three commits", enabled
-  source        crates/surface/src/project.rs:96:11, in build 2e6c9e9a
+  source        rust/screen/src/project.rs:96:11, in build 2e6c9e9a
 
 $ plev-inspect review.monster --control proposed --at 179
 control proposed at +0.179s
@@ -1053,12 +1053,12 @@ control proposed at +0.179s
 $ plev-inspect review.monster --control 'proposed.stacks.commit[78f371df...].files' --at 128
   node          proposed.stacks.commit[78f371df...].files: table "files", enabled
   state         rows = [src/login.rs]
-  source        crates/surface/src/project.rs:104:23, in build 2e6c9e9a
+  source        rust/screen/src/project.rs:104:23, in build 2e6c9e9a
 
 $ plev-inspect review.monster --control 'proposed.stacks.commit[78f371df...].show_diff' --at 128
   node          ...show_diff: button "show diff", enabled
   actions       activate (reads proposed.diff.target:text)
-  source        crates/surface/src/project.rs:104:23, in build 2e6c9e9a
+  source        rust/screen/src/project.rs:104:23, in build 2e6c9e9a
   requests      0 touched it up to +0.128s (their target, or a state they read)
 
 $ plev-inspect review.monster --why 6
@@ -1073,8 +1073,8 @@ request 6 (origin 0): show_diff on stacks.commit[78f371df...] by human, at +0.12
 ```
 
 a superfície e cada controle dela vêm do materializador
-(`crates/surface/src/project.rs`); os commits vêm de
-`crates/ide/src/workbench/project.rs` (o teste confere nó a nó no estado
+(`rust/screen/src/project.rs`); os commits vêm de
+`apps/idestudio/src/capability/project.rs` (o teste confere nó a nó no estado
 gravado). os dois achados da task-69 fase 4c continuam: o ato pela
 superfície chega ao dispatcher como a capacidade do app, e só o input da
 pessoa nomeia o botão gerado; e a observação da pessoa não é colocada. no
@@ -1113,7 +1113,7 @@ o que falta para a superfície não perder no diff não é do ide: o
 vocabulário do IR não tem um componente de código ou de diff, e a tabela
 é o único jeito de mostrar uma lista de textos (linhas de 48 px, um
 único token de altura, `dropdown_max_h`). um componente novo pede o widget
-no comps primeiro e um ADR (`crates/uir/src/vocab.rs`), decisão do
+no comps primeiro e um ADR (`rust/plevir/src/vocabulary.rs`), decisão do
 orquestrador. os três diffs de uma vez, que o painel fixo também não tem,
 pediriam um estado de diff por commit na projeção (P3 da sonda da
 task-96).
@@ -1195,7 +1195,7 @@ control proposed.diff.lines at +0.205s
                 removed, added, context, context, header, added, added, added, added, added],
                 lines = [src/session.rs: @@ -1,9 +1,10 @@,  pub struct Session {, ...]
   actions       none
-  source        crates/surface/src/project.rs:104:23, in build 10f66729
+  source        rust/screen/src/project.rs:104:23, in build 10f66729
 
 $ plev-inspect review.monster --control proposed --at 232
 control proposed at +0.232s
@@ -1243,7 +1243,7 @@ onde ela perde, e por quê:
   que um nó toma o que sobra do retângulo da superfície (decisão do
   orquestrador).
 - o número de linha: a projeção leva a marca de cada linha, não os
-  números antigo e novo (`crates/ide/src/workbench/project.rs`, `diff`).
+  números antigo e novo (`apps/idestudio/src/capability/project.rs`, `diff`).
 - os atos: a intenção digitada e o propor, como na primeira corrida.
 
 o que isso não cobre, dito como na primeira: só as regras; a pessoa
@@ -1368,17 +1368,17 @@ apagada depois da validação.
 
 ### arquivos
 
-- `docs/mission/steps/ongoing/task-80-proof-qualitatively-different-software.md`:
+- `docs/log/steps/task-80-proof-qualitatively-different-software.md`:
   sonda, método, provado, demos 3 e 4, handoff.
-- `docs/ADR/generative-runtime-results.md` (novo, proposed).
-- `crates/ide/tests/rerun/inflight.rs` (novo): a fixture `InFlight` e o
+- `docs/adr/generated/0070-generative-runtime-results.md` (novo, proposed).
+- `apps/idestudio/tests/rerun/inflight.rs` (novo): a fixture `InFlight` e o
   teste do trecho.
-- `crates/ide/tests/rerun/lab.rs`: `answer_while` e `take` (o `drain` usa
-  o mesmo), `fixture` público no módulo. `crates/ide/tests/rerun/main.rs`:
+- `apps/idestudio/tests/rerun/eval.rs`: `answer_while` e `take` (o `drain` usa
+  o mesmo), `fixture` público no módulo. `apps/idestudio/tests/rerun/main.rs`:
   o módulo novo.
-- `crates/ide/tests/fixtures/sessions/bug84.monster` (43.916 bytes) e
+- `apps/idestudio/tests/fixtures/sessions/bug84.monster` (43.916 bytes) e
   `bug84.marks`.
-- `crates/showcase/tests/ephemeral.rs` (novo): a demo 4.
+- `apps/uigallery/tests/ephemeral.rs` (novo): a demo 4.
 
 nenhum código de produção, nenhum `Cargo.toml`, nenhuma linha do
 `Cargo.lock`, nenhum baseline.
@@ -1393,7 +1393,7 @@ as marcas e o relatório estão como estavam.
 com o ambiente do briefing (o `PLEV_CLAUDE` no stub) e
 `CARGO_NET_OFFLINE=true` em todo comando cargo:
 
-- `./script/gate`: verde (exit 0, 03:17 a 03:19), com a perna urnaui e o
+- `./tool/tasks/fullcheck.sh`: verde (exit 0, 03:17 a 03:19), com a perna urnaui e o
   check wasm com `-D warnings`. workspace 2927 passam, 0 falham, 26
   ignorados (157 suítes); urnaui 85 passam, 0 falham, 1 ignorado (6
   suítes). total 3012 passam e 27 ignorados, contra 3010 e 27 na base: os

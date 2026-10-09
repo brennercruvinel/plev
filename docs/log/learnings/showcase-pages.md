@@ -46,9 +46,9 @@ fazer a próxima reorganização grande, humano ou agente.
    1100 px. o teste "tall: nada rola" passou a dobrar Components antes,
    que é exatamente o que o usuário faz.
 7. **`git mv` em lote com `git rm --cached` + `git add` quando o
-   sistema de arquivos não distingue maiúscula.** `docs/adr` -> `docs/ADR`
+   sistema de arquivos não distingue maiúscula.** `docs/adr` -> `docs/adr`
    no macOS: `git mv` recusa ("bad source"), o disco já estava com o
-   nome novo. `git rm -r --cached docs/adr && git add docs/ADR` registra
+   nome novo. `git rm -r --cached docs/adr && git add docs/adr` registra
    os 59 renames sem tocar em nada.
 
 ## o que mordeu
@@ -67,8 +67,8 @@ fazer a próxima reorganização grande, humano ou agente.
 - **`Group::len` sem `is_empty`.** clippy `len_without_is_empty` pega
   qualquer método público chamado `len`. nome que diz o que conta
   (`pages()`) resolve melhor que um `is_empty` de fachada.
-- **typos no root de docs/.** a exclusão cobria `docs/adr/`, `docs/how-to/`
-  etc., mas `docs/catalog.md` e o changelog que subiu pra `docs/` são
+- **typos no root de docs/.** a exclusão cobria `docs/adr/`, `docs/ref/`
+  etc., mas `docs/ref/component-catalog.md` e o changelog que subiu pra `docs/` são
   português e ficaram descobertos. a CI é advisory, mas o ruído esconde
   erro real.
 - **`TaskCreate` não existe em toda sessão.** quando a tool não está

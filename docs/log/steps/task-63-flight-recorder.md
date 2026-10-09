@@ -34,15 +34,15 @@ característica de engine leve.
 
 ## estado atual no código
 
-- `crates/monster`: codec com IR próprio (`ir.rs`), desacoplado de
+- `rust/motion`: codec com IR próprio (`ir.rs`), desacoplado de
   `SceneNode` para o formato congelado não perseguir o enum interno; o
   player baixa IR para `SceneNode` (`lower.rs`), não existe o caminho
   contrário. discover (modo B) descobre deltas a partir de frames
   amostrados (`discover.rs`, `discover_fit.rs`).
-- container (`crates/monster/src/container.rs`): magic `MON0`, versão 0,
+- container (`rust/motion/src/encoding/container.rs`): magic `MON0`, versão 0,
   seções `K` (keyframe), `D` (delta), `X`, `T` (descrição), cada uma com
   sha256; contadores `u16` (nós por keyframe, assets, tamanho de dado de
-  asset). golden em `crates/monster/fixtures/golden_v0_minimal.monster`.
+  asset). golden em `rust/motion/tests/fixtures/golden_v0_minimal.monster`.
 - limites que importam para sessão: `u16` estoura em sessão longa; texto
   é asset `text_style`; imagem é asset.
 - depois de 57 e 58: `Snapshot`, `Revision`, `Snapshot::diff`,
@@ -131,10 +131,10 @@ decisões do orquestrador para a fase c:
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 
-- o gravador mora num crate novo, `crates/rec` (depende de `sem`,
+- o gravador mora num crate novo, `rust/record` (depende de `sem`,
   `monster` e `engine`). o `monster` continua sendo o codec de animação e
   ganha só o `raise` (`SceneNode` para o IR), o espelho do `lower` que ele
-  já tem, em `crates/monster/src/raise.rs`.
+  já tem, em `rust/motion/src/mappings/raise.rs`.
 - esta rodada faz as fases a e b em memória (trilha semântica como
   `ReceiptSink`, anel limitado, raise e trilha visual pelo discover) e
   termina apresentando as duas opções de formato de arquivo com custo e
@@ -214,13 +214,13 @@ o inspector com scrub e painel de estado (task-64), sessão para teste
 
 ## superfície sob responsabilidade
 
-- `crates/monster/**` (formato e raise), ou o crate irmão decidido no ADR
+- `rust/motion/**` (formato e raise), ou o crate irmão decidido no ADR
 - o módulo de gravação (dentro do crate decidido; não em `sem`, que fica
   puro e sem I/O)
-- proposta de ADR `docs/ADR/session-recording-replay-not-reexecution.md`
+- proposta de ADR `docs/adr/recording/0037-session-recording-replay-not-reexecution.md`
 
 proibido: o golden `fixtures/golden_v0_minimal.monster` e o comportamento
-do player de animação; `crates/sem` sem aprovação.
+do player de animação; `rust/accord` sem aprovação.
 
 ## interfaces que consome
 
@@ -229,7 +229,7 @@ do player de animação; `crates/sem` sem aprovação.
 
 ## interfaces que pode alterar
 
-`crates/monster` por adição. qualquer mudança que altere o decode do
+`rust/motion` por adição. qualquer mudança que altere o decode do
 golden é recusada.
 
 ## contrato exposto
@@ -251,7 +251,7 @@ golden é recusada.
 - roundtrip `raise -> lower` para cada tipo de nó.
 - ring buffer respeita os limites (teste com relógio injetado).
 - números medidos de custo registrados no ADR.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -315,7 +315,7 @@ sobre a `main` em `2ecaa8d`. seis commits, gate verde.
   lista ou além dela, retângulo não finito ou sem área e passo no início
   do chunk seguinte ou depois viram `FileError::Bindings` e
   `FileError::BoundId`.
-- testes (`crates/rec/tests/session/bound.rs`): mudou, não mudou, id que
+- testes (`rust/record/tests/session/bound.rs`): mudou, não mudou, id que
   some, ordem de empilhamento, clip, camada escondida, leitura em qualquer
   instante da memória e do arquivo; o anel e o export cortando no meio
   (cada chunk abre com a lista); um arquivo versão 0 (a mesma sessão sem
@@ -347,13 +347,13 @@ pid. sem a variável, nada muda.
 - `PLEV_RECORD=1` num build de debug (`ide::record::enabled`); sem a
   variável não se cria recorder, diretório nem tecla, e o shell paga um
   teste de `Option` por frame e por input.
-- a lib (`crates/ide/src/record.rs`, `ide::record::Recording`, testável
+- a lib (`apps/idestudio/src/interfaces/window/record/mod.rs`, `ide::record::Recording`, testável
   sem janela): um `Recorder` no relógio do workbench (`bench.now()`), um
   sink no dispatcher dele (`attach`), o estado (`state`, guardado só
   quando muda), o frame desenhado com as ligações (`frame`, que grava o
   estado antes), o input da pessoa (`input`: tipo, posição e o controle
   sob o ponteiro no frame na tela, nunca o caractere), `save` e
-  `catch_panics` (`rec::install_panic_hook`). em `crates/ide/src/agent.rs`,
+  `catch_panics` (`rec::install_panic_hook`). em `apps/idestudio/src/capability/agent.rs`,
   `Served` ganhou `recorder` e o `Host::observed` grava quem observou o
   quê (ator, escopo, revisão) no relógio do workbench;
   `serve_recorded(port, bench, compositor, recording)` é o `serve` com a
@@ -378,7 +378,7 @@ pid. sem a variável, nada muda.
 
 ### o teste sem janela
 
-`crates/ide/tests/record.rs` faz o papel do shell pelas mesmas funções
+`apps/idestudio/tests/record.rs` faz o papel do shell pelas mesmas funções
 (`Recording::attach`, `state`, `frame`, `input`, `save` e
 `ide::agent::serve_recorded`), com um repositório real, o worker do git e
 uma porta real. o agente observa com `bounds`, faz stage de A e B, abre o
@@ -646,14 +646,14 @@ Implementado:
   $TMPDIR/plev/sessions/ide-<pid>-<n>.monster
 
 Arquivos principais:
-- crates/rec/src/{bound.rs (novo), format.rs, persist.rs, visual.rs,
+- rust/record/src/{bound.rs (novo), format.rs, persist.rs, visual.rs,
   screen.rs, session.rs, recorder.rs, ring.rs, limits.rs, error.rs, lib.rs}
-- crates/rec/tests/session/{bound.rs (novo), file.rs, measure.rs, main.rs}
-- crates/ide/src/{record.rs (novo, lib), recording.rs (novo, shell),
-  agent.rs, lib.rs, main.rs, keys.rs}, crates/ide/tests/record.rs (novo),
-  crates/ide/Cargo.toml (inspect como dev-dependency), Cargo.lock
-- docs/ADR/session-recording-replay-not-reexecution.md,
-  docs/mission/steps/checked/task-63-flight-recorder-done.md
+- rust/record/tests/session/{bound.rs (novo), file.rs, measure.rs, main.rs}
+- apps/idestudio/src/{record.rs (novo, lib), recording.rs (novo, shell),
+  agent.rs, lib.rs, main.rs, keys.rs}, apps/idestudio/tests/record.rs (novo),
+  apps/idestudio/Cargo.toml (inspect como dev-dependency), Cargo.lock
+- docs/adr/recording/0037-session-recording-replay-not-reexecution.md,
+  docs/log/steps/task-63-flight-recorder.md
 
 Interfaces adicionadas/alteradas:
 - adicionadas: rec::Bound, rec::VERSION_BINDINGS, Session::{bindings_at,
@@ -677,7 +677,7 @@ Testes:
   sem gravar as observações, conferido à mão)
 
 Validação executada:
-- ./script/gate verde com a perna urnaui: 2208 passed, 0 failed, 12
+- ./tool/tasks/fullcheck.sh verde com a perna urnaui: 2208 passed, 0 failed, 12
   ignored (88 "test result"); a main tinha 2202 (87); os 6 a mais são
   desta task
 - cargo test -p rec, -p ide, -p inspect, -p showcase verdes dentro do gate
@@ -747,7 +747,7 @@ Riscos de integração:
 ADR proposto:
 - já escrito em session-recording-replay-not-reexecution.md (a trilha
   visual, o formato com a versão e a seção B, o custo, as consequências).
-  a linha do índice (docs/ADR/README.md, fora da minha lista) pode ganhar
+  a linha do índice (docs/adr/README.md, fora da minha lista) pode ganhar
   no fim: "; desde a fase d, cada frame leva onde cada id ligado aparece
   (seção B, versão 1; versão 0 continua lida), e o ide grava a própria
   sessão com PLEV_RECORD=1 em debug"

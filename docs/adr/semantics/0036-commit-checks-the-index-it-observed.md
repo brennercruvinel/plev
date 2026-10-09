@@ -18,19 +18,19 @@ later), so for a moment the screen and the index could disagree, and a
 terminal, an editor, the file watcher, the person and an agent all move
 the index.
 
-task-58 gave the rule (docs/ADR/actions-carry-observed-state.md): a
+task-58 gave the rule (docs/adr/semantics/0033-actions-carry-observed-state.md): a
 request carries the values its actor observed for the state the action
 reads, the dispatcher checks them against the live projection, and when
 the truth lives outside the ui process the point of truth checks them
 again right before the effect. task-59 gave the binding table and the
-click as a request (docs/ADR/semantic-binding-beside-the-scene.md). this
+click as a request (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md). this
 record applies both to the git client.
 
 ## decision
 
 ### one workbench
 
-`crates/ide/src/workbench` is the git workspace as a capability. the
+`apps/idestudio/src/capability` is the git workspace as a capability. the
 `Workbench` owns the views (`WorkspaceView`), the git side (`GitSession`)
 and one `sem::Dispatcher`; it implements `Semantics` (`project.rs`) and
 `Operable` (`execute.rs`, one handler per capability). the ide binary and
@@ -66,7 +66,7 @@ row under the cursor, which is not a fixed id.
 
 ### the second check, at the index
 
-`crates/git` replaces `GitCommand::Commit` with `GitCommand::CommitIf {
+`rust/gitdrv` replaces `GitCommand::Commit` with `GitCommand::CommitIf {
 message, expect_staged }`. the worker reads the real index through
 `status` (the same source the list shows), compares its staged set with
 `expect_staged`, and only then runs `git commit`; when they differ it
@@ -132,7 +132,7 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   (task-84): the session counts the status, log and branches reads it
   asked for, and a read asked before a mutation the view already shows is
   dropped when it arrives, since the refresh that mutation's answer sends
-  is queued after it (`crates/ide/src/session.rs`, `Reads`). without it a
+  is queued after it (`apps/idestudio/src/repository/git.rs`, `Reads`). without it a
   status read before a stage landed over the stage and the projection
   showed, for a moment, a state that was neither git's nor the one the
   ide had accepted.
@@ -152,9 +152,9 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
 - task-61 carries the same requests and receipts over the agent socket;
   the phase c experiment drives this workbench from outside the process.
 - updated on 2026-09-23: `Dispatcher::decline` exists since task-58b
-  (`crates/sem/src/dispatch.rs`). closing the modal without confirming
+  (`rust/accord/src/dispatch.rs`). closing the modal without confirming
   (cancel, escape, a click outside it) declines as `Actor::Human`
-  (`crates/ide/src/workbench/person.rs`): the receipt ends rejected with
+  (`apps/idestudio/src/capability/person.rs`): the receipt ends rejected with
   `Rejection::Declined`, nothing runs, and the next request waiting for a
   person is asked. expiring a request awaiting confirmation still has no
   api.
@@ -169,9 +169,9 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   today, and the rule above stands for what a view decides on its own.
   the git worker's answers land when they arrive: the refresh's status
   replaces `changes:staged` with what the index holds (`GitSession::apply`,
-  `crates/ide/src/session.rs`), which is how a change made outside the ui
+  `apps/idestudio/src/repository/git.rs`), which is how a change made outside the ui
   reaches the projection, and since task-84 a status read before a
   mutation the view shows is dropped. typing changes `commit.message:text`
-  (`crates/ide/src/main.rs`), editing that
-  docs/ADR/semantic-binding-beside-the-scene.md exempts. navigation moves
+  (`apps/idestudio/src/main.rs`), editing that
+  docs/adr/semantics/0035-semantic-binding-beside-the-scene.md exempts. navigation moves
   `changes:selected`, accepted under "one workbench" above.

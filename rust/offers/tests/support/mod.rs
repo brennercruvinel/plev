@@ -14,7 +14,7 @@ fn read(rel: &str) -> String {
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
-/// The showcase todo projected, as `crates/uir/fixtures` pins it.
+/// The showcase todo projected, as `rust/plevir/tests/fixtures` pins it.
 pub fn todo() -> Snapshot {
     serde_json::from_str(&read(
         "../plevir/tests/fixtures/uigallery-todo.snapshot.json",
@@ -22,7 +22,7 @@ pub fn todo() -> Snapshot {
     .unwrap()
 }
 
-/// The ide workbench projected, as `crates/uir/fixtures` pins it.
+/// The ide workbench projected, as `rust/plevir/tests/fixtures` pins it.
 pub fn ide() -> Snapshot {
     serde_json::from_str(&read(
         "../plevir/tests/fixtures/idestudio-workbench.snapshot.json",
@@ -222,7 +222,7 @@ pub fn agent() -> accord::Actor {
     }
 }
 
-/// The Silences projected, as `crates/uir/fixtures` pins it.
+/// The Silences projected, as `rust/plevir/tests/fixtures` pins it.
 pub fn silences() -> Snapshot {
     serde_json::from_str(&read(
         "../plevir/tests/fixtures/uigallery-silences.snapshot.json",

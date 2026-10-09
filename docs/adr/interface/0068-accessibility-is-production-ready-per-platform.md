@@ -22,7 +22,7 @@ accesskit_winit 0.32.2, accesskit_macos 0.26.1, accesskit_windows 0.32.1,
 accesskit_unix 0.21.1 over accesskit_atspi_common 0.18.1, the consumers
 0.35.0 and 0.36.0, winit 0.30.13) and every page of the gallery. the
 matrix with file and line is in
-`docs/mission/steps/ongoing/task-75-platform-accessibility.md`, section
+`docs/log/steps/task-75-platform-accessibility.md`, section
 "fase 1: a sonda".
 
 ## decision
@@ -51,7 +51,7 @@ redone from the new lock when it happens.
 
 ### the tree of every page is tested
 
-`crates/showcase/tests/access_tree.rs` builds the tree of each of the 82
+`apps/uigallery/tests/access_tree.rs` builds the tree of each of the 82
 pages as the bridge does and holds it: a valid update; every control
 named and focusable; Tab and the reader walking the same order; the page
 taking the focus the reader asks for; every offered action reading back
@@ -92,7 +92,7 @@ live region yet: that is a change of the view's shell projection.
 
 ### contrast
 
-`crates/engine/src/theme/tests_contrast.rs` measures 301 pairs of the
+`rust/engine/src/styling/theme/tests/contrast.rs` measures 301 pairs of the
 four themes (every text token on every surface text sits on, the
 tooltip's text on the tooltip, the headline gradient as large text, the
 intents, the accent that draws the focus ring and the active border as
@@ -173,7 +173,7 @@ full keyboard stay for phase 2b.
 ### where a fix lives
 
 three things read a page's projection at rest and pin it: the `uir`
-goldens (`crates/uir/fixtures/showcase-{todo,silences,files}.snapshot.json`,
+goldens (`rust/plevir/tests/fixtures/showcase-{todo,silences,files}.snapshot.json`,
 what the IR fixtures verify against), the capability registry a
 generated surface is verified against and a model is prompted with
 (`uir::Capabilities::from_snapshot`), and the regress scene, which
@@ -244,7 +244,7 @@ and a skeleton's pulse stand still and ask for no frame.
 
 ## consequences of phase 2a
 
-- the exact lists of `crates/showcase/tests/access_tree.rs` are down to
+- the exact lists of `apps/uigallery/tests/access_tree.rs` are down to
   the file drop; the others are empty and stay empty.
 - the capture baselines moved in their semantics only (the scene's
   revision with them); every other baseline and the `uir` goldens held.
@@ -258,7 +258,7 @@ is in the task file, section "fase 2b: a sonda".
 
 ### a component page is a `Component`
 
-one trait (`crates/showcase/src/view/dispatch/component.rs`) and one table,
+one trait (`apps/uigallery/src/views/dispatcher/component/mod.rs`) and one table,
 a line per pane: the page's widgets carry the ids it gave them, so each
 draw binds its rect beside the scene; it projects them under a region
 named by the page's title (inert while an overlay holds the pointer); it
@@ -299,7 +299,7 @@ accesskit_windows 0.32.1); macOS and AT-SPI do.
   pages, Editor, Git, Builder, Panel Header) and the ones with nothing to
   operate or read but a sample (22: Typography, Icons, Effects, Panel,
   Separator, the 17 placeholders), each with its reason in
-  `crates/showcase/tests/access_tree.rs`.
+  `apps/uigallery/tests/access_tree.rs`.
 - the Resizable page's `set_ratio`: the tree sets a value only through
   `set_value` and a select's `select`, and the contract has no splitter
   role; an agent asks it, a person drags, a reader hears the share.

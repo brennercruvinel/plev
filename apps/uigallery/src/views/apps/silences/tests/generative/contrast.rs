@@ -1,6 +1,6 @@
 //! The contrast of the generated review measured as the window shows it
 //! (task-70 phase 4), the way task-75 measures the four themes
-//! (`crates/engine/src/theme/tests_contrast.rs`): every text run the
+//! (`rust/engine/src/styling/theme/tests/contrast.rs`): every text run the
 //! surface draws, its ink composed in linear light over what it sits on
 //! (the fills drawn under it, in order, over the page's `bg`), the
 //! relative luminance of WCAG, and the ratio against 4.5 (3 for large

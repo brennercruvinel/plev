@@ -1,5 +1,5 @@
 //! Stage 1 (figma, task-71 phase 2): a Figma export (the REST API's JSON
-//! shape, as `script/figma-fixture` writes it from a .fig) -> its node
+//! shape, as `tool/tasks/figmapull.py` writes it from a .fig) -> its node
 //! tree, every node and every key with its line.
 //!
 //! `serde_json` keeps no position, so the lines come from the text: a node

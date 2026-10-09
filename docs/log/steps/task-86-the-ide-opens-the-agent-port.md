@@ -18,21 +18,21 @@ o cenário da tese é "uma pessoa usa o app enquanto um agente o opera, os
 dois pelo mesmo contrato". os dois checkpoints a rodaram no `ide-lab`: o
 workbench sem janela e uma pessoa roteirizada. o binário `ide`, o que
 alguém abre de verdade, não usa `wire` e não abre porta nenhuma
-(`crates/ide/src/main.rs`). enquanto isso não existir, a afirmação
+(`apps/idestudio/src/main.rs`). enquanto isso não existir, a afirmação
 principal do programa só está provada em laboratório, e o teste que só o
 brenner pode fazer (ele usando o ide enquanto um agente age) não tem como
 acontecer.
 
 ## estado no código (main @ 91a7319)
 
-- `crates/ide/src/main.rs`: o shell do ide (winit), com o `Workbench`,
+- `apps/idestudio/src/main.rs`: o shell do ide (winit), com o `Workbench`,
   o worker do git, o watcher, e desde a task-82 o `pace` e o tick de
   alcance. 655 linhas, acima do limite de 639: precisa dividir para
   crescer.
-- `crates/ide/src/bin/lab/host.rs:232-263`: o `Host` do laboratório
+- `apps/agenteval/src/host.rs:232-263`: o `Host` do laboratório
   sobre o `Workbench`, com gravação, custos e a pessoa roteirizada.
-- `crates/showcase/src/view/dispatch.rs:322-371` e
-  `crates/showcase/src/app.rs:178-185`, `:295`, `:486-494`: como o
+- `apps/uigallery/src/views/dispatcher/mod.rs:322-371` e
+  `apps/uigallery/src/shell/mod.rs:178-185`, `:295`, `:486-494`: como o
   showcase abre a porta (`AgentPort::open`, `PLEV_AGENT=1` em debug),
   acorda o loop (`UserEvent::Agent`), serve no thread do app e desenha só
   se um ato rodou; o `bounds` com o retângulo visível de cada ligação.
@@ -67,9 +67,9 @@ recusa; gate verde.
 ## o que foi feito (branch `task/86-ide-port`, sobre a main em `af8302f`)
 
 - o `main.rs` do ide foi dividido antes de crescer: o pacing (alcance,
-  wake do frame, a espera) foi para `crates/ide/src/pace.rs` com os dois
+  wake do frame, a espera) foi para `apps/idestudio/src/interfaces/window/pace.rs` com os dois
   testes de relógio injetado, e o teclado (keymap, contextos, ações) para
-  `crates/ide/src/keys.rs`. mesmo código, mesmos testes. o `main.rs` tem
+  `apps/idestudio/src/interfaces/window/keyboard.rs`. mesmo código, mesmos testes. o `main.rs` tem
   461 linhas com a porta.
 - o retângulo visível de uma ligação saiu do `Host` do showcase e foi
   para o engine, ao lado da ligação: `Binding::visible_rect` (o retângulo
@@ -78,7 +78,7 @@ recusa; gate verde.
   retângulo, na ordem do bind). o `bounds` do showcase lê dali; os testes
   de agente do showcase não mudaram e o `regress -- check` da task-67
   deu 157 baselines sem mudança.
-- `crates/ide/src/agent.rs` (lib, só unix): `Served { bench, compositor }`
+- `apps/idestudio/src/capability/agent.rs` (lib, só unix): `Served { bench, compositor }`
   implementa `wire::Host` (`project` = `bench.snapshot().ok()`, com o
   erro de projeção no log; `bounds` = `visible_bindings`; `dispatch` =
   `bench.dispatch`; `add_sink` = `bench.add_sink`; `observed` padrão),
@@ -96,14 +96,14 @@ recusa; gate verde.
 o briefing pedia `AgentPort::open("ide", wake)` dizendo que ele "já
 respeita `PLEV_AGENT=1` e build de debug". não respeita:
 `AgentPort::open` é o opt-in explícito do app e abre em qualquer build
-(`crates/wire/src/port.rs`, doc de `open`); quem olha a variável e o
+(`rust/socket/src/port.rs`, doc de `open`); quem olha a variável e o
 debug é `AgentPort::from_env`. o contrato que não pode mudar é
 "`PLEV_AGENT=1` só em debug, release fechado", então o ide usa
 `from_env`, como o showcase.
 
 ## o teste do `Host` da lib
 
-`crates/ide/tests/agent_port.rs`, só unix, dois testes. um `Rig` real
+`apps/idestudio/tests/agent_port.rs`, só unix, dois testes. um `Rig` real
 (repositório num tempdir, o worker do git de verdade) e uma porta real
 num tempdir, sem janela. a thread do teste faz o papel do shell do ide:
 no wake da porta chama `ide::agent::serve` e redesenha se um ato rodou;
@@ -329,7 +329,7 @@ Implementado:
   teclado), sem mudar comportamento
 - engine: Binding::visible_rect e Compositor::visible_bindings, aditivos,
   com teste; o bounds do showcase passa a ler dali
-- ide lib: crates/ide/src/agent.rs (só unix): Served (Host sobre
+- ide lib: apps/idestudio/src/capability/agent.rs (só unix): Served (Host sobre
   &mut Workbench e &Compositor), serve(port, bench, compositor) -> bool,
   port(wake) (from_env, app "ide"), APP = "ide"
 - ide shell: AppEvent::Agent; serve no wake da porta e depois de cada
@@ -337,13 +337,13 @@ Implementado:
   task-82 intacto no new_events
 
 Arquivos principais:
-- crates/ide/src/{main.rs, pace.rs (novo), keys.rs (novo), agent.rs
-  (novo), lib.rs}, crates/ide/Cargo.toml (só o comentário do wire: a
+- apps/idestudio/src/{main.rs, pace.rs (novo), keys.rs (novo), agent.rs
+  (novo), lib.rs}, apps/idestudio/Cargo.toml (só o comentário do wire: a
   lib agora o usa; ele já estava em [dependencies])
-- crates/engine/src/compositor/binding.rs
-- crates/showcase/src/view/dispatch.rs (só o bounds; 776 -> 775 linhas,
+- rust/engine/src/drawing/compositor/binding.rs
+- apps/uigallery/src/views/dispatcher/mod.rs (só o bounds; 776 -> 775 linhas,
   continua na lista congelada do file_hygiene_guard)
-- crates/ide/tests/agent_port.rs (novo), crates/ide/tests/support/mod.rs
+- apps/idestudio/tests/agent_port.rs (novo), apps/idestudio/tests/support/mod.rs
   (Rig::event)
 
 Interfaces adicionadas/alteradas:
@@ -359,7 +359,7 @@ Testes:
   do worker, conferido à mão
 
 Validação executada:
-- ./script/gate verde em 8e383b3 (rebase sobre a main em af8302f), com a
+- ./tool/tasks/fullcheck.sh verde em 8e383b3 (rebase sobre a main em af8302f), com a
   perna urnaui: 2202 passed, 0 failed, 12 ignored (87 "test result").
   3 desses testes são desta task (engine 1, ide 2); o resto da subida
   desde os 2128 da task-82b veio com a main (task-67, o
@@ -387,7 +387,7 @@ Decisões:
 
 Limitações:
 - acted nomeia só os pedidos validados contra exatamente a revisão em
-  que o agente se apoiou (crates/sem/src/dispatch.rs, acted:
+  que o agente se apoiou (rust/accord/src/dispatch.rs, acted:
   validated_against == observed.revision). na cena, a pessoa selecionou
   a linha antes da decisão do agente; se ela clicasse numa linha nova
   depois da decisão (seleção e show_diff mudam a revisão) e só então
@@ -399,7 +399,7 @@ Limitações:
 - todo AppEvent::Git invalida (apply_git_event, antes desta task): o
   refresh do watcher depois de um commit desenha uns 3 frames sem
   mudança visível
-- a árvore de accessibility (crates/engine/src/accessibility/tree.rs,
+- a árvore de accessibility (rust/engine/src/control/accessibility/tree/mod.rs,
   physical) calcula o mesmo retângulo à mão; pode usar
   Binding::visible_rect (arquivo fora da lista desta task)
 

@@ -31,7 +31,7 @@ custo zero quando nada mudou; a diferença vem com o nome da layer.
 ## estado atual no código
 
 - cada layer tem hash de conteúdo para dirty tracking
-  (`crates/engine/src/compositor/layer/mod.rs:43`, `FxHasher`). o hash é
+  (`rust/engine/src/drawing/compositor/layer/mod.rs:43`, `FxHasher`). o hash é
   determinístico dentro do mesmo build; muda quando a estrutura de dados do
   nó muda, mesmo sem mudança visual.
 - validação de visual por pixel é regra do repositório (convenções,
@@ -72,7 +72,7 @@ comparação entre plataformas (77); regressão de interação (64).
 um exemplo ou binário de regressão (`cargo run -p showcase --example
 regress -- check|bless` ou nome aprovado), os baselines em fixtures do
 showcase, `.github/workflows` (o job), proposta de ADR
-`docs/ADR/regression-by-meaning-before-pixels.md`.
+`docs/adr/workflows/0045-regression-by-meaning-before-pixels.md`.
 
 ## interfaces que consome
 
@@ -90,7 +90,7 @@ leitura de hash e nome de layer no compositor, por adição.
   "semântica igual, visual mudou" para os controles afetados, com região.
 - mudar uma label: relatório diz "semântica mudou" para aquele `SemId`.
 - tempo do `check` sem mudança medido e registrado.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -119,7 +119,7 @@ os dois), do cruzamento região para `SemId`, e do relatório.
 
 implementado, rebaseado na `main` @ bf67799 (task-82 fase b, 85, 87, 86
 aberta; o último passo só trouxe o journal) e revisto a pedido do
-orquestrador; `./script/gate` verde na
+orquestrador; `./tool/tasks/fullcheck.sh` verde na
 árvore final, perna urnaui incluída. nenhum dos "pare e reporte"
 disparou:
 
@@ -135,7 +135,7 @@ disparou:
 ### o que foi feito
 
 `cargo run -p showcase --example regress -- check|bless`, em
-`crates/showcase/examples/regress/`:
+`tool/bench/regress/src/`:
 
 - `scene.rs`: nome de cada layer, bounds do que ela desenha, ligações
   por layer; `hash.rs`: a codificação estável do hash.
@@ -181,7 +181,7 @@ disparou:
    estreitaria a layer a uma região. core é o tema de lançamento e hoff o
    vidro escuro, o par que os testes do headless desenham; cada imagem
    custa uns 90 KB a cada bless e são os pixels de uma GPU só.
-4. `docs/how-to/validate-visuals-by-pixel.md` ganha a seção do fluxo
+4. `docs/ref/validate-visuals-by-pixel.md` ganha a seção do fluxo
    check/bless no lugar de "until then, check the snapshot by hand"; o
    README ganha a linha do `regress -- check`; o `arc.toml` ganha
    `showcase = ["measure", "regress"]`.
@@ -189,7 +189,7 @@ disparou:
 ### formato do baseline
 
 um diretório por (página, tema, viewport) em
-`crates/showcase/fixtures/regress/<página>@<tema>@<w>x<h>[@<s>x]/`
+`tool/bench/regress/baselines/<página>@<tema>@<w>x<h>[@<s>x]/`
 (a escala só quando não é 1):
 
 - `scene.json`: `format` (`regress.baseline.v1`), `hash`
@@ -242,7 +242,7 @@ limpo depois de cada uma).
    checked 157 baselines in 627.2 ms: 157 unchanged, 0 changed; no frame drawn, no GPU opened
    ```
 
-2. cor de um token: `text_mid` do hoff em `crates/engine/src/theme/hoff.rs`,
+2. cor de um token: `text_mid` do hoff em `rust/engine/src/styling/theme/hoff.rs`,
    `n2(0.70)` para `n2(0.60)`. 28 baselines hoff mudam, nenhuma core; o
    todo em hoff tem imagem e nomeia os controles com região, o único
    frame desenhado:
@@ -269,7 +269,7 @@ limpo depois de cada uma).
    ```
 
 3. uma label do todo: `"Measure text, never estimate it"` para `"Measure
-   text, then estimate it"` em `crates/showcase/src/view/apps/app.rs:68`.
+   text, then estimate it"` em `apps/uigallery/src/views/apps/todo/mod.rs:68`.
    5 baselines mudam (as três do todo, o Toggle Group
    nos dois temas); as duas com imagem:
 
@@ -356,21 +356,21 @@ Implementado:
   `structural regression (macos)` no CI.
 
 Arquivos principais:
-- crates/showcase/examples/regress/{main,run,scene,hash,baseline,compare,pixels,report,tests}.rs
+- tool/bench/regress/src/{main,run,scene,hash,baseline,compare,pixels,report,tests}.rs
   e report/{text,json,describe}.rs (novos)
-- crates/showcase/fixtures/regress/** (novos)
-- crates/showcase/src/app/headless.rs (aditivo)
-- crates/showcase/Cargo.toml, Cargo.lock
+- tool/bench/regress/baselines/** (novos)
+- apps/uigallery/src/shell/window/headless.rs (aditivo)
+- apps/uigallery/Cargo.toml, Cargo.lock
 - .github/workflows/ci.yml (o job novo)
-- docs/ADR/regression-by-meaning-before-pixels.md (novo)
-- docs/how-to/validate-visuals-by-pixel.md, README.md, docs/arc/arc.toml
+- docs/adr/workflows/0045-regression-by-meaning-before-pixels.md (novo)
+- docs/ref/validate-visuals-by-pixel.md, README.md, docs/ATLAS.toml
 - este arquivo
 
 Interfaces adicionadas/alteradas:
 - `StagedPage::compositor(&self) -> &Compositor`, `steps() -> usize`,
   `settled() -> bool`, só leitura. o laço de settle é o mesmo, escrito
   com um contador. nenhuma interface do engine mudou.
-- crates/showcase/Cargo.toml: `[[example]] regress` com `test = true`
+- apps/uigallery/Cargo.toml: `[[example]] regress` com `test = true`
   (fora da letra do briefing, que só previa dependência de dev: sem isso
   o cargo compila os testes de um exemplo e não os roda, e os 31 do
   comparador ficariam fora do gate); `image` e `tempfile` em
@@ -395,7 +395,7 @@ Testes (antes -> depois):
 - `cargo test -p showcase --lib`: +1 (`a_page_stages_the_same_scene_every_time`).
 
 Validação executada:
-- ./script/gate (com o ambiente de build do briefing, perna urnaui
+- ./tool/tasks/fullcheck.sh (com o ambiente de build do briefing, perna urnaui
   incluída): verde na árvore final.
 - regress check na árvore rebaseada e na final: 157 unchanged, nenhum
   frame desenhado.
@@ -462,7 +462,7 @@ Commits (depois do rebase):
 
 ### proposta para o orquestrador
 
-linha do índice de ADRs (`docs/ADR/README.md`):
+linha do índice de ADRs (`docs/adr/README.md`):
 
 ```text
 | 2026-09-23 | [regression-by-meaning-before-pixels](regression-by-meaning-before-pixels.md) | proposed | regressão pergunta na ordem: o significado mudou (revision, `Snapshot::diff`), o desenho mudou (hash estável por layer, FNV-1a 64 sobre codificação documentada, `f32` pelos bits; nome de layer pelas raízes dos `SemId` ligados, ou pelo z-order), e só então os pixels, só na região das layers que mudaram, cruzados com as ligações para nomear o controle; nada mudou, nenhuma GPU aberta; pixel explica e não decide o veredito; imagem só no baseline do todo; `regress check|bless` no showcase e job de CI no macOS (task-67) |

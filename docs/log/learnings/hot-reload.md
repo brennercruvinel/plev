@@ -94,5 +94,5 @@ mexer no dev loop, humano ou agente, e pra não repetir a manhã.
   (rust-conventions.md, crate boundary).
 - o chokepoint de um override de dev mantém o `cfg` numa linha só; o
   caminho de produção lê sem ele.
-- `docs/mission/steps/ongoing/gap-1-hot-reload.md` virou
+- `docs/log/steps/gap-1-hot-reload.md` virou
   `checked/task-56-hot-reload-done.md`.

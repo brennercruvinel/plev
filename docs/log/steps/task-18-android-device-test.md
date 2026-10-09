@@ -35,16 +35,16 @@ compilar, gerar APK e testar em device/emulator android.
 instalados com o ok do brenner: JDK 17 (`openjdk@17`, `~/jdk17`), SDK
 com platform-tools, emulador, android-35, NDK 27.2.12479018 e a imagem
 arm64 google_apis; o AVD `plev35` é um Pixel 7 (1080x2400, 420 dpi). o
-projeto gradle (`android/`) e o `build_android.sh` já existiam.
+projeto gradle (`apps/uigallery/android/`) e o `build_android.sh` já existiam.
 
-- APK e deploy: `script/capture-android` (task-77) compila o cdylib pelo
+- APK e deploy: `tool/tasks/screencap.sh android` (task-77) compila o cdylib pelo
   cargo-ndk, monta o APK pelo gradle, sobe o emulador sem janela e
   instala.
 - rendering e texto: o frame do emulador difere do desktop de mesma
   página, tema, viewport e escala em no máximo 2/255 por canal (média 1),
   fora a barra de navegação: o Vulkan do emulador é o llvmpipe, software.
 - toque e gestos: a galeria não tratava `WindowEvent::Touch`, só mouse.
-  agora (`crates/showcase/src/app/touch.rs`) o primeiro dedo é o ponteiro:
+  agora (`apps/uigallery/src/shell/system/touch.rs`) o primeiro dedo é o ponteiro:
   um toque é um clique onde o dedo encostou (pressão e soltura no
   levantar, porque um card de paleta age na pressão), e um arrasto além
   de 8 px lógicos rola a página e não clica nada. no emulador, tocar no

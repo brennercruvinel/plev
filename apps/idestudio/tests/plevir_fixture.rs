@@ -3,7 +3,7 @@
 //! A real repository in a temp dir and the real git worker: three changed
 //! files, one staged, and the commit form open with a message, written by
 //! a person through the dispatcher. The projection is written in the lean
-//! `sem` form without `source` to `crates/uir/fixtures/idestudio-workbench.snapshot.json`,
+//! `sem` form without `source` to `rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json`,
 //! and the IR fixtures of the ide build their capability registry from it
 //! (`uir::Capabilities::from_snapshot`): the registry is the ide's own
 //! projection, never a second declaration by hand.

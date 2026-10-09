@@ -1,5 +1,5 @@
 //! the toy apps the recorder tests drive: the git client of the thesis
-//! (the pattern of crates/sem/examples/commit.rs, with a sha for the
+//! (the pattern of demo/commit/src/main.rs, with a sha for the
 //! commit) and a login form with a secret field.
 
 use std::collections::BTreeSet;

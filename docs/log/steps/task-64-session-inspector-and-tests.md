@@ -30,9 +30,9 @@ primeiro `.monster` para confiar na delegação).
 
 ## estado atual no código
 
-- `monster_player` (`crates/engine/examples/monster_player`) toca
+- `monster_player` (`demo/player/src`) toca
   animação com seek e scrub pelo player determinístico de
-  `crates/monster/src/play.rs`.
+  `rust/motion/src/play/mod.rs`.
 - depois de 63: `Session::open`, estado semântico em t, receipts por
   `SemId`, trilha visual.
 - depois de 66: render headless de frame.
@@ -89,7 +89,7 @@ remoto.
 
 o crate ou página do inspector; o harness de teste de sessão (onde o ADR
 de 63 colocou o leitor); proposta de ADR
-`docs/ADR/sessions-become-regression-tests.md`.
+`docs/adr/recording/0050-sessions-become-regression-tests.md`.
 
 ## interfaces que consome
 
@@ -110,7 +110,7 @@ as próprias.
   regra de precondição é quebrada de propósito (prova que o teste pega
   regressão).
 - inspector não cria request em nenhum caminho (teste).
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -166,7 +166,7 @@ Status: pronto para revisão (branch task/64a-inspector-model, rebaseada na main
 
 ### implementado
 
-- crate novo `crates/inspect` (lib `inspect`, bin `plev-inspect`),
+- crate novo `rust/replay` (lib `inspect`, bin `plev-inspect`),
   dependendo só de `rec`, `sem`, `serde` e `serde_json`. `Inspector`
   empresta uma `rec::Session` e não guarda mais nada: nenhum app, nada que
   despacha, nenhum recorder.
@@ -207,7 +207,7 @@ Status: pronto para revisão (branch task/64a-inspector-model, rebaseada na main
   imprimem; parse sem dependência, `--help`, exit 0 respondido, 1 request
   que a sessão não tem, 2 invocação errada, 3 arquivo que não lê como
   sessão (o `rec::FileError` dito como é).
-- ADR `docs/ADR/the-inspector-reads-a-session-never-runs-it.md`; entrada
+- ADR `docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md`; entrada
   `[crates.inspect]` no `arc.toml`; `inspect` na lista de crates do README
   e uma linha de comando na seção de comandos.
 
@@ -538,9 +538,9 @@ ausente, texto que não é sessão e animação `MON0` (com a mensagem do `rec`)
 
 ### testes
 
-`crates/inspect/tests/model/` (33) e o parse da CLI (3), com sessões
+`rust/replay/tests/queries/` (33) e o parse da CLI (3), com sessões
 montadas pelo `Recorder` sobre um git de brinquedo por um `Dispatcher` de
-verdade (o padrão de `crates/rec/tests/session/`):
+verdade (o padrão de `rust/record/tests/session/`):
 
 - timeline: um item por evento, tempo relativo, contagem por tipo e ator;
 - observação encontrada (com escopo e sem) e não gravada (pessoa; revisão
@@ -571,7 +571,7 @@ verdade (o padrão de `crates/rec/tests/session/`):
 
 ### validação
 
-- `./script/gate` verde na árvore rebaseada (com a perna urnaui): 2199
+- `./tool/tasks/fullcheck.sh` verde na árvore rebaseada (com a perna urnaui): 2199
   passados (2117 do workspace, 82 do urnaui), 0 falhas, 12 ignorados. a
   main na task-67 registrou 2160; o `inspect` soma 36 (33 do modelo, 3 do
   parse). os outros 3 vêm de fora do crate e não investiguei (a perna
@@ -604,7 +604,7 @@ verdade (o padrão de `crates/rec/tests/session/`):
 observação para depois da fase b (não é do `rec` sozinho): desde a task-87
 o último estágio de um ato leva a revisão em que o app está, e o `plev act
 --from-revision` aceita ela; o servidor não reporta isso como observação
-(`Host::observed`, `crates/wire/src/server.rs`), e o `rec` não grava a
+(`Host::observed`, `rust/socket/src/server.rs`), e o `rec` não grava a
 revisão no estágio. numa sessão gravada depois disso, um ato encadeado
 nessa revisão aparece no inspector como "não gravada: as observações do ator
 estão em outras revisões", com o instante em que o estado teve aquela
@@ -688,7 +688,7 @@ recusado (o worker respondeu 14 ms depois).
 
 `Repo::build` morava no bin do laboratório (`src/bin/lab/repo.rs`), fora do
 alcance de um teste. a fixture o alcança sem duplicar: o arquivo foi movido
-com `git mv` para a lib, `crates/ide/src/lab_repo.rs` (`pub mod lab_repo`,
+com `git mv` para a lib, `apps/idestudio/src/repository/eval_repo.rs` (`pub mod lab_repo`,
 conteúdo igual), e o bin do laboratório passou a importá-lo com `use
 ide::lab_repo as repo;`, então todo `crate::repo::...` do laboratório
 continua como estava. a fixture é a mesma montagem do `Bench::open` do
@@ -767,7 +767,7 @@ unstage da pessoa com o submit; relógios) não mexe em veredito.
 
 ### o harness
 
-onde: `crates/ide/tests/rerun/`, um binário de teste (`cargo test -p ide
+onde: `apps/idestudio/tests/rerun/`, um binário de teste (`cargo test -p ide
 --test rerun`). pelo ADR da 63, não no `rec` (o crate não executa nada, o
 `Session` não segura app, e o ADR evita qualquer api que receba um
 dispatcher ou um app no lado da leitura), nem no
@@ -867,7 +867,7 @@ rerun. o `" = "` primeiro da linha separa o quê do valor.
 
 ### o teste gerado e a prova de que pega regressão
 
-`crates/ide/tests/fixtures/sessions/a2ppa.monster` é a sessão da terceira
+`apps/idestudio/tests/fixtures/sessions/a2ppa.monster` é a sessão da terceira
 rodada exportada do começo até o commit e a projeção que ele deixa
 (`plev-inspect target/agents/exp3/a2ppa/session.monster --export 0 110688
 a2ppa.monster`; 184042 bytes, 65 eventos, 12 frames; o sha256 da sessão de
@@ -902,7 +902,7 @@ o teste também confere, no repositório temporário, que o `HEAD` do rerun
 é o commit "fix login session timeout" com os três arquivos.
 
 a prova: `.reads(format!("{}:staged", ids.changes))` comentada em
-`crates/ide/src/workbench/project.rs` (a precondição do `commit.submit`
+`apps/idestudio/src/capability/project.rs` (a precondição do `commit.submit`
 quebrada de propósito), `cargo test -p ide --test rerun -- lab`, e o
 arquivo restaurado com `git checkout` logo depois (nenhum diff no
 workbench, nada disso commitado). a saída:
@@ -910,7 +910,7 @@ workbench, nada disso commitado). a saída:
 ```text
 test lab::the_a2ppa_session_reruns_as_it_was_recorded ... FAILED
 ---- lab::the_a2ppa_session_reruns_as_it_was_recorded stdout ----
-thread 'lab::the_a2ppa_session_reruns_as_it_was_recorded' panicked at crates/ide/tests/rerun/lab.rs:171:5:
+thread 'lab::the_a2ppa_session_reruns_as_it_was_recorded' panicked at apps/idestudio/tests/rerun/eval.rs:171:5:
 rerun of an excerpt recorded by rec 0.1.0, built from 96c20a0: 9 requests, 6 marks
   same      request 1 (origin 0, rerun as 1): unstage on changes.file[README.md] by agent:claude-a2ppa: completed
   same      request 2 (origin 0, rerun as 2): stage on changes.file[src/session.rs] by agent:claude-a2ppa: completed
@@ -969,7 +969,7 @@ forma do briefing. vai sozinho (com `--timeline`, `--why`, `--control` ou
 escrita que falha é exit 4, novo, no `--help`. a lib do `inspect` não
 mudou; só o bin.
 
-testes (`crates/inspect/tests/model/export.rs`): uma sessão com frames e
+testes (`rust/replay/tests/queries/export.rs`): uma sessão com frames e
 ligações de um compositor e keyframes frequentes; o trecho do meio reabre
 abrindo nos keyframes das duas trilhas antes de t0, com os mesmos eventos
 em [t0, t1], o mesmo estado, frame, tempo de frame e ligações a cada 10 ms,
@@ -982,7 +982,7 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
 ### validação
 
 - `cargo test -p inspect -p rec -p ide`: verde.
-- `./script/gate` com a perna urnaui (o `worktrees/urna` aponta para o
+- `./tool/tasks/fullcheck.sh` com a perna urnaui (o `worktrees/urna` aponta para o
   checkout irmão), antes e depois, no target da task:
   - antes (a main, com o `git mv` já feito, que não muda contagem): 2277
     passaram (2195 do workspace, 82 da urnaui), 0 falharam, 12 ignorados.
@@ -1001,10 +1001,10 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
 
 ### arquivos fora do óbvio
 
-- `crates/ide/Cargo.toml`: só o comentário do `[dependencies]` (dizia que
+- `apps/idestudio/Cargo.toml`: só o comentário do `[dependencies]` (dizia que
   a lib não usa o `tempfile`; agora usa, pelo `lab_repo`). o briefing
   permitia esse arquivo para dev-dependencies; nenhuma dependência mudou.
-- `crates/inspect/Cargo.toml`: `engine` como dev-dependency, para o teste
+- `rust/replay/Cargo.toml`: `engine` como dev-dependency, para o teste
   do export gravar frames com ligações de um compositor (o `rec` já
   depende do `engine`); no `Cargo.lock`, essa linha.
 - nada em `sem`, `wire`, `workbench`, `views`, `rec`, no formato `MONS`, na
@@ -1013,16 +1013,16 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
 ### linha proposta para o índice de ADRs
 
 ```text
-| 2026-09-24 | [sessions-become-regression-tests](sessions-become-regression-tests.md) | proposed | um trecho de sessão gravada vira teste de regressão: o harness (crates/ide/tests/rerun, reexecução controlada, só em teste; nunca no rec nem no inspect) refaz cada ato do trecho na ordem gravada contra uma fixture do app (dispatch, confirm, decline, settle, project, receipt), assenta antes de cada ato menos onde a gravação tinha uma execução em voo, e compara veredito e estágio terminal (numa recusa stale, os reads mudados) e as marcas do desenvolvedor num arquivo de texto ao lado; a fixture do ide sobe o repositório do laboratório num tempdir com o worker do git real; plev-inspect --export grava um trecho como bug report (task-64 fase c) |
+| 2026-09-24 | [sessions-become-regression-tests](sessions-become-regression-tests.md) | proposed | um trecho de sessão gravada vira teste de regressão: o harness (apps/idestudio/tests/rerun, reexecução controlada, só em teste; nunca no rec nem no inspect) refaz cada ato do trecho na ordem gravada contra uma fixture do app (dispatch, confirm, decline, settle, project, receipt), assenta antes de cada ato menos onde a gravação tinha uma execução em voo, e compara veredito e estágio terminal (numa recusa stale, os reads mudados) e as marcas do desenvolvedor num arquivo de texto ao lado; a fixture do ide sobe o repositório do laboratório num tempdir com o worker do git real; plev-inspect --export grava um trecho como bug report (task-64 fase c) |
 ```
 
 ### para a integração (o que é do orquestrador)
 
 - `arc.toml`, entrada do ide: o repositório do laboratório mora na lib
-  (`lab_repo`), e `crates/ide/tests/rerun` guarda o harness e as sessões
+  (`lab_repo`), e `apps/idestudio/tests/rerun` guarda o harness e as sessões
   que viraram teste.
 - README: a linha do `plev-inspect` pode ganhar o `--export`.
-- manual: nenhum `docs/how-to` trata do inspector; se um passar a tratar,
+- manual: nenhum `docs/ref` trata do inspector; se um passar a tratar,
   o formato das marcas está no ADR.
 
 ### limitações
@@ -1057,7 +1057,7 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
 - a fixture da página do todo: o dispatcher da página (os cliques já
   passam pelo `sem`) com o relógio do harness, um `settle` que avance o que
   a página anima, e o `project` dela.
-- com a segunda fixture, o harness sai de `crates/ide/tests/rerun` para um
+- com a segunda fixture, o harness sai de `apps/idestudio/tests/rerun` para um
   crate de teste (com `arc.toml` e README).
 
 ### o que falta para a fase b
@@ -1096,32 +1096,32 @@ severidade do que ficou:
 ## fase b: a sonda (2026-09-25)
 
 lida contra a main `702f2827`, com as duas sessões gravadas do repositório
-(`crates/ide/tests/fixtures/sessions/{a2ppa,bug84}.monster`).
+(`apps/idestudio/tests/fixtures/sessions/{a2ppa,bug84}.monster`).
 
 ### (a) onde a UI mora
 
-um crate novo, `crates/inspector` (lib e o binário `plev-inspector`), não
+um crate novo, `apps/inspector` (lib e o binário `plev-inspector`), não
 um segundo binário no `inspect`:
 
 - o `inspect` é o leitor, e um teste fixa as arestas dele em `rec`, `sem`,
-  `serde` e `serde_json` (`crates/inspect/tests/model/readonly.rs:123`),
-  como o ADR diz (`docs/ADR/the-inspector-reads-a-session-never-runs-it.md:39-40`).
+  `serde` e `serde_json` (`rust/replay/tests/queries/readonly.rs:123`),
+  como o ADR diz (`docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md:39-40`).
   a UI precisa de `comps` e da janela; num binário atrás de feature, essas
   arestas entrariam no manifesto do leitor.
 - a task já recomendava crate de app próprio, porque abre arquivo e vai
   crescer (arquivo da task, linha 44).
 - arestas: `inspect`, `rec`, `sem`, `engine`, `comps`, todas do workspace.
   a janela vem pelo `engine`, que reexporta o `winit`
-  (`crates/engine/src/lib.rs:64`), e o `WindowHost::open` abre o device
-  sem executor próprio (`crates/engine/src/window/host.rs:170`). nenhum
+  (`rust/engine/src/lib.rs:64`), e o `WindowHost::open` abre o device
+  sem executor próprio (`rust/engine/src/runtime/window/host.rs:170`). nenhum
   pacote de fora, nem `log` nem `web-time`.
 
 ### (b) o frame do instante
 
 - o que foi desenhado vem de `Session::scene_at(t)`
-  (`crates/rec/src/session.rs:115`): os nós rebaixados do frame que estava
+  (`rust/record/src/session.rs:115`): os nós rebaixados do frame que estava
   na tela em `t`, em pixels lógicos da janela, o mesmo espaço dos
-  contornos (`Bound.rect`, `crates/rec/src/bound.rs:43-47`;
+  contornos (`Bound.rect`, `rust/record/src/bound.rs:43-47`;
   `Session::bindings_at`, `session.rs:130`; `Session::hit_at`,
   `session.rs:146`). a UI escala cada nó por um fator e um deslocamento
   (retângulo, texto pelo tamanho da fonte, path pelos vértices) e desenha
@@ -1129,8 +1129,8 @@ um segundo binário no `inspect`:
   entra na tabela de ligações do compositor da UI: é imagem, e o controle
   sob o ponteiro sai do `hit_at` da gravação.
 - tamanho e escala: a sessão não guarda nenhum dos dois. o
-  `Recorder::frame` recebe só o compositor (`crates/rec/src/recorder.rs:105`)
-  e o compositor não tem tamanho (`crates/engine/src/compositor/mod.rs:45-54`).
+  `Recorder::frame` recebe só o compositor (`rust/record/src/recorder.rs:105`)
+  e o compositor não tem tamanho (`rust/engine/src/drawing/compositor/mod.rs:45-54`).
   mas o frame sai certo sem eles: nas duas sessões, o primeiro nó de todo
   frame é o fundo da janela em (0, 0, 1280, 800), e a extensão de todos os
   nós e de todas as ligações é exatamente 1280 x 800 (a2ppa, 12 frames;
@@ -1142,10 +1142,10 @@ um segundo binário no `inspect`:
   uma camada (`recorder.rs:96-99`); uma lista rolada com linhas fora da
   tela alargaria o frame, e aí gravar o tamanho da janela resolve.
 - a imagem de fluxo sem pixels: o arquivo grava toda imagem sem pixels
-  (`crates/rec/src/payload.rs:44-46`) e a lê de volta só com o tamanho
+  (`rust/record/src/payload.rs:44-46`) e a lê de volta só com o tamanho
   (`payload.rs:16-18`); no rebaixamento ela vira um path vazio
-  (`crates/rec/src/screen.rs:77`) e o monster não desenha um nó de imagem
-  cujo asset não é imagem (`crates/monster/src/lower.rs:106-116`). a UI
+  (`rust/record/src/visuals/reader.rs:77`) e o monster não desenha um nó de imagem
+  cujo asset não é imagem (`rust/motion/src/mappings/lower.rs:106-116`). a UI
   não recebe nenhum nó de imagem e nenhum pixel, e o teste de privacidade
   prova isso em todo frame. mas ela também não sabe onde a imagem estava:
   desenhar a caixa no lugar pede do `rec` uma leitura dos nós de imagem sem
@@ -1155,30 +1155,30 @@ um segundo binário no `inspect`:
 ### (c) a timeline e o scrub
 
 - o instante é um `t` no relógio do recorder, entre `Inspector::start` e
-  `Inspector::end` (`crates/inspect/src/index.rs:111-119`). o scrub é o
+  `Inspector::end` (`rust/replay/src/index.rs:111-119`). o scrub é o
   `Slider` do comps de 0 até a duração em ms; as setas andam de evento em
   evento.
 - o frame em `t` usa o mesmo seek da fase a: `Screen::locate`
-  (`crates/rec/src/screen.rs:142`) acha o chunk por busca binária e o frame
+  (`rust/record/src/visuals/reader.rs:142`) acha o chunk por busca binária e o frame
   dentro dele, e o player do monster avalia aquele tempo
-  (`crates/monster/src/play.rs:148`). a UI guarda a cena pelo tempo do
+  (`rust/motion/src/play/mod.rs:148`). a UI guarda a cena pelo tempo do
   frame (`Session::frame_at`, `session.rs:120`), então um scrub que não
   troca de frame não decodifica nada.
-- as faixas saem de `Inspector::timeline` (`crates/inspect/src/timeline.rs:100`):
+- as faixas saem de `Inspector::timeline` (`rust/replay/src/timeline.rs:100`):
   uma faixa por ator (a pessoa inclusive) e uma do estado do app
   (snapshot e changes), cada evento uma marca no seu `at`, com a cor do
   tipo; as contagens por tipo e por ator são as do mesmo modelo.
 
 ### (d) quem responde cada pergunta do painel
 
-- `Inspector::control(id, t)` (`crates/inspect/src/control.rs:33`): o nó
+- `Inspector::control(id, t)` (`rust/replay/src/control.rs:33`): o nó
   no estado gravado em `t` (role, label, estado, ações, o `source` com o
   sha do build) e os requests que tocaram o id até `t`, cada um com a
   cadeia causal como a janela até `t` conta.
 - o texto é o do modelo: `inspect::text::control`
-  (`crates/inspect/src/text/mod.rs:191`), que escreve uma linha por
+  (`rust/replay/src/prose/mod.rs:191`), que escreve uma linha por
   pergunta da tese para cada request com `text::why`
-  (`crates/inspect/src/text/chain.rs:18`): control, state, initiated by,
+  (`rust/replay/src/prose/chain.rs:18`): control, state, initiated by,
   action, observed, precondition, before, stages, verdict, what changed,
   acted, result.
 - o que veio depois de `t`: a mesma `control(id, end)`, e o painel mostra
@@ -1187,7 +1187,7 @@ um segundo binário no `inspect`:
   o botão só aparece no frame antes do commit (a2ppa: em +110.688s o form
   fecha junto com o `completed`), e o sha só existe depois.
 - a lista de requests ao lado sai de `Inspector::summary`
-  (`crates/inspect/src/summary.rs:51`).
+  (`rust/replay/src/summary.rs:51`).
 
 ### (e) a prova de que a UI não cria request
 
@@ -1201,7 +1201,7 @@ um segundo binário no `inspect`:
   cada tecla, cada posição do scrub) e acha a sessão igual à aberta do
   arquivo e os bytes do arquivo iguais.
 - o frame gravado não liga nada no compositor da UI
-  (`Compositor::visible_bindings`, `crates/engine/src/compositor/binding.rs:189`):
+  (`Compositor::visible_bindings`, `rust/engine/src/drawing/compositor/binding.rs:189`):
   nenhum id gravado vira controle vivo.
 
 ## fase b: o roteiro para abrir a UI numa sessão de verdade
@@ -1215,7 +1215,7 @@ não rodado aqui (esta rodada não abre janela). na raiz do repositório:
 2. abrir: `cargo run -p inspector --bin plev-inspector --
    $TMPDIR/plev/sessions/<arquivo>.monster`. sem sessão nova à mão, a do
    cenário do commit serve: `cargo run -p inspector --bin plev-inspector
-   -- crates/ide/tests/fixtures/sessions/a2ppa.monster`.
+   -- apps/idestudio/tests/fixtures/sessions/a2ppa.monster`.
 3. o que olhar:
    - o cabeçalho diz o instante, a duração e o frame na tela; a lista à
      esquerda tem cada request com como terminou; um clique leva ao
@@ -1273,7 +1273,7 @@ mudou; a caixa no lugar da imagem de fluxo ficou pendente (abaixo).
 
 ### a UI
 
-`crates/inspector` (lib e `plev-inspector <session.monster>`):
+`apps/inspector` (lib e `plev-inspector <session.monster>`):
 
 - `InspectorView` guarda a sessão e nada mais. os handlers
   (`pointer_move`, `pointer_down`, `pointer_up`, `scroll`, `key`, `seek`,
@@ -1299,7 +1299,7 @@ mudou; a caixa no lugar da imagem de fluxo ficou pendente (abaixo).
   largura do painel sem perder caractere.
 - nenhuma cor nova: tudo vem do tema ou da própria gravação.
 
-### os testes (`crates/inspector/tests/ui`, 15)
+### os testes (`apps/inspector/tests/ui`, 15)
 
 - `accept::the_commit_scenario_in_the_inspector`: **critério 1**. abre a
   a2ppa pelo caminho, arrasta o scrub até +105s (antes do commit, depois
@@ -1358,26 +1358,26 @@ própria; nada em dev. o diff do `Cargo.lock` é só o bloco novo:
 +]
 ```
 
-e a linha `"crates/inspector",` em `members` da raiz.
+e a linha `"apps/inspector",` em `members` da raiz.
 
 ### validação
 
 - disco antes do gate: 11 GB livres.
-- as pernas do `./script/gate`, na ordem dele, no target dir do agente:
+- as pernas do `./tool/tasks/fullcheck.sh`, na ordem dele, no target dir do agente:
   `cargo test --workspace` 3057 passaram, 0 falharam, 27 ignorados;
   clippy `-D warnings` limpo; `fmt --check` limpo; wasm do showcase com
   `-D warnings` limpo; perna urnaui (a `../urna` existe ao lado do
   worktree): 85 passaram, 0 falharam, 1 ignorado, clippy, fmt e wasm
   limpos.
 - **o bloqueio:** o teste `every_crate_is_named_in_arc_toml_and_readme`
-  (`crates/engine/tests/arc_sync_guard.rs:73`) falha com "README.md does
+  (`tool/tests/test_repoaudit.rs:73`) falha com "README.md does
   not mention these workspace crates: ["inspector"]". todo crate de
   `members` precisa aparecer no README e no `arc.toml`, e os dois são
   proibidos nesta rodada. a contagem acima rodou com só esse teste de
   fora (`--skip`); com as duas linhas abaixo, ele passa.
-- regress: `crates/showcase/examples/regress/main.rs` tocado, `check`:
+- regress: `tool/bench/regress/src/main.rs` tocado, `check`:
   176 baselines, 176 iguais, 0 mudados.
-- contagem de testes: nenhum teste fora de `crates/inspector` mudou; a
+- contagem de testes: nenhum teste fora de `apps/inspector` mudou; a
   branch soma 15 aos da main.
 
 ### o que o orquestrador põe na integração (README e arc)
@@ -1389,11 +1389,11 @@ na seção de comandos, depois da linha do `plev-inspect`:
 cargo run -p inspector --bin plev-inspector -- <session.monster>   # the inspector's window: the timeline and the scrub, the recorded frame with its controls, the thesis answers about the control clicked; it never runs anything
 ```
 
-`docs/arc/arc.toml`, depois de `[crates.inspect]`:
+`docs/ATLAS.toml`, depois de `[crates.inspect]`:
 
 ```text
 [crates.inspector]
-path = "crates/inspector"
+path = "apps/inspector"
 role = "the session inspector's window (task-64 phase b, adr the-inspector-reads-a-session-never-runs-it): InspectorView owns a rec::Session and nothing else, shows the inspect model (the timeline as lanes by actor with the comps Slider as the scrub; the frame on screen at the instant, Session::scene_at fit into its rect, with the outline of every control from Session::bindings_at and the SemId under the pointer from Session::hit_at, never bound in its own compositor; the panel of a control, Inspector::control at the instant then what came after it, as inspect::text writes it); handlers and render run without a window, the plev-inspector binary (plev-inspector <session.monster>) is the only part that opens one; no dispatcher, no request, no socket, no process"
 ```
 
@@ -1432,7 +1432,7 @@ o ADR já está no índice; a linha dele ganha a fase b:
 
 fechada pelo critério de aceite, item por item:
 
-- item 1: `crates/inspector/tests/ui/accept.rs` abre a sessão a2ppa (o
+- item 1: `apps/inspector/tests/ui/accept.rs` abre a sessão a2ppa (o
   cenário do commit), leva o scrub a +105s, clica no botão e confere no
   painel, em ordem: o que o agente observou, o request 7, a recusa
   `stale` com `changes:staged: removed src/session.rs`, depois o request

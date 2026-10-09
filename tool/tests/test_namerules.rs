@@ -1,6 +1,6 @@
 //! Guard: raw `TextNodeKey::new` is confined to the engine.
 //!
-//! The ADR docs/ADR/one-text-style-for-measurement-and-drawing.md decides
+//! The ADR docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md decides
 //! that a text run owns exactly one `TextStyle`, input to both
 //! `TextMeasurer::measure_styled` (sizing) and `TextNodeKey::from_style`
 //! (drawing). `TextNodeKey::new` hardcodes weight 400, letter spacing 0
@@ -26,7 +26,7 @@ const SKIP_DIRS: [&str; 7] = [
 
 /// Path prefixes (relative to the repo root, '/'-separated) where the raw
 /// constructor is legitimate: the engine that defines it, its inline
-/// tests, its benches, and this guard itself. crates/monster builds raw keys
+/// tests, its benches, and this guard itself. rust/motion builds raw keys
 /// in codec round-trip tests and is engine-side tooling.
 const ALLOWED_PREFIXES: [&str; 4] = ["src/", "benches/", "tests/", "crates/monster/src/"];
 

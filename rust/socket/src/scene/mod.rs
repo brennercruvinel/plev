@@ -1,4 +1,4 @@
-//! the scene channel (task-79, docs/ADR/scene-travels-as-data.md): a
+//! the scene channel (task-79, docs/adr/recording/0065-scene-travels-as-data.md): a
 //! client watches the scene of one of the app's windows and gets its
 //! frames, the first whole and then only what changed, on the same
 //! connection and in protocol v1, as replies to its `scene` request.

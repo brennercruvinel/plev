@@ -9,7 +9,7 @@ domain: changelog
 # task-51 changelog: reestruturacao do workspace e rebrand
 
 ## tiers
-- [x] engine na raiz (crates/engine)
+- [x] engine na raiz (rust/engine)
 - [x] libs e apps em crates/
 - [x] demos em examples/ (scene-3d e snake deixam de ser crate)
 

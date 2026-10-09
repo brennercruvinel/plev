@@ -6,7 +6,7 @@
 //! `resize` (phase b).
 //!
 //! The line under the region `ide_surface`, projected as the Silences
-//! projects its own (`crates/showcase/src/view/apps/silences/generated.rs`):
+//! projects its own (`apps/uigallery/src/views/apps/silences/generative/mod.rs`):
 //! `ide_surface.intent` a text input (`set_value`); `ide_surface.proposer`
 //! a select of who proposes (`rules`, and `claude` where the program is,
 //! the rules chosen first); `ide_surface.propose` a button whose

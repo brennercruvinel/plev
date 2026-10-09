@@ -17,7 +17,7 @@ build e teste visual no ios simulator.
 ## checklist
 - [x] `cargo check --target aarch64-apple-ios-sim` compila (zero warnings)
 - [x] `cargo build --target aarch64-apple-ios-sim` compila (requer xcode com ios SDK)
-- [x] deploy no simulator (`ios/showcase/build_ios.sh` e `simctl install`/`launch`, pelo `script/capture-ios`)
+- [x] deploy no simulator (`tool/tasks/mobileapp.sh ios` e `simctl install`/`launch`, pelo `tool/tasks/screencap.sh ios`)
 - [x] verificar: quad rendering, text, metal pipeline
 - [x] testar: safe areas, orientação, lifecycle (orientação não testada, ver o fechamento)
 
@@ -31,12 +31,12 @@ o bloqueio antigo (só command line tools) não existe mais: o Xcode está
 instalado, com os runtimes iOS 26.5 e 27.0. `xcodegen` e o target
 `aarch64-apple-ios-sim` foram instalados com o ok do brenner.
 
-- build e deploy: `script/capture-ios` (task-77) compila o staticlib, gera
+- build e deploy: `tool/tasks/screencap.sh ios` (task-77) compila o staticlib, gera
   o projeto, compila o app e instala no simulador "iPhone 17 Pro"
   (402x874 a 3x), sem abrir o Simulator.app.
 - rendering: o frame do simulador é igual ao do desktop de mesma página,
   tema, viewport e escala em todo pixel, fora a faixa da barra de status
-  (diferença declarada em `crates/showcase/fixtures/determinism/requested.json`).
+  (diferença declarada em `tool/bench/regress/requested.json`).
   dois defeitos antes disso:
   - o `capture-ios` lia o tamanho da tela de `mainScreenWidth` no
     `profile.plist`, que os perfis do Xcode 26 não têm mais; agora cai no

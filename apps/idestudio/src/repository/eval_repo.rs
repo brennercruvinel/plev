@@ -9,7 +9,7 @@
 //! every run, and a note in the working tree that no commit holds
 //! (`UNCOMMITTED`): what a review of the three never shows.
 //!
-//! the shape follows `crates/ide/tests/support/mod.rs` (`Rig::new`): real
+//! the shape follows `apps/idestudio/tests/support/mod.rs` (`Rig::new`): real
 //! git, a temp dir, `git(args)`, `head`, `head_files`. the tests panic on
 //! a failure; a binary reports it, so the helpers return `Result`.
 

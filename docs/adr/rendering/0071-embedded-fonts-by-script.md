@@ -9,7 +9,7 @@ date: 2026-09-25
 
 ## context
 
-the audit of task-74 phase 1 (`docs/mission/steps/ongoing/task-74-text-and-editing.md`,
+the audit of task-74 phase 1 (`docs/log/steps/task-74-text-and-editing.md`,
 "relatório da fase 1") measured that the embedded path, what wasm,
 android and ios ship, shaped every non-Latin script as tofu: 24 of 27
 glyphs in the Arabic line, 5 of 5 in the Chinese one. the desktop hid it
@@ -29,11 +29,11 @@ phase 5, from Noto Color Emoji (see below).
 
 ### the subsets
 
-`script/font-subset` (python, stdlib plus fontTools 4.64.0, no network)
+`tool/tasks/subsetter.py` (python, stdlib plus fontTools 4.64.0, no network)
 reads the sources from outside the repo (`target/fonts-noto/`), checks
 each one's sha256 against the value in the script (with the URL it came
 from: the hinted TTFs of notofonts.github.io and `Sans/SubsetOTF` of
-noto-cjk 2.004), and writes the subsets to `crates/engine/assets/fonts/`
+noto-cjk 2.004), and writes the subsets to `rust/engine/assets/fonts/`
 with `LICENSE-Noto-OFL.txt` (the copyright and trademark records of every
 source, then the OFL 1.1 as shipped). a second run writes the same bytes
 (`--check` rebuilds into a temporary directory and compares).
@@ -144,7 +144,7 @@ the face is Noto Color Emoji v2.051 in its CBDT/CBLC build (PNG bitmaps
 in one 109 ppem strike, from the `v2.051` tag of googlefonts/noto-emoji,
 sha256 in the script). the current Google Fonts build is COLR v1, which
 swash 0.2.8 (the rasterizer in Cargo.lock) does not draw; it draws CBDT,
-sbix and COLR v0. `script/font-subset` writes a subset of a fixed set
+sbix and COLR v0. `tool/tasks/subsetter.py` writes a subset of a fixed set
 written in the script: the Emoticons block (80), the face emoji of the
 Supplemental Symbols and Pictographs block (52), 197 common symbols
 (hearts, marks, objects, nature, food, animals), the five skin tones
@@ -199,14 +199,14 @@ none. on the desktop the same color path draws the system's emoji face
   CJK face costs about as much as all the Latin faces together. the
   emoji subset adds 1.4 MB more.
 - an emoji outside the subset is tofu on wasm and mobile; widening the
-  set is an edit to the lists in `script/font-subset` and a rerun, about
+  set is an edit to the lists in `tool/tasks/subsetter.py` and a rerun, about
   2.2 KB per emoji.
 - the coverage is a set, not the script: a hanzi outside GB2312 level 1
   or a kanji outside JIS level 1 falls to the other CJK face if it has it
   and to tofu if not; Korean compatibility jamo (ㅋ, U+3131 to U+318E) are
   not in the KR subset.
 - widening a set, adding a weight or a script is an edit to
-  `script/font-subset` and a rerun; the sha256 and the stdlib codecs keep
+  `tool/tasks/subsetter.py` and a rerun; the sha256 and the stdlib codecs keep
   the result reproducible.
 
 ## alternatives considered

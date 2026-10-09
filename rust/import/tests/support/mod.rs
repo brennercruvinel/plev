@@ -215,7 +215,7 @@ pub fn import_html() -> Imported {
     import::import_html((HTML, &src), &hoff()).expect("html import")
 }
 
-/// The Figma screen (`fixtures/figma`, exported by `script/figma-fixture`).
+/// The Figma screen (`fixtures/figma`, exported by `tool/tasks/figmapull.py`).
 pub const FIGMA: &str = "settings.json";
 
 pub fn import_figma() -> Imported {

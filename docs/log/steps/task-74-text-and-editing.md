@@ -32,17 +32,17 @@ engines alternativas quebram). é a primeira das montanhas de maturidade.
   determinístico no atlas em escala física (ADR
   `glyph-raster-identity-and-atlas-isolation`), um `TextStyle` por run
   para medir e desenhar (guard test em
-  `crates/engine/tests/text_style_guard.rs`).
+  `tool/tests/test_namerules.rs`).
 - fontes embutidas: Inclusive Sans (300 a 700), Inter (400 a 600),
-  codicons (`crates/engine/src/text/fonts.rs:38-52`). árabe, hebraico,
+  codicons (`rust/engine/src/drawing/text/fonts.rs:38-52`). árabe, hebraico,
   CJK e emoji colorido não estão cobertos; o sistema avisa uma vez por
   fonte não embutida.
-- `crates/rope`: documento, transações, seleção, multi-cursor, movimento,
+- `rust/editor`: documento, transações, seleção, multi-cursor, movimento,
   history (undo e redo), puro e testado (ADR
   `text-editing-core-follows-helix`).
-- `crates/comps/src/editor` (`EditorView`, multi-cursor sobre o rope) e
-  `crates/comps/src/form` (`TextField` sobre o núcleo `TextInput`).
-- `crates/engine/src/platform/ime.rs`: `ImeState` básico (evento, teclado
+- `rust/engine/src/widgets/editor` (`EditorView`, multi-cursor sobre o rope) e
+  `rust/engine/src/widgets/form` (`TextField` sobre o núcleo `TextInput`).
+- `rust/engine/src/runtime/platform/ime.rs`: `ImeState` básico (evento, teclado
   virtual no mobile).
 - `engine::clipboard`: arboard no desktop, local no wasm e mobile.
 - tree-sitter já é dependência (parser).
@@ -82,10 +82,10 @@ independente para 1 a 8; 9 depende de 60; a auditoria usa 66 se integrada.
 
 ## superfície sob responsabilidade
 
-`crates/engine/src/text/**` (menos `probe.rs` enquanto a 66 roda),
-`crates/engine/src/platform/ime.rs`, `crates/rope/**`,
-`crates/comps/src/editor/**`, `crates/comps/src/form/text_input*`,
-`crates/engine/assets/fonts` (depois da decisão de fontes). ADRs por fase.
+`rust/engine/src/drawing/text/**` (menos `probe.rs` enquanto a 66 roda),
+`rust/engine/src/runtime/platform/ime.rs`, `rust/editor/**`,
+`rust/engine/src/widgets/editor/**`, `rust/engine/src/widgets/form/text_input*`,
+`rust/engine/assets/fonts` (depois da decisão de fontes). ADRs por fase.
 
 ## interfaces que consome
 
@@ -133,12 +133,12 @@ medição: nenhuma correção de render, nenhuma fonte entrou ou saiu.
 ### commits
 
 - `df270334` task-74: the text probe reports shaping per glyph
-  (`crates/engine/src/text/probe.rs`: `Faces`, `GlyphReport`,
+  (`rust/engine/src/drawing/text/probe.rs`: `Faces`, `GlyphReport`,
   `ShapeReport`, `shape_report`; a única mudança em `src/text/**`)
 - `ad6d0d6a` task-74: text corpus, one phrase file per script
-  (`crates/engine/tests/text_corpus/`, 11 arquivos e um README)
+  (`rust/engine/tests/fixtures/text_corpus/`, 11 arquivos e um README)
 - `36ac4257` task-74: text audit test with the embedded-only golden
-  (`crates/engine/tests/text_audit.rs`, `crates/engine/tests/text_audit.txt`)
+  (`rust/engine/tests/text_audit.rs`, `rust/engine/tests/fixtures/text_audit.txt`)
 - o commit deste relatório
 
 ### a sonda
@@ -164,7 +164,7 @@ caminho desktop: não existe `TextSystem` sem fontes de sistema no desktop
 | é ão ö ño ệ decomposto (17 code points, e + U+0301 entre eles) | 11 / 0 / 84,4 | 11 / 0 / 84,4 / só Inclusive Sans | 1076, 1,0..83,5 |
 | abc אבג def | 11 / 3 / 92,4 | 11 / 0 / 86,8 / Arial | 1193, 1,0..86,5 |
 
-(b) o aviso de fonte não embutida sai em `crates/engine/src/text/atlas.rs`
+(b) o aviso de fonte não embutida sai em `rust/engine/src/drawing/text/atlas.rs`
 (`emit_glyphs`), nível `warn`, alvo `engine::text::atlas`, texto "text
 fallback: cluster ... rasterized from non-embedded face '...'" (a mensagem
 carrega um travessão, herdado). sai só no caminho de render, nunca no
@@ -186,7 +186,7 @@ pelo Cargo.lock).
 
 ### corpus
 
-`crates/engine/tests/text_corpus/`, um arquivo por escrita, cada um com
+`rust/engine/tests/fixtures/text_corpus/`, um arquivo por escrita, cada um com
 `# escrita`, `# cobre`, `# significado`, `# fonte da frase`, e uma frase
 por linha, escrita à mão para este corpus, escapes `\u{}` para marca, ZWJ e
 VS16 ficarem visíveis:
@@ -203,7 +203,7 @@ U+1F600, coração U+2764 + VS16), 11 bidi (abc אבג def, hello مرحبا 123
 
 só faces embutidas, 16 px, wrap em 80 px, as duas famílias de texto
 (Inclusive Sans e Inter; codicons é ícone e não entra). números completos,
-com id e avanço de cada glifo, em `crates/engine/tests/text_audit.txt`.
+com id e avanço de cada glifo, em `rust/engine/tests/fixtures/text_audit.txt`.
 
 | escrita | o que falta | o que sai errado (exemplo) |
 |---|---|---|
@@ -294,7 +294,7 @@ que está embutido hoje, mesmo em subset. cada peso a mais multiplica.
 
 ### gate e contagem
 
-`./script/gate` verde na branch (`36ac4257`), com o ambiente de build do
+`./tool/tasks/fullcheck.sh` verde na branch (`36ac4257`), com o ambiente de build do
 briefing (`CARGO_TARGET_DIR=target/agents/task-74`), nesta máquina (metal,
 macOS 26.6.2): `cargo test --workspace`, `cargo clippy --workspace
 --all-targets -- -D warnings`, `cargo fmt --check`, `cargo check --target
@@ -400,7 +400,7 @@ que ela cobre (`shape.rs:326-400`). a ordem das faces, em
 
 qual `Fallback` cada caminho usa: o motor constrói o caminho embutido com
 `FontSystem::new_with_locale_and_db("en-US", Database::new())`
-(`crates/engine/src/text/system.rs:91-95`, `measure.rs:121-125`), que é
+(`rust/engine/src/drawing/text/system.rs:91-95`, `measure.rs:121-125`), que é
 `PlatformFallback` do alvo (`system.rs:266-267` do cosmic-text). o alvo
 escolhe a lista em `fallback/mod.rs:12-26`: wasm e android caem em
 `other.rs`, listas vazias (`other.rs:30-42`); ios é `unix` e cai em
@@ -484,7 +484,7 @@ o shaping, sim: `probe::shape_report` com `Faces::Embedded` já monta um
 `FontSystem` só com as faces do repositório (`probe.rs:336-347`). o
 pixel, não: `probe::render` passa pelo `headless::Renderer`
 (`probe.rs:207`), que cria o `TextSystem` dele
-(`crates/engine/src/headless/mod.rs:157`) e o guarda privado, e
+(`rust/engine/src/drawing/headless/mod.rs:157`) e o guarda privado, e
 `TextSystem::new` escolhe as fontes do sistema por `cfg` no desktop
 (`system.rs:84-95`). falta uma chave em tempo de execução. o que esta
 rodada faz, só em `src/text`: um construtor único do `FontSystem` em
@@ -497,13 +497,13 @@ chave não existe; nada fora de `src/text` muda.
 
 o critério "corpus renderizado sem tofu nas escritas decididas", com gate
 verde, fechou para árabe, hebraico, devanágari, chinês simplificado,
-japonês e coreano. a ADR é `docs/ADR/embedded-fonts-by-script.md`
+japonês e coreano. a ADR é `docs/adr/rendering/0071-embedded-fonts-by-script.md`
 (proposed).
 
 ### commits
 
 - `3882aedd` task-74: phase 2 probe, how the embedded path finds a face per script
-- `a0f7a0b6` task-74: script/font-subset and the Noto subsets for six scripts, with the OFL
+- `a0f7a0b6` task-74: tool/tasks/subsetter.py and the Noto subsets for six scripts, with the OFL
 - `fc304299` task-74: register the Noto faces, one font-system constructor, and the probe's embedded render
 - `caad36f2` task-74: the text audit holds the six scripts to zero tofu and draws the embedded path
 - o commit da ADR e deste handoff
@@ -525,25 +525,25 @@ peso (400 a 700) saíram iguais antes e depois nas oito linhas medidas.
 
 | arquivo | bytes |
 |---|---|
-| `crates/engine/assets/fonts/NotoSansArabic-Regular.ttf` | 217.320 |
-| `crates/engine/assets/fonts/NotoSansArabic-Bold.ttf` | 243.820 |
-| `crates/engine/assets/fonts/NotoSansHebrew-Regular.ttf` | 25.204 |
-| `crates/engine/assets/fonts/NotoSansHebrew-Bold.ttf` | 25.204 |
-| `crates/engine/assets/fonts/NotoSansDevanagari-Regular.ttf` | 225.236 |
-| `crates/engine/assets/fonts/NotoSansDevanagari-Bold.ttf` | 231.752 |
-| `crates/engine/assets/fonts/NotoSansSC-Regular.otf` | 946.616 |
-| `crates/engine/assets/fonts/NotoSansSC-Bold.otf` | 956.892 |
-| `crates/engine/assets/fonts/NotoSansJP-Regular.otf` | 794.888 |
-| `crates/engine/assets/fonts/NotoSansJP-Bold.otf` | 813.168 |
-| `crates/engine/assets/fonts/NotoSansKR-Regular.otf` | 350.204 |
-| `crates/engine/assets/fonts/NotoSansKR-Bold.otf` | 361.128 |
-| `crates/engine/assets/fonts/LICENSE-Noto-OFL.txt` | 4.823 |
-| `script/font-subset` | 9.926 |
-| `docs/ADR/embedded-fonts-by-script.md` | a ADR |
+| `rust/engine/assets/fonts/NotoSansArabic-Regular.ttf` | 217.320 |
+| `rust/engine/assets/fonts/NotoSansArabic-Bold.ttf` | 243.820 |
+| `rust/engine/assets/fonts/NotoSansHebrew-Regular.ttf` | 25.204 |
+| `rust/engine/assets/fonts/NotoSansHebrew-Bold.ttf` | 25.204 |
+| `rust/engine/assets/fonts/NotoSansDevanagari-Regular.ttf` | 225.236 |
+| `rust/engine/assets/fonts/NotoSansDevanagari-Bold.ttf` | 231.752 |
+| `rust/engine/assets/fonts/NotoSansSC-Regular.otf` | 946.616 |
+| `rust/engine/assets/fonts/NotoSansSC-Bold.otf` | 956.892 |
+| `rust/engine/assets/fonts/NotoSansJP-Regular.otf` | 794.888 |
+| `rust/engine/assets/fonts/NotoSansJP-Bold.otf` | 813.168 |
+| `rust/engine/assets/fonts/NotoSansKR-Regular.otf` | 350.204 |
+| `rust/engine/assets/fonts/NotoSansKR-Bold.otf` | 361.128 |
+| `rust/engine/assets/fonts/LICENSE-Noto-OFL.txt` | 4.823 |
+| `tool/tasks/subsetter.py` | 9.926 |
+| `docs/adr/rendering/0071-embedded-fonts-by-script.md` | a ADR |
 
 fontes embutidas: antes 1.744.532 bytes (834.203 com gzip -9), depois
 6.935.964 bytes (4.873.679 com gzip -9). nenhum arquivo passa de 1 MB.
-`script/font-subset --src target/fonts-noto --check` refaz tudo num
+`tool/tasks/subsetter.py --src target/fonts-noto --check` refaz tudo num
 diretório temporário e compara byte a byte: 13 arquivos iguais.
 
 ### o audit, notdef antes e depois (caminho embutido, 16 px, 400)
@@ -577,7 +577,7 @@ linha das escritas decididas tem tinta; o teste afirma as duas coisas.
 
 ### gate e regress
 
-`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+`./tool/tasks/fullcheck.sh` verde com o ambiente do briefing: `cargo test --workspace`
 3079 passed, 0 failed, 27 ignored (a base tinha um teste a menos: este
 trabalho soma `decided_scripts_have_no_tofu` e não tira nenhum); clippy,
 fmt e wasm verdes; perna urnaui 85 passed, 0 failed, 1 ignored.
@@ -585,13 +585,13 @@ fmt e wasm verdes; perna urnaui 85 passed, 0 failed, 1 ignored.
 `cargo check -p engine --target aarch64-apple-ios-sim` com `-D warnings`
 verde; `cargo ndk -t arm64-v8a check -p showcase --lib` compila, com dois
 avisos de código morto que já existiam e ficam fora do escopo
-(`crates/engine/src/window/mod.rs:57`, `crates/showcase/src/app.rs:407`).
+(`rust/engine/src/runtime/window/mod.rs:57`, `apps/uigallery/src/shell/mod.rs:407`).
 disco: 13 GB livres antes do gate, 11 GB no fim.
 
 ### linha para o índice de ADR
 
 ```
-| 2026-09-25 | [embedded-fonts-by-script](embedded-fonts-by-script.md) | proposed | Noto Sans embutida por escrita (decisão do brenner): árabe, hebraico, devanágari, SC, JP e KR em Regular e Bold, subsets reprodutíveis por script/font-subset (sha256 das fontes, conjuntos pelos codecs da stdlib); de 1,7 MB para 6,9 MB embutidos; o fallback acha as faces no último passo do cosmic-text, han na ordem SC, JP, KR; o desktop segue com as fontes do sistema; emoji fica para a fase 5 |
+| 2026-09-25 | [embedded-fonts-by-script](embedded-fonts-by-script.md) | proposed | Noto Sans embutida por escrita (decisão do brenner): árabe, hebraico, devanágari, SC, JP e KR em Regular e Bold, subsets reprodutíveis por tool/tasks/subsetter.py (sha256 das fontes, conjuntos pelos codecs da stdlib); de 1,7 MB para 6,9 MB embutidos; o fallback acha as faces no último passo do cosmic-text, han na ordem SC, JP, KR; o desktop segue com as fontes do sistema; emoji fica para a fase 5 |
 ```
 
 ### pendências
@@ -606,7 +606,7 @@ disco: 13 GB livres antes do gate, 11 GB no fim.
   no desktop é uma decisão à parte.
 - a cobertura é um conjunto: hanzi fora do GB2312 nível 1, kanji fora do
   JIS nível 1 e os jamo de compatibilidade do coreano (ㅋ, U+3131 a U+318E)
-  não estão; alargar é editar `script/font-subset` e rodar de novo.
+  não estão; alargar é editar `tool/tasks/subsetter.py` e rodar de novo.
 - o wasm cresce uns 5,2 MB crus (uns 4 MB com gzip); não medi o wasm de
   release (o briefing proíbe `--release`).
 - herdadas da fase 1 e ainda abertas: o travessão no aviso de fallback de
@@ -620,7 +620,7 @@ disco: 13 GB livres antes do gate, 11 GB no fim.
 fecha o item "corpus renderizado sem tofu nas escritas decididas" do
 critério de aceite. a decisão foi do brenner ("Noto, amigo. Noto, sans"):
 árabe, hebraico, devanágari, chinês simplificado, japonês e coreano em
-Noto Sans, Regular e Bold, subsets de `script/font-subset`.
+Noto Sans, Regular e Bold, subsets de `tool/tasks/subsetter.py`.
 
 validação do orquestrador: diff lido (as faces entram por último no
 banco, emprestadas do binário sem cópia; `TextSystem`, `TextMeasurer` e a
@@ -646,20 +646,20 @@ faces embutidas (Noto Sans Hebrew e Arabic no fallback).
 ### (a) como o caret e a seleção são posicionados hoje, e onde quebram
 
 o rope já anda por grafema e em ordem lógica: `move_left` e `move_right`
-(`crates/rope/src/movement.rs:175-189`) vão ao grafema anterior e ao
+(`rust/editor/src/document/movement.rs:175-189`) vão ao grafema anterior e ao
 seguinte (`movement.rs:43-78`, `grapheme_indices` por linha). em texto
 misto isso está certo como movimento lógico; o que falta é o visual. o
-editor liga as setas direto nessas funções (`crates/comps/src/editor/input.rs:60-75`),
+editor liga as setas direto nessas funções (`rust/engine/src/widgets/editor/input.rs:60-75`),
 então em trecho RTL a seta direita anda para a esquerda na tela.
 
 o `TextBuffer` do `TextInput` anda por `char`, não por grafema
-(`crates/comps/src/form/text_input/buffer.rs:98-110`, `153-167`), e não
+(`rust/engine/src/widgets/form/text_input/buffer.rs:98-110`, `153-167`), e não
 tem seleção estendida: só `select_all` cria seleção.
 
-o x do caret sai de `cursor_rect_in` (`crates/engine/src/text/measure.rs:179`),
+o x do caret sai de `cursor_rect_in` (`rust/engine/src/drawing/text/measure.rs:179`),
 usado por `TextMeasurer::cursor_x_styled` no `TextField`
-(`crates/comps/src/form/text_field.rs:365`) e no editor
-(`crates/comps/src/editor/view.rs:142`). ele devolve `glyph.x`, a borda
+(`rust/engine/src/widgets/form/text_field.rs:365`) e no editor
+(`rust/engine/src/widgets/editor/view.rs:142`). ele devolve `glyph.x`, a borda
 esquerda do glifo que contém o byte (`measure.rs:200`), e no fim da linha
 `last.x + last.w` do último glifo do vetor (`measure.rs:209`). as duas
 coisas supõem LTR. num glifo RTL o começo lógico é a borda direita, e num
@@ -758,12 +758,12 @@ não havia leitura disso fora do engine. detalhe em "fase 3: a sonda".
 ### o que mudou, por crate
 
 - `engine`: uma leitura nova, `TextMeasurer::clusters_styled` com o tipo
-  `ClusterBox` (`crates/engine/src/text/measure.rs`): os clusters de cada
+  `ClusterBox` (`rust/engine/src/drawing/text/measure.rs`): os clusters de cada
   linha da esquerda para a direita, com bytes, caixa, nível e direção do
   parágrafo. nada do que existia mudou.
 - `rope`: só docs e testes. `move_left` e `move_right` passam a dizer que
   são lógicos (grafema anterior e seguinte na ordem do texto).
-- `comps`, `TextInput`: `crates/comps/src/form/text_input/visual.rs`
+- `comps`, `TextInput`: `rust/engine/src/widgets/form/text_input/visual.rs`
   (`VisualLine`, uso interno do crate) faz de cada fronteira de grafema
   uma parada com x e lugar na ordem da tela. na troca de direção o byte
   fica na borda do lado de nível menor, o lado do parágrafo: em
@@ -787,16 +787,16 @@ não havia leitura disso fora do engine. detalhe em "fase 3: a sonda".
 
 ### testes (25 novos)
 
-- rope, `crates/rope/src/tests_bidi.rs` (6): as duas frases e a frase RTL
+- rope, `rust/editor/src/tests/bidi.rs` (6): as duas frases e a frase RTL
   andam em ordem de texto nos dois sentidos; niqqud e harakat andam junto
   da letra; seleção que cruza a troca de direção é um intervalo lógico
   (e colapsa nas pontas lógicas); início, fim de linha e palavra em texto
   misto.
-- engine, `crates/engine/src/text/tests_measure.rs` (3): clusters da
+- engine, `rust/engine/src/drawing/text/tests/measure.rs` (3): clusters da
   esquerda para a direita com os níveis (`abc אבג def` e um parágrafo
   RTL); em latim cada cluster começa no x do caret de antes; marcas
   entram no cluster da letra.
-- `TextInput` e `TextField`, `crates/comps/src/form/text_input/tests/tests_bidi.rs`
+- `TextInput` e `TextField`, `rust/engine/src/widgets/form/text_input/tests/bidi.rs`
   (11): a seta direita percorre a tela nas três frases, a esquerda volta,
   o caret anda para a direita a cada toque e cada byte aparece uma vez;
   num trecho RTL a esquerda avança no texto; o caret nas fronteiras; o
@@ -804,7 +804,7 @@ não havia leitura disso fora do engine. detalhe em "fase 3: a sonda".
   End; clique em cada parada volta a ela; latim bit a bit igual; o
   `TextField` desenha o caret da fronteira, as duas lavagens da seleção
   cruzada e o caret do parágrafo RTL.
-- editor, `crates/comps/src/editor/tests_bidi.rs` (5): as setas percorrem
+- editor, `rust/engine/src/widgets/editor/tests/bidi.rs` (5): as setas percorrem
   cada linha e passam para a vizinha nas pontas; na linha RTL a esquerda
   avança; shift cruzando direções desenha duas caixas com os dígitos no
   meio; o caret da fronteira e o clique em cada parada das três linhas; a
@@ -823,19 +823,19 @@ na borda direita. para refazer:
 
 ### gate e regress
 
-`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+`./tool/tasks/fullcheck.sh` verde com o ambiente do briefing: `cargo test --workspace`
 3104 passed, 0 failed, 27 ignored (a base tinha 3079: são os 25 novos,
 nenhum saiu); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
 failed, 1 ignored. `regress -- check` depois de tocar
-`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+`tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
 fora do gate: `cargo check -p comps --target aarch64-apple-ios-sim` com
 `-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
 compila, com os dois avisos antigos de código morto. disco: 11 GB livres.
 
 ### pendências
 
-- os apps não mandam shift+seta para o campo: `crates/ide/src/keys.rs`,
-  `crates/showcase/src/keys.rs` e o `keys.rs` do urnaui mapeiam só a
+- os apps não mandam shift+seta para o campo: `apps/idestudio/src/interfaces/window/keyboard.rs`,
+  `apps/uigallery/src/keyboard.rs` e o `keys.rs` do urnaui mapeiam só a
   tecla, sem modificador, e estão fora dos arquivos desta fase. o
   `TextField` já aceita `EditKey::Select*`; falta a linha em cada app. o
   editor não precisa (recebe os modificadores).
@@ -885,7 +885,7 @@ lida com fontTools 4.64.0.
 ### (a) como o raster pede a imagem ao swash, e o que muda
 
 `rasterize_and_upload` pede a imagem com `SwashCache::get_image_uncached`
-(`crates/engine/src/text/atlas.rs:209`) e descarta tudo que não é máscara
+(`rust/engine/src/drawing/text/atlas.rs:209`) e descarta tudo que não é máscara
 (`atlas.rs:211`, `image.content != SwashContent::Mask` devolve `None`: o
 glifo reserva o avanço e não desenha). o cosmic-text já pede as três
 fontes na ordem certa, `ColorOutline(0)`, `ColorBitmap(BestFit)` e
@@ -985,7 +985,7 @@ passo do fallback em qualquer peso (`FontMatchKey::not_emoji`).
 
 ### o subset
 
-`script/font-subset` ganhou o emoji: conjunto fixo escrito no script
+`tool/tasks/subsetter.py` ganhou o emoji: conjunto fixo escrito no script
 (bloco Emoticons, os rostos do bloco suplementar, 197 símbolos comuns, os
 cinco tons sozinhos e em 45 mãos e pessoas, 15 famílias e 30 profissões
 em ZWJ). 369 code points e 270 sequências, 640 glifos, 1.421.996 bytes
@@ -1028,11 +1028,11 @@ bytes do cabeçalho.
 
 ### gate e regress
 
-`./script/gate` verde com o ambiente do briefing: `cargo test --workspace`
+`./tool/tasks/fullcheck.sh` verde com o ambiente do briefing: `cargo test --workspace`
 3136 passed, 0 failed, 27 ignored (o diff só acrescenta 3 testes e não
 tira nenhum); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
 failed, 1 ignored. `regress -- check` depois de tocar
-`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+`tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
 fora do gate: `cargo check -p engine --target aarch64-apple-ios-sim` com
 `-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
 compila, com os dois avisos antigos de código morto. disco: 12 GB livres.
@@ -1061,7 +1061,7 @@ compila, com os dois avisos antigos de código morto. disco: 12 GB livres.
 
 fecha o item "emoji colorido com pixel medido": Noto Color Emoji em
 bitmap (CBDT v2.051; o COLRv1 atual do Google Fonts o swash do lock não
-desenha), subset de 640 glifos (1,4 MB) por `script/font-subset`; o
+desenha), subset de 640 glifos (1,4 MB) por `tool/tasks/subsetter.py`; o
 atlas continua R8, com o emoji em quatro texels por pixel e o `u`
 negativo como marca no shader, que desenha a cor do emoji e só a
 opacidade do texto. o audit: 0 notdef nas linhas de emoji e pixel de cor
@@ -1082,13 +1082,13 @@ o agente gastou uns 235 mil tokens.
 
 documentos grandes no editor: o que ele faz hoje com N linhas, onde entram
 o layout virtualizado e o cache de shaping por linha, e o que o rope já dá.
-os números vêm do benchmark desta fase (`crates/comps/tests/editor_large_bench.rs`,
+os números vêm do benchmark desta fase (`rust/engine/tests/editor.rs`,
 comando no fim da seção), em release, num Apple M4 com 16 GB, macOS 26.6.2.
 
 ### (a) o que o editor faz por frame com N linhas
 
 - já é virtualizado na emissão. `render` percorre só `visible_lines()`
-  (`crates/comps/src/editor/view.rs:288`, laço em `:299-339`), que é a
+  (`rust/engine/src/widgets/editor/view.rs:288`, laço em `:299-339`), que é a
   conta pura de `visible_line_range` (`view.rs:468-483`): as linhas que
   cortam a viewport mais `overscan_lines` (8) de cada lado. a altura total
   vem da contagem de linhas, sem medir nenhuma
@@ -1096,11 +1096,11 @@ comando no fim da seção), em release, num Apple M4 com 16 GB, macOS 26.6.2.
 - por linha visível: o texto sai do rope (`view.rs:134-140`,
   `rope.line(n)`, O(log n)); o número da margem é medido com
   `TextMeasurer::measure_styled` (`view.rs:304-305`), que tem cache LRU de
-  2048 entradas por conteúdo (`crates/engine/src/text/measure.rs:24`,
+  2048 entradas por conteúdo (`rust/engine/src/drawing/text/measure.rs:24`,
   `:327-346`); o texto vira um nó `SceneNode::Text` com o conteúdo como
   chave.
 - quem molda o texto desenhado é o `TextSystem`, na hora de montar o frame:
-  `ensure_shaped` (`crates/engine/src/text/system.rs:253-289`) molda uma
+  `ensure_shaped` (`rust/engine/src/drawing/text/system.rs:253-289`) molda uma
   vez por chave, num mapa por conteúdo, e `finish_frame` (`system.rs:346-352`)
   joga fora o que o frame não usou. isso já é o shaping por linha com cache
   do desenho, limitado às linhas da tela.
@@ -1108,7 +1108,7 @@ comando no fim da seção), em release, num Apple M4 com 16 GB, macOS 26.6.2.
   caret na tela (`view.rs:343-360`, `caret_x` em `:145-147`) e cada linha
   visível com seleção (`view.rs:319-329`, `selection_boxes_on_line` em
   `:423-441`). as duas passam por `VisualLine::new`
-  (`crates/comps/src/form/text_input/visual.rs:51-52`), que chama
+  (`rust/engine/src/widgets/form/text_input/visual.rs:51-52`), que chama
   `TextMeasurer::clusters_styled` (`measure.rs:400-414`): esse molda toda
   vez, é o único caminho de shaping do measure sem cache.
 - a geometria das linhas é f32 contra o topo do documento:
@@ -1137,7 +1137,7 @@ custo medido antes de mudar (média / p99, ms; `scene` para no
 o frame não depende de N: rolar e editar custam o mesmo com 10 mil e com
 um milhão de linhas. só abrir cresce com o documento, e o pico ao abrir é
 quase o dobro do que fica, porque `Document::load` copia o texto inteiro
-antes de montar o rope (`crates/rope/src/document.rs:51-62`, o
+antes de montar o rope (`rust/editor/src/document/mod.rs:51-62`, o
 `text.into()`). com tudo selecionado, a cena custa 28 vezes a da roda
 simples: é o `clusters_styled` moldando de novo cada linha da tela a cada
 frame.
@@ -1149,7 +1149,7 @@ frame.
   f64 contra o deslocamento da rolagem e só o resultado, pequeno, volta a
   f32 (`line_top`, `hit_test_point`, `scroll_to_cursor` e a faixa
   visível). o `ScrollState` guarda o deslocamento em f32
-  (`crates/engine/src/input/scroll.rs:42-56`) e é do engine, fora dos
+  (`rust/engine/src/control/input/scroll.rs:42-56`) e é do engine, fora dos
   arquivos desta fase: perto do fim de um milhão de linhas ele anda em
   passos de 2 px. isso vira pendência, não mudança de API.
 - cache de shaping por linha: no `clusters_styled` do measure, ao lado
@@ -1171,7 +1171,7 @@ frame.
 
 o rope é o ropey 1.6, uma árvore B com contagem de linhas nos nós:
 `line(n)`, `line_to_byte` e `byte_to_line` são O(log n) e `len_lines` é
-O(1). uma edição é uma `Transaction` (`crates/rope/src/transaction.rs:91-105`):
+O(1). uma edição é uma `Transaction` (`rust/editor/src/document/transaction.rs:91-105`):
 para cada trecho, `byte_to_char`, `remove` e `insert`, todos O(log n). o
 inverso guarda só o texto removido (`transaction.rs:110-124`), e o
 histórico guarda a transação e o inverso, sem cópia do documento. inserir
@@ -1271,15 +1271,15 @@ inteiro antes de montar o rope.
 
 ### o que mudou
 
-- `crates/comps/src/editor/view.rs`: `line_y` calcula em f64 a distância
+- `rust/engine/src/widgets/editor/view.rs`: `line_y` calcula em f64 a distância
   do topo do documento até a linha; `line_top`, `hit_test_point` e
   `scroll_to_cursor` usam essa conta, e só a diferença pequena, na tela,
   volta a f32. `input.rs`: o encaixe da roda em linhas inteiras usa a
   mesma conta. para um documento pequeno com rolagem zero, o resultado é
   bit a bit o de antes (as 176 baselines iguais confirmam).
-- `crates/rope/src/document.rs`: `Document::load` monta o rope direto do
+- `rust/editor/src/document/mod.rs`: `Document::load` monta o rope direto do
   `&str` e só copia quando há `\r` para normalizar.
-- `crates/engine/src/text/cluster_cache.rs` (novo): o cache de
+- `rust/engine/src/drawing/text/cluster_cache.rs` (novo): o cache de
   `TextMeasurer::clusters_styled`. chave: o texto e o estilo, com a
   largura exata; sem índice de linha, então uma edição invalida só as
   linhas cujo texto mudou, e uma quebra de linha que empurra o resto do
@@ -1309,28 +1309,28 @@ cargo test --offline --release -p comps --test editor_large_bench -- --ignored -
 
 ### testes (8 novos, 1 benchmark ignorado)
 
-- `crates/comps/src/editor/tests_large.rs`, com um milhão de linhas, em
+- `rust/engine/src/widgets/editor/tests/large.rs`, com um milhão de linhas, em
   debug e no gate: abre e rola até o fim; rola por onze pontos do
   documento; clica perto do fim e cai na linha sob o ponteiro; insere,
   apaga e quebra linha no meio. cada frame confere que cada nó de texto é
   a linha do documento naquela posição, que as linhas estão a uma altura
   de linha uma da outra e que a margem numera as linhas certas. os quatro
   falhavam antes da correção de f64.
-- `crates/engine/src/text/cluster_cache.rs`: acerto e chave, despejo da
+- `rust/engine/src/drawing/text/cluster_cache.rs`: acerto e chave, despejo da
   menos usada no orçamento, linha maior que o orçamento e troca contada
   uma vez. `tests_measure.rs`: `clusters_styled` molda uma vez por texto
   de linha e uma edição molda só a linha editada.
-- `crates/comps/tests/editor_large_bench.rs`: o benchmark, `#[ignore]`.
+- `rust/engine/tests/editor.rs`: o benchmark, `#[ignore]`.
 - os testes do editor pequeno, do bidi (fase 3) e do `TextField` passam
   sem mudança.
 
 ### gate e regress
 
-`./script/gate` verde com o ambiente do briefing: `cargo test
+`./tool/tasks/fullcheck.sh` verde com o ambiente do briefing: `cargo test
 --workspace` 3144 passed, 0 failed, 28 ignored (eram 3136 e 27: mais os
 8 testes e o benchmark); clippy, fmt e wasm verdes; perna urnaui 85
 passed, 0 failed, 1 ignored. `regress -- check` depois de tocar
-`crates/showcase/examples/regress/main.rs`: 176 unchanged, 0 changed.
+`tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
 fora do gate: `cargo check -p engine -p comps --target
 aarch64-apple-ios-sim` com `-D warnings` verde; `cargo ndk -t arm64-v8a
 check -p showcase --lib` compila, com os dois avisos antigos de código
@@ -1349,7 +1349,7 @@ morto. disco: 9,3 GB livres.
   (0,148 contra 0,021 ms): o shaping saiu, mas o `VisualLine` refaz as
   paradas do caret de cada linha a cada frame. guardar o `VisualLine`
   pede um construtor a partir dos clusters em
-  `crates/comps/src/form/text_input/visual.rs`, fora dos arquivos desta
+  `rust/engine/src/widgets/form/text_input/visual.rs`, fora dos arquivos desta
   fase.
 - linha muito longa (um arquivo minificado de megabytes numa linha só)
   não foi medida: o editor molda a linha inteira, sem virtualização
@@ -1403,7 +1403,7 @@ keymap dele liga só escape, enter e backspace).
 
 o brenner rodou o roteiro no macOS, no exemplo do editor
 (`cargo run -p comps --example editor`, o único app que liga o IME:
-`crates/comps/examples/editor/main.rs:153`), com as fontes de entrada
+`rust/engine/src/widgets/examples/editor/main.rs:153`), com as fontes de entrada
 japonês (Romaji) e chinês simplificado (Pinyin): `nihongo`, espaço e
 Enter para 日本語; `zhongwen` e espaço para 中文. o que ele disse: "no
 editor de código funciona" e, perguntado pelo japonês e pelo chinês,
@@ -1513,7 +1513,7 @@ compondo, sublinhado, caret no fim. para refazer:
 
 ### gate e regress
 
-`./script/gate` verde: `cargo test --workspace` 3160 passed, 0 failed,
+`./tool/tasks/fullcheck.sh` verde: `cargo test --workspace` 3160 passed, 0 failed,
 28 ignored; perna urnaui 86 passed, 1 ignored (3246 no total, eram
 3234); clippy, fmt e wasm verdes. `regress -- check`: 176 unchanged, 0
 changed. disco: 8,4 GB livres.
@@ -1588,7 +1588,7 @@ parte B uns 30 mil.
 
 a parte A foi validada sozinha: tests 3178 no workspace e 86 no urnaui,
 clippy, fmt e wasm verdes, 176 baselines iguais. depois da parte B:
-`./script/gate` verde, 3268 passed (3182 no workspace, 86 no urnaui),
+`./tool/tasks/fullcheck.sh` verde, 3268 passed (3182 no workspace, 86 no urnaui),
 0 failed, 29 ignored; clippy, fmt e wasm verdes. `regress -- check`:
 176 unchanged. disco: 11 GB livres.
 

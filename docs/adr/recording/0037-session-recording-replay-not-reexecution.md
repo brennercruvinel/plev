@@ -30,7 +30,7 @@ way from a frame back to the IR.
 
 ## decision
 
-a new crate, `crates/rec` (deps: `sem`, `monster`, `engine`, serde and
+a new crate, `rust/record` (deps: `sem`, `monster`, `engine`, serde and
 serde_json, sha2). `sem` stays pure; `monster` gains only `raise`, the
 mirror of `lower`. the recorder keeps the session in memory, and writes
 it, whole or in part, as a session file (below).
@@ -184,7 +184,7 @@ B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
   version 1 file by its version (`unsupported session version 1`), since
   a strict reader cannot skip a section it does not know.
 
-- the build identity comes from `crates/rec/build.rs` (`git rev-parse
+- the build identity comes from `rust/record/build.rs` (`git rev-parse
   --short HEAD`, never failing the build) and `CARGO_PKG_VERSION`; task-65
   follows it back to the code.
 - every chunk is copied as it is and decodes with `monster::decode`
@@ -324,7 +324,7 @@ scene needs it.
 - the showcase wiring (a debug shortcut that persists, the panic hook)
   waited for task-60, which edited the showcase shell. task-60 is
   integrated and the showcase still does not depend on `rec`
-  (`crates/showcase/Cargo.toml`): the wiring is task-63 phase d now.
+  (`apps/uigallery/Cargo.toml`): the wiring is task-63 phase d now.
   outside tests, the one caller of `Recorder` today is the `ide-lab`
   binary (task-62 phase c). (updated on 2026-09-23: the orchestrator
   took the showcase wiring and the image pixel retention out of phase d,
@@ -364,12 +364,12 @@ scene needs it.
   `$TMPDIR/plev/sessions/showcase-<pid>-<n>.monster`. without the variable
   nothing is created; the wasm and mobile shells have none of it. the
   recorded demo of the video editor is one of these sessions:
-  `crates/showcase/examples/demo` drives the Silences page through the
+  `apps/uigallery/examples/videos` drives the Silences page through the
   port with no window (the shell's loop on the example's thread, an agent
   on another, every act from a revision it was shown) and
-  `crates/showcase/fixtures/demo/` keeps the run by the rules (187 KB)
+  `apps/uigallery/tests/fixtures/sessions/` keeps the run by the rules (187 KB)
   and the run with the Claude proposing the review (861 KB, two calls,
-  124 s), read back by `crates/showcase/tests/demo.rs` and by
+  124 s), read back by `apps/uigallery/tests/demo.rs` and by
   `plev-inspect`. what such a session says of a generated surface, and
   what it cannot: an act on a node of the surface reaches the dispatcher
   as the capability it was routed to (`surface::Surface::route`), so the

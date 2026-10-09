@@ -1,6 +1,6 @@
 //! The Figma importer (task-71 phase 2): one screen of a real design file
 //! (the "settings" frame of the dark theme), exported by
-//! `script/figma-fixture` into the REST API's shape (`fixtures/figma`);
+//! `tool/tasks/figmapull.py` into the REST API's shape (`fixtures/figma`);
 //! its IR, report and builder code as goldens; every node and every key of
 //! the export in the report, by a census read straight from the parse; the
 //! IR verified with nothing declared, since a design names no capability.

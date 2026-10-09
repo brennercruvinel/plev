@@ -7,7 +7,7 @@
 //! id. an error about a line whose id could not be read has a null id.
 //!
 //! snapshots, changes, requests, observations and stages travel in the
-//! serde form `sem` pins (crates/sem/tests/wire.rs): ids and refs as their
+//! serde form `sem` pins (rust/accord/tests/encoding.rs): ids and refs as their
 //! canonical text, a `Revision` as 16 hex digits, a `RequestId` as decimal
 //! text, a `Value` as `{"kind": .., "value": ..}`.
 

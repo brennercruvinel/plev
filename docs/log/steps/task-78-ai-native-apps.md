@@ -34,7 +34,7 @@ pesquisa, sem critério de aceite neste programa.
 - o urnaui já é a semente: explorer de banco vetorial `.urna` com busca
   exata, ann, graph e híbrida, embedders offline chamados em subprocesso
   python, frames de mídia por ffmpeg lidos no lugar, worker que acorda o
-  loop (`crates/urnaui`, ADRs `urnaui-media-frames-in-place-via-ffmpeg-subfile`
+  loop (`apps/urnadbapp`, ADRs `urnaui-media-frames-in-place-via-ffmpeg-subfile`
   e `worker-results-wake-the-event-loop`).
 - charts e grafo com layout de força em comps e engine.
 - sem inferência de LLM em processo; sem captura de áudio; sem compute
@@ -71,7 +71,7 @@ independente para começar; 73 para o streaming barato; 66 para as capturas.
 ## superfície sob responsabilidade
 
 o app de referência, o módulo de inferência (crate próprio se a decisão
-pedir), ADR `docs/ADR/ai-native-single-process.md`. `crates/urnaui` só se
+pedir), ADR `docs/adr/structure/0072-ai-native-single-process.md`. `apps/urnadbapp` só se
 ele for o app escolhido.
 
 ## interfaces que consome
@@ -88,7 +88,7 @@ as próprias.
 - app de referência rodando no macOS com modelo local em streaming e fontes
   citadas.
 - tabela de medição do app de referência, com metodologia.
-- `./script/gate` verde (o app, se depender de coisa fora do workspace,
+- `./tool/tasks/fullcheck.sh` verde (o app, se depender de coisa fora do workspace,
   segue o modelo do urnaui: workspace próprio e perna opcional no gate).
 
 ## testes esperados
@@ -196,7 +196,7 @@ metodologia:
 - máquina: Apple M4 (4 núcleos P e 6 E, GPU de 10 núcleos, Metal 4),
   16 GB, macOS 26.6.2, rustc 1.98.1. o Mac não estava ocioso (Finder e
   outros processos, load average perto de 5).
-- perfil: release do workspace `crates/llm` (lto thin, um codegen unit),
+- perfil: release do workspace `rust/llmrun` (lto thin, um codegen unit),
   um binário `llm-bench` por implementação, com CPU e Metal dentro.
 - modelo: TinyLlama 1.1B Chat v1.0; bf16 no arquivo, f16 no Metal, f32 na
   CPU. geração gulosa.
@@ -218,7 +218,7 @@ metodologia:
 
 ```sh
 export CARGO_TARGET_DIR=target/agents/one/llm CARGO_BUILD_JOBS=4
-cargo build --offline --release --manifest-path crates/llm/Cargo.toml \
+cargo build --offline --release --manifest-path rust/llmrun/Cargo.toml \
   --features candle,metal --bin llm-bench      # ou burn,metal
 $CARGO_TARGET_DIR/release/llm-bench --impl candle \
   --model ~/.cache/plev/models/tinyllama-1.1b-chat-v1.0 --device metal
@@ -292,14 +292,14 @@ MB. na CPU f32, 6,7 contra 1,9 tok/s. os 32 primeiros tokens são iguais
 nas quatro colunas. os dois compilam para wasm com o getrandom
 configurado; o tokenizer não.
 
-o ADR: `docs/ADR/ai-native-single-process.md`, `proposed`. recomenda o
+o ADR: `docs/adr/structure/0072-ai-native-single-process.md`, `proposed`. recomenda o
 candle para o app de referência, com o burn atrás da feature até a
 decisão, que é do brenner.
 
 o comando que reproduz está na seção da medição (`llm-bench --impl
 candle|burn --device metal|cpu`, de dentro do `CARGO_TARGET_DIR`).
 
-testes: `cargo test --offline --manifest-path crates/llm/Cargo.toml
+testes: `cargo test --offline --manifest-path rust/llmrun/Cargo.toml
 --features candle,burn` com 24 passados (a interface com o modelo falso,
 o template, o detokenizador, o rope, o prefill contra o passo); clippy e
 fmt verdes com `text`, `candle`, `burn` e `candle,burn,metal`. os dois
@@ -327,7 +327,7 @@ pendências:
 
 validação do orquestrador: diff lido (a interface de streaming, as duas
 implementações, o NOTICE do código trazido do burn-lm); os testes do
-`crates/llm` com as duas features verdes (24, mais 2 com o modelo real,
+`rust/llmrun` com as duas features verdes (24, mais 2 com o modelo real,
 `#[ignore]`); o gate da raiz verde com os mesmos 3268; o `Cargo.lock` da
 raiz igual ao de main; nenhum peso no git.
 
@@ -388,7 +388,7 @@ que pegou o plev:
   wgpu-naga-bridge src/lib.rs:182). `wgpu::naga` segue reexportado
   (src/lib.rs:172) e o teste `wgsl` dá arquivo, linha e coluna como antes.
 - o `rust-version` 1.87 liga o `manual_is_multiple_of` do clippy em seis
-  lugares; um deles é o `crates/wire/src/b64.rs:54`. o wgpu 28 já pedia
+  lugares; um deles é o `rust/socket/src/framing/base64.rs:54`. o wgpu 28 já pedia
   1.92 (Cargo.toml:14) com o workspace declarando 1.85.
 
 ## fase 2: a prova de pixel
@@ -418,7 +418,7 @@ preview do parser e o prime), o
 `InstanceDescriptor` sem `Default` e por valor (`gpu/context.rs:295`,
 dois testes), os layouts com `Option` (11 no engine, 1 no scene3d) e o
 depth do scene3d. o `rust-version` 1.87 pediu o `is_multiple_of` em
-seis lugares da raiz (um no wire) e em três do `crates/llm`.
+seis lugares da raiz (um no wire) e em três do `rust/llmrun`.
 
 a prova de pixel: 1312 de 1312 `equal` contra a base do wgpu 28, no
 commit do wgpu 29 e de novo na ponta da branch, depois do device para o
@@ -427,7 +427,7 @@ burn. `regress check`: 176 iguais.
 o device dividido: o engine dá `instance()` e `adapter()` por acréscimo,
 e `RenderConfig::compute` (`None` por padrão) pede os limites e as
 features do adaptador (`gpu/config.rs:44`, `gpu/context.rs:309`). no
-`crates/llm`, a feature `plev` põe o engine como dependência de caminho
+`rust/llmrun`, a feature `plev` põe o engine como dependência de caminho
 e `llm::plev` entrega os quatro handles ao `init_device`. o
 `tests/plev.rs` roda sem janela: matmul no device do engine igual ao da
 CPU, e depois o mesmo device desenha um frame igual byte a byte ao de um
@@ -442,7 +442,7 @@ variável, porque o NDK não está no PATH) e iOS (`aarch64-apple-ios-sim`).
 
 gate verde com as pernas urnaui e wasm: 3272 passados (3186 na raiz e 86
 no urnaui), eram 3268; os 4 a mais são os testes novos do engine. o
-`crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados; clippy
+`rust/llmrun` com `candle,burn,plev`: 27 passados e 3 ignorados; clippy
 verde também com `burn`, `candle,burn,metal` e `burn,plev,metal`.
 
 pendências:
@@ -463,13 +463,13 @@ validação do orquestrador:
 - diff lido. as mudanças de API do wgpu 29 são mecânicas. o frame da
   janela coberta (`Occluded`) é pulado, e o `Occluded(false)` que já
   existia redesenha.
-- o `RenderConfig::compute` vem desligado; só o `crates/llm` com a
+- o `RenderConfig::compute` vem desligado; só o `rust/llmrun` com a
   feature `plev` liga. a linha do wire é só o lint, sem mudar o formato.
 - gate verde com 3272 (eram 3268; os 4 a mais são do engine).
 - `regress check`: 176 iguais.
 - a captura refeita pelo orquestrador contra a base do wgpu 28: todo
   frame igual.
-- `crates/llm` com `candle,burn,plev`: 27 passados e 3 ignorados (os que
+- `rust/llmrun` com `candle,burn,plev`: 27 passados e 3 ignorados (os que
   pedem o modelo).
 
 o que isso fecha e o que não fecha: o pedido do brenner (decisão 16),

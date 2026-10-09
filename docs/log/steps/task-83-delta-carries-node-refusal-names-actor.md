@@ -30,18 +30,18 @@ o brenner escolheu corrigir isso antes da onda 5.
 
 ## estado no código (main @ c5fdf36)
 
-- `crates/sem/src/diff.rs:23`: `Change::NodeAdded(SemId)`.
-- `crates/rec/src/ring.rs:47-53`: o recorder trata `NodeAdded`,
+- `rust/accord/src/mutation.rs:23`: `Change::NodeAdded(SemId)`.
+- `rust/record/src/ring.rs:47-53`: o recorder trata `NodeAdded`,
   `ParentChanged` e `Reordered` como estruturais e grava um snapshot
-  inteiro; `crates/rec/src/state.rs:83` recusa `node_added` dentro de
+  inteiro; `rust/record/src/state.rs:83` recusa `node_added` dentro de
   `Kind::Changes`.
-- `crates/wire/src/server.rs:329-339`: o delta passa o `Change` como veio
+- `rust/socket/src/server.rs:329-339`: o delta passa o `Change` como veio
   do `diff`, filtrando só `StateChanged` por `keys`; o snapshot tira
   `source` quando não pedido (`:349`).
-- `crates/sem/src/dispatch.rs`: o dispatcher guarda os receipts abertos e
+- `rust/accord/src/dispatch.rs`: o dispatcher guarda os receipts abertos e
   os últimos 256 terminados, cada um com `validated_against` (a revisão
   viva em que foi checado); ninguém usa isso para dizer quem agiu.
-- `crates/ide/src/workbench/notice.rs:84-87`: a recusa stale vira "Refused
+- `apps/idestudio/src/capability/notice.rs:84-87`: a recusa stale vira "Refused
   agent's submit: <o que mudou>", sem autor da mudança.
 
 ## escopo
@@ -155,7 +155,7 @@ o que mudou em cada contrato:
   mesmas mudanças na mesma ordem, e nada exatamente quando os snapshots
   são iguais. o `Change` não lê a forma antiga (string): sem o snapshot
   não há nó.
-- rec, leitura de sessão (`read_event` em `crates/rec/src/persist.rs`):
+- rec, leitura de sessão (`read_event` em `rust/record/src/persist.rs`):
   uma linha que não lê como `Event` tem mais uma chance. num evento de
   snapshot, cada `node_added` escrito como id vira o nó que o snapshot do
   próprio evento tem para aquele id, como foi gravado. id que o snapshot
@@ -189,7 +189,7 @@ decisões minhas, locais:
   fica de fora: ele não rodou efeito nenhum, e a regra do briefing tira
   "recusados". um que falhou entra (rodou e pode ter mexido em algo).
 - o teste de medição do todo é um teste ignorado novo em
-  `crates/showcase/src/view/dispatch.rs` (arquivo permitido), ao lado do
+  `apps/uigallery/src/views/dispatcher/mod.rs` (arquivo permitido), ao lado do
   `agent_port_cost` da 57b, para o antes e o depois rodarem o mesmo
   código. a medição do laboratório usou um script de `plev` fora do
   repositório (não precisou mudar o lab).
@@ -201,7 +201,7 @@ validação executada (com o ambiente do briefing):
 
 - `cargo test -p rec && cargo test -p sem && cargo test -p wire &&
   cargo test -p ide`: verde, 323 passed, 0 failed, 2 ignored.
-- `./script/gate` na ponta da branch: verde. workspace 1996 passed, 0
+- `./tool/tasks/fullcheck.sh` na ponta da branch: verde. workspace 1996 passed, 0
   failed, 8 ignored (a main tinha 1985, 0, 6: onze testes novos e dois
   ignorados novos, o de medição do todo e o que abre sessões por
   caminho). a perna do urnaui rodou também, porque existe um checkout em
@@ -217,8 +217,8 @@ validação executada (com o ambiente do briefing):
   sozinha, de novo, até um `cargo clean -p engine` no mesmo target dir;
   depois dele o gate inteiro passou. acontece desde que o `engine` passou
   a depender do `sem` (task-59), num target dir usado pelas duas pernas.
-  fica para o orquestrador: não mexi em `script/gate` nem no
-  `crates/engine/Cargo.toml`.
+  fica para o orquestrador: não mexi em `tool/tasks/fullcheck.sh` nem no
+  `rust/engine/Cargo.toml`.
 - o comando do laboratório de aceite: exit 0, com a recusa nomeando a
   pessoa (seção medição).
 
@@ -240,7 +240,7 @@ testes novos ou estendidos:
 - showcase: `agent_port_new_row` (ignorado, medição).
 - rec: `a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds`
   e `open_the_named_sessions` (ignorado, lê `REC_OPEN`), em
-  `crates/rec/tests/session/file.rs`.
+  `rust/record/tests/session/file.rs`.
 
 decisão tomada pelo orquestrador: B. as sessões gravadas antes continuam
 abrindo. o `Kind::Snapshot { snapshot, changes }` guardava o diff do
@@ -266,7 +266,7 @@ a2 e numa do lab rodada na base):
 | `lab-control2` | 46 | `stacks.commit[9f33318]` | request 6 completed, `9f33318` |
 
 o teste `a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds`
-(`crates/rec/tests/session/file.rs`) escreve a seção S de uma sessão
+(`rust/record/tests/session/file.rs`) escreve a seção S de uma sessão
 gravada na forma antiga, com o índice e os sha256 refeitos, e confere:
 abre, e os eventos são iguais aos da janela em memória (o nó do
 snapshot, com `source`); gravada de novo, só a forma nova sai; o mesmo
@@ -294,17 +294,17 @@ limites conhecidos (também no ADR e no doc de `Acted`):
 
 o que ficou de fora, e por quê:
 
-- `docs/ADR/session-recording-replay-not-reexecution.md` diz que "a
+- `docs/adr/recording/0037-session-recording-replay-not-reexecution.md` diz que "a
   `Change` carries neither the new node nor the new order" e
-  `docs/ADR/lean-semantic-form-and-one-redaction.md` diz que "a `delta`
+  `docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md` diz que "a `delta`
   never carried `source`". o ADR novo corrige os dois; a nota em cima
   de cada um fica com o orquestrador no fechamento.
-- dívida registrada, fora deste escopo: `crates/ide/src/bin/lab/lab.rs`
+- dívida registrada, fora deste escopo: `apps/agenteval/src/arms/plev.rs`
   já tinha 728 linhas na main (acima das 639) e foi a 733; a formatação
   de `acted` foi para `story.rs` para não crescer mais.
-- `docs/arc/arc.toml` (papel do `sem`): cabe dizer que um `node_added`
+- `docs/ATLAS.toml` (papel do `sem`): cabe dizer que um `node_added`
   carrega o nó e que o dispatcher nomeia em `acted` quem agiu sobre o
-  estado visto. `docs/how-to/code-against-the-plev-engine.md` (seção do
+  estado visto. `docs/ref/code-against-the-plev-engine.md` (seção do
   contrato semântico) pode ganhar a mesma frase. os dois ficam com o
   orquestrador no fechamento.
 - fora do escopo pelo arquivo da task: aplicar `NodeAdded` no recorder
@@ -316,11 +316,11 @@ pernas pode falhar na do urnaui depois de uma recompilação do `engine`
 pela raiz (acima); `cargo clean -p engine` resolve. quem casar
 `Rejection::Stale { changes }` numa
 branch aberta precisa de `..` (a task-84 mexe no ide; os arquivos dela,
-`session.rs`, `views/` e `crates/git`, não foram tocados aqui). a task-85
+`session.rs`, `views/` e `rust/gitdrv`, não foram tocados aqui). a task-85
 põe `files` no nó do commit, que passa a viajar dentro do `node_added`
 sem mais nada.
 
-linha proposta para `docs/ADR/README.md`:
+linha proposta para `docs/adr/README.md`:
 
 ```text
 | 2026-09-23 | [a-delta-carries-the-node-a-refusal-names-who-acted](a-delta-carries-the-node-a-refusal-names-who-acted.md) | accepted | `Change::NodeAdded` carrega o nó como o snapshot `after` o tem, e o agent port o serve com o mesmo filtro de `keys` e `source` do snapshot (o delta que mostra o commit nascendo em `stacks`: 172 B mais uma observação de 402 B viram 427 B numa ida só); `Rejection::Stale` ganha `acted`, as ações de outros atores checadas na revisão que o autor viu e que rodaram, preenchido só pelo dispatcher; a regra de stale fica no `plev --help` e no doc do `Act`; protocolo continua v1, e a sessão gravada antes continua abrindo: o leitor põe no lugar do id o nó que o snapshot do próprio evento tem, sem perda (task-83) |
@@ -351,6 +351,6 @@ sem conflito). validação do orquestrador:
 - fechamento: linha no índice de ADRs, notas datadas nos ADRs
   session-recording e lean-semantic, manual do engine, changelog.
 
-dívida registrada: `crates/ide/src/bin/lab/lab.rs` passou de 728 para 733
+dívida registrada: `apps/agenteval/src/arms/plev.rs` passou de 728 para 733
 linhas, acima do limite de tamanho de arquivo; dividir o laboratório fica
 para a próxima task que mexer nele.

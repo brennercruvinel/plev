@@ -75,7 +75,7 @@ decisão:
   submódulo entram. a ordem é a de byte do caminho inteiro, que é a ordem
   em que o git lista. pela cli, é o que lista
   `git diff-tree --no-commit-id --name-only -r --no-renames --root --diff-merges=first-parent <sha>`.
-- uma função só em `crates/git/src/repo.rs`: `GitRepo::files_of` (privada),
+- uma função só em `rust/gitdrv/src/repo.rs`: `GitRepo::files_of` (privada),
   sobre o `TreeDiff` (`gix::diff::tree` com o `Recorder`, sem feature nova
   do gix e sem processo `git`). `commit_files(sha)` (qualquer revisão que
   nomeie um commit), `commit` e `commit_if` (o `NewCommit` do receipt) e
@@ -92,7 +92,7 @@ decisão:
   arquivos do laboratório além do `scripted.rs`) e `Rig::head_files` dos
   testes do ide.
 
-conferido neste repositório (`crates/git/tests/log_cost.rs`, ignorado): nos
+conferido neste repositório (`rust/gitdrv/tests/log_cost.rs`, ignorado): nos
 440 commits do HEAD, 47 merges, o `files` do log e o `commit_files` lido
 sozinho, como o receipt lê, são iguais ao `git diff-tree` acima.
 
@@ -112,8 +112,8 @@ só logava e pedia o refresh. até o refresh chegar, `changes:staged`
 seguia com os arquivos commitados e `stacks` sem o commit.
 
 decisão: ao aplicar o `Committed(Ok)`, `Workbench::settle`
-(`crates/ide/src/workbench/truth.rs`, `committed`) chama
-`GitSession::show_commit` (`crates/ide/src/session.rs`) antes de
+(`apps/idestudio/src/capability/truth.rs`, `committed`) chama
+`GitSession::show_commit` (`apps/idestudio/src/repository/git.rs`) antes de
 `dispatcher.complete`, no mesmo `Workbench::apply`. a chamada fica em
 `truth.rs` porque é ali que existe a mensagem do `CommitIf`
 (`Inflight::Commit`); guardar uma segunda cópia dela na sessão duplicaria
@@ -162,7 +162,7 @@ consequências:
 ### o que a projeção carrega
 
 decisão: `files` vai só nos `FILES_PROJECTED` (10) commits mais recentes
-do stack ativo (`crates/ide/src/workbench/project.rs`) e no último commit
+do stack ativo (`apps/idestudio/src/capability/project.rs`) e no último commit
 que o workbench fez (`GitSession::made`, gravado por `show_commit`), onde
 quer que ele esteja no stack. os outros commits mantêm `summary`, `author`
 e `show_diff`, sem `files`. os stacks das outras branches não têm commits
@@ -181,7 +181,7 @@ pesaria sozinho uns 10 KB se estivesse entre os dez.
 
 ### `GitRepo::log(100)` neste repositório
 
-`crates/git/tests/log_cost.rs`, ignorado por padrão, build de debug (as
+`rust/gitdrv/tests/log_cost.rs`, ignorado por padrão, build de debug (as
 dependências com `opt-level = 2`):
 `cargo test -p git --test log_cost -- --ignored --nocapture --test-threads=1`.
 frio é um `GitRepo` novo a cada corrida, com o cache vazio (o cache de
@@ -210,7 +210,7 @@ a mesma forma do braço screenshot do laboratório: a linha que o servidor
 escreve para uma observação (`Reply::Snapshot` pelo codec do wire, sem
 `source`, id de um caractere, mais o fim de linha).
 
-neste repositório, `crates/ide/tests/observe_cost.rs` (ignorado; um clone
+neste repositório, `apps/idestudio/tests/observe_cost.rs` (ignorado; um clone
 limpo do HEAD, para o que está sem commit no worktree não pesar; 100
 commits no stack, 107 nós):
 
@@ -269,7 +269,7 @@ implementado:
 
 - uma definição dos arquivos de um commit (diff de árvores contra o
   primeiro pai, renomeação nos dois caminhos, raiz contra a árvore vazia),
-  numa função só do `crates/git`, para o receipt (`commit`, `commit_if`,
+  numa função só do `rust/gitdrv`, para o receipt (`commit`, `commit_if`,
   `commit_files`) e para o log, com cache por sha; as testemunhas do
   laboratório e dos testes leem a mesma definição pelo `git diff-tree`.
 - o estado `files` nos `FILES_PROJECTED` (10) commits mais recentes do
@@ -282,15 +282,15 @@ implementado:
   receipt, sem esperar, e diz quanto pesa cada observação; os dois testes
   do laboratório exigem a confirmação.
 
-arquivos principais: `crates/git/src/{repo.rs,types.rs}`,
-`crates/git/tests/{real_repo.rs,log_cost.rs}`,
-`crates/ide/src/{session.rs,adapters.rs}`,
-`crates/ide/src/workbench/{truth.rs,project.rs,mod.rs,tests.rs}`,
-`crates/ide/src/views/multi_stack_view.rs` (`CommitEntry.files`),
-`crates/ide/src/views/workspace/tests.rs` (o construtor),
-`crates/ide/src/bin/lab/{scripted.rs,repo.rs}` (`repo.rs`: só
+arquivos principais: `rust/gitdrv/src/{repo.rs,types.rs}`,
+`rust/gitdrv/tests/{real_repo.rs,log_cost.rs}`,
+`apps/idestudio/src/{session.rs,adapters.rs}`,
+`apps/idestudio/src/capability/{truth.rs,project.rs,mod.rs,tests.rs}`,
+`apps/idestudio/src/interfaces/panels/stacks.rs` (`CommitEntry.files`),
+`apps/idestudio/src/interfaces/panels/layout/tests/mod.rs` (o construtor),
+`apps/agenteval/src/{scripted.rs,repo.rs}` (`repo.rs`: só
 `head_files`),
-`crates/ide/tests/{human_agent.rs,lab.rs,observe_cost.rs,support/mod.rs}`.
+`apps/idestudio/tests/{human_agent.rs,lab.rs,observe_cost.rs,support/mod.rs}`.
 
 interfaces:
 
@@ -338,7 +338,7 @@ briefing), sobre a main `558b061`:
 - `cargo test -p ide`: 80 passed, 1 ignored (a main: 73, 0; 50 lib, 5
   bin, 3 lab bin, 20 human_agent, 2 lab).
 - `cargo test -p showcase`: 135 passed, 3 ignored (igual à main).
-- `./script/gate`: verde. `cargo test --workspace` 2016 passed, 0
+- `./tool/tasks/fullcheck.sh`: verde. `cargo test --workspace` 2016 passed, 0
   failed, 11 ignored (a main `558b061`: 2004, 0, 8; mais doze testes e as
   três medições ignoradas). a perna urnaui rodou, no subdiretório próprio
   do target (a correção `1bf6606`): 80 passed, 1 ignored, clippy, fmt e
@@ -424,6 +424,6 @@ triplicava). gate verde no diretório da task: 2096 passaram, 0 falharam,
 12 ignorados (três medições novas ignoradas), com a perna urnaui.
 laboratório reproduzido pelo orquestrador: MATCH sem e com a intervenção,
 o roteirizado confirmando pelo `files` do nó (exigido por
-`crates/ide/tests/lab.rs`). fechamento: ADR commit-checks (a definição e
+`apps/agenteval/tests/experiment.rs`). fechamento: ADR commit-checks (a definição e
 o palpite do commit), textos da task-62 que citavam `git show
 --name-only`, changelog, programa, truth, learnings.

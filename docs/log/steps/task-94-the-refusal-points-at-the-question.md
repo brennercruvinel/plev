@@ -50,7 +50,7 @@ status: feito na branch `task/94-refusal-points-at-question`, sobre
 ### a sonda (na base, por teste)
 
 `a_plev_submit_refused_after_the_person_unstaged_prints_the_stages`, em
-`crates/ide/tests/agent_port.rs` (commit `2a6ec95`): o cenário da quarta
+`apps/idestudio/tests/agent_port.rs` (commit `2a6ec95`): o cenário da quarta
 rodada pela porta real, com o shell do ide sem janela e o agente sendo o
 próprio binário `plev`, rodado como um agente roda num shell (`--app
 <socket> --name test-agent`, um processo por comando). o agente observa,
@@ -117,7 +117,7 @@ linha vem depois do JSON). não aparece:
   protocolo (`not_observed` e os outros).
 
 a função é `ask_hint(stage: &Stage, asked: bool) -> Option<String>`,
-pura, em `crates/wire/src/bin/plev.rs`; o `act_once` guarda `asked`
+pura, em `rust/socket/src/bin/plev.rs`; o `act_once` guarda `asked`
 antes de mandar o ato e escreve a linha depois de imprimir o estágio
 terminal. o `plev act --help`, na seção do ask, ganhou: "when an act
 without --ask is refused as stale and its acted names a person (human or
@@ -150,14 +150,14 @@ the person's request and points at --ask; none after a decline."
   pergunta, com só agentes, depois de `declined`, em `completed` e em
   `failed`. e `act_takes_a_question_for_a_person_and_waits_longer_for_it`
   confere a frase nova do `--help`.
-- `crates/wire/tests/cli.rs`, com o binário contra o app de brinquedo:
+- `rust/socket/tests/cli.rs`, com o binário contra o app de brinquedo:
   `a_stale_refusal_naming_a_person_points_at_the_question_on_stderr`
   (outro agente agiu: recusa sem linha; uma pessoa na tela e outra por
   tecnologia assistiva: a linha com as duas, e o stdout exatamente a
   recodificação canônica; o mesmo ato com `--ask`: recusado stale antes
   da pergunta, sem linha). o teste do `--ask` recusado pela pessoa agora
   confere que o stderr fica vazio.
-- `crates/ide/tests/agent_port.rs`, pela porta real, sem janela: a sonda
+- `apps/idestudio/tests/agent_port.rs`, pela porta real, sem janela: a sonda
   com a linha no stderr e o stdout igual; em seguida o agente faz o que a
   linha diz (observa e pede o `stage` de `src/session.rs` com `--ask`),
   a pessoa recusa no modal, sai `declined` com exit 1 e o stderr vazio,
@@ -168,7 +168,7 @@ the person's request and points at --ask; none after a decline."
 
 ### validação e contagem
 
-`./script/gate` verde no fim, com o `CARGO_TARGET_DIR` da task: teste,
+`./tool/tasks/fullcheck.sh` verde no fim, com o `CARGO_TARGET_DIR` da task: teste,
 clippy `-D warnings`, fmt, wasm check e a perna urnaui. `cargo test
 --workspace`: na base, 2347 passando e 12 ignorados (no commit da sonda,
 que só acrescenta um teste, 2348 e 12); no fim, 2351 e 12 (+4: a função,
@@ -177,7 +177,7 @@ urnaui: 82 passando e 1 ignorado. `cargo test -p wire -p ide` verde.
 
 ### limitações
 
-- `crates/wire/src/bin/plev.rs` está com 638 das 639 linhas que o guard
+- `rust/socket/src/bin/plev.rs` está com 638 das 639 linhas que o guard
   conta. o guard deixa de fora o módulo `#[cfg(test)]` só na coluna 0, e o
   do `plev.rs` está dentro de `mod cli`, indentado: os testes contam como
   produção, ao contrário do que a convenção diz. a próxima mudança no

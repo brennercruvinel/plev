@@ -19,7 +19,7 @@ what the audit found before this change:
   showcase, ide and urnaui have their own `ApplicationHandler` and only
   share `GpuContext`, `EffectProcessor` and `present_frame`, so even with
   the feature on they would have had no watcher.
-- `shader_dir()` pointed at `crates/engine/shaders`, which does not exist
+- `shader_dir()` pointed at `rust/engine/shaders`, which does not exist
   (the shaders live in `src/gpu/shaders`), so the watcher failed to start
   and every read fell back to the embedded copy.
 - `reload_shader` rebuilt pipelines with the raw surface format while
@@ -32,7 +32,7 @@ what the audit found before this change:
 - after a reload only `compositor.invalidate()` was called, which forces
   a frame but not a layer redraw. clean layers kept textures drawn with
   the old shader.
-- the narrate watcher watched `crates/engine/src`, while `file!()` in a
+- the narrate watcher watched `rust/engine/src`, while `file!()` in a
   workspace member is relative to the workspace root, so override keys
   could never match.
 
@@ -80,7 +80,7 @@ rebuild) and on success `exec` the fresh binary with the same args. pid,
 terminal and `cargo run` stay; the window closes and reopens. this is a
 restart, not a reload, and the log says "code changed". a failed build
 leaves the old binary running. the web target keeps its loop in `trunk
-serve` (`script/web`).
+serve` (`tool/tasks/webtarget.sh`).
 
 no macro, no dsl, no dylib, no third-party toolchain in the engine.
 `proc-macro2` (already in the workspace for the macros) is the one

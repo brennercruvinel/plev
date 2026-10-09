@@ -27,13 +27,13 @@ verdade.
 
 ## estado no código (main @ c5fdf36)
 
-- `crates/ide/src/session.rs:129-148`: toda mutação que volta do worker
+- `apps/idestudio/src/repository/git.rs:129-148`: toda mutação que volta do worker
   (`Staged`, `Unstaged`, `Discarded`, `Ignored`, `Committed`,
   `CommitRejected`) manda um `Refresh` novo.
-- `crates/ide/src/session.rs:91-95`: todo `GitEvent::Status(Ok)` chega e
+- `apps/idestudio/src/repository/git.rs:91-95`: todo `GitEvent::Status(Ok)` chega e
   substitui a lista inteira (`set_files`), sem saber se foi lido antes ou
   depois das mutações que a view já mostra.
-- o worker (`crates/git/src/client.rs`) roda os comandos em ordem, um de
+- o worker (`rust/gitdrv/src/client.rs`) roda os comandos em ordem, um de
   cada vez. sequência que produz o defeito: stage A; volta `Staged A`; o
   ide pede o refresh R1; o worker começa R1; o ide aceita stage B (view
   otimista: B staged) e manda o comando; R1 volta com B fora do index e a
@@ -53,8 +53,8 @@ watcher) continuam chegando; gate verde.
 
 ## mecanismo (2026-09-23)
 
-contexto: o worker do `crates/git` roda um comando por vez, na ordem em
-que chegaram, e responde na mesma ordem (`crates/git/src/client.rs:125-130`).
+contexto: o worker do `rust/gitdrv` roda um comando por vez, na ordem em
+que chegaram, e responde na mesma ordem (`rust/gitdrv/src/client.rs:125-130`).
 a view mostra cada mutação assim que ela sai para o worker, e toda
 resposta de mutação manda um `Refresh`. um status pedido antes de uma
 mutação é lido antes dela, e a resposta chega depois de a view já
@@ -63,25 +63,25 @@ mostrar a mutação.
 decisão: a sessão conta as leituras que pediu e, quando uma mutação sai,
 marca como velhas todas as leituras ainda devidas do que ela muda; a
 resposta velha é descartada. nada muda no worker nem na API do
-`crates/git`.
+`rust/gitdrv`.
 
-- `crates/ide/src/session.rs:39-70` (`Owed`): para cada leitura (status,
+- `apps/idestudio/src/repository/git.rs:39-70` (`Owed`): para cada leitura (status,
   log, branches), quantas respostas o worker ainda deve (`owed`) e quantas
   das mais antigas foram lidas antes de uma mutação (`stale`). `asked`
   soma uma devida, `outdated` faz `stale = owed`, `fresh` consome a
   resposta que chegou e diz se ela vale. resposta que ninguém pediu pela
   sessão vale, como antes.
-- `crates/ide/src/session.rs:77-120` (`Reads`): `sent` classifica o
+- `apps/idestudio/src/repository/git.rs:77-120` (`Reads`): `sent` classifica o
   comando que sai. `Refresh` pede as três leituras; `Status`, `Log` e
   `Branches` pedem a sua; `Stage`, `Unstage`, `Discard` e `Ignore`
   envelhecem o status devido; `CommitIf` envelhece os três (o commit muda
   o index, o log e, no primeiro commit, cria a branch). o `match` não tem
   curinga: um comando novo em `GitCommand` obriga a dizer o que ele lê ou
   muda.
-- `crates/ide/src/session.rs:168-170`: todo comando passa por
+- `apps/idestudio/src/repository/git.rs:168-170`: todo comando passa por
   `GitSession::send`, que conta antes de mandar (`refresh`, `diff_file`,
   `diff_commit` e o `execute` do workbench já passavam por ali).
-- `crates/ide/src/session.rs:198-202`: `apply` descarta a resposta velha
+- `apps/idestudio/src/repository/git.rs:198-202`: `apply` descarta a resposta velha
   antes de tocar a view. o `settle` do workbench (`truth.rs:39`) roda
   antes e não olha status, log nem branches, então os receipts não mudam.
 
@@ -125,22 +125,22 @@ implementado:
 
 - a contagem de leituras devidas no `GitSession` (seção mecanismo).
 - cinco testes em repositório real com o worker de verdade
-  (`crates/ide/tests/human_agent.rs:466-611`), sem sleep: a ordem é a da
+  (`apps/idestudio/tests/human_agent.rs:466-611`), sem sleep: a ordem é a da
   fila do worker, e cada teste aplica os eventos um tipo por vez e olha a
   projeção no meio. quatro reproduzem a corrida (stage, unstage da
   pessoa, discard da pessoa, status pedido pelo watcher) e falham na
   base; o quinto segura o que não pode mudar (um stage que o git recusa
   é desfeito pelo refresh da resposta).
-- três testes de unidade da regra (`crates/ide/src/session.rs:276-335`):
+- três testes de unidade da regra (`apps/idestudio/src/repository/git.rs:276-335`):
   stage envelhece só o status, commit envelhece os três, leitura pedida
   depois da última mutação e leitura que ninguém pediu valem.
 - o agente roteirizado do laboratório não espera mais o index "parar"
-  (`crates/ide/src/bin/lab/scripted.rs`, só o contorno: o `settle`, as
+  (`apps/agenteval/src/arms/scripted.rs`, só o contorno: o `settle`, as
   duas constantes e as duas chamadas).
 
-arquivos principais: `crates/ide/src/session.rs`,
-`crates/ide/src/workbench/{mod.rs,execute.rs}` (só `&mut`),
-`crates/ide/tests/human_agent.rs`, `crates/ide/src/bin/lab/scripted.rs`.
+arquivos principais: `apps/idestudio/src/repository/git.rs`,
+`apps/idestudio/src/capability/{mod.rs,execute.rs}` (só `&mut`),
+`apps/idestudio/tests/human_agent.rs`, `apps/agenteval/src/arms/scripted.rs`.
 
 interfaces alteradas: `GitSession::refresh(&mut self)`,
 `GitSession::send(&mut self, GitCommand) -> bool`,
@@ -194,21 +194,21 @@ validação executada (com o ambiente do briefing, target
 - `cargo test -p ide`: 72 passed (48 lib, 5 bin, 3 lab bin, 14
   human_agent, 2 lab).
 - `cargo test -p showcase`: 135 passed, 2 ignored.
-- `./script/gate`: verde, 1993 passed, 0 failed, 6 ignored (a `main` tinha
+- `./tool/tasks/fullcheck.sh`: verde, 1993 passed, 0 failed, 6 ignored (a `main` tinha
   1985, 0, 6; mais oito testes novos). a perna urnaui pulou por não haver
   `../urna` a partir do worktree, como na contagem da base.
 
 outras corridas encontradas (descritas, não corrigidas):
 
 - o receipt do commit fica à frente da projeção. o `Committed` completa o
-  receipt com sha e arquivos (`crates/ide/src/workbench/truth.rs:103-122`),
+  receipt com sha e arquivos (`apps/idestudio/src/capability/truth.rs:103-122`),
   mas `changes:staged` segue com os arquivos commitados e `stacks` sem o
   commit até chegar o refresh que o `Committed` manda
-  (`crates/ide/src/session.rs:251-256`). não é leitura velha por cima de
+  (`apps/idestudio/src/repository/git.rs:251-256`). não é leitura velha por cima de
   um palpite (o commit não tem palpite na view), então não cabe nesta
   correção. aparece no laboratório: nas dez corridas o roteirizado
   observa `stacks` logo depois do submit concluído
-  (`crates/ide/src/bin/lab/scripted.rs:118-121`) e vê só o commit inicial
+  (`apps/agenteval/src/arms/scripted.rs:118-121`) e vê só o commit inicial
   ("stacks: 1 commit(s) projected"). um agente que confere o próprio
   commit pelo `stacks` na hora não o acha (o A1 da fase c achou porque
   levou segundos). caminhos: um palpite do commit na view quando o
@@ -216,12 +216,12 @@ outras corridas encontradas (descritas, não corrigidas):
   no topo do stack), ou completar o receipt só quando o refresh seguinte
   ao commit for aplicado (mexe em `truth.rs`, fora do escopo).
 - o diff mostrado não é relido. o `Refresh` lê status, log e branches
-  (`crates/git/src/client.rs:200-204`); o diff de um arquivo (HEAD contra
-  worktree, `crates/git/src/repo.rs:113-127`) fica com as linhas de antes
+  (`rust/gitdrv/src/client.rs:200-204`); o diff de um arquivo (HEAD contra
+  worktree, `rust/gitdrv/src/repo.rs:113-127`) fica com as linhas de antes
   de um commit ou de uma edição de fora até alguém pedir o diff de novo,
   e `diff:lines` projeta essas linhas. não é corrida de ordem, é leitura
   que ninguém refaz. discard e ignore já apagam o diff do arquivo e
-  esquecem a resposta em voo (`crates/ide/src/workbench/execute.rs:103-112`).
+  esquecem a resposta em voo (`apps/idestudio/src/capability/execute.rs:103-112`).
 
 limitações:
 
@@ -235,13 +235,13 @@ limitações:
 
 o que ficou de fora: as duas corridas acima; uma linha no adr
 commit-checks-the-index-it-observed dizendo que as leituras também se
-apoiam na ordem do worker (`docs/ADR/**` é proibido nesta task, fica para
+apoiam na ordem do worker (`docs/adr/**` é proibido nesta task, fica para
 a integração).
 
 dependências pendentes: nenhuma.
 
 riscos de integração: a task-83 muda padrões de match em
-`crates/ide/src/bin/lab/**`; aqui o `scripted.rs` só perdeu o `settle`
+`apps/agenteval/src/**`; aqui o `scripted.rs` só perdeu o `settle`
 (36 linhas saíram, 8 entraram, nenhum match tocado). um conflito, se
 houver, é mecânico.
 
@@ -266,7 +266,7 @@ wasm `c07a7f0`). validação do orquestrador:
   mais antigas das devidas; toda mutação termina num refresh posterior,
   então descartar nunca deixa a view sem a leitura seguinte. o `match` de
   `Reads::sent` não tem curinga: comando novo obriga a decidir.
-- os testes de `crates/ide/tests/human_agent.rs` dirigem a ordem pelos
+- os testes de `apps/idestudio/tests/human_agent.rs` dirigem a ordem pelos
   eventos do worker real (`Rig::until`), sem sleep.
 - gate verde no diretório da task sobre a base rebaseada: 2073 passaram,
   0 falharam, 7 ignorados, agora com a perna urnaui rodando no worktree

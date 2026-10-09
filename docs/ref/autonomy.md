@@ -196,4 +196,4 @@ a cada 10 min enquanto há agente rodando, para pegar agente parado; o fim de
 um agente acorda o orquestrador na hora). `caffeinate -i -w <pid>` mantém o
 Mac acordado enquanto a sessão existir; um hook `Notification` avisa o
 brenner no macOS quando o orquestrador espera por ele. regras de disco e de
-build em `docs/how-to/orchestrate-coding-agents-on-this-repo.md`.
+build em `docs/ref/orchestrate-coding-agents-on-this-repo.md`.

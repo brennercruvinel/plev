@@ -25,7 +25,7 @@ logo abaixo; o detalhe é o do programa.
 ## estado atual (2026-09-26)
 
 - workspace de 23 crates membros, mais dois workspaces próprios
-  (`crates/urnaui`, o explorador de `.urna`, e `crates/llm`, a inferência
+  (`apps/urnadbapp`, o explorador de `.urna`, e `rust/llmrun`, a inferência
   em processo); wgpu 29, rust 1.87.
 - alvos: macOS e web entregues; android e iOS rodam a galeria (tasks 18,
   19 e 20 fechadas em 2026-09-25); linux e windows pendentes.
@@ -36,7 +36,7 @@ logo abaixo; o detalhe é o do programa.
   referência) e task-80 (a prova: a demo 2 e o checkpoint c).
 - pendente em `steps/pending/`: task-41 (licença e release pública).
 - o repositório no GitHub é privado; a licença MIT está em
-  `docs/LICENSE`.
+  `LICENSE`.
 
 ## mapa de tasks
 
@@ -120,7 +120,7 @@ logo abaixo; o detalhe é o do programa.
 ### experiment, gitbutler port (proof of real app)
 | task | descricao | status |
 |------|-----------|--------|
-| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | dispatch tipado + overlay foram para a engine; o app evoluiu para o crate `crates/ide` (ver task-48). resta polir context menu/modal render |
+| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | dispatch tipado + overlay foram para a engine; o app evoluiu para o crate `apps/idestudio` (ver task-48). resta polir context menu/modal render |
 
 ### research
 | task | descricao | status |
@@ -209,11 +209,11 @@ release pública é a task-41, em `steps/pending/`.
 ---
 
 ## pesquisa de referencia
-analise de ecossistema com 50+ repos, em `docs/refs/`
+analise de ecossistema com 50+ repos, em `docs/ref/`
 
 novas tasks derivadas: task-30 (a11y), task-31 (lyon), task-32 (parley assessment), task-33 (WASM plugins)
 
-sintese: `docs/refs/integration-candidates.md` (adopt/evaluate/watch/hold), `docs/refs/technology-radar.md`
+sintese: `docs/ref/integration-candidates.md` (adopt/evaluate/watch/hold), `docs/ref/technology-radar.md`
 
 ## decisoes tecnicas chave
-ver `docs/ADR/README.md`
+ver `docs/adr/README.md`

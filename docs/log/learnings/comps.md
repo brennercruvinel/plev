@@ -9,13 +9,13 @@ status: reference
 
 registro da sessão que criou o crate `comps` e tirou os literais dos
 widgets (adr comps-one-design-system-crate, inventário em
-docs/catalog.md). escrito pra quem for fazer a próxima migração desse
+docs/ref/component-catalog.md). escrito pra quem for fazer a próxima migração desse
 tamanho, humano ou agente.
 
 ## o caminho que funcionou
 
 1. **catálogo antes de código.** meia hora de grep produziu a tabela do
-   docs/catalog.md: onde cada componente vivia, quem duplicava quem, quais
+   docs/ref/component-catalog.md: onde cada componente vivia, quem duplicava quem, quais
    números estavam soltos. a tabela virou o plano; cada linha virou um
    move, um merge ou um delete. sem ela o refactor teria virado uma
    sequência de descobertas no meio do caminho.
@@ -58,7 +58,7 @@ tamanho, humano ou agente.
   antes de uma sessão longa.
 - **rust do Homebrew não tem `rustup` nem o target wasm32.** a perna
   `cargo check --target wasm32-unknown-unknown -p showcase` do gate não
-  roda local; `script/gate` já pula com aviso e o CI verifica. não
+  roda local; `tool/tasks/fullcheck.sh` já pula com aviso e o CI verifica. não
   confundir com "wasm quebrou".
 - **`cargo fmt` reformata arquivos que o agente acabou de escrever**; o
   `Edit` seguinte falha se o texto antigo mudou de indentação. rodar fmt
@@ -78,7 +78,7 @@ tamanho, humano ou agente.
   segmentos.
 - **screencapture no macOS capturou o wallpaper**, não a janela (permissão
   de captura). a validação de pixel fica pelos testes headless ou pelo
-  `text_probe` (docs/how-to/validate-visuals-by-pixel.md).
+  `text_probe` (docs/ref/validate-visuals-by-pixel.md).
 
 ## números pra calibrar a próxima
 

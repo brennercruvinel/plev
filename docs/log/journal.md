@@ -123,7 +123,7 @@ task; aqui fica o que aconteceu e onde ler.
 - fase 2 integrada: o parser importa HTML/CSS (subset) e Figma, pelo
   mesmo caminho do react e do gpui, com relatório em quatro categorias. a
   fixture do Figma é a tela settings do `Artify App.fig` que o brenner
-  mandou, lida por `script/figma-fixture` (o `.fig` fica fora do repo).
+  mandou, lida por `tool/tasks/figmapull.py` (o `.fig` fica fora do repo).
 - o agente (Opus) gastou uns 440 mil tokens. pendências no arquivo da
   task: ícone, forma e imagem no IR; unidades e elementos fora do subset
   de HTML; texto quebrado em coluna estreita desenhado por cima da linha
@@ -194,8 +194,8 @@ task; aqui fica o que aconteceu e onde ler.
   e o template de briefing nas diretrizes (critério de aceite que a rodada
   fecha, economia de leitura e de saída, pendências em vez de fase).
 - **arrumação:** o programa, a tese e as diretrizes subiram para
-  `docs/mission/`; as medições da 73 também; as notas do mon para
-  `docs/refs/`; a cópia repetida do mon saiu (o texto era igual, só a data
+  `docs/log/`; as medições da 73 também; as notas do mon para
+  `docs/ref/`; a cópia repetida do mon saiu (o texto era igual, só a data
   mudava). fechadas: 42 (substituída pelo ide), 72 e 79 (critério de aceite
   batido), 39 (absorvida pela 73). em `ongoing` ficam só tasks: 18, 19,
   20, 64, 65, 71, 73, 74, 75, 77, 80.
@@ -312,9 +312,9 @@ task; aqui fica o que aconteceu e onde ler.
   estava provado reunido com a fonte; demo 3: a corrida do `Refresh` da
   task-84 gravada no laboratório com o bug de volta (branch descartável
   `task/80a-bug84`, só local, fora do merge), lida no instante pelo
-  `plev-inspect` e virando teste no gate (`crates/ide/tests/rerun/inflight.rs`)
+  `plev-inspect` e virando teste no gate (`apps/idestudio/tests/rerun/inflight.rs`)
   que falha com o bug e passa sem; demo 4: a revisão nasce da intenção,
-  vira comparação e fecha, gravada sem janela (`crates/showcase/tests/ephemeral.rs`).
+  vira comparação e fecha, gravada sem janela (`apps/uigallery/tests/ephemeral.rs`).
 - **validação:** diff inteiro lido; nenhum código de produção mudou (só
   testes, uma fixture de 43.916 bytes e docs). gate local verde, 3012
   passam (antes 3010); regress 176 sem mudança.
@@ -1189,7 +1189,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **integrada:** task-94 (`37c5e0c`). gate verde (2433, +4). o
   orquestrador leu o diff inteiro e conferiu o stdout igual byte a byte
   pelos testes. no fechamento, corrigiu o topo de
-  `crates/ide/tests/agent_port.rs` (um decline já chega na hora, desde o
+  `apps/idestudio/tests/agent_port.rs` (um decline já chega na hora, desde o
   P0 da 92).
 - **registrado:** `plev.rs` a uma linha do limite; a próxima task nele
   começa movendo os testes (programa, seção 8).
@@ -1398,7 +1398,7 @@ task; aqui fica o que aconteceu e onde ler.
 
 - aprovou o fluxo recursivo e pediu para continuar como está.
 - regra nova: toda descoberta recebe P0 a P3 antes de virar task
-  (`docs/mission/autonomy.md`, "severidade antes de priorizar"); só P0 e
+  (`docs/ref/autonomy.md`, "severidade antes de priorizar"); só P0 e
   P1 bloqueiam. ownership: a próxima task que disputa uma superfície em
   uso dá lugar a trabalho independente da onda. a onda seguinte espera os
   critérios essenciais da atual, sem perfeição local. ciclo: observar →
@@ -1528,7 +1528,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **integrada:** task-67 (`49e2822`), a regressão por significado antes
   de pixel. gate verde (2160), check verde sem GPU, e o orquestrador
   reproduziu a troca de uma label sendo nomeada pelo controle.
-- **processo:** `crates/engine/tests/file_hygiene_guard.rs` (`7528309`)
+- **processo:** `tool/tests/test_filepaths.rs` (`7528309`)
   conta o limite de 639 linhas de produção no gate; seis arquivos já
   passavam e ficaram congelados.
 - **publicado:** PR #52 (task-82 fase b).
@@ -1664,7 +1664,7 @@ task; aqui fica o que aconteceu e onde ler.
   (2073 passaram), laboratório reproduzido pelo orquestrador (seis
   corridas certas).
 - **integrada:** a auditoria de verdade (`7621403`),
-  `docs/mission/state/truth.md`. achados que mudam o plano: o binário
+  `docs/log/truth.md`. achados que mudam o plano: o binário
   `ide` não abre a porta do agente (o checkpoint a rodou só no
   `ide-lab`); digitar não passa pelo dispatcher; 32 divergências entre
   docs e código.
@@ -1697,7 +1697,7 @@ task; aqui fica o que aconteceu e onde ler.
   (inspector). o limite vai no doc e no ADR.
 - **decisão autônoma:** `files` no nó do commit sai da task-83 e vira a
   task-85 (git e projeção do ide), depois da task-84, porque as duas mexem
-  na `GitSession` e no `crates/git`.
+  na `GitSession` e no `rust/gitdrv`.
 - **decisão autônoma:** a onda 5 espera o experimento do checkpoint a rodar
   de novo com as correções (é o "outro checkpoint" que o brenner pediu);
   se H1 a H5 se sustentarem e as lacunas fecharem, a onda 5 abre sem
@@ -1711,7 +1711,7 @@ task; aqui fica o que aconteceu e onde ler.
   (PR com merge commit). máquina: `caffeinate`, notificação do macOS,
   allowlist de comandos de leitura.
 - mudou o modo de operação para **orquestrador autônomo**
-  (`docs/mission/autonomy.md`): ciclo observe → choose → brief → implement
+  (`docs/ref/autonomy.md`): ciclo observe → choose → brief → implement
   → validate → learn → update → replan, parada só nas condições listadas.
   os checkpoints param quando caem nessas condições.
 - estado da `main` nesse momento: `c5fdf36` (57b, 62c, 66b, 82a

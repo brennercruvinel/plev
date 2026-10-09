@@ -2,7 +2,7 @@
 //! it the way an app with the recorder does: every act goes through the
 //! dispatcher, whose stages reach the recorder's sink, and the app's
 //! projection is recorded after it (the pattern of
-//! crates/rec/tests/session/).
+//! rust/record/tests/session/).
 
 use std::collections::BTreeSet;
 

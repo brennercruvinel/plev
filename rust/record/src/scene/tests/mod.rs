@@ -1,7 +1,7 @@
 //! the scene codec on hand-built compositors: every node kind back as it
 //! was, a delta with one dirty layer, an asset built once, the patch, the
-//! refusals. the gallery and the socket are in crates/rec/tests/scene.rs
-//! and crates/showcase/tests/mirror.rs.
+//! refusals. the gallery and the socket are in apps/uigallery/tests/scene_codec.rs
+//! and apps/uigallery/tests/mirror.rs.
 
 #[cfg(test)]
 mod mask;

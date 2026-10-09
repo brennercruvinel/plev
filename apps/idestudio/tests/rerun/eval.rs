@@ -147,7 +147,7 @@ impl Fixture for Lab {
     }
 }
 
-/// `crates/ide/tests/fixtures/sessions/<name>.monster` and its marks.
+/// `apps/idestudio/tests/fixtures/sessions/<name>.monster` and its marks.
 pub fn fixture(name: &str) -> (Session, Vec<marks::Mark>) {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/sessions");
     let excerpt = dir.join(format!("{name}.monster"));

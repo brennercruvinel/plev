@@ -825,7 +825,7 @@ fn the_gallery_routes_the_page() {
     assert!(!view.tick(TURN), "at rest the page asks for nothing");
 }
 
-/// The page's projection is the golden of `crates/uir/fixtures`, the
+/// The page's projection is the golden of `rust/plevir/tests/fixtures`, the
 /// registry a generated surface would verify against: the page as it
 /// opens, empty, settled as the headless staging settles it.
 /// `UIR_BLESS=1` writes it again.

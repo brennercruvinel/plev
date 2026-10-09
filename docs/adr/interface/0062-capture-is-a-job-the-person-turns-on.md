@@ -19,7 +19,7 @@ desktop machines the showcase already runs it on (the Silences page),
 with an input device per platform.
 
 the probe (the handoff of item 10 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) opened no
+docs/log/steps/task-76-platform-integration.md) opened no
 device, ever: ffmpeg read `-f lavfi` sources only, paced by `-re` as a
 device paces itself, and the rest was read from `ffmpeg-devices(1)` and
 the strings of libavdevice.
@@ -130,7 +130,7 @@ the strings of libavdevice.
 
 - proven without a device: the stream image (unit tests over the log and
   two cursors, and on the GPU two renderers, a late one and a recovered
-  one), the capture over three fakes (`crates/engine/tests/fake-ffmpeg`
+  one), the capture over three fakes (`rust/engine/tests/fakes/ffmpeg`
   runs the real ffmpeg on the capture's own output arguments with a lavfi
   source; `fake-ffmpeg-refuses`; `fake-ffmpeg-mute`), the page over
   `FakeCapture`, the shell covering and waking over a bare window, and the

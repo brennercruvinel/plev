@@ -10,7 +10,7 @@ date: 2026-09-24
 ## context
 
 the thesis' scenario for a generated interface is the video editor
-(docs/mission/generative-runtime-thesis.md, section 4): the
+(docs/pub/generative-runtime-thesis.md, section 4): the
 person says "cut the silences of this video and let me review the cuts",
 a review surface is born; "compare the original with the cuts", the same
 surface becomes a comparison; done, it goes. before the surface is
@@ -23,7 +23,7 @@ page of the showcase's Apps Demo group.
 the constraints it had to meet: the official app pattern (state in
 structs, retained widgets, one dispatcher, the model changed only in
 `execute`, every action reading the state it changes); ffmpeg as a child
-process (docs/ADR/urnaui-media-frames-in-place-via-ffmpeg-subfile.md),
+process (docs/adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md),
 never a library; no test of the gate depending on ffmpeg; the showcase
 still compiling to wasm; render on demand; and a projection, a headless
 frame and a regression baseline that are the same on every machine.
@@ -145,7 +145,7 @@ gallery scrolls it.
 
 - the checkpoint b compares the surface phase 4b generates against this
   page: the same capabilities, the same dispatcher, the same test video.
-- the projection golden (`crates/uir/fixtures/showcase-silences.snapshot.json`)
+- the projection golden (`rust/plevir/tests/fixtures/uigallery-silences.snapshot.json`)
   is the registry the generated surface verifies against, kept equal to
   the app by test; the regression baselines (`silences@core@1280x800`,
   `silences@hoff@1280x800`) hold the page at rest.

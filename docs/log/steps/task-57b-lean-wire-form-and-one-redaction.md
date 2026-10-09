@@ -25,7 +25,7 @@ que mede quanto dado e quanto token o agente recebe:
 2. a regra de redação de segredo (o valor de um campo `secret` sai só como
    tamanho; texto livre sobre um alvo secreto é trocado por um texto fixo;
    nó desconhecido conta como secreto) existe duas vezes, escrita
-   independente em `crates/rec/src/redact.rs` e em `crates/wire/src/redact.rs`.
+   independente em `rust/record/src/redact.rs` e em `rust/socket/src/redact.rs`.
    uma regra de segurança com duas cópias diverge.
 
 ## escopo
@@ -54,11 +54,11 @@ verdes sem mudança de comportamento; forma antiga lendo; gate verde.
 
 integrada na `main` em `a7a6735` (seis commits, rebaseados sobre
 `1debd01` sem conflito), validada pelo orquestrador: diff inteiro lido
-commit a commit, `./script/gate` verde no diretório de build da task
+commit a commit, `./tool/tasks/fullcheck.sh` verde no diretório de build da task
 (1941 passed, 0 failed, 6 ignored; a `main` tinha 1930), e o grep do
-aceite achando a regra de redação só em `crates/sem/src/redact.rs`. o
+aceite achando a regra de redação só em `rust/accord/src/redactor.rs`. o
 aceite de 3 KB passou com 2039 bytes (2939 com `source` pedido). ADR:
-`docs/ADR/lean-semantic-form-and-one-redaction.md`; o ADR da task-61
+`docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`; o ADR da task-61
 aponta para ele nas duas consequências que esta task fecha.
 
 aceitos: a união do `holds` (diverge da cópia do rec só num caso que o
@@ -79,30 +79,30 @@ agente de verdade; um v2 do protocolo pode tirar o `focused` nulo.
 
 diagnóstico, pelo mecanismo:
 
-- `crates/sem/src/node.rs:24-39`: `Node` deriva serde sem atributo, então
+- `rust/accord/src/controls.rs:24-39`: `Node` deriva serde sem atributo, então
   todo campo é escrito, inclusive `enabled: true`, `inert: false`,
   `focusable: false`, `description: null`, `parent: null`, `state: {}`,
   `actions: []`, um `constraints` inteiro com sete campos no valor padrão
-  e o `source` com arquivo, linha e coluna. `crates/sem/src/decl.rs:146-153`:
+  e o `source` com arquivo, linha e coluna. `rust/accord/src/manifest.rs:146-153`:
   o mesmo em `ActionDecl` (`label: null`, `reads: []`, `param: null`) e
   em `Policy` (quatro atores `true`, `confirm: "never"`,
   `destructive: false`).
-- `crates/sem/src/snapshot.rs:100`: a revisão é calculada da árvore em
+- `rust/accord/src/snapshot.rs:100`: a revisão é calculada da árvore em
   memória e ignora o `source`; nenhuma forma JSON muda revisão. um teste
   prova.
-- `crates/wire/src/server.rs:270-283`: a resposta `snapshot` clona cada
+- `rust/socket/src/server.rs:270-283`: a resposta `snapshot` clona cada
   nó e filtra `state` pelas `keys`; o `source` vai junto. um `Change`
-  (`crates/sem/src/diff.rs`) só carrega `SemId`, então o delta nunca
+  (`rust/accord/src/mutation.rs`) só carrega `SemId`, então o delta nunca
   carregou `source`: a retirada é só na resposta `snapshot`.
-- `crates/rec/src/persist.rs:58`: a trilha `S` é JSON lines do `Event`
+- `rust/record/src/persist.rs:58`: a trilha `S` é JSON lines do `Event`
   pela forma serde; o gravador serializa o snapshot que recebe, com
-  `source`, e `crates/rec/src/weigh.rs:58` conta esses bytes no
+  `source`, e `rust/record/src/weigh.rs:58` conta esses bytes no
   orçamento do anel. o `rec` continua gravando o `source` (a task-65
   precisa dele). por isso o `source` não sai da forma serde: sai da
   resposta do `wire`, a não ser que o agente peça.
-- `crates/wire/src/redact.rs` e `crates/rec/src/redact.rs`: a mesma regra
-  duas vezes, chamada em `crates/wire/src/server.rs:21` (e o `REDACTED`
-  reexportado em `lib.rs:55`) e em `crates/rec/src/ring.rs:238,243`. as
+- `rust/socket/src/redact.rs` e `rust/record/src/redact.rs`: a mesma regra
+  duas vezes, chamada em `rust/socket/src/server.rs:21` (e o `REDACTED`
+  reexportado em `lib.rs:55`) e em `rust/record/src/ring.rs:238,243`. as
   duas divergem num ponto: o `wire` redige um delta stale só quando o nó
   está entre os nós do request (alvo e observados) que eram secretos ou
   desconhecidos no dispatch; o `rec` redige quando o nó é secreto ou
@@ -137,7 +137,7 @@ decisões do orquestrador:
 
 bytes da linha JSON que o servidor escreve (`encode_server` da `Reply`,
 envelope incluído), medidos pelo harness `agent_port_cost` de
-`crates/showcase/src/view/dispatch.rs`: a página todo do showcase servida
+`apps/uigallery/src/views/dispatcher/mod.rs`: a página todo do showcase servida
 por uma porta real em diretório temporário, sem janela, build de debug
 (bytes não dependem do perfil). a forma antiga é a `main` em `22f885e`, a
 nova é esta branch. token é da task-62 fase c.
@@ -168,22 +168,22 @@ rebase é do orquestrador na integração.
 commits, cada um compilando; gate verde no último:
 
 1. `7d2cbcb` sem: padrões omitidos na forma serde e `default` na leitura
-   (`crates/sem/src/{decl,node,snapshot,request}.rs`), fixture da forma
-   antiga (`OLD_SNAPSHOT`) e golden novo em `crates/sem/tests/wire.rs`.
+   (`rust/accord/src/{decl,node,snapshot,request}.rs`), fixture da forma
+   antiga (`OLD_SNAPSHOT`) e golden novo em `rust/accord/tests/encoding.rs`.
 2. `df44464` wire: `Observe.source` (padrão `false`), o servidor zera
    `node.source` na resposta `snapshot` a não ser que pedido, `plev
-   observe --source` (`crates/wire/src/{proto,server}.rs`,
-   `crates/wire/src/bin/plev.rs`, `crates/wire/tests/{codec,server,cli}.rs`).
-3. `e95253a` `sem::redact` (novo, `crates/sem/src/redact.rs`, `pub mod` em
-   `lib.rs`), o wire sobre ele (`crates/wire/src/{lib,server}.rs`), a
-   cópia `crates/wire/src/redact.rs` apagada, `wire::REDACTED` removido
-   (único consumidor: `crates/wire/tests/server.rs`, que lê
+   observe --source` (`rust/socket/src/{proto,server}.rs`,
+   `rust/socket/src/bin/plev.rs`, `rust/socket/tests/{codec,server,cli}.rs`).
+3. `e95253a` `sem::redact` (novo, `rust/accord/src/redactor.rs`, `pub mod` em
+   `lib.rs`), o wire sobre ele (`rust/socket/src/{lib,server}.rs`), a
+   cópia `rust/socket/src/redact.rs` apagada, `wire::REDACTED` removido
+   (único consumidor: `rust/socket/tests/server.rs`, que lê
    `sem::redact::REDACTED`).
-4. `1c72d96` rec sobre `sem::redact` (`crates/rec/src/{lib,ring}.rs`), a
-   cópia `crates/rec/src/redact.rs` apagada, teste da linha de `Event` da
-   forma antiga em `crates/rec/tests/session/file.rs`.
+4. `1c72d96` rec sobre `sem::redact` (`rust/record/src/{lib,ring}.rs`), a
+   cópia `rust/record/src/redact.rs` apagada, teste da linha de `Event` da
+   forma antiga em `rust/record/tests/session/file.rs`.
 5. `b10cd36` medição: harness do showcase mede a forma servida e a mesma
-   com `source: true` (`crates/showcase/src/view/dispatch.rs`, só o módulo
+   com `source: true` (`apps/uigallery/src/views/dispatcher/mod.rs`, só o módulo
    de testes do `agent`); a tabela acima.
 6. este: estado e handoff.
 
@@ -199,18 +199,18 @@ campo sem contar a mais.
 validação executada, com `CARGO_TARGET_DIR=target/agents/task-57b`,
 `CARGO_INCREMENTAL=0` e debug `line-tables-only`: `cargo test -p sem`,
 `-p wire`, `-p rec`, `-p showcase`, `cargo check -p sem
---no-default-features`, `./script/gate` (test, clippy `-D warnings`,
+--no-default-features`, `./tool/tasks/fullcheck.sh` (test, clippy `-D warnings`,
 fmt, wasm check do showcase; a perna urnaui pulou por falta de `../urna`),
 `cargo test -p showcase agent_port_cost -- --ignored --nocapture` antes e
 depois. `grep -rn 'REDACTED\|fn length\|fn is_secret\|struct Secrets'
-crates --include='*.rs'` acha a regra só em `crates/sem/src/redact.rs`; a
+crates --include='*.rs'` acha a regra só em `rust/accord/src/redactor.rs`; a
 outra ocorrência é o teste do wire lendo `sem::redact::REDACTED`.
 
 decisões locais:
 
 - os predicados da forma enxuta (`is_default<T: Default + PartialEq>`,
   `is_false`, `is_true` e `yes()` para o padrão `true` de `enabled`) são
-  `pub(crate)` em `crates/sem/src/decl.rs`, sob a feature `serde`; o
+  `pub(crate)` em `rust/accord/src/manifest.rs`, sob a feature `serde`; o
   `node.rs` os importa. `Constraints` sai inteira quando é o padrão e,
   quando não é, cada campo dela no padrão sai também. `Actors` é escrito
   inteiro quando algum ator está de fora.
@@ -243,9 +243,9 @@ ambiguidades e dívidas, para o orquestrador:
   gravado antes da mudança não existe no repositório para servir de
   fixture.
 - docs fora do escopo que citam o usage antigo ou a cópia dupla:
-  `docs/ADR/agents-act-through-the-semantic-contract.md` (linha 157, o
+  `docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md` (linha 157, o
   usage sem `--source`; linhas 244 a 250, as duas consequências que esta
-  task fecha), `docs/CHANGELOG.md` se a mudança for user-facing (o
+  task fecha), `docs/log/changelog.md` se a mudança for user-facing (o
   `--source` é). o how-to de orquestração não cita o usage.
 - risco de integração: nenhum golden fora de sem, wire e rec pinava a
   forma antiga em bytes (grep em showcase, ide, engine, comps: só nomes

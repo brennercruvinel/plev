@@ -33,22 +33,22 @@ disabled, foco, modais e regras da interface).
 
 ## estado atual no código
 
-- `crates/engine/src/window/render.rs:99-125`: com a feature
+- `rust/engine/src/runtime/window/render.rs:99-125`: com a feature
   `accessibility` ligada e o leitor de tela ativo, cada hit region vira um
   nó AccessKit; a role é `Button` se `focusable`, senão
   `GenericContainer`; label sempre `None`.
-- `crates/engine/src/window/mod.rs:221`: `PlevActionHandler::do_action`
+- `rust/engine/src/runtime/window/mod.rs:221`: `PlevActionHandler::do_action`
   só faz log. a árvore inicial tem label fixa "plev Showcase".
-- `crates/engine/src/accessibility/` (`state.rs`, `id_map.rs`,
+- `rust/engine/src/control/accessibility/` (`state.rs`, `id_map.rs`,
   `focus.rs`): `AccessibilityState`, `NodeId` derivado do `ViewId` posicional
   (`view_id_to_node_id`), `FocusGraph` construído de hit regions.
 - tudo isso vive em `engine::window::App`. showcase, ide e urnaui têm o
   próprio `App` e usam o `present_frame` compartilhado
-  (`crates/showcase/src/app.rs:367`, `crates/ide/src/main.rs:466`,
-  `crates/urnaui/src/app.rs:432`). resultado: nenhum app que shipa expõe
+  (`apps/uigallery/src/shell/mod.rs:367`, `apps/idestudio/src/main.rs:466`,
+  `apps/urnadbapp/src/app.rs:432`). resultado: nenhum app que shipa expõe
   árvore.
 - feature `accessibility` ligada por padrão
-  (`crates/engine/Cargo.toml:21-22`), deps `accesskit` 0.24 e
+  (`rust/engine/Cargo.toml:21-22`), deps `accesskit` 0.24 e
   `accesskit_winit` 0.32.
 
 ## fechamento (2026-09-23)
@@ -63,7 +63,7 @@ determinística); ação do leitor de tela vira `Request` com
 Decrement); ordem de foco semântica; `Bridge` cria o adapter antes da
 janela ficar visível. o caminho antigo, derivado de hit region, saiu por
 inteiro (o grep confirma). o showcase liga a ponte e o todo é a primeira
-página com árvore. ADR: `docs/ADR/accessibility-projects-the-semantic-snapshot.md`.
+página com árvore. ADR: `docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md`.
 
 decisões do orquestrador sobre as duas perguntas do agente:
 
@@ -162,14 +162,14 @@ texto rico acessível (runs, seleção): task-74.
 
 ## superfície sob responsabilidade
 
-- `crates/engine/src/accessibility/**`
-- `crates/engine/src/window/{mod.rs,render.rs,lifecycle.rs}` (só o que é
+- `rust/engine/src/control/accessibility/**`
+- `rust/engine/src/runtime/window/{mod.rs,render.rs,lifecycle.rs}` (só o que é
   accessibility)
-- `crates/showcase/src/app.rs` (a ponte no shell do showcase)
-- proposta de ADR `docs/ADR/accessibility-projects-the-semantic-snapshot.md`
+- `apps/uigallery/src/shell/mod.rs` (a ponte no shell do showcase)
+- proposta de ADR `docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md`
 
-proibido: `crates/ide` e `crates/git` (task-62 na mesma onda),
-`crates/sem` (mudança só com aprovação), o socket (task-61).
+proibido: `apps/idestudio` e `rust/gitdrv` (task-62 na mesma onda),
+`rust/accord` (mudança só com aprovação), o socket (task-61).
 
 ## interfaces que consome
 
@@ -178,7 +178,7 @@ proibido: `crates/ide` e `crates/git` (task-62 na mesma onda),
 
 ## interfaces que pode alterar
 
-`crates/engine/src/accessibility` inteiro (é dela). `engine::window::App`
+`rust/engine/src/control/accessibility` inteiro (é dela). `engine::window::App`
 só no que toca accessibility.
 
 ## critérios de aceitação
@@ -193,7 +193,7 @@ só no que toca accessibility.
   VO+espaço, marcar item, ouvir o estado mudar. resultado registrado.
 - nenhum resto do caminho antigo (grep por `view_id_to_node_id` e pelo
   bloco de `render.rs` vazio).
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 

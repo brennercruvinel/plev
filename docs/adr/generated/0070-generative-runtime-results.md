@@ -58,15 +58,15 @@ never by eye where a number exists.
   eight questions of thesis section 12 from the file alone, where the
   frames alone answer at most three and the two lapses (29 and 24 ms) are
   shorter than a 30 fps video frame. the excerpt (43,916 B) became a test
-  in the gate (`crates/ide/tests/rerun/inflight.rs`) that fails with the
+  in the gate (`apps/idestudio/tests/rerun/inflight.rs`) that fails with the
   race back (three marks diverge) and passes without it, ten of ten.
 - **demo 4, the ephemeral interface**, in this task: the review of the
   silences born from an intent, a person deciding a cut on it, turned into
   the comparison in place and closed, recorded with no window by a test in
-  the gate (`crates/showcase/tests/ephemeral.rs`). from the recording: the
+  the gate (`apps/uigallery/tests/ephemeral.rs`). from the recording: the
   surface is in the state only between the propose and the close and
   leaves no node or binding after; its 40 nodes come from the materializer
-  (`crates/surface/src/project.rs`), none from a file of the app's screen;
+  (`rust/screen/src/project.rs`), none from a file of the app's screen;
   the person's click on it is her request on the app's cut; at 1200 by 800
   it shows the five pieces of each cut where the fixed screen beside it
   shows none and the fixed screen alone shows one cut of two; it puts the

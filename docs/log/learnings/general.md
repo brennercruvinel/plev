@@ -36,7 +36,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
 - **o Claude vê um snapshot feito para ele:** o prompt leva todo nó do
   snapshot que recebe, então o ide monta um só com os commits que a
   revisão pede. regra: um canal novo para o modelo recebe uma projeção
-  própria, nunca a do app inteiro. fonte: `crates/ide/src/generated/scope.rs`.
+  própria, nunca a do app inteiro. fonte: `apps/idestudio/src/generative/scope.rs`.
 
 ### 2026-09-25, task-80 fase 1
 
@@ -45,7 +45,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   task-84 passava. só uma fixture que deixa as leituras em voo, como a
   janela deixa, pegou o bug. regra: teste de concorrência reproduz o
   ritmo de quem usa, não o repouso. fonte:
-  `crates/ide/tests/rerun/inflight.rs`.
+  `apps/idestudio/tests/rerun/inflight.rs`.
 - **a gravação semântica vê o que o vídeo não vê:** os lapsos da corrida
   duraram 29 e 24 ms, menos que um quadro a 30 fps; o `plev-inspect`
   respondeu as oito perguntas da tese só pelo arquivo. fonte: a demo 3 no
@@ -58,11 +58,11 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   projeção que vai para o agente é a que vai para o leitor de tela; tirar
   o estado para um tira para o outro. regra: um dado pessoal que o leitor
   precisa entra só na árvore do AccessKit, nunca no snapshot do port.
-  fonte: `crates/showcase/src/view/apps/silences/generated/access.rs`.
+  fonte: `apps/uigallery/src/views/apps/silences/generative/access.rs`.
 - **preferência é camada, não passo do histórico:** guardar a superfície
   como foi pedida e refazer as preferências por cima depois de toda
   mudança resolve o desligar sem desfazer o que outros pediram, coisa que
-  uma pilha de desfazer não faz. fonte: `crates/surface/src/host/prefer.rs`.
+  uma pilha de desfazer não faz. fonte: `rust/screen/src/host/prefer.rs`.
 
 ### 2026-09-25, task-71 fase 1
 
@@ -72,12 +72,12 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   era carregar a origem de cada nó e prop, de forma aditiva. regra: um
   emissor novo lê a representação intermediária antes da normalização
   para o emissor antigo, ou a estende sem mexer no que o antigo lê.
-  fonte: `crates/parser/src/ir.rs`, `Origin`.
+  fonte: `rust/import/src/tree.rs`, `Origin`.
 - **"nada some" só se prova com um censo independente:** comparar o
   relatório com o que o resolver contou prova só o resolver. o teste lê o
   censo direto do parse (cada elemento, atributo, declaração, chamada) e
   achou dois silêncios antigos na droplist. fonte:
-  `crates/parser/tests/ir.rs`.
+  `rust/import/tests/plevir.rs`.
 
 ### 2026-09-25, task-75 fase 1
 
@@ -86,7 +86,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   componente o leitor ouve como a janela sozinha. um teste que percorre
   todas as páginas e guarda listas exatas do que falta pega isso; o
   VoiceOver manual numa página só não pegava. fonte:
-  `crates/showcase/tests/access_tree.rs`.
+  `apps/uigallery/tests/access_tree.rs`.
 - **a matriz de plataforma só vale lida no lock:** o iOS compila o
   `null.rs` do `accesskit_winit` 0.32.2 e joga fora toda atualização, e
   nenhum adapter do lock tem custom actions. a documentação não diz nem
@@ -95,7 +95,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   dá 4,13 sobre o fundo (AA pede 4,5); 102 de 301 pares falham nos quatro
   temas. mudar cor é decisão de design e mexe em todo baseline, então o
   teste guarda a lista e acusa quando um par muda de lado. fonte:
-  `crates/engine/src/theme/tests_contrast.rs`.
+  `rust/engine/src/styling/theme/tests/contrast.rs`.
 
 ### 2026-09-25, o prazo do Claude
 
@@ -104,7 +104,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   (`--max-budget-usd`); o prazo só decide se o gasto vira resposta. regra:
   quando o prompt pede mais saída, o prazo acompanha a mais lenta medida.
   para achar a causa sem gastar, um stub no `PLEV_CLAUDE` que só grava a
-  stdin mostra o prompt exato. fonte: `crates/claude-model/src/lib.rs`,
+  stdin mostra o prompt exato. fonte: `rust/claude/src/lib.rs`,
   `TIMEOUT`.
 
 ### 2026-09-24, task-70 fase 2
@@ -114,7 +114,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   Claude sozinho quando ele existe no PATH. regra: todo comando de agente
   e do orquestrador fora da prova real roda com `PLEV_CLAUDE` apontando
   para um stub que sai com erro (o `ClaudeCli::exists` só olha se o
-  arquivo existe, `crates/claude-model/src/lib.rs:159`, então a tela e as
+  arquivo existe, `rust/claude/src/lib.rs:159`, então a tela e as
   baselines ficam iguais). fonte: handoff da fase 2, incidente.
 
 ### 2026-09-24, task-70 fase 1
@@ -144,7 +144,7 @@ causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
   min-content como mínimo de um item, e o `TextMeasurer` mede o
   min-content com largura zero. qualquer linha apertada do IR espremia o
   texto em vez de quebrar. fonte: handoff das correções, sonda (a),
-  `crates/surface/src/layout.rs` (`longest_word`).
+  `rust/screen/src/layout.rs` (`longest_word`).
 - **a tela gerada nunca tinha sido vista inteira na janela padrão:** os
   testes da task-69 provavam a projeção, as ações e os frames, e o
   regress só tinha a Silences no estado inicial. a primeira vez que
@@ -775,7 +775,7 @@ c"; saídas em `target/agents/exp/`.
   crates pede um teste pelo caminho inteiro, porta real e host real.
 
 - **briefing que proíbe o que o gate exige:** o briefing da 68 proibiu
-  `README.md` e `docs/arc/arc.toml`, e o `arc_sync_guard` exige de todo
+  `README.md` e `docs/ATLAS.toml`, e o `arc_sync_guard` exige de todo
   crate novo uma entrada nos dois. o agente parou com o gate vermelho
   num teste só. regra: crate novo sempre leva, nos arquivos permitidos, a
   própria linha no README e a entrada no `arc.toml`, como a seção 8 do
@@ -838,7 +838,7 @@ c"; saídas em `target/agents/exp/`.
   arquivo estava na convenção e nenhum gate conferia; três entregas do
   ciclo passaram dele sem aviso, e o próprio orquestrador contou errado
   uma vez (contou o arquivo inteiro, não a produção). agora o gate conta
-  (`crates/engine/tests/file_hygiene_guard.rs`), com a regra exata e os
+  (`tool/tests/test_filepaths.rs`), com a regra exata e os
   seis arquivos que já passavam congelados no tamanho de hoje; um
   arquivo de prova com 700 linhas fez o guard falhar com o nome dele.
 
@@ -882,7 +882,7 @@ c"; saídas em `target/agents/exp/`.
   trouxe `decline` e o ADR commit-checks continuou dizendo que não
   existia). regra nova do fechamento: procurar em `docs/` e no README os
   nomes do contrato que mudou e corrigir o que ficou falso
-  (`docs/how-to/orchestrate-coding-agents-on-this-repo.md`).
+  (`docs/ref/orchestrate-coding-agents-on-this-repo.md`).
 
 - **o gate local divergia do CI:** a 66b deixou `ShapedGlyph` e
   `shaped_glyphs` como código morto no wasm32 (o único leitor, o export
@@ -892,7 +892,7 @@ c"; saídas em `target/agents/exp/`.
   gate mais frouxa que a do CI deixa passar o que o CI reprova. o gate
   agora roda as duas pernas wasm como o CI (`c07a7f0`); a falha reproduziu
   localmente antes da correção e sumiu depois. regra: toda perna do CI tem
-  a mesma perna, com as mesmas flags, em `script/gate`.
+  a mesma perna, com as mesmas flags, em `tool/tasks/fullcheck.sh`.
 
 - **graça do laboratório:** o laboratório fechava 1 s depois do commit e
   derrubou a verificação final de dois agentes (A2, B2). a classe: um

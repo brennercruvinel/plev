@@ -36,7 +36,7 @@ identidade, implementação).
 
 ## estado atual no código
 
-- hot reload de literal (`crates/engine/src/hot_reload/literals.rs`): no
+- hot reload de literal (`rust/engine/src/runtime/hot_reload/literals/mod.rs`): no
   start, cada `.rs` vira skeleton (token stream com literais em branco,
   hasheado) mais a lista de literais em ordem; no save, mesmo skeleton
   quer dizer só literal mudou, e o delta é aplicado em `TextNodeKey`,
@@ -44,7 +44,7 @@ identidade, implementação).
   literal repetido muda nos dois lugares, string formatada antes de
   aparecer não casa, número é tratado como código.
 - `proc-macro2` entra pela feature `hot-reload`
-  (`crates/engine/Cargo.toml:35` e `:84`) sem `span-locations`: a lista de
+  (`rust/engine/Cargo.toml:35` e `:84`) sem `span-locations`: a lista de
   literais não tem linha nem coluna.
 - tudo gated em `#[cfg(hot_reload)]` (build de debug no desktop; release,
   wasm e mobile nunca veem).
@@ -100,9 +100,9 @@ literal); release, wasm e mobile.
 
 ## superfície sob responsabilidade
 
-`crates/engine/src/hot_reload/**`, `crates/engine/Cargo.toml` (feature
+`rust/engine/src/runtime/hot_reload/**`, `rust/engine/Cargo.toml` (feature
 `span-locations`), o atalho no shell do showcase (dev only), proposta de
-ADR `docs/ADR/view-source-for-pixels.md`. `crates/engine/src/theme` só
+ADR `docs/adr/workflows/0048-view-source-for-pixels.md`. `rust/engine/src/styling/theme` só
 depois da decisão da fase d.
 
 ## interfaces que consome
@@ -123,7 +123,7 @@ literais (hot reload).
   --release -p showcase` conferem).
 - escrita recusada quando o arquivo mudou de estrutura desde o baseline
   (teste).
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -163,7 +163,7 @@ wrote todo.json (10 nodes, revision cfc1185078f7c825, Todo / core at 1200x800 sc
 ```
 
 o `source` de cada nó, e a linha para onde ele aponta
-(`crates/showcase/src/view/apps/app/semantics.rs`):
+(`apps/uigallery/src/views/apps/todo/semantics/mod.rs`):
 
 ```text
 todo                    region     151:11  b.node(&ids.todo, Role::Region, "todo").inert(self.inert);
@@ -260,12 +260,12 @@ Como a resolução funciona:
   é esperado numa thread, sem bloquear o loop.
 
 Arquivos principais:
-- crates/engine/Cargo.toml (só a feature)
-- crates/engine/src/hot_reload/{mod.rs, literals.rs, view_source.rs (novo)}
-- crates/showcase/src/app.rs (595 linhas), crates/showcase/src/app/
+- rust/engine/Cargo.toml (só a feature)
+- rust/engine/src/runtime/hot_reload/{mod.rs, literals.rs, view_source.rs (novo)}
+- apps/uigallery/src/shell/mod.rs (595 linhas), apps/uigallery/src/shell/
   {source.rs, background.rs, access.rs} (novos)
-- crates/showcase/tests/view_source.rs (novo)
-- docs/ADR/view-source-for-pixels.md (novo, proposed), este arquivo
+- apps/uigallery/tests/view_source.rs (novo)
+- docs/adr/workflows/0048-view-source-for-pixels.md (novo, proposed), este arquivo
 
 Interfaces adicionadas/alteradas (todas novas, nenhuma alterada):
 - engine::hot_reload::Site
@@ -317,7 +317,7 @@ Testes (21 novos):
   the_click_hands_the_editor_the_line_under_the_cursor
 
 Validação executada (CARGO_TARGET_DIR e as variáveis do briefing):
-- ./script/gate em 41d65d4: verde, com a perna urnaui (../urna presente
+- ./tool/tasks/fullcheck.sh em 41d65d4: verde, com a perna urnaui (../urna presente
   pelo link do worktree): test, clippy -D warnings, fmt, wasm32 com
   RUSTFLAGS -D warnings, e urnaui (test, clippy, fmt, wasm).
 - contagem: 2246 testes passaram em todas as pernas somadas (2164 do
@@ -355,9 +355,9 @@ A prova na janela:
   título, com cmd, e chama App::view_source_with com o opener real
   (open_with, PLEV_EDITOR = script gravador). o script recebeu:
 
-  .../crates/showcase/src/view/apps/app/semantics.rs:153:14
+  .../apps/uigallery/src/views/apps/todo/semantics/mod.rs:153:14
       .project(b, &ids.input, "new todo", Some(&ids.todo))
-  .../crates/showcase/src/view/pages/table.rs:459:9
+  .../apps/uigallery/src/views/pages/table.rs:459:9
       "Todo",
 
   (caminhos absolutos do worktree; a coluna aponta para `project` e para
@@ -390,7 +390,7 @@ Limitações:
 - o modificador é cmd no macOS e ctrl fora dele; linux e windows não
   foram rodados.
 
-Dependências pendentes: nenhuma de código. docs/ADR/README.md (índice
+Dependências pendentes: nenhuma de código. docs/adr/README.md (índice
 do ADR novo) é do orquestrador.
 
 Riscos de integração:
@@ -456,7 +456,7 @@ mudança. cada afirmação aponta arquivo:linha na base.
 
 (a) o que o baseline guarda de cada literal, e o que é "o mesmo skeleton"
 
-- `Snapshot` (crates/engine/src/hot_reload/literals.rs:51) guarda o hash do
+- `Snapshot` (rust/engine/src/runtime/hot_reload/literals/mod.rs:51) guarda o hash do
   skeleton (`skeleton: u64`), a lista dos literais em ordem (`lits`) e onde
   cada um começa (`at`). `At` (literals.rs:63) tem linha, coluna (de 1, em
   chars) e `unseen` (doc comment, item sob `#[cfg(test)]`). não há span
@@ -484,7 +484,7 @@ mudança. cada afirmação aponta arquivo:linha na base.
   (app/events.rs:52 a 101) não tem gancho do view source: a edição
   precisa de um, o primeiro do `KeyboardInput`, e de um no desenho do
   frame (app/pace.rs:48, depois do `view.render`).
-- o widget é o `comps::form::TextField` (crates/comps/src/form/text_field.rs:49):
+- o widget é o `comps::form::TextField` (rust/engine/src/widgets/form/text_field.rs:49):
   `insert` (:179) para o texto, `edit(EditKey)` (:190) para apagar e
   mover, `render_to_layer` (:273) para desenhar numa camada nossa, acima
   dos toasts. o comps não precisa de widget novo.
@@ -560,18 +560,18 @@ Como funciona a gravação (engine, hot_reload/literals/write.rs):
   delta depois.
 
 Arquivos:
-- crates/engine/src/hot_reload/literals.rs (`mod write`, `same_code`)
-- crates/engine/src/hot_reload/literals/write.rs e write/tests.rs (novos)
-- crates/engine/src/hot_reload/view_source.rs (`text_run_at`)
-- crates/showcase/src/app/source.rs (a edição e os testes)
-- crates/showcase/tests/edit_literal.rs (novo)
+- rust/engine/src/runtime/hot_reload/literals/mod.rs (`mod write`, `same_code`)
+- rust/engine/src/runtime/hot_reload/literals/write/mod.rs e write/tests.rs (novos)
+- rust/engine/src/runtime/hot_reload/view_source.rs (`text_run_at`)
+- apps/uigallery/src/shell/window/source.rs (a edição e os testes)
+- apps/uigallery/tests/edit_literal.rs (novo)
 - fora da lista do briefing, só os ganchos do módulo, sob o mesmo cfg:
   app.rs (o campo `source_click: bool` virou `source: ViewSource`, mesmo
   número de linhas), app/events.rs (+8, o gancho do teclado),
   app/pace.rs (+13, o desenho do campo na janela principal e na da
   página). a rodada 1 já tinha o gancho do clique em events.rs e o campo
   em app.rs. access.rs não mudou.
-- docs/ADR/view-source-for-pixels.md (seção da fase c), este arquivo.
+- docs/adr/workflows/0048-view-source-for-pixels.md (seção da fase c), este arquivo.
 
 Testes (11 novos, nenhum removido):
 - item 1 (editar o título grava o `.rs`, `git diff` só aquela string):
@@ -620,7 +620,7 @@ Símbolos (item 2), no metadata do check (rmeta), contando os nomes novos:
   macos, linux ou windows), como na rodada 1.
 
 Validação:
-- ./script/gate em 6910ad37 (CARGO_NET_OFFLINE e as variáveis do
+- ./tool/tasks/fullcheck.sh em 6910ad37 (CARGO_NET_OFFLINE e as variáveis do
   briefing): verde, com a perna urnaui. 3200 testes passaram (3115 do
   workspace e 85 do urnaui), 0 falhas, 28 ignorados. disco antes: 12 GiB
   livres.
@@ -650,7 +650,7 @@ Limitações:
 - uma watch da janela (PLEV_MIRROR) vê o campo como pixels; nada dele
   entra na projeção.
 
-Linha de ADR para o índice (docs/ADR/README.md, a linha do
+Linha de ADR para o índice (docs/adr/README.md, a linha do
 view-source-for-pixels ganha no fim, antes do "(task-65, fases a e b)"):
   ...; fase c: cmd+shift+clique num texto de um literal só abre um
   `TextField` sobre ele e o Enter grava o literal no `.rs`
@@ -677,7 +677,7 @@ fechada pelo critério de aceite, item por item:
 
 - item 1: o cmd+clique que abre o site e o literal fechou na rodada 1;
   editar o título grava o `.rs` e o `git diff` mostra só aquela string
-  (`crates/showcase/tests/edit_literal.rs`, numa cópia do `table.rs` num
+  (`apps/uigallery/tests/edit_literal.rs`, numa cópia do `table.rs` num
   repositório git temporário: `-"Todo",` e `+"Todo list",`, e o frame
   seguinte já desenha o texto novo).
 - item 2: os nomes novos aparecem zero vezes no release e no wasm e

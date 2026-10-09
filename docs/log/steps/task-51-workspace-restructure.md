@@ -19,7 +19,7 @@ levar o repo de crates soltos com naming inconsistente para uma estrutura de tre
 o naming inicial do projeto era phi (φ) e boitata; o codec era anm (.anm, magic ANM0); o transpiler era prs. nomes inconsistentes e crates sem hierarquia clara. esta foi a passada de organizacao antes da modularizacao por SRP.
 
 ## o que foi entregue
-- tres tiers: engine na raiz (`crates/engine`), libs e apps irmas em `crates/`, demos em `examples/`.
+- tres tiers: engine na raiz (`rust/engine`), libs e apps irmas em `crates/`, demos em `examples/`.
 - renames de crate: editor_core -> rope, git_backend -> git, basic-ide -> ide, prs -> parser, anm -> monster, narrate_macro -> narrate-macro.
 - rebrand de produto: boitata / phi -> plev; .anm -> .monster, magic ANM0 -> MON0.
 - shaders movidos para `src/gpu/shaders` (junto de quem os carrega).

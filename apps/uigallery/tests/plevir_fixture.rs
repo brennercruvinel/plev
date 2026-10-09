@@ -3,7 +3,7 @@
 //! The page staged headless as `showcase --render Todo --semantics` stages
 //! it, projected and written in the form `plev observe` serves
 //! (`showcase::app::semantics_json`, without `source`) to
-//! `crates/uir/fixtures/uigallery-todo.snapshot.json`. The todo IR fixture
+//! `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`. The todo IR fixture
 //! builds its capability registry from it (`uir::Capabilities::from_snapshot`):
 //! the registry is the page's own projection, never a second declaration
 //! by hand.
@@ -14,7 +14,7 @@
 //! verifies. Desktop only, like the headless staging it uses.
 //!
 //! The Silences page (task-69 phase 4a) has its golden the same way,
-//! `crates/uir/fixtures/uigallery-silences.snapshot.json`, kept by a test
+//! `rust/plevir/tests/fixtures/uigallery-silences.snapshot.json`, kept by a test
 //! of the page itself (`view::apps::silences::tests::the_app_projection_is_the_uir_golden`):
 //! since phase 4b the page's semantics carry the proposing row too, and
 //! the golden is the app alone (the fixed screen as it opens, seeded, no

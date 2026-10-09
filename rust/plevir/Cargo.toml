@@ -1,5 +1,5 @@
 # uir: the plev IR and its verifier (task-68,
-# docs/ADR/plev-ir-typed-and-verified.md). pure on purpose, like sem: it
+# docs/adr/generated/0049-plev-ir-typed-and-verified.md). pure on purpose, like sem: it
 # depends on sem and serde only, never on engine, comps or wire. the
 # component and token vocabulary is declared here as data; binding it to
 # comps and the theme is the materializer's job (task-69).

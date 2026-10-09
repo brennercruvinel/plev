@@ -23,12 +23,12 @@ sem frame.
 
 ## estado atual no código
 
-- `TextField::tick` (`crates/comps/src/form/text_field.rs`) devolve `true`
+- `TextField::tick` (`rust/engine/src/widgets/form/text_field.rs`) devolve `true`
   em todo frame enquanto está focado; o `TextInput` guarda a fase do blink.
 - as páginas repassam isso: `TodoPage::tick` devolve
   `animating || self.input.is_focused()`
-  (`crates/showcase/src/view/apps/app.rs`), e o formulário de commit do ide
-  faz o mesmo (`crates/ide/src/views/commit_form.rs`).
+  (`apps/uigallery/src/views/apps/todo/mod.rs`), e o formulário de commit do ide
+  faz o mesmo (`apps/idestudio/src/interfaces/panels/commit_form.rs`).
 - com `ControlFlow::Wait`, um tick que devolve `false` deixa o loop dormir,
   e ninguém acorda para virar o caret: por isso o atalho de pedir frame
   sempre.
@@ -61,7 +61,7 @@ conflito), validada pelo orquestrador: diff inteiro lido (o `Wake` e o
 `WaitUntil` com o retorno a `Wait` em `ResumeTimeReached`), gate verde no
 diretório da task sobre a base `26d7e3d` (1985 passed, 0 failed, 6
 ignored; a `main` tinha 1969); o rebase final só cruzou docs. ADR:
-`docs/ADR/a-tick-asks-for-a-deadline.md`.
+`docs/adr/rendering/0042-a-tick-asks-for-a-deadline.md`.
 
 decisão do orquestrador registrada: opção 1 do agente (`since_last` no
 `AnimationTick`, `dt` travado mantido); os dois literais em
@@ -77,22 +77,22 @@ worker do git e a bridge de accessibility pedem frames avulsos.
 
 ## revisão do orquestrador (2026-09-23, antes do briefing)
 
-- mecanismo: `TextInput::tick(dt)` (`crates/comps/src/form/text_input/component.rs:61-70`)
+- mecanismo: `TextInput::tick(dt)` (`rust/engine/src/widgets/form/text_input/component.rs:61-70`)
   acumula `cursor_blink_timer` e vira a visibilidade a cada
   `CURSOR_BLINK_INTERVAL` (0,53 s); `TextField::tick`
-  (`crates/comps/src/form/text_field.rs:205`) devolve `true` enquanto
-  focado; `EditorView` tem o mesmo relógio (`crates/comps/src/editor/view.rs:52,180`).
+  (`rust/engine/src/widgets/form/text_field.rs:205`) devolve `true` enquanto
+  focado; `EditorView` tem o mesmo relógio (`rust/engine/src/widgets/editor/view.rs:52,180`).
   `TodoPage::tick` devolve `animating || self.input.is_focused()`
-  (`crates/showcase/src/view/apps/app.rs:311-314`), e o shell do showcase
+  (`apps/uigallery/src/views/apps/todo/mod.rs:311-314`), e o shell do showcase
   pede frame sempre que o tick devolve `true`
-  (`crates/showcase/src/app.rs:394-417`), com `ControlFlow::Wait`.
+  (`apps/uigallery/src/shell/mod.rs:394-417`), com `ControlFlow::Wait`.
 - decisão: o tick passa a devolver um prazo, não um booleano de "continue":
   um tipo do comps (nome sugerido `Wake`) que diz se um frame é preciso
   agora e, opcionalmente, quando o próximo é preciso (`Option<Duration>`);
   a composição de vários widgets é o menor prazo. o shell traduz em
   `ControlFlow::WaitUntil(instante)` e só pede frame quando o prazo vence
   ou uma entrada chega. o `PerfHud` continua implicando frames contínuos.
-- sequência por ownership: o ide (`crates/ide/**`) é da task-62 fase c em
+- sequência por ownership: o ide (`apps/idestudio/**`) é da task-62 fase c em
   andamento; esta task NÃO toca o ide. o `commit_form.rs` e o shell do ide
   adotam o prazo numa fase b, depois da 62c integrar. o urnaui não compila
   sem `../urna`; fica anotado como pendente.
@@ -101,7 +101,7 @@ worker do git e a bridge de accessibility pedem frames avulsos.
 
 feito, em seis commits que compilam sozinhos:
 
-- `comps::Wake` (`crates/comps/src/wake.rs`, exportado na raiz e no
+- `comps::Wake` (`rust/engine/src/widgets/wake.rs`, exportado na raiz e no
   prelude): `now: bool` (este tick mudou algo visível) e
   `next: Option<Duration>` (quando o próximo tick é preciso;
   `Some(ZERO)` é movimento contínuo, `None` é nada pendente).
@@ -143,7 +143,7 @@ feito, em seis commits que compilam sozinhos:
   o engine não compilava; duas linhas). teste em
   `engine/src/animation/tests_clock.rs`: dois ticks com 120 ms de sleep
   entre eles dão `since_last` acima do sleep e `dt` no máximo 0,1.
-- o shell do showcase (`crates/showcase/src/app.rs`): `RedrawRequested`
+- o shell do showcase (`apps/uigallery/src/shell/mod.rs`): `RedrawRequested`
   chama `view.wake(tick.since_last)`, desenha, e `pace` traduz o `Wake`:
   `Some(ZERO)` invalida e pede o próximo frame (como antes para
   animação), `Some(d)` põe `ControlFlow::WaitUntil(Instant::now() + d)`,
@@ -232,13 +232,13 @@ também é só do `engine::window`, então o contrato
 atualizada no fim da fase b (2026-09-23, branch `task/82b-wake-everywhere`).
 o que a fase a deixou e o que aconteceu com cada item:
 
-- ide (`crates/ide/src/views/commit_form.rs`, `crates/ide/src/main.rs`):
+- ide (`apps/idestudio/src/interfaces/panels/commit_form.rs`, `apps/idestudio/src/main.rs`):
   fechou na fase b. a cadeia `Workbench` -> `WorkspaceView` -> painéis,
   formulário e toasts responde com `Wake`, e o shell do ide passa
   `since_last` e traduz o `Wake` como o showcase. `TextField::tick` e o
   `bool` de `CommitForm::tick` saíram. medido abaixo: 11 frames em 6 s
   com o campo focado, eram 1431.
-- urnaui (`crates/urnaui/src/view/field.rs` e o `app.rs`): fechou na
+- urnaui (`apps/urnadbapp/src/view/field.rs` e o `app.rs`): fechou na
   fase b. os oito `tick -> bool` viraram `wake -> Wake` e o shell faz o
   mesmo `WaitUntil`. com o `../urna` presente o gate compila e testa a
   perna do urnaui (82 testes, eram 80); numa janela real parada, 0
@@ -248,14 +248,14 @@ o que a fase a deixou e o que aconteceu com cada item:
   workspace embutido qualquer que seja a página e só pede frame com a
   página Git na tela (3 acordadas, 0 frames, eram 3).
 - a bridge de acessibilidade continua pedindo frame avulso:
-  `UserEvent::Access` invalida sempre (`crates/showcase/src/app.rs`). fica.
+  `UserEvent::Access` invalida sempre (`apps/uigallery/src/shell/mod.rs`). fica.
 - o `EditorView` não tem foco: o blink dele está sempre pendente, então
   o Editor page pede uma virada a cada 0,53 s enquanto está visível,
   mesmo sem ninguém editando. um estado de foco no editor (blur ->
   `Wake::idle()`) é task própria. fica. (a primeira virada depois de
   uma edição já conta a partir da tecla: os shells alcançam o tempo
   antes de aplicar a tecla, descrito abaixo.)
-- o caret do dock (`crates/showcase/src/model/dock.rs`, `blink_t`) é
+- o caret do dock (`apps/uigallery/src/domain/dock.rs`, `blink_t`) é
   do modelo da demo e continua pedindo frame contínuo enquanto o painel
   está aberto. fica.
 - a linha `log::debug!` por frame fica nos três shells (showcase, ide,
@@ -278,7 +278,7 @@ dentro da fase (e fecharam); o terceiro fica:
 
 - o ide parado nunca parava de desenhar num repositório comum: o
   `git status` do worker pega o `.git/index.lock` opcional, o watcher
-  (`crates/ide/src/watcher.rs`) via a escrita dentro do `.git`, disparava
+  (`apps/idestudio/src/repository/watcher.rs`) via a escrita dentro do `.git`, disparava
   `Refresh`, que rodava `git status` de novo. eram dois frames a cada
   ~0,34 s e um processo `git status` por volta (34 frames e 17 processos
   em 6 s, medidos com um `git` de contagem no PATH; log e branches vêm
@@ -307,7 +307,7 @@ dentro da fase (e fecharam); o terceiro fica:
 
 ## fase b aberta (orquestrador, 2026-09-23)
 
-a auditoria de verdade (`docs/mission/state/truth.md`, seções 4g e 5.1)
+a auditoria de verdade (`docs/log/truth.md`, seções 4g e 5.1)
 mostrou que a promessa do README ("no change, no frame") está quebrada no
 app da prova da tese: o binário `ide` desenha todo frame com o campo de
 commit focado ou com um toast na tela, a página Git do showcase volta a 60
@@ -334,7 +334,7 @@ em `64e10a1`:
   que recebe: quem aplica uma mudança alcança o tempo antes.
 - ide: `CommitForm::wake`, `wake` nos três painéis (o fade do scrollbar
   por `Wake::moving`), `WorkspaceView::wake` junta painéis, formulário e
-  toasts, `Workbench::wake` repassa. o shell (`crates/ide/src/main.rs`)
+  toasts, `Workbench::wake` repassa. o shell (`apps/idestudio/src/main.rs`)
   é o do showcase: `since_last`, `pace` com `WaitUntil`/`Wait`,
   `new_events` com `ResumeTimeReached` e a linha de debug por frame.
   `Workbench::tick -> bool` fica, com o sentido "ainda em movimento",
@@ -428,35 +428,35 @@ depois um turno de 60 Hz só é desenhado se o pedido anterior era
 contínuo ou o prazo venceu, e recebe o tempo desde o último turno
 desenhado):
 
-- git (`crates/git/tests/real_repo.rs`): com o stat do index velho, o
+- git (`rust/gitdrv/tests/real_repo.rs`): com o stat do index velho, o
   `status` deixa o `.git/index` como achou (tempo e bytes), e um
   `git status` puro, o controle, reescreve. sem a variável o teste
   falha.
-- ide, watcher (`crates/ide/src/watcher.rs`): o predicado em eventos
+- ide, watcher (`apps/idestudio/src/repository/watcher.rs`): o predicado em eventos
   montados, e o watcher de verdade num diretório temporário, onde mexer
   no lock não dispara e escrever na worktree dispara. sem o filtro o
   segundo falha.
-- ide, shell (`crates/ide/src/main.rs`): a recusa depois de 10 s parado
+- ide, shell (`apps/idestudio/src/main.rs`): a recusa depois de 10 s parado
   vive os 4 s inteiros; o caret focado depois de 10 s parado começa
   sólido e vira 0,53 s depois da tecla, 11 viradas em 6 s.
-- showcase, shell (`crates/showcase/src/app/pace/tests.rs`): o toast
+- showcase, shell (`apps/uigallery/src/shell/window/pace/tests.rs`): o toast
   empurrado depois de 10 s parado vive a duração inteira e entra do
   começo; o caret focado na página Git depois de 10 s parado começa
   sólido, 11 viradas, a primeira no turno 32; um alcance que não muda
   nada não pede frame.
-- showcase, `Switch` (`crates/showcase/src/view/render.rs`): virado
+- showcase, `Switch` (`apps/uigallery/src/views/compositor/render.rs`): virado
   depois de 3 s parado, o knob anima (mais de 10 frames) com o alcance,
   e sem o alcance chega ao fim no primeiro frame.
-- showcase, página Git (`crates/showcase/src/view/apps/git/desktop/tests.rs`):
+- showcase, página Git (`apps/uigallery/src/views/apps/git/desktop/tests.rs`):
   o campo focado pede 11 frames, todos viradas; o toast de recusa anda,
   descansa e sai no prazo; eventos do worker esperam o host aplicar; o
   gallery pede o caret do git só com a página na tela; eventos do worker
   são aplicados com a página escondida e só pedem frame com ela na tela.
-- ide, workspace (`crates/ide/src/views/workspace/tests/wake.rs`): o
+- ide, workspace (`apps/idestudio/src/interfaces/panels/layout/tests/wake.rs`): o
   campo focado pede 11 frames em 6 s, todos viradas; o formulário
   escondido não pede nada; o toast pede o instante em que sai e nada
   depois; toast e campo juntos pedem o menor prazo.
-- comps (`crates/comps/src/tests/wake.rs`): o toast anda, descansa num
+- comps (`rust/engine/src/widgets/tests/wake.rs`): o toast anda, descansa num
   prazo e sai; o tick conta todo o tempo que recebe (um push avançado
   10 s de uma vez já está saindo, alcançado antes vive a duração
   inteira); o clique anima a saída; sem toast ou com duração infinita,
@@ -484,17 +484,17 @@ Implementado:
 - ide: o watcher ignora .git/index.lock sozinho
 
 Arquivos principais:
-- crates/comps/src/feedback/toast.rs, crates/comps/src/form/text_field.rs
-- crates/git/src/repo.rs, crates/git/tests/real_repo.rs
-- crates/ide/src/main.rs, crates/ide/src/watcher.rs,
-  crates/ide/src/views/{commit_form,diff_view,multi_stack_view,
-  unassigned_view}.rs, crates/ide/src/views/workspace/mod.rs,
-  crates/ide/src/workbench/mod.rs (só tick/wake)
-- crates/showcase/src/app.rs, crates/showcase/src/app/pace.rs (novo),
-  crates/showcase/src/view/render.rs,
-  crates/showcase/src/view/apps/git/{desktop,stub}.rs e o doc de
-  crates/showcase/src/view/apps/git.rs
-- crates/urnaui/src/app.rs, crates/urnaui/src/view/{mod,field,open,
+- rust/engine/src/widgets/feedback/toast.rs, rust/engine/src/widgets/form/text_field.rs
+- rust/gitdrv/src/repo.rs, rust/gitdrv/tests/real_repo.rs
+- apps/idestudio/src/main.rs, apps/idestudio/src/repository/watcher.rs,
+  apps/idestudio/src/interfaces/panels/{commit_form,diff_view,multi_stack_view,
+  unassigned_view}.rs, apps/idestudio/src/interfaces/panels/layout/mod.rs,
+  apps/idestudio/src/capability/mod.rs (só tick/wake)
+- apps/uigallery/src/shell/mod.rs, apps/uigallery/src/shell/window/pace/mod.rs (novo),
+  apps/uigallery/src/views/compositor/render.rs,
+  apps/uigallery/src/views/apps/git/{desktop,stub}.rs e o doc de
+  apps/uigallery/src/views/apps/git/mod.rs
+- apps/urnadbapp/src/app.rs, apps/urnadbapp/src/view/{mod,field,open,
   search,chunks,graph,stats,explorer}.rs
 
 Interfaces adicionadas/alteradas:
@@ -516,7 +516,7 @@ Testes:
 
 Validação executada:
 - cargo test -p git, -p comps, -p ide, -p showcase verdes
-- ./script/gate verde sobre a main em 64e10a1, com a perna urnaui
+- ./tool/tasks/fullcheck.sh verde sobre a main em 64e10a1, com a perna urnaui
   rodando (../urna presente)
 - contagem: base (main 64e10a1) workspace 2022 passed, 0 failed, 11
   ignored (74 "test result"); urnaui 80 passed, 1 ignored. branch:
@@ -537,7 +537,7 @@ Decisões:
 - a página Git não aplica eventos no tick: o host aplica depois do
   alcance
 - o pacing do showcase foi para app/pace.rs pelo limite de 639 linhas
-- o doc de crates/showcase/src/view/apps/git.rs dizia que os eventos
+- o doc de apps/uigallery/src/views/apps/git/mod.rs dizia que os eventos
   eram drenados no próximo tick; mudei as três linhas
 
 Limitações:
@@ -554,12 +554,12 @@ Riscos de integração:
   eventos repetidos da criação do diretório e espera 1,2 s de silêncio);
   passou em seis rodadas seguidas e no gate, mas é o único teste com
   tempo de sistema de arquivos que entrou
-- o exemplo crates/showcase/examples/measure modela o shell sem o
+- o exemplo tool/bench/measure/src modela o shell sem o
   alcance; os números dele não mudam (são da fase a, antes do "fresh"),
   mas o modelo não repete mais o shell à risca (arquivo fora desta fase)
 - o alcance roda em new_events também no wasm e no mobile: compilado
   (check wasm com -D warnings), não rodado num browser nem num aparelho
-- crates/ide/src/workbench/mod.rs: só tick/wake mudaram; o rebase sobre
+- apps/idestudio/src/capability/mod.rs: só tick/wake mudaram; o rebase sobre
   a task-85 e a task-87 foi limpo
 
 Commits:

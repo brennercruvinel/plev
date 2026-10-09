@@ -18,7 +18,7 @@ approximation reported (task-66b). nothing reached the system's printing
 queue, and no app offered "print this page" as a capability.
 
 the probe (the handoff of item 9 in
-docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
+docs/log/steps/task-76-platform-integration.md) measured:
 
 - this machine has no destination: `lpstat -p -d` says "No destinations
   added." (exit 1, 0.14 s), `lp <file>` says "No default destination.",
@@ -107,11 +107,11 @@ docs/mission/steps/checked/task-76-platform-integration-done.md) measured:
 
 ## consequences
 
-- proven without a printer: the fakes (`crates/engine/tests/print.rs`
+- proven without a printer: the fakes (`rust/engine/tests/print.rs`
   over `tests/fake-lp`, `tests/fake-lpstat`, `tests/fake-lpstat-none`),
   the document from the render (size, dpi, a png that is the frame's
   pixels), a person's print of the Todo page through the fake printer
-  (`crates/showcase/tests/print.rs`: the document is, byte for byte, the
+  (`apps/uigallery/tests/print.rs`: the document is, byte for byte, the
   frame a view in the same state draws at the paper scale; the main
   window's scene and scale untouched; a print asked asleep started on
   the wake), the shell's projection and policies, the bar's item with its

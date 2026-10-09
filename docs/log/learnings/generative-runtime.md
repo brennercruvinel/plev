@@ -19,7 +19,7 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
 1. **fechar antes de abrir.** o brenner parou o ciclo automático porque o
    orquestrador abria fase nova de cada task que integrava e virava
    resultado de demo em task nova, a 500 a 660 mil tokens por agente. as
-   regras que vieram (`docs/mission/autonomy.md`, "contra gasto de
+   regras que vieram (`docs/ref/autonomy.md`, "contra gasto de
    tokens") pagaram: cada briefing diz o item do critério que fecha; o que
    sobra vira pendência; task nova só com o ok dele; um agente por vez,
    com o custo no journal.
@@ -69,7 +69,7 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
   recusa limpar uma pasta sem `CACHEDIR.TAG` (um `target/` criado por um
   comando sem `CARGO_TARGET_DIR` dentro do worktree), e a lixeira não
   devolve espaço até ser esvaziada. limpar `target/` inteiro leva junto o
-  `target/fonts-noto` (as fontes-fonte do `script/font-subset`): tirar
+  `target/fonts-noto` (as fontes-fonte do `tool/tasks/subsetter.py`): tirar
   antes e devolver depois.
 - **o que se baixa fica fora do repositório e com sha256 registrado.** o
   modelo em `~/.cache/plev/models/` sumiu numa limpeza de cache; com o
@@ -113,7 +113,7 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
 - **fontes e formatos se escolhem pelo que a versão travada desenha e
   lê.** o emoji é CBDT porque o swash 0.2.8 não desenha COLRv1; o `.fig`
   é um zip com fig-kiwi (esquema em deflate, mensagem em zstd, instâncias
-  expandidas do SYMBOL), lido offline por `script/figma-fixture`.
+  expandidas do SYMBOL), lido offline por `tool/tasks/figmapull.py`.
 - **inferência: uma interface, duas bibliotecas, o mesmo modelo.**
   decodificação gulosa e os 32 primeiros tokens lado a lado dizem se a
   comparação é justa; o burn não tem llama e o código trazido do burn-lm

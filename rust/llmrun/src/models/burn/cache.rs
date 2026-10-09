@@ -1,6 +1,6 @@
 // adapted from burn-lm (https://github.com/tracel-ai/burn-lm), commit a53baab,
 // crates/burn-lm-llama/src/nn/attention/{kv_cache.rs, cache.rs},
-// MIT OR Apache-2.0; see crates/llm/NOTICE. changes: the backend parameter of
+// MIT OR Apache-2.0; see rust/llmrun/NOTICE. changes: the backend parameter of
 // burn 0.21 back, key and value in one type, and no shift or shrink strategy:
 // the stream refuses a request longer than the context before the first step,
 // so the buffer never overflows.

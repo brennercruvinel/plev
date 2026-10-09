@@ -54,12 +54,12 @@ segundos e nunca ter sido tela). goal 1 e goal 8 do programa. checkpoint b.
 ## estado atual no código
 
 - não existe host de superfície materializada; o padrão oficial é estado
-  em structs com widgets retained (`docs/ADR/official-app-pattern.md`).
-- `crates/engine/src/layout` (taffy) resolve layout a partir de árvore;
-  `crates/comps` tem os widgets; `crates/comps/src/overlay` tem spring para
+  em structs com widgets retained (`docs/adr/structure/0023-official-app-pattern.md`).
+- `rust/engine/src/compose/layout` (taffy) resolve layout a partir de árvore;
+  `rust/engine/src/widgets` tem os widgets; `rust/engine/src/widgets/overlay` tem spring para
   entrada e saída.
 - o urnaui já decodifica frames de mídia com ffmpeg em subprocesso
-  (`crates/urnaui`, ADR `urnaui-media-frames-in-place-via-ffmpeg-subfile`).
+  (`apps/urnadbapp`, ADR `urnaui-media-frames-in-place-via-ffmpeg-subfile`).
   ffmpeg tem `silencedetect`.
 - depois de 68: `VerifiedIr`, `Capabilities`.
 
@@ -143,9 +143,9 @@ fase 0: nenhuma. fases 1 a 4: 68, 59 e 58 integradas.
 ## superfície sob responsabilidade
 
 o host de superfícies (lugar no ADR), a página demo no showcase
-(`crates/showcase/src/view/apps/` com arquivo novo), o proponente,
+(`apps/uigallery/src/views/apps/` com arquivo novo), o proponente,
 `refs/` para a fase 0, propostas de ADR
-`docs/ADR/materialized-surfaces-from-verified-ir.md` e a atualização de
+`docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md` e a atualização de
 `official-app-pattern`.
 
 ## interfaces que consome
@@ -171,7 +171,7 @@ as próprias. mudança em widget de comps só com aprovação.
 - demo gravada (task-63 se integrada) e roteiro no handoff.
 - checkpoint b: a superfície gerada comparada com uma tela fixa bem
   desenhada para a mesma tarefa, com o brenner, resultado escrito.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -207,7 +207,7 @@ viewports estreito e largo da demo.
 ## handoff (task-69 fase 1)
 
 status: implementado, testado, rebaseado na `main` @ 86f8b4f, com o
-`./script/gate` verde (perna urnaui incluída). a sonda e a parada abaixo
+`./tool/tasks/fullcheck.sh` verde (perna urnaui incluída). a sonda e a parada abaixo
 ficaram como foram escritas, antes do código; a resolução do orquestrador
 e o handoff da fase vêm depois delas.
 
@@ -249,7 +249,7 @@ que o widget não aceita fica no padrão do widget:
   `theme.shape.card`, o do `Panel`.
 
 (b) cada `Layout` do IR no `LayoutEngine` de hoje
-(`crates/engine/src/layout`: taffy atrás de `LayoutStyle`, sempre
+(`rust/engine/src/compose/layout`: taffy atrás de `LayoutStyle`, sempre
 `Display::Flex`, sem `position` e sem grid; folha de texto medida pelo
 `TextMeasurer`):
 
@@ -322,7 +322,7 @@ arquivo novo em `view/apps/`, o `mod.rs` de lá e a linha de
 `view/pages/table.rs`).
 
 - uma página do showcase é uma linha de `PAGES` com um `Pane`
-  (`crates/showcase/src/view/pages/mod.rs:50`), o estado dela em `Panes`
+  (`apps/uigallery/src/views/pages/mod.rs:50`), o estado dela em `Panes`
   (`view/panes.rs`) e as rotas de `view/dispatch.rs`, que casa `Pane` de
   forma exaustiva em `page_content_height`, `page_event` e
   `page_render`: um `Pane` novo não compila sem um braço em cada um;
@@ -332,7 +332,7 @@ arquivo novo em `view/apps/`, o `mod.rs` de lá e a linha de
   digitado num campo passa por `view/input.rs` (`handle_text`,
   `handle_edit_key`, `handle_enter`, `handle_escape`), por pane também;
 - o `dispatch.rs` tem 775 linhas de produção para o teto 776 do `FROZEN`
-  (`crates/engine/tests/file_hygiene_guard.rs:33`); os braços somam umas
+  (`tool/tests/test_filepaths.rs:33`); os braços somam umas
   vinte;
 - uma linha em `table.rs` com o `Pane::Todo` (como alias) mostra o todo,
   não a superfície, e o teste `every_pane_has_exactly_one_page_of_its_own`
@@ -347,7 +347,7 @@ opções:
    `view/input.rs` (quatro braços), `view/dispatch.rs` (os braços, depois
    de levar o módulo `agent`, com os testes dele, para um arquivo
    próprio, `view/agent.rs`, sem mudar código; o `dispatch.rs` cai para
-   umas 330 linhas) e `crates/engine/tests/file_hygiene_guard.rs` (a
+   umas 330 linhas) e `tool/tests/test_filepaths.rs` (a
    linha do `dispatch.rs` sai do `FROZEN`, como o guard pede quando uma
    divisão traz o arquivo para baixo do limite). impacto: cinco arquivos
    fora da lista, um deles o congelado; a página é a do briefing, se
@@ -356,14 +356,14 @@ opções:
 2. a superfície dentro da página Todo (`view/apps/app.rs` e `app/**`),
    lado a lado com o todo fixo: nenhuma rota nova. impacto: muda a página
    que é o gabarito do padrão oficial; a projeção do todo passa a ter os
-   nós da superfície, o golden `crates/uir/fixtures/showcase-todo.snapshot.json`
+   nós da superfície, o golden `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
    muda (proibido) e os ids `todo_panel.*` viram nós do app no registro
    de que a fixture verifica. pela regra 2 do verifier, um nó com o id de
    um nó do app só manda as ações desse nó, então a fixture deixa de
    verificar contra a página que a mostra. não recomendo.
 3. nenhuma página nesta fase: o crate, a materialização, a projeção, os
    eventos e a medida como o briefing pede, e a prova sobre o todo em
-   `crates/showcase/tests` pela API pública (`stage_page`,
+   `apps/uigallery/tests` pela API pública (`stage_page`,
    `ShowcaseView::semantics` e `act`), com o PNG da superfície saindo do
    renderer headless num teste, não de `showcase --render`. impacto:
    nenhum arquivo fora da lista; "render headless da página nova" e "a
@@ -395,7 +395,7 @@ verifica contra o registro do instante, mas não mostra item novo e fica
 velho quando um item some (o dispatcher recusa); (iii) o todo projeta os
 itens como `List` e a fixture ganha o repeat: muda
 `view/apps/app/semantics.rs` e os dois arquivos do todo em
-`crates/uir/fixtures`, proibidos. recomendação: (i) agora, (iii) numa
+`rust/plevir/tests/fixtures`, proibidos. recomendação: (i) agora, (iii) numa
 task própria ou na fase 2, que transforma por `SemId` e vai querer uma
 lista viva.
 
@@ -408,7 +408,7 @@ lista viva.
 
 opção 1 e fixture (i). liberados `view/pages/mod.rs`, `view/panes.rs`,
 `view/input.rs` e `view/dispatch.rs`, e no
-`crates/engine/tests/file_hygiene_guard.rs` só tirar a linha do
+`tool/tests/test_filepaths.rs` só tirar a linha do
 `dispatch.rs` do `FROZEN` quando ele caísse abaixo de 639. primeiro mover
 o módulo `agent` sem mudar código, num commit só; depois o `Pane::Surface`.
 a página se projeta para o agent port como as outras, provado por um
@@ -423,7 +423,7 @@ props que não chegam ao widget vão para o ADR como limite conhecido.
 goal: task-69 fase 1, uma superfície materializada de IR verificado.
 
 status: implementado. `cargo test -p surface -p showcase -p uir` verdes,
-`./script/gate` verde com a perna urnaui, sobre a `main` @ 86f8b4f.
+`./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ 86f8b4f.
 
 #### commits
 
@@ -457,7 +457,7 @@ com a página, o `dispatch.rs` tem 338 linhas.
 
 #### como o host materializa
 
-crate `crates/surface` (depende de `uir`, `sem`, `engine`, `comps`).
+crate `rust/screen` (depende de `uir`, `sem`, `engine`, `comps`).
 
 - `Surface::materialize(VerifiedIr, &Snapshot)` é a única entrada; nada
   no crate recebe `Ir`. um doctest `compile_fail` mostra que um `Ir` não
@@ -531,7 +531,7 @@ da projeção do app (um snapshot, um contrato):
 
 #### a página e o render headless
 
-`crates/showcase/src/view/apps/surface_page.rs`, grupo Apps Demo,
+`apps/uigallery/src/views/apps/surface/mod.rs`, grupo Apps Demo,
 página "Surface": a fixture `showcase-todo.ir.json` da task-68 verificada
 contra o registro que o todo projeta e materializada ao lado do todo
 escrito à mão, lado a lado quando largo, o todo em cima quando estreito,
@@ -607,7 +607,7 @@ glifos é compartilhado entre as rodadas e as fixtures. duas execuções:
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 86f8b4f (`cargo test --workspace` com a `main` em detached HEAD neste worktree) | 2267 passam, 11 ignorados | 82 passam, 1 ignorado | 2349 |
-| depois, esta branch (`./script/gate`, saída 0) | 2297 passam, 0 falhas, 12 ignorados | 82 passam, 0 falhas, 1 ignorado | 2379 |
+| depois, esta branch (`./tool/tasks/fullcheck.sh`, saída 0) | 2297 passam, 0 falhas, 12 ignorados | 82 passam, 0 falhas, 1 ignorado | 2379 |
 
 30 testes novos: 23 no `surface` (8 unitários, 5 de materialização, 6
 de eventos, 2 de render, 2 doctests, um deles `compile_fail`; a medição
@@ -619,7 +619,7 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
 
 #### testes
 
-- `crates/surface/tests/materialize.rs`: cada fixture projeta os ids, os
+- `rust/screen/tests/materialize.rs`: cada fixture projeta os ids, os
   roles e as ações do seu IR, instâncias da repetição incluídas pelo
   valor vivo (o esperado sai de uma leitura do IR feita no teste), os
   reads como a capacidade ou como a superfície os mostra, e o `route` de
@@ -627,16 +627,16 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
   estado onde a superfície o mostra; o repeat segue a lista viva (um
   arquivo sai, outro repete); um nó mantém o widget enquanto o id fica;
   o IR recusado não materializa.
-- `crates/surface/tests/events.rs`: clique é a capacidade ligada, pela
+- `rust/screen/tests/events.rs`: clique é a capacidade ligada, pela
   pessoa, pelo dispatcher do app, com o receipt de lá; digitar muda o
   texto do app e a tecla seguinte observa o texto que a primeira fez;
   clique sobre estado ainda não mostrado é stale; o ato de um agente num
   nó da superfície vai para a capacidade; capacidade desabilitada deixa o
   controle desabilitado; superfície inerte não recebe nada.
-- `crates/surface/tests/render.rs`: cada fixture desenha e liga cada nó
+- `rust/screen/tests/render.rs`: cada fixture desenha e liga cada nó
   com role, em 320 e 1200 de largura, em dois temas; parada não pede
   frame.
-- `crates/showcase/src/view/apps/surface_page/tests.rs`: a fixture abre;
+- `apps/uigallery/src/views/apps/surface/tests/mod.rs`: a fixture abre;
   o aceite (adicionar na superfície aparece no todo fixo, receipt do
   dispatcher do todo, a linha nova desenhada); o filtro da superfície
   filtra o todo fixo; o todo fixo move a superfície; um snapshot só;
@@ -649,10 +649,10 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
 
 #### linhas de ADR
 
-- novo, proposto: `docs/ADR/materialized-surfaces-from-verified-ir.md`.
+- novo, proposto: `docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md`.
   linha do índice para o orquestrador:
   `| 2026-09-24 | [materialized-surfaces-from-verified-ir](materialized-surfaces-from-verified-ir.md) | proposed | crate surface (uir, sem, engine, comps): só VerifiedIr materializa; o IR se desenrola sobre o snapshot vivo (repeat por item, ids chaveados pelo item) num widget retido do comps por SemId; layout pelo LayoutEngine (grid como linha com flex_wrap, overlay uma passada por camada), tokens pelo Theme num match exaustivo (control_size do botão aproximado pela escada ButtonSize); projeção do IR no builder do app, reads com o nome do estado que a superfície mostra; cada evento é um Request pelo dispatcher do app, observado no snapshot mostrado; route leva o ato num nó da superfície à capacidade; a página Surface do showcase (task-69) |`
-- atualizado: `docs/ADR/official-app-pattern.md` ganhou o adendo "the
+- atualizado: `docs/adr/structure/0023-official-app-pattern.md` ganhou o adendo "the
   second pattern, a surface materialized from verified IR", com quando
   usar cada padrão.
 
@@ -698,13 +698,13 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
 #### dependências pendentes e riscos de integração
 
 - fora da minha lista de arquivos, para o orquestrador: a linha do
-  índice de ADR (acima); o `docs/CHANGELOG.md`; o comentário de
-  `crates/showcase/src/app/headless.rs` ("today only the todo page
+  índice de ADR (acima); o `docs/log/changelog.md`; o comentário de
+  `apps/uigallery/src/shell/window/headless.rs` ("today only the todo page
   does"), que agora vale também para a página Surface; a entrada
-  `[crates.showcase]` do `docs/arc/arc.toml`, que não cita a página
+  `[crates.showcase]` do `docs/ATLAS.toml`, que não cita a página
   Surface nem as dependências `surface` e `uir` (só a entrada do crate
   novo era permitida).
-- a página inclui a fixture de `crates/uir/fixtures` por `include_str!`:
+- a página inclui a fixture de `rust/plevir/tests/fixtures` por `include_str!`:
   se o golden do todo ou o IR mudarem e o IR deixar de verificar, a
   página mostra um estado vazio com o primeiro erro do verifier (e o
   teste `the_fixture_verifies_against_the_todo_and_opens` fica vermelho).
@@ -741,11 +741,11 @@ para uma superfície repetir sobre os itens do todo:
 
 - o todo projetar a lista dos itens como estado, por exemplo `items` no
   nó `todo` (`todo:items`, `List` com os ids visíveis, na ordem), em
-  `crates/showcase/src/view/apps/app/semantics.rs`;
+  `apps/uigallery/src/views/apps/todo/semantics/mod.rs`;
 - o texto de cada item como estado (`todo.item[<id>]:text`), porque o
   label de uma instância é o item (o id, "1") e o IR não interpola label:
   um `text` do molde liga o texto;
-- gravar de novo `crates/uir/fixtures/showcase-todo.snapshot.json`
+- gravar de novo `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
   (`UIR_BLESS=1 cargo test -p showcase --test uir_fixture`) e dar ao
   `showcase-todo.ir.json` uma lista com `repeat` sobre `todo:items`,
   molde `todo_panel.item[{item}]` com um checkbox ligado a
@@ -794,11 +794,11 @@ na base não existe transformação: `SurfaceHost::open` recusa um id
 aberto, então o único caminho de uma forma verificada para outra é
 fechar a superfície e abrir a outra. o teste
 `closing_and_reopening_makes_every_widget_new`
-(`crates/surface/tests/transform.rs`) faz isso sobre o app de teste com o
-golden do todo (`crates/uir/fixtures/showcase-todo.snapshot.json`):
+(`rust/screen/tests/transform.rs`) faz isso sobre o app de teste com o
+golden do todo (`rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`):
 
 - a forma compacta é a fixture da task-68 (`showcase-todo.ir.json`). a
-  outra é nova, `crates/surface/tests/fixtures/showcase-todo-columns.ir.json`,
+  outra é nova, `rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`,
   verificada contra o mesmo golden: duas colunas, à esquerda o filtro e
   as contagens (`todo_panel.side`), à direita a entrada
   (`todo_panel.main`). os ids dos controles são os mesmos; o grid
@@ -862,8 +862,8 @@ e nenhum estado semântico se perde. se isso tiver de passar, é mudança no
 comps (expor o `Press` dos dois) e pede aprovação.
 
 outro achado, fora do comps: o engine não expõe reduced motion. não há
-símbolo de preferência de movimento em `crates/engine` nem em
-`crates/comps`, e só a task-75 (pendente) traz a preferência do sistema.
+símbolo de preferência de movimento em `rust/engine` nem em
+`rust/engine/src/widgets`, e só a task-75 (pendente) traz a preferência do sistema.
 a fase 2 não pede mudança no engine para isso: a superfície recebe a
 preferência de quem a tiver (`SurfaceHost::set_reduced_motion`), e hoje
 ninguém a tem. a task-75 liga a fonte.
@@ -884,7 +884,7 @@ a fixture nova, e o teste da sonda passa com ela.
 goal: task-69 fase 2, a superfície se transforma sem perder identidade.
 
 status: implementado. `cargo test -p surface -p showcase` verdes,
-`./script/gate` verde com a perna urnaui, sobre a `main` @ 69b65ed.
+`./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ 69b65ed.
 
 #### commits
 
@@ -997,14 +997,14 @@ nenhuma fixture da task-68 tem slider).
 
 #### a página
 
-`crates/showcase/src/view/apps/surface_page.rs`: um controle segmentado
+`apps/uigallery/src/views/apps/surface/mod.rs`: um controle segmentado
 (`comps::nav::Tabs`, "compact" e "two columns") acima da metade gerada
 troca a forma da superfície. as duas formas:
 
-- compact: a fixture da task-68, `crates/uir/fixtures/showcase-todo.ir.json`;
-- two columns: `crates/surface/tests/fixtures/showcase-todo-columns.ir.json`,
+- compact: a fixture da task-68, `rust/plevir/tests/fixtures/uigallery-todo.ir.json`;
+- two columns: `rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`,
   fixture local do crate `surface`, que a página inclui por `include_str!`
-  como já incluía a da task-68. fica ali porque `crates/uir/**` é
+  como já incluía a da task-68. fica ali porque `rust/plevir/**` é
   proibido nesta fase, e os testes do `surface` a usam.
 
 cada forma é verificada contra o que o todo projeta no momento do
@@ -1099,12 +1099,12 @@ página.
 
 18 testes novos:
 
-- `crates/surface/tests/transform.rs` (5): a sonda (fechar e abrir
+- `rust/screen/tests/transform.rs` (5): a sonda (fechar e abrir
   perde foco e caret); transformar mantém widget, foco e caret, projeta a
   forma nova na hora e volta; outro componente no mesmo id é widget novo
   sobre o mesmo estado (switch para checkbox); transformação recusada
   (`NotOpen`, `Collision`); o arraste continua depois de mudar de painel;
-- `crates/surface/tests/motion.rs` (6): o que nasce entra na projeção na
+- `rust/screen/tests/transition.rs` (6): o que nasce entra na projeção na
   hora, o que sai deixa a projeção na hora e é desenhado até a transição
   acabar, sem ligação e sem hit, e o ato de agente nele é `NotFound`; a
   transição pede frames até assentar e depois nenhum (37 de 120);
@@ -1112,11 +1112,11 @@ página.
   meio da transição a termina; um nó que volta antes de a imagem sumir é
   a mesma instância; a dispensa some com fade e depois solta tudo (e na
   hora, com reduced motion);
-- `crates/surface/tests/events.rs` (+1): antes do frame seguinte, o
+- `rust/screen/tests/events.rs` (+1): antes do frame seguinte, o
   clique atinge o que a pessoa viu (falha na base);
-- `crates/surface/src/widget.rs` (+1, unitário): o botão que liga `busy`
+- `rust/screen/src/widget.rs` (+1, unitário): o botão que liga `busy`
   é outro widget;
-- `crates/showcase/src/view/apps/surface_page/tests.rs` (+4): as duas
+- `apps/uigallery/src/views/apps/surface/tests/mod.rs` (+4): as duas
   formas verificam contra o todo como uma superfície só (mesmo id, mesmos
   controles); o controle troca a forma, e o texto, o caret e o filtro
   continuam; a forma de duas colunas cabe num celular; uma forma que não
@@ -1124,7 +1124,7 @@ página.
 - `.../surface_page/tests/forms.rs` (+1): a página headless nas duas
   formas, cena e projeção (e pixels com GPU).
 
-fixtures novas em `crates/surface/tests/fixtures/`:
+fixtures novas em `rust/screen/tests/fixtures/`:
 `showcase-todo-columns.ir.json`, `mixer-left.ir.json`,
 `mixer-right.ir.json`. o app do mixer (`support::mixer()`) é construído
 no teste.
@@ -1134,7 +1134,7 @@ no teste.
 - `cargo test -p surface`, `cargo test -p showcase --lib surface_page`;
 - `cargo clippy -p surface -p showcase --all-targets -- -D warnings`;
 - `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
-- `./script/gate`, saída 0, com a perna urnaui (`df -h /` antes: 15 GB
+- `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui (`df -h /` antes: 15 GB
   livres);
 - `cargo run -p showcase -- --render Surface --out ... --semantics ...` e
   `SURFACE_PAGE_OUT=<dir> cargo test -p showcase --lib surface_page::tests::forms -- --nocapture`
@@ -1145,15 +1145,15 @@ no teste.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 69b65ed (`cargo test --workspace` neste worktree; urnaui como no fechamento da fase 1) | 2297 passam, 12 ignorados | 82 passam, 1 ignorado | 2379 |
-| depois, esta branch @ 3f510b3 (`./script/gate`, saída 0) | 2315 passam, 0 falhas, 12 ignorados | 82 passam, 0 falhas, 1 ignorado | 2397 |
+| depois, esta branch @ 3f510b3 (`./tool/tasks/fullcheck.sh`, saída 0) | 2315 passam, 0 falhas, 12 ignorados | 82 passam, 0 falhas, 1 ignorado | 2397 |
 
 18 testes novos; a contagem não cai.
 
 #### linha de ADR
 
 o adendo datado "a surface changes form (task-69 phase 2, proposed)" em
-`docs/ADR/materialized-surfaces-from-verified-ir.md`. linha do índice
-para o orquestrador (o `docs/ADR/README.md` é proibido aqui):
+`docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md`. linha do índice
+para o orquestrador (o `docs/adr/README.md` é proibido aqui):
 
 `| 2026-09-24 | [materialized-surfaces-from-verified-ir](materialized-surfaces-from-verified-ir.md) | accepted, adendo da fase 2 proposto | fase 2: SurfaceHost::transform reconcilia por SemId e pelo widget do comps (o mesmo mantém foco, caret e arraste; outro é widget novo sobre o estado do app); geometria por SemId; a semântica muda na hora (o que sai é NotFound) e os frames depois: entrada e saída na mola do overlay, movimento num Tween de theme.duration.slow, fade até um degrau de 8 bits; render on demand (37 de 120 turnos no mixer); reduced motion recebido de quem o tem (o engine não expõe, task-75); close some com fade e solta; a página Surface alterna compacta e duas colunas (task-69) |`
 
@@ -1194,9 +1194,9 @@ para o orquestrador (o `docs/ADR/README.md` é proibido aqui):
 #### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima), o
-  `docs/CHANGELOG.md` (a página Surface troca de forma) e, se quiser, a
-  entrada do `surface` no `docs/arc/arc.toml`, que descreve a fase 1;
-- a página inclui `crates/surface/tests/fixtures/showcase-todo-columns.ir.json`
+  `docs/log/changelog.md` (a página Surface troca de forma) e, se quiser, a
+  entrada do `surface` no `docs/ATLAS.toml`, que descreve a fase 1;
+- a página inclui `rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`
   por `include_str!`. mudar essa fixture muda a página, e o teste
   `both_forms_verify_against_the_todo_as_one_surface` a verifica contra o
   todo real;
@@ -1270,9 +1270,9 @@ branch `task/69c-proposers`, worktree próprio, sobre a `main` @ a678ef4.
 
 ### sonda da fase 3a (antes do primeiro tipo, 2026-09-24)
 
-um teste descartável (`crates/uir/tests/probe_69c.rs`, rodado e depois
+um teste descartável (`rust/plevir/tests/probe_69c.rs`, rodado e depois
 jogado fora) lê o golden da projeção real do todo
-(`crates/uir/fixtures/showcase-todo.snapshot.json`, que o teste
+(`rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`, que o teste
 `uir_fixture` do showcase mantém igual à página), monta
 `Capabilities::from_snapshot` e escreve à mão o IR que um proponente por
 regras escreveria para "só o que está ativo e o campo de adicionar". a
@@ -1374,7 +1374,7 @@ projetadas, pelo mesmo dispatcher da página, e isso não se faz com os
 arquivos permitidos (`surface_page.rs` e `surface_page/**`).
 
 - o único dispatcher da página Surface é o do todo, `TodoPage.dispatcher`,
-  campo privado de `crates/showcase/src/view/apps/app.rs`.
+  campo privado de `apps/uigallery/src/views/apps/todo/mod.rs`.
   `TodoPage::dispatch` (`app/semantics.rs:244`) o empresta com o próprio
   `TodoPage` como `Operable`, e o `Dispatcher` valida cada pedido contra a
   projeção desse `Operable`. um `set_value` no campo de intenção, ou um
@@ -1385,13 +1385,13 @@ arquivos permitidos (`surface_page.rs` e `surface_page/**`).
   `ShowcaseView::add_sink` (`view/dispatch.rs`) põe a sink da porta só no
   dispatcher do todo, e o servidor recusa o ato cujo id a sink não ouviu
   ("request N was dispatched, but the app's dispatcher reports no stage",
-  `crates/wire/src/server.rs:516`). e os dois dispatchers numeram a partir
+  `rust/socket/src/server.rs:516`). e os dois dispatchers numeram a partir
   de 1: a porta casa estágio por `RequestId`, então um id do outro
   dispatcher passaria por esse teste com o estágio errado.
 
 opções:
 
-1. um método em `crates/showcase/src/view/apps/app/semantics.rs` que
+1. um método em `apps/uigallery/src/views/apps/todo/semantics/mod.rs` que
    empresta o dispatcher do todo para um `Operable` maior, o mesmo
    `mem::take` que `dispatch` já faz, umas dez linhas:
    `pub(crate) fn with_dispatcher<R>(&mut self, f: impl FnOnce(&mut Dispatcher, &mut TodoPage, Millis) -> R) -> R`.
@@ -1424,7 +1424,7 @@ escolha (o crate `propose`, o trait, o determinístico, o LLM com o modelo
 falso, a medição, o ADR).
 
 decisão necessária: qual opção; na 1, a autorização para o método em
-`crates/showcase/src/view/apps/app/semantics.rs`.
+`apps/uigallery/src/views/apps/todo/semantics/mod.rs`.
 
 ### o seletor em português (não bloqueia; decidir junto)
 
@@ -1439,7 +1439,7 @@ proponente LLM. recomendação: (i) agora, e (iii) na 3b.
 ### resolução da parada (orquestrador, 2026-09-24)
 
 opção 1: autorizado um método em
-`crates/showcase/src/view/apps/app/semantics.rs`, só ele, que empresta o
+`apps/uigallery/src/views/apps/todo/semantics/mod.rs`, só ele, que empresta o
 dispatcher do todo ao `Operable` maior da página, pelo mesmo
 `mem::take` de `TodoPage::dispatch`; nada mais daquele arquivo nem de
 `app.rs` muda (nem a projeção do todo, nem o golden, nem o caminho de
@@ -1458,7 +1458,7 @@ goal: task-69 fase 3a, proponentes sem provedor: uma intenção em texto
 vira um IR proposto que só chega ao runtime verificado.
 
 status: implementado. `cargo test -p propose -p showcase -p uir -p
-surface` verdes, `./script/gate` verde com a perna urnaui, sobre a
+surface` verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a
 `main` @ a678ef4.
 
 #### commits
@@ -1483,12 +1483,12 @@ concluído" não é fato do registro, role e parent vêm do snapshot.
 
 #### onde mora e por quê
 
-crate novo, `crates/propose` (`uir`, `sem`, `serde_json`, `thiserror`;
+crate novo, `rust/offers` (`uir`, `sem`, `serde_json`, `thiserror`;
 nunca engine, comps ou rede). um proponente não é parte do IR: o `uir`
 continua a língua e o verifier, compila para wasm e não faz I/O, e a fase
 3b vai pôr um provedor atrás do `Model`, que não pode morar lá. as
 entradas do `README.md` (a lista de crates e uma frase) e do
-`docs/arc/arc.toml` (`[crates.propose]`) foram no commit do trait; o
+`docs/ATLAS.toml` (`[crates.propose]`) foram no commit do trait; o
 `arc_sync_guard` passa.
 
 a API:
@@ -1665,7 +1665,7 @@ answer again with the whole corrected IR, one JSON object.
 
 #### a página
 
-`crates/showcase/src/view/apps/surface_page.rs` e o módulo novo
+`apps/uigallery/src/views/apps/surface/mod.rs` e o módulo novo
 `surface_page/proposing.rs`. acima da superfície, sob a legenda: o campo
 de intenção (`surface_page.intent`, text_input com `set_value`), o botão
 "propose" (`surface_page.propose`, ação `propose` que lê a intenção,
@@ -1777,7 +1777,7 @@ num app rodando.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ a678ef4 (`cargo test --workspace` e o `cargo test` do urnaui neste worktree, antes do primeiro código) | 2347 passam, 12 ignorados | 82 passam, 1 ignorado | 2429 |
-| depois, esta branch @ fb4ca07 (`./script/gate`, saída 0) | 2368 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2450 |
+| depois, esta branch @ fb4ca07 (`./tool/tasks/fullcheck.sh`, saída 0) | 2368 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2450 |
 
 21 testes novos e uma medição ignorada: 14 no `propose` (2 unitários da
 gramática, 8 das regras, 4 do LLM) e 7 no showcase (5 da linha de
@@ -1787,9 +1787,9 @@ warnings` verdes, dentro do gate. `df -h /` antes do gate: 13 GB livres.
 
 #### testes
 
-- `crates/propose/src/words.rs` (2): a dobra das palavras; a gramática
+- `rust/offers/src/words.rs` (2): a dobra das palavras; a gramática
   nas duas línguas;
-- `crates/propose/tests/rules.rs` (8): cada intenção da gramática, em
+- `rust/offers/tests/rules.rs` (8): cada intenção da gramática, em
   inglês e português, verifica sobre o todo, sem superfície e sobre a da
   página, e liga o que pediu e nada mais; os ids do que fica são os da
   superfície atual (da compacta para a proposta, e das duas colunas para
@@ -1797,7 +1797,7 @@ warnings` verdes, dentro do gate. `df -h /` antes do gate: 13 GB livres.
   intenção não entendida é erro claro; só o que o autor pode pedir; a
   mesma pergunta dá o mesmo IR; `propose_verified` nunca devolve o que o
   verifier recusa;
-- `crates/propose/tests/llm.rs` (4): o modelo que erra primeiro é
+- `rust/offers/tests/llm.rs` (4): o modelo que erra primeiro é
   consertado pelos erros do verifier no segundo prompt; o que erra sempre
   esgota as três tentativas; o que falha para na hora; o prompt leva o
   schema, os componentes, as regras, o registro e os ids a manter;
@@ -1821,15 +1821,15 @@ warnings` verdes, dentro do gate. `df -h /` antes do gate: 13 GB livres.
 - `cargo test -p propose -p showcase -p uir -p surface` (pelo gate);
 - `cargo clippy -p propose -p showcase --all-targets -- -D warnings`;
 - `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
-- `./script/gate`, saída 0, com a perna urnaui;
+- `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui;
 - `SURFACE_PAGE_OUT=<dir> cargo test -p showcase --lib surface_page::tests::forms`,
   `cargo run -p showcase -- --render Surface` (1200x800 e 390x844), e a
   medição.
 
 #### linha de ADR
 
-novo, proposto: `docs/ADR/proposers-propose-the-runtime-verifies.md`.
-linha do índice para o orquestrador (o `docs/ADR/README.md` é proibido
+novo, proposto: `docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md`.
+linha do índice para o orquestrador (o `docs/adr/README.md` é proibido
 aqui):
 
 `| 2026-09-24 | [proposers-propose-the-runtime-verifies](proposers-propose-the-runtime-verifies.md) | proposed | crate propose (uir, sem, serde_json; sem engine, comps ou rede): trait Proposer sobre Ask (intenção, Capabilities, Snapshot, VerifiedIr mostrado, GenerationPolicy) devolve Ir não verificado; propose_verified é a única saída, VerifiedIr ou os erros; Rules, determinístico, gramática pequena em inglês e português (add, filter, counts, compact, two columns, everything) ligada por estrutura do registro, nunca por nomes do app, palavras que escolhem só do app (NoMatch lista as dele), ids do que fica mantidos; Llm atrás de Model, prompt com regras, componentes, registro, superfície atual e ids a manter e o schema, erros do verifier de volta, 3 tentativas, Exhausted; a página Surface propõe pelo dispatcher do todo (TodoPage::with_dispatcher); o provedor é a fase 3b (task-69) |`
@@ -1875,8 +1875,8 @@ aqui):
 #### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima), o
-  `docs/CHANGELOG.md` (a página Surface propõe a partir de uma intenção),
-  e na entrada `[crates.showcase]` do `docs/arc/arc.toml` a linha de
+  `docs/log/changelog.md` (a página Surface propõe a partir de uma intenção),
+  e na entrada `[crates.showcase]` do `docs/ATLAS.toml` a linha de
   proposta da página e a dependência `propose` (só a entrada do crate
   novo era permitida);
 - `TodoPage::with_dispatcher` é `pub(crate)`: outro `Operable` do crate
@@ -1914,10 +1914,10 @@ na conta do brenner), atrás de `propose::Model`, num crate próprio.
 
 ### sonda da fase 3b-i (antes do primeiro tipo, 2026-09-24)
 
-um exemplo descartável (`crates/claude-model/examples/probe.rs`, rodado e
+um exemplo descartável (`demo/intent/src/probe.rs`, rodado e
 jogado fora, nunca commitado) monta o `propose::prompt` para a intenção
 "only what is active and the add field" sobre o golden do todo
-(`crates/uir/fixtures/showcase-todo.snapshot.json`), com a superfície
+(`rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`), com a superfície
 compacta da página como a atual (`showcase-todo.ir.json`, id
 `todo_panel`), e escreve o prompt num arquivo: 17.704 bytes. o mesmo
 exemplo, com `check <arquivo>`, passa uma resposta por
@@ -2144,7 +2144,7 @@ dos arquivos tomam o id do nó do app (`changes.file[src/lexer.rs]`) e os
 filhos nascem embaixo dele. o verifier aceita (regra identity: um nó com
 o id de um nó do app só manda as ações dele), e o host da superfície
 trata esse nó como do app, o caso da tela fixa escrita em IR
-(`crates/surface/src/project.rs`): não o projeta de novo, e os filhos
+(`rust/screen/src/project.rs`): não o projeta de novo, e os filhos
 novos ficam sob o nó do app na projeção. se é isso que uma superfície
 gerada ao lado do app deve fazer, a 3b-ii decide. nenhuma das duas é
 deste crate; estão no handoff.
@@ -2158,7 +2158,7 @@ projeção real do todo e do ide, pelo `propose::Llm` e pelo
 `propose_verified`.
 
 status: implementado. `cargo test -p claude-model -p propose` verdes,
-`./script/gate` verde com a perna urnaui, sobre a `main` @ ce9acee. a
+`./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ ce9acee. a
 `main` andou para 9299f2d depois (só o journal); o rebase é do
 orquestrador.
 
@@ -2186,7 +2186,7 @@ não mudou. nenhuma condição de parada disparou.
 
 #### o crate
 
-`crates/claude-model` (pacote `claude-model`, lib `claude_model`).
+`rust/claude` (pacote `claude-model`, lib `claude_model`).
 depende de `propose` (o trait) e de `serde_json` (o resultado do
 filho); nunca de `uir`, `sem`, engine, comps, showcase, ide ou de um
 cliente HTTP. `uir`, `sem` e `tempfile` só nos testes e no exemplo.
@@ -2289,8 +2289,8 @@ por chamada no todo, 0,111 no ide, um terço com o prompt em cache.
 
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
-| antes, `main` @ ce9acee (`./script/gate` neste worktree, antes do primeiro código) | 2372 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2454 |
-| depois, esta branch @ 524332f (`./script/gate`, saída 0) | 2385 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2467 |
+| antes, `main` @ ce9acee (`./tool/tasks/fullcheck.sh` neste worktree, antes do primeiro código) | 2372 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2454 |
+| depois, esta branch @ 524332f (`./tool/tasks/fullcheck.sh`, saída 0) | 2385 passam, 0 falhas, 13 ignorados | 82 passam, 0 falhas, 1 ignorado | 2467 |
 
 13 testes novos, todos no `claude-model`: 6 unitários e 7 com o `claude`
 falso. a contagem não cai. clippy `-D warnings`, `cargo fmt --check` e o
@@ -2329,7 +2329,7 @@ script. os testes de processo são `#[cfg(unix)]`.
 - `cargo clippy -p claude-model --all-targets -- -D warnings`,
   `cargo fmt -p claude-model --check`;
 - `cargo test -p engine --test arc_sync_guard`;
-- `./script/gate`, saída 0, com a perna urnaui;
+- `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui;
 - o exemplo com o `claude` de verdade: as quatro corridas e a repetição
   acima, e com `PLEV_CLAUDE=/nonexistent/claude` (erro "could not
   start", exit 1) e `--app nope` (uso, exit 2).
@@ -2340,7 +2340,7 @@ chamada: `cargo run -p claude-model --example propose -- --app todo
 
 #### seção de ADR
 
-`docs/ADR/proposers-propose-the-runtime-verifies.md`, seção nova no fim,
+`docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md`, seção nova no fim,
 "addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i,
 proposed)": contexto (a decisão 13), decisão (o crate, o processo, cada
 flag com o motivo, o filho fora da sessão, o prazo, os erros, o prompt
@@ -2349,7 +2349,7 @@ corridas), consequências (o que ele lê que as regras não leem, valores
 de agora em vez de listas, os ids tomados do app, o teto de orçamento, o
 que o `claude` escreve, o que a 3b-ii decide) e o que evitar.
 
-para o orquestrador (o `docs/ADR/README.md` é proibido aqui): no fim da
+para o orquestrador (o `docs/adr/README.md` é proibido aqui): no fim da
 linha do índice desse ADR, algo como "; addendum 3b-i (proposed): crate
 claude-model, `ClaudeCli` implementa `Model` pelo `claude -p` como
 processo (json, sem ferramentas, sem sessão salva, sem MCP, sem
@@ -2400,7 +2400,7 @@ configurações, system prompt próprio, fora da sessão do Claude Code,
 #### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  `docs/CHANGELOG.md` (crate novo e o exemplo); no `docs/arc/arc.toml`,
+  `docs/log/changelog.md` (crate novo e o exemplo); no `docs/ATLAS.toml`,
   a linha `claude-model = ["propose"]` em `[examples]` (só a entrada do
   crate era permitida; o exemplo está citado nela); no `AGENTS.md`,
   "## running", o comando do exemplo, se quiser;
@@ -2452,7 +2452,7 @@ esse modelo, fora da thread do app, com a espera visível e um cancelar.
 ### sonda da fase 3b-ii (antes do primeiro tipo, 2026-09-24)
 
 dois testes descartáveis (`surface_page/tests/probe.rs` no showcase e
-`crates/claude-model/tests/probe.rs`, rodados e jogados fora, nunca
+`rust/claude/tests/probe.rs`, rodados e jogados fora, nunca
 commitados) e uma chamada real pelo exemplo do `claude-model`.
 
 (a) na base, o `propose` da página roda na thread de quem despacha e já
@@ -2564,7 +2564,7 @@ com a espera e o custo visíveis e um jeito de cancelar; sem o `claude` na
 máquina, a página continua pelas regras.
 
 status: implementado. `cargo test -p showcase -p claude-model -p propose`
-verdes, `./script/gate` verde com a perna urnaui e a perna wasm,
+verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui e a perna wasm,
 `regress check` verde, sobre a `main` @ cc908560.
 
 #### commits
@@ -2612,7 +2612,7 @@ naquele caminho; um nome só é um arquivo em algum diretório do PATH.
 `asking::Claude::find` faz `ClaudeCli::new()` (o `PLEV_CLAUDE` ou
 `claude`) e guarda o cli quando `exists`; com ele o select oferece
 `rules` e `claude` e escolhe `claude`; sem ele oferece só `rules`. o
-`claude-model` entrou no `crates/showcase/Cargo.toml` na seção
+`claude-model` entrou no `apps/uigallery/Cargo.toml` na seção
 `cfg(not(any(wasm32, android, ios)))`, com `ide`, `git` e `wire`: no wasm
 o módulo `asking` compila sem thread e sem programa e `find` não acha
 nada. nos testes do próprio crate (`cfg(test)`) o programa nunca é
@@ -2760,7 +2760,7 @@ forma lean, sem os reads):
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ cc908560 (a árvore da base em detached HEAD neste worktree, `cargo test --workspace -- --list`: 2409 testes, 13 ignorados) | 2396 passam, 13 ignorados | 82 passam, 1 ignorado (a perna não muda: o urnaui é outro workspace) | 2478 |
-| depois, esta branch @ 00228db1 (`./script/gate`, saída 0) | 2404 passam, 0 falhas, 14 ignorados | 82 passam, 0 falhas, 1 ignorado | 2486 |
+| depois, esta branch @ 00228db1 (`./tool/tasks/fullcheck.sh`, saída 0) | 2404 passam, 0 falhas, 14 ignorados | 82 passam, 0 falhas, 1 ignorado | 2486 |
 
 9 testes novos: 3 no `claude-model` (2 unitários, 1 com o falso), 5 no
 showcase (4 com o falso, um deles pela porta real, e 1 do layout da
@@ -2773,10 +2773,10 @@ Surface não tem baseline; nenhuma outra página mudou).
 
 #### testes
 
-- `crates/claude-model/src/lib.rs` (+2): um `Cancel` clonado é o mesmo
+- `rust/claude/src/lib.rs` (+2): um `Cancel` clonado é o mesmo
   sinal, um novo não; `exists` acha `sh` no PATH, o falso pelo caminho,
   e não acha um nome inexistente, um arquivo inexistente ou um diretório;
-- `crates/claude-model/tests/cli.rs` (+1): uma chamada cancelada de
+- `rust/claude/tests/cli.rs` (+1): uma chamada cancelada de
   outra thread mata o filho que dormia (o pid some), para bem antes do
   prazo de 30 s, o sinal levantado impede a chamada seguinte de começar
   (nenhum `prompt.2`), e um sinal novo deixa a chamada seguinte correr;
@@ -2811,7 +2811,7 @@ Surface não tem baseline; nenhuma outra página mudou).
 - `cargo clippy -p showcase -p claude-model -p propose --all-targets -- -D warnings`;
 - `cargo fmt --check`;
 - `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
-- `./script/gate` e `cargo run -p showcase --example regress -- check`
+- `./tool/tasks/fullcheck.sh` e `cargo run -p showcase --example regress -- check`
   (abaixo);
 - o teste ignorado com o `claude` real (chamada 2), `--render Surface`
   em 1200x800 core e 390x844 hoff, e o exemplo do `claude-model` para as
@@ -2819,13 +2819,13 @@ Surface não tem baseline; nenhuma outra página mudou).
 
 #### seção de ADR
 
-`docs/ADR/proposers-propose-the-runtime-verifies.md`, seção nova no fim,
+`docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md`, seção nova no fim,
 "addendum, 2026-09-24: the page asks the Claude off the app's thread
 (task-69 phase 3b-ii, proposed)": contexto, decisão (o proponente como
 capacidade, a descoberta do programa, o trabalhador pelo contrato do
 dispatcher, um pedido por vez, a espera como estado, o cancel no laço do
 `run`, o prompt que não muda), custo (as três chamadas), consequências e
-o que evitar. para o orquestrador (o `docs/ADR/README.md` é proibido
+o que evitar. para o orquestrador (o `docs/adr/README.md` é proibido
 aqui): no fim da linha do índice, algo como "; addendum 3b-ii
 (proposed): a página Surface escolhe o proponente (`select` rules |
 claude, claude só onde `ClaudeCli::exists`), pede ao Claude numa thread
@@ -2889,8 +2889,8 @@ mata o filho".
 #### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  `docs/CHANGELOG.md` (a página Surface pede ao Claude, com espera e
-  cancel); na entrada `[crates.showcase]` do `docs/arc/arc.toml` a
+  `docs/log/changelog.md` (a página Surface pede ao Claude, com espera e
+  cancel); na entrada `[crates.showcase]` do `docs/ATLAS.toml` a
   dependência `claude-model` (desktop) e os módulos `asking` e `page`;
   o comentário de `app/headless.rs` não muda;
 - `Cargo.lock` mudou: o `showcase` passa a depender do `claude-model`
@@ -3058,7 +3058,7 @@ o que a sonda decide para o desenho:
 
 - 4e3595ae task-69f: a sonda da fase 4a no arquivo da task
 - ae7f113d task-69f: the silences model and the silencedetect parser,
-  tested first (`crates/showcase/src/model/silences.rs`, `silences/parse.rs`,
+  tested first (`apps/uigallery/src/domain/silences/mod.rs`, `silences/parse.rs`,
   `silences/probe.stderr` como fixture e semente, `silences/tests.rs`,
   11 testes; a linha `pub mod silences;` em `model/mod.rs`)
 
@@ -3073,7 +3073,7 @@ forma exaustiva em sete lugares: `page_content_height`, `page_event`,
 `Pane` novo não compila sem um braço em cada um. o briefing diz para
 parar antes de mexer no `dispatch.rs` "que está congelado no tamanho";
 o estado da árvore: o `dispatch.rs` saiu do `FROZEN` na fase 1 (o
-guard `crates/engine/tests/file_hygiene_guard.rs` não o lista mais) e
+guard `tool/tests/test_filepaths.rs` não o lista mais) e
 tem 338 linhas para o teto 639; os sete braços somam umas 30. o
 trabalhador do ffmpeg e a página, escritos sem o registro, seriam código
 morto para o clippy (`-D warnings`), então os commits 3 e 4 esperam a
@@ -3190,7 +3190,7 @@ tela fixa bem desenhada, contra a qual o checkpoint b compara a tela
 gerada (4b): uma página do grupo Apps Demo, operável por pessoa, agente
 pela porta e leitor de tela pelo mesmo dispatcher.
 
-status: implementado. `cargo test -p showcase` verde, `./script/gate`
+status: implementado. `cargo test -p showcase` verde, `./tool/tasks/fullcheck.sh`
 verde com a perna urnaui e a perna wasm, `regress check` verde, sobre a
 `main` @ 205d0e1d (a contagem abaixo).
 
@@ -3225,7 +3225,7 @@ png para `pipe:1` em 39 a 42 ms (12.978 bytes, 320x180), que o
 
 #### o modelo e o parser
 
-`crates/showcase/src/model/silences.rs` (303 linhas),
+`apps/uigallery/src/domain/silences/mod.rs` (303 linhas),
 `silences/parse.rs` (76), `silences/probe.stderr` (o stderr real da
 sonda, fixture e semente) e `silences/tests.rs` (11 testes). `Segment`
 (início, fim; `duration`, `middle`, `contains`), `Decision` (pending,
@@ -3246,7 +3246,7 @@ texto. nada de ffmpeg no modelo.
 
 #### o trabalhador
 
-`crates/showcase/src/view/apps/silences/worker.rs` (600 linhas, as do
+`apps/uigallery/src/views/apps/silences/fixed_page/worker.rs` (600 linhas, as do
 desktop num módulo `child` com `cfg`; fora do desktop `find` e `spawn`
 respondem "ffmpeg runs on the desktop only" sem thread nem processo).
 
@@ -3286,7 +3286,7 @@ respondem "ffmpeg runs on the desktop only" sem thread nem processo).
 
 #### a página
 
-`crates/showcase/src/view/apps/silences.rs` (341 linhas: a struct, os
+`apps/uigallery/src/views/apps/silences/mod.rs` (341 linhas: a struct, os
 eventos, Tab/setas/Escape, o `wake`), `silences/semantics.rs` (605: os
 ids, a projeção, o `execute`, o `dispatch` pelo `with_dispatcher` do
 todo, `act`, `focus`, `ask`, `settle`, a mensagem do status),
@@ -3356,9 +3356,9 @@ decisão; `apply_all` lê `silences.counts:pending` e fica desabilitado
 sem pendentes; os sliders leem o próprio `value`; `detect` fica
 desabilitado enquanto o trabalhador está ocupado (um segundo
 `detect_silence` é `Rejected(Disabled)` antes do `execute`). o golden
-`crates/uir/fixtures/showcase-silences.snapshot.json` é essa projeção
+`rust/plevir/tests/fixtures/uigallery-silences.snapshot.json` é essa projeção
 inteira, mantida igual ao app por
-`crates/showcase/tests/uir_fixture.rs::the_silences_projection_is_the_uir_fixture`
+`apps/uigallery/tests/plevir_fixture.rs::the_silences_projection_is_the_uir_fixture`
 (`UIR_BLESS=1` regrava).
 
 #### a medição
@@ -3383,7 +3383,7 @@ diz `settled` em 2 passos).
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 205d0e1d (o handoff da 3b-ii sobre a mesma árvore) | 2404 passam, 0 falhas, 14 ignorados | 82 passam, 1 ignorado | 2486 |
-| depois, esta branch @ f305e67e (`./script/gate`, saída 0) | 2428 passam, 0 falhas, 15 ignorados (109 suítes) | 82 passam, 0 falhas, 1 ignorado (6 suítes) | 2510 |
+| depois, esta branch @ f305e67e (`./tool/tasks/fullcheck.sh`, saída 0) | 2428 passam, 0 falhas, 15 ignorados (109 suítes) | 82 passam, 0 falhas, 1 ignorado (6 suítes) | 2510 |
 
 24 testes novos: 11 no modelo, 11 na página, 1 pela porta real e 1 o
 golden; e 1 ignorado (o ffmpeg de verdade). a contagem não cai. clippy
@@ -3438,7 +3438,7 @@ frame desenhado. `view/dispatch.rs`: 338 linhas antes, 363 depois.
   frames 320x180, detecta de novo com o vídeo já lá, preview de um
   trecho já decodificado, e escreve o PNG e a projeção com
   `SILENCES_OUT`; sem o programa diz "skipping" e passa;
-- `crates/showcase/tests/uir_fixture.rs` (+1): o golden dos silêncios;
+- `apps/uigallery/tests/plevir_fixture.rs` (+1): o golden dos silêncios;
 - os testes da galeria (`every_page_renders_a_scene`,
   `every_page_renders_in_short_viewports`, os invariantes de `PAGES`) e
   os 31 do `regress` passaram sem mudança.
@@ -3448,7 +3448,7 @@ frame desenhado. `view/dispatch.rs`: 338 linhas antes, 363 depois.
 - `cargo test -p showcase` (196 na lib com 6 ignorados, 8 no main, 2 no
   `uir_fixture`, 5 no `view_source`, 31 no `regress`);
 - `cargo clippy -p showcase --all-targets -- -D warnings`, `cargo fmt`;
-- `./script/gate` (abaixo) e `cargo run -p showcase --example regress --
+- `./tool/tasks/fullcheck.sh` (abaixo) e `cargo run -p showcase --example regress --
   check`;
 - o teste ignorado com o ffmpeg real, duas vezes (com e sem o vídeo já
   gerado); `--render Silences` em 1200x800 core (com `--semantics`) e
@@ -3459,12 +3459,12 @@ frame desenhado. `view/dispatch.rs`: 338 linhas antes, 363 depois.
 
 #### linha de ADR
 
-`docs/ADR/the-silences-app-is-the-fixed-screen.md` (proposed): o
+`docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md` (proposed): o
 contexto (o cenário da tese e o checkpoint b), o modelo puro, a semente,
 o ffmpeg só depois de um pedido de um ator (e por que não ao abrir), o
 `Started`/`complete` no `wake`, o dispatcher da galeria, a projeção, a
 tela, as consequências (a medição, o golden e as baselines), o que a 4b
-precisa e o que evitar. para o orquestrador (o `docs/ADR/README.md` é
+precisa e o que evitar. para o orquestrador (o `docs/adr/README.md` é
 proibido aqui): uma linha no índice, algo como "the silences app is the
 fixed screen (proposed): a página Silences do showcase é o app do editor
 de vídeo da tese e a tela fixa do checkpoint b; o modelo puro com o
@@ -3523,7 +3523,7 @@ filho só depois de `detect_silence`/`preview_segment`, `Started` ->
   largura é do shell (a página Surface mostra o mesmo) e não desta
   página;
 - o teste `the_agent_asks_the_person_who_declines_and_it_stops` de
-  `crates/ide/tests/lab.rs` (task-93) falhou uma vez no primeiro gate
+  `apps/agenteval/tests/experiment.rs` (task-93) falhou uma vez no primeiro gate
   desta branch ("the person's click at 1701 ms is in the session": casa
   um evento pelo milissegundo) e passou três vezes sozinho e no gate
   seguinte; é sensível à carga da máquina e não toca em nada desta
@@ -3533,10 +3533,10 @@ filho só depois de `detect_silence`/`preview_segment`, `Started` ->
 #### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  `docs/CHANGELOG.md` (a página Silences); na entrada `[crates.showcase]`
-  do `docs/arc/arc.toml` os módulos `model::silences` e
+  `docs/log/changelog.md` (a página Silences); na entrada `[crates.showcase]`
+  do `docs/ATLAS.toml` os módulos `model::silences` e
   `view::apps::silences` (com `worker`, `semantics`, `layout`, `draw`) e
-  a página; o `docs/catalog.md` se listar as páginas do Apps Demo;
+  a página; o `docs/ref/component-catalog.md` se listar as páginas do Apps Demo;
 - `Cargo.toml` e `Cargo.lock` não mudaram: nenhuma dependência nova (o
   `image` que decodifica o png já vinha pelo engine);
 - a página depende de `TodoPage::with_dispatcher` e `receipt` (públicos
@@ -3589,7 +3589,7 @@ decisão do brenner.
 
 um teste descartável do showcase (`tests/probe69g.rs`, rodado com
 `--nocapture` e jogado fora, nunca commitado) fez as três partes sobre o
-golden `crates/uir/fixtures/showcase-silences.snapshot.json` e sobre a
+golden `rust/plevir/tests/fixtures/uigallery-silences.snapshot.json` e sobre a
 página real montada sem janela (`stage_page`). nenhuma janela, nenhum
 ffmpeg, nenhum `claude`.
 
@@ -3628,7 +3628,7 @@ real, sem janela, desenhado em 900 px: 28 nós, `SceneNode::Image` no
 frame: zero. o `image` do vídeo desenha o que desenha hoje: o retângulo
 arredondado (`glass.surface`) com o label "the video" centrado, ligado
 em `[308, 138, 860, 140]` (140 é `card_min_w / 2`, a altura de bloco da
-fase 1). o `draw::image` de `crates/surface/src/draw.rs` é onde o host
+fase 1). o `draw::image` de `rust/screen/src/draw.rs` é onde o host
 precisaria perguntar o frame ao app antes de desenhar o label. e um
 achado que a sonda não esperava: os itens saíram como
 `review.cut[silences.cut[1\]]`, e os `text` do corte vazios. a projeção
@@ -3693,7 +3693,7 @@ termina. as duas telas (a fixa da 4a, a gerada) ficam prontas para o
 checkpoint b, que é decisão do brenner.
 
 status: implementado. `cargo test -p surface -p showcase -p propose -p
-uir` verde, `./script/gate` verde com a perna urnaui e a perna wasm,
+uir` verde, `./tool/tasks/fullcheck.sh` verde com a perna urnaui e a perna wasm,
 `regress check` verde (as duas baselines dos silêncios abençoadas, dito
 abaixo), sobre a `main` @ 4a7a8abf (a contagem abaixo). duas chamadas
 reais ao Claude, as duas verificadas.
@@ -3707,12 +3707,12 @@ branch `task/69g-silences-surface`:
   frame ref per instant and the range (a projeção; o golden e as duas
   baselines regravados, nada visual mudou)
 - af79fd3b task-69g: the frames trait and the image drawn from the app's
-  frame (`crates/surface`; as duas fixtures; `tests/frames.rs`)
+  frame (`rust/screen`; as duas fixtures; `tests/frames.rs`)
 - 191aa93e task-69g: the generated surface beside the fixed screen, on
   the same dispatcher (a página; o bloco compartilhado da Surface;
   `dispatch.rs` e `input.rs`; as baselines com a linha de intenção)
 - b30a5b81 task-69g: the rules find the media by structure and show a
-  frame per item (`crates/propose`; o prompt; o exemplo com `--app
+  frame per item (`rust/offers`; o prompt; o exemplo com `--app
   silences` e `--shown`)
 - e o commit dos adendos de ADR e deste handoff
 
@@ -3755,7 +3755,7 @@ nós.
 #### o trait
 
 `surface::Frames`, `fn frame(&self, source: &str) -> Option<ImageHandle>`
-(`crates/surface/src/host.rs`, ao lado do `Dispatch`), e `NoFrames`.
+(`rust/screen/src/host/mod.rs`, ao lado do `Dispatch`), e `NoFrames`.
 `Surface::render_with(c, rect, theme, &dyn Frames)` e
 `SurfaceHost::draw_closing_with` perguntam o frame de cada `image` pelo
 texto ligado no `source` quando desenham (`draw::picture`); `render` e
@@ -3781,7 +3781,7 @@ página pede um frame, a superfície desenha.
 
 #### as fixtures
 
-`crates/surface/tests/fixtures/showcase-silences-review.ir.json` (id
+`rust/screen/tests/fixtures/uigallery-silences-review.ir.json` (id
 `review`, "review the cuts"): o card com o `image` do vídeo
 (`silences.video:original`), quatro `stat` das contagens, a linha da
 detecção (o slider do limiar com `set_value`, detectar, aplicar todos), e
@@ -3807,7 +3807,7 @@ sem formatação) saiu da revisão.
 
 #### a página
 
-`crates/showcase/src/view/apps/silences/generated.rs` (o bloco: o
+`apps/uigallery/src/views/apps/silences/generative/mod.rs` (o bloco: o
 `SurfaceHost`, a superfície aberta, a linha de intenção da Surface, o
 botão de fechar, as metades) e `generated/page.rs` (o `Operable` sobre a
 página inteira, o padrão do `page.rs` da Surface sobre este app:
@@ -3839,7 +3839,7 @@ a projeção em dois níveis: `snapshot()` é o app (a tela fixa, o registro
 que a superfície verifica e lê; o golden), `projection()` é a página
 (o app, a superfície, a linha e o botão de fechar: o que o chrome e a
 porta veem). o golden por isso mudou de teste: de
-`crates/showcase/tests/uir_fixture.rs` (que só chega à página inteira)
+`apps/uigallery/tests/plevir_fixture.rs` (que só chega à página inteira)
 para `silences::tests::the_app_projection_is_the_uir_golden`
 (`UIR_BLESS=1` regrava).
 
@@ -3856,7 +3856,7 @@ com o resto), a linha volta a dizer nada.
 
 #### as regras
 
-`crates/propose`: uma quinta parte, mídia, achada pela estrutura: um nó
+`rust/offers`: uma quinta parte, mídia, achada pela estrutura: um nó
 com role `media` ou `image` cujos estados de texto são frame refs (o
 valor nomeia um nó do app com esse role, e um instante); cada estado é
 uma vista (`original`, `result`); as palavras da parte são as do nó e as
@@ -3885,7 +3885,7 @@ stat" lê o valor de um slider como número que o app mostra. estreitar
 isso (um número que uma ação do próprio nó recebe é do controle) é regra
 de outra fase.
 
-`crates/propose/tests/media.rs` (5 testes): a revisão (a vista do vídeo
+`rust/offers/tests/media.rs` (5 testes): a revisão (a vista do vídeo
 em cima, `cut_secs`, a lista com `image` do frame, `range`, `decision` e
 os dois botões, nenhum `text` de frame ref, nenhum `stat` de corte), a
 comparação (as duas vistas lado a lado, `original`/`result` sozinhas), a
@@ -3982,7 +3982,7 @@ no diretório acima.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ 4a7a8abf (o handoff da 4a sobre a mesma árvore) | 2428 passam, 0 falhas, 15 ignorados (109 suítes) | 82 passam, 1 ignorado (6 suítes) | 2510 |
-| depois, esta branch @ b30a5b81 (`./script/gate`, saída 0) | 2444 passam, 0 falhas, 16 ignorados (111 suítes) | 82 passam, 0 falhas, 1 ignorados (6 suítes) | 2526 |
+| depois, esta branch @ b30a5b81 (`./tool/tasks/fullcheck.sh`, saída 0) | 2444 passam, 0 falhas, 16 ignorados (111 suítes) | 82 passam, 0 falhas, 1 ignorados (6 suítes) | 2526 |
 
 16 testes novos passando (3 em `surface/tests/frames.rs`, 7 em
 `silences/tests/generated.rs`, 5 em `propose/tests/media.rs`, 1 em
@@ -4002,7 +4002,7 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
 
 #### testes
 
-- `crates/surface/tests/frames.rs` (3): a revisão sobre o golden com
+- `rust/screen/tests/frames.rs` (3): a revisão sobre o golden com
   `sources` iguais aos três refs, zero imagem sem frames, três com o
   provedor falso (uma imagem 32x18 por ref, gerada em memória com
   `load_image_rgba`), cada uma dentro do rect do seu nó e nunca ampliada,
@@ -4034,7 +4034,7 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
   ignorado com o ffmpeg real;
 - `silences/tests.rs` (+1, 2 mexidos): o golden do app; os dois de
   layout medindo a tela fixa no rect que as metades dão;
-- `crates/propose/tests/media.rs` (5, acima); `words.rs` (+1 caso);
+- `rust/offers/tests/media.rs` (5, acima); `words.rs` (+1 caso);
   `jobs.rs` (1: o frame ref e o instante);
 - os testes de antes: os 6 da Surface page (`surface_page::tests`, 29),
   os 12 das regras e os 4 do llm, os do `surface` (todos), e o golden do
@@ -4054,12 +4054,12 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
 
 #### seções de ADR
 
-- `docs/ADR/materialized-surfaces-from-verified-ir.md`, adendo datado
+- `docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md`, adendo datado
   "an image draws the frame the app holds (task-69 phase 4b, proposed)":
   o frame ref como forma do app, o trait `Frames`, `sources`, a imagem
   ajustada, a página, as consequências (as fixtures, as chaves na lista,
   o tamanho do frame falso, a largura da metade) e o que evitar;
-- `docs/ADR/proposers-propose-the-runtime-verifies.md`, adendo datado
+- `docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md`, adendo datado
   "the rules show the media by structure (task-69 phase 4b, proposed)":
   a quinta parte, as vistas e o `compare`, o frame de item como imagem,
   os números de item fora das contagens, a mídia no topo, o prompt, o
@@ -4067,12 +4067,12 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
   partes, as contagens dos sliders);
 - `plev-ir-typed-and-verified.md` e o schema não mudaram (forma (i)).
 - para o orquestrador (fora do que esta fase pode editar): no índice
-  `docs/ADR/README.md` os dois adendos; em
-  `docs/ADR/the-silences-app-is-the-fixed-screen.md` a projeção diz "the
+  `docs/adr/README.md` os dois adendos; em
+  `docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md` a projeção diz "the
   ids in order" onde agora é "the keys in order", e os estados
   `original`, `result`, `range` e `frame` entram na lista da seção "the
-  projection"; o `docs/CHANGELOG.md` (a superfície gerada na página
-  Silences); no `docs/arc/arc.toml` os módulos `view::apps::silences::{jobs,
+  projection"; o `docs/log/changelog.md` (a superfície gerada na página
+  Silences); no `docs/ATLAS.toml` os módulos `view::apps::silences::{jobs,
   generated, generated::page}` e o `tests/frames.rs` do `surface`.
 
 #### decisões
@@ -4164,13 +4164,13 @@ branch `task/69h-recorded-demo`, sobre a `main` em `a9edcbaa`.
 
 ### sonda da fase 4c (antes do primeiro tipo, 2026-09-24)
 
-(a) o showcase não grava. por leitura: `grep -rn "rec::\|Recorder\|Recording\|PLEV_RECORD"` em `crates/showcase/{src,Cargo.toml,examples}` não acha nada (o ide tem os três em `record.rs`, `recording.rs` e `lib.rs`); `crates/showcase/Cargo.toml` não depende de `rec` (chega a ele só por `ide`). por binário: `strings target/debug/showcase | grep -c PLEV_RECORD` dá 0 (o `ide`, 1) e "plev/sessions" não aparece. por um teste descartável: `PLEV_RECORD=1 showcase --render Silences --semantics probe-a.json` escreveu o json (17 nós, revisão `d3c64aa094fd9c52`) e `$TMPDIR/plev/sessions/` ficou sem nenhum `showcase-*` antes e depois.
+(a) o showcase não grava. por leitura: `grep -rn "rec::\|Recorder\|Recording\|PLEV_RECORD"` em `apps/uigallery/{src,Cargo.toml,examples}` não acha nada (o ide tem os três em `record.rs`, `recording.rs` e `lib.rs`); `apps/uigallery/Cargo.toml` não depende de `rec` (chega a ele só por `ide`). por binário: `strings target/debug/showcase | grep -c PLEV_RECORD` dá 0 (o `ide`, 1) e "plev/sessions" não aparece. por um teste descartável: `PLEV_RECORD=1 showcase --render Silences --semantics probe-a.json` escreveu o json (17 nós, revisão `d3c64aa094fd9c52`) e `$TMPDIR/plev/sessions/` ficou sem nenhum `showcase-*` antes e depois.
 
 os cinco pontos do shell do ide, por linha, e o ponto equivalente no shell do showcase (linhas da base):
 
 | o que | onde o ide grava | onde o showcase tinha o ponto e não gravava |
 | --- | --- | --- |
-| sink no dispatcher único | `crates/ide/src/main.rs:530` `recording::start` -> `recording.rs:16` `attach` -> `record.rs:129` `bench.add_sink(rec.sink())` | `crates/showcase/src/view/dispatch.rs:316` `add_sink` (o dispatcher do todo, emprestado à Surface e aos silêncios); só a porta chamava (`dispatch/agent.rs:56`) |
+| sink no dispatcher único | `apps/idestudio/src/main.rs:530` `recording::start` -> `recording.rs:16` `attach` -> `record.rs:129` `bench.add_sink(rec.sink())` | `apps/uigallery/src/views/dispatcher/mod.rs:316` `add_sink` (o dispatcher do todo, emprestado à Surface e aos silêncios); só a porta chamava (`dispatch/agent.rs:56`) |
 | a porta: quem observou o quê, e o estado depois de um ato | `main.rs:188` `ide::agent::serve_recorded(port, bench, compositor, recording)` -> `agent.rs:57` (`Served.recorder`, `Host::observed` em 112, o estado em 69) | `app.rs:179` `serve_agent` -> `view.serve_agent(port, compositor)` -> `dispatch/agent.rs:21` (`Served { view, compositor }`, sem `observed`, nada gravado) |
 | o estado depois de clique ou tecla que mudou algo, depois de um resultado do git, antes do frame | `main.rs:258` (git), `371` e `390` (`changed()` depois do clique), `keys.rs` (tecla), `record.rs:143` (antes do frame) | `app.rs:285` (git: só `invalidate`), `410` e `421` (cliques: só `invalidate`), `341` a `363` (teclas: só `invalidate`) |
 | cada frame com as ligações | `main.rs:441` `recording.frame(&bench, &compositor)` depois do `render_frame` | `app.rs:460` `render_frame` e a árvore da acessibilidade em `470`; nada gravado |
@@ -4179,7 +4179,7 @@ os cinco pontos do shell do ide, por linha, e o ponto equivalente no shell do sh
 
 o relógio: o ide grava em `bench.now()`, o relógio dos receipts. no showcase os receipts levam o relógio do dispatcher do todo (`apps/app/semantics.rs:259` e `279`, `clock.elapsed()`), lido só dentro de `with_dispatcher` (`pub(crate)`, `&mut self`); a `ShowcaseView` não tinha `now()`.
 
-(b) o showcase tem um modo servido sem janela: `ShowcaseView::serve_agent(&mut AgentPort, &Compositor)` sobre um `AgentPort::open_with` num diretório, a forma dos testes de `view/dispatch/agent.rs` e de `silences/tests/agent.rs` (este thread é o shell: serve, dá o tick, desenha num `Compositor` sem GPU; um thread é o agente pelo `wire::Client`). o roteiro rodou assim, por `crates/showcase/examples/demo.rs`, sem janela nenhuma e sem `PLEV_BACKGROUND`: 3,3 s, 17 observações, 10 requests, 101 frames desenhados. três coisas apareceram na corrida: as regras recusam a frase da tese ("then" e "review" não são palavras do app, o que a 4b já tinha dito), então pelas regras a revisão é "the list with the video and the counts" e a frase da tese fica para o Claude; em 1200 por 800 uma linha da revisão das regras (thumbnail, dois textos, dois botões) é mais larga que a metade e o botão de rejeitar fica em x = 1232..1341, fora da janela, onde um clique não chega (pelo id o agente chega), então a demo desenha em 1600 por 1000 (`--width`, `--height`); e a rolagem da página não resolve isso (é horizontal), o exemplo diz o retângulo no erro. com janela de verdade não foi preciso; se um dia for, `PLEV_BACKGROUND=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p showcase -- Silences` abre a janela por baixo e o mesmo roteiro cabe em `plev observe`/`act` contra `--app showcase`.
+(b) o showcase tem um modo servido sem janela: `ShowcaseView::serve_agent(&mut AgentPort, &Compositor)` sobre um `AgentPort::open_with` num diretório, a forma dos testes de `view/dispatch/agent.rs` e de `silences/tests/agent.rs` (este thread é o shell: serve, dá o tick, desenha num `Compositor` sem GPU; um thread é o agente pelo `wire::Client`). o roteiro rodou assim, por `apps/uigallery/examples/videos.rs`, sem janela nenhuma e sem `PLEV_BACKGROUND`: 3,3 s, 17 observações, 10 requests, 101 frames desenhados. três coisas apareceram na corrida: as regras recusam a frase da tese ("then" e "review" não são palavras do app, o que a 4b já tinha dito), então pelas regras a revisão é "the list with the video and the counts" e a frase da tese fica para o Claude; em 1200 por 800 uma linha da revisão das regras (thumbnail, dois textos, dois botões) é mais larga que a metade e o botão de rejeitar fica em x = 1232..1341, fora da janela, onde um clique não chega (pelo id o agente chega), então a demo desenha em 1600 por 1000 (`--width`, `--height`); e a rolagem da página não resolve isso (é horizontal), o exemplo diz o retângulo no erro. com janela de verdade não foi preciso; se um dia for, `PLEV_BACKGROUND=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p showcase -- Silences` abre a janela por baixo e o mesmo roteiro cabe em `plev observe`/`act` contra `--app showcase`.
 
 (c) o tamanho: a sessão da demo (3 s, 100 frames, 73 eventos) tem 186.837 bytes: eventos 81.078 (4 keyframes de até 51 nós, 10 passos de mudança, 40 estágios, 17 observações, 2 inputs), índice 6.812, chunks 67.984 (100 frames em 12 chunks, uns 680 B por frame), assets 21.085 (134: estilos de texto e glifos; 3 imagens só com o tamanho), ligações 9.600. o `rec` guarda de imagem `Asset::Live(LoweredAsset::Image(handle))`, o handle do atlas, e persiste só largura e altura (`Persisted::images_without_pixels = 3`): os pixels de um frame do vídeo nunca entram no arquivo, por construção (a retenção de pixels ficou fora da task-63 fase d, sem task). então 30 s custam o que os frames desenhados e os eventos custam, não o tempo: render on demand, a página parada não desenha; mil frames seriam uns 700 KB. a fixture cabe no repositório (187 KB, limite de 2 MB) e fica sem os pixels dos frames: leva a cena de cada frame (retângulos, textos, as imagens com tamanho) e as ligações; `Session::scene_at` lê a cena sem nó de imagem, `to_bytes` conta as três imagens sem pixels.
 
@@ -4214,7 +4214,7 @@ tamanho.
 
 #### a gravação (os cinco pontos)
 
-`crates/showcase/src/app/record.rs` (novo): `ENV`, `enabled`,
+`apps/uigallery/src/shell/window/record.rs` (novo): `ENV`, `enabled`,
 `default_dir`, `SAVE_KEYS`, `is_save_key`, `Recording` (`from_env`,
 `new`, `recorder`, `dir`, `attach`, `state`, `frame`, `input`,
 `next_path`, `save`, `catch_panics`) e os ganchos do shell (`App::record`,
@@ -4265,7 +4265,7 @@ verde no gate).
 
 #### o roteiro (o programa e cada passo)
 
-`crates/showcase/examples/demo/{main,shell,agent}.rs`:
+`apps/uigallery/examples/videos/{main,shell,agent}.rs`:
 
 ```text
 PLEV_RECORD=1 cargo run -p showcase --example demo -- [--out f.monster]
@@ -4311,7 +4311,7 @@ anterior). com o Claude na revisão, o mesmo roteiro com a frase da tese:
 
 #### a demo (arquivo, tamanho, o que tem dentro)
 
-`crates/showcase/fixtures/demo/silences-demo.monster`: 186.837 bytes
+`apps/uigallery/tests/fixtures/sessions/silences-demo.monster`: 186.837 bytes
 (eventos 81.078, índice 6.812, chunks 67.984, assets 21.085, ligações
 9.600); 73 eventos (4 keyframes, 10 mudanças, 40 estágios, 17
 observações, 2 inputs), 100 frames em 12 chunks, 134 assets, 3 imagens sem
@@ -4320,7 +4320,7 @@ chunks 255.517, assets 45.056, ligações 32.760, índice 32.472); 200
 eventos, 226 frames em 63 chunks: o contador da espera muda a cada segundo
 por 124 s, uma mudança e um frame por segundo.
 
-`crates/showcase/tests/demo.rs` abre os dois como o `plev-inspect`
+`apps/uigallery/tests/demo.rs` abre os dois como o `plev-inspect`
 (`rec::Session::open`) e confere por dentro: os 10 requests na ordem, com
 ator, alvo, ação e `completed` inteiros, o `close` por último com `closed
 = <superfície>`; as intenções como escritas; as observações só do agente,
@@ -4337,7 +4337,7 @@ gate roda o ffmpeg, o demo ou o claude.
 
 #### o que o plev-inspect disse
 
-`plev-inspect crates/showcase/fixtures/demo/silences-demo.monster`:
+`plev-inspect apps/uigallery/tests/fixtures/sessions/silences-demo.monster`:
 
 ```text
 session   rec 0.1.0, built from a9edcbaa
@@ -4388,7 +4388,7 @@ control proposed.silences.cut[4].apply_cut at +1.600s
   node          proposed.silences.cut[4].apply_cut: button "apply cut", disabled
   state         none of its own
   actions       activate (reads proposed.silences.cut[4].decision:text), disabled
-  source        crates/surface/src/project.rs:104:23, in build a9edcbaa
+  source        rust/screen/src/project.rs:104:23, in build a9edcbaa
   requests      0 touched it up to +1.600s (their target, or a state they read)
 
 control silences.cut[4] at +1.600s
@@ -4468,7 +4468,7 @@ task.
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
 | antes, `main` @ a9edcbaa (o handoff da 4b, integrado nela) | 2444 passam, 0 falhas, 16 ignorados (111 suítes) | 82 passam, 1 ignorado (6 suítes) | 2526 |
-| depois, esta branch @ 82db3ddf (`./script/gate`, saída 0) | 2451 passam, 0 falhas, 16 ignorados (113 suítes) | 82 passam, 0 falhas, 1 ignorado (6 suítes) | 2533 |
+| depois, esta branch @ 82db3ddf (`./tool/tasks/fullcheck.sh`, saída 0) | 2451 passam, 0 falhas, 16 ignorados (113 suítes) | 82 passam, 0 falhas, 1 ignorado (6 suítes) | 2533 |
 
 7 testes novos (4 unitários em `app/record.rs`, 1 em `tests/record.rs`, 2
 em `tests/demo.rs`) e 2 suítes; nenhum ignorado a mais; a contagem não
@@ -4502,17 +4502,17 @@ inspect` verdes.
 
 #### seção de ADR
 
-`docs/ADR/session-recording-replay-not-reexecution.md`, consequências,
+`docs/adr/recording/0037-session-recording-replay-not-reexecution.md`, consequências,
 um item datado "the showcase records itself too (added on 2026-09-24,
 task-69 phase 4c)": o que grava e onde, a demo e as fixtures, e os três
 achados sobre superfície gerada com o que cada um pede do checkpoint.
 escolhi o ADR da gravação, não o do inspector: os achados são sobre o que
 a sessão guarda (o request roteado, a revisão do snapshot só do app, a
 ligação duplicada), não sobre como o inspector lê. para o orquestrador
-(fora da lista): a linha do índice `docs/ADR/README.md` pode ganhar no
+(fora da lista): a linha do índice `docs/adr/README.md` pode ganhar no
 fim "; desde a task-69 fase 4c o showcase grava como o ide, e a demo do
-editor de vídeo é uma sessão em `crates/showcase/fixtures/demo`";
-`docs/arc/arc.toml`: `showcase::app::record`, o exemplo `demo` e
+editor de vídeo é uma sessão em `apps/uigallery/tests/fixtures/sessions`";
+`docs/ATLAS.toml`: `showcase::app::record`, o exemplo `demo` e
 `tests/{record,demo}.rs`; o CHANGELOG (`PLEV_RECORD=1` no showcase).
 
 #### decisões
@@ -4588,7 +4588,7 @@ editor de vídeo é uma sessão em `crates/showcase/fixtures/demo`";
 
 - o checkpoint b, do brenner: as duas telas lado a lado (a fixa da 4a e a
   gerada da 4b), agora com as duas demos gravadas para abrir com
-  `plev-inspect` (`crates/showcase/fixtures/demo/*.monster`) e regravar
+  `plev-inspect` (`apps/uigallery/tests/fixtures/sessions/*.monster`) e regravar
   com o exemplo; os achados 1 a 3 e a linha fora da janela em 1200 por
   800 são material para ele;
 - um mp4 da tela é decisão do brenner (a demo é a sessão `.monster`);
@@ -4648,18 +4648,18 @@ reproduzido em teste, na galeria de 1200x800 com o worker falso
 imprime): a coluna da superfície vai de x = 740 a 1160 (420 px); o card
 das regras tem `padding: lg` (20 px), então a linha do corte tem 380 px.
 
-(a) a linha. `crates/surface/src/layout.rs:138` passa o texto ao engine
+(a) a linha. `rust/screen/src/layout.rs:138` passa o texto ao engine
 como `Leaf::Text` sem largura mínima, e o `LayoutStyle` nasce com
-`flex_shrink: 1.0` e `flex_wrap: false` (`crates/engine/src/layout/types.rs:75`
+`flex_shrink: 1.0` e `flex_wrap: false` (`rust/engine/src/compose/layout/style.rs:75`
 e `:77`); o `stack` só põe direção, gap e alinhamento (`layout.rs:175` a
 `183`), nunca `flex_wrap` (só o `grid` quebra, `layout.rs:184` a `188`).
 no taffy 0.9.2 o mínimo automático de um item flex é o seu min-content
 (`compute/flexbox.rs:798` a `818`), e o engine mede o min-content de um
-texto com largura 0 (`crates/engine/src/layout/engine.rs:143`): o shaper
+texto com largura 0 (`rust/engine/src/compose/layout/solver.rs:143`): o shaper
 quebra dentro da palavra, e o texto encolhe até um glifo. os botões e a
 imagem são `Leaf::Fixed` com `flex_shrink = 0` (`layout.rs:133` a `137`),
 não encolhem, e numa linha que não quebra passam da borda. a linha das
-regras é um `stack` horizontal (`crates/propose/src/rules.rs:429`) com a
+regras é um `stack` horizontal (`rust/offers/src/rules.rs:429`) com a
 imagem `xl` (`:386`), cinco textos com `flex: 1` (`:395`) e três botões.
 os números: os cinco textos com 9 a 10 px de largura e 158 a 360 px de
 altura (um caractere por linha), quando a palavra mais longa de cada um
@@ -4670,38 +4670,38 @@ faixa com 9 px e os botões até x = 1348. não precisa mexer no engine
 nem no comps: a largura mínima do texto e a quebra da linha são estilos
 que a superfície já passa ao `LayoutEngine`.
 
-(b) o slider. `crates/surface/src/widget.rs:185` cria o
+(b) o slider. `rust/screen/src/widget.rs:185` cria o
 `Slider::new(0.0, 1.0, 0.0).sem(id)` sem rótulo; o `sync_slider`
 (`widget.rs:438` a `454`) põe faixa, passo, valor e `disabled`; o
 `draw.rs:141` dá à folha só a altura do controle (`ControlSize::Xs`, 36
 px) e o `draw.rs:330` chama `s.render`, que desenha trilho e botão e
-nenhum texto (`crates/comps/src/form/slider.rs:243` a `330`). o rótulo do
+nenhum texto (`rust/engine/src/widgets/form/slider.rs:243` a `330`). o rótulo do
 nó nunca é desenhado. a tela fixa desenha ela mesma o nome em
 `caption_sm`/`text_mid` e o valor em `caption_r`/`text`, alinhado à
 direita, numa linha acima do slider (`silences/draw.rs:209` a `247`,
 `silences/layout.rs:201` a `211`: a linha do rótulo, `spacing.xs`, o
 slider).
 
-(c) o número. `crates/surface/src/widget.rs:94`, `Value::Num(n) =>
+(c) o número. `rust/screen/src/widget.rs:94`, `Value::Num(n) =>
 n.to_string()`, no `text_of`, que serve o texto e o badge (`shown_text`,
 `draw.rs:63`), o stat (`draw.rs:84`) e o rótulo que o texto e o badge
 projetam (`project.rs:43`). a tela fixa formata com o que sabe do app:
 `"{:.0} dB"` (`silences/draw.rs:222`), `"{:.1} s"` (`:228`), `"{:.1} s of
 silence"` (`:319`). o IR não tem campo de unidade nem de formato (os
 `prop` do stat e do texto são só `Text`, `Int`, `Num`,
-`crates/uir/src/vocab.rs:246` e `:290`), e não precisa: a unidade já vem
+`rust/plevir/src/vocabulary.rs:246` e `:290`), e não precisa: a unidade já vem
 no rótulo, o do app ("threshold (dB)", "minimum silence (s)") e o do
 Claude ("duration (s)"). o formato mais justo sem tocar o IR: no máximo
 duas casas, sem zero à direita. o vocabulário fica como está; não há
 parada.
 
-(d) o prompt. `crates/propose/src/prompt.rs:271` a `306`: o pedido, a
+(d) o prompt. `rust/offers/src/prompt.rs:271` a `306`: o pedido, a
 intenção, as regras do verificador, a política, os componentes, o
 registro, a superfície de agora e o schema. nada sobre ordem, sobre o
 que vem primeiro, sobre repetir um controle; de rótulo, só a regra de
 acesso (`prompt.rs:49` a `53`: todo controle tem rótulo), que o Claude
 cumpriu e o slider não desenhou. o `SYSTEM`
-(`crates/claude-model/src/lib.rs:55` a `57`) só pede a resposta na forma
+(`rust/claude/src/lib.rs:55` a `57`) só pede a resposta na forma
 pedida: não precisa mudar.
 
 (e) o regress. `run::stage` (`examples/regress/run.rs:52` a `76`) chama
@@ -4767,7 +4767,7 @@ API pública: dois ganchos de encenação resolvem.
 #### cada defeito e a correção
 
 - **a linha encolhe o texto e os botões passam da borda.** em
-  `crates/surface/src/layout.rs`: um texto nunca fica mais estreito que a
+  `rust/screen/src/layout.rs`: um texto nunca fica mais estreito que a
   sua palavra mais longa (`longest_word`, `:102`, medida palavra a palavra
   com o estilo do texto, no cache do medidor; aplicada como `min_width` em
   `:214` e depois do `size`), e uma linha (`stack` horizontal, `is_row`,
@@ -4778,7 +4778,7 @@ API pública: dois ganchos de encenação resolvem.
   até nenhuma passar. encolher vem antes de quebrar: um texto longo ao lado
   de um botão continua na mesma linha e quebra entre as palavras (o teste
   `a_row_shrinks_its_text_before_it_wraps`). nada no engine nem no comps.
-- **o slider sem rótulo nem valor.** em `crates/surface/src/draw.rs:352`
+- **o slider sem rótulo nem valor.** em `rust/screen/src/draw.rs:352`
   (`slider`) e `widget.rs:477` a `498`: a folha do slider ganhou uma faixa
   acima do trilho, como a da tela fixa: o rótulo do nó à esquerda em
   `caption_sm` e `text_mid`, o valor do widget à direita em `caption_r` e
@@ -4792,7 +4792,7 @@ API pública: dois ganchos de encenação resolvem.
   um agente lê como nome); o estado do app guarda todas as casas. o IR não
   mudou.
 - **a proposta põe a tarefa por último.** em
-  `crates/propose/src/prompt.rs:73` (`READS`) e `:297`: logo depois da
+  `rust/offers/src/prompt.rs:73` (`READS`) e `:297`: logo depois da
   intenção e antes das regras, a seção "how the surface reads", a mesma
   para todo app: primeiro o que a intenção pede para fazer (a lista a
   revisar, a ação a rodar, o valor a mudar), depois o contexto (o arquivo,
@@ -4805,7 +4805,7 @@ API pública: dois ganchos de encenação resolvem.
 
 #### a fixture do Claude
 
-`crates/showcase/fixtures/ir/silences-review-claude.ir.json`: a
+`rust/plevir/tests/fixtures/silences-review-claude.ir.json`: a
 superfície `review` ("Review Silence Cuts") com os nós `review*` da
 observação da primeira rodada (`obs-claude.json`), na ordem: o título, o
 card do vídeo (arquivo, duração, frame original e resultado), o card da
@@ -4828,7 +4828,7 @@ detectar na dobra).
 
 #### o regress: a página num estado
 
-`crates/showcase/examples/regress/state.rs` (novo): um estado tem nome, e
+`tool/bench/regress/src/state.rs` (novo): um estado tem nome, e
 o nome faz as vezes da página na chave do baseline (`--page "<nome>"`,
 qualquer caixa). os dois de hoje (`STATES`, `:52`): "Silences, review by
 the rules" e "Silences, review by the Claude (fixture)". a encenação
@@ -4857,16 +4857,16 @@ proposer foi chamado.
 
 | vista | antes, a rodada real | antes, a mesma encenação com o código de antes | depois (baseline) |
 | --- | --- | --- | --- |
-| regras, 1200x800 core | `checkpoint-b/03-generated-rules.png` | `before/silences-review-by-the-rules@core@1200x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-rules@core@1200x800/frame.png` |
-| Claude, 1200x800 core | `checkpoint-b/04-generated-claude.png` | `before/silences-review-by-the-claude-fixture@core@1200x800/frame.png` | `crates/showcase/fixtures/regress/silences-review-by-the-claude-fixture@core@1200x800/frame.png` |
+| regras, 1200x800 core | `checkpoint-b/03-generated-rules.png` | `before/silences-review-by-the-rules@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1200x800/frame.png` |
+| Claude, 1200x800 core | `checkpoint-b/04-generated-claude.png` | `before/silences-review-by-the-claude-fixture@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture@core@1200x800/frame.png` |
 | regras, 1280x800 core e hoff | | | `.../silences-review-by-the-rules@{core,hoff}@1280x800/frame.png` |
 | Claude, 1280x800 core e hoff | | | `.../silences-review-by-the-claude-fixture@{core,hoff}@1280x800/frame.png` |
 
 o "antes" encenado está na scratchpad desta sessão
 (`/private/tmp/claude-501/-Users-nn-Dev-hoff-plevdev/ffe9cd40-0b24-414e-be8c-32dec2cf8b3d/scratchpad/before/`),
 fora do repositório; para refazer: `git checkout 253be85d --
-crates/surface/src`, `regress bless` dos dois estados com `--width 1200
---png --dir <dir>`, e `git checkout HEAD -- crates/surface/src`. ele
+rust/screen/src`, `regress bless` dos dois estados com `--width 1200
+--png --dir <dir>`, e `git checkout HEAD -- rust/screen/src`. ele
 repete a 03 e a 04 ponto por ponto, fora os frames (barras no lugar do
 testsrc) e os dados (a semente, cortes 1 e 2, no lugar da detecção real).
 
@@ -4893,10 +4893,10 @@ antes e depois a aceitar.
 
 | | workspace | perna urnaui | total |
 | --- | --- | --- | --- |
-| antes, `main` @ 5cfb0dfb (`./script/gate`, saída 0, 20:29:09 a 20:31:12) | 2736 passam, 0 falhas, 25 ignorados (138 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2821 |
-| depois, esta branch @ 25633cba (`./script/gate`, saída 0, 20:53:21 a 20:55:34) | 2747 passam, 0 falhas, 25 ignorados (139 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2832 |
+| antes, `main` @ 5cfb0dfb (`./tool/tasks/fullcheck.sh`, saída 0, 20:29:09 a 20:31:12) | 2736 passam, 0 falhas, 25 ignorados (138 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2821 |
+| depois, esta branch @ 25633cba (`./tool/tasks/fullcheck.sh`, saída 0, 20:53:21 a 20:55:34) | 2747 passam, 0 falhas, 25 ignorados (139 suítes) | 85 passam, 0 falhas, 1 ignorado (6 suítes) | 2832 |
 
-11 testes novos e uma suíte (`crates/surface/tests/checkpoint.rs`);
+11 testes novos e uma suíte (`rust/screen/tests/checkpoint.rs`);
 nenhum ignorado a mais; a contagem não cai. o gate inteiro verde nas duas
 vezes, com a perna urnaui (`../urna` resolve deste worktree) e o check
 wasm com `-D warnings`; `df -h /`: 19 GB livres antes, 18 GB depois.
@@ -4906,17 +4906,17 @@ frame desenhado.
 
 #### testes
 
-- `crates/surface/src/layout.rs` (2): a linha do corte das regras num card
+- `rust/screen/src/layout.rs` (2): a linha do corte das regras num card
   de 420 e de 280 px quebra, nada passa da linha e nenhum texto fica
   abaixo da palavra mais longa (vermelho com o código de antes); a linha
   encolhe o texto antes de quebrar.
-- `crates/surface/src/widget.rs` (1): o formato do número, doze casos, o
+- `rust/screen/src/widget.rs` (1): o formato do número, doze casos, o
   não finito e o inteiro.
-- `crates/surface/tests/checkpoint.rs` (2, suíte nova): o slider do
+- `rust/screen/tests/checkpoint.rs` (2, suíte nova): o slider do
   mixer com "volume" e "0.5" acima do trilho, e "0.75" depois de um
   arraste; um stat e um texto sobre os números do corte 1 mostram "2" e
   "3.02", na tela e no rótulo projetado, e o app guarda 3.018594.
-- `crates/propose/tests/llm.rs` (1): a seção vem depois da intenção e
+- `rust/offers/tests/llm.rs` (1): a seção vem depois da intenção e
   antes das regras, diz as três coisas, é a mesma no todo e no ide e não
   nomeia app nenhum.
 - `silences/tests/generated/checkpoint.rs` (4): a revisão das regras na
@@ -4974,7 +4974,7 @@ frame desenhado.
 
 #### linha de ADR (para o orquestrador; o ADR não está na minha lista)
 
-em `docs/ADR/materialized-surfaces-from-verified-ir.md`, consequências:
+em `docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md`, consequências:
 "uma linha encolhe o que encolhe e, se ainda passa da borda, quebra; um
 texto nunca fica mais estreito que a sua palavra mais longa; o slider
 mostra rótulo e valor acima do trilho; um número aparece com no máximo

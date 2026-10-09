@@ -17,7 +17,7 @@ was missing (task-79, thesis sections 2 and 27): a way for that data to
 leave the process, a codec that gives back the same frame, and a viewer
 that draws it.
 
-the probe (task-79 phase 1, `crates/rec/tests/scene_probe.rs`, the task
+the probe (task-79 phase 1, `apps/uigallery/tests/scene_probe.rs`, the task
 file) measured the gallery, 82 pages in two themes at 1280x800:
 
 - the agent transport (task-61) can carry it. a v1 app of before
@@ -295,7 +295,7 @@ primeiro frame da câmera também não sair; aceito pelo orquestrador.
 the phase 1 channel only showed. this phase adds the two things it left:
 input back through the semantic contract, and the redaction's gap. the
 probe is in the task file (`fase 2: a sonda`) and in
-`crates/showcase/tests/mirror_probe.rs`: over the gallery's 164 frames,
+`apps/uigallery/tests/mirror_probe.rs`: over the gallery's 164 frames,
 445 bound controls, none marked secret, 6 bound and not projected (the
 Git page's changes, stacks and diff), none on a hidden layer, and no
 overlapping pair whose bind order and stacking disagree.

@@ -309,7 +309,7 @@ pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
 
 ### testes
 
-- `crates/ide/tests/lab.rs`: os dois que existiam, sem mudança
+- `apps/agenteval/tests/experiment.rs`: os dois que existiam, sem mudança
   (`the_person_makes_the_agents_submit_stale_and_the_agent_recovers`,
   `without_the_person_the_agent_commits_the_task_with_no_refusal`), e
   quatro novos, um por combinação que faltava:
@@ -329,13 +329,13 @@ pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
 
 - `df -h /`: 15 GB livres antes do gate.
 - `cargo test -p ide` e `cargo test -p wire` verdes (`wire`: 76).
-- `./script/gate` verde depois do rebase na main (`0c1f629`), com a perna
+- `./tool/tasks/fullcheck.sh` verde depois do rebase na main (`0c1f629`), com a perna
   urnaui. depois: 2234 passed, 12 ignored (workspace 2152 e 11, urnaui 82
   e 1). a main em `0c1f629`: 2225, contada como o total de depois menos
   os 9 `#[test]` que a branch adiciona (`git diff 0c1f629`, nenhum
   removido, nenhum `#[ignore]` novo). os 2218 do briefing eram a main em
   `4163983`, antes da task-90.
-- `crates/engine/tests/file_hygiene_guard.rs` verde sem o `lab.rs` em
+- `tool/tests/test_filepaths.rs` verde sem o `lab.rs` em
   `FROZEN`. o maior arquivo do laboratório agora é o `finish.rs`, com 463
   linhas.
 

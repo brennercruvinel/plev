@@ -23,7 +23,7 @@ por pixel: `showcase --render Todo --theme hoff` duas vezes com o mesmo
 sha256 e o fundo medido em (48, 48, 48). o agente rodou a matriz inteira
 (78 páginas, dois temas, dois viewports, duas execuções, 624 renders, zero
 diferença) e comparou frames de monster com janela contra headless por
-sha256 no Metal: iguais. ADR: `docs/ADR/headless-render-shares-the-frame-path.md`.
+sha256 no Metal: iguais. ADR: `docs/adr/rendering/0034-headless-render-shares-the-frame-path.md`.
 
 o que entrou: `GpuContext::new_headless` e o construtor da janela terminam
 no mesmo `from_device`; `window::draw_frame`; `GpuContext::texture_render_view`;
@@ -40,7 +40,7 @@ o que ficou de fora e por quê:
   orquestrador: opção A (glifos como contorno via `SwashCache`, com a
   string no `aria-label` do grupo), em follow-up próprio com os arquivos
   `text/system.rs`, `text/fonts.rs` e `gpu/image.rs` liberados:
-  `docs/mission/steps/pending/task-66b-svg-export.md`.
+  `docs/log/steps/task-66b-svg-export.md`.
 - `--semantics` do showcase: só a mensagem de "ainda não"; entra agora que
   a 59 fase a está na `main` (fica no follow-up da 66b, que é pequeno).
 
@@ -56,10 +56,10 @@ limitações declaradas:
 - só verificado no Metal; outro adapter é a task-77.
 
 incidente de processo: ao parar o próprio gate, o agente rodou
-`pkill -f "script/gate"`, que matou um comando do agente da 59 no worktree
+`pkill -f "tool/tasks/fullcheck.sh"`, que matou um comando do agente da 59 no worktree
 vizinho. o estado final da 59 foi validado pelo gate do orquestrador e
 estava íntegro. a regra "processo se mata por pid exato, nunca por
-padrão" entrou em `docs/how-to/orchestrate-coding-agents-on-this-repo.md`.
+padrão" entrou em `docs/ref/orchestrate-coding-agents-on-this-repo.md`.
 
 ## objetivo
 
@@ -77,11 +77,11 @@ cena é renderizável sem janela).
 
 ## estado atual no código
 
-- `crates/engine/src/text/probe.rs` e o exemplo
-  `crates/engine/examples/text_probe`: wgpu offscreen para png, só texto,
+- `rust/engine/src/drawing/text/probe.rs` e o exemplo
+  `rust/engine/src/bin`: wgpu offscreen para png, só texto,
   escala configurável. existe porque o sistema às vezes nega captura de
   tela.
-- `crates/engine/tests/text_raster_pixels.rs` e
+- `rust/engine/tests/text_raster_pixels.rs` e
   `text_drawn_extent.rs` já medem pixel em teste.
 - o showcase aceita `[page] [theme] [scroll]` na linha de comando
   (`cargo run -p showcase`), com janela.
@@ -91,18 +91,18 @@ cena é renderizável sem janela).
 ## diagnóstico do orquestrador (2026-09-23)
 
 - `GpuContext::new_with_config(window, config)`
-  (`crates/engine/src/gpu/context.rs:77`) exige uma janela: cria a surface
+  (`rust/engine/src/drawing/gpu/context.rs:77`) exige uma janela: cria a surface
   a partir dela, tira largura e altura de `window.inner_size()`, escolhe o
   formato na capacidade da surface e cria todos os pipelines nesse
   `render_format` (a variante srgb). o campo `surface` já é
   `Option<wgpu::Surface>` (`context.rs:26`), então o resto do contexto não
   depende de ter uma surface.
-- `present_frame` (`crates/engine/src/window/frame.rs:29`) mistura duas
+- `present_frame` (`rust/engine/src/runtime/window/frame.rs:29`) mistura duas
   coisas: pegar a textura da surface (`get_current_texture`, tratamento de
   `Lost`/`Outdated`/`Timeout`, `surface_render_view`) e desenhar o frame
   (resolve do compositor, texto, imagens, passes de layer, composite na
   view, submit), e no fim `output.present()`.
-- `engine::text::probe` (`crates/engine/src/text/probe.rs`) é um segundo
+- `engine::text::probe` (`rust/engine/src/drawing/text/probe.rs`) é um segundo
   caminho offscreen: cria device, textura, pipeline de texto próprios e
   desenha só texto. é o que esta task substitui.
 
@@ -151,18 +151,18 @@ nenhuma para o render. a saída semântica usa 57 se já integrada.
 
 ## superfície sob responsabilidade
 
-`crates/engine/src/headless/**` (novo), `crates/engine/src/text/probe.rs`,
-`crates/engine/examples/{text_probe,monster_player}`, o entry point do
-showcase (`crates/showcase/src/main.rs` e o parse de argumentos em
-`crates/showcase/src/app.rs`, só a parte de CLI), proposta de ADR
-`docs/ADR/headless-render-shares-the-frame-path.md`.
+`rust/engine/src/drawing/headless/**` (novo), `rust/engine/src/drawing/text/probe.rs`,
+`demo/{text_probe,monster_player}`, o entry point do
+showcase (`apps/uigallery/src/main.rs` e o parse de argumentos em
+`apps/uigallery/src/shell/mod.rs`, só a parte de CLI), proposta de ADR
+`docs/adr/rendering/0034-headless-render-shares-the-frame-path.md`.
 
-proibido na onda 3: `crates/engine/src/compositor` (task-59),
-`crates/comps`, `crates/showcase/src/view/apps/app*` (task-59).
+proibido na onda 3: `rust/engine/src/drawing/compositor` (task-59),
+`rust/engine/src/widgets`, `apps/uigallery/src/views/apps/todo*` (task-59).
 
 ## interfaces que consome
 
-`present_frame` e os passes de `crates/engine/src/window`, `GpuContext`,
+`present_frame` e os passes de `rust/engine/src/runtime/window`, `GpuContext`,
 `TextSystem`, `Compositor`.
 
 ## interfaces que pode alterar
@@ -181,7 +181,7 @@ de assinatura pública em `window` precisa de aprovação.
 - frame de monster renderizado headless igual ao frame do player com
   janela (hash).
 - `--semantics` do todo (depois de 59) igual à projeção em processo.
-- `./script/gate` verde; wasm não compila o módulo headless (cfg).
+- `./tool/tasks/fullcheck.sh` verde; wasm não compila o módulo headless (cfg).
 
 ## testes esperados
 

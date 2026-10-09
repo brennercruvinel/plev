@@ -29,29 +29,29 @@ seções 8 (o exemplo do git client), 9 (receipts), 10 (handoff), 11 e 12
 
 ## estado atual no código
 
-- o caminho do commit: `crates/ide/src/views/commit_form.rs`
+- o caminho do commit: `apps/idestudio/src/interfaces/panels/commit_form.rs`
   (`hit_test_click` devolve `CommitFormAction::Commit`) ->
-  `crates/ide/src/views/workspace/input.rs:47` -> `submit_commit`
+  `apps/idestudio/src/interfaces/panels/layout/input.rs:47` -> `submit_commit`
   (`:259-267`) empurra `UiRequest::Commit { message }`
-  (`crates/ide/src/views/workspace/mod.rs:115-123`) -> `GitSession`
-  traduz para `GitCommand::Commit` (`crates/ide/src/session.rs:76`) ->
-  worker -> `crates/git/src/repo.rs:187` roda `git commit --message` e
+  (`apps/idestudio/src/interfaces/panels/layout/mod.rs:115-123`) -> `GitSession`
+  traduz para `GitCommand::Commit` (`apps/idestudio/src/repository/git.rs:76`) ->
+  worker -> `rust/gitdrv/src/repo.rs:187` roda `git commit --message` e
   `git rev-parse HEAD`.
 - "arquivos selecionados" no ide é o index: `FileEntry.staged`
-  (`crates/ide/src/views/unassigned_view.rs:51-55`). stage e unstage vão
+  (`apps/idestudio/src/interfaces/panels/unassigned.rs:51-55`). stage e unstage vão
   por `UiRequest::Stage`/`Unstage`.
 - `UnassignedView.selected_idx` é a linha em destaque (cursor). não entra
   no commit. é o exemplo perfeito de estado visual que não pode invalidar
   a ação.
 - a view é otimista e reconcilia depois de cada mutação com um refresh
-  completo (`crates/ide/src/session.rs:118-138`): por um instante a view
+  completo (`apps/idestudio/src/repository/git.rs:118-138`): por um instante a view
   pode divergir do index real. por isso a precondição é conferida em dois
   pontos (task-58): no dispatcher, contra a projeção, e no worker, contra
   o index real, logo antes do `git commit`.
 - o showcase embute o workspace do ide na página Git
-  (`crates/showcase/src/view/apps/git*`).
+  (`apps/uigallery/src/views/apps/git*`).
 - existe teste de repositório real com tempfile em
-  `crates/git/tests/real_repo.rs`.
+  `rust/gitdrv/tests/real_repo.rs`.
 
 ## fases a e b fechadas (2026-09-23)
 
@@ -60,7 +60,7 @@ orquestrador sobre a 63 e a 73 sem conflito, gate verde (1809 testes). os
 seis critérios de aceite passam em repositório real com o worker de
 verdade, mais o clique real contra `Actor::Test` e o commit duplicado que
 só commita uma vez; a suíte passou oito vezes seguidas. ADR:
-`docs/ADR/commit-checks-the-index-it-observed.md`.
+`docs/adr/semantics/0036-commit-checks-the-index-it-observed.md`.
 
 decisões aceitas: o nó de arquivo tem `unstaged` além de `staged` (uma
 path com mudança nos dois é uma linha por lado mas um nó só), e
@@ -94,13 +94,13 @@ sessão gravada (63).
 - o que já existe na `main` e muda esta task: o `sem` completo (contrato,
   dispatcher, `Operable::execute(id, req)`, `reject_at_truth`), a ligação
   no compositor, e todo widget do comps com `.sem(id)` e `project`
-  (`crates/comps`, adr semantic-binding-beside-the-scene). a regra "toda
+  (`rust/engine/src/widgets`, adr semantic-binding-beside-the-scene). a regra "toda
   ação lê o estado que ela muda" vale: `stage`, `unstage` e `discard` leem
   o `staged` do arquivo; `set_value` da mensagem lê `text`.
 - onde mora o `Operable`: um tipo só no lib do ide (nome sugerido
   `Workbench`) que junta `WorkspaceView`, `GitSession` e um `Dispatcher`.
-  o binário do ide (`crates/ide/src/main.rs`, hoje `App { workspace, git,
-  .. }`) e a página Git do showcase (`crates/showcase/src/view/apps/git/desktop.rs`)
+  o binário do ide (`apps/idestudio/src/main.rs`, hoje `App { workspace, git,
+  .. }`) e a página Git do showcase (`apps/uigallery/src/views/apps/git/desktop/mod.rs`)
   passam a segurar esse tipo, sem duplicar a ligação. a execução
   assíncrona guarda o `RequestId` que `execute` recebeu, e o
   `GitSession::apply` fecha o receipt (`complete` ou `reject_at_truth`)
@@ -132,13 +132,13 @@ sessão gravada (63).
 2. o clique em Commit, a tecla (`commit::Submit` do keymap) e o stage e
    unstage passam a ser `Request` com `Actor::Human` pelo dispatcher. o
    handler é um só.
-3. `crates/git` ganha o commit condicional:
+3. `rust/gitdrv` ganha o commit condicional:
    `GitCommand::CommitIf { message, expect_staged: BTreeSet<String> }`. o
    worker lê o status real, compara o conjunto staged com o esperado e só
    então commita; se diferir, devolve a rejeição com o delta real
    (`GitEvent::CommitRejected { added, removed }`). o `GitEvent::Committed`
    passa a carregar também a lista de arquivos do commit (`git show
-   --name-only`). mudança de API do `crates/git`, aprovada aqui pelo
+   --name-only`). mudança de API do `rust/gitdrv`, aprovada aqui pelo
    programa porque o ide é o único consumidor.
 4. o receipt: `Accepted` no dispatcher, `Executing` quando o comando sai
    para o worker, `Completed { commit, files }` ou `Rejected(Stale)` no
@@ -154,8 +154,8 @@ sessão gravada (63).
    `Modal` de comps).
 3. o shell do ide abre o `AgentPort` da task-61 quando ela estiver
    integrada. (2026-09-23: não abre. o binário `ide` não usa `wire`
-   (`crates/ide/src/main.rs`); quem serve o `Workbench` pela porta é o
-   `ide-lab` da fase c (`crates/ide/src/bin/lab/lab.rs`). a porta no
+   (`apps/idestudio/src/main.rs`); quem serve o `Workbench` pela porta é o
+   `ide-lab` da fase c (`apps/agenteval/src/arms/plev.rs`). a porta no
    shell de janela do ide continua por fazer.)
 
 ### fase c: o experimento do plev (depende de 61 e 63)
@@ -198,14 +198,14 @@ c.
 
 ## superfície sob responsabilidade
 
-- `crates/ide/**`
-- `crates/git/**`
-- `crates/showcase/src/view/apps/git*` (só se a mudança de API do ide
+- `apps/idestudio/**`
+- `rust/gitdrv/**`
+- `apps/uigallery/src/views/apps/git*` (só se a mudança de API do ide
   exigir; mínimo)
-- proposta de ADR `docs/ADR/commit-checks-the-index-it-observed.md`
+- proposta de ADR `docs/adr/semantics/0036-commit-checks-the-index-it-observed.md`
 
-proibido: `crates/sem`, `crates/engine/src/accessibility`,
-`crates/engine/src/window`, o crate de protocolo da task-61.
+proibido: `rust/accord`, `rust/engine/src/control/accessibility`,
+`rust/engine/src/runtime/window`, o crate de protocolo da task-61.
 
 ## interfaces que consome
 
@@ -215,8 +215,8 @@ fase c); API de gravação (63, fase c).
 
 ## interfaces que pode alterar
 
-`crates/git` (`GitCommand`, `GitEvent`, `Repo::commit` ou um irmão
-condicional), `crates/ide` inteiro.
+`rust/gitdrv` (`GitCommand`, `GitEvent`, `Repo::commit` ou um irmão
+condicional), `apps/idestudio` inteiro.
 
 ## critérios de aceitação
 
@@ -239,7 +239,7 @@ testes em repositório git real num tempdir:
    arquivo é descartado.
 
 e ainda: o clique real e o `Actor::Test` produzem o mesmo resultado; a
-página Git do showcase continua funcionando; `./script/gate` verde.
+página Git do showcase continua funcionando; `./tool/tasks/fullcheck.sh` verde.
 
 ## riscos e perguntas abertas
 
@@ -252,7 +252,7 @@ página Git do showcase continua funcionando; `./script/gate` verde.
 ## commits esperados
 
 1. `task-62: projeção semântica do workspace do ide`
-2. `task-62: commit condicional no crates/git com o delta real`
+2. `task-62: commit condicional no rust/gitdrv com o delta real`
 3. `task-62: ide implementa Operable; clique e tecla pelo dispatcher`
 4. `task-62: receipt do commit até o sha e os arquivos`
 5. `task-62: testes em repositório real (stale, aceito, cursor, ponto de verdade, handoff)`
@@ -265,7 +265,7 @@ página Git do showcase continua funcionando; `./script/gate` verde.
 - o modelo semântico precisar de role, value ou campo que `sem` não tem;
 - o `WorkspaceView` não conseguir ser `Operable` sem reestruturar o ide
   além do escopo;
-- a mudança no `crates/git` afetar outro consumidor.
+- a mudança no `rust/gitdrv` afetar outro consumidor.
 
 ## fase c: desenho do experimento (revisão do orquestrador, 2026-09-23)
 
@@ -277,22 +277,22 @@ agente se recupera, e a sessão gravada explica e confere com o git real.
 
 ### o que já existe e o que falta
 
-- existe, na `main`: o `Workbench` (`crates/ide/src/workbench/mod.rs`)
+- existe, na `main`: o `Workbench` (`apps/idestudio/src/capability/mod.rs`)
   com `snapshot()`, `dispatch(req)`, `add_sink`, `apply(GitEvent)`,
   `render(compositor)`; o commit conferido em dois pontos
   (`truth.rs`, `GitCommand::CommitIf`); o rig de repositório real
-  (`crates/ide/tests/support/mod.rs`: `Rig::new(files, staged)`, `until`,
+  (`apps/idestudio/tests/support/mod.rs`: `Rig::new(files, staged)`, `until`,
   `git(args)`, `head`, `head_files`); o `AgentPort` com `open_with(Config,
-  wake)` e `drain(&mut dyn Host)` (`crates/wire/src/port.rs`), o `Host`
+  wake)` e `drain(&mut dyn Host)` (`rust/socket/src/port.rs`), o `Host`
   com `project`, `bounds`, `dispatch`, `add_sink`
-  (`crates/wire/src/server.rs:33`); o `plev observe`/`plev act` (que sem
+  (`rust/socket/src/server.rs:33`); o `plev observe`/`plev act` (que sem
   `--from-revision` observa o alvo antes e age sobre o estado de agora);
   o `Recorder` com `sink()`, `observed(t, actor, scope, rev)`,
   `snapshot(t, &snap)`, `input(t, kind, at, target)`, `frame(t,
   &compositor)`, `persist(path)`, `stats()` e a leitura `Session::open`,
   `state_at`, `receipts_for`; o `headless::Renderer::draw(&mut
   compositor, clear)` pelo mesmo caminho de frame da janela.
-- falta: o ide não depende de `wire` nem de `rec` (`crates/ide/Cargo.toml`);
+- falta: o ide não depende de `wire` nem de `rec` (`apps/idestudio/Cargo.toml`);
   ninguém chama `Recorder::observed` fora dos testes do `rec`; o `Host`
   não avisa o app de uma observação servida; o `AgentPort` não conta
   bytes nem mensagens; o relógio do `Workbench` (`now()`, `mod.rs:315`) é
@@ -300,7 +300,7 @@ agente se recupera, e a sessão gravada explica e confere com o git real.
 
 ### o laboratório: `ide-lab`
 
-um binário headless no crate do ide (`crates/ide/src/bin/lab/`, entrada
+um binário headless no crate do ide (`apps/agenteval/src/`, entrada
 em `main.rs`), sem janela, que é o app sob experimento e o experimentador
 ao mesmo tempo:
 
@@ -360,7 +360,7 @@ vez de esconder.
   `submit` com `from_revision`, recebe `stale`, observa com `since`,
   tenta de novo, conclui, observa `stacks`. é o teste do laboratório e da
   intervenção antes de gastar token, roda no gate
-  (`crates/ide/tests/lab.rs`), e mede o custo puro do protocolo (latência
+  (`apps/agenteval/tests/experiment.rs`), e mede o custo puro do protocolo (latência
   por ida e volta, bytes) sem o ruído do LLM.
 - **A, agente LLM pelo contrato.** um agente novo, sem contexto do repo,
   recebe a tarefa e só dois comandos: `plev observe` e `plev act`, com o
@@ -428,21 +428,21 @@ resultado. o agente do laboratório nunca é o agente do experimento.
 
 ### superfície da fase c
 
-- `crates/ide/**` (o bin em `src/bin/lab/`, `Cargo.toml` com `wire` e
+- `apps/idestudio/**` (o bin em `src/bin/lab/`, `Cargo.toml` com `wire` e
   `rec`, `tests/lab.rs`, `Workbench::now` público se preciso).
-- `crates/wire/src/{server.rs,port.rs,lib.rs}`, só aditivo: um método
+- `rust/socket/src/{server.rs,port.rs,lib.rs}`, só aditivo: um método
   `Host::observed(&mut self, actor: &Actor, scope: Option<&SemId>,
   revision: Revision)` com implementação padrão vazia, chamado pelo
   servidor depois de servir uma observação; contadores de tráfego
   (`Traffic`) lidos pelo app. os testes do `wire` continuam verdes.
 - este arquivo (protocolo e como rodar).
-- proibido: `crates/sem`, `crates/rec` (consumir só; o que faltar é
-  parada e reporte), `crates/engine`, `crates/comps`, `crates/git`,
-  `crates/showcase`.
+- proibido: `rust/accord`, `rust/record` (consumir só; o que faltar é
+  parada e reporte), `rust/engine`, `rust/engine/src/widgets`, `rust/gitdrv`,
+  `apps/uigallery`.
 
 ## como rodar a fase c
 
-o laboratório é o binário `ide-lab` (`crates/ide/src/bin/lab/`, unix
+o laboratório é o binário `ide-lab` (`apps/agenteval/src/`, unix
 only; em outro alvo imprime e sai com 3). ele monta o repositório do
 experimento num diretório temporário, sobe o `Workbench` sem janela com
 o worker de git de verdade, abre o `AgentPort`, liga o `Recorder` no
@@ -473,7 +473,7 @@ cargo run -p ide --bin ide-lab -- --arm scripted \
 cargo run -p ide --bin ide-lab -- --arm scripted --human none --out <dir>
 ```
 
-é o mesmo que `crates/ide/tests/lab.rs` roda no gate. mede o protocolo
+é o mesmo que `apps/agenteval/tests/experiment.rs` roda no gate. mede o protocolo
 puro: bytes, idas e voltas, custo do contrato e da gravação, sem o ruído
 do llm.
 
@@ -866,7 +866,7 @@ o que as corridas mostraram além das hipóteses, dito pelos três agentes:
 - **não se sabe por que um controle está desabilitado** (`commit.submit`
   só diz `enabled: false`), nem o que `constrained` restringe.
 
-decisão do orquestrador (modo autônomo, `docs/mission/autonomy.md`): a
+decisão do orquestrador (modo autônomo, `docs/ref/autonomy.md`): a
 hipótese central continua de pé com o app corrigido, e as correções
 aparecem no comportamento dos agentes. nenhuma condição de parada. a
 onda 5 abre. antes, duas correções pequenas do que esta rodada achou: o
@@ -874,7 +874,7 @@ aviso sem segunda pessoa e a revisão no `completed`.
 
 ## fase c, terceira rodada (a regra da task-89, 2026-09-24)
 
-severidade P1 (`docs/mission/autonomy.md`): a conclusão do checkpoint a
+severidade P1 (`docs/ref/autonomy.md`): a conclusão do checkpoint a
 está em uso (a onda 5 abriu com ela), e o inspector mostrou que o acerto
 do A2 da primeira rodada dependeu da ordem dos eventos. o submit tinha se
 apoiado num `changes:staged` que o agente nunca viu. a task-89 fechou

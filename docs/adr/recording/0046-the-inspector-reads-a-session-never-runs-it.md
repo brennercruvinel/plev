@@ -36,7 +36,7 @@ line over it.
 
 ### a crate that only reads
 
-`crates/inspect`: the lib `inspect` and the bin `plev-inspect`, depending on
+`rust/replay`: the lib `inspect` and the bin `plev-inspect`, depending on
 `rec` and `sem` (and serde, serde_json for the json form). `Inspector`
 borrows a `rec::Session` and holds nothing else: no app, nothing that
 dispatches, no recorder. its sources name none of those types, and a test
@@ -170,7 +170,7 @@ carried was outside that scope.
 
 ## the window (phase b, 2026-09-25)
 
-`crates/inspector` (the lib and the bin `plev-inspector <session.monster>`)
+`apps/inspector` (the lib and the bin `plev-inspector <session.monster>`)
 shows this model and never works an answer out again. it is its own crate,
 not a bin of `inspect`: the reader keeps its edges (`rec`, `sem`, serde),
 and the window adds `comps` and `engine` (winit through it), nothing from
@@ -198,7 +198,7 @@ outside the workspace.
   the pick) go to the view's handlers, never through a dispatcher: the
   inspector must never create a request, so they stand outside the rule
   that a click goes through the dispatcher
-  (docs/how-to/code-against-the-plev-engine.md, definition of done, 6),
+  (docs/ref/code-against-the-plev-engine.md, definition of done, 6),
   and they project nothing for accessibility yet.
 - the proof is in tests: the sources name nothing that runs, records or
   builds a request, and no socket, process, port or accessibility bridge;

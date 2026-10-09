@@ -7,5 +7,5 @@ frase`. cada linha restante é uma frase do corpus, curta e legível, escrita
 são decodificados pelo teste, para que marca combinante, ZWJ e VS16 fiquem
 visíveis no arquivo.
 
-o leitor é crates/engine/tests/text_audit.rs; o golden do shaping com as
-fontes embutidas é crates/engine/tests/text_audit.txt.
+o leitor é rust/engine/tests/text_audit.rs; o golden do shaping com as
+fontes embutidas é rust/engine/tests/fixtures/text_audit.txt.

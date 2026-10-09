@@ -401,14 +401,14 @@ repositório. tudo nele vale para os agentes deste programa, em especial:
   reduced motion, contraste wcag e cross-density são requisitos nativos.
 - nenhum literal visual em widget ou tela de app: cor, raio, altura,
   padding, sombra e breakpoint são tokens de `Theme`; número que não é
-  token vira token em `crates/engine/src/theme/scales.rs` na mesma mudança.
+  token vira token em `rust/engine/src/styling/theme/scales.rs` na mesma mudança.
 - as cinco regras de "design for ranges, not screens": fluid scale,
   component-driven responsiveness, intrinsic layout, relative and semantic
   values, progressive adaptation. valem para toda mudança visível, em
   qualquer plataforma, e entram no aceite da task.
 - antes de implementar, conferir se o engine ou o comps já tem a
   capacidade. widget que falta vai para o comps, nunca para o app.
-- o gate: `./script/gate` (test, clippy `-D warnings`, fmt, wasm check,
+- o gate: `./tool/tasks/fullcheck.sh` (test, clippy `-D warnings`, fmt, wasm check,
   perna urnaui quando `../urna` existe). todo commit que o orquestrador
   integra passa nele.
 - as convenções em `.contracts/.mantras/.code/.lang/.rust/rust-conventions.md`:
@@ -439,7 +439,7 @@ aplicados no AGENTS.md e no rust-conventions:
 
 ## os manuais
 
-os quatro `docs/how-to/*.md` estavam desatualizados e foram reconstruídos
+os quatro `docs/ref/*.md` estavam desatualizados e foram reconstruídos
 a partir da nova missão em 2026-09-23:
 
 - `code-against-the-plev-engine.md`: o manual do engine, agora com a
@@ -463,15 +463,15 @@ close-out.
 
 ## arquivo da task
 
-- a task existe em `docs/mission/steps/pending/` antes de qualquer código.
+- a task existe em `docs/log/steps/` antes de qualquer código.
 - quando o agente começa, o orquestrador move o arquivo para `ongoing/`.
 - ao integrar, o orquestrador move para `checked/` como `task-NN-done.md`,
   com o estado final escrito (o que foi feito, o que ficou de fora, links
   para ADR e commits).
-- decisão técnica relevante vira ADR em `docs/ADR/` (índice em
-  `docs/ADR/README.md`) no mesmo change set da integração.
-- estrutura, crate ou contrato novo atualiza `docs/arc/arc.toml` e o
-  `README.md`; o `crates/engine/tests/arc_sync_guard.rs` falha o build se um
+- decisão técnica relevante vira ADR em `docs/adr/` (índice em
+  `docs/adr/README.md`) no mesmo change set da integração.
+- estrutura, crate ou contrato novo atualiza `docs/ATLAS.toml` e o
+  `README.md`; o `tool/tests/test_repoaudit.rs` falha o build se um
   crate do workspace não estiver nos dois.
 
 ## docs escritos por agentes
@@ -488,7 +488,7 @@ retas.
 ## sequência por task
 
 1. o orquestrador confere o critério de aceite da task item por item
-   (`docs/mission/autonomy.md`, "contra gasto de tokens"): se já bate, a
+   (`docs/ref/autonomy.md`, "contra gasto de tokens"): se já bate, a
    task fecha e não há briefing; se não, escolhe o item que esta rodada
    fecha. confere também que as dependências estão integradas na `main` e
    que a superfície está livre (seção 8 do programa).
@@ -532,11 +532,11 @@ critério de aceite que esta rodada fecha (copiado do arquivo da task, item
 por item; sem item, sem briefing):
 
 leia antes de tocar em código (só as seções citadas, não o arquivo inteiro):
-  docs/mission/generative-runtime-guidelines.md
-  docs/mission/steps/ongoing/task-NN-<slug>.md, seções <quais>
+  docs/ref/generative-runtime-guidelines.md
+  docs/log/steps/task-NN-<slug>.md, seções <quais>
   .contracts/.agents/AGENTS.md
   .contracts/.mantras/.code/.lang/.rust/rust-conventions.md
-  docs/how-to/code-against-the-plev-engine.md (quando toca UI ou render)
+  docs/ref/code-against-the-plev-engine.md (quando toca UI ou render)
   <ADRs e arquivos específicos>
 
 diagnóstico (arquivo:linha, o mecanismo, não o sintoma):
@@ -553,7 +553,7 @@ aceite:
 testes obrigatórios:
 validação obrigatória (comandos):
   cargo test -p <crate>
-  ./script/gate
+  ./tool/tasks/fullcheck.sh
 
 commits: pequenos, na branch da task, mensagem começando com task-NN
 pare e reporte se: <as decisões que não são do agente>

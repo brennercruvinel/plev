@@ -1,6 +1,6 @@
 //! The Claude as the proposer of the line (task-96), the workbench's side
 //! of `crate::generated::claude`, as the Silences page asks it
-//! (`crates/showcase/src/view/apps/silences/generated/page.rs`): `propose`
+//! (`apps/uigallery/src/views/apps/silences/generative/page.rs`): `propose`
 //! answers `Execution::Started` and a worker asks the Claude off the
 //! workbench's thread; the workbench's wake looks at it, and when the
 //! answer arrives the surface opens (or takes its form in place) and the

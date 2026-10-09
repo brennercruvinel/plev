@@ -12,7 +12,7 @@
 //! ```
 //!
 //! A baseline is one (page, theme, viewport) under
-//! `crates/showcase/fixtures/regress` (`baseline`): the page's projection,
+//! `tool/bench/regress/baselines` (`baseline`): the page's projection,
 //! every layer under a stable name with a stable content hash (`scene`),
 //! the bound controls. `bless` stages each page without a window
 //! (`showcase::app::stage_page`, a fixed clock), or a page in a state

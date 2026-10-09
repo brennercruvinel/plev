@@ -1,5 +1,5 @@
 //! a race the rerun at rest cannot see, caught by a recorded session
-//! (task-80 demo 3: the task-84 race, `crates/ide/src/session.rs`).
+//! (task-80 demo 3: the task-84 race, `apps/idestudio/src/repository/git.rs`).
 //!
 //! the ide's fixture settles by draining every refresh owed before each
 //! act (`Lab::settle`), so when the next act leaves, no read is in

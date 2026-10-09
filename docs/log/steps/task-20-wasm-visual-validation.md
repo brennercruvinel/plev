@@ -28,8 +28,8 @@ validar rendering WASM/webgpu no browser.
 fechada pelo checklist, item por item. o `trunk` e o `wasm-bindgen-cli
 0.2.123` (a versão do `Cargo.lock`) foram instalados com o ok do brenner.
 
-- validação visual no chrome com WebGPU: `script/capture-web` (task-77)
-  serve o `web/dist` do `script/web build --release` e abre no chromium
+- validação visual no chrome com WebGPU: `tool/tasks/screencap.sh web` (task-77)
+  serve o `web/dist` do `tool/tasks/webtarget.sh build --release` e abre no chromium
   headless do playwright com WebGPU no Metal (adapter `apple / metal-3`,
   não o swiftshader).
 - idêntico ao native: 12 capturas iguais em todo byte ao frame do desktop
@@ -40,7 +40,7 @@ fechada pelo checklist, item por item. o `trunk` e o `wasm-bindgen-cli
   - o `trunk` recusava o build: o cdylib (o `.so` do android) e o bin
     `showcase` têm o mesmo nome, e o trunk escolhe o artefato pelo nome
     (`trunk-0.21.14/src/pipelines/rust/mod.rs:825-857`). a web ganhou um
-    bin próprio, `showcase-web` (`crates/showcase/src/main_web.rs`), e o
+    bin próprio, `showcase-web` (`apps/uigallery/src/bin/web.rs`), e o
     pacote um `default-run = "showcase"`.
   - o app morria ao abrir: o worker do Silences pedia
     `std::env::temp_dir()`, que entra em pânico no wasm32.

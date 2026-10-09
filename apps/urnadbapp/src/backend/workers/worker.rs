@@ -4,7 +4,7 @@
 //! Commands flow in through an mpsc channel, events flow out through a
 //! second channel the UI drains with `try_recv` (from the event loop's
 //! `about_to_wait`, which then requests a redraw). Same shape as
-//! `crates/git`'s `GitClient`, except results come back over a channel
+//! `rust/gitdrv`'s `GitClient`, except results come back over a channel
 //! instead of a callback — winit apps already poll every frame.
 //!
 //! The command/event vocabulary lives in `model::types` (shared with the

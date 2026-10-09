@@ -13,13 +13,13 @@ the monster takes a foreign format once, offline, into a representation
 of ours, and keeps the runtime small (thesis, sections 11 and 24;
 `import-foreign-formats-by-conversion-not-embedding`). the other ui
 assets never went through that: lucide icons are tessellated at runtime
-and cached (`crates/comps/src/icons/mod.rs`, `tessellate_icon`), fonts
-are whole ttf files embedded (`crates/engine/src/text/fonts.rs`), WGSL
+and cached (`rust/engine/src/widgets/icons/mod.rs`, `tessellate_icon`), fonts
+are whole ttf files embedded (`rust/engine/src/drawing/text/fonts.rs`), WGSL
 is parsed and validated when a pipeline is built (hot reload reads it
 from disk in debug), images are decoded at runtime.
 
 task-72 phase 1 measured before moving anything. the probes are two
-ignored tests (`crates/engine/tests/asset_cost.rs`,
+ignored tests (`rust/engine/tests/asset_cost.rs`,
 `icons::tests::the_tessellation_cost` in comps) and the inventory is in
 the task file. in the debug profile the showcase's first headless frame
 (the launch page, `Theme`) takes 79 ms from process start to exit. of
@@ -48,7 +48,7 @@ showcase embeds none).
    and the tolerance is a runtime setting (`RenderConfig::path_tolerance`).
 
 3. WGSL is checked in the gate, not in a build script.
-   `crates/engine/tests/wgsl.rs` walks the engine's `src/` and
+   `rust/engine/tests/wgsl.rs` walks the engine's `src/` and
    `examples/`, reads every `.wgsl` from disk (the files the debug hot
    reload reads) and runs naga's parse and validation as `wgpu-core`
    does, with no optional capability, so a shader that passes needs
@@ -93,7 +93,7 @@ showcase embeds none).
 
 - a broken shader fails the gate with its place instead of the first
   run that builds its pipeline. the unit test in
-  `crates/engine/src/gpu/tests.rs` (a hand list of nine shaders,
+  `rust/engine/src/drawing/gpu/tests.rs` (a hand list of nine shaders,
   `Capabilities::all()`, messages without a line) is covered by the new
   one; removing it is left to the integration.
 - no new dependency, no new edge in `Cargo.lock`, no runtime change, no

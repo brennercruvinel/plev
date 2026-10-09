@@ -43,7 +43,7 @@ measured with a million lines, release, Apple M4: open 21 ms (peak 65 MiB,
 121 MiB before); a scroll frame 0.36 ms; an edit in the middle, up to the
 next frame, 0.27 ms. scrolling and editing cost the same with ten thousand
 lines and with a million. the benchmark is
-`crates/comps/tests/editor_large_bench.rs` (ignored, release).
+`rust/engine/tests/editor.rs` (ignored, release).
 
 ## consequences
 

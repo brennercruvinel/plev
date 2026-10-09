@@ -16,20 +16,20 @@ status: living
   and shapes by line), the orchestration and pixel how-tos with the
   machine limits and the capture method, and a learnings file for the
   session. the changelogs of closed tasks sit with the closed tasks, the
-  2022 competitor list moved to `docs/refs/`, a Figma file is never
+  2022 competitor list moved to `docs/ref/`, a Figma file is never
   committed (`*.fig`), and the zed tasks and the pull request template run
-  `./script/gate`.
+  `./tool/tasks/fullcheck.sh`.
 
 - plev on wgpu 29, and burn on the renderer's gpu (2026-09-26, task-78):
   the whole workspace moved from wgpu 28 to 29, and every gallery page in
   4 themes at 4 scales (1312 frames) draws the same bytes as before. a
   covered window on macOS now skips its frame and redraws when it shows
   again. the engine hands its own gpu device to a library that computes
-  on it: with `crates/llm`'s `plev` feature, burn runs on that device,
+  on it: with `rust/llmrun`'s `plev` feature, burn runs on that device,
   a matrix product on it matches the cpu, and TinyLlama answers there.
   the workspace now needs rust 1.87.
 
-- a local language model in process (2026-09-26, task-78): `crates/llm`
+- a local language model in process (2026-09-26, task-78): `rust/llmrun`
   streams an answer token by token from a model on disk (TinyLlama 1.1B
   for now), with candle or burn behind one interface. on an M4's gpu,
   candle does 37 tokens a second and burn 26, and both give the same
@@ -95,7 +95,7 @@ status: living
 - the parser imports HTML/CSS and Figma (2026-09-25, task-71): a page
   (a subset: flex, color, radius, type, buttons and fields) and a Figma
   screen become plev IR with the same four-way report as react and gpui.
-  `script/figma-fixture` reads a `.fig` file with no network and no API
+  `tool/tasks/figmapull.py` reads a `.fig` file with no network and no API
   token and writes one screen as the Figma API would.
 
 - a window for a recorded session (2026-09-25, task-64):
@@ -424,7 +424,7 @@ status: living
   combining marks, arabic, hebrew, devanagari, chinese, japanese, korean,
   emoji with ZWJ, mixed bidi) shaped and rendered headless, with the
   glyphs, the notdefs, the measured width and the ink per line in
-  `crates/engine/tests/text_audit.txt`. with the embedded fonts every
+  `rust/engine/tests/fixtures/text_audit.txt`. with the embedded fonts every
   non-latin script is tofu; bidi order, combining marks and kerning work;
   no embedded face has `liga`; colour emoji has width and no ink. the
   probe reports shaping per glyph (`engine::text::probe::shape_report`).
@@ -834,7 +834,7 @@ status: living
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead (docs/mission/task-73-measurements.md).
+  ahead (docs/log/steps/task-73-measurements.md).
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
@@ -912,8 +912,8 @@ status: living
   slot for a widget comps does not have yet; Forms, Chrome, Extras,
   Overlays and Lists split into one module per widget; `comps::nav::
   Sidebar` gains `NavGroup`; the launch argument is the page title.
-  docs/adr/ became docs/ADR/ with README.md as its index, the changelog
-  moved to docs/CHANGELOG.md.
+  docs/adr/ became docs/adr/ with README.md as its index, the changelog
+  moved to docs/log/changelog.md.
 - core theme and the buttons poc (2026-09-21, adr
   core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
   typescript kit (nine shades, six accents, depths as shadow stacks,
@@ -934,7 +934,7 @@ status: living
 - comps, the design system crate (2026-09-18, adr
   comps-one-design-system-crate): `engine::ui`, `text_input`, `overlay`,
   `charts`, `GraphView` and the editor view moved out of the engine into
-  crates/comps (git mv), organized by category (core, recipe, icons,
+  rust/engine/src/widgets (git mv), organized by category (core, recipe, icons,
   action, form, nav, content, feedback, overlay, charts, graph, editor,
   shell); the legacy `Ui` builder and `UiTheme` are gone. the theme grew
   the scales the widgets were improvising (shape by role, control sizes,
@@ -958,9 +958,9 @@ status: living
   `TextMeasurer::elide_path` came from the ide (and now drops several
   middle segments, the old helper dropped one). matrix test: every widget
   under 13 themes at phone and desktop widths. inventory and migration
-  record: docs/catalog.md. workspace tests 855 -> 1414.
+  record: docs/ref/component-catalog.md. workspace tests 855 -> 1414.
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
-  end (crate, modules, types, web/urnaui, script/web-urnaui, gate, ci)
+  end (crate, modules, types, apps/urnadbapp/web, tool/tasks/webtarget.sh urnadbapp, gate, ci)
   against hoffresearch/urna v0.4.0; the portable reader accepts both
   magics so pre-rename .nest corpora open. the poc's real bugs fixed
   against the 38k-card mtg corpus (530 MB): the file was read into ram
@@ -979,8 +979,8 @@ status: living
   subfile (adr urnaui-media-frames-in-place-via-ffmpeg-subfile), Browse…
   native dialog (rfd). tests 57 -> 80 incl. a media corpus built with the
   urna writer (blob + overlay + space); wasm check green.
-- arc unified (2026-09-18): docs/arc/{arc.yaml, arc.md, arc.mmd} became one
-  file, docs/arc/arc.toml: the machine map as tables, the human reference
+- arc unified (2026-09-18): docs/{arc.yaml, arc.md, arc.mmd} became one
+  file, docs/ATLAS.toml: the machine map as tables, the human reference
   under [prose], the frame-flow mermaid as a literal string under
   [diagram]. the sync guard, AGENTS.md, the conventions, the pr template
   and the README point at it. content unchanged except nest/nestui ->
@@ -994,7 +994,7 @@ status: living
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  docs/ADR/glyph-raster-identity-and-atlas-isolation.md
+  docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
@@ -1023,12 +1023,12 @@ status: living
   reader (nestread) for the web target.
 - showcase 12 -> 14 tabs (typography, effects), scrollable sidebar.
   ci matrix: macos + ubuntu + wasm (.github/workflows/ci.yml);
-  script/gate skips the wasm leg with a warning when the rust-std wasm
+  tool/tasks/fullcheck.sh skips the wasm leg with a warning when the rust-std wasm
   target is absent (Homebrew rust), CI stays the full verification.
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
-  it (docs/arc/, from doc/arc/); doc/ was retired (its changelog copy
+  it (docs/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for docs/refs/mon-experiment-notes.md. web/ owns
+  root for docs/ref/mon-experiment-notes.md. web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only
@@ -1036,7 +1036,7 @@ status: living
   and the crate docstrings follow the new paths; the svg crate and the
   svg2monster cli entered the arc trio. the root gained LICENSE (mit),
   rust-toolchain.toml (stable + wasm32 pinned) and .gitattributes, and
-  lost .env.example and the Makefile (script/gate runs the four-part
+  lost .env.example and the Makefile (tool/tasks/fullcheck.sh runs the four-part
   gate; the other targets were one cargo call each). study-clone
   references in docs now name the repository and the inner path, never
   a machine path. ADR: one-knowledge-tree-and-a-minimal-root.

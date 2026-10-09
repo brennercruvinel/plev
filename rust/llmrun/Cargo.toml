@@ -9,7 +9,7 @@ description = "local llm inference in process: one streaming interface, candle a
 # llm is NOT a member of the root workspace (see the exclude + comment in the
 # root Cargo.toml): candle and burn pull a dependency tree the engine does not
 # need, so it keeps its own workspace and its own Cargo.lock. build it with
-# --manifest-path crates/llm/Cargo.toml.
+# --manifest-path rust/llmrun/Cargo.toml.
 [workspace]
 
 [features]

@@ -18,7 +18,7 @@ a onda 5 fechou com os critérios essenciais (programa, seção 6), e a
 onda 6 abre com esta task. a sonda nas premissas desta task achou:
 
 - **o nome do crate é `uir`**, como sugerido. é curto como os outros
-  (`sem`, `wire`, `rec`) e não confunde com `crates/parser/src/ir.rs`.
+  (`sem`, `wire`, `rec`) e não confunde com `rust/import/src/tree.rs`.
 - **o vocabulário v1 é o que existe no comps ou no engine**, conferido
   no código:
   - no comps: `Button`, `IconButton`, `TextField`, `Checkbox`, `Switch`,
@@ -72,15 +72,15 @@ verification, execution). goal 3 do programa.
 
 ## estado atual no código
 
-- `crates/parser/src/ir.rs`: `ParserNode { tag, props, children }`, IR de
+- `rust/import/src/tree.rs`: `ParserNode { tag, props, children }`, IR de
   geração de código (props já normalizadas para métodos do builder,
   valores literais ou expressões de token em Rust). é IR de compilação
   para código, não de runtime, e não carrega semântica.
-- `crates/engine/src/builder`: árvore declarativa (`div`, `text`,
+- `rust/engine/src/compose/builder`: árvore declarativa (`div`, `text`,
   `button`, `path`, `image`) com layout taffy, suportada para protótipo
-  (`docs/ADR/official-app-pattern.md`).
-- `crates/comps`: o vocabulário real de componentes (catálogo em
-  `docs/catalog.md`, seção 0).
+  (`docs/adr/structure/0023-official-app-pattern.md`).
+- `rust/engine/src/widgets`: o vocabulário real de componentes (catálogo em
+  `docs/ref/component-catalog.md`, seção 0).
 - `engine::theme`: todos os tokens (`colors`, `glass`, `typography`,
   `spacing`, `shape`, `control`, `size`, `duration`, `layout`, `shadows`).
 - depois de 57 e 58: `SemId`, `Role`, `Value`, `Constraints`,
@@ -188,8 +188,8 @@ LLM.
 
 ## superfície sob responsabilidade
 
-o crate novo; entradas em `Cargo.toml`, `docs/arc/arc.toml`, `README.md`;
-proposta de ADR `docs/ADR/plev-ir-typed-and-verified.md`.
+o crate novo; entradas em `Cargo.toml`, `docs/ATLAS.toml`, `README.md`;
+proposta de ADR `docs/adr/generated/0049-plev-ir-typed-and-verified.md`.
 
 ## interfaces que consome
 
@@ -212,7 +212,7 @@ visual; toda ação de um `VerifiedIr` é uma capacidade declarada.
 - cada checagem do verifier tem um IR inválido de teste com o erro e o
   caminho esperados.
 - roundtrip serde; schema exportado validando as fixtures.
-- `./script/gate` verde; crate compila em wasm.
+- `./tool/tasks/fullcheck.sh` verde; crate compila em wasm.
 
 ## testes esperados
 
@@ -252,46 +252,46 @@ sem ação); para esses o role sai da tabela do `uir`, marcado "uir".
 
 | componente | tipo | onde | role e o que o `project` declara |
 |---|---|---|---|
-| `button` | `Button` (e `SubmitButton`) | `crates/comps/src/action/button.rs:74`, `submit_button.rs` | `Button`; `activate`. o `SubmitButton` tem `busy` e o `activate` lê `busy` |
-| `icon_button` | `IconButton` | `crates/comps/src/action/icon_button.rs:47` | `Button`; `activate`; na variante toolbar, `active` e o `activate` lê `active` |
-| `text_field` | `TextField` | `crates/comps/src/form/text_field.rs:42` | `TextInput`; `text`; `set_value` com `ParamSpec { Text, constrained }`, editable |
-| `checkbox` | `Checkbox` | `crates/comps/src/form/checkbox.rs:22` | `Checkbox`; `checked`; `toggle` lê `checked` |
-| `switch` | `Switch` | `crates/comps/src/form/switch.rs:27` | `Toggle`; `on`; `toggle` lê `on` |
-| `slider` | `Slider` | `crates/comps/src/form/slider.rs:20` | `Slider`; `value` (num) com range e step; `set_value` com `ParamSpec { Num, constrained }`; `increment` e `decrement` só com step |
-| `select` | `Select` | `crates/comps/src/form/select.rs:68` | `Select`; `selected` (text), `expanded`; `select` com `ParamSpec { Text, constrained }`, `open`, `close`; aberto, filhos `Option` `<id>[i]` com `select` |
-| `tabs` | `Tabs` | `crates/comps/src/nav/tabs.rs:24` | `TabList`; `selected` (a chave da aba); filhos `Tab` `<id>[i]` com `select` sem parâmetro |
-| `list` | `VirtualList` | `crates/comps/src/content/list.rs:38` | `List`; `count`, `selected`; filhos `ListItem` `<id>[i]` com `select` |
-| `table` | `Table` | `crates/comps/src/content/table.rs:87` | `Table`; `count`, `selected_row`; filhos `Row` `<id>[i]` com `select` |
-| `card` | `Card` | `crates/comps/src/content/card.rs:140` | sem `project`; uir: `Group` |
-| `stat` | `Stat` | `crates/comps/src/content/stat.rs:26` | sem `project`; uir: `Label` |
-| `chart` (line, bar, area, donut) | `LineChart`, `BarChart`, `StackedArea`, `Donut` | `crates/comps/src/charts/{line,bars,area,donut}.rs` | sem `project`; uir: `Image` |
-| `separator` | `Separator` | `crates/comps/src/content/separator.rs:10` | sem `project`; uir: sem role (decorativo, não é controle) |
-| `dialog` | `Modal` | `crates/comps/src/feedback/modal.rs:43` | `Dialog` nomeado pelo título, descrito pelo corpo; `confirm` (destrutivo quando o intent é) e `cancel`; filhos `Button` `<id>[confirm]` e `<id>[cancel]` |
-| `empty_state` | `EmptyState` | `crates/comps/src/content/empty_state.rs:22` | sem `project`; uir: `Status` |
-| `progress` | `ProgressBar` | `crates/comps/src/feedback/progress.rs:12` | sem `project`; uir: `ProgressBar` |
-| `badge` | `Badge` | `crates/comps/src/action/badge.rs:27` | sem `project`; uir: `Label` |
-| `chip` | `Chip` | `crates/comps/src/action/chip.rs:25` | `Toggle` com `selected` e `toggle` quando selecionável; `Button` com `activate` quando interativo; `Label` quando estático |
-| `text` | `engine::builder::text` | `crates/engine/src/builder/element/mod.rs:98` | sem `project`; uir: `Label` |
-| `image` | `engine::builder::image` | `crates/engine/src/builder/element/mod.rs:137` | sem `project`; uir: `Image` |
+| `button` | `Button` (e `SubmitButton`) | `rust/engine/src/widgets/buttons/button.rs:74`, `submit_button.rs` | `Button`; `activate`. o `SubmitButton` tem `busy` e o `activate` lê `busy` |
+| `icon_button` | `IconButton` | `rust/engine/src/widgets/buttons/icon_button.rs:47` | `Button`; `activate`; na variante toolbar, `active` e o `activate` lê `active` |
+| `text_field` | `TextField` | `rust/engine/src/widgets/form/text_field.rs:42` | `TextInput`; `text`; `set_value` com `ParamSpec { Text, constrained }`, editable |
+| `checkbox` | `Checkbox` | `rust/engine/src/widgets/form/checkbox.rs:22` | `Checkbox`; `checked`; `toggle` lê `checked` |
+| `switch` | `Switch` | `rust/engine/src/widgets/form/switch.rs:27` | `Toggle`; `on`; `toggle` lê `on` |
+| `slider` | `Slider` | `rust/engine/src/widgets/form/slider.rs:20` | `Slider`; `value` (num) com range e step; `set_value` com `ParamSpec { Num, constrained }`; `increment` e `decrement` só com step |
+| `select` | `Select` | `rust/engine/src/widgets/form/select/mod.rs:68` | `Select`; `selected` (text), `expanded`; `select` com `ParamSpec { Text, constrained }`, `open`, `close`; aberto, filhos `Option` `<id>[i]` com `select` |
+| `tabs` | `Tabs` | `rust/engine/src/widgets/nav/tabs.rs:24` | `TabList`; `selected` (a chave da aba); filhos `Tab` `<id>[i]` com `select` sem parâmetro |
+| `list` | `VirtualList` | `rust/engine/src/widgets/content/list.rs:38` | `List`; `count`, `selected`; filhos `ListItem` `<id>[i]` com `select` |
+| `table` | `Table` | `rust/engine/src/widgets/content/table.rs:87` | `Table`; `count`, `selected_row`; filhos `Row` `<id>[i]` com `select` |
+| `card` | `Card` | `rust/engine/src/widgets/content/card.rs:140` | sem `project`; uir: `Group` |
+| `stat` | `Stat` | `rust/engine/src/widgets/content/stat.rs:26` | sem `project`; uir: `Label` |
+| `chart` (line, bar, area, donut) | `LineChart`, `BarChart`, `StackedArea`, `Donut` | `rust/engine/src/widgets/charts/{line,bars,area,donut}.rs` | sem `project`; uir: `Image` |
+| `separator` | `Separator` | `rust/engine/src/widgets/content/separator.rs:10` | sem `project`; uir: sem role (decorativo, não é controle) |
+| `dialog` | `Modal` | `rust/engine/src/widgets/feedback/modal.rs:43` | `Dialog` nomeado pelo título, descrito pelo corpo; `confirm` (destrutivo quando o intent é) e `cancel`; filhos `Button` `<id>[confirm]` e `<id>[cancel]` |
+| `empty_state` | `EmptyState` | `rust/engine/src/widgets/content/empty_state.rs:22` | sem `project`; uir: `Status` |
+| `progress` | `ProgressBar` | `rust/engine/src/widgets/feedback/progress.rs:12` | sem `project`; uir: `ProgressBar` |
+| `badge` | `Badge` | `rust/engine/src/widgets/content/badge.rs:27` | sem `project`; uir: `Label` |
+| `chip` | `Chip` | `rust/engine/src/widgets/content/chip.rs:25` | `Toggle` com `selected` e `toggle` quando selecionável; `Button` com `activate` quando interativo; `Label` quando estático |
+| `text` | `engine::builder::text` | `rust/engine/src/compose/builder/element/mod.rs:98` | sem `project`; uir: `Label` |
+| `image` | `engine::builder::image` | `rust/engine/src/compose/builder/element/mod.rs:137` | sem `project`; uir: `Image` |
 
 (b) os papéis de token do theme por categoria de `Props`.
 
 | categoria | onde | papéis |
 |---|---|---|
-| cor | `ColorTokens`, `crates/engine/src/theme/tokens.rs:200` (`theme.colors`) | `bg`, `surface`, `bg_panel`, `bg_hover`, `text`, `text_dim`, `text_mid`, `accent`, `accent_dim`, `success`, `danger`, `warning`, `info`, `divider`, `border_active`. o `theme.glass` (`tokens.rs:226`) é receita de superfície, não papel de cor, e fica fora do v1 |
+| cor | `ColorTokens`, `rust/engine/src/styling/theme/tokens.rs:200` (`theme.colors`) | `bg`, `surface`, `bg_panel`, `bg_hover`, `text`, `text_dim`, `text_mid`, `accent`, `accent_dim`, `success`, `danger`, `warning`, `info`, `divider`, `border_active`. o `theme.glass` (`tokens.rs:226`) é receita de superfície, não papel de cor, e fica fora do v1 |
 | tipografia | `TypographyScale`, `tokens.rs:27` (`theme.typography`, um método por estilo) | `h4`, `headline`, `title`, `base_r`, `base_m`, `base_2r`, `base_2m`, `base_2sm`, `base_2b`, `caption_r`, `caption_sm`, `small_r`, `small_sm`, `body`, `body_2r`, `body_2m`, `body_2b`, `hairline`, `mono`, `readout` |
 | espaçamento | `SpacingScale`, `tokens.rs:9` (`theme.spacing`) | `xs`, `sm`, `md`, `lg`, `xl`, `xxl` |
-| forma | `ShapeTokens`, `crates/engine/src/theme/scales.rs:22` (`theme.shape`) | `pill`, `dropdown`, `tabs`, `card`, `block`, `item`, `nav`, `cluster`, `tooltip`, `micro` |
+| forma | `ShapeTokens`, `rust/engine/src/styling/theme/scales.rs:22` (`theme.shape`) | `pill`, `dropdown`, `tabs`, `card`, `block`, `item`, `nav`, `cluster`, `tooltip`, `micro` |
 | tamanho de controle | `ControlSize`, `scales.rs:88` (alturas em `theme.control.heights`) | `xs`, `sm`, `md`, `lg`, `xl` |
 | elevação | `Elevation`, `scales.rs:505` (`theme.shadows`) | `base`, `raised`, `floating`, `overlay`, `hint` |
 | tamanho de container (layout `min`, `max`, `min_col`) | `SizeTokens`, `scales.rs:259` (`theme.size`) | `menu_w`, `modal_max_w`, `sidebar_w`, `sidebar_rail_w`, `card_w`, `card_min_w`, `readable_max_w`, `field_min_w`, `toast_w`, `tooltip_max_w`, `dropdown_max_h` |
 
 (c) as capacidades, lidas de projeções reais por dois testes novos que
 projetam, imprimem (`--nocapture`) e gravam o snapshot:
-`crates/ide/tests/uir_fixture.rs` (um repositório real num temp dir, três
+`apps/idestudio/tests/plevir_fixture.rs` (um repositório real num temp dir, três
 arquivos mudados, `src/lexer.rs` no index, o formulário de commit aberto
 com "fix parser" escrito por uma pessoa pelo dispatcher) e
-`crates/showcase/tests/uir_fixture.rs` (a página Todo encenada headless,
+`apps/uigallery/tests/plevir_fixture.rs` (a página Todo encenada headless,
 como `showcase --render Todo --semantics`). policy omitida é a padrão
 (todos os atores, `Confirm::Never`, não destrutiva).
 
@@ -333,12 +333,12 @@ decisões do orquestrador:
 - o id de um commit no ide é o sha, que muda com a data do commit; o
   teste do ide fixa a data do primeiro commit do repositório para que o
   snapshot seja o mesmo a cada execução.
-- o briefing proíbe `README.md` e `docs/arc/arc.toml`, mas o
-  `crates/engine/tests/arc_sync_guard.rs` exige que todo membro do
+- o briefing proíbe `README.md` e `docs/ATLAS.toml`, mas o
+  `tool/tests/test_repoaudit.rs` exige que todo membro do
   workspace apareça nos dois, e o programa (seção 8) diz que o agente que
   cria um crate adiciona a própria entrada. hoje o `arc.toml` passa por
   acaso (contém "acquire", que contém "uir"); o `README.md` não. com
-  `crates/uir` no workspace, o teste do guard fica vermelho até alguém
+  `rust/plevir` no workspace, o teste do guard fica vermelho até alguém
   pôr o crate no README. isso não bloqueia os tipos; vira uma condição de
   parada no gate (reportada no fim).
 
@@ -347,7 +347,7 @@ decisões do orquestrador:
 goal: task-68, o plev IR e o verifier.
 
 status: implementado, testado, rebaseado na `main` e com o
-`./script/gate` verde (perna urnaui incluída). a parada no
+`./tool/tasks/fullcheck.sh` verde (perna urnaui incluída). a parada no
 `arc_sync_guard` (fim deste handoff) foi resolvida pela opção 2, com a
 liberação do orquestrador.
 
@@ -375,7 +375,7 @@ a sonda: a seção "sonda" acima, escrita antes do primeiro tipo.
 #### o IR como ficou
 
 o formulário de commit do ide, encurtado (a fixture inteira é
-`crates/uir/fixtures/ide-commit-form.ir.json`):
+`rust/plevir/tests/fixtures/idestudio-commit-form.ir.json`):
 
 ```json
 {
@@ -449,10 +449,10 @@ profundidade 256 (`HARD_DEPTH`).
 #### o schema
 
 `uir::schema()` (função pública, montada das mesmas tabelas dos tipos) e
-o arquivo `crates/uir/schema/plev-ir-1.json`, que é esse valor escrito.
+o arquivo `rust/plevir/assets/plev-ir-1.json`, que é esse valor escrito.
 um teste mantém os dois iguais; regenera com `UIR_BLESS=1 cargo test -p
 uir --test fixtures`. nenhuma dependência nova: sem `schemars` e sem
-validador de schema. o validador do teste (`crates/uir/tests/jsonschema/mod.rs`)
+validador de schema. o validador do teste (`rust/plevir/tests/support/jsonschema.rs`)
 conhece só as palavras que o schema usa e falha em qualquer outra. o
 schema não carrega a gramática de id, state ref e nome de ação (sem
 `pattern`, o workspace não tem regex); o leitor checa e aponta.
@@ -462,7 +462,7 @@ dev-dependency, sem dependência nova de workspace.
 
 #### as fixtures
 
-em `crates/uir/fixtures/`:
+em `rust/plevir/tests/fixtures/`:
 
 - `ide-commit-form.ir.json`: a tela fixa do ide, com os ids do ide;
 - `ide-review-commit.ir.json`: "review what goes into the commit",
@@ -472,11 +472,11 @@ em `crates/uir/fixtures/`:
 - `ide-workbench.snapshot.json` e `showcase-todo.snapshot.json`: as
   projeções reais de onde saem os registros.
 
-os snapshots são gravados por `crates/ide/tests/uir_fixture.rs` (um
+os snapshots são gravados por `apps/idestudio/tests/plevir_fixture.rs` (um
 repositório real, três arquivos mudados, `src/lexer.rs` no index, o
 formulário aberto com "fix parser" escrito por uma pessoa pelo
 dispatcher, a data do primeiro commit fixa para o sha ser estável) e por
-`crates/showcase/tests/uir_fixture.rs` (a página Todo encenada
+`apps/uigallery/tests/plevir_fixture.rs` (a página Todo encenada
 headless). os dois testes falham quando a projeção se afasta do arquivo.
 regeneração: `UIR_BLESS=1 cargo test -p ide --test uir_fixture`,
 `UIR_BLESS=1 cargo test -p showcase --test uir_fixture`, depois `cargo
@@ -489,7 +489,7 @@ contagem final, depois do rebase:
 | | workspace | perna urnaui | total do gate |
 |---|---|---|---|
 | antes, `main` @ 39a76cf (`cargo test --workspace` com a `main` em detached HEAD neste worktree) | 2195 passam, 11 ignorados | 82 passam, 1 ignorado (o urnaui não mudou) | 2277 |
-| depois, esta branch (`./script/gate`, saída 0) | 2256 passam, 0 falhas, 11 ignorados | 82 passam, 0 falhas, 1 ignorado | 2338 |
+| depois, esta branch (`./tool/tasks/fullcheck.sh`, saída 0) | 2256 passam, 0 falhas, 11 ignorados | 82 passam, 0 falhas, 1 ignorado | 2338 |
 
 são 61 testes novos: 59 no `uir` (19 unitários, 1 doctest, 27 de regras,
 7 de fixtures, 5 de proptest), 1 no ide, 1 no showcase. a contagem não
@@ -506,7 +506,7 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
 - perna urnaui (rodada à mão como o gate roda, com o target dir próprio):
   82 passam, clippy, fmt e wasm verdes. o urnaui não depende do `uir` e
   não mudou.
-- `./script/gate` (antes da resolução): parava no `arc_sync_guard`.
+- `./tool/tasks/fullcheck.sh` (antes da resolução): parava no `arc_sync_guard`.
   depois da resolução e do rebase: verde, todas as pernas.
 - proptest também rodado com `PROPTEST_CASES=5000`: verde.
 
@@ -537,7 +537,7 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
   o filtro do todo são uma capacidade por aba, sem parâmetro, e não casam;
   a fixture do todo usa chips.
 - o `uir` não entrou em `[workspace.dependencies]`: ninguém o consome
-  ainda; a task-69 adiciona `uir = { path = "crates/uir" }` quando usar.
+  ainda; a task-69 adiciona `uir = { path = "rust/plevir" }` quando usar.
 
 #### limitações
 
@@ -576,7 +576,7 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
 
 #### dependências pendentes e riscos de integração
 
-- as entradas do `uir` no `README.md` e no `docs/arc/arc.toml` estão
+- as entradas do `uir` no `README.md` e no `docs/ATLAS.toml` estão
   feitas (2461bb5). fica a linha do índice de ADR, que é do orquestrador:
   `| 2026-09-24 | [plev-ir-typed-and-verified](plev-ir-typed-and-verified.md) | proposed | crate uir, puro (sem, serde): o plev IR (id, componente de um vocabulário fechado espelho do comps, props só por token do theme, layout por primitivas, estado e ações ligados a capacidades que o app declara, repetição mínima sobre List/Set com [{item}]); um leitor só com erro por JSON pointer; Capabilities saem do Snapshot; verify com oito regras é o único caminho a um VerifiedIr; JSON schema gerado das mesmas tabelas (task-68) |`
 - rebaseada sobre `main` @ 39a76cf (as tasks 91 e 65 e a nota de
@@ -590,7 +590,7 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
 #### parada
 
 problema: o `arc_sync_guard` exige que todo membro do workspace apareça
-no `README.md` e no `docs/arc/arc.toml`. o briefing proíbe os dois
+no `README.md` e no `docs/ATLAS.toml`. o briefing proíbe os dois
 arquivos; o programa (seção 8) diz que o agente que cria um crate
 adiciona a própria entrada. o `arc.toml` passa por acaso ("acquire"
 contém "uir"); o `README.md` falha. é o único vermelho da branch.
@@ -613,18 +613,18 @@ ausência.
   the plev IR: a surface described by meaning (ids, a closed component
   vocabulary, props by theme token, state and actions bound to the
   capabilities an app projects), and `verify`, the only way to a
-  `VerifiedIr` ([docs/ADR/plev-ir-typed-and-verified.md](docs/ADR/plev-ir-typed-and-verified.md))."
-- `docs/arc/arc.toml`:
+  `VerifiedIr` ([docs/adr/generated/0049-plev-ir-typed-and-verified.md](docs/adr/generated/0049-plev-ir-typed-and-verified.md))."
+- `docs/ATLAS.toml`:
 
   ```toml
   [crates.uir]
-  path = "crates/uir"
+  path = "rust/plevir"
   role = "the plev IR (task-68, adr plev-ir-typed-and-verified): Ir, Surface, IrNode with a SemId, a Component of the closed vocabulary (the comps widgets and the builder's text and image, declared as data in Spec), Props by theme token, Layout (stack, grid, split, overlay) and Size by token, Bind of state to StateRefs and of events to CapabilityRefs, Repeat over a List or Set with [{item}] in the template ids; one reader (decode, Ir's Deserialize) with every shape error at its JSON pointer; Capabilities::from_snapshot; verify(ir, caps, GenerationPolicy) -> VerifiedIr or every IrError at once (schema, identity, vocabulary, state, action, policy, access, limits); schema() and schema/plev-ir-1.json; pure, wasm"
   depends = ["sem"]
   ```
 
 decisão necessária: quem escreve as entradas do `uir` no `README.md` e no
-`docs/arc/arc.toml`, e em que momento.
+`docs/ATLAS.toml`, e em que momento.
 
 #### resolução da parada (2026-09-24)
 
@@ -639,8 +639,8 @@ programa já dizia que o agente adiciona a própria entrada. no commit
   click.": "`uir` is the plev IR: a surface described by meaning over
   that contract, and only what its verifier accepts reaches the
   runtime." o README cresceu uma linha.
-- `docs/arc/arc.toml`: uma entrada `[crates.uir]` antes de
-  `[crates.git]`, com `path = "crates/uir"`, `depends = ["sem"]` e um
+- `docs/ATLAS.toml`: uma entrada `[crates.uir]` antes de
+  `[crates.git]`, com `path = "rust/plevir"`, `depends = ["sem"]` e um
   `role` no estilo das vizinhas (o que o IR descreve, o leitor único, o
   registro vindo do snapshot, o `verify` e as oito regras, a policy
   padrão, o schema, as fixtures, puro e wasm). o guard agora acha

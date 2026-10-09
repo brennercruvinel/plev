@@ -4,9 +4,9 @@
 //! The surface has two forms, each an IR verified against the registry
 //! the todo projects (`uir::Capabilities::from_snapshot`) and materialized
 //! by the `surface` crate: compact, the fixture of task-68
-//! (`crates/uir/fixtures/showcase-todo.ir.json`: the field, the add
+//! (`rust/plevir/tests/fixtures/uigallery-todo.ir.json`: the field, the add
 //! button, the items, the filter as chips, the counters as stats, one
-//! under the other), and two columns (`crates/surface/tests/fixtures/showcase-todo-columns.ir.json`:
+//! under the other), and two columns (`rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`:
 //! a grid, the filter and the counters in one column and the entry over
 //! the items in the other, one column where the width does not hold two).
 //! The items repeat over `todo:items` (task-95), the ids of the items the

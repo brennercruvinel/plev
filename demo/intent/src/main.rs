@@ -5,7 +5,7 @@
 //! cargo run -p claude-model --example propose -- [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] [--timeout <s>] "<intent>"
 //! ```
 //!
-//! it reads the golden projection of the app (`crates/uir/fixtures`: the
+//! it reads the golden projection of the app (`rust/plevir/tests/fixtures`: the
 //! showcase todo, with the compact surface of the Surface page shown, the
 //! ide's workbench, with no surface shown, or the showcase silences, with
 //! no surface shown unless `--shown` names an IR file to verify and show

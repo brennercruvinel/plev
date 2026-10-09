@@ -1,5 +1,5 @@
 //! transformations of a verified surface (task-70,
-//! docs/ADR/adaptive-transforms-preserve-identity.md): the interface
+//! docs/adr/generated/0067-adaptive-transforms-preserve-identity.md): the interface
 //! changes without being built again.
 //!
 //! an `Op` is one small change, as data (a person, the rules or an agent

@@ -23,7 +23,7 @@
 //! refusal has a window to show in), `plev-showcase://...` as an argument
 //! being a link and never the page title (`App::launch_view`); on macOS
 //! the system's own delivery waits for the bundle (the bring-up, in
-//! docs/ADR/a-link-is-not-a-person.md). The shell polls on its loop: at
+//! docs/adr/interface/0063-a-link-is-not-a-person.md). The shell polls on its loop: at
 //! the launch, when the source wakes it (`UserEvent::Link`), after a
 //! wake. Asleep, nothing is polled: a link waits in its source and is
 //! applied on the first poll awake. A recorded session keeps the link's

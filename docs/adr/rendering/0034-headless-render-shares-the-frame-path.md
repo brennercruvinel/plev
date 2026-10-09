@@ -10,7 +10,7 @@ date: 2026-09-23
 ## context
 
 every app draws a frame the same way after building its scene:
-`window::present_frame` (`crates/engine/src/window/frame.rs`) acquires the
+`window::present_frame` (`rust/engine/src/runtime/window/frame.rs`) acquires the
 surface texture, resolves the compositor and its text, uploads images,
 encodes the layer passes and the composite pass, submits and presents.
 drawing and presenting were one function, and `GpuContext` could only be

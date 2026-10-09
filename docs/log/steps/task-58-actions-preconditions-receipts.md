@@ -16,11 +16,11 @@ integrated: 20c601e
 ## fechamento (2026-09-23)
 
 integrada na `main` em `20c601e` (dez commits, de `83562b9` a `20c601e`),
-validada pelo orquestrador: diff inteiro lido, `./script/gate` verde na
+validada pelo orquestrador: diff inteiro lido, `./tool/tasks/fullcheck.sh` verde na
 branch (54 suítes, 1608 testes no workspace, 63 a mais que a task-57), 141
 testes do `sem` com serde e 128 sem, os testes 1 a 10 da spec, goldens
 JSON de `Request`, `Receipt` e `Snapshot`. `cargo run -p sem --example
-commit` roda o cenário da tese. ADR: `docs/ADR/actions-carry-observed-state.md`.
+commit` roda o cenário da tese. ADR: `docs/adr/semantics/0033-actions-carry-observed-state.md`.
 
 a entrega voltou uma vez ao agente, com duas correções de contrato feitas
 antes de haver consumidor:
@@ -77,17 +77,17 @@ condições tornam as ações válidas, quem está autorizado, o que aconteceu).
 ## estado atual no código
 
 - o commit do ide sai do clique direto para o git, sem conferir nada:
-  `crates/ide/src/views/workspace/input.rs:47` chama `submit_commit`
+  `apps/idestudio/src/interfaces/panels/layout/input.rs:47` chama `submit_commit`
   (`:259-267`), que empurra `UiRequest::Commit { message }`
-  (`crates/ide/src/views/workspace/mod.rs:115-123`), que vira
-  `GitCommand::Commit` (`crates/ide/src/session.rs:76`), que roda
-  `git commit --message` (`crates/git/src/repo.rs:187`). o index é
+  (`apps/idestudio/src/interfaces/panels/layout/mod.rs:115-123`), que vira
+  `GitCommand::Commit` (`apps/idestudio/src/repository/git.rs:76`), que roda
+  `git commit --message` (`rust/gitdrv/src/repo.rs:187`). o index é
   commitado como estiver no instante em que o worker executa.
 - a execução é assíncrona: o resultado volta como `GitEvent::Committed`
-  (`crates/ide/src/session.rs:132`). o receipt precisa suportar execução
+  (`apps/idestudio/src/repository/git.rs:132`). o receipt precisa suportar execução
   que começa agora e termina depois.
 - o action handler da accessibility só faz log
-  (`crates/engine/src/window/mod.rs:221`).
+  (`rust/engine/src/runtime/window/mod.rs:221`).
 - depois desta task nada disso muda ainda: a ligação com o ide é da
   task-62 e a com a accessibility é da task-60. esta task entrega o
   contrato e o dispatcher, provados com um app de brinquedo nos testes.
@@ -95,7 +95,7 @@ condições tornam as ações válidas, quem está autorizado, o que aconteceu).
 ## o que a task-57 entregou e muda aqui (revisão do orquestrador, 2026-09-23)
 
 a task-57 está na `main` (`860b029`); o fechamento está em
-`docs/mission/steps/checked/task-57-semantic-contract-done.md`. leia antes
+`docs/log/steps/task-57-semantic-contract.md`. leia antes
 de começar. o que isso muda nesta task:
 
 - `Change` já existe no `sem` (doze variantes, `Snapshot::diff`). o delta
@@ -302,7 +302,7 @@ task-57 integrada na `main`.
 
 ## superfície sob responsabilidade
 
-`crates/sem/**` (módulos novos: `request`, `check`, `receipt`,
+`rust/accord/**` (módulos novos: `request`, `check`, `receipt`,
 `dispatch`). mudança nos tipos da task-57 só com aprovação do orquestrador,
 e reportada no handoff.
 
@@ -343,10 +343,10 @@ compatibilidade: a representação serde de `Request`, `Receipt` e
 ## critérios de aceitação
 
 - os testes abaixo, `cargo test -p sem`, clippy, wasm check do crate,
-  `./script/gate`.
-- um exemplo (`crates/sem/examples/commit.rs` ou doc test) que roda o
+  `./tool/tasks/fullcheck.sh`.
+- um exemplo (`demo/commit/src/main.rs` ou doc test) que roda o
   cenário da tese e imprime os receipts.
-- ADR proposto: `docs/ADR/actions-carry-observed-state.md`.
+- ADR proposto: `docs/adr/semantics/0033-actions-carry-observed-state.md`.
 
 ## testes esperados
 

@@ -11,14 +11,14 @@ date: 2026-09-26
 
 task-78 wants an app that answers from a local model in streaming, in the
 same rust process as the ui and the renderer, with no browser, no ipc and
-no backend (`docs/mission/steps/ongoing/task-78-ai-native-apps.md`). the
+no backend (`docs/log/steps/task-78-ai-native-apps.md`). the
 first step is the inference library. brenner picked the two candidates on
 2026-09-25: candle (with tokio for the streaming) and burn. the choice is
 his (decision 15 of the program); this adr measures and recommends.
 
 both run the same model, TinyLlama 1.1B Chat v1.0 (Apache-2.0, bf16
 safetensors, outside the repository), behind one interface in
-`crates/llm`, its own workspace like urnaui:
+`rust/llmrun`, its own workspace like urnaui:
 
 - `llm::Model`: reset the kv cache, feed ids at a position, get the greedy
   next id. `llm::stream::spawn` runs the decode loop on its own thread and
@@ -33,7 +33,7 @@ safetensors, outside the repository), behind one interface in
   checkpoint as it is.
 - `llm::burn`: burn 0.21 has no llama. the model code is adapted from
   burn-lm's `burn-lm-llama` (commit a53baab, MIT OR Apache-2.0,
-  `crates/llm/NOTICE`), about 300 lines after the port: the backend
+  `rust/llmrun/NOTICE`), about 300 lines after the port: the backend
   parameter back, the checkpoint's field names, weights read by
   burn-store from the safetensors with bf16 cast on the way in, and the
   Hugging Face rope with f32 tables (burn's own rope builds its angles in
@@ -124,7 +124,7 @@ over it, the shared wgpu device and webgpu in the browser, is not usable
 today (wgpu 29 against 28) and belongs to later items; the gpu compute of
 item 4, like projecting embeddings for the graph, can be plev's own wgpu
 compute on the renderer's device without an ml framework. the `Model`
-trait keeps the door open: burn stays a feature of `crates/llm` until the
+trait keeps the door open: burn stays a feature of `rust/llmrun` until the
 decision, and can come back if the shared device or the browser gpu
 becomes the priority.
 
@@ -134,14 +134,14 @@ both stay. read the numbers above, then brenner decided: "vamos manter o
 burn e candle", and, about burn needing a newer wgpu than plev has,
 "implementa". so:
 
-- `crates/llm` keeps the two implementations behind the one `Model`
+- `rust/llmrun` keeps the two implementations behind the one `Model`
   trait, each behind its feature. the reference app can run either one.
 - plev moves from wgpu 28 to 29, the version burn 0.21 is on, so that
   burn can run on the renderer's own device (`WgpuSetup`), as scope item
   4 asks. that is the next step of task-78. it lands before the
   reference app, and pixel identity has to hold.
 - the licence chain of the burn model code (burn-lm, adapted from Meta's
-  Llama 3 reference code, `crates/llm/NOTICE`) is looked at before any
+  Llama 3 reference code, `rust/llmrun/NOTICE`) is looked at before any
   public release (task-41).
 
 ## the shared device (task-78 phase 2)
@@ -161,12 +161,12 @@ renderer's device:
   renderer's defaults would reject them (TinyLlama's embedding alone
   outgrows the default 256 MB buffer). without it the renderer asks for
   what it asked before.
-- `crates/llm`, feature `plev`: `llm::plev::device` wraps the four
+- `rust/llmrun`, feature `plev`: `llm::plev::device` wraps the four
   handles in a `WgpuSetup`, and `llm::plev::load` loads the model on that
   device through burn's wgsl path.
 
 what it shows. one process, one wgpu device, one queue. in
-`crates/llm/tests/plev.rs` the headless renderer's device goes to burn,
+`rust/llmrun/tests/engine.rs` the headless renderer's device goes to burn,
 a matmul on it reads back equal to the cpu's, and the same renderer then
 draws a frame equal in every byte to one from a renderer burn never
 touched. with the model present (`tests/real.rs`, ignored by default),

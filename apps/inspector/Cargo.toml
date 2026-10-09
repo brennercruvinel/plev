@@ -1,5 +1,5 @@
 # inspector: the session inspector's window (task-64 phase b,
-# docs/ADR/the-inspector-reads-a-session-never-runs-it.md). it opens a
+# docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md). it opens a
 # recorded session from a path on the command line and shows it: the
 # timeline with the scrub, the frame on screen at the instant with the
 # outline of each control, and the panel with the thesis answers about the

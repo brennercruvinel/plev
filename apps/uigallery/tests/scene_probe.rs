@@ -34,7 +34,7 @@ const VIEWPORT: Viewport = Viewport {
 };
 
 /// the longest line a client may send the port (`wire::MAX_LINE`,
-/// crates/wire/src/port.rs:48); rec does not depend on wire.
+/// rust/socket/src/port.rs:48); rec does not depend on wire.
 const MAX_LINE: usize = 1 << 20;
 
 /// base64 of `n` bytes, as a JSON string carries binary.
@@ -393,7 +393,7 @@ fn discovery() -> DiscoverConfig {
 }
 
 /// the monster path for `frames`: raised into one bank, discovered and
-/// encoded as the recorder's visual track does (crates/rec/src/visual.rs,
+/// encoded as the recorder's visual track does (rust/record/src/visuals/mod.rs,
 /// `encode`), plus what its asset table would hold (a text key as the
 /// session file writes it, a path as `monster::asset_path` packs it; an
 /// image as its size, the monster table having no pixels).

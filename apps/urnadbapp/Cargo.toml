@@ -10,7 +10,7 @@ description = "urnaui — desktop (and web) explorer for .urna vector databases:
 # the root Cargo.toml): the native backend path-depends on the sibling urna
 # checkout (../urna relative to the plev repo root), so membership would break
 # the root workspace for anyone without urna. this crate is its own workspace;
-# build it with --manifest-path crates/urnaui/Cargo.toml or from this dir.
+# build it with --manifest-path apps/urnadbapp/Cargo.toml or from this dir.
 [workspace]
 
 # lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity

@@ -17,7 +17,7 @@
 //! To record them again (ffmpeg on the PATH; the rules need no model, the
 //! Claude run needs `claude` and pays for it):
 //! `PLEV_RECORD=1 cargo run -p showcase --example demo -- --out
-//! crates/showcase/fixtures/demo/silences-demo.monster`, and with
+//! apps/uigallery/tests/fixtures/sessions/silences-demo.monster`, and with
 //! `--review claude` for the other.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 

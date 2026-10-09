@@ -11,14 +11,14 @@ date: 2026-09-23
 
 the only identity in the engine is `ViewId`, a counter that
 `InputState::begin_frame` resets to zero every frame
-(`crates/engine/src/input/mod.rs:50-61`). the third control emitted is
+(`rust/engine/src/control/input/mod.rs:50-61`). the third control emitted is
 `ViewId(2)` in this frame and may be another control in the next. the
 accessibility tree is built from hit regions, with the role guessed from
 `focusable` and the label always empty
-(`crates/engine/src/window/render.rs:99-125`). in the ide,
+(`rust/engine/src/runtime/window/render.rs:99-125`). in the ide,
 `FileEntry.staged` (it goes into a commit) and
 `UnassignedView.selected_idx` (a highlighted row) are loose fields
-(`crates/ide/src/views/unassigned_view.rs:51-61`); nothing says the first
+(`apps/idestudio/src/interfaces/panels/unassigned.rs:51-61`); nothing says the first
 can invalidate a commit and the second cannot.
 
 the generative runtime program (task-57 to task-80) needs one contract
@@ -30,7 +30,7 @@ identity.
 
 ## decision
 
-a new pure crate, `crates/sem`. dependencies: thiserror, indexmap, and
+a new pure crate, `rust/accord`. dependencies: thiserror, indexmap, and
 serde behind a default feature. no gpu, no window, no text stack.
 
 - identity is `SemId`: canonical text made of name segments
@@ -50,7 +50,7 @@ serde behind a default feature. no gpu, no window, no text stack.
   violation at once (`SemErrors`), the way the parser droplist reports
   every construct it drops.
 - a `Snapshot` is an immutable value. its `Revision` is FNV-1a 64 over an
-  encoding documented in `crates/sem/src/hash.rs` (version tag
+  encoding documented in `rust/accord/src/revision.rs` (version tag
   `sem.revision.v1`); it never goes through a std hasher and it leaves
   `source` out. `Snapshot::diff` returns `Change`s, and the diff is empty
   exactly when two snapshots are equal, which is exactly when their
@@ -107,11 +107,11 @@ agent observes is a question of scope, and scope belongs to task-61.
 - the cost of projecting on demand is not measured yet (task-59 and
   task-73 measure it).
 - updated on 2026-09-23: task-59 did not bridge `engine::actions` to
-  `sem`. the keymap (`crates/engine/src/actions/`) still knows nothing of
+  `sem`. the keymap (`rust/engine/src/control/keymap/`) still knows nothing of
   `sem` and no binding names a capability; the ide sends the keys that act
   on one through its `Workbench`, which asks the dispatcher as the person,
   and left a keymap entry naming a capability out on purpose
-  (docs/ADR/commit-checks-the-index-it-observed.md, "the person asks,
+  (docs/adr/semantics/0036-commit-checks-the-index-it-observed.md, "the person asks,
   execute acts").
 
 ## avoid

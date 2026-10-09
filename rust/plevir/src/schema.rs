@@ -4,7 +4,7 @@
 //!
 //! it is built from the same tables the types use (`Component::ALL`,
 //! each token's `ALL`, the names the specs accept), so it moves with them.
-//! `crates/uir/schema/plev-ir-1.json` is this value written out; a test
+//! `rust/plevir/assets/plev-ir-1.json` is this value written out; a test
 //! keeps the two equal (`UIR_BLESS=1 cargo test -p uir` writes the file
 //! again). the schema checks shape only: ids, references, kinds, policy
 //! and accessibility are the verifier's.

@@ -11,7 +11,7 @@ domain: hot-reload
 opened 2024-01-25 as gap-1 with three tiers (shader, narrate DSL,
 subsecond). closed 2026-09-22 with what an authorial engine can own:
 shader and literal reload in place, code by rebuild. adr:
-docs/ADR/hot-reload-on-by-default-in-gpu-context.md.
+docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md.
 
 ## what was there in the morning
 

@@ -60,6 +60,6 @@ a short window and does not read as a system.
   taller than a screen even folded.
 - the launch argument is the page title as the sidebar shows it:
   `showcase "Data Table" core 1400`.
-- `docs/catalog.md` stays the inventory of what comps has;
+- `docs/ref/component-catalog.md` stays the inventory of what comps has;
   `view/pages/table.rs` is the inventory of what the gallery shows,
   including what is still missing.

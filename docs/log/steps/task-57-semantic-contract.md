@@ -16,10 +16,10 @@ integrated: 860b029
 ## fechamento (2026-09-23)
 
 integrada na `main` em `860b029` (oito commits, de `35f6b10` a `860b029`),
-validada pelo orquestrador: diff inteiro lido, `./script/gate` verde na
+validada pelo orquestrador: diff inteiro lido, `./tool/tasks/fullcheck.sh` verde na
 branch (a perna do urnaui pula no worktree), 78 testes do `sem` com serde
 e 72 sem, 7 proptests, contagem do workspace de 1467 para 1545 (exatamente
-os testes novos). ADR: `docs/ADR/semantic-contract-as-pure-projection.md`.
+os testes novos). ADR: `docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`.
 
 o que ficou diferente da spec abaixo, aceito como contrato:
 
@@ -33,7 +33,7 @@ o que ficou diferente da spec abaixo, aceito como contrato:
   cada subárvore em profundidade; estado ordenado por chave. a ordem entre
   irmãos muda a revisão; a intercalação de subárvores sem relação e a
   ordem de declaração das chaves, não. a codificação é `sem.revision.v1`,
-  documentada em `crates/sem/src/hash.rs`.
+  documentada em `rust/accord/src/revision.rs`.
 - `Change` tem doze variantes: as sete da spec mais `RoleChanged`,
   `DescriptionChanged`, `ConstraintsChanged`, `Reordered { parent }` e
   `FocusChanged`, de modo que `diff` é vazio exatamente quando os dois
@@ -74,21 +74,21 @@ nasce, some ou se transforma.
 
 - a única identidade que existe é `ViewId(pub u64)`, gerada por um
   contador que volta a zero em `InputState::begin_frame`
-  (`crates/engine/src/input/mod.rs:50-61`). ela é posicional: o terceiro
+  (`rust/engine/src/control/input/mod.rs:50-61`). ela é posicional: o terceiro
   controle emitido é `ViewId(2)` neste frame e pode ser outro no próximo.
-- nenhum widget de `crates/comps` declara o que é. o estado vive em campos
+- nenhum widget de `rust/engine/src/widgets` declara o que é. o estado vive em campos
   privados (`TextField`, `Checkbox`, `Switch`) ou no app
-  (`FileEntry.staged` em `crates/ide/src/views/unassigned_view.rs:51-55`).
+  (`FileEntry.staged` em `apps/idestudio/src/interfaces/panels/unassigned.rs:51-55`).
 - a árvore de accessibility é derivada de geometria, sem label
-  (`crates/engine/src/window/render.rs:99-125`).
-- `engine::actions` (`crates/engine/src/actions/mod.rs`) resolve tecla em
+  (`rust/engine/src/runtime/window/render.rs:99-125`).
+- `engine::actions` (`rust/engine/src/control/keymap/mod.rs`) resolve tecla em
   nome de ação (`"commit::Submit"`). ele continua existindo: é binding de
   input. o contrato desta task é a capacidade operável que o binding pode
   alvejar (a ponte é da task-59).
 
 ## decisão de arquitetura (recomendada; o orquestrador confirma no briefing)
 
-1. crate novo `crates/sem`, puro: sem wgpu, winit, cosmic-text, accesskit.
+1. crate novo `rust/accord`, puro: sem wgpu, winit, cosmic-text, accesskit.
    motivo pela regra de crate boundary: dependências próprias e mínimas,
    testável isolado, e consumido por quem não pode puxar o stack de GPU
    (agente, recorder, ferramenta headless, CLI).
@@ -231,8 +231,8 @@ e 63 não precisam mexer nos tipos depois.
 
 `Request`, `check`, `Receipt`, `Dispatcher` (task-58). ligação com
 `ViewId`, bounds, layer (task-59). mapeamento AccessKit (task-60).
-protocolo e socket (task-61). qualquer mudança em `crates/engine`,
-`crates/comps` ou apps.
+protocolo e socket (task-61). qualquer mudança em `rust/engine`,
+`rust/engine/src/widgets` ou apps.
 
 ## dependências
 
@@ -240,12 +240,12 @@ nenhuma.
 
 ## superfície sob responsabilidade
 
-- `crates/sem/**` (novo)
+- `rust/accord/**` (novo)
 - `Cargo.toml` da raiz: entrada em `members` e em
   `[workspace.dependencies]`
-- `docs/arc/arc.toml`: `[crates.sem]`
+- `docs/ATLAS.toml`: `[crates.sem]`
 - `README.md`: o crate na tabela e na linha de crates
-- proposta de ADR `docs/ADR/semantic-contract-as-pure-projection.md` no
+- proposta de ADR `docs/adr/semantics/0032-semantic-contract-as-pure-projection.md` no
   handoff (o orquestrador integra e atualiza o índice)
 
 ## interfaces que consome
@@ -290,7 +290,7 @@ exige ADR.
 ## critérios de aceitação
 
 - `cargo test -p sem`, `cargo clippy -p sem --all-targets -- -D warnings`,
-  `cargo check -p sem --target wasm32-unknown-unknown`, `./script/gate`.
+  `cargo check -p sem --target wasm32-unknown-unknown`, `./tool/tasks/fullcheck.sh`.
 - zero `unwrap`/`expect` fora de teste.
 - `arc_sync_guard` passa com o crate registrado.
 - doc test com o exemplo da tese: uma struct `GitState { staged:

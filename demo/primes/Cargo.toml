@@ -7,7 +7,7 @@ publish = false
 description = "prime number creatures, an emergent particle swarm driven by prime coherence (port of the codepen demo) on the plev engine"
 
 # Both a lib (pure, gpu-free backend modules, unit tested) and a bin (the
-# windowed app). Same pattern as crates/showcase: src/lib.rs is auto-detected.
+# windowed app). Same pattern as apps/uigallery: src/lib.rs is auto-detected.
 [[bin]]
 name = "primes"
 path = "src/main.rs"

@@ -13,7 +13,7 @@ in this repository, shipped a visible defect, and was root-caused; treat a
 violation as a defect even when the screen looks right.
 
 plev is moving from a GPU UI engine to a generative interaction runtime
-(docs/mission/generative-runtime-program.md). the direction
+(docs/log/generative-runtime-program.md). the direction
 adds one layer on top of everything below: every control keeps a
 persistent identity and meaning while its pixels are born, disappear or
 transform. the section "the semantic contract" says which parts of that
@@ -36,7 +36,7 @@ the design system crate: `comps::prelude::*`), and every visible mutation
 invalidates (`EventResult::changed` / request redraw). the showcase is the
 template app. the declarative builder (`engine::builder`) is supported for
 prototypes and demos; `view`, `component`, `signal` and `narrate` are
-experimental: do not start app code on them (docs/ADR/official-app-pattern.md).
+experimental: do not start app code on them (docs/adr/structure/0023-official-app-pattern.md).
 
 task-69 adds a second supported pattern (surfaces materialized from
 verified plev IR); until its ADR lands, the pattern above is the only one.
@@ -49,7 +49,7 @@ them valid, who may run them, what happened when they ran.
 
 what exists (updated at each task close-out):
 
-- `crates/sem` (task-57, adr semantic-contract-as-pure-projection): the
+- `rust/accord` (task-57, adr semantic-contract-as-pure-projection): the
   contract as pure data. `SemId`, `Role`, `Value`, `StateRef`,
   `Constraints`, `ActionDecl` with its `reads` and `Policy`, `Node`, the
   `Semantics` trait, `SnapshotBuilder` (text or typed ids, every
@@ -57,7 +57,7 @@ what exists (updated at each task close-out):
   and `Snapshot::diff`. the engine (the binding table, accessibility),
   comps (the widgets' `.sem` and `project`), the showcase and the ide
   depend on it, and so do `wire` and `rec`.
-- the dispatcher, also in `crates/sem` (task-58, adr
+- the dispatcher, also in `rust/accord` (task-58, adr
   actions-carry-observed-state): `Request::observe` records the values the
   actor saw for the action's `reads`; `check` decides in a fixed order and
   goes `Stale` only when one of those values moved, with the delta and,
@@ -84,7 +84,7 @@ what exists (updated at each task close-out):
   handle events have neither yet: `Scrollbar`, `Card`, `GraphView`,
   `AppShell`, `EmptyState`, `Sidebar` and `EditorView`.
 - the first app on the one path is the showcase todo page
-  (`crates/showcase/src/view/apps/app/semantics.rs`): `Semantics +
+  (`apps/uigallery/src/views/apps/todo/semantics/mod.rs`): `Semantics +
   Operable`, owner of a `Dispatcher`; every click, the Enter key and the
   filter pills become `Request::observe(.., Actor::Human, ..)`; the model
   changes only inside `execute`; while an overlay holds the pointer the
@@ -105,10 +105,10 @@ what exists (updated at each task close-out):
   shaping path, never a second shaping (task-66b); `showcase --render` and
   `monster_player --frame` use it.
 - the engine keys its binding table and its accessibility node ids by
-  the `SemId` the app chose (crates/engine/src/compositor/binding.rs,
-  crates/engine/src/accessibility/ids.rs); the only identity it mints
+  the `SemId` the app chose (rust/engine/src/drawing/compositor/binding.rs,
+  rust/engine/src/control/accessibility/ids.rs); the only identity it mints
   itself is still `ViewId`, a per-frame counter reset in
-  `InputState::begin_frame` (crates/engine/src/input/mod.rs). it is a
+  `InputState::begin_frame` (rust/engine/src/control/input/mod.rs). it is a
   temporary render identity, never a control's identity. do not persist
   it, do not send it to an agent, do not record it.
 - accessibility (task-60, adr accessibility-projects-the-semantic-snapshot):
@@ -171,7 +171,7 @@ as the tasks land, these rules become binding (each line names its task):
   task-59 lands (task-59). typing is not a capability: a keystroke in a
   field changes the projected text (`todo.input:text`,
   `commit.message:text`) with no request, as
-  docs/ADR/semantic-binding-beside-the-scene.md exempts it, so it leaves
+  docs/adr/semantics/0035-semantic-binding-beside-the-scene.md exempts it, so it leaves
   no receipt and names no author; an actor with no keyboard sets the text
   with `set_value`, which does go through the dispatcher.
 - when the truth lives outside the ui process (the git index, a server),
@@ -204,7 +204,7 @@ stacks from `theme.shadows` (by `Elevation`), and text styles from the
 `theme.typography` ramp. a widget that lays out from tokens takes `&Theme`
 on `handle_event` too, so the hit test and the pixels come from one
 geometry. a number a screen needs that is not a token yet becomes one in
-`crates/engine/src/theme/scales.rs`, with its spec value in
+`rust/engine/src/styling/theme/scales.rs`, with its spec value in
 `tests_scales.rs`; it never lands in the screen.
 
 an app frames its screens with `comps::shell::AppShell` (full sidebar,
@@ -213,7 +213,7 @@ safe area). the only tokens an app may own are domain semantics derived
 from the theme (the ide's file-status colors).
 
 every comps widget renders under every built-in theme at a phone and a
-desktop width (`crates/comps/src/tests/matrix.rs`); a new widget joins
+desktop width (`rust/engine/src/widgets/tests/matrix.rs`); a new widget joins
 that matrix in the same change, and ships its showcase page.
 
 ## before writing anything
@@ -221,8 +221,8 @@ that matrix in the same change, and ships its showcase page.
 check whether the engine or comps already provides the capability. the
 most expensive failure pattern in this project was app-layer
 reimplementation of an existing feature (a second theme, five copied
-widgets, per-app ellipsis helpers). grep `crates/engine/src` and
-`crates/comps/src` first, read docs/catalog.md, and find one screen that
+widgets, per-app ellipsis helpers). grep `rust/engine/src` and
+`rust/engine/src/widgets` first, read docs/ref/component-catalog.md, and find one screen that
 already does it right (the showcase pages).
 
 the same rule holds for the new layer: one `sem` crate, one dispatcher,
@@ -238,7 +238,7 @@ one binding table, one accessibility projection. never a local copy.
 - never estimate text width arithmetically. `TextMeasurer` is GPU free and
   cached.
 - a family and weight pair resolves only if that exact face is embedded
-  (`crates/engine/src/text/fonts.rs`: Inclusive Sans 300 to 700, Inter 400
+  (`rust/engine/src/drawing/text/fonts.rs`: Inclusive Sans 300 to 700, Inter 400
   to 600, codicons). a new weight is embedded first, then added to the
   face-resolution test. scripts without an embedded face (arabic, cjk,
   color emoji) fall back and warn once; task-74 decides the fix.
@@ -276,7 +276,7 @@ one binding table, one accessibility projection. never a local copy.
   2026-09-21 came from that).
 - a shadow with blur 0 is still anti-aliased: `shadow_sigma` floors at
   `MIN_SHADOW_SIGMA`.
-- validate color by sampling pixels (docs/how-to/validate-visuals-by-pixel.md);
+- validate color by sampling pixels (docs/ref/validate-visuals-by-pixel.md);
   the dark background measures 48,48,48 on desktop and web.
 
 ## design for ranges, not screens

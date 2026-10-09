@@ -10,12 +10,12 @@ date: 2026-09-24
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/ADR/plev-ir-typed-and-verified.md). task-69 gave the host that
+(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 gave the host that
 materializes it and changes a surface's form by a whole new `VerifiedIr`,
-reconciled by `SemId` (docs/ADR/materialized-surfaces-from-verified-ir.md,
+reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md,
 the addendum of phase 2). the checkpoint b ended with the generated
 surface no longer worse than the fixed one, and the generation stays the
-main line (docs/mission/steps/checked/task-69-ephemeral-generative-surfaces-done.md).
+main line (docs/log/steps/task-69-ephemeral-generative-surfaces.md).
 
 task-70 is the next step of the thesis (sections 4 and 16): the interface
 changes without being built again. the only change of form was the whole
@@ -31,7 +31,7 @@ capabilities (phase 3) extend it.
 
 ### nine operations, as data
 
-`uir::Op` (`crates/uir/src/transform/mod.rs`) is serde data, the
+`uir::Op` (`rust/plevir/src/transform/mod.rs`) is serde data, the
 operation's name in `op`: `{"op": "hide", "id": "review.controls"}`. its
 reader denies unknown fields, so a model's typo is an error, not a
 default.
@@ -117,7 +117,7 @@ which the vocabulary does not have.
 ### where it lives
 
 the operations, the inverse and `Adapted` are in `uir`
-(`crates/uir/src/transform/`), pure like the rest of the crate: the
+(`rust/plevir/src/transform/`), pure like the rest of the crate: the
 operation is data the recorder keeps and the proposer of phase 2 writes,
 and `propose` depends on `uir` and `sem`, never on the engine; applying
 is a function from IR to IR followed by `verify`, which is here; and the
@@ -175,7 +175,7 @@ second is not taken.
 ### the demo
 
 over the fixture of the Claude's review of the checkpoint's first round
-(`crates/showcase/fixtures/ir/silences-review-claude.ir.json`, the one
+(`rust/plevir/tests/fixtures/silences-review-claude.ir.json`, the one
 that put the list of the cuts last), a `reorder` puts the cuts after the
 title and a `hide` takes out the detection card the fixed screen already
 offers. at 1280x800 both cuts, with their decision, duration, frame and
@@ -283,7 +283,7 @@ place (`ProposeError::Unapplied`). no operation at all is `NoChange`.
 
 #### the rules' grammar of changes
 
-a second reader beside the one of surfaces (`crates/propose/src/change.rs`),
+a second reader beside the one of surfaces (`rust/offers/src/change.rs`),
 with the same folding, in english and portuguese: **less** ("too much",
 "cluttered", "simpler"; "demais", "poluído", "mais simples"), **compare**
 only with a word of difficulty ("can't compare"; "não consigo comparar":
@@ -295,7 +295,7 @@ hint, or a word of the app or of the surface shown, which chooses the
 target. anything else is not a change.
 
 the targets come from the structure and the registry, never from an
-app's name (`crates/propose/src/reshape.rs`): the task is what binds an
+app's name (`rust/offers/src/reshape.rs`): the task is what binds an
 action, context a block that shows state and binds none. less hides each
 block of context (down through what holds the task, never inside a
 repeat, never a split's child), groups the controls of a stack that runs
@@ -309,7 +309,7 @@ before made and kept only when it applies.
 
 #### the prompt of a change
 
-`Llm` as a transformer asks with its own prompt (`crates/propose/src/ops.rs`):
+`Llm` as a transformer asks with its own prompt (`rust/offers/src/operations.rs`):
 the intent, how a change reads, the nine operations as JSON with what
 each refuses, the rules of identity, the verifier's rules and the
 policy, who asks, the components, the registry (the same text as a
@@ -364,7 +364,7 @@ the prompt's guidance says, for any app, that reviewing items is seeing
 what each one is (its picture when the app has one, its name, its
 numbers with their names, its state) and that "only what the intent
 needs" never takes that away. the rules' row goes by sense
-(`crates/propose/src/row.rs`): what the item is (picture, texts, and a
+(`rust/offers/src/row.rs`): what the item is (picture, texts, and a
 decision as a badge: a text two actions or more of the item read and
 nothing else), its numbers (a small stat each, named by its key), its
 actions (small buttons); each sense of two nodes or more is a row of its
@@ -539,7 +539,7 @@ images seen: the offer under the row after "preview segment, then apply
 cut" twice, and the composite's button on each cut once accepted. debt
 recorded: the host lends `promote` a registry where the item template
 counts as one more member of the collection (`registry` in
-`crates/surface/src/host.rs`); the right place is `uir`'s `promote`
+`rust/screen/src/host/mod.rs`); the right place is `uir`'s `promote`
 understanding a template, and then that detour goes (P2).
 local gate green, 2932 passed, 0 failed (was 2894); regress 175
 unchanged (2 new).

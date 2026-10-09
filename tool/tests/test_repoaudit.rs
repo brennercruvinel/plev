@@ -2,7 +2,7 @@
 //!
 //! The source of truth for what exists is Cargo.toml `members` and the
 //! examples/ directory, never a doc. Two architecture views are kept by
-//! hand (docs/arc/arc.toml the map + prose + diagram, README.md the home
+//! hand (docs/ATLAS.toml the map + prose + diagram, README.md the home
 //! page), so they drift on the first rush. This test makes drift a failing
 //! build instead of a silent lie: every workspace crate must be named in
 //! arc.toml and README, and every example directory must be named in
@@ -12,7 +12,7 @@
 use std::fs;
 use std::path::PathBuf;
 
-/// this guard lives in the engine crate (crates/engine), so the workspace
+/// this guard lives in the engine crate (rust/engine), so the workspace
 /// root is two levels up. the workspace Cargo.toml, docs/ and README live
 /// there; the examples/ dir is the engine's own.
 fn wroot() -> PathBuf {

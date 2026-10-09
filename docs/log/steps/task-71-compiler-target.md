@@ -29,11 +29,11 @@ fingir equivalência silenciosa), e a nota das anotações: "Figma -> plev IR
 
 ## estado atual no código
 
-- `crates/parser`: parse (tree-sitter: `tsx.rs`, `sass.rs`, `gpui.rs`),
+- `rust/import`: parse (tree-sitter: `tsx.rs`, `sass.rs`, `gpui.rs`),
   resolve (`resolve_react.rs` via `css_map.rs`, `resolve_gpui.rs`) para o
   `ParserNode` IR, emit (`emit.rs`) de código Rust contra
   `engine::builder`. o droplist reporta com arquivo:linha tudo que não
-  passa (`crates/parser/src/lib.rs`, ADR
+  passa (`rust/import/src/lib.rs`, ADR
   `transpiler-reports-every-unmapped-construct`). escopo brutalmente
   pequeno: um componente react (o card) e um widget gpui (o separador).
   marcado experimental.
@@ -88,7 +88,7 @@ origem.
 
 ## superfície sob responsabilidade
 
-`crates/parser/**`, proposta de ADR `docs/ADR/importers-target-plev-ir.md`.
+`rust/import/**`, proposta de ADR `docs/adr/importing/0069-importers-target-plev-ir.md`.
 dependência nova (grammar HTML, cliente do export Figma) só com
 justificativa aprovada.
 
@@ -98,7 +98,7 @@ o IR e o verifier (68), host de superfícies (69), headless (66).
 
 ## interfaces que pode alterar
 
-`crates/parser` inteiro; o formato do relatório é contrato com quem o lê
+`rust/import` inteiro; o formato do relatório é contrato com quem o lê
 (documentado).
 
 ## critérios de aceitação
@@ -107,7 +107,7 @@ o IR e o verifier (68), host de superfícies (69), headless (66).
 - comparação de pixels entre o IR materializado e o builder emitido, com a
   diferença explicada quando houver.
 - uma fonte nova (HTML/CSS subset ou Figma) com fixture e relatório.
-- `./script/gate` verde.
+- `./tool/tasks/fullcheck.sh` verde.
 
 ## testes esperados
 
@@ -142,13 +142,13 @@ afirmação aponta arquivo e linha.
 
 ### (a) o `ParserNode` campo a campo contra o IR do `uir`
 
-o `ParserNode` (`crates/parser/src/ir.rs:7-13`) tem `tag`, `props` e
+o `ParserNode` (`rust/import/src/tree.rs:7-13`) tem `tag`, `props` e
 `children`; `Tag` é `Div`, `Text` e `Slot` (`ir.rs:15-22`); os props já são
 nomes de método do builder com argumentos literais ou expressões de token
 (`ir.rs:33-62`). o IR pede identidade (`IrNode.sem`,
-`crates/uir/src/ir.rs:62-83`), um componente de vocabulário fechado
-(`crates/uir/src/vocab.rs:50-93`), props só por token
-(`crates/uir/src/token.rs:174-192`), layout por primitivas
+`rust/plevir/src/ir.rs:62-83`), um componente de vocabulário fechado
+(`rust/plevir/src/vocabulary.rs:50-93`), props só por token
+(`rust/plevir/src/token.rs:174-192`), layout por primitivas
 (`token.rs:202-224`), tamanho por token e peso (`token.rs:236-245`) e
 ligação a estado e ação que o app declara (`ir.rs:111-130`).
 
@@ -177,7 +177,7 @@ atributos que não são `className` (`onClick`, `placeholder`; o
 `tsx.rs:99-112` só lê `className`), a linha de cada nó e a construção de
 origem de cada prop (o resolve só conta, `resolve_react.rs:241-265`,
 `resolve_gpui.rs:130-133`). pela autorização do orquestrador isso entra de
-forma aditiva dentro do `crates/parser`: um `origin` no `ParserNode`, a
+forma aditiva dentro do `rust/import`: um `origin` no `ParserNode`, a
 lista de origens em cada `Prop` (fora do `PartialEq`, que continua
 comparando nome e argumentos), notas para as construções contadas que não
 viram prop, e o `covers` e o tipo (perdido ou reescrito) em cada
@@ -277,19 +277,19 @@ com role (`button`, `text_field`). o controle liga o evento do componente
 do app, `<superfície>.props`, com o nome do handler (`onOpen` vira `open`)
 ou, sem handler, do rótulo; o parâmetro de texto liga `text` a
 `<superfície>.props:<parâmetro>`. o IR só referencia, nada nele cria
-capacidade (`crates/uir/src/ir.rs:104-110`). com o registro vazio o
+capacidade (`rust/plevir/src/ir.rs:104-110`). com o registro vazio o
 verificador recusa pela regra 5 ou 4 dizendo exatamente o que falta ("the
 app declares no action `open` on `note_card.props`",
-`crates/uir/src/verify/bind.rs:176` e `:139`); o relatório lista as
+`rust/plevir/src/verify/bind.rs:176` e `:139`); o relatório lista as
 mesmas referências em `bindings`. o teste declara o registro, como o app
 faria, e o mesmo IR passa. deixar o controle sem ligação não serve: a
-regra 7 recusa controle só visual (`crates/uir/src/verify/access.rs:120-127`)
+regra 7 recusa controle só visual (`rust/plevir/src/verify/access.rs:120-127`)
 sem dizer qual capacidade falta.
 
 ### (f) pixels
 
 os dois lados no mesmo `engine::headless::Renderer`
-(`crates/engine/src/headless/mod.rs:138-270`), mesmo tamanho, escala 1,
+(`rust/engine/src/drawing/headless/mod.rs:138-270`), mesmo tamanho, escala 1,
 tema `Theme::hoff()` e fundo `theme.colors.bg`: o código builder emitido
 (o golden do gpui e o `expected.rs` do react, incluídos e executados como
 o `tests/emitted_compiles.rs` já faz) desenhado pelo `render` do
@@ -332,7 +332,7 @@ Status: pronto para validação do orquestrador. nada no `uir`, no
 
 ### o emissor e o que se perde
 
-- `crates/parser/src/emit_ir/` (`mod.rs`, `props.rs`, `control.rs`) lê o
+- `rust/import/src/emit/plevir/` (`mod.rs`, `props.rs`, `control.rs`) lê o
   mesmo `Resolution` do `emit.rs` e escreve `uir::Ir`. o `emit.rs` não
   mudou. a origem entrou de forma aditiva (`ir.rs`: `Origin`, `Prop::src`
   fora do `PartialEq`, `Note`, `DropKind`, `covers`).
@@ -351,7 +351,7 @@ Status: pronto para validação do orquestrador. nada no `uir`, no
 
 ### o relatório e o formato
 
-- `crates/parser/src/report.rs`: uma entrada por construção com `at`,
+- `rust/import/src/report.rs`: uma entrada por construção com `at`,
   `construct` e a categoria (`supported`+`ir`, `transformed`+`ir`+`rule`,
   `approximated`+`ir`+`difference`, `impossible`+`reason`), `covers` nas
   entradas de bloco, `bindings` à parte. JSON `plev_report: 1`, nomes
@@ -392,7 +392,7 @@ app), verifica. note card: `title`, `content` (estado), `reply` (texto) e
 
 ### fixtures e pixels
 
-- react: `crates/parser/fixtures/react/` escrita para a fase, não copiada
+- react: `rust/import/tests/fixtures/react/` escrita para a fase, não copiada
   (forma do card do corpus mais um campo e um botão com `onClick`); o card
   do corpus segue fora do repo e roda ao vivo quando existe. gpui: o
   separador de sempre. goldens novos: `expected.ir.json`,
@@ -437,7 +437,7 @@ app), verifica. note card: `title`, `content` (estado), `reply` (texto) e
 
 ### validação
 
-- `./script/gate` verde, pernas wasm e urnaui: 2990 passam, 0 falham, 27
+- `./tool/tasks/fullcheck.sh` verde, pernas wasm e urnaui: 2990 passam, 0 falham, 27
   ignorados (antes 2960 e 26: +30 testes, +1 ignorado, o diagnóstico que
   escreve os pngs). disco com 16 GB livres.
 - `cargo run --offline -p showcase --example regress -- check`: 175
@@ -517,7 +517,7 @@ a struct não muda (`ir.rs:12-20`). o que entra é aditivo, e nenhuma das
 fontes que existem produz:
 
 1. o prop `gap` (o `.gap(v)` do builder,
-   `crates/engine/src/builder/element/builders.rs:77`). nenhum resolve o
+   `rust/engine/src/compose/builder/element/builders.rs:77`). nenhum resolve o
    escreve hoje; o container do emissor de IR manda todo nome que não
    conhece para `lost` (`emit_ir/props.rs:490`), então ele aprende o gap
    do stack, pela mesma medida de token dos spacers
@@ -532,7 +532,7 @@ fontes que existem produz:
    a regra de posição do Figma precisa de `approximated` com a diferença
    em px. variante nova, que react e gpui não produzem.
 4. `Origin.tag == "img"` vira o componente `image` do `uir`
-   (`crates/uir/src/vocab.rs:339`, nome sempre, `source` opcional): um
+   (`rust/plevir/src/vocabulary.rs:339`, nome sempre, `source` opcional): um
    braço novo no `node()` do emissor antes do container
    (`emit_ir/mod.rs:226-227`). a fixture react não tem `<img>`; um
    `<img>` do corpus viraria `image` em vez de grupo, só no IR.
@@ -596,7 +596,7 @@ Figma (export JSON da API REST):
 
 ### (d) o script do Figma
 
-`script/figma-fixture` (python 3.14, só stdlib: `zipfile`, `zlib`,
+`tool/tasks/figmapull.py` (python 3.14, só stdlib: `zipfile`, `zlib`,
 `compression.zstd`, `json`) lê o `.fig` (um zip com `canvas.fig` em
 fig-kiwi: o schema kiwi em deflate cru, a mensagem em zstd), monta a
 árvore por `parentIndex` (ordem por `position`), acha a página cujo nome
@@ -635,7 +635,7 @@ com a integração, a task-71 vai para `checked`. nada no `uir`, no
 1. `e3201af7` a sonda (a) a (d), acima.
 2. `6e99cec8` as duas dependências.
 3. `7ca7d41e` o importer HTML/CSS com a fixture (`fixtures/html/`).
-4. `0cb09a90` o `script/figma-fixture` e a tela exportada
+4. `0cb09a90` o `tool/tasks/figmapull.py` e a tela exportada
    (`fixtures/figma/settings.json`).
 5. `4e16c349` o importer Figma, os goldens e o desenho headless das duas.
 6. este commit: a adição da fase 2 no ADR e este handoff.
@@ -703,7 +703,7 @@ tinha. nenhum outro pacote.
 
 ### validação
 
-- `./script/gate` verde, pernas wasm e urnaui: 3163 passam, 0 falham, 28
+- `./tool/tasks/fullcheck.sh` verde, pernas wasm e urnaui: 3163 passam, 0 falham, 28
   ignorados. o parser foi de 49 para 69 testes (+20), nenhum removido.
   disco com 13 GB livres no fim.
 - `cargo run --offline -p showcase --example regress -- check`: 176
@@ -711,7 +711,7 @@ tinha. nenhum outro pacote.
 
 ### linha para o índice de ADR
 
-`| 2026-09-25 | [importers-target-plev-ir](importers-target-plev-ir.md) | proposed | o parser ganha o segundo emissor, ParserNode para plev IR, ao lado do código builder (que não muda um byte); relatório em quatro categorias com arquivo:linha que estende a droplist, forma JSON fixa; tolerância por token medida no tema (metade da distância ao vizinho); controle vira componente com role ligado a uma ação nomeada em <superfície>.props (binding required); pixels contra o builder com cada diferença explicada (task-71 fase 1); fase 2: HTML/CSS subset (tree-sitter-html e -css) e Figma (export REST de um .fig por script/figma-fixture) pelo mesmo Resolution e os mesmos emissores, regra de posição approximated, cor por variável no modo da tela |`
+`| 2026-09-25 | [importers-target-plev-ir](importers-target-plev-ir.md) | proposed | o parser ganha o segundo emissor, ParserNode para plev IR, ao lado do código builder (que não muda um byte); relatório em quatro categorias com arquivo:linha que estende a droplist, forma JSON fixa; tolerância por token medida no tema (metade da distância ao vizinho); controle vira componente com role ligado a uma ação nomeada em <superfície>.props (binding required); pixels contra o builder com cada diferença explicada (task-71 fase 1); fase 2: HTML/CSS subset (tree-sitter-html e -css) e Figma (export REST de um .fig por tool/tasks/figmapull.py) pelo mesmo Resolution e os mesmos emissores, regra de posição approximated, cor por variável no modo da tela |`
 
 ### pendências
 
@@ -743,7 +743,7 @@ fechada pelo critério de aceite, item por item:
   - Figma: a tela "settings" do `Artify App.fig` do brenner
     (`fixtures/figma/settings.json`, 98 nós): 251, 27, 119, 196, nenhum
     binding (o design não nomeia capacidade). o `.fig` fica fora do repo;
-    `script/figma-fixture` o lê só com a stdlib do python 3.14, e o
+    `tool/tasks/figmapull.py` o lê só com a stdlib do python 3.14, e o
     orquestrador reproduziu a fixture byte a byte.
 - item 4: gate abaixo.
 

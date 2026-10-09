@@ -130,7 +130,7 @@ props (from the engine-fit study):
 - b (basic, v0): from a sampled frame sequence: diff consecutive
   snapshots, emit modify ops, linear segments, keyframe insertion on
   discontinuity. curve fitting (easing recovery) is v1. implemented as
-  discover (crates/monster/src/discover.rs): samples are quantized to the
+  discover (rust/motion/src/discover/mod.rs): samples are quantized to the
   wire grid before diffing, slot transitions become place | replace |
   remove (an id moving depth is remove + place), per-prop runs merge
   greedily into linear segments while every interior sample stays
@@ -144,7 +144,7 @@ props (from the engine-fit study):
 ## path asset payload (v0, defined 2025-03-26)
 
 asset payloads are opaque to the container; the Path kind's bytes are
-defined by crates/monster/src/asset_path.rs so importers and players meet
+defined by rust/motion/src/encoding/asset_path.rs so importers and players meet
 through one codec: color rgba8 (tessellation assigns one color to every
 vertex), vertex_count u16, index_count u32, vertices as i32 twips pairs,
 indices u16. positions quantize to the twips grid, so sub-twip float
@@ -166,7 +166,7 @@ the samples.
 
 ## optimizer passes (encoder-side, format-neutral)
 
-optimize (crates/monster/src/optimize.rs) runs between authoring or
+optimize (rust/motion/src/optimize/mod.rs) runs between authoring or
 discovery and encode, on the IR only; the wire layout and frozen
 fixtures never change. three passes over any validated timeline:
 static track collapse (a chain that never strays from its base value
@@ -194,7 +194,7 @@ SceneNode must derive PartialEq for structural round-trip tests
 
 ## crate plan
 
-crates/monster: ir.rs (node model), write.rs (encoder), read.rs (decoder),
+rust/motion: ir.rs (node model), write.rs (encoder), read.rs (decoder),
 play.rs (player), fixtures/ (golden), benches vs the lottie sample table.
 rhai behind feature "script", config default-features=false,
 features=["std","f32_float"] (wasm-safe; measured 226 KB gzip dieted).

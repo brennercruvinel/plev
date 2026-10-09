@@ -25,12 +25,12 @@ são onde o plev perde para o `git` direto (H4). um agente que age
 
 ## estado no código (main @ 5be83c5)
 
-- `crates/wire/src/proto.rs:197-203`: `StageReply { request, stage, at,
+- `rust/socket/src/protocol.rs:197-203`: `StageReply { request, stage, at,
   asked }`, sem revisão.
-- `crates/wire/src/server.rs:225-261`: `Server::forward` manda os
+- `rust/socket/src/server.rs:225-261`: `Server::forward` manda os
   estágios que o sink ouviu, sem acesso ao `Host`; chamado em `:219` (fim
-  do `handle`) e em `crates/wire/src/port.rs:296` (fim do `drain`).
-- `crates/wire/src/ring.rs:52`: `Ring::serve(snapshot) -> Revision`
+  do `handle`) e em `rust/socket/src/port.rs:296` (fim do `drain`).
+- `rust/socket/src/ring.rs:52`: `Ring::serve(snapshot) -> Revision`
   guarda um snapshot servido; `since` e `from_revision` só aceitam
   revisão que esteja no anel.
 
@@ -101,7 +101,7 @@ exatamente a revisão que o estágio terminal daquele ato trouxe: o ide
 mostra o efeito de um ato quando ele termina (task-84), e a projeção do
 `forward` vê isso. o que a revisão não traz, e uma observação no mesmo
 instante também não traria, está no ADR
-(`docs/ADR/a-terminal-stage-carries-the-revision.md`, consequências): o
+(`docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md`, consequências): o
 `show_diff` termina antes das linhas chegarem, e um stage que falha no
 git deixa o palpite da view até o refresh.
 
@@ -138,11 +138,11 @@ Implementado:
   para saber a revisão; mantém as observações que decidem.
 
 Arquivos principais:
-- crates/wire/src/{proto.rs,server.rs,port.rs,lib.rs,bin/plev.rs}
-- crates/wire/tests/{server.rs,codec.rs,traffic.rs,cli.rs}
-- crates/ide/src/bin/lab/scripted.rs, crates/ide/tests/lab.rs
-- docs/ADR/a-terminal-stage-carries-the-revision.md (novo),
-  docs/ADR/agents-act-through-the-semantic-contract.md (consequências)
+- rust/socket/src/{proto.rs,server.rs,port.rs,lib.rs,bin/plev.rs}
+- rust/socket/tests/{server.rs,codec.rs,traffic.rs,cli.rs}
+- apps/agenteval/src/arms/scripted.rs, apps/agenteval/tests/experiment.rs
+- docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md (novo),
+  docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md (consequências)
 
 Interfaces adicionadas/alteradas:
 - wire::StageReply ganha o campo pub revision (quem monta a struct à mão
@@ -173,7 +173,7 @@ Testes:
   estágio) e o agente encadeou pelo menos um ato, nos dois cenários.
 
 Validação executada:
-- ./script/gate verde (test, clippy -D warnings, fmt, wasm -D warnings,
+- ./tool/tasks/fullcheck.sh verde (test, clippy -D warnings, fmt, wasm -D warnings,
   perna urnaui no subdiretório do target dir): 2102 passados, 0
   falhas, 12 ignorados. a main tinha 2096 no gate da task-85; +6 testes
   novos (cinco em wire/tests/server.rs, um em plev.rs).
@@ -196,7 +196,7 @@ Decisões:
   submit: é onde ele decide, e é nela que a pessoa do roteiro age.
 
 Limitações:
-- o relatório do ide-lab (story::acts, crates/ide/src/bin/lab/story.rs,
+- o relatório do ide-lab (story::acts, apps/agenteval/src/story.rs,
   fora dos arquivos permitidos) só conhece as observações servidas: o
   form de um ato que se apoia na revisão de um estágio sai "observed", e
   served_index, observations_between e fresh_before não o veem. o teste
@@ -235,7 +235,7 @@ Commits:
 - (este) task-87: handoff
 ```
 
-linha proposta para `docs/ADR/README.md`, depois da do task-83:
+linha proposta para `docs/adr/README.md`, depois da do task-83:
 
 ```text
 | 2026-09-23 | [a-terminal-stage-carries-the-revision](a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 160 us no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |

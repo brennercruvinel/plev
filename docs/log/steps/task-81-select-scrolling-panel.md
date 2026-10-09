@@ -36,7 +36,7 @@ visível ao abrir.
 
 ## escopo
 
-`crates/comps/src/form/select.rs` e os testes dele. o desenho, o hit test
+`rust/engine/src/widgets/form/select/mod.rs` e os testes dele. o desenho, o hit test
 e a ligação leem a mesma janela de linhas (`drawn_rows` passa a considerar
 o offset); roda do mouse e teclado (setas) rolam; as opções fora da janela
 continuam projetadas como filhos enquanto o painel está aberto, mas só as

@@ -58,9 +58,9 @@ a sonda foi feita, como teste, e nada do pedido foi implementado.
 
 ### a sonda
 
-dois testes em `crates/ide/tests/agent_port.rs`, na base (`88923f2`), com
+dois testes em `apps/idestudio/tests/agent_port.rs`, na base (`88923f2`), com
 o porto real, o git worker real e um shell que serve o porto como a
-janela do ide serve (`crates/ide/src/main.rs`, `serve_agent`): depois do
+janela do ide serve (`apps/idestudio/src/main.rs`, `serve_agent`): depois do
 wake do porto e depois de cada resposta do worker.
 
 - `an_agent_discard_through_the_port_waits_for_the_person_who_confirms_it`:
@@ -84,7 +84,7 @@ wake do porto e depois de cada resposta do worker.
 o que o modal mostra hoje, e onde o texto nasce: título "Discard
 changes?", corpo "test-agent asks to discard all changes to README. This
 cannot be undone.", botão "Discard" (e "Cancel"). o texto nasce em
-`Workbench::confirmation` (`crates/ide/src/workbench/notice.rs`), a partir
+`Workbench::confirmation` (`apps/idestudio/src/capability/notice.rs`), a partir
 do ator, da ação e do alvo do request; `ask_next_confirmation`
 (`person.rs`) o passa a `WorkspaceView::open_confirm_modal`
 (`views/workspace/overlays.rs`), que abre o `comps::feedback::Modal` e o
@@ -110,13 +110,13 @@ confirmar funciona, porque o `stage` vai ao worker; recusar é exatamente
 o caso quebrado ("o agente recebe o `declined` e para").
 
 nada disso se resolve nos arquivos permitidos: o drain é de
-`crates/wire/src/port.rs` e de quem o chama (`crates/ide/src/main.rs`,
-`crates/ide/src/agent.rs`, o laboratório).
+`rust/socket/src/port.rs` e de quem o chama (`apps/idestudio/src/main.rs`,
+`apps/idestudio/src/capability/agent.rs`, o laboratório).
 
 ### opções
 
 1. o porto acorda o próprio loop quando o sink ouve, fora de um drain, um
-   estágio de um request que ele emitiu. arquivos: `crates/wire/src/port.rs`
+   estágio de um request que ele emitiu. arquivos: `rust/socket/src/port.rs`
    (fora da lista) e `server.rs` (na lista; está com 610 das 639 linhas).
    impacto: todo host (a janela do ide, o `ide-lab`, o showcase) passa a
    entregar o estágio sem mudar o shell; nenhuma mudança de protocolo; um
@@ -125,7 +125,7 @@ nada disso se resolve nos arquivos permitidos: o drain é de
    o mesmo closure que o leitor já chama.
 2. a janela do ide serve o porto depois de toda entrada de uma pessoa,
    como já serve depois de um resultado do git. arquivo:
-   `crates/ide/src/main.rs` (proibido). impacto: uma linha, mas vale só
+   `apps/idestudio/src/main.rs` (proibido). impacto: uma linha, mas vale só
    para a janela; cada host precisa lembrar disso (o laboratório também,
    quando tiver uma pessoa que responde), e o teste precisa imitar o shell.
 3. aceitar a espera e documentar: o agente precisa mandar outra mensagem
@@ -142,17 +142,17 @@ o protocolo.
 
 ### decisão necessária
 
-1. autorizar `crates/wire/src/port.rs` (opção 1) ou `crates/ide/src/main.rs`
+1. autorizar `rust/socket/src/port.rs` (opção 1) ou `apps/idestudio/src/main.rs`
    (opção 2), ou aceitar a espera (opção 3). a sonda da recusa vira o
    teste que prova a escolha (ela hoje fixa a espera).
 2. junto, dois arquivos fora da lista que a implementação vai pedir de
    qualquer jeito, aditivos:
-   - `crates/sem/src/redact.rs`: a regra única de segredo é
+   - `rust/accord/src/redactor.rs`: a regra única de segredo é
      `Secrets::request`, e é ela que o `rec` e o porto aplicam ao request.
      sem ela, a pergunta sobre um alvo secreto vai inteira para a gravação
      e para o `asked`. a mudança: a pergunta vira `REDACTED` quando o alvo
      é secreto, como o texto livre de um erro. três linhas e um teste.
-   - `crates/inspect/src/why.rs`: `text::why` recebe só o `Why`, e o
+   - `rust/replay/src/why.rs`: `text::why` recebe só o `Why`, e o
      `Asked` dele não carrega o campo novo do request; mexer só em
      `text/**` não põe a pergunta no `why`. a mudança: um campo em
      `Asked`, preenchido do request gravado (aditivo também no `--json`).
@@ -175,7 +175,7 @@ o protocolo.
   `Actor::Assistive` não pede nada, como o `Confirm::ForAgents` não pede
   nada a uma pessoa. recusar com um motivo novo exigiria uma variante em
   `Rejection`, e o `rec` tem um `match` completo sobre ela
-  (`crates/rec/src/weigh.rs`), o que é condição de parada.
+  (`rust/record/src/weigh.rs`), o que é condição de parada.
 - o modal: diz que o agente pergunta e mostra o texto dele, na terceira
   pessoa ("the person", nunca "you"); confirmar e recusar como hoje.
 - a projeção: a pergunta não entra em `notices` nem num nó do modal (o
@@ -191,13 +191,13 @@ o protocolo.
 ### contagem
 
 `cargo test --workspace` na base: 2267 passaram, 11 ignorados. com a sonda:
-2269 e 11. `./script/gate` verde no commit da sonda, com a perna urnaui
+2269 e 11. `./tool/tasks/fullcheck.sh` verde no commit da sonda, com a perna urnaui
 (82 passaram, 1 ignorado), o clippy, o fmt e o wasm check.
 
 ### ADR
 
 nenhum escrito, porque parou. a linha que eu proporia: uma seção datada no
-ADR da 58b (`docs/ADR/actions-carry-observed-state.md`): "um agente pode
+ADR da 58b (`docs/adr/semantics/0033-actions-carry-observed-state.md`): "um agente pode
 pedir, no próprio request, que uma pessoa confirme antes; o request espera
 como um `Confirm::ForAgents`".
 
@@ -231,8 +231,8 @@ a sonda achou que a recusa da pessoa não chegava ao agente (seção acima).
 o orquestrador classificou como P0: o porto promete os estágios dos
 requests que o agente emitiu, e essa promessa quebrava num caminho que já
 existia (58b). escolheu a opção 1, a correção veio primeiro e sozinha, e
-liberou `crates/wire/src/port.rs`, `crates/sem/src/redact.rs` e
-`crates/inspect/src/why.rs`.
+liberou `rust/socket/src/port.rs`, `rust/accord/src/redactor.rs` e
+`rust/replay/src/why.rs`.
 
 ### o P0: um estágio ouvido fora de um drain acorda o porto
 
@@ -255,18 +255,18 @@ liberou `crates/wire/src/port.rs`, `crates/sem/src/redact.rs` e
   lista, o showcase não tem ação que espere uma pessoa e o laboratório não
   tem pessoa que responda ao modal. a prova vale para qualquer host que
   drene no wake: um teste com socket real em que o shell do toy só drena
-  no wake (`crates/wire/tests/socket.rs`) e os testes do ide com o shell
+  no wake (`rust/socket/tests/socket.rs`) e os testes do ide com o shell
   servindo só no wake.
 - custo: um drain vazio a mais por estágio tardio num shell que também
   drena depois do resultado do git (o wake que ficou na fila durante o
   `apply`). os wakes já coalescem.
 - o `server.rs` estava com 610 das 639 linhas de produção: o sink foi para
-  `crates/wire/src/sink.rs` num commit só de movimento, antes. agora o
+  `rust/socket/src/sink.rs` num commit só de movimento, antes. agora o
   `server.rs` tem 599.
 
 ### a sonda, depois do P0
 
-os dois testes da sonda (`crates/ide/tests/agent_port.rs`) usam agora um
+os dois testes da sonda (`apps/idestudio/tests/agent_port.rs`) usam agora um
 shell que serve o porto só no wake. o do discard confirmado recebe
 `confirmed`, `executing` e `completed`. o da recusa, que fixava a espera,
 virou `a_decline_reaches_the_agent_with_no_message_from_it`: a pessoa
@@ -303,7 +303,7 @@ botões "Allow" e "Cancel". num discard, o botão continua "Discard" e o
 corpo mantém "This cannot be undone.". fica na terceira pessoa ("the
 person", nunca "you"). confirmar e recusar seguem como antes, pelo
 dispatcher como `Actor::Human`. o texto nasce em `Workbench::confirmation`
-(`crates/ide/src/workbench/notice.rs`).
+(`apps/idestudio/src/capability/notice.rs`).
 
 ### as decisões
 
@@ -327,10 +327,10 @@ dispatcher como `Actor::Human`. o texto nasce em `Workbench::confirmation`
 
 ### o aceite
 
-- sem: seis testes em `crates/sem/tests/dispatch.rs` (o pedido espera,
+- sem: seis testes em `rust/accord/tests/dispatch.rs` (o pedido espera,
   confirmado roda com a segunda checagem, recusado não roda, quem já
   exigia continua igual, pessoa e teste não pedem nada, a pergunta nunca
-  passa de uma recusa), a forma serde em `crates/sem/tests/wire.rs` e a
+  passa de uma recusa), a forma serde em `rust/accord/tests/encoding.rs` e a
   redação em `redact.rs`.
 - wire: a forma de `Act` com e sem pergunta (`codec.rs`); pela porta, a
   espera, a confirmação, a recusa e a segunda checagem, o texto limitado
@@ -376,7 +376,7 @@ request 8 (origin 0): stage on changes.file[src/session.rs] by agent:test-agent,
 
 ### validação e contagem
 
-`./script/gate` verde depois do rebase em `e840904`, com teste, clippy
+`./tool/tasks/fullcheck.sh` verde depois do rebase em `e840904`, com teste, clippy
 `-D warnings`, fmt, wasm check e a perna urnaui. `cargo test --workspace`:
 na base eram 2267 passando e 11 ignorados; agora são 2289 e 11 (+22). a
 perna urnaui tem 82 passando e 1 ignorado, igual. os testes novos da porta
@@ -385,7 +385,7 @@ perna urnaui tem 82 passando e 1 ignorado, igual. os testes novos da porta
 ### ADR
 
 seção datada "updated on 2026-09-24 (task-92): an agent asks the person"
-em `docs/ADR/actions-carry-observed-state.md`, com o P0 descrito. a linha
+em `docs/adr/semantics/0033-actions-carry-observed-state.md`, com o P0 descrito. a linha
 para o índice, se o orquestrador quiser: "um agente pode pedir, no próprio
 request, que uma pessoa confirme antes (`Request::ask`, `Act::ask`, `plev
 act --ask`); o porto se acorda quando ouve, fora de um drain, um estágio
@@ -393,11 +393,11 @@ de um request seu (P0 da task-92)".
 
 ### limitações e o que fica para a integração
 
-- `crates/ide/src/agent.rs` (proibido) ainda diz que os estágios tardios
+- `apps/idestudio/src/capability/agent.rs` (proibido) ainda diz que os estágios tardios
   esperam a próxima mensagem se o shell não drenar depois do worker. com
   o P0 isso deixou de valer.
-- `docs/ADR/agents-act-through-the-semantic-contract.md`, o `README.md`,
-  o `docs/arc/arc.toml` e o `docs/CHANGELOG.md` não mudaram. o ADR do
+- `docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`, o `README.md`,
+  o `docs/ATLAS.toml` e o `docs/log/changelog.md` não mudaram. o ADR do
   porto não cita o `ask` nem o wake do sink; a seção do ADR da 58b cobre
   os dois.
 - o `rec` estima o peso de um request sem o texto da pergunta
@@ -411,7 +411,7 @@ de um request seu (P0 da task-92)".
 - o laboratório não tem uma pessoa que responde ao modal: os modos
   `--human` só tiram um arquivo do index. para medir o handoff, precisa de
   um modo em que a pessoa confirma ou recusa (por exemplo, depois de um
-  atraso), em `crates/ide/src/bin/lab/**`, fora desta task. o P0 já faz a
+  atraso), em `apps/agenteval/src/**`, fora desta task. o P0 já faz a
   resposta chegar ao agente.
 - o briefing do agente não ensina a pergunta, como a terceira rodada não
   ensinou a regra da task-89: ela está no `plev act --help` e na doc do
@@ -458,7 +458,7 @@ validação do orquestrador:
   `port.rs`, `a_decline_reaches_the_agent_with_no_message_from_it` falha
   por timeout em 20 s; com ela, passa. o arquivo foi restaurado.
 
-aplicado no fechamento: a doc de `crates/ide/src/agent.rs` e a
+aplicado no fechamento: a doc de `apps/idestudio/src/capability/agent.rs` e a
 consequência no ADR agents-act-through (o wake e o `ask`); o índice de
 ADR e o CHANGELOG.
 

@@ -29,7 +29,7 @@ use crate::taxonomy::Role;
 /// or `source`, an empty `state` or `actions`, default `constraints`,
 /// `enabled` on, `inert` and `focusable` off are left out, and read back
 /// as those values when absent. `source` travels whenever the node has
-/// one; the agent port drops it unless asked (crates/wire).
+/// one; the agent port drops it unless asked (rust/socket).
 #[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Node {

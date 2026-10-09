@@ -95,7 +95,7 @@ onde o `LabHost` enxerga o request esperando, sem mudar o `workbench`
 um achado para a gravação: `Compositor::hit` no centro dos dois botões do
 modal devolve `stacks`, o controle embaixo dele, porque o modal não é
 ligado a nenhum `SemId`. a janela do ide grava o clique de uma pessoa com
-esse `hit` (`crates/ide/src/record.rs`, fora da lista), então um clique no
+esse `hit` (`apps/idestudio/src/interfaces/window/record/mod.rs`, fora da lista), então um clique no
 modal fica gravado como um clique em `stacks`. o laboratório não repete
 isso: grava a resposta com o ponto do botão e sem alvo.
 
@@ -234,7 +234,7 @@ roteirizado padrão, que não pergunta, com a pessoa respondendo `allow`.
 
 ### testes
 
-- `crates/ide/tests/lab.rs`, os seis de antes sem mudança (o diff do
+- `apps/agenteval/tests/experiment.rs`, os seis de antes sem mudança (o diff do
   arquivo só acrescenta) e quatro novos:
   - `the_agent_asks_the_person_who_allows_and_the_three_files_are_committed`:
     MATCH, commit com os três, a pergunta com o texto, `answer_ms` de no
@@ -262,7 +262,7 @@ roteirizado padrão, que não pergunta, com a pessoa respondendo `allow`.
 ### validação e contagem
 
 - `df -h /` antes de cada gate: 14 e 15 GB livres.
-- `./script/gate` verde no commit `363d6dd`, com teste, clippy `-D
+- `./tool/tasks/fullcheck.sh` verde no commit `363d6dd`, com teste, clippy `-D
   warnings`, fmt, wasm check e a perna urnaui.
 - antes: `cargo test --workspace` na base `e42e596`, medido aqui: 2319
   passaram, 12 ignorados; com a perna urnaui (82 e 1, sem mudança), 2401
@@ -342,7 +342,7 @@ roteirizado padrão, que não pergunta, com a pessoa respondendo `allow`.
 
 ### limitações e riscos
 
-- a gravação da janela do ide (`crates/ide/src/record.rs`, fora da
+- a gravação da janela do ide (`apps/idestudio/src/interfaces/window/record/mod.rs`, fora da
   lista) grava um clique no modal com o controle embaixo dele (`stacks`
   na sonda). o laboratório não repete isso, mas uma sessão da janela
   diz que a pessoa clicou em `stacks` quando respondeu. P3, para quem
@@ -359,11 +359,11 @@ roteirizado padrão, que não pergunta, com a pessoa respondendo `allow`.
 
 ### arquivos
 
-- novos: `crates/ide/src/bin/lab/answer.rs` (a pessoa que responde),
-  `crates/ide/src/bin/lab/asked.rs` (o que o relatório conta das
+- novos: `apps/agenteval/src/answer.rs` (a pessoa que responde),
+  `apps/agenteval/src/asked.rs` (o que o relatório conta das
   perguntas).
-- mudados: `crates/ide/src/bin/lab/{args.rs, finish.rs, host.rs, lab.rs,
-  main.rs, scripted.rs}`, `crates/ide/tests/lab.rs` (só acrescentado),
+- mudados: `apps/agenteval/src/{args.rs, finish.rs, host.rs, lab.rs,
+  main.rs, scripted.rs}`, `apps/agenteval/tests/experiment.rs` (só acrescentado),
   este arquivo e uma nota datada na seção do protocolo da task-62.
 - nenhuma interface de biblioteca mudou: só a linha de comando do
   `ide-lab` e o relatório, os dois aditivos. os exit codes são os de

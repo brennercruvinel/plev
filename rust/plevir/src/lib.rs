@@ -1,7 +1,7 @@
 //! the plev IR: an interface surface described by meaning.
 //!
 //! a surface is a tree of `IrNode`s. each node has an identity (`SemId`),
-//! a component of a closed vocabulary that mirrors `crates/comps`
+//! a component of a closed vocabulary that mirrors `rust/engine/src/widgets`
 //! (`Component`), props by token only (`Props`), a layout by primitives
 //! (`Layout`, `Size`), and bindings: the state it shows comes from the
 //! app's state (`StateRef`) and the actions it sends are capabilities the

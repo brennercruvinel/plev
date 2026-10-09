@@ -10,31 +10,31 @@ date: 2026-09-18
 inventário de tudo que desenhava ui no repositório antes do crate `comps`
 (seções 1 a 4, mantidas como registro do ponto de partida), o destino de
 cada item (seção 5) e o que a migração fez (seção 7). a decisão está em
-docs/ADR/comps-one-design-system-crate.md.
+docs/adr/structure/0027-comps-one-design-system-crate.md.
 
 ## 0. estado atual (depois da migração)
 
 | onde | o que |
 |---|---|
-| `crates/engine/src/theme` | tokens: `colors`, `glass`, `typography`, `spacing`, `radius`, `shape`, `control`, `size`, `duration`, `layout`, `shadows`, `motion`, `effects`. `Theme::hoff()`, `Theme::hoff_light()`, `Theme::named(..)` |
-| `crates/comps/src/core.rs` | `Rect`, `WidgetEvent`, `EventResult`, helpers de cor |
-| `crates/comps/src/recipe.rs` | `glass_pill`, `glass_surface`, `edge_light`, `inset_keylight`, `shadow_node`, `shadow_stack`, `menu_shadow`, `focus_ring`, `rounded_rect(_stroke)` |
-| `crates/comps/src/icons.rs` | ícones lucide (a tabela `ICONS`) |
-| `crates/comps/src/action` | `Button`, `IconButton`, `SubmitButton` (receitas de `theme.button`, o kit core), `Chip`, `Badge`; `press.rs` é o modelo de press e o `paint_surface` que os três compartilham |
-| `crates/comps/src/form` | `TextField` (sobre `TextInput`), `Checkbox`, `Switch`, `Slider`, `Select`, `EditKey` |
-| `crates/comps/src/nav` | `Tabs`, `NavLink`, `Sidebar` (com `NavGroup`), `PanelHeader`, `Breadcrumb`, `SplitPane` |
-| `crates/comps/src/content` | `Card`, `Avatar`, `Panel`, `Stat`, `CodeBlock`, `Skeleton`, `Table`, `EmptyState`, `VirtualList`, `Tree`, `Separator` |
-| `crates/comps/src/feedback` | `Modal`, `ContextMenu`, `Toast`, `Tooltip`, `ProgressBar`, `Spinner`, `Scrollbar` |
-| `crates/comps/src/overlay` | `OverlayManager` |
-| `crates/comps/src/charts` | geometria + `draw` |
-| `crates/comps/src/graph.rs` | `GraphView` |
-| `crates/comps/src/editor` | `EditorView`, `EditorConfig::from_theme`, `EditorTheme::from_theme` |
-| `crates/comps/src/shell.rs` | `AppShell`, `SafeArea`, `ShellLayout` |
-| `crates/comps/src/tests` | `matrix.rs` (todo widget x todo tema x phone/desktop), `components.rs`, `widgets.rs`, `focus.rs` |
+| `rust/engine/src/styling/theme` | tokens: `colors`, `glass`, `typography`, `spacing`, `radius`, `shape`, `control`, `size`, `duration`, `layout`, `shadows`, `motion`, `effects`. `Theme::hoff()`, `Theme::hoff_light()`, `Theme::named(..)` |
+| `rust/engine/src/widgets/widget.rs` | `Rect`, `WidgetEvent`, `EventResult`, helpers de cor |
+| `rust/engine/src/widgets/recipe.rs` | `glass_pill`, `glass_surface`, `edge_light`, `inset_keylight`, `shadow_node`, `shadow_stack`, `menu_shadow`, `focus_ring`, `rounded_rect(_stroke)` |
+| `rust/engine/src/widgets/icons.rs` | ícones lucide (a tabela `ICONS`) |
+| `rust/engine/src/widgets/buttons` | `Button`, `IconButton`, `SubmitButton` (receitas de `theme.button`, o kit core), `Chip`, `Badge`; `press.rs` é o modelo de press e o `paint_surface` que os três compartilham |
+| `rust/engine/src/widgets/form` | `TextField` (sobre `TextInput`), `Checkbox`, `Switch`, `Slider`, `Select`, `EditKey` |
+| `rust/engine/src/widgets/nav` | `Tabs`, `NavLink`, `Sidebar` (com `NavGroup`), `PanelHeader`, `Breadcrumb`, `SplitPane` |
+| `rust/engine/src/widgets/content` | `Card`, `Avatar`, `Panel`, `Stat`, `CodeBlock`, `Skeleton`, `Table`, `EmptyState`, `VirtualList`, `Tree`, `Separator` |
+| `rust/engine/src/widgets/feedback` | `Modal`, `ContextMenu`, `Toast`, `Tooltip`, `ProgressBar`, `Spinner`, `Scrollbar` |
+| `rust/engine/src/widgets/overlay` | `OverlayManager` |
+| `rust/engine/src/widgets/charts` | geometria + `draw` |
+| `rust/engine/src/widgets/graph/mod.rs` | `GraphView` |
+| `rust/engine/src/widgets/editor` | `EditorView`, `EditorConfig::from_theme`, `EditorTheme::from_theme` |
+| `rust/engine/src/widgets/shell.rs` | `AppShell`, `SafeArea`, `ShellLayout` |
+| `rust/engine/src/widgets/tests` | `matrix.rs` (todo widget x todo tema x phone/desktop), `components.rs`, `widgets.rs`, `focus.rs` |
 | consumidores | showcase (uma página por widget, em árvore de três grupos, a tabela é `view::pages::PAGES`; chrome via `AppShell`), ide (`status.rs` é o único token local), urnaui (`view/field.rs` é um alias de `TextField`) |
 
-referência visual: o git client (`crates/ide`, que consome `crates/git`)
-e a galeria (`crates/showcase`). os dois já falam HOFF dark glass; o
+referência visual: o git client (`apps/idestudio`, que consome `rust/gitdrv`)
+e a galeria (`apps/uigallery`). os dois já falam HOFF dark glass; o
 problema é que falam em dialetos diferentes.
 
 semântica (task-59, 2026-09-23): todo widget interativo do comps
@@ -198,10 +198,10 @@ content.w":
 | tipografia | a ramp HOFF já é completa; falta `mono()` (o `code_style` existe em 3 lugares) e `stat()` (32/40/500 do card) |
 | acessibilidade por componente | cada widget expõe `role` + `label` pro accesskit; hoje só o que passa pelo builder tem |
 
-## 5. destino: `crates/comps`
+## 5. destino: `rust/engine/src/widgets`
 
 ```
-crates/comps/
+rust/engine/src/widgets/
   Cargo.toml          depende só de engine (e rope pro editor)
   README.md
   src/
@@ -264,5 +264,5 @@ cada passo passa o gate inteiro antes do próximo.
 - ide: `theme.rs` e `components/` apagados; views sobre comps + `Theme::hoff()`/`hoff_light()`; `status.rs` com as cores de status de arquivo.
 - showcase: chrome via `AppShell` (sidebar cheia, rail, drawer), seção `Chrome` nova, fields e app section sobre `TextField`.
 - urnaui: `Field` vira alias de `TextField`; layouts recebem o tema.
-- examples: `todo` e `text_input` absorvidos pelo showcase; `editor` foi pra `crates/comps/examples`; `input`, `layers`, `mobile_input`, `scene3d` leem `Theme::default()`.
+- examples: `todo` e `text_input` absorvidos pelo showcase; `editor` foi pra `rust/engine/src/widgets/examples`; `input`, `layers`, `mobile_input`, `scene3d` leem `Theme::default()`.
 - o que ficou como constante nomeada, de propósito: tempos de plataforma (blink 0,53 s, delay de tooltip 0,45 s, multi-click 0,4 s, fade da scrollbar 1 s, velocidade do spinner), a geometria pura dos charts (gaps mínimos, raio máximo de barra, furo do donut), o mundo do grafo (`WORLD`, `NODE_R`, `CLICK_DIST`), a fração de largura da mensagem do empty state. nada disso é cor, raio, altura ou padding de design.
