@@ -43,15 +43,15 @@
 //! only a `VerifiedIr` materializes; no function here takes an `Ir`:
 //!
 //! ```
-//! fn open(ir: uir::VerifiedIr, app: &sem::Snapshot) -> surface::Surface {
-//!     surface::Surface::materialize(ir, app)
+//! fn open(ir: plevir::VerifiedIr, app: &accord::Snapshot) -> screen::Surface {
+//!     screen::Surface::materialize(ir, app)
 //! }
 //! ```
 //!
 //! ```compile_fail
 //! // an IR the verifier did not accept does not type-check as one.
-//! fn open(ir: uir::Ir, app: &sem::Snapshot) -> surface::Surface {
-//!     surface::Surface::materialize(ir, app)
+//! fn open(ir: plevir::Ir, app: &accord::Snapshot) -> screen::Surface {
+//!     screen::Surface::materialize(ir, app)
 //! }
 //! ```
 

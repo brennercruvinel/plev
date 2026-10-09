@@ -9,8 +9,8 @@
 //! the [`ActionRegistry`](crate::actions::ActionRegistry).
 //!
 //! ```rust
-//! use engine::actions::shortcuts::ShortcutMap;
-//! use engine::actions::Keystroke;
+//! use engine::control::keymap::shortcuts::ShortcutMap;
+//! use engine::control::keymap::Keystroke;
 //!
 //! let map = ShortcutMap::new()
 //!     .bind("cmd-o", "open")

@@ -19,7 +19,7 @@
 //! ```
 //! use std::collections::BTreeSet;
 //!
-//! use sem::{Change, Role, SemId, Semantics, Snapshot, SnapshotBuilder, StateRef, Value};
+//! use accord::{Change, Role, SemId, Semantics, Snapshot, SnapshotBuilder, StateRef, Value};
 //!
 //! struct GitState {
 //!     staged: BTreeSet<String>,

@@ -2,7 +2,7 @@
 //! `claude -p` of Claude Code, run as a child process.
 //!
 //! ```text
-//! propose::Llm -> ClaudeCli::complete -> claude -p (prompt on stdin)
+//! offers::Llm -> ClaudeCli::complete -> claude -p (prompt on stdin)
 //!              <- the reply (the json result on stdout) or a ModelError
 //! ```
 //!

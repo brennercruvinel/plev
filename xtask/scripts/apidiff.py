@@ -26,7 +26,7 @@ for line in open(os.path.join(plevmap.ROOT, "xtask/tests/modpaths.txt")):
 IDENT = re.compile(r"[A-Za-z0-9_]")
 
 
-def translate(text):
+def translate(text, bare=True):
     out, i = [], 0
     while i < len(text):
         if i == 0 or not (IDENT.match(text[i - 1]) or text[i - 1] == ":"):
@@ -35,10 +35,12 @@ def translate(text):
                 if text.startswith(old, i):
                     hit = (old, new)
                     break
-                bare = old[:-2]
-                j = i + len(bare)
-                if text.startswith(bare, i) and (j == len(text) or not (IDENT.match(text[j]) or text[j] == ":")):
-                    hit = (bare, new[:-2])
+                if not bare:
+                    continue
+                stem = old[:-2]
+                j = i + len(stem)
+                if text.startswith(stem, i) and (j == len(text) or not (IDENT.match(text[j]) or text[j] == ":")):
+                    hit = (stem, new[:-2])
                     break
             if hit:
                 out.append(hit[1])

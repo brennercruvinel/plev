@@ -8,7 +8,7 @@ use std::any::Any;
 ///
 /// # Example
 /// ```rust
-/// use engine::input::dispatch::{ActionQueue, WidgetAction};
+/// use engine::control::input::dispatch::{ActionQueue, WidgetAction};
 ///
 /// #[derive(Debug, PartialEq)]
 /// enum FileAction { Stage(String), Discard(String) }

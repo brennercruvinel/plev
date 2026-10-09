@@ -12,7 +12,7 @@
 //! sits on top (`"plev_ir": 1`):
 //!
 //! ```
-//! let ir: uir::Ir = serde_json::from_str(r#"{
+//! let ir: plevir::Ir = serde_json::from_str(r#"{
 //!     "plev_ir": 1,
 //!     "surface": {
 //!         "id": "commit",

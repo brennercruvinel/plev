@@ -10,7 +10,7 @@
 //! nothing unverified leaves this crate:
 //!
 //! ```text
-//! intent -> Proposer -> Ir -> uir::verify -> VerifiedIr -> the runtime
+//! intent -> Proposer -> Ir -> plevir::verify -> VerifiedIr -> the runtime
 //! ```
 //!
 //! two proposers:

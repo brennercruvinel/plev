@@ -7,7 +7,7 @@
 //! for a cache hit is a vertex copy with offset + tint applied.
 //!
 //! ```rust
-//! use comps::icons;
+//! use engine::widgets::icons;
 //! let node = icons::icon_at("folder", 16.0, [1.0, 1.0, 1.0, 1.0], 8.0, 8.0);
 //! assert!(node.is_some());
 //! ```

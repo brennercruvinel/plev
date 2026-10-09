@@ -28,10 +28,10 @@ const EDGE: f32 = 1e-3;
 /// [`VirtualList::project`] declares the list in a semantic projection.
 ///
 /// ```rust
-/// # use comps::content::VirtualList;
-/// # use comps::core::Rect;
-/// # use engine::compositor::Compositor;
-/// # use engine::theme::Theme;
+/// # use engine::widgets::content::VirtualList;
+/// # use engine::widgets::widget::Rect;
+/// # use engine::drawing::compositor::Compositor;
+/// # use engine::styling::theme::Theme;
 /// let mut list = VirtualList::new(24.0);
 /// list.set_item_count(10_000);
 /// let bounds = Rect::new(0.0, 0.0, 300.0, 240.0);

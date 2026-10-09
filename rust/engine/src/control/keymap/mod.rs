@@ -77,7 +77,7 @@ impl dyn Action {
 /// ```rust
 /// engine::actions!(file, [Save, SaveAs, Open]);
 ///
-/// use engine::actions::Action;
+/// use engine::control::keymap::Action;
 /// assert_eq!(Save.name(), "file::Save");
 /// ```
 #[macro_export]

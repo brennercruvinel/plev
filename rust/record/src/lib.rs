@@ -31,9 +31,9 @@
 //! ```
 //! use std::collections::BTreeSet;
 //!
-//! use rec::{Limits, Recorder};
-//! use sem::{Actor, Dispatcher, Execution, Operable, Outcome, Request, RequestId, Role};
-//! use sem::{Semantics, SnapshotBuilder, StateRef, Value};
+//! use record::{Limits, Recorder};
+//! use accord::{Actor, Dispatcher, Execution, Operable, Outcome, Request, RequestId, Role};
+//! use accord::{Semantics, SnapshotBuilder, StateRef, Value};
 //!
 //! struct Git {
 //!     staged: BTreeSet<String>,
@@ -56,7 +56,7 @@
 //!     }
 //! }
 //!
-//! fn look(git: &Git) -> sem::Snapshot {
+//! fn look(git: &Git) -> accord::Snapshot {
 //!     let mut b = SnapshotBuilder::new();
 //!     git.project(&mut b);
 //!     b.finish().expect("the projection is valid")
