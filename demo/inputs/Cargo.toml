@@ -8,8 +8,6 @@ description = "Input system demo -- hit regions, hover states, event queue"
 
 [dependencies]
 engine.workspace = true
-wgpu.workspace = true
-winit.workspace = true
 log.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

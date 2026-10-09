@@ -143,17 +143,13 @@ name = "agenteval"
 version = "0.1.0"
 dependencies = [
  "accord",
- "claude",
  "engine",
  "env_logger",
  "gitdrv",
  "idestudio",
  "log",
- "offers",
- "plevir",
  "record",
  "replay",
- "screen",
  "serde_json",
  "socket",
  "tempfile",
@@ -335,8 +331,6 @@ dependencies = [
  "env_logger",
  "pollster",
  "web-time",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -724,7 +718,6 @@ dependencies = [
  "env_logger",
  "pollster",
  "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -2453,7 +2446,6 @@ dependencies = [
  "serde_json",
  "socket",
  "tempfile",
- "wgpu",
  "winit",
 ]
 
@@ -2542,8 +2534,6 @@ dependencies = [
  "env_logger",
  "log",
  "pollster",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -2801,7 +2791,6 @@ version = "0.1.0"
 dependencies = [
  "engine",
  "env_logger",
- "winit",
 ]
 
 [[package]]
@@ -2892,8 +2881,6 @@ dependencies = [
  "import",
  "log",
  "pollster",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -3029,9 +3016,7 @@ version = "0.1.0"
 dependencies = [
  "accord",
  "engine",
- "env_logger",
  "log",
- "pollster",
  "socket",
  "uigallery",
  "winit",
@@ -3044,8 +3029,6 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -3056,8 +3039,6 @@ dependencies = [
  "env_logger",
  "import",
  "pollster",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -3742,9 +3723,6 @@ dependencies = [
  "log",
  "motion",
  "pollster",
- "record",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -4456,7 +4434,6 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
- "wgpu",
  "winit",
 ]
 
@@ -4796,8 +4773,6 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
- "wgpu",
- "winit",
 ]
 
 [[package]]
@@ -5084,7 +5059,6 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
- "wgpu",
  "winit",
 ]
 

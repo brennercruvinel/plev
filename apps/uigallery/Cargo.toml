@@ -27,7 +27,6 @@ path = "src/bin/web.rs"
 [dependencies]
 engine.workspace = true
 editor.workspace = true
-wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
 web-time.workspace = true

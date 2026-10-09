@@ -8,7 +8,6 @@ description = "Makepad-inspired SDF shapes showcase"
 
 [dependencies]
 engine.workspace = true
-wgpu.workspace = true
 winit.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
