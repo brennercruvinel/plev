@@ -17,7 +17,7 @@ tmps/
 .temp/
 
 # Android build outputs & caches (never track)
-apps/uigallery/apps/uigallery/android/.gradle/
+apps/uigallery/android/.gradle/
 apps/uigallery/android/app/build/
 apps/uigallery/android/app/src/main/jniLibs/
 apps/uigallery/android/build/
