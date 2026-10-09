@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "plev-showcase"
+rootProject.name = "plev-uigallery"
 include(":app")

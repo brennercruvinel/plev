@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "com.plev.showcase"
+    namespace = "com.plev.uigallery"
     compileSdk = 35
     ndkVersion = "27.2.12479018"
 
     defaultConfig {
-        applicationId = "com.plev.showcase"
+        applicationId = "com.plev.uigallery"
         minSdk = 28
         targetSdk = 35
         versionCode = 1
@@ -29,7 +29,7 @@ android {
         }
     }
 
-    // The Rust cdylib (libshowcase.so) is produced by cargo-ndk into jniLibs.
+    // The Rust cdylib (libuigallery.so) is produced by cargo-ndk into jniLibs.
     sourceSets {
         getByName("main") {
             jniLibs.srcDirs("src/main/jniLibs")

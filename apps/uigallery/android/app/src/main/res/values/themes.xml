@@ -3,7 +3,7 @@
     <!-- GameActivity extends AppCompatActivity, so the theme must descend from
          Theme.AppCompat. Fullscreen, no action bar: the GPU surface owns the
          whole window. -->
-    <style name="Theme.Showcase" parent="Theme.AppCompat.NoActionBar">
+    <style name="Theme.UIGallery" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>

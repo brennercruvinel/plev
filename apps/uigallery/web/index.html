@@ -4,12 +4,12 @@
     <link rel="icon" href="data:,">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>plev, design system showcase</title>
-    <!-- Trunk builds the showcase-web bin to wasm and injects the JS glue
-         (not the showcase bin: the lib's cdylib shares that name). -->
-    <link data-trunk rel="rust" href="../crates/showcase/Cargo.toml" data-bin="showcase-web" />
+    <title>plev, design system uigallery</title>
+    <!-- Trunk builds the uigallery-web bin to wasm and injects the JS glue
+         (not the uigallery bin: the lib's cdylib shares that name). -->
+    <link data-trunk rel="rust" href="../Cargo.toml" data-bin="uigallery-web" />
     <style>
-      /* Match the showcase's dark surface so there's no white flash
+      /* Match the uigallery's dark surface so there's no white flash
          while the wasm module loads and the GPU initializes. */
       html,
       body {

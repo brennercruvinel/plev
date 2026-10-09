@@ -1,10 +1,10 @@
-# Trunk config for the web build of urnaui. run from the repo root:
-# `script/web-urnaui` (wraps `trunk --config web/urnaui serve`).
+# Trunk config for the web build of urnadbapp. run from the repo root:
+# `tool/tasks/webtarget.sh urnadbapp` (wraps `trunk --config apps/urnadbapp/web serve`).
 #
-# index.html points at crates/urnaui/Cargo.toml (bin "urnaui"); trunk
+# index.html points at apps/urnadbapp/Cargo.toml (bin "urnadbapp"); trunk
 # runs cargo for wasm32-unknown-unknown, applies wasm-bindgen (version
-# pinned by crates/urnaui/Cargo.lock), and emits everything into
-# web/urnaui/dist/. urnaui is its own workspace (excluded from the root
+# pinned by apps/urnadbapp/Cargo.lock), and emits everything into
+# apps/urnadbapp/web/dist/. urnadbapp is its own workspace (excluded from the root
 # one); the native urna backend is cfg'd out on wasm, but cargo still
 # reads its manifest, so the sibling urna checkout at ../urna must exist.
 
