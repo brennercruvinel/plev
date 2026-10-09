@@ -475,8 +475,8 @@ impl TextMeasurer {
     /// directory segments from the middle, keeping the leading directory
     /// and the file name (`crates/…/fonts/Name.ttf`); measured with the
     /// SAME style the caller draws with. When even `…/name` will not fit,
-    /// the name itself is ellipsized by [`truncate_to_width`]
-    /// (Self::truncate_to_width). A character-count cut lands mid-segment
+    /// the name itself is ellipsized by
+    /// [`truncate_to_width`](Self::truncate_to_width). A character-count cut lands mid-segment
     /// (producing directory names that do not exist) and is blind to the
     /// font; this never does.
     pub fn elide_path(path: &str, style: &TextStyle, max_width: f32) -> String {

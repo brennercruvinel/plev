@@ -59,7 +59,7 @@ pub struct Overlay {
     pub x: f32,
     pub y: f32,
     /// Pixel dimensions. `0.0` means unknown; call
-    /// [`OverlayManager::set_bounds`] after the first render computes size.
+    /// [`OverlayManager::set_bounds`](super::OverlayManager::set_bounds) after the first render computes size.
     pub w: f32,
     pub h: f32,
     /// Compositor layer z_order for this overlay.

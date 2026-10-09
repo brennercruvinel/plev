@@ -118,7 +118,7 @@ fn splitmix64(mut x: u64) -> u64 {
 #[derive(Clone, Debug)]
 pub struct GraphScene {
     pub graph: GraphData,
-    /// positions[i] is node i of `graph` (already reindexed when
+    /// `positions[i]` is node i of `graph` (already reindexed when
     /// subsampled).
     pub positions: Vec<(f32, f32)>,
     /// Scene node → app node ordinal. Identity for full layouts.
@@ -297,7 +297,7 @@ fn subsample_bfs(data: &GraphData, max_nodes: usize) -> (GraphData, Vec<u32>) {
 }
 
 /// Pan/zoom mapping between world and screen space. Scale is clamped to
-/// [`MIN_SCALE`..`MAX_SCALE`] so a lost scroll storm can never lose the
+/// \[`MIN_SCALE`..`MAX_SCALE`\] so a lost scroll storm can never lose the
 /// graph.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ViewTransform {

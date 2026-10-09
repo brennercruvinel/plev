@@ -24,7 +24,7 @@ pub enum DrawKind {
     /// Glyph quads. Index ranges are patched in after the text system
     /// resolves glyphs (see [`Layer::set_text_data_with_ranges`]).
     ///
-    /// [`Layer::set_text_data_with_ranges`]: crate::compositor::Layer::set_text_data_with_ranges
+    /// [`Layer::set_text_data_with_ranges`]: crate::drawing::compositor::Layer::set_text_data_with_ranges
     Text,
 }
 
@@ -40,7 +40,7 @@ pub enum DrawCommand {
     /// its rounded rect. One resolve per command -- see
     /// [`SceneNode::BackdropBlur`].
     ///
-    /// [`SceneNode::BackdropBlur`]: crate::compositor::SceneNode::BackdropBlur
+    /// [`SceneNode::BackdropBlur`]: crate::drawing::compositor::SceneNode::BackdropBlur
     BackdropBlur {
         first_index: u32,
         /// Gaussian sigma in pixels.

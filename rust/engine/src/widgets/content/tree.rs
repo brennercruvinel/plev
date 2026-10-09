@@ -98,7 +98,7 @@ pub struct TreeRow {
 ///
 /// Rows are laid out top-down from `bounds.y`; the caller decides whether
 /// to wrap it in a scrollable region (pair with
-/// [`VirtualList`](crate::content::VirtualList)-style clipping for huge trees).
+/// [`VirtualList`](crate::widgets::content::VirtualList)-style clipping for huge trees).
 ///
 /// With a [`SemId`] ([`Tree::sem`]) the render binds the tree and each row
 /// it draws to the rects it hit-tests them with, and [`Tree::project`]

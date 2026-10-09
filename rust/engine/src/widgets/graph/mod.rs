@@ -3,8 +3,8 @@
 //! selection with incident-edge highlight.
 //!
 //! The app owns the data and the side panels: feed a
-//! [`GraphSpec`](engine::widgets::graph::geometry::GraphSpec) (or a precomputed
-//! [`GraphScene`](engine::widgets::graph::geometry::GraphScene) when the layout ran off the UI
+//! [`GraphSpec`](crate::widgets::graph::geometry::GraphSpec) (or a precomputed
+//! [`GraphScene`](crate::widgets::graph::geometry::GraphScene) when the layout ran off the UI
 //! thread), then read [`GraphView::hovered`]/[`selected`](GraphView::selected)
 //! to drive your own tooltip/detail — the widget never owns a Tooltip.
 //! Node payloads stay app-side; everything here indexes nodes by ordinal

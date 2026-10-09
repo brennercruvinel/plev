@@ -6,7 +6,7 @@
 //! two). Reach for the full [`KeymapMatcher`](super::KeymapMatcher)
 //! instead when you need context-dependent bindings (`ContextStack`),
 //! multi-stroke sequences, user-configurable keymaps, or dispatch into
-//! the [`ActionRegistry`](crate::actions::ActionRegistry).
+//! the [`ActionRegistry`](crate::control::keymap::ActionRegistry).
 //!
 //! ```rust
 //! use engine::control::keymap::shortcuts::ShortcutMap;

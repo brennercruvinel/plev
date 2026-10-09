@@ -1,6 +1,6 @@
-//! Chart drawing: turns the pure geometry from [`crate::charts`] into
+//! Chart drawing: turns the pure geometry from [`crate::widgets::charts`] into
 //! scene nodes. Every label is drawn with exactly the `TextStyle` it was
-//! measured with (the [`Label`](crate::charts::Label) carries it), and the
+//! measured with (the [`Label`](crate::widgets::charts::Label) carries it), and the
 //! reveal parameter `r` in 0..=1 scales primitives the way the original
 //! makepad_charts demo did: the line sweeps open, bars grow, bands rise,
 //! the ring sweeps clockwise. `r = 1.0` is the settled state.

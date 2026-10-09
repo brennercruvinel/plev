@@ -23,7 +23,7 @@
 //! that holds it ([`sites_of`]). A file saved with only literals, comments
 //! or whitespace changed keeps its positions as they are on disk now.
 //!
-//! The way back ([`write`]): a text the person typed over a literal in the
+//! The way back ([`write()`]): a text the person typed over a literal in the
 //! window replaces exactly that literal in its file, only while the file's
 //! code is still the baseline's, and is then applied as any save is.
 

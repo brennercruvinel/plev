@@ -254,7 +254,7 @@ impl TextField {
 
     /// Type what `clipboard` holds over the selection, on one line: its
     /// line breaks and tabs become spaces
-    /// ([`single_line`](crate::form::text_input::single_line)). `false`
+    /// ([`single_line`](crate::widgets::form::text_input::single_line)). `false`
     /// with an empty clipboard, unfocused or disabled.
     pub fn paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
         !self.disabled && self.input.handle_paste(clipboard)

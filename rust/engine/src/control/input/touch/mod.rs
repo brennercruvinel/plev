@@ -1,5 +1,5 @@
 //! Multi-finger touch tracking ([`TouchTracker`]) plus the touch -> pointer
-//! synthesis compatibility layer ([`synth`]).
+//! synthesis compatibility layer ([`TouchPointerSynth`]).
 
 mod synthesis;
 

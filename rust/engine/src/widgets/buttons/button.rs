@@ -76,7 +76,7 @@ pub struct Button {
     pub variant: ButtonVariant,
     pub size: ButtonSize,
     pub disabled: bool,
-    /// Optional leading icon (a [`crate::icons`] name).
+    /// Optional leading icon (a [`crate::widgets::icons`] name).
     pub icon: Option<&'static str>,
     /// Icon color when it should not follow the label (the like heart).
     pub icon_color: Option<[f32; 4]>,

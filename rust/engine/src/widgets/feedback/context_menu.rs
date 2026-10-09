@@ -52,7 +52,7 @@ pub enum MenuEntry {
         /// Opaque id reported on click.
         id: u64,
         label: String,
-        /// Optional leading icon ([`crate::icons`] name).
+        /// Optional leading icon ([`crate::widgets::icons`] name).
         icon: Option<&'static str>,
         disabled: bool,
         /// Colors the label (Destructive = red row, etc.).

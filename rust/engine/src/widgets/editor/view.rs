@@ -81,7 +81,7 @@ impl EditorView {
         self
     }
 
-    /// Replace the clipboard backend (tests inject a [`LocalClipboard`]
+    /// Replace the clipboard backend (tests inject a [`LocalClipboard`](crate::runtime::platform::clipboard::LocalClipboard)
     /// (engine::runtime::platform::clipboard::LocalClipboard) so they never touch the OS clipboard).
     pub fn with_clipboard(mut self, clipboard: Box<dyn ClipboardProvider>) -> Self {
         self.clipboard = clipboard;

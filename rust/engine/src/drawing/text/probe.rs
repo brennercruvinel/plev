@@ -3,7 +3,7 @@
 //! The project's conventions require pixels for a visual claim, and the
 //! window path cannot supply them in CI (or wherever the OS denies screen
 //! capture). The probe builds a text scene and renders it through
-//! [`crate::headless`], which is the window's own frame path
+//! [`crate::drawing::headless`], which is the window's own frame path
 //! (`window::draw_frame`): compositor layers, the real [`TextSystem`] and
 //! glyph atlas, the text pipeline, the composite pass, the sRGB target.
 //! It adds no drawing of its own; it only lays out specimens and measures
@@ -18,7 +18,7 @@
 //! against this machine's system fonts too. The text audit
 //! (`tests/text_audit.rs`) reads it per script.
 //!
-//! [`TextSystem`]: crate::text::TextSystem
+//! [`TextSystem`]: crate::drawing::text::TextSystem
 
 use std::cell::RefCell;
 

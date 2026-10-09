@@ -1,7 +1,7 @@
 //! comps: the plev design system.
 //!
 //! Retained widgets over the engine, one category per module, every
-//! visual value read from [`engine::styling::theme::Theme`]. A widget is a plain
+//! visual value read from [`crate::styling::theme::Theme`]. A widget is a plain
 //! struct the app owns across frames: feed it [`WidgetEvent`]s with the
 //! bounds you gave it, read the [`EventResult`], and call
 //! `render(compositor, bounds, theme)` to emit scene nodes. Nothing here
@@ -14,7 +14,7 @@
 //! equivalent recipe, so every widget renders under every theme.
 //!
 //! Categories (docs/ref/component-catalog.md):
-//! - [`action`]: button, icon button, chip, badge
+//! - [`buttons`]: button, icon button, chip, badge
 //! - [`form`]: text field, checkbox, switch, slider, select
 //! - [`nav`]: tabs, nav link, sidebar, panel header, breadcrumb, split
 //!   pane

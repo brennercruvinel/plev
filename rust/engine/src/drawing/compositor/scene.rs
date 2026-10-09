@@ -138,7 +138,7 @@ impl TextNodeKey {
         }
     }
 
-    /// Build the key from a [`TextStyle`], so widgets measure and render
+    /// Build the key from a [`TextStyle`](crate::drawing::text::TextStyle), so widgets measure and render
     /// with exactly the same typography (size, line height, weight,
     /// letter spacing, family).
     pub fn from_style(

@@ -76,7 +76,7 @@ impl EditorConfig {
 
 /// Colors used by [`EditorView::render`](super::EditorView::render).
 /// All colors are premultiplied-friendly linear RGBA arrays, matching
-/// [`SceneNode`](engine::drawing::compositor::SceneNode) color fields.
+/// [`SceneNode`](crate::drawing::compositor::SceneNode) color fields.
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditorTheme {
     pub background: [f32; 4],
