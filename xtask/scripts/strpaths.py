@@ -16,6 +16,10 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import plevmap  # noqa: E402
 
+# text the gallery draws: a module named there is what the user reads, and
+# the move keeps every pixel (its regress baselines hold the old text)
+SKIP = {"apps/uigallery/src/views/pages/table.rs"}
+
 TABLE = plevmap.module_table()
 NEWMODS = set()
 for d in plevmap.NEW_CRATES:
@@ -67,6 +71,8 @@ def main(argv):
     total = 0
     for f in plevmap.rs_files(plevmap.ROOT):
         rel = os.path.relpath(f, plevmap.ROOT)
+        if rel in SKIP:
+            continue
         src = open(f, encoding="utf-8").read()
         hits = []
 

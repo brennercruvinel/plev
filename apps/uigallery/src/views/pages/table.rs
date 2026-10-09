@@ -500,7 +500,7 @@ pub const PAGES: &[Page] = &[
         A,
         "Editor",
         "code",
-        "The multi-cursor text editor (engine::widgets::editor): alt+click adds cursors, cmd-z undoes.",
+        "The multi-cursor text editor (comps::editor): alt+click adds cursors, cmd-z undoes.",
         Pane::Editor,
     ),
     page(
