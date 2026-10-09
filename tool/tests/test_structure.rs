@@ -172,6 +172,9 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
     let mut numbers: BTreeMap<u32, Vec<String>> = BTreeMap::new();
     let mut bad = Vec::new();
     for theme in entries(&adr) {
+        if untracked(&theme) {
+            continue;
+        }
         let dir = adr.join(&theme);
         if !dir.is_dir() {
             if !matches!(theme.as_str(), "README.md" | "TEMPLATE.md") {
@@ -180,6 +183,9 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
             continue;
         }
         for file in entries(&dir) {
+            if untracked(&file) {
+                continue;
+            }
             let (num, rest) = file.split_at(file.len().min(5));
             let well_named = num.len() == 5
                 && num[..4].bytes().all(|b| b.is_ascii_digit())
