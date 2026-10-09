@@ -8,18 +8,18 @@
 #   tool/tasks/screencap.sh android [options]
 #
 # ---- web
-# capture one frame of the showcase's web build and classify it against the
+# capture one frame of the gallery's web build and classify it against the
 # desktop's frame of the same page, theme, viewport and scale (task-77).
 #
-#   script/capture-web [--page <title> | --all] [--theme <name>] [--width <px>]
+#   tool/tasks/screencap.sh web [--page <title> | --all] [--theme <name>] [--width <px>]
 #                      [--height <px>] [--scale <s>] [--out <dir>] [--port <n>]
 #
 # --all: every page of the gallery in one browser, each against the
 # desktop's, one line per page in <out>/report.txt.
 #
 # defaults: the launch page (Theme) in core, 1280x800 at scale 1, into
-# target/determinism/web-<time>/. the build is `script/web build --release`
-# (task-20's path, web/dist); the page is served on 127.0.0.1 and opened by
+# target/determinism/web-<time>/. the build is `tool/tasks/webtarget.sh build
+# --release` (task-20's path, apps/uigallery/web/dist); the page is served on 127.0.0.1 and opened by
 # python playwright in the headless chromium shell with WebGPU on Metal
 # (`--enable-unsafe-webgpu --use-angle=metal`; without the second flag the
 # adapter is SwiftShader, software, and the capture says so). the viewport is
@@ -30,11 +30,11 @@
 # as the desktop reads its command line (`engine::window::launch_args`).
 #
 # ---- ios
-# capture one frame of the showcase on the iOS simulator and classify it
+# capture one frame of the gallery on the iOS simulator and classify it
 # against the desktop's frame of the same page, theme, viewport and scale
 # (task-77).
 #
-#   script/capture-ios [--page <title> | --all] [--theme <name>] [--device <name>]
+#   tool/tasks/screencap.sh ios [--page <title> | --all] [--theme <name>] [--device <name>]
 #                      [--out <dir>]
 #
 # --all: every page of the gallery, launched in turn on the one booted
@@ -43,7 +43,7 @@
 #
 # defaults: the launch page (Theme) in core on the "iPhone 17 Pro", into
 # target/determinism/ios-<time>/. the build is task-19's
-# ios/showcase/build_ios.sh; the launch is here and not in run_ios.sh because
+# `mobileapp.sh ios`; the launch is here and not in `mobileapp.sh ios-run` because
 # the page and the theme go as launch arguments (App::launch_view reads
 # `[page] [theme]`), which run_ios.sh does not pass. the viewport and the
 # scale are the device type's screen (its profile.plist): 402x874 at 3 on
@@ -52,16 +52,16 @@
 # (status-bar, home-indicator) as the platform's.
 #
 # ---- android
-# capture one frame of the showcase on the android emulator and classify it
+# capture one frame of the gallery on the android emulator and classify it
 # against the desktop's frame of the same page, theme, viewport and scale
 # (task-77).
 #
-#   script/capture-android [--page <title>] [--theme <name>] [--avd <name>]
+#   tool/tasks/screencap.sh android [--page <title>] [--theme <name>] [--avd <name>]
 #                          [--out <dir>]
 #
 # defaults: the launch page (Theme) in core on the AVD "plev35" (android 35,
 # google_apis, arm64-v8a), into target/determinism/android-<time>/. the build
-# is task-18's android/build_android.sh (cargo-ndk, then gradle; the first
+# is task-18's `mobileapp.sh android` (cargo-ndk, then gradle; the first
 # gradle run downloads its distribution and dependencies). the emulator runs
 # without a window. the viewport and the scale come from the running device:
 # `wm size` is the physical screen, `wm density` / 160 the scale (420 dpi is
@@ -76,17 +76,16 @@
 set -euo pipefail
 
 # ---- what the three targets share
-# sourced by script/capture-web, script/capture-ios and script/capture-android
-# (task-77): what the three share. each captures one frame of the showcase on
+# (task-77) what the three targets share. each captures one frame of the gallery on
 # its target (page, theme, viewport and scale named the same way as the
 # desktop's `regress capture`), then draws the desktop's frame of the same
 # page, theme, viewport and scale through the headless path, then classifies
 # the target's frame against it with the target's rows of the table of
-# requested differences (crates/showcase/fixtures/determinism/requested.json).
+# requested differences (tool/bench/regress/requested.json).
 #
 # nothing here installs anything: a missing tool stops the script with the
 # command that installs it.
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MISSING=""
 
 # usage: the script's header comment.
@@ -127,9 +126,9 @@ missing_stop() {
     fi
 }
 
-# regress <args...>: the showcase's regression harness, offline.
+# regress <args...>: the gallery's regression harness, offline.
 regress() {
-    (cd "$REPO_ROOT" && cargo run --offline -q -p showcase --example regress -- "$@")
+    (cd "$REPO_ROOT" && cargo run --offline -q -p regress -- "$@")
 }
 
 # to_srgb <png>: a capture tagged with a color profile other than sRGB (a
@@ -240,7 +239,7 @@ while [ $# -gt 0 ]; do
         --out) OUT="$2"; shift 2 ;;
         --port) PORT="$2"; shift 2 ;;
         -h | --help) usage; exit 0 ;;
-        *) echo "capture-web: unknown argument '$1'" >&2; exit 2 ;;
+        *) echo "screencap.sh web: unknown argument '$1'" >&2; exit 2 ;;
     esac
 done
 
@@ -260,11 +259,11 @@ fi
 missing_stop web
 
 mkdir -p "$OUT"
-echo ">> building the web target (script/web build --release)"
-"$REPO_ROOT/script/web" build --release
+echo ">> building the web target (tool/tasks/webtarget.sh build --release)"
+"$REPO_ROOT/tool/tasks/webtarget.sh" build --release
 
-echo ">> serving web/dist on 127.0.0.1:$PORT"
-python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$REPO_ROOT/web/dist" >/dev/null 2>&1 &
+echo ">> serving apps/uigallery/web/dist on 127.0.0.1:$PORT"
+python3 -m http.server "$PORT" --bind 127.0.0.1 --directory "$REPO_ROOT/apps/uigallery/web/dist" >/dev/null 2>&1 &
 SERVER=$!
 trap 'kill "$SERVER" 2>/dev/null || true' EXIT
 sleep 1
@@ -350,7 +349,7 @@ while [ $# -gt 0 ]; do
         --device) DEVICE="$2"; shift 2 ;;
         --out) OUT="$2"; shift 2 ;;
         -h | --help) usage; exit 0 ;;
-        *) echo "capture-ios: unknown argument '$1'" >&2; exit 2 ;;
+        *) echo "screencap.sh ios: unknown argument '$1'" >&2; exit 2 ;;
     esac
 done
 
@@ -366,7 +365,7 @@ missing_stop ios
 TYPES="$(xcrun simctl list devicetypes -j)"
 PROFILE="$(python3 -c 'import json,sys; t=[d for d in json.loads(sys.argv[1])["devicetypes"] if d["name"]==sys.argv[2]]; print(t[0]["bundlePath"] if t else "")' "$TYPES" "$DEVICE")"
 if [ -z "$PROFILE" ] || ! xcrun simctl list devices available | grep -q "    $DEVICE ("; then
-    echo "capture-ios: no available simulator named '$DEVICE' (xcrun simctl list devices available)" >&2
+    echo "screencap.sh ios: no available simulator named '$DEVICE' (xcrun simctl list devices available)" >&2
     exit 2
 fi
 # the screen: `mainScreen<Width|Height|Scale>` of profile.plist on older
@@ -386,11 +385,11 @@ WIDTH="$(python3 -c "print(repr(${PX_W} / ${SCALE}))")"
 HEIGHT="$(python3 -c "print(repr(${PX_H} / ${SCALE}))")"
 
 mkdir -p "$OUT"
-echo ">> building the showcase for the simulator (ios/showcase/build_ios.sh)"
+echo ">> building the gallery for the simulator (tool/tasks/mobileapp.sh ios)"
 # build_ios.sh links the staticlib from target/<triple>/<profile> of the
 # repository: a CARGO_TARGET_DIR elsewhere would leave it looking at nothing
-(unset CARGO_TARGET_DIR; "$REPO_ROOT/ios/showcase/build_ios.sh")
-APP="$REPO_ROOT/ios/showcase/build/Build/Products/Debug-iphonesimulator/ShowcaseDemo.app"
+(unset CARGO_TARGET_DIR; "$REPO_ROOT/tool/tasks/mobileapp.sh" ios)
+APP="$REPO_ROOT/apps/uigallery/ios/build/Build/Products/Debug-iphonesimulator/UIGallery.app"
 
 echo ">> booting $DEVICE"
 xcrun simctl boot "$DEVICE" 2>/dev/null || true
@@ -402,8 +401,8 @@ xcrun simctl install "$DEVICE" "$APP"
 
 # shoot <page> <png>: the app launched on the page and the theme, its frame
 shoot() {
-    xcrun simctl terminate "$DEVICE" com.plev.showcase 2>/dev/null || true
-    xcrun simctl launch "$DEVICE" com.plev.showcase "$1" "$THEME" >/dev/null
+    xcrun simctl terminate "$DEVICE" com.plev.uigallery 2>/dev/null || true
+    xcrun simctl launch "$DEVICE" com.plev.uigallery "$1" "$THEME" >/dev/null
     sleep "$2"
     xcrun simctl io "$DEVICE" screenshot --type=png "$3" >/dev/null 2>&1
 }
@@ -440,11 +439,11 @@ while [ $# -gt 0 ]; do
         --avd) AVD="$2"; shift 2 ;;
         --out) OUT="$2"; shift 2 ;;
         -h | --help) usage; exit 0 ;;
-        *) echo "capture-android: unknown argument '$1'" >&2; exit 2 ;;
+        *) echo "screencap.sh android: unknown argument '$1'" >&2; exit 2 ;;
     esac
 done
 
-# the paths build_android.sh reads, unless the environment says otherwise
+# the paths `mobileapp.sh android` reads, unless the environment says otherwise
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Library/Android/sdk}"
 export JAVA_HOME="${JAVA_HOME:-$HOME/jdk17/Contents/Home}"
 ADB="$ANDROID_HOME/platform-tools/adb"
@@ -478,18 +477,18 @@ for i in "${!KEYS[@]}"; do
     fi
 done
 if [ -z "$KEY" ]; then
-    echo "capture-android: '$PAGE' is not one of the first ten pages, the only ones a key selects" >&2
+    echo "screencap.sh android: '$PAGE' is not one of the first ten pages, the only ones a key selects" >&2
     exit 2
 fi
 case "$THEME" in
     core) PRESSES=0 ;; hoff) PRESSES=1 ;; dark) PRESSES=2 ;; light) PRESSES=3 ;;
-    *) echo "capture-android: the T key reaches core, hoff, dark and light, not '$THEME'" >&2; exit 2 ;;
+    *) echo "screencap.sh android: the T key reaches core, hoff, dark and light, not '$THEME'" >&2; exit 2 ;;
 esac
 
 mkdir -p "$OUT"
-echo ">> building the showcase apk (android/build_android.sh)"
-"$REPO_ROOT/android/build_android.sh"
-APK="$REPO_ROOT/android/app/build/outputs/apk/debug/app-debug.apk"
+echo ">> building the gallery apk (tool/tasks/mobileapp.sh android)"
+"$REPO_ROOT/tool/tasks/mobileapp.sh" android
+APK="$REPO_ROOT/apps/uigallery/android/app/build/outputs/apk/debug/app-debug.apk"
 
 echo ">> starting the emulator $AVD without a window"
 "$EMULATOR" -avd "$AVD" -no-window -no-audio -no-boot-anim -no-snapshot >"$OUT/emulator.log" 2>&1 &
@@ -506,8 +505,8 @@ sleep 20
 echo ">> renderer: $("$ADB" shell getprop ro.hardware.egl 2>/dev/null | tr -d '\r') / vulkan $("$ADB" shell getprop ro.hardware.vulkan 2>/dev/null | tr -d '\r')"
 
 "$ADB" install -r "$APK" >/dev/null
-"$ADB" shell am force-stop com.plev.showcase
-"$ADB" shell am start -W -n com.plev.showcase/.MainActivity >/dev/null
+"$ADB" shell am force-stop com.plev.uigallery
+"$ADB" shell am start -W -n com.plev.uigallery/.MainActivity >/dev/null
 sleep 5
 if [ "$KEY" != "1" ]; then
     "$ADB" shell input keyevent "KEYCODE_$KEY"

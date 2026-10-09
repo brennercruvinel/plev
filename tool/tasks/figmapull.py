@@ -5,13 +5,13 @@ Reads a .fig file (a zip holding `canvas.fig` in the fig-kiwi format) and
 writes ONE screen as the Figma REST API export shapes it (`document` with
 `children`, `type`, `name`, `absoluteBoundingBox`, `layoutMode`,
 `itemSpacing`, `padding*`, `fills`, `cornerRadius`, `characters`, `style`),
-only what the importer (crates/parser/src/figma.rs) reads, one key per line
+only what the importer (rust/import/src/formats/figma/parse.rs) reads, one key per line
 and `children` last, so the importer can give every construct its line.
 
-    script/figma-fixture <file.fig> [out.json]
+    tool/tasks/figmapull.py <file.fig> [out.json]
         [--page "Dark Theme"] [--section settings] [--frame settings]
 
-Default out: crates/parser/fixtures/figma/settings.json. Python 3.14 or
+Default out: rust/import/tests/fixtures/figma/settings.json. Python 3.14 or
 later (compression.zstd), stdlib only, never the network. The .fig stays
 outside the repo; only the JSON is committed.
 
@@ -54,7 +54,7 @@ try:
 except ImportError:  # pragma: no cover
     sys.exit("figma-fixture needs python 3.14 or later (compression.zstd)")
 
-OUT = "crates/parser/fixtures/figma/settings.json"
+OUT = "rust/import/tests/fixtures/figma/settings.json"
 
 # override fields the export applies; any other is reported as unapplied
 APPLIED = {

@@ -17,16 +17,17 @@ tmps/
 .temp/
 
 # Android build outputs & caches (never track)
-android/.gradle/
-android/app/build/
-android/app/src/main/jniLibs/
-android/build/
+apps/uigallery/apps/uigallery/android/.gradle/
+apps/uigallery/android/app/build/
+apps/uigallery/android/app/src/main/jniLibs/
+apps/uigallery/android/build/
 *.apk
 
-# iOS build outputs & generated Xcode project + Info.plist (xcodegen regenerates them)
-ios/showcase/build/
-ios/showcase/ShowcaseDemo.xcodeproj/
-ios/showcase/Info.plist
+# iOS build outputs & generated Xcode project (xcodegen regenerates them; the
+# Info.plist it writes lives under build/)
+apps/uigallery/ios/build/
+apps/uigallery/ios/UIGallery.xcodeproj/
+apps/uigallery/ios/ios_uigallery.png
 
 # Claude Code: agent worktrees and local settings
 .claude/
@@ -68,12 +69,11 @@ htmlcov/
 
 # Private / experiments (not for public release)
 examples-wip/
-# /refs/: study clones stay out of git. the curated reference files already
-# tracked stay tracked; a new one goes in with `git add -f`. anchored to the
-# root so docs/refs/ stays versioned.
+# /refs/: study clones stay out of git (the curated lottie references moved
+# to data/media/lottie). anchored to the root.
 /refs/
 
-# Design sources (a .fig is read by script/figma-fixture from outside the repo)
+# Design sources (a .fig is read by tool/tasks/figmapull.py from outside the repo)
 *.fig
 
 # Environment

@@ -1,6 +1,6 @@
 #!/bin/sh
-# development loop for the web targets: trunk reads the app's web/Trunk.toml
-# and web/index.html and serves in watch mode, the gallery on 127.0.0.1:8080
+# development loop for the web targets: trunk reads the app's apps/uigallery/web/Trunk.toml
+# and apps/uigallery/web/index.html and serves in watch mode, the gallery on 127.0.0.1:8080
 # and the urna database app on 127.0.0.1:8081. extra args pass through.
 #
 #   tool/tasks/webtarget.sh [uigallery] [serve|build ...]   (default: uigallery serve)

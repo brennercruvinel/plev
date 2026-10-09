@@ -3,15 +3,15 @@
 and of emoji (phase 5).
 
 Reads the Noto sources from a directory outside the repo, checks each one's
-sha256, subsets it and writes the result to crates/engine/assets/fonts/,
+sha256, subsets it and writes the result to rust/engine/assets/fonts/,
 next to the license (LICENSE-Noto-OFL.txt). Stdlib plus fontTools (tested
 with 4.64.0), never the network. The sources stay out of the repo; only the
-subsets are committed. docs/ADR/embedded-fonts-by-script.md has the why.
+subsets are committed. docs/adr/rendering/0071-embedded-fonts-by-script.md has the why.
 
-    script/font-subset [--src DIR] [--out DIR] [--check]
+    tool/tasks/subsetter.py [--src DIR] [--out DIR] [--check]
 
     --src    the sources (default: target/fonts-noto at the repo root)
-    --out    where the subsets go (default: crates/engine/assets/fonts)
+    --out    where the subsets go (default: rust/engine/assets/fonts)
     --check  subset into a temporary directory and compare byte for byte
              with --out; exit 1 when any file differs
 
@@ -55,9 +55,9 @@ from pathlib import Path
 from fontTools import subset
 from fontTools.ttLib import TTFont
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 # The embedded faces; the emoji guard reads the Latin ones from here.
-ASSETS = ROOT / "crates/engine/assets/fonts"
+ASSETS = ROOT / "rust/engine/assets/fonts"
 
 # The static hinted TTFs of notofonts.github.io and the region subsets of
 # noto-cjk (Sans/SubsetOTF, release 2.004). The sha256 pins the bytes.
@@ -300,8 +300,8 @@ def license_text(src_dir):
     head = "\n".join(lines)
     note = (
         "The files NotoSans*-Regular and NotoSans*-Bold in this directory are "
-        "subsets of the\nNoto fonts above, made by script/font-subset "
-        "(docs/ADR/embedded-fonts-by-script.md).\n"
+        "subsets of the\nNoto fonts above, made by tool/tasks/subsetter.py "
+        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / LICENSE_SOURCE[0]).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"
@@ -392,8 +392,8 @@ def emoji_license_text(src_dir):
     head = "\n".join(line for line in lines if line)
     note = (
         f"The file {EMOJI[0]} in this directory is a subset of Noto Color Emoji "
-        "v2.051\n(CBDT build), made by script/font-subset "
-        "(docs/ADR/embedded-fonts-by-script.md).\n"
+        "v2.051\n(CBDT build), made by tool/tasks/subsetter.py "
+        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / EMOJI_LICENSE_SOURCE).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"

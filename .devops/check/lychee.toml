@@ -1,0 +1,32 @@
+# lychee contract for the plev workspace: every link in the docs resolves.
+#
+# run from the repository root:
+#   lychee --config .devops/check/lychee.toml --offline .
+# offline: the gate checks links into this repository (files, anchors, the
+# tree's own paths), the ones a move can break. links out to the web are
+# checked on demand without --offline; they come and go on their own.
+
+# markdown, toml and the html pages; a link inside a code block is an
+# example, not a reference.
+include_verbatim = false
+extensions = ["md", "toml", "html"]
+
+# the generated, the vendored and the scratch never hold doc links.
+exclude_path = [
+    "target",
+    "boiler",
+    "xtask",
+    "data",
+    "tool/bench/regress/baselines",
+    "apps/uigallery/web/dist",
+    "apps/urnadbapp/web/dist",
+]
+
+# local placeholders written in the docs as examples, not as links.
+exclude = [
+    "^file:///.*/(urna|refs)/",
+    "^mailto:",
+]
+
+# a link to a directory resolves to the directory itself.
+include_fragments = true
