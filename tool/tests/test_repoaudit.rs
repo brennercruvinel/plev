@@ -5,9 +5,9 @@
 //! by hand (docs/ATLAS.toml the map + prose + diagram, README.md the home
 //! page), so they drift on the first rush. This test makes drift a failing
 //! build instead of a silent lie: every crate must have its table in the
-//! atlas and be named in the README, and every demo crate must be listed
-//! under the atlas' [demos]. add a crate and forget a doc, and this test
-//! tells you which doc, by name.
+//! atlas and be named in its home's row of the README's crate table, and
+//! every demo crate must be listed under the atlas' [demos]. add a crate
+//! and forget a doc, and this test tells you which doc, by name.
 
 use std::fs;
 use std::path::PathBuf;
@@ -78,12 +78,39 @@ fn every_crate_has_its_table_in_the_atlas_and_a_mention_in_the_readme() {
     let readme = read("README.md");
     let unnamed: Vec<&String> = crates
         .iter()
-        .filter(|c| !readme.contains(name(c)))
+        .filter(|c| {
+            let home = c.split('/').next().unwrap_or(c);
+            !home_row(&readme, home).is_some_and(|row| names(row, name(c)))
+        })
         .collect();
     assert!(
         unnamed.is_empty(),
-        "README.md does not mention these workspace crates: {unnamed:?}"
+        "README.md's crate table does not name these workspace crates in their \
+         home's row: {unnamed:?}"
     );
+}
+
+/// the row of the README's crate table for a home (`rust`, `apps`, ...):
+/// the line whose `where` cell is that directory.
+fn home_row<'a>(readme: &'a str, home: &str) -> Option<&'a str> {
+    let cell = format!("| `{home}/` |");
+    readme.lines().find(|l| l.contains(&cell))
+}
+
+/// `word` stands alone in `text`, not inside a longer name (`record` is
+/// not named by `recorder`, nor `inspect` by `plev-inspect`).
+fn names(text: &str, word: &str) -> bool {
+    let edge = |c: Option<char>| !c.is_some_and(|c| c.is_alphanumeric() || c == '_' || c == '-');
+    text.match_indices(word).any(|(i, _)| {
+        edge(text[..i].chars().next_back()) && edge(text[i + word.len()..].chars().next())
+    })
+}
+
+#[test]
+fn a_crate_is_named_by_a_whole_word_only() {
+    let row = "| tooling | `tool/` | `bench/measure` (cost tables), `tests` (the recorder) |";
+    assert!(names(row, "measure") && names(row, "tests"));
+    assert!(!names(row, "record") && !names(row, "bench/m"));
 }
 
 #[test]
