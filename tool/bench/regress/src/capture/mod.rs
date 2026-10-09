@@ -34,7 +34,7 @@ pub const SCALES: [f32; 4] = [1.0, 2.0, 1.25, 1.5];
 /// the repository's `target/`, which git ignores.
 pub const OUT: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/../../target/determinism/desktop"
+    "/../../../target/determinism/desktop"
 );
 
 pub const USAGE: &str = "\

@@ -23,6 +23,8 @@ fn the_defaults_are_every_page_the_four_themes_and_the_four_scales() {
     assert_eq!(o.scales, SCALES);
     assert_eq!((o.width, o.height), (1280.0, 800.0));
     assert!(o.out.ends_with("target/determinism/desktop"));
+    // the repository's target/, not one beside the crate
+    assert!(o.out.join("../../../Cargo.lock").is_file(), "{}", o.out.display());
     assert!(o.png && !o.reverse && o.against.is_none());
     let all = match keys(&o) {
         Ok(k) => k,
