@@ -156,7 +156,9 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &dyn
                     Some(data) => {
                         // Layout in a fixed 1000×1000 world box; the view
                         // fits it to the viewport with a ViewTransform.
-                        Ok(engine::widgets::graph::geometry::compute_layout(&data, 1000.0, 1000.0))
+                        Ok(engine::widgets::graph::geometry::compute_layout(
+                            &data, 1000.0, 1000.0,
+                        ))
                     }
                     None => Err("no graph section in this file".to_string()),
                 },
@@ -227,7 +229,8 @@ fn load_frame(db: &UrnaBackend, ordinal: usize, max_side: u32) -> Result<Vec<u8>
         .blob_range(span.blob_index as usize)
         .ok_or_else(|| "the media bytes are not inlined in this file (sidecar blob)".to_string())?;
     let path = db.path().to_string_lossy().into_owned();
-    crate::backend::sources::frames::decode_frame(&path, range, frame, max_side).map_err(|e| e.to_string())
+    crate::backend::sources::frames::decode_frame(&path, range, frame, max_side)
+        .map_err(|e| e.to_string())
 }
 
 /// Embed-then-search: the offline embedder produces the query vector

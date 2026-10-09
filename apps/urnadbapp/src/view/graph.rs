@@ -7,14 +7,14 @@
 //! CITATION=2) and the widget's default tones match the old hand-rolled
 //! canvas: dim neutral / accent / info.
 
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use engine::widgets::graph::geometry::GraphScene;
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, IconButtonVariant, Rect,
     Spinner, SpinnerSize, Wake, WidgetEvent, menu_shadow,
 };
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::widgets::graph::geometry::GraphScene;
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
 
 use crate::backend::workers::messages::ChunksData;
 

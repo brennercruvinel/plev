@@ -9,13 +9,13 @@
 //! widget state and the filter's index list only. Nothing here re-reads
 //! the file.
 
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 use engine::widgets::prelude::{
     EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, Wake, WidgetEvent,
 };
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::control::input::scroll::ScrollState;
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
 
 use super::field::{Field, field_h};
 use super::search::render_frame_box;
@@ -59,7 +59,8 @@ pub struct ChunksScreen {
 
 impl ChunksScreen {
     pub fn new() -> Self {
-        let ghost = || IconButton::new("copy").variant(engine::widgets::prelude::IconButtonVariant::Ghost);
+        let ghost =
+            || IconButton::new("copy").variant(engine::widgets::prelude::IconButtonVariant::Ghost);
         Self {
             filter: Field::new("filter by text, chunk id or urna:// citation"),
             filtered: None,

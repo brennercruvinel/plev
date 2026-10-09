@@ -84,12 +84,16 @@ pub fn decode_frame(
         "pipe:1".to_string(),
     ];
     use super::super::workers::subprocess::RunError;
-    let out = super::super::workers::subprocess::run("ffmpeg", &args, DECODE_TIMEOUT).map_err(|e| match e {
-        RunError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => FrameError::FfmpegMissing,
-        RunError::Spawn(e) => FrameError::Failed(e.to_string()),
-        RunError::Timeout => FrameError::Timeout,
-        RunError::Failed(stderr) => FrameError::Failed(stderr),
-    })?;
+    let out = super::super::workers::subprocess::run("ffmpeg", &args, DECODE_TIMEOUT).map_err(
+        |e| match e {
+            RunError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                FrameError::FfmpegMissing
+            }
+            RunError::Spawn(e) => FrameError::Failed(e.to_string()),
+            RunError::Timeout => FrameError::Timeout,
+            RunError::Failed(stderr) => FrameError::Failed(stderr),
+        },
+    )?;
     if out.is_empty() {
         return Err(FrameError::Empty);
     }

@@ -12,8 +12,8 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
 
-use super::messages::{UrnaCommand, UrnaEvent};
 use super::super::sources::reader::UrnaBytes;
+use super::messages::{UrnaCommand, UrnaEvent};
 
 struct Inner {
     file: Option<UrnaBytes>,
@@ -105,7 +105,9 @@ impl WebWorker {
                         Some(file) => match file.graph_data() {
                             // The O(n²) layout runs inline here — see the
                             // module docs for the blocking note.
-                            Some(data) => Ok(engine::widgets::graph::geometry::compute_layout(&data, 1000.0, 1000.0)),
+                            Some(data) => Ok(engine::widgets::graph::geometry::compute_layout(
+                                &data, 1000.0, 1000.0,
+                            )),
                             None => Err("no graph section in this file".to_string()),
                         },
                         None => Err("no database open".to_string()),

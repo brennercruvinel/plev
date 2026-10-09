@@ -211,9 +211,13 @@ fn frame_plumbing_resolves_the_blob_range() {
     );
     // ffmpeg on a non-media blob: a typed failure, never a panic.
     if urnadbapp::backend::sources::frames::ffmpeg_available() {
-        let err =
-            urnadbapp::backend::sources::frames::decode_frame(backend.path().to_str().unwrap(), range, 1, 64)
-                .unwrap_err();
+        let err = urnadbapp::backend::sources::frames::decode_frame(
+            backend.path().to_str().unwrap(),
+            range,
+            1,
+            64,
+        )
+        .unwrap_err();
         assert!(!err.to_string().is_empty());
     }
 }

@@ -5,10 +5,12 @@
 //! benchmark runs on the worker; this screen owns the controls, the
 //! progress counter and the last `BenchmarkView`.
 
-use engine::widgets::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, Wake, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{
+    Button, EventResult, Rect, Slider, Spinner, SpinnerSize, Wake, WidgetEvent,
+};
 
 use crate::backend::benchmark::{BenchmarkView, LatencyStats};
 use crate::backend::workers::messages::OpenedDbView;

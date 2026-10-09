@@ -20,9 +20,6 @@ pub mod benchmark;
 pub mod sources;
 pub mod workers;
 
-
-
-
 #[cfg(target_arch = "wasm32")]
 pub use workers::web::WebWorker as Worker;
 /// The platform worker: a background thread on native, synchronous

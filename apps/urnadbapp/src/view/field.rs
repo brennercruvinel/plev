@@ -3,10 +3,10 @@
 //! Enter and Tab, which stay with the screen) and its focus/edit plumbing
 //! the Open, Search and Chunks screens share.
 
-use engine::widgets::form::TextField;
-use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::EditKey;
 

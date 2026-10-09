@@ -4,12 +4,12 @@
 //! The screen owns only widget state; recents, status and the embedder /
 //! ffmpeg probes live in `UrnauiView` and flow in as render context.
 
-use engine::widgets::prelude::{
-    Button, EventResult, Rect, Spinner, SpinnerSize, Wake, WidgetEvent, rounded_rect_stroke,
-};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{
+    Button, EventResult, Rect, Spinner, SpinnerSize, Wake, WidgetEvent, rounded_rect_stroke,
+};
 
 #[cfg(not(target_arch = "wasm32"))]
 use super::field::Field;
@@ -59,7 +59,8 @@ impl OpenScreen {
             path: Field::new("/path/to/corpus.urna"),
             open_button: Button::new(label).icon("folder-open"),
             #[cfg(not(target_arch = "wasm32"))]
-            browse_button: Button::new("Browse…").variant(engine::widgets::prelude::ButtonVariant::Outline),
+            browse_button: Button::new("Browse…")
+                .variant(engine::widgets::prelude::ButtonVariant::Outline),
             recents_hover: None,
             spinner: Spinner::new().size(SpinnerSize::Sm),
             opening: false,
@@ -423,7 +424,8 @@ impl OpenScreen {
                 2.0,
             ));
             let hint = "release to open";
-            let (tw, _) = engine::drawing::text::TextMeasurer::measure_styled(hint, &style_14, None);
+            let (tw, _) =
+                engine::drawing::text::TextMeasurer::measure_styled(hint, &style_14, None);
             panel(
                 c,
                 Rect::new(

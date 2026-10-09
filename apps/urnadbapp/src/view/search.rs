@@ -10,13 +10,13 @@
 //! the worker directly — submissions bubble up as [`Action::RunSearch`]
 //! and the shell validates against the open database.
 
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 use engine::widgets::prelude::{
     Button, EventResult, IconButton, Rect, Select, Slider, Spinner, SpinnerSize, Tabs, VirtualList,
     Wake, WidgetEvent,
 };
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
 
 use crate::backend::workers::messages::{OpenedDbView, SearchMode, SearchResultsView};
 

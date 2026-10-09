@@ -19,10 +19,12 @@ mod overview;
 mod search;
 mod stats;
 
-use engine::widgets::prelude::{Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextStyle;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{
+    Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
+};
 
 /// Non-character editing keys bridged from winit by `keys.rs` (the view
 /// stays winit-free). Enter submits; Tab is reserved for focus traversal.
@@ -123,8 +125,10 @@ pub struct ChunkLookup<'a> {
     pub ids: &'a [String],
     pub index: Option<&'a std::collections::HashMap<String, usize>>,
     pub chunks: Option<&'a crate::backend::workers::messages::ChunksData>,
-    pub frames:
-        &'a std::collections::HashMap<usize, Result<engine::drawing::gpu::image::ImageHandle, String>>,
+    pub frames: &'a std::collections::HashMap<
+        usize,
+        Result<engine::drawing::gpu::image::ImageHandle, String>,
+    >,
 }
 
 impl ChunkLookup<'_> {
@@ -497,11 +501,12 @@ pub(crate) mod fixtures {
             n_vectors: 3,
             band_bytes: 1536,
         }];
-        db.inspect.manifest.capabilities_ext = Some(crate::backend::workers::messages::CapabilitiesExtView {
-            supports_multimodal: Some(true),
-            graph_present: None,
-            blobs_present: Some(true),
-        });
+        db.inspect.manifest.capabilities_ext =
+            Some(crate::backend::workers::messages::CapabilitiesExtView {
+                supports_multimodal: Some(true),
+                graph_present: None,
+                blobs_present: Some(true),
+            });
         db.has_spaces = true;
         db.space_names = vec!["clip-vit-b32".into()];
         db.has_blob_data = true;
@@ -568,7 +573,11 @@ pub(crate) mod fixtures {
                 },
             ],
         };
-        engine::widgets::graph::geometry::compute_layout(&engine::widgets::graph::geometry::GraphData::from_spec(&spec), 1000.0, 1000.0)
+        engine::widgets::graph::geometry::compute_layout(
+            &engine::widgets::graph::geometry::GraphData::from_spec(&spec),
+            1000.0,
+            1000.0,
+        )
     }
 }
 
@@ -580,7 +589,10 @@ mod tests {
     fn starts_on_the_open_screen_with_the_hoff_theme() {
         let view = UrnauiView::new(1200.0, 800.0);
         // Page frame is the HOFF #444444.
-        assert_eq!(view.theme.colors.bg.0, engine::styling::theme::hoff::PAGE_BG.0);
+        assert_eq!(
+            view.theme.colors.bg.0,
+            engine::styling::theme::hoff::PAGE_BG.0
+        );
         #[cfg(not(target_arch = "wasm32"))]
         assert_eq!(view.explorer.screen(), Screen::Open);
     }

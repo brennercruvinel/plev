@@ -8,10 +8,10 @@
 //! (optional manifest fields, spaces and blobs add rows), never from
 //! viewport constants.
 
-use engine::widgets::prelude::{Button, EventResult, IconButton, Rect, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{Button, EventResult, IconButton, Rect, WidgetEvent};
 
 use crate::backend::workers::messages::OpenedDbView;
 
@@ -339,7 +339,8 @@ impl OverviewScreen {
                 };
                 (
                     b,
-                    IconButton::new(icon).variant(engine::widgets::prelude::IconButtonVariant::Ghost),
+                    IconButton::new(icon)
+                        .variant(engine::widgets::prelude::IconButtonVariant::Ghost),
                 )
             })
             .collect();

@@ -21,11 +21,11 @@ use std::sync::Arc;
 
 use crate::view::UrnauiView;
 use crate::{keyboard, renderer};
-use engine::widgets::prelude::{Wake, WidgetEvent};
 use engine::compose::animation::FrameClock;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::GpuContext;
 use engine::drawing::text::TextSystem;
+use engine::widgets::prelude::{Wake, WidgetEvent};
 use web_time::Instant;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
@@ -224,7 +224,8 @@ impl ApplicationHandler<UserEvent> for App {
         {
             let gpu = pollster::block_on(GpuContext::new(window));
             let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-            let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+            let effects =
+                engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
             self.state = GpuState::Ready {
                 gpu,
                 text_system,
@@ -241,8 +242,10 @@ impl ApplicationHandler<UserEvent> for App {
             wasm_bindgen_futures::spawn_local(async move {
                 let gpu = GpuContext::new(window).await;
                 let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-                let effects =
-                    engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+                let effects = engine::drawing::effects::EffectProcessor::new(
+                    &gpu.device,
+                    gpu.surface_format(),
+                );
                 let _ = proxy.send_event(UserEvent::GpuReady {
                     gpu,
                     text_system,
@@ -311,7 +314,8 @@ impl ApplicationHandler<UserEvent> for App {
                     // Named editing keys bridge through keys.rs (the view
                     // stays winit-free).
                     Key::Named(named) => {
-                        if keyboard::handle_named(&mut self.view, named, self.modifiers.shift_key()) {
+                        if keyboard::handle_named(&mut self.view, named, self.modifiers.shift_key())
+                        {
                             self.invalidate();
                         }
                     }
@@ -330,7 +334,8 @@ impl ApplicationHandler<UserEvent> for App {
                         )))]
                         if paste {
                             use engine::runtime::platform::clipboard::ClipboardProvider;
-                            let mut clipboard = engine::runtime::platform::clipboard::SystemClipboard::new();
+                            let mut clipboard =
+                                engine::runtime::platform::clipboard::SystemClipboard::new();
                             if let Some(text) = clipboard.get_text()
                                 && self.view.handle_paste(&text)
                             {

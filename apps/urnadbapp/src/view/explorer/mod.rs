@@ -12,16 +12,18 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use engine::widgets::overlay::OverlayManager;
-use engine::widgets::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::runtime::platform::files::FileDialogs;
 use engine::styling::theme::{Intent, Theme};
+use engine::widgets::overlay::OverlayManager;
+use engine::widgets::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
 
 use crate::backend::Worker;
+use crate::backend::workers::messages::{
+    ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use crate::recents;
-use crate::backend::workers::messages::{ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent};
 
 use super::chunks::{ChunksContext, ChunksScreen};
 use super::graph::{GraphContext, GraphScreen};
@@ -328,7 +330,8 @@ impl Explorer {
                 UrnaEvent::FrameLoaded { ordinal, result } => {
                     self.frames_pending.remove(&ordinal);
                     let handle = result.and_then(|png| {
-                        engine::drawing::gpu::image::load_image_bytes(&png).map_err(|e| e.to_string())
+                        engine::drawing::gpu::image::load_image_bytes(&png)
+                            .map_err(|e| e.to_string())
                     });
                     self.frames.insert(ordinal, handle);
                 }
