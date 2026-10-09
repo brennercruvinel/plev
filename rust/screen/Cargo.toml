@@ -1,9 +1,9 @@
-# surface: the host of surfaces materialized from verified plev IR
+# screen: the host of surfaces materialized from verified plev IR
 # (task-69, docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md). a
-# `uir::VerifiedIr` becomes a live surface: laid out by the engine's
-# LayoutEngine, every token read from the Theme, drawn by the comps
-# widgets, projected from the IR itself, and every event a sem::Request
-# the app's own dispatcher runs. it never executes anything. comps stays a
+# `plevir::VerifiedIr` becomes a live surface: laid out by the engine's
+# LayoutEngine, every token read from the Theme, drawn by the engine::widgets
+# widgets, projected from the IR itself, and every event a accord::Request
+# the app's own dispatcher runs. it never executes anything. engine::widgets stays a
 # widget library that knows nothing of the IR; this crate is the bridge.
 [package]
 name = "screen"

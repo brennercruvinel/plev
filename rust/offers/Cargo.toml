@@ -1,10 +1,10 @@
-# propose: proposers of plev IR (task-69 phase 3a,
+# offers: proposers of plev IR (task-69 phase 3a,
 # docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md). an intent in text,
 # the app's capability registry, its snapshot and the surface it shows
-# become a proposed uir::Ir; propose_verified is the way out and returns
+# become a proposed plevir::Ir; propose_verified is the way out and returns
 # only a VerifiedIr. a deterministic proposer by rules, and a proposer that
 # asks a language model behind the Model trait, looping on the verifier's
-# errors. pure, like uir: no engine, no comps, no network; a provider for
+# errors. pure, like plevir: no engine (nor its widgets), no network; a provider for
 # the model is phase 3b.
 [package]
 name = "offers"

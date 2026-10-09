@@ -1,5 +1,5 @@
 # engine: plev, the gpu-first compositing engine. one renderer, identical on
-# macos, web (webgpu/wasm), android and ios. the apps (showcase, ide) and the
+# macos, web (webgpu/wasm), android and ios. the apps (uigallery, idestudio) and the
 # other crates build on top of this one.
 [package]
 name = "engine"
@@ -21,14 +21,14 @@ workspace = true
 default = ["accessibility", "hot-reload"]
 accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # Exports the engine's own `#[wasm_bindgen(start)]` entry point on wasm32.
-# Off by default so downstream apps (showcase, ide, ...) can define
+# Off by default so downstream apps (uigallery, idestudio, ...) can define
 # their own browser entry without colliding with the engine's.
 web-entry = []
 android-game-activity = ["winit/android-game-activity"]
 # Exports the engine's own `android_main` entry on android. Off by default so
 # downstream apps can ship their own GameActivity entry without symbol clash.
 android-entry = []
-# Shader hot reload (and the experimental narrate DSL override map). On by
+# Shader hot reload (and the experimental markup DSL override map). On by
 # default, but build.rs only turns the `hot_reload` cfg on for desktop debug
 # builds: release, wasm and mobile compile the embedded `include_str!` path
 # and never start a watcher. Opt out entirely with `--no-default-features`.

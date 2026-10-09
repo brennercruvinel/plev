@@ -1,6 +1,6 @@
-# inspect: the session inspector (task-64 phase a,
+# replay: the session inspector (task-64 phase a,
 # docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md). it reads a
-# recorded session (rec::Session) and answers the thesis questions about
+# recorded session (record::Session) and answers the thesis questions about
 # any request or control: what it was, the state, who observed what and
 # when, the request, the verdict with its delta, what happened between the
 # observation and the request and who did it, and the result. it only
@@ -24,7 +24,7 @@ path = "src/bin/plev_inspect.rs"
 # receipts rebuilt from their stages.
 record.workspace = true
 # with its serde form: the json output carries actors, values, changes,
-# stages and rejections exactly as sem writes them.
+# stages and rejections exactly as accord writes them.
 accord = { workspace = true, features = ["serde"] }
 serde.workspace = true
 # the serde names in the plain-english forms, and the cli's --json.
@@ -36,7 +36,7 @@ serde_json.workspace = true
 indexmap.workspace = true
 tempfile.workspace = true
 # the export test records frames with their bindings from a compositor, so
-# the stretch it cuts has both tracks (rec already builds on the engine).
+# the stretch it cuts has both tracks (record already builds on the engine).
 engine.workspace = true
 
 [lints]

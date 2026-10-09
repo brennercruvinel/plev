@@ -53,7 +53,7 @@ burn = { version = "0.21", default-features = false, features = ["std"], optiona
 burn-ndarray = { version = "0.21", optional = true }
 burn-store = { version = "0.21", default-features = false, features = ["std", "safetensors", "memmap"], optional = true }
 serde = { version = "1", features = ["derive"], optional = true }
-# a path dependency, as urnaui has it; no hot reload, no accessibility.
+# a path dependency, as urnadbapp has it; no hot reload, no accessibility.
 engine = { path = "../engine", default-features = false, optional = true }
 serde_json = { version = "1", optional = true }
 

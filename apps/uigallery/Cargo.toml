@@ -34,7 +34,7 @@ web-time.workspace = true
 # the todo page runs every click through the semantic dispatcher.
 accord.workspace = true
 # the Surface page verifies the todo's IR fixture against the todo's
-# projection (uir) and materializes it over the todo's state (surface).
+# projection (plevir) and materializes it over the todo's state (screen).
 screen.workspace = true
 plevir.workspace = true
 # the Surface page's intent field proposes a surface by the rules (task-69
@@ -45,7 +45,7 @@ offers.workspace = true
 env_logger.workspace = true
 pollster.workspace = true
 
-# The Git tab embeds the ide workspace over a real git worker: desktop only
+# The Git tab embeds the idestudio workspace over a real git worker: desktop only
 # (the worker needs a thread and the git CLI).
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))'.dependencies]
 idestudio.workspace = true
@@ -54,9 +54,9 @@ gitdrv.workspace = true
 # active page over a local socket, through the hooks a screen reader uses.
 socket.workspace = true
 # the flight recorder (PLEV_RECORD=1, debug): the shell records its
-# session as the ide does (src/app/record.rs), for plev-inspect.
+# session as the idestudio does (src/shell/window/record.rs), for plev-inspect.
 record.workspace = true
-# `--render --semantics` writes the page's projection in the sem serde
+# `--render --semantics` writes the page's projection in the accord serde
 # form, the json an agent receives from `plev observe`.
 serde.workspace = true
 serde_json.workspace = true
@@ -76,12 +76,12 @@ import.workspace = true
 # the scene goes through the recorder's channel as motion data.
 motion.workspace = true
 indexmap.workspace = true
-# examples/regress decodes the png a baseline keeps and writes its
+# tool/bench/regress decodes the png a baseline keeps and writes its
 # baselines into temporary directories in its tests.
 image.workspace = true
 tempfile.workspace = true
 
-# the recorded demo (fixtures/demo) is read back the way plev-inspect
+# the recorded demo (tests/fixtures/sessions) is read back the way plev-inspect
 # reads it: the inspector answers "why" about an act on the generated
 # surface. desktop only, like the recording.
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))'.dev-dependencies]

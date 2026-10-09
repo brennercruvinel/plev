@@ -1,9 +1,9 @@
-# claude-model: the Claude as the model of a proposer (task-69 phase 3b-i,
-# decision 13 of the generative runtime program). propose::Model over the
+# claude: the Claude as the model of a proposer (task-69 phase 3b-i,
+# decision 13 of the generative runtime program). offers::Model over the
 # `claude -p` of Claude Code, run as a child process: the prompt on its
 # stdin, the reply on its stdout, a time limit, no tools, no saved
 # session, no MCP, no user settings. the network is the child's; this
-# crate opens no socket and holds no key. propose stays pure.
+# crate opens no socket and holds no key. offers stays pure.
 [package]
 name = "claude"
 version.workspace = true

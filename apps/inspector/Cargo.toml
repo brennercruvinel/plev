@@ -3,7 +3,7 @@
 # recorded session from a path on the command line and shows it: the
 # timeline with the scrub, the frame on screen at the instant with the
 # outline of each control, and the panel with the thesis answers about the
-# control picked on it. every answer is the `inspect` model's; the window
+# control picked on it. every answer is the `replay` model's; the window
 # only shows it. it only reads: nothing here can create a request or run
 # an action.
 [package]

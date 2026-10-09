@@ -1,4 +1,4 @@
-# rec: the session flight recorder (task-63,
+# record: the session flight recorder (task-63,
 # docs/adr/recording/0037-session-recording-replay-not-reexecution.md). it records what an
 # app did as data (observations, snapshots, receipts, input, frames) in a
 # bounded ring, and reads it back. it never creates a request.
@@ -13,7 +13,7 @@ description = "Session flight recorder of plev: semantic events, receipts and sa
 [dependencies]
 engine.workspace = true
 motion.workspace = true
-# with its serde form (a default feature of sem): recorded events carry
+# with its serde form (a default feature of accord): recorded events carry
 # snapshots, requests and stages.
 accord.workspace = true
 # the session file's semantic section is one json line per event, so

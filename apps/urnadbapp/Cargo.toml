@@ -6,7 +6,7 @@ rust-version = "1.87"
 publish = false
 description = "urnaui — desktop (and web) explorer for .urna vector databases: search, chunks, media frames, spaces, graph, built on plev"
 
-# urnaui is NOT a member of the root workspace (see the exclude + comment in
+# urnadbapp is NOT a member of the root workspace (see the exclude + comment in
 # the root Cargo.toml): the native backend path-depends on the sibling urna
 # checkout (../urna relative to the plev repo root), so membership would break
 # the root workspace for anyone without urna. this crate is its own workspace;
@@ -15,7 +15,7 @@ description = "urnaui — desktop (and web) explorer for .urna vector databases:
 
 # lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
 # loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
-# Xcode app (which calls `urnaui_ios_main`). Same shape as showcase.
+# Xcode app (which calls `urnaui_ios_main`). Same shape as uigallery.
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]
 
@@ -44,7 +44,7 @@ memmap2 = "0.9"
 # engine::platform::files, which holds rfd on the desktop.
 # urna vector database (sibling workspace, read-only): the native backend.
 # needs hoffresearch/urna at v0.4.0 or later (the `urna-*` crate names).
-# urna pins sha2 0.11 while urnaui pins 0.10 — both coexist in the lockfile,
+# urna pins sha2 0.11 while urnadbapp pins 0.10 — both coexist in the lockfile,
 # no unification needed.
 urna-format = { path = "../../../urna/crates/urna-format" }
 urna-runtime = { path = "../../../urna/crates/urna-runtime" }
