@@ -6,4 +6,3 @@ pub mod adapters;
 pub mod eval_repo;
 pub mod git;
 pub mod status;
-pub(super) mod watcher;

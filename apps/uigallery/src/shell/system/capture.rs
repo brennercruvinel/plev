@@ -15,7 +15,7 @@ impl App {
     /// The platform's camera and microphone, once, when the main window
     /// is up. Building them runs nothing and opens nothing.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    pub(super) fn install_capture(&mut self) {
+    pub(crate) fn install_capture(&mut self) {
         self.view
             .set_capture(engine::runtime::platform::capture::default_capture());
         self.capture_follows();
@@ -25,7 +25,7 @@ impl App {
     /// the main window, or the page's own while it is open, neither
     /// covered, the app not asleep. A change it shows asks for a frame
     /// (which a window that is not awake withholds).
-    pub(super) fn capture_follows(&mut self) {
+    pub(crate) fn capture_follows(&mut self) {
         let awake =
             |id: Option<winit::window::WindowId>| id.is_some_and(|id| self.windows.awake(id));
         let shown = !self.windows.asleep() && (awake(self.main) || awake(self.page_window_id()));

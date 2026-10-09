@@ -44,7 +44,7 @@ use accord::{Actor, Millis, SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
 use crate::args::Args;
-use crate::bench::Bench;
+use crate::subject::Bench;
 use crate::host::Log;
 use crate::repo::Repo;
 use crate::report::{self, DONE, ERROR, row};
@@ -573,7 +573,7 @@ fn demo(args: &Args) -> Result<(), String> {
     let session = read_back(&path)?;
     let report = json!({
         "arm": "review",
-        "viewport": { "width": crate::bench::WIDTH, "height": crate::bench::HEIGHT },
+        "viewport": { "width": crate::subject::WIDTH, "height": crate::subject::HEIGHT },
         "fixed": fixed,
         "surface": surface,
         "closed": closed,

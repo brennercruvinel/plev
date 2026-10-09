@@ -10,7 +10,7 @@ use engine::drawing::gpu::GpuContext;
 use engine::drawing::gpu::texture_pool::TexturePool;
 use engine::drawing::text::TextSystem;
 use engine::runtime::window::present_frame;
-use crate::capability::Workbench;
+use idestudio::capability::Workbench;
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,
 /// and present. Called once per `RedrawRequested`.

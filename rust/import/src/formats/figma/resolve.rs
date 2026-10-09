@@ -19,7 +19,6 @@
 //! hidden layer, an effect, an override the export could not apply: each
 //! is an entry at its line.
 
-mod look;
 
 use crate::ParserError;
 use crate::emit::plevir::sanitize;
@@ -57,7 +56,7 @@ struct Kid {
 
 pub(crate) struct Ctx<'a> {
     file: &'a str,
-    mapped: usize,
+    pub(super) mapped: usize,
     dropped: Vec<Dropped>,
     notes: Vec<Note>,
 }
@@ -146,7 +145,7 @@ impl<'a> Ctx<'a> {
         format!("{}:{line}", self.file)
     }
 
-    fn src(&self, line: usize, what: impl Into<String>) -> Src {
+    pub(super) fn src(&self, line: usize, what: impl Into<String>) -> Src {
         Src::new(self.at(line), what)
     }
 
@@ -158,7 +157,7 @@ impl<'a> Ctx<'a> {
         });
     }
 
-    fn lose(&mut self, src: &Src, why: impl Into<String>) {
+    pub(super) fn lose(&mut self, src: &Src, why: impl Into<String>) {
         self.dropped
             .push(Dropped::new(src.what.clone(), why, src.at.clone()));
     }

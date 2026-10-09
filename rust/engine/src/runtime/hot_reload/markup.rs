@@ -41,7 +41,7 @@ pub fn project_root() -> PathBuf {
 pub fn narrate_override(file: &str, line: u32) -> Option<Element> {
     let map = NARRATE_OVERRIDES.lock().ok()?;
     let dsl = map.get(&(file.to_string(), line))?;
-    narrate_runtime::parse_narrate(dsl)
+    markup_runtime::parse_narrate(dsl)
 }
 
 /// Update the override map with new blocks extracted from a changed file.
@@ -138,7 +138,7 @@ pub fn process_narrate_file(path: &Path) {
 
     match std::fs::read_to_string(path) {
         Ok(source) => {
-            let blocks = narrate_runtime::extract_narrate_blocks(&source);
+            let blocks = markup_runtime::extract_narrate_blocks(&source);
             if !blocks.is_empty() {
                 log::info!(
                     "Narrate hot reload: found {} block(s) in {}",

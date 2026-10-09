@@ -54,7 +54,7 @@ fn transform_matrix(ks: &Transform, t: f64, warned: &mut HashSet<String>) -> Mat
     if eval1(ks.sk.as_ref(), t, 0.0).abs() > 1e-3 {
         warn_once(warned, "skew (sk) unsupported, ignored");
     }
-    gem::trs(a, p, s, r)
+    geometry::trs(a, p, s, r)
 }
 
 /// Composed matrix of a layer and its parent chain (same layer list).
@@ -192,7 +192,7 @@ fn walk_shapes(
                             warn_once(warned, "skew (sk) unsupported, ignored");
                         }
                         let a2 = alpha * eval1(tr.o.as_ref(), t, 100.0) / 100.0;
-                        (m.mul(&gem::trs(anchor, pos, sc, rot)), a2)
+                        (m.mul(&geometry::trs(anchor, pos, sc, rot)), a2)
                     }
                     None => (m, alpha),
                 };
@@ -203,7 +203,7 @@ fn walk_shapes(
             }
             "sh" => {
                 if let Some(pd) = item.ks.as_ref().and_then(|p| eval_path(p, t))
-                    && let Some(sub) = gem::path_to_sub(&pd, &m)
+                    && let Some(sub) = geometry::path_to_sub(&pd, &m)
                 {
                     paths.push(sub);
                 }
@@ -211,7 +211,7 @@ fn walk_shapes(
             "el" => {
                 let p = eval2(item.p.as_ref(), t, [0.0, 0.0]);
                 let s = eval2(item.s.as_ref(), t, [0.0, 0.0]);
-                paths.push(gem::ellipse_sub(p, s, &m));
+                paths.push(geometry::ellipse_sub(p, s, &m));
             }
             "rc" => {
                 let p = eval2(item.p.as_ref(), t, [0.0, 0.0]);
@@ -219,17 +219,17 @@ fn walk_shapes(
                 if eval1(item.r.as_ref(), t, 0.0) > 1e-3 {
                     warn_once(warned, "rect roundness unsupported, square corners");
                 }
-                paths.push(gem::rect_sub(p, s, &m));
+                paths.push(geometry::rect_sub(p, s, &m));
             }
             "fl" => {
                 if !paths.is_empty() {
-                    draws.push(gem::tess_fill(paths, style_color(item, alpha, t)));
+                    draws.push(geometry::tess_fill(paths, style_color(item, alpha, t)));
                 }
             }
             "st" => {
                 if !paths.is_empty() {
                     let w = eval1(item.w.as_ref(), t, 1.0) * m.scale_factor();
-                    draws.push(gem::tess_stroke(
+                    draws.push(geometry::tess_stroke(
                         paths,
                         style_color(item, alpha, t),
                         w.max(0.1) as f32,
@@ -239,14 +239,14 @@ fn walk_shapes(
             "gf" => {
                 warn_once(warned, "gradient fill (gf) approximated as solid color");
                 if !paths.is_empty() {
-                    draws.push(gem::tess_fill(paths, grad_color(item, alpha, t)));
+                    draws.push(geometry::tess_fill(paths, grad_color(item, alpha, t)));
                 }
             }
             "gs" => {
                 warn_once(warned, "gradient stroke (gs) approximated as solid color");
                 if !paths.is_empty() {
                     let w = eval1(item.w.as_ref(), t, 1.0) * m.scale_factor();
-                    draws.push(gem::tess_stroke(
+                    draws.push(geometry::tess_stroke(
                         paths,
                         grad_color(item, alpha, t),
                         w.max(0.1) as f32,

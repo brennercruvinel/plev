@@ -4,7 +4,7 @@
 //! accents, Inter tracked -0.02em, radii 8 / 10 / 12 / 16 / 22 and the
 //! measured shadow stacks of its depths page.
 
-use super::super::super::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::buttons::tokens::ButtonTokens;
 use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{

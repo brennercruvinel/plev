@@ -24,8 +24,8 @@ pub mod workers;
 
 
 #[cfg(target_arch = "wasm32")]
-pub use web::WebWorker as Worker;
+pub use workers::web::WebWorker as Worker;
 /// The platform worker: a background thread on native, synchronous
 /// inline execution on the web (wasm32-unknown-unknown has no threads).
 #[cfg(not(target_arch = "wasm32"))]
-pub use worker::UrnaWorker as Worker;
+pub use workers::worker::UrnaWorker as Worker;

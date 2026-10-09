@@ -3,10 +3,10 @@
 //! `todo.clear` reads the counter's `done`, state of another node, as the
 //! ide's `commit.submit` reads `changes:staged`.
 
-mod toy;
+mod support;
 
 use accord::{Actor, Change, Rejection, RequestId, Revision, Stage, StateRef, Value};
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{
     ConnId, DeltaReply, Host, MAX_ACTORS, ProtoError, Reply, Server, ServerMsg, SnapshotReply,
     StageReply, decode_client,

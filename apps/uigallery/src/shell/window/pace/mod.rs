@@ -107,7 +107,7 @@ impl App {
     /// draws nothing; if it changed something visible, it asks for the
     /// frame. Asleep, nothing: the clock does not tick either, so the
     /// whole time asleep lands on the first tick after the wake.
-    pub(super) fn catch_up(&mut self) {
+    pub(crate) fn catch_up(&mut self) {
         if self.windows.asleep() {
             return;
         }
@@ -119,7 +119,7 @@ impl App {
     /// settled (a job that ended) and what the pages asked to tell the
     /// person are notified right after, when no window has the focus.
     /// Nothing while the app sleeps.
-    pub(super) fn advance(&mut self, since_last: f32) {
+    pub(crate) fn advance(&mut self, since_last: f32) {
         if self.windows.asleep() {
             return;
         }
@@ -147,7 +147,7 @@ impl App {
     /// last tick (a catch-up or a frame), and what that asks of the loop.
     /// `now` also carries a visible change a catch-up made since the last
     /// frame; a print thread that is out asks for a look at its channel.
-    pub(super) fn frame_wake(&mut self, since_last: f32) -> Wake {
+    pub(crate) fn frame_wake(&mut self, since_last: f32) -> Wake {
         let mut wake = self.view.wake(since_last).merge(self.view.print_wake());
         wake.now |= std::mem::take(&mut self.caught_up);
         wake
@@ -192,7 +192,7 @@ impl App {
 
     /// A deadline came due: the windows whose deadline it was ask for
     /// their frame; the others keep theirs.
-    pub(super) fn deadlines_due(&mut self) {
+    pub(crate) fn deadlines_due(&mut self) {
         let now = Instant::now();
         for (_, host) in self.windows.iter_mut() {
             if host.deadline().is_some_and(|at| at <= now) {

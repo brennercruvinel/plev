@@ -422,7 +422,7 @@ mod tests {
             .policy(Policy {
                 actors: accord::Actors {
                     agent: false,
-                    ..sem::Actors::default()
+                    ..accord::Actors::default()
                 },
                 ..Policy::default()
             });
@@ -432,7 +432,7 @@ mod tests {
             .policy(Policy {
                 actors: accord::Actors {
                     human: false,
-                    ..sem::Actors::default()
+                    ..accord::Actors::default()
                 },
                 ..Policy::default()
             });

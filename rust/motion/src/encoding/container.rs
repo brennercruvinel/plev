@@ -165,9 +165,9 @@ pub fn prop_from_wire_id(id: u8) -> Option<Prop> {
 /// validated value kind against the prop (`Timeline::validate`).
 pub fn put_value(buf: &mut Vec<u8>, prop: Prop, value: Value) {
     match (prop, value) {
-        (Prop::AngleDeg, Value::Scalar(deg)) => put_u16(buf, quant::angle_deg_to_u16(deg)),
-        (_, Value::Scalar(px)) => put_i32(buf, quant::px_to_twips(px)),
-        (_, Value::Color(rgba)) => buf.extend_from_slice(&quant::rgba_to_bytes(rgba)),
+        (Prop::AngleDeg, Value::Scalar(deg)) => put_u16(buf, quantize::angle_deg_to_u16(deg)),
+        (_, Value::Scalar(px)) => put_i32(buf, quantize::px_to_twips(px)),
+        (_, Value::Color(rgba)) => buf.extend_from_slice(&quantize::rgba_to_bytes(rgba)),
     }
 }
 

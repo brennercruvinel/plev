@@ -27,7 +27,7 @@ fn wanted() -> bool {
 /// terminal of the app in front is let in over it. An app whose activation
 /// policy is prohibited may not be activated at all, and still shows its
 /// window.
-pub(super) fn event_loop(builder: &mut EventLoopBuilder<UserEvent>) {
+pub(crate) fn event_loop(builder: &mut EventLoopBuilder<UserEvent>) {
     if wanted() {
         builder
             .with_activation_policy(ActivationPolicy::Prohibited)
@@ -35,7 +35,7 @@ pub(super) fn event_loop(builder: &mut EventLoopBuilder<UserEvent>) {
     }
 }
 
-pub(super) fn window(attrs: WindowAttributes) -> WindowAttributes {
+pub(crate) fn window(attrs: WindowAttributes) -> WindowAttributes {
     if wanted() {
         attrs
             .with_active(false)

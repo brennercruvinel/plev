@@ -1,13 +1,13 @@
-//! narrate: an experimental verbal UI dsl for plev. **Not the official app
+//! markup: an experimental verbal UI dsl for plev (the former narrate). **Not the official app
 //! pattern** -- state in structs + retained widgets + explicit invalidation
 //! is (the showcase is the template). Do not build new app code on this
 //! crate without an ADR (docs/ADR/official-app-pattern.md).
 
-pub use macros::markup::plev_narrate;
+pub use macros::plev_narrate;
 
 /// Bridge module: re-exports from the real `engine::builder` API.
 ///
-/// The `plev_narrate!` macro generates code referencing `::narrate::builder::*`.
+/// The `plev_narrate!` macro generates code referencing `::markup::builder::*`.
 /// This module provides all symbols the generated code needs, using the real
 /// builder implementations instead of the previous stubs.
 pub mod builder {

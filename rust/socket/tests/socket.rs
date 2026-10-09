@@ -10,7 +10,7 @@
 
 #![cfg(unix)]
 
-mod toy;
+mod support;
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};
@@ -21,7 +21,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::{ActionName, Actor, Rejection, SemId, Stage, Value};
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{
     Act, AgentPort, Client, Config, MAX_LINE, Observe, ProtoError, Reply, WireError, find,
     socket_path,

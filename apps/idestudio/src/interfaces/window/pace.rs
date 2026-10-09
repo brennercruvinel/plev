@@ -68,7 +68,7 @@ mod tests {
     //! from the change, however long the window sat idle before it.
 
     use engine::widgets::prelude::Wake;
-    use crate::capability::Workbench;
+    use idestudio::capability::Workbench;
 
     use crate::App;
 

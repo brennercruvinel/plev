@@ -39,7 +39,7 @@ const PRINT: &str = "shell.print";
 const SAVE: &str = "shell.save_session";
 
 /// The bar as shown, and the model it shows.
-pub(super) struct Menu {
+pub(crate) struct Menu {
     native: Box<dyn NativeMenu>,
     shown: Option<MenuModel>,
 }
@@ -48,7 +48,7 @@ impl App {
     /// Shows the bar for the first time, on the loop's thread (the main
     /// one, as `muda` needs). A click wakes the loop through the proxy. A
     /// target without a menu is logged and the shell goes on without one.
-    pub(super) fn install_menu(&mut self) {
+    pub(crate) fn install_menu(&mut self) {
         let proxy = Mutex::new(self.access.proxy.clone());
         let mut native = default_menu(move || {
             if let Ok(proxy) = proxy.lock()
@@ -83,7 +83,7 @@ impl App {
     /// The bar follows the gallery: after a frame, the model is built
     /// again and, when it moved, the bar is updated (shown, when nothing
     /// was yet). The same model costs a projection and nothing else.
-    pub(super) fn sync_menu(&mut self) {
+    pub(crate) fn sync_menu(&mut self) {
         let Some(menu) = self.menu.as_mut() else {
             return;
         };
@@ -105,7 +105,7 @@ impl App {
     /// person's request (`ShowcaseView::menu_click`). `true` when the
     /// gallery's projection moved, so a frame is needed. What the shell
     /// owns is left for the caller: `detach_requested`, `save_requested`.
-    pub(super) fn menu_clicks(&mut self) -> bool {
+    pub(crate) fn menu_clicks(&mut self) -> bool {
         let Some(menu) = self.menu.as_mut() else {
             return false;
         };

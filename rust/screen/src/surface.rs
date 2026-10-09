@@ -309,7 +309,7 @@ impl Surface {
             let picture = draw::picture(node, &self.shown, frames);
             if alpha < 1.0 {
                 let shown = &self.shown;
-                motion::draw_faded(c, alpha, true, |own| {
+                transition::draw_faded(c, alpha, true, |own| {
                     draw::draw(own, node, w, r, shown, theme, picture);
                 });
             } else {

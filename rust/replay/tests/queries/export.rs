@@ -11,7 +11,7 @@ use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use record::{Limits, Recorder, Session};
 use accord::{Dispatcher, Millis, Request, SemId};
 
-use crate::apps::{Git, agent, look};
+use crate::toys::{Git, agent, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

@@ -100,7 +100,7 @@ impl Snapshot {
     pub fn revision(&self) -> Revision {
         let order = self.tree_order();
         let nodes = order.iter().filter_map(|&at| self.node_at(at));
-        hash::revision(order.len(), nodes, self.focused.as_ref())
+        revision::revision(order.len(), nodes, self.focused.as_ref())
     }
 
     /// node indices in tree order: each root in projection order, then its

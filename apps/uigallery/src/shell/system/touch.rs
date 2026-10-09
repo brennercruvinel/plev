@@ -17,7 +17,7 @@ const SLOP: f32 = 8.0;
 
 /// The first finger, from its landing to its lift.
 #[derive(Debug, Default)]
-pub(super) struct Finger {
+pub(crate) struct Finger {
     /// Its id and where it landed, while it is down.
     down: Option<(u64, f32, f32)>,
     /// Where it was at the last move.
@@ -80,7 +80,7 @@ impl Finger {
 impl App {
     /// A touch in window `id`, in physical pixels: the view gets what the
     /// finger asks, through the path the mouse takes.
-    pub(super) fn touched(&mut self, id: WindowId, touch: &winit::event::Touch) {
+    pub(crate) fn touched(&mut self, id: WindowId, touch: &winit::event::Touch) {
         let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
         let (x, y) = (touch.location.x as f32 / sf, touch.location.y as f32 / sf);
         for event in self.finger.touch(touch.id, touch.phase, x, y) {

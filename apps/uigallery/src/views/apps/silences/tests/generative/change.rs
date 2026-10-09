@@ -189,7 +189,7 @@ fn an_intent_for_a_surface_still_proposes_one() {
 mod claude {
     use super::*;
     use crate::views::apps::surface::asking::Claude;
-    use claude::ClaudeCli;
+    use ::claude::ClaudeCli;
 
     /// The fake claude in a directory of its own, in `mode`, answering
     /// `good` (and `bad` first in `repair`) as the claude's json result.

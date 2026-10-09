@@ -3,4 +3,5 @@
 
 pub mod lower;
 pub mod raise;
-pub(super) mod tests;
+#[cfg(test)]
+mod tests;

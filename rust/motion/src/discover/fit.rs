@@ -18,10 +18,10 @@ use crate::encoding::quantize;
 pub fn quantize_value(prop: Prop, value: Value) -> Value {
     match (prop, value) {
         (Prop::AngleDeg, Value::Scalar(deg)) => {
-            Value::Scalar(quant::u16_to_angle_deg(quant::angle_deg_to_u16(deg)))
+            Value::Scalar(quantize::u16_to_angle_deg(quantize::angle_deg_to_u16(deg)))
         }
-        (_, Value::Scalar(px)) => Value::Scalar(quant::twips_to_px(quant::px_to_twips(px))),
-        (_, Value::Color(rgba)) => Value::Color(quant::bytes_to_rgba(quant::rgba_to_bytes(rgba))),
+        (_, Value::Scalar(px)) => Value::Scalar(quantize::twips_to_px(quantize::px_to_twips(px))),
+        (_, Value::Color(rgba)) => Value::Color(quantize::bytes_to_rgba(quantize::rgba_to_bytes(rgba))),
     }
 }
 
@@ -52,7 +52,7 @@ pub(crate) fn grid_step(prop: Prop) -> f32 {
     } else if prop == Prop::AngleDeg {
         360.0 / 65536.0
     } else {
-        1.0 / quant::TWIPS_PER_PX as f32
+        1.0 / quantize::TWIPS_PER_PX as f32
     }
 }
 

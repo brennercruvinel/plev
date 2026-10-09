@@ -10,7 +10,7 @@ use indexmap::IndexMap;
 use accord::{
     Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Mark, Operable, Outcome,
     ParamSpec, Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError,
-    Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, decision,
+    Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
 };
 
 fn at(text: &str) -> StateRef {

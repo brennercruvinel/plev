@@ -14,7 +14,7 @@
 //! Desktop only, like the port; skips without a GPU adapter.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-mod login;
+mod support;
 
 use engine::drawing::gpu::RenderConfig;
 use engine::runtime::window::WindowHost;
@@ -120,26 +120,26 @@ fn inside([x, y, w, h]: [f32; 4], px: f32, py: f32) -> bool {
 #[test]
 fn a_secret_drawn_never_crosses_and_the_mirror_draws_the_box() {
     let secret = "hunter2-correct-horse";
-    let (w, h) = (login::WIDTH, login::HEIGHT);
+    let (w, h) = (support::login::WIDTH, support::login::HEIGHT);
     let (Some(mut app), Some(mut seen)) = (host(w, h), host(w, h)) else {
         return;
     };
     let clear = [0.0, 0.0, 0.0, 1.0];
     app.begin_frame();
-    let now = login::form(app.compositor_mut(), secret);
+    let now = support::login::form(app.compositor_mut(), secret);
     app.present(clear, "app").expect("the app drew");
     let drawn = app.read().expect("the app reads");
 
     // unmasked (the frame of phase 1), both would cross: the search finds
     let plain = Sender::new().frame(app.compositor(), head(w, h, clear));
     let (lines, parts) = wire_of(&watched().offer_scene(MAIN, &offer(plain, app.compositor())));
-    assert!(carries(&lines, &parts, secret) && carries(&lines, &parts, login::PIN));
+    assert!(carries(&lines, &parts, secret) && carries(&lines, &parts, support::login::PIN));
 
     let hidden = masks(Some(&now), app.compositor());
     let places: Vec<[f32; 4]> = hidden.iter().map(|m: &Mask| m.rect).collect();
     assert_eq!(
         places,
-        [login::PASSWORD_AT, login::PIN_AT],
+        [support::login::PASSWORD_AT, support::login::PIN_AT],
         "the two secrets"
     );
     let mut sender = Sender::new();
@@ -148,9 +148,9 @@ fn a_secret_drawn_never_crosses_and_the_mirror_draws_the_box() {
     let out = server.offer_scene(MAIN, &offer(frame, app.compositor()));
     let (lines, parts) = wire_of(&out);
     assert!(!carries(&lines, &parts, secret), "the password went out");
-    assert!(!carries(&lines, &parts, login::PIN), "the pin went out");
+    assert!(!carries(&lines, &parts, support::login::PIN), "the pin went out");
     assert!(
-        carries(&lines, &parts, login::USER),
+        carries(&lines, &parts, support::login::USER),
         "the clear field travels"
     );
     assert!(carries(&lines, &parts, SECRET_LABEL), "the box says why");
@@ -186,7 +186,7 @@ fn a_secret_drawn_never_crosses_and_the_mirror_draws_the_box() {
 
     // the person types: the secret and its caret move, nothing travels
     app.begin_frame();
-    let now = login::form(app.compositor_mut(), "hunter2-correct-horse-battery");
+    let now = support::login::form(app.compositor_mut(), "hunter2-correct-horse-battery");
     let hidden = masks(Some(&now), app.compositor());
     let frame = sender.frame_masked(app.compositor(), head(w, h, clear), &hidden);
     let out = server.offer_scene(MAIN, &offer(frame, app.compositor()));

@@ -134,7 +134,7 @@ impl<M: Model> Transformer for Llm<M> {
     /// once; `transform_verified` applies it again, as for any
     /// transformer.
     fn transform(&mut self, ask: &Adapt<'_>) -> Result<Adaptation, ProposeError> {
-        let base = ops::prompt(ask);
+        let base = operations::prompt(ask);
         let mut asked = base.clone();
         let mut last = Vec::new();
         for attempt in 1..=self.attempts {
@@ -143,23 +143,23 @@ impl<M: Model> Transformer for Llm<M> {
                 .complete(&asked)
                 .map_err(|e| ProposeError::Model(e.0))?;
             let checked =
-                ops::read(&reply).map_err(|why| vec![why]).and_then(|list| {
+                operations::read(&reply).map_err(|why| vec![why]).and_then(|list| {
                     match apply_all(&list, ask) {
                         Ok(_) => Ok(list),
                         Err((at, e)) => Err(list
                             .get(at)
-                            .map(|op| ops::reasons(at + 1, op, &e))
+                            .map(|op| operations::reasons(at + 1, op, &e))
                             .unwrap_or_default()),
                     }
                 });
             match checked {
                 Ok(list) => return Ok(Adaptation::Ops(list)),
                 Err(why) => {
-                    asked = ops::repair(&base, attempt, &reply, &why);
+                    asked = operations::repair(&base, attempt, &reply, &why);
                     last = why;
                 }
             }
         }
-        Err(ops::unchanged(self.attempts, last))
+        Err(operations::unchanged(self.attempts, last))
     }
 }

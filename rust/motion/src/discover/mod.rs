@@ -16,9 +16,9 @@
 //! step (bit-exactly for grid-aligned input). sample bookkeeping and
 //! segment fitting live in `crate::discover_fit`.
 
-mod fit;
+pub(crate) mod fit;
 #[cfg(test)]
-mod tests;
+pub(super) mod tests;
 
 use crate::encoding::container::prop_wire_id;
 use crate::discover::fit::{Life, emit_tracks, jumped, quantize_value, value_of};

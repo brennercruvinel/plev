@@ -11,7 +11,7 @@ use engine::drawing::path::PathBuilder;
 use record::{Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
 use accord::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
 
-use crate::apps::{Git, agent, id, look};
+use crate::toys::{Git, agent, id, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

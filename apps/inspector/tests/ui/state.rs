@@ -74,7 +74,7 @@ fn the_frame_is_the_one_on_screen_at_the_instant() -> Fallible {
     // the header says the instant and the frame.
     view.seek(session.frame_times()[5]);
     let drawn = texts(&draw(&mut view));
-    let stamp = text::stamp(view.at());
+    let stamp = prose::stamp(view.at());
     assert!(
         drawn.iter().any(|t| t.contains(&format!("{stamp} of "))),
         "{stamp} in {drawn:?}"
@@ -120,7 +120,7 @@ fn a_click_picks_and_the_panel_is_the_models() -> Fallible {
     let panel = view.panel().ok_or("a panel")?;
     let control = inspector.control(&message, view.t())?;
     assert_eq!(panel.at, control, "the model's answer at the instant");
-    let written = text::control(&control);
+    let written = prose::control(&control);
     let written: Vec<&str> = written.lines().collect();
     let rows: Vec<&str> = view.rows().iter().map(|r| r.text.as_str()).collect();
     assert_eq!(rows.get(..written.len()), Some(written.as_slice()));

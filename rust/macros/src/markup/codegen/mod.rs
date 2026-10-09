@@ -29,7 +29,7 @@ pub fn generate(block: NarrateBlock) -> TokenStream {
     quote! {
         {
             #[allow(unused_imports)]
-            use ::narrate::builder::*;
+            use ::markup::builder::*;
             ::engine::narrate_resolve(file!(), line!(), || {
                 #elem
             })

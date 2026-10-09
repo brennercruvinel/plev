@@ -5,7 +5,7 @@
 //! engine::headless when the machine has a GPU. then the semantic track
 //! under a busy toy app. a measurement, not a check: run it in release,
 //!
-//!     cargo test -p rec --release --test session measure -- --ignored --nocapture
+//!     cargo test -p uigallery --release --test record_cost -- --ignored --nocapture
 //!
 //! the quick check that the harness itself works runs with the suite.
 
@@ -19,7 +19,13 @@ use record::{InputKind, Limits, Recorder, Stats};
 use accord::{Actor, Dispatcher, Millis, Request, SemId};
 use uigallery::views::ShowcaseView;
 
-use crate::apps::{Git, look};
+// the semantic track runs under the recorder's own toy git client, the one
+// its session tests drive; read from there rather than copied.
+#[path = "../../../rust/record/tests/session/toys.rs"]
+#[allow(dead_code)]
+mod toys;
+
+use toys::{Git, look};
 
 /// one simulated window: the view, its compositor, the recorder, an
 /// optional headless renderer, and the clock in milliseconds.

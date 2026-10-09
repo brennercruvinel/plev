@@ -14,7 +14,7 @@ fn the_stale_submit_answers_every_question_of_the_thesis() -> Fallible {
     let thesis = record();
     let inspector = Inspector::new(&thesis.session);
     let why = inspector.why(0, thesis.stale)?.ok_or("the stale submit")?;
-    let answer = text::why(&why);
+    let answer = prose::why(&why);
     for (label, says) in [
         ("control", r#"commit.submit: button "Commit", enabled"#),
         ("initiated by", "agent:reviewer"),
@@ -58,7 +58,7 @@ fn the_completed_submit_says_its_sha_and_files() -> Fallible {
     let why = Inspector::new(&thesis.session)
         .why(0, thesis.done)?
         .ok_or("the completed submit")?;
-    let answer = text::why(&why);
+    let answer = prose::why(&why);
     assert!(
         answer.contains("verdict       accepted at +0.500s"),
         "{answer}"
@@ -81,7 +81,7 @@ fn a_persons_request_says_why_no_observation_is_recorded() -> Fallible {
     let why = Inspector::new(&thesis.session)
         .why(0, thesis.unstage)?
         .ok_or("the unstage")?;
-    let answer = text::why(&why);
+    let answer = prose::why(&why);
     for says in [
         "not recorded: no observation by human before the request",
         "a person acts on the frame on screen",
@@ -103,7 +103,7 @@ fn the_summary_lists_every_request_and_the_refusal_with_its_why() -> Fallible {
         (summary.start, summary.end, summary.duration),
         (1_000, 1_500, 500)
     );
-    let answer = text::summary(&summary);
+    let answer = prose::summary(&summary);
     for says in [
         "span      +0.000s to +0.500s",
         "requests  3",
@@ -122,7 +122,7 @@ fn the_summary_lists_every_request_and_the_refusal_with_its_why() -> Fallible {
 fn the_timeline_and_the_control_read_as_lines() -> Fallible {
     let thesis = record();
     let inspector = Inspector::new(&thesis.session);
-    let timeline = text::timeline(&inspector.timeline());
+    let timeline = prose::timeline(&inspector.timeline());
     assert_eq!(
         timeline.lines().filter(|l| l.starts_with('+')).count(),
         thesis.session.events().len()
@@ -133,7 +133,7 @@ fn the_timeline_and_the_control_read_as_lines() -> Fallible {
             "stage     request 2 rejected: stale (agent:reviewer, submit on commit.submit)"
         )
     );
-    let control = text::control(&inspector.control(&crate::apps::id("commit.submit"), 1_300)?);
+    let control = prose::control(&inspector.control(&crate::toys::id("commit.submit"), 1_300)?);
     for says in [
         "control commit.submit at +0.300s",
         r#"node          commit.submit: button "Commit", enabled"#,
@@ -151,8 +151,8 @@ fn the_timeline_and_the_control_read_as_lines() -> Fallible {
 /// receipts in one window say the answer is ambiguous and name both.
 #[test]
 fn outside_and_ambiguous_moves_say_so() -> Fallible {
-    let mut lab = crate::apps::Lab::new(&["A", "B", "C", "D"], "fix login", 0);
-    let seen = lab.observe(10, crate::apps::agent());
+    let mut lab = crate::toys::Lab::new(&["A", "B", "C", "D"], "fix login", 0);
+    let seen = lab.observe(10, crate::toys::agent());
     lab.outside_unstages(20, "D");
     for (t, actor, file) in [
         (30, accord::Actor::Human, "B"),
@@ -166,7 +166,7 @@ fn outside_and_ambiguous_moves_say_so() -> Fallible {
     let submit = lab.act(
         40,
         &seen,
-        crate::apps::agent(),
+        crate::toys::agent(),
         "commit.submit",
         "submit",
         None,
@@ -175,7 +175,7 @@ fn outside_and_ambiguous_moves_say_so() -> Fallible {
     let why = Inspector::new(&session)
         .why(0, submit)?
         .ok_or("the submit")?;
-    let answer = text::why(&why);
+    let answer = prose::why(&why);
     for says in [
         "+0.020s changes:staged: removed D",
         "by no request: no receipt ran between the state before and this change, so it came \

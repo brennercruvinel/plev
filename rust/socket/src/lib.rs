@@ -63,7 +63,7 @@ mod traffic;
 mod framing;
 mod protocol;
 
-pub use b64::{decode as decode_base64, encode as encode_base64};
+pub use framing::base64::{decode as decode_base64, encode as encode_base64};
 #[cfg(unix)]
 pub use client::Client;
 pub use framing::{Refusal, decode_client, decode_server, encode_client, encode_server};
@@ -81,6 +81,6 @@ pub use scene::{
     BlobReply, MAIN_WINDOW, MAX_LINE, MAX_WINDOW, MIRROR_ENV, Offer, OfferLayer, SCENE_PART,
     SceneAsk, SceneLayer, SceneReply, SceneWatch, mirror_enabled,
 };
-pub use scene_read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
+pub use scene::read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};
 pub use shown::MAX_ACTORS;

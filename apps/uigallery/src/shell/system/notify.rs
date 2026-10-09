@@ -42,7 +42,7 @@ const SHOW: &str = "shell.show";
 const DETECT: &str = "detect_silence";
 
 /// The notifier, and what the background jobs came to.
-pub(super) struct Notices {
+pub(crate) struct Notices {
     notifier: Box<dyn Notifier>,
     jobs: Arc<Mutex<VecDeque<Finished>>>,
 }
@@ -99,7 +99,7 @@ impl App {
     /// The platform's notifier, woken through the proxy on a click, and
     /// the ear on the gallery's dispatcher for the jobs that end off the
     /// loop. Once, when the main window is up.
-    pub(super) fn install_notices(&mut self) {
+    pub(crate) fn install_notices(&mut self) {
         let proxy = Mutex::new(self.access.proxy.clone());
         let notifier = default_notifier(move || {
             if let Ok(proxy) = proxy.lock()
@@ -121,7 +121,7 @@ impl App {
 
     /// Window `id` of ours took or lost the focus (the platform's word):
     /// the view learns whether any window has it.
-    pub(super) fn focus_changed(&mut self, id: WindowId, on: bool) {
+    pub(crate) fn focus_changed(&mut self, id: WindowId, on: bool) {
         if on {
             self.focus = Some(id);
         } else if self.focus == Some(id) {
@@ -134,7 +134,7 @@ impl App {
     /// while no window had the focus (a job that ended while one had it
     /// was seen on screen and is not told): each shown through the
     /// platform, the text projected either way, a refusal logged.
-    pub(super) fn notify_pending(&mut self) {
+    pub(crate) fn notify_pending(&mut self) {
         let Some(notices) = self.notices.as_mut() else {
             return;
         };
@@ -163,7 +163,7 @@ impl App {
     /// by the view as the person's request (`ShowcaseView::menu_click`).
     /// `true` when the gallery's projection moved, so a frame is needed.
     /// What the shell owns is left for the caller: `show_requested`.
-    pub(super) fn notice_clicks(&mut self) -> bool {
+    pub(crate) fn notice_clicks(&mut self) -> bool {
         let Some(notices) = self.notices.as_mut() else {
             return false;
         };
@@ -176,7 +176,7 @@ impl App {
 
     /// The tray icon, its item or a notification asked for the main
     /// window to come forward: shown, unminimized, focused.
-    pub(super) fn show_requested(&mut self) {
+    pub(crate) fn show_requested(&mut self) {
         if !self.view.take_show_request() {
             return;
         }

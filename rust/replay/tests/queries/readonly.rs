@@ -9,7 +9,7 @@ use std::path::Path;
 use replay::{Inspector, prose};
 use accord::{RequestId, SemId};
 
-use crate::apps::{Lab, agent};
+use crate::toys::{Lab, agent};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 
@@ -17,11 +17,11 @@ type Fallible = Result<(), Box<dyn std::error::Error>>;
 /// rendered: the number of lines it printed.
 fn inspect_everything(session: &record::Session) -> Result<usize, Box<dyn std::error::Error>> {
     let inspector = Inspector::new(session);
-    let mut lines = text::summary(&inspector.summary()?).lines().count();
-    lines += text::timeline(&inspector.timeline()).lines().count();
+    let mut lines = prose::summary(&inspector.summary()?).lines().count();
+    lines += prose::timeline(&inspector.timeline()).lines().count();
     for (origin, id) in inspector.requests() {
         let why = inspector.why(origin, id)?.ok_or("a listed request")?;
-        lines += text::why(&why).lines().count();
+        lines += prose::why(&why).lines().count();
         lines += serde_json::to_string(&why)?.len().min(1);
     }
     let ids: Vec<SemId> = ["changes", "commit.message", "commit.submit", "nowhere"]
@@ -31,7 +31,7 @@ fn inspect_everything(session: &record::Session) -> Result<usize, Box<dyn std::e
     let (start, end) = (inspector.start(), inspector.end());
     for t in start.saturating_sub(5)..=end + 5 {
         for id in &ids {
-            lines += text::control(&inspector.control(id, t)?).lines().count();
+            lines += prose::control(&inspector.control(id, t)?).lines().count();
         }
     }
     Ok(lines)

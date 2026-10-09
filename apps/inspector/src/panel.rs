@@ -43,20 +43,20 @@ impl Panel {
     /// (`text::why`) under one line that says what they are. the line
     /// that opens a control or a request is a header.
     pub fn rows(&self) -> Vec<CodeLine> {
-        let mut rows: Vec<CodeLine> = text::control(&self.at).lines().map(row).collect();
+        let mut rows: Vec<CodeLine> = prose::control(&self.at).lines().map(row).collect();
         if !self.later.is_empty() {
             rows.push(CodeLine::new("", LineKind::Context));
             rows.push(CodeLine::new(
                 format!(
                     "after {}, as the whole session tells it: {} more",
-                    text::stamp(self.at.at),
+                    prose::stamp(self.at.at),
                     self.later.len()
                 ),
                 LineKind::Header,
             ));
             for why in &self.later {
                 rows.push(CodeLine::new("", LineKind::Context));
-                rows.extend(text::why(why).lines().map(|l| row(&format!("  {l}"))));
+                rows.extend(prose::why(why).lines().map(|l| row(&format!("  {l}"))));
             }
         }
         rows

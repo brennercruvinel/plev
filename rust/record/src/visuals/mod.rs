@@ -23,7 +23,7 @@
 //! a step only when that changed from the frame before (see `bound`),
 //! opening with the whole list, so a chunk stays a keyframe for them too.
 
-mod reader;
+pub(super) mod reader;
 
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};

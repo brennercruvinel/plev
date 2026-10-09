@@ -6,7 +6,7 @@
 use record::{Limits, Recorder, Session};
 use accord::{Actor, Dispatcher, Request, RequestId, SemId};
 
-use crate::apps::{Git, agent, look};
+use crate::toys::{Git, agent, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

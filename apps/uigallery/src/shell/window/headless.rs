@@ -404,7 +404,7 @@ mod tests {
                 svg.matches("</g>").count(),
                 "{title}"
             );
-            match ::svg::convert(svg, title) {
+            match ::import::formats::svg::convert(svg, title) {
                 Ok((_, stats)) => {
                     assert_eq!((stats.width, stats.height), (1280.0, 800.0), "{title}");
                     assert!(stats.paths > labels, "{title}: {stats:?}");

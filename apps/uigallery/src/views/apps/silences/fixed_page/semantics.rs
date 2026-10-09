@@ -45,7 +45,7 @@ use super::super::{Focus, Said, SilencesPage};
 use crate::views::apps::todo::TodoPage;
 
 /// The ids the page projects and binds, parsed once.
-pub(super) struct Ids {
+pub(crate) struct Ids {
     pub region: SemId,
     pub video: SemId,
     pub threshold: SemId,
@@ -59,7 +59,7 @@ pub(super) struct Ids {
 }
 
 impl Ids {
-    pub(super) fn new() -> Result<Self, SemError> {
+    pub(crate) fn new() -> Result<Self, SemError> {
         let region = SemId::name("silences")?;
         Ok(Self {
             video: region.child("video")?,
@@ -80,7 +80,7 @@ impl Ids {
     }
 
     /// `silences.cut`, the collection whose items are the cuts.
-    pub(super) fn collection(&self) -> &SemId {
+    pub(crate) fn collection(&self) -> &SemId {
         &self.cut
     }
 
@@ -96,7 +96,7 @@ impl Ids {
     }
 
     /// True for every id the page projects.
-    pub(super) fn holds(&self, id: &SemId) -> bool {
+    pub(crate) fn holds(&self, id: &SemId) -> bool {
         *id == self.region
             || *id == self.video
             || *id == self.threshold
@@ -152,7 +152,7 @@ impl Ids {
 
 /// What the page's own input asks for, named without the ids.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum Target {
+pub(crate) enum Target {
     Threshold,
     MinDuration,
     Detect,
@@ -162,7 +162,7 @@ pub(super) enum Target {
 
 /// The two sliders.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(super) enum Which {
+pub(crate) enum Which {
     Threshold,
     MinDuration,
 }
@@ -196,7 +196,7 @@ pub(super) fn clock(t: f64) -> String {
 }
 
 /// The instant in milliseconds, the key of a frame.
-pub(super) fn ms(t: f64) -> u64 {
+pub(crate) fn ms(t: f64) -> u64 {
     if t.is_finite() && t > 0.0 {
         (t * 1000.0).round() as u64
     } else {
@@ -399,26 +399,26 @@ impl SilencesPage {
 
     /// A person proposes: `propose` observed on the page as it is now,
     /// by the person, through the todo's dispatcher.
-    pub(super) fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+    pub(crate) fn propose(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
         let target = self.generated.proposing.ids.as_ref()?.propose.clone();
         self.ask_page(todo, &target, "propose")
     }
 
     /// A person cancels the proposal the Claude is answering.
-    pub(super) fn cancel(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+    pub(crate) fn cancel(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
         let target = self.generated.proposing.ids.as_ref()?.cancel.clone();
         self.ask_page(todo, &target, "activate")
     }
 
     /// A person closes the generated surface.
-    pub(super) fn close(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
+    pub(crate) fn close(&mut self, todo: &mut TodoPage) -> Option<RequestId> {
         let target = self.generated.close_id.clone()?;
         self.ask_page(todo, &target, "close")
     }
 
     /// A person's click on the block: observed on the whole page,
     /// dispatched over it.
-    pub(super) fn ask_page(
+    pub(crate) fn ask_page(
         &mut self,
         todo: &mut TodoPage,
         target: &SemId,
@@ -518,7 +518,7 @@ impl SilencesPage {
     /// now, ask through the dispatcher, and ask for a frame when the
     /// projected state moved. A refused request is still handled: the
     /// person aimed at the page.
-    pub(super) fn ask(
+    pub(crate) fn ask(
         &mut self,
         todo: &mut TodoPage,
         target: Target,
@@ -574,7 +574,7 @@ impl SilencesPage {
     }
 
     /// `2 silences, 1 applied, 0 rejected, 2.0 s cut`.
-    pub(super) fn counts_text(&self) -> String {
+    pub(crate) fn counts_text(&self) -> String {
         let c = self.model.counts();
         format!(
             "{} {}, {} applied, {} rejected, {:.1} s cut",

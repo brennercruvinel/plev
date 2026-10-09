@@ -2,9 +2,9 @@ mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
-mod scales;
+pub(crate) mod scales;
 mod tests;
-mod tokens;
+pub(crate) mod tokens;
 
 pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,

@@ -15,7 +15,7 @@ use engine::drawing::compositor::Compositor;
 use accord::{Actor, Receipt, Request, SemId, Snapshot};
 use screen::SurfaceHost;
 
-use super::super::capability::Workbench;
+use crate::capability::Workbench;
 use crate::generative::row::Asked;
 
 /// The workbench as a surface reaches it: the one dispatcher, and the
@@ -136,7 +136,7 @@ impl Workbench {
     /// A left click on the line or the column, as a press and a release
     /// there (the workspace takes a click on the press); `None` when it is
     /// neither's. A click on the workspace blurs the intent field.
-    pub(super) fn click_column(&mut self, x: f32, y: f32) -> Option<bool> {
+    pub(crate) fn click_column(&mut self, x: f32, y: f32) -> Option<bool> {
         let events = [
             WidgetEvent::MouseDown { x, y },
             WidgetEvent::MouseUp { x, y },
@@ -276,7 +276,7 @@ impl Workbench {
 
     /// Draws the line and the column of an open surface beside the frame
     /// the workspace drew.
-    pub(super) fn render_column(&mut self, compositor: &mut Compositor) {
+    pub(crate) fn render_column(&mut self, compositor: &mut Compositor) {
         let theme = self.workspace.theme().clone();
         let (w, h) = self.window;
         if let Some(g) = self.generated.as_mut() {

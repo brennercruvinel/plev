@@ -15,11 +15,11 @@ use socket::{AgentPort, Config};
 
 use crate::answer::Answers;
 use crate::args::{Args, Arm, Until};
-use crate::bench::{Bench, Wake};
+use crate::subject::{Bench, Wake};
 use crate::host::{ActSeen, Costs, LabHost, Log, Person, Served};
 use crate::repo::TASK;
 use crate::report::ERROR;
-use crate::scripted::{self, Scripted};
+use crate::arms::scripted::{self, Scripted};
 
 /// how long the loop sleeps between two looks at the timers.
 const TICK: Duration = Duration::from_millis(10);

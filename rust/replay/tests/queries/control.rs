@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use replay::{Ending, Inspector};
 use accord::{Outcome, Value};
 
-use crate::apps::{Lab, agent, id};
+use crate::toys::{Lab, agent, id};
 use crate::thesis::record;
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;

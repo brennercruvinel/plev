@@ -7,7 +7,7 @@ use std::sync::Arc;
 use record::{Event, InputKind, Kind, Limits, ReadError, Recorder, Session};
 use accord::{Change, Dispatcher, Request, Role, Semantics, SnapshotBuilder, Stage};
 
-use crate::apps::{Git, id, look};
+use crate::toys::{Git, id, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

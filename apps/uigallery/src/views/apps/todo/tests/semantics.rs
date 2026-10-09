@@ -399,7 +399,7 @@ fn an_inert_page_refuses_every_request_and_takes_no_input() {
     let seen = s.snapshot().unwrap();
     let req = Request::observe(&seen, Actor::Human, "todo.item[2]", "remove", None).unwrap();
     assert!(matches!(
-        accord::decision(&req, &seen),
+        accord::check(&req, &seen),
         Verdict::Rejected(Rejection::Inert { .. })
     ));
 

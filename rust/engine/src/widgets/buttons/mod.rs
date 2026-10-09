@@ -5,11 +5,11 @@ mod button;
 mod icon_button;
 mod press;
 mod submit_button;
-mod tokens;
+pub(crate) mod tokens;
 
-pub use badge::{Badge, BadgeKind};
+pub use crate::widgets::content::badge::{Badge, BadgeKind};
 pub use button::{Button, ButtonSize, ButtonVariant};
-pub use chip::Chip;
+pub use crate::widgets::content::chip::Chip;
 pub use icon_button::{IconButton, IconButtonSize, IconButtonVariant};
 pub use press::Press;
 pub use submit_button::SubmitButton;

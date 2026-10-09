@@ -166,7 +166,7 @@ impl ActionRegistry {
 mod tests {
     use super::*;
 
-    crate::control::keymap!(test_ns, [Save, Open, Quit]);
+    crate::actions!(test_ns, [Save, Open, Quit]);
 
     // A manually implemented action carrying data.
     #[derive(Clone, Debug, PartialEq, Eq)]
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn macro_accepts_trailing_comma() {
-        crate::control::keymap!(trailing, [One, Two,]);
+        crate::actions!(trailing, [One, Two,]);
         assert_eq!(One.name(), "trailing::One");
         assert_eq!(Two.name(), "trailing::Two");
     }

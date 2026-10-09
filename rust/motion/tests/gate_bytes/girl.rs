@@ -24,7 +24,7 @@
 //! also drops morph keyframes outside their layer's visibility.
 
 use crate::dense::{Dense, encode_pair, fixture_missing, load, path_node, report};
-use crate::lot::{NumKf, Scan, f, scan_layer};
+use crate::lottie::{NumKf, Scan, f, scan_layer};
 use motion::{
     Asset, AssetKind, Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode,
     Segment, Timeline, Track, Value,

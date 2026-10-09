@@ -16,7 +16,7 @@ use super::super::SilencesPage;
 const ASPECT: f32 = 16.0 / 9.0;
 
 /// One frame of geometry.
-pub(super) struct Layout {
+pub(crate) struct Layout {
     /// The whole page, the region's binding.
     pub region: Rect,
     pub video_card: Rect,
@@ -52,14 +52,14 @@ pub(super) struct Layout {
 
 /// A labelled slider: the label's origin, the right edge the value is
 /// aligned to, and the slider's bounds.
-pub(super) struct SliderRow {
+pub(crate) struct SliderRow {
     pub label: (f32, f32),
     pub value_right: f32,
     pub slider: Rect,
 }
 
 /// The parts of one cut's row.
-pub(super) struct RowParts {
+pub(crate) struct RowParts {
     pub thumb: Rect,
     /// The origin of the range text; the detail line goes under it.
     pub text: (f32, f32),
@@ -150,7 +150,7 @@ pub(super) fn stats(page: &SilencesPage) -> [Stat; 4] {
     ]
 }
 
-pub(super) fn compute(page: &SilencesPage, content: Rect, theme: &Theme) -> Layout {
+pub(crate) fn compute(page: &SilencesPage, content: Rect, theme: &Theme) -> Layout {
     let pad = theme.spacing.lg;
     let gap = theme.spacing.xl;
     let md = theme.spacing.md;
@@ -300,7 +300,7 @@ fn flow(at: Rect, gap: f32, sizes: &[(f32, f32)]) -> (Vec<Rect>, f32) {
 /// The parts of a cut's row: the thumbnail at the left, the texts beside
 /// it, the decision badge and the two buttons at the right; stacked, the
 /// badge and the buttons go on a line under the thumbnail.
-pub(super) fn row_parts(
+pub(crate) fn row_parts(
     row: Rect,
     theme: &Theme,
     apply: &Button,
@@ -353,7 +353,7 @@ pub(super) fn row_parts(
 }
 
 /// Where `seg` sits on the band of a video `duration` long.
-pub(super) fn mark_rect(band: Rect, seg: Segment, duration: f64) -> Rect {
+pub(crate) fn mark_rect(band: Rect, seg: Segment, duration: f64) -> Rect {
     if duration <= 0.0 {
         return Rect::new(band.x, band.y, 0.0, band.h);
     }

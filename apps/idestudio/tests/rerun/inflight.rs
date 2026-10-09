@@ -22,7 +22,7 @@ use idestudio::capability::Workbench;
 use accord::{Actor, Millis, Receipt, Request, RequestId, Snapshot, Stage};
 
 use crate::harness::{Fixture, rerun};
-use crate::lab::{Lab, fixture};
+use crate::eval::{Lab, fixture};
 
 /// the laboratory's workbench, settled only as far as its executions.
 pub struct InFlight<'a> {

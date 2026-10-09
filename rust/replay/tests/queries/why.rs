@@ -7,7 +7,7 @@ use replay::{Basis, By, Ending, Inspector, Unrecorded, Why};
 use record::InputKind;
 use accord::{Actor, Change, Rejection, RequestId, Stage, Value};
 
-use crate::apps::{Lab, agent, id, rid, sha};
+use crate::toys::{Lab, agent, id, rid, sha};
 use crate::thesis::record;
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
@@ -217,9 +217,9 @@ fn an_act_on_a_revision_no_observation_served() -> Fallible {
 #[test]
 fn a_revision_the_recording_never_held() -> Fallible {
     let mut lab = Lab::new(&["A", "B"], "fix login", 0);
-    let mut elsewhere = crate::apps::Git::new(&["A", "B", "C"], "fix login");
+    let mut elsewhere = crate::toys::Git::new(&["A", "B", "C"], "fix login");
     elsewhere.message = "other".into();
-    let seen = crate::apps::look(&elsewhere);
+    let seen = crate::toys::look(&elsewhere);
     let submit = lab.act(10, &seen, agent(), "commit.submit", "submit", None);
     let why = why(&lab.session(), submit)?;
     assert_eq!(
@@ -308,7 +308,7 @@ fn two_receipts_in_the_window_are_ambiguous_and_both_shown() -> Fallible {
 fn a_refused_request_explains_nothing_and_the_same_actor_is_marked() -> Fallible {
     let mut lab = Lab::new(&["A", "B", "C"], "fix login", 0);
     let seen = lab.observe(10, agent());
-    let stale_seen = crate::apps::look(&crate::apps::Git::new(&["A"], "x"));
+    let stale_seen = crate::toys::look(&crate::toys::Git::new(&["A"], "x"));
     let refused = lab.act(
         20,
         &stale_seen,

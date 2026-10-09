@@ -19,7 +19,7 @@ pub mod styling;
 // -- Widgets: the design system, one category per module (the former `comps`)
 pub mod widgets;
 
-pub use macros::view::component;
+pub use macros::component;
 
 pub use wgpu;
 pub use winit;
@@ -30,12 +30,12 @@ pub use winit;
 /// to a direct call of `compiled()` with zero overhead.
 #[cfg(hot_reload)]
 #[inline(always)]
-pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
+pub fn narrate_resolve<F: FnOnce() -> compose::builder::Element>(
     file: &str,
     line: u32,
     compiled: F,
-) -> builder::Element {
-    if let Some(el) = hot_reload::narrate_override(file, line) {
+) -> compose::builder::Element {
+    if let Some(el) = runtime::hot_reload::narrate_override(file, line) {
         el
     } else {
         compiled()
@@ -44,18 +44,18 @@ pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
 
 #[cfg(not(hot_reload))]
 #[inline(always)]
-pub fn narrate_resolve<F: FnOnce() -> builder::Element>(
+pub fn narrate_resolve<F: FnOnce() -> compose::builder::Element>(
     _file: &str,
     _line: u32,
     compiled: F,
-) -> builder::Element {
+) -> compose::builder::Element {
     compiled()
 }
 
 /// Shared event loop runner used by native desktop platforms.
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
-pub fn run_event_loop(event_loop: winit::event_loop::EventLoop<window::AppEvent>) {
-    let mut app = window::App::new();
+pub fn run_event_loop(event_loop: winit::event_loop::EventLoop<runtime::window::AppEvent>) {
+    let mut app = runtime::window::App::new();
     event_loop.run_app(&mut app).unwrap();
 }
 
@@ -78,12 +78,12 @@ fn android_main(app: winit::platform::android::activity::AndroidApp) {
 
     log::info!("plev android_main started");
 
-    let event_loop = winit::event_loop::EventLoop::<window::AppEvent>::with_user_event()
+    let event_loop = winit::event_loop::EventLoop::<runtime::window::AppEvent>::with_user_event()
         .with_android_app(app)
         .build()
         .unwrap();
     let proxy = event_loop.create_proxy();
-    let mut app = window::App::new_with_proxy(proxy);
+    let mut app = runtime::window::App::new_with_proxy(proxy);
     match event_loop.run_app(&mut app) {
         Ok(()) => log::info!("Event loop exited cleanly"),
         Err(e) => log::error!("Event loop error: {:?}", e),
@@ -106,10 +106,10 @@ pub fn wasm_main() {
     console_error_panic_hook::set_once();
     console_log::init_with_level(log::Level::Info).expect("Failed to init logger");
 
-    let event_loop = winit::event_loop::EventLoop::<window::AppEvent>::with_user_event()
+    let event_loop = winit::event_loop::EventLoop::<runtime::window::AppEvent>::with_user_event()
         .build()
         .unwrap();
     let proxy = event_loop.create_proxy();
-    let app = window::App::new_with_proxy(proxy);
+    let app = runtime::window::App::new_with_proxy(proxy);
     event_loop.spawn_app(app);
 }

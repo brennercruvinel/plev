@@ -24,14 +24,14 @@ use winit::window::{WindowAttributes, WindowId};
 use super::super::App;
 
 /// The page's own window and the cursor in it (logical pixels).
-pub(super) struct PageWindow {
-    pub(super) id: WindowId,
-    pub(super) cursor: (f32, f32),
+pub(crate) struct PageWindow {
+    pub(crate) id: WindowId,
+    pub(crate) cursor: (f32, f32),
 }
 
 impl App {
     /// `D`: the page to a window of its own, or back.
-    pub(super) fn toggle_page_window(&mut self, event_loop: &ActiveEventLoop) {
+    pub(crate) fn toggle_page_window(&mut self, event_loop: &ActiveEventLoop) {
         if self.page_window.is_some() {
             self.close_page_window();
         } else {

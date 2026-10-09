@@ -8,7 +8,7 @@ use std::rc::Rc;
 use engine::drawing::compositor::Compositor;
 use accord::{
     Actor, Confirm, Mark, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage,
-    Value, Verdict, decision,
+    Value, Verdict, check,
 };
 
 use super::*;

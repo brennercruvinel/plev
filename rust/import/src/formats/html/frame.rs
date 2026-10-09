@@ -36,7 +36,7 @@ impl Ctx<'_> {
             let decl_sites: Vec<String> = rule.decls.iter().map(|d| self.at(d.line)).collect();
             if let Some(lines) = &rule.at_rule {
                 let covers = lines.iter().map(|l| self.at(*l)).collect();
-                let why = html_map::at_rule(&rule.selector);
+                let why = css::at_rule(&rule.selector);
                 self.dropped
                     .push(Dropped::new(rule.selector.clone(), why, at).covering(covers));
                 self.applied.insert(i);
@@ -45,10 +45,10 @@ impl Ctx<'_> {
             let parts = split_list(&rule.selector);
             let simple: Vec<Selector> = parts
                 .iter()
-                .filter_map(|p| html_map::selector(p).ok())
+                .filter_map(|p| css::selector(p).ok())
                 .collect();
             for part in &parts {
-                if let Err(why) = html_map::selector(part) {
+                if let Err(why) = css::selector(part) {
                     let covers = if simple.is_empty() {
                         decl_sites.clone()
                     } else {
@@ -322,7 +322,7 @@ impl Ctx<'_> {
                 "style" => self.note(src, "inline declarations, each reported on its own"),
                 "width" | "height" if el.tag == "img" => {}
                 _ => {
-                    let (name, value) = html_map::attr(&a.name, a.value.as_deref());
+                    let (name, value) = css::attr(&a.name, a.value.as_deref());
                     out.push(Attr { name, value, src });
                 }
             }

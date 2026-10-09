@@ -62,7 +62,7 @@ pub fn convert(svg: &str, name: &str) -> Result<(Vec<u8>, Stats), SvgError> {
     let size = tree.size();
     let (width, height) = (size.width(), size.height());
 
-    let paths = tess::tessellate(&tree);
+    let paths = tessellate::tessellate(&tree);
     let mut intern: HashMap<Vec<u8>, u16> = HashMap::new();
     let mut assets: Vec<Asset> = Vec::new();
     let mut scene: Vec<Node> = Vec::new();

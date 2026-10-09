@@ -17,12 +17,12 @@ use proptest::prelude::*;
 
 /// Scalars on the twips grid round-trip exactly.
 fn grid_px() -> impl Strategy<Value = f32> {
-    (-200_000i32..200_000).prop_map(quant::twips_to_px)
+    (-200_000i32..200_000).prop_map(quantize::twips_to_px)
 }
 
 /// Colors on the rgba8 grid round-trip exactly.
 fn grid_color() -> impl Strategy<Value = [f32; 4]> {
-    proptest::array::uniform4(any::<u8>()).prop_map(quant::bytes_to_rgba)
+    proptest::array::uniform4(any::<u8>()).prop_map(quantize::bytes_to_rgba)
 }
 
 /// Any preset, or a custom bezier already on the u8 grid.
@@ -30,10 +30,10 @@ fn arb_easing() -> impl Strategy<Value = Easing> {
     prop_oneof![
         (0..PRESETS.len()).prop_map(|i| PRESETS[i]),
         proptest::array::uniform4(any::<u8>()).prop_map(|[a, b, c, d]| Easing::CustomBezier {
-            x1: quant::u8_to_bezier_x(a),
-            y1: quant::u8_to_bezier_y(b),
-            x2: quant::u8_to_bezier_x(c),
-            y2: quant::u8_to_bezier_y(d),
+            x1: quantize::u8_to_bezier_x(a),
+            y1: quantize::u8_to_bezier_y(b),
+            x2: quantize::u8_to_bezier_x(c),
+            y2: quantize::u8_to_bezier_y(d),
         }),
     ]
 }

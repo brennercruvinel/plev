@@ -7,7 +7,7 @@
 use offers::compose::Composer;
 use accord::{
     ActionDecl, ActionName, Actor, Rejection, Request, SemId, Semantics, Snapshot, SnapshotBuilder,
-    StateRef, Verdict, decision,
+    StateRef, Verdict, check,
 };
 
 use super::desk::{Bench, Desk, PERSON_ONLY, agent, person};

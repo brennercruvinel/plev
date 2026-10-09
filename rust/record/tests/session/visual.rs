@@ -7,7 +7,7 @@ use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use motion::{AssetBank, NodeKind, Prop, RaiseError, Value, quantize_value, raise_scene};
 use record::{FrameError, InputKind, Limits, Recorder};
 
-use crate::apps::look;
+use crate::toys::look;
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 
@@ -238,7 +238,7 @@ fn one_byte_budget_covers_both_tracks() -> Fallible {
         ..Limits::default()
     };
     let rec = Recorder::new(limits);
-    let mut counter = crate::apps::Git::new(&["A"], "wip");
+    let mut counter = crate::toys::Git::new(&["A"], "wip");
     for now in (0..20_000u64).step_by(20) {
         counter.message = format!("wip {now}");
         rec.snapshot(now, &look(&counter));

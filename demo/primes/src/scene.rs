@@ -8,9 +8,9 @@
 
 use engine::drawing::compositor::{Compositor, RoundedRectParams};
 use engine::drawing::path::PathBuilder;
-use crate::color::hsl_to_srgb;
-use crate::simulation::Simulation;
-use crate::simulation::particle::Particle;
+use primes::color::hsl_to_srgb;
+use primes::simulation::Simulation;
+use primes::simulation::particle::Particle;
 
 /// the demo's particle radius: max(0.5, mass*1.5) breathing with the phase.
 fn core_radius(p: &Particle) -> f32 {

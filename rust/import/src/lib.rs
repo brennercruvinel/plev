@@ -35,7 +35,7 @@ pub mod tokens;
 pub mod formats;
 pub mod tree;
 
-pub use emit_ir::{Imported, emit_ir};
+pub use emit::plevir::{Imported, emit_ir};
 pub use tree::{Dropped, Resolution, Transpiled};
 pub use report::{Binding, Category, Entry, Need, Report, Verdict};
 pub use tokens::{Tokens, TypeStyle, Value};
@@ -57,9 +57,9 @@ pub fn resolve_react(
     sass: (&str, &str),
     vars: &str,
 ) -> Result<Resolution, ParserError> {
-    let component = tsx::parse_tsx(tsx.1)?;
-    let rules = sass::parse_sass(sass.1, vars);
-    Ok(resolve_react::resolve_react(
+    let component = formats::react::parse::parse_tsx(tsx.1)?;
+    let rules = formats::react::sass::parse_sass(sass.1, vars);
+    Ok(formats::react::resolve::resolve_react(
         &component, &rules, tsx.0, sass.0,
     ))
 }
@@ -67,28 +67,28 @@ pub fn resolve_react(
 /// Resolve a gpui widget: `(file_name, source)`. The poc resolves the
 /// instance dissected in the study: horizontal, solid, with label.
 pub fn resolve_gpui(rust: (&str, &str)) -> Result<Resolution, ParserError> {
-    let parsed = gpui::parse_gpui(rust.1)?;
-    resolve_gpui::resolve_gpui(&parsed, rust.0)
+    let parsed = formats::gpui::parse::parse_gpui(rust.1)?;
+    formats::gpui::resolve::resolve_gpui(&parsed, rust.0)
 }
 
 /// Resolve an HTML document (task-71 phase 2): `(file_name, source)`. The
 /// component is the body's element; the CSS is its `<style>` and `style=""`.
 pub fn resolve_html(html: (&str, &str)) -> Result<Resolution, ParserError> {
-    let doc = html::parse_html(html.1)?;
-    resolve_html::resolve_html(&doc, html.0)
+    let doc = formats::html::parse::parse_html(html.1)?;
+    formats::html::resolve::resolve_html(&doc, html.0)
 }
 
 /// Resolve a Figma export (task-71 phase 2): `(file_name, json)`, the REST
 /// API's shape as `script/figma-fixture` writes it. The screen is the first
 /// layer under the document's page and section.
 pub fn resolve_figma(json: (&str, &str)) -> Result<Resolution, ParserError> {
-    let doc = figma::parse_figma(json.1)?;
-    resolve_figma::resolve_figma(&doc, json.0)
+    let doc = formats::figma::parse::parse_figma(json.1)?;
+    formats::figma::resolve::resolve_figma(&doc, json.0)
 }
 
 fn transpiled(res: Resolution) -> Transpiled {
     Transpiled {
-        code: emit::emit(&res),
+        code: emit::builder::emit(&res),
         mapped: res.mapped,
         dropped: res.dropped,
     }

@@ -37,7 +37,7 @@ pub(super) fn frame_ref(video: &SemId, t: f64) -> String {
 
 /// The instant (ms) a frame ref of `video` names; `None` for a text that
 /// is not one, or that names another node.
-pub(super) fn instant_of(video: &SemId, source: &str) -> Option<u64> {
+pub(crate) fn instant_of(video: &SemId, source: &str) -> Option<u64> {
     let (node, at) = source.rsplit_once('@')?;
     if node != video.as_str() {
         return None;
@@ -67,7 +67,7 @@ impl SilencesPage {
     /// The frame refs `sources` name that the page does not have yet are
     /// asked for: what the generated surface's images show, looked at
     /// from `wake`.
-    pub(super) fn want_sources<'a>(&mut self, sources: impl IntoIterator<Item = &'a str>) {
+    pub(crate) fn want_sources<'a>(&mut self, sources: impl IntoIterator<Item = &'a str>) {
         let Some(video) = self.ids.as_ref().map(|ids| ids.video.clone()) else {
             return;
         };
@@ -81,7 +81,7 @@ impl SilencesPage {
     /// The instant of the result (the video with the applied cuts) at the
     /// instant shown: inside an applied cut, the cut's end (the first
     /// frame that stays); elsewhere, the instant shown itself.
-    pub(super) fn result_instant(&self) -> f64 {
+    pub(crate) fn result_instant(&self) -> f64 {
         let shown = self.model.shown();
         match self.model.cut_at(shown) {
             Some(cut) if cut.decision() == Decision::Apply => {
@@ -96,7 +96,7 @@ impl SilencesPage {
     /// ends the previews waiting for it and asks for the frames still
     /// missing. True when what the page shows moved. Nothing while the
     /// app sleeps: the channel keeps it for the wake.
-    pub(super) fn settle(&mut self, todo: &mut TodoPage) -> bool {
+    pub(crate) fn settle(&mut self, todo: &mut TodoPage) -> bool {
         if Background::asleep() {
             return false;
         }

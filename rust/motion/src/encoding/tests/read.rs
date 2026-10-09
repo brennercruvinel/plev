@@ -17,10 +17,10 @@ const GOLDEN: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_minimal.
 fn quantize_value(prop: Prop, v: Value) -> Value {
     match (prop, v) {
         (Prop::AngleDeg, Value::Scalar(d)) => {
-            Value::Scalar(quant::u16_to_angle_deg(quant::angle_deg_to_u16(d)))
+            Value::Scalar(quantize::u16_to_angle_deg(quantize::angle_deg_to_u16(d)))
         }
-        (_, Value::Scalar(px)) => Value::Scalar(quant::twips_to_px(quant::px_to_twips(px))),
-        (_, Value::Color(c)) => Value::Color(quant::bytes_to_rgba(quant::rgba_to_bytes(c))),
+        (_, Value::Scalar(px)) => Value::Scalar(quantize::twips_to_px(quantize::px_to_twips(px))),
+        (_, Value::Color(c)) => Value::Color(quantize::bytes_to_rgba(quantize::rgba_to_bytes(c))),
     }
 }
 
@@ -29,10 +29,10 @@ fn quantize_easing(e: Easing) -> Easing {
         Easing::CustomBezier { x1, y1, x2, y2 } => {
             let [a, b, c, d] = quantize_curve(x1, y1, x2, y2);
             Easing::CustomBezier {
-                x1: quant::u8_to_bezier_x(a),
-                y1: quant::u8_to_bezier_y(b),
-                x2: quant::u8_to_bezier_x(c),
-                y2: quant::u8_to_bezier_y(d),
+                x1: quantize::u8_to_bezier_x(a),
+                y1: quantize::u8_to_bezier_y(b),
+                x2: quantize::u8_to_bezier_x(c),
+                y2: quantize::u8_to_bezier_y(d),
             }
         }
         preset => preset,
@@ -72,7 +72,7 @@ fn golden_fixture_decodes_to_the_expected_document() {
 /// at_s, node id, prop wire id) because Timeline equality is ordered.
 #[test]
 fn round_trip_covers_every_node_kind_and_value_type() {
-    let gray = Value::Color(quant::bytes_to_rgba([10, 20, 30, 255]));
+    let gray = Value::Color(quantize::bytes_to_rgba([10, 20, 30, 255]));
     let snapshot = vec![
         Node {
             id: 1,
@@ -96,7 +96,7 @@ fn round_trip_covers_every_node_kind_and_value_type() {
             kind: NodeKind::GradientRect,
             props: Props::new()
                 .with(Prop::Color2, gray)
-                .with(Prop::AngleDeg, Value::Scalar(quant::u16_to_angle_deg(8192))),
+                .with(Prop::AngleDeg, Value::Scalar(quantize::u16_to_angle_deg(8192))),
         },
         Node {
             id: 4,
@@ -118,10 +118,10 @@ fn round_trip_covers_every_node_kind_and_value_type() {
         },
     ];
     let curve = Easing::CustomBezier {
-        x1: quant::u8_to_bezier_x(84),
-        y1: quant::u8_to_bezier_y(64),
-        x2: quant::u8_to_bezier_x(51),
-        y2: quant::u8_to_bezier_y(242),
+        x1: quantize::u8_to_bezier_x(84),
+        y1: quantize::u8_to_bezier_y(64),
+        x2: quantize::u8_to_bezier_x(51),
+        y2: quantize::u8_to_bezier_y(242),
     };
     let seg = |target, easing| Segment {
         target,
@@ -153,7 +153,7 @@ fn round_trip_covers_every_node_kind_and_value_type() {
                 prop: Prop::AngleDeg,
                 start_t: 0.5,
                 segments: vec![seg(
-                    Value::Scalar(quant::u16_to_angle_deg(40000)),
+                    Value::Scalar(quantize::u16_to_angle_deg(40000)),
                     Easing::Step,
                 )],
             },

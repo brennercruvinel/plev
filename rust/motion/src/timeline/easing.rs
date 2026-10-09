@@ -168,10 +168,10 @@ impl Easing {
 /// each, x in [0,1], y in [-0.5,1.5]; see `crate::quant`).
 pub fn quantize_curve(x1: f32, y1: f32, x2: f32, y2: f32) -> [u8; 4] {
     [
-        quant::bezier_x_to_u8(x1),
-        quant::bezier_y_to_u8(y1),
-        quant::bezier_x_to_u8(x2),
-        quant::bezier_y_to_u8(y2),
+        quantize::bezier_x_to_u8(x1),
+        quantize::bezier_y_to_u8(y1),
+        quantize::bezier_x_to_u8(x2),
+        quantize::bezier_y_to_u8(y2),
     ]
 }
 

@@ -1,4 +1,4 @@
-mod evaluation;
+pub(crate) mod evaluation;
 #[cfg(test)]
 mod tests;
 use crate::timeline::{IrError, Node, Timeline};

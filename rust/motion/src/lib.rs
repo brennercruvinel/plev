@@ -46,20 +46,20 @@ pub mod encoding;
 pub mod mappings;
 pub mod timeline;
 
-pub use container::{Asset, AssetKind, Desc, stage_size};
+pub use encoding::container::{Asset, AssetKind, Desc, stage_size};
 pub use discover::{DiscoverConfig, DiscoverError, discover};
-pub use discover_fit::quantize_value;
-pub use easing::Easing;
+pub use discover::fit::quantize_value;
+pub use timeline::easing::Easing;
 pub use timeline::{
     AssetId, Depth, IrError, Keyframe, Node, NodeId, NodeKind, PlaceNode, Prop, Props, RemoveNode,
     ReplaceNode, Segment, Timeline, Track, Value,
 };
-pub use lower::LoweredAsset;
+pub use mappings::lower::LoweredAsset;
 pub use optimize::{OptimizeCfg, optimize};
 pub use play::MonsterPlayer;
-pub use raise::{
+pub use mappings::raise::{
     AssetBank, MAX_RAISED, RaiseError, Raised, Skipped, Unsupported, raise_node, raise_scene,
 };
-pub use read::{Document, ReadError, decode};
-pub use write::{WriteError, encode};
+pub use encoding::read::{Document, ReadError, decode};
+pub use encoding::write::{WriteError, encode};
 

@@ -19,7 +19,7 @@
 //! like the port.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-mod login;
+mod support;
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
@@ -616,7 +616,7 @@ impl socket::Host for Login {
 fn a_secret_leaves_as_its_length_and_never_as_what_it_draws() {
     let secret = "hunter2-correct-horse";
     let mut c = Compositor::new();
-    let now = login::form(&mut c, secret);
+    let now = support::login::form(&mut c, secret);
     let dir = tempfile::tempdir().expect("a temporary directory");
     let (tx, woke) = mpsc::channel();
     let config = Config {
@@ -635,13 +635,13 @@ fn a_secret_leaves_as_its_length_and_never_as_what_it_draws() {
         let shown = eye.hand.shown().expect("a look").clone();
         let said = ["login.password", "login.pin"].map(|id| eye.click(id).said());
         eye.drain(200);
-        let crossed = [secret, login::PIN, login::USER].map(|t| eye.carried(t.as_bytes()));
+        let crossed = [secret, support::login::PIN, support::login::USER].map(|t| eye.carried(t.as_bytes()));
         (shown, said, crossed)
     });
     let (mut host, mut scenes) = (Login(now.clone()), Scenes::default());
     let head = Head {
-        width: login::WIDTH,
-        height: login::HEIGHT,
+        width: support::login::WIDTH,
+        height: support::login::HEIGHT,
         scale: 1.0,
         clear: [0.0, 0.0, 0.0, 1.0],
     };
@@ -665,13 +665,13 @@ fn a_secret_leaves_as_its_length_and_never_as_what_it_draws() {
     };
     let chars = |t: &str| Some(Value::Int(t.chars().count() as i64));
     assert_eq!(value("login.password", "text"), chars(secret));
-    assert_eq!(value("login.pin", "message"), chars(login::PIN));
+    assert_eq!(value("login.pin", "message"), chars(support::login::PIN));
     let look = socket::encode_server(&socket::ServerMsg {
         id: None,
         reply: Reply::Snapshot(shown),
     });
-    assert!(!look.contains(secret) && !look.contains(login::PIN));
-    assert!(look.contains(login::USER));
+    assert!(!look.contains(secret) && !look.contains(support::login::PIN));
+    assert!(look.contains(support::login::USER));
     assert_eq!(
         said,
         [

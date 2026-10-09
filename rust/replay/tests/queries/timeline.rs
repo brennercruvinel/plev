@@ -4,7 +4,7 @@
 use replay::{Inspector, What};
 use accord::Actor;
 
-use crate::apps::agent;
+use crate::toys::agent;
 use crate::thesis::record;
 
 #[test]

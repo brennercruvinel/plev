@@ -19,7 +19,7 @@ use record::InputKind;
 use accord::{Millis, Receipt, RequestId, Stage};
 
 use crate::args::Answer;
-use crate::lab::Lab;
+use crate::arms::plev::Lab;
 use crate::report::row;
 
 /// the person's answers to the requests that waited for her.

@@ -161,9 +161,9 @@ fn mask_props(mask: u16) -> Result<Vec<Prop>, ReadError> {
 
 fn read_value(c: &mut Cur, prop: Prop) -> Result<Value, ReadError> {
     Ok(match prop {
-        Prop::AngleDeg => Value::Scalar(quant::u16_to_angle_deg(c.u16("angle value")?)),
-        p if p.is_color() => Value::Color(quant::bytes_to_rgba(c.arr("color value")?)),
-        _ => Value::Scalar(quant::twips_to_px(c.i32("twips value")?)),
+        Prop::AngleDeg => Value::Scalar(quantize::u16_to_angle_deg(c.u16("angle value")?)),
+        p if p.is_color() => Value::Color(quantize::bytes_to_rgba(c.arr("color value")?)),
+        _ => Value::Scalar(quantize::twips_to_px(c.i32("twips value")?)),
     })
 }
 
@@ -242,10 +242,10 @@ fn parse_segment(c: &mut Cur, prop: Prop, curves: &[[u8; 4]]) -> Result<Segment,
                     len: curves.len(),
                 })?;
         Easing::CustomBezier {
-            x1: quant::u8_to_bezier_x(x1),
-            y1: quant::u8_to_bezier_y(y1),
-            x2: quant::u8_to_bezier_x(x2),
-            y2: quant::u8_to_bezier_y(y2),
+            x1: quantize::u8_to_bezier_x(x1),
+            y1: quantize::u8_to_bezier_y(y1),
+            x2: quantize::u8_to_bezier_x(x2),
+            y2: quantize::u8_to_bezier_y(y2),
         }
     } else {
         Easing::from_preset_byte(byte).ok_or(ReadError::UnknownEasing(byte))?

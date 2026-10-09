@@ -17,7 +17,7 @@ use serde_json::json;
 use socket::{Reply, ServerMsg, SnapshotReply, encode_server};
 
 use crate::args::Args;
-use crate::bench::{self, Bench};
+use crate::subject::{self, Bench};
 use crate::repo::TASK;
 use crate::report::{self, DONE, ERROR, row};
 
@@ -59,11 +59,11 @@ fn arm(args: &Args) -> Result<i32, String> {
     // GPU device, and the compositor's uploaded buffers belong to the
     // first one.
     let mut shots = Vec::new();
-    match bench::headless(SCALES[0])? {
+    match subject::headless(SCALES[0])? {
         Some(mut gpu) => {
             for scale in SCALES {
                 if gpu.viewport().scale != scale {
-                    let viewport = Viewport::new(bench::WIDTH, bench::HEIGHT, scale);
+                    let viewport = Viewport::new(subject::WIDTH, subject::HEIGHT, scale);
                     gpu.resize(viewport)
                         .map_err(|e| format!("the viewport at scale {scale}: {e}"))?;
                 }
@@ -81,7 +81,7 @@ fn arm(args: &Args) -> Result<i32, String> {
     let report = json!({
         "arm": "screenshot",
         "task": TASK,
-        "viewport": { "width": bench::WIDTH, "height": bench::HEIGHT },
+        "viewport": { "width": subject::WIDTH, "height": subject::HEIGHT },
         "frames": shots.iter().map(|s| json!({
             "scale": s.scale,
             "width": s.width,

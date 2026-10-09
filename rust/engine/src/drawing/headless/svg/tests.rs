@@ -156,7 +156,7 @@ fn the_svg_importer_reads_the_export_back() {
         Ok(e) => e,
         Err(e) => panic!("{e}"),
     };
-    match ::svg::convert(&export.svg, "export") {
+    match ::import::formats::svg::convert(&export.svg, "export") {
         Ok((_, stats)) => {
             assert_eq!((stats.width, stats.height), (240.0, 140.0));
             // the rects and every glyph
@@ -429,7 +429,7 @@ fn every_approximation_is_on_the_report_once_and_the_file_still_parses() {
     assert!(svg.contains("<!-- image 32x32 at 130 90"));
     assert!(svg.contains("<!-- backdrop blur at 130 20"));
     assert_eq!(count(svg, "<g"), count(svg, "</g>"));
-    if let Err(e) = ::svg::convert(svg, "approximate") {
+    if let Err(e) = ::import::formats::svg::convert(svg, "approximate") {
         panic!("the importer refused the export: {e}\n{svg}");
     }
 }
@@ -534,7 +534,7 @@ fn a_tessellated_path_is_the_outline_of_its_triangles() {
     assert!(frame.contains("fill=\"#00ff00\" fill-opacity=\"0.5\""));
     assert_eq!(count(frame, "M"), 2, "{frame}");
     assert_eq!(count(frame, "Z"), 2, "{frame}");
-    if let Err(e) = ::svg::convert(svg, "paths") {
+    if let Err(e) = ::import::formats::svg::convert(svg, "paths") {
         panic!("the importer refused the export: {e}\n{svg}");
     }
 }

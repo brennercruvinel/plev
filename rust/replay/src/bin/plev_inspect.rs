@@ -187,10 +187,10 @@ exit: 0 answered, 1 the request is not in the session, 2 bad invocation,
     impl Answer {
         fn text(&self) -> String {
             let parts: Vec<String> = [
-                self.summary.as_ref().map(text::summary),
-                self.timeline.as_ref().map(text::timeline),
-                self.why.as_ref().map(text::why),
-                self.control.as_ref().map(text::control),
+                self.summary.as_ref().map(prose::summary),
+                self.timeline.as_ref().map(prose::timeline),
+                self.why.as_ref().map(prose::why),
+                self.control.as_ref().map(prose::control),
             ]
             .into_iter()
             .flatten()

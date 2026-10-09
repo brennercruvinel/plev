@@ -3,7 +3,7 @@
 //!   girl json 742135 -> 122861 gz, webm 111344.
 //! run: cargo test -p monster --test bench_lottie -- --nocapture
 
-use crate::lot::{Scan, f, scan_layer};
+use crate::lottie::{Scan, f, scan_layer};
 use motion::{
     Asset, AssetKind, Keyframe, Node, NodeKind, OptimizeCfg, Props, Timeline, decode, encode,
     optimize,

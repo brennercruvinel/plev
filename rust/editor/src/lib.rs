@@ -12,9 +12,9 @@ pub mod document;
 mod tests;
 
 pub use document::Document;
-pub use history::{CommitKind, History, UndoStep};
-pub use movement::GoalColumn;
+pub use document::history::{CommitKind, History, UndoStep};
+pub use document::movement::GoalColumn;
 pub use ropey::{self, Rope};
-pub use selection::{Selection, SelectionSet};
-pub use transaction::{Bias, Edit, Transaction};
+pub use document::selection::{Selection, SelectionSet};
+pub use document::transaction::{Bias, Edit, Transaction};
 

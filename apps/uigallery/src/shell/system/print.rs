@@ -41,14 +41,14 @@ impl App {
     /// The platform's printer, once, when the main window is up: its
     /// destinations are looked for off the loop and projected when they
     /// land.
-    pub(super) fn install_print(&mut self) {
+    pub(crate) fn install_print(&mut self) {
         self.view.set_printer(default_printer());
     }
 
     /// A key pressed: the print keys ask `shell.print` (the person's
     /// request, through the dispatcher; the job follows) and go to nobody
     /// else (`true`).
-    pub(super) fn print_key(&mut self, key: &Key) -> bool {
+    pub(crate) fn print_key(&mut self, key: &Key) -> bool {
         if !is_print_key(key, self.modifiers) {
             return false;
         }

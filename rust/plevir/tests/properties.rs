@@ -11,7 +11,6 @@
 //! an id).
 
 // the validator for the keywords the schema uses (no schema dependency).
-mod jsonschema;
 // shared with rules.rs: this binary uses the registry only.
 #[allow(dead_code)]
 mod support;
@@ -274,7 +273,7 @@ proptest! {
     #[test]
     fn the_schema_accepts_every_ir_within_its_ranges(ir in ir(true)) {
         let doc = serde_json::to_value(&ir).unwrap();
-        let errors = jsonschema::validate(&schema(), &doc);
+        let errors = support::jsonschema::validate(&schema(), &doc);
         prop_assert!(errors.is_empty(), "{errors:#?}");
     }
 
@@ -311,7 +310,7 @@ proptest! {
         if let Some(slot) = doc.pointer_mut(&at) {
             *slot = replacement;
         }
-        let fits = jsonschema::validate(&schema(), &doc).is_empty();
+        let fits = support::jsonschema::validate(&schema(), &doc).is_empty();
         if let (true, Err(errors)) = (fits, decode(&doc)) {
             for e in errors {
                 let grammar = matches!(e.rule, Rule::Identity | Rule::State | Rule::Action)

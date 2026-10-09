@@ -28,7 +28,6 @@
 //! nothing leaves the machine. Without the variable nothing is created: no
 //! recorder, no directory, no key.
 
-mod shell;
 
 use std::fs;
 use std::io;
@@ -43,7 +42,7 @@ use crate::capability::Workbench;
 /// The variable that turns the recording on in a debug build.
 pub const ENV: &str = "PLEV_RECORD";
 
-engine::control::keymap!(session, [Save]);
+engine::actions!(session, [Save]);
 
 /// The keys that save the retained window, in every context of the
 /// workspace (the commit form's too): `cmd` is the Command key on macOS.

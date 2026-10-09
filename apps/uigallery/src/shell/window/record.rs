@@ -222,7 +222,7 @@ impl App {
     /// Starts `recording` on the view, when there is one: its
     /// dispatcher's stages, the state now, the panic hook, and where the
     /// files go, in the log.
-    pub(super) fn record(&mut self, recording: Option<Recording>) {
+    pub(crate) fn record(&mut self, recording: Option<Recording>) {
         self.view.set_recording(recording.is_some());
         if let Some(recording) = &recording {
             recording.attach(&mut self.view);
@@ -243,7 +243,7 @@ impl App {
 
     /// The state now, when the session is recorded (stored only when it
     /// changed).
-    pub(super) fn record_state(&mut self) {
+    pub(crate) fn record_state(&mut self) {
         if let Some(recording) = &self.recording {
             recording.state(&mut self.view);
         }
@@ -268,7 +268,7 @@ impl App {
 
     /// `shell.save_session` ran (the keys, the menu, a screen reader):
     /// the shell, which owns the recording, writes the window.
-    pub(super) fn save_requested(&mut self) {
+    pub(crate) fn save_requested(&mut self) {
         if self.view.take_save_request() {
             self.save_session("asked");
         }
@@ -310,7 +310,7 @@ impl App {
     }
 
     /// Writes the retained window of the recording, and says where.
-    pub(super) fn save_session(&mut self, why: &str) {
+    pub(crate) fn save_session(&mut self, why: &str) {
         let Some(recording) = self.recording.as_mut() else {
             return;
         };

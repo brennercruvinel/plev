@@ -17,7 +17,6 @@
 //! not simple, declarations outside the subset, the browser's default
 //! styles the subset does not apply, and text styles no run takes.
 
-mod frame;
 
 use std::collections::HashSet;
 
@@ -32,8 +31,8 @@ use crate::tree::{
 
 const COLLAPSE_RULE: &str =
     "an element holding only one text run and its text styles is that text run";
-const FRAME: &str = "the document's frame: the component is the body's element";
-const SCRIPT: &str =
+pub(super) const FRAME: &str = "the document's frame: the component is the body's element";
+pub(super) const SCRIPT: &str =
     "JavaScript is not read: what a control does is the app's (binding required on the control)";
 
 /// The elements of the subset.
@@ -59,7 +58,7 @@ fn in_subset(tag: &str) -> bool {
 }
 
 /// `<section class=note-card>`, `<div id=x>`, `<p>`.
-fn label(el: &HtmlNode) -> String {
+pub(super) fn label(el: &HtmlNode) -> String {
     let classes = el.classes();
     match (
         classes.is_empty(),
@@ -73,10 +72,10 @@ fn label(el: &HtmlNode) -> String {
 
 /// A declaration an element receives, with the construct it is.
 #[derive(Clone)]
-struct Styled {
-    decl: CssDecl,
-    src: Src,
-    rank: u8,
+pub(super) struct Styled {
+    pub(super) decl: CssDecl,
+    pub(super) src: Src,
+    pub(super) rank: u8,
 }
 
 enum Out {
@@ -84,17 +83,17 @@ enum Out {
     Gone,
 }
 
-struct Ctx<'a> {
-    doc: &'a HtmlDoc,
+pub(super) struct Ctx<'a> {
+    pub(super) doc: &'a HtmlDoc,
     file: &'a str,
     /// Each simple selector with the index of its rule.
-    rules: Vec<(usize, Selector)>,
+    pub(super) rules: Vec<(usize, Selector)>,
     /// The rules some element matched, or that an entry already answers.
-    applied: HashSet<usize>,
-    mapped: usize,
-    dropped: Vec<Dropped>,
+    pub(super) applied: HashSet<usize>,
+    pub(super) mapped: usize,
+    pub(super) dropped: Vec<Dropped>,
     notes: Vec<Note>,
-    title: Option<(String, Src)>,
+    pub(super) title: Option<(String, Src)>,
     /// The constructs behind every text style, to find the ones no run takes.
     text_srcs: Vec<Src>,
 }
@@ -159,18 +158,18 @@ pub fn resolve_html(doc: &HtmlDoc, file: &str) -> Result<Resolution, ParserError
 }
 
 impl<'a> Ctx<'a> {
-    fn at(&self, line: usize) -> String {
+    pub(super) fn at(&self, line: usize) -> String {
         format!("{}:{line}", self.file)
     }
 
-    fn note(&mut self, src: Src, why: &'static str) {
+    pub(super) fn note(&mut self, src: Src, why: &'static str) {
         self.notes.push(Note {
             src,
             kind: NoteKind::Holds(why),
         });
     }
 
-    fn lose(&mut self, src: &Src, why: impl Into<String>) {
+    pub(super) fn lose(&mut self, src: &Src, why: impl Into<String>) {
         self.dropped
             .push(Dropped::new(src.what.clone(), why, src.at.clone()));
     }
@@ -222,7 +221,7 @@ impl<'a> Ctx<'a> {
             match s.decl.prop.as_str() {
                 "display" => self.display(s, &styled, &mut props),
                 "flex-direction" => {}
-                prop => match html_map::map(prop, &s.decl.value, font_size, flex) {
+                prop => match css::map(prop, &s.decl.value, font_size, flex) {
                     Mapped::Props(new) => {
                         self.mapped += 1;
                         for p in new {
@@ -386,7 +385,7 @@ impl<'a> Ctx<'a> {
 
     /// The browser's default styles of `el` the stylesheet does not replace.
     fn defaults(&mut self, el: &HtmlNode, styled: &[Styled]) {
-        for (group, props, what) in html_map::defaults(&el.tag) {
+        for (group, props, what) in css::defaults(&el.tag) {
             if styled.iter().any(|s| props.contains(&s.decl.prop.as_str())) {
                 continue;
             }

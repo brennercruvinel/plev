@@ -6,7 +6,7 @@
 use record::Session;
 use accord::RequestId;
 
-use crate::apps::{Lab, agent};
+use crate::toys::{Lab, agent};
 
 /// the session, and the ids of the person's unstage, the stale submit
 /// and the completed one.

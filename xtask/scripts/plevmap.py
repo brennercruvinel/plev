@@ -57,9 +57,27 @@ def crate_of(path, crates):
     return best
 
 
+# modules a binary declares (its main.rs) in a crate that also has a library:
+# part of the binary, not of the library, wherever their file sits
+BIN_MODULES = {
+    "crates/ide/src/actions.rs", "crates/ide/src/keys.rs", "crates/ide/src/pace.rs",
+    "crates/ide/src/recording.rs", "crates/ide/src/renderer.rs", "crates/ide/src/watcher.rs",
+    "crates/prime/src/scene.rs",
+    "apps/idestudio/src/interfaces/window/keymap.rs",
+    "apps/idestudio/src/interfaces/window/keyboard.rs",
+    "apps/idestudio/src/interfaces/window/pace.rs",
+    "apps/idestudio/src/interfaces/window/record/shell.rs",
+    "apps/idestudio/src/interfaces/window/renderer.rs",
+    "apps/idestudio/src/repository/watcher.rs",
+    "demo/primes/src/scene.rs",
+}
+
+
 def lib_module(path, crate_dir):
     """Module path (list of segments) of a lib source file, or None when the
     file is not part of the crate's library tree (bins, tests, examples)."""
+    if path in BIN_MODULES:
+        return None
     rel = path[len(crate_dir) + 1:]
     if not rel.startswith("src/") or not rel.endswith(".rs"):
         return None

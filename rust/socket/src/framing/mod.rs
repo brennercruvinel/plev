@@ -6,7 +6,7 @@
 //! checked before the shape, so a message of a later version is refused
 //! as `BadVersion`, never as `BadMessage`.
 
-mod base64;
+pub(crate) mod base64;
 
 use serde::Serialize;
 use serde::de::DeserializeOwned;

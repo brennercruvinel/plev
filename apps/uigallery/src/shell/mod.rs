@@ -86,7 +86,7 @@ pub struct App {
     main: Option<WindowId>,
     /// The page's own window, desktop only (task-76 item 2).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    page_window: Option<detached::PageWindow>,
+    page_window: Option<window::detached::PageWindow>,
     view: ShowcaseView,
     clock: FrameClock,
     /// A catch-up tick since the last frame changed something visible
@@ -96,7 +96,7 @@ pub struct App {
     /// window keeps its own).
     cursor: (f32, f32),
     /// The first finger on a touch screen (`touch.rs`).
-    finger: touch::Finger,
+    finger: system::touch::Finger,
     modifiers: ModifiersState,
     #[cfg(target_arch = "wasm32")]
     proxy: Option<EventLoopProxy<UserEvent>>,
@@ -108,20 +108,20 @@ pub struct App {
     /// The session's recording, when `PLEV_RECORD=1` in a debug build
     /// (`record`; desktop, where the port is).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    recording: Option<record::Recording>,
+    recording: Option<window::record::Recording>,
     /// The native menu bar, built from what the gallery projects (`menu`;
     /// desktop; `None` where the platform has none, or before the main
     /// window is up).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    menu: Option<menu::Menu>,
+    menu: Option<system::menu::Menu>,
     /// The tray icon with the shell's menu (`tray`; desktop; `None` where
     /// the platform has none, or before the main window is up).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    tray: Option<tray::TrayIcon>,
+    tray: Option<system::tray::TrayIcon>,
     /// The platform's notifications and what the background jobs came
     /// to (`notify`; desktop).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    notices: Option<notify::Notices>,
+    notices: Option<system::notify::Notices>,
     /// The window of ours that has the focus, if any: with none, what
     /// lands is told to the person by notification (`notify`).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -135,7 +135,7 @@ pub struct App {
         debug_assertions,
         any(target_os = "macos", target_os = "linux", target_os = "windows")
     ))]
-    source: source::ViewSource,
+    source: window::source::ViewSource,
 }
 
 impl App {
@@ -157,7 +157,7 @@ impl App {
     /// source reads it once the window is up (`links.rs`).
     fn launch_view(args: impl Iterator<Item = String>) -> ShowcaseView {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        let mut args = args.filter(|a| !engine::runtime::platform::links::is_link(a, links::SCHEME));
+        let mut args = args.filter(|a| !engine::runtime::platform::links::is_link(a, system::links::SCHEME));
         if let Some(page) = args.next() {
             view.jump_to_page(&page);
         }
@@ -181,7 +181,7 @@ impl App {
             clock: FrameClock::new(),
             caught_up: false,
             cursor: (0.0, 0.0),
-            finger: touch::Finger::default(),
+            finger: system::touch::Finger::default(),
             modifiers: ModifiersState::empty(),
             #[cfg(target_arch = "wasm32")]
             proxy: None,
@@ -202,7 +202,7 @@ impl App {
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
             ))]
-            source: source::ViewSource::default(),
+            source: window::source::ViewSource::default(),
         }
     }
 
@@ -323,7 +323,7 @@ impl App {
             && let Some(port) = self.access.agent.as_mut()
             && let Some(host) = self.windows.get(shown_in)
         {
-            let recorder = self.recording.as_ref().map(record::Recording::recorder);
+            let recorder = self.recording.as_ref().map(window::record::Recording::recorder);
             if self
                 .view
                 .serve_agent_recorded(port, host.compositor(), recorder)
@@ -384,7 +384,7 @@ impl ApplicationHandler<UserEvent> for App {
         let mut attrs = WindowAttributes::default().with_title(TITLE);
         #[cfg(target_os = "macos")]
         {
-            attrs = background::window(attrs);
+            attrs = system::background::window(attrs);
         }
 
         // AccessKit attaches before the window is first shown.
@@ -540,18 +540,18 @@ impl Default for App {
 }
 
 #[cfg(target_os = "android")]
-pub use entry::android_main;
+pub use window::entry::android_main;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub use entry::run;
+pub use window::entry::run;
 #[cfg(target_arch = "wasm32")]
-pub use entry::run_web;
+pub use window::entry::run_web;
 #[cfg(target_os = "ios")]
-pub use entry::showcase_ios_main;
+pub use window::entry::showcase_ios_main;
 
 /// `showcase --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
+pub use window::headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
 
 
 
@@ -564,6 +564,6 @@ pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_p
 
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use access::Access;
+use window::access::Access;
 
 

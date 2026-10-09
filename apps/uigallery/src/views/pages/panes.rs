@@ -54,9 +54,9 @@ pub struct Panes {
     pub tooltip: tooltip::TooltipPage,
     pub tree: tree::TreePage,
     // -- apps demo
-    pub todo: app::TodoPage,
+    pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
-    pub surface: surface_page::SurfacePage,
+    pub surface: surface::SurfacePage,
     /// The silences app; it dispatches through `todo`'s dispatcher, the
     /// gallery's one.
     pub silences: silences::SilencesPage,
@@ -69,7 +69,7 @@ pub struct Panes {
     pub capture: capture::CapturePage,
     pub dock: dock::DockPage,
     pub editor: editor::EditorPage,
-    pub git: gitdrv::GitPage,
+    pub git: git::GitPage,
     pub builder: builder::BuilderPage,
     /// Where the active page shows when it left the main window: a
     /// window of its own (task-76 item 2, `dispatch::Detached`). `None`,
@@ -84,8 +84,8 @@ pub struct Panes {
 
 impl Panes {
     pub fn new(theme: &Theme) -> Self {
-        let todo = app::TodoPage::new();
-        let surface = surface_page::SurfacePage::new(&todo);
+        let todo = todo::TodoPage::new();
+        let surface = surface::SurfacePage::new(&todo);
         Self {
             themes: theme::ThemePage::new(),
             typography: typography::TypographyPage::new(),
@@ -132,7 +132,7 @@ impl Panes {
             capture: capture::CapturePage::new(theme),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
-            git: gitdrv::GitPage::new(),
+            git: git::GitPage::new(),
             builder: builder::BuilderPage::new(),
             detached: None,
             shell: super::super::dispatcher::Shell::new(),

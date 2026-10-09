@@ -17,7 +17,7 @@
 use accord::{Execution, Outcome, RequestId, Snapshot, Value};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
-use super::super::capability::Workbench;
+use crate::capability::Workbench;
 use super::shown;
 use crate::generative::{Said, scope};
 
@@ -90,7 +90,7 @@ impl Workbench {
     /// seconds moved; or the answer arrived, the surface opens or takes
     /// its form in place, and the request ends. True when what the line
     /// shows moved.
-    pub(super) fn settle_claude(&mut self) -> bool {
+    pub(crate) fn settle_claude(&mut self) -> bool {
         let Some(g) = self.generated.as_mut() else {
             return false;
         };

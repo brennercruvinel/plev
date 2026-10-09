@@ -167,9 +167,9 @@ impl App {
             }
             self.accum += dt;
             let mut steps = 0;
-            while self.accum >= params::FIXED_DT && steps < 5 {
-                sim.step(params::FIXED_DT);
-                self.accum -= params::FIXED_DT;
+            while self.accum >= parameters::FIXED_DT && steps < 5 {
+                sim.step(parameters::FIXED_DT);
+                self.accum -= parameters::FIXED_DT;
                 steps += 1;
             }
             if steps == 5 {

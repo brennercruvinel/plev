@@ -317,7 +317,7 @@ impl ShowcaseView {
         });
     }
 
-    pub(super) fn open_modal(&mut self, destructive: bool) {
+    pub(crate) fn open_modal(&mut self, destructive: bool) {
         let (widget, intent) = if destructive {
             (
                 Modal::new(
@@ -370,7 +370,7 @@ impl ShowcaseView {
     /// True while the active overlay takes every pointer event: a modal
     /// or a menu that is not fading out. The page beneath is then inert
     /// (the todo page projects itself so, see `TodoPage::set_inert`).
-    pub(super) fn overlay_holds_pointer(&self) -> bool {
+    pub(crate) fn overlay_holds_pointer(&self) -> bool {
         self.active_overlay
             .as_ref()
             .is_some_and(|active| overlay::holds(&self.overlay_mgr, active))

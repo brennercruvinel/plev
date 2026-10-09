@@ -38,8 +38,8 @@ pub(crate) fn seg(target: f32, dur_s: f32) -> Segment {
 /// step compares equal ("PartialEq after quantization"). Shared with
 /// tests_optimize, whose parity checks measure the same grid.
 pub(crate) fn q_scene(scene: Vec<SceneNode>) -> Vec<SceneNode> {
-    let qpx = |v: f32| quant::twips_to_px(quant::px_to_twips(v));
-    let qc = |c: [f32; 4]| quant::bytes_to_rgba(quant::rgba_to_bytes(c));
+    let qpx = |v: f32| quantize::twips_to_px(quantize::px_to_twips(v));
+    let qc = |c: [f32; 4]| quantize::bytes_to_rgba(quantize::rgba_to_bytes(c));
     scene
         .into_iter()
         .map(|n| match n {

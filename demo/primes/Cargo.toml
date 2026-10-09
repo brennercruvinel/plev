@@ -1,5 +1,5 @@
 [package]
-name = "prime"
+name = "primes"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,7 +9,7 @@ description = "prime number creatures, an emergent particle swarm driven by prim
 # Both a lib (pure, gpu-free backend modules, unit tested) and a bin (the
 # windowed app). Same pattern as crates/showcase: src/lib.rs is auto-detected.
 [[bin]]
-name = "prime"
+name = "primes"
 path = "src/main.rs"
 
 [dependencies]

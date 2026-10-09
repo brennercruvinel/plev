@@ -36,7 +36,7 @@ use super::super::App;
 /// The shell's view source: the button a click took, the literal edited
 /// in place, the layer its field is drawn on.
 #[derive(Default)]
-pub(super) struct ViewSource {
+pub(crate) struct ViewSource {
     /// A cmd+click, or a press on the field, takes the button until it is
     /// released.
     click: bool,

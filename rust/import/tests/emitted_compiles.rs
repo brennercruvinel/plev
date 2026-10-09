@@ -5,7 +5,7 @@
 //! tests/golden.rs and rendered by examples/preview.rs.
 
 mod sep {
-    include!("../fixtures/gpui/expected.rs");
+    include!("fixtures/gpui/expected.rs");
 }
 
 #[test]
@@ -25,7 +25,7 @@ fn emitted_separator_label_is_a_real_text_run() {
 }
 
 mod html_card {
-    include!("../fixtures/html/expected.rs");
+    include!("fixtures/html/expected.rs");
 }
 
 #[test]
@@ -38,7 +38,7 @@ fn emitted_html_note_card_builds_its_tree() {
 }
 
 mod settings {
-    include!("../fixtures/figma/expected.rs");
+    include!("fixtures/figma/expected.rs");
 }
 
 #[test]

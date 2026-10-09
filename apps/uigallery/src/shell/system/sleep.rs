@@ -26,7 +26,7 @@ use super::super::App;
 impl App {
     /// The app falls asleep: no window draws and nothing settles until
     /// `wake`.
-    pub(super) fn sleep(&mut self) {
+    pub(crate) fn sleep(&mut self) {
         // android takes the window away while asleep: each host drops its
         // surface and waits for `resume`. the old surface, configured
         // again on the way back from the home screen, failed wgpu's
@@ -41,7 +41,7 @@ impl App {
     /// The app wakes: every window is invalidated and asks for one new
     /// frame; the view catches up with the whole time asleep, applying
     /// what the workers answered meanwhile and starting what was held.
-    pub(super) fn wake(&mut self) {
+    pub(crate) fn wake(&mut self) {
         if !self.windows.asleep() {
             return;
         }
@@ -71,7 +71,7 @@ impl App {
 
     /// The platform's word on window `id`'s visibility: covered, it asks
     /// for nothing; shown again, its host asks for one new frame.
-    pub(super) fn covered(&mut self, id: WindowId, covered: bool) {
+    pub(crate) fn covered(&mut self, id: WindowId, covered: bool) {
         if let Some(host) = self.windows.get_mut(id) {
             host.set_occluded(covered);
         }

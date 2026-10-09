@@ -1,8 +1,6 @@
-//! The window: keys and keymap, pacing, the renderer and the session
-//! recording of the shell.
+//! The window's library half: the session recording (`record`). The
+//! binary's halves of the window (keys and keymap, pacing, the renderer,
+//! the shell's side of the recording) sit beside it and are declared by
+//! `main.rs`, which owns `App`.
 
-pub(super) mod keyboard;
-pub(super) mod keymap;
-pub(super) mod pace;
 pub mod record;
-pub(super) mod renderer;

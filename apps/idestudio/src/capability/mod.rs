@@ -32,7 +32,7 @@ mod tests;
 mod truth;
 #[cfg(unix)]
 pub mod agent;
-mod ids;
+pub(super) mod ids;
 
 use std::collections::VecDeque;
 use std::path::Path;
@@ -63,12 +63,12 @@ pub(super) struct NativeConfirm {
 }
 
 pub struct Workbench {
-    workspace: WorkspaceView,
+    pub(super) workspace: WorkspaceView,
     /// The repository, once connected; a workbench without one draws an
     /// empty workspace and refuses what needs git.
     git: Option<GitSession>,
     /// The one path from a request to `execute`, for every actor.
-    dispatcher: Dispatcher,
+    pub(super) dispatcher: Dispatcher,
     /// The requests whose execution left for the git worker, oldest
     /// first, with what each waits for; the worker's answer ends them.
     inflight: VecDeque<(RequestId, Inflight)>,
@@ -83,10 +83,10 @@ pub struct Workbench {
     clock: Instant,
     /// The window, in logical pixels: the workspace takes it, less the
     /// line's strip and an open surface's column when the block is on.
-    window: (f32, f32),
+    pub(super) window: (f32, f32),
     /// The intent line and the host of generated surfaces, when turned on
     /// ([`Workbench::host_surfaces`]).
-    generated: Option<Box<Generated>>,
+    pub(super) generated: Option<Box<Generated>>,
 }
 
 impl Workbench {

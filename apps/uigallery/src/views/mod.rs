@@ -19,11 +19,11 @@ mod dispatcher;
 pub mod text_input;
 
 pub use apps::git::{GitWake, NavKey};
-pub use ime::ImeEvent;
-pub use input::EditKey;
+pub use text_input::ime::ImeEvent;
+pub use text_input::input::EditKey;
 pub use pages::{Body, Group, PAGES, Page, Pane};
 
-pub(crate) use draw::{group_label, panel, text, with_alpha};
+pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
 use dispatcher::keyboard::Walk;
 
@@ -101,7 +101,7 @@ pub struct ShowcaseView {
     shift: bool,
 
     /// One struct per pane, the pages' state.
-    panes: panes::Panes,
+    panes: pages::panes::Panes,
     /// The clipboard of the text fields, made on first use
     /// (`clipboard.rs`).
     clipboard: Option<Box<dyn engine::runtime::platform::clipboard::ClipboardProvider>>,
@@ -147,7 +147,7 @@ impl ShowcaseView {
             height,
             scale_factor: 1.0,
             shell: AppShell::new(sidebar, header, width, height),
-            panes: panes::Panes::new(&theme),
+            panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
             page: 0,

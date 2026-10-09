@@ -143,7 +143,7 @@ impl App {
     /// The platform's links for [`SCHEME`], woken through the loop's
     /// proxy; once, when the main window is up, so the launch argument is
     /// read then.
-    pub(super) fn install_links(&mut self) {
+    pub(crate) fn install_links(&mut self) {
         #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
         let wake = {
             let proxy = std::sync::Mutex::new(self.access.proxy.clone());
@@ -168,7 +168,7 @@ impl App {
     /// The links delivered since the last poll, followed in order, and a
     /// frame for what they changed or told. Asleep, nothing: they wait in
     /// the source for the first poll awake.
-    pub(super) fn links_arrived(&mut self) {
+    pub(crate) fn links_arrived(&mut self) {
         if Background::asleep() {
             return;
         }

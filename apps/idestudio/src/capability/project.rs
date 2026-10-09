@@ -67,7 +67,7 @@ impl Semantics for Workbench {
 impl Workbench {
     /// The workspace alone: what [`Workbench::app_snapshot`] gives, the
     /// registry a generated surface binds.
-    pub(super) fn project_app(&self, b: &mut SnapshotBuilder) {
+    pub(crate) fn project_app(&self, b: &mut SnapshotBuilder) {
         let ws = &self.workspace;
         let Some(ids) = &ws.ids else {
             return;

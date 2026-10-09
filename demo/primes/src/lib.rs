@@ -6,5 +6,4 @@
 //! particle color. nothing here touches gpu, winit, or the compositor.
 
 pub mod color;
-mod scene;
 pub mod simulation;

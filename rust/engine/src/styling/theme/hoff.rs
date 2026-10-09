@@ -25,7 +25,7 @@
 // screen sits on the graphite container, never on pure black.
 // ============================================================================
 
-use super::super::super::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::buttons::tokens::ButtonTokens;
 use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{

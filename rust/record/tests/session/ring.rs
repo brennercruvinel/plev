@@ -8,7 +8,7 @@ use accord::{
     SnapshotBuilder,
 };
 
-use crate::apps::{id, look};
+use crate::toys::{id, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

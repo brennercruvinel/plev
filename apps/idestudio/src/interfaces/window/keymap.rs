@@ -8,13 +8,13 @@
 
 use engine::control::keymap::{ActionRegistry, Keymap};
 
-engine::control::keymap!(app, [Quit]);
-engine::control::keymap!(theme, [Toggle]);
-engine::control::keymap!(nav, [Up, Down]);
-engine::control::keymap!(file, [ShowDiff, Stage, Discard]);
-engine::control::keymap!(commit, [OpenForm, Submit, Cancel, Backspace]);
-engine::control::keymap!(overlay, [Close]);
-engine::control::keymap!(edit, [Copy, Cut, Paste, SelectAll]);
+engine::actions!(app, [Quit]);
+engine::actions!(theme, [Toggle]);
+engine::actions!(nav, [Up, Down]);
+engine::actions!(file, [ShowDiff, Stage, Discard]);
+engine::actions!(commit, [OpenForm, Submit, Cancel, Backspace]);
+engine::actions!(overlay, [Close]);
+engine::actions!(edit, [Copy, Cut, Paste, SelectAll]);
 
 /// All actions the app can dispatch, in palette-friendly order.
 pub fn registry() -> ActionRegistry {

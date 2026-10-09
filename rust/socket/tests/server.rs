@@ -2,7 +2,7 @@
 //! agent sees, what it may do, and that its action takes the path a
 //! person's click takes.
 
-mod toy;
+mod support;
 
 use proptest::prelude::*;
 use accord::redactor::REDACTED;
@@ -10,7 +10,7 @@ use accord::{
     Actor, Change, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
     Stage, StateRef, Value,
 };
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{
     Bound, ClientMsg, ConnId, DeltaReply, Host, ProtoError, Reply, Server, ServerMsg,
     SnapshotReply, StageReply, decode_client, encode_client,

@@ -1,5 +1,7 @@
 //! A small app projection shaped like the ide's, its registry, and a valid
-//! IR over it that each rule test breaks in one place.
+//! IR over it that each rule test breaks in one place, and the JSON
+//! schema validator (`jsonschema`). Each test binary uses its own part.
+#![allow(dead_code)]
 
 pub mod jsonschema;
 

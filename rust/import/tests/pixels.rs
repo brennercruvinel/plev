@@ -22,20 +22,20 @@ mod support;
 
 #[allow(dead_code)]
 mod sep {
-    include!("../fixtures/gpui/expected.rs");
+    include!("fixtures/gpui/expected.rs");
 }
 #[allow(dead_code)]
 mod card {
-    include!("../fixtures/react/expected.rs");
+    include!("fixtures/react/expected.rs");
 }
 
 #[allow(dead_code)]
 mod html_card {
-    include!("../fixtures/html/expected.rs");
+    include!("fixtures/html/expected.rs");
 }
 #[allow(dead_code)]
 mod settings {
-    include!("../fixtures/figma/expected.rs");
+    include!("fixtures/figma/expected.rs");
 }
 
 use engine::widgets::Rect;

@@ -39,7 +39,7 @@
 //! ended a watch (`take_scene_watches`), and the host hears a watch that
 //! begins as an observation of its actor (`Host::observed`).
 
-mod read;
+pub(crate) mod read;
 
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -86,7 +86,7 @@ pub struct SceneReply {
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "b64::opt_bytes"
+        with = "base64::opt_bytes"
     )]
     pub head: Option<Vec<u8>>,
     pub layers: Vec<SceneLayer>,
@@ -100,18 +100,18 @@ pub struct SceneReply {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SceneLayer {
     pub key: u32,
-    #[serde(with = "b64::hex")]
+    #[serde(with = "base64::hex")]
     pub hash: u64,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "b64::opt_bytes"
+        with = "base64::opt_bytes"
     )]
     pub body: Option<Vec<u8>>,
     #[serde(
         default,
         skip_serializing_if = "Option::is_none",
-        with = "b64::opt_bytes"
+        with = "base64::opt_bytes"
     )]
     pub patch: Option<Vec<u8>>,
 }
@@ -120,11 +120,11 @@ pub struct SceneLayer {
 /// frame's line, `total` bytes under `key`, this part from byte `at`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BlobReply {
-    #[serde(with = "b64::hex")]
+    #[serde(with = "base64::hex")]
     pub key: u64,
     pub at: u64,
     pub total: u64,
-    #[serde(with = "b64::bytes")]
+    #[serde(with = "base64::bytes")]
     pub bytes: Vec<u8>,
 }
 

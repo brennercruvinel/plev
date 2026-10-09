@@ -9,7 +9,7 @@ use accord::{
     Actor, Change, Dispatcher, Millis, Rejection, Request, Snapshot, Stage, StateRef, Value,
 };
 
-use crate::apps::{Git, agent, id, look, sha};
+use crate::toys::{Git, agent, id, look, sha};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

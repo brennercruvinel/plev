@@ -208,7 +208,7 @@ impl App {
 
     /// Every window's frame to its watches: after a drain of the port, so
     /// a watch that just came gets the frame on screen.
-    pub(super) fn offer_scenes(&mut self) {
+    pub(crate) fn offer_scenes(&mut self) {
         let ids = [self.main, self.page_window_id()];
         for id in ids.into_iter().flatten() {
             self.offer_scene(id);

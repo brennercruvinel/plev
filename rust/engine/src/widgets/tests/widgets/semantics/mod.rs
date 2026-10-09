@@ -13,7 +13,7 @@ mod buttons;
 use super::*;
 use accord::{
     Actor, Change, ParamSpec, Rejection, Request, Role, SemId, Snapshot, SnapshotBuilder, Value,
-    ValueKind, Verdict, decision,
+    ValueKind, Verdict, check,
 };
 
 fn id(text: &str) -> SemId {

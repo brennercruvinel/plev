@@ -7,7 +7,7 @@
 
 #![cfg(unix)]
 
-mod toy;
+mod support;
 
 use std::io::{BufRead, BufReader, Write};
 use std::os::unix::net::UnixStream;
@@ -17,7 +17,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{
     AgentPort, Bound, Config, ConnId, Host, Reply, Server, ServerMsg, Traffic, decode_client,
     decode_server,

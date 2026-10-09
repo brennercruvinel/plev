@@ -74,7 +74,7 @@ mod run {
     use std::time::{Duration, Instant};
 
     use engine::drawing::compositor::Compositor;
-    use record::{Limits, Persisted};
+    use ::record::{Limits, Persisted};
     use uigallery::shell::window::record::{self, Recording};
     use uigallery::views::ShowcaseView;
     use socket::{AgentPort, Config};

@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 use proptest::prelude::*;
 use accord::{
     ActionName, Actor, Actors, Change, Confirm, Constraints, ParamSpec, Policy, Rejection, Request,
-    Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value, ValueKind, Verdict, decision,
+    Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value, ValueKind, Verdict, check,
 };
 
 fn id(text: &str) -> SemId {

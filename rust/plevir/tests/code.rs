@@ -6,7 +6,7 @@
 //! the same bytes.
 
 // the validator for the keywords the schema uses (no schema dependency).
-mod jsonschema;
+mod support;
 
 use std::path::PathBuf;
 
@@ -103,7 +103,7 @@ fn a_code_bound_to_the_lines_and_their_kinds_verifies_and_round_trips() {
     );
     let text = serde_json::to_string(&ir).unwrap();
     assert_eq!(parse(&text).unwrap(), ir);
-    assert_eq!(jsonschema::validate(&schema(), &v), Vec::<String>::new());
+    assert_eq!(support::jsonschema::validate(&schema(), &v), Vec::<String>::new());
 }
 
 #[test]
@@ -176,7 +176,7 @@ fn the_schema_knows_the_code_and_its_two_names() {
         .unwrap_or_default();
     assert_eq!(names[names.len() - 2..], [json!("lines"), json!("kinds")]);
     let bad = doc(json!({ "bind": { "state": { "diff": "diff:lines" } } }));
-    assert!(!jsonschema::validate(&s, &bad).is_empty());
+    assert!(!support::jsonschema::validate(&s, &bad).is_empty());
 }
 
 fn path(rel: &str) -> PathBuf {
@@ -244,7 +244,7 @@ fn an_ir_of_before_reads_and_writes_back_the_same_document() {
             at.display()
         );
         assert_eq!(
-            jsonschema::validate(&schema(), &kept),
+            support::jsonschema::validate(&schema(), &kept),
             Vec::<String>::new(),
             "{}",
             at.display()

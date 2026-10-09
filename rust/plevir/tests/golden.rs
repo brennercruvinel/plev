@@ -19,7 +19,7 @@
 //! `uir::schema()` written out; `UIR_BLESS=1` writes it again.
 
 // the validator for the keywords the schema uses (no schema dependency).
-mod jsonschema;
+mod support;
 
 use std::path::PathBuf;
 
@@ -166,7 +166,7 @@ fn the_schema_accepts_every_fixture() {
     for (name, _, _) in cases() {
         let doc: Value = serde_json::from_str(&fixture(name)).unwrap();
         assert_eq!(
-            jsonschema::validate(&schema, &doc),
+            support::jsonschema::validate(&schema, &doc),
             Vec::<String>::new(),
             "{name}"
         );
@@ -198,7 +198,7 @@ fn the_schema_refuses_a_literal_an_unknown_name_and_a_second_form() {
     for (at, value) in edits {
         let mut bad = doc.clone();
         *bad.pointer_mut(at).unwrap() = value;
-        assert!(!jsonschema::validate(&schema, &bad).is_empty(), "{at}");
+        assert!(!support::jsonschema::validate(&schema, &bad).is_empty(), "{at}");
     }
 }
 

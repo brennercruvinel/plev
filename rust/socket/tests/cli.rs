@@ -3,7 +3,7 @@
 
 #![cfg(unix)]
 
-mod toy;
+mod support;
 
 use std::path::Path;
 use std::process::Command;
@@ -12,7 +12,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::Revision;
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server};
 
 struct Run {

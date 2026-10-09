@@ -462,7 +462,7 @@ fn the_gallery_routes_the_row_the_surface_and_the_keys() {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 #[test]
 fn the_claude_answers_the_review_off_the_thread() {
-    use claude::ClaudeCli;
+    use ::claude::ClaudeCli;
 
     use crate::views::apps::surface::asking::Claude;
 

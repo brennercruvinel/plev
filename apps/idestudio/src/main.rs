@@ -60,11 +60,20 @@
 //!
 //! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
 
+// the binary's own modules (they hold `App`'s halves): their files sit
+// beside the library's modules of the same concern, so they are reached by
+// path from here.
+#[path = "interfaces/window/keymap.rs"]
 mod actions;
+#[path = "interfaces/window/keyboard.rs"]
 mod keys;
+#[path = "interfaces/window/pace.rs"]
 mod pace;
+#[path = "interfaces/window/record/shell.rs"]
 mod recording;
+#[path = "interfaces/window/renderer.rs"]
 mod renderer;
+#[path = "repository/watcher.rs"]
 mod watcher;
 
 use std::path::PathBuf;

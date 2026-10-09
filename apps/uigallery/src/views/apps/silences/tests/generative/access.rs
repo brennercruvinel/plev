@@ -348,7 +348,7 @@ mod claude {
     use std::path::PathBuf;
     use std::time::{Duration, Instant};
 
-    use claude::ClaudeCli;
+    use ::claude::ClaudeCli;
     use accord::RequestId;
 
     use super::*;

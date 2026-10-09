@@ -31,7 +31,7 @@ mod column;
 
 use std::time::Duration;
 
-use claude::ClaudeCli;
+use ::claude::ClaudeCli;
 use engine::widgets::prelude::{Button, ButtonSize, Select, TextField, Wake};
 use offers::{Ask, Llm, Model, Rules, propose_verified};
 use accord::{

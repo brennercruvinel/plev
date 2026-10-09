@@ -381,13 +381,13 @@ impl InspectorView {
             self.shown = self.read_frame(frame);
         }
         let frame_text = match self.shown.frame {
-            Some(f) => format!("frame {}", text::stamp(f.saturating_sub(self.start))),
+            Some(f) => format!("frame {}", prose::stamp(f.saturating_sub(self.start))),
             None => "no frame yet".to_owned(),
         };
         self.shell.header.blurb = Some(format!(
             "{} of {}, {frame_text}",
-            text::stamp(self.at()),
-            text::stamp(self.end.saturating_sub(self.start)),
+            prose::stamp(self.at()),
+            prose::stamp(self.end.saturating_sub(self.start)),
         ));
         if let Some(id) = self.picked().cloned() {
             self.panel = Some(self.answer(&id));

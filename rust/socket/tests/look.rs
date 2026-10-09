@@ -5,10 +5,10 @@
 //! `done`, state of another node, as the ide's `commit.submit` reads
 //! `changes:staged`.
 
-mod toy;
+mod support;
 
 use accord::{Acted, Actor, Rejection, RequestId, Revision, SemId, Stage};
-use toy::ToyHost;
+use support::toy::ToyHost;
 use socket::{ConnId, Host, Reply, Server, ServerMsg, StageReply, decode_client};
 
 const A: ConnId = 1;

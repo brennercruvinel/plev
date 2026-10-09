@@ -57,9 +57,9 @@ use super::todo::TodoPage;
 use super::{EditKey, panel};
 use crate::views::text_input::clipboard::Keys;
 use generative::{Generated, Halves, page::Page};
-use layout::{compute, row_parts};
-use semantics::{Ids, Target, Which};
-use worker::{POLL, Worker};
+use fixed_page::layout::{compute, row_parts};
+use fixed_page::semantics::{Ids, Target, Which};
+use fixed_page::worker::{POLL, Worker};
 
 /// A cut's row as the pointer meets it: its two buttons, retained so
 /// hover and press survive frames.
@@ -350,7 +350,7 @@ impl SilencesPage {
         }
         for ((cut, row), at) in self.model.cuts().iter().zip(&mut self.rows).zip(&l.rows) {
             let id = cut.id();
-            let badge_w = draw::badge(cut.decision()).preferred_size(theme).0;
+            let badge_w = fixed_page::draw::badge(cut.decision()).preferred_size(theme).0;
             let parts = row_parts(*at, theme, &row.apply, &row.reject, badge_w, l.stacked);
             let apply = row.apply.handle_event(event, parts.apply);
             let reject = row.reject.handle_event(event, parts.reject);
@@ -377,7 +377,7 @@ impl SilencesPage {
         // the band: a mark is the cut's preview
         let duration = self.model.duration();
         for cut in self.model.cuts() {
-            let mark = layout::mark_rect(l.timeline, cut.segment(), duration);
+            let mark = fixed_page::layout::mark_rect(l.timeline, cut.segment(), duration);
             match *event {
                 WidgetEvent::MouseMove { x, y } if mark.contains(x, y) => {
                     hover_mark = Some(cut.id())

@@ -38,7 +38,7 @@ const SHOW: &str = "shell.show";
 const MARK: u32 = 36;
 
 /// The tray as shown, and the model it shows.
-pub(super) struct TrayIcon {
+pub(crate) struct TrayIcon {
     native: Box<dyn Tray>,
     shown: Option<TrayModel>,
 }
@@ -48,7 +48,7 @@ impl App {
     /// one, as `tray-icon` needs). A click wakes the loop through the
     /// proxy. A target without a tray is logged and the shell goes on
     /// without one.
-    pub(super) fn install_tray(&mut self) {
+    pub(crate) fn install_tray(&mut self) {
         let proxy = Mutex::new(self.access.proxy.clone());
         let mut native = default_tray(move || {
             if let Ok(proxy) = proxy.lock()
@@ -83,7 +83,7 @@ impl App {
     /// The tray follows the gallery: after a frame, the model is built
     /// again and, when it moved, the tray is updated (shown, when nothing
     /// was yet). The same model costs a projection and nothing else.
-    pub(super) fn sync_tray(&mut self) {
+    pub(crate) fn sync_tray(&mut self) {
         let Some(tray) = self.tray.as_mut() else {
             return;
         };
@@ -106,7 +106,7 @@ impl App {
     /// (`ShowcaseView::menu_click`). `true` when the gallery's projection
     /// moved, so a frame is needed. What the shell owns is left for the
     /// caller: `show_requested`, `detach_requested`, `save_requested`.
-    pub(super) fn tray_clicks(&mut self) -> bool {
+    pub(crate) fn tray_clicks(&mut self) -> bool {
         let Some(tray) = self.tray.as_mut() else {
             return false;
         };

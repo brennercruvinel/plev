@@ -13,10 +13,10 @@ use crate::views::ShowcaseView;
 /// The window's outside actors (a screen reader, agents through the port)
 /// and how their threads wake the event loop.
 #[derive(Default)]
-pub(super) struct Access {
+pub(crate) struct Access {
     pub(super) bridge: Option<engine::control::accessibility::Bridge>,
-    pub(super) agent: Option<socket::AgentPort>,
-    pub(super) proxy: Option<EventLoopProxy<UserEvent>>,
+    pub(crate) agent: Option<socket::AgentPort>,
+    pub(crate) proxy: Option<EventLoopProxy<UserEvent>>,
     /// The windows' scenes, written for the port's watches (`mirror`).
     pub(super) scenes: super::mirror::Scenes,
 }
@@ -24,7 +24,7 @@ pub(super) struct Access {
 impl Access {
     /// Creates the bridge for `window`, which is still hidden. Without a
     /// bridge the window still opens, and the reason is logged.
-    pub(super) fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
+    pub(crate) fn attach(&mut self, event_loop: &ActiveEventLoop, window: &Window) {
         let proxy = self.proxy.clone();
         let wake = move || {
             if let Some(proxy) = &proxy {
@@ -40,7 +40,7 @@ impl Access {
     /// What the screen reader asked, on the main thread: a request goes
     /// through the active page's dispatcher as `Actor::Assistive`, a focus
     /// move to the page's focus.
-    pub(super) fn carry_out(&mut self, view: &mut ShowcaseView) {
+    pub(crate) fn carry_out(&mut self, view: &mut ShowcaseView) {
         let Some(bridge) = self.bridge.as_mut() else {
             return;
         };

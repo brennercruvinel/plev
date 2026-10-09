@@ -30,7 +30,7 @@ pub(super) fn bounds(r: Rect) -> [f32; 4] {
 }
 
 /// The badge of a decision.
-pub(super) fn badge(decision: Decision) -> Badge {
+pub(crate) fn badge(decision: Decision) -> Badge {
     let (text, intent) = match decision {
         Decision::Pending => ("pending", Intent::Neutral),
         Decision::Apply => ("cut", Intent::Destructive),
@@ -365,7 +365,7 @@ impl SilencesPage {
     }
 
     /// The variant of a row's buttons: the decision taken reads dark.
-    pub(super) fn variant(taken: bool) -> ButtonVariant {
+    pub(crate) fn variant(taken: bool) -> ButtonVariant {
         if taken {
             ButtonVariant::Secondary
         } else {

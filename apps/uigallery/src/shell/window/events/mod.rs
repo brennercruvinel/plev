@@ -16,7 +16,7 @@ use crate::keyboard;
 
 impl App {
     /// One event of one window (`ApplicationHandler::window_event`).
-    pub(super) fn handle_window_event(
+    pub(crate) fn handle_window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
         id: WindowId,
@@ -97,7 +97,7 @@ impl App {
                     // Space and the editing keys bridge through keys.rs
                     // (the view stays winit-free).
                     Key::Named(named) => {
-                        if keys::handle_named(&mut self.view, named, self.modifiers.shift_key()) {
+                        if keyboard::handle_named(&mut self.view, named, self.modifiers.shift_key()) {
                             self.changed();
                         }
                     }

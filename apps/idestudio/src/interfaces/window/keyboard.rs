@@ -12,7 +12,7 @@ use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::{App, interfaces::window::keymap};
+use crate::{App, actions};
 
 impl App {
     /// Keyboard handling: text input for the commit form, everything else
@@ -137,7 +137,7 @@ impl App {
         if action.is::<actions::Quit>() {
             event_loop.exit();
             false
-        } else if action.is::<crate::interfaces::window::record::Save>() {
+        } else if action.is::<idestudio::interfaces::window::record::Save>() {
             self.save_session("key");
             false
         } else if action.is::<actions::Toggle>() {

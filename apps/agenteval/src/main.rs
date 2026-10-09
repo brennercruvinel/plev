@@ -61,10 +61,10 @@ fn main() {
         }
     };
     let code = match args.arm {
-        args::Arm::Plev | args::Arm::Scripted => lab::run(&args),
-        args::Arm::Git => gitarm::run(&args),
-        args::Arm::Screenshot => screenshot::run(&args),
-        args::Arm::Review => review::run(&args),
+        args::Arm::Plev | args::Arm::Scripted => arms::plev::run(&args),
+        args::Arm::Git => arms::git::run(&args),
+        args::Arm::Screenshot => arms::screenshot::run(&args),
+        args::Arm::Review => arms::review::run(&args),
     };
     std::process::exit(code);
 }
