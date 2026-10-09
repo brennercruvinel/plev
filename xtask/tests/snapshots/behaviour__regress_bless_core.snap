@@ -1,0 +1,292 @@
+---
+source: tests/behaviour.rs
+expression: text
+---
+exit: 0
+--- stdout
+new      theme@core@1280x800
+wrote <tmp>/theme@core@1280x800: 4 layers (z0 cd6b7ad0bae25d6e, z10 c853f02ec00cb9d8, z1000 c1c6bb8155f442a4, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      typography@core@1280x800
+wrote <tmp>/typography@core@1280x800: 4 layers (z0 ec8e595dc0d0fa81, z10 c853f02ec00cb9d8, z1000 d66270efd4f011be, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      icons@core@1280x800
+wrote <tmp>/icons@core@1280x800: 4 layers (z0 256007d901b6e192, z10 c853f02ec00cb9d8, z1000 32f9d3643d83bc5b, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      effects@core@1280x800
+wrote <tmp>/effects@core@1280x800: 4 layers (z0 5978ae1f0fd58c27, z10 c853f02ec00cb9d8, z1000 c60e3404265da092, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      accordion@core@1280x800
+wrote <tmp>/accordion@core@1280x800: 4 layers (z0 642d9d02c477653c, z10 c853f02ec00cb9d8, z1000 43018440eff44520, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      alert@core@1280x800
+wrote <tmp>/alert@core@1280x800: 4 layers (z0 daaeeb78f91b094c, z10 c853f02ec00cb9d8, z1000 f5fcd07312bb38b6, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      alert-dialog@core@1280x800
+wrote <tmp>/alert-dialog@core@1280x800: 4 layers (dialog_page cff7a7fbf9504a9c, z10 c853f02ec00cb9d8, z1000 f427ce822d09601a, z1200 ef5874151115e51e), 2 bound controls, 3 semantic nodes (revision 9cd5eab614eb5771), settled after 2 steps
+new      aspect-ratio@core@1280x800
+wrote <tmp>/aspect-ratio@core@1280x800: 4 layers (z0 0f1e1664c4160d6f, z10 c853f02ec00cb9d8, z1000 5b8128c5b6e8ce6e, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      attachment@core@1280x800
+wrote <tmp>/attachment@core@1280x800: 4 layers (z0 0c197c2d28b25f80, z10 c853f02ec00cb9d8, z1000 f098756f2dbe0066, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      avatar@core@1280x800
+wrote <tmp>/avatar@core@1280x800: 4 layers (z0 fb946e8784771951, z10 c853f02ec00cb9d8, z1000 b5ef6fe819c852f8, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      badge@core@1280x800
+wrote <tmp>/badge@core@1280x800: 4 layers (z0 ced4dee0598ffe7e, z10 c853f02ec00cb9d8, z1000 83f17e5af2abb592, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      breadcrumb@core@1280x800
+wrote <tmp>/breadcrumb@core@1280x800: 4 layers (breadcrumb_page d6bde8e1a47aa959, z10 c853f02ec00cb9d8, z1000 0c2af62fdfe42342, z1200 ef5874151115e51e), 6 bound controls, 7 semantic nodes (revision a0a1dd29ac4a13d0), settled after 2 steps
+new      bubble@core@1280x800
+wrote <tmp>/bubble@core@1280x800: 4 layers (z0 68011e0475374b10, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      button@core@1280x800
+wrote <tmp>/button@core@1280x800: 4 layers (button_page 15333d0a40a594a3, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 30 bound controls, 45 semantic nodes (revision ba3b8e915ad501ba), settled after 2 steps
+new      button-group@core@1280x800
+wrote <tmp>/button-group@core@1280x800: 4 layers (button_page 69159912ab0fa03c, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 30 bound controls, 45 semantic nodes (revision d27dabe221a46695), settled after 2 steps
+new      calendar@core@1280x800
+wrote <tmp>/calendar@core@1280x800: 4 layers (z0 56193ab6ca4a26b6, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      card@core@1280x800
+wrote <tmp>/card@core@1280x800: 4 layers (z0 4426d7cdb9524216, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      carousel@core@1280x800
+wrote <tmp>/carousel@core@1280x800: 4 layers (z0 b1a3a40084110ef0, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      chart@core@1280x800
+wrote <tmp>/chart@core@1280x800: 4 layers (z0 937c0d7c9a652ab8, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      checkbox@core@1280x800
+wrote <tmp>/checkbox@core@1280x800: 4 layers (checkbox_page 09f22aa36b48a71d, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 4 semantic nodes (revision 5514cfa19cba0b3f), settled after 2 steps
+new      chip@core@1280x800
+wrote <tmp>/chip@core@1280x800: 4 layers (chip_page 3614c8cff29469e3, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 6 bound controls, 7 semantic nodes (revision 34660fdde1fa2016), settled after 2 steps
+new      code-block@core@1280x800
+wrote <tmp>/code-block@core@1280x800: 4 layers (z0 5b178fe0ad3cbf37, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      collapsible@core@1280x800
+wrote <tmp>/collapsible@core@1280x800: 4 layers (z0 1515856dfab0fae7, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      combobox@core@1280x800
+wrote <tmp>/combobox@core@1280x800: 4 layers (select_page 2caf47c97ab42524, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision 80af7102559656c0), settled after 2 steps
+new      command@core@1280x800
+wrote <tmp>/command@core@1280x800: 4 layers (z0 bbb32979fe6f27fc, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      context-menu@core@1280x800
+wrote <tmp>/context-menu@core@1280x800: 4 layers (z0 feb6e9b13fa6bede, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      data-table@core@1280x800
+wrote <tmp>/data-table@core@1280x800: 4 layers (table_page 63e1319ce2a02286, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 10 bound controls, 13 semantic nodes (revision 35eecd13c1d6222d), settled after 2 steps
+new      date-picker@core@1280x800
+wrote <tmp>/date-picker@core@1280x800: 4 layers (z0 a069d30d77175488, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      dialog@core@1280x800
+wrote <tmp>/dialog@core@1280x800: 4 layers (dialog_page 4590ca88cb89d148, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 2 bound controls, 3 semantic nodes (revision d4897bba299c907d), settled after 2 steps
+new      drawer@core@1280x800
+wrote <tmp>/drawer@core@1280x800: 4 layers (z0 2bfb0976651493a8, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      dropdown-menu@core@1280x800
+wrote <tmp>/dropdown-menu@core@1280x800: 4 layers (z0 cad36364e774d244, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      empty@core@1280x800
+wrote <tmp>/empty@core@1280x800: 4 layers (z0 32ee6c7d8f111e0f, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      field@core@1280x800
+wrote <tmp>/field@core@1280x800: 4 layers (input_page 6f115b4a53d4b886, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 5 semantic nodes (revision f5402783b73fab7b), settled after 2 steps
+new      graph@core@1280x800
+wrote <tmp>/graph@core@1280x800: 4 layers (z0 234e44f860050df1, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      hover-card@core@1280x800
+wrote <tmp>/hover-card@core@1280x800: 4 layers (tooltip_page 2cd72809e8c04abb, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision 311185a6902a9590), settled after 2 steps
+new      icon-button@core@1280x800
+wrote <tmp>/icon-button@core@1280x800: 4 layers (icon_button_page 871b3a0c941d685a, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 7 bound controls, 8 semantic nodes (revision 2b934f436f14c437), settled after 2 steps
+new      input@core@1280x800
+wrote <tmp>/input@core@1280x800: 4 layers (input_page e76805377071a9a3, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 5 semantic nodes (revision 91ae38a99909443f), settled after 2 steps
+new      input-group@core@1280x800
+wrote <tmp>/input-group@core@1280x800: 4 layers (z0 56e55d0d7dc8c369, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      input-otp@core@1280x800
+wrote <tmp>/input-otp@core@1280x800: 4 layers (z0 bd8a369b335dc4aa, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      item@core@1280x800
+wrote <tmp>/item@core@1280x800: 4 layers (z0 5671bdd2f8537c3f, scroll_area_page 2122db04dd575ef4, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 17 bound controls, 21 semantic nodes (revision fa6ab5300788c116), settled after 2 steps
+new      kbd@core@1280x800
+wrote <tmp>/kbd@core@1280x800: 4 layers (navigation_menu_page 3a0db6941027c99f, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 4 bound controls, 5 semantic nodes (revision 6fe8f6ccbf55119e), settled after 2 steps
+new      label@core@1280x800
+wrote <tmp>/label@core@1280x800: 4 layers (input_page 384afb45513050cd, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 5 semantic nodes (revision 4d4814f75fa68dfd), settled after 2 steps
+new      marker@core@1280x800
+wrote <tmp>/marker@core@1280x800: 4 layers (z0 167db3c76e59448d, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      menubar@core@1280x800
+wrote <tmp>/menubar@core@1280x800: 4 layers (z0 f8c0579d12a8a3bd, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      message@core@1280x800
+wrote <tmp>/message@core@1280x800: 4 layers (z0 41d1a228ab3f938a, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      message-scroller@core@1280x800
+wrote <tmp>/message-scroller@core@1280x800: 4 layers (z0 48c482b551778f97, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      navigation-menu@core@1280x800
+wrote <tmp>/navigation-menu@core@1280x800: 4 layers (navigation_menu_page c6f73539a208d6f7, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 4 bound controls, 5 semantic nodes (revision 75572df424d1e780), settled after 2 steps
+new      pagination@core@1280x800
+wrote <tmp>/pagination@core@1280x800: 4 layers (z0 9e44fac0dd24a7a8, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      panel@core@1280x800
+wrote <tmp>/panel@core@1280x800: 4 layers (z0 710c61308e57df57, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      panel-header@core@1280x800
+wrote <tmp>/panel-header@core@1280x800: 4 layers (z0 55fcdc0652626cdd, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      popover@core@1280x800
+wrote <tmp>/popover@core@1280x800: 4 layers (tooltip_page 83992cb7e682aa3d, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision 132873189af52bd2), settled after 2 steps
+new      progress@core@1280x800
+wrote <tmp>/progress@core@1280x800: 4 layers (z0 5d5a6323f50c2b57, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      questionnaire@core@1280x800
+wrote <tmp>/questionnaire@core@1280x800: 4 layers (z0 61569cd4135f0233, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      radio-group@core@1280x800
+wrote <tmp>/radio-group@core@1280x800: 4 layers (z0 b103ae69acc8419d, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      resizable@core@1280x800
+wrote <tmp>/resizable@core@1280x800: 4 layers (resizable_page 2616fe6386d19071, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision c630e0d4d1fab70c), settled after 2 steps
+new      scroll-area@core@1280x800
+wrote <tmp>/scroll-area@core@1280x800: 4 layers (z0 47aeaaec9cbdcb2c, scroll_area_page 13b164364fb17212, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 18 bound controls, 22 semantic nodes (revision 90e4f7621329ca7a), settled after 2 steps
+new      select@core@1280x800
+wrote <tmp>/select@core@1280x800: 4 layers (select_page 0cffc12d2f2ff855, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision 2d0259745d1b5973), settled after 2 steps
+new      separator@core@1280x800
+wrote <tmp>/separator@core@1280x800: 4 layers (z0 ac85f2c578a8e27a, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      sheet@core@1280x800
+wrote <tmp>/sheet@core@1280x800: 4 layers (z0 0e6f50baf7f74e35, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      sidebar@core@1280x800
+wrote <tmp>/sidebar@core@1280x800: 4 layers (z0 93fc845b24936bed, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      skeleton@core@1280x800
+wrote <tmp>/skeleton@core@1280x800: 4 layers (z0 33f1d3ca0997c1d6, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      slider@core@1280x800
+wrote <tmp>/slider@core@1280x800: 4 layers (slider_page 1763f3d3869ff25d, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 4 semantic nodes (revision 37d805cb7d5786da), settled after 2 steps
+new      spinner@core@1280x800
+wrote <tmp>/spinner@core@1280x800: 4 layers (spinner_page 9b166ff0cf92315e, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision 5c0da32a482554b9), settled after 2 steps
+new      stat@core@1280x800
+wrote <tmp>/stat@core@1280x800: 4 layers (z0 b74119f1ef53b04c, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      switch@core@1280x800
+wrote <tmp>/switch@core@1280x800: 4 layers (switch_page 4f518445a9b0df73, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 3 bound controls, 4 semantic nodes (revision b9b34bd5fa9187df), settled after 2 steps
+new      table@core@1280x800
+wrote <tmp>/table@core@1280x800: 4 layers (table_page e96f5b146e472584, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 10 bound controls, 13 semantic nodes (revision 7d9efc5655644d7e), settled after 2 steps
+new      tabs@core@1280x800
+wrote <tmp>/tabs@core@1280x800: 4 layers (tabs_page 1a6d19fa363311c2, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 4 bound controls, 5 semantic nodes (revision 14b440d979ebcfe6), settled after 2 steps
+new      textarea@core@1280x800
+wrote <tmp>/textarea@core@1280x800: 4 layers (z0 38b6448566b37844, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      toast@core@1280x800
+wrote <tmp>/toast@core@1280x800: 4 layers (toast_page 9cc101b695dc2d06, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 4 bound controls, 5 semantic nodes (revision 95b6c6c1c1d5c9d4), settled after 2 steps
+new      toggle@core@1280x800
+wrote <tmp>/toggle@core@1280x800: 4 layers (chip_page 032e8ef7fab9d0cb, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 6 bound controls, 7 semantic nodes (revision a704cfc7106cf112), settled after 2 steps
+new      toggle-group@core@1280x800
+wrote <tmp>/toggle-group@core@1280x800: 4 layers (todo fe8fc130799bd303, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 8 bound controls, 10 semantic nodes (revision 20b9a038f126d398), settled after 2 steps
+new      tooltip@core@1280x800
+wrote <tmp>/tooltip@core@1280x800: 4 layers (tooltip_page d71e16d7daa1642e, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 1 bound controls, 2 semantic nodes (revision d67b3531a8b56fb4), settled after 2 steps
+new      tree@core@1280x800
+wrote <tmp>/tree@core@1280x800: 4 layers (tree_page 5ecc7aa280c2e5c7, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 10 bound controls, 11 semantic nodes (revision ee332f884ae68d2e), settled after 2 steps
+new      todo@core@1280x800
+wrote <tmp>/todo@core@1280x800: 4 layers (todo 541caa8afab91996, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 8 bound controls, 10 semantic nodes (revision 20b9a038f126d398), settled after 2 steps
+new      surface@core@1280x800
+wrote <tmp>/surface@core@1280x800: 4 layers (todo+surface_page+todo_panel bccdd3031c37e023, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 35 bound controls, 38 semantic nodes (revision 0b51d1d24a286ede), settled after 2 steps
+new      silences@core@1280x800
+wrote <tmp>/silences@core@1280x800: 4 layers (silences_surface+silences a5c90c2242eac117, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 17 bound controls, 17 semantic nodes (revision d3c64aa094fd9c52), settled after 2 steps
+new      files@core@1280x800
+wrote <tmp>/files@core@1280x800: 4 layers (files 34753c5be541f48e, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 5 bound controls, 5 semantic nodes (revision e51033a5f09ca058), settled after 2 steps
+new      capture@core@1280x800
+wrote <tmp>/capture@core@1280x800: 4 layers (capture b7d5134dff22c269, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 6 bound controls, 6 semantic nodes (revision e570b657d60aa4a5), settled after 2 steps
+new      dock@core@1280x800
+wrote <tmp>/dock@core@1280x800: 4 layers (z0 6d27e800ddddf61a, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      editor@core@1280x800
+wrote <tmp>/editor@core@1280x800: 4 layers (z0 fa95d4e8450054cf, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+new      git@core@1280x800
+wrote <tmp>/git@core@1280x800: 5 layers (changes+stacks+diff 6e9a8c16d4b9ee4f, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1000#2 d76c501533bcc4a3, z1200 ef5874151115e51e), 3 bound controls, no semantic projection, settled after 2 steps
+new      builder@core@1280x800
+wrote <tmp>/builder@core@1280x800: 4 layers (z0 49314409f49ac323, z10 c853f02ec00cb9d8, z1000 41dc04b6fa7988ef, z1200 ef5874151115e51e), 0 bound controls, no semantic projection, settled after 2 steps
+
+--- stderr
+
+--- files
+bb1ed3fdbf7cfb503d15e2ca37b220e97258cb0f88a51430f0a4615cc7226b3a  accordion@core@1280x800/scene.json
+cfe967a83433703831321cb24d3dcadfc6177c5dda58b1334866304a4674e9e8  alert-dialog@core@1280x800/scene.json
+43401901e789ed0255fd3b538b4e0fce0ef1b8a8be0ddcc7b66d31a4c30d2d85  alert-dialog@core@1280x800/semantics.json
+9698ac0a031013ac3c06e0f6cdb94f9bf446156e36c4c1e16bf171c1b9d434e2  alert@core@1280x800/scene.json
+b862201c95d26584386d7611e707e9bbe8c6c601f4cc497873ce8645b51c09c5  aspect-ratio@core@1280x800/scene.json
+95de7b7e2f62d1b37141d0e40ffaa6fbb578fdc5f69d049b9d19ce67bed1c17b  attachment@core@1280x800/scene.json
+0ae2f7557331012a87edfb103565c2e0b9e3059f91c6d27f4f4f5330bab0b6c8  avatar@core@1280x800/scene.json
+c1ddd9367b42970ee89c9b92d6599374d861214b2810c41b7ea1bf55648969a9  badge@core@1280x800/scene.json
+1728e79345457953b9425c03b36ee010bbad3724873b601e179362cfb9966b5c  breadcrumb@core@1280x800/scene.json
+0ce26c1a16d1b02e9df02f0a6a0cda3b6535447926292681e7860903776919db  breadcrumb@core@1280x800/semantics.json
+5cec046635cd3e4b8fa96c4a1e6c419fbcbafd4f49834a2da624831e4de871ef  bubble@core@1280x800/scene.json
+019e53edc1304f937fb6765228a7bd8b0e353af51b50589b94136685bda78a96  builder@core@1280x800/scene.json
+e40eb1aae77f24e15b745f11f12ea28f2c815cbf13c8d201f9c08cf5f86e1f5e  button-group@core@1280x800/scene.json
+6220b2b703c09ab4ac1dc7773a9e9fd244fbb8d4272f00bc7c4a679585489969  button-group@core@1280x800/semantics.json
+6b722b7e46b6e545866b222540abbb9e5a1cae4034648386c0c4646bcc6667b1  button@core@1280x800/scene.json
+9ece777a872c0ed6321078bff4c25a25e6122ea9cddba6c40c3d1dd4685802a5  button@core@1280x800/semantics.json
+245cddd4bcde5072d1efbd5e75aca63d99e270e8ac8e3fcedc903970f0a4d938  calendar@core@1280x800/scene.json
+ee10c15f8ffaa917e6089ee1afbf199425502f4a3f5b431b5e27657887fbab14  capture@core@1280x800/scene.json
+e63a4807cef8239ac48498b24d9309ff939a0dfb61fd9fe67c611a1213828ae1  capture@core@1280x800/semantics.json
+06af7f37b0db8be6f607d5feb0b7a7fd3381d9467c691a4064297db0096a7c82  card@core@1280x800/scene.json
+efe9ecaa26ae05b7cefe0c03544be1ab73013c13c44ea0024b4f86fb3fb0c8c5  carousel@core@1280x800/scene.json
+a9d5e63efc95efb67946165f2810828f071ec594a68db32a7100d920ad19f1f5  chart@core@1280x800/scene.json
+44cdf9c1307d54933c201709d9909a4b851d8d84aaea7caae6a7dc62373af706  checkbox@core@1280x800/scene.json
+9fc1a0bae7af827adf364f57b8dfa2cf420ba7a16c94f83c5122a0a0a6c86c40  checkbox@core@1280x800/semantics.json
+13f07e51c74cfe813caf344c5b180b14133c8fefbce17a7146822d26c69dc40b  chip@core@1280x800/scene.json
+5426903baa2477907acd6cb8e2a85ee416f5089cfea19d02caa801f67b39718b  chip@core@1280x800/semantics.json
+228b6ef31aba6942075f741caf09a99f82c21bc5998ed92158b79b130b27082e  code-block@core@1280x800/scene.json
+737b850004d34e2fbebc10fa6c3d393081b04eccc5dd4a4e0bb84cc7d467520f  collapsible@core@1280x800/scene.json
+8ef1441cc1bb758a460f4330cbc4f0fbe5a9a7b0e832707dc41ba0f06d009fbe  combobox@core@1280x800/scene.json
+e10993a325c56c6900592807f4f2642352142c9956f7ac214995bc365e93fc83  combobox@core@1280x800/semantics.json
+99319c5aa42433921993f78ebe1b282c045957bbd15b628d0dba03aa68dcc4db  command@core@1280x800/scene.json
+c13fcd48e26656e3c21a646be46b885bedefd68e0f75d9fe09ff1837ebff5180  context-menu@core@1280x800/scene.json
+706c9ca045109870a1802189aa83231ef5d8032792650c51783b682c00311351  data-table@core@1280x800/scene.json
+7394e80d90a2317f7555a1de28f7bf4c45ad20fc487831977cb8b57d6d5c2eb0  data-table@core@1280x800/semantics.json
+71a55f52746a596d42ad326f680b112e07ad1414731fe8462f9c96011ead4da9  date-picker@core@1280x800/scene.json
+f978237e35879cb2ad92461184bc8b5f40075d792d2ad812247bcfa813b670a3  dialog@core@1280x800/scene.json
+991e6355071586421ccbc29a7be21a6d20ab8b7d9bdd1cad05a4f52bb0eee1d8  dialog@core@1280x800/semantics.json
+74e3c1ad1cd2c40cf8c8dd7a3f7307208a639508a4a7b707ecec8b0c49b43741  dock@core@1280x800/scene.json
+937397b2f7a15a7c0e928f1318538c156dc6241e65622334e97eabf04ebcdffc  drawer@core@1280x800/scene.json
+7573c4362f2ec1693c7d809449705efefa07bf2f6a9ebfd1e3b1f217a80a95a3  dropdown-menu@core@1280x800/scene.json
+5cdbfaf11c8b6d4947c4043705f6b449fddab625327443963e4c72460266efa8  editor@core@1280x800/scene.json
+5bfbb3c239cc5bc69b2662ba1ba7502f7ee78c03b2dbb00c1ada2074d44e4108  effects@core@1280x800/scene.json
+c4408cd843ae248407636be6f36fbf74099d78657aee9e1aae13cc035a5f0deb  empty@core@1280x800/scene.json
+e441ebbc997f7157f4074ad341e7e0c2a3c31030026816779fafdfa181820c90  field@core@1280x800/scene.json
+89ef4cbed6e99399aa83f2799a3ed1befa989053acbea2e5a766685a568b245b  field@core@1280x800/semantics.json
+b3c6e00badf2d2e93e446c1c29460c0f0100e50c37aaa181153d889ec4d50f52  files@core@1280x800/scene.json
+9a02116ed9c908faa750c8c58a17faad0d2b2a77e615c25701239e8a1f2afbdb  files@core@1280x800/semantics.json
+9e4126d445dc469552012a0b4ba414d7ce46b3f6ef7d9c2939b2c60e70a94e20  git@core@1280x800/scene.json
+aaea72fed39839ad210cf8f60a0d002120f978a7c6a9cfb9f7aab81c81fbf101  graph@core@1280x800/scene.json
+e8d2962cb8f1d0dbbe00eeb5b5e06968a59ab8de754bf886ee43dec9d63a13bf  hover-card@core@1280x800/scene.json
+804a810a80f114924211cd094719071b0ce0389ffc7ae1e168052da28a020302  hover-card@core@1280x800/semantics.json
+257171852582294112c84e4862865fb9ee3bb9c97e40f73508a7fb305d48404d  icon-button@core@1280x800/scene.json
+dbb3646ed08996b0b07e5ba4d8c47df1f481536afd6816577bf4bb12eb39c7ef  icon-button@core@1280x800/semantics.json
+4b425bf4cbc544a4bfd4508a77a011803c749ec3bd324c56a4e68910551fc7ce  icons@core@1280x800/scene.json
+7b0d42a5457d3447e5956a0254bd438edf098994588adb455c5120b2140277e6  input-group@core@1280x800/scene.json
+3425283bf1b365aa7ae4b6dfbee9b639057d6a691ab5fa2ec92dae70a8a51a6d  input-otp@core@1280x800/scene.json
+ee5ad9f6643893be4167ac6d44030320eea9d172165f716cc911729a492fd2ef  input@core@1280x800/scene.json
+407dfc11d698e3b38a53800f11d598dac7d05b27185aacc46855111922e9e8ef  input@core@1280x800/semantics.json
+bbb03e29797822fbf43132508ed754ad1cbd3e367b0b8e4047b3b55136f45cfa  item@core@1280x800/scene.json
+f0a18f8cceca72d649943b2e0627e7d31439567a2394545dd09c9cc0f12e01fb  item@core@1280x800/semantics.json
+8b254548216c8795a9c56dfb84d3c4ad3a0e6cbe65afcf18b2486c04d70082cb  kbd@core@1280x800/scene.json
+c60885ccefaef6efe7d9b78289c88d3b067f2a4679c47f0fea95050b88ecd911  kbd@core@1280x800/semantics.json
+b370dbfb4dc64418fa4c358171a9130fd22f451c8de1bf2f8b37c56792caf87f  label@core@1280x800/scene.json
+8c5718341c52e814b53d2186ad39dc4d1d4ea03b8176f045140e0d0f4718dc48  label@core@1280x800/semantics.json
+eb778e5a4ed2cddd4f63730462803ccebde66557ea58158f56f6fa5e29db54a8  marker@core@1280x800/scene.json
+6d63c75f319eb648a0b38221c32eb89bcbdbdfdc38a77669b597e744631f0a10  menubar@core@1280x800/scene.json
+fbc672c2832e322ab6687f8a4ded451230e99f387c6ed74e60a1c124dc3b7e66  message-scroller@core@1280x800/scene.json
+6d733b73753ad84edd25d78981097f51056a5dbaf972f0e40d80225077ef2e3d  message@core@1280x800/scene.json
+646fa71024514596fa7ce960fc41400e96c5069210800457ded2073a9b32fde4  navigation-menu@core@1280x800/scene.json
+8c78f5ac956160a4fee6ec97efb3297f2a2d8a563331d6e2d6d4aa316909adfb  navigation-menu@core@1280x800/semantics.json
+e173634dc58c56953d9a960c749fdd3b46c4e8cb7c9724704be9cf8024a1b07e  pagination@core@1280x800/scene.json
+0f2328b22fb98853c017e41fdc38771896f0b4040ac7476530ad609a630e9ff8  panel-header@core@1280x800/scene.json
+9684fbb197e10b726569440aa5ec0fc34d148499c7cfe5a152622ae5781560b2  panel@core@1280x800/scene.json
+749a8821dcfcec3c80e1ec4abc6b44a1882399fa8df6574b13e034a452a215f8  popover@core@1280x800/scene.json
+a4335e269b73ba32e34ac63c1cf97e9a7185ef4bac6b2226a204ef858ab47550  popover@core@1280x800/semantics.json
+c23434f45490689a88f273e657a8125a7e38b5beb8588585881be6d3f98d3139  progress@core@1280x800/scene.json
+346f1a969f4ce8d1648bbf8e8ba8e08c20281a487119db4ac25ec6001c50258c  questionnaire@core@1280x800/scene.json
+ce2fdb7b2125adcf0bdc2bd0cd274d7e5f8d743f0678924d8ae3a8a4d956b232  radio-group@core@1280x800/scene.json
+1dee363b638a076d25c9ca039e48d213de53b24a905bee899c37f403ae581082  resizable@core@1280x800/scene.json
+a08ae3b9a0e213ec31278bc02b835053f9a914971259c23aefa2ad30bb66be8a  resizable@core@1280x800/semantics.json
+125f44f566764354f7e71c3950941659093850eba33877bc4e78c8128d0fcc4b  scroll-area@core@1280x800/scene.json
+2b552a15a210242cf60cd28c249d643a8fd9c46e6de93a0753e2ad51d8c0e59a  scroll-area@core@1280x800/semantics.json
+f0e2be16b0d2bb9a1cf0f0c24f7bf43668c456d84c19d3f995b05f3a8e99081a  select@core@1280x800/scene.json
+f9fae6c967c11da7bb478b4c7ecfdf950b1c405d94f6069da466eb1d8d19a86a  select@core@1280x800/semantics.json
+d9c82f864971d6b95d9f8df5ab7a43c9c2f86c7b178946ffa5659533fd526105  separator@core@1280x800/scene.json
+fbf311fdc7a9199db75261011b7301be5633f29cbe3297c36a9428399eaa17bb  sheet@core@1280x800/scene.json
+6d559b2f664b1f74e9d81df8b5cd0bafa98bcd1523b888a12cdca1c20554558f  sidebar@core@1280x800/scene.json
+b89926f6725dd19316c06c2ae4ba5a2f357f570ed0e06d1e95a60dfbb1ec9d06  silences@core@1280x800/scene.json
+16bbe16fa182c700201d127df230d2a4c95341fb360922f07e90f708da406d98  silences@core@1280x800/semantics.json
+341769a26d4a36a31d9c3cf70b10efb712d06a722ced9664dc05071ebfbb12bd  skeleton@core@1280x800/scene.json
+9843f5db2c4d251b86d4fc28f53817daadc223fedb19c3881ba80f36008d1176  slider@core@1280x800/scene.json
+3e618e184ec6f6e2f54f2fe7a1ee13a86471dde63607edd263f4152c8e661990  slider@core@1280x800/semantics.json
+978da6816b10b6eb42e5a9b1625c0230e3cbecd3e8dc2728834aa01b8debacd7  spinner@core@1280x800/scene.json
+9d61810947e139581861a6453cede2146c4faeed4dfc76fe33b25504aa0e1a52  spinner@core@1280x800/semantics.json
+50cab5ba0f19342936618684dab3cea2ae321a12a35eaa61be0df832d342a087  stat@core@1280x800/scene.json
+415213fb9d939b153350c45a3c68fa32fc9540c995ca26603d703254c99d4e01  surface@core@1280x800/scene.json
+6fd8a4ac2a05c0bd4576e8c85090f32a35fb372cf266d5c481e2e77e4b431408  surface@core@1280x800/semantics.json
+7f9afd39330d1f95d38b14c69c63f09caaf5fa53d679f905afc4a447ffc68bff  switch@core@1280x800/scene.json
+37858dafee64e2bf8c0b8ce518b20b13e4377cfd2fc03ddd5339576761672a9b  switch@core@1280x800/semantics.json
+6656f34d5bb7bfc3c7a080f5416921fbdf74c5cf9bcd07076cb41afe73486dae  table@core@1280x800/scene.json
+3ebd3596255dee3c54003e5bf78093bc37914d99dd244898a3206303dcae5d2e  table@core@1280x800/semantics.json
+1b6328d735255f89be3f8a84040e918c7fbc41bd425cff94b5e794dd9f27029d  tabs@core@1280x800/scene.json
+39a084d9264dc115cc92dabca981b19525f5aec19193beadf926dc9cc93e9a8b  tabs@core@1280x800/semantics.json
+e0c08ac5712579ef4b87a1b5c542195887e3c58a9b56d593bf5c705d153edc1c  textarea@core@1280x800/scene.json
+08f865036fc087d107dcd8cf7e9b73b32f31e414b96a246d83d8cfa87fc90310  theme@core@1280x800/scene.json
+e6792239a34f4093914fc0e39a7a19e576419a77c536139c4adeb39e37a6a25f  toast@core@1280x800/scene.json
+7846d556cb924a80bc5d689ccfff9b832c8fd2d3dc4dbf55cbedc441e43dc1a6  toast@core@1280x800/semantics.json
+fda302cc8379fa9f7d0c26545f9cb80c4e765414832e316efaf3b20bb1adbee1  todo@core@1280x800/scene.json
+4dabb9e47e4c448591eb6724feb8d7c66cd08e652cdb2bc0722c2cbda7083a23  todo@core@1280x800/semantics.json
+c8ac2278f10feb822edbce8c677aec98cf9d7084e30a6383964232ebe59dbf51  toggle-group@core@1280x800/scene.json
+4dabb9e47e4c448591eb6724feb8d7c66cd08e652cdb2bc0722c2cbda7083a23  toggle-group@core@1280x800/semantics.json
+fbc7fd2b85c88e82d5533ecec3aac2d7d0c873621fa3ad38b898d12c862bce10  toggle@core@1280x800/scene.json
+dd4941c88f78ff8a73b0c13b7f825ae039ecb8ff91e2cbeb60e50eef9f8b9ec3  toggle@core@1280x800/semantics.json
+24902eeea5d7293b5d42b7674f3b0704ecfee197cd1318719971f0634f969329  tooltip@core@1280x800/scene.json
+d56dc8842c94d16220ce928787adabb2afceea18f57618ce9a25e492f3c619bd  tooltip@core@1280x800/semantics.json
+39744c4767f1c98313111e912730894cfe806c51f2048bf210be9418d1aa9465  tree@core@1280x800/scene.json
+22bf5bfa622f9d05838aee09f3206a25f11a54dbb818a3ed34ccfcfab8c3c435  tree@core@1280x800/semantics.json
+5679dbda57924d2f601e91956209551ed78e9ddc7682035640ddf6a4223380f6  typography@core@1280x800/scene.json

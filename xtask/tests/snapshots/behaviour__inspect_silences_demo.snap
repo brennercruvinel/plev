@@ -1,0 +1,24 @@
+---
+source: tests/behaviour.rs
+expression: text
+---
+exit: 0
+--- stdout
+session   rec 0.1.0, built from a9edcbaa
+span      +0.000s to +2.951s, 73 events, 100 frames
+actors    agent:demo: 17 observations, 9 requests, 36 stages
+          human: 1 request, 4 stages, 2 inputs
+requests  10
+  +0.039s  request 1   agent:demo  detect_silence on silences.detect     completed: cuts = 2, seconds = 0.060720708
+  +0.835s  request 2   agent:demo  select on silences_surface.proposer   completed
+  +0.839s  request 3   agent:demo  set_value on silences_surface.intent  completed
+  +0.845s  request 4   agent:demo  propose on silences_surface.propose   completed: surface = "proposed", nodes = 33
+  +1.565s  request 5   agent:demo  apply_cut on silences.cut[4]          completed: decision = "apply"
+  +1.594s  request 6   human       reject_cut on silences.cut[3]         completed: decision = "reject"
+  +1.604s  request 7   agent:demo  select on silences_surface.proposer   completed
+  +1.613s  request 8   agent:demo  set_value on silences_surface.intent  completed
+  +1.621s  request 9   agent:demo  propose on silences_surface.propose   completed: surface = "proposed", nodes = 27
+  +2.353s  request 10  agent:demo  close on silences_surface.close       completed: closed = "proposed"
+refusals  0
+
+--- stderr

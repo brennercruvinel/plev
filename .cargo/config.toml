@@ -10,3 +10,7 @@
 # breaks because of this wiring.
 [env]
 CLIPPY_CONF_DIR = { value = ".contracts/.mantras/.code/.lang/.rust", relative = true }
+
+# temporary: the tree migration's tooling (xtask/, migration.toml).
+[alias]
+xtask = "run --quiet --manifest-path xtask/Cargo.toml --"

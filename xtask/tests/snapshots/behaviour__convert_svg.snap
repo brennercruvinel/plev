@@ -1,0 +1,15 @@
+---
+source: tests/behaviour.rs
+expression: text
+---
+exit: 0
+--- stdout
+cards.svg -> <tmp>/cards.monster
+  stage 1658x1327  15 paths
+  scene: 15 nodes, 5 distinct payloads, 6.0 KB assets (95% of the file)
+  bytes: svg 8163.6 KB -> monster 6.3 KB (0.00x)
+
+--- stderr
+
+--- files
+08298da8cae97c4a6f22888e710a9b93bd39251b658aa7993b104c9d54f4f48b  cards.monster

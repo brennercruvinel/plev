@@ -1,0 +1,21 @@
+# temporary tooling of the tree migration (migration.toml at the root).
+# its own workspace, so it never shows up in the plev workspace's metadata,
+# lock or test list: the before/after comparisons stay clean. removed with
+# migration.toml once the migration is integrated.
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+toml = "1"
+toml_edit = "0.25"
+
+[dev-dependencies]
+insta = "1"

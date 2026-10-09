@@ -1,0 +1,16 @@
+---
+source: tests/behaviour.rs
+expression: text
+---
+exit: 0
+--- stdout
+girl.json -> <tmp>/girl.monster
+  stage 512x512  95 frames @ 60 fps  1.57s
+  timeline: 1 keyframes, 43 place / 5045 replace / 52 remove
+  assets: 4632 distinct payloads, 4657.7 KB (98% of the file)
+  bytes: json 724.7 KB -> monster 4742.0 KB (6.54x)
+
+--- stderr
+
+--- files
+c41c31ca6d70cc7b1f5166285f8ed631d38569b0e1d630ea94aa491bd49e77c7  girl.monster

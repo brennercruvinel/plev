@@ -1,0 +1,36 @@
+---
+source: tests/behaviour.rs
+expression: text
+---
+exit: 0
+--- stdout
+session   +0.000s to +0.091s, 25 events
+kinds     observed 2, snapshot 1, changes 6, stage 16
+actors    agent:scripted: 2 observations, 4 requests, 16 stages
++0.000s     snapshot  keyframe, 14 nodes
++0.017s     observed  agent:scripted observed the whole app, revision c3b81d753349dbb5
++0.018s     stage     request 1 requested (agent:scripted, unstage on changes.file[README.md])
++0.018s     stage     request 1 accepted (agent:scripted, unstage on changes.file[README.md])
++0.018s     stage     request 1 executing (agent:scripted, unstage on changes.file[README.md])
++0.018s     changes   changes:staged: removed README.md; changes.file[README.md]:staged: true -> false; changes.file[README.md]:unstaged: false -> true; and 1 more
++0.035s     stage     request 1 completed (agent:scripted, unstage on changes.file[README.md])
++0.036s     stage     request 2 requested (agent:scripted, stage on changes.file[src/session.rs])
++0.036s     stage     request 2 accepted (agent:scripted, stage on changes.file[src/session.rs])
++0.036s     stage     request 2 executing (agent:scripted, stage on changes.file[src/session.rs])
++0.036s     changes   changes:staged: added src/session.rs; changes.file[src/session.rs]:staged: false -> true; changes.file[src/session.rs]:unstaged: true -> false; and 1 more
++0.048s     changes   changes:staged: removed src/session.rs; changes.file[src/session.rs]:staged: true -> false; changes.file[src/session.rs]:unstaged: false -> true; and 1 more
++0.064s     stage     request 2 completed (agent:scripted, stage on changes.file[src/session.rs])
++0.065s     stage     request 3 requested (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.065s     stage     request 3 accepted (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.065s     stage     request 3 executing (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.065s     changes   changes:staged: added tests/login_test.rs; changes.file[tests/login_test.rs]:staged: false -> true; changes.file[tests/login_test.rs]:unstaged: true -> false; and 1 more
++0.077s     changes   changes:staged: added src/session.rs; removed tests/login_test.rs; changes.file[src/session.rs]:staged: false -> true; changes.file[src/session.rs]:unstaged: true -> false; and 4 more
++0.089s     stage     request 3 completed (agent:scripted, stage on changes.file[tests/login_test.rs])
++0.090s     observed  agent:scripted observed the whole app, revision 0267c905f7e90383
++0.091s     stage     request 4 requested (agent:scripted, open on commit.form)
++0.091s     stage     request 4 accepted (agent:scripted, open on commit.form)
++0.091s     stage     request 4 executing (agent:scripted, open on commit.form)
++0.091s     stage     request 4 completed (agent:scripted, open on commit.form)
++0.091s     changes   commit.form:open: false -> true; commit.form actions; commit.message enabled on; and 1 more
+
+--- stderr
