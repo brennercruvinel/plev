@@ -1,8 +1,7 @@
 //! Guard: no source file grows past the file-hygiene limit unnoticed.
 //!
-//! `.contracts/.mantras/.code/.lang/.rust/rust-conventions.md` ("file
-//! hygiene") caps production code at 639 lines per source file, with
-//! test code out of the count. The rule lived only in prose, and three
+//! The repository's file-hygiene rule caps production code at 639 lines
+//! per source file, with test code out of the count. The rule lived only in prose, and three
 //! deliveries in one cycle went past it before anyone counted
 //! (docs/log/learnings/general.md, process). This test counts, so the
 //! gate says it first.
@@ -26,13 +25,13 @@ const LIMIT: usize = 639;
 /// lines each had then: debt, frozen. A split that brings one under the
 /// limit removes it from here.
 const FROZEN: &[(&str, usize)] = &[
-    ("crates/comps/src/content/card.rs", 1343),
-    ("crates/urnaui/src/view/explorer.rs", 1019),
-    ("crates/urnaui/src/model/urnaread.rs", 794),
-    ("crates/urnaui/src/view/search.rs", 752),
+    ("rust/engine/src/widgets/content/card.rs", 1343),
+    ("apps/urnadbapp/src/view/explorer/mod.rs", 1019),
+    ("apps/urnadbapp/src/backend/sources/reader.rs", 794),
+    ("apps/urnadbapp/src/view/search.rs", 752),
 ];
 
-/// The repository root: this guard lives in `rust/engine`.
+/// The repository root: this guard lives in `tool/tests`.
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
@@ -93,8 +92,10 @@ fn sources(dir: &Path, out: &mut Vec<PathBuf>) {
 fn no_source_file_grows_past_the_limit() {
     let root = root();
     let mut files = Vec::new();
-    sources(&root.join("crates"), &mut files);
-    assert!(!files.is_empty(), "no source files found under crates/");
+    for home in ["rust", "apps", "demo", "tool"] {
+        sources(&root.join(home), &mut files);
+    }
+    assert!(!files.is_empty(), "no source files found under rust/, apps/, demo/, tool/");
 
     let mut failures = Vec::new();
     for path in files {
@@ -116,7 +117,7 @@ fn no_source_file_grows_past_the_limit() {
     assert!(
         failures.is_empty(),
         "past the file-hygiene limit ({LIMIT} lines of production code, tests \
-         out of the count; .contracts/.mantras/.code/.lang/.rust/rust-conventions.md). \
+         out of the count). \
          split by responsibility:\n  {}",
         failures.join("\n  ")
     );
@@ -151,8 +152,8 @@ fn test_code_is_left_out_of_the_count() {
         3,
         "a declared module is one line"
     );
-    assert!(is_test_file(Path::new("crates/x/tests/a.rs")));
-    assert!(is_test_file(Path::new("crates/x/src/y/tests.rs")));
-    assert!(is_test_file(Path::new("crates/x/src/tests_clock.rs")));
-    assert!(!is_test_file(Path::new("crates/x/src/testing.rs")));
+    assert!(is_test_file(Path::new("rust/x/tests/a.rs")));
+    assert!(is_test_file(Path::new("rust/x/src/y/tests.rs")));
+    assert!(is_test_file(Path::new("rust/x/src/tests_clock.rs")));
+    assert!(!is_test_file(Path::new("rust/x/src/testing.rs")));
 }

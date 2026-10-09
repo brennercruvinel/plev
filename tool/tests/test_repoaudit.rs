@@ -1,28 +1,23 @@
-//! Guard: the architecture docs cannot silently omit a crate or example.
+//! Guard: the architecture docs cannot silently omit a crate or a demo.
 //!
-//! The source of truth for what exists is Cargo.toml `members` and the
-//! examples/ directory, never a doc. Two architecture views are kept by
-//! hand (docs/ATLAS.toml the map + prose + diagram, README.md the home
+//! The source of truth for what exists is the workspace Cargo.toml
+//! (`members` and `exclude`), never a doc. Two architecture views are kept
+//! by hand (docs/ATLAS.toml the map + prose + diagram, README.md the home
 //! page), so they drift on the first rush. This test makes drift a failing
-//! build instead of a silent lie: every workspace crate must be named in
-//! arc.toml and README, and every example directory must be named in
-//! arc.toml. add a crate or example and forget a doc, and this test tells
-//! you which doc, by name.
+//! build instead of a silent lie: every crate must have its table in the
+//! atlas and be named in the README, and every demo crate must be listed
+//! under the atlas' [demos]. add a crate and forget a doc, and this test
+//! tells you which doc, by name.
 
 use std::fs;
 use std::path::PathBuf;
 
-/// this guard lives in the engine crate (rust/engine), so the workspace
-/// root is two levels up. the workspace Cargo.toml, docs/ and README live
-/// there; the examples/ dir is the engine's own.
+/// this guard lives in tool/tests, two levels under the workspace root,
+/// where the workspace Cargo.toml, docs/ and README live.
 fn wroot() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
-}
-
-fn engine_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
 }
 
 fn read(rel: &str) -> String {
@@ -30,65 +25,86 @@ fn read(rel: &str) -> String {
     fs::read_to_string(&p).unwrap_or_else(|e| panic!("read {rel}: {e}"))
 }
 
-/// crate directory names under crates/ taken from the workspace members,
-/// the real source of truth for what crates exist.
+/// every crate directory the workspace names, members and excluded ones
+/// alike (an excluded crate is still a crate of the repository).
 fn workspace_crates() -> Vec<String> {
-    let toml = read("Cargo.toml");
-    let mut out = Vec::new();
-    for line in toml.lines() {
-        let t = line.trim().trim_matches(',').trim_matches('"');
-        if let Some(name) = t.strip_prefix("crates/") {
-            out.push(name.to_string());
-        }
-    }
-    assert!(!out.is_empty(), "no crates/ members parsed from Cargo.toml");
-    out
-}
-
-/// example directory names (examples/<name>/main.rs), the source of truth
-/// for what demos exist.
-fn examples() -> Vec<String> {
-    let mut out = Vec::new();
-    for entry in fs::read_dir(engine_dir().join("examples")).expect("read examples/") {
-        let entry = entry.expect("dir entry");
-        if entry.path().is_dir() && entry.path().join("main.rs").exists() {
-            out.push(entry.file_name().to_string_lossy().into_owned());
-        }
-    }
-    assert!(!out.is_empty(), "no examples found");
-    out
-}
-
-#[test]
-fn every_crate_is_named_in_arc_toml_and_readme() {
-    let crates = workspace_crates();
-    for (rel, body) in [
-        ("docs/arc/arc.toml", read("docs/arc/arc.toml")),
-        ("README.md", read("README.md")),
-    ] {
-        let missing: Vec<&String> = crates
-            .iter()
-            .filter(|c| !body.contains(c.as_str()))
-            .collect();
-        assert!(
-            missing.is_empty(),
-            "{rel} does not mention these workspace crates: {missing:?}. \
-             update it (the docs track Cargo.toml, not the other way around)."
-        );
-    }
-}
-
-#[test]
-fn every_example_is_named_in_arc_toml() {
-    let body = read("docs/arc/arc.toml");
-    let examples = examples();
-    let missing: Vec<&String> = examples
+    let doc: toml::Table = toml::from_str(&read("Cargo.toml")).expect("Cargo.toml parses");
+    let ws = doc["workspace"].as_table().expect("[workspace]");
+    let mut out: Vec<String> = ["members", "exclude"]
         .iter()
-        .filter(|e| !body.contains(e.as_str()))
+        .filter_map(|k| ws.get(*k).and_then(|v| v.as_array()))
+        .flatten()
+        .filter_map(|v| v.as_str().map(str::to_owned))
+        .collect();
+    out.sort();
+    assert!(!out.is_empty(), "no members parsed from Cargo.toml");
+    out
+}
+
+/// the package name of a crate directory: its last segment.
+fn name(dir: &str) -> &str {
+    dir.rsplit('/').next().unwrap_or(dir)
+}
+
+fn atlas() -> toml::Table {
+    toml::from_str(&read("docs/ATLAS.toml")).expect("docs/ATLAS.toml parses")
+}
+
+#[test]
+fn every_crate_has_its_table_in_the_atlas_and_a_mention_in_the_readme() {
+    let crates = workspace_crates();
+    let atlas = atlas();
+    let tables = atlas["crates"].as_table().expect("[crates] in the atlas");
+    let missing: Vec<&String> = crates
+        .iter()
+        .filter(|c| !tables.contains_key(name(c)))
         .collect();
     assert!(
         missing.is_empty(),
-        "docs/arc/arc.toml does not list these examples: {missing:?}. \
-         add them under the [examples] table."
+        "docs/ATLAS.toml has no [crates.<name>] table for: {missing:?}. \
+         add one (the docs track Cargo.toml, not the other way around)."
+    );
+    let wrong: Vec<String> = crates
+        .iter()
+        .filter_map(|c| {
+            let path = tables.get(name(c))?.get("path")?.as_str()?;
+            (path != c).then(|| format!("{}: {path} (is {c})", name(c)))
+        })
+        .collect();
+    assert!(
+        wrong.is_empty(),
+        "docs/ATLAS.toml gives these crates another path: {wrong:?}"
+    );
+    let readme = read("README.md");
+    let unnamed: Vec<&String> = crates
+        .iter()
+        .filter(|c| !readme.contains(name(c)))
+        .collect();
+    assert!(
+        unnamed.is_empty(),
+        "README.md does not mention these workspace crates: {unnamed:?}"
+    );
+}
+
+#[test]
+fn every_demo_is_listed_in_the_atlas() {
+    let atlas = atlas();
+    let demos = atlas["demos"].as_table().expect("[demos] in the atlas");
+    let listed: Vec<&str> = ["windowed", "cli"]
+        .iter()
+        .filter_map(|k| demos.get(*k).and_then(|v| v.as_array()))
+        .flatten()
+        .filter_map(|v| v.as_str())
+        .collect();
+    let missing: Vec<String> = workspace_crates()
+        .iter()
+        .filter(|c| c.starts_with("demo/"))
+        .map(|c| name(c).to_owned())
+        .filter(|n| !listed.contains(&n.as_str()))
+        .collect();
+    assert!(
+        missing.is_empty(),
+        "docs/ATLAS.toml does not list these demos: {missing:?}. \
+         add them under the [demos] table."
     );
 }

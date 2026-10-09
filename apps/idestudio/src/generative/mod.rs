@@ -358,7 +358,6 @@ impl Generated {
     }
 }
 
-// ---------------------------------------------------------------------------
 // The workbench's side of the generated surface (task-96,
 // `crate::generated`): the block turned on; the workspace's own
 // projection apart from it, the registry a proposal binds and the state a
@@ -374,8 +373,6 @@ impl Generated {
 // the request ends at once, `completed` with the surface and how many
 // nodes it has, or `failed` with why there is none (the line says it
 // too). Only a `VerifiedIr` opens: `propose::propose_verified` is the way.
-// ---------------------------------------------------------------------------
-
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.
 pub(crate) fn shown(surface: &SemId, nodes: usize) -> Outcome {

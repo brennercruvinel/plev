@@ -14,10 +14,11 @@ use std::path::{Path, PathBuf};
 
 /// Directories never scanned (build output, vendored study material,
 /// discarded code kept for reference, vcs).
-const SKIP_DIRS: [&str; 7] = [
+const SKIP_DIRS: [&str; 8] = [
     ".git",
     "target",
     "ref",
+    "boiler",
     "codigo-descartado",
     "dist",
     "tmp",
@@ -25,28 +26,30 @@ const SKIP_DIRS: [&str; 7] = [
 ];
 
 /// Path prefixes (relative to the repo root, '/'-separated) where the raw
-/// constructor is legitimate: the engine that defines it, its inline
-/// tests, its benches, and this guard itself. rust/motion builds raw keys
+/// constructor is legitimate: the engine that defines it (its widgets
+/// included), its inline tests and its benches. rust/motion builds raw keys
 /// in codec round-trip tests and is engine-side tooling.
-const ALLOWED_PREFIXES: [&str; 4] = ["src/", "benches/", "tests/", "crates/monster/src/"];
+const ALLOWED_PREFIXES: [&str; 4] = [
+    "rust/engine/src/",
+    "rust/engine/benches/",
+    "rust/engine/tests/",
+    "rust/motion/src/",
+];
 
-/// Known pre-ADR call sites pending their own migration, listed file by
-/// file so no new file (and no new crate) can add a raw constructor call.
-/// Shrink this list, never grow it.
-const PENDING_MIGRATION: [&str; 13] = [
-    "crates/showcase/src/view/icons_gallery.rs",
-    "crates/showcase/src/view/lists.rs",
-    "crates/showcase/src/view/mod.rs",
-    "crates/showcase/src/view/theme_gallery.rs",
-    "crates/ide/src/components/checkbox.rs",
-    "crates/ide/src/components/context_menu.rs",
-    "crates/ide/src/components/modal.rs",
-    "crates/ide/src/components/panel_header.rs",
-    "crates/ide/src/views/commit_form.rs",
-    "crates/ide/src/views/diff_view.rs",
-    "crates/ide/src/views/multi_stack_view.rs",
-    "crates/ide/src/views/sidebar.rs",
-    "crates/ide/src/views/unassigned_view.rs",
+/// Call sites pending their own migration, listed file by file so no new
+/// file (and no new crate) can add a raw constructor call. Shrink this
+/// list, never grow it. Until the 2026-10 tree the guard lived inside the
+/// engine crate and, despite its doc, scanned only the engine's own
+/// directory; these were the calls outside it on the day it began to scan
+/// the whole repository.
+const PENDING_MIGRATION: [&str; 7] = [
+    "apps/uigallery/src/views/compositor/draw.rs",
+    "apps/uigallery/src/views/foundations/icons.rs",
+    "apps/uigallery/src/views/foundations/theme.rs",
+    "apps/urnadbapp/src/view/mod.rs",
+    "rust/motion/tests/raise.rs",
+    "rust/record/tests/session/file.rs",
+    "rust/record/tests/session/visual.rs",
 ];
 
 fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
@@ -70,7 +73,9 @@ fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 
 #[test]
 fn raw_text_node_key_stays_inside_the_engine() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    // the repository root: this guard lives in tool/tests
+    let root_buf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let root = root_buf.as_path();
     // Assembled at runtime so this file does not match itself.
     let needle: String = ["TextNodeKey", "::new("].concat();
 
@@ -82,7 +87,7 @@ fn raw_text_node_key_stays_inside_the_engine() {
     for path in &files {
         let rel = path
             .strip_prefix(root)
-            .expect("walked paths start at the manifest dir")
+            .expect("walked paths start at the repository root")
             .to_string_lossy()
             .replace('\\', "/");
         if ALLOWED_PREFIXES.iter().any(|p| rel.starts_with(p))
@@ -103,9 +108,9 @@ fn raw_text_node_key_stays_inside_the_engine() {
     assert!(
         violations.is_empty(),
         "raw TextNodeKey::new found outside the engine ({} occurrence(s)):\n{}\n\
-         build one engine::text::TextStyle per text run and pass it to both\n\
-         TextMeasurer::measure_styled and TextNodeKey::from_style.\n\
-         see docs/ADR/one-text-style-for-measurement-and-drawing.md",
+         build one engine::drawing::text::TextStyle per text run and pass it to\n\
+         both TextMeasurer::measure_styled and TextNodeKey::from_style.\n\
+         see docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md",
         violations.len(),
         violations.join("\n")
     );
