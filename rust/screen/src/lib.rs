@@ -60,11 +60,11 @@ mod draw;
 mod expand;
 mod host;
 mod layout;
-mod motion;
 mod project;
 mod surface;
 mod token;
 mod widget;
+mod transition;
 
 pub use host::{Change, Dispatch, Frames, NoFrames, SurfaceError, SurfaceHost};
 pub use surface::Surface;

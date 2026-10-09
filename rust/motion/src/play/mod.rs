@@ -1,3 +1,6 @@
+mod evaluation;
+#[cfg(test)]
+mod tests;
 use crate::ir::{IrError, Node, Timeline};
 use crate::lower::{LoweredAsset, lower_scene};
 use crate::play_eval::{

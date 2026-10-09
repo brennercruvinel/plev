@@ -1,6 +1,11 @@
 //! The document: rope buffer + selections + history, with multi-cursor
 //! editing primitives.
 
+pub mod history;
+pub mod movement;
+pub mod selection;
+pub mod transaction;
+
 use std::fmt;
 use std::ops::Range;
 

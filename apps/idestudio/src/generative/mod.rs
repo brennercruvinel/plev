@@ -26,6 +26,8 @@
 pub(crate) mod claude;
 pub(crate) mod row;
 pub(crate) mod scope;
+mod asking;
+mod column;
 
 use std::time::Duration;
 

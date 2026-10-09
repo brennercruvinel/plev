@@ -6,6 +6,8 @@
 //! checked before the shape, so a message of a later version is refused
 //! as `BadVersion`, never as `BadMessage`.
 
+mod base64;
+
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value as Json};

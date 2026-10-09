@@ -8,13 +8,11 @@ pub mod measure;
 pub mod probe;
 mod system;
 mod vertex;
+#[cfg(test)]
+mod tests;
 
 pub use backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
 pub use measure::{ClusterBox, LineMetrics, ShapedText, TextMeasurer};
 pub use system::TextSystem;
 pub use vertex::TextVertex;
 
-#[cfg(test)]
-mod tests_measure;
-#[cfg(test)]
-mod tests_raster;

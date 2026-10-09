@@ -18,10 +18,10 @@ pub mod action;
 pub mod bridge;
 pub mod focus;
 pub mod ids;
-pub mod motion;
 pub mod present;
 pub mod role;
 pub mod tree;
+pub mod reduced_motion;
 
 /// The AccessKit types a shell or a test names (an `ActionRequest`, a
 /// `TreeUpdate`), so an app does not pin its own copy of the crate.

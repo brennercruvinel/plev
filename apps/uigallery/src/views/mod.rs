@@ -8,20 +8,15 @@
 //! one module per pane.
 
 mod apps;
-mod clipboard;
 mod components;
-mod dispatch;
-mod draw;
-mod field_menu;
 mod foundations;
-mod ime;
-mod input;
 mod pages;
-mod panes;
-mod render;
 
 #[cfg(test)]
 mod tests;
+pub mod compositor;
+mod dispatcher;
+pub mod text_input;
 
 pub use apps::git::{GitWake, NavKey};
 pub use ime::ImeEvent;
@@ -30,7 +25,7 @@ pub use pages::{Body, Group, PAGES, Page, Pane};
 
 pub(crate) use draw::{group_label, panel, text, with_alpha};
 
-use dispatch::keyboard::Walk;
+use dispatcher::keyboard::Walk;
 
 use winit::keyboard::{Key, ModifiersState};
 
@@ -99,10 +94,10 @@ pub struct ShowcaseView {
     pub toasts: ToastManager,
     active_overlay: Option<ActiveOverlay>,
     /// The button of the modal or the item of the menu a screen reader
-    /// moved the focus to (`dispatch::overlay`); `None`, the overlay's
+    /// moved the focus to (`dispatcher::overlay`); `None`, the overlay's
     /// own (the modal's cancel, the menu's first item).
     overlay_focus: Option<sem::SemId>,
-    /// The shift key is held: Tab walks backward (`dispatch::keyboard`).
+    /// The shift key is held: Tab walks backward (`dispatcher::keyboard`).
     shift: bool,
 
     /// One struct per pane, the pages' state.
@@ -160,7 +155,7 @@ impl ShowcaseView {
             pending_scroll: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
-            toasts: match dispatch::overlay::id(dispatch::overlay::TOASTS) {
+            toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
                 Some(id) => ToastManager::new().sem(id),
                 None => ToastManager::new(),
             },
@@ -193,7 +188,7 @@ impl ShowcaseView {
 
     /// Arrow up/down: the Git tab's file list; on a component page, or
     /// over the modal or the menu, the widget the focus is in
-    /// (`dispatch::keyboard`).
+    /// (`dispatcher::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
         if self.walks() {
             let walk = match key {

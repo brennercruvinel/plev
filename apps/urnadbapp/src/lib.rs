@@ -14,14 +14,16 @@
 // (`urnaui::model::...`) now that they live in the library.
 extern crate self as urnaui;
 
-pub mod model;
 
 pub mod app;
-pub mod keys;
 pub mod renderer;
 pub mod view;
 #[cfg(target_arch = "wasm32")]
 mod web_picker;
+pub mod backend;
+pub mod keyboard;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod recents;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use app::run;

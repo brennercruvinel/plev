@@ -46,7 +46,6 @@
 
 pub(crate) mod asking;
 mod page;
-pub(crate) mod proposing;
 
 use comps::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode, TextNodeKey};
@@ -62,7 +61,7 @@ use super::EditKey;
 use super::app::TodoPage;
 use crate::view::clipboard::Keys;
 use page::Page;
-use proposing::{Proposing, Row, Said};
+use offering::{Proposing, Row, Said};
 
 /// One form of the generated surface: what the control calls it, the
 /// caption naming its IR, the IR.
@@ -600,3 +599,4 @@ impl SurfacePage {
 
 #[cfg(test)]
 mod tests;
+pub(crate) mod offering;

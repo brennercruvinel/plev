@@ -94,12 +94,11 @@ mod persist;
 mod recorder;
 mod ring;
 pub mod scene;
-mod screen;
 mod session;
 mod state;
 mod track;
-mod visual;
 mod weigh;
+mod visuals;
 
 pub use bound::Bound;
 pub use error::{FileError, FrameError, ReadError};

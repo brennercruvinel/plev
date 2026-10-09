@@ -15,18 +15,18 @@
 //!   literals that hold it; the shell opens the editor there.
 
 pub mod literals;
-mod narrate;
 mod shader;
 mod source;
 #[cfg(test)]
 mod tests;
 pub mod view_source;
+mod markup;
 
 use std::borrow::Cow;
 use std::path::PathBuf;
 
 // Re-export all public items
-pub use narrate::{
+pub use markup::{
     NarrateWatcher, narrate_override, process_narrate_file, project_root, update_narrate_overrides,
 };
 pub use shader::ShaderWatcher;

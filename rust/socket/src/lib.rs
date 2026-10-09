@@ -47,34 +47,32 @@
 //! (`AgentPort::offer_scene`); a viewer puts the lines back together
 //! (`SceneReader`).
 
-mod b64;
 #[cfg(unix)]
 mod client;
-mod codec;
 mod error;
 #[cfg(unix)]
 mod place;
 #[cfg(unix)]
 mod port;
-mod proto;
 mod ring;
 mod scene;
-mod scene_read;
 mod server;
 mod shown;
 mod sink;
 mod traffic;
+mod framing;
+mod protocol;
 
 pub use b64::{decode as decode_base64, encode as encode_base64};
 #[cfg(unix)]
 pub use client::Client;
-pub use codec::{Refusal, decode_client, decode_server, encode_client, encode_server};
+pub use framing::{Refusal, decode_client, decode_server, encode_client, encode_server};
 pub use error::WireError;
 #[cfg(unix)]
 pub use place::{MAX_APP, check_app, find, socket_dir, socket_path};
 #[cfg(unix)]
 pub use port::{AgentPort, Config, ENV, MAX_CONNS, SCENE_QUEUE, Wake, enabled};
-pub use proto::{
+pub use protocol::{
     Act, Ask, Bound, ClientMsg, DeltaReply, MAX_ASK, Observe, ProtoError, Reply, ServerMsg,
     SnapshotReply, StageReply, VERSION,
 };

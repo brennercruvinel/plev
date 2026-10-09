@@ -15,6 +15,8 @@
 //! `begin` without `end` (the nestui graph discovered this). Nodes are
 //! accent circles, radius clamped per zoom level.
 
+pub mod geometry;
+
 use std::collections::HashMap;
 
 use engine::compositor::{Compositor, SceneNode};

@@ -10,6 +10,7 @@
 mod table;
 #[cfg(test)]
 mod tests;
+mod panes;
 
 pub use table::PAGES;
 

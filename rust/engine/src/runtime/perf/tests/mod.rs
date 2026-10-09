@@ -1,6 +1,9 @@
 //! Pure tests: rolling window semantics, percentiles, fps from synthetic
 //! dts, snapshot/log formatting, memory aggregation and HUD scene output.
 
+#[cfg(test)]
+mod stages;
+
 use super::*;
 use crate::animation::AnimationTick;
 use crate::compositor::{Compositor, LayerId, RenderStats, SceneNode};

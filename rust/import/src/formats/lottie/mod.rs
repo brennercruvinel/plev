@@ -10,13 +10,14 @@
 //! features (masks, mattes, trim paths, text, images, expressions)
 //! are skipped with a one-time log, never a panic.
 
-pub mod cnv;
-pub mod gem;
-pub mod kfr;
-pub mod mdl;
-pub mod rnd;
+pub mod convert;
+pub mod geometry;
+pub mod keyframe;
+pub mod render;
+pub mod schema;
 
-pub use cnv::{CnvError, Stats, convert};
-pub use gem::Mat;
-pub use mdl::Animation;
-pub use rnd::Player;
+
+pub use convert::{CnvError, Stats, convert};
+pub use geometry::Mat;
+pub use schema::Animation;
+pub use render::Player;

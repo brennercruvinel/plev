@@ -2,7 +2,6 @@ mod binding;
 mod clip;
 pub(crate) mod drawing;
 mod layer;
-mod layer_ops;
 mod memory;
 mod scene;
 mod sequence;
@@ -11,6 +10,7 @@ mod vertex;
 
 #[cfg(test)]
 mod tests;
+mod layer_operations;
 
 use crate::perf::stages::{self, Stage};
 

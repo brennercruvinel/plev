@@ -1,9 +1,10 @@
 //! Multi-finger touch tracking ([`TouchTracker`]) plus the touch -> pointer
 //! synthesis compatibility layer ([`synth`]).
 
-mod synth;
+mod synthesis;
 
-pub use synth::{SyntheticPointerEvent, TouchPointerSynth};
+
+pub use synthesis::{SyntheticPointerEvent, TouchPointerSynth};
 
 use web_time::Instant;
 

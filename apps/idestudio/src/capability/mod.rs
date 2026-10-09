@@ -23,16 +23,16 @@
 //! a request aimed at a node of a surface routed to the capability it
 //! stands for before the dispatcher takes it.
 
-mod asking;
-mod column;
 mod execute;
-mod generated;
 mod notice;
 mod person;
 mod project;
 #[cfg(test)]
 mod tests;
 mod truth;
+#[cfg(unix)]
+pub mod agent;
+mod ids;
 
 use std::collections::VecDeque;
 use std::path::Path;

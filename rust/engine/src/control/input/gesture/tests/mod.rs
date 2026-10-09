@@ -1,5 +1,3 @@
-#[path = "tests_basic.rs"]
-mod tests_basic;
+pub mod basic;
+pub mod complex;
 
-#[path = "tests_complex.rs"]
-mod tests_complex;

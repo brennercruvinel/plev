@@ -13,18 +13,12 @@
 
 mod error;
 pub mod stream;
-
-#[cfg(feature = "text")]
-pub mod chat;
-#[cfg(feature = "text")]
-pub mod text;
-
-#[cfg(feature = "burn")]
-pub mod burn;
-#[cfg(feature = "candle")]
-pub mod candle;
 #[cfg(feature = "plev")]
-pub mod plev;
+pub mod engine;
+pub mod models;
+pub mod prompt;
+
+
 
 pub use error::LlmError;
 pub use stream::{Cancel, Event, Model, Request, Stop, Stream, Token};

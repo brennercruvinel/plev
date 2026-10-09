@@ -1,13 +1,13 @@
 //! Per-widget behavior tests, one file per comps category, over the
 //! helpers below (a shared bounds rect, pointer events, a click).
 
-mod action;
 mod content;
 mod feedback;
 mod fixtures;
 mod form;
 mod nav;
 mod semantics;
+mod buttons;
 
 use crate::core::*;
 use crate::prelude::*;

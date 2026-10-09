@@ -8,6 +8,7 @@ pub mod menu;
 pub mod notify;
 pub mod print;
 pub mod tray;
+pub mod clipboard;
 use winit::window::Window;
 
 /// Safe area insets in physical pixels.

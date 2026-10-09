@@ -37,9 +37,9 @@ mod control;
 mod describe;
 mod index;
 mod summary;
-pub mod text;
 mod timeline;
 mod why;
+pub mod prose;
 
 pub use control::Control;
 pub use index::{Inspector, Stamp};

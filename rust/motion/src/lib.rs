@@ -5,7 +5,7 @@
 //! v0 ground work, backend before ui:
 //! - [`ir`]: the codec's own node and timeline model, decoupled from
 //!   `engine::SceneNode` so the frozen format never chases the internal
-//!   enum; the player lowers `ir::Node` to `SceneNode` at render time
+//!   enum; the player lowers `timeline::Node` to `SceneNode` at render time
 //! - [`easing`]: presets mirroring `engine::animation::Easing` plus the
 //!   1-byte wire ids and the custom cubic bezier escape (0xFF)
 //! - [`quant`]: pure quantization primitives, f32 in memory and
@@ -39,28 +39,18 @@
 //! the `script` cargo feature is reserved for the rhai sidecar and is
 //! intentionally empty in v0.
 
-pub mod asset_path;
-pub mod container;
 pub mod discover;
-mod discover_fit;
-pub mod easing;
-pub mod ir;
-pub mod lower;
 pub mod optimize;
 pub mod play;
-mod play_eval;
-pub mod quant;
-pub mod raise;
-pub mod read;
-mod read_sec;
-mod validate;
-pub mod write;
+pub mod encoding;
+pub mod mappings;
+pub mod timeline;
 
 pub use container::{Asset, AssetKind, Desc, stage_size};
 pub use discover::{DiscoverConfig, DiscoverError, discover};
 pub use discover_fit::quantize_value;
 pub use easing::Easing;
-pub use ir::{
+pub use timeline::{
     AssetId, Depth, IrError, Keyframe, Node, NodeId, NodeKind, PlaceNode, Prop, Props, RemoveNode,
     ReplaceNode, Segment, Timeline, Track, Value,
 };
@@ -73,5 +63,3 @@ pub use raise::{
 pub use read::{Document, ReadError, decode};
 pub use write::{WriteError, encode};
 
-#[cfg(test)]
-mod tests;

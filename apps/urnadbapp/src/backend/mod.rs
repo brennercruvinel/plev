@@ -16,25 +16,12 @@
 //! The explorer talks to [`Worker`], the platform alias with an identical
 //! `spawn`/`send`/`try_recv` surface.
 
-pub mod bench;
-pub mod types;
-pub mod urnaread;
+pub mod benchmark;
+pub mod sources;
+pub mod workers;
 
-#[cfg(not(target_arch = "wasm32"))]
-pub mod backend;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod embed;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod frames;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod recents;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod subprocess;
-#[cfg(not(target_arch = "wasm32"))]
-pub mod worker;
 
-#[cfg(target_arch = "wasm32")]
-pub mod web;
+
 
 #[cfg(target_arch = "wasm32")]
 pub use web::WebWorker as Worker;

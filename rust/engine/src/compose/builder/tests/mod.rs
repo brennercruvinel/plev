@@ -6,6 +6,7 @@
 mod emit;
 mod layout;
 mod styles;
+mod intent;
 
 use crate::view::ViewContext;
 

@@ -3,6 +3,9 @@
 //! refusals. the gallery and the socket are in crates/rec/tests/scene.rs
 //! and crates/showcase/tests/mirror.rs.
 
+#[cfg(test)]
+mod mask;
+
 use engine::compositor::{Compositor, LayerEffect, LayerId, QuadVertex, SceneNode, TextNodeKey};
 use engine::gpu::load_image_rgba;
 use engine::path::TessellatedPath;

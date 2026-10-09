@@ -38,14 +38,10 @@
 //! and the arrows reach the sliders through `handle_edit_key`, Enter
 //! proposes through `handle_enter`, Escape through `handle_escape`.
 
-mod draw;
-mod generated;
-mod jobs;
-mod layout;
-mod semantics;
 #[cfg(test)]
 mod tests;
-mod worker;
+pub mod fixed_page;
+mod generative;
 
 use std::collections::HashMap;
 use std::time::Duration;
@@ -60,7 +56,7 @@ use surface::{Dispatch, SurfaceHost};
 use super::app::TodoPage;
 use super::{EditKey, panel};
 use crate::view::clipboard::Keys;
-use generated::{Generated, Halves, page::Page};
+use generative::{Generated, Halves, page::Page};
 use layout::{compute, row_parts};
 use semantics::{Ids, Target, Which};
 use worker::{POLL, Worker};

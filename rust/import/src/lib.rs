@@ -29,26 +29,14 @@
 //! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 
-pub mod css_map;
 pub mod emit;
-pub mod emit_ir;
-pub mod figma;
-pub mod gpui;
-pub(crate) mod gpui_ir;
-pub mod html;
-pub mod html_map;
-pub mod ir;
 pub mod report;
-pub mod resolve_figma;
-pub mod resolve_gpui;
-pub mod resolve_html;
-pub mod resolve_react;
-pub mod sass;
 pub mod tokens;
-pub mod tsx;
+pub mod formats;
+pub mod tree;
 
 pub use emit_ir::{Imported, emit_ir};
-pub use ir::{Dropped, Resolution, Transpiled};
+pub use tree::{Dropped, Resolution, Transpiled};
 pub use report::{Binding, Category, Entry, Need, Report, Verdict};
 pub use tokens::{Tokens, TypeStyle, Value};
 

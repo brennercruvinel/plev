@@ -1,6 +1,6 @@
 mod components;
-mod scene3d;
 mod theme;
+mod render;
 
 use std::sync::Arc;
 
@@ -12,7 +12,7 @@ use engine::winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEv
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
 use engine::winit::window::{Window, WindowAttributes, WindowId};
 
-use scene3d::{ClinicScene, OrbitCamera, Pipeline3D, Uniforms3D};
+use render::{ClinicScene, OrbitCamera, Pipeline3D, Uniforms3D};
 
 #[allow(clippy::large_enum_variant)]
 enum State {

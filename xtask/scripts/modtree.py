@@ -27,7 +27,7 @@ for _e in plevmap.load():
         MOVES[_e["from"]] = _e["to"]
 
 DECL = re.compile(
-    r"(?P<attrs>(?:[ \t]*#\[[^\]]*(?:\[[^\]]*\][^\]]*)*\][ \t]*\n)*)"
+    r"(?P<attrs>(?:[ \t]*(?:///[^\n]*|#\[[^\]]*(?:\[[^\]]*\][^\]]*)*\])[ \t]*\n)*)"
     r"(?P<indent>[ \t]*)(?P<vis>pub(?:\([^)]*\))?\s+)?mod\s+(?P<name>[a-z_][a-z0-9_]*)\s*;[ \t]*\n",
     re.M,
 )
@@ -135,6 +135,10 @@ def fix_module(path, check):
         if m is not None:
             attrs = re.sub(r"[ \t]*#\[path\s*=\s*\"[^\"]*\"\][ \t]*\n", "", m.group("attrs"))
             vis = m.group("vis") or ""
+            # a private module that moved under a new grouping module keeps
+            # the reach it had: its old parent is the new grandparent
+            if not vis and path not in REV:
+                vis = "pub(super) "
             # renamed in place: the same parent file declared it under the old name
             if old_name and old_name != name and REV.get(path) == old_parent:
                 renames[old_name] = name

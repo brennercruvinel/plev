@@ -5,18 +5,18 @@
 
 pub mod coherence;
 pub mod grid;
-pub mod params;
 pub mod particle;
 pub mod physics;
 pub mod primes;
-pub mod rng;
+pub mod parameters;
+pub mod random;
 
 use crate::color::particle_color;
 use coherence::CoherenceMatrix;
 use grid::Grid;
 use particle::Particle;
 use physics::Bond;
-use rng::Rng;
+use random::Rng;
 use std::f32::consts::TAU;
 
 /// the whole simulation: the swarm, the prime tables, the coherence matrix,
@@ -26,7 +26,7 @@ pub struct Simulation {
     particles: Vec<Particle>,
     primes: Vec<u32>,
     matrix: CoherenceMatrix,
-    mode: params::CohMode,
+    mode: parameters::CohMode,
     modulus: u32,
     rng: Rng,
     grid: Grid,
@@ -40,11 +40,11 @@ pub struct Simulation {
 
 impl Simulation {
     /// a new simulation filling a `width` x `height` field, seeded for
-    /// reproducibility. spawns `params::RESET_COUNT` particles.
+    /// reproducibility. spawns `parameters::RESET_COUNT` particles.
     pub fn new(width: f32, height: f32, seed: u64) -> Self {
-        let primes = primes::generate_primes(params::MAX_PRIME_INDEX);
-        let mode = params::CohMode::default();
-        let modulus = params::DEFAULT_MODULUS;
+        let primes = primes::generate_primes(parameters::MAX_PRIME_INDEX);
+        let mode = parameters::CohMode::default();
+        let modulus = parameters::DEFAULT_MODULUS;
         let matrix = CoherenceMatrix::build(&primes, mode, modulus);
         let mut sim = Self {
             particles: Vec::new(),
@@ -70,8 +70,8 @@ impl Simulation {
         self.width = width.max(1.0);
         self.height = height.max(1.0);
         self.particles.clear();
-        let pad = params::SPAWN_PAD;
-        for _ in 0..params::RESET_COUNT {
+        let pad = parameters::SPAWN_PAD;
+        for _ in 0..parameters::RESET_COUNT {
             let x = self.rng.range(pad, (self.width - pad).max(pad + 1.0));
             let y = self.rng.range(pad, (self.height - pad).max(pad + 1.0));
             let particle = self.make_particle(x, y);
@@ -98,13 +98,13 @@ impl Simulation {
     pub fn brush(&mut self, x: f32, y: f32) {
         if self.rng.next_f32() > 0.5 {
             let angle = self.rng.range(0.0, TAU);
-            let r = self.rng.range(0.0, params::BRUSH_SIZE);
+            let r = self.rng.range(0.0, parameters::BRUSH_SIZE);
             self.spawn_at(x + angle.cos() * r, y + angle.sin() * r);
         }
     }
 
     fn make_particle(&mut self, x: f32, y: f32) -> Particle {
-        let prime_index = self.rng.below(params::MAX_PRIME_INDEX);
+        let prime_index = self.rng.below(parameters::MAX_PRIME_INDEX);
         let prime_value = self.primes[prime_index];
         let phase = self.rng.range(0.0, TAU);
         let phase_rate = 0.01 + self.rng.range(0.0, 0.01);
@@ -114,7 +114,7 @@ impl Simulation {
             y,
             prime_index,
             prime_value,
-            params::MASS,
+            parameters::MASS,
             phase,
             phase_rate,
             color,
@@ -135,10 +135,10 @@ impl Simulation {
         for particle in self.particles.iter_mut() {
             particle.x = particle
                 .x
-                .clamp(params::BOUNCE_PAD, self.width - params::BOUNCE_PAD);
+                .clamp(parameters::BOUNCE_PAD, self.width - parameters::BOUNCE_PAD);
             particle.y = particle
                 .y
-                .clamp(params::BOUNCE_PAD, self.height - params::BOUNCE_PAD);
+                .clamp(parameters::BOUNCE_PAD, self.height - parameters::BOUNCE_PAD);
         }
     }
 
@@ -146,7 +146,7 @@ impl Simulation {
     /// physics is frame-based (the demo's model), so a step is a step.
     pub fn step(&mut self, _dt: f32) {
         self.grid
-            .rebuild(&self.particles, self.width, self.height, params::GRID_SIZE);
+            .rebuild(&self.particles, self.width, self.height, parameters::GRID_SIZE);
         physics::accumulate(
             &self.particles,
             &mut self.forces,
@@ -185,14 +185,14 @@ mod tests {
     #[test]
     fn spawns_the_reset_count() {
         let sim = Simulation::new(900.0, 700.0, 1);
-        assert_eq!(sim.particles().len(), params::RESET_COUNT);
+        assert_eq!(sim.particles().len(), parameters::RESET_COUNT);
     }
 
     #[test]
     fn stays_in_bounds_and_finite_after_many_steps() {
         let mut sim = Simulation::new(900.0, 700.0, 7);
         for _ in 0..600 {
-            sim.step(params::FIXED_DT);
+            sim.step(parameters::FIXED_DT);
         }
         for particle in sim.particles() {
             assert!(
@@ -216,7 +216,7 @@ mod tests {
         let run = |seed| {
             let mut sim = Simulation::new(900.0, 700.0, seed);
             for _ in 0..120 {
-                sim.step(params::FIXED_DT);
+                sim.step(parameters::FIXED_DT);
             }
             sim.particles()
                 .iter()
@@ -233,7 +233,7 @@ mod tests {
         let start: Vec<_> = sim.particles().iter().map(|p| (p.x, p.y)).collect();
         let mut saw_bonds = false;
         for _ in 0..120 {
-            sim.step(params::FIXED_DT);
+            sim.step(parameters::FIXED_DT);
             saw_bonds |= !sim.bonds().is_empty();
         }
         let moved = sim

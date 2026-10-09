@@ -1,6 +1,8 @@
 //! A small app projection shaped like the ide's, its registry, and a valid
 //! IR over it that each rule test breaks in one place.
 
+pub mod jsonschema;
+
 use std::collections::BTreeSet;
 
 use sem::{Actors, Confirm, Constraints, ParamSpec, Policy, Role, SnapshotBuilder, ValueKind};

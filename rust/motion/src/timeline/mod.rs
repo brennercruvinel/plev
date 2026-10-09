@@ -7,6 +7,10 @@
 //! snapshot = O(1) random access (decision 2). interframe = per-node,
 //! per-property segment chains the renderer interpolates (decision 3).
 
+pub mod easing;
+#[cfg(test)]
+mod tests;
+
 use crate::easing::Easing;
 
 /// Instance identity of a node across keyframes and tracks.

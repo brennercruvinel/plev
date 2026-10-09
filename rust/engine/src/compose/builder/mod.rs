@@ -5,11 +5,10 @@ mod render;
 mod style;
 #[cfg(test)]
 mod tests;
-mod tests_intent;
-mod traits;
-mod types;
+mod conversions;
+mod output;
 
 pub use element::*;
 pub use style::*;
-pub use traits::*;
-pub use types::*;
+pub use conversions::*;
+pub use output::*;

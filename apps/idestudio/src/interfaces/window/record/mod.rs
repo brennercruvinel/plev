@@ -28,6 +28,8 @@
 //! nothing leaves the machine. Without the variable nothing is created: no
 //! recorder, no directory, no key.
 
+mod shell;
+
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};

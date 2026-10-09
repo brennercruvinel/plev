@@ -1,9 +1,10 @@
 //! Tests for the narrate runtime interpreter: tokenizer and parser.
 
+mod extraction;
+
 use super::*;
 use crate::view::{View, ViewContext};
 
-mod extraction_tests;
 
 fn render(el: &Element) -> Vec<crate::compositor::SceneNode> {
     el.render(&mut ViewContext::new(800.0, 600.0))

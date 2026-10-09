@@ -43,7 +43,6 @@
 //! a verified surface by small operations, each verified again and with
 //! its inverse, is `transform` (task-70).
 
-mod caps;
 mod decode;
 mod error;
 mod ir;
@@ -53,9 +52,10 @@ mod schema;
 mod token;
 mod transform;
 mod verify;
-mod vocab;
+mod capabilities;
+mod vocabulary;
 
-pub use caps::{ActionCap, Capabilities, DataCap};
+pub use capabilities::{ActionCap, Capabilities, DataCap};
 pub use decode::{decode, parse};
 pub use error::{IrError, Rule};
 pub use ir::{Bind, CapabilityRef, ITEM, Ir, IrNode, Repeat, Surface, VERSION};
@@ -70,7 +70,7 @@ pub use transform::{
     TransformError,
 };
 pub use verify::{VerifiedIr, verify, verify_json};
-pub use vocab::{
+pub use vocabulary::{
     CONTAINER, ChartKind, Component, Event, LineKind, Named, Spec, StateProp, is_control, names,
     role_of, spec_of,
 };

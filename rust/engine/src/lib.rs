@@ -1,62 +1,23 @@
 // -- Error
 pub mod error;
 
-// -- Rendering
-pub mod compositor;
-pub mod effects;
-pub mod gpu;
-pub mod path;
+// -- Composing: builder, layout, views, animation, the markup runtime
+pub mod compose;
 
-// -- Text
-pub mod text;
+// -- Control: input and events, touch and gestures, the keymap, accessibility
+pub mod control;
 
-// -- Clipboard (trait + system/local providers; the editor widget in
-// -- `comps` and any app that wants "copy to clipboard" both come here)
-pub mod clipboard;
+// -- Drawing: compositor, GPU, text, paths, effects, the headless frame path
+pub mod drawing;
 
-// -- Graph canvas geometry (CSR layout + pan/zoom transform; the widget
-// -- that pans and zooms it is `comps::graph::GraphView`)
-pub mod graph;
+// -- Runtime: window and event loop, signals, platform, performance, hot reload
+pub mod runtime;
 
-// -- Input & Events
-pub mod actions;
-pub mod input;
+// -- Styling: color and the theme's tokens
+pub mod styling;
 
-// -- Reactive & Components
-pub mod builder;
-pub mod component;
-pub mod signal;
-pub mod view;
-
-// -- Tokens & Layout (the widgets themselves live in the `comps` crate)
-pub mod color;
-pub mod layout;
-pub mod theme;
-
-// -- Animation
-pub mod animation;
-
-// -- Performance instrumentation
-pub mod perf;
-
-// -- Platform
-pub mod platform;
-pub mod window;
-
-// -- Headless (the window's frame path into an offscreen texture; native
-// -- only: its constructor blocks on the adapter)
-#[cfg(not(target_arch = "wasm32"))]
-pub mod headless;
-
-// -- Accessibility
-#[cfg(feature = "accessibility")]
-pub mod accessibility;
-
-// -- Hot Reload
-#[cfg(hot_reload)]
-pub mod hot_reload;
-#[cfg(hot_reload)]
-pub mod narrate_runtime;
+// -- Widgets: the design system, one category per module (the former `comps`)
+pub mod widgets;
 
 pub use macros::component;
 

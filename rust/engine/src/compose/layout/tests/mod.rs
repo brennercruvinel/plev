@@ -6,6 +6,8 @@
 mod flex;
 mod measure;
 mod percent;
+#[cfg(test)]
+mod perf;
 
 use super::*;
 

@@ -1,5 +1,10 @@
 //! Headless editor tests: no GPU, no OS clipboard, real text shaping.
 
+#[cfg(test)]
+mod bidi;
+#[cfg(test)]
+mod large;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 

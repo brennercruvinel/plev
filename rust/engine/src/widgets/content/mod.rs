@@ -11,6 +11,8 @@ mod skeleton;
 mod stat;
 mod table;
 mod tree;
+mod badge;
+mod chip;
 
 pub use avatar::{Avatar, AvatarSize};
 pub use card::{Card, CardListRow, CardVariant};

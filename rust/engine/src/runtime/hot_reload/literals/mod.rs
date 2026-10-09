@@ -622,8 +622,6 @@ mod tests {
             }
             #[cfg(test)]
             pub(crate) fn helper(x: u32) -> Vec<&'static str> { vec!["in a test fn"] }
-            #[cfg(test)]
-            mod out_of_line;
             #[cfg(not(test))]
             fn g() -> &'static str { "not test" }
             fn f() -> &'static str { "in a fn" }

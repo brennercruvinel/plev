@@ -6,12 +6,12 @@
 //! timer-based game tick, keyboard input, dirty tracking.
 #![allow(dead_code)]
 
-mod rendering;
 mod state;
 mod ui;
+mod render;
 
 use engine::winit::event_loop::EventLoop;
-use rendering::SnakeApp;
+use render::SnakeApp;
 
 fn main() {
     env_logger::init();

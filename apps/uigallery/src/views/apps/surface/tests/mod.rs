@@ -455,10 +455,6 @@ mod measure;
 /// dispatcher, and a change of form keeps each item's instance.
 mod items;
 
-/// The intent field and the propose button: a person proposes, the
-/// surface takes the form in place; a refusal says why; the page's
-/// `Operable` leaves the todo as the todo's own path does.
-mod proposals;
 
 /// The Claude asked from the page, against the fake claude: the request
 /// starts and the page goes on, the answer arrives through the wake, a
@@ -466,6 +462,10 @@ mod proposals;
 /// real port; the real claude in one ignored test.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod claude;
+/// The intent field and the propose button: a person proposes, the
+/// surface takes the form in place; a refusal says why; the page's
+/// `Operable` leaves the todo as the todo's own path does.
+mod offers;
 
 /// Two columns where the width allows, one where it does not: at a
 /// phone's width the second form wraps and nothing of the surface

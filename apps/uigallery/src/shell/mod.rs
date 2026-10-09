@@ -29,6 +29,9 @@
 //! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
 //! GPU init blocks inside `resumed` instead.
 
+pub mod system;
+pub mod window;
+
 use crate::view::ShowcaseView;
 use comps::prelude::WidgetEvent;
 use engine::animation::FrameClock;
@@ -536,9 +539,6 @@ impl Default for App {
     }
 }
 
-/// The per-platform entry points: desktop `run`, browser `run_web`,
-/// android `android_main`, iOS `showcase_ios_main`.
-mod entry;
 #[cfg(target_os = "android")]
 pub use entry::android_main;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
@@ -553,67 +553,17 @@ pub use entry::showcase_ios_main;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod headless;
 
-mod events;
-mod pace;
-/// Asleep, covered, awake again (task-76 item 7).
-mod sleep;
-mod touch;
 
-/// The app's URL scheme: a link followed as a link, never as the person
-/// (task-76 item 6).
-pub mod links;
 
-/// The camera and the microphone follow the windows (task-76 item 10).
-mod capture;
 
-/// The page in a window of its own (task-76 item 2), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod detached;
 
-/// The native menu bar (task-76 item 4), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod menu;
 
-/// The tray icon with the shell's menu (task-76 item 5), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod tray;
 
-/// The system notifications, and the focus that decides them (task-76
-/// item 5), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod notify;
 
-/// The page on paper: the platform's printer and the print keys (task-76
-/// item 9), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod print;
 
-/// `PLEV_BACKGROUND=1`: the window comes up without taking the focus.
-#[cfg(target_os = "macos")]
-mod background;
 
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-mod access;
-/// The windows' scenes over the agent port, and the viewer's side of a
-/// watch (task-79), desktop only.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub mod mirror;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use access::Access;
 
-/// `PLEV_RECORD=1` in a debug build: the session recorded for the
-/// inspector, as the ide records its own.
-#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub mod record;
 
-/// cmd+click to the code: desktop debug builds, the terms on which the
-/// engine compiles `hot_reload` (its build.rs), so nothing of it exists in
-/// release, wasm or mobile.
-#[cfg(all(
-    debug_assertions,
-    any(target_os = "macos", target_os = "linux", target_os = "windows")
-))]
-mod source;

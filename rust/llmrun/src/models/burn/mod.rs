@@ -5,7 +5,7 @@
 mod cache;
 mod load;
 mod model;
-mod rope;
+mod rotary;
 
 use std::path::Path;
 
@@ -15,7 +15,7 @@ use burn::tensor::{Element, ElementConversion, Int, Tensor, TensorData};
 use crate::{Device, Info, LlmError, Model};
 use cache::KvCache;
 use model::Llama;
-use rope::Rope;
+use rotary::Rope;
 
 pub use burn::nn::LinearLayout;
 pub use model::Spec;

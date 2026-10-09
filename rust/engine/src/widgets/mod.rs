@@ -35,13 +35,11 @@
 //! - [`wake`]: what a tick asks of the loop (a frame now, the next
 //!   deadline), and the caret clock the text widgets share
 
-pub mod core;
 pub mod recipe;
 pub mod wake;
 
 pub mod icons;
 
-pub mod action;
 pub mod content;
 pub mod feedback;
 pub mod form;
@@ -55,8 +53,10 @@ pub mod shell;
 
 #[cfg(test)]
 mod tests;
+pub mod buttons;
+pub mod widget;
 
-pub use core::{EventResult, Rect, WidgetEvent};
+pub use widget::{EventResult, Rect, WidgetEvent};
 pub use engine::theme::{self, Intent, Theme};
 pub use wake::Wake;
 

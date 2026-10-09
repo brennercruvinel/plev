@@ -1,5 +1,8 @@
 //! Tests for the view module.
 
+#[cfg(test)]
+mod lifecycle;
+
 use super::*;
 use crate::compositor::{SceneNode, TextNodeKey};
 use crate::layout::{ComputedBounds, LayoutStyle};

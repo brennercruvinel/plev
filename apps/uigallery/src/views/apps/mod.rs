@@ -7,7 +7,6 @@
 //! the capture page, the camera and the microphone a person turns on
 //! (task-76 item 10).
 
-pub mod app;
 pub mod builder;
 pub mod capture;
 pub mod dock;
@@ -15,6 +14,7 @@ pub mod editor;
 pub mod files;
 pub mod git;
 pub mod silences;
-pub mod surface_page;
+pub mod surface;
+pub mod todo;
 
 pub(crate) use super::{EditKey, group_label, panel, text, with_alpha};

@@ -1,5 +1,7 @@
 //! Core signal tests: signal read/write, effects, memos, batch, diamond.
 
+mod advanced;
+
 #[cfg(test)]
 // The inner module only carries the cfg(test) gate for this
 // tests.rs file; the same-name nesting is deliberate.

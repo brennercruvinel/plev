@@ -3,12 +3,12 @@
 //! helper declares role, label, state and actions from the widget the app
 //! owns. one file per comps category; the helpers below are shared.
 
-mod action;
 mod content;
 mod feedback;
 mod form;
 mod nav;
 mod roving;
+mod buttons;
 
 use super::*;
 use sem::{

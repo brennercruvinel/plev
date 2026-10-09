@@ -3,13 +3,12 @@
 //! creating a request, the ring within its limits, where each bound
 //! control showed in each frame.
 
-mod apps;
 mod bound;
 mod file;
-mod measure;
-mod replay;
 mod ring;
 mod secret;
 mod semantic;
 mod thesis;
 mod visual;
+mod readback;
+mod toys;

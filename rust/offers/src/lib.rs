@@ -55,7 +55,6 @@ mod error;
 mod ids;
 mod list;
 mod llm;
-mod ops;
 mod parts;
 mod prompt;
 mod reshape;
@@ -63,6 +62,7 @@ mod review;
 mod row;
 mod rules;
 mod words;
+mod operations;
 
 pub use adapt::{Adapt, Adaptation, Transformed, Transformer, transform_verified};
 pub use change::{CHANGES, reads_as_change};

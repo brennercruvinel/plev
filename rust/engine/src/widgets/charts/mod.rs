@@ -21,10 +21,10 @@ mod axis;
 mod bars;
 mod donut;
 mod line;
-#[cfg(test)]
-mod tests_donut;
 
 pub mod draw;
+#[cfg(test)]
+mod tests;
 
 pub use area::{AreaBand, StackedArea, stacked_area};
 pub use axis::{Axis, format_tick, nice_ticks};

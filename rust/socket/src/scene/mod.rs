@@ -39,6 +39,8 @@
 //! ended a watch (`take_scene_watches`), and the host hears a watch that
 //! begins as an observation of its actor (`Host::observed`).
 
+mod read;
+
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 

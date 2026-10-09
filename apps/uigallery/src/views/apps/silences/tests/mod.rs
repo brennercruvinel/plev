@@ -11,7 +11,7 @@
 mod agent;
 mod composites;
 mod ffmpeg;
-mod generated;
+mod generative;
 
 use comps::prelude::{Rect, WidgetEvent};
 use engine::compositor::{Compositor, SceneNode};

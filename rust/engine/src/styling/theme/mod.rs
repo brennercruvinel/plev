@@ -1,13 +1,9 @@
-mod button;
 mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
 mod scales;
 mod tests;
-mod tests_oklch;
-#[cfg(test)]
-mod tests_scales;
 mod tokens;
 
 pub use crate::theme::button::{

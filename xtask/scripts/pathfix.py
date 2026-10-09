@@ -112,6 +112,9 @@ class File:
         self.lib_file = bool(oc and plevmap.lib_module(old, oc) is not None)
         # a path to its own crate is `crate::` only from inside the library
         self.new_lib_file = bool(nc and plevmap.lib_module(path, nc) is not None)
+        self.old_mod = plevmap.lib_module(old, oc) if self.lib_file else None
+        self.new_mod = plevmap.lib_module(path, nc) if self.new_lib_file else None
+        self.inline_depth = []  # per token index: inline `mod x {` nesting
         self.shadow = set()
         for m in re.finditer(r"\bmod\s+([a-z_][a-z0-9_]*)", src):
             self.shadow.add(m.group(1))
@@ -135,7 +138,41 @@ class File:
             return "$crate" if own else new_lib
         return "crate" if own else new_lib
 
-    def translate(self, root, segs):
+    def translate_super(self, names, depth):
+        """`super::...::rest` from a file whose module moved: the old target,
+        translated, expressed again relative to the new module."""
+        if self.old_mod is None or self.new_mod is None:
+            return None
+        k = 0
+        while k < len(names) and names[k] == "super":
+            k += 1
+        if k <= depth:
+            return None  # stays inside the file's inline modules
+        k -= depth
+        if k > len(self.old_mod):
+            return None
+        target = self.old_mod[: len(self.old_mod) - k] + names[k + depth:]
+        new_lib, new_target = plevmap.translate(TABLE, self.old_lib, target)
+        if new_lib != self.new_lib:
+            return None
+        # longest prefix shared with the new module
+        c = 0
+        while (c < len(self.new_mod) and c < len(new_target)
+               and self.new_mod[c] == new_target[c]):
+            c += 1
+        ups = len(self.new_mod) - c
+        if ups == 0:
+            rel = ["self"] + new_target[c:]
+        else:
+            rel = ["super"] * ups + new_target[c:]
+        out = ["super"] * depth + rel if depth else rel
+        if depth and rel[0] == "self":
+            out = ["super"] * depth + rel[1:]
+        return out
+
+    def translate(self, root, segs, depth=0):
+        if root == "super":
+            return self.translate_super([root] + segs, depth)
         lib = self.root_lib(root)
         if lib is None:
             return None
@@ -145,11 +182,21 @@ class File:
     def run(self):
         t = self.toks
         i = 0
+        stack = []  # True for a brace that opened an inline module
         while i < len(t):
             k, text, _ = t[i]
             prev = t[i - 1] if i else None
+            if k == "brace":
+                if text == "{":
+                    is_mod = (i >= 2 and t[i - 2][1] == "mod" and t[i - 1][0] == "ident")
+                    stack.append(is_mod)
+                elif stack:
+                    stack.pop()
+                i += 1
+                continue
             if (k == "ident" and i + 1 < len(t) and t[i + 1][0] == "sep"
                     and not (prev and (prev[0] == "sep" or prev[1] == "."))):
+                self.depth = sum(stack)
                 i = self.path_at(i)
             else:
                 i += 1
@@ -173,10 +220,11 @@ class File:
     def path_at(self, i):
         segs, j, group = self.read_path(i)
         names = [self.toks[s][1] for s in segs]
-        new = self.translate(names[0], names[1:])
+        new = self.translate(names[0], names[1:], getattr(self, "depth", 0))
         if new is not None and new != names:
             self.replace_segs(segs, new)
-        if group is not None and self.root_lib(names[0]) is not None:
+        if group is not None and (self.root_lib(names[0]) is not None
+                                  or (names[0] == "super" and new is not None)):
             return self.group(group, names, new or names)
         return j
 
@@ -204,7 +252,7 @@ class File:
             segs, after, sub = self.read_path(j)
             names = [self.toks[s][1] for s in segs]
             full_old = old_prefix + names
-            full_new = self.translate(full_old[0], full_old[1:])
+            full_new = self.translate(full_old[0], full_old[1:], getattr(self, "depth", 0))
             if full_new is None:
                 full_new = new_prefix + names
             if full_new[:len(new_prefix)] == new_prefix:

@@ -6,11 +6,11 @@ mod pipelines;
 mod recover;
 mod surface;
 pub mod texture_pool;
-pub(crate) mod utils;
 pub mod vec;
 
 #[cfg(test)]
 mod tests;
+pub(crate) mod presets;
 
 pub use config::RenderConfig;
 pub use context::*;

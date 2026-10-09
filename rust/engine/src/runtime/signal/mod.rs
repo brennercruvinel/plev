@@ -18,7 +18,6 @@ mod api;
 pub(crate) mod execution;
 pub(crate) mod runtime;
 mod tests;
-mod tests_advanced;
 
 pub use api::*;
 pub use runtime::NodeId;

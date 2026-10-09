@@ -1,13 +1,13 @@
-mod types;
 
 #[cfg(test)]
 mod tests;
+mod item;
 
 use engine::animation::Spring;
 use engine::theme::MotionPhysics;
-use types::OverlayAnim;
+use item::OverlayAnim;
 
-pub use types::{MenuItem, Overlay, OverlayId, OverlayKind};
+pub use item::{MenuItem, Overlay, OverlayId, OverlayKind};
 
 /// Z-ordered stack of overlays (context menus, modals, tooltips).
 ///

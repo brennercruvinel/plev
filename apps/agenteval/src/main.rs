@@ -28,15 +28,9 @@ mod args;
 #[cfg(unix)]
 mod asked;
 #[cfg(unix)]
-mod bench;
-#[cfg(unix)]
 mod finish;
 #[cfg(unix)]
-mod gitarm;
-#[cfg(unix)]
 mod host;
-#[cfg(unix)]
-mod lab;
 #[cfg(unix)]
 mod refused;
 // the repository of the experiment lives in the lib (`ide::lab_repo`), so
@@ -47,13 +41,10 @@ use ide::lab_repo as repo;
 #[cfg(unix)]
 mod report;
 #[cfg(unix)]
-mod review;
-#[cfg(unix)]
-mod screenshot;
-#[cfg(unix)]
-mod scripted;
-#[cfg(unix)]
 mod story;
+pub mod arms;
+#[cfg(unix)]
+mod subject;
 
 #[cfg(unix)]
 fn main() {

@@ -1,3 +1,6 @@
+mod oklch;
+#[cfg(test)]
+mod scales;
 #[cfg(test)]
 // The inner module only carries the cfg(test) gate for this
 // tests.rs file; the same-name nesting is deliberate.
@@ -490,5 +493,4 @@ mod tests {
 // it sits on, WCAG 2.2 AA (task-75 phase 1): a file of its own, declared
 // from here.
 #[cfg(test)]
-#[path = "tests_contrast.rs"]
-mod tests_contrast;
+mod contrast;

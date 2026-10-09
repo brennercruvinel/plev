@@ -16,16 +16,14 @@ pub(crate) mod gpu_time;
 mod hud;
 mod memory;
 pub mod stages;
-mod window;
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_stages;
+mod samples;
 
 pub use hud::PerfHud;
 pub use memory::{MemoryStats, process_rss_bytes};
-pub use window::RollingWindow;
+pub use samples::RollingWindow;
 
 use crate::animation::AnimationTick;
 use crate::compositor::RenderStats;
@@ -91,7 +89,7 @@ impl PerfMonitor {
     ///
     /// The measured source is the frame's timestamp queries: with
     /// `RenderConfig::gpu_timestamps` on an adapter that has them and
-    /// stages on, `window::draw_frame` records the GPU's time as
+    /// stages on, `samples::draw_frame` records the GPU's time as
     /// [`stages::Stage::GpuSpan`], and the frame loop feeds
     /// [`stages::StageFrame::gpu_micros`] here. A loop that does not
     /// (the engine `App`'s own tail, `window/render.rs`, has no timestamps)

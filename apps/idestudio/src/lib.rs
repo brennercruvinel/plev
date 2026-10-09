@@ -10,14 +10,8 @@
 //! is the intent line and the host of generated surfaces the workbench
 //! holds beside the fixed views when the host turns it on (task-96).
 
-pub mod adapters;
-#[cfg(unix)]
-pub mod agent;
-mod generated;
-mod ids;
-pub mod lab_repo;
-pub mod record;
-pub mod session;
-pub mod status;
-pub mod views;
-pub mod workbench;
+pub mod capability;
+mod generative;
+pub mod interfaces;
+pub mod repository;
+

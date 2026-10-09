@@ -3,12 +3,12 @@
 //! reach the recorder, read back by the inspector; its text, its binary,
 //! and the proof that reading runs nothing.
 
-mod apps;
 mod cli;
 mod control;
 mod export;
 mod readonly;
-mod text;
 mod thesis;
 mod timeline;
 mod why;
+mod prose;
+mod toys;

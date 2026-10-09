@@ -1,12 +1,11 @@
 //! Action controls: the things a user presses (and the badges that
 //! annotate them).
 
-mod badge;
 mod button;
-mod chip;
 mod icon_button;
 mod press;
 mod submit_button;
+mod tokens;
 
 pub use badge::{Badge, BadgeKind};
 pub use button::{Button, ButtonSize, ButtonVariant};

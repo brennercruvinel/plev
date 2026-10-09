@@ -4,12 +4,12 @@ mod builder;
 mod tessellation;
 #[cfg(test)]
 mod tests;
-mod types;
+mod mesh;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 
 pub use builder::PathBuilder;
-pub use types::TessellatedPath;
+pub use mesh::TessellatedPath;
 
 static DEFAULT_TOLERANCE_BITS: AtomicU32 = AtomicU32::new(0.1f32.to_bits());
 

@@ -8,10 +8,8 @@
 //! positions (and therefore selections) across edits.
 
 pub mod document;
-pub mod history;
-pub mod movement;
-pub mod selection;
-pub mod transaction;
+#[cfg(test)]
+mod tests;
 
 pub use document::Document;
 pub use history::{CommitKind, History, UndoStep};
@@ -20,5 +18,3 @@ pub use ropey::{self, Rope};
 pub use selection::{Selection, SelectionSet};
 pub use transaction::{Bias, Edit, Transaction};
 
-#[cfg(test)]
-mod tests_bidi;

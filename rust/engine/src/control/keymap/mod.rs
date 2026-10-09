@@ -10,15 +10,15 @@
 //! declaratively-bound layer on top of it.
 
 pub mod context;
-pub mod keymap;
 pub mod keystroke;
 pub mod shortcuts;
-pub mod winit_keys;
+pub mod bindings;
+pub mod winit;
 
 pub use context::{ContextStack, KeyContext, Predicate, PredicateParseError};
-pub use keymap::{Keymap, KeymapError, KeymapMatcher, MatchResult};
+pub use bindings::{Keymap, KeymapError, KeymapMatcher, MatchResult};
 pub use keystroke::{InvalidKeystroke, Keystroke, Modifiers};
-pub use winit_keys::{keystroke_from_key_event, keystroke_from_logical_key};
+pub use winit::{keystroke_from_key_event, keystroke_from_logical_key};
 
 use std::any::Any;
 use std::fmt;

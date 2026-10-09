@@ -94,5 +94,3 @@ pub enum SceneError {
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_mask;

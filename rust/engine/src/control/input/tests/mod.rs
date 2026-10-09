@@ -1,3 +1,5 @@
+#[cfg(test)]
+mod hit;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta};
 
 use super::*;

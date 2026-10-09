@@ -10,14 +10,14 @@
 // (`showcase::model::...`) now that they live in the library.
 extern crate self as showcase;
 
-pub mod model;
 
-pub mod app;
-pub mod keys;
 pub mod renderer;
-pub mod view;
+pub mod domain;
+pub mod keyboard;
+pub mod shell;
+pub mod views;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub use app::run;
+pub use shell::run;
 #[cfg(target_arch = "wasm32")]
-pub use app::run_web;
+pub use shell::run_web;

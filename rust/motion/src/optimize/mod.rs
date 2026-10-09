@@ -26,6 +26,9 @@
 //! joint fixpoint and the collapse decisions are order-independent,
 //! so optimizing twice equals optimizing once.
 
+#[cfg(test)]
+mod tests;
+
 use crate::discover_fit::{dist, grid_step, value_of};
 use crate::easing::Easing;
 use crate::ir::{IrError, NodeId, Prop, Segment, Timeline, Track, Value};

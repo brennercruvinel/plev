@@ -4,8 +4,8 @@
 //! recorded here the way an app records them.
 
 mod accept;
-mod model;
 mod privacy;
 mod readonly;
 mod support;
 mod viewport;
+mod state;

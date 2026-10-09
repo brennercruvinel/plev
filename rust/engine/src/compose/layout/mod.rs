@@ -1,12 +1,10 @@
-mod engine;
-mod types;
 
-pub use engine::LayoutEngine;
-pub use types::{
+pub use solver::LayoutEngine;
+pub use style::{
     Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle, TextMeasureSpec,
 };
 
 #[cfg(test)]
 mod tests;
-#[cfg(test)]
-mod tests_perf;
+mod solver;
+mod style;

@@ -14,6 +14,8 @@
 //!   fixed, bezier u8), so decode(encode(t)) == t holds exactly for
 //!   grid-aligned timelines; the property tests generate those
 
+mod section;
+
 use crate::container::{
     Asset, Desc, MAGIC, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, SEC_SCRIPT, VERSION,
 };
