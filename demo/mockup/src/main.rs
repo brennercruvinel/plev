@@ -38,14 +38,14 @@ fn color_of(theme: &Theme, token: &str) -> Color {
         "theme.glass.edge_soft" => theme.glass.edge_soft,
         "theme.glass.edge" => theme.glass.edge,
         "theme.glass.button" => theme.glass.button,
-        "engine::theme::hoff::CARD_OVERLAY" => engine::styling::theme::hoff::CARD_OVERLAY,
-        t if t.starts_with("engine::theme::hoff::n2(") => {
+        "engine::styling::theme::hoff::CARD_OVERLAY" => engine::styling::theme::hoff::CARD_OVERLAY,
+        t if t.starts_with("engine::styling::theme::hoff::n2(") => {
             engine::styling::theme::hoff::n2(call(t).unwrap_or(1.0))
         }
-        t if t.starts_with("engine::theme::hoff::n3(") => {
+        t if t.starts_with("engine::styling::theme::hoff::n3(") => {
             engine::styling::theme::hoff::n3(call(t).unwrap_or(1.0))
         }
-        t if t.starts_with("engine::color::Color::rgba(") => {
+        t if t.starts_with("engine::styling::color::Color::rgba(") => {
             let inner = t.split_once('(').map(|(_, r)| r.trim_end_matches(')'));
             let v: Vec<f32> = inner
                 .unwrap_or("")

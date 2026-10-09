@@ -301,7 +301,7 @@ mod tests {
         assert_eq!(t.color_of("theme.glass.button"), Some([0.1, 0.1, 0.1, 0.7]));
         assert_eq!(t.color_of("theme.radius.xl"), None);
         assert_eq!(t.length_of("theme.radius.xl"), Some(32.0));
-        let n2 = t.color_of("engine::theme::hoff::n2(0.5)").unwrap();
+        let n2 = t.color_of("engine::styling::theme::hoff::n2(0.5)").unwrap();
         assert_eq!(n2[3], 0.5);
         t.sizes = vec![(SizeToken::CardW, 368.0), (SizeToken::DropdownMaxH, 320.0)];
         assert_eq!(t.sizes_of(true), vec![(SizeToken::DropdownMaxH, 320.0)]);

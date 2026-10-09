@@ -180,7 +180,7 @@ pub fn tokens(theme: &Theme) -> Tokens {
                 Value::Color(theme.glass.button.0),
             ),
             (
-                "engine::theme::hoff::CARD_OVERLAY".into(),
+                "engine::styling::theme::hoff::CARD_OVERLAY".into(),
                 Value::Color(engine::styling::theme::hoff::CARD_OVERLAY.0),
             ),
             ("theme.radius.xl".into(), Value::Length(theme.radius.xl)),

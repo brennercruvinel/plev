@@ -121,7 +121,7 @@ pub const NAMED_EXPRS: &[&str] = &[
     "theme.glass.edge_soft",
     "theme.glass.edge",
     "theme.glass.button",
-    "engine::theme::hoff::CARD_OVERLAY",
+    "engine::styling::theme::hoff::CARD_OVERLAY",
     "theme.radius.xl",
     "theme.effects.blur_sigma",
 ];
@@ -136,15 +136,15 @@ pub fn token_rgba(expr: &str) -> Option<[f32; 4]> {
         let inner = expr.strip_prefix(prefix)?.strip_suffix(')')?;
         inner.split(',').map(|v| v.trim().parse().ok()).collect()
     };
-    if let Some(a) = args("engine::theme::hoff::n2(") {
+    if let Some(a) = args("engine::styling::theme::hoff::n2(") {
         let g = 248.0 / 255.0;
         return Some([g, g, g, *a.first()?]);
     }
-    if let Some(a) = args("engine::theme::hoff::n3(") {
+    if let Some(a) = args("engine::styling::theme::hoff::n3(") {
         let g = 40.0 / 255.0;
         return Some([g, g, g, *a.first()?]);
     }
-    match args("engine::color::Color::rgba(")?.as_slice() {
+    match args("engine::styling::color::Color::rgba(")?.as_slice() {
         [r, g, b, a] => Some([*r, *g, *b, *a]),
         _ => None,
     }
@@ -308,12 +308,12 @@ pub fn color_token((r, g, b, a): (u8, u8, u8, f32)) -> String {
         (255, 255, 255) if close(a, 0.05) => "theme.glass.edge_soft".into(),
         (255, 255, 255) if close(a, 0.10) => "theme.glass.edge".into(),
         // Pre-composed card shell tone; see the hoff.rs compositing note.
-        (40, 40, 40) if close(a, 0.80) => "engine::theme::hoff::CARD_OVERLAY".into(),
+        (40, 40, 40) if close(a, 0.80) => "engine::styling::theme::hoff::CARD_OVERLAY".into(),
         (40, 40, 40) if close(a, 0.70) => "theme.glass.button".into(),
-        (248, 248, 248) => format!("engine::theme::hoff::n2({})", fmt_f32(a)),
-        (40, 40, 40) => format!("engine::theme::hoff::n3({})", fmt_f32(a)),
+        (248, 248, 248) => format!("engine::styling::theme::hoff::n2({})", fmt_f32(a)),
+        (40, 40, 40) => format!("engine::styling::theme::hoff::n3({})", fmt_f32(a)),
         _ => format!(
-            "engine::color::Color::rgba({}, {}, {}, {})",
+            "engine::styling::color::Color::rgba({}, {}, {}, {})",
             fmt_f32(r as f32 / 255.0),
             fmt_f32(g as f32 / 255.0),
             fmt_f32(b as f32 / 255.0),
@@ -382,7 +382,7 @@ mod tests {
             }
         }
         assert_eq!(token_rgba("theme.colors.text"), None);
-        assert_eq!(token_rgba("engine::theme::hoff::n2(x)"), None);
+        assert_eq!(token_rgba("engine::styling::theme::hoff::n2(x)"), None);
     }
 
     #[test]

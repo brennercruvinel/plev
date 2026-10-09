@@ -45,11 +45,11 @@ pub fn emit(res: &Resolution) -> String {
         builder_items.push("text");
     }
     out.push_str(&format!(
-        "use engine::builder::{{{}}};\n",
+        "use engine::compose::builder::{{{}}};\n",
         builder_items.join(", ")
     ));
     if uses_theme {
-        out.push_str("use engine::theme::Theme;\n");
+        out.push_str("use engine::styling::theme::Theme;\n");
     }
     out.push('\n');
     let params: Vec<String> = res

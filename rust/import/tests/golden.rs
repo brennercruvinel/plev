@@ -91,7 +91,7 @@ fn react_card_emits_the_known_chains() {
     for frag in [
         "pub fn hoff_research_card(children: Element, title: &str, content: &str) -> Element",
         ".w(368.0)",
-        ".bg(engine::theme::hoff::CARD_OVERLAY)",
+        ".bg(engine::styling::theme::hoff::CARD_OVERLAY)",
         ".backdrop_blur(theme.effects.blur_sigma)",
         ".rounded(theme.radius.xl)",
         "text(title)",

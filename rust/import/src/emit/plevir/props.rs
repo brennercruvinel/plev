@@ -657,7 +657,7 @@ mod tests {
         assert_eq!(role, Some(ColorRole::Surface));
         assert_eq!(d.verdict.category(), Category::Transformed);
         let (role, d) = color(
-            "engine::theme::hoff::n3(0.7)",
+            "engine::styling::theme::hoff::n3(0.7)",
             "background",
             &[src(1)],
             &t(),

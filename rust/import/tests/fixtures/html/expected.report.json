@@ -109,7 +109,7 @@
       "construct": ".note-card { background: #2e2e2e }",
       "ir": "props.background = surface",
       "node": "note_card.root",
-      "rule": "`engine::color::Color::rgba(0.18039216, 0.18039216, 0.18039216, 1.0)` is theme.colors.surface in the theme"
+      "rule": "`engine::styling::color::Color::rgba(0.18039216, 0.18039216, 0.18039216, 1.0)` is theme.colors.surface in the theme"
     },
     {
       "at": "note-card.html:21",
@@ -146,7 +146,7 @@
       "at": "note-card.html:27",
       "category": "approximated",
       "construct": ".meta { color: rgba(248, 248, 248, 0.66) }",
-      "difference": "`engine::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 25.5",
+      "difference": "`engine::styling::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 25.5",
       "ir": "props.color = text_mid",
       "node": "note_card.root.meta"
     },
@@ -573,7 +573,7 @@
       "at": "note-card.html:93",
       "category": "approximated",
       "construct": "style=\"color: #f8f8f8\"",
-      "difference": "`engine::theme::hoff::n2(1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
+      "difference": "`engine::styling::theme::hoff::n2(1.0)` is 12.75 levels from theme.colors.text, within its tolerance of 31.88",
       "ir": "props.color = text",
       "node": "note_card.root.badge"
     },
