@@ -253,7 +253,7 @@ impl LabHost<'_> {
         let req = match Request::observe(&live, Actor::Human, &target, "unstage", None) {
             Ok(req) => req,
             Err(e) => {
-                eprintln!("ide-lab: the person cannot unstage {path}: {e}");
+                eprintln!("agenteval: the person cannot unstage {path}: {e}");
                 return;
             }
         };

@@ -44,7 +44,7 @@ fn fake(dir: &Path, mode: &str, good: Option<&str>) -> ClaudeCli {
     }
     let mut cli = ClaudeCli::new();
     cli.program =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../claude-model/tests/fake-claude");
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../rust/claude/tests/fakes/claude");
     cli.dir = dir.to_owned();
     cli.timeout = Duration::from_secs(20);
     cli

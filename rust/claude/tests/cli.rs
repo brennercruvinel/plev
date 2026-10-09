@@ -34,7 +34,7 @@ fn read(rel: &str) -> String {
 
 /// the compact surface of the Surface page (the task-68 fixture).
 fn compact() -> String {
-    read("../uir/fixtures/showcase-todo.ir.json")
+    read("../plevir/tests/fixtures/uigallery-todo.ir.json")
 }
 
 /// what the proposer is asked about the todo projected, with the compact
@@ -49,7 +49,7 @@ struct Todo {
 impl Todo {
     fn new() -> Todo {
         let app: Snapshot =
-            serde_json::from_str(&read("../uir/fixtures/showcase-todo.snapshot.json")).unwrap();
+            serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-todo.snapshot.json")).unwrap();
         let caps = Capabilities::from_snapshot(&app);
         let policy = GenerationPolicy::default();
         let current = verify_json(&compact(), &caps, &policy).unwrap();
@@ -100,7 +100,7 @@ fn fake(mode: &str) -> (TempDir, ClaudeCli) {
         std::fs::write(dir.path().join(name), text).unwrap();
     }
     let mut cli = ClaudeCli::new();
-    cli.program = manifest("tests/fake-claude");
+    cli.program = manifest("tests/fakes/claude");
     cli.dir = dir.path().to_owned();
     (dir, cli)
 }

@@ -41,8 +41,8 @@ use crate::views::EditKey;
 use crate::views::ShowcaseView;
 use crate::views::apps::todo::TodoPage;
 
-const REVIEW: &str = "../surface/tests/fixtures/showcase-silences-review.ir.json";
-const COMPARE: &str = "../surface/tests/fixtures/showcase-silences-compare.ir.json";
+const REVIEW: &str = "../../rust/screen/tests/fixtures/uigallery-silences-review.ir.json";
+const COMPARE: &str = "../../rust/screen/tests/fixtures/uigallery-silences-compare.ir.json";
 
 fn fixture(rel: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(rel);
@@ -477,7 +477,7 @@ fn the_claude_answers_the_review_off_the_thread() {
     std::fs::write(dir.path().join("good"), good).unwrap();
     let mut cli = ClaudeCli::new();
     cli.program =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../claude-model/tests/fake-claude");
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../rust/claude/tests/fakes/claude");
     cli.dir = dir.path().to_owned();
     cli.timeout = Duration::from_secs(20);
     page.generated.proposing.set_claude(Claude::with(cli));

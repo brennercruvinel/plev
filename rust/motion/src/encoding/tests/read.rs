@@ -10,7 +10,7 @@ use crate::encoding::read::decode;
 use crate::encoding::tests::golden::golden_doc;
 use crate::encoding::write::encode;
 
-const GOLDEN: &[u8] = include_bytes!("../../fixtures/golden_v0_minimal.monster");
+const GOLDEN: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_minimal.monster");
 
 /// What the decoder must hand back for a value that went through the
 /// wire: the quantized-grid form of the authored value.

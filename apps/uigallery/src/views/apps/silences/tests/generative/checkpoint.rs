@@ -22,7 +22,7 @@ use super::super::{TURN, frame, images, narrow, setup, sid};
 use crate::views::ShowcaseView;
 
 /// The Claude's review of the checkpoint's first round, as IR.
-const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
+const CLAUDE: &str = "../../rust/plevir/tests/fixtures/silences-review-claude.ir.json";
 
 /// The intent of the checkpoint's rules round.
 const RULES: &str = "the list with the video and the counts";

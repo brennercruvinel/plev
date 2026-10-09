@@ -56,23 +56,23 @@ const EMBEDDED_LOCALE: &str = "en-US";
 /// `script/font-subset`. The order is the fallback order among faces of the
 /// same weight: SC before JP is the Han order, see the module docs.
 const NOTO: [&[u8]; 12] = [
-    include_bytes!("../../assets/fonts/NotoSansArabic-Regular.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansArabic-Bold.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansHebrew-Regular.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansHebrew-Bold.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansDevanagari-Regular.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansDevanagari-Bold.ttf"),
-    include_bytes!("../../assets/fonts/NotoSansSC-Regular.otf"),
-    include_bytes!("../../assets/fonts/NotoSansSC-Bold.otf"),
-    include_bytes!("../../assets/fonts/NotoSansJP-Regular.otf"),
-    include_bytes!("../../assets/fonts/NotoSansJP-Bold.otf"),
-    include_bytes!("../../assets/fonts/NotoSansKR-Regular.otf"),
-    include_bytes!("../../assets/fonts/NotoSansKR-Bold.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansArabic-Regular.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansArabic-Bold.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansHebrew-Regular.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansHebrew-Bold.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansDevanagari-Regular.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansDevanagari-Bold.ttf"),
+    include_bytes!("../../../assets/fonts/NotoSansSC-Regular.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansSC-Bold.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansJP-Regular.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansJP-Bold.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansKR-Regular.otf"),
+    include_bytes!("../../../assets/fonts/NotoSansKR-Bold.otf"),
 ];
 
 /// Noto Color Emoji, a CBDT subset (SIL OFL,
 /// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `script/font-subset`.
-const NOTO_EMOJI: &[u8] = include_bytes!("../../assets/fonts/NotoColorEmoji-CBDT.ttf");
+const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
 
 /// The faces a font system holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -149,21 +149,21 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     let before: std::collections::HashSet<ID> = db.faces().map(|f| f.id).collect();
 
     // Inclusive Sans (SIL OFL, assets/fonts/LICENSE-InclusiveSans-OFL.txt), the UI sans.
-    db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Light.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Regular.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Medium.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-SemiBold.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/InclusiveSans-Bold.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/InclusiveSans-Light.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/InclusiveSans-Regular.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/InclusiveSans-Medium.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/InclusiveSans-SemiBold.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/InclusiveSans-Bold.ttf").to_vec());
 
     // Inter (SIL OFL, assets/fonts/LICENSE-Inter-OFL.txt), the hoff core
     // design system's face; themes select it through
     // `TypographyScale::family`.
-    db.load_font_data(include_bytes!("../../assets/fonts/Inter-Regular.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/Inter-Medium.ttf").to_vec());
-    db.load_font_data(include_bytes!("../../assets/fonts/Inter-SemiBold.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/Inter-Regular.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/Inter-Medium.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf").to_vec());
 
     // Codicons, the VS Code icon font (CC BY 4.0; texto em assets/fonts/).
-    db.load_font_data(include_bytes!("../../assets/fonts/codicons.ttf").to_vec());
+    db.load_font_data(include_bytes!("../../../assets/fonts/codicons.ttf").to_vec());
 
     // The Noto faces load last, after every Latin face: a glyph the Latin
     // faces carry never reaches them. Borrowed from the binary instead of

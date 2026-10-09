@@ -77,12 +77,12 @@ const FORMS: [Form; 2] = [
     Form {
         label: "compact",
         caption: "the same capabilities, materialized from showcase-todo.ir.json",
-        ir: include_str!("../../../../uir/fixtures/showcase-todo.ir.json"),
+        ir: include_str!("../../../../../../rust/plevir/tests/fixtures/uigallery-todo.ir.json"),
     },
     Form {
         label: "two columns",
         caption: "the same capabilities, materialized from showcase-todo-columns.ir.json",
-        ir: include_str!("../../../../surface/tests/fixtures/showcase-todo-columns.ir.json"),
+        ir: include_str!("../../../../../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json"),
     },
 ];
 

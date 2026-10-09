@@ -50,7 +50,7 @@ impl std::fmt::Display for Site {
 
 /// Directory containing `.wgsl` shader source files.
 pub fn shader_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/gpu/shaders")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/drawing/gpu/shaders")
 }
 
 /// Read a shader source file from disk (hot-reload path).
@@ -73,15 +73,15 @@ pub fn shader_source(filename: &str) -> Cow<'static, str> {
 
 pub(crate) fn fallback_shader(filename: &str) -> &'static str {
     match filename {
-        "quad.wgsl" => include_str!("../gpu/shaders/quad.wgsl"),
-        "text.wgsl" => include_str!("../gpu/shaders/text.wgsl"),
-        "rect_sdf.wgsl" => include_str!("../gpu/shaders/rect_sdf.wgsl"),
-        "shadow_analytic.wgsl" => include_str!("../gpu/shaders/shadow_analytic.wgsl"),
-        "image.wgsl" => include_str!("../gpu/shaders/image.wgsl"),
-        "backdrop.wgsl" => include_str!("../gpu/shaders/backdrop.wgsl"),
-        "composite.wgsl" => include_str!("../gpu/shaders/composite.wgsl"),
-        "blur.wgsl" => include_str!("../gpu/shaders/blur.wgsl"),
-        "shadow.wgsl" => include_str!("../gpu/shaders/shadow.wgsl"),
+        "quad.wgsl" => include_str!("../../drawing/gpu/shaders/quad.wgsl"),
+        "text.wgsl" => include_str!("../../drawing/gpu/shaders/text.wgsl"),
+        "rect_sdf.wgsl" => include_str!("../../drawing/gpu/shaders/rect_sdf.wgsl"),
+        "shadow_analytic.wgsl" => include_str!("../../drawing/gpu/shaders/shadow_analytic.wgsl"),
+        "image.wgsl" => include_str!("../../drawing/gpu/shaders/image.wgsl"),
+        "backdrop.wgsl" => include_str!("../../drawing/gpu/shaders/backdrop.wgsl"),
+        "composite.wgsl" => include_str!("../../drawing/gpu/shaders/composite.wgsl"),
+        "blur.wgsl" => include_str!("../../drawing/gpu/shaders/blur.wgsl"),
+        "shadow.wgsl" => include_str!("../../drawing/gpu/shaders/shadow.wgsl"),
         _ => {
             log::error!("Unknown shader for fallback: {filename}");
             ""

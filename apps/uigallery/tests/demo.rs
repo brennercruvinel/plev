@@ -52,7 +52,7 @@ struct Demo {
 const RULES: Demo = Demo {
     fixture: concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/fixtures/demo/silences-demo.monster"
+        "/tests/fixtures/sessions/silences-demo.monster"
     ),
     review: REVIEW_BY_RULES,
     surface: "proposed",
@@ -64,7 +64,7 @@ const RULES: Demo = Demo {
 const CLAUDE: Demo = Demo {
     fixture: concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/fixtures/demo/silences-demo-claude.monster"
+        "/tests/fixtures/sessions/silences-demo-claude.monster"
     ),
     review: REVIEW,
     surface: "silence_review",

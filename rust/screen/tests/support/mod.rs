@@ -97,7 +97,7 @@ pub fn settle(surface: &mut Surface, area: Rect, theme: &Theme) -> (Compositor, 
 
 pub fn fixture(name: &str) -> String {
     let at = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../uir/fixtures")
+        .join("../plevir/tests/fixtures")
         .join(name);
     std::fs::read_to_string(&at).unwrap_or_else(|e| panic!("{}: {e}", at.display()))
 }

@@ -90,8 +90,7 @@ fn identical_shapes_dedup_to_one_asset() {
 // real artifact, guarded: convert one of the corpus svgs if present.
 #[test]
 fn corpus_svg_converts_when_present() {
-    let rel = "/../../refs/lottie/MONEY/interactivebototnbar/interativebtn/\
-               53fdc2f8-6c41-465c-92e7-ab540d2c90f6.svg";
+    let rel = "/../../data/media/lottie/buttontap/animation.svg";
     let path = concat!(env!("CARGO_MANIFEST_DIR"));
     let full = format!("{path}{rel}");
     let Ok(svg) = std::fs::read_to_string(&full) else {

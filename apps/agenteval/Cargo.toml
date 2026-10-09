@@ -8,7 +8,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-description = "`ide-lab`: the laboratory of the plev experiment (task-62, phase c)"
+description = "`agenteval`: the laboratory of the plev experiment (task-62, phase c)"
 
 [dependencies]
 idestudio.workspace = true

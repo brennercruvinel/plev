@@ -62,7 +62,7 @@ pub fn run(args: &Args) -> i32 {
     match demo(args) {
         Ok(()) => DONE,
         Err(e) => {
-            eprintln!("ide-lab: {e}");
+            eprintln!("agenteval: {e}");
             ERROR
         }
     }
@@ -559,7 +559,7 @@ fn demo(args: &Args) -> Result<(), String> {
         keys: 0,
     };
     d.record()?;
-    println!("ide-lab: arm review, intent \"{INTENT}\"");
+    println!("agenteval: arm review, intent \"{INTENT}\"");
     let commits = d.commits()?;
     let fixed = d.fixed(&commits)?;
     let surface = d.surface(&commits)?;

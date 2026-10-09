@@ -55,7 +55,7 @@ def new_of(old_path):
     old_path = os.path.normpath(old_path)
     if old_path in MOVES:
         return MOVES[old_path]
-    return old_dir_target(old_path)
+    return old_dir_target(old_path) or None
 
 
 def rel(target, base_dir):
@@ -81,6 +81,8 @@ def fix(path, check):
             MANUAL.append(f"{path}: include {lit}")
             return m.group(0)
         new = rel(tgt, new_dir)
+        if new != lit:
+            print(f"  {path}: include \"{lit}\" -> \"{new}\"")
         return f'{m.group(1)}"{new}"' if new != lit else m.group(0)
 
     out = re.sub(r'(include_(?:str|bytes)!\(\s*)"([^"]+)"', inc, out)
@@ -112,6 +114,8 @@ def fix(path, check):
                 new = rel(tgt, nc)
                 if lit.startswith("/"):
                     new = "/" + new
+                if new != lit:
+                    print(f"  {path}:{i + 1}: \"{lit}\" -> \"{new}\"")
                 return f'"{new}"' if new != lit else m.group(0)
 
             lines[i] = re.sub(r'"([^"\n]*)"', man, line)

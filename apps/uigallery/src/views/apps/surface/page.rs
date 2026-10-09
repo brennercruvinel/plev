@@ -407,7 +407,7 @@ mod tests {
         /// once, and a `ClaudeCli` that runs it in a directory of its own.
         fn fake() -> (TempDir, ClaudeCli) {
             let dir = tempfile::tempdir().unwrap();
-            let columns = manifest("../surface/tests/fixtures/showcase-todo-columns.ir.json");
+            let columns = manifest("../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json");
             let columns = std::fs::read_to_string(&columns)
                 .unwrap_or_else(|e| panic!("{}: {e}", columns.display()));
             let good = json!({
@@ -418,7 +418,7 @@ mod tests {
             std::fs::write(dir.path().join("mode"), "ok").unwrap();
             std::fs::write(dir.path().join("good"), good).unwrap();
             let mut cli = ClaudeCli::new();
-            cli.program = manifest("../claude-model/tests/fake-claude");
+            cli.program = manifest("../../rust/claude/tests/fakes/claude");
             cli.dir = dir.path().to_owned();
             (dir, cli)
         }

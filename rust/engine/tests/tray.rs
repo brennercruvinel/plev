@@ -19,7 +19,7 @@ fn sid(text: &str) -> SemId {
 
 fn todo() -> Snapshot {
     serde_json::from_str(include_str!(
-        "../../uir/fixtures/showcase-todo.snapshot.json"
+        "../../plevir/tests/fixtures/uigallery-todo.snapshot.json"
     ))
     .expect("the golden parses")
 }

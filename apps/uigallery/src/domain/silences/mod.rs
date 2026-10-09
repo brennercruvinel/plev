@@ -24,7 +24,7 @@ pub use parse::{Detected, parse};
 /// the stderr ffmpeg 9 wrote on the test video in the probe of task-69f
 /// (`silencedetect=noise=-30dB:d=0.5`): the seed of the page and the
 /// fixture of the parser.
-pub const PROBE_STDERR: &str = include_str!("silences/probe.stderr");
+pub const PROBE_STDERR: &str = include_str!("probe.stderr");
 
 /// the file name of the test video the worker generates.
 pub const TEST_VIDEO: &str = "silences-test.mp4";

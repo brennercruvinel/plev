@@ -28,7 +28,7 @@ pub fn run(args: &Args) -> i32 {
     match arm(args) {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("ide-lab: {e}");
+            eprintln!("agenteval: {e}");
             ERROR
         }
     }
@@ -70,7 +70,7 @@ fn arm(args: &Args) -> Result<i32, String> {
                 shots.push(shoot(&mut app, &mut gpu, scale, &args.out)?);
             }
         }
-        None => println!("ide-lab: no GPU adapter; no frame was drawn"),
+        None => println!("agenteval: no GPU adapter; no frame was drawn"),
     }
 
     let whole = observation_bytes(&snapshot, None);

@@ -58,8 +58,8 @@ fn result(reply: &str) -> String {
 /// `ClaudeCli` that runs it in a directory of its own.
 fn fake(mode: &str) -> (TempDir, ClaudeCli) {
     let dir = tempfile::tempdir().unwrap();
-    let columns = read("../surface/tests/fixtures/showcase-todo-columns.ir.json");
-    let wrong = read("../uir/fixtures/showcase-todo.ir.json")
+    let columns = read("../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json");
+    let wrong = read("../../rust/plevir/tests/fixtures/uigallery-todo.ir.json")
         .replace("todo.counter:active", "todo.counter:gone");
     for (name, text) in [
         ("mode", mode.to_owned()),
@@ -69,7 +69,7 @@ fn fake(mode: &str) -> (TempDir, ClaudeCli) {
         std::fs::write(dir.path().join(name), text).unwrap();
     }
     let mut cli = ClaudeCli::new();
-    cli.program = manifest("../claude-model/tests/fake-claude");
+    cli.program = manifest("../../rust/claude/tests/fakes/claude");
     cli.dir = dir.path().to_owned();
     (dir, cli)
 }

@@ -19,7 +19,7 @@ use plevir::{Component, Layout, VerifiedIr};
 
 fn silences() -> Snapshot {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../uir/fixtures/showcase-silences.snapshot.json");
+        .join("../plevir/tests/fixtures/uigallery-silences.snapshot.json");
     serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap()
 }
 

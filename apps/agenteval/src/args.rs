@@ -5,7 +5,7 @@ use std::time::Duration;
 
 pub const USAGE: &str = "\
 usage:
-  ide-lab --arm plev|scripted|git|screenshot|review
+  agenteval --arm plev|scripted|git|screenshot|review
           [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
           [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
           [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
@@ -45,7 +45,7 @@ the scripted agent (--arm scripted):
             person who acted, it asks the person before it puts a file of the task back in the
             index (`Act::ask`, as `plev act --ask`), and waits for the answer: allowed, it stages
             the file and commits; declined, it stops with no commit
-defaults: --out ./ide-lab-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
+defaults: --out ./agenteval-out --until commit --timeout 600 --grace 1 --app ide --scripted observe
           --answer none --answer-after 0
 --until commit ends --grace seconds after the first commit completes (or at --timeout);
 --until timeout runs the whole --timeout.
@@ -176,7 +176,7 @@ pub struct Args {
 pub fn parse(args: &[String]) -> Result<Args, String> {
     let mut arm = None;
     let mut human = Human::None;
-    let mut out = PathBuf::from("ide-lab-out");
+    let mut out = PathBuf::from("agenteval-out");
     let mut until = Until::Commit;
     let mut timeout = Duration::from_secs(600);
     let mut grace = Duration::from_secs(1);
@@ -319,7 +319,7 @@ mod tests {
 
         let d = parse(&args("--arm plev")).unwrap();
         assert_eq!(d.human, Human::None);
-        assert_eq!(d.out, PathBuf::from("ide-lab-out"));
+        assert_eq!(d.out, PathBuf::from("agenteval-out"));
         assert_eq!(d.until, Until::Commit);
         assert_eq!(d.timeout, Duration::from_secs(600));
         assert_eq!(d.grace, Duration::from_secs(1));

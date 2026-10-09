@@ -187,7 +187,7 @@ fn path(rel: &str) -> PathBuf {
 /// surface's tests.
 fn fixtures_of_before() -> Vec<PathBuf> {
     let mut out = Vec::new();
-    for dir in ["fixtures", "../surface/tests/fixtures"] {
+    for dir in ["tests/fixtures", "../screen/tests/fixtures"] {
         let Ok(entries) = std::fs::read_dir(path(dir)) else {
             continue;
         };
@@ -256,7 +256,7 @@ fn an_ir_of_before_reads_and_writes_back_the_same_document() {
         "ide-review-commit.ir.json",
         "showcase-todo.ir.json",
     ] {
-        let text = std::fs::read_to_string(path(&format!("fixtures/{name}"))).expect("it");
+        let text = std::fs::read_to_string(path(&format!("tests/fixtures/{name}"))).expect("it");
         let mut written = serde_json::to_string_pretty(&parse(&text).expect("reads")).unwrap();
         written.push('\n');
         assert!(written == text, "{name} writes back other bytes");

@@ -2,7 +2,7 @@
 //! `dense.rs`, json scan in `lot.rs`.
 //!
 //! mapping honesty notes (read the json before touching the numbers):
-//! girl/json.json (742135 B, 60 fps, 95 f = 1.5833 s, 44 root layers
+//! girlscene/animation.json (742135 B, 60 fps, 95 f = 1.5833 s, 44 root layers
 //! plus 3 precomps of 11/40/16 layers, each instanced once and
 //! materialized at its instance offset; skateboard P2 rides at
 //! st = 52 f) carries 287 animated properties and 2223 keyframes. monster
@@ -150,10 +150,10 @@ fn scan_all(doc: &serde_json::Value, fr: f32, dur: f32) -> Vec<Scan> {
 
 #[test]
 fn bench_girl_vs_lottie() {
-    if fixture_missing("girl/json.json") {
+    if fixture_missing("girlscene/animation.json") {
         return;
     }
-    let doc = load("girl/json.json");
+    let doc = load("girlscene/animation.json");
     let fr = f(&doc["fr"]);
     let dur = (f(&doc["op"]) - f(&doc["ip"])) / fr;
     let scans = scan_all(&doc, fr, dur);

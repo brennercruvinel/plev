@@ -78,7 +78,7 @@ pub(crate) fn golden_doc() -> (Timeline, Vec<Asset>, Vec<Desc>) {
 /// spec entry, never a fixture refresh.
 #[test]
 fn golden_fixture_is_frozen_byte_for_byte() {
-    let golden = include_bytes!("../../fixtures/golden_v0_minimal.monster");
+    let golden = include_bytes!("../../../tests/fixtures/golden_v0_minimal.monster");
     let (timeline, assets, descs) = golden_doc();
     let bytes = encode(&timeline, &assets, &descs).unwrap();
     assert_eq!(bytes.as_slice(), golden.as_slice());

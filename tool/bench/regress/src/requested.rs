@@ -16,7 +16,7 @@ use crate::classify::{Area, Decision};
 /// The table in the repository, wherever the example runs from.
 pub const TABLE: &str = concat!(
     env!("CARGO_MANIFEST_DIR"),
-    "/fixtures/determinism/requested.json"
+    "/requested.json"
 );
 
 /// The version of the table's layout.

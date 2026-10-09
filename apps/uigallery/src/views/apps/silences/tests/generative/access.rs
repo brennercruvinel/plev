@@ -369,7 +369,7 @@ mod claude {
         std::fs::write(dir.path().join("bad"), "").unwrap();
         let mut cli = ClaudeCli::new();
         cli.program =
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../claude-model/tests/fake-claude");
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../rust/claude/tests/fakes/claude");
         cli.dir = dir.path().to_owned();
         cli.timeout = Duration::from_secs(20);
         page.generated.proposing.set_claude(Claude::with(cli));

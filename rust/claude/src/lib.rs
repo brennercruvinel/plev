@@ -339,7 +339,7 @@ mod tests {
         assert!(cli.exists(), "sh is on the PATH");
         cli.program = PathBuf::from("no-such-claude-anywhere");
         assert!(!cli.exists());
-        cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fake-claude");
+        cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fakes/claude");
         assert!(cli.exists(), "a file at its path");
         cli.program = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/no-such-claude");
         assert!(!cli.exists());

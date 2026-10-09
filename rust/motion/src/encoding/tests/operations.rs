@@ -12,7 +12,7 @@ use crate::encoding::read::decode;
 use crate::encoding::tests::write::{parse, rect, seg};
 use crate::encoding::write::encode;
 
-const GOLDEN_OPS: &[u8] = include_bytes!("../../fixtures/golden_v0_ops.monster");
+const GOLDEN_OPS: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_ops.monster");
 
 /// One rect in the snapshot, a second life at depth 1: placed at 0.5,
 /// replaced at 1.0, removed at 1.5, plus one modify chain on node 1.

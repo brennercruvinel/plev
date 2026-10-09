@@ -200,7 +200,7 @@ mod cups {
 
     fn fake(name: &str) -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests")
+            .join("tests/fakes")
             .join(name)
     }
 
@@ -216,7 +216,7 @@ mod cups {
     }
 
     fn printer(lpstat: &str, test: &str) -> CupsPrinter {
-        CupsPrinter::with(fake("fake-lp"), fake(lpstat))
+        CupsPrinter::with(fake("lp"), fake(lpstat))
             .spool_dir(spool(test))
             .timeout(Duration::from_secs(10))
     }
@@ -241,7 +241,7 @@ mod cups {
 
     #[test]
     fn the_destinations_are_what_lpstat_lists_with_the_default_marked() {
-        let mut printer = printer("fake-lpstat", "destinations");
+        let mut printer = printer("lpstat", "destinations");
         assert_eq!(
             printer.destinations().unwrap(),
             [
@@ -253,7 +253,7 @@ mod cups {
 
     #[test]
     fn this_machine_has_no_destination_and_that_is_an_empty_list() {
-        let mut printer = printer("fake-lpstat-none", "none");
+        let mut printer = printer("lpstat-none", "none");
         assert_eq!(printer.destinations().unwrap(), []);
         // and lp, asked without one, says so
         let err = printer
@@ -265,7 +265,7 @@ mod cups {
     #[test]
     fn a_print_runs_lp_with_the_destination_the_title_and_the_options_and_reads_the_job() {
         let dir = spool("print");
-        let mut printer = CupsPrinter::with(fake("fake-lp"), fake("fake-lpstat"))
+        let mut printer = CupsPrinter::with(fake("lp"), fake("lpstat"))
             .spool_dir(&dir)
             .timeout(Duration::from_secs(10));
         let options = PrintOptions::default()
@@ -340,7 +340,7 @@ mod cups {
 
     #[test]
     fn what_lp_refuses_is_refused_in_its_words() {
-        let mut printer = printer("fake-lpstat", "refuse");
+        let mut printer = printer("lpstat", "refuse");
         let err = printer
             .print(
                 &page(),
@@ -349,7 +349,7 @@ mod cups {
             .unwrap_err();
         assert_eq!(err, PrintError::UnknownDestination("Nowhere".to_owned()));
         let mut missing =
-            CupsPrinter::with("/nonexistent/lp", fake("fake-lpstat")).spool_dir(spool("missing"));
+            CupsPrinter::with("/nonexistent/lp", fake("lpstat")).spool_dir(spool("missing"));
         assert!(matches!(
             missing.print(&page(), &PrintOptions::default().to("Office")),
             Err(PrintError::Io(why)) if why.contains("could not start")
@@ -363,7 +363,7 @@ mod cups {
     #[test]
     fn a_program_past_the_deadline_is_killed() {
         let dir = spool("slow");
-        let mut printer = CupsPrinter::with(fake("fake-lp"), fake("fake-lpstat"))
+        let mut printer = CupsPrinter::with(fake("lp"), fake("lpstat"))
             .spool_dir(&dir)
             .timeout(Duration::from_secs(2));
         let started = Instant::now();
@@ -377,7 +377,7 @@ mod cups {
         assert_eq!(
             err,
             PrintError::Timeout {
-                program: "fake-lp".to_owned(),
+                program: "lp".to_owned(),
                 secs: 2
             }
         );

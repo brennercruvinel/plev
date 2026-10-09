@@ -21,7 +21,7 @@ use super::super::{setup, tester};
 use super::access::review;
 use super::show;
 
-const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
+const CLAUDE: &str = "../../rust/plevir/tests/fixtures/silences-review-claude.ir.json";
 
 /// WCAG 2.2 AA: text (1.4.3).
 const TEXT: f64 = 4.5;

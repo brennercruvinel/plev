@@ -1,5 +1,5 @@
 //! the laboratory of the experiment, run as the orchestrator runs it
-//! (task-62 phase c): the `ide-lab` binary against a real repository, a
+//! (task-62 phase c): the `agenteval` binary against a real repository, a
 //! real agent port and the real git worker, driven by its own scripted
 //! agent, with and without the person of the script. the agent comes to
 //! its submit in two ways (it observes right before it, or it chains it on
@@ -90,7 +90,7 @@ impl Run {
     }
 }
 
-/// runs `ide-lab --arm scripted` with `human`, in its own output
+/// runs `agenteval --arm scripted` with `human`, in its own output
 /// directory and under its own app name.
 fn scripted(app: &str, human: &str) -> Run {
     lab(app, human, &[])
@@ -103,12 +103,12 @@ fn chained(app: &str, human: &str) -> Run {
 
 fn lab(app: &str, human: &str, more: &[&str]) -> Run {
     let out = tempfile::tempdir().expect("a temp dir for the run");
-    let mut cmd = Command::new(env!("CARGO_BIN_EXE_ide-lab"));
+    let mut cmd = Command::new(env!("CARGO_BIN_EXE_agenteval"));
     cmd.args(["--arm", "scripted", "--human", human]);
     cmd.args(more);
     cmd.args(["--app", app, "--timeout", TIMEOUT_S]);
     cmd.arg("--out").arg(out.path());
-    let output = cmd.output().expect("ide-lab runs");
+    let output = cmd.output().expect("agenteval runs");
     let code = output.status.code().unwrap_or(-1);
     let report = read_report(out.path(), &output.stdout, &output.stderr);
     Run { code, report, out }
@@ -197,7 +197,7 @@ fn confirmed_by_the_node(run: &Run) {
 
 #[test]
 fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
-    let run = scripted("ide-lab-stale", "unstage-after-observe:src/session.rs");
+    let run = scripted("agenteval-stale", "unstage-after-observe:src/session.rs");
     assert_eq!(run.code, 0, "the report: {}", run.report);
 
     // the person acted once, on the file the scenario names, and the
@@ -306,7 +306,7 @@ fn the_person_makes_the_agents_submit_stale_and_the_agent_recovers() {
 
 #[test]
 fn without_the_person_the_agent_commits_the_task_with_no_refusal() {
-    let run = scripted("ide-lab-control", "none");
+    let run = scripted("agenteval-control", "none");
     assert_eq!(run.code, 0, "the report: {}", run.report);
 
     assert!(run.at("intervention").is_null(), "nobody intervened");
@@ -457,7 +457,7 @@ fn measured_on_the_old_world(run: &Run) {
 
 #[test]
 fn the_person_before_the_submit_makes_the_observed_submit_stale() {
-    let run = scripted("ide-lab-before", "unstage-before-submit:src/session.rs");
+    let run = scripted("agenteval-before", "unstage-before-submit:src/session.rs");
     commits_the_task(&run);
 
     assert_eq!(run.str("intervention.trigger"), "submit arriving");
@@ -488,7 +488,7 @@ fn the_chained_submit_is_refused_by_the_agents_own_write() {
     // the message the agent was last shown, empty, and the agent wrote it
     // since. nobody else acted, and the refusal names the agent's own acts
     // since that look (task-91; task-90 named nobody).
-    let run = chained("ide-lab-chain", "none");
+    let run = chained("agenteval-chain", "none");
     commits_the_task(&run);
 
     assert!(run.at("intervention").is_null());
@@ -511,7 +511,7 @@ fn after_the_look_the_person_comes_too_late_for_the_chained_submit() {
     // right after a look, acts on the look of its recovery. the agent then
     // sees the file out, puts it back and commits: the check was not
     // exercised by the person, and the measurement says why.
-    let run = chained("ide-lab-chain-late", "unstage-after-observe:src/session.rs");
+    let run = chained("agenteval-chain-late", "unstage-after-observe:src/session.rs");
     commits_the_task(&run);
 
     assert_eq!(run.str("intervention.trigger"), "observation served");
@@ -539,7 +539,7 @@ fn after_the_look_the_person_comes_too_late_for_the_chained_submit() {
 #[test]
 fn before_the_submit_the_person_makes_the_chained_submit_stale() {
     let run = chained(
-        "ide-lab-chain-before",
+        "agenteval-chain-before",
         "unstage-before-submit:src/session.rs",
     );
     commits_the_task(&run);
@@ -679,7 +679,7 @@ fn answered_in_the_session(run: &Run, q: &Json) {
 
 #[test]
 fn the_agent_asks_the_person_who_allows_and_the_three_files_are_committed() {
-    let run = asking("ide-lab-ask-allow", "allow");
+    let run = asking("agenteval-ask-allow", "allow");
     commits_the_task(&run);
     let q = asked_once(&run, "allow", "allowed");
     assert_eq!(
@@ -704,7 +704,7 @@ fn the_agent_asks_the_person_who_allows_and_the_three_files_are_committed() {
 
 #[test]
 fn the_agent_asks_the_person_who_declines_and_it_stops() {
-    let run = asking("ide-lab-ask-decline", "decline");
+    let run = asking("agenteval-ask-decline", "decline");
     // no commit, with the exit of a run with no commit.
     assert_eq!(run.code, 2, "the report: {}", run.report);
     assert!(!run.bool("truth.committed"));
@@ -756,18 +756,18 @@ fn when_nobody_answers_the_question_waits_to_the_end() {
     // the default person answers nothing, as before task-93: the request
     // waits for her until the run ends, and the report says so.
     let out = tempfile::tempdir().expect("a temp dir for the run");
-    let output = Command::new(env!("CARGO_BIN_EXE_ide-lab"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agenteval"))
         .args(["--arm", "scripted", "--scripted", "ask", "--human"])
         .args([
             "unstage-before-submit:src/session.rs",
             "--app",
-            "ide-lab-ask-quiet",
+            "agenteval-ask-quiet",
         ])
         .args(["--timeout", "5"])
         .arg("--out")
         .arg(out.path())
         .output()
-        .expect("ide-lab runs");
+        .expect("agenteval runs");
     let report = read_report(out.path(), &output.stdout, &output.stderr);
     let run = Run {
         code: output.status.code().unwrap_or(-1),
@@ -795,7 +795,7 @@ fn the_agent_that_does_not_ask_puts_the_file_back_over_the_person() {
     // her, it stages the file she took out, and the report counts that act
     // as over her, with no question. the one that asks counts none (above).
     let run = scripted(
-        "ide-lab-over-the-person",
+        "agenteval-over-the-person",
         "unstage-before-submit:src/session.rs",
     );
     commits_the_task(&run);

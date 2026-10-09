@@ -40,7 +40,7 @@ const SETTLE_STEPS: usize = 120;
 const SETTLE_DT: f32 = 1.0 / 60.0;
 
 /// The Claude's review of the checkpoint's first round, as IR.
-const CLAUDE_REVIEW: &str = include_str!("../../fixtures/ir/silences-review-claude.ir.json");
+const CLAUDE_REVIEW: &str = include_str!("../../../../rust/plevir/tests/fixtures/silences-review-claude.ir.json");
 
 /// How a state's surface is proposed.
 #[derive(Clone, Copy, Debug, PartialEq)]

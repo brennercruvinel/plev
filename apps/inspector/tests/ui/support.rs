@@ -14,7 +14,7 @@ pub type Fallible = Result<(), Box<dyn std::error::Error>>;
 /// src/session.rs`, then accepted with its sha), or `bug84`.
 pub fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../ide/tests/fixtures/sessions")
+        .join("../idestudio/tests/fixtures/sessions")
         .join(format!("{name}.monster"))
 }
 

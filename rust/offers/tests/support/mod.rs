@@ -16,22 +16,22 @@ fn read(rel: &str) -> String {
 
 /// The showcase todo projected, as `crates/uir/fixtures` pins it.
 pub fn todo() -> Snapshot {
-    serde_json::from_str(&read("../uir/fixtures/showcase-todo.snapshot.json")).unwrap()
+    serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-todo.snapshot.json")).unwrap()
 }
 
 /// The ide workbench projected, as `crates/uir/fixtures` pins it.
 pub fn ide() -> Snapshot {
-    serde_json::from_str(&read("../uir/fixtures/ide-workbench.snapshot.json")).unwrap()
+    serde_json::from_str(&read("../plevir/tests/fixtures/idestudio-workbench.snapshot.json")).unwrap()
 }
 
 /// The compact form of the Surface page (the task-68 fixture).
 pub fn compact() -> String {
-    read("../uir/fixtures/showcase-todo.ir.json")
+    read("../plevir/tests/fixtures/uigallery-todo.ir.json")
 }
 
 /// The two-column form of the Surface page (phase 2).
 pub fn columns() -> String {
-    read("../surface/tests/fixtures/showcase-todo-columns.ir.json")
+    read("../screen/tests/fixtures/uigallery-todo-columns.ir.json")
 }
 
 /// `ir` verified against `app`.
@@ -218,13 +218,13 @@ pub fn agent() -> accord::Actor {
 
 /// The Silences projected, as `crates/uir/fixtures` pins it.
 pub fn silences() -> Snapshot {
-    serde_json::from_str(&read("../uir/fixtures/showcase-silences.snapshot.json")).unwrap()
+    serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-silences.snapshot.json")).unwrap()
 }
 
 /// The Claude's review of the checkpoint b's first round, as IR (the
 /// cuts in a flat row: range, decision, duration, frame, three buttons).
 pub fn claude_review() -> String {
-    read("../showcase/fixtures/ir/silences-review-claude.ir.json")
+    read("../plevir/tests/fixtures/silences-review-claude.ir.json")
 }
 
 /// The ids of the nodes set aside on `adapted`, in id order.

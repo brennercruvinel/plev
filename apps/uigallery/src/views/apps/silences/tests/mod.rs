@@ -877,7 +877,7 @@ fn the_app_projection_is_the_uir_golden() {
     let mut text = crate::shell::semantics_json(&snap, false).expect("json prints");
     text.push('\n');
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../uir/fixtures/showcase-silences.snapshot.json");
+        .join("../../rust/plevir/tests/fixtures/uigallery-silences.snapshot.json");
     if std::env::var_os("UIR_BLESS").is_some() {
         std::fs::write(&path, text).expect("the golden writes");
         return;

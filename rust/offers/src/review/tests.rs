@@ -35,7 +35,7 @@ fn a_review_reads_its_number_in_both_languages() {
 /// the ide workbench projected, as `crates/uir/fixtures` pins it.
 fn ide() -> Snapshot {
     serde_json::from_str(include_str!(
-        "../../../uir/fixtures/ide-workbench.snapshot.json"
+        "../../../plevir/tests/fixtures/idestudio-workbench.snapshot.json"
     ))
     .unwrap()
 }

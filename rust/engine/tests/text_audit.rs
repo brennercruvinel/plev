@@ -85,7 +85,7 @@ struct Phrase {
 }
 
 fn corpus_dir() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/text_corpus")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/text_corpus")
 }
 
 /// `\u{XXXX}` escapes to characters, so invisible marks stay visible in
@@ -349,7 +349,7 @@ fn golden_text() -> String {
 /// shaper is pinned by Cargo.lock), so it is a golden.
 #[test]
 fn shaping_matches_the_golden() {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/text_audit.txt");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/text_audit.txt");
     let actual = golden_text();
     if std::env::var_os("TEXT_AUDIT_UPDATE").is_some() {
         fs::write(&path, &actual).unwrap_or_else(|e| panic!("{}: {e}", path.display()));

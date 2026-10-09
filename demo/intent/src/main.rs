@@ -33,7 +33,7 @@ const USAGE: &str = "usage: propose [--app todo|ide|silences] [--shown <ir.json>
 
 fn fixture(name: &str) -> Result<String, String> {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../uir/fixtures")
+        .join("../../rust/plevir/tests/fixtures")
         .join(name);
     std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))
 }
@@ -83,9 +83,9 @@ fn args() -> Result<Args, String> {
 /// compact form; the ide and the silences show none).
 fn app(name: &str) -> Result<(Snapshot, Option<&'static str>), String> {
     let (snapshot, shown) = match name {
-        "todo" => ("showcase-todo.snapshot.json", Some("showcase-todo.ir.json")),
-        "ide" => ("ide-workbench.snapshot.json", None),
-        "silences" => ("showcase-silences.snapshot.json", None),
+        "todo" => ("uigallery-todo.snapshot.json", Some("uigallery-todo.ir.json")),
+        "ide" => ("idestudio-workbench.snapshot.json", None),
+        "silences" => ("uigallery-silences.snapshot.json", None),
         other => return Err(format!("no app {other}: todo, ide or silences")),
     };
     let app = serde_json::from_str(&fixture(snapshot)?).map_err(|e| format!("{snapshot}: {e}"))?;

@@ -32,14 +32,14 @@ const REVIEW: &str = "ide-review-commit.ir.json";
 const TODO: &str = "showcase-todo.ir.json";
 const IDE: &str = "ide-workbench.snapshot.json";
 const SHOWCASE: &str = "showcase-todo.snapshot.json";
-const SCHEMA: &str = "schema/plev-ir-1.json";
+const SCHEMA: &str = "assets/plev-ir-1.json";
 
 fn path(rel: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(rel)
 }
 
 fn fixture(name: &str) -> String {
-    let at = path(&format!("fixtures/{name}"));
+    let at = path(&format!("tests/fixtures/{name}"));
     std::fs::read_to_string(&at).unwrap_or_else(|e| panic!("{}: {e}", at.display()))
 }
 

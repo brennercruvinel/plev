@@ -18,7 +18,7 @@ use super::super::sid;
 use crate::views::ShowcaseView;
 
 /// The Claude's review of the checkpoint's first round, as IR.
-const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
+const CLAUDE: &str = "../../rust/plevir/tests/fixtures/silences-review-claude.ir.json";
 
 fn wash(ms: u64) -> Result<ImageHandle, String> {
     let v = u8::try_from(40 + (ms / 100) % 200).unwrap_or(120);

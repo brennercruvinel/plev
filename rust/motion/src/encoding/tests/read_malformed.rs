@@ -8,7 +8,7 @@ use crate::timeline::Node;
 use crate::encoding::read::{ReadError, decode};
 use crate::encoding::tests::write::parse;
 
-const GOLDEN: &[u8] = include_bytes!("../../fixtures/golden_v0_minimal.monster");
+const GOLDEN: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_minimal.monster");
 
 #[test]
 fn every_truncation_prefix_errs_without_panic() {

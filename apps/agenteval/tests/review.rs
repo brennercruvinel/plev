@@ -1,5 +1,5 @@
 //! The demo 5 of task-80 (task-96) as the orchestrator runs it: the
-//! `ide-lab --arm review` binary, with no window, on the laboratory's
+//! `agenteval --arm review` binary, with no window, on the laboratory's
 //! repository of the review and the real git worker. A person reviews the
 //! three newest commits with the fixed panel, then with the surface her
 //! intent generates, and closes it; the run is recorded, and the session
@@ -29,7 +29,7 @@ use serde_json::Value as Json;
 const INTENT: &str = "review these three commits";
 
 fn run(out: &Path) -> Json {
-    let output = Command::new(env!("CARGO_BIN_EXE_ide-lab"))
+    let output = Command::new(env!("CARGO_BIN_EXE_agenteval"))
         .args(["--arm", "review", "--out"])
         .arg(out)
         .output()

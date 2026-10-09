@@ -35,7 +35,7 @@ pub fn run(args: &Args) -> i32 {
     match Lab::open(args.clone()).and_then(Lab::run) {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("ide-lab: {e}");
+            eprintln!("agenteval: {e}");
             ERROR
         }
     }
@@ -146,7 +146,7 @@ impl Lab {
 
     fn run(mut self) -> Result<i32, String> {
         println!(
-            "ide-lab: arm {}, app {}",
+            "agenteval: arm {}, app {}",
             self.args.arm.name(),
             self.args.app
         );

@@ -212,7 +212,7 @@ fn through_the_port_an_agent_does_not_accept() {
 /// is and shown as a proposal shows it.
 fn review_open(page: &mut SilencesPage) -> SemId {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../surface/tests/fixtures/showcase-silences-review.ir.json");
+        .join("../../rust/screen/tests/fixtures/uigallery-silences-review.ir.json");
     let json = std::fs::read_to_string(&path).expect("the review fixture");
     let app = page.snapshot().expect("the app projects");
     let caps = Capabilities::from_snapshot(&app);

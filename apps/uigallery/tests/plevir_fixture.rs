@@ -27,7 +27,7 @@ use engine::drawing::headless::Viewport;
 use accord::Snapshot;
 use uigallery::shell::{semantics_json, stage_page};
 
-const FIXTURE: &str = "../uir/fixtures/showcase-todo.snapshot.json";
+const FIXTURE: &str = "../../rust/plevir/tests/fixtures/uigallery-todo.snapshot.json";
 
 #[test]
 fn the_todo_projection_is_the_uir_fixture() {

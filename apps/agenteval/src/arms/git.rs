@@ -29,7 +29,7 @@ pub fn run(args: &Args) -> i32 {
     match arm(args) {
         Ok(code) => code,
         Err(e) => {
-            eprintln!("ide-lab: {e}");
+            eprintln!("agenteval: {e}");
             ERROR
         }
     }
@@ -48,7 +48,7 @@ fn arm(args: &Args) -> Result<i32, String> {
     };
 
     // the agent gets the path of this repository: it works on git itself.
-    println!("ide-lab: arm git");
+    println!("agenteval: arm git");
     println!("task: {TASK}");
     println!("repository: {}", repo.path().display());
     println!("export PATH={}:$PATH", bin.display());
@@ -199,7 +199,7 @@ fn write_shim(bin: &Path, log: &Path) -> Result<PathBuf, String> {
     let script = format!(
         r#"#!/bin/sh
 # the git of arm B: one json line per invocation, then the real git,
-# byte for byte. written by ide-lab (crates/ide/src/bin/lab/gitarm.rs).
+# byte for byte. written by agenteval (crates/ide/src/bin/lab/gitarm.rs).
 real='{git}'
 log='{log}'
 out=$(mktemp) || exit 1
@@ -242,7 +242,7 @@ fn install_hook(repo: &Repo, out: &Path, path: &str) -> Result<PathBuf, String> 
         r#"#!/bin/sh
 # the intervention of arm B: once, at the instant of the commit, the path
 # leaves the index and git commits what is left, telling nobody.
-# written by ide-lab (crates/ide/src/bin/lab/gitarm.rs).
+# written by agenteval (crates/ide/src/bin/lab/gitarm.rs).
 marker={marker}
 [ -e "$marker" ] && exit 0
 {git} reset -q HEAD -- {path}

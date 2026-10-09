@@ -130,7 +130,7 @@ pub fn headless(scale: f32) -> Result<Option<Renderer>, String> {
     match Renderer::new(Viewport::new(WIDTH, HEIGHT, scale), RenderConfig::default()) {
         Ok(renderer) => Ok(Some(renderer)),
         Err(HeadlessError::NoAdapter) => {
-            eprintln!("ide-lab: no GPU adapter; the frames are built and recorded, not drawn");
+            eprintln!("agenteval: no GPU adapter; the frames are built and recorded, not drawn");
             Ok(None)
         }
         Err(e) => Err(format!("the headless renderer: {e}")),

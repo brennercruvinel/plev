@@ -24,13 +24,13 @@ fn golden(json: &str) -> Snapshot {
 
 fn todo() -> Snapshot {
     golden(include_str!(
-        "../../uir/fixtures/showcase-todo.snapshot.json"
+        "../../plevir/tests/fixtures/uigallery-todo.snapshot.json"
     ))
 }
 
 fn silences() -> Snapshot {
     golden(include_str!(
-        "../../uir/fixtures/showcase-silences.snapshot.json"
+        "../../plevir/tests/fixtures/uigallery-silences.snapshot.json"
     ))
 }
 

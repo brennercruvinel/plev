@@ -18,7 +18,7 @@ use plevir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
 pub fn fixture_path(rel: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures")
+        .join("tests/fixtures")
         .join(rel)
 }
 

@@ -85,7 +85,7 @@ fn shaders() {
     println!("| shader | bytes | parse (us) | validate (us) |");
     println!("| --- | ---: | ---: | ---: |");
     let (mut bytes, mut parse, mut validate) = (0, Duration::ZERO, Duration::ZERO);
-    for path in files(&manifest().join("src/gpu/shaders"), "wgsl") {
+    for path in files(&manifest().join("src/drawing/gpu/shaders"), "wgsl") {
         let source = std::fs::read_to_string(&path).unwrap_or_default();
         let module = naga::front::wgsl::parse_str(&source)
             .unwrap_or_else(|e| panic!("{}", e.emit_to_string_with_path(&source, &path)));

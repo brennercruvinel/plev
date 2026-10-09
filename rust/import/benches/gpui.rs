@@ -5,7 +5,7 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use import::transpile_gpui;
 
-const SEPARATOR: &str = include_str!("../fixtures/gpui/separator.rs");
+const SEPARATOR: &str = include_str!("../tests/fixtures/gpui/separator.rs");
 
 fn bench_transpile(c: &mut Criterion) {
     c.bench_function("parser_transpile_gpui_separator", |b| {

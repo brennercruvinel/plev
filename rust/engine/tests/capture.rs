@@ -396,7 +396,7 @@ mod child {
 
     fn fake(name: &str) -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("tests")
+            .join("tests/fakes")
             .join(name)
     }
 
@@ -448,7 +448,7 @@ mod child {
         if ffmpeg().is_none() {
             return;
         }
-        let mut capture = capture("fake-ffmpeg");
+        let mut capture = capture("ffmpeg");
         let settings = CaptureSettings {
             width: 320,
             height: 180,
@@ -512,7 +512,7 @@ mod child {
         if ffmpeg().is_none() {
             return;
         }
-        let mut capture = capture("fake-ffmpeg");
+        let mut capture = capture("ffmpeg");
         let settings = CaptureSettings::default();
         capture.start(DeviceKind::Microphone, &settings).unwrap();
         let pid = capture.pid(DeviceKind::Microphone).expect("a child runs");
@@ -557,7 +557,7 @@ mod child {
         if ffmpeg().is_none() {
             return;
         }
-        let mut capture = capture("fake-ffmpeg");
+        let mut capture = capture("ffmpeg");
         let settings = CaptureSettings::default();
         capture.start(DeviceKind::Camera, &settings).unwrap();
         capture.start(DeviceKind::Microphone, &settings).unwrap();
@@ -595,7 +595,7 @@ mod child {
     /// and the state says so.
     #[test]
     fn nothing_within_the_deadline_is_failed_and_the_child_killed() {
-        let mut capture = capture("fake-ffmpeg-mute").first_frame(Duration::from_secs(2));
+        let mut capture = capture("ffmpeg-mute").first_frame(Duration::from_secs(2));
         let started = Instant::now();
         capture
             .start(DeviceKind::Camera, &CaptureSettings::default())
@@ -629,7 +629,7 @@ mod child {
             camera: Device::at(DeviceKind::Camera, index),
             ..CaptureSettings::default()
         };
-        let mut capture = capture("fake-ffmpeg-refuses");
+        let mut capture = capture("ffmpeg-refuses");
         for (index, want) in [
             (0, CaptureState::Denied),
             (9, CaptureState::NoDevice),
@@ -662,7 +662,7 @@ mod child {
         if ffmpeg().is_none() {
             return;
         }
-        let mut capture = capture("fake-ffmpeg");
+        let mut capture = capture("ffmpeg");
         let settings = CaptureSettings {
             camera: Device::at(DeviceKind::Camera, 5),
             ..CaptureSettings::default()

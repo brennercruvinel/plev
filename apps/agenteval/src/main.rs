@@ -1,4 +1,4 @@
-//! `ide-lab`: the laboratory of the plev experiment (task-62, phase c).
+//! `agenteval`: the laboratory of the plev experiment (task-62, phase c).
 //!
 //! the ide's `Workbench` without a window, on a real repository built for
 //! the task, served to an agent outside through the agent port, recorded
@@ -13,7 +13,7 @@
 //! with the surface her intent generates, recorded and measured.
 //!
 //! ```text
-//! ide-lab --arm plev|scripted|git|screenshot|review
+//! agenteval --arm plev|scripted|git|screenshot|review
 //!         [--human none|unstage-after-observe:<path>|unstage-before-submit:<path>]
 //!         [--out <dir>] [--until commit|timeout] [--timeout <s>] [--grace <s>] [--app <name>]
 //!         [--scripted observe|chain|ask] [--answer none|allow|decline] [--answer-after <ms>]
@@ -71,6 +71,6 @@ fn main() {
 
 #[cfg(not(unix))]
 fn main() {
-    eprintln!("ide-lab: the agent port is a unix socket, and this platform has none");
+    eprintln!("agenteval: the agent port is a unix socket, and this platform has none");
     std::process::exit(3);
 }

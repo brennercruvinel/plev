@@ -27,7 +27,7 @@ use support::{Rig, completed};
 /// the projection, is the same on every run.
 const DATE: &str = "2026-01-01T00:00:00+0000";
 
-const FIXTURE: &str = "../uir/fixtures/ide-workbench.snapshot.json";
+const FIXTURE: &str = "../../rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json";
 
 #[test]
 fn the_workbench_projection_is_the_uir_fixture() {

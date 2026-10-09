@@ -999,7 +999,7 @@ fn plev_bin() -> PathBuf {
         .and_then(Path::parent)
         .expect("target/<profile>/deps")
         .join("plev");
-    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../wire/src/bin/plev.rs");
+    let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../rust/socket/src/bin/plev.rs");
     let modified = |p: &Path| std::fs::metadata(p).and_then(|m| m.modified()).ok();
     assert!(
         modified(&bin) >= modified(&source),

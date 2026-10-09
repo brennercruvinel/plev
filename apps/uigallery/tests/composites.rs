@@ -90,7 +90,7 @@ fn live_and_recorded_the_detector_finds_the_same_sequence() {
 fn the_recorded_demo_repeats_a_proposal_with_parameters_and_nothing_is_found() {
     let path = concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/fixtures/demo/silences-demo.monster"
+        "/tests/fixtures/sessions/silences-demo.monster"
     );
     let session = Session::open(path).expect("the demo opens");
     // the agent chose the proposer, wrote an intent and proposed, twice

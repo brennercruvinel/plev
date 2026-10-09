@@ -128,7 +128,7 @@ compare classifies two frames, capture draws the desktop against itself
 (task-77): regress compare --help, regress capture --help.";
 
     /// The baselines of the repository, wherever the example runs from.
-    pub const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/fixtures/regress");
+    pub const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/baselines");
 
     pub const DEFAULT_THEME: &str = "core";
     pub const DEFAULT_WIDTH: f32 = 1280.0;

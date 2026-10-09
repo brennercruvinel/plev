@@ -100,7 +100,7 @@ fn every_engine_shader_parses_and_validates() {
         assert!(
             found
                 .iter()
-                .any(|p| p.ends_with(Path::new("src/gpu/shaders").join(name))),
+                .any(|p| p.ends_with(Path::new("src/drawing/gpu/shaders").join(name))),
             "{name} is not under src/gpu/shaders: {found:?}"
         );
     }
@@ -125,7 +125,7 @@ fn every_engine_shader_parses_and_validates() {
 /// at, and shows that line.
 #[test]
 fn a_syntax_error_names_the_file_the_line_and_the_column() {
-    let path = engine().join("src/gpu/shaders/quad.wgsl");
+    let path = engine().join("src/drawing/gpu/shaders/quad.wgsl");
     let source = std::fs::read_to_string(&path).expect("quad.wgsl is on disk");
     let statement = "out.color = in.color;";
     let line = source

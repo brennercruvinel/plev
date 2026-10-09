@@ -15,7 +15,7 @@ pub const VERT_BYTES: usize = 24;
 /// Static paint weight: rgba8 plus width or gradient extras.
 pub const PAINT_BYTES: usize = 8;
 
-const REF: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../refs/lottie");
+const REF: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../data/media/lottie");
 const EXPLOSION_JSON_BYTES: usize = 698654;
 const EXPLOSION_GZIP_BYTES: usize = 207434;
 const EXPLOSION_WEBM_BYTES: usize = 38642;
@@ -100,10 +100,10 @@ pub fn encode_pair(tl: &Timeline, assets: &[Asset]) -> (usize, usize, Timeline) 
 
 #[test]
 fn bench_explosion_vs_lottie() {
-    if fixture_missing("explosion/Explosion.json") {
+    if fixture_missing("explosion/animation.json") {
         return;
     }
-    let doc = load("explosion/Explosion.json");
+    let doc = load("explosion/animation.json");
     let fr = f(&doc["fr"]);
     let dur = (f(&doc["op"]) - f(&doc["ip"])) / fr;
     let mut cels: Vec<Scan> = doc["layers"]

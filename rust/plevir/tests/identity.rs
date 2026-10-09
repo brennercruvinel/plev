@@ -616,24 +616,24 @@ fn every_operation_on_every_node_of_the_fixtures_keeps_identity() {
     for (ir, snap, kinds) in [
         // a form: nothing a family of swaps holds
         (
-            "fixtures/ide-commit-form.ir.json",
-            "fixtures/ide-workbench.snapshot.json",
+            "tests/fixtures/idestudio-commit-form.ir.json",
+            "tests/fixtures/idestudio-workbench.snapshot.json",
             but(&["swap_view"]),
         ),
         (
-            "fixtures/ide-review-commit.ir.json",
-            "fixtures/ide-workbench.snapshot.json",
+            "tests/fixtures/idestudio-review-commit.ir.json",
+            "tests/fixtures/idestudio-workbench.snapshot.json",
             but(&[]),
         ),
         // the todo surface shows every action the todo declares
         (
-            "fixtures/showcase-todo.ir.json",
-            "fixtures/showcase-todo.snapshot.json",
+            "tests/fixtures/uigallery-todo.ir.json",
+            "tests/fixtures/uigallery-todo.snapshot.json",
             but(&["promote"]),
         ),
         (
-            "../showcase/fixtures/ir/silences-review-claude.ir.json",
-            "fixtures/showcase-silences.snapshot.json",
+            "tests/fixtures/silences-review-claude.ir.json",
+            "tests/fixtures/uigallery-silences.snapshot.json",
             but(&[]),
         ),
     ] {
