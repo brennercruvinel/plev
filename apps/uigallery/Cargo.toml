@@ -1,54 +1,45 @@
 [package]
-name = "showcase"
+name = "uigallery"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-# two bins (the second is the web entry, see src/main_web.rs): `cargo run -p
-# showcase` keeps running the gallery.
-default-run = "showcase"
+# two bins (the second is the web entry, see src/bin/web.rs): `cargo run -p
+# uigallery` keeps running the gallery.
+default-run = "uigallery"
 description = "plev design system gallery — every widget, every state, every theme"
 
 # lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
 # loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
-# Xcode app (which calls `showcase_ios_main`).
+# Xcode app (which calls `uigallery_ios_main`).
 [lib]
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [[bin]]
-name = "showcase"
+name = "uigallery"
 path = "src/main.rs"
 
 # the web entry trunk builds (web/index.html): a name of its own, see the file.
 [[bin]]
-name = "showcase-web"
-path = "src/main_web.rs"
-
-# the structural regression harness (task-67). `test = true`: cargo only
-# builds an example under `cargo test`; this one runs its tests there too,
-# so the comparator's tests are part of the gate.
-[[example]]
-name = "regress"
-path = "examples/regress/main.rs"
-test = true
+name = "uigallery-web"
+path = "src/bin/web.rs"
 
 [dependencies]
 engine.workspace = true
-comps.workspace = true
-rope.workspace = true
+editor.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
 web-time.workspace = true
 # the todo page runs every click through the semantic dispatcher.
-sem.workspace = true
+accord.workspace = true
 # the Surface page verifies the todo's IR fixture against the todo's
 # projection (uir) and materializes it over the todo's state (surface).
-surface.workspace = true
-uir.workspace = true
+screen.workspace = true
+plevir.workspace = true
 # the Surface page's intent field proposes a surface by the rules (task-69
 # phase 3a), through the todo's dispatcher.
-propose.workspace = true
+offers.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
@@ -57,14 +48,14 @@ pollster.workspace = true
 # The Git tab embeds the ide workspace over a real git worker: desktop only
 # (the worker needs a thread and the git CLI).
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))'.dependencies]
-ide.workspace = true
-git.workspace = true
+idestudio.workspace = true
+gitdrv.workspace = true
 # the agent port (PLEV_AGENT=1, debug): agents observe and act on the
 # active page over a local socket, through the hooks a screen reader uses.
-wire.workspace = true
+socket.workspace = true
 # the flight recorder (PLEV_RECORD=1, debug): the shell records its
 # session as the ide does (src/app/record.rs), for plev-inspect.
-rec.workspace = true
+record.workspace = true
 # `--render --semantics` writes the page's projection in the sem serde
 # form, the json an agent receives from `plev observe`.
 serde.workspace = true
@@ -72,14 +63,19 @@ serde_json.workspace = true
 # the Surface page asks the Claude for a surface through `claude -p`
 # (task-69 phase 3b-ii): a child process run on a thread of its own.
 # desktop only; where it is absent the page proposes by the rules.
-claude-model.workspace = true
+claude.workspace = true
 
 [dev-dependencies]
 # the agent port's cost test weighs a leaner JSON form of a snapshot.
 serde_json.workspace = true
 # the svg importer reads `--render --svg` exports back: the round trip is
 # the test that the file is well-formed svg with drawable content.
-svg.workspace = true
+import.workspace = true
+# the scene codec, its probe and the recording's cost run over every page
+# of the gallery (tests/scene_codec.rs, scene_probe.rs, record_cost.rs):
+# the scene goes through the recorder's channel as motion data.
+motion.workspace = true
+indexmap.workspace = true
 # examples/regress decodes the png a baseline keeps and writes its
 # baselines into temporary directories in its tests.
 image.workspace = true
@@ -89,7 +85,7 @@ tempfile.workspace = true
 # reads it: the inspector answers "why" about an act on the generated
 # surface. desktop only, like the recording.
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))'.dev-dependencies]
-inspect = { path = "../inspect" }
+replay.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true

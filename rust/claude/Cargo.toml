@@ -5,7 +5,7 @@
 # session, no MCP, no user settings. the network is the child's; this
 # crate opens no socket and holds no key. propose stays pure.
 [package]
-name = "claude-model"
+name = "claude"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,15 +14,15 @@ description = "propose::Model over the claude -p of Claude Code as a child proce
 
 [dependencies]
 # the Model trait and ModelError the child is put behind.
-propose.workspace = true
+offers.workspace = true
 # `claude -p --output-format json` answers one object: the reply, or the
 # error, with the cost and the turns.
 serde_json.workspace = true
 
 [dev-dependencies]
 # the tests and the example read the goldens of task-68 and verify.
-uir.workspace = true
-sem.workspace = true
+plevir.workspace = true
+accord.workspace = true
 # the fake claude answers from files in a directory of its own.
 tempfile.workspace = true
 

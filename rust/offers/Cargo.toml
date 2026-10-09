@@ -7,7 +7,7 @@
 # errors. pure, like uir: no engine, no comps, no network; a provider for
 # the model is phase 3b.
 [package]
-name = "propose"
+name = "offers"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -16,9 +16,9 @@ description = "proposers of plev IR: an intent, the capability registry, the sna
 
 [dependencies]
 # the IR, the registry, the verifier, the schema the prompt carries.
-uir.workspace = true
+plevir.workspace = true
 # the snapshot (roles, parents, values) and the actors of the policy.
-sem.workspace = true
+accord.workspace = true
 # the prompt carries the schema and the current surface as JSON.
 serde_json.workspace = true
 thiserror.workspace = true

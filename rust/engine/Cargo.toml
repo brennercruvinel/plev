@@ -64,16 +64,17 @@ serde_json.workspace = true
 unicode-segmentation.workspace = true
 # the semantic contract (docs/ADR/semantic-binding-beside-the-scene.md):
 # the compositor binds each `SemId` to its rect beside the scene.
-sem.workspace = true
+accord.workspace = true
+# the widgets' multi-line editor sits on the rope-based editing core.
+editor.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }
 
 [dev-dependencies]
-narrate.workspace = true
+markup.workspace = true
 criterion.workspace = true
-lot.workspace = true
-monster.workspace = true
-svg.workspace = true
+import.workspace = true
+motion.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true
@@ -144,6 +145,3 @@ theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
 name = "scene_build"
 harness = false
 
-[[example]]
-name = "text_probe"
-path = "examples/text_probe/main.rs"

@@ -1,0 +1,33 @@
+# the laboratory of the plev experiment (task-62 phase c): the ide's
+# workbench without a window, served to agents through the port, recorded,
+# measured and checked against the real git. unix only (the port is a unix
+# socket); elsewhere it says so and exits.
+[package]
+name = "agenteval"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "`ide-lab`: the laboratory of the plev experiment (task-62, phase c)"
+
+[dependencies]
+idestudio.workspace = true
+engine.workspace = true
+gitdrv.workspace = true
+accord.workspace = true
+socket.workspace = true
+record.workspace = true
+claude.workspace = true
+offers.workspace = true
+plevir.workspace = true
+screen.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+env_logger.workspace = true
+log.workspace = true
+
+[dev-dependencies]
+replay.workspace = true
+
+[lints]
+workspace = true

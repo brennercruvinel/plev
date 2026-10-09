@@ -6,7 +6,7 @@
 # wasm included; the unix socket (AgentPort), the client and the `plev`
 # binary are unix only.
 [package]
-name = "wire"
+name = "socket"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -22,7 +22,7 @@ path = "src/bin/plev.rs"
 [dependencies]
 # with its serde form: the protocol carries snapshots, changes, requests
 # and stages exactly as sem writes them.
-sem = { workspace = true, features = ["serde"] }
+accord = { workspace = true, features = ["serde"] }
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

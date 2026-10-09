@@ -1,5 +1,5 @@
 [package]
-name = "urnaui"
+name = "urnadbapp"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.87"
@@ -20,12 +20,11 @@ description = "urnaui — desktop (and web) explorer for .urna vector databases:
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [[bin]]
-name = "urnaui"
+name = "urnadbapp"
 path = "src/main.rs"
 
 [dependencies]
-engine = { path = "../engine" }
-comps = { path = "../comps" }
+engine = { path = "../../rust/engine" }
 wgpu = "29"
 winit = { version = "0.30", features = ["rwh_06"] }
 log = "0.4"
@@ -74,7 +73,7 @@ console_error_panic_hook = "0.1"
 # Android pulls the GameActivity winit backend (via the engine feature) and a
 # logcat-backed logger; the cdylib above is what gets packaged into the APK.
 [target.'cfg(target_os = "android")'.dependencies]
-engine = { path = "../engine", features = ["android-game-activity"] }
+engine = { path = "../../rust/engine", features = ["android-game-activity"] }
 android_logger = "0.14"
 
 # Same bar as the root workspace (which this crate no longer inherits).

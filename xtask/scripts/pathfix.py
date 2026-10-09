@@ -25,6 +25,9 @@ TABLE = plevmap.module_table()
 REV = plevmap.reverse_moves()
 OLD_LIBS = set(plevmap.OLD_CRATES.values())
 MANUAL = []
+# `crate::` inside a proc-macro's quote! names the crate the expansion lands
+# in (the engine), not the macro crate: rewritten by hand.
+SKIP = {"rust/macros/src/view.rs"}
 
 
 def tokenize(src):
@@ -107,6 +110,8 @@ class File:
         self.old_lib = plevmap.OLD_CRATES.get(oc) if oc else None
         # `crate::` means the old crate only for files of a library tree
         self.lib_file = bool(oc and plevmap.lib_module(old, oc) is not None)
+        # a path to its own crate is `crate::` only from inside the library
+        self.new_lib_file = bool(nc and plevmap.lib_module(path, nc) is not None)
         self.shadow = set()
         for m in re.finditer(r"\bmod\s+([a-z_][a-z0-9_]*)", src):
             self.shadow.add(m.group(1))
@@ -125,9 +130,10 @@ class File:
         return None
 
     def emit_root(self, new_lib, root_tok):
+        own = new_lib == self.new_lib and self.new_lib_file
         if root_tok == "$crate":
-            return "$crate" if new_lib == self.new_lib else new_lib
-        return "crate" if new_lib == self.new_lib else new_lib
+            return "$crate" if own else new_lib
+        return "crate" if own else new_lib
 
     def translate(self, root, segs):
         lib = self.root_lib(root)
@@ -236,6 +242,8 @@ def main(argv):
     files = [a for a in argv if not a.startswith("--")] or plevmap.rs_files(plevmap.ROOT)
     changed = 0
     for rel in files:
+        if rel in SKIP:
+            continue
         full = os.path.join(plevmap.ROOT, rel)
         src = open(full, encoding="utf-8").read()
         out = File(rel, src).run()

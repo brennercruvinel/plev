@@ -59,10 +59,11 @@ def children(full_dir, is_root, own=None):
 
 
 def old_decl(new_child_path):
-    """The declaration of this child in its old parent, with its old name."""
+    """The declaration of this child in its old parent, with its old name and
+    the old parent's file."""
     old = REV.get(new_child_path)
     if not old:
-        return None, None
+        return None, None, None
     d, b = os.path.split(old)
     name = os.path.basename(d) if b == "mod.rs" else b[:-3]
     parent_dir = os.path.dirname(d) if b == "mod.rs" else d
@@ -74,12 +75,12 @@ def old_decl(new_child_path):
             continue
         for m in DECL.finditer(src):
             if m.group("name") == name:
-                return m, name
+                return m, name, cand
         # #[path = "tests_x.rs"] mod x;
         for m in DECL.finditer(src):
             if f'"{b}"' in m.group("attrs"):
-                return m, m.group("name")
-    return None, name
+                return m, m.group("name"), cand
+    return None, name, None
 
 
 _OLD = {}
@@ -130,11 +131,12 @@ def fix_module(path, check):
     added = []
     for name in sorted(want - set(have)):
         cpath = child_path(mdir, name)
-        m, old_name = old_decl(cpath)
+        m, old_name, old_parent = old_decl(cpath)
         if m is not None:
             attrs = re.sub(r"[ \t]*#\[path\s*=\s*\"[^\"]*\"\][ \t]*\n", "", m.group("attrs"))
             vis = m.group("vis") or ""
-            if old_name and old_name != name:
+            # renamed in place: the same parent file declared it under the old name
+            if old_name and old_name != name and REV.get(path) == old_parent:
                 renames[old_name] = name
         else:
             attrs, vis = "", "pub "

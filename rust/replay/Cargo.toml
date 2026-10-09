@@ -6,7 +6,7 @@
 # observation and the request and who did it, and the result. it only
 # reads: nothing here can create a request or run an action.
 [package]
-name = "inspect"
+name = "replay"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -22,10 +22,10 @@ path = "src/bin/plev_inspect.rs"
 [dependencies]
 # the read side of a recorded session: events, the state at an instant,
 # receipts rebuilt from their stages.
-rec.workspace = true
+record.workspace = true
 # with its serde form: the json output carries actors, values, changes,
 # stages and rejections exactly as sem writes them.
-sem = { workspace = true, features = ["serde"] }
+accord = { workspace = true, features = ["serde"] }
 serde.workspace = true
 # the serde names in the plain-english forms, and the cli's --json.
 serde_json.workspace = true

@@ -1,6 +1,6 @@
 # monster: binary animation codec for plev (docs/ADR/monster-format-v0.md).
 [package]
-name = "monster"
+name = "motion"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

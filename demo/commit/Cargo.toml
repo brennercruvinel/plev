@@ -1,0 +1,13 @@
+[package]
+name = "commit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "the thesis scenario (generative-runtime-thesis.md, sections 8 and 9)"
+
+[dependencies]
+accord.workspace = true
+
+[lints]
+workspace = true

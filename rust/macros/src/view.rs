@@ -1,17 +1,11 @@
+//! `#[component]`: a function becomes a View-implementing struct.
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{ItemFn, parse_macro_input};
 
-/// Transforms a function into a View-implementing struct.
-///
-/// ```ignore
-/// #[component]
-/// fn Header(cx: Scope) -> impl IntoView {
-///     div().bg("blue").child(text("Title"))
-/// }
-/// ```
-#[proc_macro_attribute]
-pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
+/// The expansion of `#[component]` (see the crate root).
+pub(crate) fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as ItemFn);
     let fn_name = &input.sig.ident;
     let fn_body = &input.block;
@@ -20,15 +14,15 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote! {
         #vis struct #fn_name;
 
-        impl crate::view::View for #fn_name {
-            fn render(&self, cx: &mut crate::view::ViewContext) -> Vec<crate::compositor::SceneNode> {
-                let scope = crate::builder::Scope::from(cx);
-                let element: crate::builder::Element = {
-                    use crate::builder::*;
-                    use crate::color::*;
+        impl crate::compose::view::View for #fn_name {
+            fn render(&self, cx: &mut crate::compose::view::ViewContext) -> Vec<crate::drawing::compositor::SceneNode> {
+                let scope = crate::compose::builder::Scope::from(cx);
+                let element: crate::compose::builder::Element = {
+                    use crate::compose::builder::*;
+                    use crate::styling::color::*;
                     #fn_body
                 }.into_view();
-                element.render(&mut crate::view::ViewContext::new(
+                element.render(&mut crate::compose::view::ViewContext::new(
                     scope.cx.width,
                     scope.cx.height,
                 ))

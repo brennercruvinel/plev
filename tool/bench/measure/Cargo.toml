@@ -1,0 +1,17 @@
+[package]
+name = "measure"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "What each stage of a frame costs for a few real interactions of the"
+
+[dependencies]
+uigallery.workspace = true
+engine.workspace = true
+editor.workspace = true
+winit.workspace = true
+web-time.workspace = true
+
+[lints]
+workspace = true

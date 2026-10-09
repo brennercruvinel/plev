@@ -1,32 +1,17 @@
 [package]
-name = "ide"
+name = "idestudio"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-# two bins (the ide and ide-lab): `cargo run -p ide` runs the ide.
-default-run = "ide"
 description = "Simple IDE test"
-
-[[bin]]
-name = "ide"
-path = "src/main.rs"
-
-# the laboratory of the plev experiment (task-62 phase c): the workbench
-# without a window, served to agents through the port, recorded, measured
-# and checked against the real git. unix only (the port is a unix
-# socket); elsewhere it says so and exits.
-[[bin]]
-name = "ide-lab"
-path = "src/bin/lab/main.rs"
 
 [dependencies]
 engine.workspace = true
-comps.workspace = true
-git.workspace = true
+gitdrv.workspace = true
 # the workbench: the workspace as a capability every actor reaches
 # through one dispatcher.
-sem.workspace = true
+accord.workspace = true
 wgpu.workspace = true
 winit.workspace = true
 log.workspace = true
@@ -37,32 +22,32 @@ notify.workspace = true
 # the agent port: the lib serves the workbench through it (src/agent.rs,
 # unix only), the ide's window opens it with PLEV_AGENT=1 in a debug build,
 # and the laboratory (src/bin/lab) serves it too.
-wire.workspace = true
+socket.workspace = true
 # the flight recorder: the lib records the ide's session with it
 # (src/record.rs, PLEV_RECORD=1 in a debug build), and the laboratory
 # (src/bin/lab) around its workbench. the laboratory's report as json: the
 # lib does not use it; cargo has no per-binary dependencies. its real
 # repository in a temp dir lives in the lib (src/lab_repo.rs), so the
 # tests that rerun a recorded session build the same one.
-rec.workspace = true
+record.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
 # the generated surface beside the fixed views (task-96): an intent
 # proposed as IR (propose: the rules), verified against the registry the
 # workbench's own projection gives (uir), and hosted beside the panels,
 # every act through the workbench's dispatcher (surface).
-uir.workspace = true
-propose.workspace = true
-surface.workspace = true
+plevir.workspace = true
+offers.workspace = true
+screen.workspace = true
 # the Claude as a proposer of the line, off the workbench's thread, the
 # way the showcase asks it (claude -p as a child process; the rules stay
 # the first choice, and a test only ever runs the repository's fake).
-claude-model.workspace = true
+claude.workspace = true
 
 [dev-dependencies]
 # the recording test reads the session back the way plev-inspect does,
 # and asks it why each act of the agent went as it did.
-inspect = { path = "../inspect" }
+replay.workspace = true
 
 [lints]
 workspace = true

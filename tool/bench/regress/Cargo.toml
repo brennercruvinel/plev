@@ -1,0 +1,23 @@
+# the structural regression harness (task-67) over every page of the gallery.
+[package]
+name = "regress"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Structural regression for the showcase (task-67): a frame is compared"
+
+[dependencies]
+uigallery.workspace = true
+engine.workspace = true
+accord.workspace = true
+plevir.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+image.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

@@ -3,7 +3,7 @@
 # app did as data (observations, snapshots, receipts, input, frames) in a
 # bounded ring, and reads it back. it never creates a request.
 [package]
-name = "rec"
+name = "record"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,10 +12,10 @@ description = "Session flight recorder of plev: semantic events, receipts and sa
 
 [dependencies]
 engine.workspace = true
-monster.workspace = true
+motion.workspace = true
 # with its serde form (a default feature of sem): recorded events carry
 # snapshots, requests and stages.
-sem.workspace = true
+accord.workspace = true
 # the session file's semantic section is one json line per event, so
 # serde is not optional here. snapshots and requests are shared between
 # events behind an Arc, hence the rc feature.
@@ -27,10 +27,7 @@ sha2.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
-# the showcase todo page is the real scene the recording cost is measured
-# on (tests/session/measure.rs); the showcase is only read.
-showcase = { path = "../showcase" }
-comps.workspace = true
+engine.workspace = true
 indexmap.workspace = true
 # a temporary directory per file test.
 tempfile.workspace = true

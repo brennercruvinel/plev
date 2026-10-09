@@ -1,37 +1,53 @@
 [workspace]
 resolver = "2"
-# Every crate in the project is a member (each shows up as an IDE target).
-# urnaui is deliberately NOT a member: its native backend path-depends on the
-# sibling urna workspace (../urna), so including it would break this workspace
-# for anyone without a urna checkout (public repo, CI). it lives excluded with
-# its own manifest/workspace — see crates/urnaui/Cargo.toml and script/gate.
+# Every crate in the project is a member (each shows up as an IDE target):
+# the libraries under rust/, the apps under apps/, one crate per demo under
+# demo/, and the tooling under tool/.
+# urnadbapp is deliberately NOT a member: its native backend path-depends on
+# the sibling urna workspace (../urna), so including it would break this
+# workspace for anyone without a urna checkout (public repo, CI). it lives
+# excluded with its own manifest/workspace — see apps/urnadbapp/Cargo.toml
+# and tool/tasks/fullcheck.sh.
 members = [
-    "crates/engine",
-    "crates/comps",
-    "crates/claude-model",
-    "crates/macros",
-    "crates/git",
-    "crates/ide",
-    "crates/inspect",
-    "crates/inspector",
-    "crates/lot",
-    "crates/monster",
-    "crates/svg",
-    "crates/narrate",
-    "crates/narrate-macro",
-    "crates/parser",
-    "crates/prime",
-    "crates/propose",
-    "crates/rec",
-    "crates/rope",
-    "crates/sem",
-    "crates/showcase",
-    "crates/surface",
-    "crates/uir",
-    "crates/wire",
+    "rust/accord",
+    "rust/claude",
+    "rust/editor",
+    "rust/engine",
+    "rust/gitdrv",
+    "rust/import",
+    "rust/macros",
+    "rust/markup",
+    "rust/motion",
+    "rust/offers",
+    "rust/plevir",
+    "rust/record",
+    "rust/replay",
+    "rust/screen",
+    "rust/socket",
+    "apps/agenteval",
+    "apps/idestudio",
+    "apps/inspector",
+    "apps/mirroring",
+    "apps/uigallery",
+    "demo/arcade",
+    "demo/camera",
+    "demo/commit",
+    "demo/inputs",
+    "demo/intent",
+    "demo/layers",
+    "demo/lottie",
+    "demo/mobile",
+    "demo/mockup",
+    "demo/player",
+    "demo/primes",
+    "demo/shapes",
+    "demo/ticker",
+    "tool/bench/measure",
+    "tool/bench/regress",
+    "tool/tests",
 ]
-# llm too: candle and burn (burn on wgpu 29) live in its own workspace and lock.
-exclude = ["crates/urnaui", "crates/llm"]
+# llmrun too: candle and burn (burn on wgpu 29) live in its own workspace and lock.
+exclude = ["apps/urnadbapp", "rust/llmrun"]
 
 # Metadata inherited by every crate (`version.workspace = true`;
 # `description` stays per crate). Private: `publish = false` on each one.
@@ -55,24 +71,23 @@ uninlined_format_args = "warn"
 # `{ workspace = true, features = [...] }`.
 [workspace.dependencies]
 # -- internal (path)
-engine = { path = "crates/engine" }
-comps = { path = "crates/comps" }
-claude-model = { path = "crates/claude-model" }
-git = { path = "crates/git" }
-ide = { path = "crates/ide" }
-lot = { path = "crates/lot" }
-macros = { path = "crates/macros" }
-monster = { path = "crates/monster" }
-narrate = { path = "crates/narrate" }
-narrate-macro = { path = "crates/narrate-macro" }
-propose = { path = "crates/propose" }
-rec = { path = "crates/rec" }
-rope = { path = "crates/rope" }
-sem = { path = "crates/sem" }
-surface = { path = "crates/surface" }
-svg = { path = "crates/svg" }
-uir = { path = "crates/uir" }
-wire = { path = "crates/wire" }
+accord = { path = "rust/accord" }
+claude = { path = "rust/claude" }
+editor = { path = "rust/editor" }
+engine = { path = "rust/engine" }
+gitdrv = { path = "rust/gitdrv" }
+idestudio = { path = "apps/idestudio" }
+import = { path = "rust/import" }
+macros = { path = "rust/macros" }
+markup = { path = "rust/markup" }
+motion = { path = "rust/motion" }
+offers = { path = "rust/offers" }
+plevir = { path = "rust/plevir" }
+record = { path = "rust/record" }
+replay = { path = "rust/replay" }
+screen = { path = "rust/screen" }
+socket = { path = "rust/socket" }
+uigallery = { path = "apps/uigallery" }
 # -- gpu / window
 wgpu = "29"
 winit = { version = "0.30", features = ["rwh_06"] }
@@ -88,7 +103,7 @@ etagere = "0.2"
 # svg importer: usvg normalizes a whole svg document (groups, transforms,
 # gradients, use/defs, shape-to-path) into a flat tree we tessellate.
 # default-features off drops fontdb/text-to-path (wasm-safe, deterministic);
-# text is skipped like lot skips it. pinned at 0.45; a newer usvg is a
+# text is skipped like the lottie importer skips it. pinned at 0.45; a newer usvg is a
 # change of its own.
 usvg = { version = "0.45", default-features = false }
 # -- data / util
@@ -108,7 +123,7 @@ gix = { version = "0.84", default-features = false, features = ["sha1", "revisio
 syn = { version = "2", features = ["full", "extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
-# -- tree-sitter (parser)
+# -- tree-sitter (import)
 tree-sitter = "0.25"
 tree-sitter-typescript = "0.23"
 tree-sitter-rust = "0.24"

@@ -2,7 +2,7 @@
 # pure on purpose: no gpu, no window, no text stack, so an agent, the
 # recorder, a headless tool or a cli can link it without the render stack.
 [package]
-name = "sem"
+name = "accord"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
