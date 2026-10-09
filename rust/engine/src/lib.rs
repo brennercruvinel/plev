@@ -59,11 +59,11 @@ pub fn run_event_loop(event_loop: winit::event_loop::EventLoop<runtime::window::
     event_loop.run_app(&mut app).unwrap();
 }
 
-/// Android entry point for the engine's built-in [`window::App`].
+/// Android entry point for the engine's built-in [`runtime::window::App`].
 ///
 /// Gated behind the `android-entry` cargo feature (off by default), mirroring
 /// `web-entry`: a cdylib exports exactly one `android_main` symbol, so a
-/// downstream app (showcase, ide, ...) that ships its own GameActivity entry
+/// downstream app (uigallery, idestudio, ...) that ships its own GameActivity entry
 /// must be able to opt out and define its own.
 #[cfg(all(target_os = "android", feature = "android-entry"))]
 #[unsafe(no_mangle)]
@@ -93,7 +93,7 @@ fn android_main(app: winit::platform::android::activity::AndroidApp) {
 #[cfg(all(target_arch = "wasm32", feature = "web-entry"))]
 use wasm_bindgen::prelude::*;
 
-/// Browser entry point for the engine's built-in [`window::App`].
+/// Browser entry point for the engine's built-in [`runtime::window::App`].
 ///
 /// Gated behind the `web-entry` cargo feature (off by default): a wasm
 /// module may only have one `#[wasm_bindgen(start)]`, so downstream apps
