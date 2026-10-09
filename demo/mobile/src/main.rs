@@ -1,6 +1,6 @@
 //! Mobile Input -- safe area insets, IME input, lifecycle state.
 //!
-//! Run: `cargo run --example mobile_input`
+//! Run: `cargo run -p mobile`
 #![allow(dead_code)]
 
 mod palette;

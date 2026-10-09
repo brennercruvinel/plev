@@ -1,6 +1,6 @@
 //! Component Counter -- demonstrates the Component<T> + Lifecycle pattern.
 //!
-//! Run: `cargo run --example counter`
+//! Run: `cargo run -p ticker`
 //!
 //! The Counter Lifecycle increments a u64 every frame via on_update().
 //! Its render() produces SceneNodes for the counter display card.

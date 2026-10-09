@@ -1,7 +1,7 @@
 //! Lottie player: renders a lottie json file with the `lot` crate on a
 //! plev window. Loops at the file's native frame rate.
 //!
-//! Run: `cargo run --example lottie_player -- path/to/animation.json`
+//! Run: `cargo run -p lottie -- path/to/animation.json`
 //! (default: data/media/lottie/snakeloop). Space pauses, left/right arrows scrub
 //! by half a second.
 

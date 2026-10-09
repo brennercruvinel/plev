@@ -1,6 +1,6 @@
 //! Snake Game -- auto-playing AI snake built entirely on plev primitives.
 //!
-//! Run: `cargo run --example snake`
+//! Run: `cargo run -p arcade`
 //!
 //! Demonstrates: Rect, RoundedRect (SDF), Text, per-frame scene rebuild,
 //! timer-based game tick, keyboard input, dirty tracking.

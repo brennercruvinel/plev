@@ -41,7 +41,7 @@ pub enum FileError {
     BadMagic,
     #[error(
         "this .monster is an animation (MON0), not a session; play it with \
-         monster_player or monster::MonsterPlayer"
+         the player demo (cargo run -p player) or motion::MonsterPlayer"
     )]
     Animation,
     #[error("unsupported session version {0}; this reader reads 0 and 1")]

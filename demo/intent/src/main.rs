@@ -28,7 +28,7 @@ use plevir::{
     Capabilities, Component, GenerationPolicy, IrNode, VerifiedIr, parse, verify, verify_json,
 };
 
-const USAGE: &str = "usage: propose [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] \
+const USAGE: &str = "usage: intent [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] \
                      [--timeout <seconds>] \"<intent>\"";
 
 fn fixture(name: &str) -> Result<String, String> {

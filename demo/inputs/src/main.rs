@@ -1,6 +1,6 @@
 //! Input system demo -- hit regions, hover states, event queue.
 //!
-//! Run: `cargo run --example input`
+//! Run: `cargo run -p inputs`
 
 mod gpu;
 mod palette;

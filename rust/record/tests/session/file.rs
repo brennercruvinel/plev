@@ -420,7 +420,7 @@ fn an_animation_handed_to_the_session_reader_is_named() -> Fallible {
     let refused = Session::from_bytes(&bytes);
     assert!(matches!(refused, Err(FileError::Animation)), "{refused:?}");
     let message = refused.err().map(|e| e.to_string()).unwrap_or_default();
-    assert!(message.contains("monster_player"), "{message}");
+    assert!(message.contains("cargo run -p player"), "{message}");
     assert_eq!(probe(b"MO"), FileKind::Unknown);
     assert!(matches!(
         Session::open("/nonexistent/session.monster"),

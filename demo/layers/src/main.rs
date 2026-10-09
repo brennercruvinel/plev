@@ -4,7 +4,7 @@
 //! animates (render on demand, per window). Close either: the other
 //! stays. Close both: the app exits. (task-76 item 2)
 //!
-//! Run: `cargo run --example layers`
+//! Run: `cargo run -p layers`
 #![allow(dead_code)]
 
 mod palette;

@@ -1,5 +1,5 @@
 //! Makepad-inspired SDF shapes showcase.
-//! Run: `cargo run --example sdf_shapes`
+//! Run: `cargo run -p shapes`
 #![allow(dead_code)]
 
 mod cards_row1;

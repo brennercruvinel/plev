@@ -2,15 +2,15 @@
 //! window. This binary contains zero lottie knowledge: it decodes our
 //! container, unpacks the path assets, and pushes the lowered scene.
 //!
-//! Run: `cargo run --release --example monster_player -- file.monster`
+//! Run: `cargo run --release -p player -- file.monster`
 //! Space pauses, left/right arrows scrub by half a second; the
 //! animation loops.
 //!
-//! Without a window: `monster_player file.monster --frame <t> --out f.png`
+//! Without a window: `player file.monster --frame <t> --out f.png`
 //! draws the frame at `t` seconds through `engine::drawing::headless` (the window's
 //! frame path into an offscreen texture) at 640x640 and exits.
 //!
-//! `monster_player file.monster --frame <t> --capture f.png` is the check
+//! `player file.monster --frame <t> --capture f.png` is the check
 //! that the two are one path: it opens the window at 640x640 physical
 //! pixels, draws the frame at `t` into the surface with the same
 //! `draw_frame`, reads the surface texture back before presenting, writes
@@ -39,7 +39,7 @@ use motion::{AssetKind, LoweredAsset, MonsterPlayer};
 const BG: [f32; 4] = [0.0090, 0.0105, 0.0137, 1.0];
 const WINDOW: f32 = 640.0;
 
-const USAGE: &str = "usage: monster_player <file.monster> \
+const USAGE: &str = "usage: player <file.monster> \
                      [--frame <seconds> (--out <file.png> | --capture <file.png>)]";
 
 #[allow(clippy::large_enum_variant)]
@@ -350,7 +350,7 @@ fn main() {
     if bytes.starts_with(b"MONS") {
         eprintln!(
             "{path} is a recorded session (magic MONS), not an animation (MON0); \
-             monster_player plays animations only. sessions open in the session \
+             player plays animations only. sessions open in the session \
              inspector (task-64), or read them with rec::Session::open"
         );
         std::process::exit(1);
