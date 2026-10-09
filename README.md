@@ -65,21 +65,20 @@ rustup.
 ```
 cargo build --release --workspace
 
-cargo run -p showcase [page] [theme] [scroll]      # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
-cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
-cargo run -p showcase -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
-cargo run -p showcase --example regress -- check   # structural regression over tool/bench/regress/baselines: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
-cargo run -p showcase --example regress -- capture   # every page in 4 themes at 4 scales through the real frame path; `--against <dir>` compares byte for byte with an earlier capture
-cargo run -p ide --bin ide [path]      # plev-native git client; with PLEV_AGENT=1 (debug) its window opens the agent port as app ide, with PLEV_RECORD=1 it records its session (cmd-shift-s, on close, on a panic) for plev-inspect
-cargo run -p ide --bin ide-lab -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
-cargo run -p prime                     # prime-coherence particle swarm
-cargo run -p engine --example snake    # any of the windowed demos
-cargo run -p comps --example editor    # the design-system editor demo
-cargo run -p wire --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
-cargo run -p wire --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
-cargo run -p inspect --bin plev-inspect -- <session.monster> [--timeline] [--why <request>] [--control <id> --at <ms>] [--json]   # a recorded session read back: a summary, every event, a request's causal chain, a control at an instant; it never runs anything
+cargo run -p uigallery [page] [theme] [scroll]     # the design-system gallery, one page per component (title as the sidebar shows it, "Data Table")
+cargo run -p uigallery -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png   # any page to png, no window
+cargo run -p uigallery -- --render Todo --svg todo.svg --semantics todo.json   # the same frame as svg (each approximation reported on stderr) and the page's semantic projection as the json `plev observe` serves
+cargo run -p regress -- check   # structural regression over tool/bench/regress/baselines: meaning, then layer hashes, then pixels only where a layer moved; `-- bless` accepts a change
+cargo run -p regress -- capture   # every page in 4 themes at 4 scales through the real frame path; `--against <dir>` compares byte for byte with an earlier capture
+cargo run -p idestudio [path]          # plev-native git client; with PLEV_AGENT=1 (debug) its window opens the agent port as app ide, with PLEV_RECORD=1 it records its session (cmd-shift-s, on close, on a panic) for plev-inspect
+cargo run -p agenteval -- --arm scripted   # the task-62 lab (unix): the ide's workbench with no window, on a temp repo, served to an agent through the port, recorded, checked against git
+cargo run -p primes                    # prime-coherence particle swarm
+cargo run -p arcade                    # any of the windowed demos (demo/*)
+cargo run -p socket --bin plev -- observe --scope todo --app showcase   # an app opened with PLEV_AGENT=1 (debug), as an agent sees it
+cargo run -p socket --bin plev -- act todo.item[1] toggle --from-revision <rev>   # act on what that observation saw; exit 0 done, 1 rejected, 2 failed, 3 error
+cargo run -p replay --bin plev-inspect -- <session.monster> [--timeline] [--why <request>] [--control <id> --at <ms>] [--json]   # a recorded session read back: a summary, every event, a request's causal chain, a control at an instant; it never runs anything
 cargo run -p inspector --bin plev-inspector -- <session.monster>   # the inspector's window: the timeline and the scrub, the recorded frame with its controls, the thesis answers about the control clicked; it never runs anything
-cargo run -p claude-model --example propose -- --app todo "show the filter as chips and hide the counts"   # an intent to a verified IR over the todo's (or --app ide, the workbench's) golden projection, proposed by the Claude through the local claude -p (PLEV_CLAUDE names another program); prints each attempt, the time and the IR
+cargo run -p intent -- --app todo "show the filter as chips and hide the counts"   # an intent to a verified IR over the todo's (or --app ide, the workbench's) golden projection, proposed by the Claude through the local claude -p (PLEV_CLAUDE names another program); prints each attempt, the time and the IR
 ```
 
 every debug build is its own dev loop: save a `.wgsl`, a string or a hex
@@ -97,7 +96,7 @@ web, the desktop's pixels in the browser (`cargo install trunk` first):
 ./tool/tasks/webtarget.sh
 ```
 
-urnaui, the `.urna` explorer, is its own workspace because its native
+urnadbapp, the `.urna` explorer, is its own workspace because its native
 backend path-depends on a sibling checkout of
 [urna](https://github.com/hoffresearch/urna) (v0.4.0 or later) at
 `../urna`. with urna cloned next to plev:
@@ -133,97 +132,33 @@ cargo test --manifest-path rust/llmrun/Cargo.toml --features candle,burn
 cargo run --release --manifest-path rust/llmrun/Cargo.toml --features candle,metal --bin llm-bench -- --impl candle --model <dir> --device metal
 ```
 
-mobile: the showcase runs natively on iOS and Android from the same
+mobile: the gallery runs natively on iOS and Android from the same
 engine. there is no kotlin or swift ui, every pixel is drawn by plev. iOS
 needs xcode, the `aarch64-apple-ios-sim` target and `xcodegen`; Android
 needs the sdk/ndk, a jdk 17 and `cargo-ndk`.
 
 ```
-cd apps/uigallery/ios && ./build_ios.sh && ./run_ios.sh   # simulator: build, install, launch, screenshot
-cd android && ./build_android.sh                    # -> app/build/outputs/apk/debug/app-debug.apk
+tool/tasks/mobileapp.sh ios && tool/tasks/mobileapp.sh ios-run   # simulator: build, install, launch, screenshot
+tool/tasks/mobileapp.sh android                                  # -> apps/uigallery/android/app/build/outputs/apk/debug/app-debug.apk
 tool/tasks/screencap.sh web --all                            # every gallery page in the browser, each classified against the desktop's frame
 tool/tasks/screencap.sh ios --all                            # the same on the simulator
 ```
 
 ## workspace
 
-the engine is one crate, the design system is one crate over it, the
-repo root is a virtual workspace, libraries and apps are sibling crates,
-demos are the engine's (and comps') examples.
+the repo root is a virtual workspace; every crate lives in one of four
+homes by what it is.
 
-| tier | where | what |
+| home | where | what |
 |---|---|---|
-| engine | `rust/engine` | gpu, compositor, effects, text, path, layout, input, actions, animation, signal, theme (the tokens), graph, builder, window, headless, accessibility, clipboard, perf, hot_reload, platform |
-| comps | `rust/engine/src/widgets` | the design system: every widget, recipe, icon, chart, overlay, the editor and the app shell, all read from `engine::theme::Theme`; the inventory is [docs/ref/component-catalog.md](docs/ref/component-catalog.md) |
-| crates | `crates/` | claude-model, git, ide, inspect, inspector, lot, macros, monster, narrate, narrate-macro, parser, prime, propose, rec, rope, sem, showcase, surface, svg, uir, wire |
-| own workspaces | `apps/urnadbapp`, `rust/llmrun` | the `.urna` explorer and the in-process language model, each with its own `Cargo.lock` |
-| examples | `demo/`, `rust/engine/src/widgets/examples/` | 13 windowed engine demos, the comps editor demo, plus the lot2monsters, svg2monster and text_probe clis |
+| libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling, and the design system as `engine::widgets`; the inventory is [docs/ref/component-catalog.md](docs/ref/component-catalog.md)), `accord` (the semantic contract), `plevir` (plev IR and its verifier), `screen` (surfaces materialized from the IR), `offers` (the proposers), `claude` (the Claude as a proposer), `socket` (the agent port and the plev cli), `record` (the flight recorder), `replay` (reading a session back, plev-inspect), `motion` (the .monster codec), `import` (lottie, svg, react, html, figma, gpui in), `editor` (the rope editing core), `gitdrv` (git), `markup` + `macros` (the markup dsl and the proc-macros), `llmrun` (own workspace) |
+| apps | `apps/` | `uigallery` (the design-system gallery, desktop, web, android, ios), `idestudio` (the git client), `agenteval` (the experiment's lab), `inspector` (the session inspector window), `mirroring` (a page mirrored over the scene socket), `urnadbapp` (the `.urna` explorer, own workspace) |
+| demos | `demo/` | one crate per demo: arcade, camera, commit, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker |
+| tooling | `tool/` | `bench/measure` and `bench/regress` (cost tables and the structural regression), `tasks` (the scripts), `tests` (the architecture tests) |
 
-`comps` is the crate an app draws with. widgets are plain structs the app
-owns; they take `&Theme` and read every color, radius, height, padding,
-shadow and breakpoint from it, so a theme swap or a phone width changes
-the whole app at once. the showcase and the ide are framed by
-`comps::shell::AppShell`: full sidebar on a desktop, a rail in a narrow
-window, a drawer behind a menu button on a phone.
-
-the text field in `comps` composes input-method text inline, moves its
-caret by what the screen shows in mixed-direction text, and copies, cuts
-and pastes through the person's clipboard. the text still being composed
-is only drawn: it stays out of the field's value, the recording and what
-an agent reads. only the person's keys and menu reach the clipboard; an
-agent can neither read it nor write to it.
-
-`sem` is the semantic contract: each control's persistent id, role,
-state, actions and constraints as pure data, projected from app state on
-demand ([docs/adr/semantics/0032-semantic-contract-as-pure-projection.md](docs/adr/semantics/0032-semantic-contract-as-pure-projection.md)).
-`rec` records a session as data in a bounded ring (who observed what, the
-state, every receipt, the frames on screen) and reads it back; replay
-never creates a request. `inspect` answers the questions a session raises
-(what the agent saw, why a request was refused, what a control held at an
-instant) and `inspector` is its window; neither runs anything.
-`wire` lets an agent outside the process observe and operate an app
-through that contract only, over a local socket in json lines: scoped and
-incremental observations, and actions that go through the same dispatcher
-as a click. `uir` is the plev IR: a surface described by meaning over
-that contract, and only what its verifier accepts reaches the runtime.
-`surface` materializes a verified IR into a live surface over an app:
-laid out by the engine, drawn by the comps widgets, projected from the IR,
-and every event a request through the app's own dispatcher.
-`propose` turns an intent into a proposed IR, by rules over the app's
-registry or by a language model behind a trait, and only a verified IR
-comes out of it. `claude-model` puts the Claude behind that trait: it
-runs the `claude -p` of Claude Code as a child process, with no tools and
-no saved session, and kills it past a timeout; the network is the
-child's, the crate holds no key.
-
-some crates are pipelines, with a foreign format in and ours out.
-
-`monster` is a binary animation format, magic `MON0`, container version
-0 (the v0 spec), its golden fixtures frozen.
-keyframes are full snapshots so seek is O(1), between them only discovered
-deltas travel, and a node that does not change costs zero bytes. `lot`
-converts a lottie json into it once, `svg` imports a still through the
-same door, and no foreign runtime is ever embedded. the decision record is
-[docs/ref/monster-format-v0.md](docs/ref/monster-format-v0.md).
-
-`parser` reads ui source from React, gpui, a subset of HTML and CSS, or a
-Figma export, and writes plev builder code and plev IR from it. colors
-become the nearest theme token. every construct in the source lands in
-the report as supported, transformed, approximated or impossible, with
-its file and line, so nothing is dropped without a trace.
-
-```
-cargo run -p engine --example lot2monsters in.json out.monster
-cargo run -p engine --example svg2monster  in.svg  out.monster
-cargo run -p engine --example monster_player out.monster
-cargo run -p engine --example monster_player out.monster --frame 0.5 --out f.png   # one frame, no window
-
-cargo run -p parser --example transpile  index.tsx module.sass vars.sass
-cargo run -p parser --example preview    index.tsx module.sass vars.sass
-```
-
-the frame flow, from event to present, is the `[diagram]` table of
-[docs/ATLAS.toml](docs/ATLAS.toml).
+`data/media/lottie` holds the lottie references the importer and the gates
+read; [docs/TERMS.toml](docs/TERMS.toml) maps every former name (sem,
+showcase, comps, ...) to its place in this tree.
 
 ## contracts
 
@@ -247,12 +182,12 @@ constructing a raw key instead of going through the one-TextStyle path.
 ## gate
 
 ```
-./tool/tasks/fullcheck.sh       # test (the wgsl shaders included), clippy, fmt and the wasm check, plus the urnaui leg when ../urna is there; stops on the first red
-cargo bench -p rope # criterion, one crate
+./tool/tasks/fullcheck.sh       # test (the wgsl shaders included), clippy, fmt, the wasm check and the docs links, plus the urnadbapp leg when ../urna is there; stops on the first red
+cargo bench -p editor           # criterion, one crate
 ```
 
-benches sit on the hot path of each crate: `engine` scene build, `rope`
-edits, `monster` codec, `lot` conversion, `parser` transpile.
+benches sit on the hot path of each crate: `engine` scene build, `editor`
+edits, `motion` codec, `import` lottie conversion and gpui transpile.
 `rust/llmrun` measures inference with its own `llm-bench`.
 
 ## docs
@@ -262,7 +197,8 @@ edits, `monster` codec, `lot` conversion, `parser` transpile.
 - [docs/ref/code-against-the-plev-engine.md](docs/ref/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/ref/](docs/ref/): pixel validation, the web target, orchestrating agents.
 - [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
 - [docs/log/changelog.md](docs/log/changelog.md): what changed, newest first.
-- [.contracts/.agents/AGENTS.md](.contracts/.agents/AGENTS.md): the single instruction source for ai agents and contributors. route every tool here, no per-tool files.
+- [docs/TERMS.toml](docs/TERMS.toml): the names of the tree, old and new, crate by crate and module by module.
+- [.devops/](.devops/): the tool contracts (`check/`), the agents' rules (`rules/`) and skills (`agent/`).
 
 ## license
 

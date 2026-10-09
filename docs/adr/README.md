@@ -200,3 +200,124 @@ o programa em docs/log/generative-runtime-program.md; uma linha por decisão das
 - duplicados conscientes: [adr-003-srp-modularization](structure/0015-srp-modularization.md) (decisao formal) e [srp-modularization](../ref/srp-modularization.md) (detalhes de sessao) cobrem o mesmo limite de 300 linhas por angulos diferentes. o trio de hot reload ([hot-reload-design](../ref/hot-reload-design.md) e a pesquisa, [shader-hot-reload-adr](workflows/0019-shader-hot-reload.md) e [narrate-hot-reload-adr](workflows/0018-narrate-hot-reload.md) sao as duas decisoes).
 - idioma: ADRs ate meados de 2024 estao em portugues, do fim de 2024 em diante em ingles, casando com o idioma do codigo e dos commits da respectiva onda. mantido de proposito.
 - a spec do monster ([monster-format-v0](../ref/monster-format-v0.md)) e o registro tecnico do formato; a decisao por tras dela esta em [binary-animation-format-with-discovered-deltas](importing/0010-binary-animation-format-with-discovered-deltas.md).
+
+## por tema
+
+os registros de decisão numerados ficam em `docs/adr/<tema>/NNNN-<titulo>.md`, a numeração única para todos os temas (o modelo é [TEMPLATE.md](TEMPLATE.md)). os documentos de referência que esta tabela lista acima moraram aqui e hoje estão em `docs/ref/`, `docs/pub/` e `docs/log/`.
+
+### generated
+
+generated surfaces: plev IR, verification, proposers, generative results.
+
+- [0049](generated/0049-plev-ir-typed-and-verified.md) the plev IR is typed, references only declared capabilities, and runs only once verified
+- [0051](generated/0051-materialized-surfaces-from-verified-ir.md) a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher
+- [0052](generated/0052-proposers-propose-the-runtime-verifies.md) proposers propose, the runtime verifies
+- [0067](generated/0067-adaptive-transforms-preserve-identity.md) adaptive transformations are small verified operations that preserve identity
+- [0070](generated/0070-generative-runtime-results.md) generative runtime results
+
+### importing
+
+importing other formats: lottie, svg, figma, react, html, gpui, the .monster codec.
+
+- [0010](importing/0010-binary-animation-format-with-discovered-deltas.md) the monster animation format: keyframes plus discovered deltas
+- [0011](importing/0011-import-foreign-formats-by-conversion-not-embedding.md) import foreign formats by conversion, never by embedding a foreign runtime
+- [0012](importing/0012-transpiler-reports-every-unmapped-construct.md) the transpiler reports every unmapped construct, never drops silently
+- [0025](importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md) urnaui: decode media frames in place with ffmpeg's subfile protocol
+- [0066](importing/0066-ui-asset-compiler.md) ui asset compiler: an asset leaves the runtime on a measured number
+- [0069](importing/0069-importers-target-plev-ir.md) importers target plev IR, with a report in four categories
+
+### interface
+
+the person at the interface: input, text, keyboard, accessibility, platform capabilities.
+
+- [0009](interface/0009-touch-as-synthesized-pointer-events.md) touch input synthesizes pointer events into the existing mouse path
+- [0021](interface/0021-text-editing-core-follows-helix.md) the text editing core follows helix: document is rope plus selections plus history
+- [0038](interface/0038-accessibility-projects-the-semantic-snapshot.md) accessibility projects the semantic snapshot
+- [0055](interface/0055-file-dialogs-and-drops-are-capabilities.md) file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person
+- [0057](interface/0057-native-menus-are-another-view-of-capabilities.md) a native menu is another view of the app's capabilities
+- [0058](interface/0058-native-dialogs-answer-the-same-contract.md) a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline
+- [0059](interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md) the tray and the notifications are capabilities out of the window
+- [0062](interface/0062-capture-is-a-job-the-person-turns-on.md) capture is a job the person turns on
+- [0063](interface/0063-a-link-is-not-a-person.md) a link is not a person
+- [0068](interface/0068-accessibility-is-production-ready-per-platform.md) accessibility is production-ready per platform
+- [0075](interface/0075-text-moves-by-screen-order-and-shapes-by-line.md) text moves by screen order and shapes by line
+- [0076](interface/0076-the-keyboard-walks-the-projection.md) the keyboard walks the projection
+- [0077](interface/0077-the-persons-text-and-clipboard-stay-the-persons.md) the person's composition and clipboard stay the person's
+
+### recording
+
+recording and reading sessions back.
+
+- [0037](recording/0037-session-recording-replay-not-reexecution.md) session recording: replay, not re-execution
+- [0046](recording/0046-the-inspector-reads-a-session-never-runs-it.md) the inspector reads a session, it never runs it
+- [0050](recording/0050-sessions-become-regression-tests.md) sessions become regression tests
+- [0065](recording/0065-scene-travels-as-data.md) the scene travels as data
+
+### rendering
+
+rendering: gpu, color, text raster, layout, frames, devices.
+
+- [0001](rendering/0001-async-gpu-init-and-single-wasm-entry.md) async GPU initialization and one wasm entry point per module
+- [0002](rendering/0002-content-driven-layout-not-fixed-constants.md) container geometry derives from available space, never from constants
+- [0003](rendering/0003-embed-every-font-weight-in-use.md) embed every font weight the UI uses, and pin the default families
+- [0004](rendering/0004-linearize-colors-before-the-gpu.md) linearize colors before they reach the GPU
+- [0005](rendering/0005-measured-design-tokens-over-eyeballed-values.md) design tokens come from measurement of the live reference, not from eyes or static CSS
+- [0006](rendering/0006-one-text-style-for-measurement-and-drawing.md) one TextStyle per text run, shared by measurement and drawing
+- [0007](rendering/0007-render-into-an-srgb-view-format.md) render into an sRGB view when the surface format cannot be sRGB
+- [0008](rendering/0008-render-on-demand-requires-explicit-invalidation.md) render on demand makes invalidation a correctness contract
+- [0014](rendering/0014-motion-trails-by-position-history.md) motion trails come from position history, not framebuffer accumulation
+- [0016](rendering/0016-hidpi-projection.md) adr-004: adotamos projecao ortografica em logical pixels para apps hidpi
+- [0024](rendering/0024-glyph-raster-identity-and-atlas-isolation.md) glyph raster identity and atlas isolation
+- [0026](rendering/0026-worker-results-wake-the-event-loop.md) background results wake the event loop; child pipes drain from the start
+- [0028](rendering/0028-core-theme-tailwind-classes-as-recipes.md) core theme: the tailwind class lists as button recipes
+- [0029](rendering/0029-embed-an-app-view-by-frame-origin.md) embed an app view by giving it a frame origin
+- [0034](rendering/0034-headless-render-shares-the-frame-path.md) headless render shares the frame path
+- [0041](rendering/0041-svg-export-reads-the-scene.md) the svg export reads the scene, not the pixels
+- [0042](rendering/0042-a-tick-asks-for-a-deadline.md) a tick asks for a deadline, not for every frame
+- [0054](rendering/0054-gpu-device-loss-recovers-in-place.md) a lost GPU device is recovered in place, and the next frame draws the same
+- [0060](rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md) a covered window does not draw, and wakes with a new frame
+- [0061](rendering/0061-printing-is-the-frame-on-paper.md) printing is the frame on paper
+- [0071](rendering/0071-embedded-fonts-by-script.md) embed Noto Sans subsets for the non-Latin scripts
+- [0073](rendering/0073-design-for-ranges-not-screens-and-devices.md) design for ranges, not screens and devices
+- [0074](rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md) a renderer upgrade is proven by a full capture
+
+### semantics
+
+the semantic contract: identity, actions, receipts, agents.
+
+- [0032](semantics/0032-semantic-contract-as-pure-projection.md) semantic contract as a pure projection of app state
+- [0033](semantics/0033-actions-carry-observed-state.md) actions carry the state their actor observed
+- [0035](semantics/0035-semantic-binding-beside-the-scene.md) semantic binding beside the scene, and the click as a request
+- [0036](semantics/0036-commit-checks-the-index-it-observed.md) a commit checks the index it observed
+- [0039](semantics/0039-agents-act-through-the-semantic-contract.md) agents act through the semantic contract
+- [0040](semantics/0040-lean-semantic-form-and-one-redaction.md) the semantic form is lean, and one rule redacts a secret
+- [0043](semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md) a delta carries the node it adds, and a stale refusal names who acted
+- [0044](semantics/0044-a-terminal-stage-carries-the-revision.md) a terminal stage carries the revision the app is at
+- [0047](semantics/0047-an-act-rests-on-what-its-actor-was-shown.md) an act rests on what its actor was shown
+
+### structure
+
+the shape of the repository and of its apps.
+
+- [0013](structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md) engine at root, libraries and apps in crates, demos in examples
+- [0015](structure/0015-srp-modularization.md) adr-003: modularizacao por single responsibility principle
+- [0020](structure/0020-git-backend-gix-reads-cli-mutations.md) git backend: gix for reads, git CLI for mutations, a worker thread for the UI
+- [0022](structure/0022-one-knowledge-tree-and-a-minimal-root.md) one knowledge tree, and a minimal root
+- [0023](structure/0023-official-app-pattern.md) official app pattern: state in structs, retained widgets, explicit invalidation
+- [0027](structure/0027-comps-one-design-system-crate.md) comps: one design system crate, every value a token
+- [0030](structure/0030-showcase-one-page-per-component.md) showcase: one page per component, the sidebar as a folding tree
+- [0053](structure/0053-the-silences-app-is-the-fixed-screen.md) the silences app is the fixed screen the generated one is compared against
+- [0056](structure/0056-windows-are-hosts-the-app-owns-the-state.md) a window is a host of what dies with it; the app owns the state
+- [0072](structure/0072-ai-native-single-process.md) local llm inference in process: candle or burn
+
+### workflows
+
+how work is done: hot reload, regression, determinism, lint.
+
+- [0017](workflows/0017-error-handling-lint-cleanup.md) adotamos pleverror como tipo de erro unificado e eliminamos debt de lint
+- [0018](workflows/0018-narrate-hot-reload.md) adotamos runtime parser + override map para hot reload de plev_narrate! DSL
+- [0019](workflows/0019-shader-hot-reload.md) adotamos shader hot reload via notify file watcher sobre dylib reloading
+- [0031](workflows/0031-hot-reload-on-by-default-in-gpu-context.md) hot reload on by default: shaders and literals in place, code by rebuild
+- [0045](workflows/0045-regression-by-meaning-before-pixels.md) regression by meaning before pixels
+- [0048](workflows/0048-view-source-for-pixels.md) view source for pixels: a control leads to its projection, a text to its literal
+- [0064](workflows/0064-what-identical-means.md) what identical means
