@@ -9,9 +9,16 @@
 //! it has to grow mid-frame, the state in which the defects described in
 //! `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
+//!
+//! Native only (the probe and env_logger are): on wasm32 this binary is empty.
 
+#[cfg(target_arch = "wasm32")]
+fn main() {}
+
+#[cfg(not(target_arch = "wasm32"))]
 use engine::drawing::text::probe::{Specimen, render};
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
     let _ = env_logger::builder()
         .filter_level(log::LevelFilter::Info)
