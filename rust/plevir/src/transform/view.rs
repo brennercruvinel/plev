@@ -113,7 +113,7 @@ pub(super) fn swap(d: &mut Draft, id: &SemId, to: Component) -> Result<Inverse, 
     }))
 }
 
-/// true when `actors` lets `actor` ask, the mapping `sem::check` uses.
+/// true when `actors` lets `actor` ask, the mapping `accord::decision` uses.
 fn allows(actors: &Actors, actor: &Actor) -> bool {
     match actor {
         Actor::Human => actors.human,

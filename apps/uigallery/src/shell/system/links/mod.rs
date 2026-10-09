@@ -1,11 +1,11 @@
 //! Deep links in the gallery (task-76 item 6): the scheme
 //! `plev-showcase` ([`SCHEME`]), `plev-showcase://<sem id>/<action>
-//! [?value=<text>]`, read by `engine::platform::links`.
+//! [?value=<text>]`, read by `engine::runtime::platform::links`.
 //!
 //! A link comes from outside the window and from nobody the gallery
 //! knows: a web page, a mail, another app, someone at a terminal. So it
 //! is never the person's request: it asks as an agent named `link`
-//! (`engine::platform::links::actor`), over the gallery as it projects
+//! (`engine::runtime::platform::links::actor`), over the gallery as it projects
 //! now, through the gallery's one dispatcher, and only for what [`OPEN`]
 //! lists, going to a page and changing the theme. Anything else (the
 //! camera, the print, the Files dialog, the page's own window, a todo
@@ -18,7 +18,7 @@
 //! `link refused: <link>: <why>`, as a toast on screen and as
 //! `shell:notice` for an agent to read; the log says it too.
 //!
-//! Where links come from (`engine::platform::links::default_links`): the
+//! Where links come from (`engine::runtime::platform::links::default_links`): the
 //! launch argument on every desktop, read once the main window is up (a
 //! refusal has a window to show in), `plev-showcase://...` as an argument
 //! being a link and never the page title (`App::launch_view`); on macOS

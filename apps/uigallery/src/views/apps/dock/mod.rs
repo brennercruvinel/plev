@@ -1,6 +1,6 @@
 //! Dock section: the floating message dock, absorbed from
 //! examples/message_dock and rebuilt on the engine. Every motion is a
-//! dt-based Tween inside `showcase::model::dock::DockModel` (backend
+//! dt-based Tween inside `uigallery::domain::dock::DockModel` (backend
 //! tested first); this view only derives rects and pushes scene nodes.
 //!
 //! One source of truth for geometry: `handle_event` hit-tests exactly the

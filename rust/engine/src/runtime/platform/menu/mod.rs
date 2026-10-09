@@ -1,7 +1,7 @@
 //! Native menus as another view of an app's capabilities. A menu item is
 //! not a command of its own: it names a node of the app's projection
-//! (`sem::Snapshot`) and one of its actions, and a click on it becomes the
-//! same `sem::Request` by `Actor::Human` that a click on the button does,
+//! (`accord::Snapshot`) and one of its actions, and a click on it becomes the
+//! same `accord::Request` by `Actor::Human` that a click on the button does,
 //! through the app's one dispatcher. The app decides which capabilities
 //! enter the menu and under which submenu ([`MenuModel`]); the platform
 //! only shows them ([`NativeMenu`]) and hands the clicks back

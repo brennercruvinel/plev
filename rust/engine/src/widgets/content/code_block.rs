@@ -484,7 +484,7 @@ mod tests {
     }
 
     /// The contrast of each kind's text against the row it sits on,
-    /// measured as task-75 measures (`engine::theme::tests_contrast`): the
+    /// measured as task-75 measures (`engine::styling::theme::tests::contrast`): the
     /// block's field composed over the page (`colors.bg`) or a card
     /// (`colors.surface`), the kind's wash over that, the ink over the
     /// wash, in linear light. Every one reads at AA (4.5) in the five

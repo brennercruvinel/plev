@@ -335,7 +335,7 @@ fn a_dismissal_fades_the_surface_out_and_then_lets_it_go() {
 /// told to the surface: the first frame after the change draws the new
 /// form, the born node whole and nothing of the gone one, and no turn
 /// after it asks for another; a dismissal lets go at once. A thread
-/// starts with motion (`engine::animation::set_reduced_motion`).
+/// starts with motion (`engine::compose::animation::set_reduced_motion`).
 #[test]
 fn the_thread_s_reduced_motion_makes_the_change_instant_from_its_first_frame() {
     assert!(

@@ -1,7 +1,7 @@
 //! comps: the plev design system.
 //!
 //! Retained widgets over the engine, one category per module, every
-//! visual value read from [`engine::theme::Theme`]. A widget is a plain
+//! visual value read from [`engine::styling::theme::Theme`]. A widget is a plain
 //! struct the app owns across frames: feed it [`WidgetEvent`]s with the
 //! bounds you gave it, read the [`EventResult`], and call
 //! `render(compositor, bounds, theme)` to emit scene nodes. Nothing here
@@ -25,7 +25,7 @@
 //! - [`overlay`]: the overlay stack (menus, modals, toasts) with spring
 //!   motion
 //! - [`charts`]: pure chart geometry plus scene emission
-//! - [`graph`]: pan/zoom network canvas over `engine::graph`
+//! - [`graph`]: pan/zoom network canvas over `engine::widgets::graph::geometry`
 //! - [`editor`]: multi-cursor text editor over `rope`
 //! - [`shell`]: the app chrome (sidebar by breakpoint, header, content
 //!   rect, safe area)

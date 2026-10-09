@@ -1,7 +1,7 @@
 //! The recorded demo of the video editor (task-69 phase 4c): the script
 //! of the thesis on the Silences page, driven by an agent through the
 //! port, with no window, and recorded the way the shell records a
-//! session (`showcase::app::record`) when `PLEV_RECORD=1`.
+//! session (`uigallery::shell::window::record`) when `PLEV_RECORD=1`.
 //!
 //! ```text
 //! PLEV_RECORD=1 cargo run -p uigallery --example videos -- [--out <file.monster>]
@@ -12,7 +12,7 @@
 //! This thread is the shell's (`shell`): it serves the port, ticks the
 //! page (the worker's answers land in its wake), draws a frame on demand
 //! into a compositor and never a window, and records each. A spawned
-//! thread is the agent (`agent`), over `wire::Client`, every act resting
+//! thread is the agent (`agent`), over `socket::Client`, every act resting
 //! on a revision it was shown (`from_revision`). The script:
 //!
 //! 1. observe the page, with where each control shows;
@@ -41,7 +41,7 @@
 //! Without `PLEV_RECORD=1` the script runs and nothing is written. With
 //! it, the window kept is the whole run (ten minutes, not the shell's
 //! twenty seconds) and the file goes to `--out`, else to
-//! `showcase::app::record::default_dir()`, whatever the script came to.
+//! `uigallery::shell::window::record::default_dir()`, whatever the script came to.
 //! The `claude` proposer runs the real program (`PLEV_CLAUDE`, or the one
 //! on the PATH): a real call, minutes and money, up to three per
 //! proposal. Desktop only, like the port and the recording.

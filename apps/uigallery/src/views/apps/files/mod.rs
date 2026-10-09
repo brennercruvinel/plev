@@ -1,7 +1,7 @@
 //! Apps Demo, Files: the file dialog and the file drop as capabilities
 //! of the contract (task-76, item 3). A person opens a file through the
-//! platform's dialog (`engine::platform::files`) or drops files on the
-//! window (`engine::input::FileDrop`, the engine's one event for the
+//! platform's dialog (`engine::runtime::platform::files`) or drops files on the
+//! window (`engine::control::input::FileDrop`, the engine's one event for the
 //! platform's three); both reach the page as requests through the
 //! gallery's one dispatcher (the todo page lends it, as to the Silences
 //! page), and the files received are the page's projected state. An
@@ -12,7 +12,7 @@
 //! on its own.
 //!
 //! The native alert is a capability the same way (task-76, item 8): the
-//! "warn" button asks `engine::platform::alerts` for the platform's
+//! "warn" button asks `engine::runtime::platform::alerts` for the platform's
 //! warning panel through the dispatcher, a person's alone, and the text
 //! the person saw is the page's projected state (`files:alert`), so an
 //! agent reads what was shown and never raises a panel itself.
@@ -21,7 +21,7 @@
 //! files that land while no window of the app has the focus (the shell
 //! says so, `set_window_focused`) are told to the person by a notification
 //! the page asks for (`take_notifications`; the shell shows it through
-//! `engine::platform::notify`), with the open button as its one button,
+//! `engine::runtime::platform::notify`), with the open button as its one button,
 //! and the text is the page's projected state (`files:notice`) whether the
 //! platform showed it or not, so an agent reads what the person was told.
 //!

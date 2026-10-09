@@ -21,12 +21,12 @@
 //! still written in it, byte for byte; version 1 adds section B and
 //! nothing else, so a reader of version 0 refuses it by its version.
 //!
-//! S := one `rec::Event` per line, the serde json form, in time order
+//! S := one `record::Event` per line, the serde json form, in time order
 //! I := chunk_count u32, chunk*; chunk := start u64, frame_count u32,
 //!      time u32* (ms from start, strictly increasing from 0),
 //!      ref_count u32, asset u32* (the chunk's asset id n is asset ref n),
 //!      offset u64, len u64 (inside C; the chunks tile C in index order)
-//! C := the chunks, each the exact bytes `monster::encode` writes
+//! C := the chunks, each the exact bytes `motion::encode` writes
 //! A := asset_count u32, (kind u8, len u32, payload)*; see `payload`
 //! B := where each bound control shows in each frame; see `bound`
 
@@ -56,7 +56,7 @@ const SEC_ENTRY_LEN: usize = 1 + 8 + 8 + 32;
 /// what a `.monster` file is, by its magic.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FileKind {
-    /// `MON0`: an animation, for `monster::decode` and its player.
+    /// `MON0`: an animation, for `motion::decode` and its player.
     Animation,
     /// `MONS`: a recorded session, for `Session::from_bytes`.
     Session,

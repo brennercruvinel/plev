@@ -39,8 +39,8 @@ pub enum OverlayKind {
 /// Entry/exit animation state for an overlay (fade + scale driven by a
 /// [`Spring`] whose physics come from the content's [`Intent`]).
 ///
-/// [`Spring`]: engine::animation::Spring
-/// [`Intent`]: engine::theme::Intent
+/// [`Spring`]: engine::compose::animation::Spring
+/// [`Intent`]: engine::styling::theme::Intent
 #[derive(Debug, Clone)]
 pub(super) struct OverlayAnim {
     /// Progress 0.0 (hidden) -> 1.0 (fully shown).

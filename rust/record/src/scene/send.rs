@@ -56,8 +56,8 @@ impl Sender {
     /// frames), laid out and cleared as `head` says.
     ///
     /// a fixed image travels with the pixels its slot holds
-    /// (`engine::gpu::image_pixels`), once while frames reference it; a
-    /// stream image (`engine::gpu::image_is_stream`: a camera's frames)
+    /// (`engine::drawing::gpu::image_pixels`), once while frames reference it; a
+    /// stream image (`engine::drawing::gpu::image_is_stream`: a camera's frames)
     /// travels as its size and place only, never its pixels, under a key
     /// its frames share, so a new frame of it moves nothing.
     pub fn frame(&mut self, compositor: &Compositor, head: Head) -> Frame {

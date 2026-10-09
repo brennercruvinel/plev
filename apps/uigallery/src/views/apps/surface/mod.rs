@@ -2,7 +2,7 @@
 //! from verified plev IR (task-69), beside the todo page written by hand.
 //!
 //! The surface has two forms, each an IR verified against the registry
-//! the todo projects (`uir::Capabilities::from_snapshot`) and materialized
+//! the todo projects (`plevir::Capabilities::from_snapshot`) and materialized
 //! by the `surface` crate: compact, the fixture of task-68
 //! (`rust/plevir/tests/fixtures/uigallery-todo.ir.json`: the field, the add
 //! button, the items, the filter as chips, the counters as stats, one

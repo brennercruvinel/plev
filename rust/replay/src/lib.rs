@@ -1,7 +1,7 @@
 //! the session inspector (task-64 phase a,
 //! docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md).
 //!
-//! a recorded session (`rec::Session`, a `.monster` whose magic is `MONS`)
+//! a recorded session (`record::Session`, a `.monster` whose magic is `MONS`)
 //! holds who observed what, the state the app projected at every step, and
 //! every stage of every receipt, each with its time. the inspector reads
 //! it and answers the questions of the thesis about any request or

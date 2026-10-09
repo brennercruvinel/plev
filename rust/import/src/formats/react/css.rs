@@ -127,9 +127,9 @@ pub const NAMED_EXPRS: &[&str] = &[
 ];
 
 /// The sRGB color (0 to 1, alpha included) of a parametric expression
-/// [`color_token`] prints: `engine::theme::hoff::n2(a)` (`#F8F8F8` at a),
-/// `engine::theme::hoff::n3(a)` (`#282828` at a) and
-/// `engine::color::Color::rgba(r, g, b, a)`. The inverse of its own table;
+/// [`color_token`] prints: `engine::styling::theme::hoff::n2(a)` (`#F8F8F8` at a),
+/// `engine::styling::theme::hoff::n3(a)` (`#282828` at a) and
+/// `engine::styling::color::Color::rgba(r, g, b, a)`. The inverse of its own table;
 /// `None` for any other expression.
 pub fn token_rgba(expr: &str) -> Option<[f32; 4]> {
     let args = |prefix: &str| -> Option<Vec<f32>> {

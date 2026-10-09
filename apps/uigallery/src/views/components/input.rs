@@ -1,4 +1,4 @@
-//! Input page: three single-line [`comps::form::TextField`]s plus the
+//! Input page: three single-line [`engine::widgets::form::TextField`]s plus the
 //! live value preview line. The page owns the keyboard focus: a click in
 //! a field places the caret, Tab reaches the fields (the view's keyboard,
 //! in the order of the projection), Escape blurs; the characters and

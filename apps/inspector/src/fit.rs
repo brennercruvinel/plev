@@ -1,6 +1,6 @@
 //! the recorded frame, fit into a rect of the view. the session keeps a
 //! frame as the nodes the app drew, in logical window pixels, and where
-//! each control showed in the same space (`rec::Bound`). it keeps neither
+//! each control showed in the same space (`record::Bound`). it keeps neither
 //! the window's size nor its scale: the size is the extent of the nodes
 //! and the bindings, from the origin (every node the recorded apps draw
 //! starts at the window background), and the scale does not enter the

@@ -361,7 +361,7 @@ impl Page<'_> {
 
     /// With a surface open, a button for `composite` in it, beside the
     /// controls of its steps, as the host promotes an action the app
-    /// declares (`uir::Op::Promote`, verified again, with its inverse in
+    /// declares (`plevir::Op::Promote`, verified again, with its inverse in
     /// the history): the line of the operation, or why there is none.
     /// `None` without a surface.
     fn promote(&mut self, composite: &Composite, by: &Actor) -> Option<Result<String, String>> {

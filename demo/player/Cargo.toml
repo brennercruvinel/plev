@@ -4,7 +4,7 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish = false
-description = "monster player: plays a .monster file with `monster::MonsterPlayer` on a plev"
+description = "monster player: plays a .monster file with `motion::MonsterPlayer` on a plev"
 
 [dependencies]
 engine.workspace = true

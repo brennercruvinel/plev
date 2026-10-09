@@ -1,6 +1,6 @@
 //! The gallery's menu bar (task-76 item 4), desktop only: built from what
 //! the gallery projects (`ShowcaseView::gallery_semantics`), shown by the
-//! engine's menu (`engine::platform::menu`, `muda` underneath), and read
+//! engine's menu (`engine::runtime::platform::menu`, `muda` underneath), and read
 //! back as clicks the view dispatches as a person's requests, the path a
 //! key and a button take. The bar: "plev" (the platform's own items),
 //! "view" (the shell's capabilities: the theme, the page to go to, the

@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ir::Bind;
 
-/// the kind of a chart, one per chart of `comps::charts`.
+/// the kind of a chart, one per chart of `engine::widgets::charts`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ChartKind {
@@ -48,49 +48,49 @@ impl ChartKind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Component {
-    /// `comps::action::Button` (and `SubmitButton`, whose `busy` it shows).
+    /// `engine::widgets::buttons::Button` (and `SubmitButton`, whose `busy` it shows).
     Button,
-    /// `comps::action::IconButton`.
+    /// `engine::widgets::buttons::IconButton`.
     IconButton,
-    /// `comps::form::TextField`.
+    /// `engine::widgets::form::TextField`.
     TextField,
-    /// `comps::form::Checkbox`.
+    /// `engine::widgets::form::Checkbox`.
     Checkbox,
-    /// `comps::form::Switch`.
+    /// `engine::widgets::form::Switch`.
     Switch,
-    /// `comps::form::Slider`.
+    /// `engine::widgets::form::Slider`.
     Slider,
-    /// `comps::form::Select`.
+    /// `engine::widgets::form::Select`.
     Select,
-    /// `comps::nav::Tabs`.
+    /// `engine::widgets::nav::Tabs`.
     Tabs,
-    /// `comps::content::VirtualList`.
+    /// `engine::widgets::content::VirtualList`.
     List,
-    /// `comps::content::Table`.
+    /// `engine::widgets::content::Table`.
     Table,
-    /// `comps::content::Card`.
+    /// `engine::widgets::content::Card`.
     Card,
-    /// `comps::content::Stat`.
+    /// `engine::widgets::content::Stat`.
     Stat,
-    /// `comps::charts`: line, bar, stacked area, donut.
+    /// `engine::widgets::charts`: line, bar, stacked area, donut.
     Chart(ChartKind),
-    /// `comps::content::Separator`.
+    /// `engine::widgets::content::Separator`.
     Separator,
-    /// `comps::feedback::Modal`.
+    /// `engine::widgets::feedback::Modal`.
     Dialog,
-    /// `comps::content::EmptyState`.
+    /// `engine::widgets::content::EmptyState`.
     EmptyState,
-    /// `comps::feedback::ProgressBar`.
+    /// `engine::widgets::feedback::ProgressBar`.
     Progress,
-    /// `comps::action::Badge`.
+    /// `engine::widgets::buttons::Badge`.
     Badge,
-    /// `comps::action::Chip`.
+    /// `engine::widgets::buttons::Chip`.
     Chip,
-    /// a text run of the engine builder (`engine::builder::text`).
+    /// a text run of the engine builder (`engine::compose::builder::text`).
     Text,
-    /// an image of the engine builder (`engine::builder::image`).
+    /// an image of the engine builder (`engine::compose::builder::image`).
     Image,
-    /// `comps::content::CodeBlock`: text in the mono step, a row per line,
+    /// `engine::widgets::content::CodeBlock`: text in the mono step, a row per line,
     /// each line with its kind when the app says it (task-97).
     Code,
 }

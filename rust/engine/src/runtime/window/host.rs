@@ -181,7 +181,7 @@ impl WindowHost {
     }
 
     /// A host without a window, drawing into a texture of `width x height`
-    /// physical pixels at `scale` (the frame path `engine::headless` uses).
+    /// physical pixels at `scale` (the frame path `engine::drawing::headless` uses).
     /// `None` without a GPU adapter, so tests can skip.
     #[cfg(not(target_arch = "wasm32"))]
     pub fn headless(width: u32, height: u32, scale: f64, config: RenderConfig) -> Option<Self> {
@@ -481,7 +481,7 @@ impl WindowHost {
         recovered
     }
 
-    /// The pixels of a headless host's last frame (`engine::headless::read_texture`).
+    /// The pixels of a headless host's last frame (`engine::drawing::headless::read_texture`).
     /// `Err(DeviceLost)` while the device is gone, `Err(NoAdapter)` for a
     /// host that has no target to read.
     #[cfg(not(target_arch = "wasm32"))]
@@ -565,7 +565,7 @@ impl WindowHost {
 }
 
 /// The offscreen texture a headless host draws into: the context's size
-/// and format, readable back (as `engine::headless` makes its own).
+/// and format, readable back (as `engine::drawing::headless` makes its own).
 fn create_target(gpu: &GpuContext) -> wgpu::Texture {
     gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("window_host_target"),

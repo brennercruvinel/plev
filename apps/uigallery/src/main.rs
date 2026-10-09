@@ -6,7 +6,7 @@
 //!
 //! On desktop the binary also draws a page without a window:
 //! `showcase --render <page> ... --out file.png` renders one frame through
-//! the window's frame path (`showcase::app::stage_page`), `--svg file.svg`
+//! the window's frame path (`uigallery::shell::stage_page`), `--svg file.svg`
 //! writes the same frame as SVG with every approximation reported, and
 //! `--semantics file.json` writes the page's semantic projection in the
 //! form `plev observe` serves; then it exits.

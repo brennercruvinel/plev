@@ -1,5 +1,5 @@
 //! The Capture page as a capability (task-76, item 10), over the fake
-//! capture (`engine::platform::capture::FakeCapture`, no process, no
+//! capture (`engine::runtime::platform::capture::FakeCapture`, no process, no
 //! device): what it projects at rest, only a person turning a device on
 //! (an agent refused before anything starts, and reading the state), the
 //! newest frame into the stream image on the wake and not before, the

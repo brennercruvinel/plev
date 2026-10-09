@@ -1,5 +1,5 @@
 //! the prompt of a change (task-70 phase 2): a language model is asked
-//! to change the surface shown by the operations of `uir::transform`, and
+//! to change the surface shown by the operations of `plevir::transform`, and
 //! answers `{"ops": [...]}`. the prompt carries the intent, how a change
 //! reads, the nine operations as JSON with what each refuses, the rules
 //! of identity, the verifier's rules and the policy (as the proposal's
@@ -136,7 +136,7 @@ pub(crate) fn prompt(ask: &Adapt<'_>) -> String {
 
 /// the operations in a reply: the object `{"ops": [...]}`, alone or
 /// inside a fence or prose (from the first `{` to the last `}`), each one
-/// read as `uir::Op` reads it (an unknown field is an error).
+/// read as `plevir::Op` reads it (an unknown field is an error).
 pub(crate) fn read(reply: &str) -> Result<Vec<Op>, String> {
     let text = reply.trim();
     let inner = match (text.find('{'), text.rfind('}')) {

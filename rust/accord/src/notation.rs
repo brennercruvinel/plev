@@ -111,7 +111,7 @@ name_type!(
 
 name_type!(
     /// the name of an action a node accepts, `[a-z0-9_]+`: `submit`,
-    /// `toggle`. the key binding in `engine::actions` stays a binding; this is
+    /// `toggle`. the key binding in `engine::control::keymap` stays a binding; this is
     /// the capability a binding can target.
     ActionName,
     "action name"

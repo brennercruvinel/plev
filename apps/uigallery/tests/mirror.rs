@@ -2,8 +2,8 @@
 //! read back by a viewer and drawn there with the same pixels.
 //!
 //! In process, two compositors: every gallery page in both main themes,
-//! staged, drawn, written (`rec::scene::Sender`), read back into a second
-//! compositor (`showcase::app::mirror::Viewer` over `rec::scene::Mirror`)
+//! staged, drawn, written (`record::scene::Sender`), read back into a second
+//! compositor (`uigallery::shell::window::mirror::Viewer` over `record::scene::Mirror`)
 //! and drawn by a second headless host; the two frames are the same
 //! bytes. The image store is global, so here both sides share it: an
 //! image proves nothing in process.

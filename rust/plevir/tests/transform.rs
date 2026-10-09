@@ -1,4 +1,4 @@
-//! The nine operations of `uir::transform`, one by one, on a surface over
+//! The nine operations of `plevir::transform`, one by one, on a surface over
 //! the registry of `support::caps()`: what each changes, that the result
 //! passes the verifier, that its inverse gives the surface before byte for
 //! byte, and where each is refused or fails the verifier.

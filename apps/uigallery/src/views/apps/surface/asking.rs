@@ -3,7 +3,7 @@
 //!
 //! `Claude::find` says whether the program is there without running it
 //! (`ClaudeCli::exists`: `claude`, or what `PLEV_CLAUDE` names).
-//! `Claude::start` clones the `ClaudeCli` and everything a `propose::Ask`
+//! `Claude::start` clones the `ClaudeCli` and everything a `offers::Ask`
 //! borrows (the intent, the todo's snapshot and registry, the surface
 //! shown, the policy) into a thread that runs `propose_verified(Llm)` and
 //! reports back through a channel: each attempt as it begins, then the
@@ -13,7 +13,7 @@
 //! `Cancel` that kills the child. Only `VerifiedIr` crosses the channel:
 //! the worker verifies, as `propose_verified` always does.
 //!
-//! An ask made while the app sleeps (`engine::window::Background`, task-76
+//! An ask made while the app sleeps (`engine::runtime::window::Background`, task-76
 //! item 7) does not start a thread: `Pending` holds everything the thread
 //! would take and starts it on the first look after the app wakes, its
 //! time counted from then. A cancel meanwhile ends it without a child.

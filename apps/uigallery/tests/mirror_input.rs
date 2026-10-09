@@ -2,7 +2,7 @@
 //! on this thread through a real agent port, as the shell serves it (the
 //! port's drain, a new frame after an act, each frame offered to the
 //! watches), and the viewer on a thread of its own, with its watch and
-//! its hand (`showcase::app::mirror::Hand`), each a connection under the
+//! its hand (`uigallery::shell::window::mirror::Hand`), each a connection under the
 //! name "mirror". A click at the viewer is found in the frame's bindings
 //! (`Viewer::hit`) and goes back as an act on that control, resting on the
 //! hand's last look: the same receipts, refusals and staleness as any

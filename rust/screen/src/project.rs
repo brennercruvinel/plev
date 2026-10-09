@@ -2,7 +2,7 @@
 //! surface is semantic by construction, so no widget's `project` is asked.
 //!
 //! - the surface is a `Region` named by its title, its tree under it;
-//! - each node takes the role `uir::role_of` gives, its label (an instance
+//! - each node takes the role `plevir::role_of` gives, its label (an instance
 //!   is named by its item; a text or a badge by what it shows), its
 //!   description, and the state it binds, read from the snapshot the
 //!   surface shows;

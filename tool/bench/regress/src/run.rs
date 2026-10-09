@@ -122,7 +122,7 @@ fn named(r: &Request) -> Vec<Key> {
 
 /// The headless renderer, opened on the first frame asked of it and
 /// kept for the next (a renderer that drew other pages draws a page the
-/// same, `showcase::app` tests it). It counts what it draws.
+/// same, `uigallery::shell` tests it). It counts what it draws.
 #[derive(Default)]
 pub struct Gpu {
     renderer: Option<Renderer>,

@@ -3,7 +3,7 @@
 //! the strip is the line's widgets, on the column the surface's, each act
 //! a request through the one dispatcher (the line's buttons observed on
 //! the whole projection as the person, the surface's widgets building
-//! their own, `surface::Surface::handle_event`); the wheel and the hover
+//! their own, `screen::Surface::handle_event`); the wheel and the hover
 //! the same way; the keys while the intent field or a field of a surface
 //! has the keyboard. Where they sit is `crate::generated::row`.
 

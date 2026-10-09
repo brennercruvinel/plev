@@ -1,5 +1,5 @@
 //! A gallery page in a state, staged for a baseline (task-69 checkpoint
-//! b): the page opened as `showcase::app::stage_page` opens it, then a
+//! b): the page opened as `uigallery::shell::stage_page` opens it, then a
 //! script run through the gallery's public entries only (the port's
 //! `act`, as an agent acts, and the Silences page's two staging entries),
 //! then settled on the same fixed clock. A state is named, and the name
@@ -63,7 +63,7 @@ pub struct Asked {
 
 /// A page in a state: its name, the page it is of, the intent typed in
 /// the row, how its surface is proposed, the operations applied to it
-/// then (`uir::Op` in JSON, in order), the intents asked after them, and
+/// then (`plevir::Op` in JSON, in order), the intents asked after them, and
 /// the actions taken last (target and action, through the port's path).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct State {

@@ -12,7 +12,7 @@
 //! stacking order disagree (a viewer that takes the last binding holding
 //! a point, in bind order, would hit another control than the app); and
 //! the action a click would press on each bound control
-//! (`engine::accessibility::primary`, a screen reader's click).
+//! (`engine::control::accessibility::primary`, a screen reader's click).
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
 use std::collections::BTreeMap;

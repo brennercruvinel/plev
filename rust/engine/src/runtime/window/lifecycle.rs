@@ -180,7 +180,7 @@ impl super::App {
 /// device pixel ratio. Returns `Err` if any web-sys API is unavailable (e.g.
 /// restricted iframe, headless context).
 ///
-/// Re-exported as `engine::window::setup_wasm_canvas` so downstream apps with
+/// Re-exported as `engine::runtime::window::setup_wasm_canvas` so downstream apps with
 /// their own winit event loop can reuse it. The initial width/height set
 /// here are a first-paint fallback: with the canvas styled via CSS (e.g.
 /// `width: 100vw; height: 100vh`), winit's `ResizeObserver` emits

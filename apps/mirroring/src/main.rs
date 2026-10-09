@@ -10,7 +10,7 @@
 //! cargo run -p mirroring -- --frames 5 --png /tmp/mirror.png
 //! ```
 //!
-//! Without `--show` it draws headless (`engine::window::WindowHost::headless`,
+//! Without `--show` it draws headless (`engine::runtime::window::WindowHost::headless`,
 //! the host a window has, into a texture) and prints one line per frame:
 //! what came (bytes, layers sent of the frame's, assets) and the hash of
 //! the pixels drawn (FNV-1a 64 over the RGBA8), the hash the app's own

@@ -372,7 +372,7 @@ impl Generated {
 // The rules propose inside `execute`, in a fraction of a millisecond, and
 // the request ends at once, `completed` with the surface and how many
 // nodes it has, or `failed` with why there is none (the line says it
-// too). Only a `VerifiedIr` opens: `propose::propose_verified` is the way.
+// too). Only a `VerifiedIr` opens: `offers::propose_verified` is the way.
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.
 pub(crate) fn shown(surface: &SemId, nodes: usize) -> Outcome {
@@ -427,7 +427,7 @@ impl Workbench {
 
     /// The workspace's own projection, without the line and the surface:
     /// the registry every proposal is verified against
-    /// (`uir::Capabilities::from_snapshot`) and the state a surface shows.
+    /// (`plevir::Capabilities::from_snapshot`) and the state a surface shows.
     /// With the block off it is [`Workbench::snapshot`].
     pub fn app_snapshot(&self) -> Result<Snapshot, SemErrors> {
         let mut b = SnapshotBuilder::new();

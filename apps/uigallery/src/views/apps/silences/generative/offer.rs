@@ -1,5 +1,5 @@
 //! The composite offer of the Silences page (task-70 phase 3): the
-//! page's `propose::compose::Composer`, heard on the gallery's one
+//! page's `offers::compose::Composer`, heard on the gallery's one
 //! dispatcher, and the band under the proposing row where the person
 //! sees a sequence they repeated and answers it: "make it one action" or
 //! "not now". The band and its nodes (`silences_surface.composite`, with
@@ -9,7 +9,7 @@
 //! dispatcher, and nothing installs unless a person asks.
 //!
 //! A composite installed is an action of the app on every cut; asked, its
-//! `execute` answers `Started` and keeps a `propose::compose::Chain`,
+//! `execute` answers `Started` and keeps a `offers::compose::Chain`,
 //! which runs the steps through the same lending of the dispatcher right
 //! after (`composed`), and goes on from the page's wake when a step
 //! waited for a frame.

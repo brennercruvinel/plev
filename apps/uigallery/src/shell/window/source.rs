@@ -1,7 +1,7 @@
 //! cmd+click to the code, in a desktop debug build (where the engine has
 //! `hot_reload`; the parent gates this module on the same terms). A left
 //! click with cmd held (ctrl off macOS) never reaches the page, press or
-//! release: it asks `engine::hot_reload::view_source::origin_at` what made
+//! release: it asks `engine::runtime::hot_reload::view_source::origin_at` what made
 //! the pixel under the cursor in the frame on screen, and opens the one
 //! site it names in the editor (`PLEV_EDITOR`, else zed, else `code -g`).
 //! Anything else is logged at warn, the level the shell shows: no control
@@ -10,7 +10,7 @@
 //! frame, so cmd alone or cmd+click changes nothing on screen.
 //!
 //! With shift too (task-65 phase c), a text exactly one literal holds is
-//! edited in place: a `comps::form::TextField` over the text, on a layer
+//! edited in place: a `engine::widgets::form::TextField` over the text, on a layer
 //! of its own above the frame, owns the keyboard. Enter writes what was
 //! typed over the literal (`literals::write`, as the person: the edit is
 //! no capability, so nothing of it reaches the dispatcher or the agent

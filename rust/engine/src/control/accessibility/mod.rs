@@ -2,12 +2,12 @@
 //! (docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md).
 //!
 //! The tree assistive technology reads is built from the same
-//! `sem::Snapshot` agents and tests read (`tree`), placed by the
+//! `accord::Snapshot` agents and tests read (`tree`), placed by the
 //! compositor's binding table, with node ids that follow each node's
 //! `SemId` across frames (`ids`); the actions an item's own node does not
 //! reach are presented inside it as controls (`present`), since no
 //! adapter implements custom actions. What a screen reader asks comes back as
-//! a `sem::Request` with `Actor::Assistive`, for the app's one dispatcher
+//! a `accord::Request` with `Actor::Assistive`, for the app's one dispatcher
 //! (`action`). Keyboard focus walks the same snapshot (`focus`). The
 //! system's "reduce motion" is read here (`motion`) and ends every
 //! transition at once (`animation::set_reduced_motion`). An app shell

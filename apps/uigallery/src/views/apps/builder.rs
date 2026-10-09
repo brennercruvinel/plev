@@ -1,10 +1,10 @@
-//! Builder tour: the declarative engine::builder API live. The demo card is
+//! Builder tour: the declarative engine::compose::builder API live. The demo card is
 //! a real Element tree rendered via render_interactive, so its buttons are
 //! REAL engine hit regions (the old demo drew fake buttons via View::render)
 //! and a counter proves reactivity: click, state changes, the tree rebuilds.
 //! The source panel besides it shows the code in Inclusive Sans, the
 //! embedded UI family. Named
-//! builder_tour to not collide with the engine's engine::builder.
+//! builder_tour to not collide with the engine's engine::compose::builder.
 
 use engine::compose::builder::{Element, button, div, text as btext};
 use engine::compose::view::ViewContext;

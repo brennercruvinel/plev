@@ -1,5 +1,5 @@
 //! The gallery's system notifications (task-76 item 5), desktop only: the
-//! shell owns the platform's notifier (`engine::platform::notify`) and
+//! shell owns the platform's notifier (`engine::runtime::platform::notify`) and
 //! decides when to tell the person something they were not looking at.
 //! Two things are told:
 //!

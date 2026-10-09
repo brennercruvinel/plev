@@ -41,7 +41,7 @@
 //! its handle (one per content), a stream image's its place and size (the
 //! same for all its frames), a path's its engine hash and sizes.
 //!
-//! a stream image (`engine::gpu::image_is_stream`: a camera's frames)
+//! a stream image (`engine::drawing::gpu::image_is_stream`: a camera's frames)
 //! never travels with its pixels, whoever watches: the capture ADR keeps
 //! a camera's frames from every agent, and a watcher is an agent. the
 //! receiver draws a box in its place that says so ([`LIVE_LABEL`]). a

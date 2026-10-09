@@ -55,7 +55,7 @@ impl Rig {
 
     /// The laboratory's repository of the review (task-96): three commits
     /// over the first, and a note in the working tree that none of them
-    /// holds (`ide::lab_repo::review_in`), with a workbench connected.
+    /// holds (`idestudio::repository::eval_repo::review_in`), with a workbench connected.
     // each test binary compiles this module whole; only the tests of the
     // review start from it.
     #[allow(dead_code)]

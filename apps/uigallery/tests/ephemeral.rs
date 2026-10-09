@@ -5,7 +5,7 @@
 //! screen, a person deciding a cut on it with a click, "I can't compare
 //! these" refused by the rules, the review turned into the comparison in
 //! place, and closed. Recorded with no window, the way the gallery's shell
-//! records (`showcase::app::record::Recording`), and held to the criterion
+//! records (`uigallery::shell::window::record::Recording`), and held to the criterion
 //! of the method, read from the recording:
 //!
 //! - K1: the person's decision on the generated surface is a request on

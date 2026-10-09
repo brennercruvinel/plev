@@ -1,6 +1,6 @@
 //! The secret does not cross (task-79 phase 2): a frame is offered with
 //! the places of the bound controls the port's one rule counts as secret
-//! masked (`showcase::app::mirror::masks`, `rec::scene::Sender::frame_masked`),
+//! masked (`uigallery::shell::window::mirror::masks`, `record::scene::Sender::frame_masked`),
 //! the shell's path. A secret drawn for real (`login`: a password field
 //! and a pin said by a status, marked secret by the projection) is in no
 //! line and no byte of the watch, the mirror draws a box in each secret's

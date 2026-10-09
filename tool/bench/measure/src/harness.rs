@@ -1,12 +1,12 @@
 //! The window's loop without the window: input routed the way the
-//! showcase shell routes it (`showcase::app`), a frame drawn only when an
+//! showcase shell routes it (`uigallery::shell`), a frame drawn only when an
 //! event changed something, the last tick was still moving, or a deadline
 //! the last tick asked for came due (render on demand), the scene built
-//! by the surface and drawn by `engine::headless::Renderer`, which runs
+//! by the surface and drawn by `engine::drawing::headless::Renderer`, which runs
 //! the window's frame tail. Time is a fixed `DT` per turn: the tick of a
 //! drawn turn gets the time since the last drawn turn, the way a shell
 //! that slept until a deadline would hand it. Every turn is one stage
-//! frame (`engine::perf::stages`); the GPU time a turn's timestamps read
+//! frame (`engine::runtime::perf::stages`); the GPU time a turn's timestamps read
 //! feeds a `PerfMonitor`, as a window's loop would.
 
 use engine::compose::layout::ComputedBounds;
@@ -55,9 +55,9 @@ pub trait Surface {
 }
 
 impl Surface for ShowcaseView {
-    /// The routing of `showcase::app`'s `window_event`: Escape closes the
+    /// The routing of `uigallery::shell`'s `window_event`: Escape closes the
     /// top overlay, the editor takes a key first, named keys go through
-    /// `showcase::keys`, characters through `handle_key`.
+    /// `uigallery::keyboard`, characters through `handle_key`.
     fn input(&mut self, input: &Input) -> bool {
         let none = ModifiersState::empty();
         match input {

@@ -3,10 +3,10 @@
 //!
 //! A [`PrintDocument`] is a frame of the app on paper: the same scene the
 //! window draws, rendered through the headless frame path
-//! (`engine::headless`, the window's own) at a paper scale, dots per inch
+//! (`engine::drawing::headless`, the window's own) at a paper scale, dots per inch
 //! over points per inch, since a logical pixel is a point on paper
 //! ([`paper_scale`]), and encoded as png, which every CUPS filter chain
-//! takes. The frame's svg (`engine::headless::svg`) may ride along
+//! takes. The frame's svg (`engine::drawing::headless::svg`) may ride along
 //! ([`PrintDocument::with_svg`]): it is the way toward a vector pdf, which
 //! nothing here writes yet.
 //!

@@ -9,7 +9,7 @@
 //! The page is a capability (`semantics.rs`): it projects what it means,
 //! runs what it offers in `execute`, and every actor goes through the
 //! gallery's one dispatcher (the todo page lends it, as to the Surface
-//! page). The model (`showcase::model::silences`) changes only inside
+//! page). The model (`uigallery::domain::silences`) changes only inside
 //! `execute`. The sliders' drag stays with the widget, as typing stays
 //! with a field: `set_value`, `increment` and `decrement` are how an actor
 //! without a pointer moves them.
@@ -29,7 +29,7 @@
 //! materialized from verified IR over this app's registry, beside the
 //! fixed screen, on the same dispatcher: a cut applied on either shows
 //! on both. The surface's images draw the frames the page holds
-//! (`surface::Frames`); the page decodes what they lack from its wake.
+//! (`screen::Frames`); the page decodes what they lack from its wake.
 //!
 //! Wiring contract for the chrome (view/dispatch.rs, view/input.rs): every
 //! entry takes the todo page (the dispatcher's owner) and the inert flag,

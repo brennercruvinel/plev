@@ -5,7 +5,7 @@
 //! the app is reached through `Host` only: its projection, where its bound
 //! nodes sit, its one dispatcher and a `ReceiptSink` on it. nothing here
 //! runs app code, reads a file or calls a backend; an act becomes a
-//! `sem::Request` with `Actor::Agent` and goes through the dispatcher a
+//! `accord::Request` with `Actor::Agent` and goes through the dispatcher a
 //! click goes through, and its stages come back through the sink.
 //!
 //! an act on `from_revision` rests on what its actor was shown, and on
@@ -17,13 +17,13 @@
 //!
 //! a stale refusal of an act the port dispatched names what ran since its
 //! actor looked (task-91). the port's sink follows the dispatcher's order
-//! (`sem::Mark`) and marks each revision it gives an actor; an act rests
+//! (`accord::Mark`) and marks each revision it gives an actor; an act rests
 //! on the oldest observation its reads come from (with `observed` given,
 //! on the last giving of the revision it names), and the sink hands that
 //! look to the dispatcher when it fills `acted` (`ReceiptSink::looked`).
 //!
 //! a secret never leaves through the port. the request as dispatched and
-//! every stage of it are reduced by `sem::redact`, the one rule the
+//! every stage of it are reduced by `accord::redactor`, the one rule the
 //! recorder applies too, with the secret nodes read from the live snapshot
 //! at dispatch (a node it does not hold counts as secret).
 
@@ -86,7 +86,7 @@ pub trait Host {
     /// the whole snapshot at that instant. called right after the reply is
     /// built, on the app's thread, only for a connection that said hello
     /// (before it there is no actor). an app records it
-    /// (`rec::Recorder::observed`) or reacts to it; nothing by default.
+    /// (`record::Recorder::observed`) or reacts to it; nothing by default.
     /// the revision a terminal stage carries is not an observation (the
     /// agent is given its name, not what it holds) and is not reported
     /// here.

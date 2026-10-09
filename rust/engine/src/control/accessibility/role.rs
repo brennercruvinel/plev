@@ -1,4 +1,4 @@
-//! `sem::Role` to `accesskit::Role`: what a node is, told to assistive
+//! `accord::Role` to `accesskit::Role`: what a node is, told to assistive
 //! technology. The match is exhaustive, so a role added to the contract
 //! does not compile until it has a mapping here.
 

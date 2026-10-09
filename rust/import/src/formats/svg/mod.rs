@@ -1,9 +1,9 @@
 //! svg: static SVG importer for the plev engine. Normalizes an svg
 //! document with usvg (groups, transforms, gradients, use/defs and the
 //! shape-to-path conversion all resolved), tessellates the resulting flat
-//! path tree through `engine::path::PathBuilder`, and converts it to a
+//! path tree through `engine::drawing::path::PathBuilder`, and converts it to a
 //! single-frame .monster file ([`cnv`]); afterwards playback runs on
-//! `monster::MonsterPlayer` and no svg code executes (import by
+//! `motion::MonsterPlayer` and no svg code executes (import by
 //! conversion, not embedding).
 //!
 //! Supported subset: filled and stroked paths (usvg lowers rect, circle,

@@ -1,7 +1,7 @@
 //! the session inspector's window (task-64 phase b,
 //! docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md).
 //!
-//! it opens a recorded session (`rec::Session`, from the path on the
+//! it opens a recorded session (`record::Session`, from the path on the
 //! command line) and shows what the `inspect` model answers about it:
 //!
 //! - the strip (`Strip`): every event on a lane per actor and one for the
@@ -13,7 +13,7 @@
 //!   (`Session::hit_at`);
 //! - the panel (`Panel`): a click on a control shows the model's answers
 //!   about it at the instant (`Inspector::control`, written by
-//!   `inspect::text`): which control, its state, who observed what, the
+//!   `replay::prose`): which control, its state, who observed what, the
 //!   request, the verdict with its delta, what happened in between, the
 //!   result; then what came after the instant, as the whole session tells
 //!   it.

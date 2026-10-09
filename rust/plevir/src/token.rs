@@ -2,7 +2,7 @@
 //! color, elevation, control size, shape), `Layout` (how a container
 //! arranges its children) and `Size` (how a node sits in its parent).
 //!
-//! every token names a field or a style of `engine::theme::Theme` by its
+//! every token names a field or a style of `engine::styling::theme::Theme` by its
 //! own name, so the materializer (task-69) reads the theme and the IR never
 //! holds a color or a pixel. the only numbers are proportions: a split's
 //! `ratio` and a `flex` weight, which the verifier bounds.
@@ -94,7 +94,7 @@ tokens! {
 }
 
 tokens! {
-    /// a shadow stack: `engine::theme::Elevation`, read from
+    /// a shadow stack: `engine::styling::theme::Elevation`, read from
     /// `theme.shadows`.
     Elevation {
         Base = "base",
@@ -106,7 +106,7 @@ tokens! {
 }
 
 tokens! {
-    /// a control height: `engine::theme::ControlSize`, read from
+    /// a control height: `engine::styling::theme::ControlSize`, read from
     /// `theme.control`.
     ControlSize {
         Xs = "xs",

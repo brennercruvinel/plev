@@ -18,7 +18,7 @@ use crate::report::row;
 use crate::story::ActStory;
 
 /// the longest question the report keeps, in characters: the port's own
-/// limit on a question (`wire::MAX_ASK`); a longer one, from inside the
+/// limit on a question (`socket::MAX_ASK`); a longer one, from inside the
 /// process, is cut there.
 const MAX_TEXT: usize = socket::MAX_ASK;
 

@@ -10,7 +10,7 @@
 //! <- {"v":1,"id":"9","type":"scene","seq":2,"layers":[{"key":0,"hash":"77d0...","patch":"AAAAAA..."},{"key":1,"hash":"51aa..."}]}
 //! ```
 //!
-//! the transport does not read a frame: the app's codec (`rec::scene`)
+//! the transport does not read a frame: the app's codec (`record::scene`)
 //! writes each layer with a hash, a body and maybe a patch against the
 //! frame before, and each asset a frame references under a key; the
 //! server keeps, per watch, the hash of each layer and the assets it

@@ -1,6 +1,6 @@
 //! The platform's confirmation in the modal's place (task-76 item 8),
 //! against a real repository and the real git worker, with the fake
-//! dialogs of `engine::platform::alerts` (no window, no native panel):
+//! dialogs of `engine::runtime::platform::alerts` (no window, no native panel):
 //! an agent's discard waits for a person; with the option on, the
 //! workbench asks the fake with the modal's own words and no modal opens;
 //! confirmed, the discard runs after the second check and its receipt

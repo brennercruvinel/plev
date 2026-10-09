@@ -39,7 +39,7 @@ pub(super) struct ClickRecord {
 
 /// Multi-line, multi-cursor text editor widget.
 ///
-/// Owns an [`rope::Document`] and renders it as compositor scene
+/// Owns an [`editor::Document`] and renders it as compositor scene
 /// nodes. Rendering is virtualized: only the lines intersecting the viewport
 /// (plus [`EditorConfig::overscan_lines`]) are shaped and emitted, so
 /// documents with hundreds of thousands of lines render in constant time.
@@ -82,7 +82,7 @@ impl EditorView {
     }
 
     /// Replace the clipboard backend (tests inject a [`LocalClipboard`]
-    /// (engine::clipboard::LocalClipboard) so they never touch the OS clipboard).
+    /// (engine::runtime::platform::clipboard::LocalClipboard) so they never touch the OS clipboard).
     pub fn with_clipboard(mut self, clipboard: Box<dyn ClipboardProvider>) -> Self {
         self.clipboard = clipboard;
         self

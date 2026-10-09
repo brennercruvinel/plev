@@ -1,5 +1,5 @@
 //! Reduced motion on the widgets the gallery shows (task-75 phase 1):
-//! with the system's "reduce motion" on (`engine::animation`, set on the
+//! with the system's "reduce motion" on (`engine::compose::animation`, set on the
 //! event loop's thread by the accessibility bridge), a switch's knob, a
 //! toast's slide, a modal's fade and scale, the todo rows and the whole
 //! gallery reach their end on the first frame, and ask for no more.

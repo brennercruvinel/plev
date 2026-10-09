@@ -10,8 +10,8 @@
 //! ide's workbench, with no surface shown, or the showcase silences, with
 //! no surface shown unless `--shown` names an IR file to verify and show
 //! as the current one), says what the rules make
-//! of the intent (`propose::Rules`, for comparison), asks the Claude through
-//! `propose::Llm` (the real `claude -p`, or what `PLEV_CLAUDE` names) and
+//! of the intent (`offers::Rules`, for comparison), asks the Claude through
+//! `offers::Llm` (the real `claude -p`, or what `PLEV_CLAUDE` names) and
 //! `propose_verified`, and prints every attempt (its time, its cost, and
 //! the verifier's errors when it was refused), the total, and the
 //! verified IR, summed up and whole. exit 0 with a verified IR, 1 without

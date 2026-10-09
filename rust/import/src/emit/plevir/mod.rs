@@ -1,4 +1,4 @@
-//! Stage 3, the second emitter: ParserNode tree -> plev IR (`uir::Ir`),
+//! Stage 3, the second emitter: ParserNode tree -> plev IR (`plevir::Ir`),
 //! next to the code emitter (`emit.rs`), which stays until a decision
 //! removes it. It reads the same `Resolution` and writes what the IR can
 //! say, never a pixel or a color: every value goes to a token by the

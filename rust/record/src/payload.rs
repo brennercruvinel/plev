@@ -9,7 +9,7 @@
 //! image (1) := width u32, height u32, has_pixels u8 (then width * height
 //!              * 4 bytes of RGBA8)
 //! path  (2) := piece_count u32, (len u32, piece)*; each piece is a
-//!              `monster::asset_path` payload (twips vertices, one color,
+//!              `motion::encoding::asset_path` payload (twips vertices, one color,
 //!              u16 indices), so a path of any size fits
 //!
 //! a text key is kept bit for bit. a path comes back on the twips grid

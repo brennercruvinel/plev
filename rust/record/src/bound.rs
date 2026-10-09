@@ -42,7 +42,7 @@ pub struct Bound {
     pub id: SemId,
     /// `(x, y, w, h)` in logical window pixels: the part of the rect the
     /// control draws and hit-tests with that is inside its clip
-    /// (`engine::compositor::Binding::visible_rect`).
+    /// (`engine::drawing::compositor::Binding::visible_rect`).
     pub rect: [f32; 4],
 }
 

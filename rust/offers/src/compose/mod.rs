@@ -3,7 +3,7 @@
 //! it.
 //!
 //! - `Detector` reads the stages of an app's dispatcher, in order, the
-//!   same way live (`Listener`, a `sem::ReceiptSink`) and from a recorded
+//!   same way live (`Listener`, a `accord::ReceiptSink`) and from a recorded
 //!   session (the `rec` stage events of one origin), and finds the same
 //!   sequence of actions, by the same actor, in the same order, repeated
 //!   at the end of what happened (`Found`, with its `Shape`).

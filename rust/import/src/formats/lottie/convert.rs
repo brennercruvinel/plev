@@ -3,7 +3,7 @@
 //! reads it ONCE, samples the composition through [`crate::rnd`],
 //! dedups the tessellated geometry into the monster asset table, and the
 //! monster encoder discovers the deltas. Playback afterwards is
-//! `monster::MonsterPlayer` over our format; no lottie code runs.
+//! `motion::MonsterPlayer` over our format; no lottie code runs.
 //!
 //! the dedup thesis (swf display list at shape granularity): payloads
 //! are compared as exact quantized bytes, so a static shape is one

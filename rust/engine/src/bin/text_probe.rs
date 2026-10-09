@@ -2,7 +2,7 @@
 //!
 //! `cargo run -p engine --bin text_probe -- out.png [raster_scale]`
 //!
-//! The scene goes through `engine::headless`, the window's own frame path
+//! The scene goes through `engine::drawing::headless`, the window's own frame path
 //! into an offscreen texture, so the PNG is what a window would show.
 //!
 //! Set `PROBE_FILL=1` to push enough distinct glyphs through the atlas that

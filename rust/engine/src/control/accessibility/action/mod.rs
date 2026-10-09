@@ -1,5 +1,5 @@
 //! What a screen reader asks, read back into the contract: an AccessKit
-//! `ActionRequest` becomes a `sem::Request` with `Actor::Assistive`, which
+//! `ActionRequest` becomes a `accord::Request` with `Actor::Assistive`, which
 //! the app sends through the same `Dispatcher` a click, an agent and a
 //! test use. Nothing here runs app logic; there is no second path.
 //!

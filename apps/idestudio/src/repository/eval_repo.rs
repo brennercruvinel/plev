@@ -102,7 +102,7 @@ impl Repo {
     /// the paths the last commit changes, as git lists them against its
     /// first parent (a root commit against the empty tree), a renamed
     /// file at both paths: the definition of a commit's files in the
-    /// receipt and in the stacks (`git::Commit::files`), read here by the
+    /// receipt and in the stacks (`gitdrv::Commit::files`), read here by the
     /// cli, apart from the workbench.
     pub fn head_files(&self) -> Result<Vec<String>, String> {
         Ok(self

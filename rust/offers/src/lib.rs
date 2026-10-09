@@ -6,7 +6,7 @@
 //! surface it shows now and the policy the surface will be verified
 //! under) and answers an `Ir`, never trusted as it is. the way out is
 //! `propose_verified`, which verifies the proposal against the same
-//! registry and policy and returns a `uir::VerifiedIr` or the reasons, so
+//! registry and policy and returns a `plevir::VerifiedIr` or the reasons, so
 //! nothing unverified leaves this crate:
 //!
 //! ```text
@@ -37,7 +37,7 @@
 //!
 //! with a surface shown, the same two answer a change of it instead
 //! (task-70 phase 2, `adapt`): a `Transformer` answers operations of
-//! `uir::transform`, and `transform_verified` returns them only with the
+//! `plevir::transform`, and `transform_verified` returns them only with the
 //! verified surface they make. `Rules` reads "too much", "can't compare",
 //! "bigger" and "undo", in english and portuguese; `Llm` asks the model
 //! for `{"ops": [...]}` and sends back the operation refused.

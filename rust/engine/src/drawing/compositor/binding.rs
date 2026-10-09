@@ -1,4 +1,4 @@
-//! The binding table: where each logical identity (`sem::SemId`) sits in
+//! The binding table: where each logical identity (`accord::SemId`) sits in
 //! the current frame. It lives beside the scene, never in it: a binding
 //! is not a scene node, takes no part in a layer hash and never changes a
 //! pixel, so binding an id, or not, can never dirty a layer.

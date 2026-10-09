@@ -3,7 +3,7 @@
 //! (`apps/uigallery/src/views/apps/surface/asking.rs`): the program
 //! looked for without running it (`ClaudeCli::exists`: `claude`, or what
 //! `PLEV_CLAUDE` names); a thread that runs `propose_verified` with the
-//! `propose::Llm` over a clone of the `ClaudeCli` and reports each attempt
+//! `offers::Llm` over a clone of the `ClaudeCli` and reports each attempt
 //! as it begins, then the answer with what the calls took and cost; and
 //! `Pending`, the line's side of it: the request it will end
 //! (`Execution::Started` was answered for it), the time gone by, the

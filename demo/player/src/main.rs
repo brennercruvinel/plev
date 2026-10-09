@@ -1,4 +1,4 @@
-//! monster player: plays a .monster file with `monster::MonsterPlayer` on a plev
+//! monster player: plays a .monster file with `motion::MonsterPlayer` on a plev
 //! window. This binary contains zero lottie knowledge: it decodes our
 //! container, unpacks the path assets, and pushes the lowered scene.
 //!
@@ -7,7 +7,7 @@
 //! animation loops.
 //!
 //! Without a window: `monster_player file.monster --frame <t> --out f.png`
-//! draws the frame at `t` seconds through `engine::headless` (the window's
+//! draws the frame at `t` seconds through `engine::drawing::headless` (the window's
 //! frame path into an offscreen texture) at 640x640 and exits.
 //!
 //! `monster_player file.monster --frame <t> --capture f.png` is the check

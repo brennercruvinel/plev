@@ -2,7 +2,7 @@
 //! the nodes of the governing full snapshot, in projection order, with the
 //! changes recorded after it applied in place, and the focus.
 //!
-//! it is not a `sem::Snapshot` on purpose. a snapshot can only be built
+//! it is not a `accord::Snapshot` on purpose. a snapshot can only be built
 //! inside `sem` or through its validating builder, and the builder stamps
 //! every node with the builder's call site as its `source`; the recorder
 //! must not rewrite what it recorded, so the nodes here keep the source

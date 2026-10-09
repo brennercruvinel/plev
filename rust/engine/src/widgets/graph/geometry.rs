@@ -1,4 +1,4 @@
-//! Pure graph geometry for the `GraphView` widget (`comps::graph::GraphView`)
+//! Pure graph geometry for the `GraphView` widget (`engine::widgets::graph::GraphView`)
 //! widget: a CSR adjacency built from an edge list, a deterministic
 //! force-directed layout, and the pan/zoom [`ViewTransform`]. No GPU, no
 //! widget state — the same code is unit-testable headless and reusable by

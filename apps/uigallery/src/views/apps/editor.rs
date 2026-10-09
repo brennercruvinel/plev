@@ -1,4 +1,4 @@
-//! Editor section: the multi-cursor text editor (`comps::editor`) filling
+//! Editor section: the multi-cursor text editor (`engine::widgets::editor`) filling
 //! the content rect, the same widget the `comps --example editor` window
 //! runs. Pointer events arrive through the section contract; the keyboard
 //! goes straight to `EditorView::handle_key` (it wants the winit key and

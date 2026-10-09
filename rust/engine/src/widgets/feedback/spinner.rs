@@ -4,7 +4,7 @@
 //! spinner that ticks off-screen would busy-loop every frame (the same
 //! rule the dock caret follows in the showcase).
 //!
-//! With the system's "reduce motion" on (`engine::animation::reduced_motion`,
+//! With the system's "reduce motion" on (`engine::compose::animation::reduced_motion`,
 //! the thread's, set by the accessibility bridge) the arc stands still
 //! where it is and `tick` says it does not move, so its owner asks for no
 //! frame: a still arc still reads as "loading" (task-75 phase 2a).

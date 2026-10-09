@@ -1,8 +1,8 @@
-//! The todo page as a capability: what it means (`sem::Semantics`), what
-//! it runs (`sem::Operable`) and the one path every actor takes to run it.
+//! The todo page as a capability: what it means (`accord::Semantics`), what
+//! it runs (`accord::Operable`) and the one path every actor takes to run it.
 //!
 //! A click, the Enter key, an agent, assistive technology and a test all
-//! become a `sem::Request` over the page as it is at that instant and go
+//! become a `accord::Request` over the page as it is at that instant and go
 //! through the page's `Dispatcher`; the model changes only inside
 //! `execute`. The page binds the rects it draws and hit-tests with to the
 //! same ids (`draw.rs`), beside the scene.
@@ -19,7 +19,7 @@
 //! `todo:items` follows the filter, as the item nodes do: a projection
 //! shows only what exists now, so every id in the list is a node here and
 //! every item node is in the list. A generated surface repeats over it
-//! (`uir::Repeat`), one instance per `todo.item[<id>]`, and shows each
+//! (`plevir::Repeat`), one instance per `todo.item[<id>]`, and shows each
 //! item's `text` (the IR names an instance by its item, the id, and does
 //! not interpolate a label).
 

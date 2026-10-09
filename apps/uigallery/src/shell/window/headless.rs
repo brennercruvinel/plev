@@ -1,7 +1,7 @@
 //! `showcase --render`: one frame of a gallery page without a window,
-//! through `engine::headless` (the window's own frame path into an
+//! through `engine::drawing::headless` (the window's own frame path into an
 //! offscreen texture), the same frame as SVG with every approximation
-//! reported (`engine::headless::svg`), and the page's semantic projection
+//! reported (`engine::drawing::headless::svg`), and the page's semantic projection
 //! in the form `plev observe` serves. Desktop only, like the binary that
 //! calls it.
 

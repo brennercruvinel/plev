@@ -7,7 +7,7 @@
 //! (`Kind::Snapshot`, whole on a cadence and whenever nodes come, move or
 //! reorder, `Kind::Changes` in between), who asked for which action on
 //! which state and how it went, stage by stage (`Kind::Stage`, from a
-//! `sem::ReceiptSink`), and a person's input with the control under it
+//! `accord::ReceiptSink`), and a person's input with the control under it
 //! (`Kind::Input`). beside that semantic track, the visual track keeps
 //! what was on screen: every rendered frame, raised to the monster IR
 //! and compressed by monster's delta discovery in chunks
@@ -18,7 +18,7 @@
 //! time is the caller's), and a secret never lands in it: the snapshot
 //! already keeps only the length of a `secret` field, and the recorder
 //! reduces to a length every parameter, observed value, delta, outcome
-//! or error aimed at one, with `sem::redact`, the rule the agent port
+//! or error aimed at one, with `accord::redactor`, the rule the agent port
 //! applies too.
 //!
 //! the read side is `Session`: events by time, the semantic state at any

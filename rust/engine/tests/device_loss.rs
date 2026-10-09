@@ -8,7 +8,7 @@
 //! must not leave a stale frame; and a machine whose GPU does not come
 //! back keeps the app alive, with one error in the log.
 //!
-//! Through `engine::headless`, the window's frame path into a texture. The
+//! Through `engine::drawing::headless`, the window's frame path into a texture. The
 //! tests skip without a GPU adapter, like their neighbours.
 
 use std::sync::{Mutex, OnceLock};

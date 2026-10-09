@@ -1,6 +1,6 @@
 //! Geometry: 2x3 affine matrices, transform composition, and conversion
 //! of lottie shape primitives into transformed cubic subpaths ready for
-//! tessellation through `engine::path::PathBuilder`.
+//! tessellation through `engine::drawing::path::PathBuilder`.
 
 use crate::formats::lottie::keyframe::PathData;
 use engine::drawing::path::{PathBuilder, TessellatedPath};

@@ -78,7 +78,7 @@ pub struct Stats {
     /// frames the IR limits refused (see `FrameError`).
     pub frame_errors: u64,
     /// compositor nodes the monster IR v0 has no node for, per kind, in
-    /// the order of `monster::Unsupported::ALL` (clip push, clip pop,
+    /// the order of `motion::Unsupported::ALL` (clip push, clip pop,
     /// backdrop blur, shadow): the replay draws without them.
     pub skipped: [u64; 4],
     /// layers drawn with an opacity, an effect or a clip rect the IR v0

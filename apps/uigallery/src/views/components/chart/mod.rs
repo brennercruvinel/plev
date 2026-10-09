@@ -1,5 +1,5 @@
 //! Charts section: line with axes/grid/dots, bars, stacked area and donut
-//! with legend, all drawn from `comps::charts` (the pure tested geometry
+//! with legend, all drawn from `engine::widgets::charts` (the pure tested geometry
 //! core + scene-node emission, promoted from this app in engine F3). The 2x2 grid is
 //! content-driven and stacks to one column in narrow windows (cards.rs
 //! pattern). A Tween reveal in the style of the old makepad_charts demo

@@ -1,6 +1,6 @@
 //! surfaces materialized from verified plev IR.
 //!
-//! a `uir::VerifiedIr` becomes a live surface over an app's state
+//! a `plevir::VerifiedIr` becomes a live surface over an app's state
 //! (`Surface::materialize`), kept with the others the app has open in a
 //! `SurfaceHost`:
 //!
@@ -13,7 +13,7 @@
 //!   shows is read from the app's `Snapshot`, again whenever its revision
 //!   moves (`Surface::sync`);
 //! - **semantics** from the IR itself, not from the widgets: role by
-//!   `uir::role_of`, label, the state bound, the actions bound
+//!   `plevir::role_of`, label, the state bound, the actions bound
 //!   (`Surface::project`), so an agent or a screen reader observes the
 //!   surface and acts on it like on any page;
 //! - **pictures** asked of the app (`Frames`): an `image` binds its
@@ -22,7 +22,7 @@
 //!   text when it draws (`Surface::render_with`); without one it draws
 //!   the image's shell and label, and `Surface::sources` says what the
 //!   app should decode;
-//! - **events** as `sem::Request`s for the capability the IR bound, with
+//! - **events** as `accord::Request`s for the capability the IR bound, with
 //!   the actor who acted and the state the surface showed as the
 //!   observation, handed to the app's own dispatcher (`Dispatch`). the
 //!   surface never runs anything;
@@ -35,7 +35,7 @@
 //!   the surface out and then lets it go. render on demand: frames are
 //!   asked for only while something moves (`wake`);
 //! - **adaptation** by one small operation at a time (`SurfaceHost::apply`,
-//!   a `uir::Op`: hide, show, group, reorder, emphasize, density, restyle,
+//!   a `plevir::Op`: hide, show, group, reorder, emphasize, density, restyle,
 //!   swap a view, promote an action), verified again and reconciled the
 //!   same way, kept with its inverse and who asked; `undo` takes back the
 //!   last one.

@@ -1,8 +1,8 @@
 //! the agent surface of plev: an agent outside the process observes and
 //! operates an app through the semantic contract only. no screenshot, no
 //! coordinate, no access to the app's backend: an observation is a
-//! projection of the app (`sem::Snapshot`), scoped and incremental, and an
-//! action is a `sem::Request` that goes through the same `Dispatcher` a
+//! projection of the app (`accord::Snapshot`), scoped and incremental, and an
+//! action is a `accord::Request` that goes through the same `Dispatcher` a
 //! person's click goes through.
 //!
 //! protocol v1 is JSON lines. every message is one object with `"v": 1`,

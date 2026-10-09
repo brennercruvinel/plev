@@ -80,7 +80,7 @@ pub fn slug(title: &str) -> String {
 /// How the page came to rest before its frame was taken.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Settle {
-    /// Fixed animation steps taken (`showcase::app::stage_page`).
+    /// Fixed animation steps taken (`uigallery::shell::stage_page`).
     pub steps: usize,
     /// `false`: the page still moved after the last step (a spinner, a
     /// caret) and its frame is the one at that fixed step.

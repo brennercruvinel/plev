@@ -19,7 +19,7 @@
 //! ago forgotten first. whatever was forgotten counts as never shown.
 //!
 //! each revision given carries the dispatcher's mark at that instant
-//! (`sem::Mark`, followed by the port's sink in `Looks`), so an act says
+//! (`accord::Mark`, followed by the port's sink in `Looks`), so an act says
 //! when its actor looked at what it reads: the oldest of the observations
 //! its reads come from. the dispatcher names what ran after that look in a
 //! stale refusal (task-91); the mark only names.
@@ -284,7 +284,7 @@ fn last_shown<'a>(
 /// how many open requests of a port keep the look they rest on.
 const MAX_LOOKS: usize = 256;
 
-/// the dispatcher's order as the port's sink follows it (`sem::Mark`).
+/// the dispatcher's order as the port's sink follows it (`accord::Mark`).
 /// the sink learns the dispatcher's mark when it is added and follows it
 /// as requests are taken, so an observation served now is marked now
 /// (`now`). an act says which look it rests on right before its dispatch

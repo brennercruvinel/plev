@@ -11,14 +11,14 @@
 //!
 //! a `promote` may name the template of an item (`silences.cut[{item}]`,
 //! task-70 phase 3: a composite runs on each item): the button then goes
-//! inside the item's template, one per item; `uir::Op::Promote` finds the
+//! inside the item's template, one per item; `plevir::Op::Promote` finds the
 //! action on the items the template stands for (task-70 phase 4).
 //!
 //! the person's preferences of accessibility (`prefer`, task-70 phase 4:
 //! larger text, more contrast, a density) are the last layer of every
 //! surface the host shows: the host keeps each surface as it was asked
 //! (its form and the changes asked, by anyone) and draws it with the
-//! operations of the preferences over it (`uir::Preferences::over`), made
+//! operations of the preferences over it (`plevir::Preferences::over`), made
 //! again after every change, in the name of the person who turned them
 //! on, and kept in the same history (`Change::preference`). a surface
 //! opens with them already, before its first frame; turning one off makes

@@ -7,10 +7,10 @@
 //! `silences.video:result`, `silences.cut[<id>]:frame`): the media node's
 //! id and the instant in seconds, `silences.video@4.017052`. A generated
 //! surface binds an `image` to one of those and the host asks the page
-//! for it through `surface::Frames`; the page decodes what it does not
+//! for it through `screen::Frames`; the page decodes what it does not
 //! have in `wake`, never in a frame.
 //!
-//! While the app sleeps (`engine::window::Background`, task-76 item 7)
+//! While the app sleeps (`engine::runtime::window::Background`, task-76 item 7)
 //! `settle` reads nothing: an answer that arrives stays on the worker's
 //! channel and is applied on the first wake after the app wakes, when the
 //! shell draws the frame that shows it. A job asked while asleep still

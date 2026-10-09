@@ -220,7 +220,7 @@ impl UrnauiView {
     }
 
     /// Files dragged over the window, as the engine says it
-    /// (`engine::input::FileDrop`, forwarded whole by the shell): while
+    /// (`engine::control::input::FileDrop`, forwarded whole by the shell): while
     /// they hover the Open screen shows it, a drop opens each path in
     /// turn (a corpus is one file, so the last one dropped is the one
     /// open), and a cancel clears the hover. Always a frame. The browser

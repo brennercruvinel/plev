@@ -1,5 +1,5 @@
 //! The ide's session recording, through the path its shell takes
-//! (`ide::record::Recording`, `ide::agent::serve_recorded`), with no
+//! (`idestudio::interfaces::window::record::Recording`, `idestudio::capability::agent::serve_recorded`), with no
 //! window: a real repository in a temp dir, the real git worker, a real
 //! agent port. This thread plays the shell as `main.rs` does with
 //! `PLEV_RECORD=1`: it serves the port after its wake and after every

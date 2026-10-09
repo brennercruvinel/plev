@@ -1,6 +1,6 @@
 //! The gallery's tray icon (task-76 item 5), desktop only: built from what
 //! the gallery projects (`ShowcaseView::gallery_semantics`), shown by the
-//! engine's tray (`engine::platform::tray`, `tray-icon` underneath on
+//! engine's tray (`engine::runtime::platform::tray`, `tray-icon` underneath on
 //! macOS and windows, none on linux until its bring-up), and read back as
 //! clicks the view dispatches as a person's requests, the path a key, a
 //! button and a bar item take. The menu on the icon: "show plev"

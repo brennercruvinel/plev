@@ -14,12 +14,12 @@
 //!    to the ParserNode IR, map colors to HOFF theme tokens, apply the
 //!    documented flow rewrites, fill the droplist with file:line entries
 //! 3. emit, two emitters over the same ParserNode:
-//!    - emit.rs: deterministic rust source against `engine::builder`;
-//!    - emit_ir/: plev IR (`uir::Ir`, task-71, ADR
+//!    - emit.rs: deterministic rust source against `engine::compose::builder`;
+//!    - emit_ir/: plev IR (`plevir::Ir`, task-71, ADR
 //!      importers-target-plev-ir), measured against the theme's tokens
 //!      (tokens.rs), with a report that puts every construct of the source
 //!      in one of four categories (report.rs). The IR only references the
-//!      app's capabilities; `uir::verify` decides whether it may exist.
+//!      app's capabilities; `plevir::verify` decides whether it may exist.
 //!
 //! Scope is brutally small and honest (ADR transpiler-reports-every-
 //! unmapped-construct): one react component instance (the hoff research

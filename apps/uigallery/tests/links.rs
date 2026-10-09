@@ -1,7 +1,7 @@
 //! The gallery's links on screen (task-76 item 6), without a window and
 //! without opening a link: a `ShowcaseView` over a headless host (the
 //! window's frame path into a texture), a link text given to
-//! `showcase::app::links::follow` as a platform would deliver it. A
+//! `uigallery::shell::system::links::follow` as a platform would deliver it. A
 //! link to the camera is refused and its line is on screen, the page as
 //! it was around it; a link to the Files page draws, byte for byte, the
 //! frame of a gallery that went there by its own sidebar name. Desktop

@@ -12,7 +12,7 @@
 //! busy, the attempt, the seconds and the cost. An agent reads and acts
 //! on the same nodes.
 //!
-//! The rules (`propose::Rules`) propose inside `execute`, in a fraction
+//! The rules (`offers::Rules`) propose inside `execute`, in a fraction
 //! of a millisecond, and the request ends at once. The Claude takes
 //! seconds to a minute and a half per attempt, up to three: `propose`
 //! answers `Execution::Started`, a worker runs the proposal (`asking`),

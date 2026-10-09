@@ -7,7 +7,7 @@
 //! iOS (staticlib `uigallery_ios_main`) all drive the same gallery.
 
 // Let the view modules keep referring to this crate by name
-// (`showcase::model::...`) now that they live in the library.
+// (`uigallery::domain::...`) now that they live in the library.
 extern crate self as showcase;
 
 pub mod domain;

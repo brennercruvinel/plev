@@ -1,8 +1,8 @@
 //! The git workspace as a capability: the workbench owns the views
 //! (`WorkspaceView`), the git side (`GitSession`) and the one
-//! `sem::Dispatcher` every actor goes through. It says what the workspace
-//! means (`sem::Semantics`, `project.rs`) and runs what it offers
-//! (`sem::Operable`, `execute.rs`). The ide binary and the showcase's Git
+//! `accord::Dispatcher` every actor goes through. It says what the workspace
+//! means (`accord::Semantics`, `project.rs`) and runs what it offers
+//! (`accord::Operable`, `execute.rs`). The ide binary and the showcase's Git
 //! page both hold one, so neither carries its own copy of the wiring.
 //!
 //! A person's click or key runs the view first (hit test, cursor, menus),
@@ -407,7 +407,7 @@ impl Workbench {
 
     /// Milliseconds since the workbench was made: the clock every receipt
     /// is stamped with, and so the clock anything recorded beside them
-    /// (a `rec::Recorder`) must use, or its events and the receipts
+    /// (a `record::Recorder`) must use, or its events and the receipts
     /// would not line up.
     pub fn now(&self) -> Millis {
         u64::try_from(self.clock.elapsed().as_millis()).unwrap_or(u64::MAX)

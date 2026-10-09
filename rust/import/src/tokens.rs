@@ -160,7 +160,7 @@ impl Tokens {
 
     /// The color a builder expression stands for: a role of the table
     /// (`theme.colors.text_mid`), a named expression, or a parametric one
-    /// (`engine::theme::hoff::n2(0.66)`).
+    /// (`engine::styling::theme::hoff::n2(0.66)`).
     pub fn color_of(&self, expr: &str) -> Option<[f32; 4]> {
         if let Some(name) = expr.strip_prefix("theme.colors.")
             && let Some(role) = role_named(name)

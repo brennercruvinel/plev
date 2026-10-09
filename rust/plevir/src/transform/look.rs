@@ -22,7 +22,7 @@ fn look(node: &IrNode) -> Look {
 }
 
 /// the rung of a text style on the type ramp, by its size
-/// (`engine::theme::TypographyScale`: small 10, caption 12, base-2 and
+/// (`engine::styling::theme::TypographyScale`: small 10, caption 12, base-2 and
 /// body-2 14, base and body 16, title 20, headline 32, h4 the display).
 fn rung(t: TypographyRole) -> usize {
     use TypographyRole as T;
@@ -56,7 +56,7 @@ const RAMP: [TypographyRole; 7] = [
     TypographyRole::H4,
 ];
 
-/// the sizes of a stat's value (`comps::content::StatSize`): `base_m`,
+/// the sizes of a stat's value (`engine::widgets::content::StatSize`): `base_m`,
 /// `title` (a stat with no style), `headline`.
 const STAT: [TypographyRole; 3] = [
     TypographyRole::BaseM,
@@ -65,7 +65,7 @@ const STAT: [TypographyRole; 3] = [
 ];
 
 /// the fill an emphasized badge takes: the theme's accent, its filled
-/// shape (`comps::action::Badge::count`) instead of the glass tag.
+/// shape (`engine::widgets::buttons::Badge::count`) instead of the glass tag.
 const BADGE_FILL: ColorRole = ColorRole::Accent;
 
 const ELEVATIONS: [Elevation; 4] = [

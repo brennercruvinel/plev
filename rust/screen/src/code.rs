@@ -1,6 +1,6 @@
 //! a `code` on the comps `CodeBlock` (task-97): its `lines` (a list, or
 //! one text split at its line breaks) are the block's rows, each with the
-//! kind its `kinds` names at the same place (`uir::LineKind` by name; a
+//! kind its `kinds` names at the same place (`plevir::LineKind` by name; a
 //! name it does not know, a place `kinds` does not reach, or no `kinds`
 //! at all is a context row), and its label is the caption.
 //!

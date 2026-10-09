@@ -11,7 +11,7 @@
 //! native-only, the web build swaps in `urnaread` + an inline worker.
 
 // Let the view modules keep referring to this crate by name
-// (`urnaui::model::...`) now that they live in the library.
+// (`urnadbapp::backend::...`) now that they live in the library.
 extern crate self as urnaui;
 
 

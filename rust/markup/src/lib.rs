@@ -5,7 +5,7 @@
 
 pub use macros::plev_narrate;
 
-/// Bridge module: re-exports from the real `engine::builder` API.
+/// Bridge module: re-exports from the real `engine::compose::builder` API.
 ///
 /// The `plev_narrate!` macro generates code referencing `::markup::builder::*`.
 /// This module provides all symbols the generated code needs, using the real

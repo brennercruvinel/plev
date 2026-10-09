@@ -15,7 +15,7 @@
 //! `tool/bench/regress/baselines` (`baseline`): the page's projection,
 //! every layer under a stable name with a stable content hash (`scene`),
 //! the bound controls. `bless` stages each page without a window
-//! (`showcase::app::stage_page`, a fixed clock), or a page in a state
+//! (`uigallery::shell::stage_page`, a fixed clock), or a page in a state
 //! named by `--page` (`state`: the Silences page with the review of the
 //! checkpoint b open, and adapted by task-70's operations), and writes
 //! what it holds;
@@ -23,7 +23,7 @@
 //! `Snapshot::diff`, the layers by hash, the bindings by rect. When
 //! nothing moved it ends there, without drawing a frame. When a layer's
 //! hash moved and the baseline keeps its image (`bless --png`), it draws
-//! the frame through `engine::headless` and compares pixels only inside
+//! the frame through `engine::drawing::headless` and compares pixels only inside
 //! the regions of the layers that moved (`pixels`), then crosses the
 //! changed pixels with the bindings to name the controls they fall in.
 //! The report (`report`) goes by `SemId`: meaning changed or not, visual

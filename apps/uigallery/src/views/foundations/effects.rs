@@ -1,7 +1,7 @@
 //! Effects section: the compositor's visual primitives as design-system
 //! tokens — analytic shadows (CSS-like blur radii, incl. the theme's own
 //! `effects.shadow_sigma`), linear gradients, backdrop blur, the clip stack
-//! and tessellated vector shapes (`engine::path::PathBuilder`). Absorbs the
+//! and tessellated vector shapes (`engine::drawing::path::PathBuilder`). Absorbs the
 //! `visual` and `sdf_shapes` engine examples; everything is static, so an
 //! idle section settles (render-on-demand contract).
 
@@ -323,7 +323,7 @@ impl EffectsPage {
         }
         c.push(SceneNode::PopClip);
 
-        // Vector shapes tessellated by lyon (engine::path::PathBuilder).
+        // Vector shapes tessellated by lyon (engine::drawing::path::PathBuilder).
         let shape_colors = [
             theme.colors.accent.0,
             theme.colors.success.0,

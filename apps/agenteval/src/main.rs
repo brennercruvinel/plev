@@ -33,7 +33,7 @@ mod finish;
 mod host;
 #[cfg(unix)]
 mod refused;
-// the repository of the experiment lives in the lib (`ide::lab_repo`), so
+// the repository of the experiment lives in the lib (`idestudio::repository::eval_repo`), so
 // the session tests start from the same one; the laboratory names it
 // `crate::repo` as before.
 #[cfg(unix)]

@@ -32,9 +32,9 @@ the mantra every change is judged against:
 ## the official app pattern
 
 state lives in plain structs, ui is built from retained widgets (`comps`,
-the design system crate: `comps::prelude::*`), and every visible mutation
+the design system crate: `engine::widgets::prelude::*`), and every visible mutation
 invalidates (`EventResult::changed` / request redraw). the showcase is the
-template app. the declarative builder (`engine::builder`) is supported for
+template app. the declarative builder (`engine::compose::builder`) is supported for
 prototypes and demos; `view`, `component`, `signal` and `narrate` are
 experimental: do not start app code on them (docs/adr/structure/0023-official-app-pattern.md).
 
@@ -91,7 +91,7 @@ what exists (updated at each task close-out):
   view calls `set_inert(true)` and every request comes back `Inert`. copy
   this shape.
 - the second app on the one path is the git client (task-62):
-  `ide::workbench::Workbench` owns the view, the git session and the
+  `idestudio::capability::Workbench` owns the view, the git session and the
   dispatcher, for the ide binary and the showcase Git page alike. it shows
   the asynchronous shape: `execute` sends the command to the worker and
   returns `Execution::Started`, and the worker's answer ends the receipt
@@ -113,13 +113,13 @@ what exists (updated at each task close-out):
   it, do not send it to an agent, do not record it.
 - accessibility (task-60, adr accessibility-projects-the-semantic-snapshot):
   the AccessKit tree is built from the page's `Snapshot` and the
-  compositor's bindings (`engine::accessibility::tree::build`), and a
+  compositor's bindings (`engine::control::accessibility::tree::build`), and a
   screen reader's action comes back as a `Request` with
   `Actor::Assistive` for the same dispatcher. a shell attaches
   `accessibility::Bridge` before its window is visible. a page with no
   projection has no tree: projecting it is the fix, never a fallback.
 - agents from outside (task-61, adr agents-act-through-the-semantic-contract):
-  `wire::AgentPort` opens a local socket (off unless `PLEV_AGENT=1` in a
+  `socket::AgentPort` opens a local socket (off unless `PLEV_AGENT=1` in a
   debug build or an explicit `open`); the shell drains it on the ui
   thread through a small `Host` (project the page, dispatch a request,
   register a sink). try it: `PLEV_AGENT=1 cargo run -p uigallery -- Todo`,
@@ -129,13 +129,13 @@ what exists (updated at each task close-out):
 how to project (from the crate docs):
 
 ```rust
-impl sem::Semantics for GitState {
-    fn project(&self, b: &mut sem::SnapshotBuilder) {
-        b.node("changes", sem::Role::List, "changes")
+impl accord::Semantics for GitState {
+    fn project(&self, b: &mut accord::SnapshotBuilder) {
+        b.node("changes", accord::Role::List, "changes")
             .state("staged", self.staged.clone());
-        b.node("commit.message", sem::Role::TextInput, "commit message")
+        b.node("commit.message", accord::Role::TextInput, "commit message")
             .state("text", self.message.as_str());
-        b.node("commit.submit", sem::Role::Button, "commit")
+        b.node("commit.submit", accord::Role::Button, "commit")
             .enabled(!self.staged.is_empty())
             .action("submit")
             .reads("changes:staged")
@@ -154,7 +154,7 @@ as the tasks land, these rules become binding (each line names its task):
   app or the IR (`commit.submit`, `changes.file[src/lib.rs]`), never from a
   position or an emission order (task-57).
 - semantics is a pure projection of app state: the app implements
-  `sem::Semantics::project`; nothing semantic accumulates inside render
+  `accord::Semantics::project`; nothing semantic accumulates inside render
   (task-57).
 - what is not projected does not exist for the contract. hover,
   animation and scroll position are not projected, so they can never
@@ -165,7 +165,7 @@ as the tasks land, these rules become binding (each line names its task):
   reads at least the state it changes, absolute setters included, so no
   actor overwrites a value it never saw (task-59).
 - one path: a click, a key that acts on a capability, a screen reader
-  action, an agent and a test all become a `sem::Request` and go through
+  action, an agent and a test all become a `accord::Request` and go through
   the same `Dispatcher` into the same `Operable::execute`. a click handler
   that calls app logic directly is a second path and a defect once
   task-59 lands (task-59). typing is not a capability: a keystroke in a
@@ -183,7 +183,7 @@ as the tasks land, these rules become binding (each line names its task):
 - a field marked `secret` never leaves the process: not in snapshots, not
   in recordings, not to agents (task-57). whatever carries a request or a
   stage out of the process reduces what aims at a secret node with
-  `sem::redact`, the one rule; never write a second one (task-57b).
+  `accord::redactor`, the one rule; never write a second one (task-57b).
 - the sem serde form is lean: a field at its default is not written and
   reads back when absent; `source` travels only when the node has one and
   leaves an agent's observation unless asked (`plev observe --source`).
@@ -207,7 +207,7 @@ geometry. a number a screen needs that is not a token yet becomes one in
 `rust/engine/src/styling/theme/scales.rs`, with its spec value in
 `tests_scales.rs`; it never lands in the screen.
 
-an app frames its screens with `comps::shell::AppShell` (full sidebar,
+an app frames its screens with `engine::widgets::shell::AppShell` (full sidebar,
 rail, or a drawer behind a menu button on a phone; header; content rect;
 safe area). the only tokens an app may own are domain semantics derived
 from the theme (the ide's file-status colors).
@@ -250,15 +250,15 @@ one binding table, one accessibility projection. never a local copy.
 
 ## small app utilities
 
-- clipboard: `engine::clipboard` (`SystemClipboard` on desktop,
+- clipboard: `engine::runtime::platform::clipboard` (`SystemClipboard` on desktop,
   `LocalClipboard` for tests, wasm and mobile, `default_clipboard()` picks
   per target).
-- charts: `comps::charts` (pure geometry plus `charts::draw`); the owning
-  view keeps any reveal tween. network canvases: `engine::graph` plus
-  `comps::graph::GraphView`.
-- text fields: `comps::form::TextField` over the `TextInput` core; the
-  editor: `comps::editor::EditorView` with `EditorConfig::from_theme`.
-- simple global shortcuts: `engine::actions::shortcuts::ShortcutMap` with
+- charts: `engine::widgets::charts` (pure geometry plus `charts::draw`); the owning
+  view keeps any reveal tween. network canvases: `engine::widgets::graph::geometry` plus
+  `engine::widgets::graph::GraphView`.
+- text fields: `engine::widgets::form::TextField` over the `TextInput` core; the
+  editor: `engine::widgets::editor::EditorView` with `EditorConfig::from_theme`.
+- simple global shortcuts: `engine::control::keymap::shortcuts::ShortcutMap` with
   `match_logical_key`; the full `KeymapMatcher` and `ActionRegistry` only
   for contexts, sequences or user keymaps. a keymap binding is an input
   binding; once task-59 lands it targets a capability and goes through the
@@ -337,7 +337,7 @@ request template; an edit to one lands in the others in the same change
   request redraw). under render on demand a missed invalidation is a
   frozen app.
 - motion on a clock (a caret) asks for the instant it next changes, not
-  for every frame: a tick answers `comps::Wake` (a frame now, the next
+  for every frame: a tick answers `engine::widgets::Wake` (a frame now, the next
   deadline), the owner merges its children's asks, and the shell sleeps
   until the earliest one (task-82). a `tick -> bool` that is true while
   focused is the defect, not the pattern.

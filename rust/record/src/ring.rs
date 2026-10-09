@@ -231,7 +231,7 @@ impl Inner {
     }
 
     /// records one stage a dispatcher reports. the request is redacted
-    /// against the state now (`sem::redact`, the rule the agent port
+    /// against the state now (`accord::redactor`, the rule the agent port
     /// applies too; no state, or a node the state does not hold, counts as
     /// secret) and shared by every stage of its receipt.
     pub(crate) fn stage(&mut self, origin: u16, receipt: &Receipt, stage: &Stage) {

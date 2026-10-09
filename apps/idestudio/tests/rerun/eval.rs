@@ -2,7 +2,7 @@
 //!
 //! the fixture is the laboratory's own start (`src/bin/lab/bench.rs`,
 //! `Bench::open`): the repository of the experiment built in a temporary
-//! directory (`ide::lab_repo::Repo::build`, the same code the laboratory
+//! directory (`idestudio::repository::eval_repo::Repo::build`, the same code the laboratory
 //! runs), a real git worker on it, and the `Workbench` connected and
 //! loaded. the worker only ever runs `git` in that directory; nothing
 //! reaches the network.

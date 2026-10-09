@@ -108,7 +108,7 @@ pub(crate) fn color(t: ColorRole, theme: &Theme) -> [f32; 4] {
     color.0
 }
 
-/// `engine::theme::Elevation`, whose stack is `theme.shadows.stack(e)`.
+/// `engine::styling::theme::Elevation`, whose stack is `theme.shadows.stack(e)`.
 pub(crate) fn elevation(t: Elevation) -> theme::Elevation {
     match t {
         Elevation::Base => theme::Elevation::Base,
@@ -119,7 +119,7 @@ pub(crate) fn elevation(t: Elevation) -> theme::Elevation {
     }
 }
 
-/// `engine::theme::ControlSize`, whose height is `theme.control.height`.
+/// `engine::styling::theme::ControlSize`, whose height is `theme.control.height`.
 pub(crate) fn control(t: ControlSize) -> theme::ControlSize {
     match t {
         ControlSize::Xs => theme::ControlSize::Xs,

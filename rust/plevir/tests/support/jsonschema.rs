@@ -1,4 +1,4 @@
-//! A JSON Schema validator for the keywords `uir::schema()` uses, and no
+//! A JSON Schema validator for the keywords `plevir::schema()` uses, and no
 //! more: `$ref` into `$defs`, `type`, `const`, `enum`, `anyOf`,
 //! `properties`, `required`, `additionalProperties`, `propertyNames`,
 //! `items`, `minLength`, `minimum` and `maximum`. A keyword it does not

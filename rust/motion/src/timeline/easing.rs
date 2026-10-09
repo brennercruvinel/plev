@@ -1,4 +1,4 @@
-//! easing model: mirrors the `engine::animation::Easing` presets and adds
+//! easing model: mirrors the `engine::compose::animation::Easing` presets and adds
 //! the 1-byte wire representation of docs/ref/monster-format-v0.md decision 4.
 //!
 //! wire table: 0x00 linear, 0x01 hold, 0x02 ae-default (lowered as
@@ -20,7 +20,7 @@ pub const CUSTOM_BEZIER_BYTE: u8 = 0xFF;
 /// Highest assigned preset id; 0x21..=0xFE are reserved.
 pub const MAX_PRESET_BYTE: u8 = 0x20;
 
-/// Easing of a segment. Preset variants mirror `engine::animation::Easing`
+/// Easing of a segment. Preset variants mirror `engine::compose::animation::Easing`
 /// one to one; `CustomBezier` mirrors `plev`'s `CubicBezier` with f32
 /// control points in memory (x in [0,1], y in [-0.5,1.5] on the wire).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]

@@ -8,7 +8,7 @@
 //!
 //! When the app chose the platform's dialog (`Workbench::confirm_natively`,
 //! task-76 item 8) the same title, body and button go to
-//! `engine::platform::alerts` instead of the modal, the window as the
+//! `engine::runtime::platform::alerts` instead of the modal, the window as the
 //! dialog's parent, and its answer takes the same two paths. The dialog
 //! blocks this thread until the person answers, as every native panel
 //! does; the receipt, the recording and the inspector see the same

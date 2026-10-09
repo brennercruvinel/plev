@@ -1,6 +1,6 @@
 //! The ide's session recording (task-63 phase d): with `PLEV_RECORD=1` in
 //! a debug build, what happens in the workbench goes into a
-//! `rec::Recorder` on the workbench's clock (`Workbench::now`, the one its
+//! `record::Recorder` on the workbench's clock (`Workbench::now`, the one its
 //! receipts are stamped with), so `plev-inspect` can answer "why" about a
 //! real session of a person and an agent in the ide.
 //!
@@ -176,7 +176,7 @@ impl Recording {
     }
 
     /// On a panic, the retained window goes to the directory
-    /// (`rec::install_panic_hook`), before the hook installed before runs.
+    /// (`record::install_panic_hook`), before the hook installed before runs.
     pub fn catch_panics(&self) -> io::Result<()> {
         private_dir(&self.dir)?;
         record::install_panic_hook(self.rec.clone(), self.dir.clone());

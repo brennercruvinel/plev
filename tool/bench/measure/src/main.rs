@@ -16,7 +16,7 @@
 //!
 //! Each scenario opens a page (or the editor) headless, drives it with the
 //! input the window would deliver (`harness`), and records every turn of
-//! the loop with `engine::perf::stages`. The tables go to stdout and, with
+//! the loop with `engine::runtime::perf::stages`. The tables go to stdout and, with
 //! `--out`, to a markdown file. Native only: the headless renderer blocks
 //! on the adapter.
 

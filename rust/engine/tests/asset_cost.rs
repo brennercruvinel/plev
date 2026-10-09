@@ -131,7 +131,7 @@ fn bare_device() -> Option<(wgpu::Device, wgpu::Queue)> {
     pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default())).ok()
 }
 
-/// The phases of `engine::headless::Renderer::new`, one by one, in a
+/// The phases of `engine::drawing::headless::Renderer::new`, one by one, in a
 /// process that opened no device before: the context's constructor is
 /// the device plus the seven pipelines of `GpuContext::from_device`.
 fn renderer() {

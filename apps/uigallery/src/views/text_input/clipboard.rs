@@ -1,7 +1,7 @@
 //! The clipboard in the gallery's text fields (task-74, the person's
 //! request): cmd on macOS, ctrl elsewhere, with c, x, v or a copies, cuts,
 //! pastes or selects all in the field that has the keys, through the
-//! gallery's one clipboard (`engine::clipboard`: the system's, made on
+//! gallery's one clipboard (`engine::runtime::platform::clipboard`: the system's, made on
 //! first use, unless a test puts a `LocalClipboard`). A letter with cmd
 //! or ctrl held is never typed into a field.
 //!

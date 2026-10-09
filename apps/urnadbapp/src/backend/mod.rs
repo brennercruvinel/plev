@@ -7,7 +7,7 @@
 //! - [`urnaread`]: portable in-memory .urna reader (all targets; the web
 //!   backend's engine, unit-tested natively against the real writer).
 //! - [`bench`]: pure benchmark stats (all targets). Graph geometry moved
-//!   to `engine::graph` in design-system F3.
+//!   to `engine::widgets::graph::geometry` in design-system F3.
 //! - [`backend`] + [`worker`] (native): mmap runtime + worker thread;
 //!   [`embed`] (offline query embedders) and [`frames`] (ffmpeg frame
 //!   preview for inlined media) run on that thread.

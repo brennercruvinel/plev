@@ -2,7 +2,7 @@
 //! page, driven by events the way a window drives it (render on demand:
 //! a frame after each input and while something animates), recorded
 //! frame by frame from the compositor, drawn headless through
-//! engine::headless when the machine has a GPU. then the semantic track
+//! engine::drawing::headless when the machine has a GPU. then the semantic track
 //! under a busy toy app. a measurement, not a check: run it in release,
 //!
 //!     cargo test -p uigallery --release --test record_cost -- --ignored --nocapture

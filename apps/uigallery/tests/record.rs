@@ -1,5 +1,5 @@
 //! The gallery's session recording, through the path its shell takes
-//! (`showcase::app::record::Recording`, `ShowcaseView::serve_agent_recorded`),
+//! (`uigallery::shell::window::record::Recording`, `ShowcaseView::serve_agent_recorded`),
 //! with no window: the Silences page as it opens (seeded; nothing here
 //! runs ffmpeg), a real agent port in a temporary directory. This thread
 //! plays the shell as `app.rs` does with `PLEV_RECORD=1`: it serves the

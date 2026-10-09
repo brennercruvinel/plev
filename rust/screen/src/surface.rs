@@ -24,7 +24,7 @@ use crate::widget::{Kind, Widget};
 /// what it shows is read from the app's `Snapshot`: `sync` reads the
 /// bindings again when the app's revision moved, and keeps that snapshot
 /// as the one shown. an event on one of its widgets becomes a
-/// `sem::Request` for the capability the IR bound, observed on that
+/// `accord::Request` for the capability the IR bound, observed on that
 /// snapshot, by the person (`Actor::Human`), handed to the app's
 /// dispatcher; the surface itself never runs anything.
 ///

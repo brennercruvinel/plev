@@ -5,7 +5,7 @@
 //! a person through the dispatcher. The projection is written in the lean
 //! `sem` form without `source` to `rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json`,
 //! and the IR fixtures of the ide build their capability registry from it
-//! (`uir::Capabilities::from_snapshot`): the registry is the ide's own
+//! (`plevir::Capabilities::from_snapshot`): the registry is the ide's own
 //! projection, never a second declaration by hand.
 //!
 //! The file is a golden. This test fails when the projection moves away

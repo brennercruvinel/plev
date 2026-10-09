@@ -9,7 +9,7 @@
 //! dispatcher, the same path an agent or a test takes.
 //!
 //! With `PLEV_AGENT=1` in a debug build the window also opens the agent
-//! port (`ide::agent`, `$TMPDIR/plev/ide-<pid>.sock`), so a person and an
+//! port (`idestudio::capability::agent`, `$TMPDIR/plev/ide-<pid>.sock`), so a person and an
 //! agent operate the same workbench at once. The port wakes the loop; the
 //! shell serves it on this thread, and again after every git result it
 //! applies, since a stage, an unstage or a commit ends on the worker and
@@ -35,7 +35,7 @@
 //! keys while the line or a surface's field has the keyboard (`keys.rs`).
 //!
 //! With `PLEV_RECORD=1` in a debug build the shell records the session
-//! for the inspector (`ide::record`): the receipts, who observed what
+//! for the inspector (`idestudio::interfaces::window::record`): the receipts, who observed what
 //! through the port, the state, a person's clicks and keys, and every
 //! frame drawn with where each bound control shows. It saves the retained
 //! window to `$TMPDIR/plev/sessions/ide-<pid>-<n>.monster` on cmd-shift-s
@@ -44,7 +44,7 @@
 //! With `PLEV_NATIVE_CONFIRM=1` a request that waits for a person (an
 //! agent's discard, an agent's question) is asked in the platform's own
 //! dialog, a sheet of the window, instead of the drawn modal
-//! (`Workbench::confirm_natively`, `engine::platform::alerts`): the same
+//! (`Workbench::confirm_natively`, `engine::runtime::platform::alerts`): the same
 //! words, the same `confirm` or `decline` as the person, the same
 //! receipt. The dialog blocks the loop until the person answers. Off by
 //! default: the drawn modal stays the ide's way.

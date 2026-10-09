@@ -2,7 +2,7 @@
 //! file. The svg is read ONCE here: usvg normalizes it, [`crate::tess`]
 //! tessellates the paths, the geometry is deduped into the monster asset
 //! table, and the encoder writes one keyframe. Playback afterwards is
-//! `monster::MonsterPlayer` over our format; no svg code runs.
+//! `motion::MonsterPlayer` over our format; no svg code runs.
 //!
 //! an svg is a still image, so the timeline is a single keyframe: every
 //! tessellated path is one node placed on the stage. dedup by exact

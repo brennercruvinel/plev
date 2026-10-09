@@ -1,4 +1,4 @@
-//! the Claude as the model of a proposer: `propose::Model` over the
+//! the Claude as the model of a proposer: `offers::Model` over the
 //! `claude -p` of Claude Code, run as a child process.
 //!
 //! ```text
@@ -19,7 +19,7 @@
 //!
 //! the network is the child's: this crate opens no socket and holds no
 //! key; the child uses the login its Claude Code already has. what the
-//! model answers is never trusted here: `propose::propose_verified` is
+//! model answers is never trusted here: `offers::propose_verified` is
 //! the way out.
 
 mod reply;
@@ -111,7 +111,7 @@ impl Cancel {
     }
 }
 
-/// the Claude behind `propose::Model`: each `complete` runs `program -p`
+/// the Claude behind `offers::Model`: each `complete` runs `program -p`
 /// once, with the flags of `args`.
 #[derive(Clone, Debug)]
 pub struct ClaudeCli {

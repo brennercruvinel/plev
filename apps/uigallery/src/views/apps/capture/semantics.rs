@@ -1,5 +1,5 @@
-//! The Capture page as a capability: what it means (`sem::Semantics`),
-//! what it runs (`sem::Operable`), and the one path every actor takes to
+//! The Capture page as a capability: what it means (`accord::Semantics`),
+//! what it runs (`accord::Operable`), and the one path every actor takes to
 //! run it, the gallery's dispatcher (the todo page's, lent as to the
 //! Files page).
 //!

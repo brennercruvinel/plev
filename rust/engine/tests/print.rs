@@ -1,7 +1,7 @@
 //! Printing as the frame on paper (task-76 item 9), without a printer.
 //!
 //! The probe first: a text run drawn through the window's frame path
-//! without a window (`engine::headless`) at the screen's scale (2.0) and
+//! without a window (`engine::drawing::headless`) at the screen's scale (2.0) and
 //! at a paper scale (300 dpi over 72 points per inch, 4.1667), timed
 //! piece by piece: the device, the draw and the readback, the png. The
 //! glyphs are rasterized at the physical scale (the atlas of task-66), so

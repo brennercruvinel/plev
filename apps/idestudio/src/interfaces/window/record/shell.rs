@@ -1,4 +1,4 @@
-//! The shell's side of the session recording (`ide::record`, on with
+//! The shell's side of the session recording (`idestudio::interfaces::window::record`, on with
 //! `PLEV_RECORD=1` in a debug build): the recording starts with the
 //! workbench, its save keys join the keymap, and the shell's handlers
 //! call these hooks where something happens (see the shell's module doc).

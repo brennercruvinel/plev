@@ -16,7 +16,7 @@
 //! at rest nothing is asked. with reduced motion every change is
 //! instant: nothing fades, nothing slides, nothing is kept after it left.
 //! it is reduced when the surface is told so (`set_reduced`) or when the
-//! thread's motion is (`engine::animation::reduced_motion`, the system's
+//! thread's motion is (`engine::compose::animation::reduced_motion`, the system's
 //! preference the bridge sets, task-75): then no transition is made at
 //! all, so the first frame after a change already shows the new form (a
 //! spring made here would land only at the next tick, one frame late).

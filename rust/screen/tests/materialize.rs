@@ -263,7 +263,7 @@ fn a_node_keeps_its_widget_while_its_id_stays() {
 }
 
 /// Only a verified IR materializes. `Surface::materialize` takes a
-/// `VerifiedIr`, which only `uir::verify` builds (the `compile_fail`
+/// `VerifiedIr`, which only `plevir::verify` builds (the `compile_fail`
 /// doctest of the crate shows an `Ir` does not type-check there); an IR
 /// the verifier refuses gives no value to materialize at all.
 #[test]

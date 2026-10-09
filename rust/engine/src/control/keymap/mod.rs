@@ -75,7 +75,7 @@ impl dyn Action {
 /// Declares unit-struct actions within a namespace.
 ///
 /// ```rust
-/// engine::actions!(file, [Save, SaveAs, Open]);
+/// engine::control::keymap!(file, [Save, SaveAs, Open]);
 ///
 /// use engine::control::keymap::Action;
 /// assert_eq!(Save.name(), "file::Save");

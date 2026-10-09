@@ -1,6 +1,6 @@
 //! Git section: the plev ide workspace (changes, stacks, diff) embedded in
 //! the gallery's content rect against the repository the showcase was
-//! launched from. The panels are the ide's own views (`ide::views`), so a
+//! launched from. The panels are the ide's own views (`idestudio::interfaces::panels`), so a
 //! comps change shows up here and in the ide binary alike. The git worker
 //! wakes the event loop through the host-provided callback; the host
 //! applies its events then, whichever page shows, and draws only when the
@@ -20,7 +20,7 @@ mod stub;
 pub use stub::GitPage;
 
 /// Wakes the host event loop from the git worker thread (not
-/// `comps::Wake`, what a tick asks of that loop).
+/// `engine::widgets::Wake`, what a tick asks of that loop).
 pub type GitWake = Box<dyn Fn() + Send + 'static>;
 
 /// Vertical navigation of the file list (arrow keys).

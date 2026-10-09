@@ -12,7 +12,7 @@ use crate::ir::IrNode;
 use crate::token::Layout;
 use crate::vocabulary::{Component, Named, is_control, role_of, spec_of};
 
-/// true when `actors` lets `actor` ask, the mapping `sem::check` uses.
+/// true when `actors` lets `actor` ask, the mapping `accord::decision` uses.
 fn allows(actors: &Actors, actor: &Actor) -> bool {
     match actor {
         Actor::Human => actors.human,

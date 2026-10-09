@@ -3,7 +3,7 @@
 //! at the card radius, breathing between the surface and surface-hover
 //! alphas. Tick it only while visible: under render-on-demand a
 //! skeleton that ticks off-screen would busy-loop every frame. With the
-//! system's "reduce motion" on (`engine::animation::reduced_motion`) the
+//! system's "reduce motion" on (`engine::compose::animation::reduced_motion`) the
 //! pulse stands still and `tick` says so, and the placeholder still reads
 //! as one (task-75 phase 2a).
 

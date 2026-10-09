@@ -32,7 +32,7 @@ fn status_kind(kind: gitdrv::StatusKind) -> FileStatus {
 
 /// Builds the stacks panel: the checked-out branch carries the HEAD log,
 /// other local branches appear as headers (their logs are not walked —
-/// `git::GitRepo::log` follows HEAD only).
+/// `gitdrv::GitRepo::log` follows HEAD only).
 pub fn stacks(branches: &[gitdrv::Branch], log: &[gitdrv::Commit]) -> Vec<Stack> {
     let now = unix_now();
     let mut stacks: Vec<Stack> = Vec::with_capacity(branches.len().max(1));

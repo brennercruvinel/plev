@@ -1,12 +1,12 @@
 //! App section: the canonical small-but-complete todo app over the tested
-//! domain model (showcase::model::todo). comps::form::text_input::TextInput owns
+//! domain model (uigallery::domain::todo). engine::widgets::form::text_input::TextInput owns
 //! editing, focus, blink and cursor byte mapping; rows pair the design
 //! system Checkbox with a strike-through whose width comes from
 //! TextMeasurer (never chars * factor); filters are HOFF glass pills; the
 //! list scrolls internally (ScrollState) so the footer never overflows.
 //!
 //! The page is a capability (`semantics.rs`): it projects what it means,
-//! runs what it offers in `execute`, and owns the `sem::Dispatcher` every
+//! runs what it offers in `execute`, and owns the `accord::Dispatcher` every
 //! actor goes through. A click on a checkbox, a delete button or a filter
 //! pill, and the Enter key, become requests over the page as it is at
 //! that instant; nothing here calls the model directly. Typing, caret

@@ -1,5 +1,5 @@
 //! The active page in a window of its own as well (task-76 item 2),
-//! without a window: two headless hosts (`engine::window::WindowHost`,
+//! without a window: two headless hosts (`engine::runtime::window::WindowHost`,
 //! the window's frame path into a texture), one `ShowcaseView`. The same
 //! page, over the same state and the same dispatcher, lays out and binds
 //! in both compositors; a click in the page's own window changes the

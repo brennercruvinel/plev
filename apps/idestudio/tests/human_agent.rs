@@ -1045,7 +1045,7 @@ fn without_a_look_a_click_on_a_new_row_leaves_the_chain_nowhere_to_start() {
 // -- who acted since the agent looked, through the port (task-91) --
 
 /// The agent through the ide's agent port, in process: the protocol's
-/// server over the ide's own host (`ide::agent::Served`, what the window
+/// server over the ide's own host (`idestudio::capability::agent::Served`, what the window
 /// shell serves), with no socket. What it observes goes through the port
 /// as the window's agent's does.
 #[cfg(unix)]

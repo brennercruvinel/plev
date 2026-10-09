@@ -83,13 +83,13 @@ state the atlas lifecycle defects only show under
 (docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md). a probe that
 cannot reach the failing state proves nothing.
 
-the renderer behind it is `engine::text::probe` (offscreen texture, real
+the renderer behind it is `engine::drawing::text::probe` (offscreen texture, real
 `TextSystem`, real shader, readback to RGBA8).
 `rust/engine/tests/text_raster_pixels.rs` asserts through the same
 entry point. tests skip when no GPU adapter is present rather than
 failing.
 
-since task-66 the probe renders through `engine::headless`, which draws
+since task-66 the probe renders through `engine::drawing::headless`, which draws
 with the window's own frame path (`window::draw_frame`) into an
 offscreen texture: same pipelines, same srgb view, no second renderer.
 any showcase page and any `.monster` frame go to png the same way:

@@ -12,7 +12,7 @@
 //!   [`DIFF_LINES`] `lines` (each with the diff's `+`, `-` or space in
 //!   front, a hunk's header as it is), the kind of each of them in
 //!   `kinds` (`context`, `added`, `removed`, `header`: the names of
-//!   `uir::LineKind`, task-97) and the `count` of every line.
+//!   `plevir::LineKind`, task-97) and the `count` of every line.
 //! - `commit.form` (group): `open`; `open` reads it, `cancel` reads it and
 //!   the message it clears.
 //! - `commit.message` (text input): `text`, required; `set_value` reads it.

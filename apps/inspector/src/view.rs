@@ -39,7 +39,7 @@ pub(crate) struct Shown {
     pub(crate) scene: Vec<SceneNode>,
     pub(crate) bound: Vec<Bound>,
     pub(crate) extent: Option<(f32, f32)>,
-    /// the chunk did not read back (`rec::ReadError`), said as it is.
+    /// the chunk did not read back (`record::ReadError`), said as it is.
     pub(crate) error: Option<String>,
 }
 
@@ -55,7 +55,7 @@ pub(crate) enum Press {
 /// why a session did not open.
 #[derive(Debug)]
 pub enum OpenError {
-    /// the file does not read as a session (`rec::FileError`, as it is:
+    /// the file does not read as a session (`record::FileError`, as it is:
     /// an animation, a bad magic, a truncated file).
     File(FileError),
     /// the file reads, but its record does not replay.

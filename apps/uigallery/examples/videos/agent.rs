@@ -1,4 +1,4 @@
-//! The agent's side of the demo's script, over `wire::Client`: every act
+//! The agent's side of the demo's script, over `socket::Client`: every act
 //! from a revision it was shown, the waits for the page's worker (the
 //! frames decoded), the person asked to click once, and the buttons of
 //! the generated surface found by what the proposer named them.

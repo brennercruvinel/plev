@@ -1,5 +1,5 @@
 //! Frame rendering — build the scene, then hand the frame to plev's shared
-//! present path (`engine::window::present_frame`), which resolves the
+//! present path (`engine::runtime::window::present_frame`), which resolves the
 //! compositor and text, encodes the per-layer draw sequence in scene push
 //! order (quads/paths, shadows, SDF rects, images, text and backdrop-blur
 //! resolves interleaved as pushed), composites and presents.

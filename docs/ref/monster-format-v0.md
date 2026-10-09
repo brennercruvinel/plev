@@ -96,7 +96,7 @@ became decodable).
 
 the codec works on its own IR mirroring plev's animatable surface, so the
 frozen format never chases the internal enum; the player lowers
-monster::Node -> SceneNode at render time. v0 node kinds and animatable
+motion::Node -> SceneNode at render time. v0 node kinds and animatable
 props (from the engine-fit study):
 
 - rect: x y w h color
@@ -155,7 +155,7 @@ boundaries deterministically. the description track's first entry
 carries `stage WxH` (container::stage_size), so a player learns the
 composition bounds from the file alone.
 
-the lot::cnv bridge (lottie json sampled once -> dedup -> discover ->
+the import::formats::lottie::convert bridge (lottie json sampled once -> dedup -> discover ->
 encode) measured on the 5 corpus files: cards 0.36x and explosion 0.74x
 of the json size; girl 6.5x, snake 42x, money 53x. discrete motion wins
 already; 60fps full-body morphs pay v0's sampled-geometry cost

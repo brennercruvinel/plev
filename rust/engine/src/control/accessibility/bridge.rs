@@ -60,7 +60,7 @@ impl std::fmt::Display for BridgeError {
 
 impl std::error::Error for BridgeError {}
 
-/// A window's accessibility, projected from the app's `sem::Snapshot`.
+/// A window's accessibility, projected from the app's `accord::Snapshot`.
 ///
 /// The shell creates it right after the window, while the window is still
 /// hidden, and then:

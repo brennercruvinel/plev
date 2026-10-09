@@ -7,7 +7,7 @@
 //! copied into each app's `renderer.rs`.
 //!
 //! Drawing ([`draw_frame`]) is separate from presenting ([`present_frame`]):
-//! a window draws into its surface texture, `engine::headless` draws into
+//! a window draws into its surface texture, `engine::drawing::headless` draws into
 //! an offscreen texture, and both run the same function.
 
 use crate::drawing::compositor::Compositor;
@@ -120,7 +120,7 @@ pub fn present_frame(
 /// This is the whole frame after the scene is built: compositor resolve,
 /// text resolve, image upload, the layer passes, the composite pass into
 /// `target`, submit. [`present_frame`] calls it with the surface view and
-/// then presents; `engine::headless` calls it with an offscreen view and
+/// then presents; `engine::drawing::headless` calls it with an offscreen view and
 /// then reads the pixels back.
 ///
 /// `target` must be a view of a texture sized like `gpu.surface_config`

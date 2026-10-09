@@ -4,7 +4,7 @@
 //! will) and what the shell does with it.
 //!
 //! Covered, a window's host asks for no frame and has no deadline
-//! (`engine::window::WindowHost::set_occluded`): the view goes on, its
+//! (`engine::runtime::window::WindowHost::set_occluded`): the view goes on, its
 //! catch-up ticks with the real time, and as the window shows again the
 //! host asks for one frame, built from the state as it is then. Asleep,
 //! the shell does two things less: it neither settles the view (no
@@ -15,7 +15,7 @@
 //! each), catches up (the answers that arrived asleep are applied, an ask
 //! held is started, what ended is told), and the frame that follows shows
 //! it all. The work beside the frames hears the sleep through
-//! `engine::window::Background`, set by `Windows::sleep` and `wake`. The
+//! `engine::runtime::window::Background`, set by `Windows::sleep` and `wake`. The
 //! camera and the microphone hear it at once, asleep or covered
 //! (`capture.rs`): a device is released, not paused.
 

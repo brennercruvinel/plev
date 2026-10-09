@@ -1,7 +1,7 @@
 //! What the surface tests share: the fixtures of task-68 (the IR and the
 //! projections they are written against, read from `rust/plevir/tests/fixtures`),
 //! a page that projects an app and its surface as one snapshot, and a
-//! small app with a real `sem::Dispatcher` whose state is the fixture's.
+//! small app with a real `accord::Dispatcher` whose state is the fixture's.
 
 use std::path::PathBuf;
 

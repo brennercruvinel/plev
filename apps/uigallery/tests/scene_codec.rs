@@ -1,5 +1,5 @@
 //! the scene codec over the whole gallery (task-79): every page of the
-//! showcase in both main themes, written by `rec::scene::Sender`, read
+//! showcase in both main themes, written by `record::scene::Sender`, read
 //! back by a `Mirror` and drawn into a second compositor, holds the same
 //! layers with the same nodes, bit for bit. no GPU: the pixels are
 //! compared in apps/uigallery/tests/mirror.rs.

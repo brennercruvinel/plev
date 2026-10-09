@@ -452,7 +452,7 @@ impl ShowcaseView {
 
     /// Milliseconds on the clock the gallery's receipts are stamped with
     /// (the one dispatcher's): the clock anything recorded beside them (a
-    /// `rec::Recorder`) must use, or its events and the receipts would
+    /// `record::Recorder`) must use, or its events and the receipts would
     /// not line up. Read through the dispatcher's lending, hence `&mut`.
     pub fn now(&mut self) -> Millis {
         self.panes.todo.with_dispatcher(|_, _, now| now)

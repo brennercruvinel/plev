@@ -161,7 +161,7 @@ impl Gallery {
     }
 
     /// Every focus ring drawn in the frame: the accent stroke of
-    /// `comps::recipe::focus_ring`, as `(x, y, w, h)`.
+    /// `engine::widgets::recipe::focus_ring`, as `(x, y, w, h)`.
     fn rings(&self) -> Vec<[f32; 4]> {
         let theme = Theme::hoff_core();
         let accent = theme.colors.accent.0;

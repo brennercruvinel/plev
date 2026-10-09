@@ -25,7 +25,7 @@
 //! whoever asked, and "undo" takes the last change back; an intent that
 //! is no change proposes a surface.
 //!
-//! While the app sleeps (`engine::window::Background`, task-76 item 7) a
+//! While the app sleeps (`engine::runtime::window::Background`, task-76 item 7) a
 //! `propose` by the Claude is held (`asking::Pending`): the request
 //! starts and stays open, and the child runs only after the app wakes.
 //! `settle` reads nothing meanwhile, so an answer that arrives asleep

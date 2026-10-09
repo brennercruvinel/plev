@@ -4,7 +4,7 @@
 //! the input is the stream of stages of one dispatcher, in the order they
 //! happened: `(id, request, stage)`. live, a `Listener` hears it as the
 //! dispatcher's sink; recorded, it is the session's stage events of one
-//! origin, in the order of the file (`rec::Kind::Stage`). the same calls,
+//! origin, in the order of the file (`record::Kind::Stage`). the same calls,
 //! the same answer.
 //!
 //! a request enters the history when it ends, in the order of its id (the

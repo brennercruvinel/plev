@@ -3,15 +3,15 @@
 //! Built on the headless foundations:
 //! - [`rope`]: rope document, transactional edits, multi-cursor
 //!   selections and undo history;
-//! - [`TextMeasurer`](engine::text::TextMeasurer): GPU-free shaping for
+//! - [`TextMeasurer`](engine::drawing::text::TextMeasurer): GPU-free shaping for
 //!   hit-testing and caret geometry;
 //! - the compositor scene graph for rendering.
 //!
 //! The widget itself stays GPU-free: [`EditorView::render`] only emits
-//! [`SceneNode`](engine::compositor::SceneNode)s, so every behavior is
+//! [`SceneNode`](engine::drawing::compositor::SceneNode)s, so every behavior is
 //! testable headless. Line rendering is virtualized: only the lines
 //! visible in the viewport (plus overscan) are shaped per frame. The
-//! clipboard providers live in [`engine::clipboard`].
+//! clipboard providers live in [`engine::runtime::platform::clipboard`].
 
 mod config;
 mod input;

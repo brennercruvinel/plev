@@ -10,7 +10,7 @@
 //!
 //! A frame is the editor's scene pushed into a `Compositor` and resolved:
 //! `scene` stops at `Compositor::resolve_scene` (no GPU, what the editor
-//! controls); `frame` goes through `engine::headless::Renderer::draw`,
+//! controls); `frame` goes through `engine::drawing::headless::Renderer::draw`,
 //! which shapes the text nodes, rasterizes new glyphs and submits the
 //! frame, as a window does. `frame` is skipped when no GPU adapter answers.
 //! Memory is the heap the document and the editor keep after the open

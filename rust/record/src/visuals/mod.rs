@@ -1,6 +1,6 @@
 //! the visual track: what was on screen, as monster data. every rendered
 //! frame (render on demand: a frame only when something changed) is
-//! raised to the monster IR (`monster::raise_scene`) and kept in the open
+//! raised to the monster IR (`motion::raise_scene`) and kept in the open
 //! chunk; a chunk closes on its cadence, at a frame count or when its
 //! asset bank is full, and closing runs monster's delta discovery and
 //! encodes the result as a v0 file with an empty asset table. a chunk is

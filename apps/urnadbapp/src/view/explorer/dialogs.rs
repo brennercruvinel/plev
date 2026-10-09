@@ -1,5 +1,5 @@
 //! The explorer's file dialogs: the Browse… open and the blob export ask
-//! the platform through `engine::platform::files` (native on the desktop,
+//! the platform through `engine::runtime::platform::files` (native on the desktop,
 //! none on wasm and mobile, the fake in tests) with the title, filter and
 //! file name the urnaui always used. Split from `explorer.rs` by
 //! responsibility: that file is frozen past the file-hygiene limit and

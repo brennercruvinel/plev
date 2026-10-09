@@ -2,13 +2,13 @@
 //! (task-70 phase 2), shared by the Surface page and the Silences.
 //!
 //! With a surface open, `propose` reads the intent as a change of it
-//! first (`change`). By the rules, `propose::transform_verified(Rules)`
+//! first (`change`). By the rules, `offers::transform_verified(Rules)`
 //! answers at once: the operations are applied through the host
 //! (`SurfaceHost::apply_all`, all or none, verified again under the
 //! surface's own policy, reconciled by `SemId`), as the actor of the
 //! request, and "undo" takes the last change back whole
 //! (`SurfaceHost::undo_asked`). By the Claude, when the intent reads as a
-//! change (`propose::reads_as_change`), the worker asks for operations off
+//! change (`offers::reads_as_change`), the worker asks for operations off
 //! the app's thread (`asking::Job::Change`), the request starts, and the
 //! page's `settle` applies them when they arrive (`arrived`), as whoever
 //! asked. An intent that is no change goes on to the proposal of a

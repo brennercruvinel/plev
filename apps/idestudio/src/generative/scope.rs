@@ -1,7 +1,7 @@
 //! What the Claude is shown of the repository (task-96): what the review
-//! needs, never the workspace whole. The prompt of `propose::Llm` carries
+//! needs, never the workspace whole. The prompt of `offers::Llm` carries
 //! every node of the snapshot it is given, with its values
-//! (`propose::prompt`), so the workbench gives it a snapshot of its own:
+//! (`offers::prompt`), so the workbench gives it a snapshot of its own:
 //! the commits the review names, as the rules read the intent, each with
 //! its message, its files and the action that shows its diff; and the diff
 //! region, with its lines and their kinds only while it shows one of

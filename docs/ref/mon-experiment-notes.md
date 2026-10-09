@@ -182,7 +182,7 @@ objeto movido por frame), nao head-to-head medido no corpus. marcar.
 import por conversao, nunca por embedding (ADR
 import-foreign-formats-by-conversion-not-embedding, commit a044613): o `lot` le
 o JSON do lottie uma vez, offline, e converte. depois disso o playback roda no
-`monster::MonsterPlayer` e nenhum codigo lottie executa. o JSON morre na porta.
+`motion::MonsterPlayer` e nenhum codigo lottie executa. o JSON morre na porta.
 
 ## os asteriscos honestos
 

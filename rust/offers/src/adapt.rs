@@ -1,5 +1,5 @@
 //! the transformation proposer (task-70 phase 2): with a surface shown, an
-//! intent becomes operations of `uir::transform` instead of a whole new
+//! intent becomes operations of `plevir::transform` instead of a whole new
 //! IR.
 //!
 //! a `Transformer` reads what a person or an agent asked for (`Adapt`:

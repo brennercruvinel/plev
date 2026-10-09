@@ -1,6 +1,6 @@
 //! task-79, the probe behind the scene channel: what a frame of every
 //! showcase page weighs when it travels, by the monster path the
-//! recorder uses (`monster::raise_scene`, discovery, the v0 encoder) and
+//! recorder uses (`motion::raise_scene`, discovery, the v0 encoder) and
 //! by a codec of the compositor's own nodes, layer by layer; what a frame
 //! with one change weighs on a page with text, one with an image and one
 //! with glass; the images and the bindings a frame references.
@@ -33,7 +33,7 @@ const VIEWPORT: Viewport = Viewport {
     scale: 1.0,
 };
 
-/// the longest line a client may send the port (`wire::MAX_LINE`,
+/// the longest line a client may send the port (`socket::MAX_LINE`,
 /// rust/socket/src/port.rs:48); rec does not depend on wire.
 const MAX_LINE: usize = 1 << 20;
 
@@ -395,7 +395,7 @@ fn discovery() -> DiscoverConfig {
 /// the monster path for `frames`: raised into one bank, discovered and
 /// encoded as the recorder's visual track does (rust/record/src/visuals/mod.rs,
 /// `encode`), plus what its asset table would hold (a text key as the
-/// session file writes it, a path as `monster::asset_path` packs it; an
+/// session file writes it, a path as `motion::encoding::asset_path` packs it; an
 /// image as its size, the monster table having no pixels).
 struct Monster {
     bytes: usize,

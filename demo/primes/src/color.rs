@@ -5,7 +5,7 @@
 //! returns sRGB in [0, 1], NOT linear. vertex colors are linearized once in
 //! the shader (`srgb_to_linear`), so the host must hand the gpu sRGB. the
 //! near-black clear is the opposite case and is linearized on the cpu via
-//! `engine::color::Color::to_linear_array` in the bin.
+//! `engine::styling::color::Color::to_linear_array` in the bin.
 
 use crate::simulation::parameters::{CohMode, MAX_PRIME_INDEX};
 

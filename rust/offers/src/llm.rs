@@ -23,7 +23,7 @@ use crate::{Ask, Proposer};
 /// a language model: a prompt in, the model's text out. synchronous, like
 /// the rest of a proposal; a provider that takes seconds runs it off the
 /// app's thread (the dispatcher already ends a request later,
-/// `sem::Execution::Started`).
+/// `accord::Execution::Started`).
 pub trait Model {
     fn complete(&mut self, prompt: &str) -> Result<String, ModelError>;
 }

@@ -22,7 +22,7 @@ pub struct CommitEntry {
     pub message: String,
     pub author: String,
     pub time_ago: String,
-    /// The paths the commit changes, in git's order (`git::Commit::files`).
+    /// The paths the commit changes, in git's order (`gitdrv::Commit::files`).
     pub files: Vec<String>,
 }
 

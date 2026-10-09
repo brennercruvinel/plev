@@ -110,7 +110,7 @@ fn the_registry_is_the_workspace_with_each_commits_files_and_the_diff() {
 }
 
 /// The kind of each line of a commit's diff, by name, beside the lines
-/// (task-97): as many kinds as lines, each a name of `uir::LineKind`, a
+/// (task-97): as many kinds as lines, each a name of `plevir::LineKind`, a
 /// header where a hunk begins and the name of the mark on every other
 /// line; nothing before a diff is shown.
 #[test]

@@ -1,5 +1,5 @@
 //! The workbench through a real agent port, with no window, served the
-//! way the ide's shell serves it (`ide::agent::serve`): after the port's
+//! way the ide's shell serves it (`idestudio::capability::agent::serve`): after the port's
 //! wake, and again after every worker event the shell applies. A real
 //! repository in a temp dir and the real git worker; this thread is the
 //! shell, a spawned thread is the agent speaking the protocol.

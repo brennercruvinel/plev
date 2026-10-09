@@ -1,5 +1,5 @@
 //! The gallery asleep and covered (task-76 item 7), without a window: a
-//! `ShowcaseView` over a headless host (`engine::window::WindowHost`, the
+//! `ShowcaseView` over a headless host (`engine::runtime::window::WindowHost`, the
 //! window's frame path into a texture) under `Windows`. The app sleeps,
 //! the state changes meanwhile (a todo toggled through the dispatcher),
 //! nothing is asked of the window and its texture keeps the old frame;

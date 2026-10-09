@@ -2,14 +2,14 @@
 //! a button a person asks for (cmd-p, the menu item), and the shell
 //! prints the frame of the main window as it stands: the same scene the
 //! window draws, at a paper scale, through the system's printer
-//! (`engine::platform::print`). The scene is built on the loop's thread
+//! (`engine::runtime::platform::print`). The scene is built on the loop's thread
 //! (the view lives here; it costs a frame's scene build); everything after
 //! runs on a thread of its own: a headless renderer of its own draws the
 //! scene through the window's frame path and reads it back, the png is
 //! encoded, the document handed to the printer, the job's place asked
 //! once. The request stays open (`Execution::Started`) until the answer
 //! lands, read by `settle_print` on the loop, as the Silences page reads
-//! its ffmpeg. Under `engine::window::Background`: a print asked while
+//! its ffmpeg. Under `engine::runtime::window::Background`: a print asked while
 //! the app sleeps waits for the wake (the scene is built then, from the
 //! state then), and an answer that lands asleep waits on the channel.
 //!

@@ -1,5 +1,5 @@
 //! `Recorder`, the handle an app records through, and `Sink`, the
-//! `sem::ReceiptSink` a dispatcher reports its stages to. both share one
+//! `accord::ReceiptSink` a dispatcher reports its stages to. both share one
 //! ring behind a lock that is held only inside a recorder call, never
 //! across the app's code, so no call can find it taken by the same thread.
 

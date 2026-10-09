@@ -1,6 +1,6 @@
 //! The gallery's session recording (task-69 phase 4c), in the form of the
-//! ide's (`ide::record`, task-63 phase d): with `PLEV_RECORD=1` in a debug
-//! build, what happens in the window goes into a `rec::Recorder` on the
+//! ide's (`idestudio::interfaces::window::record`, task-63 phase d): with `PLEV_RECORD=1` in a debug
+//! build, what happens in the window goes into a `record::Recorder` on the
 //! gallery's clock (`ShowcaseView::now`, the one its receipts are stamped
 //! with), so `plev-inspect` can answer "why" about a real session of a
 //! person and an agent on a page, the generated screen of the Silences
@@ -207,7 +207,7 @@ impl Recording {
     }
 
     /// On a panic, the retained window goes to the directory
-    /// (`rec::install_panic_hook`), before the hook installed before runs.
+    /// (`record::install_panic_hook`), before the hook installed before runs.
     pub fn catch_panics(&self) -> io::Result<()> {
         private_dir(&self.dir)?;
         record::install_panic_hook(self.rec.clone(), self.dir.clone());

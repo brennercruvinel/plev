@@ -2,9 +2,9 @@
 //!
 //! The page staged headless as `showcase --render Todo --semantics` stages
 //! it, projected and written in the form `plev observe` serves
-//! (`showcase::app::semantics_json`, without `source`) to
+//! (`uigallery::shell::semantics_json`, without `source`) to
 //! `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`. The todo IR fixture
-//! builds its capability registry from it (`uir::Capabilities::from_snapshot`):
+//! builds its capability registry from it (`plevir::Capabilities::from_snapshot`):
 //! the registry is the page's own projection, never a second declaration
 //! by hand.
 //!

@@ -1,5 +1,5 @@
 //! Showcase application shell: the winit `ApplicationHandler` that owns the
-//! windows (`engine::window::Windows`: each with its GPU context, its
+//! windows (`engine::runtime::window::Windows`: each with its GPU context, its
 //! compositor and its clock) and the `ShowcaseView`, plus the per-platform
 //! entry points (desktop `run`, web `run_web`, android `android_main`, iOS
 //! `uigallery_ios_main`). The view stays winit-free; this is the only
@@ -16,7 +16,7 @@
 //!
 //! Frames render on demand; animations (springs, fades) keep requesting
 //! frames only while something is actually moving, and a caret at rest
-//! asks for its next flip: the view's tick answers a [`comps::Wake`], and
+//! asks for its next flip: the view's tick answers a [`engine::widgets::Wake`], and
 //! the loop sleeps until the earliest deadline of any window
 //! (`ControlFlow::WaitUntil`), or for good when nothing is pending. Input,
 //! the git worker, the screen reader and the agent port wake it as before:

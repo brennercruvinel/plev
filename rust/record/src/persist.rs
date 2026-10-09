@@ -1,7 +1,7 @@
 //! a `Session` to and from a session file (see `format` for the layout).
 //! the writer copies every chunk's monster bytes as they are; the reader
 //! is strict: the header, every section, every event line, every chunk
-//! (through `monster::decode`) and every asset reference is checked, and
+//! (through `motion::decode`) and every asset reference is checked, and
 //! anything the writer would not have written is a typed `FileError`.
 //!
 //! a window with bindings is written with section B, as version 1; one
@@ -168,7 +168,7 @@ impl Session {
 
     /// reads a session from its bytes, strictly. an image that carries
     /// its pixels is loaded into this process's image store
-    /// (`engine::gpu::load_image_rgba`) so its node draws; one without is
+    /// (`engine::drawing::gpu::load_image_rgba`) so its node draws; one without is
     /// kept with its size and draws nothing.
     pub fn from_bytes(bytes: &[u8]) -> Result<Session, FileError> {
         let parsed = format::parse(bytes)?;

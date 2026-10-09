@@ -105,7 +105,7 @@ impl WindowHost {
         text_system.finish_frame();
 
         // The accessibility tree of this frame, while a screen reader
-        // listens. This `App` projects no meaning (no `sem::Snapshot`), so
+        // listens. This `App` projects no meaning (no `accord::Snapshot`), so
         // the tree is the window alone and nothing the reader asks maps.
         #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
         if let (Some(bridge), Some(window)) = (self.a11y.as_mut(), self.window.as_ref()) {

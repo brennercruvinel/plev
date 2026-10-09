@@ -1,6 +1,6 @@
 //! `ClaudeCli` against a fake claude (`tests/fake-claude`, a shell script),
 //! never the real one: no test here reaches the network. over the todo's
-//! golden projection, through `propose::Llm` and `propose_verified`: a
+//! golden projection, through `offers::Llm` and `propose_verified`: a
 //! good answer is a verified surface, a refused one is repaired by the
 //! second call, a child past the timeout is killed, a call cancelled from
 //! another thread kills the child too, a grandchild that holds the pipes

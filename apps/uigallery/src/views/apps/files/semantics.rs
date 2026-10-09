@@ -1,5 +1,5 @@
-//! The Files page as a capability: what it means (`sem::Semantics`), what
-//! it runs (`sem::Operable`), and the one path every actor takes to run
+//! The Files page as a capability: what it means (`accord::Semantics`), what
+//! it runs (`accord::Operable`), and the one path every actor takes to run
 //! it, the gallery's dispatcher (the todo page's, lent by
 //! `TodoPage::with_dispatcher` as to the Surface and Silences pages: the
 //! agent port adds its sink to that one dispatcher and matches acts by

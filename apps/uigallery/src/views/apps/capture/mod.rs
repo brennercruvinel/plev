@@ -7,16 +7,16 @@
 //! "off", "starting", "on 640x360 at 15 fps", "permission denied", "no
 //! camera", "failed: ...", and "paused" while nobody can see the page).
 //!
-//! The devices are `engine::platform::capture`'s: the page holds none of
+//! The devices are `engine::runtime::platform::capture`'s: the page holds none of
 //! its own until the shell gives it the platform's (`set_capture`), so a
 //! page built headless, in a test or for a baseline never reaches one.
 //! A device runs only while the person wants it and the page can be
 //! seen: the page is the active one, a window that shows it is awake
 //! (the shell says so, `set_shown`), and the app does not sleep
-//! (`engine::window::Background`). Covered, asleep or left, the device is
+//! (`engine::runtime::window::Background`). Covered, asleep or left, the device is
 //! stopped and released (the child dies); shown again, it starts again if
 //! the person had turned it on. The camera's newest frame goes into one
-//! stream image (`engine::gpu::image::replace_image_rgba`) on the wake
+//! stream image (`engine::drawing::gpu::image::replace_image_rgba`) on the wake
 //! that follows it, never in a frame and never asleep, and the frame box
 //! draws it; after a stop the box waits for a new frame instead of
 //! showing the last one. The microphone's last chunk sets the level

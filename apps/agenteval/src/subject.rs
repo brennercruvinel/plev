@@ -1,6 +1,6 @@
 //! the app under experiment: the ide's `Workbench` on the experiment's
 //! repository, its git worker waking this thread through a channel, and
-//! its frame drawn without a window through `engine::headless` when the
+//! its frame drawn without a window through `engine::drawing::headless` when the
 //! machine has a GPU. the plev, scripted, screenshot and review arms start
 //! here.
 

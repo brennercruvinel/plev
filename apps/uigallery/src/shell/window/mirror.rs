@@ -3,7 +3,7 @@
 //!
 //! The app's side: when a connection watches a window (`main`, or `page`
 //! for the page's own window), the shell writes that window's frame
-//! (`rec::scene::Sender`) after each frame it draws there, and after each
+//! (`record::scene::Sender`) after each frame it draws there, and after each
 //! drain of the port, so a watch that just came gets the frame on screen
 //! without waiting for the next one; the port sends each watch only what
 //! changed. With nobody watching, nothing is written. The port takes a
@@ -19,7 +19,7 @@
 //! drawn there stays out of the frame, a box in its stead.
 //!
 //! The viewer's side, [`Viewer`]: a watch's replies put back together
-//! (`wire::SceneReader`), applied to a `rec::scene::Mirror`, and drawn
+//! (`socket::SceneReader`), applied to a `record::scene::Mirror`, and drawn
 //! into a compositor of its own, with the bindings (where each control
 //! shows, task-59) drawn over it on a layer of their own when asked. The
 //! app sends the bindings from the bottom of the frame to the top
@@ -89,11 +89,11 @@ impl Scenes {
 
 /// The places of `compositor`'s frame whose drawing never travels: every
 /// bound control the one rule of the port counts as secret in `now`, the
-/// app's projection at this frame (`sem::redact::is_secret`: marked
+/// app's projection at this frame (`accord::redactor::is_secret`: marked
 /// secret, or not held by the projection, or no projection at all; the
 /// rule fails closed), at the rect it is bound to on its layer, the part
 /// a clip hides included. The codec leaves what is drawn there out of the
-/// frame and writes a box in its stead (`rec::scene::Sender::frame_masked`).
+/// frame and writes a box in its stead (`record::scene::Sender::frame_masked`).
 pub fn masks(now: Option<&Snapshot>, compositor: &Compositor) -> Vec<Mask> {
     compositor
         .bindings()
@@ -373,7 +373,7 @@ impl Viewer {
 /// for any agent. The app takes it as `Actor::Agent`: an action kept for
 /// a person is refused, and one that asks a person waits for the person
 /// at the app. A click presses what a screen reader's click presses
-/// (`engine::accessibility::primary`), and only where the reader's tree
+/// (`engine::control::accessibility::primary`), and only where the reader's tree
 /// offers one (the action and the node on).
 pub struct Hand {
     client: Client,

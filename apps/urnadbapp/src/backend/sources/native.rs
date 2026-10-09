@@ -297,7 +297,7 @@ impl UrnaBackend {
     }
 
     /// The CSR graph copied into the engine's
-    /// [`GraphData`](engine::graph::GraphData) (the runtime's `CsrIndex`
+    /// [`GraphData`](engine::widgets::graph::geometry::GraphData) (the runtime's `CsrIndex`
     /// never leaves this module).
     pub fn graph_data(&self) -> Option<engine::widgets::graph::geometry::GraphData> {
         let g = self.graph.as_ref()?;

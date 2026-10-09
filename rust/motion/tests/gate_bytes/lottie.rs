@@ -49,7 +49,7 @@ pub struct Scan {
 
 /// Outgoing bezier of `kf`, snapped to the linear and ae-default
 /// presets when it matches (the starfish bench precedent), control
-/// points clamped to the wire range of `monster::quant`.
+/// points clamped to the wire range of `motion::encoding::quantize`.
 fn ease_of(kf: &J) -> Easing {
     if f(&kf["h"]) == 1.0 {
         return Easing::Hold;

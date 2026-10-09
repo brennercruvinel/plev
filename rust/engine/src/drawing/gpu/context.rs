@@ -143,7 +143,7 @@ impl GpuContext {
 
     /// A context with no window and no surface: frames are drawn into an
     /// offscreen texture of `width x height` physical pixels (see
-    /// `engine::headless`). `surface_config` holds that size and the
+    /// `engine::drawing::headless`). `surface_config` holds that size and the
     /// target format, [`HEADLESS_FORMAT`]; every pipeline is built by the
     /// same code as the windowed context, in that format.
     ///

@@ -2,7 +2,7 @@
 //!
 //! Absorbed from examples/message_dock and rebuilt dt-based: the example
 //! interpolated with per-frame `smooth()` (frame-rate dependent); here
-//! every motion is a `engine::animation::Tween` ticked by `update(dt)`,
+//! every motion is a `engine::compose::animation::Tween` ticked by `update(dt)`,
 //! with dt fed by the app's `FrameClock::tick()`. Views read geometry
 //! through getters against an available-space `Rect`; the only constants
 //! are element sizes, gaps and a max expanded width.

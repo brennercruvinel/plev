@@ -2,7 +2,7 @@
 //! a window and without a device: a `ShowcaseView` on the Capture page
 //! over the fake capture (`FakeCapture`: frame `n` is one solid color,
 //! `FakeCapture::pixel(n)`), drawn by a headless host
-//! (`engine::window::WindowHost`) and read back. A person turns the camera
+//! (`engine::runtime::window::WindowHost`) and read back. A person turns the camera
 //! on; the frame drawn before the view's wake shows the empty box, never a
 //! captured frame; the first frame after the wake shows the fake's frame
 //! 0 inside the box, the next wake frame 1 in the same place (one stream

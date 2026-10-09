@@ -12,7 +12,7 @@
 //! the level of a block. Then captured frames into one stream image
 //! (`stream_image_rgba`, `replace_image_rgba`: one slot whose pixels
 //! change in place) and drawn through the window's frame path without a
-//! window (`engine::headless`), timed, in every context over the store.
+//! window (`engine::drawing::headless`), timed, in every context over the store.
 //! Loaded as fixed images instead, every frame would be a new handle and
 //! a new upload kept whole, since the store is grow-only
 //! (`gpu/image.rs`): the stream would grow the memory and end in

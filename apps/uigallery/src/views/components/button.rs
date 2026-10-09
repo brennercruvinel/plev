@@ -1,6 +1,6 @@
 //! Buttons page, the hoff core kit's ButtonsPage: groups with a title and
 //! a bottom rule, cards in rows, one state per card behind a chip that
-//! names it. The widgets are `comps::action` (labeled, icon-only,
+//! names it. The widgets are `engine::widgets::buttons` (labeled, icon-only,
 //! submit); every visual value comes from the theme.
 //!
 //! Projected (task-75 phase 2b): a group per title,
