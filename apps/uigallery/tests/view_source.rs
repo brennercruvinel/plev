@@ -66,7 +66,7 @@ fn the_field_that_adds_leads_to_where_the_todo_projects_it() {
     assert_eq!(id.as_str(), "todo.input");
     assert!(
         site.file
-            .ends_with("crates/showcase/src/view/apps/app/semantics.rs")
+            .ends_with("apps/uigallery/src/views/apps/todo/semantics/mod.rs")
     );
     assert!(
         source_at(site).starts_with("project(b, &ids.input, \"new todo\""),
@@ -86,7 +86,7 @@ fn an_item_leads_to_the_list_item_projection() {
     assert_eq!(id.as_str(), "todo.item[1]");
     assert!(
         site.file
-            .ends_with("crates/showcase/src/view/apps/app/semantics.rs")
+            .ends_with("apps/uigallery/src/views/apps/todo/semantics/mod.rs")
     );
     assert!(
         source_at(site).starts_with("node(&id, Role::ListItem, item.text())"),
@@ -111,7 +111,7 @@ fn a_static_title_leads_to_its_one_literal() {
         let site = &sites[0];
         assert!(
             site.file
-                .ends_with("crates/showcase/src/view/pages/table.rs")
+                .ends_with("apps/uigallery/src/views/pages/table.rs")
         );
         assert!(
             source_at(site).starts_with(&format!("{shown:?}")),
@@ -165,7 +165,7 @@ fn a_formatted_text_has_no_literal() {
     assert_eq!(id.as_str(), "table_page.table[0]");
     assert!(
         site.file
-            .ends_with("crates/showcase/src/view/components/table.rs")
+            .ends_with("apps/uigallery/src/views/components/table.rs")
     );
 
     // the todo's counter is formatted too, but it sits inside the bound

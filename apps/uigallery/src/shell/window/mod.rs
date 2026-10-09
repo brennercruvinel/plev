@@ -7,7 +7,7 @@ pub(super) mod access;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub(super) mod detached;
 /// The per-platform entry points: desktop `run`, browser `run_web`,
-/// android `android_main`, iOS `showcase_ios_main`.
+/// android `android_main`, iOS `uigallery_ios_main`.
 pub(super) mod entry;
 pub(super) mod events;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

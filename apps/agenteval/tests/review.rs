@@ -187,9 +187,9 @@ fn the_demo_reviews_three_commits_with_the_fixed_panel_and_with_the_surface() {
         let id = node.id.as_str();
         if id == "proposed" || id.starts_with("proposed.") {
             surface += 1;
-            assert!(file.starts_with("crates/surface/src/"), "{id}: {file}");
+            assert!(file.starts_with("rust/screen/src/"), "{id}: {file}");
         } else if id.starts_with("stacks") {
-            assert!(file.starts_with("crates/ide/src/"), "{id}: {file}");
+            assert!(file.starts_with("apps/idestudio/src/"), "{id}: {file}");
         }
     }
     assert!(surface > 10, "the surface is in the state: {surface}");

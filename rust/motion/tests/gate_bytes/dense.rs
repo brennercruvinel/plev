@@ -36,7 +36,7 @@ pub fn fixture_missing(name: &str) -> bool {
     if std::path::Path::new(&path).exists() {
         return false;
     }
-    eprintln!("skip: ref lottie fixture absent ({path}); populate refs/lottie to run this bench");
+    eprintln!("skip: ref lottie fixture absent ({path}); populate data/media/lottie to run this bench");
     true
 }
 

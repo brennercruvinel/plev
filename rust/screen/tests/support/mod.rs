@@ -17,15 +17,15 @@ use indexmap::IndexMap;
 use plevir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, parse, verify};
 use screen::{Dispatch, Surface};
 
-pub const COMMIT_FORM: &str = "ide-commit-form.ir.json";
-pub const REVIEW: &str = "ide-review-commit.ir.json";
-pub const TODO: &str = "showcase-todo.ir.json";
-pub const IDE: &str = "ide-workbench.snapshot.json";
-pub const SHOWCASE: &str = "showcase-todo.snapshot.json";
+pub const COMMIT_FORM: &str = "idestudio-commit-form.ir.json";
+pub const REVIEW: &str = "idestudio-review-commit.ir.json";
+pub const TODO: &str = "uigallery-todo.ir.json";
+pub const IDE: &str = "idestudio-workbench.snapshot.json";
+pub const SHOWCASE: &str = "uigallery-todo.snapshot.json";
 /// The todo surface in two columns (a local fixture): the same controls
 /// as `TODO`, in a grid of two columns where the width allows (the
 /// filter and the counts, then the entry) and one where it does not.
-pub const COLUMNS: &str = "showcase-todo-columns.ir.json";
+pub const COLUMNS: &str = "uigallery-todo-columns.ir.json";
 /// The mixer surface (local fixtures, over `mixer()`): the volume slider
 /// in the left panel, then in the right one.
 pub const MIXER_LEFT: &str = "mixer-left.ir.json";
@@ -35,9 +35,9 @@ pub const MIXER_RIGHT: &str = "mixer-right.ir.json";
 /// generated surface (local fixtures, phase 4b): the review, with the
 /// video's frame and one per cut, and the comparison of the original
 /// with the result, side by side, over the same cuts.
-pub const SILENCES: &str = "showcase-silences.snapshot.json";
-pub const REVIEW_SILENCES: &str = "showcase-silences-review.ir.json";
-pub const COMPARE_SILENCES: &str = "showcase-silences-compare.ir.json";
+pub const SILENCES: &str = "uigallery-silences.snapshot.json";
+pub const REVIEW_SILENCES: &str = "uigallery-silences-review.ir.json";
+pub const COMPARE_SILENCES: &str = "uigallery-silences-compare.ir.json";
 
 /// A small app with a slider, which no fixture of task-68 has: a volume
 /// from 0 to 1 that `set_value` sets and `reset` puts back to 0, and a

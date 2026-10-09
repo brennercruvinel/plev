@@ -523,7 +523,7 @@ impl GpuContext {
                 move || wake.request_redraw(),
             ) {
                 Ok(w) => {
-                    log::info!("source hot reload on: crates/*/src");
+                    log::info!("source hot reload on: {{rust,apps,demo,tool/bench}}/*/src");
                     Some(w)
                 }
                 Err(e) => {

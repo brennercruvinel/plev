@@ -256,9 +256,9 @@ fn an_ir_of_before_reads_and_writes_back_the_same_document() {
     }
     // the three of this crate are in the writer's own order: byte a byte
     for name in [
-        "ide-commit-form.ir.json",
-        "ide-review-commit.ir.json",
-        "showcase-todo.ir.json",
+        "idestudio-commit-form.ir.json",
+        "idestudio-review-commit.ir.json",
+        "uigallery-todo.ir.json",
     ] {
         let text = std::fs::read_to_string(path(&format!("tests/fixtures/{name}"))).expect("it");
         let mut written = serde_json::to_string_pretty(&parse(&text).expect("reads")).unwrap();

@@ -391,7 +391,7 @@ mod tests {
         let site = &opened[0];
         assert!(
             site.file
-                .ends_with("crates/showcase/src/view/apps/app/semantics.rs")
+                .ends_with("apps/uigallery/src/views/apps/todo/semantics/mod.rs")
         );
         let src = std::fs::read_to_string(&site.file).unwrap();
         let line = src.lines().nth(site.line as usize - 1).unwrap();
@@ -501,13 +501,13 @@ mod tests {
         let got = lines(&got, 2);
         println!("PLEV_EDITOR received:\n{}", got.join("\n"));
         let (file, text) = source_at(&got[0]);
-        assert!(file.ends_with("crates/showcase/src/view/apps/app/semantics.rs"));
+        assert!(file.ends_with("apps/uigallery/src/views/apps/todo/semantics/mod.rs"));
         assert!(
             text.starts_with("project(b, &ids.input, \"new todo\""),
             "{text}"
         );
         let (file, text) = source_at(&got[1]);
-        assert!(file.ends_with("crates/showcase/src/view/pages/table.rs"));
+        assert!(file.ends_with("apps/uigallery/src/views/pages/table.rs"));
         assert!(text.starts_with("\"Todo\","), "{text}");
     }
 
@@ -580,7 +580,7 @@ mod tests {
         assert_eq!(edit.was, "Todo");
         assert_eq!(edit.field.text(), "Todo");
         let (file, text) = source_at(&edit.site.to_string());
-        assert!(file.ends_with("crates/showcase/src/view/pages/table.rs"));
+        assert!(file.ends_with("apps/uigallery/src/views/pages/table.rs"));
         assert!(text.starts_with("\"Todo\","), "{text}");
         assert!(edit.bounds.contains(title.0, title.1), "over the text");
 
@@ -621,7 +621,7 @@ mod tests {
         let (site, from, to) = asked.into_inner().expect("Enter writes");
         assert!(
             site.file
-                .ends_with("crates/showcase/src/view/pages/table.rs")
+                .ends_with("apps/uigallery/src/views/pages/table.rs")
         );
         assert_eq!((from.as_str(), to.as_str()), ("Todo", "Todo liSt"));
         assert!(app.source.edit.is_none(), "the field is gone");
@@ -673,7 +673,7 @@ mod tests {
         assert_eq!(told.len(), 1);
         assert!(
             told[0].ends_with(
-                "crates/showcase/src/view/pages/table.rs: its code changed since this build; rebuild, then edit"
+                "apps/uigallery/src/views/pages/table.rs: its code changed since this build; rebuild, then edit"
             ),
             "{told:?}"
         );

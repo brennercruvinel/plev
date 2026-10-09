@@ -180,7 +180,7 @@ fn an_event_line_of_the_form_before_the_lean_one_still_reads() -> Fallible {
             r#""state":{{}},"actions":[{{"name":"submit","label":null,"enabled":true,"#,
             r#""reads":["changes:staged"],"param":null,"policy":{p}}}],"#,
             r#""constraints":{c},"enabled":true,"inert":false,"focusable":true,"#,
-            r#""source":{{"file":"crates/rec/tests/session/file.rs","line":7,"column":5}}}}"#,
+            r#""source":{{"file":"rust/record/tests/session/file.rs","line":7,"column":5}}}}"#,
             r#"],"focused":null}},"changes":[]}}}}}}"#
         ),
         c = CONSTRAINTS,
@@ -208,7 +208,7 @@ fn an_event_line_of_the_form_before_the_lean_one_still_reads() -> Fallible {
         sources,
         [
             None,
-            Some(("crates/rec/tests/session/file.rs".to_owned(), 7, 5))
+            Some(("rust/record/tests/session/file.rs".to_owned(), 7, 5))
         ],
         "the recorded source travels as recorded"
     );

@@ -1,5 +1,5 @@
 //! The per-platform entry points of the gallery: desktop `run`, browser
-//! `run_web`, android `android_main`, iOS `showcase_ios_main`. Each builds
+//! `run_web`, android `android_main`, iOS `uigallery_ios_main`. Each builds
 //! the winit event loop its platform wants and drives the same [`App`].
 
 use super::super::{App, UserEvent};
@@ -86,7 +86,7 @@ pub fn android_main(android_app: winit::platform::android::activity::AndroidApp)
 /// drives `UIApplicationMain` from `run_app` and never returns.
 #[cfg(target_os = "ios")]
 #[unsafe(no_mangle)]
-pub extern "C" fn showcase_ios_main() {
+pub extern "C" fn uigallery_ios_main() {
     let event_loop = EventLoop::<UserEvent>::with_user_event()
         .build()
         .expect("ios event loop");

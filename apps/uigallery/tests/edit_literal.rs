@@ -25,7 +25,7 @@ use engine::runtime::hot_reload::view_source::{Origin, origin_at};
 use uigallery::shell::stage_page;
 
 /// The gallery's page table, where the Todo title is written.
-const TABLE: &str = "crates/showcase/src/view/pages/table.rs";
+const TABLE: &str = "apps/uigallery/src/views/pages/table.rs";
 
 fn git(repo: &Path, args: &[&str]) -> String {
     let out = Command::new("git")
@@ -68,7 +68,7 @@ fn repository() -> (PathBuf, PathBuf) {
     std::fs::copy(project_root().join(TABLE), &file).unwrap();
     git(&repo, &["init", "-q"]);
     git(&repo, &["add", TABLE]);
-    literals::take_baseline(&[repo.join("crates")]);
+    literals::take_baseline(&[repo.join("apps")]);
     (repo, file)
 }
 

@@ -2,7 +2,7 @@
 //! `main_web.rs`): delegates to the showcase library, which owns
 //! the winit application shell and every per-platform entry point. Mobile
 //! does not use this binary: android loads the cdylib's `android_main` and
-//! iOS links the staticlib's `showcase_ios_main` instead.
+//! iOS links the staticlib's `uigallery_ios_main` instead.
 //!
 //! On desktop the binary also draws a page without a window:
 //! `showcase --render <page> ... --out file.png` renders one frame through

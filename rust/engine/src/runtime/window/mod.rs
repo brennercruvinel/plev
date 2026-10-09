@@ -83,7 +83,7 @@ impl App {
                 let dirs: Vec<&std::path::Path> = dirs.iter().map(|d| d.as_path()).collect();
                 match crate::runtime::hot_reload::NarrateWatcher::new(&dirs) {
                     Ok(w) => {
-                        log::info!("narrate hot reload on: crates/*/src");
+                        log::info!("narrate hot reload on: {{rust,apps,demo,tool/bench}}/*/src");
                         Some(w)
                     }
                     Err(e) => {

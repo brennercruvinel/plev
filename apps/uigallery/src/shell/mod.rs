@@ -2,7 +2,7 @@
 //! windows (`engine::window::Windows`: each with its GPU context, its
 //! compositor and its clock) and the `ShowcaseView`, plus the per-platform
 //! entry points (desktop `run`, web `run_web`, android `android_main`, iOS
-//! `showcase_ios_main`). The view stays winit-free; this is the only
+//! `uigallery_ios_main`). The view stays winit-free; this is the only
 //! module that touches the event loop.
 //!
 //! One window shows the gallery: the chrome and the active page. On the
@@ -550,7 +550,7 @@ pub use window::entry::run;
 #[cfg(target_arch = "wasm32")]
 pub use window::entry::run_web;
 #[cfg(target_os = "ios")]
-pub use window::entry::showcase_ios_main;
+pub use window::entry::uigallery_ios_main;
 
 /// `showcase --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.

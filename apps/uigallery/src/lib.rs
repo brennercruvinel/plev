@@ -4,7 +4,7 @@
 //! GPU-facing `view`/`renderer`/`app`. The `app` module owns the winit
 //! `ApplicationHandler` and the per-platform entry points re-exported here,
 //! so desktop (`main.rs`), the browser, android (cdylib `android_main`) and
-//! iOS (staticlib `showcase_ios_main`) all drive the same gallery.
+//! iOS (staticlib `uigallery_ios_main`) all drive the same gallery.
 
 // Let the view modules keep referring to this crate by name
 // (`showcase::model::...`) now that they live in the library.

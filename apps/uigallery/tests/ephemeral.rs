@@ -573,7 +573,7 @@ fn the_review_is_born_from_an_intent_becomes_the_comparison_and_leaves_nothing()
         };
         if of_surface(node.id.as_str()) {
             assert!(
-                source.file.starts_with("crates/surface/src/"),
+                source.file.starts_with("rust/screen/src/"),
                 "{}: {}",
                 node.id,
                 source.file
@@ -583,7 +583,7 @@ fn the_review_is_born_from_an_intent_becomes_the_comparison_and_leaves_nothing()
             assert!(
                 source
                     .file
-                    .starts_with("crates/showcase/src/view/apps/silences"),
+                    .starts_with("apps/uigallery/src/views/apps/silences"),
                 "{}: {}",
                 node.id,
                 source.file
@@ -597,8 +597,8 @@ fn the_review_is_born_from_an_intent_becomes_the_comparison_and_leaves_nothing()
         .filter(|n| of_surface(n.id.as_str()))
         .count();
     println!(
-        "K4: {} of the surface's {of_it} nodes carry a source, all in crates/surface/src; \
-         {} of the fixed screen's, all in crates/showcase/src/view/apps/silences",
+        "K4: {} of the surface's {of_it} nodes carry a source, all in rust/screen/src; \
+         {} of the fixed screen's, all in apps/uigallery/src/view/apps/silences",
         sources.0, sources.1
     );
     assert!(sources.0 > 0 && sources.1 > 0, "{sources:?}");

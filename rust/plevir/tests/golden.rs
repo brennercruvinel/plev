@@ -1,19 +1,19 @@
 //! The golden IR of three surfaces, each verified against the capability
 //! registry of the real projection it was written for:
 //!
-//! - `ide-commit-form.ir.json`, the ide's commit form, the fixed screen,
+//! - `idestudio-commit-form.ir.json`, the ide's commit form, the fixed screen,
 //!   with the ide's own ids: a fixed screen fits the IR too;
-//! - `ide-review-commit.ir.json`, a surface generated over the same
+//! - `idestudio-review-commit.ir.json`, a surface generated over the same
 //!   capabilities, "review what goes into the commit": the changed files
 //!   repeated over `changes:files`, stage and unstage per file, the
 //!   message and the commit;
-//! - `showcase-todo.ir.json`, a surface over the showcase's todo: the
+//! - `uigallery-todo.ir.json`, a surface over the showcase's todo: the
 //!   field and the add button, the items repeated over `todo:items` (each
 //!   one's text and a checkbox for its `toggle`), the filter as chips and
 //!   the counters.
 //!
-//! The registries come from `ide-workbench.snapshot.json` and
-//! `showcase-todo.snapshot.json`, which the projection tests of the ide and
+//! The registries come from `idestudio-workbench.snapshot.json` and
+//! `uigallery-todo.snapshot.json`, which the projection tests of the ide and
 //! the showcase write (`crates/ide/tests/uir_fixture.rs`,
 //! `crates/showcase/tests/uir_fixture.rs`). The schema file is
 //! `uir::schema()` written out; `UIR_BLESS=1` writes it again.
@@ -28,11 +28,11 @@ use accord::Snapshot;
 use plevir::{Capabilities, GenerationPolicy, Ir, Rule, parse, schema, verify};
 use serde_json::{Value, json};
 
-const COMMIT_FORM: &str = "ide-commit-form.ir.json";
-const REVIEW: &str = "ide-review-commit.ir.json";
-const TODO: &str = "showcase-todo.ir.json";
-const IDE: &str = "ide-workbench.snapshot.json";
-const SHOWCASE: &str = "showcase-todo.snapshot.json";
+const COMMIT_FORM: &str = "idestudio-commit-form.ir.json";
+const REVIEW: &str = "idestudio-review-commit.ir.json";
+const TODO: &str = "uigallery-todo.ir.json";
+const IDE: &str = "idestudio-workbench.snapshot.json";
+const SHOWCASE: &str = "uigallery-todo.snapshot.json";
 const SCHEMA: &str = "assets/plev-ir-1.json";
 
 fn path(rel: &str) -> PathBuf {

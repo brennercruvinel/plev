@@ -52,7 +52,7 @@ fn shaders() -> Vec<PathBuf> {
 /// editor opens it as printed.
 fn shown(path: &Path) -> String {
     match path.strip_prefix(engine()) {
-        Ok(rel) => format!("crates/engine/{}", rel.to_string_lossy().replace('\\', "/")),
+        Ok(rel) => format!("rust/engine/{}", rel.to_string_lossy().replace('\\', "/")),
         Err(_) => path.display().to_string(),
     }
 }
@@ -141,7 +141,7 @@ fn a_syntax_error_names_the_file_the_line_and_the_column() {
     let next = source.lines().nth(line).expect("a line follows");
     let column = next.len() - next.trim_start().len() + 1;
     let at = format!(
-        "crates/engine/src/gpu/shaders/quad.wgsl:{}:{column}",
+        "rust/engine/src/drawing/gpu/shaders/quad.wgsl:{}:{column}",
         line + 1
     );
     assert!(report.contains(&at), "expected {at} in:\n{report}");

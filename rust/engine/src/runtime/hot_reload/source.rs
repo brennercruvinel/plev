@@ -81,13 +81,17 @@ impl SourceWatcher {
     }
 }
 
+/// The directories that hold the crates: the libraries, the apps, the demos
+/// and the benches.
+const CRATE_ROOTS: [&str; 4] = ["rust", "apps", "demo", "tool/bench"];
+
 /// `src/` of every crate in the workspace (not the crate dirs themselves:
-/// urnaui keeps its own target/ in there).
+/// urnadbapp keeps its own target/ in there).
 pub fn source_dirs() -> Vec<PathBuf> {
-    std::fs::read_dir(super::project_root().join("crates"))
-        .into_iter()
-        .flatten()
-        .flatten()
+    let root = super::project_root();
+    CRATE_ROOTS
+        .iter()
+        .flat_map(|r| std::fs::read_dir(root.join(r)).into_iter().flatten().flatten())
         .map(|e| e.path().join("src"))
         .filter(|d| d.is_dir())
         .collect()
