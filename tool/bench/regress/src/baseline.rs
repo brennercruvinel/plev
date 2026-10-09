@@ -7,7 +7,7 @@
 //!                   settled, the projection's revision, every layer
 //!                   (name, z, hash, node count, bounds) and every
 //!                   binding (id, layer, rect, clip)
-//!   semantics.json  the projection in the lean form `showcase --render
+//!   semantics.json  the projection in the lean form `uigallery --render
 //!                   --semantics` writes; only for a page that projects
 //!   frame.png       the frame; only when asked for (`bless --png`)
 //! ```

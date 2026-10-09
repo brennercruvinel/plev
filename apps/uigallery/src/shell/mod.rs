@@ -554,7 +554,7 @@ pub use window::entry::run_web;
 #[cfg(target_os = "ios")]
 pub use window::entry::uigallery_ios_main;
 
-/// `showcase --render`: one frame of a page without a window, as png, as
+/// `uigallery --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use window::headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};

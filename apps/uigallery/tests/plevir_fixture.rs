@@ -1,6 +1,6 @@
 //! The todo page's projection as the plev IR fixtures read it (task-68).
 //!
-//! The page staged headless as `showcase --render Todo --semantics` stages
+//! The page staged headless as `uigallery --render Todo --semantics` stages
 //! it, projected and written in the form `plev observe` serves
 //! (`uigallery::shell::semantics_json`, without `source`) to
 //! `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`. The todo IR fixture

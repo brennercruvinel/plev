@@ -102,8 +102,8 @@ what exists (updated at each task close-out):
   a texture through the window's path; `Renderer::svg` writes the same
   scene as svg with every approximation reported, and text in it is the
   outline of the glyphs `TextSystem::shaped_glyphs` returns from the one
-  shaping path, never a second shaping (task-66b); `showcase --render` and
-  `monster_player --frame` use it.
+  shaping path, never a second shaping (task-66b); `uigallery --render` and
+  `player --frame` use it.
 - the engine keys its binding table and its accessibility node ids by
   the `SemId` the app chose (rust/engine/src/drawing/compositor/binding.rs,
   rust/engine/src/control/accessibility/ids.rs); the only identity it mints

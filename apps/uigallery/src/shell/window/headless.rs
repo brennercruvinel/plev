@@ -1,4 +1,4 @@
-//! `showcase --render`: one frame of a gallery page without a window,
+//! `uigallery --render`: one frame of a gallery page without a window,
 //! through `engine::drawing::headless` (the window's own frame path into an
 //! offscreen texture), the same frame as SVG with every approximation
 //! reported (`engine::drawing::headless::svg`), and the page's semantic projection

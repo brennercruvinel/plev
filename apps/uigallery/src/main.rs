@@ -1,11 +1,11 @@
-//! Desktop binary entry (trunk builds `showcase-web` for the web, see
-//! `main_web.rs`): delegates to the showcase library, which owns
+//! Desktop binary entry (trunk builds `uigallery-web` for the web, see
+//! `src/bin/web.rs`): delegates to the uigallery library, which owns
 //! the winit application shell and every per-platform entry point. Mobile
 //! does not use this binary: android loads the cdylib's `android_main` and
 //! iOS links the staticlib's `uigallery_ios_main` instead.
 //!
 //! On desktop the binary also draws a page without a window:
-//! `showcase --render <page> ... --out file.png` renders one frame through
+//! `uigallery --render <page> ... --out file.png` renders one frame through
 //! the window's frame path (`uigallery::shell::stage_page`), `--svg file.svg`
 //! writes the same frame as SVG with every approximation reported, and
 //! `--semantics file.json` writes the page's semantic projection in the
@@ -19,12 +19,12 @@ fn main() {
         Ok(cli::Mode::Help) => println!("{}", cli::USAGE),
         Ok(cli::Mode::Render(request)) => {
             if let Err(e) = cli::render(&request) {
-                eprintln!("showcase: {e}");
+                eprintln!("uigallery: {e}");
                 std::process::exit(1);
             }
         }
         Err(e) => {
-            eprintln!("showcase: {e}\n\n{}", cli::USAGE);
+            eprintln!("uigallery: {e}\n\n{}", cli::USAGE);
             std::process::exit(2);
         }
     }
@@ -49,10 +49,10 @@ mod cli {
 
     pub const USAGE: &str = "\
 usage:
-  showcase [page] [theme] [scroll]      open the gallery window
-  showcase --render <page> [--out <file.png>] [--svg <file.svg>] [--semantics <file.json>]
-           [--svg-report <file.txt>] [--source]
-           [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
+  uigallery [page] [theme] [scroll]     open the gallery window
+  uigallery --render <page> [--out <file.png>] [--svg <file.svg>] [--semantics <file.json>]
+            [--svg-report <file.txt>] [--source]
+            [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
                                         one frame of a page, no window: as png, as svg (every
                                         approximation reported on stderr, and to --svg-report
                                         when given), and the page's semantic projection as json
