@@ -1,6 +1,7 @@
 //! Theme section: the HOFF token strip, palette cards, typography ramp.
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextStyle;
 use engine::styling::theme::Theme;
 use engine::widgets::icons;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
@@ -230,7 +231,7 @@ impl ThemePage {
                 if is_current { 1.5 } else { 1.0 },
             ));
             c.push(SceneNode::Text {
-                key: TextNodeKey::new(name, 12.0, 12.0 * 1.3, None).with_weight(600),
+                key: TextNodeKey::from_style(name, &TextStyle::new(12.0).with_weight(600), None),
                 x: rect.x + 12.0,
                 y: rect.y + 10.0,
                 color: t.colors.text.0,

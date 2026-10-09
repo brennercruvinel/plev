@@ -9,6 +9,7 @@ use accord::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilde
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::PathBuilder;
+use engine::drawing::text::TextStyle;
 use record::{
     Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe,
 };
@@ -16,6 +17,11 @@ use record::{
 use crate::toys::{Git, agent, id, look};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
+
+/// the body text of the toy frames: 14 on a 20 line
+fn body() -> TextStyle {
+    TextStyle::new(14.0).with_line_height(20.0)
+}
 
 fn dir() -> Result<tempfile::TempDir, std::io::Error> {
     tempfile::tempdir()
@@ -35,7 +41,7 @@ fn draw(git: &Git, hover: bool) -> Vec<SceneNode> {
     }];
     for (i, file) in git.staged.iter().enumerate() {
         scene.push(SceneNode::Text {
-            key: TextNodeKey::new(file, 14.0, 20.0, None),
+            key: TextNodeKey::from_style(file, &body(), None),
             x: 20.0,
             y: 20.0 + 24.0 * i as f32,
             color: [0.9, 0.9, 0.9, 1.0],
@@ -53,7 +59,7 @@ fn draw(git: &Git, hover: bool) -> Vec<SceneNode> {
         },
     });
     scene.push(SceneNode::Text {
-        key: TextNodeKey::new(&git.message, 14.0, 20.0, Some(100.0)),
+        key: TextNodeKey::from_style(&git.message, &body(), Some(100.0)),
         x: 30.0,
         y: 186.0,
         color: [1.0; 4],
@@ -253,7 +259,11 @@ fn ticker_scene(n: i64) -> Vec<SceneNode> {
             color: [1.0, 0.5, 0.0, 1.0],
         },
         SceneNode::Text {
-            key: TextNodeKey::new(&format!("tick {}", n / 10), 12.0, 16.0, None),
+            key: TextNodeKey::from_style(
+                &format!("tick {}", n / 10),
+                &TextStyle::new(12.0).with_line_height(16.0),
+                None,
+            ),
             x: 0.0,
             y: 20.0,
             color: [1.0; 4],

@@ -1,7 +1,7 @@
 //! Icons section: the full Lucide set in a hoverable grid.
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
 use engine::widgets::icons;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
@@ -106,11 +106,12 @@ impl IconsPage {
                 c.push(node);
             }
 
-            // Caption centered with real text measurement.
-            let caption = 10.0;
-            let (tw, _) = TextMeasurer::measure(name, caption, None);
+            // Caption centered with real text measurement: one style
+            // sizes the run and draws it.
+            let caption = TextStyle::new(10.0);
+            let (tw, _) = TextMeasurer::measure_styled(name, &caption, None);
             c.push(SceneNode::Text {
-                key: TextNodeKey::new(name, caption, caption * 1.3, None),
+                key: TextNodeKey::from_style(name, &caption, None),
                 x: rect.x + ((rect.w - tw) / 2.0).max(4.0),
                 y: rect.y + rect.h - 22.0,
                 color: theme.colors.text_dim.0,

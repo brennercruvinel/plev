@@ -4,6 +4,7 @@
 //! opens at a visual keyframe, and one byte budget covers both tracks.
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextStyle;
 use motion::{AssetBank, NodeKind, Prop, RaiseError, Value, quantize_value, raise_scene};
 use record::{FrameError, InputKind, Limits, Recorder};
 
@@ -12,7 +13,7 @@ use crate::toys::look;
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 
 fn label(text: &str) -> TextNodeKey {
-    TextNodeKey::new(text, 14.0, 20.0, None)
+    TextNodeKey::from_style(text, &TextStyle::new(14.0).with_line_height(20.0), None)
 }
 
 /// a todo-like frame: a card, a row per item sliding in from `slide`, a

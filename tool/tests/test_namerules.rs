@@ -36,22 +36,6 @@ const ALLOWED_PREFIXES: [&str; 4] = [
     "rust/motion/src/",
 ];
 
-/// Call sites pending their own migration, listed file by file so no new
-/// file (and no new crate) can add a raw constructor call. Shrink this
-/// list, never grow it. Until the 2026-10 tree the guard lived inside the
-/// engine crate and, despite its doc, scanned only the engine's own
-/// directory; these were the calls outside it on the day it began to scan
-/// the whole repository.
-const PENDING_MIGRATION: [&str; 7] = [
-    "apps/uigallery/src/views/compositor/draw.rs",
-    "apps/uigallery/src/views/foundations/icons.rs",
-    "apps/uigallery/src/views/foundations/theme.rs",
-    "apps/urnadbapp/src/view/mod.rs",
-    "rust/motion/tests/raise.rs",
-    "rust/record/tests/session/file.rs",
-    "rust/record/tests/session/visual.rs",
-];
-
 fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
@@ -90,9 +74,7 @@ fn raw_text_node_key_stays_inside_the_engine() {
             .expect("walked paths start at the repository root")
             .to_string_lossy()
             .replace('\\', "/");
-        if ALLOWED_PREFIXES.iter().any(|p| rel.starts_with(p))
-            || PENDING_MIGRATION.contains(&rel.as_str())
-        {
+        if ALLOWED_PREFIXES.iter().any(|p| rel.starts_with(p)) {
             continue;
         }
         let Ok(source) = fs::read_to_string(path) else {

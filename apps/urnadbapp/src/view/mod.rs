@@ -21,6 +21,7 @@ mod stats;
 
 use engine::widgets::prelude::{Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextStyle;
 use engine::styling::theme::Theme;
 
 /// Non-character editing keys bridged from winit by `keys.rs` (the view
@@ -339,8 +340,11 @@ pub(crate) fn text(
     y: f32,
     color: [f32; 4],
 ) {
+    let style = TextStyle::new(size)
+        .with_line_height(size * 1.4)
+        .with_weight(weight);
     c.push(SceneNode::Text {
-        key: TextNodeKey::new(s, size, size * 1.4, None).with_weight(weight),
+        key: TextNodeKey::from_style(s, &style, None),
         x,
         y,
         color,

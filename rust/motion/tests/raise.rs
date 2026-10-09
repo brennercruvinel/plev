@@ -6,6 +6,7 @@
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::{PathBuilder, TessellatedPath};
+use engine::drawing::text::TextStyle;
 use motion::mappings::lower::lower_scene;
 use motion::{
     AssetBank, DiscoverConfig, MAX_RAISED, MonsterPlayer, NodeKind, Prop, RaiseError, Skipped,
@@ -13,7 +14,11 @@ use motion::{
 };
 
 fn text(s: &str) -> TextNodeKey {
-    TextNodeKey::new(s, 14.0, 20.0, Some(240.0)).with_weight(600)
+    TextNodeKey::from_style(
+        s,
+        &TextStyle::new(14.0).with_line_height(20.0).with_weight(600),
+        Some(240.0),
+    )
 }
 
 fn handle(id: u32) -> ImageHandle {
