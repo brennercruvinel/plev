@@ -29,11 +29,17 @@ pub(crate) mod scope;
 
 use std::time::Duration;
 
+use claude_model::ClaudeCli;
 use comps::prelude::{Button, ButtonSize, Select, TextField, Wake};
-use propose::{Llm, Model};
-use sem::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
+use propose::{Ask, Llm, Model, Rules, propose_verified};
+use sem::{
+    Actor, Execution, Outcome, Request, RequestId, Role, SemError, SemErrors, SemId, Snapshot,
+    SnapshotBuilder, Value,
+};
 use surface::SurfaceHost;
+use uir::{Capabilities, GenerationPolicy, VerifiedIr};
 
+use crate::workbench::Workbench;
 use claude::{Claude, POLL, Pending};
 
 /// The region the line projects under.
@@ -347,5 +353,288 @@ impl Generated {
         } else {
             own
         }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// The workbench's side of the generated surface (task-96,
+// `crate::generated`): the block turned on; the workspace's own
+// projection apart from it, the registry a proposal binds and the state a
+// surface shows; what a request asks of the line, run first by `execute`
+// (propose, close, the field, the proposer); a request aimed at a node of
+// an open surface routed to the capability the IR bound before the
+// dispatcher (`route`), so a person's click, an agent through the port
+// and a test reach the same one; and the window laid out with the line's
+// strip and an open surface's column. A person's pointer and keys on
+// them, and their drawing, are `column.rs`.
+//
+// The rules propose inside `execute`, in a fraction of a millisecond, and
+// the request ends at once, `completed` with the surface and how many
+// nodes it has, or `failed` with why there is none (the line says it
+// too). Only a `VerifiedIr` opens: `propose::propose_verified` is the way.
+// ---------------------------------------------------------------------------
+
+/// The outcome of a proposal shown: the surface and how many nodes it
+/// has.
+pub(crate) fn shown(surface: &SemId, nodes: usize) -> Outcome {
+    let mut outcome = Outcome::default();
+    outcome
+        .result
+        .insert("surface".to_owned(), Value::Text(surface.to_string()));
+    let nodes = i64::try_from(nodes).unwrap_or(i64::MAX);
+    outcome.result.insert("nodes".to_owned(), Value::Int(nodes));
+    outcome
+}
+
+impl Workbench {
+    /// Turns on the intent line and the host of generated surfaces: the
+    /// line in a strip along the bottom of the window, under the fixed
+    /// views, which keep the window's width; a surface in a column at the
+    /// right while it is open. Off by default: a workbench without it
+    /// projects, draws and runs as before. The ide's window turns it on. The Claude is offered when
+    /// its program is found (`claude`, or what `PLEV_CLAUDE` names), never
+    /// run to find it; the rules are chosen first either way.
+    pub fn host_surfaces(&mut self) {
+        self.host_surfaces_over(Claude::find());
+    }
+
+    /// [`Workbench::host_surfaces`], with this Claude to offer, or none
+    /// (the rules alone): a test gives the repository's fake here.
+    pub fn host_surfaces_with(&mut self, claude: Option<ClaudeCli>) {
+        self.host_surfaces_over(Claude::with(claude));
+    }
+
+    fn host_surfaces_over(&mut self, claude: Claude) {
+        if self.generated.is_none() {
+            self.generated = Some(Box::new(Generated::new(claude)));
+            self.lay_out();
+        }
+    }
+
+    /// Whether the line and the host are on.
+    pub fn hosts_surfaces(&self) -> bool {
+        self.generated.is_some()
+    }
+
+    /// The surfaces open, when the block is on.
+    pub fn surfaces(&self) -> Option<&SurfaceHost> {
+        self.generated.as_ref().map(|g| &g.host)
+    }
+
+    /// The id of the surface open, when one is.
+    pub fn surface_open(&self) -> Option<&SemId> {
+        self.generated.as_ref().and_then(|g| g.open.as_ref())
+    }
+
+    /// The workspace's own projection, without the line and the surface:
+    /// the registry every proposal is verified against
+    /// (`uir::Capabilities::from_snapshot`) and the state a surface shows.
+    /// With the block off it is [`Workbench::snapshot`].
+    pub fn app_snapshot(&self) -> Result<Snapshot, SemErrors> {
+        let mut b = SnapshotBuilder::new();
+        self.project_app(&mut b);
+        b.finish()
+    }
+
+    /// The window is `w` by `h` logical pixels: the workspace takes it,
+    /// less the line's strip and an open surface's column when the block
+    /// is on.
+    pub fn resize(&mut self, w: f32, h: f32) {
+        self.window = (w, h);
+        match self.generated {
+            Some(_) => self.lay_out(),
+            None => self.workspace.resize(w, h),
+        }
+    }
+
+    /// The workspace gets the window less the line's strip and an open
+    /// surface's column, when the block is on; nothing moves otherwise.
+    pub(crate) fn lay_out(&mut self) {
+        let Some(g) = &self.generated else {
+            return;
+        };
+        let (w, h) = self.window;
+        let (ws, hs) = g.workspace_size(w, h, self.workspace.theme());
+        if (self.workspace.vw, self.workspace.vh) != (ws, hs) {
+            self.workspace.resize(ws, hs);
+        }
+    }
+
+    /// `req` as the capability it asks for when it aims at a node of an
+    /// open surface; as it is otherwise.
+    pub(crate) fn route(&self, req: Request) -> Request {
+        match &self.generated {
+            Some(g) => g.host.route(req),
+            None => req,
+        }
+    }
+
+    /// Every open surface reads the workspace again when it moved.
+    pub(crate) fn sync_surfaces(&mut self) {
+        if self.generated.as_ref().is_none_or(|g| g.host.is_empty()) {
+            return;
+        }
+        match self.app_snapshot() {
+            Ok(app) => {
+                if let Some(g) = self.generated.as_mut() {
+                    g.host.sync(&app);
+                }
+            }
+            Err(e) => log::warn!("ide: the projection does not validate: {e}"),
+        }
+    }
+
+    /// What `req` asks of the line, run now; `None` when it aims
+    /// elsewhere (the workspace, whose `execute` runs it).
+    pub(crate) fn execute_generated(&mut self, id: RequestId, req: &Request) -> Option<Execution> {
+        let g = self.generated.as_mut()?;
+        let op = g.op(req)?;
+        let done = Execution::Done(Outcome::default());
+        Some(match op {
+            Op::Write(text) => {
+                g.intent.set_text(&text);
+                done
+            }
+            Op::Propose => self.propose(id, &req.actor),
+            Op::Choose(name) => {
+                if g.proposer.select_label(&name) {
+                    done
+                } else {
+                    Execution::Failed(format!("no proposer is named {name:?}"))
+                }
+            }
+            Op::ChooseAt(at) => {
+                if g.proposer.select_index(at) {
+                    done
+                } else {
+                    Execution::Failed(format!("no proposer at {at}"))
+                }
+            }
+            Op::Unfold => {
+                g.proposer.open();
+                done
+            }
+            Op::Fold => {
+                g.proposer.close();
+                done
+            }
+            Op::Cancel => match g.pending.as_mut() {
+                Some(pending) => {
+                    pending.cancel(req.actor.clone());
+                    let mut outcome = Outcome::default();
+                    let what = Value::Text(pending.id.to_string());
+                    outcome.result.insert("cancelled".to_owned(), what);
+                    Execution::Done(outcome)
+                }
+                None => Execution::Failed("nothing is being asked".to_owned()),
+            },
+            Op::Dismiss => self.dismiss(),
+        })
+    }
+
+    /// A proposal for the intent, as `author` wrote it, over the
+    /// workspace as it is (its own registry, never the line's) and the
+    /// surface shown. By the rules it is verified and shown now, and the
+    /// request is done; by the Claude a worker starts with what the
+    /// review scopes for it (`asking.rs`), and the request `id` stays
+    /// open until the answer ends it.
+    fn propose(&mut self, id: RequestId, author: &Actor) -> Execution {
+        let app = match self.app_snapshot() {
+            Ok(app) => app,
+            Err(e) => return Execution::Failed(e.to_string()),
+        };
+        let Some(g) = self.generated.as_ref() else {
+            return Execution::Failed("no surface is hosted here".to_owned());
+        };
+        let intent = g.intent.text().trim().to_owned();
+        let caps = Capabilities::from_snapshot(&app);
+        let policy = GenerationPolicy::by(author.clone());
+        let current: Option<VerifiedIr> = g
+            .open
+            .as_ref()
+            .and_then(|id| g.host.current(id))
+            .map(|asked| asked.verified().clone());
+        let ask = Ask {
+            intent: &intent,
+            caps: &caps,
+            app: &app,
+            current: current.as_ref(),
+            policy: &policy,
+        };
+        let proposed = propose_verified(&mut Rules, &ask).map_err(|e| e.to_string());
+        if g.chosen() == Proposer::Claude {
+            return self.ask_claude(id, intent, &app, proposed, policy);
+        }
+        match proposed.and_then(|ir| self.show(ir, policy, &app)) {
+            Ok((surface, nodes)) => {
+                self.say(Said::Proposed(intent));
+                Execution::Done(shown(&surface, nodes))
+            }
+            Err(why) => {
+                self.say(Said::Refused(why.clone()));
+                Execution::Failed(why)
+            }
+        }
+    }
+
+    /// What the last proposal came to, on the line; a message longer than
+    /// the lines the strip holds takes the room it needs now.
+    pub(crate) fn say(&mut self, said: Said) {
+        if let Some(g) = self.generated.as_mut() {
+            g.said = Some(said);
+        }
+        self.lay_out();
+    }
+
+    /// Shows `ir`, verified under `policy`, over `app`: the surface
+    /// opens, or takes the form in place when its id is open (reconciled
+    /// by `SemId`), and the workspace makes room for it. One surface at a
+    /// time: an open one of another id is dismissed first. Its id and how
+    /// many nodes it has.
+    pub(crate) fn show(
+        &mut self,
+        ir: VerifiedIr,
+        policy: GenerationPolicy,
+        app: &Snapshot,
+    ) -> Result<(SemId, usize), String> {
+        let g = self.generated.as_mut().ok_or("no surface is hosted here")?;
+        let id = &ir.ir().surface.id;
+        if let Some(other) = g.open.take_if(|open| open != id) {
+            g.host.close(&other);
+        }
+        let open = g.host.get(id).is_some();
+        let surface = if open {
+            g.host.transform_under(ir, app, policy)
+        } else {
+            g.host.open_under(ir, app, policy)
+        };
+        let (id, nodes) = surface
+            .map(|s| (s.id().clone(), s.nodes().count()))
+            .map_err(|e| e.to_string())?;
+        g.open = Some(id.clone());
+        self.lay_out();
+        Ok((id, nodes))
+    }
+
+    /// The surface is dismissed: out of the projection, the routing and
+    /// the hit test at once, its picture fading where it was
+    /// (`SurfaceHost::close`), its column gone and the workspace back to
+    /// the window's width, and the line says nothing until the next
+    /// proposal.
+    fn dismiss(&mut self) -> Execution {
+        let Some(g) = self.generated.as_mut() else {
+            return Execution::Failed("no surface is hosted here".to_owned());
+        };
+        let Some(id) = g.open.take() else {
+            return Execution::Failed("no surface is open".to_owned());
+        };
+        g.host.close(&id);
+        g.said = None;
+        self.lay_out();
+        let mut outcome = Outcome::default();
+        outcome
+            .result
+            .insert("closed".to_owned(), Value::Text(id.to_string()));
+        Execution::Done(outcome)
     }
 }
