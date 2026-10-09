@@ -412,6 +412,8 @@ impl ApplicationHandler<UserEvent> for App {
         // the window alone, the device below.
         let id = self.windows.open(event_loop, attrs).unwrap();
         self.main = Some(id);
+        // read on the desktop and the web only; mobile just checks it opened
+        #[cfg_attr(any(target_os = "android", target_os = "ios"), allow(unused_variables))]
         let window = self
             .windows
             .get(id)
