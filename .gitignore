@@ -13,6 +13,7 @@ platforms/
 build-tools/
 system-images/
 licenses/
+tmps/
 .temp/
 
 # Android build outputs & caches (never track)
