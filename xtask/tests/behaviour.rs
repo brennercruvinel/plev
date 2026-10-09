@@ -151,12 +151,49 @@ fn renames(root: &Path) -> Vec<(String, String)> {
     out
 }
 
+/// `old::a::` -> `new::x::` for every module the move renamed, longest
+/// first (xtask/tests/modpaths.txt, generated from migration.toml): Rust
+/// paths an output carries (generated code, a report) cross the move too
+fn modpaths(root: &Path) -> Vec<(String, String)> {
+    let text = std::fs::read_to_string(root.join("xtask/tests/modpaths.txt")).unwrap();
+    text.lines()
+        .filter(|l| !l.starts_with('#'))
+        .filter_map(|l| l.split_once(' '))
+        .map(|(a, b)| (a.to_owned(), b.to_owned()))
+        .collect()
+}
+
+/// one pass, left to right: at a path's start (not inside a longer path)
+/// the longest old module that begins there is written as its new one
+fn translate_mods(text: &str, mods: &[(String, String)]) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    while i < text.len() {
+        let at_start = i == 0
+            || !text[..i]
+                .chars()
+                .next_back()
+                .is_some_and(|c| c.is_alphanumeric() || c == '_' || c == ':');
+        if at_start {
+            if let Some((from, to)) = mods.iter().find(|(f, _)| text[i..].starts_with(f.as_str())) {
+                out.push_str(to);
+                i += from.len();
+                continue;
+            }
+        }
+        let ch = text[i..].chars().next().unwrap();
+        out.push(ch);
+        i += ch.len_utf8();
+    }
+    out
+}
+
 fn before_layout(root: &Path) -> bool {
     root.join("crates").is_dir()
 }
 
 fn translate(text: &str, renames: &[(String, String)]) -> String {
-    let mut s = text.to_owned();
+    let mut s = translate_mods(text, &modpaths(&root()));
     for (from, to) in renames {
         if s.contains(from.as_str()) {
             s = s.replace(from.as_str(), to);
