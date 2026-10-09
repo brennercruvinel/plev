@@ -4,8 +4,8 @@
 //! pick refused as a button's would be, the gallery projection beside
 //! the page's, and a menu click running the page's capability.
 
-use engine::runtime::platform::menu::Clicked;
 use accord::{Actor, Rejection, Request, RequestId, Role, SemId, Stage, Value};
+use engine::runtime::platform::menu::Clicked;
 
 use super::PERSON_ONLY;
 use crate::views::foundations::theme::THEMES;
@@ -84,7 +84,11 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
     assert_eq!(select.name.as_str(), "select");
     assert_eq!(select.param.map(|p| p.kind), Some(accord::ValueKind::Text));
     assert_eq!(select.reads, ["shell.page:selected".parse().unwrap()]);
-    assert_eq!(select.policy, accord::Policy::default(), "anyone picks a page");
+    assert_eq!(
+        select.policy,
+        accord::Policy::default(),
+        "anyone picks a page"
+    );
 
     let theme = shell.get(&sid("shell.theme")).unwrap();
     assert_eq!(theme.role, Role::Select);

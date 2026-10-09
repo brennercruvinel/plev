@@ -6,9 +6,9 @@
 mod cli;
 mod control;
 mod export;
+mod prose;
 mod readonly;
 mod thesis;
 mod timeline;
-mod why;
-mod prose;
 mod toys;
+mod why;

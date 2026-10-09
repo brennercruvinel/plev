@@ -17,9 +17,9 @@ mod hud;
 mod memory;
 pub mod stages;
 
+mod samples;
 #[cfg(test)]
 mod tests;
-mod samples;
 
 pub use hud::PerfHud;
 pub use memory::{MemoryStats, process_rss_bytes};

@@ -4,10 +4,10 @@
 //! centered as a unit, and the message wraps against the available width
 //! (clamped by a readability maximum, never a viewport constant).
 
-use crate::widgets::icons;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{IconSize, Theme};
+use crate::widgets::icons;
 
 use crate::widgets::buttons::Button;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};

@@ -4,11 +4,11 @@
 
 use std::collections::BTreeSet;
 
-use proptest::prelude::*;
 use accord::{
     ActionName, Actor, Change, Observation, Outcome, Rejection, Request, RequestId, Revision, Role,
     SemId, SnapshotBuilder, Stage, StateKey, StateRef, Value,
 };
+use proptest::prelude::*;
 use socket::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Refusal, Reply, ServerMsg,
     SnapshotReply, StageReply, decode_client, decode_server, encode_client, encode_server,

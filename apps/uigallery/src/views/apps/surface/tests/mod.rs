@@ -8,10 +8,10 @@
 
 use std::collections::BTreeSet;
 
-use engine::widgets::prelude::{Rect, WidgetEvent};
+use accord::{Actor, SemId, StateRef, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use accord::{Actor, SemId, StateRef, Value};
+use engine::widgets::prelude::{Rect, WidgetEvent};
 use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::{FORMS, SurfacePage};
@@ -454,7 +454,6 @@ mod measure;
 /// live list, a check on either half reaches the other through the todo's
 /// dispatcher, and a change of form keeps each item's instance.
 mod items;
-
 
 /// The Claude asked from the page, against the fake claude: the request
 /// starts and the page goes on, the answer arrives through the wake, a

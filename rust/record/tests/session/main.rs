@@ -5,10 +5,10 @@
 
 mod bound;
 mod file;
+mod readback;
 mod ring;
 mod secret;
 mod semantic;
 mod thesis;
-mod visual;
-mod readback;
 mod toys;
+mod visual;

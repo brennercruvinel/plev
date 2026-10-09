@@ -38,15 +38,17 @@ mod tests;
 
 use std::path::PathBuf;
 
-use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use accord::Value;
 use engine::control::input::FileDrop;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::runtime::platform::alerts::Alerts;
 use engine::runtime::platform::files::FileDialogs;
 use engine::runtime::platform::notify::Notification;
-use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::{ControlSize, Intent, Theme};
-use accord::Value;
+use engine::widgets::prelude::{
+    Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke,
+};
 
 use super::todo::TodoPage;
 use super::{EditKey, panel};

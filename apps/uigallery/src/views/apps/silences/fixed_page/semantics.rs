@@ -30,18 +30,18 @@
 //! and ends them with `Dispatcher::complete` or `fail`, through the same
 //! lending.
 
-use engine::widgets::prelude::EventResult;
-use engine::runtime::perf::stages::{self, Stage};
+use crate::domain::silences::{Decision, Settings, TEST_VIDEO};
 use accord::{
     Actor, Execution, Operable, Receipt, Request, RequestId, Role, SemError, SemErrors, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use crate::domain::silences::{Decision, Settings, TEST_VIDEO};
+use engine::runtime::perf::stages::{self, Stage};
+use engine::widgets::prelude::EventResult;
 
 use super::super::generative::page::{Page, project_all};
+use super::super::{Focus, Said, SilencesPage};
 use super::jobs::frame_ref;
 use super::worker::Job;
-use super::super::{Focus, Said, SilencesPage};
 use crate::views::apps::todo::TodoPage;
 
 /// The ids the page projects and binds, parsed once.

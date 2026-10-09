@@ -10,12 +10,12 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use idestudio::capability::Workbench;
-use record::{InputKind, Recorder};
 use accord::{
     Actor, Millis, Receipt, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot, Stage,
     StateRef, Value,
 };
+use idestudio::capability::Workbench;
+use record::{InputKind, Recorder};
 use socket::Host;
 
 use crate::answer::Answers;

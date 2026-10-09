@@ -21,12 +21,12 @@
 
 use std::sync::Mutex;
 
+use accord::SemId;
 use engine::runtime::platform::menu::{MenuItem, Predefined, Submenu};
 use engine::runtime::platform::tray::{Tray, TrayImage, TrayModel, default_tray};
-use accord::SemId;
 
-use super::menu::view_menu;
 use super::super::{App, UserEvent};
+use super::menu::view_menu;
 use crate::views::ShowcaseView;
 
 /// The shell's capability the icon asks for, as the projection names it
@@ -147,9 +147,9 @@ pub(super) fn model(view: &ShowcaseView) -> TrayModel {
 mod tests {
     use std::sync::{Arc, Mutex};
 
+    use accord::{SemId, Value};
     use engine::runtime::platform::menu::{Entry, locked};
     use engine::runtime::platform::tray::{FakeTray, TrayModel};
-    use accord::{SemId, Value};
 
     use super::super::super::App;
     use crate::views::{PAGES, ShowcaseView};
@@ -231,7 +231,9 @@ mod tests {
         );
         assert!(matches!(
             tray.menu.entries.last(),
-            Some(Entry::Predefined(engine::runtime::platform::menu::Predefined::Quit))
+            Some(Entry::Predefined(
+                engine::runtime::platform::menu::Predefined::Quit
+            ))
         ));
 
         // the icon clicked: the shell is asked to show the window

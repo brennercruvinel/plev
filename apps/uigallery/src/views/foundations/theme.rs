@@ -1,9 +1,9 @@
 //! Theme section: the HOFF token strip, palette cards, typography ramp.
 
-use engine::widgets::icons;
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
+use engine::widgets::icons;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, text};
 

@@ -20,8 +20,8 @@ pub(crate) mod fit;
 #[cfg(test)]
 pub(super) mod tests;
 
-use crate::encoding::container::prop_wire_id;
 use crate::discover::fit::{Life, emit_tracks, jumped, quantize_value, value_of};
+use crate::encoding::container::prop_wire_id;
 use crate::timeline::{
     Depth, IrError, Keyframe, Node, NodeId, PlaceNode, Prop, Props, RemoveNode, ReplaceNode,
     Timeline, Value,

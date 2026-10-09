@@ -2,8 +2,8 @@
 //! held it, and every request that touched it up to then, each with its
 //! causal chain.
 
-use record::ReadError;
 use accord::{Millis, Node, SemId};
+use record::ReadError;
 
 use crate::index::{Inspector, Stamp};
 use crate::why::Why;

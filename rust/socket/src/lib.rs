@@ -50,24 +50,24 @@
 #[cfg(unix)]
 mod client;
 mod error;
+mod framing;
 #[cfg(unix)]
 mod place;
 #[cfg(unix)]
 mod port;
+mod protocol;
 mod ring;
 mod scene;
 mod server;
 mod shown;
 mod sink;
 mod traffic;
-mod framing;
-mod protocol;
 
-pub use framing::base64::{decode as decode_base64, encode as encode_base64};
 #[cfg(unix)]
 pub use client::Client;
-pub use framing::{Refusal, decode_client, decode_server, encode_client, encode_server};
 pub use error::WireError;
+pub use framing::base64::{decode as decode_base64, encode as encode_base64};
+pub use framing::{Refusal, decode_client, decode_server, encode_client, encode_server};
 #[cfg(unix)]
 pub use place::{MAX_APP, check_app, find, socket_dir, socket_path};
 #[cfg(unix)]
@@ -77,10 +77,10 @@ pub use protocol::{
     SnapshotReply, StageReply, VERSION,
 };
 pub use ring::{DEFAULT_RING, Ring};
+pub use scene::read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
 pub use scene::{
     BlobReply, MAIN_WINDOW, MAX_LINE, MAX_WINDOW, MIRROR_ENV, Offer, OfferLayer, SCENE_PART,
     SceneAsk, SceneLayer, SceneReply, SceneWatch, mirror_enabled,
 };
-pub use scene::read::{LayerBody, MAX_BLOB, SceneFrame, SceneLayerIn, SceneReader};
 pub use server::{ConnId, Host, MAX_NAME, Outgoing, Server, Traffic};
 pub use shown::MAX_ACTORS;

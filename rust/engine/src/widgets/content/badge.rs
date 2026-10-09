@@ -11,8 +11,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{Intent, Theme};
 
-use crate::widgets::widget::{Rect, contrast_text, intent_fill};
 use crate::widgets::recipe::rounded_rect;
+use crate::widgets::widget::{Rect, contrast_text, intent_fill};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BadgeKind {

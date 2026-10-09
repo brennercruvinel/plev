@@ -5,9 +5,9 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
+use accord::Snapshot;
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
-use accord::Snapshot;
 use uigallery::shell::semantics_json;
 use uigallery::views::PAGES;
 

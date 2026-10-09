@@ -3,8 +3,8 @@
 //! the bindings refused with nothing declared and accepted by the app, the
 //! goldens.
 
-use import::{Imported, Need, Report};
 use accord::Snapshot;
+use import::{Imported, Need, Report};
 use plevir::{Capabilities, GenerationPolicy, IrNode, Rule, verify};
 
 use super::check_golden;

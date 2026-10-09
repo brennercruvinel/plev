@@ -1,6 +1,6 @@
 use crate::compose::animation::Spring;
-use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::control::input::scroll::ScrollState;
+use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::styling::theme::Theme;
 
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};

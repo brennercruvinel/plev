@@ -37,16 +37,16 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
+use accord::{Actor, Request};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::Frame;
 use engine::runtime::platform::capture::FakeCapture;
 use engine::runtime::window::WindowHost;
+use engine::widgets::prelude::WidgetEvent;
 use record::scene::{Head, Sender};
-use accord::{Actor, Request};
+use socket::{AgentPort, Client, Config, Reply, WireError, encode_server};
 use uigallery::shell::window::mirror::{Hand, MAIN, Pressed, Scenes, Viewer, offer};
 use uigallery::views::{PAGES, ShowcaseView};
-use socket::{AgentPort, Client, Config, Reply, WireError, encode_server};
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 800;

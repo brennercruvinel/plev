@@ -9,17 +9,17 @@ use std::sync::mpsc::RecvTimeoutError;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use record::{Limits, Recorder};
 use accord::{Millis, Rejection, SemId, Stage};
+use record::{Limits, Recorder};
 use socket::{AgentPort, Config};
 
 use crate::answer::Answers;
 use crate::args::{Args, Arm, Until};
-use crate::subject::{Bench, Wake};
+use crate::arms::scripted::{self, Scripted};
 use crate::host::{ActSeen, Costs, LabHost, Log, Person, Served};
 use crate::repo::TASK;
 use crate::report::ERROR;
-use crate::arms::scripted::{self, Scripted};
+use crate::subject::{Bench, Wake};
 
 /// how long the loop sleeps between two looks at the timers.
 const TICK: Duration = Duration::from_millis(10);

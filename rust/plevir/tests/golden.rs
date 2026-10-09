@@ -25,8 +25,8 @@ mod support;
 use std::path::PathBuf;
 
 use accord::Snapshot;
-use serde_json::{Value, json};
 use plevir::{Capabilities, GenerationPolicy, Ir, Rule, parse, schema, verify};
+use serde_json::{Value, json};
 
 const COMMIT_FORM: &str = "ide-commit-form.ir.json";
 const REVIEW: &str = "ide-review-commit.ir.json";
@@ -199,7 +199,10 @@ fn the_schema_refuses_a_literal_an_unknown_name_and_a_second_form() {
     for (at, value) in edits {
         let mut bad = doc.clone();
         *bad.pointer_mut(at).unwrap() = value;
-        assert!(!support::jsonschema::validate(&schema, &bad).is_empty(), "{at}");
+        assert!(
+            !support::jsonschema::validate(&schema, &bad).is_empty(),
+            "{at}"
+        );
     }
 }
 

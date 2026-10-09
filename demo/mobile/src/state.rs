@@ -4,10 +4,10 @@ use std::sync::Arc;
 
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use engine::runtime::platform::SafeAreaInsets;
 use engine::runtime::platform::ime::ImeState;
 use engine::runtime::platform::lifecycle::LifecycleManager;
-use engine::drawing::text::TextSystem;
 use engine::winit::window::Window;
 
 // Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the

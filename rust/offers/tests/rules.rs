@@ -11,10 +11,10 @@
 #[allow(dead_code)]
 mod support;
 
-use offers::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
 use accord::{Actor, Actors, Policy, Role, SnapshotBuilder};
-use support::{Asking, bindings, columns, compact, ide, ids, todo, verified};
+use offers::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
 use plevir::{Capabilities, GenerationPolicy, Ir, IrNode, Layout, VerifiedIr, verify};
+use support::{Asking, bindings, columns, compact, ide, ids, todo, verified};
 
 fn propose(asking: &Asking, intent: &str) -> VerifiedIr {
     propose_verified(&mut Rules, &asking.ask(intent))

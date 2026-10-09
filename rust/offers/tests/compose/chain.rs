@@ -7,8 +7,8 @@
 //! why, and what ran stays run. An agent never runs a composite one of
 //! whose steps is kept from it.
 
-use offers::compose::Composer;
 use accord::{Actor, Rejection, Request, RequestId, Stage, Value};
+use offers::compose::Composer;
 
 use super::desk::{Bench, agent, person};
 
@@ -188,8 +188,8 @@ fn a_composite_asked_of_a_node_it_is_not_declared_on_is_unknown() {
 /// composite says so; nobody confirms for the person in the middle.
 #[test]
 fn a_step_that_waits_for_a_person_stops_the_chain_and_stays_waiting() {
-    use offers::compose::Chain;
     use accord::{ActionName, SemId};
+    use offers::compose::Chain;
 
     let mut bench = Bench::new(3);
     let stand_in = bench.act(person(), "desk.doc[1]", "fetch");

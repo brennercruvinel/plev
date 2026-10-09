@@ -10,14 +10,14 @@
 //! by its icon, the submit button "submit". A button here does nothing but
 //! press, so its `activate` changes nothing.
 
+use accord::{Request, Role, SemId, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::{Theme, hoff_core};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
     Rect, SubmitButton, WidgetEvent, rounded_rect, rounded_rect_stroke,
 };
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
-use engine::styling::theme::{Theme, hoff_core};
-use accord::{Request, Role, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 

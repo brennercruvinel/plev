@@ -16,8 +16,7 @@ pub mod keyframe;
 pub mod render;
 pub mod schema;
 
-
 pub use convert::{CnvError, Stats, convert};
 pub use geometry::Mat;
-pub use schema::Animation;
 pub use render::Player;
+pub use schema::Animation;

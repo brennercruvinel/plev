@@ -1,9 +1,9 @@
 mod easing;
 mod keyframe;
 mod spring;
-mod tween;
 #[cfg(test)]
 mod tests;
+mod tween;
 
 pub use easing::{Easing, ease};
 pub use keyframe::{Keyframe, KeyframeSequence};
@@ -90,4 +90,3 @@ impl FrameClock {
         }
     }
 }
-

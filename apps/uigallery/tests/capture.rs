@@ -16,12 +16,12 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use accord::{Actor, Request, SemId, Stage};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::Frame;
 use engine::runtime::platform::capture::{DeviceKind, FakeCapture};
 use engine::runtime::platform::menu::locked;
 use engine::runtime::window::WindowHost;
-use accord::{Actor, Request, SemId, Stage};
 use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);

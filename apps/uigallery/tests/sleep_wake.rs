@@ -10,12 +10,12 @@
 //! the headless tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
+use accord::{Actor, Request, SemId, Value};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::Frame;
 use engine::runtime::window::{Background, Routed, WindowHost, Windows};
 use engine::winit::event::WindowEvent;
 use engine::winit::window::WindowId;
-use accord::{Actor, Request, SemId, Value};
 use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);

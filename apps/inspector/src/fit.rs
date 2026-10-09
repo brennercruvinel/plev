@@ -11,9 +11,9 @@
 //! letter spacing), a path by its vertices. an image never comes through:
 //! a session carries no pixel, and its replay lowers an image to nothing.
 
-use engine::widgets::Rect;
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::path::TessellatedPath;
+use engine::widgets::Rect;
 use record::Bound;
 
 /// how a frame of `extent` sits in the view: `view = frame * scale +

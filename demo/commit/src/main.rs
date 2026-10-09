@@ -11,11 +11,11 @@
 use std::collections::BTreeSet;
 use std::error::Error;
 
-use indexmap::IndexMap;
 use accord::{
     Actor, Change, Dispatcher, Execution, Operable, Outcome, ParamSpec, Receipt, Rejection,
     Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Stage, Value, ValueKind,
 };
+use indexmap::IndexMap;
 
 /// the app: what is staged, the message, the commits made.
 struct Git {

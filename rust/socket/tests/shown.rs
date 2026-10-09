@@ -6,11 +6,11 @@
 mod support;
 
 use accord::{Actor, Change, Rejection, RequestId, Revision, Stage, StateRef, Value};
-use support::toy::ToyHost;
 use socket::{
     ConnId, DeltaReply, Host, MAX_ACTORS, ProtoError, Reply, Server, ServerMsg, SnapshotReply,
     StageReply, decode_client,
 };
+use support::toy::ToyHost;
 
 const A: ConnId = 1;
 const B: ConnId = 2;

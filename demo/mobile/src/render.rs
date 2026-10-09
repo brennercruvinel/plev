@@ -142,9 +142,12 @@ impl MobileInputApp {
                     resolve_target: None,
                     ops: engine::wgpu::Operations {
                         load: engine::wgpu::LoadOp::Clear({
-                            let [lr, lg, lb, la] =
-                                engine::styling::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
-                                    .to_linear_array();
+                            let [lr, lg, lb, la] = engine::styling::color::Color::rgb(
+                                pal().bg[0],
+                                pal().bg[1],
+                                pal().bg[2],
+                            )
+                            .to_linear_array();
                             engine::wgpu::Color {
                                 r: lr as f64,
                                 g: lg as f64,

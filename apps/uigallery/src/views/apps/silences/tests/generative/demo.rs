@@ -8,10 +8,10 @@
 //! shown by the surface as before, and a slider in the middle of a drag
 //! goes on dragging after the change.
 
-use engine::widgets::prelude::{Rect, WidgetEvent};
+use accord::{Actor, Request, Stage, Value};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
-use accord::{Actor, Request, Stage, Value};
+use engine::widgets::prelude::{Rect, WidgetEvent};
 
 use super::super::super::SilencesPage;
 use super::super::{TURN, frame, setup, sid, value, wide};

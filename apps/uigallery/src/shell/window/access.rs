@@ -71,11 +71,11 @@ mod tests {
     //! tree it sends: the toasts, the counter and the shell's notice are
     //! heard where they are, and the focus stays.
 
-    use engine::widgets::prelude::Intent;
+    use accord::{Role, SemId, Snapshot};
     use engine::control::accessibility::accesskit::{Live, Node, TreeUpdate};
     use engine::control::accessibility::{self, Chrome, NodeIds};
     use engine::drawing::compositor::Compositor;
-    use accord::{Role, SemId, Snapshot};
+    use engine::widgets::prelude::Intent;
 
     use crate::views::ShowcaseView;
 
@@ -195,9 +195,13 @@ mod tests {
         assert_eq!(counter.live(), Some(Live::Polite));
         assert_eq!(counter.value(), Some("2 active · 1 done"));
         let seen = view.semantics().unwrap_or_default();
-        let Ok(req) =
-            accord::Request::observe(&seen, accord::Actor::Assistive, "todo.item[1]", "toggle", None)
-        else {
+        let Ok(req) = accord::Request::observe(
+            &seen,
+            accord::Actor::Assistive,
+            "todo.item[1]",
+            "toggle",
+            None,
+        ) else {
             panic!("the row toggles");
         };
         assert!(view.act(req).is_some());

@@ -27,8 +27,8 @@ use engine::drawing::compositor::{
 use engine::drawing::gpu::{RenderConfig, load_image_rgba};
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
 use engine::drawing::path::PathBuilder;
-use engine::runtime::perf::stages::{self, Stage};
 use engine::drawing::text::TextStyle;
+use engine::runtime::perf::stages::{self, Stage};
 
 /// The scales of the capture: a plain display, the fractional 125% and
 /// 150% of windows and linux, a retina display.

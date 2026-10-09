@@ -6,8 +6,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::{SidebarMode, Theme};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::icons;
+use crate::widgets::widget::Rect;
 
 use super::{NavGroup, Sidebar};
 

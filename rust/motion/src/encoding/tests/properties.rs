@@ -4,14 +4,14 @@
 //! the wire is lossless), plus byte determinism of the encoder.
 
 use crate::encoding::container::{Asset, AssetKind, Desc};
+use crate::encoding::quantize;
+use crate::encoding::read::decode;
+use crate::encoding::write::encode;
 use crate::timeline::easing::{Easing, PRESETS};
 use crate::timeline::{
     Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode, Segment, Timeline,
     Track, Value,
 };
-use crate::encoding::quantize;
-use crate::encoding::read::decode;
-use crate::encoding::write::encode;
 use proptest::collection::vec as pvec;
 use proptest::prelude::*;
 

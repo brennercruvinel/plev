@@ -8,12 +8,12 @@
 //! refused, and a capability that left the projection makes no request.
 //! The app's open list comes before all of it.
 
-use engine::runtime::platform::links::{self, FakeLinks, Link, LinkError, LinkSource};
 use accord::{
     Actor, Actors, Confirm, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec,
     Policy, Rejection, Request, RequestId, Role, SemError, Semantics, Snapshot, SnapshotBuilder,
     Stage, Value, ValueKind,
 };
+use engine::runtime::platform::links::{self, FakeLinks, Link, LinkError, LinkSource};
 
 const SCHEME: &str = "plev-test";
 

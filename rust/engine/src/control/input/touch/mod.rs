@@ -3,7 +3,6 @@
 
 mod synthesis;
 
-
 pub use synthesis::{SyntheticPointerEvent, TouchPointerSynth};
 
 use web_time::Instant;

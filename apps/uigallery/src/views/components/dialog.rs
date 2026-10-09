@@ -4,10 +4,10 @@
 //! `dialog_page.delete`, whose `activate` asks the view for the modal a
 //! click opens (the modal itself is the view's, `dispatch::overlay`).
 
-use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Rect, WidgetEvent};
+use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use accord::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Rect, WidgetEvent};
 
 use super::{After, Component, child_id, flow, root_id, under};
 

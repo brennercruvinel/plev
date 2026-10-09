@@ -3,10 +3,10 @@
 //! and malformed delta ops.
 
 use crate::encoding::container::{self, DeltaOp, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section};
-use crate::timeline::easing::EasingTable;
-use crate::timeline::Node;
 use crate::encoding::read::{ReadError, decode};
 use crate::encoding::tests::write::parse;
+use crate::timeline::Node;
+use crate::timeline::easing::EasingTable;
 
 const GOLDEN: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_minimal.monster");
 

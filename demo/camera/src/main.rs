@@ -1,6 +1,6 @@
 mod components;
-mod theme;
 mod render;
+mod theme;
 
 use std::sync::Arc;
 

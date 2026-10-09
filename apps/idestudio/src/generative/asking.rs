@@ -17,8 +17,8 @@
 use accord::{Execution, Outcome, RequestId, Snapshot, Value};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
-use crate::capability::Workbench;
 use super::shown;
+use crate::capability::Workbench;
 use crate::generative::{Said, scope};
 
 fn int(n: usize) -> Value {

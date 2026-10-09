@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
+use engine::control::input::{InputEvent, InputState, PressState, ViewId};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::GpuContext;
-use engine::control::input::{InputEvent, InputState, PressState, ViewId};
 use engine::drawing::text::TextSystem;
 use engine::winit::window::Window;
 

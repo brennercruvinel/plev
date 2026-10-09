@@ -201,7 +201,8 @@ impl ApplicationHandler for LottieApp {
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects =
+            engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,

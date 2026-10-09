@@ -1,10 +1,10 @@
 //! Skeleton page: disc, lines and block placeholders. They breathe only
 //! while toggled on (a press on the row), so an idle page settles.
 
-use engine::widgets::content::{Skeleton, SkeletonShape};
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::{ControlSize, Theme};
+use engine::widgets::content::{Skeleton, SkeletonShape};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 pub struct SkeletonPage {
     skeletons: [Skeleton; 3],

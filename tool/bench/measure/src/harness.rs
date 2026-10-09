@@ -9,14 +9,14 @@
 //! frame (`engine::perf::stages`); the GPU time a turn's timestamps read
 //! feeds a `PerfMonitor`, as a window's loop would.
 
-use engine::widgets::editor::{EditorTheme, EditorView, MouseEvent};
-use engine::widgets::prelude::{Wake, WidgetEvent};
+use engine::compose::layout::ComputedBounds;
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::headless::Renderer;
-use engine::compose::layout::ComputedBounds;
 use engine::runtime::perf::stages::{self, Stage, StageFrame};
 use engine::runtime::perf::{PerfMonitor, PerfSnapshot};
 use engine::styling::theme::Theme;
+use engine::widgets::editor::{EditorTheme, EditorView, MouseEvent};
+use engine::widgets::prelude::{Wake, WidgetEvent};
 use uigallery::views::ShowcaseView;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 

@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use record::{Event, InputKind, Kind, Limits, ReadError, Recorder, Session};
 use accord::{Change, Dispatcher, Request, Role, Semantics, SnapshotBuilder, Stage};
+use record::{Event, InputKind, Kind, Limits, ReadError, Recorder, Session};
 
 use crate::toys::{Git, id, look};
 

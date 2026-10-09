@@ -8,8 +8,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 use crate::styling::theme::{Elevation, Theme};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::recipe::{glass_surface, shadow_stack};
+use crate::widgets::widget::Rect;
 
 #[derive(Clone, Debug, Default)]
 pub struct Panel {

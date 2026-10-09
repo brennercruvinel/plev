@@ -3,8 +3,8 @@
 //! runs with the real elapsed time), so it counts its time from the
 //! change, however long the window sat idle before it.
 
-use engine::widgets::prelude::Wake;
 use engine::styling::theme::Intent;
+use engine::widgets::prelude::Wake;
 
 use super::App;
 use crate::views::ShowcaseView;

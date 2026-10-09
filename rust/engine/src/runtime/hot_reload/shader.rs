@@ -81,7 +81,10 @@ impl crate::drawing::gpu::GpuContext {
     /// Apply every shader saved since the last frame to its pipeline(s).
     /// Returns true when something reloaded: the caller redraws every layer,
     /// since clean layers keep textures drawn with the old shader.
-    pub fn poll_shader_reload(&mut self, effects: &mut crate::drawing::effects::EffectProcessor) -> bool {
+    pub fn poll_shader_reload(
+        &mut self,
+        effects: &mut crate::drawing::effects::EffectProcessor,
+    ) -> bool {
         let Some(paths) = self.shader_watcher.as_ref().and_then(|w| w.poll_changes()) else {
             return false;
         };

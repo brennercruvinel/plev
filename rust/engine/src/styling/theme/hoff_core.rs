@@ -4,7 +4,6 @@
 //! accents, Inter tracked -0.02em, radii 8 / 10 / 12 / 16 / 22 and the
 //! measured shadow stacks of its depths page.
 
-use crate::widgets::buttons::tokens::ButtonTokens;
 use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
@@ -14,6 +13,7 @@ use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
 use crate::styling::color::Color;
+use crate::widgets::buttons::tokens::ButtonTokens;
 
 /// Shade 1..9 of the colors page, paper to ink.
 pub const SHADES: [Color; 9] = [

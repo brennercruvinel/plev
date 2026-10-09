@@ -16,13 +16,13 @@
 
 mod support;
 
+use accord::Request;
 use engine::drawing::gpu::RenderConfig;
 use engine::runtime::window::WindowHost;
 use record::scene::{Head, Mask, SECRET_LABEL, Sender};
-use accord::Request;
+use socket::{Outgoing, Reply, encode_server};
 use uigallery::shell::window::mirror::{MAIN, Viewer, masks, offer};
 use uigallery::views::{PAGES, ShowcaseView};
-use socket::{Outgoing, Reply, encode_server};
 
 fn host(w: f32, h: f32) -> Option<WindowHost> {
     let host = WindowHost::headless(w as u32, h as u32, 1.0, RenderConfig::default());
@@ -148,7 +148,10 @@ fn a_secret_drawn_never_crosses_and_the_mirror_draws_the_box() {
     let out = server.offer_scene(MAIN, &offer(frame, app.compositor()));
     let (lines, parts) = wire_of(&out);
     assert!(!carries(&lines, &parts, secret), "the password went out");
-    assert!(!carries(&lines, &parts, support::login::PIN), "the pin went out");
+    assert!(
+        !carries(&lines, &parts, support::login::PIN),
+        "the pin went out"
+    );
     assert!(
         carries(&lines, &parts, support::login::USER),
         "the clear field travels"

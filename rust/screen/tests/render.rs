@@ -7,12 +7,12 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::widgets::Rect;
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use support::{CASES, snapshot, verified};
-use screen::Surface;
+use engine::widgets::Rect;
 use plevir::IrNode;
+use screen::Surface;
+use support::{CASES, snapshot, verified};
 
 /// The fixed ids of `node`'s subtree that take a role (a repeat's
 /// template ids are left out: their instances are keyed by item).

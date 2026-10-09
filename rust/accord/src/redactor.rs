@@ -16,12 +16,12 @@
 //! like the rest of the crate: no I/O, no clock.
 
 use crate::decision::Rejection;
-use crate::mutation::Change;
 use crate::identity::SemId;
+use crate::mutation::Change;
+use crate::property::Value;
 use crate::receipts::{Outcome, Stage};
 use crate::requests::Request;
 use crate::snapshot::Snapshot;
-use crate::property::Value;
 
 /// what replaces a free text about a secret target, which could quote it.
 pub const REDACTED: &str = "redacted: the target is a secret field";

@@ -9,11 +9,11 @@
 //! as typing would. The preview line is a label, `input_page.preview`. The
 //! focus a reader asks for is the page's own (the caret).
 
-use engine::widgets::form::TextField;
-use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use accord::{Request, Role, SemId, SnapshotBuilder, Value};
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::{After, Component, EditKey, child_id, root_id, text, under};
 use crate::views::ImeEvent;

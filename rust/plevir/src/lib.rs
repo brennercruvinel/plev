@@ -43,6 +43,7 @@
 //! a verified surface by small operations, each verified again and with
 //! its inverse, is `transform` (task-70).
 
+mod capabilities;
 mod decode;
 mod error;
 mod ir;
@@ -52,7 +53,6 @@ mod schema;
 mod token;
 mod transform;
 mod verify;
-mod capabilities;
 mod vocabulary;
 
 pub use capabilities::{ActionCap, Capabilities, DataCap};

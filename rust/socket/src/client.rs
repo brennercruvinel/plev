@@ -8,8 +8,8 @@ use std::time::Duration;
 
 use accord::Actor;
 
-use crate::framing::{decode_server, encode_client};
 use crate::error::WireError;
+use crate::framing::{decode_server, encode_client};
 use crate::place::io;
 use crate::protocol::{Act, Ask, ClientMsg, Observe, Reply, ServerMsg, StageReply};
 

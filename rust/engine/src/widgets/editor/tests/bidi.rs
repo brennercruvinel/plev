@@ -7,8 +7,8 @@
 use editor::{Document, Selection};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::compose::layout::ComputedBounds;
+use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::drawing::text::{ClusterBox, TextMeasurer};
 
 use super::super::{EditorConfig, EditorTheme, EditorView};

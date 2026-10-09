@@ -4,10 +4,10 @@
 //! follow their node through place and remove. codec coverage of the
 //! same document lives in tests_ops.
 
-use crate::timeline::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
-use crate::play::MonsterPlayer;
 use crate::encoding::tests::operations::ops_timeline;
 use crate::encoding::tests::write::{rect, seg};
+use crate::play::MonsterPlayer;
+use crate::timeline::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
 use engine::compose::animation::AnimationTick;
 use engine::drawing::compositor::SceneNode;
 

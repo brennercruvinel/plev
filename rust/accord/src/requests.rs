@@ -5,11 +5,11 @@ use std::fmt;
 
 use crate::assembly::resolve;
 use crate::failures::SemError;
-use crate::revision::Revision;
 use crate::identity::SemId;
 use crate::notation::ActionName;
-use crate::snapshot::Snapshot;
 use crate::property::{StateRef, Value};
+use crate::revision::Revision;
+use crate::snapshot::Snapshot;
 
 /// who asks for an action. one kind per column of `Actors`, which a
 /// policy maps directly: `Human` to `human`, `Agent` to `agent`,

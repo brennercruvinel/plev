@@ -32,16 +32,16 @@
 use std::collections::HashMap;
 use std::path::Path;
 
+use accord::redactor::is_secret;
+use accord::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use engine::control::accessibility::primary;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use record::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
-use accord::redactor::is_secret;
-use accord::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
-use winit::window::WindowId;
 use socket::{
     Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
     SceneWatch, SnapshotReply, StageReply,
 };
+use winit::window::WindowId;
 
 use super::super::App;
 

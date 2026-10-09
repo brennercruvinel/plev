@@ -6,8 +6,8 @@
 //! for tools, so we parse it instead (the Zed route). `-z` gives
 //! NUL-separated records: no quoting issues with spaces or unicode paths.
 
-use crate::error::{GitError, Result};
 use crate::domain::{FileStatus, StatusKind};
+use crate::error::{GitError, Result};
 
 /// Parses NUL-separated `status --porcelain=v2 -z` output.
 ///

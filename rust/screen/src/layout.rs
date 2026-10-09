@@ -19,11 +19,13 @@
 //! narrower than its longest word (the flex minimum of a text would be
 //! one glyph: the engine measures its min-content at width zero).
 
-use engine::widgets::Rect;
 use engine::compose::layout::TextMeasureSpec;
-use engine::compose::layout::{Align as FlexAlign, Direction, LayoutEngine, LayoutItem, LayoutStyle};
+use engine::compose::layout::{
+    Align as FlexAlign, Direction, LayoutEngine, LayoutItem, LayoutStyle,
+};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::widgets::Rect;
 use plevir::{Align, Axis, Layout};
 
 use crate::expand::Node;

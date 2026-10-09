@@ -311,8 +311,8 @@ mod tests {
     use crate::compare;
     use crate::pixels;
     use crate::scene::LayerRecord;
-    use engine::drawing::headless::Frame;
     use accord::{Role, SemId, SnapshotBuilder};
+    use engine::drawing::headless::Frame;
     use std::time::Duration;
 
     fn id(text: &str) -> SemId {

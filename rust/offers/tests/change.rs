@@ -12,12 +12,12 @@
 #[allow(dead_code)]
 mod support;
 
+use accord::{Role, SnapshotBuilder, Value};
 use offers::{
     Adaptation, ProposeError, Rules, Transformed, Transformer, reads_as_change, transform_verified,
 };
-use accord::{Role, SnapshotBuilder, Value};
-use support::{Changing, aside, claude_review, compact, silences, todo};
 use plevir::{ChartKind, Component, IrNode, Op, Step, TypographyRole};
+use support::{Changing, aside, claude_review, compact, silences, todo};
 
 fn sid(text: &str) -> accord::SemId {
     accord::SemId::parse(text).unwrap()

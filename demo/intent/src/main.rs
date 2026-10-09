@@ -21,9 +21,9 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
+use accord::Snapshot;
 use claude::ClaudeCli;
 use offers::{Ask, Llm, Model, ModelError, Rules, prompt, propose_verified};
-use accord::Snapshot;
 use plevir::{
     Capabilities, Component, GenerationPolicy, IrNode, VerifiedIr, parse, verify, verify_json,
 };
@@ -83,7 +83,10 @@ fn args() -> Result<Args, String> {
 /// compact form; the ide and the silences show none).
 fn app(name: &str) -> Result<(Snapshot, Option<&'static str>), String> {
     let (snapshot, shown) = match name {
-        "todo" => ("uigallery-todo.snapshot.json", Some("uigallery-todo.ir.json")),
+        "todo" => (
+            "uigallery-todo.snapshot.json",
+            Some("uigallery-todo.ir.json"),
+        ),
         "ide" => ("idestudio-workbench.snapshot.json", None),
         "silences" => ("uigallery-silences.snapshot.json", None),
         other => return Err(format!("no app {other}: todo, ide or silences")),

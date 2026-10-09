@@ -17,8 +17,8 @@ mod render;
 use crate::control::input::scroll::ScrollState;
 use crate::styling::theme::{SidebarMode, Theme};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::nav::NavLink;
+use crate::widgets::widget::Rect;
 
 /// A run of `len` consecutive links under one caption. The groups of a
 /// sidebar partition its links in order; the active index space is

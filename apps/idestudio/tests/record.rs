@@ -28,15 +28,15 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use accord::{ActionName, Actor, Rejection, Revision, SemId, Stage, Value};
 use engine::drawing::compositor::Compositor;
 use gitdrv::GitEvent;
-use idestudio::interfaces::window::record::Recording;
 use idestudio::capability::Workbench;
-use replay::{Basis, By, Ending, Inspector};
+use idestudio::interfaces::window::record::Recording;
 use record::{InputKind, Kind, Limits, Session};
-use accord::{ActionName, Actor, Rejection, Revision, SemId, Stage, Value};
-use support::Rig;
+use replay::{Basis, By, Ending, Inspector};
 use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use support::Rig;
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("an id")

@@ -25,15 +25,15 @@ mod transform;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::{Rect, WidgetEvent};
-use engine::drawing::compositor::Compositor;
-use accord::{Actor, Rejection, Request, SemId, Stage, StateRef, Value};
 use crate::domain::silences::{Decision, PROBE_STDERR, parse};
+use accord::{Actor, Rejection, Request, SemId, Stage, StateRef, Value};
+use engine::drawing::compositor::Compositor;
+use engine::widgets::prelude::{Rect, WidgetEvent};
 use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::super::SilencesPage;
-use super::super::generative::page::Page;
 use super::super::fixed_page::worker::Worker;
+use super::super::generative::page::Page;
 use super::{
     TURN, ask_as_test, center, click, frame, images, narrow, setup, sid, stage, text, value, wide,
 };
@@ -223,7 +223,10 @@ fn the_review_opens_beside_the_fixed_screen_and_draws_its_frames() {
     let under = h.surface.expect("open");
     assert!(under.y >= h.fixed.bottom(), "{:?} {under:?}", h.fixed);
     assert!(page.content_height(narrow(), &theme) >= under.y - narrow().y);
-    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
+    assert_eq!(
+        page.wake(TURN, &mut todo),
+        engine::widgets::prelude::Wake::idle()
+    );
 }
 
 /// The acceptance: a click on a cut's apply button on the generated
@@ -377,7 +380,10 @@ fn the_comparison_keeps_what_continues_and_close_undoes_it() {
     assert!(wake.is_continuous(), "the exit runs: {wake:?}");
     let (_, frames) = settle(&mut page, &mut todo, content, &theme);
     assert!(frames > 1, "the exit took {frames} frames");
-    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
+    assert_eq!(
+        page.wake(TURN, &mut todo),
+        engine::widgets::prelude::Wake::idle()
+    );
     let receipt = todo
         .receipt(accord::RequestId::parse("2").unwrap())
         .expect("the close");

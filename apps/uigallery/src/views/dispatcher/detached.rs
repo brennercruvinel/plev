@@ -4,12 +4,12 @@
 //! compositor, takes its pointer events, paces it, and projects the
 //! window beside the page.
 
+use accord::{Role, SemErrors, Snapshot, Value};
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::styling::theme::Theme;
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::drawing::compositor::{Compositor, SceneNode};
-use engine::control::input::scroll::ScrollState;
-use engine::styling::theme::Theme;
-use accord::{Role, SemErrors, Snapshot, Value};
 
 use super::super::{Layers, Pane, ShowcaseView};
 

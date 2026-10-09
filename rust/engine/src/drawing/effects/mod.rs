@@ -1,11 +1,11 @@
 mod apply;
 mod pipelines;
 
-#[cfg(test)]
-mod tests;
 mod parameters;
 mod sequencer;
+#[cfg(test)]
+mod tests;
 
 pub(crate) use apply::EffectContext;
-pub use sequencer::*;
 pub use parameters::*;
+pub use sequencer::*;

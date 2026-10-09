@@ -8,8 +8,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::prelude::*;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 fn hoff() -> Theme {
     Theme::hoff()

@@ -12,11 +12,11 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use accord::Millis;
 use engine::drawing::compositor::SceneNode;
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::TessellatedPath;
 use motion::{LoweredAsset, MonsterPlayer};
-use accord::Millis;
 
 use crate::bound::{self, Bound, Step};
 use crate::error::ReadError;

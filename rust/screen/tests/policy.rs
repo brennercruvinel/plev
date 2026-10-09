@@ -9,9 +9,9 @@
 mod support;
 
 use accord::{Actor, Actors, Policy, Role, Snapshot, SnapshotBuilder};
-use support::{MIXER_LEFT, id, mixer, verified_local};
-use screen::{SurfaceError, SurfaceHost};
 use plevir::{Capabilities, GenerationPolicy, Op, Step, TransformError, verify_json};
+use screen::{SurfaceError, SurfaceHost};
+use support::{MIXER_LEFT, id, mixer, verified_local};
 
 fn agent() -> Actor {
     Actor::Agent {

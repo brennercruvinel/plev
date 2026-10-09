@@ -192,7 +192,8 @@ impl ApplicationHandler for MonsterApp {
             surface.configure(&gpu.device, &gpu.surface_config);
         }
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects =
+            engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,

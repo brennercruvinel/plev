@@ -1,11 +1,11 @@
 pub(crate) mod evaluation;
 #[cfg(test)]
 mod tests;
-use crate::timeline::{IrError, Node, Timeline};
 use crate::mappings::lower::{LoweredAsset, lower_scene};
 use crate::play::evaluation::{
     Cursor, DEAD, KfPlan, apply_ops, default_value, derive_cursor, plan, sample,
 };
+use crate::timeline::{IrError, Node, Timeline};
 use engine::compose::animation::AnimationTick;
 use engine::drawing::compositor::SceneNode;
 use engine::runtime::signal::{ReadSignal, WriteSignal, create_signal};

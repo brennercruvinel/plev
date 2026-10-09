@@ -7,13 +7,13 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::widgets::Rect;
+use accord::StateRef;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
-use accord::StateRef;
-use support::{App, MIXER_LEFT, SILENCES, id, mixer, page, snapshot, verified_local};
-use screen::Surface;
+use engine::widgets::Rect;
 use plevir::{Capabilities, GenerationPolicy, verify_json};
+use screen::Surface;
+use support::{App, MIXER_LEFT, SILENCES, id, mixer, page, snapshot, verified_local};
 
 const AREA: Rect = Rect {
     x: 16.0,
@@ -68,7 +68,9 @@ fn a_slider_draws_its_label_and_its_value_above_its_track() {
     );
     assert_eq!(
         track[3],
-        theme.control.height(engine::styling::theme::ControlSize::Xs),
+        theme
+            .control
+            .height(engine::styling::theme::ControlSize::Xs),
         "the track is the control's height"
     );
 

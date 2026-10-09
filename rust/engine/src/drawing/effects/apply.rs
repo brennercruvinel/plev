@@ -1,7 +1,7 @@
 use wgpu::util::DeviceExt;
 
-use super::sequencer::EffectProcessor;
 use super::parameters::*;
+use super::sequencer::EffectProcessor;
 use crate::drawing::gpu::texture_pool::{TextureHandle, TexturePool};
 
 /// Shared GPU context for effect passes.

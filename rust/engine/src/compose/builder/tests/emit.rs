@@ -2,9 +2,9 @@
 
 use super::test_cx;
 use crate::compose::builder::*;
-use crate::styling::color::Color;
-use crate::drawing::compositor::SceneNode;
 use crate::compose::view::View;
+use crate::drawing::compositor::SceneNode;
+use crate::styling::color::Color;
 
 #[test]
 fn div_produces_no_nodes_without_bg() {
@@ -62,14 +62,16 @@ fn text_color_applied() {
 
 #[test]
 fn path_element_produces_path_node() {
-    let circle = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let circle =
+        crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
     let el = path(circle);
     assert_eq!(el.render(&mut test_cx()).len(), 1);
 }
 
 #[test]
 fn path_in_div() {
-    let circle = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let circle =
+        crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
     let el = div().w(200.0).h(200.0).bg("dark_gray").child(path(circle));
     let nodes = el.render(&mut test_cx());
     assert_eq!(nodes.len(), 2);

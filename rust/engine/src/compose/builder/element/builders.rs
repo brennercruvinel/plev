@@ -1,5 +1,5 @@
-use super::super::style::*;
 use super::super::conversions::{IntoF32, IntoRadius};
+use super::super::style::*;
 use super::{
     ClickEvent, Element, ElementKind, FocusEvent, HoverEvent, IntoView, KeyEvent, ScrollEvent,
 };

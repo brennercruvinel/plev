@@ -5,12 +5,12 @@
 //! `activate` starts or stops the spinners as its click does; its label
 //! says which. The spinners themselves have no projection in comps yet.
 
+use accord::{Request, SemId, SnapshotBuilder};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent,
 };
-use engine::drawing::compositor::Compositor;
-use engine::styling::theme::{ControlSize, Theme};
-use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 

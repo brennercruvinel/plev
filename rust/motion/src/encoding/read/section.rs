@@ -3,14 +3,16 @@
 //! consumes its payload exactly; leftover bytes are an error, so a
 //! malformed length can never hide trailing garbage.
 
-use crate::encoding::container::{self, Asset, AssetKind, Desc, OP_MODIFY, OP_PLACE, OP_REMOVE, OP_REPLACE};
+use crate::encoding::container::{
+    self, Asset, AssetKind, Desc, OP_MODIFY, OP_PLACE, OP_REMOVE, OP_REPLACE,
+};
+use crate::encoding::quantize;
+use crate::encoding::read::ReadError;
 use crate::timeline::easing::{CUSTOM_BEZIER_BYTE, Easing};
 use crate::timeline::{
     Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode, Segment, Track,
     Value,
 };
-use crate::encoding::quantize;
-use crate::encoding::read::ReadError;
 
 /// Everything D blocks decode into, in wire order per list: modify ops
 /// become tracks, the structural ops their timeline lists.

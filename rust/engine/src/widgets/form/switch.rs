@@ -12,8 +12,8 @@ use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::styling::theme::{MotionPhysics, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, mix};
 use crate::widgets::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, mix};
 
 // HOFF switch: `control.switch_size` track (pill), `control.switch_knob`
 // knob inset by the derived pad. The widget centers the track inside its

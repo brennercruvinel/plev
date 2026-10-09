@@ -173,7 +173,12 @@ pub fn build_info_card(comp: &mut engine::drawing::compositor::Compositor, _w: f
     );
 }
 
-pub fn build_footer(comp: &mut engine::drawing::compositor::Compositor, w: f32, h: f32, margin: f32) {
+pub fn build_footer(
+    comp: &mut engine::drawing::compositor::Compositor,
+    w: f32,
+    h: f32,
+    margin: f32,
+) {
     let footer_h = 32.0;
     let footer_y = h - footer_h;
     comp.push_to_layer(

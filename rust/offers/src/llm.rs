@@ -142,15 +142,14 @@ impl<M: Model> Transformer for Llm<M> {
                 .model
                 .complete(&asked)
                 .map_err(|e| ProposeError::Model(e.0))?;
-            let checked =
-                operations::read(&reply).map_err(|why| vec![why]).and_then(|list| {
-                    match apply_all(&list, ask) {
-                        Ok(_) => Ok(list),
-                        Err((at, e)) => Err(list
-                            .get(at)
-                            .map(|op| operations::reasons(at + 1, op, &e))
-                            .unwrap_or_default()),
-                    }
+            let checked = operations::read(&reply)
+                .map_err(|why| vec![why])
+                .and_then(|list| match apply_all(&list, ask) {
+                    Ok(_) => Ok(list),
+                    Err((at, e)) => Err(list
+                        .get(at)
+                        .map(|op| operations::reasons(at + 1, op, &e))
+                        .unwrap_or_default()),
                 });
             match checked {
                 Ok(list) => return Ok(Adaptation::Ops(list)),

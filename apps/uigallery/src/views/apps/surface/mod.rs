@@ -47,21 +47,21 @@
 pub(crate) mod asking;
 mod page;
 
-use engine::widgets::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
 use accord::{
     Actor, Receipt, Request, RequestId, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder,
 };
-use screen::{Dispatch, SurfaceHost};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use engine::widgets::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
 use plevir::{Capabilities, GenerationPolicy, verify_json};
+use screen::{Dispatch, SurfaceHost};
 
 use super::EditKey;
 use super::todo::TodoPage;
 use crate::views::text_input::clipboard::Keys;
-use page::Page;
 use offering::{Proposing, Row, Said};
+use page::Page;
 
 /// One form of the generated surface: what the control calls it, the
 /// caption naming its IR, the IR.
@@ -82,7 +82,9 @@ const FORMS: [Form; 2] = [
     Form {
         label: "two columns",
         caption: "the same capabilities, materialized from showcase-todo-columns.ir.json",
-        ir: include_str!("../../../../../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json"),
+        ir: include_str!(
+            "../../../../../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json"
+        ),
     },
 ];
 
@@ -597,6 +599,6 @@ impl SurfacePage {
     }
 }
 
+pub(crate) mod offering;
 #[cfg(test)]
 mod tests;
-pub(crate) mod offering;

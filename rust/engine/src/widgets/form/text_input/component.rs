@@ -16,8 +16,8 @@
 
 use std::ops::Range;
 
-use crate::runtime::platform::clipboard::ClipboardProvider;
 use crate::drawing::text::TextStyle;
+use crate::runtime::platform::clipboard::ClipboardProvider;
 
 use super::buffer::TextBuffer;
 use super::visual::VisualLine;

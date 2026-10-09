@@ -10,14 +10,14 @@
 //! edge-lit translucent pill) and all text centering is measured with one
 //! TextStyle per run for measurement and drawing.
 
+use crate::domain::dock::{AVATARS, DockModel};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 use engine::widgets::icons;
 use engine::widgets::prelude::{
     EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
 };
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
-use crate::domain::dock::{AVATARS, DockModel};
 
 use super::{group_label, panel, text, with_alpha};
 

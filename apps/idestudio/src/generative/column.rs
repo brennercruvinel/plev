@@ -7,12 +7,12 @@
 //! the same way; the keys while the intent field or a field of a surface
 //! has the keyboard. Where they sit is `crate::generated::row`.
 
+use accord::{Actor, Receipt, Request, SemId, Snapshot};
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::clipboard::ClipboardProvider;
 use engine::widgets::form::text_input::single_line;
 use engine::widgets::form::{ClipKey, EditKey};
 use engine::widgets::prelude::{EventResult, WidgetEvent};
-use engine::runtime::platform::clipboard::ClipboardProvider;
-use engine::drawing::compositor::Compositor;
-use accord::{Actor, Receipt, Request, SemId, Snapshot};
 use screen::SurfaceHost;
 
 use crate::capability::Workbench;

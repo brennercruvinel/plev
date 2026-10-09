@@ -2,10 +2,10 @@
 //! exhaustive `match` per kind: a token the `uir` adds without a home in
 //! the theme stops the build here, not at a surface on screen.
 
-use engine::widgets::buttons::ButtonSize;
-use engine::widgets::content::{LineKind as Row, StatSize};
 use engine::drawing::text::TextStyle;
 use engine::styling::theme::{self, Intent, Theme};
+use engine::widgets::buttons::ButtonSize;
+use engine::widgets::content::{LineKind as Row, StatSize};
 use plevir::{
     ColorRole, ControlSize, Elevation, LineKind, ShapeRole, SizeToken, SpacingToken, TypographyRole,
 };

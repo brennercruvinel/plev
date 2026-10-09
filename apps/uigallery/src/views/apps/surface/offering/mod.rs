@@ -42,12 +42,12 @@
 
 use std::time::Duration;
 
-use engine::widgets::prelude::{Button, EventResult, Rect, Select, TextField, Wake, WidgetEvent};
+use accord::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::{IconSize, Theme};
+use engine::widgets::prelude::{Button, EventResult, Rect, Select, TextField, Wake, WidgetEvent};
 use offers::{Llm, Model};
-use accord::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
 
 use super::asking::{Claude, POLL, Pending};
 

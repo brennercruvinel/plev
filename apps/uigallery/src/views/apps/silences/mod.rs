@@ -38,28 +38,28 @@
 //! and the arrows reach the sliders through `handle_edit_key`, Enter
 //! proposes through `handle_enter`, Escape through `handle_escape`.
 
-#[cfg(test)]
-mod tests;
 pub mod fixed_page;
 mod generative;
+#[cfg(test)]
+mod tests;
 
 use std::collections::HashMap;
 use std::time::Duration;
 
-use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
+use crate::domain::silences::{Decision, Settings, SilencesModel};
+use accord::{Receipt, Request, RequestId, Snapshot};
 use engine::drawing::gpu::image::ImageHandle;
 use engine::styling::theme::Theme;
-use accord::{Receipt, Request, RequestId, Snapshot};
-use crate::domain::silences::{Decision, Settings, SilencesModel};
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
 use screen::{Dispatch, SurfaceHost};
 
 use super::todo::TodoPage;
 use super::{EditKey, panel};
 use crate::views::text_input::clipboard::Keys;
-use generative::{Generated, Halves, page::Page};
 use fixed_page::layout::{compute, row_parts};
 use fixed_page::semantics::{Ids, Target, Which};
 use fixed_page::worker::{POLL, Worker};
+use generative::{Generated, Halves, page::Page};
 
 /// A cut's row as the pointer meets it: its two buttons, retained so
 /// hover and press survive frames.
@@ -350,7 +350,9 @@ impl SilencesPage {
         }
         for ((cut, row), at) in self.model.cuts().iter().zip(&mut self.rows).zip(&l.rows) {
             let id = cut.id();
-            let badge_w = fixed_page::draw::badge(cut.decision()).preferred_size(theme).0;
+            let badge_w = fixed_page::draw::badge(cut.decision())
+                .preferred_size(theme)
+                .0;
             let parts = row_parts(*at, theme, &row.apply, &row.reject, badge_w, l.stacked);
             let apply = row.apply.handle_event(event, parts.apply);
             let reject = row.reject.handle_event(event, parts.reject);

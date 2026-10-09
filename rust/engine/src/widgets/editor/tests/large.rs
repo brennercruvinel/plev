@@ -5,8 +5,8 @@
 use editor::{Document, Selection, SelectionSet};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::compose::layout::ComputedBounds;
+use crate::drawing::compositor::{Compositor, SceneNode};
 
 use super::super::{EditorTheme, EditorView};
 use crate::runtime::platform::clipboard::LocalClipboard;

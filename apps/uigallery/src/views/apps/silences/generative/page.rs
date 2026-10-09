@@ -27,13 +27,13 @@
 //! proposal would show it, so no model is asked; and an operation of
 //! task-70 applied to the surface shown, as the host applies one.
 
-use engine::drawing::gpu::image::ImageHandle;
-use offers::compose::Composite;
-use offers::{Ask, Rules, propose_verified};
 use accord::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
+use engine::drawing::gpu::image::ImageHandle;
+use offers::compose::Composite;
+use offers::{Ask, Rules, propose_verified};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 use super::super::SilencesPage;
@@ -42,10 +42,10 @@ use super::super::fixed_page::semantics::ms;
 use super::access::{self, Pressed};
 use super::offer::{Answer as Reply, beside};
 use crate::views::ShowcaseView;
-use crate::views::apps::todo::TodoPage;
 use crate::views::apps::surface::asking::{Answer, Job, Pending, Proposal};
 use crate::views::apps::surface::offering::changing::{self, Changing};
 use crate::views::apps::surface::offering::{Op, Proposer, Said, int};
+use crate::views::apps::todo::TodoPage;
 
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.

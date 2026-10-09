@@ -31,14 +31,14 @@
 //! `settle` reads nothing meanwhile, so an answer that arrives asleep
 //! waits on the channel for the first wake after the app wakes.
 
-use engine::runtime::window::Background;
-use offers::{Ask, Rules, propose_verified};
 use accord::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
-use screen::SurfaceHost;
+use engine::runtime::window::Background;
+use offers::{Ask, Rules, propose_verified};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
+use screen::SurfaceHost;
 
 use super::super::todo::TodoPage;
 use super::asking::{Answer, Job, Pending, Proposal};
@@ -385,15 +385,15 @@ mod tests {
         use std::thread;
         use std::time::{Duration, Instant};
 
+        use accord::{Stage, Value};
         use claude::ClaudeCli;
         use engine::runtime::window::Background;
-        use accord::{Stage, Value};
         use serde_json::json;
         use tempfile::TempDir;
 
-        use crate::views::apps::todo::TodoPage;
         use crate::views::apps::surface::SurfacePage;
         use crate::views::apps::surface::asking::Claude;
+        use crate::views::apps::todo::TodoPage;
 
         /// One turn of a 60 Hz display.
         const TURN: f32 = 1.0 / 60.0;
@@ -407,7 +407,8 @@ mod tests {
         /// once, and a `ClaudeCli` that runs it in a directory of its own.
         fn fake() -> (TempDir, ClaudeCli) {
             let dir = tempfile::tempdir().unwrap();
-            let columns = manifest("../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json");
+            let columns =
+                manifest("../../rust/screen/tests/fixtures/uigallery-todo-columns.ir.json");
             let columns = std::fs::read_to_string(&columns)
                 .unwrap_or_else(|e| panic!("{}: {e}", columns.display()));
             let good = json!({

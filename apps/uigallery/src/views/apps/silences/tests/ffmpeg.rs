@@ -7,8 +7,8 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use engine::drawing::compositor::Compositor;
 use accord::{Stage, Value};
+use engine::drawing::compositor::Compositor;
 
 use super::super::SilencesPage;
 use super::super::fixed_page::worker::Worker;

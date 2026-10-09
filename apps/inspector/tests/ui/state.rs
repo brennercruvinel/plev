@@ -2,10 +2,10 @@
 //! says. every answer the panel shows is the model's, called, not worked
 //! out again.
 
-use engine::widgets::content::{CodeBlock, CodeLine, LineKind};
 use engine::drawing::text::TextMeasurer;
-use replay::{Inspector, prose};
+use engine::widgets::content::{CodeBlock, CodeLine, LineKind};
 use inspector::{Key, Tone, wrap};
+use replay::{Inspector, prose};
 
 use crate::support::{Fallible, click, click_control, draw, id, open, texts};
 

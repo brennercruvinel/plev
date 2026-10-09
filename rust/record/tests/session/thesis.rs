@@ -4,10 +4,10 @@
 //! again and its commit completes with a sha. recorded through the
 //! dispatcher's sink and explicit calls, then read back.
 
-use record::{InputKind, Kind, Limits, Recorder, Session};
 use accord::{
     Actor, Change, Dispatcher, Millis, Rejection, Request, Snapshot, Stage, StateRef, Value,
 };
+use record::{InputKind, Kind, Limits, Recorder, Session};
 
 use crate::toys::{Git, agent, id, look, sha};
 

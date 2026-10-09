@@ -192,13 +192,23 @@ fn elevation_picks_the_stack_bottom_first() {
 
 #[test]
 fn shadow_spread_folds_into_the_cast_rect() {
-    let spec = ShadowSpec::new([0.0, 0.0], 8.0, -4.0, crate::styling::color::Color::hex(0x000000));
+    let spec = ShadowSpec::new(
+        [0.0, 0.0],
+        8.0,
+        -4.0,
+        crate::styling::color::Color::hex(0x000000),
+    );
     assert_eq!(
         spec.cast_rect(10.0, 10.0, 100.0, 50.0),
         Some((14.0, 14.0, 92.0, 42.0))
     );
     // A spread that eats the surface casts nothing.
-    let eaten = ShadowSpec::new([0.0, 0.0], 8.0, -30.0, crate::styling::color::Color::hex(0x000000));
+    let eaten = ShadowSpec::new(
+        [0.0, 0.0],
+        8.0,
+        -30.0,
+        crate::styling::color::Color::hex(0x000000),
+    );
     assert_eq!(eaten.cast_rect(0.0, 0.0, 50.0, 50.0), None);
 }
 

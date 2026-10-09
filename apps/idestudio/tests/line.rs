@@ -21,10 +21,10 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::drawing::compositor::Compositor;
 use accord::{ActionName, Actor, SemId, Stage, Value};
-use support::{Rig, completed};
+use engine::drawing::compositor::Compositor;
 use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use support::{Rig, completed};
 
 /// The window of the rig.
 const W: f32 = 1280.0;
@@ -188,8 +188,8 @@ fn the_person_reaches_the_line_by_the_pointer_and_the_keys() {
 /// focused nothing takes them.
 #[test]
 fn the_intent_field_takes_the_clipboard_keys() {
-    use engine::widgets::form::ClipKey;
     use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+    use engine::widgets::form::ClipKey;
 
     let mut rig = Rig::new(&["a.txt"], &[]);
     rig.bench.host_surfaces_with(None);

@@ -9,14 +9,14 @@
 //! for widget-to-parent communication; this module adds the global,
 //! declaratively-bound layer on top of it.
 
+pub mod bindings;
 pub mod context;
 pub mod keystroke;
 pub mod shortcuts;
-pub mod bindings;
 pub mod winit;
 
-pub use context::{ContextStack, KeyContext, Predicate, PredicateParseError};
 pub use bindings::{Keymap, KeymapError, KeymapMatcher, MatchResult};
+pub use context::{ContextStack, KeyContext, Predicate, PredicateParseError};
 pub use keystroke::{InvalidKeystroke, Keystroke, Modifiers};
 pub use winit::{keystroke_from_key_event, keystroke_from_logical_key};
 

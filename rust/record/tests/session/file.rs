@@ -5,11 +5,13 @@
 
 use std::path::PathBuf;
 
+use accord::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::PathBuilder;
-use record::{Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
-use accord::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
+use record::{
+    Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe,
+};
 
 use crate::toys::{Git, agent, id, look};
 
@@ -621,7 +623,10 @@ fn a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds() -> Fallible {
         return Err(format!("a whole snapshot at 10: {:?}", window.events()).into());
     };
     let mail = snapshot.get(&id("todo.item[mail]")).ok_or("no mail")?;
-    assert_eq!(changes, &[accord::Change::NodeAdded(Box::new(mail.clone()))]);
+    assert_eq!(
+        changes,
+        &[accord::Change::NodeAdded(Box::new(mail.clone()))]
+    );
     let (bytes, _) = window.to_bytes()?;
 
     let old = events_before_83(&window, None)?;

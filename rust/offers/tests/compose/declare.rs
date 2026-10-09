@@ -4,11 +4,11 @@
 //! first step is, with the narrowest policy of its steps; so a sequence
 //! through an action kept from agents is a composite an agent cannot ask.
 
-use offers::compose::Composer;
 use accord::{
     ActionDecl, ActionName, Actor, Rejection, Request, SemId, Semantics, Snapshot, SnapshotBuilder,
     StateRef, Verdict, check,
 };
+use offers::compose::Composer;
 
 use super::desk::{Bench, Desk, PERSON_ONLY, agent, person};
 

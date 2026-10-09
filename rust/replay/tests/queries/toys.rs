@@ -6,12 +6,12 @@
 
 use std::collections::BTreeSet;
 
-use indexmap::IndexMap;
-use record::{InputKind, Limits, Recorder, Session};
 use accord::{
     Actor, Dispatcher, Execution, Millis, Operable, Outcome, ParamSpec, Request, RequestId, Role,
     SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };
+use indexmap::IndexMap;
+use record::{InputKind, Limits, Recorder, Session};
 
 /// the git client of the thesis: what is staged, the message, the commits.
 /// a `slow` one only starts a submit (`Execution::Started`), and the test

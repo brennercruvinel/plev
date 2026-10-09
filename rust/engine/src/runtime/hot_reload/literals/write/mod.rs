@@ -23,8 +23,8 @@ use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use proc_macro2::{TokenStream, TokenTree};
 use accord::Actor;
+use proc_macro2::{TokenStream, TokenTree};
 
 use super::{BASELINE, Change, EDITED, Lit, Site, apply_change, same_code, snapshot, unquote};
 

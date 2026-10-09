@@ -7,9 +7,9 @@ use std::convert::Infallible;
 
 use crate::identity::SemId;
 use crate::notation::ActionName;
+use crate::property::StateRef;
 use crate::receipts::RequestId;
 use crate::requests::Actor;
-use crate::property::StateRef;
 
 /// one violation of the contract.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]

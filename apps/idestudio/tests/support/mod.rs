@@ -6,9 +6,9 @@ use std::process::Command;
 use std::sync::mpsc::{Receiver, channel};
 use std::time::Duration;
 
+use accord::{Actor, Outcome, Receipt, Request, RequestId, Snapshot, Stage, Value};
 use gitdrv::{GitClient, GitEvent};
 use idestudio::capability::Workbench;
-use accord::{Actor, Outcome, Receipt, Request, RequestId, Snapshot, Stage, Value};
 use tempfile::TempDir;
 
 /// How long a git answer may take before a test fails.

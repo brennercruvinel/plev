@@ -11,15 +11,15 @@
 
 use std::path::Path;
 
-use engine::drawing::headless::{Renderer, Viewport};
 use accord::{SemId, Snapshot};
+use engine::drawing::headless::{Renderer, Viewport};
 use serde_json::json;
 use socket::{Reply, ServerMsg, SnapshotReply, encode_server};
 
 use crate::args::Args;
-use crate::subject::{self, Bench};
 use crate::repo::TASK;
 use crate::report::{self, DONE, ERROR, row};
+use crate::subject::{self, Bench};
 
 /// the scales the frame is drawn at: a window and a retina window.
 const SCALES: [f32; 2] = [1.0, 2.0];

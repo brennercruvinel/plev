@@ -7,16 +7,16 @@ mod tests;
 use super::commit_form::CommitForm;
 use super::diff::DiffView;
 use super::header::Header;
-use super::stacks::MultiStackView;
 use super::sidebar::Sidebar;
+use super::stacks::MultiStackView;
 use super::unassigned::UnassignedView;
 use crate::capability::ids::Ids;
+use accord::RequestId;
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::{Intent, Theme};
 use engine::widgets::feedback::{ContextMenu, Modal, ToastManager};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::prelude::Wake;
-use engine::drawing::compositor::{Compositor, LayerId};
-use engine::styling::theme::{Intent, Theme};
-use accord::RequestId;
 
 /// Three-panel workspace layout — mirrors plev ide's MainViewport.
 pub struct WorkspaceView {

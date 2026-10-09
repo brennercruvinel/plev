@@ -1,7 +1,7 @@
 //! Render pipeline for the counter demo: scene building + GPU submission.
 
-use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::compose::view::ViewContext;
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
 
 use crate::lifecycle::*;
 use crate::{AppState, CounterApp};
@@ -180,7 +180,8 @@ pub fn render(app: &mut CounterApp) {
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2])
+                                .to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,
                             g: lg as f64,

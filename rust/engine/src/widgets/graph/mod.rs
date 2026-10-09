@@ -20,12 +20,14 @@ pub mod geometry;
 use std::collections::HashMap;
 
 use crate::drawing::compositor::{Compositor, SceneNode};
-use crate::widgets::graph::geometry::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
 use crate::drawing::path::PathBuilder;
 use crate::styling::theme::Theme;
+use crate::widgets::graph::geometry::{
+    GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout,
+};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::recipe::rounded_rect_stroke;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Fixed world box the layout runs in when the widget computes it.
 const WORLD: f32 = 1000.0;

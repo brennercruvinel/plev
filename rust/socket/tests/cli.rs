@@ -12,8 +12,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::Revision;
-use support::toy::ToyHost;
 use socket::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server};
+use support::toy::ToyHost;
 
 struct Run {
     code: i32,
@@ -497,7 +497,8 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
 /// a person's act through the toy's dispatcher by assistive technology.
 fn assistive(host: &mut ToyHost, target: &str, action: &str) {
     let seen = host.snapshot();
-    let req = accord::Request::observe(&seen, accord::Actor::Assistive, target, action, None).unwrap();
+    let req =
+        accord::Request::observe(&seen, accord::Actor::Assistive, target, action, None).unwrap();
     host.clock += 1;
     host.dispatcher.dispatch(&mut host.app, req, host.clock);
 }

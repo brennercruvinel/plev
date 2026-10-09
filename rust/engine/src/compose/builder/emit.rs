@@ -1,5 +1,5 @@
-use crate::drawing::compositor::{SceneNode, TextNodeKey};
 use crate::compose::layout::ComputedBounds;
+use crate::drawing::compositor::{SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 
 use super::element::{Element, ElementKind};

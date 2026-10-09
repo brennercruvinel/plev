@@ -13,9 +13,9 @@ mod support;
 use std::collections::BTreeMap;
 
 use accord::{Actor, Request, Role, SemId, Snapshot, Value};
-use support::{App, CASES, IDE, REVIEW, SHOWCASE, TODO, id, ir, page, snapshot, verified};
-use screen::Surface;
 use plevir::{Capabilities, CapabilityRef, GenerationPolicy, IrNode, role_of, verify};
+use screen::Surface;
+use support::{App, CASES, IDE, REVIEW, SHOWCASE, TODO, id, ir, page, snapshot, verified};
 
 /// What the IR says the page holds for one node.
 struct Expect {

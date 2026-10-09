@@ -9,10 +9,10 @@
 #[allow(dead_code)]
 mod support;
 
-use offers::{Adapt, Adaptation, ProposeError, Transformed, Transformer, transform_verified};
 use accord::{Actor, SemId};
-use support::{Changing, VAULT_PANEL, agent, compact, todo, vault};
+use offers::{Adapt, Adaptation, ProposeError, Transformed, Transformer, transform_verified};
 use plevir::{GenerationPolicy, Op, Step, TransformError};
+use support::{Changing, VAULT_PANEL, agent, compact, todo, vault};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).unwrap()

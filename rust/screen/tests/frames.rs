@@ -14,15 +14,15 @@ mod support;
 
 use std::collections::BTreeMap;
 
-use engine::widgets::{Rect, WidgetEvent};
+use accord::{Role, StateRef, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use engine::styling::theme::Theme;
-use accord::{Role, StateRef, Value};
+use engine::widgets::{Rect, WidgetEvent};
+use screen::{Frames, NoFrames, Surface, SurfaceHost};
 use support::{
     App, COMPARE_SILENCES, REVIEW_SILENCES, SILENCES, TURN, id, page, snapshot, verified_local,
 };
-use screen::{Frames, NoFrames, Surface, SurfaceHost};
 
 const AREA: Rect = Rect {
     x: 40.0,
@@ -116,7 +116,9 @@ fn the_review_draws_a_frame_per_cut_from_the_app_through_the_trait() {
     assert!(video[2] > thumb[2] * 3.0, "{video:?} {thumb:?}");
     assert_eq!(
         thumb[3],
-        theme.control.height(engine::styling::theme::ControlSize::Xl)
+        theme
+            .control
+            .height(engine::styling::theme::ControlSize::Xl)
     );
 
     // the app holds every frame: one picture per image, inside its rect

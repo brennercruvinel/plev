@@ -11,10 +11,10 @@ use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use accord::{SemId, SnapshotBuilder, StateRef, Value};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::form::TextField;
 use crate::widgets::form::text_input::*;
 use crate::widgets::wake::Wake;
+use crate::widgets::widget::Rect;
 
 /// `にほんご`: four kana of three bytes each.
 const NIHONGO: &str = "にほんご";

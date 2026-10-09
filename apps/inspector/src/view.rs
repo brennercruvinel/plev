@@ -6,16 +6,16 @@
 
 use std::path::Path;
 
+use accord::{Millis, SemId};
+use engine::drawing::compositor::{LayerId, SceneNode};
+use engine::styling::theme::Breakpoint;
 use engine::widgets::content::{CodeBlock, CodeLine, EmptyState};
 use engine::widgets::feedback::Tooltip;
 use engine::widgets::nav::{NavLink, PanelHeader, Sidebar};
 use engine::widgets::shell::{AppShell, ShellLayout};
 use engine::widgets::{Rect, Theme};
-use engine::drawing::compositor::{LayerId, SceneNode};
-use engine::styling::theme::Breakpoint;
-use replay::{Inspector, Line, prose};
 use record::{Bound, FileError, ReadError, Session};
-use accord::{Millis, SemId};
+use replay::{Inspector, Line, prose};
 
 use crate::fit::{self, Fit};
 use crate::panel::Panel;

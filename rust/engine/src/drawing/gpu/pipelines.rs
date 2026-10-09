@@ -1,4 +1,6 @@
-use crate::drawing::compositor::{BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::drawing::compositor::{
+    BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex,
+};
 use crate::drawing::text::TextVertex;
 
 use super::context::GpuContext;

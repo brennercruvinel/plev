@@ -69,7 +69,9 @@ pub(in crate::runtime::platform) fn wake() {
 
 /// The queued ids `mine` claims, in order, taken out of the queue; the
 /// rest stay for their owner.
-pub(in crate::runtime::platform) fn take_clicks(mut mine: impl FnMut(&MenuId) -> bool) -> Vec<MenuId> {
+pub(in crate::runtime::platform) fn take_clicks(
+    mut mine: impl FnMut(&MenuId) -> bool,
+) -> Vec<MenuId> {
     let mut queue = locked(&CLICKS);
     let mut taken = Vec::new();
     queue.retain(|id| {

@@ -11,14 +11,14 @@
 
 mod client;
 mod diff;
+mod domain;
 mod error;
 mod repo;
 mod status;
-mod domain;
 
 pub use client::{GitClient, GitCommand, GitEvent};
-pub use error::{GitError, Result};
-pub use repo::GitRepo;
 pub use domain::{
     Branch, Commit, CommitCheck, DiffLine, DiffLineKind, FileStatus, Hunk, NewCommit, StatusKind,
 };
+pub use error::{GitError, Result};
+pub use repo::GitRepo;

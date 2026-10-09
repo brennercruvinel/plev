@@ -6,8 +6,8 @@
 
 use std::sync::{Arc, Mutex};
 
-use offers::compose::{Detector, Found, Listener, Shape, Step, Target};
 use accord::{ActionName, SemId, Stage, Value};
+use offers::compose::{Detector, Found, Listener, Shape, Step, Target};
 
 use super::desk::{Bench, SECRET, agent, person};
 

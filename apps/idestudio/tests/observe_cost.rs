@@ -13,9 +13,9 @@ use std::process::Command;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
+use accord::{SemId, Snapshot};
 use gitdrv::{GitClient, GitEvent};
 use idestudio::capability::Workbench;
-use accord::{SemId, Snapshot};
 use socket::{Reply, ServerMsg, SnapshotReply, encode_server};
 
 #[test]

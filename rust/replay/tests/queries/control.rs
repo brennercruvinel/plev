@@ -1,12 +1,12 @@
 //! `control`: the node at an instant and every request that touched it up
 //! to then, each with its causal chain as the window up to then tells it.
 
+use accord::{Outcome, Value};
 use indexmap::IndexMap;
 use replay::{Ending, Inspector};
-use accord::{Outcome, Value};
 
-use crate::toys::{Lab, agent, id};
 use crate::thesis::record;
+use crate::toys::{Lab, agent, id};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

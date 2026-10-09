@@ -14,13 +14,13 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use accord::{Actor, Receipt, ReceiptSink, Request, SemId, Stage, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
 use engine::runtime::platform::menu::locked;
 use engine::runtime::platform::print::{FakePrinter, PAPER_DPI, paper_scale};
 use engine::runtime::window::Background;
-use accord::{Actor, Receipt, ReceiptSink, Request, SemId, Stage, Value};
 use uigallery::views::ShowcaseView;
 
 const MAIN: (f32, f32) = (1200.0, 800.0);

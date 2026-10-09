@@ -16,12 +16,12 @@
 //! emitter reads neither.
 
 use crate::formats::react::css::{MapOut, is_text_prop, map_decl, noop_is_merge, px};
+use crate::formats::react::parse::{TsxChild, TsxComponent, TsxNode};
+use crate::formats::react::sass::{Decl, Rule, class_decls};
 use crate::tree::{
     Attr, Dropped, Note, NoteKind, Origin, Param, ParserNode, Prop, Resolution, Src, Tag,
     TextValue, snake_case,
 };
-use crate::formats::react::sass::{Decl, Rule, class_decls};
-use crate::formats::react::parse::{TsxChild, TsxComponent, TsxNode};
 use std::collections::{HashMap, HashSet};
 
 const OVERLAY_RULE: &str =

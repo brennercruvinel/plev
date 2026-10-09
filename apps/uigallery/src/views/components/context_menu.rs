@@ -1,10 +1,10 @@
 //! Context Menu page: an area to right-click. The view owns the overlay
 //! stack and opens the menu (`demo_menu`) at the pointer.
 
-use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::{Intent, Theme};
+use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
 
 use super::text;
 

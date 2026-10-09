@@ -14,8 +14,8 @@ mod wake;
 
 use super::*;
 use crate::interfaces::panels::unassigned::{FileEntry, FileStatus};
-use engine::widgets::overlay::OverlayKind;
 use engine::drawing::compositor::Compositor;
+use engine::widgets::overlay::OverlayKind;
 
 fn sample_files() -> Vec<FileEntry> {
     let entry = |path: &str, status, staged| FileEntry {

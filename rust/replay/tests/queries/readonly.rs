@@ -6,8 +6,8 @@
 
 use std::path::Path;
 
-use replay::{Inspector, prose};
 use accord::{RequestId, SemId};
+use replay::{Inspector, prose};
 
 use crate::toys::{Lab, agent};
 

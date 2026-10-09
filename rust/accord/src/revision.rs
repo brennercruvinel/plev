@@ -43,9 +43,9 @@
 
 use std::fmt;
 
-use crate::manifest::{ActionDecl, Constraints, Policy};
-use crate::identity::SemId;
 use crate::controls::Node;
+use crate::identity::SemId;
+use crate::manifest::{ActionDecl, Constraints, Policy};
 use crate::property::Value;
 
 const VERSION: &str = "sem.revision.v1";

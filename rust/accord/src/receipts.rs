@@ -7,11 +7,11 @@ use std::str::FromStr;
 use indexmap::IndexMap;
 
 use crate::decision::Rejection;
-use crate::failures::SemError;
-use crate::revision::Revision;
-use crate::requests::{Actor, Request};
 use crate::encoding::text_serde;
+use crate::failures::SemError;
 use crate::property::Value;
+use crate::requests::{Actor, Request};
+use crate::revision::Revision;
 
 /// a point in time in milliseconds, on a monotonic clock whose origin the
 /// caller picks. `sem` never reads a clock: whoever dispatches passes the

@@ -14,10 +14,7 @@ use serde::Deserialize;
 use crate::classify::{Area, Decision};
 
 /// The table in the repository, wherever the example runs from.
-pub const TABLE: &str = concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/requested.json"
-);
+pub const TABLE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/requested.json");
 
 /// The version of the table's layout.
 pub const FORMAT: &str = "determinism.requested.v1";

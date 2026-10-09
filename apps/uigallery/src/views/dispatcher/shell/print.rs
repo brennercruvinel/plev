@@ -27,10 +27,10 @@ use std::time::Duration;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use std::time::Instant;
 
-use engine::widgets::prelude::Wake;
+use accord::{Policy, RequestId, Role, SnapshotBuilder, Value};
 use engine::runtime::platform::print::{Destination, Printer};
 use engine::runtime::window::Background;
-use accord::{Policy, RequestId, Role, SnapshotBuilder, Value};
+use engine::widgets::prelude::Wake;
 
 use super::super::super::ShowcaseView;
 use super::{Ids, PERSON_ONLY};
@@ -375,6 +375,7 @@ mod desktop {
     use std::thread;
     use std::time::Instant;
 
+    use accord::RequestId;
     use engine::drawing::compositor::Compositor;
     use engine::drawing::gpu::RenderConfig;
     use engine::drawing::headless::{Renderer, Viewport};
@@ -382,7 +383,6 @@ mod desktop {
     use engine::runtime::platform::print::{
         PAPER_DPI, POINTS_PER_INCH, PrintDocument, PrintError, PrintOptions, fit_scale, paper_scale,
     };
-    use accord::RequestId;
 
     use super::super::super::super::ShowcaseView;
     use super::{Done, Printed, Running, Shared};

@@ -40,26 +40,25 @@
 //! intentionally empty in v0.
 
 pub mod discover;
-pub mod optimize;
-pub mod play;
 pub mod encoding;
 pub mod mappings;
+pub mod optimize;
+pub mod play;
 pub mod timeline;
 
-pub use encoding::container::{Asset, AssetKind, Desc, stage_size};
-pub use discover::{DiscoverConfig, DiscoverError, discover};
 pub use discover::fit::quantize_value;
+pub use discover::{DiscoverConfig, DiscoverError, discover};
+pub use encoding::container::{Asset, AssetKind, Desc, stage_size};
+pub use encoding::read::{Document, ReadError, decode};
+pub use encoding::write::{WriteError, encode};
+pub use mappings::lower::LoweredAsset;
+pub use mappings::raise::{
+    AssetBank, MAX_RAISED, RaiseError, Raised, Skipped, Unsupported, raise_node, raise_scene,
+};
+pub use optimize::{OptimizeCfg, optimize};
+pub use play::MonsterPlayer;
 pub use timeline::easing::Easing;
 pub use timeline::{
     AssetId, Depth, IrError, Keyframe, Node, NodeId, NodeKind, PlaceNode, Prop, Props, RemoveNode,
     ReplaceNode, Segment, Timeline, Track, Value,
 };
-pub use mappings::lower::LoweredAsset;
-pub use optimize::{OptimizeCfg, optimize};
-pub use play::MonsterPlayer;
-pub use mappings::raise::{
-    AssetBank, MAX_RAISED, RaiseError, Raised, Skipped, Unsupported, raise_node, raise_scene,
-};
-pub use encoding::read::{Document, ReadError, decode};
-pub use encoding::write::{WriteError, encode};
-

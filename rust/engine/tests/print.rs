@@ -26,12 +26,12 @@ use std::time::{Duration, Instant};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
+use engine::drawing::text::TextStyle;
+use engine::drawing::text::probe::Rendered;
 use engine::runtime::platform::print::{
     Destination, JobId, JobStatus, PAPER_DPI, PrintDocument, PrintError, PrintOptions, Printer,
     fit_scale, paper_scale,
 };
-use engine::drawing::text::TextStyle;
-use engine::drawing::text::probe::Rendered;
 
 /// One line of the Todo page, at the body size.
 const TEXT: &str = "Absorb the plev demos into the showcase";

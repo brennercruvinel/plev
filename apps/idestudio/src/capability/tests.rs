@@ -5,11 +5,11 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use engine::drawing::compositor::Compositor;
 use accord::{
     Actor, Confirm, Mark, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage,
     Value, Verdict, check,
 };
+use engine::drawing::compositor::Compositor;
 
 use super::*;
 use crate::interfaces::panels::stacks::{CommitEntry, Stack};

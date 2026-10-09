@@ -9,10 +9,10 @@
 //! so the line becomes two `grow(1.0)` segments flanking the chip; same
 //! pixels, content-driven flow (the manual's rule).
 
-use crate::formats::gpui::parse::{GCall, GExpr, GFn, GpuiSource};
 use crate::formats::gpui::node::{
     Applied, WNode, arg_px, call_label, call_sites, closure_body, expr_line, finish,
 };
+use crate::formats::gpui::parse::{GCall, GExpr, GFn, GpuiSource};
 use crate::tree::{Dropped, Note, NoteKind, Param, Prop, Resolution, Src, TextValue, snake_case};
 
 /// Variant configuration of the transpiled instance.

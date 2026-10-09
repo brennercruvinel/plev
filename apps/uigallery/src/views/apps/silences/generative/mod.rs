@@ -27,10 +27,10 @@ pub(super) mod access;
 pub(super) mod offer;
 pub(super) mod page;
 
-use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use accord::{Request, Role, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
 use screen::SurfaceHost;
 
 use crate::views::apps::surface::offering::{Asked, Proposing, Row};

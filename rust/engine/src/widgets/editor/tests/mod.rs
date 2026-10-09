@@ -12,8 +12,8 @@ use editor::{Document, Selection, SelectionSet};
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::compose::layout::ComputedBounds;
+use crate::drawing::compositor::{Compositor, SceneNode};
 
 use super::view::visible_line_range;
 use super::{EditorConfig, EditorTheme, EditorView, MouseEvent};

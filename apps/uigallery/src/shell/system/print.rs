@@ -65,9 +65,9 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
+    use accord::{SemId, Value};
     use engine::runtime::platform::menu::{FakeMenu, Shortcut, locked};
     use engine::runtime::platform::print::FakePrinter;
-    use accord::{SemId, Value};
     use winit::keyboard::{Key, ModifiersState, NamedKey};
 
     use super::super::super::App;

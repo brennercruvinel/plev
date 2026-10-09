@@ -4,10 +4,10 @@
 //! Every text is measured with the style it is drawn with; constants
 //! exist only as ratios and the theme's tokens.
 
-use engine::widgets::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
+use crate::domain::silences::Segment;
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::{ControlSize, Theme};
-use crate::domain::silences::Segment;
+use engine::widgets::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
 
 use super::super::SilencesPage;
 

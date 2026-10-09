@@ -7,8 +7,8 @@
 
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use crate::widgets::widget::Rect;
 use crate::drawing::text::TextStyle;
+use crate::widgets::widget::Rect;
 
 use super::Label;
 

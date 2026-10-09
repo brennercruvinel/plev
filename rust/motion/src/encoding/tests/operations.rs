@@ -4,13 +4,13 @@
 //! validation errors. player behavior lives in tests_play_ops.
 
 use crate::encoding::container::SEC_DELTA;
+use crate::encoding::read::decode;
+use crate::encoding::tests::write::{parse, rect, seg};
+use crate::encoding::write::encode;
 use crate::timeline::easing::Easing;
 use crate::timeline::{
     IrError, Keyframe, PlaceNode, Prop, RemoveNode, ReplaceNode, Timeline, Track, Value,
 };
-use crate::encoding::read::decode;
-use crate::encoding::tests::write::{parse, rect, seg};
-use crate::encoding::write::encode;
 
 const GOLDEN_OPS: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_ops.monster");
 

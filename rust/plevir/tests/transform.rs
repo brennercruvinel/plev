@@ -8,13 +8,13 @@
 mod support;
 
 use accord::{Actor, SemId, ValueKind};
-use serde_json::{Value, json};
-use support::caps;
 use plevir::{
     Adapted, Capabilities, ChartKind, ColorRole, Component, Context, ControlSize, DataCap,
     Elevation, GenerationPolicy, Inverse, Ir, IrNode, Layout, Op, Rule, SpacingToken, Step,
     TransformError, TypographyRole, verify,
 };
+use serde_json::{Value, json};
+use support::caps;
 
 /// A surface over `caps()`: a title, the files repeated with a status and
 /// a stage button, a split of the message and the count, a row with the

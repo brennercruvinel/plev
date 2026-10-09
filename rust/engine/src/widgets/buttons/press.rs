@@ -6,8 +6,10 @@
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
+use crate::widgets::recipe::{
+    focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets,
+};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
-use crate::widgets::recipe::{focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets};
 
 /// Pointer state of a pressable control.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

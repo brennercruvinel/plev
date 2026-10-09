@@ -219,7 +219,8 @@ fn submit_gpu(app: &mut App, _vw: f32, _vh: f32) {
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2])
+                                .to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,
                             g: lg as f64,

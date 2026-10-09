@@ -11,8 +11,8 @@ use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::styling::theme::Theme;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::widgets::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Horizontal slider. Dragging anywhere on the bounds moves the knob —
 /// the full height is the hit area so 4px tracks aren't a precision game.

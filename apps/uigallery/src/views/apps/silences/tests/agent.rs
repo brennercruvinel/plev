@@ -9,9 +9,9 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::drawing::compositor::Compositor;
-use accord::{ActionName, Actor, RequestId, SemId, StateRef, Value};
 use crate::domain::silences::{PROBE_STDERR, parse};
+use accord::{ActionName, Actor, RequestId, SemId, StateRef, Value};
+use engine::drawing::compositor::Compositor;
 use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 use super::super::fixed_page::worker::Worker;

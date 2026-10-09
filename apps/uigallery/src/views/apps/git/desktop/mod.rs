@@ -2,9 +2,9 @@
 //! Every click and key that acts on the repository or the commit form goes
 //! through the workbench's dispatcher, the same path as in the ide.
 
-use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::super::text;
 use super::{GitWake, NavKey};
@@ -12,8 +12,8 @@ use crate::views::text_input::clipboard::Keys;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
 use gitdrv::{GitClient, GitEvent};
-use idestudio::interfaces::panels::layout::{Side, ThemeMode};
 use idestudio::capability::Workbench;
+use idestudio::interfaces::panels::layout::{Side, ThemeMode};
 
 pub struct GitPage {
     bench: Workbench,

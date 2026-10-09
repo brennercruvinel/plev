@@ -9,9 +9,9 @@ mod support;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use engine::widgets::feedback::{ContextMenu, MenuEntry};
-use engine::drawing::compositor::Compositor;
 use accord::{Actor, Change, Receipt, ReceiptSink, Rejection, Revision, SemId, Stage, Value};
+use engine::drawing::compositor::Compositor;
+use engine::widgets::feedback::{ContextMenu, MenuEntry};
 use support::{Rig, agent, completed, set};
 
 fn tester() -> Actor {

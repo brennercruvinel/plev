@@ -22,9 +22,9 @@ use gix::diff::tree::recorder::Change;
 use gix::objs::FindExt;
 
 use crate::diff::parse_unified;
+use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 use crate::error::{GitError, Result, repo_err};
 use crate::status::parse_porcelain_v2;
-use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 pub struct GitRepo {
     repo: gix::Repository,

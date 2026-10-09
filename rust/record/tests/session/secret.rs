@@ -2,8 +2,8 @@
 //! keeps its length), not in a parameter, an observed value, a stale
 //! delta, an outcome or an error aimed at a secret field.
 
-use record::{Event, Kind, Limits, Recorder};
 use accord::{Actor, Dispatcher, Observation, Rejection, Request, Stage, StateRef, Value};
+use record::{Event, Kind, Limits, Recorder};
 
 use crate::toys::{Git, Login, agent, id, look};
 

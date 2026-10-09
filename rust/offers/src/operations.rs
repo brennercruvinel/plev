@@ -10,8 +10,8 @@
 
 use std::fmt::Write as _;
 
-use serde_json::Value;
 use plevir::Op;
+use serde_json::Value;
 
 use crate::adapt::Adapt;
 use crate::prompt::{REPLY_CHARS, RULES, clip, components, registry, rule};

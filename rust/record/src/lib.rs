@@ -97,8 +97,8 @@ pub mod scene;
 mod session;
 mod state;
 mod track;
-mod weigh;
 mod visuals;
+mod weigh;
 
 pub use bound::Bound;
 pub use error::{FileError, FrameError, ReadError};

@@ -2,8 +2,8 @@
 
 use lyon_path::math::point;
 
-use super::tessellation;
 use super::mesh::{PathCommand, TessellatedPath};
+use super::tessellation;
 
 // ---------------------------------------------------------------------------
 // PathBuilder -- ergonomic path construction

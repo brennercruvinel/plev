@@ -14,12 +14,12 @@
 mod support;
 
 use import::formats::gpui::parse::{GExpr, GFn};
-use import::tokens::{color_distance, nearest, px_distance, type_distance};
 use import::formats::react::parse::{TsxChild, TsxNode};
+use import::tokens::{color_distance, nearest, px_distance, type_distance};
 use import::{Category, Need, Tokens, Verdict};
+use plevir::{Capabilities, ColorRole, GenerationPolicy, SpacingToken, verify};
 use support::checks::*;
 use support::*;
-use plevir::{Capabilities, ColorRole, GenerationPolicy, SpacingToken, verify};
 
 /// Every construct of a react source: the component, each element with
 /// its attributes and conditional classes, each text and expression child,
@@ -394,7 +394,9 @@ fn the_tolerances_measured_on_hoff() {
     assert!(close(card.tolerance, 16.0));
     let pill = nearest(&t.shapes, &32.0, px_distance).expect("pill");
     assert!(close(pill.tolerance, 4.0));
-    let caption = t.type_of(plevir::TypographyRole::CaptionR).expect("caption_r");
+    let caption = t
+        .type_of(plevir::TypographyRole::CaptionR)
+        .expect("caption_r");
     let near = nearest(&t.typography, &caption, type_distance).expect("near");
     assert!(close(near.tolerance, 1.0));
 }

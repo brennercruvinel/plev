@@ -22,8 +22,8 @@ use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, IconSize, Theme};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::widgets::recipe::{glass_pill, inset_keylight};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// One row of a [`CardVariant::List`] (expense-tracker / download rows).
 #[derive(Clone, Debug)]

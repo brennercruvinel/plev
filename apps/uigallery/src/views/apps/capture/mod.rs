@@ -34,17 +34,17 @@ mod tests;
 
 use std::time::Duration;
 
-use engine::widgets::prelude::{
-    EventResult, ProgressBar, Rect, Switch, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
-};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::gpu::image::{ImageHandle, replace_image_rgba, stream_image_rgba};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::runtime::platform::capture::{
     Capture, CaptureSettings, CaptureState, DeviceKind, Frame, NoCapture,
 };
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::{ControlSize, Theme};
 use engine::runtime::window::Background;
+use engine::styling::theme::{ControlSize, Theme};
+use engine::widgets::prelude::{
+    EventResult, ProgressBar, Rect, Switch, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
+};
 
 use super::{EditKey, panel};
 use semantics::{Ids, bounds};

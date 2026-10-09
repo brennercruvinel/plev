@@ -3,8 +3,8 @@
 
 use std::ops::Range;
 
-use proptest::prelude::*;
 use editor::{Bias, Document, Rope, Selection, SelectionSet, Transaction};
+use proptest::prelude::*;
 
 /// Text mixing ASCII, Latin diacritics, CJK, ZWJ emoji and newlines.
 fn arb_text() -> impl Strategy<Value = String> {

@@ -19,12 +19,12 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use accord::{Actor, Rejection, Request, RequestId, Stage, StateRef, Value};
 use claude::ClaudeCli;
 use engine::drawing::compositor::Compositor;
-use accord::{Actor, Rejection, Request, RequestId, Stage, StateRef, Value};
 use serde_json::json;
-use tempfile::TempDir;
 use socket::{Act, AgentPort, Client, Config, Observe, Reply};
+use tempfile::TempDir;
 
 use super::super::SurfacePage;
 use super::super::asking::{Claude, POLL};
@@ -620,7 +620,9 @@ fn agent_proposes(
 
 fn state_of(reply: &socket::SnapshotReply, id: &str, key: &str) -> Option<Value> {
     let node = reply.nodes.iter().find(|n| n.id == sid(id))?;
-    node.state.get(&accord::StateKey::parse(key).unwrap()).cloned()
+    node.state
+        .get(&accord::StateKey::parse(key).unwrap())
+        .cloned()
 }
 
 /// Through the real port, no window: an agent chooses the Claude (the

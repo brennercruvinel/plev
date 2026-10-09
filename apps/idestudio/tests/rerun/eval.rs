@@ -17,11 +17,11 @@ use std::path::PathBuf;
 use std::sync::mpsc::{Receiver, channel};
 use std::time::Duration;
 
-use gitdrv::{GitClient, GitEvent};
-use idestudio::repository::eval_repo::Repo;
-use idestudio::capability::Workbench;
-use record::Session;
 use accord::{Actor, Millis, Receipt, Request, RequestId, Snapshot};
+use gitdrv::{GitClient, GitEvent};
+use idestudio::capability::Workbench;
+use idestudio::repository::eval_repo::Repo;
+use record::Session;
 
 use crate::harness::{Fixture, rerun};
 use crate::marks;

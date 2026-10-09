@@ -4,10 +4,10 @@
 //! active overlay, the open select, the chrome, the page, the page
 //! scroll), and the demo overlays the Dialog and Context Menu pages open.
 
-use engine::widgets::overlay::OverlayKind;
-use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
 use engine::control::input::FileDrop;
 use engine::styling::theme::Intent;
+use engine::widgets::overlay::OverlayKind;
+use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
 
 use accord::Value;
 

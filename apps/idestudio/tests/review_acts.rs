@@ -23,14 +23,14 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::drawing::compositor::Compositor;
-use gitdrv::GitEvent;
 use accord::{
     ActionName, Actor, Change, Receipt, ReceiptSink, Rejection, RequestId, SemId, Stage, StateRef,
     Value,
 };
-use support::{Rig, completed};
+use engine::drawing::compositor::Compositor;
+use gitdrv::GitEvent;
 use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use support::{Rig, completed};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("an id")

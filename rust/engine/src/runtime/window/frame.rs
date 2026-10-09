@@ -14,9 +14,9 @@ use crate::drawing::compositor::Compositor;
 use crate::drawing::effects::EffectProcessor;
 use crate::drawing::gpu::GpuContext;
 use crate::drawing::gpu::texture_pool::TexturePool;
+use crate::drawing::text::TextSystem;
 use crate::runtime::perf::gpu_time::FrameStamps;
 use crate::runtime::perf::stages::{self, Stage};
-use crate::drawing::text::TextSystem;
 
 use super::render_passes::{
     encode_composite_pass_timed, encode_layer_passes_timed, resolve_layer_text,
@@ -61,7 +61,14 @@ pub fn present_frame(
     // a loss wgpu only reports on a poll. Recover and draw on the new
     // device, or skip the frame.
     if gpu.poll_device_loss()
-        && !crate::drawing::gpu::recover_or_skip(compositor, gpu, text_system, effects, texture_pool, label)
+        && !crate::drawing::gpu::recover_or_skip(
+            compositor,
+            gpu,
+            text_system,
+            effects,
+            texture_pool,
+            label,
+        )
     {
         return None;
     }

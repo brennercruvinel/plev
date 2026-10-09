@@ -19,14 +19,14 @@
 //! engine refuses (the file's code changed since this build, the literal
 //! moved), are told in a toast and logged.
 
-use engine::widgets::form::{EditKey, TextField};
-use engine::widgets::prelude::{Rect, WidgetEvent};
+use accord::Actor;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::runtime::hot_reload::Site;
 use engine::runtime::hot_reload::literals::{self, Change, Refused};
 use engine::runtime::hot_reload::view_source::{self, Origin, origin_at, text_run_at};
 use engine::styling::theme::{Intent, Theme};
-use accord::Actor;
+use engine::widgets::form::{EditKey, TextField};
+use engine::widgets::prelude::{Rect, WidgetEvent};
 use winit::event::ElementState;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::WindowId;
@@ -327,10 +327,10 @@ mod tests {
     use std::path::Path;
     use std::time::{Duration, Instant};
 
-    use engine::widgets::prelude::WidgetEvent;
+    use accord::{SemId, Value};
     use engine::drawing::compositor::SceneNode;
     use engine::runtime::hot_reload::{literals, source_dirs};
-    use accord::{SemId, Value};
+    use engine::widgets::prelude::WidgetEvent;
 
     use super::*;
     use crate::views::ShowcaseView;

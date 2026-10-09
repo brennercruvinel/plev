@@ -28,7 +28,6 @@
 //! nothing leaves the machine. Without the variable nothing is created: no
 //! recorder, no directory, no key.
 
-
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -187,7 +186,9 @@ impl Recording {
 
 #[cfg(test)]
 mod tests {
-    use engine::control::keymap::{ActionRegistry, ContextStack, KeyContext, Keymap, KeymapMatcher};
+    use engine::control::keymap::{
+        ActionRegistry, ContextStack, KeyContext, Keymap, KeymapMatcher,
+    };
     use engine::control::keymap::{Keystroke, MatchResult};
 
     use super::{SAVE_KEYS, bind_keys};

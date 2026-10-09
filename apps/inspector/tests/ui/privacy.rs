@@ -10,14 +10,14 @@
 //!   port or into a prompt: the view sends nothing anywhere (its sources
 //!   name no socket, no process, no port, no bridge: `readonly.rs`).
 
-use engine::drawing::compositor::SceneNode;
-use engine::drawing::gpu::ImageHandle;
-use inspector::{InspectorView, Key};
-use record::{Limits, Recorder};
 use accord::{
     Actor, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec, Request, RequestId,
     Role, SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };
+use engine::drawing::compositor::SceneNode;
+use engine::drawing::gpu::ImageHandle;
+use inspector::{InspectorView, Key};
+use record::{Limits, Recorder};
 
 use crate::support::{Fallible, draw, id, nodes, open, texts};
 

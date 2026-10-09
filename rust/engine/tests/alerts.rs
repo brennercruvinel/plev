@@ -8,12 +8,12 @@
 
 use std::sync::{Arc, Mutex};
 
-use engine::runtime::platform::alerts::{
-    Alert, AlertKind, Alerts, Answered, Confirm, Dialog, FakeAlerts, Level, NoAlerts,
-};
 use accord::{
     Actor, Actors, Confirm as Policy, Dispatcher, Execution, Operable, Outcome, Policy as Care,
     Rejection, Request, RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, Stage, Value,
+};
+use engine::runtime::platform::alerts::{
+    Alert, AlertKind, Alerts, Answered, Confirm, Dialog, FakeAlerts, Level, NoAlerts,
 };
 
 fn sid(text: &str) -> SemId {

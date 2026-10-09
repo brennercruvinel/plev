@@ -28,8 +28,8 @@ use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::TessellatedPath;
 
-use crate::timeline::{AssetId, Depth, Node, NodeId, NodeKind, Prop, Props, Value};
 use crate::mappings::lower::LoweredAsset;
+use crate::timeline::{AssetId, Depth, Node, NodeId, NodeKind, Prop, Props, Value};
 
 /// The most assets one bank holds and the most nodes one raised scene
 /// holds: the container counts both with a u16 (asset table, keyframe

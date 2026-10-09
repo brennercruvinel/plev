@@ -3,9 +3,9 @@
 //! the compositor seam: lowered scenes feed Compositor::resolve_scene
 //! headless, where the dirty hash makes unchanged pushes free.
 
-use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Timeline, Value};
 use crate::mappings::lower::{LoweredAsset, lower_node, lower_scene};
 use crate::play::MonsterPlayer;
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Timeline, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::TessellatedPath;

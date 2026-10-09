@@ -39,9 +39,11 @@ use std::str::FromStr;
 use plevir::{Axis, Component, Ir, IrNode, Layout, Surface};
 
 use crate::ParserError;
-use crate::tree::{Arg, DropKind, NoteKind, ParserNode, Resolution, Src, Tag, TextValue, snake_case};
 use crate::report::{Binding, Ledger, Need, Report, Verdict};
 use crate::tokens::{Tokens, color_distance, role_named};
+use crate::tree::{
+    Arg, DropKind, NoteKind, ParserNode, Resolution, Src, Tag, TextValue, snake_case,
+};
 use control::{Control, infer};
 use props::{Decision, flex, num};
 

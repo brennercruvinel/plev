@@ -15,8 +15,8 @@ use crate::styling::theme::{Elevation, Intent, Theme};
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::{Button, ButtonVariant};
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::recipe::{glass_pill, inset_keylight, shadow_stack};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Title: the HOFF `=title` mixin.
 fn title_style(theme: &Theme) -> TextStyle {

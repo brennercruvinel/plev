@@ -15,16 +15,16 @@
 #[allow(dead_code)]
 mod support;
 
-use proptest::prelude::*;
-use proptest::sample::select;
 use accord::{ActionName, SemId, StateRef};
-use serde_json::Value;
-use support::caps;
 use plevir::{
     Align, Axis, CapabilityRef, ColorRole, Component, ControlSize, Elevation, GenerationPolicy, Ir,
     IrNode, Layout, Props, Repeat, Rule, ShapeRole, Size, SizeToken, SpacingToken, Surface,
     TypographyRole, decode, names, schema, verify,
 };
+use proptest::prelude::*;
+use proptest::sample::select;
+use serde_json::Value;
+use support::caps;
 
 const IDS: &[&str] = &[
     "commit.submit",

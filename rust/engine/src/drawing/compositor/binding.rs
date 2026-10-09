@@ -13,9 +13,9 @@
 //!
 //! See docs/ADR/semantic-binding-beside-the-scene.md.
 
+use accord::SemId;
 use indexmap::IndexMap;
 use rustc_hash::{FxBuildHasher, FxHashSet};
-use accord::SemId;
 
 use super::clip::{ClipRect, ClipStack, intersect_rects};
 use super::{Compositor, LayerId, SceneNode};

@@ -1,9 +1,9 @@
 //! Counter lifecycle + color palette + layout constants.
 
 use engine::compose::view::Lifecycle;
+use engine::compose::view::ViewContext;
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::text::TextStyle;
-use engine::compose::view::ViewContext;
 
 // --- Color palette --------------------------------------------------------
 

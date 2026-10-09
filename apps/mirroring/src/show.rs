@@ -17,8 +17,9 @@
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 
-use engine::runtime::window::Windows;
 use accord::{SemId, Stage};
+use engine::runtime::window::Windows;
+use socket::{Client, ServerMsg};
 use uigallery::shell::window::mirror::{Hand, Viewer, said};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
@@ -26,7 +27,6 @@ use winit::event::{ElementState, MouseButton, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{WindowAttributes, WindowId};
-use socket::{Client, ServerMsg};
 
 use crate::cli::{self, NAME, Opts};
 

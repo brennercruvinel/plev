@@ -33,21 +33,21 @@
 
 use std::path::{Path, PathBuf};
 
-use engine::widgets::content::{Avatar, CodeBlock, CodeLine};
-use engine::widgets::nav::PanelHeader;
+use accord::{Actor, Millis, SemId, Stage, Value};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::widgets::content::{Avatar, CodeBlock, CodeLine};
+use engine::widgets::nav::PanelHeader;
 use gitdrv::GitEvent;
 use idestudio::repository::eval_repo::REVIEWED;
 use record::{InputKind, Kind, Limits, Recorder, Session};
-use accord::{Actor, Millis, SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
 use crate::args::Args;
-use crate::subject::Bench;
 use crate::host::Log;
 use crate::repo::Repo;
 use crate::report::{self, DONE, ERROR, row};
+use crate::subject::Bench;
 
 /// what the person writes in the intent line.
 pub const INTENT: &str = "review these three commits";

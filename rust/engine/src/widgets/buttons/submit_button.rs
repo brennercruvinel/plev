@@ -13,8 +13,8 @@ use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::IconButtonSize;
 use super::press::{Press, paint_surface};
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::icons;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 #[derive(Clone, Debug)]
 pub struct SubmitButton {

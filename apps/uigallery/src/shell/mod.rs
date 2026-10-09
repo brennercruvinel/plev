@@ -33,12 +33,12 @@ pub mod system;
 pub mod window;
 
 use crate::views::ShowcaseView;
-use engine::widgets::prelude::WidgetEvent;
 use engine::compose::animation::FrameClock;
 use engine::drawing::gpu::GpuContext;
 #[cfg(test)]
 use engine::runtime::window::WindowHost;
 use engine::runtime::window::Windows;
+use engine::widgets::prelude::WidgetEvent;
 use winit::application::ApplicationHandler;
 use winit::event::{StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
@@ -157,7 +157,8 @@ impl App {
     /// source reads it once the window is up (`links.rs`).
     fn launch_view(args: impl Iterator<Item = String>) -> ShowcaseView {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        let mut args = args.filter(|a| !engine::runtime::platform::links::is_link(a, system::links::SCHEME));
+        let mut args =
+            args.filter(|a| !engine::runtime::platform::links::is_link(a, system::links::SCHEME));
         if let Some(page) = args.next() {
             view.jump_to_page(&page);
         }
@@ -323,7 +324,10 @@ impl App {
             && let Some(port) = self.access.agent.as_mut()
             && let Some(host) = self.windows.get(shown_in)
         {
-            let recorder = self.recording.as_ref().map(window::record::Recording::recorder);
+            let recorder = self
+                .recording
+                .as_ref()
+                .map(window::record::Recording::recorder);
             if self
                 .view
                 .serve_agent_recorded(port, host.compositor(), recorder)
@@ -553,17 +557,5 @@ pub use window::entry::showcase_ios_main;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use window::headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
 
-
-
-
-
-
-
-
-
-
-
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use window::access::Access;
-
-

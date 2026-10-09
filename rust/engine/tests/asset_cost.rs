@@ -21,8 +21,8 @@ use std::time::{Duration, Instant};
 
 use engine::drawing::effects::EffectProcessor;
 use engine::drawing::gpu::{GpuContext, RenderConfig};
-use engine::runtime::perf::process_rss_bytes;
 use engine::drawing::text::{TextMeasurer, TextSystem};
+use engine::runtime::perf::process_rss_bytes;
 use wgpu::naga;
 
 /// Repetitions of a CPU step; the best one is reported.

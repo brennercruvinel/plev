@@ -7,12 +7,12 @@
 //! as its `todo.item[<id>]`, each pill as its `todo.filter[..]`; the field
 //! binds itself as `todo.input`.
 
-use engine::widgets::icons;
-use engine::widgets::prelude::{Rect, glass_pill, rounded_rect};
+use crate::domain::todo::Filter;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
-use crate::domain::todo::Filter;
+use engine::widgets::icons;
+use engine::widgets::prelude::{Rect, glass_pill, rounded_rect};
 
 use super::TodoPage;
 use super::layout::*;

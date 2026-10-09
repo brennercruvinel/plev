@@ -11,9 +11,9 @@
 mod support;
 
 use accord::{ActionName, Actor, Request, Snapshot, SnapshotBuilder};
-use support::{REVIEW_SILENCES, SILENCES, copy, id, page, snapshot, verified_local};
-use screen::{SurfaceError, SurfaceHost};
 use plevir::Op;
+use screen::{SurfaceError, SurfaceHost};
+use support::{REVIEW_SILENCES, SILENCES, copy, id, page, snapshot, verified_local};
 
 const COMPOSITE: &str = "preview_segment_then_apply_cut";
 

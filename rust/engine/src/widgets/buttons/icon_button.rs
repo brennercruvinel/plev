@@ -12,8 +12,8 @@ use crate::styling::theme::{ButtonRecipe, IconButtonMetrics, Intent, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::press::{Press, paint_surface};
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::icons;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum IconButtonVariant {

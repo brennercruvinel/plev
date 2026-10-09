@@ -9,7 +9,9 @@
 //! the app projected them with. `revision` builds that throwaway snapshot
 //! only to hash it (the revision ignores `source`).
 
-use accord::{Change, Node, Revision, SemErrors, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
+use accord::{
+    Change, Node, Revision, SemErrors, SemId, Snapshot, SnapshotBuilder, StateRef, Value,
+};
 
 use crate::error::ReadError;
 

@@ -11,17 +11,17 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::widgets::form::EditKey;
-use engine::widgets::{Rect, Wake, WidgetEvent};
+use accord::{Actor, Rejection, Request, SemId, SnapshotBuilder, Stage, StateRef, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
-use accord::{Actor, Rejection, Request, SemId, SnapshotBuilder, Stage, StateRef, Value};
+use engine::widgets::form::EditKey;
+use engine::widgets::{Rect, Wake, WidgetEvent};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
+use screen::{Dispatch, Surface, SurfaceHost};
 use support::{
     App, MIXER_LEFT, MIXER_RIGHT, SHOWCASE, TODO, TURN, id, mixer, page, settle, snapshot,
     verified, verified_local,
 };
-use screen::{Dispatch, Surface, SurfaceHost};
-use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 const AREA: Rect = Rect {
     x: 40.0,

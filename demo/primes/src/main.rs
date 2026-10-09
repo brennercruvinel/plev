@@ -15,13 +15,13 @@ mod scene;
 
 use std::sync::Arc;
 
-use engine::styling::color::Color;
 use engine::drawing::compositor::{Compositor, ResolveResources};
 use engine::drawing::effects::EffectProcessor;
 use engine::drawing::gpu::GpuContext;
 use engine::drawing::gpu::texture_pool::TexturePool;
 use engine::drawing::text::TextSystem;
 use engine::runtime::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::styling::color::Color;
 use primes::simulation::{Simulation, parameters};
 use web_time::Instant;
 use winit::application::ApplicationHandler;

@@ -6,12 +6,12 @@
 //! the tray following a moved projection (an item disabled, an item gone),
 //! and the target without a tray.
 
-use engine::runtime::platform::menu::{Clicked, MenuItem, Predefined, Submenu};
-use engine::runtime::platform::tray::{FakeTray, NoTray, Tray, TrayError, TrayImage, TrayModel};
 use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Stage, Value,
 };
+use engine::runtime::platform::menu::{Clicked, MenuItem, Predefined, Submenu};
+use engine::runtime::platform::tray::{FakeTray, NoTray, Tray, TrayError, TrayImage, TrayModel};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("a valid id")

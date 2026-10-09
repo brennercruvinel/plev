@@ -4,15 +4,15 @@ pub mod gesture;
 pub mod scroll;
 pub mod touch;
 
+mod events;
 mod handlers;
 mod hit_test;
 #[cfg(test)]
 mod tests;
-mod events;
 
 pub use drop::FileDrop;
-pub use touch::{SyntheticPointerEvent, TouchPointerSynth};
 pub use events::*;
+pub use touch::{SyntheticPointerEvent, TouchPointerSynth};
 
 pub struct InputState {
     next_id: u64,

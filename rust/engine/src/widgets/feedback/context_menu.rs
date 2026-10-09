@@ -8,14 +8,14 @@
 //! each item to the rects it draws and hit-tests them with, and
 //! [`ContextMenu::project`] declares the menu in a semantic projection.
 
-use crate::widgets::icons;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, IconSize, Intent, Theme};
+use crate::widgets::icons;
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::widgets::recipe::{inset_keylight, menu_shadow, rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
 /// The per-theme geometry the size, the hit test and the render share.
 struct Metrics {

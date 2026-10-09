@@ -3,13 +3,13 @@
 //! unmeasured warm-up turns run the interaction once the caches and GPU
 //! buffers have grown, then every measured turn is one sample.
 
-use engine::widgets::editor::EditorView;
-use engine::widgets::prelude::WidgetEvent;
-use engine::runtime::platform::clipboard::LocalClipboard;
+use editor::Document;
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Renderer, Viewport};
+use engine::runtime::platform::clipboard::LocalClipboard;
 use engine::styling::theme::Theme;
-use editor::Document;
+use engine::widgets::editor::EditorView;
+use engine::widgets::prelude::WidgetEvent;
 use uigallery::views::ShowcaseView;
 use winit::keyboard::NamedKey;
 

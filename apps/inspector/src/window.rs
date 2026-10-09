@@ -6,8 +6,8 @@
 
 use std::sync::Arc;
 
-use engine::widgets::content::CodeBlock;
 use engine::runtime::window::WindowHost;
+use engine::widgets::content::CodeBlock;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::dpi::LogicalSize;
 use engine::winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};

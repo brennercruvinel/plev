@@ -3,7 +3,7 @@
 
 use engine::styling::theme::Theme;
 
-use super::super::apps::{todo, builder, capture, dock, editor, files, git, silences, surface};
+use super::super::apps::{builder, capture, dock, editor, files, git, silences, surface, todo};
 use super::super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,

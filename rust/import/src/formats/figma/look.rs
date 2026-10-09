@@ -6,8 +6,8 @@
 use serde_json::Value;
 
 use super::resolve::Ctx;
-use crate::formats::react::css::color_token;
 use crate::formats::figma::parse::FigNode;
+use crate::formats::react::css::color_token;
 use crate::tree::{Arg, Prop, Src};
 
 /// A paint as the builder's color expression, or why it has none.

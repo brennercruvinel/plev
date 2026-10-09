@@ -4,9 +4,9 @@
 //! builders and the header parser from here.
 
 use crate::encoding::container::{self, Asset, AssetKind, DeltaOp, Desc, SEC_DELTA};
+use crate::encoding::write::{WriteError, encode};
 use crate::timeline::easing::{Easing, EasingTable};
 use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
-use crate::encoding::write::{WriteError, encode};
 
 pub(crate) fn scalar(v: f32) -> Value {
     Value::Scalar(v)

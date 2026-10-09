@@ -6,7 +6,9 @@
 #[cfg(test)]
 mod mask;
 
-use engine::drawing::compositor::{Compositor, LayerEffect, LayerId, QuadVertex, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{
+    Compositor, LayerEffect, LayerId, QuadVertex, SceneNode, TextNodeKey,
+};
 use engine::drawing::gpu::load_image_rgba;
 use engine::drawing::path::TessellatedPath;
 

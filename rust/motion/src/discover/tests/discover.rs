@@ -6,16 +6,16 @@
 //! op discovery (place/replace/remove, pins) lives in
 //! tests_discover_ops, which borrows the helpers from here.
 
-use crate::discover::{DiscoverConfig, DiscoverError, discover};
 use crate::discover::fit::quantize_value;
-use crate::timeline::easing::Easing;
-use crate::timeline::{IrError, Node, NodeKind, Prop, Props, Segment, Timeline, Value};
-use crate::mappings::lower::lower_scene;
-use crate::play::MonsterPlayer;
+use crate::discover::{DiscoverConfig, DiscoverError, discover};
 use crate::encoding::quantize;
 use crate::encoding::read::decode;
 use crate::encoding::tests::write::rect;
 use crate::encoding::write::encode;
+use crate::mappings::lower::lower_scene;
+use crate::play::MonsterPlayer;
+use crate::timeline::easing::Easing;
+use crate::timeline::{IrError, Node, NodeKind, Prop, Props, Segment, Timeline, Value};
 use engine::drawing::compositor::SceneNode;
 
 pub(crate) fn cfg(keyframe_every_s: f32, scalar_jump: f32) -> DiscoverConfig {

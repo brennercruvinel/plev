@@ -1,9 +1,9 @@
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::compose::layout::{LayoutEngine, LayoutItem, LayoutStyle};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::path::PathBuilder;
-use engine::runtime::signal::create_signal;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::runtime::signal::create_signal;
 
 // ---------------------------------------------------------------------------
 // Group 1: Scene construction (push_rects)

@@ -19,15 +19,15 @@
 
 use std::collections::HashMap;
 
+use crate::domain::silences::{Decision, TEST_VIDEO, Video};
+use accord::{SemId, Value};
 use engine::drawing::gpu::image::ImageHandle;
 use engine::runtime::window::Background;
-use accord::{SemId, Value};
-use crate::domain::silences::{Decision, TEST_VIDEO, Video};
 use screen::Frames;
 
+use super::super::{Said, SilencesPage};
 use super::semantics::{count, micros, ms};
 use super::worker::{Done, Job};
-use super::super::{Said, SilencesPage};
 use crate::views::apps::todo::TodoPage;
 
 /// The frame ref of the instant `t` of the media node `video`.
@@ -192,8 +192,8 @@ impl SilencesPage {
 
 #[cfg(test)]
 mod tests {
-    use accord::{Actor, Request, Stage};
     use crate::domain::silences::{PROBE_STDERR, parse};
+    use accord::{Actor, Request, Stage};
 
     use super::super::worker::Worker;
     use super::*;

@@ -11,11 +11,13 @@
 //! task-75 phase 2a a person with a screen reader hears which preference
 //! is on, in the reader's snapshot alone.
 
-use engine::control::accessibility::accesskit::{Action, ActionRequest, Toggled, TreeId, TreeUpdate};
+use accord::{Actor, Rejection, Request, Stage, Value};
+use engine::control::accessibility::accesskit::{
+    Action, ActionRequest, Toggled, TreeId, TreeUpdate,
+};
 use engine::control::accessibility::{self, Assist, Chrome, Shown};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
-use accord::{Actor, Rejection, Request, Stage, Value};
 use plevir::{Preference, Preferences};
 
 use super::super::super::SilencesPage;

@@ -1,12 +1,12 @@
-use crate::widgets::icons;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{IconSize, Theme};
+use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::list::reachable;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::widgets::recipe::focus_ring_inside;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// The per-theme geometry the hit test and the render share: a dense
 /// base-2r row (line box plus `xs` above and below), one `lg` step of

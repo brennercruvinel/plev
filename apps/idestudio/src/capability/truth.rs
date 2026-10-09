@@ -7,8 +7,8 @@
 
 use std::collections::BTreeSet;
 
-use gitdrv::{GitEvent, NewCommit};
 use accord::{Change, Outcome, Rejection, RequestId, StateRef, Value};
+use gitdrv::{GitEvent, NewCommit};
 
 use super::Workbench;
 

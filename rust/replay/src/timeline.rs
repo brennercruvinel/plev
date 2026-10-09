@@ -1,8 +1,8 @@
 //! the timeline: every event of the session, one entry each, with its
 //! time from the start, and the tallies by kind and by actor.
 
-use record::{InputKind, Kind};
 use accord::{ActionName, Actor, Millis, RequestId, Revision, SemId};
+use record::{InputKind, Kind};
 
 use crate::describe;
 use crate::index::{Inspector, Stamp};

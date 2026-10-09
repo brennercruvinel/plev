@@ -4,8 +4,8 @@
 //! `<script>`) and the attributes a node carries.
 
 use super::resolve::{Ctx, FRAME, SCRIPT, Styled, label};
-use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlNode};
 use crate::formats::html::css::{self, Selector};
+use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlNode};
 use crate::tree::{Attr, Dropped, Src};
 
 /// The selectors of a list, split on the commas outside parentheses.
@@ -43,10 +43,8 @@ impl Ctx<'_> {
                 continue;
             }
             let parts = split_list(&rule.selector);
-            let simple: Vec<Selector> = parts
-                .iter()
-                .filter_map(|p| css::selector(p).ok())
-                .collect();
+            let simple: Vec<Selector> =
+                parts.iter().filter_map(|p| css::selector(p).ok()).collect();
             for part in &parts {
                 if let Err(why) = css::selector(part) {
                     let covers = if simple.is_empty() {

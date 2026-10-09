@@ -4,8 +4,8 @@
 //! the todo's dispatcher, by whoever acted, and the fixed todo shows it,
 //! and back; a change of form keeps each item's instance.
 
-use engine::widgets::prelude::WidgetEvent;
 use accord::{Actor, Request, SemId, Stage, Value};
+use engine::widgets::prelude::WidgetEvent;
 
 use super::super::{FORMS, SurfacePage};
 use super::{center, click, frame, settle, setup, sid, text, value, wide};

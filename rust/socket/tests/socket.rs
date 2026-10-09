@@ -21,11 +21,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::{ActionName, Actor, Rejection, SemId, Stage, Value};
-use support::toy::ToyHost;
 use socket::{
     Act, AgentPort, Client, Config, MAX_LINE, Observe, ProtoError, Reply, WireError, find,
     socket_path,
 };
+use support::toy::ToyHost;
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).unwrap()

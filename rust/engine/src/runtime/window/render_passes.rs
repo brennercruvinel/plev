@@ -448,7 +448,8 @@ impl super::host::WindowHost {
         texture_pool: &mut crate::drawing::gpu::texture_pool::TexturePool,
         encoder: &mut wgpu::CommandEncoder,
     ) -> Vec<(crate::drawing::compositor::LayerId, wgpu::BindGroup)> {
-        let mut effect_results: Vec<(crate::drawing::compositor::LayerId, wgpu::BindGroup)> = Vec::new();
+        let mut effect_results: Vec<(crate::drawing::compositor::LayerId, wgpu::BindGroup)> =
+            Vec::new();
         let sw = gpu.surface_config.width;
         let sh = gpu.surface_config.height;
 
@@ -476,7 +477,8 @@ impl super::host::WindowHost {
                 );
                 continue;
             };
-            let mut current_view_owner: Option<crate::drawing::gpu::texture_pool::TextureHandle> = None;
+            let mut current_view_owner: Option<crate::drawing::gpu::texture_pool::TextureHandle> =
+                None;
 
             for effect in effects {
                 let sv = current_view_owner

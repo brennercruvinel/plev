@@ -4,9 +4,9 @@
 
 mod asset_path;
 mod golden;
-mod read;
-mod read_malformed;
-pub(crate) mod write;
 pub(crate) mod operations;
 mod properties;
 mod quantize;
+mod read;
+mod read_malformed;
+pub(crate) mod write;

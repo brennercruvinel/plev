@@ -58,8 +58,8 @@
 //! - focus is the snapshot's `focused`, or the window.
 
 use accesskit::{Action, Live, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
-use rustc_hash::{FxHashMap, FxHashSet};
 use accord::{Node, Role, SemId, Snapshot, StateKey, Value};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use super::action;
 use super::ids::{NodeIds, ROOT};

@@ -4,7 +4,6 @@
 
 pub mod dock;
 pub mod silences;
-pub mod todo;
 #[cfg(test)]
 mod tests;
-
+pub mod todo;

@@ -1,9 +1,9 @@
 //! The git section where no git worker can run (web, mobile): one line
 //! saying so, same contract as the desktop section.
 
-use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::super::text;
 use super::{GitWake, NavKey};

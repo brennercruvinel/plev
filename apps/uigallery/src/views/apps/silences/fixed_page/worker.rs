@@ -21,8 +21,8 @@ use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::time::Duration;
 
-use engine::drawing::gpu::image::ImageHandle;
 use crate::domain::silences::{Detected, Settings, TEST_VIDEO};
+use engine::drawing::gpu::image::ImageHandle;
 
 /// How often the page looks at the channel while a job runs.
 pub(crate) const POLL: Duration = Duration::from_millis(100);
@@ -291,8 +291,8 @@ mod child {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::drawing::gpu::image::{ImageHandle, load_image_bytes};
     use crate::domain::silences::{Detected, Settings, parse};
+    use engine::drawing::gpu::image::{ImageHandle, load_image_bytes};
 
     use super::{Done, Job};
 

@@ -25,9 +25,9 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
+use accord::{Receipt, ReceiptSink, SemId, Stage, Value};
 use engine::runtime::platform::menu::locked;
 use engine::runtime::platform::notify::{Action, Notification, Notifier, default_notifier};
-use accord::{Receipt, ReceiptSink, SemId, Stage, Value};
 use winit::window::WindowId;
 
 use super::super::{App, UserEvent};
@@ -207,10 +207,10 @@ fn show_action(view: &ShowcaseView) -> Option<Action> {
 mod tests {
     use std::sync::{Arc, Mutex};
 
+    use accord::{Actor, Request, SemId, Value};
     use engine::control::input::FileDrop;
     use engine::runtime::platform::menu::locked;
     use engine::runtime::platform::notify::{FakeNotifier, Level};
-    use accord::{Actor, Request, SemId, Value};
     use winit::window::WindowId;
 
     use super::super::super::App;

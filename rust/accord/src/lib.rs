@@ -101,12 +101,10 @@
 //!
 //! the crate is pure data: no gpu, no window, no text stack.
 
-mod dispatch;
-mod snapshot;
-mod validate;
 mod assembly;
 mod controls;
 mod decision;
+mod dispatch;
 mod encoding;
 mod failures;
 mod identity;
@@ -118,20 +116,22 @@ mod receipts;
 pub mod redactor;
 mod requests;
 mod revision;
+mod snapshot;
 mod taxonomy;
+mod validate;
 
 pub use assembly::{ActionBuilder, NodeBuilder, Semantics, SnapshotBuilder};
+pub use controls::{Node, Source};
 pub use decision::{Acted, Rejection, Verdict, check};
-pub use manifest::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
-pub use mutation::Change;
 pub use dispatch::{DEFAULT_RETENTION, Dispatcher, Execution, Operable, ReceiptSink};
 pub use failures::{SemError, SemErrors};
-pub use revision::Revision;
 pub use identity::SemId;
+pub use manifest::{ActionDecl, Actors, Confirm, Constraints, ParamSpec, Policy};
+pub use mutation::Change;
 pub use notation::{ActionName, StateKey};
-pub use controls::{Node, Source};
+pub use property::{StateRef, Value, ValueKind};
 pub use receipts::{Mark, Millis, Outcome, Receipt, RequestId, Stage};
 pub use requests::{Actor, Observation, Request};
-pub use taxonomy::Role;
+pub use revision::Revision;
 pub use snapshot::Snapshot;
-pub use property::{StateRef, Value, ValueKind};
+pub use taxonomy::Role;

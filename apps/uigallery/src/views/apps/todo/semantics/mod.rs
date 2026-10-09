@@ -23,13 +23,13 @@
 //! item's `text` (the IR names an instance by its item, the id, and does
 //! not interpolate a label).
 
-use engine::widgets::prelude::{EventResult, Rect};
-use engine::runtime::perf::stages::{self, Stage};
+use crate::domain::todo::Filter;
 use accord::{
     Actor, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemError, SemErrors,
     SemId, Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use crate::domain::todo::Filter;
+use engine::runtime::perf::stages::{self, Stage};
+use engine::widgets::prelude::{EventResult, Rect};
 
 use super::TodoPage;
 use super::layout::ROW_H;

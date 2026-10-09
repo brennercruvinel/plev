@@ -11,9 +11,9 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::{ClusterBox, TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 
-use crate::widgets::widget::{Rect, WidgetEvent};
 use crate::widgets::form::text_input::*;
 use crate::widgets::form::{EditKey, TextField};
+use crate::widgets::widget::{Rect, WidgetEvent};
 
 const MIXED_HEBREW: &str = "abc אבג def";
 const MIXED_ARABIC: &str = "hello مرحبا 123 world";

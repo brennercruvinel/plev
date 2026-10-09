@@ -9,13 +9,13 @@
 //! structure the Claude proposed, its sliders now with their label and
 //! value, its durations with two decimals at most, its rows inside.
 
-use engine::widgets::prelude::Rect;
+use crate::domain::silences::{PROBE_STDERR, parse};
+use accord::Snapshot;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
-use accord::Snapshot;
-use crate::domain::silences::{PROBE_STDERR, parse};
+use engine::widgets::prelude::Rect;
 
 use super::super::super::fixed_page::worker::Worker;
 use super::super::{TURN, frame, images, narrow, setup, sid};

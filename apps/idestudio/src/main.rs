@@ -86,9 +86,9 @@ use engine::drawing::gpu::GpuContext;
 use engine::drawing::gpu::texture_pool::TexturePool;
 use engine::drawing::text::TextSystem;
 use gitdrv::{GitClient, GitEvent};
-use idestudio::interfaces::window::record::Recording;
-use idestudio::interfaces::panels::layout::Side;
 use idestudio::capability::Workbench;
+use idestudio::interfaces::panels::layout::Side;
+use idestudio::interfaces::window::record::Recording;
 use record::InputKind;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
@@ -268,7 +268,8 @@ impl ApplicationHandler<AppEvent> for App {
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects =
+            engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = GpuState::Ready {
             gpu,
             text_system,

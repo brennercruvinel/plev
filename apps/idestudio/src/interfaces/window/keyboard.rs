@@ -4,9 +4,11 @@
 //! name -> registry), and the actions that act on a capability through
 //! the workbench.
 
-use engine::widgets::form::{ClipKey, EditKey};
-use engine::control::keymap::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
+use engine::control::keymap::{
+    Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event,
+};
 use engine::runtime::platform::clipboard::default_clipboard;
+use engine::widgets::form::{ClipKey, EditKey};
 use record::InputKind;
 use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;

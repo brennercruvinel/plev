@@ -1,7 +1,7 @@
 //! `SemId`: canonical form, roundtrip, rejections, escapes.
 
-use proptest::prelude::*;
 use accord::{SemError, SemId};
+use proptest::prelude::*;
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("valid id")

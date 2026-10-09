@@ -18,13 +18,13 @@
 
 use std::time::Duration;
 
+use accord::{Actor, Execution, NodeBuilder, Outcome, RequestId, SemId, Snapshot, Value};
 use offers::{
     Adapt, Adaptation, ProposeError, Rules, Transformed, Transformer, reads_as_change,
     transform_verified,
 };
-use accord::{Actor, Execution, NodeBuilder, Outcome, RequestId, SemId, Snapshot, Value};
-use screen::{Change, SurfaceHost};
 use plevir::{Capabilities, Op};
+use screen::{Change, SurfaceHost};
 
 use super::super::asking::{Job, Pending};
 use super::{Proposer, Proposing, Said, int, usd};

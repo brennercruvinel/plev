@@ -23,8 +23,8 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::process::Command;
 
-use record::Session;
 use accord::{SemId, StateRef, Value};
+use record::Session;
 use serde_json::Value as Json;
 
 /// how long one run may take before the test fails it.
@@ -511,7 +511,10 @@ fn after_the_look_the_person_comes_too_late_for_the_chained_submit() {
     // right after a look, acts on the look of its recovery. the agent then
     // sees the file out, puts it back and commits: the check was not
     // exercised by the person, and the measurement says why.
-    let run = chained("agenteval-chain-late", "unstage-after-observe:src/session.rs");
+    let run = chained(
+        "agenteval-chain-late",
+        "unstage-after-observe:src/session.rs",
+    );
     commits_the_task(&run);
 
     assert_eq!(run.str("intervention.trigger"), "observation served");

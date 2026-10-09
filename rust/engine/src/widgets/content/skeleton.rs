@@ -10,8 +10,8 @@
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 
-use crate::widgets::widget::{Rect, mix};
 use crate::widgets::recipe::rounded_rect;
+use crate::widgets::widget::{Rect, mix};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum SkeletonShape {

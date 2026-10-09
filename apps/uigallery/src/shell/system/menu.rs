@@ -22,10 +22,10 @@
 
 use std::sync::Mutex;
 
+use accord::{Role, SemId, Snapshot};
 use engine::runtime::platform::menu::{
     MenuItem, MenuModel, NativeMenu, Predefined, Shortcut, Submenu, default_menu,
 };
-use accord::{Role, SemId, Snapshot};
 
 use super::super::{App, UserEvent, system::print, window::record};
 use crate::views::ShowcaseView;
@@ -265,8 +265,8 @@ fn page_label(gallery: &Snapshot, item: &MenuItem) -> String {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::runtime::platform::menu::{Entry, FakeMenu, MenuItem, MenuModel, Shortcut, locked};
     use accord::{SemId, Value};
+    use engine::runtime::platform::menu::{Entry, FakeMenu, MenuItem, MenuModel, Shortcut, locked};
 
     use super::super::super::{App, window::record};
     use crate::views::{PAGES, ShowcaseView};
@@ -351,9 +351,11 @@ mod tests {
         let (mut app, fake) = app("Todo");
         let before = shown(&fake);
         let theme = app.view.theme.clone();
-        app.view
-            .toasts
-            .push("saved", engine::widgets::prelude::Intent::Constructive, &theme);
+        app.view.toasts.push(
+            "saved",
+            engine::widgets::prelude::Intent::Constructive,
+            &theme,
+        );
         app.sync_menu();
         let bar = shown(&fake);
         assert!(bar.find(&sid("toasts[0]"), "dismiss", None).is_none());

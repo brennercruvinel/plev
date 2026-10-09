@@ -2,11 +2,11 @@
 //! draws the shared accent focus ring when focused, skips it when not,
 //! and disabled controls refuse focus entirely.
 
-use crate::widgets::widget::*;
-use crate::widgets::prelude::*;
-use crate::widgets::recipe::*;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
+use crate::widgets::prelude::*;
+use crate::widgets::recipe::*;
+use crate::widgets::widget::*;
 
 const B: Rect = Rect {
     x: 40.0,

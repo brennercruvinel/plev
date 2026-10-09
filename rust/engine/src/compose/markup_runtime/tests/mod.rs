@@ -5,7 +5,6 @@ mod extraction;
 use super::*;
 use crate::compose::view::{View, ViewContext};
 
-
 fn render(el: &Element) -> Vec<crate::drawing::compositor::SceneNode> {
     el.render(&mut ViewContext::new(800.0, 600.0))
 }

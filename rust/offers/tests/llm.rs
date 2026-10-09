@@ -13,8 +13,8 @@ mod support;
 use std::collections::VecDeque;
 
 use offers::{Llm, Model, ModelError, ProposeError, prompt, propose_verified};
-use support::{Asking, compact, todo, verified};
 use plevir::{Capabilities, Component, IrError, verify_json};
+use support::{Asking, compact, todo, verified};
 
 /// A model that answers from a script and keeps every prompt it read.
 #[derive(Default)]

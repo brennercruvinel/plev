@@ -30,11 +30,11 @@ use std::collections::{HashMap, VecDeque};
 use std::mem::size_of;
 use std::sync::Arc;
 
+use accord::Millis;
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
 use engine::drawing::gpu::ImageHandle;
 use engine::drawing::path::TessellatedPath;
 use motion::{AssetBank, DiscoverConfig, LoweredAsset, Node, RaiseError, Unsupported};
-use accord::Millis;
 
 use crate::bound::{self, Bound, Step, Steps, Taken};
 use crate::error::FrameError;

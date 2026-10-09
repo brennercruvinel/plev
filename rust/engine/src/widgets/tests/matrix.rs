@@ -7,8 +7,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::prelude::*;
+use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
     "hoff",

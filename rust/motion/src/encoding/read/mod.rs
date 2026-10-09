@@ -19,8 +19,10 @@ mod section;
 use crate::encoding::container::{
     Asset, Desc, MAGIC, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, SEC_SCRIPT, VERSION,
 };
+use crate::encoding::read::section::{
+    Cur, DeltaOut, parse_asset, parse_delta, parse_descs, parse_keyframe,
+};
 use crate::timeline::{IrError, Timeline};
-use crate::encoding::read::section::{Cur, DeltaOut, parse_asset, parse_delta, parse_descs, parse_keyframe};
 use sha2::{Digest, Sha256};
 
 #[derive(Debug, PartialEq, thiserror::Error)]

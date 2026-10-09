@@ -1,11 +1,11 @@
 //! the timeline: one entry per event, with its time from the start, and
 //! the tallies by kind and by actor.
 
-use replay::{Inspector, What};
 use accord::Actor;
+use replay::{Inspector, What};
 
-use crate::toys::agent;
 use crate::thesis::record;
+use crate::toys::agent;
 
 #[test]
 fn every_event_is_one_entry_timed_from_the_start() {

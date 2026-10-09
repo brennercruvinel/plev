@@ -12,16 +12,16 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::widgets::{Rect, Wake};
-use engine::styling::theme::Theme;
 use accord::{Actor, Snapshot};
-use support::{COMPARE_SILENCES, REVIEW_SILENCES, SILENCES, id, page, settle, snapshot};
-use support::{TURN, verified_local};
-use screen::{SurfaceError, SurfaceHost};
+use engine::styling::theme::Theme;
+use engine::widgets::{Rect, Wake};
 use plevir::{
     Adapted, Capabilities, ColorRole, Context, GenerationPolicy, Op, Preference, Preferences,
     TypographyRole,
 };
+use screen::{SurfaceError, SurfaceHost};
+use support::{COMPARE_SILENCES, REVIEW_SILENCES, SILENCES, id, page, settle, snapshot};
+use support::{TURN, verified_local};
 
 const AREA: Rect = Rect {
     x: 0.0,

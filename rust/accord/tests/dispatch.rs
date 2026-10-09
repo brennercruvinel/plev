@@ -6,12 +6,12 @@ use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 
-use indexmap::IndexMap;
 use accord::{
     Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Mark, Operable, Outcome,
     ParamSpec, Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError,
     Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
 };
+use indexmap::IndexMap;
 
 fn at(text: &str) -> StateRef {
     StateRef::parse(text).expect("valid state ref")

@@ -12,10 +12,10 @@ mod support;
 use std::path::PathBuf;
 
 use accord::{Role, Snapshot, SnapshotBuilder};
-use serde_json::{Value, json};
 use plevir::{
     Capabilities, Component, GenerationPolicy, Ir, IrError, LineKind, Rule, parse, schema, verify,
 };
+use serde_json::{Value, json};
 
 /// A diff as an app projects it: its lines, the kind of each, what it
 /// shows the diff of, and a text that is not a list.
@@ -104,7 +104,10 @@ fn a_code_bound_to_the_lines_and_their_kinds_verifies_and_round_trips() {
     );
     let text = serde_json::to_string(&ir).unwrap();
     assert_eq!(parse(&text).unwrap(), ir);
-    assert_eq!(support::jsonschema::validate(&schema(), &v), Vec::<String>::new());
+    assert_eq!(
+        support::jsonschema::validate(&schema(), &v),
+        Vec::<String>::new()
+    );
 }
 
 #[test]

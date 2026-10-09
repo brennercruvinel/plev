@@ -4,8 +4,8 @@
 
 use super::components::scroll_area::ScrollAreaPage;
 use super::*;
-use engine::widgets::prelude::WidgetEvent;
 use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::widgets::prelude::WidgetEvent;
 
 #[test]
 fn starts_on_the_first_page_with_the_core_theme() {

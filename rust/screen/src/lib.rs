@@ -63,8 +63,8 @@ mod layout;
 mod project;
 mod surface;
 mod token;
-mod widget;
 mod transition;
+mod widget;
 
 pub use host::{Change, Dispatch, Frames, NoFrames, SurfaceError, SurfaceHost};
 pub use surface::Surface;

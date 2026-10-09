@@ -7,22 +7,22 @@
 //! the generated surface draw themselves (`generated.rs`, the `surface`
 //! crate); `render` puts them where the halves say.
 
-use engine::widgets::prelude::{Badge, ButtonVariant, Intent, Rect, rounded_rect};
+use crate::domain::silences::Decision;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::gpu::image::ImageHandle;
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
-use crate::domain::silences::Decision;
+use engine::widgets::prelude::{Badge, ButtonVariant, Intent, Rect, rounded_rect};
 
 use screen::{Frames, NoFrames};
 
+use super::super::{SilencesPage, panel};
 use super::jobs::PageFrames;
 use super::layout::{
     Layout, RowParts, compute, detail_style, label_style, mark_rect, mark_x, range_style,
     row_parts, stats, status_style, time_style, value_style,
 };
 use super::semantics::{clock, ms};
-use super::super::{SilencesPage, panel};
 
 /// `(x, y, w, h)`, the form `Compositor::bind` takes.
 pub(super) fn bounds(r: Rect) -> [f32; 4] {

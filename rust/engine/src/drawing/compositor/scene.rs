@@ -58,12 +58,7 @@ pub enum SceneNode {
     },
     /// Push a clip rect onto the clip stack: following nodes are scissored
     /// to the intersection of all pushed rects until the matching `PopClip`.
-    PushClip {
-        x: f32,
-        y: f32,
-        w: f32,
-        h: f32,
-    },
+    PushClip { x: f32, y: f32, w: f32, h: f32 },
     /// Pop the most recent `PushClip`.
     PopClip,
     /// Region backdrop blur (CSS `backdrop-filter: blur(sigma)`): at this
@@ -146,7 +141,11 @@ impl TextNodeKey {
     /// Build the key from a [`TextStyle`], so widgets measure and render
     /// with exactly the same typography (size, line height, weight,
     /// letter spacing, family).
-    pub fn from_style(text: &str, style: &crate::drawing::text::TextStyle, max_width: Option<f32>) -> Self {
+    pub fn from_style(
+        text: &str,
+        style: &crate::drawing::text::TextStyle,
+        max_width: Option<f32>,
+    ) -> Self {
         Self {
             text: live_text(text),
             font_size_bits: style.font_size.to_bits(),

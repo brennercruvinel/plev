@@ -17,13 +17,13 @@ mod support;
 
 use std::time::{Duration, Instant};
 
-use engine::widgets::Rect;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Renderer, Viewport};
 use engine::styling::theme::Theme;
-use support::{CASES, snapshot, verified};
+use engine::widgets::Rect;
 use screen::Surface;
+use support::{CASES, snapshot, verified};
 
 const ROUNDS: usize = 20;
 

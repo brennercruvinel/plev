@@ -35,17 +35,17 @@ use web_time::Instant;
 use winit::window::{Window, WindowId};
 
 use crate::compose::animation::{AnimationTick, FrameClock};
+use crate::control::input::{InputState, TouchInputState, TouchPointerSynth};
 use crate::drawing::compositor::Compositor;
 use crate::drawing::effects::EffectProcessor;
 use crate::drawing::gpu::GpuContext;
 #[cfg(not(target_arch = "wasm32"))]
 use crate::drawing::gpu::RenderConfig;
 use crate::drawing::gpu::texture_pool::TexturePool;
-use crate::control::input::{InputState, TouchInputState, TouchPointerSynth};
+use crate::drawing::text::TextSystem;
 use crate::runtime::perf::{PerfHud, PerfMonitor};
 use crate::runtime::platform::SafeAreaInsets;
 use crate::runtime::platform::ime::ImeState;
-use crate::drawing::text::TextSystem;
 
 use super::events::{BufferedEvent, logical_projection_size};
 
@@ -485,16 +485,21 @@ impl WindowHost {
     /// `Err(DeviceLost)` while the device is gone, `Err(NoAdapter)` for a
     /// host that has no target to read.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn read(&self) -> Result<crate::drawing::headless::Frame, crate::drawing::headless::HeadlessError> {
+    pub fn read(
+        &self,
+    ) -> Result<crate::drawing::headless::Frame, crate::drawing::headless::HeadlessError> {
         use crate::drawing::headless::HeadlessError;
         let (Some(gpu), Some(target)) = (self.gpu.as_ref(), self.target.as_ref()) else {
             return Err(HeadlessError::NoAdapter);
         };
         if gpu.gpu.poll_device_loss() {
-            let lost = gpu.gpu.lost_device().unwrap_or(crate::drawing::gpu::LostDevice {
-                reason: wgpu::DeviceLostReason::Unknown,
-                message: String::new(),
-            });
+            let lost = gpu
+                .gpu
+                .lost_device()
+                .unwrap_or(crate::drawing::gpu::LostDevice {
+                    reason: wgpu::DeviceLostReason::Unknown,
+                    message: String::new(),
+                });
             return Err(HeadlessError::DeviceLost(lost));
         }
         crate::drawing::headless::read_texture(&gpu.gpu, target)

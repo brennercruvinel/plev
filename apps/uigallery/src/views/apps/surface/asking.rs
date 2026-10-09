@@ -34,8 +34,8 @@
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::Duration;
 
-use offers::ProposeError;
 use accord::{Actor, RequestId, Snapshot};
+use offers::ProposeError;
 use plevir::{Adapted, Capabilities, GenerationPolicy, Op, VerifiedIr};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

@@ -23,33 +23,33 @@
 //! a request aimed at a node of a surface routed to the capability it
 //! stands for before the dispatcher takes it.
 
+#[cfg(unix)]
+pub mod agent;
 mod execute;
+pub(super) mod ids;
 mod notice;
 mod person;
 mod project;
 #[cfg(test)]
 mod tests;
 mod truth;
-#[cfg(unix)]
-pub mod agent;
-pub(super) mod ids;
 
 use std::collections::VecDeque;
 use std::path::Path;
 use std::time::Instant;
 
-use engine::widgets::prelude::Wake;
-use engine::drawing::compositor::Compositor;
-use engine::runtime::platform::alerts::{Alerts, Parent};
-use gitdrv::{GitClient, GitEvent};
 use accord::{
     Actor, Dispatcher, Millis, Receipt, ReceiptSink, Request, RequestId, SemError, SemErrors,
     SemId, Semantics, Snapshot, SnapshotBuilder,
 };
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::alerts::{Alerts, Parent};
+use engine::widgets::prelude::Wake;
+use gitdrv::{GitClient, GitEvent};
 
 use crate::generative::Generated;
-use crate::repository::git::GitSession;
 use crate::interfaces::panels::layout::{UiRequest, WorkspaceView};
+use crate::repository::git::GitSession;
 use truth::Inflight;
 
 pub use project::{DIFF_LINES, FILES_PROJECTED};

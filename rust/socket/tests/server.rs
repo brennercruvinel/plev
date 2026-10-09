@@ -4,17 +4,17 @@
 
 mod support;
 
-use proptest::prelude::*;
 use accord::redactor::REDACTED;
 use accord::{
     Actor, Change, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
     Stage, StateRef, Value,
 };
-use support::toy::ToyHost;
+use proptest::prelude::*;
 use socket::{
     Bound, ClientMsg, ConnId, DeltaReply, Host, ProtoError, Reply, Server, ServerMsg,
     SnapshotReply, StageReply, decode_client, encode_client,
 };
+use support::toy::ToyHost;
 
 const A: ConnId = 1;
 const B: ConnId = 2;

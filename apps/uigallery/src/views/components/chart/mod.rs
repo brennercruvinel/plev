@@ -9,10 +9,10 @@
 #[cfg(test)]
 mod tests;
 
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::compose::animation::{Easing, Tween};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel, text};
 
@@ -138,7 +138,14 @@ impl ChartPage {
         };
         engine::widgets::charts::draw::line(c, &self.line_data, inner(&rects[0]), theme, r);
         engine::widgets::charts::draw::bars(c, &self.bar_data, inner(&rects[1]), theme, r);
-        engine::widgets::charts::draw::area(c, &self.area_a, &self.area_b, inner(&rects[2]), theme, r);
+        engine::widgets::charts::draw::area(
+            c,
+            &self.area_a,
+            &self.area_b,
+            inner(&rects[2]),
+            theme,
+            r,
+        );
         engine::widgets::charts::draw::donut(c, &self.donut_items, inner(&rects[3]), theme, r);
 
         let bottom = rects.iter().map(|p| p.y + p.h).fold(content.y, f32::max);

@@ -30,17 +30,19 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::overlay::OverlayKind;
+use accord::{
+    Acted, ActionName, Actor, Change, Rejection, Revision, SemId, Stage, StateRef, Value,
+};
 use engine::drawing::compositor::Compositor;
+use engine::widgets::overlay::OverlayKind;
 use gitdrv::GitEvent;
-use idestudio::interfaces::window::record::Recording;
 use idestudio::capability::Workbench;
-use accord::{Acted, ActionName, Actor, Change, Rejection, Revision, SemId, Stage, StateRef, Value};
-use support::{Rig, set};
+use idestudio::interfaces::window::record::Recording;
 use socket::{
     Act, AgentPort, Ask, Client, Config, Observe, Reply, ServerMsg, SnapshotReply, StageReply,
     decode_server, encode_server,
 };
+use support::{Rig, set};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("an id")

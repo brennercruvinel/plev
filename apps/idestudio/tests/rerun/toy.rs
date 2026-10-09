@@ -7,11 +7,11 @@
 
 use std::collections::BTreeSet;
 
-use record::{Limits, Recorder, Session};
 use accord::{
     Actor, Confirm, Dispatcher, Execution, Millis, Operable, Outcome, ParamSpec, Policy, Receipt,
     Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Stage, Value, ValueKind,
 };
+use record::{Limits, Recorder, Session};
 
 use crate::harness::{Fixture, rerun};
 use crate::marks;

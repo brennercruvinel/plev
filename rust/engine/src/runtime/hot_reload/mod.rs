@@ -15,12 +15,12 @@
 //!   literals that hold it; the shell opens the editor there.
 
 pub mod literals;
+mod markup;
 mod shader;
 mod source;
 #[cfg(test)]
 mod tests;
 pub mod view_source;
-mod markup;
 
 use std::borrow::Cow;
 use std::path::PathBuf;

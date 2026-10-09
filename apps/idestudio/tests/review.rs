@@ -13,11 +13,11 @@
 #[allow(dead_code)]
 mod support;
 
+use accord::{Actor, Node, SemId, StateRef, Value, ValueKind};
 use gitdrv::GitEvent;
 use idestudio::repository::eval_repo::REVIEWED;
-use accord::{Actor, Node, SemId, StateRef, Value, ValueKind};
-use support::{Rig, completed};
 use plevir::Capabilities;
+use support::{Rig, completed};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("an id")

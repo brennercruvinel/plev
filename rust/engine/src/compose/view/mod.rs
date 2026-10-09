@@ -16,8 +16,8 @@ pub use context::ViewContext;
 pub use lifecycle::Component;
 pub use views::{ContainerView, RectView, TextView};
 
-use crate::drawing::compositor::SceneNode;
 use crate::compose::layout::LayoutStyle;
+use crate::drawing::compositor::SceneNode;
 
 /// Produces SceneNodes without touching the compositor directly.
 pub trait View {

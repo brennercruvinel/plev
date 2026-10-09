@@ -14,7 +14,6 @@ mod tests;
 pub use document::Document;
 pub use document::history::{CommitKind, History, UndoStep};
 pub use document::movement::GoalColumn;
-pub use ropey::{self, Rope};
 pub use document::selection::{Selection, SelectionSet};
 pub use document::transaction::{Bias, Edit, Transaction};
-
+pub use ropey::{self, Rope};

@@ -4,11 +4,11 @@
 //! a small glass pill on the right.
 
 use super::layout::ThemeMode;
-use engine::widgets::buttons::{Badge, Button, ButtonSize};
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::{ControlSize, Theme};
+use engine::widgets::buttons::{Badge, Button, ButtonSize};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 pub struct Header {
     theme_btn: Button,

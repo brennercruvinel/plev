@@ -2,8 +2,8 @@
 
 use super::test_cx;
 use crate::compose::builder::*;
-use crate::drawing::compositor::SceneNode;
 use crate::compose::view::View;
+use crate::drawing::compositor::SceneNode;
 
 #[test]
 fn child_composition() {

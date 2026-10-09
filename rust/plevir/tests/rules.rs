@@ -5,12 +5,12 @@
 mod support;
 
 use accord::Actor;
+use plevir::{GenerationPolicy, Ir, Rule, verify};
 use serde_json::json;
 use support::{
     COMMIT, FILES, ITEM, MESSAGE, STAGE, STATUS, base, caps, errors, errors_under, refused,
     refused_under, with, without,
 };
-use plevir::{GenerationPolicy, Ir, Rule, verify};
 
 #[test]
 fn the_base_surface_verifies() {
@@ -48,7 +48,8 @@ fn an_unknown_field_is_refused_where_it_is() {
     );
     let doc = without(base(), "/surface/title");
     refused(&doc, Rule::Schema, "/surface", "missing field `title`");
-    let errs = plevir::verify_json("{ not json", &caps(), &GenerationPolicy::default()).unwrap_err();
+    let errs =
+        plevir::verify_json("{ not json", &caps(), &GenerationPolicy::default()).unwrap_err();
     assert_eq!((errs[0].rule, errs[0].pointer.as_str()), (Rule::Schema, ""));
 }
 

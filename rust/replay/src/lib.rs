@@ -36,10 +36,10 @@
 mod control;
 mod describe;
 mod index;
+pub mod prose;
 mod summary;
 mod timeline;
 mod why;
-pub mod prose;
 
 pub use control::Control;
 pub use index::{Inspector, Stamp};

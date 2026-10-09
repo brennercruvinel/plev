@@ -11,9 +11,9 @@ use plevir::{
     Align, ColorRole, MAX_FLEX, Props, ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,
 };
 
-use crate::tree::{Arg, Prop, Src};
 use crate::report::Verdict;
 use crate::tokens::{Near, Tokens, TypeStyle, color_distance, nearest, px_distance, role_named};
+use crate::tree::{Arg, Prop, Src};
 
 /// The verdict of the constructs `srcs`.
 #[derive(Clone, Debug)]

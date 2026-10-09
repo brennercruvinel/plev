@@ -1,18 +1,18 @@
 //! Per-widget behavior tests, one file per comps category, over the
 //! helpers below (a shared bounds rect, pointer events, a click).
 
+mod buttons;
 mod content;
 mod feedback;
 mod fixtures;
 mod form;
 mod nav;
 mod semantics;
-mod buttons;
 
-use crate::widgets::widget::*;
-use crate::widgets::prelude::*;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
+use crate::widgets::prelude::*;
+use crate::widgets::widget::*;
 
 fn hoff() -> Theme {
     Theme::hoff()

@@ -6,15 +6,15 @@
 
 use std::collections::HashMap;
 
-use engine::drawing::compositor::SceneNode;
 use accord::{Millis, Receipt, RequestId, SemId, Stage};
+use engine::drawing::compositor::SceneNode;
 
 use crate::bound::{self, Bound};
 use crate::error::ReadError;
 use crate::event::{Event, Kind};
 use crate::format::Build;
-use crate::visuals::reader::Screen;
 use crate::state::State;
+use crate::visuals::reader::Screen;
 
 /// a recorded window, read by time: the semantic track (events) and the
 /// visual track (frames). the semantic track reads without decoding a

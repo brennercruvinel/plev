@@ -17,11 +17,11 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
-use support::toy::ToyHost;
 use socket::{
     AgentPort, Bound, Config, ConnId, Host, Reply, Server, ServerMsg, Traffic, decode_client,
     decode_server,
 };
+use support::toy::ToyHost;
 
 const A: ConnId = 1;
 const B: ConnId = 2;

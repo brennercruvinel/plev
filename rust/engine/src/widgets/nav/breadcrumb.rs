@@ -16,9 +16,9 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{IconSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::icons;
 use crate::widgets::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 const ELLIPSIS: &str = "\u{2026}";
 

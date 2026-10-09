@@ -3,10 +3,10 @@
 //! nothing drawn past the window, and a click on the frame still picks
 //! the control under it.
 
-use engine::widgets::content::CodeBlock;
-use engine::widgets::{Rect, Theme};
 use engine::drawing::compositor::{LayerId, SceneNode};
 use engine::styling::theme::{Breakpoint, SidebarMode};
+use engine::widgets::content::CodeBlock;
+use engine::widgets::{Rect, Theme};
 
 use crate::support::{Fallible, click_control, draw, id, open};
 

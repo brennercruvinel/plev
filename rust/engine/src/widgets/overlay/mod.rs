@@ -1,7 +1,6 @@
-
+mod item;
 #[cfg(test)]
 mod tests;
-mod item;
 
 use crate::compose::animation::Spring;
 use crate::styling::theme::MotionPhysics;

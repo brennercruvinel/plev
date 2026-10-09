@@ -38,16 +38,16 @@ mod settings {
     include!("fixtures/figma/expected.rs");
 }
 
-use engine::widgets::Rect;
+use accord::Snapshot;
 use engine::compose::builder::{Align, Element, div};
+use engine::compose::view::{View, ViewContext};
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
 use engine::styling::theme::Theme;
-use engine::compose::view::{View, ViewContext};
-use accord::Snapshot;
-use support::*;
+use engine::widgets::Rect;
 use screen::Surface;
+use support::*;
 
 fn renderer(w: f32, h: f32) -> Option<Renderer> {
     match Renderer::new(Viewport::new(w, h, 1.0), RenderConfig::default()) {
@@ -413,7 +413,9 @@ fn phase2() -> [Case; 2] {
         Case {
             name: "figma-settings",
             imported: import_figma(),
-            app: accord::SnapshotBuilder::new().finish().expect("an empty app"),
+            app: accord::SnapshotBuilder::new()
+                .finish()
+                .expect("an empty app"),
             code: settings::settings(),
             size: [393.0, 852.0],
             texts: &[

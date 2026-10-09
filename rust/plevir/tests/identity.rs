@@ -13,16 +13,16 @@ mod support;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use proptest::prelude::*;
-use proptest::sample::select;
 use accord::{Actor, SemId, Snapshot};
-use support::caps;
 use plevir::{
     Adapted, Align, Axis, Capabilities, CapabilityRef, ChartKind, ColorRole, Component, Context,
     ControlSize, Elevation, GenerationPolicy, Inverse, Ir, IrNode, Layout, Op, Props, Repeat,
     ShapeRole, SizeToken, SpacingToken, Step, Surface, TransformError, TypographyRole, parse,
     verify,
 };
+use proptest::prelude::*;
+use proptest::sample::select;
+use support::caps;
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("a valid id")

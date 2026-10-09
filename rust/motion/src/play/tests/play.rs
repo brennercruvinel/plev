@@ -3,9 +3,11 @@
 //! grow between boundaries), reactive signals, sub-epsilon skip, and
 //! sampling through plev's own ease() + Interpolate.
 
-use crate::timeline::easing::Easing;
-use crate::timeline::{IrError, Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::play::{EPSILON_S, MonsterPlayer};
+use crate::timeline::easing::Easing;
+use crate::timeline::{
+    IrError, Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value,
+};
 use engine::compose::animation::{AnimationTick, Interpolate};
 use engine::drawing::compositor::SceneNode;
 

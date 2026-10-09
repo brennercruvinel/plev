@@ -6,13 +6,15 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
-use engine::control::accessibility::accesskit::{Action, ActionData, ActionRequest, TreeId, TreeUpdate};
+use accord::{ActionName, Node, SemId, Stage, StateRef, Value};
+use engine::control::accessibility::accesskit::{
+    Action, ActionData, ActionRequest, TreeId, TreeUpdate,
+};
 use engine::control::accessibility::{self, Assist, Chrome, Shown};
 use engine::drawing::compositor::Compositor;
-use accord::{ActionName, Node, SemId, Stage, StateRef, Value};
-use uigallery::views::ShowcaseView;
+use engine::widgets::prelude::WidgetEvent;
 use socket::{Act, AgentPort, Client, Config, Observe, Reply};
+use uigallery::views::ShowcaseView;
 
 pub(crate) const CHROME: Chrome<'static> = Chrome {
     title: "plev, design system showcase",

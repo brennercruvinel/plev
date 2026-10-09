@@ -5,12 +5,12 @@
 //! modifiers) via `ShowcaseView::handle_editor_key`, and the input method
 //! to `EditorView::handle_ime` via `ShowcaseView::handle_ime`.
 
+use editor::Document;
+use engine::compose::layout::ComputedBounds;
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 use engine::widgets::editor::{EditorTheme, EditorView, MouseEvent};
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::drawing::compositor::Compositor;
-use engine::compose::layout::ComputedBounds;
-use engine::styling::theme::Theme;
-use editor::Document;
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState};
 

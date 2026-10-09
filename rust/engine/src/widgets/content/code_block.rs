@@ -15,8 +15,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 
-use crate::widgets::widget::{Rect, with_alpha};
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{Rect, with_alpha};
 
 /// The kind of one row of a code block: what a diff says of the line.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -297,9 +297,9 @@ impl CodeBlock {
 
 #[cfg(test)]
 mod tests {
-    use crate::styling::color::Color;
     use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
     use crate::drawing::text::TextMeasurer;
+    use crate::styling::color::Color;
     use crate::styling::theme::Theme;
 
     use super::{CodeBlock, CodeLine, LineKind};

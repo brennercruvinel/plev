@@ -3,11 +3,11 @@
 
 use std::collections::BTreeSet;
 
-use proptest::prelude::*;
 use accord::{
     ActionDecl, ActionName, Actors, Confirm, Constraints, Policy, SemError, SemId, StateKey,
     StateRef, Value, ValueKind,
 };
+use proptest::prelude::*;
 
 fn state_ref(text: &str) -> StateRef {
     StateRef::parse(text).expect("valid state ref")

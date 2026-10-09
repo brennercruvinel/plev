@@ -17,10 +17,10 @@ use crate::styling::theme::{ControlSize, IconSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::icons;
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 #[derive(Clone, Debug)]
 pub struct NavLink {

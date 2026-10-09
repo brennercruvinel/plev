@@ -1,5 +1,6 @@
 pub mod alerts;
 pub mod capture;
+pub mod clipboard;
 pub mod files;
 pub mod ime;
 pub mod lifecycle;
@@ -8,7 +9,6 @@ pub mod menu;
 pub mod notify;
 pub mod print;
 pub mod tray;
-pub mod clipboard;
 use winit::window::Window;
 
 /// Safe area insets in physical pixels.

@@ -14,15 +14,15 @@
 //! after (`composed`), and goes on from the page's wake when a step
 //! waited for a frame.
 
-use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
-use offers::compose::{Chain, Composer, Composite, Found, Shape, Target};
 use accord::{
     Dispatcher, Execution, Millis, Policy, Request, RequestId, Role, SemId, Snapshot,
     SnapshotBuilder, Value,
 };
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use offers::compose::{Chain, Composer, Composite, Found, Shape, Target};
 use plevir::IrNode;
 
 use super::super::SilencesPage;

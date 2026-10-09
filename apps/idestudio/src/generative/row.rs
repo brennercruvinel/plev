@@ -19,10 +19,10 @@
 //! the panel opens upward, over the workspace, and the control is drawn
 //! and hit where it is.
 
-use engine::widgets::prelude::{EventResult, Rect, TextField, WidgetEvent};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::{IconSize, Theme};
+use engine::widgets::prelude::{EventResult, Rect, TextField, WidgetEvent};
 
 use super::{Generated, Said};
 

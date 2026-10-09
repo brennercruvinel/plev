@@ -36,14 +36,14 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
+use accord::{ActionName, Actor, Millis, Node, Role, SemId, Stage, Value};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use engine::widgets::prelude::WidgetEvent;
 use record::{InputKind, Kind, Limits, Session};
-use accord::{ActionName, Actor, Millis, Node, Role, SemId, Stage, Value};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 use uigallery::shell::window::record::Recording;
 use uigallery::views::ShowcaseView;
-use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 
 /// The window of checkpoint b.
 const W: f32 = 1200.0;

@@ -13,11 +13,11 @@ mod composites;
 mod ffmpeg;
 mod generative;
 
-use engine::widgets::prelude::{Rect, WidgetEvent};
+use crate::domain::silences::{Decision, PROBE_STDERR, parse};
+use accord::{Actor, Change, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value};
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::styling::theme::Theme;
-use accord::{Actor, Change, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value};
-use crate::domain::silences::{Decision, PROBE_STDERR, parse};
+use engine::widgets::prelude::{Rect, WidgetEvent};
 
 use super::SilencesPage;
 use super::fixed_page::semantics::Ids;
@@ -477,7 +477,10 @@ fn detect_silence_starts_and_completes_in_the_wake_with_new_cuts() {
     assert!(page.frames.values().all(Result::is_ok));
     let c = frame(&mut page, wide(), &theme);
     assert_eq!(images(&c), 3, "the video box and two thumbnails");
-    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
+    assert_eq!(
+        page.wake(TURN, &mut todo),
+        engine::widgets::prelude::Wake::idle()
+    );
 }
 
 /// A preview: the row's click shows the cut's middle; its frame is

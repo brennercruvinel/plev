@@ -2,10 +2,10 @@
 //! (icons only, `size.sidebar_rail_w` wide), three tabs in the band and
 //! the settings link pinned in the foot.
 
-use engine::widgets::nav::{NavLink, Sidebar as Rail};
-use engine::widgets::prelude::{EventResult, WidgetEvent};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::{SidebarMode, Theme};
+use engine::widgets::nav::{NavLink, Sidebar as Rail};
+use engine::widgets::prelude::{EventResult, WidgetEvent};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SidebarTab {

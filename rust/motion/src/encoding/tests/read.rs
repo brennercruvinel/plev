@@ -3,12 +3,12 @@
 //! lives in tests_read_malformed.rs.
 
 use crate::encoding::container::{Asset, AssetKind, Desc};
-use crate::timeline::easing::{Easing, quantize_curve};
-use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::encoding::quantize;
 use crate::encoding::read::decode;
 use crate::encoding::tests::golden::golden_doc;
 use crate::encoding::write::encode;
+use crate::timeline::easing::{Easing, quantize_curve};
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 
 const GOLDEN: &[u8] = include_bytes!("../../../tests/fixtures/golden_v0_minimal.monster");
 
@@ -94,9 +94,10 @@ fn round_trip_covers_every_node_kind_and_value_type() {
             id: 3,
             depth: 2,
             kind: NodeKind::GradientRect,
-            props: Props::new()
-                .with(Prop::Color2, gray)
-                .with(Prop::AngleDeg, Value::Scalar(quantize::u16_to_angle_deg(8192))),
+            props: Props::new().with(Prop::Color2, gray).with(
+                Prop::AngleDeg,
+                Value::Scalar(quantize::u16_to_angle_deg(8192)),
+            ),
         },
         Node {
             id: 4,

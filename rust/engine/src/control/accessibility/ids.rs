@@ -16,8 +16,8 @@
 //! Never two nodes with one `NodeId`.
 
 use accesskit::NodeId;
-use rustc_hash::{FxHashMap, FxHashSet};
 use accord::{ActionName, SemId};
+use rustc_hash::{FxHashMap, FxHashSet};
 
 /// The window, the root of every tree this module builds.
 pub const ROOT: NodeId = NodeId(0);

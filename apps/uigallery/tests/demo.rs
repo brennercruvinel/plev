@@ -21,9 +21,9 @@
 //! `--review claude` for the other.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use replay::{Basis, Ending, Inspector};
-use record::{InputKind, Kind, Session};
 use accord::{Actor, SemId, Stage, Value};
+use record::{InputKind, Kind, Session};
+use replay::{Basis, Ending, Inspector};
 
 /// The intent of the thesis, what the Claude was asked; the rules' own
 /// sentence for the same screen; the comparison, the same for both.

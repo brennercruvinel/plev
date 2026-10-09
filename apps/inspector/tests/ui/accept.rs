@@ -3,8 +3,8 @@
 //! button, and the panel shows the state the agent observed, the request,
 //! the refusal with "removed: B", then the acceptance and the sha.
 
-use inspector::InspectorView;
 use accord::Millis;
+use inspector::InspectorView;
 
 use crate::support::{Fallible, click_control, draw, id, open, row_after, rows, texts};
 

@@ -18,8 +18,8 @@ use crate::styling::theme::{ControlSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::content::VirtualList;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::recipe::rounded_rect;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Horizontal alignment of a column's cells.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

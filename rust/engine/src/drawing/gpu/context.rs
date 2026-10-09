@@ -304,8 +304,10 @@ impl GpuContext {
         adapter: &wgpu::Adapter,
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
-        let timestamps =
-            crate::runtime::perf::gpu_time::device_features(adapter.features(), config.gpu_timestamps);
+        let timestamps = crate::runtime::perf::gpu_time::device_features(
+            adapter.features(),
+            config.gpu_timestamps,
+        );
         let (required_features, required_limits) = match config.compute {
             None => (timestamps, wgpu::Limits::default()),
             Some(asked) => {
@@ -501,7 +503,9 @@ impl GpuContext {
         self.shader_watcher = {
             let dir = crate::runtime::hot_reload::shader_dir();
             let wake = window.clone();
-            match crate::runtime::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
+            match crate::runtime::hot_reload::ShaderWatcher::new(&dir, move || {
+                wake.request_redraw()
+            }) {
                 Ok(w) => {
                     log::info!("shader hot reload on: {}", dir.display());
                     Some(w)

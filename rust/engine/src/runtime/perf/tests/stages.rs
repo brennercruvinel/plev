@@ -4,8 +4,8 @@
 //! own path; those tests skip without a GPU adapter.
 
 use super::super::stages::{self, Stage, StageFrame};
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::compose::layout::{LayoutEngine, LayoutItem, LayoutStyle};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 
 /// Stages on for one test, off again when it ends.
@@ -290,7 +290,11 @@ mod frame_tail {
             gpu_timestamps: true,
             ..RenderConfig::default()
         };
-        let probe = pollster::block_on(crate::drawing::gpu::GpuContext::new_headless(1, 1, config.clone()));
+        let probe = pollster::block_on(crate::drawing::gpu::GpuContext::new_headless(
+            1,
+            1,
+            config.clone(),
+        ));
         if !probe.is_some_and(|gpu| gpu.timestamps.is_some()) {
             eprintln!("no GPU adapter with timestamp queries; skipping");
             return None;

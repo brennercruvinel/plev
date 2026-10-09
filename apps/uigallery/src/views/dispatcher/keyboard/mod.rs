@@ -27,9 +27,9 @@
 //! path a click on the modal, a screen reader's press and an agent's act
 //! take; the key adds no capability and no path of its own.
 
+use accord::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 use engine::control::accessibility::focus::{self, Direction};
 use engine::control::accessibility::primary;
-use accord::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 
 use super::super::ShowcaseView;
 use super::super::components::key_under;

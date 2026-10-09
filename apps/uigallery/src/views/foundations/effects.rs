@@ -5,13 +5,13 @@
 //! `visual` and `sdf_shapes` engine examples; everything is static, so an
 //! idle section settles (render-on-demand contract).
 
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::{
     Compositor, GradientRectParams, RoundedRectParams, SceneNode, ShadowParams, TextNodeKey,
 };
 use engine::drawing::path::PathBuilder;
 use engine::drawing::text::TextStyle;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::{group_label, panel, text};
 

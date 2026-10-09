@@ -14,12 +14,12 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use accord::Snapshot;
 use claude::{ClaudeCli, SESSION_VARS};
 use offers::{Ask, Llm, ProposeError, prompt, propose_verified};
-use accord::Snapshot;
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 use serde_json::json;
 use tempfile::TempDir;
-use plevir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 const INTENT: &str = "only what is active and the add field";
 
@@ -48,8 +48,10 @@ struct Todo {
 
 impl Todo {
     fn new() -> Todo {
-        let app: Snapshot =
-            serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-todo.snapshot.json")).unwrap();
+        let app: Snapshot = serde_json::from_str(&read(
+            "../plevir/tests/fixtures/uigallery-todo.snapshot.json",
+        ))
+        .unwrap();
         let caps = Capabilities::from_snapshot(&app);
         let policy = GenerationPolicy::default();
         let current = verify_json(&compact(), &caps, &policy).unwrap();

@@ -27,10 +27,10 @@
 //! instant, so no ffmpeg runs and the frame is the same on every machine
 //! (a layer hashes an image by its size, `hash.rs`).
 
+use accord::{Actor, Request, Snapshot, Value};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use engine::drawing::headless::{Frame, Renderer, Viewport};
-use accord::{Actor, Request, Snapshot, Value};
 use uigallery::shell::{RenderError, StagedPage, stage_page};
 use uigallery::views::ShowcaseView;
 
@@ -40,7 +40,8 @@ const SETTLE_STEPS: usize = 120;
 const SETTLE_DT: f32 = 1.0 / 60.0;
 
 /// The Claude's review of the checkpoint's first round, as IR.
-const CLAUDE_REVIEW: &str = include_str!("../../../../rust/plevir/tests/fixtures/silences-review-claude.ir.json");
+const CLAUDE_REVIEW: &str =
+    include_str!("../../../../rust/plevir/tests/fixtures/silences-review-claude.ir.json");
 
 /// How a state's surface is proposed.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -420,7 +421,9 @@ fn ask(view: &mut ShowcaseView, asked: &Asked) -> Result<(), String> {
     .map_err(|e| format!("propose: {e}"))?;
     let receipt = view.act(req).ok_or("propose: not taken")?;
     match (receipt.stage(), asked.taken) {
-        (Some(accord::Stage::Completed(_)), true) | (Some(accord::Stage::Failed { .. }), false) => Ok(()),
+        (Some(accord::Stage::Completed(_)), true) | (Some(accord::Stage::Failed { .. }), false) => {
+            Ok(())
+        }
         (other, _) => Err(format!("\"{}\": {other:?}", asked.intent)),
     }
 }

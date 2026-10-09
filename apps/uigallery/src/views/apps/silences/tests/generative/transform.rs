@@ -7,10 +7,10 @@
 //! list for a chart: a list repeats its cuts' template, and no state of
 //! the app is a list of durations.
 
-use engine::widgets::prelude::Rect;
+use accord::{Actor, SemId};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
-use accord::{Actor, SemId};
+use engine::widgets::prelude::Rect;
 use plevir::{ChartKind, Component, Op};
 
 use super::super::TURN;

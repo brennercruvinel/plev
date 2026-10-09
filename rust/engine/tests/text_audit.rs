@@ -32,7 +32,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, OnceLock};
 
-use engine::drawing::text::probe::{Faces, Rendered, ShapeReport, Specimen, render_with, shape_report};
+use engine::drawing::text::probe::{
+    Faces, Rendered, ShapeReport, Specimen, render_with, shape_report,
+};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 
 const FONT_SIZE: f32 = 16.0;

@@ -11,9 +11,9 @@ pub mod checks;
 use std::fs;
 use std::path::PathBuf;
 
+use accord::{ParamSpec, Role, Snapshot, SnapshotBuilder, ValueKind};
 use engine::styling::theme::Theme;
 use import::{Imported, Tokens, TypeStyle, Value};
-use accord::{ParamSpec, Role, Snapshot, SnapshotBuilder, ValueKind};
 use plevir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
 pub fn fixture_path(rel: &str) -> PathBuf {

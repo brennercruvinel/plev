@@ -27,13 +27,13 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
+use accord::{Actor, Rejection, Revision, SemId, Stage, StateRef, Value};
 use engine::drawing::compositor::Compositor;
 use engine::runtime::platform::capture::FakeCapture;
 use record::scene::Head;
-use accord::{Actor, Rejection, Revision, SemId, Stage, StateRef, Value};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 use uigallery::shell::window::mirror::{Hand, MAIN, Pressed, Scenes, Viewer};
 use uigallery::views::ShowcaseView;
-use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 const WIDTH: f32 = 1280.0;
 const HEIGHT: f32 = 800.0;
@@ -635,7 +635,8 @@ fn a_secret_leaves_as_its_length_and_never_as_what_it_draws() {
         let shown = eye.hand.shown().expect("a look").clone();
         let said = ["login.password", "login.pin"].map(|id| eye.click(id).said());
         eye.drain(200);
-        let crossed = [secret, support::login::PIN, support::login::USER].map(|t| eye.carried(t.as_bytes()));
+        let crossed =
+            [secret, support::login::PIN, support::login::USER].map(|t| eye.carried(t.as_bytes()));
         (shown, said, crossed)
     });
     let (mut host, mut scenes) = (Login(now.clone()), Scenes::default());

@@ -7,10 +7,10 @@
 //! digit hotkeys and the launch argument all index it. The table itself
 //! is `table.rs`; this file is the types and the lookups.
 
+pub(super) mod panes;
 mod table;
 #[cfg(test)]
 mod tests;
-pub(super) mod panes;
 
 pub use table::PAGES;
 

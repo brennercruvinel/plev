@@ -59,7 +59,11 @@ impl<T: Interpolate> Tween<T> {
     }
 
     /// Create with duration derived from theme MotionPhysics settling time.
-    pub fn from_motion(initial: T, motion: &crate::styling::theme::MotionPhysics, easing: Easing) -> Self {
+    pub fn from_motion(
+        initial: T,
+        motion: &crate::styling::theme::MotionPhysics,
+        easing: Easing,
+    ) -> Self {
         let duration = motion.settling_time().clamp(0.1, 2.0);
         Self::new(initial, duration, easing)
     }

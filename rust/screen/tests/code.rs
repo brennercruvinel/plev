@@ -8,14 +8,14 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::widgets::content::{CodeBlock, LineKind as Row};
-use engine::widgets::{Rect, WidgetEvent};
+use accord::{Role, Snapshot, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
-use accord::{Role, Snapshot, SnapshotBuilder, Value};
-use support::{App, id, page};
-use screen::Surface;
+use engine::widgets::content::{CodeBlock, LineKind as Row};
+use engine::widgets::{Rect, WidgetEvent};
 use plevir::{Capabilities, GenerationPolicy, LineKind, verify_json};
+use screen::Surface;
+use support::{App, id, page};
 
 /// A diff of `n` lines: a header, then removed, added and context lines
 /// in turn, and a name no kind has at the end.

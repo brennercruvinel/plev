@@ -12,16 +12,16 @@ mod components;
 mod foundations;
 mod pages;
 
-#[cfg(test)]
-mod tests;
 pub mod compositor;
 mod dispatcher;
+#[cfg(test)]
+mod tests;
 pub mod text_input;
 
 pub use apps::git::{GitWake, NavKey};
+pub use pages::{Body, Group, PAGES, Page, Pane};
 pub use text_input::ime::ImeEvent;
 pub use text_input::input::EditKey;
-pub use pages::{Body, Group, PAGES, Page, Pane};
 
 pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
@@ -29,12 +29,12 @@ use dispatcher::keyboard::Walk;
 
 use winit::keyboard::{Key, ModifiersState};
 
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::compositor::LayerId;
+use engine::styling::theme::Theme;
 use engine::widgets::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
 use engine::widgets::overlay::{OverlayId, OverlayManager};
 use engine::widgets::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
-use engine::drawing::compositor::LayerId;
-use engine::control::input::scroll::ScrollState;
-use engine::styling::theme::Theme;
 
 /// Digit hotkeys `1`..`9` and `0` (as ten) reach the first pages of the
 /// table; the rest are reachable from the sidebar.

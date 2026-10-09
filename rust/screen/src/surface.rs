@@ -4,19 +4,19 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use engine::widgets::form::EditKey;
-use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
+use accord::{Actor, Receipt, Request, Revision, SemId, Snapshot, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
-use accord::{Actor, Receipt, Request, Revision, SemId, Snapshot, SnapshotBuilder, Value};
+use engine::widgets::form::EditKey;
+use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
 use plevir::{Axis, CapabilityRef, VerifiedIr};
 
 use crate::draw::{self, closed};
 use crate::expand::{Node, expand};
 use crate::host::{Dispatch, Frames, NoFrames};
 use crate::layout::{self, axis_of};
-use crate::transition::{self, Ghost, Motion};
 use crate::project;
+use crate::transition::{self, Ghost, Motion};
 use crate::widget::{Kind, Widget};
 
 /// a surface materialized from a verified IR over an app's state.

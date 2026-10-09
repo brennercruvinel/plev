@@ -23,23 +23,23 @@
 //! itself, its widgets, what they project and what a request asks of them.
 //! Where it sits and what a pointer does on it is `row.rs`.
 
+mod asking;
 pub(crate) mod claude;
+mod column;
 pub(crate) mod row;
 pub(crate) mod scope;
-mod asking;
-mod column;
 
 use std::time::Duration;
 
 use ::claude::ClaudeCli;
-use engine::widgets::prelude::{Button, ButtonSize, Select, TextField, Wake};
-use offers::{Ask, Llm, Model, Rules, propose_verified};
 use accord::{
     Actor, Execution, Outcome, Request, RequestId, Role, SemError, SemErrors, SemId, Snapshot,
     SnapshotBuilder, Value,
 };
-use screen::SurfaceHost;
+use engine::widgets::prelude::{Button, ButtonSize, Select, TextField, Wake};
+use offers::{Ask, Llm, Model, Rules, propose_verified};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
+use screen::SurfaceHost;
 
 use crate::capability::Workbench;
 use claude::{Claude, POLL, Pending};

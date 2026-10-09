@@ -9,8 +9,8 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::drawing::compositor::Compositor;
 use accord::{ActionName, Actor, SemId, StateRef, Value};
+use engine::drawing::compositor::Compositor;
 use socket::{Act, AgentPort, Client, Config, Observe, ProtoError, Reply, WireError};
 
 use crate::views::ShowcaseView;
@@ -183,7 +183,10 @@ fn an_agent_observes_the_surface_and_operates_the_todo_through_it() {
     assert_eq!(now.value(&selected), Some(&Value::Text("active".into())));
     // and the todo's dispatcher kept each act as the agent's, on the
     // todo's capabilities
-    let receipt = view.panes.todo.receipt(accord::RequestId::parse("2").unwrap());
+    let receipt = view
+        .panes
+        .todo
+        .receipt(accord::RequestId::parse("2").unwrap());
     let receipt = receipt.expect("the add");
     assert_eq!(
         receipt.request.actor,
@@ -317,7 +320,10 @@ fn an_agent_proposes_through_the_port_and_what_was_typed_goes_on() {
     let agent = Actor::Agent {
         name: "claude".into(),
     };
-    let receipt = view.panes.todo.receipt(accord::RequestId::parse("3").unwrap());
+    let receipt = view
+        .panes
+        .todo
+        .receipt(accord::RequestId::parse("3").unwrap());
     let receipt = receipt.expect("the proposal");
     assert_eq!(receipt.request.actor, agent);
     assert_eq!(receipt.request.target, sid("surface_page.propose"));
@@ -370,7 +376,10 @@ fn an_agent_asks_for_a_change_through_the_port_as_it_proposes() {
     );
     assert!(after_undo.contains(&"todo_panel.active".to_owned()));
     // the change was the agent's: its request, completed with the steps
-    let receipt = view.panes.todo.receipt(accord::RequestId::parse("2").unwrap());
+    let receipt = view
+        .panes
+        .todo
+        .receipt(accord::RequestId::parse("2").unwrap());
     let receipt = receipt.expect("the change");
     assert_eq!(
         receipt.request.actor,

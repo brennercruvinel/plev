@@ -5,10 +5,10 @@
 
 pub mod coherence;
 pub mod grid;
+pub mod parameters;
 pub mod particle;
 pub mod physics;
 pub mod primes;
-pub mod parameters;
 pub mod random;
 
 use crate::color::particle_color;
@@ -145,8 +145,12 @@ impl Simulation {
     /// advance one fixed step. `_dt` is the caller's accumulator unit; the
     /// physics is frame-based (the demo's model), so a step is a step.
     pub fn step(&mut self, _dt: f32) {
-        self.grid
-            .rebuild(&self.particles, self.width, self.height, parameters::GRID_SIZE);
+        self.grid.rebuild(
+            &self.particles,
+            self.width,
+            self.height,
+            parameters::GRID_SIZE,
+        );
         physics::accumulate(
             &self.particles,
             &mut self.forces,

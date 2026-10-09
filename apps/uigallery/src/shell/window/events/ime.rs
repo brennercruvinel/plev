@@ -81,8 +81,8 @@ impl App {
 #[cfg(test)]
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod tests {
-    use record::{InputKind, Kind, Limits};
     use accord::{StateRef, Value};
+    use record::{InputKind, Kind, Limits};
     use winit::event::Ime;
 
     use super::super::super::super::App;

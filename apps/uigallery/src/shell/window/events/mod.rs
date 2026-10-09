@@ -97,7 +97,8 @@ impl App {
                     // Space and the editing keys bridge through keys.rs
                     // (the view stays winit-free).
                     Key::Named(named) => {
-                        if keyboard::handle_named(&mut self.view, named, self.modifiers.shift_key()) {
+                        if keyboard::handle_named(&mut self.view, named, self.modifiers.shift_key())
+                        {
                             self.changed();
                         }
                     }

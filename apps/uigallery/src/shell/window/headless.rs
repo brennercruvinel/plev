@@ -6,9 +6,9 @@
 //! calls it.
 
 use crate::views::ShowcaseView;
+use accord::Snapshot;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
-use accord::Snapshot;
 
 /// Animation steps a headless frame may take before it is drawn: the
 /// window keeps drawing while anything moves, so the frame it settles

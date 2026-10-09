@@ -19,9 +19,9 @@
 //! - `inflight`: the same fixture settled only as far as its executions,
 //!   and the task-84 race caught by a recorded session (task-80).
 
+mod eval;
 mod harness;
 mod inflight;
 mod marks;
 mod report;
 mod toy;
-mod eval;

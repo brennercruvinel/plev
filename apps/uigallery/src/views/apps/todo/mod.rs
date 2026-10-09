@@ -26,12 +26,12 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 
-use engine::widgets::form::TextField;
-use engine::widgets::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
+use crate::domain::todo::{Filter, TodoModel};
+use accord::Dispatcher;
 use engine::control::input::scroll::ScrollState;
 use engine::styling::theme::Theme;
-use accord::Dispatcher;
-use crate::domain::todo::{Filter, TodoModel};
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
 
 use super::EditKey;
 use crate::views::text_input::clipboard::Keys;

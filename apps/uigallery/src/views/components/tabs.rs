@@ -7,11 +7,11 @@
 //! tab a screen reader or the keyboard moved it to (its ring, task-75
 //! phase 2c), which the arrow keys move along the strip.
 
-use engine::widgets::prelude::{EventResult, Rect, Tabs, WidgetEvent};
+use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::{Theme, TypographyScale};
-use accord::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{EventResult, Rect, Tabs, WidgetEvent};
 
 use super::{After, Component, child_id, key_under, root_id, under};
 

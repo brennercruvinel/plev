@@ -10,9 +10,9 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{Sender, channel};
 use std::thread::JoinHandle;
 
+use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 use crate::error::Result;
 use crate::repo::GitRepo;
-use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 /// Requests the worker thread understands.
 #[derive(Clone, Debug)]

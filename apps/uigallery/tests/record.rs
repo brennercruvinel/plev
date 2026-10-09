@@ -24,14 +24,14 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
-use engine::drawing::compositor::Compositor;
-use replay::{Basis, By, Ending, Inspector};
-use record::{InputKind, Kind, Limits, Session};
 use accord::{ActionName, Actor, Rejection, Revision, SemId, Stage, Value};
+use engine::drawing::compositor::Compositor;
+use engine::widgets::prelude::WidgetEvent;
+use record::{InputKind, Kind, Limits, Session};
+use replay::{Basis, By, Ending, Inspector};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 use uigallery::shell::window::record::{ENV, Recording};
 use uigallery::views::ShowcaseView;
-use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 
 /// One turn of the shell's clock, a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;

@@ -3,10 +3,10 @@
 //! thereafter). builders and the header parser come from `tests_write`.
 
 use crate::encoding::container::{Asset, AssetKind, Desc, SEC_DELTA, SEC_DESC, SEC_KEYFRAME};
-use crate::timeline::easing::Easing;
-use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::encoding::tests::write::{parse, rect, scalar, seg};
 use crate::encoding::write::encode;
+use crate::timeline::easing::Easing;
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use sha2::{Digest, Sha256};
 
 /// The golden document: 2 nodes, 2 keyframes, 3 segments, 1 asset,

@@ -18,8 +18,8 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{Intent, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
 
 /// Status/tag pill. See the module docs for the interactivity contract.
 #[derive(Clone, Debug)]

@@ -3,8 +3,8 @@
 //! `accept`, a declined sequence never again in the session, a composite
 //! named and labelled from the app's own declarations.
 
-use offers::compose::{Composer, Composite, Shape, Target};
 use accord::ActionName;
+use offers::compose::{Composer, Composite, Shape, Target};
 
 use super::desk::{Bench, person};
 

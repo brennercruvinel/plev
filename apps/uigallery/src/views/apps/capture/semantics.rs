@@ -17,13 +17,13 @@
 //! The captured pixels and samples are never projected: an agent reads
 //! where the devices are, not what they see or hear.
 
-use engine::widgets::prelude::{EventResult, Rect};
-use engine::runtime::perf::stages::{self, Stage};
-use engine::runtime::platform::capture::DeviceKind;
 use accord::{
     Actor, Constraints, Execution, Operable, Outcome, Policy, Receipt, Request, RequestId, Role,
     SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value,
 };
+use engine::runtime::perf::stages::{self, Stage};
+use engine::runtime::platform::capture::DeviceKind;
+use engine::widgets::prelude::{EventResult, Rect};
 
 use super::{CapturePage, Said};
 use crate::views::apps::todo::TodoPage;

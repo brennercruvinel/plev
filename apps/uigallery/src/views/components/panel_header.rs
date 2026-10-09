@@ -1,11 +1,11 @@
 //! Panel Header page: the column head every panel starts with, its
 //! blurb and its count badge, on a panel.
 
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 use engine::widgets::content::Panel;
 use engine::widgets::nav::PanelHeader;
 use engine::widgets::prelude::{Badge, EventResult, Rect, WidgetEvent};
-use engine::drawing::compositor::Compositor;
-use engine::styling::theme::Theme;
 
 pub struct PanelHeaderPage {
     header: PanelHeader,

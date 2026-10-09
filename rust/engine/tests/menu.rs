@@ -5,13 +5,13 @@
 //! makes and the same receipt, the menu following a moved projection (an
 //! item disabled, an item gone), and the target without a menu.
 
-use engine::runtime::platform::menu::{
-    Clicked, FakeMenu, MenuError, MenuItem, MenuModel, NativeMenu, NoMenu, Predefined, Shortcut,
-    Submenu,
-};
 use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Request, RequestId, Role, SemId, Semantics,
     Snapshot, SnapshotBuilder, Stage, Value,
+};
+use engine::runtime::platform::menu::{
+    Clicked, FakeMenu, MenuError, MenuItem, MenuModel, NativeMenu, NoMenu, Predefined, Shortcut,
+    Submenu,
 };
 
 fn sid(text: &str) -> SemId {

@@ -10,11 +10,11 @@
 
 use std::sync::Once;
 
+use accord::SemId;
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::headless::Viewport;
 use engine::runtime::hot_reload::view_source::{Origin, origin_at, text_at};
 use engine::runtime::hot_reload::{Site, literals, source_dirs};
-use accord::SemId;
 use uigallery::shell::{StagedPage, stage_page};
 
 /// The Todo page's subtitle, a string literal written once in the sources.

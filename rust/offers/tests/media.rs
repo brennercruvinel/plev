@@ -12,10 +12,10 @@
 #[allow(dead_code)]
 mod support;
 
-use offers::{Part, ProposeError, Proposer, Rules, propose_verified};
 use accord::Snapshot;
-use support::{Asking, bindings, ide, ids, nodes, todo, verified};
+use offers::{Part, ProposeError, Proposer, Rules, propose_verified};
 use plevir::{Component, Layout, VerifiedIr};
+use support::{Asking, bindings, ide, ids, nodes, todo, verified};
 
 fn silences() -> Snapshot {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -140,12 +140,15 @@ fn the_review_has_the_video_the_counts_and_a_frame_per_cut() {
         Some(plevir::ControlSize::Xl)
     );
     // its numbers, each a small stat named by its key
-    let numbers: Vec<(Option<Component>, Option<&str>, Option<plevir::TypographyRole>)> = row.children
-        [1]
-    .children
-    .iter()
-    .map(|n| (n.component, n.label.as_deref(), n.props.typography))
-    .collect();
+    let numbers: Vec<(
+        Option<Component>,
+        Option<&str>,
+        Option<plevir::TypographyRole>,
+    )> = row.children[1]
+        .children
+        .iter()
+        .map(|n| (n.component, n.label.as_deref(), n.props.typography))
+        .collect();
     let small = Some(plevir::TypographyRole::BaseM);
     assert_eq!(
         numbers,

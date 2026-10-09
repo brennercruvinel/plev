@@ -12,15 +12,15 @@ use std::panic::Location;
 
 use indexmap::IndexMap;
 
-use crate::manifest::{ActionDecl, Constraints, ParamSpec, Policy};
+use crate::controls::{Node, Source};
 use crate::failures::{SemError, SemErrors};
 use crate::identity::SemId;
+use crate::manifest::{ActionDecl, Constraints, ParamSpec, Policy};
 use crate::notation::{ActionName, StateKey};
-use crate::controls::{Node, Source};
-use crate::taxonomy::Role;
-use crate::snapshot::Snapshot;
-use crate::validate;
 use crate::property::{StateRef, Value};
+use crate::snapshot::Snapshot;
+use crate::taxonomy::Role;
+use crate::validate;
 
 /// a type whose state has a meaning.
 pub trait Semantics {

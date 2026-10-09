@@ -9,11 +9,11 @@
 //! tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
+use accord::{Stage, StateRef, Value};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::Frame;
 use engine::runtime::platform::links::read;
 use engine::runtime::window::WindowHost;
-use accord::{Stage, StateRef, Value};
 use uigallery::shell::system::links::{OPEN, SCHEME, follow};
 use uigallery::views::ShowcaseView;
 

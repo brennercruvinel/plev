@@ -10,10 +10,9 @@
 // (`showcase::model::...`) now that they live in the library.
 extern crate self as showcase;
 
-
-pub mod renderer;
 pub mod domain;
 pub mod keyboard;
+pub mod renderer;
 pub mod shell;
 pub mod views;
 

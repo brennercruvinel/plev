@@ -21,15 +21,15 @@
 
 mod panel;
 
-use crate::widgets::icons;
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::control::input::scroll::ScrollState;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, IconSize, Theme};
+use crate::widgets::icons;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::widgets::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Label style for the control and its options: base-2m.
 fn label_style(theme: &Theme) -> TextStyle {

@@ -10,8 +10,8 @@
 //! neither reads nor writes it. A paste goes into the field as typing
 //! would, and the recording keeps the key by its kind.
 
-use engine::widgets::form::{ClipKey, TextField};
 use engine::runtime::platform::clipboard::{ClipboardProvider, default_clipboard};
+use engine::widgets::form::{ClipKey, TextField};
 
 use super::super::{Pane, ShowcaseView};
 

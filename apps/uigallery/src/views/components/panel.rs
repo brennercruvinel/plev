@@ -1,9 +1,9 @@
 //! Panel page: the glass surface with rim and key light, on its own.
 
-use engine::widgets::content::Panel;
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::Panel;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::text;
 

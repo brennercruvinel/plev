@@ -1,10 +1,10 @@
 //! Path building, tessellation, and types for GPU-ready geometry.
 
 mod builder;
+mod mesh;
 mod tessellation;
 #[cfg(test)]
 mod tests;
-mod mesh;
 
 use std::sync::atomic::{AtomicU32, Ordering};
 

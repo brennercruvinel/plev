@@ -19,7 +19,6 @@
 //! hidden layer, an effect, an override the export could not apply: each
 //! is an entry at its line.
 
-
 use crate::ParserError;
 use crate::emit::plevir::sanitize;
 use crate::formats::figma::parse::{FigDoc, FigNode};

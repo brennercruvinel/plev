@@ -3,8 +3,8 @@
 //! commit comes back stale, the agent observes again and its commit
 //! completes with a sha.
 
-use record::Session;
 use accord::RequestId;
+use record::Session;
 
 use crate::toys::{Lab, agent};
 

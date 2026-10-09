@@ -1,10 +1,10 @@
 //! Separator page: a horizontal rule between two captions and a
 //! vertical one between two columns.
 
-use engine::widgets::content::Separator;
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::Separator;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::text;
 

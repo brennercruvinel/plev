@@ -3,8 +3,8 @@
 
 use super::test_cx;
 use crate::compose::builder::*;
-use crate::drawing::compositor::SceneNode;
 use crate::compose::view::View;
+use crate::drawing::compositor::SceneNode;
 
 #[test]
 fn column_layout_stacks_vertically() {
@@ -107,7 +107,11 @@ fn tracking_widens_builder_text_measurement() {
     let measure = |el: Element| {
         let mut items = Vec::new();
         let mut elements = Vec::new();
-        crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+        crate::compose::builder::layout_pipeline::collect_layout_items(
+            &el,
+            &mut items,
+            &mut elements,
+        );
         let mut engine = crate::compose::layout::LayoutEngine::new();
         engine.compute(&items, 800.0, 600.0)[0].width
     };

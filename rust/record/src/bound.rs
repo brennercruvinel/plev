@@ -30,8 +30,8 @@ use std::collections::HashMap;
 use std::mem::size_of;
 use std::sync::Arc;
 
-use engine::drawing::compositor::{Compositor, Layer};
 use accord::{Millis, SemId};
+use engine::drawing::compositor::{Compositor, Layer};
 
 use crate::error::FileError;
 use crate::format::{Cur, len32, put_u16, put_u32};

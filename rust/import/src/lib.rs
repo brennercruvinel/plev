@@ -30,15 +30,15 @@
 //! per text run, content-driven layout (no absolute positioning).
 
 pub mod emit;
+pub mod formats;
 pub mod report;
 pub mod tokens;
-pub mod formats;
 pub mod tree;
 
 pub use emit::plevir::{Imported, emit_ir};
-pub use tree::{Dropped, Resolution, Transpiled};
 pub use report::{Binding, Category, Entry, Need, Report, Verdict};
 pub use tokens::{Tokens, TypeStyle, Value};
+pub use tree::{Dropped, Resolution, Transpiled};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ParserError {

@@ -11,8 +11,8 @@ use plevir::{CapabilityRef, Component, IrNode};
 use super::props::{Decision, text};
 use super::{Cx, parse_as, sanitize};
 use crate::ParserError;
-use crate::tree::{AttrValue, ParserNode, Tag, TextValue, snake_case};
 use crate::report::{Binding, Need, Verdict};
+use crate::tree::{AttrValue, ParserNode, Tag, TextValue, snake_case};
 
 /// A control the source names.
 pub(crate) enum Control {

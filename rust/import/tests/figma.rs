@@ -15,9 +15,9 @@ mod support;
 
 use import::Category;
 use import::formats::figma::parse::FigNode;
+use plevir::{Capabilities, GenerationPolicy, verify};
 use support::checks::*;
 use support::*;
-use plevir::{Capabilities, GenerationPolicy, verify};
 
 const FILE: &str = FIGMA;
 

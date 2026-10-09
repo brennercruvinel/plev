@@ -8,14 +8,14 @@
 use std::sync::Arc;
 
 use engine::compose::builder::{Element, Justify, div, text};
-use engine::styling::color::Color;
+use engine::compose::view::ViewContext;
+use engine::control::input::InputState;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::{GpuContext, RenderConfig};
-use engine::control::input::InputState;
 use engine::drawing::text::TextSystem;
-use engine::styling::theme::Theme;
-use engine::compose::view::ViewContext;
 use engine::runtime::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::styling::color::Color;
+use engine::styling::theme::Theme;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
@@ -293,7 +293,8 @@ impl ApplicationHandler for PreviewApp {
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects =
+            engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,
@@ -351,7 +352,8 @@ fn main() {
         }
     };
     let rules = import::formats::react::sass::parse_sass(&read(sass), &read(vars));
-    let res = import::formats::react::resolve::resolve_react(&component, &rules, &name(tsx), &name(sass));
+    let res =
+        import::formats::react::resolve::resolve_react(&component, &rules, &name(tsx), &name(sass));
     let title = format!(
         "parser preview: {} - {} mapeadas, {} droplist",
         res.fn_name,

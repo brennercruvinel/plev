@@ -11,12 +11,12 @@
 
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
+use accord::{Actor, Dispatcher, Millis, Request, SemId};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{Renderer, Viewport};
+use engine::widgets::prelude::WidgetEvent;
 use record::{InputKind, Limits, Recorder, Stats};
-use accord::{Actor, Dispatcher, Millis, Request, SemId};
 use uigallery::views::ShowcaseView;
 
 // the semantic track runs under the recorder's own toy git client, the one

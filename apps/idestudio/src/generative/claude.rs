@@ -18,9 +18,9 @@
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
+use accord::{Actor, RequestId, Snapshot};
 use claude::{Cancel, ClaudeCli};
 use offers::{Ask, Llm, Model, ModelError, ProposeError, propose_verified};
-use accord::{Actor, RequestId, Snapshot};
 use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 /// How often the workbench looks at the channel while it waits.

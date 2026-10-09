@@ -10,10 +10,10 @@
 //! With `FIELD_MENU_OUT=<dir>` and a GPU, the first test also writes
 //! `field-menu.png` there: the menu open over the Input page's field.
 
-use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+use accord::{Actor, Request, Stage, Value};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
-use accord::{Actor, Request, Stage, Value};
+use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 use uigallery::views::{EditKey, NavKey};
 
 use super::harness::{Gallery, gallery, sid};

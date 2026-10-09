@@ -2,8 +2,8 @@
 // Scales
 // ============================================================================
 
-use crate::styling::color::Color;
 use crate::drawing::text::TextStyle;
+use crate::styling::color::Color;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {

@@ -20,11 +20,11 @@
 //! says as a toggle button's state. The port and a model's prompt never
 //! get it.
 
-use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use accord::{Policy, Request, RequestId, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
-use accord::{Policy, Request, RequestId, Role, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
 use plevir::{Preference, Preferences};
 
 use super::super::SilencesPage;

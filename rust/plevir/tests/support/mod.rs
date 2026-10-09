@@ -9,8 +9,8 @@ pub mod jsonschema;
 use std::collections::BTreeSet;
 
 use accord::{Actors, Confirm, Constraints, ParamSpec, Policy, Role, SnapshotBuilder, ValueKind};
-use serde_json::{Value, json};
 use plevir::{Capabilities, GenerationPolicy, IrError, Rule};
+use serde_json::{Value, json};
 
 /// The registry of a projection like the ide's (changes with two files,
 /// the commit form), plus the odd capabilities the policy rules need.

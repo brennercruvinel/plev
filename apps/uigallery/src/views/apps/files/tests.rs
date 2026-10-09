@@ -16,16 +16,16 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::{Rect, WidgetEvent};
-use engine::drawing::compositor::Compositor;
-use engine::control::input::FileDrop;
-use engine::runtime::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
-use engine::runtime::platform::files::{DialogKind, FakeDialogs, NoDialogs};
-use engine::styling::theme::Theme;
 use accord::{
     ActionName, Actor, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value,
     ValueKind,
 };
+use engine::control::input::FileDrop;
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
+use engine::runtime::platform::files::{DialogKind, FakeDialogs, NoDialogs};
+use engine::styling::theme::Theme;
+use engine::widgets::prelude::{Rect, WidgetEvent};
 use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 use super::FilesPage;

@@ -8,8 +8,8 @@
 mod support;
 
 use accord::{Acted, Actor, Rejection, RequestId, Revision, SemId, Stage};
-use support::toy::ToyHost;
 use socket::{ConnId, Host, Reply, Server, ServerMsg, StageReply, decode_client};
+use support::toy::ToyHost;
 
 const A: ConnId = 1;
 

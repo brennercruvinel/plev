@@ -19,6 +19,12 @@
 //! `control_size`, that control height at the frame's usual aspect (a
 //! thumbnail in a row).
 
+use accord::{Snapshot, Value};
+use engine::compose::layout::TextMeasureSpec;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::gpu::image::ImageHandle;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{ControlSize, Elevation, Theme};
 use engine::widgets::Rect;
 use engine::widgets::buttons::Badge;
 use engine::widgets::charts::draw as chart;
@@ -27,12 +33,6 @@ use engine::widgets::feedback::ProgressBar;
 use engine::widgets::form::{Slider, TextField};
 use engine::widgets::nav::Tabs;
 use engine::widgets::recipe::{rounded_rect, shadow_stack};
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::drawing::gpu::image::ImageHandle;
-use engine::compose::layout::TextMeasureSpec;
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::{ControlSize, Elevation, Theme};
-use accord::{Snapshot, Value};
 use plevir::{Axis, ChartKind, Component, SpacingToken};
 
 use crate::code;
@@ -512,11 +512,11 @@ fn draw_chart(c: &mut Compositor, kind: ChartKind, data: &[String], rect: Rect, 
 
 #[cfg(test)]
 mod tests {
-    use engine::widgets::Rect;
-    use engine::widgets::content::Table;
+    use accord::{Role, Snapshot, SnapshotBuilder};
     use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
     use engine::styling::theme::Theme;
-    use accord::{Role, Snapshot, SnapshotBuilder};
+    use engine::widgets::Rect;
+    use engine::widgets::content::Table;
     use plevir::{Capabilities, GenerationPolicy, verify_json};
 
     use crate::surface::Surface;

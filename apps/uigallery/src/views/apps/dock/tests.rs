@@ -3,8 +3,8 @@
 //! of truth for rects). No GPU: scenes build into a plain compositor.
 
 use super::*;
-use engine::drawing::compositor::LayerId;
 use crate::domain::dock::DockState;
+use engine::drawing::compositor::LayerId;
 
 const DT: f32 = 1.0 / 60.0;
 

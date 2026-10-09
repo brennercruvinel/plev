@@ -853,7 +853,8 @@ fn culling_applies_to_paths_via_bounds() {
     let mut comp = Compositor::new();
     let offscreen =
         crate::drawing::path::PathBuilder::circle(-100.0, -100.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
-    let onscreen = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let onscreen =
+        crate::drawing::path::PathBuilder::circle(50.0, 50.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
     let visible_vertex_count = onscreen.vertices.len();
 
     comp.begin_frame();
@@ -1399,7 +1400,8 @@ fn merge_text_groups_keeps_one_range_per_group() {
 fn path_node_participates_in_dirty_tracking() {
     let mut comp = Compositor::new();
 
-    let path_data = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let path_data =
+        crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
 
     comp.begin_frame();
     comp.push(SceneNode::Path {
@@ -1422,7 +1424,8 @@ fn path_node_participates_in_dirty_tracking() {
 
     comp.mark_layer_clean(LayerId::DEFAULT);
     comp.begin_frame();
-    let different = crate::drawing::path::PathBuilder::circle(100.0, 100.0, 10.0).fill([0.0, 1.0, 0.0, 1.0]);
+    let different =
+        crate::drawing::path::PathBuilder::circle(100.0, 100.0, 10.0).fill([0.0, 1.0, 0.0, 1.0]);
     comp.push(SceneNode::Path { data: different });
     for layer in &mut comp.layers {
         layer.resolve_dirty();

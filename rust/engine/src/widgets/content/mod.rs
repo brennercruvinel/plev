@@ -1,7 +1,9 @@
 //! Content: the things that show data.
 
 mod avatar;
+pub(crate) mod badge;
 mod card;
+pub(crate) mod chip;
 mod code_block;
 mod empty_state;
 mod list;
@@ -11,8 +13,6 @@ mod skeleton;
 mod stat;
 mod table;
 mod tree;
-pub(crate) mod badge;
-pub(crate) mod chip;
 
 pub use avatar::{Avatar, AvatarSize};
 pub use card::{Card, CardListRow, CardVariant};

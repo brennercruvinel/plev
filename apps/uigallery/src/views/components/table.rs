@@ -9,11 +9,11 @@
 //! focused one in view, and the focus follows the wheel (task-75 phase
 //! 2d).
 
-use engine::widgets::content::{Column, Panel, Table};
-use engine::widgets::prelude::{Align, EventResult, Rect, WidgetEvent};
+use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
-use accord::{Request, SemId, SnapshotBuilder};
+use engine::widgets::content::{Column, Panel, Table};
+use engine::widgets::prelude::{Align, EventResult, Rect, WidgetEvent};
 
 use super::{After, Component, child_id, key_under, root_id, under};
 

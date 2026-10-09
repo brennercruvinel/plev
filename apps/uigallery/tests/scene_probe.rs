@@ -20,9 +20,9 @@
 use std::collections::{BTreeMap, HashSet};
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
 use engine::drawing::compositor::{Compositor, Layer, LayerEffect, SceneNode, TextNodeKey};
 use engine::drawing::headless::Viewport;
+use engine::widgets::prelude::WidgetEvent;
 use motion::{AssetBank, DiscoverConfig, LoweredAsset, Node};
 use uigallery::shell::stage_page;
 use uigallery::views::{PAGES, ShowcaseView};

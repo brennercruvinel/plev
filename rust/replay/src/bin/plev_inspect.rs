@@ -18,9 +18,9 @@ fn main() {
 mod cli {
     use std::path::{Path, PathBuf};
 
-    use replay::{Control, Inspector, Summary, Timeline, Why, prose};
-    use record::{ReadError, Session};
     use accord::{Millis, RequestId, SemId};
+    use record::{ReadError, Session};
+    use replay::{Control, Inspector, Summary, Timeline, Why, prose};
 
     pub const USAGE: &str = "\
 usage:

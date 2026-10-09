@@ -3,13 +3,13 @@
 //! the person, what the agent asked her and what she answered, the costs,
 //! and the report written as json and printed.
 
-use record::Session;
 use accord::{SemId, Stage, Value};
+use record::Session;
 use serde_json::{Value as Json, json};
 
+use crate::arms::plev::Lab;
 use crate::asked;
 use crate::host::{Intervention, Trigger};
-use crate::arms::plev::Lab;
 use crate::refused;
 use crate::repo::{TASK, TASK_FILES, TASK_MESSAGE};
 use crate::report::{self, Truth, human, ms, per_call_us, row};

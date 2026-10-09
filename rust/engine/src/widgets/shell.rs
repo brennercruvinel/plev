@@ -9,8 +9,8 @@ use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::{Breakpoint, SidebarMode, Theme};
 
 use crate::widgets::buttons::{IconButton, IconButtonVariant};
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::nav::{PanelHeader, Sidebar};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Insets the platform reserves (notch, home indicator, status bar), in
 /// logical px. Zero on a desktop window.

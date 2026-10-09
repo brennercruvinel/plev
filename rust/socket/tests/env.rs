@@ -128,8 +128,8 @@ impl socket::Host for Nothing {
 
 #[test]
 fn scene_from_env_in_a_child() {
-    use std::time::{Duration, Instant};
     use socket::{Client, ProtoError, Reply, WireError};
+    use std::time::{Duration, Instant};
 
     if std::env::var_os("WIRE_T79_CHILD").is_none() {
         return;

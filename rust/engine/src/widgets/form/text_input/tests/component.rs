@@ -185,8 +185,8 @@ fn text_input_cursor_x_round_trip_all_positions() {
 
 #[test]
 fn text_field_empty_unfocused_draws_field_and_placeholder() {
-    use crate::widgets::form::TextField;
     use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    use crate::widgets::form::TextField;
     let theme = crate::styling::theme::Theme::hoff();
     let field = TextField::new("Type here...");
     let mut c = Compositor::new();
@@ -211,8 +211,8 @@ fn text_field_empty_unfocused_draws_field_and_placeholder() {
 
 #[test]
 fn text_field_focused_with_text_draws_ring_text_and_caret() {
-    use crate::widgets::form::TextField;
     use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    use crate::widgets::form::TextField;
     let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("");
     field.focus();
@@ -257,8 +257,8 @@ fn text_input_handle_ime_unfocused() {
 
 #[test]
 fn text_field_selection_draws_the_accent_wash() {
-    use crate::widgets::form::{EditKey, TextField};
     use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    use crate::widgets::form::{EditKey, TextField};
     let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("");
     field.focus();
@@ -284,8 +284,8 @@ fn text_field_selection_draws_the_accent_wash() {
 
 #[test]
 fn text_field_click_places_the_caret_on_the_glyph() {
-    use crate::widgets::widget::{Rect, WidgetEvent};
     use crate::widgets::form::TextField;
+    use crate::widgets::widget::{Rect, WidgetEvent};
     let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("").with_text("hello");
     let bounds = Rect::new(10.0, 10.0, 200.0, TextField::height(&theme));

@@ -7,8 +7,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 
-use crate::widgets::widget::Rect;
 use crate::widgets::recipe::shadow_node;
+use crate::widgets::widget::Rect;
 
 /// The per-theme geometry placement and render share.
 struct Metrics {

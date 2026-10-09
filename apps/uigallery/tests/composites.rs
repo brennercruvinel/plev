@@ -12,10 +12,10 @@
 
 use std::sync::{Arc, Mutex};
 
+use accord::{Actor, Request, SemId};
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use offers::compose::{Detector, Found, Listener, Target};
 use record::{Kind, Limits, Recorder, Session};
-use accord::{Actor, Request, SemId};
 use uigallery::views::ShowcaseView;
 
 fn agent() -> Actor {

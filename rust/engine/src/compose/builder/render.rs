@@ -1,7 +1,7 @@
-use crate::drawing::compositor::SceneNode;
-use crate::control::input::ViewId;
 use crate::compose::layout::LayoutEngine;
 use crate::compose::view::{View, ViewContext};
+use crate::control::input::ViewId;
+use crate::drawing::compositor::SceneNode;
 
 use super::element::Element;
 use super::emit::emit_scene_nodes;

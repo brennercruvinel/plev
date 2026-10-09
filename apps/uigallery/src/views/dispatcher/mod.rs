@@ -2,12 +2,12 @@
 //! event, its visible-only tick and its drawing. One match per verb over
 //! `pages::Pane`, so the rest of the view never names a pane's field.
 
-use engine::widgets::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
-use engine::drawing::compositor::Compositor;
+use accord::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
 use engine::control::input::FileDrop;
+use engine::drawing::compositor::Compositor;
 use engine::runtime::platform::capture::Capture;
 use engine::styling::theme::Theme;
-use accord::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
+use engine::widgets::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
 
 use super::{Layers, Pane, ShowcaseView, panel};
 use component::After;

@@ -5,7 +5,9 @@
 
 use std::collections::BTreeSet;
 
-use accord::{Acted, Actor, Millis, Receipt, Rejection, RequestId, Revision, Stage, StateRef, Value};
+use accord::{
+    Acted, Actor, Millis, Receipt, Rejection, RequestId, Revision, Stage, StateRef, Value,
+};
 use serde_json::{Value as Json, json};
 use socket::Traffic;
 

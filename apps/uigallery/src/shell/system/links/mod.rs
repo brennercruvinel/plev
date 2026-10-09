@@ -29,10 +29,10 @@
 //! applied on the first poll awake. A recorded session keeps the link's
 //! look at the gallery and its receipt's stages, as an agent's; no input.
 
-use engine::runtime::platform::links::{Delivered, LinkSource, default_links};
-use engine::styling::theme::Intent;
-use engine::runtime::window::Background;
 use accord::{Receipt, Rejection, Revision, Stage};
+use engine::runtime::platform::links::{Delivered, LinkSource, default_links};
+use engine::runtime::window::Background;
+use engine::styling::theme::Intent;
 
 use super::super::App;
 use crate::views::ShowcaseView;
@@ -195,7 +195,12 @@ impl App {
         let mut looked = |view: &mut ShowcaseView, revision: Revision| {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             if let Some(recorder) = recorder {
-                recorder.observed(view.now(), engine::runtime::platform::links::actor(), None, revision);
+                recorder.observed(
+                    view.now(),
+                    engine::runtime::platform::links::actor(),
+                    None,
+                    revision,
+                );
             }
             #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
             let _ = (view, revision);

@@ -7,12 +7,12 @@
 //! desk declares its composites and runs them as chains, the way the
 //! Silences page does.
 
-use offers::compose::{Chain, Composer};
 use accord::{
     Actor, Actors, Confirm, Constraints, Dispatcher, Execution, Millis, Operable, Outcome,
     ParamSpec, Policy, Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Value,
     ValueKind,
 };
+use offers::compose::{Chain, Composer};
 
 /// Who may sign: a person, at the screen or through assistive
 /// technology, and a test; never an agent (the showcase's `PERSON_ONLY`).

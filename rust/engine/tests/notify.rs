@@ -7,12 +7,12 @@
 //! agent's capability is never a notification's button, and the target
 //! without notifications says so.
 
-use engine::runtime::platform::notify::{
-    Action, FakeNotifier, Level, NoNotifier, Notification, Notifier, NotifyError,
-};
 use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Stage, Value,
+};
+use engine::runtime::platform::notify::{
+    Action, FakeNotifier, Level, NoNotifier, Notification, Notifier, NotifyError,
 };
 
 fn sid(text: &str) -> SemId {

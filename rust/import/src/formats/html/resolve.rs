@@ -17,14 +17,13 @@
 //! not simple, declarations outside the subset, the browser's default
 //! styles the subset does not apply, and text styles no run takes.
 
-
 use std::collections::HashSet;
 
 use crate::ParserError;
-use crate::formats::react::css::{is_text_prop, px};
 use crate::emit::plevir::sanitize;
-use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlDoc, HtmlNode};
 use crate::formats::html::css::{self, Mapped, Selector};
+use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlDoc, HtmlNode};
+use crate::formats::react::css::{is_text_prop, px};
 use crate::tree::{
     Dropped, Note, NoteKind, Origin, ParserNode, Prop, Resolution, Src, Tag, TextValue,
 };

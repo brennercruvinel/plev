@@ -11,8 +11,8 @@
 //! (morph, lifts, fades, send flash, or the blinking cursor while the
 //! input panel is visible). A false return means the frame is at rest.
 
-use engine::widgets::prelude::Rect;
 use engine::compose::animation::{Easing, Tween};
+use engine::widgets::prelude::Rect;
 
 /// Clickable avatars in the dock roster.
 pub const AVATARS: usize = 4;

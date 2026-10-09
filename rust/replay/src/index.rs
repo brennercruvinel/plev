@@ -4,8 +4,8 @@
 
 use std::collections::HashMap;
 
-use record::{Kind, ReadError, ReceiptAt, Session, State};
 use accord::{Millis, RequestId, Stage};
+use record::{Kind, ReadError, ReceiptAt, Session, State};
 
 /// an instant of the session: `t` on the recorder's clock, `at` in
 /// milliseconds from the start of the session (the time every view

@@ -3,13 +3,13 @@
 //! AccessKit action requests that reach the same state a person's click
 //! reaches, through the page's one dispatcher, as `Actor::Assistive`.
 
-use engine::widgets::prelude::WidgetEvent;
+use accord::{Actor, Rejection, Request, SemId, Stage};
 use engine::control::accessibility::accesskit::{
     Action, ActionData, ActionRequest, Node, Role as AkRole, Toggled, TreeId, TreeUpdate,
 };
 use engine::control::accessibility::{self, Assist, Chrome, Direction, Shown, focus};
 use engine::drawing::compositor::Compositor;
-use accord::{Actor, Rejection, Request, SemId, Stage};
+use engine::widgets::prelude::WidgetEvent;
 
 use crate::views::ShowcaseView;
 
@@ -167,7 +167,11 @@ fn the_tree_is_the_todo_page_under_the_window() {
     };
     assert_eq!(bounds.x0, f64::from(row[0]) * 2.0);
     assert_eq!(bounds.y1, f64::from(row[1] + row[3]) * 2.0);
-    assert_eq!(u.focus, engine::control::accessibility::ROOT, "nothing focused yet");
+    assert_eq!(
+        u.focus,
+        engine::control::accessibility::ROOT,
+        "nothing focused yet"
+    );
 }
 
 /// The acceptance: an AccessKit `Click` on a row's checkbox reaches the

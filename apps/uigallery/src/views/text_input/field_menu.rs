@@ -16,8 +16,8 @@
 use engine::widgets::form::ClipKey;
 use engine::widgets::prelude::{ContextMenu, MenuEntry};
 
-use super::clipboard::Keys;
 use super::super::{Pane, ShowcaseView};
+use super::clipboard::Keys;
 
 /// The items' ids, apart from the Context Menu page's demo items.
 const CUT: u64 = 101;

@@ -7,8 +7,8 @@
 //! output since forever) and parse the unified format here. This is the
 //! same route Zed's `git` crate takes for worktree diffs.
 
-use crate::error::{GitError, Result};
 use crate::domain::{DiffLine, DiffLineKind, Hunk};
+use crate::error::{GitError, Result};
 
 /// Parses `git diff` / `git show --patch` output into hunks.
 ///

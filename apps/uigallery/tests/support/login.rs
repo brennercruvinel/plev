@@ -7,8 +7,8 @@
 //! bound to the id the projection gives it; the projection marks the
 //! password and the pin secret, as a page would.
 
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use accord::{Constraints, Role, Snapshot, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 
 /// What the user field shows: it travels.
 pub const USER: &str = "brenner-at-the-desk";

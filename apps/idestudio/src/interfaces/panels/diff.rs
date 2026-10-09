@@ -3,14 +3,14 @@
 //! (text-default, text-mid); only row tints and the +/- prefixes carry
 //! the success / danger colors. Line numbers at the placeholder tone.
 
+use accord::SemId;
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 use engine::widgets::feedback::Scrollbar;
 use engine::widgets::nav::PanelHeader;
 use engine::widgets::prelude::{Rect, Wake};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::control::input::scroll::ScrollState;
-use engine::drawing::text::{TextMeasurer, TextStyle};
-use engine::styling::theme::Theme;
-use accord::SemId;
 
 /// A single line in a diff.
 #[derive(Clone, Debug)]

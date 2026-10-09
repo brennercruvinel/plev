@@ -4,9 +4,9 @@
 //! - [`layout`]: layout pipeline (positioning + text measurement parity).
 
 mod emit;
+mod intent;
 mod layout;
 mod styles;
-mod intent;
 
 use crate::compose::view::ViewContext;
 

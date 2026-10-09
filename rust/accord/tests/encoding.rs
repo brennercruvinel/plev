@@ -6,11 +6,11 @@
 
 use std::collections::BTreeSet;
 
-use indexmap::IndexMap;
 use accord::{
     Acted, ActionDecl, Actor, Actors, Change, Confirm, Constraints, Outcome, Policy, Receipt,
     Rejection, Request, RequestId, Role, Snapshot, SnapshotBuilder, Stage, Value, Verdict, check,
 };
+use indexmap::IndexMap;
 
 fn set(items: &[&str]) -> Value {
     Value::Set(items.iter().map(|s| s.to_string()).collect::<BTreeSet<_>>())

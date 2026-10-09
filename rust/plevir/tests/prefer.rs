@@ -11,12 +11,12 @@ mod support;
 use std::collections::BTreeSet;
 
 use accord::{Actor, ParamSpec, SemId, ValueKind};
-use serde_json::{Value, json};
-use support::caps;
 use plevir::{
     ActionCap, Adapted, Capabilities, ColorRole, Context, DataCap, GenerationPolicy, Ir, IrNode,
     Op, Preference, Preferences, SpacingToken, Step, TypographyRole, verify, verify_json,
 };
+use serde_json::{Value, json};
+use support::caps;
 
 /// A surface with a text of every kind a preference reads: a headline,
 /// one at the top of the ramp, one in each secondary ink, one in an

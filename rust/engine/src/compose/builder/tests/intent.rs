@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
     use crate::compose::builder::*;
-    use crate::styling::color::Color;
-    use crate::drawing::compositor::SceneNode;
     use crate::compose::view::{View, ViewContext};
+    use crate::drawing::compositor::SceneNode;
+    use crate::styling::color::Color;
 
     fn test_cx() -> ViewContext {
         ViewContext::new(800.0, 600.0)

@@ -19,8 +19,8 @@ use crate::drawing::compositor::Compositor;
 use crate::styling::theme::Theme;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::recipe::rounded_rect;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Which axis the split runs along.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

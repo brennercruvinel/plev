@@ -1,13 +1,13 @@
 use std::ops::Range;
 
-use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::control::input::scroll::ScrollState;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 use crate::widgets::feedback::Scrollbar;
 use crate::widgets::recipe::focus_ring_inside;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Rows tessellated beyond the viewport on each side, so partially
 /// visible rows and small scroll deltas don't pop.

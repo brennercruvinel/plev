@@ -9,11 +9,11 @@
 //! the focused one in view, and the focus follows the wheel (task-75
 //! phase 2d).
 
-use engine::widgets::icons;
-use engine::widgets::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
+use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
-use accord::{Request, SemId, SnapshotBuilder};
+use engine::widgets::icons;
+use engine::widgets::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
 
 use super::{After, Component, child_id, key_under, panel, root_id, text, under};
 
@@ -29,7 +29,11 @@ pub struct ScrollAreaPage {
 
 impl ScrollAreaPage {
     pub fn new(theme: &Theme) -> Self {
-        let mut list = VirtualList::new(theme.control.height(engine::styling::theme::ControlSize::Xs));
+        let mut list = VirtualList::new(
+            theme
+                .control
+                .height(engine::styling::theme::ControlSize::Xs),
+        );
         list.set_item_count(10_000);
         let root = root_id("scroll_area_page");
         let list = match child_id(root.as_ref(), "list") {
@@ -132,7 +136,8 @@ impl ScrollAreaPage {
                     },
                 );
                 let tag = format!("#{:04}", index % 10_000);
-                let (tag_w, _) = engine::drawing::text::TextMeasurer::measure_styled(&tag, &small, None);
+                let (tag_w, _) =
+                    engine::drawing::text::TextMeasurer::measure_styled(&tag, &small, None);
                 c.push_to_layer(
                     list_layer,
                     SceneNode::Text {

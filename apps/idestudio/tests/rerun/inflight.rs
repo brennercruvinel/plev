@@ -18,11 +18,11 @@
 //! read it asked for lands), on purpose and only here: the harness, the
 //! `Fixture` trait and the marks are as they were.
 
-use idestudio::capability::Workbench;
 use accord::{Actor, Millis, Receipt, Request, RequestId, Snapshot, Stage};
+use idestudio::capability::Workbench;
 
-use crate::harness::{Fixture, rerun};
 use crate::eval::{Lab, fixture};
+use crate::harness::{Fixture, rerun};
 
 /// the laboratory's workbench, settled only as far as its executions.
 pub struct InFlight<'a> {

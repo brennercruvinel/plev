@@ -1,9 +1,9 @@
 //! Empty page: the empty state with a call to action and the plain one,
 //! side by side when the page is wide.
 
-use engine::widgets::prelude::{Button, EmptyState, EventResult, Rect, WidgetEvent};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::prelude::{Button, EmptyState, EventResult, Rect, WidgetEvent};
 
 use super::panel;
 

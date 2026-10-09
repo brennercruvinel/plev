@@ -3,9 +3,9 @@
 //! stacking order, read back from memory and from the file, cut with the
 //! ring and the export, and absent from a file written before it.
 
+use accord::{Millis, SemId};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use record::{Bound, FileError, Limits, Recorder, Session};
-use accord::{Millis, SemId};
 use sha2::{Digest, Sha256};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;

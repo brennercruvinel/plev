@@ -38,11 +38,11 @@ mod refused;
 // `crate::repo` as before.
 #[cfg(unix)]
 use idestudio::repository::eval_repo as repo;
+pub mod arms;
 #[cfg(unix)]
 mod report;
 #[cfg(unix)]
 mod story;
-pub mod arms;
 #[cfg(unix)]
 mod subject;
 

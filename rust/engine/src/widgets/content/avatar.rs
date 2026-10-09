@@ -8,8 +8,8 @@ use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, Theme};
 
-use crate::widgets::widget::Rect;
 use crate::widgets::recipe::glass_pill;
+use crate::widgets::widget::Rect;
 
 /// Avatar sizes on the control ladder.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

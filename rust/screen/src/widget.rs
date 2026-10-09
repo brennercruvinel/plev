@@ -7,13 +7,13 @@
 //! `toggle`, `set_value`, `select`, `confirm`, `cancel`) and its value;
 //! the surface turns it into a request for the capability the IR bound.
 
+use accord::{Snapshot, Value};
+use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::buttons::{Button, ButtonVariant, Chip, IconButton, SubmitButton};
 use engine::widgets::content::{Column, Table};
 use engine::widgets::form::{Checkbox, Select, Slider, Switch, TextField};
 use engine::widgets::nav::Tabs;
 use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
-use engine::styling::theme::{ControlSize, Theme};
-use accord::{Snapshot, Value};
 use plevir::{CapabilityRef, Component};
 
 use crate::code::Code;

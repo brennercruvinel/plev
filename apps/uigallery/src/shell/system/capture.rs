@@ -39,10 +39,10 @@ impl App {
 mod tests {
     use std::sync::{Arc, Mutex};
 
+    use accord::{Actor, Request, Stage, StateRef, Value};
     use engine::runtime::platform::capture::{DeviceKind, FakeCapture};
     use engine::runtime::platform::menu::locked;
     use engine::runtime::window::Background;
-    use accord::{Actor, Request, Stage, StateRef, Value};
     use winit::window::WindowId;
 
     use super::super::super::App;

@@ -8,9 +8,9 @@ mod surface;
 pub mod texture_pool;
 pub mod vec;
 
+pub(crate) mod presets;
 #[cfg(test)]
 mod tests;
-pub(crate) mod presets;
 
 pub use config::RenderConfig;
 pub use context::*;

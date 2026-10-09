@@ -8,9 +8,9 @@
 //! phase 2a, tested with their pages).
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
+use engine::compose::animation::{reduced_motion, set_reduced_motion};
 use engine::widgets::overlay::{OverlayKind, OverlayManager};
 use engine::widgets::prelude::{Intent, Switch, Theme, ToastManager};
-use engine::compose::animation::{reduced_motion, set_reduced_motion};
 use uigallery::views::ShowcaseView;
 
 const FRAME: f32 = 1.0 / 60.0;

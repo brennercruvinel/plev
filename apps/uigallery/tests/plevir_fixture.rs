@@ -23,8 +23,8 @@
 
 use std::path::PathBuf;
 
-use engine::drawing::headless::Viewport;
 use accord::Snapshot;
+use engine::drawing::headless::Viewport;
 use uigallery::shell::{semantics_json, stage_page};
 
 const FIXTURE: &str = "../../rust/plevir/tests/fixtures/uigallery-todo.snapshot.json";

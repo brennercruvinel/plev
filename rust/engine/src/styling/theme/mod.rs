@@ -6,9 +6,6 @@ pub(crate) mod scales;
 mod tests;
 pub(crate) mod tokens;
 
-pub use crate::widgets::buttons::tokens::{
-    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
-};
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
 pub use self::scales::{
@@ -17,6 +14,9 @@ pub use self::scales::{
 };
 pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+};
+pub use crate::widgets::buttons::tokens::{
+    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
 };
 
 // ============================================================================

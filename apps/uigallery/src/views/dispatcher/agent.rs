@@ -1,6 +1,6 @@
+use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
 use engine::drawing::compositor::Compositor;
 use record::Recorder;
-use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
 use socket::{AgentPort, Bound, Host};
 
 use super::ShowcaseView;
@@ -105,8 +105,8 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::drawing::compositor::Compositor;
     use accord::{Actor, Change, Rejection, SemId, Stage, StateRef, Value};
+    use engine::drawing::compositor::Compositor;
     use socket::{Act, AgentPort, Client, Config, Observe, Reply, ServerMsg, encode_server};
 
     use crate::views::ShowcaseView;
@@ -353,7 +353,11 @@ mod tests {
         let agent = Actor::Agent {
             name: "claude".into(),
         };
-        let Some(receipt) = view.panes.todo.receipt(accord::RequestId::parse("1").unwrap()) else {
+        let Some(receipt) = view
+            .panes
+            .todo
+            .receipt(accord::RequestId::parse("1").unwrap())
+        else {
             panic!("the page's dispatcher kept the first request");
         };
         assert_eq!(receipt.request.actor, agent);

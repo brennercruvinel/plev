@@ -3,9 +3,9 @@
 // tests.rs file; the same-name nesting is deliberate.
 #[allow(clippy::module_inception)]
 mod tests {
+    use crate::compose::view::ViewContext;
     use crate::compose::view::{Component, Lifecycle};
     use crate::drawing::compositor::{SceneNode, TextNodeKey};
-    use crate::compose::view::ViewContext;
     use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
     // -- Minimal test lifecycle --

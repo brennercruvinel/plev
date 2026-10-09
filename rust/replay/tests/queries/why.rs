@@ -3,12 +3,12 @@
 //! then (another actor, nobody from the app, or several), the stages and
 //! the result.
 
-use replay::{Basis, By, Ending, Inspector, Unrecorded, Why};
-use record::InputKind;
 use accord::{Actor, Change, Rejection, RequestId, Stage, Value};
+use record::InputKind;
+use replay::{Basis, By, Ending, Inspector, Unrecorded, Why};
 
-use crate::toys::{Lab, agent, id, rid, sha};
 use crate::thesis::record;
+use crate::toys::{Lab, agent, id, rid, sha};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
 

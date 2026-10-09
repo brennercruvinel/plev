@@ -14,10 +14,10 @@ mod support;
 
 use std::collections::VecDeque;
 
-use offers::{Llm, Model, ModelError, ProposeError, Transformed, transform_verified};
 use accord::{Actor, SemId};
-use support::{Changing, VAULT_PANEL, agent, compact, todo, vault};
+use offers::{Llm, Model, ModelError, ProposeError, Transformed, transform_verified};
 use plevir::{GenerationPolicy, Op};
+use support::{Changing, VAULT_PANEL, agent, compact, todo, vault};
 
 /// A model that answers from a script and keeps every prompt it read.
 #[derive(Default)]

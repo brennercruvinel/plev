@@ -1,10 +1,10 @@
 //! `Receipt`, `Stage` and the legal transitions, `RequestId`.
 
-use indexmap::IndexMap;
 use accord::{
     Actor, Change, Outcome, Receipt, Rejection, Request, RequestId, Role, SemError, SemId,
     SnapshotBuilder, Stage, Value,
 };
+use indexmap::IndexMap;
 
 fn one_of_each() -> Vec<Stage> {
     vec![

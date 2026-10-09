@@ -4,11 +4,11 @@
 
 use std::collections::BTreeSet;
 
-use indexmap::IndexMap;
 use accord::{
     Actor, Constraints, Execution, Operable, Outcome, ParamSpec, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };
+use indexmap::IndexMap;
 
 /// the git client: what is staged, the message, the commits made, and how
 /// many times anything was executed.

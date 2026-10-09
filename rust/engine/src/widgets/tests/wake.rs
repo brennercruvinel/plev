@@ -5,9 +5,9 @@ use std::time::Duration;
 
 use crate::styling::theme::{Intent, Theme};
 
-use crate::widgets::widget::WidgetEvent;
 use crate::widgets::feedback::ToastManager;
 use crate::widgets::wake::{Blink, Wake};
+use crate::widgets::widget::WidgetEvent;
 
 const HALF: f32 = 0.53;
 

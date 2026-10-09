@@ -7,13 +7,13 @@ use std::sync::mpsc::{self, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::widgets::prelude::WidgetEvent;
-use engine::drawing::compositor::Compositor;
-use record::InputKind;
 use accord::SemId;
+use engine::drawing::compositor::Compositor;
+use engine::widgets::prelude::WidgetEvent;
+use record::InputKind;
+use socket::AgentPort;
 use uigallery::shell::window::record::Recording;
 use uigallery::views::ShowcaseView;
-use socket::AgentPort;
 
 use crate::run::TURN;
 

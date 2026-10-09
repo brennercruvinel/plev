@@ -5,8 +5,8 @@
 
 use std::path::PathBuf;
 
-use offers::Ask;
 use accord::Snapshot;
+use offers::Ask;
 use plevir::{Capabilities, GenerationPolicy, IrNode, VerifiedIr, verify_json};
 
 fn read(rel: &str) -> String {
@@ -16,12 +16,18 @@ fn read(rel: &str) -> String {
 
 /// The showcase todo projected, as `crates/uir/fixtures` pins it.
 pub fn todo() -> Snapshot {
-    serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-todo.snapshot.json")).unwrap()
+    serde_json::from_str(&read(
+        "../plevir/tests/fixtures/uigallery-todo.snapshot.json",
+    ))
+    .unwrap()
 }
 
 /// The ide workbench projected, as `crates/uir/fixtures` pins it.
 pub fn ide() -> Snapshot {
-    serde_json::from_str(&read("../plevir/tests/fixtures/idestudio-workbench.snapshot.json")).unwrap()
+    serde_json::from_str(&read(
+        "../plevir/tests/fixtures/idestudio-workbench.snapshot.json",
+    ))
+    .unwrap()
 }
 
 /// The compact form of the Surface page (the task-68 fixture).
@@ -218,7 +224,10 @@ pub fn agent() -> accord::Actor {
 
 /// The Silences projected, as `crates/uir/fixtures` pins it.
 pub fn silences() -> Snapshot {
-    serde_json::from_str(&read("../plevir/tests/fixtures/uigallery-silences.snapshot.json")).unwrap()
+    serde_json::from_str(&read(
+        "../plevir/tests/fixtures/uigallery-silences.snapshot.json",
+    ))
+    .unwrap()
 }
 
 /// The Claude's review of the checkpoint b's first round, as IR (the

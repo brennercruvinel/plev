@@ -13,10 +13,9 @@
 //! as lot does. Skipped with a one-time log, never a panic: filters
 //! (blur, shadow), clip paths, masks, images and text.
 
-
 pub use convert::{Stats, SvgError, convert};
 
-#[cfg(test)]
-mod tests;
 pub mod convert;
 pub mod tessellate;
+#[cfg(test)]
+mod tests;

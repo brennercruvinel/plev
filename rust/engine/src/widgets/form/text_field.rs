@@ -18,16 +18,16 @@
 //! draws and hit-tests with, and [`TextField::project`] declares the
 //! field in a semantic projection; the app still owns the field.
 
-use crate::runtime::platform::clipboard::ClipboardProvider;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::runtime::platform::clipboard::ClipboardProvider;
 use crate::styling::theme::{ControlSize, Theme};
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 use crate::widgets::form::text_input::TextInput;
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 use crate::widgets::wake::Wake;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Non-character editing keys a field understands. Apps map their key
 /// events onto these; Enter and Tab stay with the screen (submit and

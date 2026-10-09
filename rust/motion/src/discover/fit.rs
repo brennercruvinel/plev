@@ -4,10 +4,10 @@
 //! the quantization-grid helpers diffing works on. split from
 //! discover.rs to keep both files within the repository's size budget.
 
+use crate::encoding::quantize;
+use crate::play::evaluation::{default_value, lerp_value};
 use crate::timeline::easing::Easing;
 use crate::timeline::{Node, NodeId, Prop, Segment, Track, Value};
-use crate::play::evaluation::{default_value, lerp_value};
-use crate::encoding::quantize;
 
 /// Quantize `value` to the wire grid of `prop` and back to f32: the
 /// exact value an encode/decode round trip would carry (the container
@@ -21,7 +21,9 @@ pub fn quantize_value(prop: Prop, value: Value) -> Value {
             Value::Scalar(quantize::u16_to_angle_deg(quantize::angle_deg_to_u16(deg)))
         }
         (_, Value::Scalar(px)) => Value::Scalar(quantize::twips_to_px(quantize::px_to_twips(px))),
-        (_, Value::Color(rgba)) => Value::Color(quantize::bytes_to_rgba(quantize::rgba_to_bytes(rgba))),
+        (_, Value::Color(rgba)) => {
+            Value::Color(quantize::bytes_to_rgba(quantize::rgba_to_bytes(rgba)))
+        }
     }
 }
 

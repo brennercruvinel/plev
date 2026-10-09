@@ -8,9 +8,9 @@ mod sequence;
 mod stats;
 mod vertex;
 
+mod layer_operations;
 #[cfg(test)]
 mod tests;
-mod layer_operations;
 
 use crate::runtime::perf::stages::{self, Stage};
 

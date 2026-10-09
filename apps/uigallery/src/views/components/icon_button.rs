@@ -3,12 +3,12 @@
 //! `icon_button_page.button[<icon>]`, named by its icon; it does nothing
 //! but press, so its `activate` changes nothing.
 
+use accord::{Request, SemId, SnapshotBuilder};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 use engine::widgets::prelude::{
     EventResult, IconButton, IconButtonSize, IconButtonVariant, Rect, WidgetEvent,
 };
-use engine::drawing::compositor::Compositor;
-use engine::styling::theme::Theme;
-use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, flow, root_id, under};
 

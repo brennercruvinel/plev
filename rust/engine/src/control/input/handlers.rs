@@ -2,8 +2,8 @@ use winit::event::{ElementState, MouseButton, MouseScrollDelta};
 use winit::keyboard::{Key, NamedKey};
 
 use super::drop::FileDrop;
-use super::touch::SyntheticPointerEvent;
 use super::events::*;
+use super::touch::SyntheticPointerEvent;
 
 impl super::InputState {
     pub fn handle_cursor_moved(&mut self, x: f32, y: f32) {

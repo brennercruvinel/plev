@@ -5,14 +5,14 @@
 //! the session. Installed, it is an action of the app on every cut, and,
 //! with the review open, a button in each cut of it.
 
+use accord::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::load_image_rgba;
-use accord::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
 use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::super::SilencesPage;
-use super::super::generative::page::Page;
 use super::super::fixed_page::semantics::ms;
+use super::super::generative::page::Page;
 use super::agent::{Dir, act, gallery, sid, snapshot};
 use super::{TURN, center, click, dispatch_as_test, frame, setup, stage, tester, wide};
 use crate::views::ShowcaseView;

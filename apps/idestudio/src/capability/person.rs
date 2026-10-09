@@ -15,8 +15,8 @@
 //! stages as with the modal (`confirmed { by: human }`, or `declined`),
 //! and no input, since no click reached the window.
 
-use engine::runtime::platform::alerts::{self, Answered};
 use accord::{Actor, Request, RequestId, Stage};
+use engine::runtime::platform::alerts::{self, Answered};
 
 use super::Workbench;
 

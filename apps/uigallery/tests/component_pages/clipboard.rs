@@ -5,8 +5,8 @@
 //! where it went before. Every gallery here holds a `LocalClipboard`: no
 //! test touches the system's clipboard.
 
-use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 use accord::Value;
+use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 
 use super::harness::{Gallery, gallery};
 

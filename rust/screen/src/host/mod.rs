@@ -31,19 +31,19 @@ mod prefer;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use engine::widgets::Wake;
+use accord::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::ImageHandle;
 use engine::styling::theme::Theme;
-use accord::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
+use engine::widgets::Wake;
 use plevir::{
     Adapted, Capabilities, Context, GenerationPolicy, Inverse, Op, Preference, Preferences,
     TransformError, VerifiedIr,
 };
 
 use crate::expand::expand;
-use crate::transition::{Ghost, tick_ghosts};
 use crate::surface::Surface;
+use crate::transition::{Ghost, tick_ghosts};
 
 /// the app, as a surface reaches it: its one dispatcher and its
 /// projection. the surface builds the request; the app runs it, the way

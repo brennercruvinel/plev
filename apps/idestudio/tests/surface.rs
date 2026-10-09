@@ -10,9 +10,9 @@
 #[allow(dead_code)]
 mod support;
 
+use accord::{Actor, Role, SemId, Snapshot, Stage, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use accord::{Actor, Role, SemId, Snapshot, Stage, Value};
 use support::{Rig, completed};
 
 fn id(text: &str) -> SemId {

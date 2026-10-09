@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::Path;
 
-use engine::drawing::headless::Viewport;
 use accord::{Change, Snapshot};
+use engine::drawing::headless::Viewport;
 
 use crate::baseline::{Baseline, SCENE, SEMANTICS};
 use crate::compare::Status;

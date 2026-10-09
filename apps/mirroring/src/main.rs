@@ -150,8 +150,8 @@ an act through the app's contract, as the agent \"mirror\".";
 mod headless {
     use engine::drawing::gpu::RenderConfig;
     use engine::runtime::window::WindowHost;
-    use uigallery::shell::window::mirror::{Hand, Pressed, Viewer, said};
     use socket::{Client, Reply, WireError, encode_server};
+    use uigallery::shell::window::mirror::{Hand, Pressed, Viewer, said};
 
     use crate::cli::{self, NAME, Opts};
 

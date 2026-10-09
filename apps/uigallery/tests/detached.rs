@@ -9,11 +9,11 @@
 //! skips without a GPU adapter, like the headless tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use engine::widgets::prelude::WidgetEvent;
+use accord::{Role, SemId, Value};
 use engine::drawing::gpu::RenderConfig;
 use engine::drawing::headless::Frame;
 use engine::runtime::window::WindowHost;
-use accord::{Role, SemId, Value};
+use engine::widgets::prelude::WidgetEvent;
 use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);

@@ -22,11 +22,11 @@
 //! [`Component::run`] alike: the person, a reader and an agent end in the
 //! same state.
 
-use engine::styling::theme::Intent;
 use accord::{
     Execution, Operable, Outcome, Receipt, Request, RequestId, Role, SemErrors, SemId, Semantics,
     Snapshot, SnapshotBuilder,
 };
+use engine::styling::theme::Intent;
 
 use super::super::apps::todo::TodoPage;
 use super::super::components::toast::ToastPage;

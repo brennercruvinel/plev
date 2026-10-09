@@ -1,11 +1,11 @@
 use super::{PendingAction, UiRequest, WorkspaceView};
-use engine::widgets::feedback::{ContextMenu, MenuEntry, Modal};
-use engine::widgets::overlay::{MenuItem, OverlayKind};
-use engine::widgets::prelude::{Rect, WidgetEvent, rounded_rect, shadow_node};
+use accord::RequestId;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::{Intent, Theme};
-use accord::RequestId;
+use engine::widgets::feedback::{ContextMenu, MenuEntry, Modal};
+use engine::widgets::overlay::{MenuItem, OverlayKind};
+use engine::widgets::prelude::{Rect, WidgetEvent, rounded_rect, shadow_node};
 
 impl WorkspaceView {
     /// Handle a click when overlays are active. Returns true if consumed.

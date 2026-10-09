@@ -1,8 +1,8 @@
 //! Choices in a collection: the same tab, row, item, link, crumb, tree
 //! row and split from the three.
 
-use engine::control::accessibility::accesskit::{Action, Role as AkRole};
 use accord::Value;
+use engine::control::accessibility::accesskit::{Action, Role as AkRole};
 
 use super::harness::{ask, ask_with, by_agent, gallery, same, sid};
 

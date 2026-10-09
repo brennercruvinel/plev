@@ -16,7 +16,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use accord::redactor::Secrets;
-use accord::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage};
+use accord::{
+    Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage,
+};
 
 use engine::drawing::compositor::SceneNode;
 
@@ -24,9 +26,9 @@ use crate::bound::Bound;
 use crate::error::FrameError;
 use crate::event::{Event, InputKind, Kind};
 use crate::limits::{Limits, Stats};
-use crate::visuals::reader::Screen;
 use crate::session::Session;
 use crate::track::Track;
+use crate::visuals::reader::Screen;
 use crate::visuals::{Cadence, Visual};
 
 #[derive(Debug, Default)]
