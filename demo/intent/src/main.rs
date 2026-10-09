@@ -2,7 +2,7 @@
 //! proposed by the Claude:
 //!
 //! ```text
-//! cargo run -p claude-model --example propose -- [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] [--timeout <s>] "<intent>"
+//! cargo run -p intent -- [--app todo|ide|silences] [--shown <ir.json>] [--model <name>] [--timeout <s>] "<intent>"
 //! ```
 //!
 //! it reads the golden projection of the app (`rust/plevir/tests/fixtures`: the

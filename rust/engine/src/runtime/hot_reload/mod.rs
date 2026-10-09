@@ -7,7 +7,7 @@
 //! - Literals: a saved `.rs` whose only change is in strings or hex colors
 //!   is applied to the open window, state intact (`literals`). A code
 //!   change rebuilds the bin and re-execs it (`source`), so
-//!   `cargo run -p showcase` alone is the dev loop.
+//!   `cargo run -p uigallery` alone is the dev loop.
 //! - Tier 2 (narrate DSL): file watcher + runtime parse + override map,
 //!   polled by the engine's own `window::App` (experimental, no app uses it).
 //! - View source (`view_source`): a point in the window leads to the code

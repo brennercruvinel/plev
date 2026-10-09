@@ -289,8 +289,8 @@ exige ADR.
 
 ## critérios de aceitação
 
-- `cargo test -p sem`, `cargo clippy -p sem --all-targets -- -D warnings`,
-  `cargo check -p sem --target wasm32-unknown-unknown`, `./tool/tasks/fullcheck.sh`.
+- `cargo test -p accord`, `cargo clippy -p accord --all-targets -- -D warnings`,
+  `cargo check -p accord --target wasm32-unknown-unknown`, `./tool/tasks/fullcheck.sh`.
 - zero `unwrap`/`expect` fora de teste.
 - `arc_sync_guard` passa com o crate registrado.
 - doc test com o exemplo da tese: uma struct `GitState { staged:

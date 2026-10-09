@@ -478,9 +478,9 @@ formulário aberto com "fix parser" escrito por uma pessoa pelo
 dispatcher, a data do primeiro commit fixa para o sha ser estável) e por
 `apps/uigallery/tests/plevir_fixture.rs` (a página Todo encenada
 headless). os dois testes falham quando a projeção se afasta do arquivo.
-regeneração: `UIR_BLESS=1 cargo test -p ide --test uir_fixture`,
-`UIR_BLESS=1 cargo test -p showcase --test uir_fixture`, depois `cargo
-test -p uir` diz se os IR ainda verificam.
+regeneração: `UIR_BLESS=1 cargo test -p idestudio --test uir_fixture`,
+`UIR_BLESS=1 cargo test -p uigallery --test uir_fixture`, depois `cargo
+test -p plevir` diz se os IR ainda verificam.
 
 #### validação e contagem
 
@@ -500,8 +500,8 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
 2239 depois, com 1 falha (o `arc_sync_guard`).
 
 - `cargo clippy --workspace --all-targets -- -D warnings`, `cargo fmt
-  --check`, `cargo check --target wasm32-unknown-unknown -p showcase` e
-  `cargo check -p uir --target wasm32-unknown-unknown` (com `-D
+  --check`, `cargo check --target wasm32-unknown-unknown -p uigallery` e
+  `cargo check -p plevir --target wasm32-unknown-unknown` (com `-D
   warnings`): verdes.
 - perna urnaui (rodada à mão como o gate roda, com o target dir próprio):
   82 passam, clippy, fmt e wasm verdes. o urnaui não depende do `uir` e

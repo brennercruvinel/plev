@@ -4,9 +4,9 @@
 //! itself (`capture`).
 //!
 //! ```text
-//! cargo run -p showcase --example regress -- compare <base.png> <other.png>
+//! cargo run -p regress -- compare <base.png> <other.png>
 //!     [--scale <s>] [--target <desktop|web|ios|android>] [--table <file>]
-//! cargo run -p showcase --example regress -- capture [--page <title>]...
+//! cargo run -p regress -- capture [--page <title>]...
 //!     [--theme <name>]... [--scale <s>]... [--width <px>] [--height <px>]
 //!     [--out <dir>] [--against <dir>] [--reverse] [--no-png]
 //! ```
@@ -32,7 +32,7 @@ silent (a differing pixel no decision explains, measured: pixels, the
 largest and the mean channel delta, the rect that holds them); resized
 (two sizes, not compared by pixel). the decisions are the rows of
 --target in the table of requested differences (--table, default
-crates/showcase/fixtures/determinism/requested.json); without --target
+tool/bench/regress/requested.json); without --target
 nothing is declared. --scale is the frames' scale, 1 unless given: it
 maps the declared areas, in logical px, onto pixels.
 exit 0 when equal or requested, 1 when silent or resized.";

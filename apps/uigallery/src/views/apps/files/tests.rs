@@ -854,7 +854,7 @@ fn the_page_projection_is_the_uir_golden() {
     assert!(
         kept == text,
         "the projection moved away from the golden; regenerate it with \
-         UIR_BLESS=1 cargo test -p showcase --lib files::tests::the_page_projection"
+         UIR_BLESS=1 cargo test -p uigallery --lib files::tests::the_page_projection"
     );
 }
 

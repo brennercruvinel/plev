@@ -480,7 +480,7 @@ status: living
   the `claude -p` of Claude Code as a child process, with no tools, no
   saved session, no MCP, no user settings, a budget cap and a timeout that
   kills the child. the network is the child's; the crate holds no key.
-  `cargo run -p claude-model --example propose -- --app todo "<intent>"`
+  `cargo run -p intent -- --app todo "<intent>"`
   turns an intent into a verified IR over the todo's or the ide's
   projection. four real intents verified on the first attempt, in 4.5 s to
   89 s. the Surface page does not use it yet (phase 3b-ii).
@@ -688,7 +688,7 @@ status: living
 
 - a regression says which control changed before it counts pixels
   (2026-09-23, task-67, adr regression-by-meaning-before-pixels):
-  `cargo run -p showcase --example regress -- check` stages every
+  `cargo run -p regress -- check` stages every
   baselined page, compares its meaning (`Snapshot::diff`), then a stable
   hash per layer and the bindings, and only then the pixels in the region
   of a layer that moved, naming the controls there. nothing changed:
@@ -830,7 +830,7 @@ status: living
   build, text measure hits and misses, shaping, binds, hit tests, layer
   hashing, geometry, text resolve, upload bytes, encode, gpu wait), off by
   default at the cost of one relaxed load per probe;
-  `cargo run --release -p showcase --example measure` runs nine real
+  `cargo run --release -p measure` runs nine real
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
@@ -850,7 +850,7 @@ status: living
   every pipeline with the same code as the windowed constructor,
   `window::draw_frame` draws into any srgb view (`present_frame` is now
   acquire, draw, present, unchanged for every app), and `engine::headless`
-  reads the texture back to png. `cargo run -p showcase -- --render <page>
+  reads the texture back to png. `cargo run -p uigallery -- --render <page>
   --out f.png` and `monster_player <file> --frame <t> --out f.png` use it;
   the text probe's private offscreen pipeline is gone. 78 pages, two
   themes, two viewports: byte-identical across runs.
@@ -873,7 +873,7 @@ status: living
   acceptance or a person's confirmation (at the screen or through a screen
   reader), may end later with the id it received, and can be refused again
   at the point of truth. every step lands in a `Receipt` that sinks see as
-  it happens. `cargo run -p sem --example commit` plays the thesis
+  it happens. `cargo run -p commit` plays the thesis
   scenario.
 - the semantic contract, crate `sem` (2026-09-23, task-57, adr
   semantic-contract-as-pure-projection): every control can now be
@@ -903,7 +903,7 @@ status: living
   the open window, state intact, at `TextNodeKey`, `TextMeasurer`,
   `push_to_layer` and the clear color; a code change rebuilds
   (`cargo build -p $CARGO_PKG_NAME --bin`) and re-execs the running
-  binary. `cargo run -p showcase` alone is the dev loop.
+  binary. `cargo run -p uigallery` alone is the dev loop.
 - showcase, one page per component (2026-09-21, adr
   showcase-one-page-per-component): the sidebar is a folding tree of
   three groups (Foundations, Components alphabetical, Apps Demo) over

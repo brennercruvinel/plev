@@ -4,7 +4,7 @@
 //! session (`showcase::app::record`) when `PLEV_RECORD=1`.
 //!
 //! ```text
-//! PLEV_RECORD=1 cargo run -p showcase --example demo -- [--out <file.monster>]
+//! PLEV_RECORD=1 cargo run -p uigallery --example videos -- [--out <file.monster>]
 //!     [--review rules|claude] [--compare rules|claude] [--name <agent>]
 //!     [--width <px>] [--height <px>]
 //! ```
@@ -83,7 +83,7 @@ mod run {
     use crate::shell::{Answer, Poke, Shell};
 
     pub const USAGE: &str = "\
-usage: PLEV_RECORD=1 cargo run -p showcase --example demo -- [--out <file.monster>]
+usage: PLEV_RECORD=1 cargo run -p uigallery --example videos -- [--out <file.monster>]
            [--review rules|claude] [--compare rules|claude] [--name <agent>]
            [--width <px>] [--height <px>]
 the script of the thesis on the Silences page, driven by an agent through

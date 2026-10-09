@@ -52,7 +52,7 @@ compared).
 
 ### the harness
 
-`cargo run -p showcase --example regress -- check|bless`
+`cargo run -p regress -- check|bless`
 (`tool/bench/regress/src/`), an example of the showcase like
 `measure`, run by the gate's tests through `[[example]] test = true`.
 

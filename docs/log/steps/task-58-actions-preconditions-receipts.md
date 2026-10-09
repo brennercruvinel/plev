@@ -19,7 +19,7 @@ integrada na `main` em `20c601e` (dez commits, de `83562b9` a `20c601e`),
 validada pelo orquestrador: diff inteiro lido, `./tool/tasks/fullcheck.sh` verde na
 branch (54 suítes, 1608 testes no workspace, 63 a mais que a task-57), 141
 testes do `sem` com serde e 128 sem, os testes 1 a 10 da spec, goldens
-JSON de `Request`, `Receipt` e `Snapshot`. `cargo run -p sem --example
+JSON de `Request`, `Receipt` e `Snapshot`. `cargo run -p accord --example
 commit` roda o cenário da tese. ADR: `docs/adr/semantics/0033-actions-carry-observed-state.md`.
 
 a entrega voltou uma vez ao agente, com duas correções de contrato feitas
@@ -342,7 +342,7 @@ compatibilidade: a representação serde de `Request`, `Receipt` e
 
 ## critérios de aceitação
 
-- os testes abaixo, `cargo test -p sem`, clippy, wasm check do crate,
+- os testes abaixo, `cargo test -p accord`, clippy, wasm check do crate,
   `./tool/tasks/fullcheck.sh`.
 - um exemplo (`demo/commit/src/main.rs` ou doc test) que roda o
   cenário da tese e imprime os receipts.

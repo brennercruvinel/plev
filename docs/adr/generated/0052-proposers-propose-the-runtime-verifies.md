@@ -300,7 +300,7 @@ thread, after task-95.
   failing program, an exceeded budget, a program that is not there; and
   the child gets exactly the flags, the whole prompt (17 KB, more than a
   pipe holds) and none of the session's variables.
-- **the demo** is `cargo run -p claude-model --example propose -- --app
+- **the demo** is `cargo run -p intent -- --app
   todo|ide "<intent>"`, over the goldens of task-68.
 
 ### cost

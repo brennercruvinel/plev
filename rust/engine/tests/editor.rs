@@ -5,7 +5,7 @@
 //! only mean something in release.
 //!
 //! ```text
-//! cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+//! cargo test --offline --release -p engine --test editor_large_bench -- --ignored --nocapture
 //! ```
 //!
 //! A frame is the editor's scene pushed into a `Compositor` and resolved:

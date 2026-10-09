@@ -91,7 +91,12 @@ pub fn source_dirs() -> Vec<PathBuf> {
     let root = super::project_root();
     CRATE_ROOTS
         .iter()
-        .flat_map(|r| std::fs::read_dir(root.join(r)).into_iter().flatten().flatten())
+        .flat_map(|r| {
+            std::fs::read_dir(root.join(r))
+                .into_iter()
+                .flatten()
+                .flatten()
+        })
         .map(|e| e.path().join("src"))
         .filter(|d| d.is_dir())
         .collect()

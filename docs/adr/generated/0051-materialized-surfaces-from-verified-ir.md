@@ -181,7 +181,7 @@ like any page.
 
 `VerifiedIr` to the first frame, headless, debug build (the gate's),
 apple m4, rustc 1.98.1: `rust/screen/tests/measure.rs`, run by hand with
-`cargo test -p surface --test measure -- --ignored --nocapture`. scene
+`cargo test -p screen --test measure -- --ignored --nocapture`. scene
 is materialize, sync, layout and the scene built into a `Compositor`;
 pixels adds drawing it through the window's frame path into an offscreen
 target and reading it back (the readback waits for the GPU). the GPU

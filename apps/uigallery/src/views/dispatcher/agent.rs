@@ -455,7 +455,7 @@ mod tests {
     /// and with each node's `source` asked for), a scoped and an
     /// incremental one, and the round trip of one act. Bytes are the
     /// same in debug; the round trip wants release. Run by hand:
-    /// `cargo test -p showcase --release agent_port_cost -- --ignored --nocapture`.
+    /// `cargo test -p uigallery --release agent_port_cost -- --ignored --nocapture`.
     #[test]
     #[ignore = "a measurement, not a check"]
     fn agent_port_cost() {
@@ -531,7 +531,7 @@ mod tests {
     /// through the page), beside the whole observation after it, with
     /// 3 and with 103 items before the one added. Bytes only, so a
     /// debug build measures them. Run by hand:
-    /// `cargo test -p showcase agent_port_new_row -- --ignored --nocapture`.
+    /// `cargo test -p uigallery agent_port_new_row -- --ignored --nocapture`.
     #[test]
     #[ignore = "a measurement, not a check"]
     fn agent_port_new_row() {

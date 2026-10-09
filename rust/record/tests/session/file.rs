@@ -660,7 +660,7 @@ fn a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds() -> Fallible {
 /// snapshot events keep, its span, and the receipts of `commit.submit` at
 /// its end. a check on files outside the repository (the sessions of
 /// checkpoint a, task-83), so run by hand:
-/// `REC_OPEN=a.monster:b.monster cargo test -p rec --test session open_the_named_sessions -- --ignored --nocapture`.
+/// `REC_OPEN=a.monster:b.monster cargo test -p record --test session open_the_named_sessions -- --ignored --nocapture`.
 #[test]
 #[ignore = "reads the files named in REC_OPEN"]
 fn open_the_named_sessions() -> Fallible {

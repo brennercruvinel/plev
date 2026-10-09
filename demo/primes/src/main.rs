@@ -8,7 +8,7 @@
 //! and tested (the lib target); this bin runs it and draws it through plev's
 //! layer encoder. left mouse paints new particles.
 //!
-//! Run: `cargo run -p prime` (desktop). Web: `trunk serve` from
+//! Run: `cargo run -p primes` (desktop). Web: `trunk serve` from
 //! demo/primes (WebGPU only, Chrome/Edge 113+).
 
 mod scene;

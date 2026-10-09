@@ -1,7 +1,7 @@
 //! rulers measured in-session (stat -f %z; gzip -9 -c | wc -c):
 //!   explosion json 698654 -> 207434 gz, webm 38642;
 //!   girl json 742135 -> 122861 gz, webm 111344.
-//! run: cargo test -p monster --test bench_lottie -- --nocapture
+//! run: cargo test -p motion --test bench_lottie -- --nocapture
 
 use crate::lottie::{Scan, f, scan_layer};
 use motion::{
@@ -36,7 +36,9 @@ pub fn fixture_missing(name: &str) -> bool {
     if std::path::Path::new(&path).exists() {
         return false;
     }
-    eprintln!("skip: ref lottie fixture absent ({path}); populate data/media/lottie to run this bench");
+    eprintln!(
+        "skip: ref lottie fixture absent ({path}); populate data/media/lottie to run this bench"
+    );
     true
 }
 

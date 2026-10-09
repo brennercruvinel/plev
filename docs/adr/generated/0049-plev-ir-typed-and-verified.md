@@ -187,7 +187,7 @@ target by default; task-69 decides how a `VerifiedIr` becomes widgets.
 
 `uir::schema()` builds the JSON schema (draft 2020-12) from the same
 tables the types use; `rust/plevir/assets/plev-ir-1.json` is that value
-written out, kept equal by a test (`UIR_BLESS=1 cargo test -p uir` writes
+written out, kept equal by a test (`UIR_BLESS=1 cargo test -p plevir` writes
 it again). it constrains decoding to known components, tokens, fields
 and binding names, and the proportions to their bounds. it does not
 carry the grammar of an id, a state ref or an action name: the reader

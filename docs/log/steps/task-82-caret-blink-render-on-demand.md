@@ -202,7 +202,7 @@ shell passa `since_last` para `wake`.
 
 ### na janela real
 
-`cargo run -p showcase Todo` com `RUST_LOG=showcase=debug`, campo
+`cargo run -p uigallery Todo` com `RUST_LOG=showcase=debug`, campo
 focado por um clique real (CGEvent) no centro do campo achado pela
 árvore de acessibilidade, depois 6 s sem tocar em nada:
 
@@ -378,7 +378,7 @@ em `64e10a1`:
 
 ### fase b: medição
 
-método: build de debug (`cargo build -p ide -p showcase`), numa janela
+método: build de debug (`cargo build -p idestudio -p uigallery`), numa janela
 real. "antes" é a base `83967a0` com uma linha de debug por frame
 posta no `main.rs` do ide (ele não tinha) e uma linha `git worker woke`
 no `user_event` do showcase, compilada no mesmo target dir e copiada;
@@ -515,7 +515,7 @@ Testes:
   injetado onde há tempo; os de git e do watcher falham sem o conserto
 
 Validação executada:
-- cargo test -p git, -p comps, -p ide, -p showcase verdes
+- cargo test -p gitdrv, -p engine, -p idestudio, -p uigallery verdes
 - ./tool/tasks/fullcheck.sh verde sobre a main em 64e10a1, com a perna urnaui
   rodando (../urna presente)
 - contagem: base (main 64e10a1) workspace 2022 passed, 0 failed, 11

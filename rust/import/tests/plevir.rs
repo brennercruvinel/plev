@@ -6,7 +6,7 @@
 //! the parse (independent of the resolver); every IR node with its source.
 //!
 //! To write the goldens again after an intentional change:
-//! UPDATE_GOLDEN=1 cargo test -p parser --test ir
+//! UPDATE_GOLDEN=1 cargo test -p import --test ir
 
 // shared with the other test binaries (the html and figma helpers are
 // theirs).

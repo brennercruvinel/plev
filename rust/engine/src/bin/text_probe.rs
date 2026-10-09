@@ -1,6 +1,6 @@
 //! Look at what the rasterizer actually draws, without a window.
 //!
-//! `cargo run -p engine --example text_probe -- out.png [raster_scale]`
+//! `cargo run -p engine --bin text_probe -- out.png [raster_scale]`
 //!
 //! The scene goes through `engine::headless`, the window's own frame path
 //! into an offscreen texture, so the PNG is what a window would show.

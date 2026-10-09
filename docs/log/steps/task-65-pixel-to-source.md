@@ -120,7 +120,7 @@ literais (hot reload).
   site certo; cmd+clique num título estático abre o literal; editar o
   título na janela grava o `.rs` e `git diff` mostra só aquela string.
 - build release e wasm sem nenhum símbolo novo (o gate e um `cargo build
-  --release -p showcase` conferem).
+  --release -p uigallery` conferem).
 - escrita recusada quando o arquivo mudou de estrutura desde o baseline
   (teste).
 - `./tool/tasks/fullcheck.sh` verde.
@@ -158,7 +158,7 @@ resolução de editor.
 rodado na base (`76f58a0`), sem janela:
 
 ```text
-cargo run -p showcase -- --render Todo --semantics todo.json --source
+cargo run -p uigallery -- --render Todo --semantics todo.json --source
 wrote todo.json (10 nodes, revision cfc1185078f7c825, Todo / core at 1200x800 scale 1)
 ```
 
@@ -323,12 +323,12 @@ Validação executada (CARGO_TARGET_DIR e as variáveis do briefing):
 - contagem: 2246 testes passaram em todas as pernas somadas (2164 do
   workspace e 82 do urnaui), 0 falhas, 12 ignorados; a main tinha 2225,
   e os 21 novos são os listados acima.
-- cargo test -p engine e cargo test -p showcase estão dentro do cargo
+- cargo test -p engine e cargo test -p uigallery estão dentro do cargo
   test --workspace do gate.
-- cargo check --release -p showcase em 41d65d4: verde; só o showcase foi
+- cargo check --release -p uigallery em 41d65d4: verde; só o showcase foi
   rechecado, os arquivos novos do engine não entram no build de release.
 - durante o trabalho, por crate: cargo test -p engine --lib hot_reload,
-  cargo test -p showcase, clippy e fmt de engine e showcase.
+  cargo test -p uigallery, clippy e fmt de engine e showcase.
 
 A prova na janela:
 - janela real: o showcase de debug, `PLEV_BACKGROUND=1 PLEV_AGENT=1
@@ -434,8 +434,8 @@ validação do orquestrador:
   em `app/access.rs`, a janela em segundo plano;
 - gate verde no diretório da task: 2261 passaram, 0 falharam, 12
   ignorados, com a perna urnaui;
-- `cargo test -p showcase --test view_source` verde;
-- `cargo check --release -p showcase` verde.
+- `cargo test -p uigallery --test view_source` verde;
+- `cargo check --release -p uigallery` verde.
 
 o que ficou provado e o que não ficou: o clique postado não chega a uma
 janela que fica por baixo para não roubar o foco do brenner. por isso a
@@ -610,7 +610,7 @@ Testes (11 novos, nenhum removido):
   the_text_is_the_topmost_one_that_shows_at_the_point.
 
 Símbolos (item 2), no metadata do check (rmeta), contando os nomes novos:
-- release (`cargo check --release -p showcase`, verde) e wasm32 (o check
+- release (`cargo check --release -p uigallery`, verde) e wasm32 (o check
   do gate): write_beside, text_run_at, same_code, plev-edit, sites_of,
   view_source no engine; ViewSource, not_one_literal, field_bounds,
   press_while_editing, begin_edit, view_source_with no showcase: 0 em
@@ -681,7 +681,7 @@ fechada pelo critério de aceite, item por item:
   repositório git temporário: `-"Todo",` e `+"Todo list",`, e o frame
   seguinte já desenha o texto novo).
 - item 2: os nomes novos aparecem zero vezes no release e no wasm e
-  aparecem no debug; `cargo check --release -p showcase` verde.
+  aparecem no debug; `cargo check --release -p uigallery` verde.
 - item 3: com o código mudado desde o baseline, a gravação é recusada e o
   arquivo, a data e a pasta ficam iguais (engine e teste com git).
 - item 4: gate abaixo.

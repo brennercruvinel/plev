@@ -440,7 +440,7 @@ app), verifica. note card: `title`, `content` (estado), `reply` (texto) e
 - `./tool/tasks/fullcheck.sh` verde, pernas wasm e urnaui: 2990 passam, 0 falham, 27
   ignorados (antes 2960 e 26: +30 testes, +1 ignorado, o diagnóstico que
   escreve os pngs). disco com 16 GB livres.
-- `cargo run --offline -p showcase --example regress -- check`: 175
+- `cargo run --offline -p regress -- check`: 175
   baselines, 175 iguais.
 - no parser: 29 testes de unidade, 11 em `tests/ir.rs`, 2 em
   `tests/pixels.rs` (pulam sem adaptador de GPU).
@@ -666,7 +666,7 @@ com a integração, a task-71 vai para `checked`. nada no `uir`, no
 
 ### PNGs (headless, não são golden)
 
-`cargo test -p parser --test pixels -- --ignored write_the_frames`
+`cargo test -p import --test pixels -- --ignored write_the_frames`
 escreve em `/Users/nn/Dev/hoff/plevdev/target/agents/one/tmp/`:
 `html-note-card-ir.png`, `figma-settings-ir.png` (o IR materializado) e
 `html-note-card-builder.png`, `figma-settings-builder.png` (o código
@@ -706,7 +706,7 @@ tinha. nenhum outro pacote.
 - `./tool/tasks/fullcheck.sh` verde, pernas wasm e urnaui: 3163 passam, 0 falham, 28
   ignorados. o parser foi de 49 para 69 testes (+20), nenhum removido.
   disco com 13 GB livres no fim.
-- `cargo run --offline -p showcase --example regress -- check`: 176
+- `cargo run --offline -p regress -- check`: 176
   baselines, 176 iguais.
 
 ### linha para o índice de ADR

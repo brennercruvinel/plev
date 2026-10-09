@@ -351,7 +351,7 @@ fn a_page_without_a_projection_has_no_tree_yet() {
 
 /// The cost of the tree per frame while a reader listens: projection and
 /// build, at 3 and 103 items. Run in release, by hand:
-/// `cargo test -p showcase --release tree_cost -- --ignored --nocapture`.
+/// `cargo test -p uigallery --release tree_cost -- --ignored --nocapture`.
 #[test]
 #[ignore = "a measurement, not a check"]
 fn tree_cost_per_frame() {

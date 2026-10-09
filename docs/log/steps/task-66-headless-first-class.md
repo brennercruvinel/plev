@@ -84,7 +84,7 @@ cena é renderizável sem janela).
 - `rust/engine/tests/text_raster_pixels.rs` e
   `text_drawn_extent.rs` já medem pixel em teste.
 - o showcase aceita `[page] [theme] [scroll]` na linha de comando
-  (`cargo run -p showcase`), com janela.
+  (`cargo run -p uigallery`), com janela.
 - o frame inteiro passa por `engine::window::present_frame`, que escreve na
   surface da janela.
 

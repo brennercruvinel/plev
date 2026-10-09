@@ -266,7 +266,7 @@ determinístico consigo mesmo nesta máquina: não houve parada.
 
 ## fase 1: a captura do desktop
 
-`cargo run -p showcase --example regress -- capture` desenha cada página
+`cargo run -p regress -- capture` desenha cada página
 da galeria nos quatro temas que a tecla T percorre (core, hoff, dark,
 light) nas escalas 1, 2, 1.25 e 1.5, a 1280x800 lógico, duas vezes, por
 dois contextos de GPU do mesmo processo, e classifica o segundo frame
@@ -421,7 +421,7 @@ frames.
 - segundo processo, ordem inversa, contra os pngs do primeiro: 1312
   iguais entre contextos e 1312 iguais entre processos (43,2 s).
 
-reproduzir: `cargo run -p showcase --example regress -- capture`, depois
+reproduzir: `cargo run -p regress -- capture`, depois
 `... capture --out target/determinism/desktop-b --against
 target/determinism/desktop --reverse --no-png`. o relatório fica em
 `target/determinism/<dir>/report.txt` e `report.json`.
@@ -506,7 +506,7 @@ mais no meio deu `silent 1 px`, código 1.
   blur. `./tool/tasks/fullcheck.sh` verde com as pernas wasm e urnaui.
 - `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
   GPU; a saída é a de antes fora os tempos.
-- `cargo check --target wasm32-unknown-unknown -p showcase --example
+- `cargo check --target wasm32-unknown-unknown -p uigallery --example
   regress` verde. iOS e android não compilam aqui (alvos ausentes); o
   código novo fica todo atrás do mesmo `cfg` desktop do exemplo, e o `src`
   do showcase não mudou.
@@ -919,7 +919,7 @@ delta máximo de 1 a 5).
   urnaui (log em `target/agents/gate-77b.txt`).
 - `regress check`: 163 baselines, 163 inalterados, nenhum frame, nenhuma
   GPU; a saída é a da fase 1 fora os tempos.
-- o `cargo check --target wasm32-unknown-unknown -p showcase` do gate é
+- o `cargo check --target wasm32-unknown-unknown -p uigallery` do gate é
   verde. iOS e android não compilam aqui (os alvos não estão instalados,
   como na fase 1); a mudança não tem código por plataforma.
 

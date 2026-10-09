@@ -76,7 +76,7 @@ medição, que entrou primeiro justamente para isso), o "depois" na ponta
 da branch.
 
 o todo do showcase: uma pessoa adiciona um item pela página e o agente
-observa `since` a revisão de antes (`cargo test -p showcase
+observa `since` a revisão de antes (`cargo test -p uigallery
 agent_port_new_row -- --ignored --nocapture`).
 
 | itens antes | delta antes | delta depois | observação inteira depois |
@@ -107,7 +107,7 @@ mesmo roteiro a seção semântica foi de 53732 para 54066 B, 51 eventos
 nos dois: o evento de snapshot que adiciona o commit repete o nó no seu
 `changes`.
 
-o aceite do laboratório: `cargo run -p ide --bin ide-lab -- --arm
+o aceite do laboratório: `cargo run -p agenteval -- --arm
 scripted --human unstage-after-observe:src/session.rs --out
 tmp/lab-t83` (no `tmp/` do worktree, ignorado pelo git) saiu 0, MATCH.
 `report.json` traz em `stale[0].acted` um só nome, `human unstage
@@ -199,8 +199,8 @@ decisões minhas, locais:
 
 validação executada (com o ambiente do briefing):
 
-- `cargo test -p rec && cargo test -p sem && cargo test -p wire &&
-  cargo test -p ide`: verde, 323 passed, 0 failed, 2 ignored.
+- `cargo test -p record && cargo test -p accord && cargo test -p socket &&
+  cargo test -p idestudio`: verde, 323 passed, 0 failed, 2 ignored.
 - `./tool/tasks/fullcheck.sh` na ponta da branch: verde. workspace 1996 passed, 0
   failed, 8 ignored (a main tinha 1985, 0, 6: onze testes novos e dois
   ignorados novos, o de medição do todo e o que abre sessões por
@@ -250,7 +250,7 @@ foi para o `sem`: a forma antiga não carrega o nó e o `sem` não tem o
 snapshot em mãos.
 
 aceite manual, `Session::open` pelo teste ignorado
-(`REC_OPEN=<caminhos separados por :> cargo test -p rec --test session
+(`REC_OPEN=<caminhos separados por :> cargo test -p record --test session
 open_the_named_sessions -- --ignored --nocapture`), nas sessões de
 `/Users/nn/Dev/hoff/plevdev/target/agents/`. todas abrem; antes da
 conversão as quatro primeiras davam `FileError::Event` (conferido em a1,

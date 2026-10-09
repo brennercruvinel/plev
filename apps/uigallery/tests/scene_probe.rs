@@ -9,7 +9,7 @@
 //! numbers. debug build (the workspace crates at opt-level 0, their
 //! dependencies at 2), so the times are an upper bound:
 //!
-//!     cargo test -p rec --test scene_probe -- --ignored --nocapture
+//!     cargo test -p record --test scene_probe -- --ignored --nocapture
 //!
 //! the per-layer codec here is the draft the channel's codec grew from:
 //! every node a tag byte and its fields as they are (an `f32` as its

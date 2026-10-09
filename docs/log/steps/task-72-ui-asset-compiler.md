@@ -133,7 +133,7 @@ brenner. os comandos que reproduzem cada número:
 ```text
 cargo test -p engine --test asset_cost -- --ignored --nocapture
     # fases do renderer headless, shaders, fontes, imagens
-cargo test -p comps --lib icons::tests::the_tessellation_cost -- --ignored --nocapture
+cargo test -p engine --lib icons::tests::the_tessellation_cost -- --ignored --nocapture
     # ícones nos tamanhos de token
 showcase --render Theme --out f.png
     # o binário de debug; primeiro frame headless, 11 execuções
@@ -352,7 +352,7 @@ error: expected `;`, found "return"
 
 - as sondas (ignoradas no gate, rodam à mão):
   `cargo test -p engine --test asset_cost -- --ignored --nocapture` e
-  `cargo test -p comps --lib icons::tests::the_tessellation_cost -- --ignored --nocapture`.
+  `cargo test -p engine --lib icons::tests::the_tessellation_cost -- --ignored --nocapture`.
 
 ### contagem do gate e o regress
 
@@ -367,7 +367,7 @@ wasm do showcase com `-D warnings` verdes, dentro do gate, com a perna
 urnaui. `df -h /` antes de cada gate: 15 GB livres. o gate levou 2:05
 antes e 2:27 depois (a segunda compilou os testes novos).
 
-`cargo run --offline -p showcase --example regress -- check`: 163
+`cargo run --offline -p regress -- check`: 163
 baselines, 163 unchanged, nenhum frame desenhado.
 
 ### a linha do ADR para o índice (docs/adr/README.md)

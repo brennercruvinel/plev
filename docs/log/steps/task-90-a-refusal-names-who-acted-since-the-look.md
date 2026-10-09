@@ -201,7 +201,7 @@ Validação executada:
   está em cima dela, e a árvore do código é a do gate. a main
   tinha 2218 (fechamento da task-89); +7 desta task (sem 4, ide 3),
   nenhum removido, nenhum ignore novo. df -h /: 19 GiB livres
-- cargo test -p wire -p rec -p inspect -p ide depois da regra e antes do
+- cargo test -p socket -p record -p replay -p idestudio depois da regra e antes do
   toast: verdes sem mudar nenhum teste (wire server 24, inspect model 33,
   rec session 36, ide lab 2, agent_port 2, human_agent 20); o
   laboratório nomeia como antes

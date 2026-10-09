@@ -482,12 +482,12 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 - um gate anterior, em `9dadd352`, caiu no `cargo fmt --check` por uma
   asserção de `rust/offers/tests/review.rs` (o `855b1a4d` corrige); os
   testes e o clippy já passavam nele.
-- `cargo run --offline -p showcase --example regress -- check`, com o
+- `cargo run --offline -p regress -- check`, com o
   `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
   nenhuma GPU aberta (em `9dadd352`, `3df1297f` e `1283cc5b`).
-- `cargo test -p ide --test lab_review` cinco vezes seguidas, e
+- `cargo test -p idestudio --test lab_review` cinco vezes seguidas, e
   `--test claude` três: todas verdes. o braço da demo rodado à mão
-  (`cargo run -p ide --bin ide-lab -- --arm review --out <scratch>`), a
+  (`cargo run -p agenteval -- --arm review --out <scratch>`), a
   sessão lida pelo `plev-inspect`.
 - nenhuma janela aberta (o binário `ide` não rodou), nenhum clique ou
   tecla por coordenada de tela do sistema (os cliques do laboratório e dos
@@ -529,7 +529,7 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
 ### o que fica aberto
 
 - a prova com o Claude de verdade (o orquestrador).
-- a demo 5 com janela, pelo brenner (`cargo run -p ide`, com
+- a demo 5 com janela, pelo brenner (`cargo run -p idestudio`, com
   `PLEV_RECORD=1`).
 - P3: um estado de diff por commit (os três diffs de uma vez); um
   componente de código ou diff no vocabulário (widget no comps e ADR); a
@@ -794,10 +794,10 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
   `df -h /`: 28 GB livres antes e depois.
 - um gate anterior, em `e42bd571`, caiu em `apps/idestudio/tests/line.rs`
   (o teste que o `a427d2b8` corrige); o que rodou antes dele passava.
-- `cargo run --offline -p showcase --example regress -- check`, com o
+- `cargo run --offline -p regress -- check`, com o
   `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
   nenhuma GPU aberta.
-- `cargo test -p ide --test line` cinco vezes seguidas: verde.
+- `cargo test -p idestudio --test line` cinco vezes seguidas: verde.
 - nenhuma janela aberta (o binário `ide` não rodou), nenhum clique ou
   tecla do sistema (os cliques são pelo `Workbench::click`, no meio do
   retângulo que o frame ligou), nenhuma chamada ao `claude -p`, nenhuma

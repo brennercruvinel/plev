@@ -3,10 +3,10 @@
 //! pixels.
 //!
 //! ```text
-//! cargo run -p showcase --example regress -- check [--page <title>]...
+//! cargo run -p regress -- check [--page <title>]...
 //!     [--theme core] [--width 1280 --height 800 --scale 1] [--dir <dir>]
 //!     [--json <file>]
-//! cargo run -p showcase --example regress -- bless --page Todo [--theme core]
+//! cargo run -p regress -- bless --page Todo [--theme core]
 //!     [--width 1280 --height 800 --scale 1] [--all] [--png | --no-png]
 //!     [--dir <dir>]
 //! ```
@@ -123,7 +123,7 @@ new baselines take
 --theme core --width 1280 --height 800 --scale 1 unless given. --png
 keeps the frame's image too (needs a GPU), --no-png drops it; without
 either a baseline keeps what it had.
---dir defaults to crates/showcase/fixtures/regress.
+--dir defaults to tool/bench/regress/baselines.
 compare classifies two frames, capture draws the desktop against itself
 (task-77): regress compare --help, regress capture --help.";
 

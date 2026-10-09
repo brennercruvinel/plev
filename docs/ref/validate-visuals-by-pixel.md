@@ -33,8 +33,8 @@ control) and checks the tree against it
 (docs/adr/workflows/0045-regression-by-meaning-before-pixels.md):
 
 ```
-cargo run -p showcase --example regress -- check [--page Todo] [--json report.json]
-cargo run -p showcase --example regress -- bless [--page Todo | --all] [--theme hoff] [--png | --no-png]
+cargo run -p regress -- check [--page Todo] [--json report.json]
+cargo run -p regress -- bless [--page Todo | --all] [--theme hoff] [--png | --no-png]
 ```
 
 - `check` stages every baseline without a window and compares the
@@ -73,8 +73,8 @@ permission is never a reason to reason about the code instead of
 measuring:
 
 ```
-cargo run -p engine --example text_probe -- out.png 2.0      # 2.0 = raster scale
-PROBE_FILL=1 cargo run -p engine --example text_probe -- out.png 2.0
+cargo run -p engine --bin text_probe -- out.png 2.0      # 2.0 = raster scale
+PROBE_FILL=1 cargo run -p engine --bin text_probe -- out.png 2.0
 ```
 
 `PROBE_FILL=1` pushes enough distinct glyph, size and weight combinations
@@ -95,8 +95,8 @@ offscreen texture: same pipelines, same srgb view, no second renderer.
 any showcase page and any `.monster` frame go to png the same way:
 
 ```
-cargo run -p showcase -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png
-cargo run -p engine --example monster_player f.monster --frame 0.5 --out f.png
+cargo run -p uigallery -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png
+cargo run -p player f.monster --frame 0.5 --out f.png
 ```
 
 two runs on one machine are byte-identical, the hoff background measures

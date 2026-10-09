@@ -58,7 +58,7 @@
 //! click meant for another app. Keys reach it only posted to its pid.
 //! Nothing changes without it, or elsewhere.
 //!
-//! Run: `cargo run -p ide [path-to-repo]` (defaults to the cwd).
+//! Run: `cargo run -p idestudio [path-to-repo]` (defaults to the cwd).
 
 // the binary's own modules (they hold `App`'s halves): their files sit
 // beside the library's modules of the same concern, so they are reached by

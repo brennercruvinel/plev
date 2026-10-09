@@ -5,7 +5,7 @@
 # from the start to the commit and the projection it leaves. the harness
 # compares every request's verdict and terminal stage with the recording
 # by itself; these are the values marked on top (task-64 phase c, the
-# format in crates/ide/tests/rerun/marks.rs).
+# format in apps/idestudio/tests/rerun/marks.rs).
 
 # the repository of the experiment, as the laboratory builds it.
 at 0  changes:staged = {"README.md", "src/login.rs"}

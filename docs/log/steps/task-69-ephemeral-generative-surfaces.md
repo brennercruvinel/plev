@@ -422,7 +422,7 @@ props que não chegam ao widget vão para o ADR como limite conhecido.
 
 goal: task-69 fase 1, uma superfície materializada de IR verificado.
 
-status: implementado. `cargo test -p surface -p showcase -p uir` verdes,
+status: implementado. `cargo test -p screen -p uigallery -p plevir` verdes,
 `./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ 86f8b4f.
 
 #### commits
@@ -539,7 +539,7 @@ cada metade com uma legenda. as duas metades operam o mesmo estado pelo
 dispatcher do todo. o `Panes::new` monta o todo primeiro e a página sobre
 ele.
 
-render: `cargo run -p showcase -- --render Surface --out surface.png
+render: `cargo run -p uigallery -- --render Surface --out surface.png
 --semantics surface.json` (core, 1200x800, escala 1): "wrote ...
 surface.json (22 nodes, revision 6ad867dc925c2c1f, Surface / core at
 1200x800 scale 1)". o PNG: à esquerda, sob "the todo page, written by
@@ -587,7 +587,7 @@ da task-68; os 12 da superfície colados abaixo, forma lean):
 #### a medição
 
 `VerifiedIr` até o primeiro frame, headless, build debug (a do gate),
-apple m4, rustc 1.98.1, com `cargo test -p surface --test measure --
+apple m4, rustc 1.98.1, com `cargo test -p screen --test measure --
 --ignored --nocapture`. "cena" é materializar, sincronizar, o layout e a
 cena montada num `Compositor`; "pixels" soma o desenho pelo caminho de
 frame da janela num alvo fora da tela e a leitura de volta (que espera a
@@ -746,7 +746,7 @@ para uma superfície repetir sobre os itens do todo:
   label de uma instância é o item (o id, "1") e o IR não interpola label:
   um `text` do molde liga o texto;
 - gravar de novo `rust/plevir/tests/fixtures/uigallery-todo.snapshot.json`
-  (`UIR_BLESS=1 cargo test -p showcase --test uir_fixture`) e dar ao
+  (`UIR_BLESS=1 cargo test -p uigallery --test uir_fixture`) e dar ao
   `showcase-todo.ir.json` uma lista com `repeat` sobre `todo:items`,
   molde `todo_panel.item[{item}]` com um checkbox ligado a
   `todo.item[{item}]:completed` e `toggle`;
@@ -883,7 +883,7 @@ a fixture nova, e o teste da sonda passa com ela.
 
 goal: task-69 fase 2, a superfície se transforma sem perder identidade.
 
-status: implementado. `cargo test -p surface -p showcase` verdes,
+status: implementado. `cargo test -p screen -p uigallery` verdes,
 `./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ 69b65ed.
 
 #### commits
@@ -1019,7 +1019,7 @@ mas o caret fica no widget. a legenda nomeia o IR da forma mostrada.
 render headless, 1200x800, core, escala 1, pelo teste
 `surface_page::tests::forms::the_page_draws_headless_in_both_forms`, que
 com `SURFACE_PAGE_OUT=<dir>` escreve o png e a projeção de cada forma. a
-forma compacta também sai de `cargo run -p showcase -- --render Surface`,
+forma compacta também sai de `cargo run -p uigallery -- --render Surface`,
 com a mesma revisão da fase 1 (6ad867dc925c2c1f, 22 nós):
 
 - compact: à esquerda o todo escrito à mão; à direita, sob a legenda
@@ -1131,13 +1131,13 @@ no teste.
 
 #### validação executada
 
-- `cargo test -p surface`, `cargo test -p showcase --lib surface_page`;
-- `cargo clippy -p surface -p showcase --all-targets -- -D warnings`;
-- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
+- `cargo test -p screen`, `cargo test -p uigallery --lib surface_page`;
+- `cargo clippy -p screen -p uigallery --all-targets -- -D warnings`;
+- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p uigallery`;
 - `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui (`df -h /` antes: 15 GB
   livres);
-- `cargo run -p showcase -- --render Surface --out ... --semantics ...` e
-  `SURFACE_PAGE_OUT=<dir> cargo test -p showcase --lib surface_page::tests::forms -- --nocapture`
+- `cargo run -p uigallery -- --render Surface --out ... --semantics ...` e
+  `SURFACE_PAGE_OUT=<dir> cargo test -p uigallery --lib surface_page::tests::forms -- --nocapture`
   para os pngs e as projeções.
 
 #### contagem do gate
@@ -1457,7 +1457,7 @@ active and the add field"). o resto do briefing fica como estava.
 goal: task-69 fase 3a, proponentes sem provedor: uma intenção em texto
 vira um IR proposto que só chega ao runtime verificado.
 
-status: implementado. `cargo test -p propose -p showcase -p uir -p
+status: implementado. `cargo test -p offers -p uigallery -p plevir -p
 surface` verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a
 `main` @ a678ef4.
 
@@ -1708,7 +1708,7 @@ capabilities, proposed by the rules for the intent above", o campo com
 "proposed by the rules for "only what is active and the add field"", o
 controle compact | two columns, e o card da superfície com o campo "new
 todo" e o add desabilitado, um chip só, "Active", e um stat só, "2
-active". em 390x844 (hoff, `cargo run -p showcase -- --render Surface
+active". em 390x844 (hoff, `cargo run -p uigallery -- --render Surface
 --width 390 --height 844 --theme hoff`), a linha de intenção fica sob o
 todo e acima do controle, o placeholder "what should it show?" cabe no
 campo. o `--render Surface` de 1200x800 mostra agora 26 nós (revisão
@@ -1756,7 +1756,7 @@ os ids que continuaram são os da fixture da task-68; `todo_panel.filter.all`,
 
 headless, build debug (a do gate), apple m4, rustc 1.98.1, o todo com a
 superfície compacta, intenção "only what is active and the add field",
-com `cargo test -p showcase --lib surface_page::tests::measure --
+com `cargo test -p uigallery --lib surface_page::tests::measure --
 --ignored --nocapture`, três execuções. "as regras" é `propose_verified`
 com `Rules` até o `VerifiedIr`; "o pedido" é o `propose` de uma pessoa
 inteiro (observado, pelo dispatcher, proposto, verificado, a superfície
@@ -1818,12 +1818,12 @@ warnings` verdes, dentro do gate. `df -h /` antes do gate: 13 GB livres.
 
 #### validação executada
 
-- `cargo test -p propose -p showcase -p uir -p surface` (pelo gate);
-- `cargo clippy -p propose -p showcase --all-targets -- -D warnings`;
-- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
+- `cargo test -p offers -p uigallery -p plevir -p screen` (pelo gate);
+- `cargo clippy -p offers -p uigallery --all-targets -- -D warnings`;
+- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p uigallery`;
 - `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui;
-- `SURFACE_PAGE_OUT=<dir> cargo test -p showcase --lib surface_page::tests::forms`,
-  `cargo run -p showcase -- --render Surface` (1200x800 e 390x844), e a
+- `SURFACE_PAGE_OUT=<dir> cargo test -p uigallery --lib surface_page::tests::forms`,
+  `cargo run -p uigallery -- --render Surface` (1200x800 e 390x844), e a
   medição.
 
 #### linha de ADR
@@ -2041,7 +2041,7 @@ o que a sonda decide:
 
 ### corridas reais do exemplo (2026-09-24)
 
-`cargo run -p claude-model --example propose -- --app todo|ide "<intenção>"`,
+`cargo run -p intent -- --app todo|ide "<intenção>"`,
 com o `claude` de verdade (sonnet, as flags do crate), da branch @ 31ff396
 mais o exemplo; o todo com a superfície compacta mostrada, o ide sem
 superfície. as quatro primeiras rodaram com o tempo máximo em 120 s; a
@@ -2157,7 +2157,7 @@ um exemplo mostra uma intenção em texto virando um `VerifiedIr` sobre a
 projeção real do todo e do ide, pelo `propose::Llm` e pelo
 `propose_verified`.
 
-status: implementado. `cargo test -p claude-model -p propose` verdes,
+status: implementado. `cargo test -p claude -p offers` verdes,
 `./tool/tasks/fullcheck.sh` verde com a perna urnaui, sobre a `main` @ ce9acee. a
 `main` andou para 9299f2d depois (só o journal); o rebase é do
 orquestrador.
@@ -2325,17 +2325,17 @@ script. os testes de processo são `#[cfg(unix)]`.
 
 #### validação executada
 
-- `cargo test -p claude-model -p propose`;
-- `cargo clippy -p claude-model --all-targets -- -D warnings`,
-  `cargo fmt -p claude-model --check`;
+- `cargo test -p claude -p offers`;
+- `cargo clippy -p claude --all-targets -- -D warnings`,
+  `cargo fmt -p claude --check`;
 - `cargo test -p engine --test arc_sync_guard`;
 - `./tool/tasks/fullcheck.sh`, saída 0, com a perna urnaui;
 - o exemplo com o `claude` de verdade: as quatro corridas e a repetição
   acima, e com `PLEV_CLAUDE=/nonexistent/claude` (erro "could not
   start", exit 1) e `--app nope` (uso, exit 2).
 
-para reproduzir sem rede: `cargo test -p claude-model`. com rede, uma
-chamada: `cargo run -p claude-model --example propose -- --app todo
+para reproduzir sem rede: `cargo test -p claude`. com rede, uma
+chamada: `cargo run -p intent -- --app todo
 "show the filter as chips and hide the counts"`.
 
 #### seção de ADR
@@ -2494,7 +2494,7 @@ a 16 ms, é o `sh` subindo); o falso que nunca responde, com prazo de 2 s,
 segurou 2,01 s até o kill. com o Claude de verdade, 5 a 90 s por
 tentativa e até três tentativas: a thread do app congelaria isso tudo.
 
-(c) chamada real 1 de 6: `cargo run -p claude-model --example propose --
+(c) chamada real 1 de 6: `cargo run -p intent --
 --app todo "the items as a list with the add field on top"`, das
 05:04:24 às 05:04:32. as regras recusam (`"top" is not a word of the
 app`). o prompt tem 18.760 bytes: a superfície mostrada é a compacta da
@@ -2563,7 +2563,7 @@ transforma no lugar, verificada, sem travar o app enquanto ele pensa,
 com a espera e o custo visíveis e um jeito de cancelar; sem o `claude` na
 máquina, a página continua pelas regras.
 
-status: implementado. `cargo test -p showcase -p claude-model -p propose`
+status: implementado. `cargo test -p uigallery -p claude -p offers`
 verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui e a perna wasm,
 `regress check` verde, sobre a `main` @ cc908560.
 
@@ -2711,7 +2711,7 @@ superfície é uma mudança de prompt para outra fase, com sonda própria.
 
 #### PNG e projeção
 
-`SURFACE_PAGE_OUT=<dir> cargo test -p showcase --lib
+`SURFACE_PAGE_OUT=<dir> cargo test -p uigallery --lib
 surface_page::tests::claude::the_real -- --ignored --nocapture` escreve
 `surface-claude.png` e `surface-claude.json` (1200x800, core). o PNG: à
 esquerda o todo escrito à mão, igual; à direita, sob "the same
@@ -2721,7 +2721,7 @@ botão propose, a linha "proposed by the Claude for ... in 9.3 s, 1
 attempt, 0.040 USD" com o botão cancel (desabilitado) na ponta, o
 controle compact | two columns, e o card da superfície: o campo "new
 todo" com o add desabilitado e os três itens com o checkbox "done" (o
-terceiro marcado); sem chips e sem contagens. `cargo run -p showcase --
+terceiro marcado); sem chips e sem contagens. `cargo run -p uigallery --
 --render Surface` (a página em repouso, com o `claude` desta máquina
 achado): 38 nós; em 390x844 hoff a linha fica sob o todo, o select e o
 propose numa linha própria sob o campo. a projeção depois da proposta
@@ -2767,7 +2767,7 @@ showcase (4 com o falso, um deles pela porta real, e 1 do layout da
 linha), e 1 ignorado (o `claude` de verdade). a contagem não cai. clippy
 `-D warnings`, `cargo fmt --check` e o check wasm do showcase com `-D
 warnings` verdes, dentro do gate, com a perna urnaui. `df -h /` antes do
-gate: 22 GB livres. `cargo run -p showcase --example regress -- check`:
+gate: 22 GB livres. `cargo run -p regress -- check`:
 157 baselines conferidas, 157 iguais, nenhum frame desenhado (a página
 Surface não tem baseline; nenhuma outra página mudou).
 
@@ -2807,11 +2807,11 @@ Surface não tem baseline; nenhuma outra página mudou).
 
 #### validação executada
 
-- `cargo test -p showcase -p claude-model -p propose`;
-- `cargo clippy -p showcase -p claude-model -p propose --all-targets -- -D warnings`;
+- `cargo test -p uigallery -p claude -p offers`;
+- `cargo clippy -p uigallery -p claude -p offers --all-targets -- -D warnings`;
 - `cargo fmt --check`;
-- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p showcase`;
-- `./tool/tasks/fullcheck.sh` e `cargo run -p showcase --example regress -- check`
+- `RUSTFLAGS="-D warnings" cargo check --target wasm32-unknown-unknown -p uigallery`;
+- `./tool/tasks/fullcheck.sh` e `cargo run -p regress -- check`
   (abaixo);
 - o teste ignorado com o `claude` real (chamada 2), `--render Surface`
   em 1200x800 core e 390x844 hoff, e o exemplo do `claude-model` para as
@@ -3190,7 +3190,7 @@ tela fixa bem desenhada, contra a qual o checkpoint b compara a tela
 gerada (4b): uma página do grupo Apps Demo, operável por pessoa, agente
 pela porta e leitor de tela pelo mesmo dispatcher.
 
-status: implementado. `cargo test -p showcase` verde, `./tool/tasks/fullcheck.sh`
+status: implementado. `cargo test -p uigallery` verde, `./tool/tasks/fullcheck.sh`
 verde com a perna urnaui e a perna wasm, `regress check` verde, sobre a
 `main` @ 205d0e1d (a contagem abaixo).
 
@@ -3307,7 +3307,7 @@ colidiria nos ids (os dois numeram de 1); a resolução da parada da fase
 1 recusou "a porta ouvindo dois dispatchers". os receipts dos silêncios
 ficam onde ficam os da galeria, numerados com eles.
 
-a tela (1200x800 core, `cargo run -p showcase -- --render Silences --out
+a tela (1200x800 core, `cargo run -p uigallery -- --render Silences --out
 silences.png --semantics silences.json`; e 390x844 hoff com `--theme
 hoff --width 390 --height 844`): dois cards em cima e um embaixo. o card
 do vídeo: a caixa 16:9 com o frame do instante mostrado (ajustado, nunca
@@ -3364,7 +3364,7 @@ inteira, mantida igual ao app por
 #### a medição
 
 nesta máquina (apple m4, ffmpeg 9.0.1), pelo teste ignorado
-(`SILENCES_OUT=<dir> cargo test -p showcase --lib silences::tests::ffmpeg
+(`SILENCES_OUT=<dir> cargo test -p uigallery --lib silences::tests::ffmpeg
 -- --ignored --nocapture`):
 
 | o que | ffmpeg (ms, medido no trabalhador) | o request |
@@ -3393,7 +3393,7 @@ pulada). `df -h /` antes de cada gate: 17, 16 e 16 GB livres. o gate
 rodou três vezes nesta branch: a primeira caiu num teste do ide alheio a
 esta fase (abaixo, em limitações), a segunda na perna wasm por uma
 constante morta fora do desktop (o f305e67e), a terceira inteira verde.
-`cargo run -p showcase --example regress -- check`: 159 baselines
+`cargo run -p regress -- check`: 159 baselines
 conferidas (as 157 de antes e as duas novas, `silences@core@1280x800` e
 `silences@hoff@1280x800`, abençoadas com a imagem), 159 iguais, nenhum
 frame desenhado. `view/dispatch.rs`: 338 linhas antes, 363 depois.
@@ -3445,10 +3445,10 @@ frame desenhado. `view/dispatch.rs`: 338 linhas antes, 363 depois.
 
 #### validação executada
 
-- `cargo test -p showcase` (196 na lib com 6 ignorados, 8 no main, 2 no
+- `cargo test -p uigallery` (196 na lib com 6 ignorados, 8 no main, 2 no
   `uir_fixture`, 5 no `view_source`, 31 no `regress`);
-- `cargo clippy -p showcase --all-targets -- -D warnings`, `cargo fmt`;
-- `./tool/tasks/fullcheck.sh` (abaixo) e `cargo run -p showcase --example regress --
+- `cargo clippy -p uigallery --all-targets -- -D warnings`, `cargo fmt`;
+- `./tool/tasks/fullcheck.sh` (abaixo) e `cargo run -p regress --
   check`;
 - o teste ignorado com o ffmpeg real, duas vezes (com e sem o vídeo já
   gerado); `--render Silences` em 1200x800 core (com `--semantics`) e
@@ -3692,7 +3692,7 @@ mantendo a identidade do que continua, e se desfaz quando a pessoa
 termina. as duas telas (a fixa da 4a, a gerada) ficam prontas para o
 checkpoint b, que é decisão do brenner.
 
-status: implementado. `cargo test -p surface -p showcase -p propose -p
+status: implementado. `cargo test -p screen -p uigallery -p offers -p
 uir` verde, `./tool/tasks/fullcheck.sh` verde com a perna urnaui e a perna wasm,
 `regress check` verde (as duas baselines dos silêncios abençoadas, dito
 abaixo), sobre a `main` @ 4a7a8abf (a contagem abaixo). duas chamadas
@@ -3896,7 +3896,7 @@ com `Nothing` e sem `image` nas listas.
 
 #### as chamadas reais ao Claude
 
-pelo `cargo run -p claude-model --example propose -- --app silences`,
+pelo `cargo run -p intent -- --app silences`,
 sonnet, prompt de 16.958 bytes (a comparação, com a revisão como atual
 pelo `--shown`, 22.032 bytes). duas chamadas, as duas verificadas; as
 duas de reserva não foram usadas.
@@ -3937,7 +3937,7 @@ e `claude-2.txt` (a saída do exemplo), e o da chamada 1 em
 
 #### PNG e projeção
 
-`SILENCES_OUT=<dir> cargo test -p showcase --lib
+`SILENCES_OUT=<dir> cargo test -p uigallery --lib
 silences::tests::generated::the_real -- --ignored --nocapture` (o ffmpeg
 real) escreveu `silences-review-real.png` e `silences-compare-real.png`
 com os `.json`, em 0,68 s, em
@@ -3993,7 +3993,7 @@ e o check wasm do showcase com `-D warnings` verdes, dentro do gate, com
 a perna urnaui (nenhuma perna pulada; `../urna` resolve deste worktree).
 `df -h /` antes do gate e depois: 16 GB livres, os dois. o gate rodou uma
 vez nesta branch, inteiro verde, em 2 min 13 s (07:24:51 a 07:27:04).
-`cargo run -p showcase --example regress -- check`: 159 baselines
+`cargo run -p regress -- check`: 159 baselines
 conferidas, 159 iguais, nenhum frame desenhado (as duas dos silêncios
 abençoadas duas vezes nesta branch: pela projeção em 50a815e9, nada
 visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
@@ -4042,11 +4042,11 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
 
 #### validação executada
 
-- `cargo test -p surface -p showcase -p propose -p uir` (e
+- `cargo test -p screen -p uigallery -p offers -p plevir` (e
   `claude-model` pelo gate);
 - `cargo clippy --all-targets -- -D warnings`, `cargo fmt`, o check wasm
   do showcase com `-D warnings`, dentro do gate, com a perna urnaui;
-- `cargo run -p showcase --example regress -- check`;
+- `cargo run -p regress -- check`;
 - o ignorado do ffmpeg real (`the_real_ffmpeg_draws_the_review_and_the_comparison`),
   o headless do falso com `SILENCES_OUT`, o exemplo do `claude-model`
   duas vezes (a tabela). nenhuma janela foi aberta; nenhum teste do gate
@@ -4179,7 +4179,7 @@ os cinco pontos do shell do ide, por linha, e o ponto equivalente no shell do sh
 
 o relógio: o ide grava em `bench.now()`, o relógio dos receipts. no showcase os receipts levam o relógio do dispatcher do todo (`apps/app/semantics.rs:259` e `279`, `clock.elapsed()`), lido só dentro de `with_dispatcher` (`pub(crate)`, `&mut self`); a `ShowcaseView` não tinha `now()`.
 
-(b) o showcase tem um modo servido sem janela: `ShowcaseView::serve_agent(&mut AgentPort, &Compositor)` sobre um `AgentPort::open_with` num diretório, a forma dos testes de `view/dispatch/agent.rs` e de `silences/tests/agent.rs` (este thread é o shell: serve, dá o tick, desenha num `Compositor` sem GPU; um thread é o agente pelo `wire::Client`). o roteiro rodou assim, por `apps/uigallery/examples/videos.rs`, sem janela nenhuma e sem `PLEV_BACKGROUND`: 3,3 s, 17 observações, 10 requests, 101 frames desenhados. três coisas apareceram na corrida: as regras recusam a frase da tese ("then" e "review" não são palavras do app, o que a 4b já tinha dito), então pelas regras a revisão é "the list with the video and the counts" e a frase da tese fica para o Claude; em 1200 por 800 uma linha da revisão das regras (thumbnail, dois textos, dois botões) é mais larga que a metade e o botão de rejeitar fica em x = 1232..1341, fora da janela, onde um clique não chega (pelo id o agente chega), então a demo desenha em 1600 por 1000 (`--width`, `--height`); e a rolagem da página não resolve isso (é horizontal), o exemplo diz o retângulo no erro. com janela de verdade não foi preciso; se um dia for, `PLEV_BACKGROUND=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p showcase -- Silences` abre a janela por baixo e o mesmo roteiro cabe em `plev observe`/`act` contra `--app showcase`.
+(b) o showcase tem um modo servido sem janela: `ShowcaseView::serve_agent(&mut AgentPort, &Compositor)` sobre um `AgentPort::open_with` num diretório, a forma dos testes de `view/dispatch/agent.rs` e de `silences/tests/agent.rs` (este thread é o shell: serve, dá o tick, desenha num `Compositor` sem GPU; um thread é o agente pelo `wire::Client`). o roteiro rodou assim, por `apps/uigallery/examples/videos.rs`, sem janela nenhuma e sem `PLEV_BACKGROUND`: 3,3 s, 17 observações, 10 requests, 101 frames desenhados. três coisas apareceram na corrida: as regras recusam a frase da tese ("then" e "review" não são palavras do app, o que a 4b já tinha dito), então pelas regras a revisão é "the list with the video and the counts" e a frase da tese fica para o Claude; em 1200 por 800 uma linha da revisão das regras (thumbnail, dois textos, dois botões) é mais larga que a metade e o botão de rejeitar fica em x = 1232..1341, fora da janela, onde um clique não chega (pelo id o agente chega), então a demo desenha em 1600 por 1000 (`--width`, `--height`); e a rolagem da página não resolve isso (é horizontal), o exemplo diz o retângulo no erro. com janela de verdade não foi preciso; se um dia for, `PLEV_BACKGROUND=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p uigallery -- Silences` abre a janela por baixo e o mesmo roteiro cabe em `plev observe`/`act` contra `--app showcase`.
 
 (c) o tamanho: a sessão da demo (3 s, 100 frames, 73 eventos) tem 186.837 bytes: eventos 81.078 (4 keyframes de até 51 nós, 10 passos de mudança, 40 estágios, 17 observações, 2 inputs), índice 6.812, chunks 67.984 (100 frames em 12 chunks, uns 680 B por frame), assets 21.085 (134: estilos de texto e glifos; 3 imagens só com o tamanho), ligações 9.600. o `rec` guarda de imagem `Asset::Live(LoweredAsset::Image(handle))`, o handle do atlas, e persiste só largura e altura (`Persisted::images_without_pixels = 3`): os pixels de um frame do vídeo nunca entram no arquivo, por construção (a retenção de pixels ficou fora da task-63 fase d, sem task). então 30 s custam o que os frames desenhados e os eventos custam, não o tempo: render on demand, a página parada não desenha; mil frames seriam uns 700 KB. a fixture cabe no repositório (187 KB, limite de 2 MB) e fica sem os pixels dos frames: leva a cena de cada frame (retângulos, textos, as imagens com tamanho) e as ligações; `Session::scene_at` lê a cena sem nó de imagem, `to_bytes` conta as três imagens sem pixels.
 
@@ -4268,7 +4268,7 @@ verde no gate).
 `apps/uigallery/examples/videos/{main,shell,agent}.rs`:
 
 ```text
-PLEV_RECORD=1 cargo run -p showcase --example demo -- [--out f.monster]
+PLEV_RECORD=1 cargo run -p uigallery --example videos -- [--out f.monster]
     [--review rules|claude] [--compare rules|claude] [--name demo]
     [--width 1600] [--height 1000]
 ```
@@ -4477,9 +4477,9 @@ cai. o gate rodou duas vezes: a primeira vermelha só no
 exemplos como produção), corrigida pelo split; a segunda inteira verde em
 2 min 6 s (08:15:50 a 08:17:56), com a perna urnaui (`../urna` resolve
 deste worktree) e o check wasm com `-D warnings`. `df -h /` antes e
-depois: 16 GB livres. `cargo run -p showcase --example regress -- check`:
+depois: 16 GB livres. `cargo run -p regress -- check`:
 159 baselines conferidas, 159 iguais, nenhum frame desenhado (a gravação
-não muda o que uma página desenha). `cargo test -p showcase -p rec -p
+não muda o que uma página desenha). `cargo test -p uigallery -p record -p
 inspect` verdes.
 
 #### testes
@@ -4900,7 +4900,7 @@ antes e depois a aceitar.
 nenhum ignorado a mais; a contagem não cai. o gate inteiro verde nas duas
 vezes, com a perna urnaui (`../urna` resolve deste worktree) e o check
 wasm com `-D warnings`; `df -h /`: 19 GB livres antes, 18 GB depois.
-`cargo run --offline -p showcase --example regress -- check`: antes 163
+`cargo run --offline -p regress -- check`: antes 163
 baselines, 163 iguais (834 ms); depois 169, 169 iguais (879 ms), nenhum
 frame desenhado.
 
@@ -4987,19 +4987,19 @@ na mesma janela de 1200x800, com o binário desta branch (ou da `main`
 depois de integrar):
 
 ```text
-cargo build -p showcase                     # e copiar o binário, como na 1ª rodada
+cargo build -p uigallery                     # e copiar o binário, como na 1ª rodada
 PLEV_AGENT=1 PLEV_MIRROR=1 PLEV_BACKGROUND=1 PLEV_RECORD=1 <showcase> Silences
 
 # 02, a fixa com a detecção real
 plev act silences.detect detect_silence --app showcase --name orquestrador
 plev observe --app showcase --name orquestrador --scope silences.status --keys busy   # até busy = false
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 02-fixed-detected.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 02-fixed-detected.png
 
 # 03, pelas regras
 plev act silences_surface.proposer select --param '"rules"' --app showcase --name orquestrador
 plev act silences_surface.intent set_value --param '"the list with the video and the counts"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 03-generated-rules.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 03-generated-rules.png
 
 # 04, pelo Claude (a cota é do orquestrador)
 plev act silences_surface.close close --app showcase --name orquestrador
@@ -5007,15 +5007,15 @@ plev act silences_surface.proposer select --param '"claude"' --app showcase --na
 plev act silences_surface.intent set_value --param '"cut the silences of this video, then I want to review the cuts"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
 plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message   # até a resposta
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 04-generated-claude.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 04-generated-claude.png
 
 # 05, a tarefa: o primeiro corte aplicado pela fixa, o segundo rejeitado pela gerada
 plev act silences.cut[<primeiro>] apply_cut --app showcase --name orquestrador
 plev act <o reject do segundo corte na gerada, pelo id que a observação der> activate --app showcase --name orquestrador
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 05-after-task.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 05-after-task.png
 ```
 
-sem janela e sem cota, antes: `cargo run -p showcase --example regress --
+sem janela e sem cota, antes: `cargo run -p regress --
 check` (169 iguais) e as seis imagens acima. o que olhar na rodada nova:
 na 03, a linha do corte inteira dentro do card, os números com duas
 casas; na 04, se a proposta nova põe a lista dos cortes no topo (o

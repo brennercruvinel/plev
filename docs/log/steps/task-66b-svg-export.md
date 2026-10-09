@@ -181,7 +181,7 @@ Testes (antes -> depois):
 - `cargo test -p engine headless`: 13 -> 27 (14 novos em
   `headless::svg::tests`)
 - `cargo test -p engine --lib`: 755 -> 769
-- `cargo test -p showcase`: 122 + 2 ignorados (lib) + 7 (bin) ->
+- `cargo test -p uigallery`: 122 + 2 ignorados (lib) + 7 (bin) ->
   127 + 2 ignorados (lib) + 8 (bin); 6 novos no headless, 1 novo no cli
 - do contrato: (a) Todo, Button e Card exportam SVG que o importador
   `rust/import/src/formats/svg` lê de volta, viewBox igual ao viewport, `<g aria-label>` e
@@ -199,8 +199,8 @@ Testes (antes -> depois):
   Card, Effects e Typography; falha com o `SwashCache` compartilhado.
 
 Validação executada (com `CARGO_TARGET_DIR=target/agents/task-66b`):
-- `cargo test -p engine headless && cargo test -p showcase`
-- `cargo run -p showcase -- --render Todo --out target/agents/t66b-todo.png
+- `cargo test -p engine headless && cargo test -p uigallery`
+- `cargo run -p uigallery -- --render Todo --out target/agents/t66b-todo.png
   --svg target/agents/t66b-todo.svg --svg-report target/agents/t66b-todo-report.txt
   --semantics target/agents/t66b-todo.json`; o mesmo para Button (core),
   Card (hoff) e Effects (hoff) em `target/agents/t66b-{button,card,effects}.*`

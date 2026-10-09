@@ -5,7 +5,7 @@
 //! read this repository's history, which moves, so they are ignored by
 //! default:
 //!
-//! `cargo test -p git --test log_cost -- --ignored --nocapture --test-threads=1`
+//! `cargo test -p gitdrv --test log_cost -- --ignored --nocapture --test-threads=1`
 //!
 //! (one at a time: the check runs a `git` per commit, which would weigh on
 //! the timing.)

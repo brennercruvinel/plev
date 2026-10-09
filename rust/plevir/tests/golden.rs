@@ -218,6 +218,6 @@ fn the_schema_file_is_what_schema_writes() {
     let kept = std::fs::read_to_string(&at).unwrap_or_default();
     assert!(
         kept == text,
-        "{SCHEMA} is not what uir::schema() writes; UIR_BLESS=1 cargo test -p uir writes it again"
+        "{SCHEMA} is not what uir::schema() writes; UIR_BLESS=1 cargo test -p plevir writes it again"
     );
 }

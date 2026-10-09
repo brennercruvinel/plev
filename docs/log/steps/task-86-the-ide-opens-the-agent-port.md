@@ -147,7 +147,7 @@ build de debug desta branch em `68af0b1` (rebaseada sobre a main em
 `c9cc8de`; o rebase seguinte, sobre `af8302f`, trouxe só a crate
 `inspect` da task-64 e o arquivo da task-89, que o ide não usa), numa janela
 real no macOS (apple m4). o ide sobe com `PLEV_AGENT=1
-RUST_LOG=ide=debug,info cargo run -p ide -- <repo>` num repositório de
+RUST_LOG=ide=debug,info cargo run -p idestudio -- <repo>` num repositório de
 rascunho com um commit, dois arquivos modificados (`src/login.rs`,
 `src/session.rs`) e um não rastreado (`todo.txt`). o agente é o `plev`
 desta branch (`--app ide`, nome `claude` por `PLEV_AGENT_NAME`), uma
@@ -366,10 +366,10 @@ Validação executada:
   file_hygiene_guard, a task-64)
 - antes, o mesmo gate em 68af0b1 (sobre a main em c9cc8de): 2166 passed,
   0 failed, 12 ignored (83 "test result")
-- cargo test -p ide, -p showcase, -p engine verdes dentro do gate; ide
+- cargo test -p idestudio, -p uigallery, -p engine verdes dentro do gate; ide
   por binário: bin 9, agent_port 2, human_agent 20, lab 2, observe_cost
   0 (1 ignorado)
-- cargo run -p showcase --example regress -- check: 157 baselines, 0
+- cargo run -p regress -- check: 157 baselines, 0
   mudaram
 - prova na janela real, duas rodadas (antes e depois do rebase), saída
   colada acima

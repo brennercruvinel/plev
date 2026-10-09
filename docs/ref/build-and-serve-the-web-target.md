@@ -54,7 +54,7 @@ python3 -m http.server 8090 --directory web/dist
 
 ## verification checklist
 
-1. `cargo check --target wasm32-unknown-unknown -p showcase` green (the
+1. `cargo check --target wasm32-unknown-unknown -p uigallery` green (the
    gate runs it)
 2. `tool/tasks/webtarget.sh build --release` succeeds; index, js and wasm respond 200
 3. the browser console shows "GPU context ready (async)"

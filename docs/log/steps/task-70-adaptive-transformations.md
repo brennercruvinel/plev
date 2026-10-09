@@ -500,7 +500,7 @@ projeção não é o caminho: o que se vê e o que se projeta se separam.
 `uir/tests/identity.rs`, 5 de `surface/tests/adapt.rs`, 3 da demo) e três
 suítes; nenhum ignorado a mais. o gate inteiro verde, com a perna
 urnaui e o check wasm com `-D warnings`. `df -h /`: 19 GB livres antes
-e depois. `cargo run --offline -p showcase --example regress --
+e depois. `cargo run --offline -p regress --
 check` (com o `main.rs` tocado): 170 baselines, 170 iguais, nenhum frame
 desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 
@@ -971,7 +971,7 @@ linha como um agente pede):
 33 testes novos e cinco suítes (`propose`: `adapt`, `change`,
 `llm_change`; `surface`: `policy`, `emphasis`); o gate inteiro verde,
 com a perna urnaui e o check wasm com `-D warnings`. `df -h /`: 19 GB
-livres antes e depois. `cargo run --offline -p showcase --example
+livres antes e depois. `cargo run --offline -p uigallery --example
 regress -- check` (com o `main.rs` tocado): 173 baselines, 173 iguais,
 nenhum frame desenhado, nenhuma GPU aberta (167 iguais aos da `main`,
 3 abençoados de novo pela regra do item 7, 3 novos).
@@ -995,7 +995,7 @@ na janela de 1200x800 do checkpoint b, com o binário desta branch (ou
 da `main` depois de integrar):
 
 ```text
-cargo build -p showcase                     # e copiar o binário, como no checkpoint
+cargo build -p uigallery                     # e copiar o binário, como no checkpoint
 PLEV_AGENT=1 PLEV_MIRROR=1 PLEV_BACKGROUND=1 PLEV_RECORD=1 <showcase> Silences
 
 # a revisão pelo Claude (a cota é do orquestrador)
@@ -1003,13 +1003,13 @@ plev act silences_surface.proposer select --param '"claude"' --app showcase --na
 plev act silences_surface.intent set_value --param '"cut the silences of this video, then I want to review the cuts"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
 plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message   # até a resposta
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-01-review.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 70b-01-review.png
 
 # a mudança pelo Claude
 plev act silences_surface.intent set_value --param '"tem informação demais"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
 plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message,steps,attempt,cost_usd
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-02-less-claude.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 70b-02-less-claude.png
 
 # comparar e números maiores pelo Claude
 plev act silences_surface.intent set_value --param '"I can'"'"'t compare these"' --app showcase --name orquestrador
@@ -1018,7 +1018,7 @@ plev observe --app showcase --name orquestrador --scope silences_surface.status 
 plev act silences_surface.intent set_value --param '"números maiores"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
 plev observe --app showcase --name orquestrador --scope silences_surface.status --keys busy,message
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-03-bigger-claude.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 70b-03-bigger-claude.png
 
 # desfazer (sem modelo) e as mesmas frases pelas regras
 plev act silences_surface.intent set_value --param '"desfazer"' --app showcase --name orquestrador
@@ -1026,7 +1026,7 @@ plev act silences_surface.propose propose --app showcase --name orquestrador
 plev act silences_surface.proposer select --param '"rules"' --app showcase --name orquestrador
 plev act silences_surface.intent set_value --param '"too much information"' --app showcase --name orquestrador
 plev act silences_surface.propose propose --app showcase --name orquestrador
-cargo run -p showcase --example mirror -- --app showcase --frames 1 --png 70b-04-less-rules.png
+cargo run -p mirroring -- --app showcase --frames 1 --png 70b-04-less-rules.png
 ```
 
 o que olhar: na 01, se a revisão nova mantém o frame de cada corte (a
@@ -1461,7 +1461,7 @@ instalada, a linha sumiu, e cada corte tem, sob "preview segment",
 `promote`, 2; `showcase`: `composites`, 2; mais 10 na lib do showcase e
 1 no `builder` do `sem`); o gate inteiro verde, com a perna urnaui e o
 check wasm com `-D warnings`. `df -h /`: 18 GB livres antes e depois.
-`cargo run --offline -p showcase --example regress -- check` (com o
+`cargo run --offline -p regress -- check` (com o
 `main.rs` tocado): 175 baselines, 175 iguais, nenhum frame desenhado,
 nenhuma GPU aberta (os 173 de antes iguais, 2 novos). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
@@ -1891,7 +1891,7 @@ par listado). a linha mostra "accessibility", o que a pessoa escreveu.
 `surface`: `prefer`, 6, e 1 em `motion`; a lib do `showcase`: 5 em
 `access` e 2 em `contrast`). o gate inteiro verde, com a perna urnaui e
 o check wasm com `-D warnings`. `df -h /`: 16 GB livres antes e depois.
-`cargo run --offline -p showcase --example regress -- check` (com o
+`cargo run --offline -p regress -- check` (com o
 `main.rs` tocado): 176 baselines, 176 iguais, nenhum frame desenhado,
 nenhuma GPU aberta (os 175 de antes iguais, 1 novo). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`

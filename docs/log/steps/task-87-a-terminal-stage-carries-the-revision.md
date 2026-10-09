@@ -177,7 +177,7 @@ Validação executada:
   perna urnaui no subdiretório do target dir): 2102 passados, 0
   falhas, 12 ignorados. a main tinha 2096 no gate da task-85; +6 testes
   novos (cinco em wire/tests/server.rs, um em plev.rs).
-- cargo test -p wire, -p ide e -p showcase verdes (dentro do gate).
+- cargo test -p socket, -p idestudio e -p uigallery verdes (dentro do gate).
 - ide-lab --arm scripted, cinco vezes em none e cinco em
   unstage-after-observe:src/session.rs, antes (main @ f741246) e depois:
   todas exit 0 e MATCH; a tabela está na seção "medição" acima.

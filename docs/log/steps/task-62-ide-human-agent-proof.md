@@ -468,9 +468,9 @@ tests/login_test.rs, message: fix login session timeout". nos braços
 ### braço A0, o agente roteirizado (controle, sem token)
 
 ```sh
-cargo run -p ide --bin ide-lab -- --arm scripted \
+cargo run -p agenteval -- --arm scripted \
     --human unstage-after-observe:src/session.rs --out <dir>
-cargo run -p ide --bin ide-lab -- --arm scripted --human none --out <dir>
+cargo run -p agenteval -- --arm scripted --human none --out <dir>
 ```
 
 é o mesmo que `apps/agenteval/tests/experiment.rs` roda no gate. mede o protocolo
@@ -482,7 +482,7 @@ do llm.
 o laboratório sobe e espera; o agente é outro processo.
 
 ```sh
-cargo run -p ide --bin ide-lab -- --arm plev \
+cargo run -p agenteval -- --arm plev \
     --human unstage-after-observe:src/session.rs --out <dir> --app ide
 ```
 
@@ -492,7 +492,7 @@ padrão) ou até `--timeout` (600 s por padrão). o agente recebe só a
 tarefa e dois comandos, com o binário já compilado:
 
 ```sh
-cargo build -p wire --bin plev
+cargo build -p socket --bin plev
 plev observe --app ide [--scope <id>] [--keys <k,k>] [--since <rev>]
 plev act <target> <action> --from-revision <rev> [--param <json>]
 ```
@@ -509,7 +509,7 @@ para a corrida de controle, o mesmo comando com `--human none`.
 ### braço B, o git na linha de comando
 
 ```sh
-cargo run -p ide --bin ide-lab -- --arm git \
+cargo run -p agenteval -- --arm git \
     --human unstage-after-observe:src/session.rs --out <dir>
 ```
 
@@ -527,7 +527,7 @@ gravação: o relatório diz "receipts: none; session: none".
 ### braço C, o volume de um screenshot
 
 ```sh
-cargo run -p ide --bin ide-lab -- --arm screenshot --out <dir>
+cargo run -p agenteval -- --arm screenshot --out <dir>
 ```
 
 desenha o ide em 1280x800 na escala 1 e na 2 (um renderer, redimensionado

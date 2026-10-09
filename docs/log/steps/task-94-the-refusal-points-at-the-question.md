@@ -173,7 +173,7 @@ clippy `-D warnings`, fmt, wasm check e a perna urnaui. `cargo test
 --workspace`: na base, 2347 passando e 12 ignorados (no commit da sonda,
 que só acrescenta um teste, 2348 e 12); no fim, 2351 e 12 (+4: a função,
 o binário contra o brinquedo, e dois pela porta real do ide). a perna
-urnaui: 82 passando e 1 ignorado. `cargo test -p wire -p ide` verde.
+urnaui: 82 passando e 1 ignorado. `cargo test -p socket -p idestudio` verde.
 
 ### limitações
 
@@ -187,8 +187,8 @@ urnaui: 82 passando e 1 ignorado. `cargo test -p wire -p ide` verde.
   linhas. não fiz porque é reorganização fora do pedido.
 - o teste do ide acha o `plev` ao lado do próprio diretório
   (`target/<profile>/plev`), porque o cargo só dá `CARGO_BIN_EXE_*` aos
-  testes do mesmo pacote. `cargo test -p wire -p ide` e o workspace
-  constroem o binário; `cargo test -p ide` sozinho não, e o teste recusa
+  testes do mesmo pacote. `cargo test -p socket -p idestudio` e o workspace
+  constroem o binário; `cargo test -p idestudio` sozinho não, e o teste recusa
   um `plev` ausente ou mais velho que `plev.rs`, dizendo como construir.
   a checagem compara a data do binário com a de `plev.rs`, não com a das
   dependências dele.

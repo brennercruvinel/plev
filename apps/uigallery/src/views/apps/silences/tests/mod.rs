@@ -889,8 +889,8 @@ fn the_app_projection_is_the_uir_golden() {
     assert!(
         kept == text,
         "the projection moved away from the golden; regenerate it with \
-         UIR_BLESS=1 cargo test -p showcase --lib silences::tests::the_app_projection, \
-         then run cargo test -p uir -p propose -p surface"
+         UIR_BLESS=1 cargo test -p uigallery --lib silences::tests::the_app_projection, \
+         then run cargo test -p plevir -p offers -p screen"
     );
 }
 

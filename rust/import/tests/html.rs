@@ -5,7 +5,7 @@
 //! verified against the same app the react note card is written for.
 //!
 //! To write the goldens again after an intentional change:
-//! UPDATE_GOLDEN=1 cargo test -p parser --test html
+//! UPDATE_GOLDEN=1 cargo test -p import --test html
 
 // shared with the other test binaries: this one reads the html fixture.
 #[allow(dead_code)]

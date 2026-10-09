@@ -296,7 +296,7 @@ text_audit, hot reload, stages) sem mudança de resultado.
 achou `../urna`): antes `cargo test --workspace` 2454 passed, 0 failed,
 16 ignored em 114 binários; depois 2465 passed, 0 failed, 16 ignored em
 115 binários (+11: os testes novos). clippy `-D warnings` e fmt limpos.
-`cargo run -p showcase --example regress -- check`: 159 baselines, 159
+`cargo run -p regress -- check`: 159 baselines, 159
 iguais, 0 mudaram, sem frame desenhado. contagem de linhas:
 `gpu/context.rs` 507 de produção (era 461), `gpu/recover.rs` 231,
 `gpu/loss.rs` 118, tudo abaixo de 639.
@@ -740,16 +740,16 @@ os quatro bindings, em repouso a página não pede frame); o golden.
 golden: `rust/plevir/tests/fixtures/uigallery-files.snapshot.json` (4 nós,
 revision `d7a661b0bdabefd9`), mantido por
 `files::tests::the_page_projection_is_the_uir_golden`; `UIR_BLESS=1
-cargo test -p showcase --lib files::tests::the_page_projection` regrava.
+cargo test -p uigallery --lib files::tests::the_page_projection` regrava.
 os testes do `uir` continuam verdes.
 
 baselines: `tool/bench/regress/baselines/files@core@1280x800` e
 `files@hoff@1280x800` (`semantics.json`, `scene.json`, `frame.png`; 4
 layers, 4 controles bound, 4 nós, settled em 2 passos), abençoadas com
-`cargo run -p showcase --example regress -- bless --page Files --theme
+`cargo run -p regress -- bless --page Files --theme
 core --png` e o mesmo com `hoff`.
 
-render headless: `cargo run -p showcase -- --render Files --theme core
+render headless: `cargo run -p uigallery -- --render Files --theme core
 --out files-core.png --semantics files-core.json` e o mesmo com `hoff`
 deram dois PNG 1200x800 (o card centrado na largura legível, a zona com
 "drop files here", o botão "open file" com o ícone de pasta, o status
@@ -774,7 +774,7 @@ página). perna urnaui: antes 82 passed, 1 ignored; depois 85 passed, 0
 failed, 1 ignored em 6 binários (+3). clippy `-D warnings`, fmt e a
 checagem wasm limpos nas duas pernas.
 
-`cargo run -p showcase --example regress -- check`: 161 baselines (eram
+`cargo run -p regress -- check`: 161 baselines (eram
 159), 161 iguais, 0 mudaram, sem frame desenhado.
 
 linhas de produção (regra do guard): engine `platform/files.rs` 350,
@@ -879,13 +879,13 @@ assinatura existente mudou.
 ```text
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/task-76
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
-cargo test --offline -p engine -p showcase
+cargo test --offline -p engine -p uigallery
 CARGO_TARGET_DIR=$CARGO_TARGET_DIR/urnaui cargo test --offline --manifest-path apps/urnadbapp/Cargo.toml
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-cargo run --offline -p showcase -- --render Files --theme core --out files.png --semantics files.json
-UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
-cargo run --offline -p showcase --example regress -- bless --page Files --theme core --png   (e --theme hoff)
+cargo run --offline -p regress -- check
+cargo run --offline -p uigallery -- --render Files --theme core --out files.png --semantics files.json
+UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_projection   (regrava o golden)
+cargo run --offline -p regress -- bless --page Files --theme core --png   (e --theme hoff)
 ```
 
 ## handoff do item 2: múltiplas janelas no engine
@@ -1075,7 +1075,7 @@ nomeia uma layer de um compositor). não rodei a janela de verdade:
 o exemplo não tem `PLEV_BACKGROUND` (isso é do showcase) e abrir uma
 janela que toma o foco está proibido aqui. o que prova o caminho são os
 testes headless do `Windows`; o `create_window` duas vezes no mesmo
-loop é o uso comum do winit. `cargo run -p engine --example layers` é
+loop é o uso comum do winit. `cargo run -p layers` é
 do orquestrador.
 
 ### o showcase
@@ -1176,7 +1176,7 @@ failed, 1 ignored em 6 binários, igual a antes (o ide e o urnaui não
 usam o `App` do engine e compilam sem mudança). clippy `-D warnings`,
 fmt e a checagem wasm limpos nas duas pernas. 33 GB livres depois.
 
-`cargo run -p showcase --example regress -- check`: 161 baselines, 161 iguais,
+`cargo run -p regress -- check`: 161 baselines, 161 iguais,
 0 mudaram, sem frame desenhado e sem GPU aberta (788.9 ms). o golden do
 todo (`uir_fixture`) e os testes do `regress` também verdes: com uma
 janela a projeção não mudou.
@@ -1303,12 +1303,12 @@ o headless e os outros exemplos compilam sem tocar.
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo test --offline -p engine --test windows
-cargo test --offline -p showcase --test detached
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --test detached
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-cargo run --offline -p engine --example layers          (duas janelas; do orquestrador)
-cargo run --offline -p showcase -- Todo                  (D destaca a página; do orquestrador)
+cargo run --offline -p regress -- check
+cargo run --offline -p layers          (duas janelas; do orquestrador)
+cargo run --offline -p uigallery -- Todo                  (D destaca a página; do orquestrador)
 ```
 
 ## handoff do item 4: menus nativos como capacidades
@@ -1579,7 +1579,7 @@ binários (+26: 10 unitários do `platform/menu`, 6 de `engine/tests/menu.rs`,
 binários, igual a antes. clippy `-D warnings`, fmt e a checagem wasm
 limpos nas duas pernas (o showcase compila para wasm com `NoMenu`).
 
-`cargo run -p showcase --example regress -- check`: 161 baselines, 161
+`cargo run -p regress -- check`: 161 baselines, 161
 iguais, 0 mudaram, sem frame desenhado e sem GPU aberta (807 ms). o
 golden do todo (`tests/uir_fixture.rs`) e os goldens das silences e da
 files continuam iguais: a projeção da página não mudou.
@@ -1715,12 +1715,12 @@ export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo metadata --offline --format-version 1 > /dev/null   (o lock resolve offline)
 cargo test --offline -p engine --test menu
-cargo test --offline -p showcase --lib -- dispatch::shell app::menu dispatch::agent
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --lib -- dispatch::shell app::menu dispatch::agent
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-PLEV_BACKGROUND=1 RUST_LOG=showcase=info cargo run --offline -p showcase -- Todo   (a barra instala; sem clique aqui)
-cargo run --offline -p showcase -- Todo   (a barra plev / view / Todo; do orquestrador)
+cargo run --offline -p regress -- check
+PLEV_BACKGROUND=1 RUST_LOG=showcase=info cargo run --offline -p uigallery -- Todo   (a barra instala; sem clique aqui)
+cargo run --offline -p uigallery -- Todo   (a barra plev / view / Todo; do orquestrador)
 ```
 
 ## handoff do item 8: diálogos nativos de alerta e confirmação
@@ -1731,7 +1731,7 @@ branch `task/76e-alerts`, base `0e49f828` (main após o item 4). worktree
 ### a sonda
 
 (a) o caminho de hoje no ide, por teste sem janela
-(`cargo test --offline -p ide --lib -- workbench::tests`, 22 verdes, 0,19 s):
+(`cargo test --offline -p idestudio --lib -- workbench::tests`, 22 verdes, 0,19 s):
 
 - um request que exige confirmação chega ao dispatcher e fica em
   `AwaitingConfirmation`: o `discard` de um agente (a policy do nó é
@@ -1995,7 +1995,7 @@ binários, igual a antes. clippy `-D warnings`, fmt e a checagem wasm
 limpos nas duas pernas (o showcase compila para wasm com `NoAlerts`).
 `Cargo.lock` e `apps/urnadbapp/Cargo.lock` não mudaram.
 
-`cargo run -p showcase --example regress -- check`: antes do bless, 161
+`cargo run -p regress -- check`: antes do bless, 161
 baselines, 159 iguais, 2 mudaram (`files@core`, `files@hoff`, o botão
 novo); depois do bless dito acima, 161 iguais, 0 mudaram, sem frame
 desenhado e sem GPU aberta (676 ms). o golden do todo e os das silences
@@ -2084,7 +2084,7 @@ gravação acima).
   a policy só pessoa e o `MenuModel`. o `Parent` serve para qualquer
   painel que precise da janela.
 - para o brenner provar na tela, do orquestrador, nunca de teste:
-  `PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 cargo run --offline -p ide <repo>`,
+  `PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 cargo run --offline -p idestudio <repo>`,
   um `plev act --ask` ou um discard pelo agente: o sheet do macOS abre
   sobre a janela do ide com "Discard changes?" / "test-agent asks to
   discard all changes to X. This cannot be undone." e os botões
@@ -2101,15 +2101,15 @@ export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo test --offline -p engine --lib platform::alerts
 cargo test --offline -p engine --test alerts
-cargo test --offline -p ide --test native_confirm
-cargo test --offline -p showcase --lib files::
-cargo test --offline -p engine -p ide -p showcase
+cargo test --offline -p idestudio --test native_confirm
+cargo test --offline -p uigallery --lib files::
+cargo test --offline -p engine -p idestudio -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-cargo run --offline -p showcase -- --render Files --theme core --out files.png --semantics files.json
-UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
-cargo run --offline -p showcase --example regress -- bless --page Files --theme core --png   (e --theme hoff)
-PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run --offline -p ide <repo>   (o sheet; do orquestrador)
+cargo run --offline -p regress -- check
+cargo run --offline -p uigallery -- --render Files --theme core --out files.png --semantics files.json
+UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_projection   (regrava o golden)
+cargo run --offline -p regress -- bless --page Files --theme core --png   (e --theme hoff)
+PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run --offline -p idestudio <repo>   (o sheet; do orquestrador)
 ```
 
 ## handoff do item 5: notificações do sistema e tray como capacidades
@@ -2427,7 +2427,7 @@ pernas (o showcase compila para wasm com `NoTray` e `NoNotifier`). o
 único aviso no log é o `block v0.1.6` de incompatibilidade futura, que já
 estava.
 
-`cargo run -p showcase --example regress -- check`: antes do bless, 161
+`cargo run -p regress -- check`: antes do bless, 161
 baselines, 159 iguais, 2 mudaram (`files@core@1280x800`,
 `files@hoff@1280x800`: "semantics changed: notice none -> ''; visual
 unchanged, layer files"); `bless --page Files --theme core` e `--theme
@@ -2502,7 +2502,7 @@ está fora da lista, fica para a integração):
   `NativeTray` está compilado e não rodou (criar um mostra na barra), a
   notificação real não existe (bundle). o que a rodada prova é o modelo,
   o falso, o clique de volta pelo dispatcher e o showcase sobre janela
-  nua. a prova na tela é do orquestrador: `cargo run --offline -p showcase
+  nua. a prova na tela é do orquestrador: `cargo run --offline -p uigallery
   -- Files`, o anel na barra de menus; clique direito abre o menu (show
   plev, theme, go to, page in a window of its own, Quit); clique esquerdo
   traz a janela para frente; com a janela atrás de outra, soltar arquivos
@@ -2575,13 +2575,13 @@ cargo metadata --offline --format-version 1 > /dev/null   (o lock da raiz resolv
 cargo check --locked --offline --manifest-path apps/urnadbapp/Cargo.toml   (o lock do urnaui é o que o cargo quer)
 cargo test --offline -p engine --lib platform::tray platform::notify
 cargo test --offline -p engine --test tray --test notify --test menu
-cargo test --offline -p showcase --lib -- dispatch::shell app::menu app::tray app::notify files::
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --lib -- dispatch::shell app::menu app::tray app::notify files::
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-UIR_BLESS=1 cargo test --offline -p showcase --lib files::tests::the_page_projection   (regrava o golden)
-cargo run --offline -p showcase --example regress -- bless --page Files --theme core   (e --theme hoff; sem --png)
-RUST_LOG=showcase=info cargo run --offline -p showcase -- Files   (o anel na barra, o menu, o show; do orquestrador)
+cargo run --offline -p regress -- check
+UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_projection   (regrava o golden)
+cargo run --offline -p regress -- bless --page Files --theme core   (e --theme hoff; sem --png)
+RUST_LOG=showcase=info cargo run --offline -p uigallery -- Files   (o anel na barra, o menu, o show; do orquestrador)
 ```
 
 ## handoff do item 7: sleep e wake
@@ -2846,7 +2846,7 @@ fora do desktop; o `match` com o braço em `cfg` compila nos dois). o
 único aviso no log é o `block v0.1.6` de incompatibilidade futura, que
 já estava.
 
-`cargo run --offline -p showcase --example regress -- check`: 161
+`cargo run --offline -p regress -- check`: 161
 baselines, 161 iguais, 0 mudaram, sem frame desenhado e sem GPU aberta
 (840.5 ms). nada deste item muda um frame acordado: os goldens e os
 `semantics.json` ficaram como estavam, nenhum bless.
@@ -2905,7 +2905,7 @@ vive agora).
   máquina, e a máquina não dormiu: o que a rodada prova é o engine e o
   showcase com o `Occluded` injetado sobre hosts headless. o caminho do
   winit está lido na fonte, não medido. a prova na tela é do
-  orquestrador: `RUST_LOG=engine=debug cargo run --offline -p showcase --
+  orquestrador: `RUST_LOG=engine=debug cargo run --offline -p uigallery --
   Spinner`, minimizar, e ver "window paused (covered true, asleep
   false)" e nenhum "frame:" no log até restaurar, quando aparece "window
   shows again: a new frame" e um frame só, depois o spinner segue.
@@ -2970,12 +2970,12 @@ vive agora).
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo test --offline -p engine --test sleep_wake
-cargo test --offline -p showcase --test sleep_wake
-cargo test --offline -p showcase --lib -- app::sleep silences::jobs surface_page::page
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --test sleep_wake
+cargo test --offline -p uigallery --lib -- app::sleep silences::jobs surface_page::page
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-RUST_LOG=engine=debug cargo run --offline -p showcase -- Spinner   (minimizar e restaurar; do orquestrador)
+cargo run --offline -p regress -- check
+RUST_LOG=engine=debug cargo run --offline -p uigallery -- Spinner   (minimizar e restaurar; do orquestrador)
 ```
 
 ## handoff do item 9: impressão, o frame no papel
@@ -3265,10 +3265,10 @@ urnaui: 85 passed, 0 failed, 1 ignored, igual a antes (o urnaui não toca o
 `platform::print` e compila sem mudança). clippy `-D warnings`, fmt e a
 checagem wasm limpos nas duas pernas; o único aviso no log é o `block
 v0.1.6` de incompatibilidade futura, que já estava. antes do gate,
-`cargo test --offline -p engine -p showcase`: 1208 passed, 0 failed, 7
+`cargo test --offline -p engine -p uigallery`: 1208 passed, 0 failed, 7
 ignored.
 
-`cargo run --offline -p showcase --example regress -- check`: 161
+`cargo run --offline -p regress -- check`: 161
 baselines, 161 iguais, 0 mudaram, sem frame desenhado e sem GPU aberta
 (702,6 ms). o shell não está no frame de nenhuma página e
 `ShowcaseView::semantics` não mudou: os goldens ficaram como estavam,
@@ -3386,7 +3386,7 @@ PDF; nada disto foi feito aqui (a máquina fica sem destino):
 ```text
 lpadmin -p pdf -E -v cups-pdf:/ -m everywhere      (ou o "Save as PDF" de uma fila IPP; ou uma impressora real por System Settings)
 lpstat -p -d                                         (o destino aparece; "system default destination: pdf" com lpadmin -d pdf)
-RUST_LOG=showcase=info cargo run --offline -p showcase -- Todo
+RUST_LOG=showcase=info cargo run --offline -p uigallery -- Todo
    cmd-p, ou view > print this page: o log diz "print: the Todo page's scene built for paper at scale 4.167 (300 dpi) in ..." e
    "print: pdf-<n> queued: 5000x3333 at 300 dpi, ... bytes; device ..., render and png ..., spool ..."
 lpstat -W completed -o pdf                            (o job listado; o arquivo onde o driver escreve, ~/Desktop ou /var/spool/cups-pdf)
@@ -3404,12 +3404,12 @@ export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
 export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFILE_TEST_DEBUG=line-tables-only
 cargo test --offline -p engine --lib platform::print
 cargo test --offline -p engine --test print -- --nocapture          (a sonda (b) imprime as medidas)
-cargo test --offline -p showcase --lib -- dispatch::shell app::print app::menu
-RUST_LOG=showcase=info cargo test --offline -p showcase --test print -- --nocapture --test-threads=1
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --lib -- dispatch::shell app::print app::menu
+RUST_LOG=showcase=info cargo test --offline -p uigallery --test print -- --nocapture --test-threads=1
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check
-cargo run --offline -p showcase -- --render Todo --scale 4.1667 --out todo-paper.png   (o png do papel, sem impressora)
+cargo run --offline -p regress -- check
+cargo run --offline -p uigallery -- --render Todo --scale 4.1667 --out todo-paper.png   (o png do papel, sem impressora)
 lpstat -p -d                                                          (esta máquina: No destinations added)
 ```
 
@@ -3704,7 +3704,7 @@ passed, 0 failed, 1 ignored em 6 binários, igual a antes. clippy `-D
 warnings`, fmt e a checagem wasm limpos nas duas pernas; o único aviso no
 log é o `block v0.1.6` de incompatibilidade futura, que já estava.
 
-`cargo run --offline -p showcase --example regress -- check`: 163
+`cargo run --offline -p regress -- check`: 163
 baselines, 163 iguais, 0 mudaram, sem frame desenhado e sem GPU aberta.
 os 161 de antes não mudaram; os dois novos são `capture@core@1280x800` e
 `capture@hoff@1280x800` (`bless --page Capture --theme core --png` e
@@ -3812,7 +3812,7 @@ integração):
 a luz da câmera acende nesta parte; nada disto foi feito aqui.
 
 ```text
-RUST_LOG=engine=debug,showcase=info cargo run --offline -p showcase -- Capture
+RUST_LOG=engine=debug,showcase=info cargo run --offline -p uigallery -- Capture
   clicar no switch "camera" (ou Tab e Enter). no log:
     "capture: the page starts the camera"
     "capture: camera with ffmpeg -hide_banner -nostdin -loglevel error -f avfoundation -i 0:none -vf fps=15,scale=640:360:... -f rawvideo -pix_fmt rgba pipe:1"
@@ -3829,8 +3829,8 @@ cobrir: cmd-H ou minimizar. no log "capture: the page stops the camera"; a luz a
   pgrep -fl "ffmpeg.*avfoundation"   (nada). restaurar: a luz acende de novo e a caixa espera um frame novo.
   ir para outra página (Files) e voltar: o mesmo.
 o agente, em outro terminal, com o app rodando com PLEV_AGENT=1:
-  cargo run --offline -p wire --bin plev -- observe --scope capture       (capture:camera, capture:microphone)
-  cargo run --offline -p wire --bin plev -- act capture.camera toggle     (recusado: NotAuthorized; nada liga)
+  cargo run --offline -p socket --bin plev -- observe --scope capture       (capture:camera, capture:microphone)
+  cargo run --offline -p socket --bin plev -- act capture.camera toggle     (recusado: NotAuthorized; nada liga)
 desfazer: Ajustes do Sistema > Privacidade e Segurança > Câmera (e Microfone): desligar o app do terminal;
   ou tccutil reset Camera e tccutil reset Microphone (todos os apps), ou só um: tccutil reset Camera com.apple.Terminal
 a lista dos dispositivos, se quiser escolher outra câmera: ffmpeg -f avfoundation -list_devices true -i ""   (também pode pedir a permissão)
@@ -3848,12 +3848,12 @@ export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFIL
 cargo test --offline -p engine --lib -- gpu::image platform::capture
 cargo test --offline -p engine --test capture -- --nocapture           (a sonda imprime as medidas; precisa do ffmpeg no PATH)
 cargo test --offline -p engine --test capture -- --ignored --nocapture  (o atlas cheio: 244 frames, 225 MB)
-cargo test --offline -p showcase --lib -- apps::capture app::capture
-cargo test --offline -p showcase --test capture
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --lib -- apps::capture app::capture
+cargo test --offline -p uigallery --test capture
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check              (163 iguais)
-cargo run --offline -p showcase -- --render Capture --out capture.png   (a página em repouso, sem dispositivo)
+cargo run --offline -p regress -- check              (163 iguais)
+cargo run --offline -p uigallery -- --render Capture --out capture.png   (a página em repouso, sem dispositivo)
 ```
 
 ### integração do item 10 (orquestrador, 2026-09-24)
@@ -4055,7 +4055,7 @@ opções e impacto:
    manifesto e o lock ficam intactos; tudo o mais do briefing entra (o
    parse, as fontes, o falso, o showcase, o ator, a lista, a gravação, os
    testes, o ADR), e o ADR descreve o handler como o caminho do bring-up.
-   `cargo run -p showcase -- 'plev-showcase://shell.page/select?value=Files'`
+   `cargo run -p uigallery -- 'plev-showcase://shell.page/select?value=Files'`
    exercita o caminho inteiro no macOS sem registrar nada.
 
 recomendação: a opção 1, se as três linhas do lock forem aceitas: é o
@@ -4151,7 +4151,7 @@ os testes). `engine::platform::links`:
   que é como o sistema entrega um esquema registrado: um processo novo com
   a URL como argumento. a segunda instância abre outra janela com o link
   aplicado nela; encaminhar é do bring-up.
-- macOS: a mesma fonte, hoje (`cargo run -p showcase -- <link>`, ou `open
+- macOS: a mesma fonte, hoje (`cargo run -p uigallery -- <link>`, ou `open
   -a <app> --args <link>` depois do bundle). o sistema só entrega o
   esquema a um `.app` com `CFBundleURLTypes`, como evento `GURL`; esse
   handler é do bring-up (abaixo e no ADR). nada de delegado: o do winit
@@ -4300,7 +4300,7 @@ incompatibilidade futura, que já estava. `Cargo.lock`,
 `apps/urnadbapp/Cargo.lock`, `rust/engine/Cargo.toml` e o `Cargo.toml`
 da raiz sem mudança (`git diff bcf6be8e` vazio neles).
 
-`cargo run --offline -p showcase --example regress -- check`: 163
+`cargo run --offline -p regress -- check`: 163
 baselines, 163 iguais, 0 mudaram, sem frame desenhado e sem GPU aberta
 (743 ms). nenhuma projeção de página mudou; nenhum golden, nenhum bless.
 
@@ -4384,20 +4384,20 @@ fora da lista, fica para a integração):
 hoje, pelo argumento (nada registrado, nenhum `open`):
 
 ```text
-RUST_LOG=showcase=info cargo run --offline -p showcase -- 'plev-showcase://shell.page/select?value=Files'
+RUST_LOG=showcase=info cargo run --offline -p uigallery -- 'plev-showcase://shell.page/select?value=Files'
    a janela abre na Files. no log: "link: plev-showcase://shell.page/select?value=Files: completed".
-cargo run --offline -p showcase -- 'plev-showcase://capture.camera/toggle'
+cargo run --offline -p uigallery -- 'plev-showcase://capture.camera/toggle'
    a janela abre na página de sempre, a câmera não liga (nenhuma luz, nenhum ffmpeg:
    pgrep -fl "ffmpeg.*avfoundation" vazio), e um toast embaixo à direita diz
    "link refused: plev-showcase://capture.camera/toggle: capture.camera toggle is not open to links";
    o log diz o mesmo em warn.
-cargo run --offline -p showcase -- Todo dark 'plev-showcase://shell.theme/select?value=nope'
+cargo run --offline -p uigallery -- Todo dark 'plev-showcase://shell.theme/select?value=nope'
    a Todo no tema dark (o link não tomou o lugar de nenhum argumento), e o toast
    "link refused: ...: "nope" is not one of the options".
-PLEV_AGENT=1 cargo run --offline -p showcase -- 'plev-showcase://shell.print/activate'
-   e em outro terminal: cargo run --offline -p wire --bin plev -- observe --scope shell
+PLEV_AGENT=1 cargo run --offline -p uigallery -- 'plev-showcase://shell.print/activate'
+   e em outro terminal: cargo run --offline -p socket --bin plev -- observe --scope shell
    shell:notice = "link refused: plev-showcase://shell.print/activate: shell.print activate is not open to links"
-PLEV_RECORD=1 cargo run --offline -p showcase -- 'plev-showcase://shell.page/select?value=Files'
+PLEV_RECORD=1 cargo run --offline -p uigallery -- 'plev-showcase://shell.page/select?value=Files'
    cmd-shift-s, e o plev-inspect da sessão: o observed e o receipt de agent:link, nenhum input antes dele.
 ```
 
@@ -4424,11 +4424,11 @@ export CARGO_INCREMENTAL=0 CARGO_PROFILE_DEV_DEBUG=line-tables-only CARGO_PROFIL
 export CARGO_NET_OFFLINE=true
 cargo test --offline -p engine --lib platform::links
 cargo test --offline -p engine --test links
-cargo test --offline -p showcase --lib app::links
-cargo test --offline -p showcase --test links
-cargo test --offline -p engine -p showcase
+cargo test --offline -p uigallery --lib app::links
+cargo test --offline -p uigallery --test links
+cargo test --offline -p engine -p uigallery
 ./tool/tasks/fullcheck.sh
-cargo run --offline -p showcase --example regress -- check   (163 iguais)
+cargo run --offline -p regress -- check   (163 iguais)
 git diff bcf6be8e -- Cargo.lock apps/urnadbapp/Cargo.lock rust/engine/Cargo.toml Cargo.toml   (vazio)
 ```
 

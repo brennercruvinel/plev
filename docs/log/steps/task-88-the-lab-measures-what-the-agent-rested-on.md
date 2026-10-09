@@ -328,7 +328,7 @@ pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
 ### validação
 
 - `df -h /`: 15 GB livres antes do gate.
-- `cargo test -p ide` e `cargo test -p wire` verdes (`wire`: 76).
+- `cargo test -p idestudio` e `cargo test -p socket` verdes (`wire`: 76).
 - `./tool/tasks/fullcheck.sh` verde depois do rebase na main (`0c1f629`), com a perna
   urnaui. depois: 2234 passed, 12 ignored (workspace 2152 e 11, urnaui 82
   e 1). a main em `0c1f629`: 2225, contada como o total de depois menos

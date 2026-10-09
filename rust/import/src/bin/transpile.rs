@@ -1,7 +1,7 @@
 //! The parser's command line: react component sources in, plev builder
 //! code out, droplist on stderr.
 //!
-//! Run: `cargo run -p parser --example transpile -- <index.tsx> <module.sass> <vars.sass>`
+//! Run: `cargo run -p import --bin transpile -- <index.tsx> <module.sass> <vars.sass>`
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();

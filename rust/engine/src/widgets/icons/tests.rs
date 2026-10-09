@@ -133,7 +133,7 @@ fn parser_rejects_garbage() {
 /// binary (positions as two `f32`, the tint applied per request as now,
 /// indices as `u16` when they fit). The debug profile's numbers.
 #[test]
-#[ignore = "a measurement: cargo test -p comps --lib icons::tests::the_tessellation_cost -- --ignored --nocapture"]
+#[ignore = "a measurement: cargo test -p engine --lib icons::tests::the_tessellation_cost -- --ignored --nocapture"]
 fn the_tessellation_cost() {
     use std::time::{Duration, Instant};
 

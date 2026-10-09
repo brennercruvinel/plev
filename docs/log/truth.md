@@ -29,7 +29,7 @@ o da base até ser reescrito.
   estão corrigidos nos docs (README, arc.toml, manual do engine, nove
   ADRs, arquivo da task-62); os itens 26 a 30 foram corrigidos no
   programa pelo orquestrador. o `ide` ganhou `default-run = "ide"`: com
-  o `ide-lab`, `cargo run -p ide` não sabia qual binário rodar.
+  o `ide-lab`, `cargo run -p idestudio` não sabia qual binário rodar.
 
 - `78f463c` (task-83): `Change::NodeAdded(Box<Node>)` (seção 2.1 e 4b:
   o delta traz o nó; o recorder continua gravando snapshot inteiro para
@@ -234,7 +234,7 @@ o da base até ser reescrito.
 | `Operable`, `Execution`, `ReceiptSink` | `rust/accord/src/dispatch.rs:20-28`, `:34-45`, `:50-52` | app (`Operable`), consumidor (`ReceiptSink`) | `Operable`: `TodoPage` (`apps/uigallery/src/views/apps/todo/semantics/mod.rs:188`) e `Workbench` (`apps/idestudio/src/capability/execute.rs:157`); sinks: `wire` (`rust/socket/src/server.rs:133-149`), `rec` (`rust/record/src/recorder.rs:175-179`), lab (`apps/agenteval/src/host.rs:146-154`) | `execute` recebe o `RequestId` e pode terminar depois (`Started`) |
 | `Dispatcher` | `rust/accord/src/dispatch.rs:65-71` | app | ide (`apps/idestudio/src/capability/mod.rs:47`), showcase todo | projeta o app no instante e checa contra ele (`rust/accord/src/dispatch.rs:125-142`, `:324-337`); `execute` só depois de aceito ou confirmado (`:131-134`, `:166-170`); `confirm` e `decline` só por `Human` ou `Assistive` (`:275-283`); recibos terminados limitados a 256 (`:55`, `:310-319`); recibos abertos sem limite e sem expiração (`:60-64`); não é `Send` (sinks `Box<dyn ReceiptSink>`, `:70`) |
 | `sem::redact` (`REDACTED`, `is_secret`, `length`, `Secrets`) | `rust/accord/src/redactor.rs:26`, `:29-33`, `:37-45`, `:53-137` | quem leva request ou estágio para fora do processo | wire (`rust/socket/src/server.rs:403-404`, `:250`), rec (`rust/record/src/ring.rs:236`) | falha fechado: nó desconhecido conta como secreto (`rust/accord/src/redactor.rs:28-33`); única cópia da regra |
-| exemplo do cenário da tese | `demo/commit/src/main.rs` | | | roda com `cargo run -p sem --example commit` |
+| exemplo do cenário da tese | `demo/commit/src/main.rs` | | | roda com `cargo run -p commit` |
 
 ### 2.3 `wire`: protocolo v1, porta, cli
 

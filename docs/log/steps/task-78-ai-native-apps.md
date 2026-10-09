@@ -349,7 +349,7 @@ antes de qualquer mudança, na `main` em `82b584d6` (wgpu 28.0.0 no
 `Cargo.lock`), a captura do desktop contra ele mesmo:
 
 ```sh
-cargo run --offline -p showcase --example regress -- capture \
+cargo run --offline -p regress -- capture \
   --out target/determinism/wgpu28
 ```
 
@@ -394,7 +394,7 @@ que pegou o plev:
 ## fase 2: a prova de pixel
 
 ```sh
-cargo run --offline -p showcase --example regress -- capture \
+cargo run --offline -p regress -- capture \
   --out target/determinism/wgpu29 --against target/determinism/wgpu28 --no-png
 ```
 

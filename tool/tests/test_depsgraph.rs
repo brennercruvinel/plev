@@ -37,7 +37,10 @@ fn crates() -> BTreeMap<String, String> {
         for dir in ws.get(key).and_then(|v| v.as_array()).into_iter().flatten() {
             let dir = dir.as_str().expect("a path").to_owned();
             let manifest = read_toml(&format!("{dir}/Cargo.toml"));
-            let name = manifest["package"]["name"].as_str().expect("package.name").to_owned();
+            let name = manifest["package"]["name"]
+                .as_str()
+                .expect("package.name")
+                .to_owned();
             out.insert(name, dir);
         }
     }
@@ -117,5 +120,8 @@ fn the_homes_are_the_only_places_a_crate_lives() {
         .into_values()
         .filter(|dir| !matches!(home(dir), "rust" | "apps" | "demo" | "tool"))
         .collect();
-    assert!(stray.is_empty(), "crates outside rust/, apps/, demo/, tool/: {stray:?}");
+    assert!(
+        stray.is_empty(),
+        "crates outside rust/, apps/, demo/, tool/: {stray:?}"
+    );
 }

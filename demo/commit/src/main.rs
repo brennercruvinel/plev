@@ -6,7 +6,7 @@
 //! comes back rejected with the delta (removed: B) and nothing is
 //! committed. the agent observes again and commits A and C.
 //!
-//! `cargo run -p sem --example commit` prints the three receipts.
+//! `cargo run -p commit` prints the three receipts.
 
 use std::collections::BTreeSet;
 use std::error::Error;

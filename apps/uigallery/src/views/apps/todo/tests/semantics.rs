@@ -453,7 +453,7 @@ fn an_open_modal_leaves_the_todo_page_inert() {
 /// projection (what accessibility will do each frame) and the bindings
 /// (a render with ids against one without). Printed, not asserted: there
 /// is no target to invent. For the numbers, run it in release:
-/// `cargo test -p showcase --release --lib semantic_cost -- --nocapture`.
+/// `cargo test -p uigallery --release --lib semantic_cost -- --nocapture`.
 #[test]
 fn semantic_cost_per_frame() {
     use std::time::Duration;

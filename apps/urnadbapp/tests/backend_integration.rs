@@ -204,9 +204,9 @@ fn opens_the_shared_fixture_when_present() {
     assert!(result.k_returned > 0);
 }
 
-/// Dev tool: `cargo test -p urnaui -- --ignored make_demo_fixture` writes a
+/// Dev tool: `cargo test -p urnadbapp -- --ignored make_demo_fixture` writes a
 /// small demo corpus to `target/tmp/urnaui_demo.urna` so the real app can
-/// be run against it (`cargo run -p urnaui -- target/tmp/urnaui_demo.urna`).
+/// be run against it (`cargo run -p urnadbapp -- target/tmp/urnaui_demo.urna`).
 /// Ignored by default; the output path is gitignored build territory.
 #[test]
 #[ignore = "dev tool: writes target/tmp/urnaui_demo.urna"]

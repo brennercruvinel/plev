@@ -75,7 +75,7 @@ a task-57b.
 
 - nome do crate: `wire`. os tipos do protocolo são puros (compilam em
   wasm); o servidor (`AgentPort`) e o cliente ficam atrás de `cfg(unix)`;
-  o binário `plev` é um bin do mesmo crate (`cargo run -p wire --bin
+  o binário `plev` é um bin do mesmo crate (`cargo run -p socket --bin
   plev`).
 - o shell do showcase já tem, da task-60, os ganchos da página ativa:
   `ShowcaseView::semantics()` (projeta) e `assist(req)` (despacha um

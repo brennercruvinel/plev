@@ -221,7 +221,7 @@ B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
 
 ## measured cost
 
-`cargo test -p rec --release --test session measure -- --ignored
+`cargo test -p record --release --test session measure -- --ignored
 --nocapture`, on the development machine (apple silicon, headless GPU),
 the showcase todo page at 1280x800 driven by a scripted person (typing,
 enter, hover, toggle, filters, delete; 848 frames over 50 s simulated):

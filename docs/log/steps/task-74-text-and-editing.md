@@ -298,7 +298,7 @@ que está embutido hoje, mesmo em subset. cada peso a mais multiplica.
 briefing (`CARGO_TARGET_DIR=target/agents/task-74`), nesta máquina (metal,
 macOS 26.6.2): `cargo test --workspace`, `cargo clippy --workspace
 --all-targets -- -D warnings`, `cargo fmt --check`, `cargo check --target
-wasm32-unknown-unknown -p showcase` e a perna urnaui (test, clippy, fmt,
+wasm32-unknown-unknown -p uigallery` e a perna urnaui (test, clippy, fmt,
 check wasm), todas verdes. o CI do github está fora; esta rodada é a
 verificação. `text_audit` rodou no gate com GPU
 (`pixels_match_the_measured_width ... ok`), sem `#[ignore]`.
@@ -583,7 +583,7 @@ trabalho soma `decided_scripts_have_no_tofu` e não tira nenhum); clippy,
 fmt e wasm verdes; perna urnaui 85 passed, 0 failed, 1 ignored.
 `regress -- check`: 176 unchanged, 0 changed. fora do gate:
 `cargo check -p engine --target aarch64-apple-ios-sim` com `-D warnings`
-verde; `cargo ndk -t arm64-v8a check -p showcase --lib` compila, com dois
+verde; `cargo ndk -t arm64-v8a check -p uigallery --lib` compila, com dois
 avisos de código morto que já existiam e ficam fora do escopo
 (`rust/engine/src/runtime/window/mod.rs:57`, `apps/uigallery/src/shell/mod.rs:407`).
 disco: 13 GB livres antes do gate, 11 GB no fim.
@@ -819,7 +819,7 @@ sem janela, pelo caminho do frame (2x). três `TextField` no tema hoff:
 `hel|lo`, duas lavagens (`lo ` e o árabe com seu espaço, o `123` fora) e
 o caret entre o 3 e o espaço árabe; `שלום עולם` com o caret no começo,
 na borda direita. para refazer:
-`TEXT_FIELD_BIDI_OUT=<dir> cargo test -p comps --lib the_field_draws_the_boundary_caret`.
+`TEXT_FIELD_BIDI_OUT=<dir> cargo test -p engine --lib the_field_draws_the_boundary_caret`.
 
 ### gate e regress
 
@@ -828,8 +828,8 @@ na borda direita. para refazer:
 nenhum saiu); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
 failed, 1 ignored. `regress -- check` depois de tocar
 `tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
-fora do gate: `cargo check -p comps --target aarch64-apple-ios-sim` com
-`-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
+fora do gate: `cargo check -p engine --target aarch64-apple-ios-sim` com
+`-D warnings` verde; `cargo ndk -t arm64-v8a check -p uigallery --lib`
 compila, com os dois avisos antigos de código morto. disco: 11 GB livres.
 
 ### pendências
@@ -1034,7 +1034,7 @@ tira nenhum); clippy, fmt e wasm verdes; perna urnaui 85 passed, 0
 failed, 1 ignored. `regress -- check` depois de tocar
 `tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
 fora do gate: `cargo check -p engine --target aarch64-apple-ios-sim` com
-`-D warnings` verde; `cargo ndk -t arm64-v8a check -p showcase --lib`
+`-D warnings` verde; `cargo ndk -t arm64-v8a check -p uigallery --lib`
 compila, com os dois avisos antigos de código morto. disco: 12 GB livres.
 
 ### pendências
@@ -1182,7 +1182,7 @@ confirma (a coluna de edição é a mesma com 10 mil e com um milhão).
 
 ```sh
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
-cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+cargo test --offline --release -p engine --test editor_large_bench -- --ignored --nocapture
 ```
 
 ## fase 7: o benchmark
@@ -1240,7 +1240,7 @@ para reproduzir (o disco precisa de uns 2 GB para o perfil release):
 
 ```sh
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
-cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+cargo test --offline --release -p engine --test editor_large_bench -- --ignored --nocapture
 ```
 
 ## handoff da fase 7: documentos grandes
@@ -1304,7 +1304,7 @@ sonda e na seção do benchmark. comando:
 
 ```sh
 export CARGO_TARGET_DIR=/Users/nn/Dev/hoff/plevdev/target/agents/one
-cargo test --offline --release -p comps --test editor_large_bench -- --ignored --nocapture
+cargo test --offline --release -p engine --test editor_large_bench -- --ignored --nocapture
 ```
 
 ### testes (8 novos, 1 benchmark ignorado)
@@ -1331,9 +1331,9 @@ cargo test --offline --release -p comps --test editor_large_bench -- --ignored -
 8 testes e o benchmark); clippy, fmt e wasm verdes; perna urnaui 85
 passed, 0 failed, 1 ignored. `regress -- check` depois de tocar
 `tool/bench/regress/src/main.rs`: 176 unchanged, 0 changed.
-fora do gate: `cargo check -p engine -p comps --target
+fora do gate: `cargo check -p engine -p engine --target
 aarch64-apple-ios-sim` com `-D warnings` verde; `cargo ndk -t arm64-v8a
-check -p showcase --lib` compila, com os dois avisos antigos de código
+check -p uigallery --lib` compila, com os dois avisos antigos de código
 morto. disco: 9,3 GB livres.
 
 ### pendências
@@ -1402,7 +1402,7 @@ keymap dele liga só escape, enter e backspace).
 ## fase 4: o roteiro do IME no editor (brenner, 2026-09-25)
 
 o brenner rodou o roteiro no macOS, no exemplo do editor
-(`cargo run -p comps --example editor`, o único app que liga o IME:
+(`cargo run -p engine --example editor`, o único app que liga o IME:
 `rust/engine/src/widgets/examples/editor/main.rs:153`), com as fontes de entrada
 japonês (Romaji) e chinês simplificado (Pinyin): `nihongo`, espaço e
 Enter para 日本語; `zhongwen` e espaço para 中文. o que ele disse: "no
@@ -1509,7 +1509,7 @@ arquivo salvo).
 `/Users/nn/Dev/hoff/plevdev/target/agents/one/task-74h/ime-field.png`:
 a página Input a 2x, o primeiro campo com `日本語!` digitado e `にほんご`
 compondo, sublinhado, caret no fim. para refazer:
-`IME_FIELD_OUT=<dir> cargo test -p showcase --test component_pages the_focused_field`.
+`IME_FIELD_OUT=<dir> cargo test -p uigallery --test component_pages the_focused_field`.
 
 ### gate e regress
 
@@ -1581,7 +1581,7 @@ parte B uns 30 mil.
 - PNG: `/Users/nn/Dev/hoff/plevdev/target/agents/one/task-74h/field-menu.png`,
   o menu aberto sobre o campo com `Ada Lovelace` selecionado, Paste
   desligado. para refazer:
-  `FIELD_MENU_OUT=<dir> cargo test -p showcase --test component_pages a_right_click_opens`.
+  `FIELD_MENU_OUT=<dir> cargo test -p uigallery --test component_pages a_right_click_opens`.
   o `ime-field.png` foi refeito na mesma pasta.
 
 ### gate e regress

@@ -992,7 +992,7 @@ fn what_ends_at_once_or_at_the_second_check_reaches_the_agent() {
 /// The `plev` binary of the wire package, in the directory above this
 /// test binary's (`target/<profile>/plev`, the test in `deps`): cargo
 /// names a binary only to the tests of its own package. `cargo test -p
-/// wire -p ide`, or the workspace, builds it; one older than its source
+/// wire -p idestudio`, or the workspace, builds it; one older than its source
 /// would answer for another `plev`, so it is refused.
 fn plev_bin() -> PathBuf {
     let exe = std::env::current_exe().expect("this test's path");
@@ -1006,7 +1006,7 @@ fn plev_bin() -> PathBuf {
     assert!(
         modified(&bin) >= modified(&source),
         "no plev at {}, or one older than its source: build it with the wire package \
-         (cargo test -p wire -p ide)",
+         (cargo test -p socket -p idestudio)",
         bin.display()
     );
     bin

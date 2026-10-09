@@ -702,7 +702,7 @@ tela pode não ter nem o quadro.
 ### o teste
 
 `apps/idestudio/tests/rerun/inflight.rs` (novo), no binário `rerun` do ide
-(`cargo test -p ide --test rerun`):
+(`cargo test -p idestudio --test rerun`):
 
 - `InFlight`: a fixture do ide (`Lab`) assentada só até as execuções. o
   `settle` aplica as respostas do worker uma por vez, na ordem, enquanto
@@ -816,7 +816,7 @@ nada derrubou a demo. o que ela achou, para o orquestrador:
 ## fase 1: demo 4, interface efêmera (feita)
 
 o teste `apps/uigallery/tests/ephemeral.rs` (novo, no gate:
-`cargo test -p showcase --test ephemeral`) roda o roteiro do método sem
+`cargo test -p uigallery --test ephemeral`) roda o roteiro do método sem
 janela, sem ffmpeg e sem Claude: a Silences em 1200 por 800 servida por
 uma porta de verdade num diretório temporário, a partir da semente
 (cortes 1 e 2), com frames sintéticos postos no cache pelo
@@ -1398,11 +1398,11 @@ com o ambiente do briefing (o `PLEV_CLAUDE` no stub) e
   ignorados (157 suítes); urnaui 85 passam, 0 falham, 1 ignorado (6
   suítes). total 3012 passam e 27 ignorados, contra 3010 e 27 na base: os
   dois testes novos. `df -h /`: 16 GB livres antes e depois.
-- `cargo run --offline -p showcase --example regress -- check` (com o
+- `cargo run --offline -p regress -- check` (com o
   `main.rs` tocado): 176 baselines, 176 iguais, nenhum frame desenhado,
   nenhuma GPU aberta.
-- `cargo test -p ide --test rerun inflight`: dez de dez em
-  `task/80a-proof`; `cargo test -p showcase --test ephemeral`: dez de dez.
+- `cargo test -p idestudio --test rerun inflight`: dez de dez em
+  `task/80a-proof`; `cargo test -p uigallery --test ephemeral`: dez de dez.
 - na `task/80a-bug84`: o teste novo falha, o do a2ppa passa, os quatro da
   task-84 falham (saídas na demo 3).
 - nenhuma janela aberta, nenhum clique ou tecla sintética, nenhuma chamada

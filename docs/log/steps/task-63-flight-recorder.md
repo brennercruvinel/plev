@@ -460,7 +460,7 @@ método: build de debug desta branch em `1ec952b`, macOS, apple m4. um
 repositório de rascunho com um commit, `src/login.rs` e `src/session.rs`
 modificados e `todo.txt` não rastreado. o ide sobe com
 `PLEV_AGENT=1 PLEV_RECORD=1 PLEV_BACKGROUND=1 RUST_LOG=ide=debug,info
-cargo run -p ide -- <repo>` (o `cargo run` dá `exec` no ide, o pid é o
+cargo run -p idestudio -- <repo>` (o `cargo run` dá `exec` no ide, o pid é o
 mesmo). um vigia olha o app da frente a cada 100 ms nos primeiros 4 s e
 mata o ide pelo pid se ele virar o app da frente (não virou). o agente é
 o `plev` (nome `claude`), uma invocação por passo. as teclas
@@ -680,7 +680,7 @@ Validação executada:
 - ./tool/tasks/fullcheck.sh verde com a perna urnaui: 2208 passed, 0 failed, 12
   ignored (88 "test result"); a main tinha 2202 (87); os 6 a mais são
   desta task
-- cargo test -p rec, -p ide, -p inspect, -p showcase verdes dentro do gate
+- cargo test -p record, -p idestudio, -p replay, -p uigallery verdes dentro do gate
 - as nove sessões antigas: saídas idênticas entre o plev-inspect da main
   e o desta branch, arquivos intactos
 - prova na janela real com saída colada acima; o plev-inspect desta

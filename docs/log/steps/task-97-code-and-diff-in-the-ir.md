@@ -163,7 +163,7 @@ nenhum código mudou. toda afirmação sobre código tem arquivo e linha.
   `sem` muda (é um `Value::List`), nenhuma linha de `lines` muda. o que
   isso move: o golden `rust/plevir/tests/fixtures/idestudio-workbench.snapshot.json`
   ganha `diff:kinds` (lista vazia ali), escrito de novo por
-  `UIR_BLESS=1 cargo test -p ide --test uir_fixture`; o recorte que o
+  `UIR_BLESS=1 cargo test -p idestudio --test uir_fixture`; o recorte que o
   Claude vê (`apps/idestudio/src/generative/scope.rs:63-81`) leva `kinds` na
   mesma condição de `lines` (só enquanto o diff mostra um dos commits
   pedidos), senão um `code` que o Claude propuser não verifica; uma
@@ -405,10 +405,10 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
   falham, 26 ignorados (164 suítes); urnaui 85 passam, 1 ignorado (6
   suítes). total 3054 e 27, contra 3036 e 27 na base: os 18 testes novos.
   `df -h /`: 31 GB livres antes, 28 GB depois.
-- `cargo run --offline -p showcase --example regress -- check`, com o
+- `cargo run --offline -p regress -- check`, com o
   `main.rs` tocado: 176 baselines, 176 iguais, nenhum frame desenhado,
   nenhuma GPU aberta.
-- `cargo test -p ide --test lab_review` cinco vezes seguidas e `--test
+- `cargo test -p idestudio --test lab_review` cinco vezes seguidas e `--test
   claude` três: todas verdes.
 - nenhuma janela aberta, nenhum clique ou tecla do sistema (os do
   laboratório são pelo `Workbench::click`), nenhuma chamada ao `claude -p`,

@@ -9,7 +9,7 @@
 //! pixels). The GPU context exists already, as in a running app.
 //!
 //! A measurement, not a check. Run by hand:
-//! `cargo test -p showcase --lib surface_page::tests::measure -- --ignored --nocapture`.
+//! `cargo test -p uigallery --lib surface_page::tests::measure -- --ignored --nocapture`.
 
 use std::time::{Duration, Instant};
 

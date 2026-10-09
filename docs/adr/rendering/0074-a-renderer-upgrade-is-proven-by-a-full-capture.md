@@ -27,7 +27,7 @@ the way a renderer dependency moves, in this order:
    the iOS simulator, and revert. agents build offline; a crate missing
    from the cache is the orchestrator's to fetch before the briefing.
 2. capture the base on the old version:
-   `cargo run -p showcase --example regress -- capture --out target/determinism/<old>`,
+   `cargo run -p regress -- capture --out target/determinism/<old>`,
    every gallery page in 4 themes at 4 scales (1312 frames).
 3. move the version with `cargo update -p <crate>` only. in a workspace of
    its own (urnaui), an offline update can also downgrade platform-only

@@ -38,8 +38,16 @@ fn tracked(dir: &str) -> Vec<String> {
         git.args(["--", dir]);
     }
     let out = git.output().expect("git runs");
-    assert!(out.status.success(), "git ls-files: {}", String::from_utf8_lossy(&out.stderr));
-    let prefix = if dir.is_empty() { String::new() } else { format!("{dir}/") };
+    assert!(
+        out.status.success(),
+        "git ls-files: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    let prefix = if dir.is_empty() {
+        String::new()
+    } else {
+        format!("{dir}/")
+    };
     let names: BTreeSet<String> = String::from_utf8_lossy(&out.stdout)
         .split('\0')
         .filter_map(|p| p.strip_prefix(&prefix))
@@ -55,18 +63,53 @@ fn tracked(dir: &str) -> Vec<String> {
 fn untracked(name: &str) -> bool {
     matches!(
         name,
-        "target" | ".git" | ".DS_Store" | ".claude" | ".idea" | ".vscode" | "tmp" | "tmps"
-            | "TMP" | ".temp" | "refs" | "out" | "dist" | "memory" | "MEMORY.md" | ".env"
-            | ".kimi-code" | "node_modules" | ".venv" | "venv"
+        "target"
+            | ".git"
+            | ".DS_Store"
+            | ".claude"
+            | ".idea"
+            | ".vscode"
+            | "tmp"
+            | "tmps"
+            | "TMP"
+            | ".temp"
+            | "refs"
+            | "out"
+            | "dist"
+            | "memory"
+            | "MEMORY.md"
+            | ".env"
+            | ".kimi-code"
+            | "node_modules"
+            | ".venv"
+            | "venv"
     ) || name.ends_with(".log")
 }
 
 #[test]
 fn the_root_holds_the_workspace_files_and_the_nine_directories() {
     let want = [
-        ".cargo", ".design", ".devops", ".editorconfig", ".gitattributes", ".github",
-        ".gitignore", ".secops", "Cargo.lock", "Cargo.toml", "LICENSE", "README.md", "apps",
-        "data", "demo", "docs", "fuzz", "pkgs", "rust", "rust-toolchain.toml", "rustfmt.toml",
+        ".cargo",
+        ".design",
+        ".devops",
+        ".editorconfig",
+        ".gitattributes",
+        ".github",
+        ".gitignore",
+        ".secops",
+        "Cargo.lock",
+        "Cargo.toml",
+        "LICENSE",
+        "README.md",
+        "apps",
+        "data",
+        "demo",
+        "docs",
+        "fuzz",
+        "pkgs",
+        "rust",
+        "rust-toolchain.toml",
+        "rustfmt.toml",
         "tool",
     ];
     let extra: Vec<String> = tracked("")
@@ -76,7 +119,11 @@ fn the_root_holds_the_workspace_files_and_the_nine_directories() {
         .filter(|n| n != "xtask" && n != "migration.toml")
         .collect();
     assert!(extra.is_empty(), "not part of the root layout: {extra:?}");
-    let missing: Vec<&str> = want.iter().copied().filter(|n| !root().join(n).exists()).collect();
+    let missing: Vec<&str> = want
+        .iter()
+        .copied()
+        .filter(|n| !root().join(n).exists())
+        .collect();
     assert!(missing.is_empty(), "missing at the root: {missing:?}");
 }
 
@@ -98,12 +145,25 @@ fn every_crate_has_its_manifest_and_its_source() {
             }
         }
     }
-    assert!(bad.is_empty(), "crates out of shape:\n  {}", bad.join("\n  "));
+    assert!(
+        bad.is_empty(),
+        "crates out of shape:\n  {}",
+        bad.join("\n  ")
+    );
 }
 
 #[test]
 fn the_docs_keep_their_five_parts() {
-    let want = ["ATLAS.toml", "README.md", "TERMS.toml", "adr", "img", "log", "pub", "ref"];
+    let want = [
+        "ATLAS.toml",
+        "README.md",
+        "TERMS.toml",
+        "adr",
+        "img",
+        "log",
+        "pub",
+        "ref",
+    ];
     let got = tracked("docs");
     assert_eq!(got, want, "docs/ holds exactly these");
 }
@@ -135,7 +195,10 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
                 continue;
             }
             let n: u32 = num[..4].parse().expect("four digits");
-            numbers.entry(n).or_default().push(format!("{theme}/{file}"));
+            numbers
+                .entry(n)
+                .or_default()
+                .push(format!("{theme}/{file}"));
         }
     }
     for (n, files) in &numbers {
@@ -143,5 +206,9 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
             bad.push(format!("{n:04} is used by {files:?}"));
         }
     }
-    assert!(bad.is_empty(), "decision records out of shape:\n  {}", bad.join("\n  "));
+    assert!(
+        bad.is_empty(),
+        "decision records out of shape:\n  {}",
+        bad.join("\n  ")
+    );
 }

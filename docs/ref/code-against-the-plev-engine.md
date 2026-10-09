@@ -70,7 +70,7 @@ what exists (updated at each task close-out):
   `Dispatcher` for every actor projects the app at dispatch, runs
   `Operable::execute(id, req)` only after acceptance or a person's
   confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a
-  `Receipt` whose stages sinks see as they happen. `cargo run -p sem
+  `Receipt` whose stages sinks see as they happen. `cargo run -p accord
   --example commit` is the thesis scenario in thirty lines of app.
 - the binding table (task-59, adr semantic-binding-beside-the-scene): a
   widget with a `SemId` calls `Compositor::bind` (or `bind_to_layer` on
@@ -122,8 +122,8 @@ what exists (updated at each task close-out):
   `wire::AgentPort` opens a local socket (off unless `PLEV_AGENT=1` in a
   debug build or an explicit `open`); the shell drains it on the ui
   thread through a small `Host` (project the page, dispatch a request,
-  register a sink). try it: `PLEV_AGENT=1 cargo run -p showcase -- Todo`,
-  then `cargo run -p wire --bin plev -- observe --scope todo` and
+  register a sink). try it: `PLEV_AGENT=1 cargo run -p uigallery -- Todo`,
+  then `cargo run -p socket --bin plev -- observe --scope todo` and
   `plev act todo.item[1] toggle`.
 
 how to project (from the crate docs):
@@ -359,7 +359,7 @@ request template; an edit to one lands in the others in the same change
 - work on a background thread wakes the loop through `EventLoopProxy`
   (ADR worker-results-wake-the-event-loop); the agent socket (task-61)
   and the accessibility action handler (task-60) follow the same pattern.
-- `cargo check --target wasm32-unknown-unknown -p showcase` stays green;
+- `cargo check --target wasm32-unknown-unknown -p uigallery` stays green;
   a crate that the engine depends on (`sem`) must compile for wasm too.
 
 ## definition of done for ui work

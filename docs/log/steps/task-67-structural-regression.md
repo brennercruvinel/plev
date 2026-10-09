@@ -69,7 +69,7 @@ comparação entre plataformas (77); regressão de interação (64).
 
 ## superfície sob responsabilidade
 
-um exemplo ou binário de regressão (`cargo run -p showcase --example
+um exemplo ou binário de regressão (`cargo run -p uigallery --example
 regress -- check|bless` ou nome aprovado), os baselines em fixtures do
 showcase, `.github/workflows` (o job), proposta de ADR
 `docs/adr/workflows/0045-regression-by-meaning-before-pixels.md`.
@@ -134,7 +134,7 @@ disparou:
 
 ### o que foi feito
 
-`cargo run -p showcase --example regress -- check|bless`, em
+`cargo run -p regress -- check|bless`, em
 `tool/bench/regress/src/`:
 
 - `scene.rs`: nome de cada layer, bounds do que ela desenha, ligações
@@ -338,7 +338,7 @@ Status: implementado, rebaseado na main @ bf67799 e revisto; gate verde
 árvore final.
 
 Implementado:
-- `cargo run -p showcase --example regress -- check|bless`, com
+- `cargo run -p regress -- check|bless`, com
   `--page` (repetível), `--theme`, `--width`, `--height`, `--scale`,
   `--dir`; `bless --all`, `--png`, `--no-png`; `check --json <file>`.
   saída 0 tudo segurou, 1 algo mudou, 2 pedido malformado, 3 erro.
@@ -382,7 +382,7 @@ Testes (antes -> depois):
   ignorados, nenhum pulado por falta de GPU. 32 são desta task (31 do
   exemplo, 1 do headless); a main em bf67799 teria 2128 por essa conta
   (não rodei o gate da main à parte). antes do rebase: 2096 -> 2128.
-- `cargo test -p showcase --example regress`: 0 -> 31 (cena: nome
+- `cargo test -p regress`: 0 -> 31 (cena: nome
   estável, bounds com clip e texto, ligações, JSON; hash: codificação
   presa, muda com valor e não com ligação; baseline: rótulo, ida e
   volta, formato velho recusado; comparador: igual, só hash, só
@@ -392,7 +392,7 @@ Testes (antes -> depois):
   descrita pelo nó; ponta a ponta: página contra o próprio bless sem
   abrir GPU, label que nomeia `todo.item[2]`, layer sem imagem, e com
   GPU um bloco sobre o segundo item nomeado com a região exata).
-- `cargo test -p showcase --lib`: +1 (`a_page_stages_the_same_scene_every_time`).
+- `cargo test -p uigallery --lib`: +1 (`a_page_stages_the_same_scene_every_time`).
 
 Validação executada:
 - ./tool/tasks/fullcheck.sh (com o ambiente de build do briefing, perna urnaui

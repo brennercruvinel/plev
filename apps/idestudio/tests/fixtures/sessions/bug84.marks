@@ -1,7 +1,7 @@
 # bug84.monster: the task-84 race as a bug report (task-80 demo 3). the
 # laboratory's scripted agent, with nobody else (`ide-lab --arm scripted
 # --human none`), on a build with the race back (the throwaway branch
-# task/80a-bug84: `GitSession::apply` in crates/ide/src/session.rs applies
+# task/80a-bug84: `GitSession::apply` in apps/idestudio/src/repository/git.rs applies
 # a read taken before a mutation the view already shows), exported with
 # `plev-inspect <session> --export 0 92 bug84.monster`: from the start to
 # the form opened, before the submit the race misled.
@@ -11,8 +11,8 @@
 # tests/login_test.rs at +0.077s, and the agent's observation at +0.090s
 # sees two files. every verdict was right; the marks say what the view
 # must hold, not what the recording holds. they are read with the reads
-# in flight (crates/ide/tests/rerun/inflight.rs), the format in
-# crates/ide/tests/rerun/marks.rs.
+# in flight (apps/idestudio/tests/rerun/inflight.rs), the format in
+# apps/idestudio/tests/rerun/marks.rs.
 
 # the repository of the experiment, as the laboratory builds it.
 at 0  changes:staged = {"README.md", "src/login.rs"}

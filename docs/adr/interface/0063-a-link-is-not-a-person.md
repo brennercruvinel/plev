@@ -98,7 +98,7 @@ docs/log/steps/task-76-platform-integration.md) found:
   while the app runs.
 - **the path per platform, today.** windows and linux: the launch
   argument, the way a registered scheme arrives there. macOS: the launch
-  argument too (`cargo run -p showcase -- <link>`), until the bring-up
+  argument too (`cargo run -p uigallery -- <link>`), until the bring-up
   gives the app a bundle; no delegate and no Apple event handler enter
   now, and the manifest and the lock stay as they are: the `GURL` event
   only reaches an app with its scheme registered, and registering needs

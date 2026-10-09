@@ -863,7 +863,7 @@ task; aqui fica o que aconteceu e onde ler.
   gate na `main` em andamento no registro; o agente reportou 2540 (+20)
   e 161 baselines iguais (2 da Files abençoadas). nenhum diálogo abriu
   nesta máquina: o clique real fica para o brenner
-  (`PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p ide`).
+  (`PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run -p idestudio`).
 - **limite registrado:** o diálogo nativo bloqueia o laço; por isso o
   modal desenhado continua o padrão.
 
@@ -1627,7 +1627,7 @@ task; aqui fica o que aconteceu e onde ler.
   arc.toml, manual, nove ADRs, task-62). as afirmações falsas saíram; as
   promessas de design que o código ainda não cumpre ficaram, com a
   exceção de hoje e a task que a fecha. `arc_sync_guard` verde.
-- **bug achado pelo agente de docs:** `cargo run -p ide` não rodava desde
+- **bug achado pelo agente de docs:** `cargo run -p idestudio` não rodava desde
   a fase c da task-62 (dois binários, sem `default-run`). corrigido no
   manifesto.
 

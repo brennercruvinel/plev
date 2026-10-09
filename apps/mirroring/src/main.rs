@@ -5,9 +5,9 @@
 //! named over it.
 //!
 //! ```text
-//! PLEV_AGENT=1 cargo run -p showcase                      # the app, in a debug build
-//! cargo run -p showcase --example mirror -- --show        # its main window, mirrored in a window
-//! cargo run -p showcase --example mirror -- --frames 5 --png /tmp/mirror.png
+//! PLEV_AGENT=1 cargo run -p uigallery                      # the app, in a debug build
+//! cargo run -p mirroring -- --show        # its main window, mirrored in a window
+//! cargo run -p mirroring -- --frames 5 --png /tmp/mirror.png
 //! ```
 //!
 //! Without `--show` it draws headless (`engine::window::WindowHost::headless`,

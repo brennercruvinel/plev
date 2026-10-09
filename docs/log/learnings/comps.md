@@ -33,7 +33,7 @@ tamanho, humano ou agente.
    `engine::compositor` e `super::{Rect, ...}` por `crate::core::{...}`
    fez 40 arquivos numa passada; depois o compilador guiou. cada
    categoria (action, form, nav, content, feedback) fechou com
-   `cargo check -p comps` antes da próxima.
+   `cargo check -p engine` antes da próxima.
 5. **`&Theme` no `handle_event` quando a geometria vem do tema.** o
    primeiro instinto foi cachear rects do último render; o padrão do repo
    é "uma geometria pra evento e pixel", então select, tabs, slider, tree,
@@ -57,7 +57,7 @@ tamanho, humano ou agente.
   ... No space left on device`. checar `df -h /System/Volumes/Data`
   antes de uma sessão longa.
 - **rust do Homebrew não tem `rustup` nem o target wasm32.** a perna
-  `cargo check --target wasm32-unknown-unknown -p showcase` do gate não
+  `cargo check --target wasm32-unknown-unknown -p uigallery` do gate não
   roda local; `tool/tasks/fullcheck.sh` já pula com aviso e o CI verifica. não
   confundir com "wasm quebrou".
 - **`cargo fmt` reformata arquivos que o agente acabou de escrever**; o

@@ -3,7 +3,7 @@
 //! straight from the resolver's IR. Nothing is generated on disk and
 //! nothing is hand-written per component: what you see is the parse.
 //!
-//! Run: `cargo run -p parser --example preview -- <index.tsx> <module.sass> <vars.sass>`
+//! Run: `cargo run -p mockup -- <index.tsx> <module.sass> <vars.sass>`
 
 use std::sync::Arc;
 

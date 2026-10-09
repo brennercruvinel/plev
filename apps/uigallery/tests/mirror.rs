@@ -1019,7 +1019,7 @@ impl Band {
 /// (its assets among it: the icons' paths, the images' pixels), a frame
 /// with one change, a frame with none. A measurement: it prints, run
 ///
-///     cargo test -p showcase --test mirror band -- --ignored --nocapture
+///     cargo test -p uigallery --test mirror band -- --ignored --nocapture
 #[test]
 #[ignore = "a measurement: run with --ignored --nocapture"]
 fn band() {

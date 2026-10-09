@@ -93,7 +93,7 @@ gain today.
 
 ## consequences
 
-`cargo run -p showcase` is the whole dev loop. save a `.wgsl`: the window
+`cargo run -p uigallery` is the whole dev loop. save a `.wgsl`: the window
 updates in about half a second with no input. save a string or a hex
 color anywhere in the sources: same, in place, state intact (page, scroll,
 theme, everything). save code: rebuild plus relaunch, under two seconds

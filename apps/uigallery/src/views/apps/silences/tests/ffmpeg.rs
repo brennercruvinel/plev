@@ -1,5 +1,5 @@
 //! The real ffmpeg, ignored (a runner of the gate may not have it):
-//! `cargo test -p showcase --lib silences::tests::ffmpeg -- --ignored
+//! `cargo test -p uigallery --lib silences::tests::ffmpeg -- --ignored
 //! --nocapture`, with `SILENCES_OUT=<dir>` for the png and the projection
 //! of the page after the detection. Without the program the test says so
 //! and passes.
@@ -34,7 +34,7 @@ fn wait(
 }
 
 #[test]
-#[ignore = "runs ffmpeg: cargo test -p showcase --lib silences::tests::ffmpeg -- --ignored --nocapture"]
+#[ignore = "runs ffmpeg: cargo test -p uigallery --lib silences::tests::ffmpeg -- --ignored --nocapture"]
 fn the_real_ffmpeg_generates_the_video_detects_the_silences_and_decodes_a_frame() {
     use engine::drawing::gpu::RenderConfig;
     use engine::drawing::headless::{Renderer, Viewport};

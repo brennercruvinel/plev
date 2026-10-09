@@ -1,6 +1,6 @@
 # plev architecture, one file (the atlas). the machine map, the human
 # reference and the frame-flow diagram used to be three files (arc.yaml,
-# arc.md, arc.mmd), then docs/arc/arc.toml; they live here now, in this
+# arc.md, arc.mmd), then one arc.toml; they live here now, in this
 # order: map, then prose, then the diagram. the names of the 2026-10 tree
 # (accord for sem, plevir for uir, uigallery for showcase, ...) are in
 # docs/TERMS.toml; the prose keeps the history it tells.

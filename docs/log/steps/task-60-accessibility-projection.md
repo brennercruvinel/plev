@@ -84,7 +84,7 @@ task, foi apagado pelo orquestrador no fechamento.
 pendente com o brenner (teste manual que só ele pode fazer): o VoiceOver
 não rodou, a máquina estava na tela de login. roteiro:
 
-1. `cargo run -p showcase -- Todo`, depois Cmd-F5.
+1. `cargo run -p uigallery -- Todo`, depois Cmd-F5.
 2. VO-Direita pela janela. esperado: janela "plev, design system
    showcase"; todo; campo "new todo"; grupo de abas com "All"
    selecionada; três linhas com a terceira marcada; "2 active · 1 done".

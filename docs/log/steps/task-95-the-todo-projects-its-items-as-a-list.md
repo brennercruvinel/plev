@@ -49,7 +49,7 @@ e no ide; o golden atualizado e conferido contra o app; gate verde.
 
 na base, `main` @ bd5f107, por um teste descartável
 (`apps/uigallery/src/views/apps/todo/tests/probe_95.rs`, rodado com
-`cargo test -p showcase --lib probe_95 -- --nocapture` e jogado fora
+`cargo test -p uigallery --lib probe_95 -- --nocapture` e jogado fora
 depois). ele monta o `TodoPage` real, lista os nós `todo.item[...]` e todo
 estado `List` ou `Set` da projeção, pede o filtro active pelo dispatcher
 do todo (`Actor::Test`) e lista de novo; verifica à mão um IR que repete
@@ -222,7 +222,7 @@ regras do proponente aprovadas como no plano.
 goal: task-95, o todo projeta os itens como lista, a superfície gerada
 repete sobre ela e o proponente por regras gera o `repeat`.
 
-status: implementado. `cargo test -p showcase -p propose -p surface -p uir`
+status: implementado. `cargo test -p uigallery -p offers -p screen -p plevir`
 verdes, `./tool/tasks/fullcheck.sh` verde com a perna urnaui, `regress check` verde,
 sobre a `main` @ bd5f107.
 
@@ -329,7 +329,7 @@ passa a trazer a lista, e o texto da gramática (`GRAMMAR`, que o
 
 ### o render
 
-`cargo run -p showcase -- --render Surface --out surface.png --semantics surface.json`
+`cargo run -p uigallery -- --render Surface --out surface.png --semantics surface.json`
 (core, 1200x800, escala 1): "wrote ... surface.json (36 nodes, revision
 3293ae75152f9f86, Surface / core at 1200x800 scale 1)". o PNG: à
 esquerda o todo escrito à mão, igual; à direita, sob a legenda, a linha de
@@ -385,7 +385,7 @@ superfície pode marcar; o `route` devolve a observação com
 `cargo fmt --check` e o check wasm do showcase com `-D warnings` verdes,
 dentro do gate. `df -h /` antes do gate: 16 GB livres.
 
-`cargo run -p showcase --example regress -- check`: 157 baselines, 157
+`cargo run -p regress -- check`: 157 baselines, 157
 unchanged. `bless` (no commit da lista) nas cinco que mostram o todo:
 `todo@core@1280x800`, `todo@core@390x844`, `todo@hoff@1280x800`,
 `toggle-group@core@1280x800`, `toggle-group@hoff@1280x800`; o relatório

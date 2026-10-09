@@ -19,11 +19,11 @@ trust them and what they show.
 - machine: apple m4 (4 performance and 6 efficiency cores), 16 GB, macOS
   26.6.2, metal through wgpu 28, rustc 1.98.1.
 - build: the workspace release profile (thin lto, one codegen unit).
-- the tables: `cargo run --release -p showcase --example measure -- --out
+- the tables: `cargo run --release -p measure -- --out
   <file.md>` (every scenario, 120 turns each after 10 warm-up turns;
   `--frames`, `--scenario <key>`, `--theme`, `--width`, `--height`,
   `--scale` and `--no-gpu-sync` change the run, `--help` lists them).
-- the cost of one probe: `cargo run --release -p showcase --example measure
+- the cost of one probe: `cargo run --release -p measure
   -- --probe-cost`.
 - the paths the probes sit on, before and after:
   `cargo bench -p engine --bench scene_build -- probed_paths`; the group
@@ -573,7 +573,7 @@ measured.
 - machine: the same apple m4 (10-core gpu, metal 4), 16 GB, macOS 26.6.2,
   metal through wgpu 28, rustc 1.98.1.
 - build: the workspace release profile.
-- the tables: `cargo run --release -p showcase --example measure -- --out
+- the tables: `cargo run --release -p measure -- --out
   <file.md>`. timestamps are on by default now (the runner asks the
   renderer for `RenderConfig::gpu_timestamps`); `--no-gpu-timestamps`
   runs without them. the other flags are as in phase 1.

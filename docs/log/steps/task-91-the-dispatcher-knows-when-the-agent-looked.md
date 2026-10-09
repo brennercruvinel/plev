@@ -194,7 +194,7 @@ Validação executada:
   worktree: workspace 2158 passed, 11 ignored (83), mais a perna urnaui
   82 passed, 1 ignored (6), total 2240 e 12. +16 testes, nenhum
   removido, nenhum #[ignore] novo. df -h /: 17 GiB livres
-- cargo test -p sem -p wire -p ide -p rec -p inspect -p showcase:
+- cargo test -p accord -p socket -p idestudio -p record -p replay -p uigallery:
   verdes (622 passed, 6 ignored, 45 binários)
 - apps/agenteval/tests/experiment.rs dez vezes seguidas: 6 passed nas dez
 - ide-lab --arm scripted --human unstage-before-submit:src/session.rs:

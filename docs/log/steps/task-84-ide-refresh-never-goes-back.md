@@ -190,10 +190,10 @@ causa desta corrida.
 validação executada (com o ambiente do briefing, target
 `target/agents/task-84`):
 
-- `cargo test -p git`: 28 passed.
-- `cargo test -p ide`: 72 passed (48 lib, 5 bin, 3 lab bin, 14
+- `cargo test -p gitdrv`: 28 passed.
+- `cargo test -p idestudio`: 72 passed (48 lib, 5 bin, 3 lab bin, 14
   human_agent, 2 lab).
-- `cargo test -p showcase`: 135 passed, 2 ignored.
+- `cargo test -p uigallery`: 135 passed, 2 ignored.
 - `./tool/tasks/fullcheck.sh`: verde, 1993 passed, 0 failed, 6 ignored (a `main` tinha
   1985, 0, 6; mais oito testes novos). a perna urnaui pulou por não haver
   `../urna` a partir do worktree, como na contagem da base.

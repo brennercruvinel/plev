@@ -183,7 +183,7 @@ pesaria sozinho uns 10 KB se estivesse entre os dez.
 
 `rust/gitdrv/tests/log_cost.rs`, ignorado por padrão, build de debug (as
 dependências com `opt-level = 2`):
-`cargo test -p git --test log_cost -- --ignored --nocapture --test-threads=1`.
+`cargo test -p gitdrv --test log_cost -- --ignored --nocapture --test-threads=1`.
 frio é um `GitRepo` novo a cada corrida, com o cache vazio (o cache de
 página do sistema já está quente); com cache é a segunda chamada no mesmo
 `GitRepo`, o que todo refresh depois do primeiro paga. mediana de 21
@@ -334,10 +334,10 @@ testes:
 validação executada (target `target/agents/task-85`, o ambiente do
 briefing), sobre a main `558b061`:
 
-- `cargo test -p git`: 33 passed, 2 ignored (a main: 28, 0).
-- `cargo test -p ide`: 80 passed, 1 ignored (a main: 73, 0; 50 lib, 5
+- `cargo test -p gitdrv`: 33 passed, 2 ignored (a main: 28, 0).
+- `cargo test -p idestudio`: 80 passed, 1 ignored (a main: 73, 0; 50 lib, 5
   bin, 3 lab bin, 20 human_agent, 2 lab).
-- `cargo test -p showcase`: 135 passed, 3 ignored (igual à main).
+- `cargo test -p uigallery`: 135 passed, 3 ignored (igual à main).
 - `./tool/tasks/fullcheck.sh`: verde. `cargo test --workspace` 2016 passed, 0
   failed, 11 ignored (a main `558b061`: 2004, 0, 8; mais doze testes e as
   três medições ignoradas). a perna urnaui rodou, no subdiretório próprio

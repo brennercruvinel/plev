@@ -95,7 +95,10 @@ fn no_source_file_grows_past_the_limit() {
     for home in ["rust", "apps", "demo", "tool"] {
         sources(&root.join(home), &mut files);
     }
-    assert!(!files.is_empty(), "no source files found under rust/, apps/, demo/, tool/");
+    assert!(
+        !files.is_empty(),
+        "no source files found under rust/, apps/, demo/, tool/"
+    );
 
     let mut failures = Vec::new();
     for path in files {

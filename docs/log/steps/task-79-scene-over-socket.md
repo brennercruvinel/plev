@@ -109,7 +109,7 @@ processo com dois compositores.
 
 branch `task/79a-scene-socket`, base `8c4ad908`. worktree
 `.claude/worktrees/agent`, target `target/agents/one`. a medição está em
-`apps/uigallery/tests/scene_probe.rs` (ignorada; `cargo test -p rec --test
+`apps/uigallery/tests/scene_probe.rs` (ignorada; `cargo test -p record --test
 scene_probe -- --ignored --nocapture`), build de debug: os crates do
 workspace em opt-level 0, as dependências em 2, então os tempos são teto.
 164 frames: as 82 páginas da galeria nos temas core e hoff, a 1280x800
@@ -538,7 +538,7 @@ ligações mostra o contorno e o nome de `todo`, `todo.input`,
 ### a banda
 
 bytes no fio de um watch (cada linha como o port escreve, com o `\n`),
-1280x800 @1. por página (`cargo test -p showcase --test mirror band --
+1280x800 @1. por página (`cargo test -p uigallery --test mirror band --
 --ignored --nocapture`, 164 frames):
 
 ```text
@@ -607,10 +607,10 @@ num checkout desta branch, dois terminais:
 
 ```text
 # 1. o app, com o port ligado e a cena compartilhada (build de debug)
-PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p showcase
+PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p uigallery
 
 # 2. o espelho numa janela, a janela principal do app, com as ligações
-cargo run -p showcase --example mirror -- --show
+cargo run -p mirroring -- --show
 ```
 
 - o app loga `scene: mirror watches main` quando o espelho começa, e
@@ -618,10 +618,10 @@ cargo run -p showcase --example mirror -- --show
 - `b` liga e desliga as ligações; Escape ou fechar a janela encerra o
   espelho (o app segue).
 - a janela própria da página: `D` no app abre, e
-  `cargo run -p showcase --example mirror -- --show --window page`.
+  `cargo run -p mirroring -- --show --window page`.
 - com mais de um app no ar, `--app showcase` (o nome) ou o caminho do
   socket em `$TMPDIR/plev/`.
-- sem janela: `cargo run -p showcase --example mirror -- --frames 3 --png
+- sem janela: `cargo run -p mirroring -- --frames 3 --png
   /tmp/espelho.png` imprime bytes e hash de três frames e grava o último.
 - sem o `PLEV_MIRROR=1` o espelho sai com a recusa:
   `mirror: scene not shared: this app's person did not share its windows: ...`.
@@ -1058,10 +1058,10 @@ num checkout desta branch, dois terminais:
 
 ```text
 # 1. o app, com o port ligado e a cena compartilhada (build de debug)
-PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p showcase
+PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p uigallery
 
 # 2. o espelho numa janela
-cargo run -p showcase --example mirror -- --show
+cargo run -p mirroring -- --show
 ```
 
 - na página Todo, clique num item no espelho: o item vira feito no app, e
@@ -1070,7 +1070,7 @@ cargo run -p showcase --example mirror -- --show
   only a person asks it". a câmera não liga.
 - clique num lugar sem controle: "no control at (x, y): nothing went to
   the app".
-- sem janela: `cargo run -p showcase --example mirror -- --frames 1
+- sem janela: `cargo run -p mirroring -- --frames 1
   --click 640,300` aperta o que estiver em (640, 300) depois do primeiro
   frame e imprime o que o clique deu.
 

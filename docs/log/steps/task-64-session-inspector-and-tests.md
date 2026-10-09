@@ -767,7 +767,7 @@ unstage da pessoa com o submit; relógios) não mexe em veredito.
 
 ### o harness
 
-onde: `apps/idestudio/tests/rerun/`, um binário de teste (`cargo test -p ide
+onde: `apps/idestudio/tests/rerun/`, um binário de teste (`cargo test -p idestudio
 --test rerun`). pelo ADR da 63, não no `rec` (o crate não executa nada, o
 `Session` não segura app, e o ADR evita qualquer api que receba um
 dispatcher ou um app no lado da leitura), nem no
@@ -903,7 +903,7 @@ o teste também confere, no repositório temporário, que o `HEAD` do rerun
 
 a prova: `.reads(format!("{}:staged", ids.changes))` comentada em
 `apps/idestudio/src/capability/project.rs` (a precondição do `commit.submit`
-quebrada de propósito), `cargo test -p ide --test rerun -- lab`, e o
+quebrada de propósito), `cargo test -p idestudio --test rerun -- lab`, e o
 arquivo restaurado com `git checkout` logo depois (nenhum diff no
 workbench, nada disso commitado). a saída:
 
@@ -981,7 +981,7 @@ sessão que não lê (exit 3). o parse ganhou os casos no teste do bin.
 
 ### validação
 
-- `cargo test -p inspect -p rec -p ide`: verde.
+- `cargo test -p replay -p record -p idestudio`: verde.
 - `./tool/tasks/fullcheck.sh` com a perna urnaui (o `worktrees/urna` aponta para o
   checkout irmão), antes e depois, no target da task:
   - antes (a main, com o `git mv` já feito, que não muda contagem): 2277
@@ -1208,7 +1208,7 @@ um segundo binário no `inspect`:
 
 não rodado aqui (esta rodada não abre janela). na raiz do repositório:
 
-1. gravar uma sessão de verdade no ide: `PLEV_RECORD=1 cargo run -p ide
+1. gravar uma sessão de verdade no ide: `PLEV_RECORD=1 cargo run -p idestudio
    --bin ide <um repo git>`. usar o app (ou deixar um agente usar pela
    porta, com `PLEV_AGENT=1`), salvar com cmd-shift-s, ou fechar a janela.
    o log diz onde o arquivo foi: `$TMPDIR/plev/sessions/`.

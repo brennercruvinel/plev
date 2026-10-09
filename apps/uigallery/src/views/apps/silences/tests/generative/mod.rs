@@ -594,12 +594,12 @@ fn the_page_draws_headless_with_the_review_and_the_comparison() {
 }
 
 /// The same two forms over the real ffmpeg, ignored (a runner of the
-/// gate may not have it): `SILENCES_OUT=<dir> cargo test -p showcase
+/// gate may not have it): `SILENCES_OUT=<dir> cargo test -p uigallery
 /// --lib silences::tests::generated::the_real -- --ignored --nocapture`
 /// writes `silences-review-real.png` and `silences-compare-real.png`
 /// with their projections. Without the program it says so and passes.
 #[test]
-#[ignore = "runs ffmpeg: cargo test -p showcase --lib silences::tests::generated::the_real -- --ignored --nocapture"]
+#[ignore = "runs ffmpeg: cargo test -p uigallery --lib silences::tests::generative::the_real -- --ignored --nocapture"]
 fn the_real_ffmpeg_draws_the_review_and_the_comparison() {
     use engine::drawing::gpu::RenderConfig;
     use engine::drawing::headless::{Renderer, Viewport};

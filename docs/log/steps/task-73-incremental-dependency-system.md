@@ -49,7 +49,7 @@ sondas são uma linha cada; desligadas custam uma leitura atômica relaxada e
 um branch, a closure de itens nem roda), gate verde (1748 testes), e
 identidade de pixel conferida pelo orquestrador: Todo (hoff) e Editor
 (core) renderizados headless na `main` e na branch com o mesmo sha256. as
-tabelas completas estão em `docs/log/steps/task-73-measurements.md`; `cargo run --release -p showcase --example measure` reproduz.
+tabelas completas estão em `docs/log/steps/task-73-measurements.md`; `cargo run --release -p measure` reproduz.
 
 o achado que muda o plano: neste M4 o frame não é limitado pela CPU. a
 espera da GPU é de 450 a 2200 µs por frame, 4 a 15 vezes a CPU do mesmo

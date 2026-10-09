@@ -276,7 +276,7 @@ mapeamento do `accesskit_macos` 0.26.1; a frase exata é do VoiceOver, e
 o que ele disser de fato é o registro. onde a coluna diz "gap", é o
 comportamento esperado hoje e está na lista da fase 2.
 
-preparo: `cargo run -p showcase -- Todo` (ou a página do passo), VoiceOver
+preparo: `cargo run -p uigallery -- Todo` (ou a página do passo), VoiceOver
 com Cmd-F5, VO é Control-Option. o rotor (VO-U) ajuda a listar controles.
 nenhum passo pede o Claude: na Surface, nunca aperte propose com o
 proposer em `claude` (é chamada paga); troque para `rules` com o mouse
@@ -303,7 +303,7 @@ antes.
 | modal 2 | confirmar com o mouse | "Settings applied." anunciado (é um toast) |
 | tabs | `-- Tabs` | gap: a página de componente não projeta nada; ouvir só a janela. as tabs com árvore são os filtros do todo (todo 5) |
 | lista | `-- Todo`, VO-Right pelas linhas | cada linha pelo texto, na ordem da tela; o foco do Tab e o do leitor andam na mesma ordem |
-| ide | `cargo run -p ide`, ou a página Git da galeria | gap: o ide não liga a ponte, a página Git não projeta; só a janela |
+| ide | `cargo run -p idestudio`, ou a página Git da galeria | gap: o ide não liga a ponte, a página Git não projeta; só a janela |
 | reduced motion | Ajustes, Acessibilidade, Tela, Reduzir movimento; voltar à janela do showcase | um toast novo aparece sem deslizar, o modal abre sem fade, o knob do switch pula; desligar e voltar à janela: o movimento volta. com `RUST_LOG=info`, o log diz `accessibility: reduce motion on` e `off` |
 
 ### as outras plataformas
@@ -1250,7 +1250,7 @@ o que cada passo espera vem dos testes (`apps/uigallery/tests/access_tree.rs`,
 `apps/uigallery/tests/component_pages/`, `view/dispatch/component/tests.rs`)
 e do mapeamento do `accesskit_macos` 0.26.1 (sonda da fase 2b, (e)); a
 frase exata é do VoiceOver, e o que ele disser de fato é o registro. o
-preparo é o da fase 1 (`cargo run -p showcase -- <página>`, VoiceOver com
+preparo é o da fase 1 (`cargo run -p uigallery -- <página>`, VoiceOver com
 Cmd-F5, VO é Control-Option). os passos das fases 1 e 2a seguem valendo;
 estes são os das páginas de componente. nenhum passo pede o Claude.
 

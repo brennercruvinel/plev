@@ -7,11 +7,11 @@
 //! report adds what the GPU itself spent on each frame next to the wait.
 //!
 //! ```text
-//! cargo run --release -p showcase --example measure -- --out measurements.md
+//! cargo run --release -p measure -- --out measurements.md
 //!     [--frames 120] [--scenario <key>]... [--theme core]
 //!     [--width 1200 --height 800 --scale 2] [--no-gpu-sync]
 //!     [--no-gpu-timestamps]
-//! cargo run --release -p showcase --example measure -- --probe-cost
+//! cargo run --release -p measure -- --probe-cost
 //! ```
 //!
 //! Each scenario opens a page (or the editor) headless, drives it with the

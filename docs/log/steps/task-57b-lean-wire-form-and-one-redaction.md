@@ -197,11 +197,11 @@ quando pedido), 1 em `rec/tests/session/file.rs` (linha antiga do
 campo sem contar a mais.
 
 validação executada, com `CARGO_TARGET_DIR=target/agents/task-57b`,
-`CARGO_INCREMENTAL=0` e debug `line-tables-only`: `cargo test -p sem`,
-`-p wire`, `-p rec`, `-p showcase`, `cargo check -p sem
+`CARGO_INCREMENTAL=0` e debug `line-tables-only`: `cargo test -p accord`,
+`-p socket`, `-p record`, `-p uigallery`, `cargo check -p accord
 --no-default-features`, `./tool/tasks/fullcheck.sh` (test, clippy `-D warnings`,
 fmt, wasm check do showcase; a perna urnaui pulou por falta de `../urna`),
-`cargo test -p showcase agent_port_cost -- --ignored --nocapture` antes e
+`cargo test -p uigallery agent_port_cost -- --ignored --nocapture` antes e
 depois. `grep -rn 'REDACTED\|fn length\|fn is_secret\|struct Secrets'
 crates --include='*.rs'` acha a regra só em `rust/accord/src/redactor.rs`; a
 outra ocorrência é o teste do wire lendo `sem::redact::REDACTED`.

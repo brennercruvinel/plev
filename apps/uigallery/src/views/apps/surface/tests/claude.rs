@@ -9,7 +9,7 @@
 //! port an agent's act completes when the Claude answers, later.
 //!
 //! The one test that asks the real `claude` is ignored (a call of the
-//! plan): `cargo test -p showcase --lib surface_page::tests::claude::the_real
+//! plan): `cargo test -p uigallery --lib surface_page::tests::claude::the_real
 //! -- --ignored --nocapture`, with `SURFACE_PAGE_OUT=<dir>` for the png
 //! and the projection.
 
