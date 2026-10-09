@@ -1,5 +1,5 @@
 # cargo config for the plev workspace.
-
-# temporary: the tree migration's tooling (xtask/, migration.toml).
-[alias]
-xtask = "run --quiet --manifest-path xtask/Cargo.toml --"
+#
+# nothing is set here today. clippy runs on its defaults; the contracts of
+# the other tools (nextest, typos, lychee) live in .devops/check and are
+# passed with --config where a tool runs.

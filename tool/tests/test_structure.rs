@@ -115,8 +115,6 @@ fn the_root_holds_the_workspace_files_and_the_nine_directories() {
     let extra: Vec<String> = tracked("")
         .into_iter()
         .filter(|n| !want.contains(&n.as_str()))
-        // the migration's own tooling, until it leaves with its last commit
-        .filter(|n| n != "xtask" && n != "migration.toml")
         .collect();
     assert!(extra.is_empty(), "not part of the root layout: {extra:?}");
     let missing: Vec<&str> = want

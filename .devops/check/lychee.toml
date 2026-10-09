@@ -15,7 +15,6 @@ extensions = ["md", "toml", "html"]
 exclude_path = [
     "target",
     "boiler",
-    "xtask",
     "data",
     "tool/bench/regress/baselines",
     "apps/uigallery/web/dist",
