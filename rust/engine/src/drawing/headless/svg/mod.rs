@@ -27,8 +27,8 @@ mod tests;
 use std::fmt;
 use std::path::Path;
 
-use crate::compositor::{Compositor, Layer, LayerEffect, SceneNode};
-use crate::text::TextSystem;
+use crate::drawing::compositor::{Compositor, Layer, LayerEffect, SceneNode};
+use crate::drawing::text::TextSystem;
 
 use super::{HeadlessError, Viewport};
 use shape::{Bounds, rounded_rect};
@@ -120,7 +120,7 @@ struct Clips {
 impl Clips {
     fn push(&mut self, rect: [f32; 4]) -> [f32; 4] {
         let combined = match self.stack.last() {
-            Some(cur) => crate::compositor::intersect_rects(*cur, rect),
+            Some(cur) => crate::drawing::compositor::intersect_rects(*cur, rect),
             None => rect,
         };
         self.stack.push(combined);

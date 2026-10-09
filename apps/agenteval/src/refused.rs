@@ -9,7 +9,7 @@
 //! `unknown_revision`).
 
 use serde_json::{Value as Json, json};
-use wire::ProtoError;
+use socket::ProtoError;
 
 use crate::report::row;
 
@@ -126,10 +126,10 @@ impl Account<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{
+    use accord::{
         ActionName, ReceiptSink, Request, RequestId, Role, SemId, Snapshot, SnapshotBuilder,
     };
-    use wire::{Act, Ask, ClientMsg, Host, Observe, Reply, Server};
+    use socket::{Act, Ask, ClientMsg, Host, Observe, Reply, Server};
 
     /// an app of two nodes: `form` holds `text`, and `send` reads it.
     struct App(Snapshot);
@@ -238,7 +238,7 @@ mod tests {
         assert_eq!(report["each"], json!([]));
     }
 
-    fn unknown() -> sem::Revision {
+    fn unknown() -> accord::Revision {
         serde_json::from_str("\"00000000000000aa\"").expect("a revision")
     }
 }

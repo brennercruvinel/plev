@@ -5,7 +5,7 @@
 
 use winit::keyboard::NamedKey;
 
-use crate::view::{EditKey, NavKey, ShowcaseView};
+use crate::views::{EditKey, NavKey, ShowcaseView};
 
 /// Route a named key to the view; with `shift` the arrows, Home and End
 /// are their `Select` keys. Mirrors the view handlers' contract: `true`

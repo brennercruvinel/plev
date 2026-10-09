@@ -3,12 +3,12 @@
 //! below when there is no room) and kept inside the viewport by the
 //! `xs` step.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::Theme;
 
-use crate::core::Rect;
-use crate::recipe::shadow_node;
+use crate::widgets::widget::Rect;
+use crate::widgets::recipe::shadow_node;
 
 /// The per-theme geometry placement and render share.
 struct Metrics {

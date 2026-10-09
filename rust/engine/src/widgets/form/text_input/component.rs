@@ -16,12 +16,12 @@
 
 use std::ops::Range;
 
-use engine::clipboard::ClipboardProvider;
-use engine::text::TextStyle;
+use crate::runtime::platform::clipboard::ClipboardProvider;
+use crate::drawing::text::TextStyle;
 
 use super::buffer::TextBuffer;
 use super::visual::VisualLine;
-use crate::wake::{Blink, Wake};
+use crate::widgets::wake::{Blink, Wake};
 
 /// Caret blink half-period in seconds (the platform convention: 530ms
 /// on macOS and windows).

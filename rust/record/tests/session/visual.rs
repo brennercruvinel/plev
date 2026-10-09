@@ -3,9 +3,9 @@
 //! enter once and leave with the last chunk that uses them, the window
 //! opens at a visual keyframe, and one byte budget covers both tracks.
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use monster::{AssetBank, NodeKind, Prop, RaiseError, Value, quantize_value, raise_scene};
-use rec::{FrameError, InputKind, Limits, Recorder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use motion::{AssetBank, NodeKind, Prop, RaiseError, Value, quantize_value, raise_scene};
+use record::{FrameError, InputKind, Limits, Recorder};
 
 use crate::apps::look;
 
@@ -356,7 +356,7 @@ fn a_frame_over_the_ir_limits_is_refused_and_counted() -> Fallible {
         h: 1.0,
         color: [1.0; 4],
     };
-    let huge = vec![rect; monster::MAX_RAISED + 1];
+    let huge = vec![rect; motion::MAX_RAISED + 1];
     assert_eq!(
         rec.frame_scene(0, &huge),
         Err(FrameError::Raise(RaiseError::TooManyNodes))

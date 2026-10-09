@@ -12,10 +12,10 @@ mod support;
 
 use std::collections::BTreeMap;
 
-use sem::{Actor, Request, Role, SemId, Snapshot, Value};
+use accord::{Actor, Request, Role, SemId, Snapshot, Value};
 use support::{App, CASES, IDE, REVIEW, SHOWCASE, TODO, id, ir, page, snapshot, verified};
-use surface::Surface;
-use uir::{Capabilities, CapabilityRef, GenerationPolicy, IrNode, role_of, verify};
+use screen::Surface;
+use plevir::{Capabilities, CapabilityRef, GenerationPolicy, IrNode, role_of, verify};
 
 /// What the IR says the page holds for one node.
 struct Expect {

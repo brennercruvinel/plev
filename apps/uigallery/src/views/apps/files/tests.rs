@@ -16,22 +16,22 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::input::FileDrop;
-use engine::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
-use engine::platform::files::{DialogKind, FakeDialogs, NoDialogs};
-use engine::theme::Theme;
-use sem::{
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::control::input::FileDrop;
+use engine::runtime::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
+use engine::runtime::platform::files::{DialogKind, FakeDialogs, NoDialogs};
+use engine::styling::theme::Theme;
+use accord::{
     ActionName, Actor, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value,
     ValueKind,
 };
-use wire::{Act, AgentPort, Client, Config, Observe, Reply};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 use super::FilesPage;
 use super::semantics::{Ids, OPEN_FILE_ACTORS};
-use crate::view::apps::app::TodoPage;
-use crate::view::{EditKey, ShowcaseView};
+use crate::views::apps::todo::TodoPage;
+use crate::views::{EditKey, ShowcaseView};
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;
@@ -444,7 +444,7 @@ fn the_warn_button_shows_the_platforms_warning_and_the_text_shown_is_state() {
     assert_eq!(first.body, "0 files received; nothing was written to disk.");
     assert_eq!(
         shown[1].dialog,
-        Dialog::Alert(engine::platform::alerts::Alert::warning(
+        Dialog::Alert(engine::runtime::platform::alerts::Alert::warning(
             "Files",
             "1 file received; nothing was written to disk."
         ))
@@ -842,7 +842,7 @@ fn the_page_projection_is_the_uir_golden() {
         assert!(steps < 120, "at rest the page asks for nothing");
     }
     let snap = view.panes.files.snapshot().expect("the page projects");
-    let mut text = crate::app::semantics_json(&snap, false).expect("json prints");
+    let mut text = crate::shell::semantics_json(&snap, false).expect("json prints");
     text.push('\n');
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../uir/fixtures/showcase-files.snapshot.json");
@@ -911,14 +911,14 @@ fn gallery<T: Send + 'static>(
     (agent.join().unwrap(), view)
 }
 
-fn snapshot(reply: Reply) -> wire::SnapshotReply {
+fn snapshot(reply: Reply) -> socket::SnapshotReply {
     match reply {
         Reply::Snapshot(s) => s,
         other => panic!("a snapshot: {other:?}"),
     }
 }
 
-fn state<'a>(reply: &'a wire::SnapshotReply, id: &str, key: &str) -> Option<&'a Value> {
+fn state<'a>(reply: &'a socket::SnapshotReply, id: &str, key: &str) -> Option<&'a Value> {
     reply
         .nodes
         .iter()

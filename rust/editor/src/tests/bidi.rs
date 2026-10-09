@@ -5,8 +5,8 @@
 
 use ropey::Rope;
 
-use crate::movement::{line_end, line_start, move_left, move_right, move_word_right};
-use crate::selection::Selection;
+use crate::document::movement::{line_end, line_start, move_left, move_right, move_word_right};
+use crate::document::selection::Selection;
 
 const MIXED_HEBREW: &str = "abc אבג def";
 const MIXED_ARABIC: &str = "hello مرحبا 123 world";

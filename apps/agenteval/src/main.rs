@@ -37,7 +37,7 @@ mod refused;
 // the session tests start from the same one; the laboratory names it
 // `crate::repo` as before.
 #[cfg(unix)]
-use ide::lab_repo as repo;
+use idestudio::repository::eval_repo as repo;
 #[cfg(unix)]
 mod report;
 #[cfg(unix)]

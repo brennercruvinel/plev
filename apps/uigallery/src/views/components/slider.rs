@@ -8,10 +8,10 @@
 //! `increment` and `decrement`. The focus a reader or the keyboard asks
 //! for is the page's own (the ring).
 
-use comps::prelude::{EventResult, Rect, Slider, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{ControlSize, Theme};
-use sem::{Request, SemId, SnapshotBuilder, Value};
+use engine::widgets::prelude::{EventResult, Rect, Slider, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{ControlSize, Theme};
+use accord::{Request, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, Focus, child_id, root_id, text, under};
 

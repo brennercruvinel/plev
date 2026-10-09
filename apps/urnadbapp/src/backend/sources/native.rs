@@ -24,7 +24,7 @@ use urna_format::{BLOB_REF_NONE, BlobSpanEntry, decode_blob_data_table, decode_b
 use urna_runtime::graph::CsrIndex;
 use urna_runtime::{MmapUrnaFile, RuntimeError, SearchResult};
 
-use super::types::{
+use super::super::workers::messages::{
     BlobSpan, ChunkMeta, ChunksData, InspectView, OpenedDbView, SearchHitView, SearchMode,
     SearchResultsView,
 };
@@ -299,10 +299,10 @@ impl UrnaBackend {
     /// The CSR graph copied into the engine's
     /// [`GraphData`](engine::graph::GraphData) (the runtime's `CsrIndex`
     /// never leaves this module).
-    pub fn graph_data(&self) -> Option<engine::graph::GraphData> {
+    pub fn graph_data(&self) -> Option<engine::widgets::graph::geometry::GraphData> {
         let g = self.graph.as_ref()?;
         let n = g.n_nodes();
-        let mut data = engine::graph::GraphData {
+        let mut data = engine::widgets::graph::geometry::GraphData {
             n_nodes: n,
             offsets: Vec::with_capacity(n + 1),
             neighbors: Vec::new(),
@@ -397,8 +397,8 @@ impl UrnaBackend {
         k: i32,
         ef: usize,
         progress: &dyn Fn(usize),
-    ) -> Result<crate::model::bench::BenchmarkView> {
-        use crate::model::bench::{BenchmarkView, gen_queries, latency_stats, recall_at_k};
+    ) -> Result<crate::backend::benchmark::BenchmarkView> {
+        use crate::backend::benchmark::{BenchmarkView, gen_queries, latency_stats, recall_at_k};
 
         let dim = self.file.embedding_dim();
         let queries = gen_queries(dim, n_queries);

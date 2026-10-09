@@ -10,8 +10,8 @@
 //! Scale is what changes between monitors: a Retina panel reports 2.0, an
 //! external display commonly 1.0, with fractional factors in between.
 
-use engine::text::probe::{Specimen, render};
-use engine::text::{TextMeasurer, TextStyle};
+use engine::drawing::text::probe::{Specimen, render};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 
 const LOGICAL_W: u32 = 1400;
 const LOGICAL_H: u32 = 120;

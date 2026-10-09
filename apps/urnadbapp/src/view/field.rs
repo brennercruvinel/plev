@@ -3,10 +3,10 @@
 //! Enter and Tab, which stay with the screen) and its focus/edit plumbing
 //! the Open, Search and Chunks screens share.
 
-use comps::form::TextField;
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 
 use super::EditKey;
 
@@ -56,16 +56,16 @@ impl Field {
     /// key is not an editing key (Enter/Tab stay with the screen).
     pub fn edit(&mut self, key: EditKey) -> bool {
         let key = match key {
-            EditKey::Backspace => comps::form::EditKey::Backspace,
-            EditKey::Delete => comps::form::EditKey::Delete,
-            EditKey::Left => comps::form::EditKey::Left,
-            EditKey::Right => comps::form::EditKey::Right,
-            EditKey::Home => comps::form::EditKey::Home,
-            EditKey::End => comps::form::EditKey::End,
-            EditKey::SelectLeft => comps::form::EditKey::SelectLeft,
-            EditKey::SelectRight => comps::form::EditKey::SelectRight,
-            EditKey::SelectHome => comps::form::EditKey::SelectHome,
-            EditKey::SelectEnd => comps::form::EditKey::SelectEnd,
+            EditKey::Backspace => engine::widgets::form::EditKey::Backspace,
+            EditKey::Delete => engine::widgets::form::EditKey::Delete,
+            EditKey::Left => engine::widgets::form::EditKey::Left,
+            EditKey::Right => engine::widgets::form::EditKey::Right,
+            EditKey::Home => engine::widgets::form::EditKey::Home,
+            EditKey::End => engine::widgets::form::EditKey::End,
+            EditKey::SelectLeft => engine::widgets::form::EditKey::SelectLeft,
+            EditKey::SelectRight => engine::widgets::form::EditKey::SelectRight,
+            EditKey::SelectHome => engine::widgets::form::EditKey::SelectHome,
+            EditKey::SelectEnd => engine::widgets::form::EditKey::SelectEnd,
             EditKey::Enter | EditKey::Tab => return false,
         };
         self.input.edit(key)

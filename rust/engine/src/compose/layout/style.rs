@@ -108,7 +108,7 @@ impl Default for ComputedBounds {
 #[derive(Debug, Clone)]
 pub struct TextMeasureSpec {
     pub content: String,
-    pub style: crate::text::TextStyle,
+    pub style: crate::drawing::text::TextStyle,
     /// Element-level wrap width, combined with the available space.
     pub max_width: Option<f32>,
 }

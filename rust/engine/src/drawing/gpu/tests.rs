@@ -39,7 +39,7 @@ fn all_engine_shaders_are_valid_wgsl() {
 /// adapter like the other GPU tests.
 #[cfg(not(target_arch = "wasm32"))]
 mod loss {
-    use crate::gpu::{GpuContext, RenderConfig};
+    use crate::drawing::gpu::{GpuContext, RenderConfig};
 
     fn headless() -> Option<GpuContext> {
         let gpu = pollster::block_on(GpuContext::new_headless(8, 8, RenderConfig::default()));
@@ -127,7 +127,7 @@ mod loss {
     /// device and the flag, and a later attempt with an adapter succeeds.
     #[test]
     fn a_recovery_without_an_adapter_is_an_error_and_the_context_stays_lost() {
-        use crate::gpu::RecoverError;
+        use crate::drawing::gpu::RecoverError;
         let Some(mut gpu) = headless() else {
             return;
         };
@@ -149,7 +149,7 @@ mod loss {
 /// `GpuContext::instance` and `adapter`). Skips without an adapter.
 #[cfg(not(target_arch = "wasm32"))]
 mod compute {
-    use crate::gpu::{GpuContext, RenderConfig};
+    use crate::drawing::gpu::{GpuContext, RenderConfig};
 
     fn headless(compute: Option<wgpu::Features>) -> Option<GpuContext> {
         let config = RenderConfig {

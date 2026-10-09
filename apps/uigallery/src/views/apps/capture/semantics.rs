@@ -17,17 +17,17 @@
 //! The captured pixels and samples are never projected: an agent reads
 //! where the devices are, not what they see or hear.
 
-use comps::prelude::{EventResult, Rect};
-use engine::perf::stages::{self, Stage};
-use engine::platform::capture::DeviceKind;
-use sem::{
+use engine::widgets::prelude::{EventResult, Rect};
+use engine::runtime::perf::stages::{self, Stage};
+use engine::runtime::platform::capture::DeviceKind;
+use accord::{
     Actor, Constraints, Execution, Operable, Outcome, Policy, Receipt, Request, RequestId, Role,
     SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value,
 };
 
 use super::{CapturePage, Said};
-use crate::view::apps::app::TodoPage;
-use crate::view::dispatch::PERSON_ONLY;
+use crate::views::apps::todo::TodoPage;
+use crate::views::dispatcher::PERSON_ONLY;
 
 /// The ids the page projects and binds, parsed once.
 pub(super) struct Ids {

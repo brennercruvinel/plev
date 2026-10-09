@@ -3,11 +3,11 @@
 
 use std::time::Duration;
 
-use engine::theme::{Intent, Theme};
+use crate::styling::theme::{Intent, Theme};
 
-use crate::core::WidgetEvent;
-use crate::feedback::ToastManager;
-use crate::wake::{Blink, Wake};
+use crate::widgets::widget::WidgetEvent;
+use crate::widgets::feedback::ToastManager;
+use crate::widgets::wake::{Blink, Wake};
 
 const HALF: f32 = 0.53;
 

@@ -1,7 +1,7 @@
 //! switch, slider and select.
 
 use super::*;
-use sem::Constraints;
+use accord::Constraints;
 
 // Switch
 
@@ -279,7 +279,7 @@ fn select_binds_the_control_and_the_option_rows_a_click_picks_from() {
     select.render(&mut c, B, &theme);
     select.render_dropdown(&mut c, overlay, B, &theme);
     let panel = select.dropdown_rect(B, &theme);
-    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let row_h = theme.control.height(crate::styling::theme::ControlSize::Md);
     let row = Rect::new(
         panel.x,
         panel.y + theme.control.menu_pad + row_h,
@@ -305,7 +305,7 @@ fn select_request_goes_stale_when_a_click_picks_another_option() {
 
     select.handle_event(&down(20.0, 20.0), B, &theme);
     let panel = select.dropdown_rect(B, &theme);
-    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let row_h = theme.control.height(crate::styling::theme::ControlSize::Md);
     let y = panel.y + theme.control.menu_pad + row_h * 1.5;
     select.handle_event(&down(panel.x + 5.0, y), B, &theme);
     assert_eq!(select.selected_label(), Some("medium"));
@@ -362,7 +362,7 @@ fn a_click_at_the_foot_of_a_full_select_panel_picks_no_hidden_option() {
 
     let panel = open.dropdown_rect(B, &theme);
     let pad = theme.control.menu_pad;
-    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let row_h = theme.control.height(crate::styling::theme::ControlSize::Md);
     let drawn = ((panel.h - pad) / row_h).floor() as usize;
     assert_eq!(drawn, 7, "hoff draws seven rows under dropdown_max_h");
     let foot = panel.y + pad + drawn as f32 * row_h;
@@ -413,7 +413,7 @@ fn strip(select: &Select, theme: &Theme) -> Rect {
 }
 
 fn row_h(theme: &Theme) -> f32 {
-    theme.control.height(engine::theme::ControlSize::Md)
+    theme.control.height(crate::styling::theme::ControlSize::Md)
 }
 
 /// `who` is drawn whole inside `strip`, and `hit` at its center answers

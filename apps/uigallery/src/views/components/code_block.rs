@@ -1,9 +1,9 @@
 //! Code Block page: a mono block with its caption.
 
-use comps::content::CodeBlock;
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::content::CodeBlock;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 
 pub struct CodeBlockPage {
     code: CodeBlock,

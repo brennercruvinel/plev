@@ -8,7 +8,7 @@
 
 use std::mem::size_of;
 
-use sem::{
+use accord::{
     Acted, ActionDecl, Actor, Change, Constraints, Node, Outcome, Rejection, Request, SemErrors,
     SemId, Snapshot, Stage, StateRef, Value,
 };

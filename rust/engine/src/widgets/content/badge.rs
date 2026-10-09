@@ -7,12 +7,12 @@
 //! Static: badges are read, never pressed. For a pressable pill see
 //! [`Chip`](crate::action::Chip).
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Intent, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{Intent, Theme};
 
-use crate::core::{Rect, contrast_text, intent_fill};
-use crate::recipe::rounded_rect;
+use crate::widgets::widget::{Rect, contrast_text, intent_fill};
+use crate::widgets::recipe::rounded_rect;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BadgeKind {

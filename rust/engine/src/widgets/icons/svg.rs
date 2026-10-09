@@ -1,7 +1,7 @@
 //! SVG path data (`d`) parser into a `PathBuilder`, with the elliptical
 //! arc to cubic bezier conversion of SVG 1.1 appendix B.2.4.
 
-use engine::path::PathBuilder;
+use crate::drawing::path::PathBuilder;
 
 /// Parse an SVG path `d` string into a [`PathBuilder`], scaling every
 /// coordinate by `scale`. Supports the full command set Lucide uses

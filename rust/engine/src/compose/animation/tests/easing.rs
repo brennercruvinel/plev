@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 fn assert_endpoints(easing: Easing) {
     let v0 = ease(0.0, easing);

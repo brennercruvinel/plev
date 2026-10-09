@@ -35,16 +35,16 @@ pub use prefer::{Applied, Preference, Preferences, Preferred};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use sem::{ActionName, Actor, SemId};
+use accord::{ActionName, Actor, SemId};
 use serde::{Deserialize, Serialize};
 
-use crate::caps::Capabilities;
+use crate::capabilities::Capabilities;
 use crate::error::IrError;
 use crate::ir::{Ir, IrNode};
 use crate::policy::GenerationPolicy;
 use crate::token::{ColorRole, Layout, Props};
 use crate::verify::{VerifiedIr, verify};
-use crate::vocab::Component;
+use crate::vocabulary::Component;
 
 /// which way `Density` moves every gap and padding: one step of the
 /// spacing scale, down or up.

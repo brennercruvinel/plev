@@ -36,7 +36,7 @@ use std::collections::HashMap;
 
 use serde_json::{Map, Value, json};
 
-use crate::ir::Src;
+use crate::tree::Src;
 
 /// The version of the JSON form, the value of `plev_report`.
 pub const FORMAT: u32 = 1;

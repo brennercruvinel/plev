@@ -10,13 +10,13 @@
 //! neither reads nor writes it. A paste goes into the field as typing
 //! would, and the recording keeps the key by its kind.
 
-use comps::form::{ClipKey, TextField};
-use engine::clipboard::{ClipboardProvider, default_clipboard};
+use engine::widgets::form::{ClipKey, TextField};
+use engine::runtime::platform::clipboard::{ClipboardProvider, default_clipboard};
 
-use super::{Pane, ShowcaseView};
+use super::super::{Pane, ShowcaseView};
 
 /// Who has the keys on the active page, for a chord or the field's menu.
-pub(in crate::view) enum Keys<'a> {
+pub(in crate::views) enum Keys<'a> {
     /// No text field: the chord goes where a bare key goes.
     Nobody,
     /// A text field the page reaches.
@@ -28,7 +28,7 @@ pub(in crate::view) enum Keys<'a> {
 }
 
 /// The gallery's clipboard, made on first use.
-pub(in crate::view) fn board(
+pub(in crate::views) fn board(
     clipboard: &mut Option<Box<dyn ClipboardProvider>>,
 ) -> &mut dyn ClipboardProvider {
     clipboard.get_or_insert_with(default_clipboard).as_mut()
@@ -57,7 +57,7 @@ impl ShowcaseView {
 
     /// `clip` to the field of the active page that has the keys (`None`:
     /// only whether one has them). `None` when no field has them.
-    pub(in crate::view) fn clip_to(&mut self, clip: Option<ClipKey>) -> Option<bool> {
+    pub(in crate::views) fn clip_to(&mut self, clip: Option<ClipKey>) -> Option<bool> {
         let pane = self.pane();
         let held = self.overlay_holds_pointer();
         let clipboard = &mut self.clipboard;
@@ -71,7 +71,7 @@ impl ShowcaseView {
             (Keys::Field(field), Some(clip)) => Some(field.clip(clip, board(clipboard))),
             (Keys::Surface, Some(ClipKey::Paste)) => {
                 let text = board(clipboard).get_text().unwrap_or_default();
-                let text = comps::form::text_input::single_line(&text);
+                let text = engine::widgets::form::text_input::single_line(&text);
                 Some(self.panes.type_in_surface(pane, &text))
             }
             (Keys::Surface, Some(ClipKey::SelectAll)) => Some(match pane {
@@ -84,9 +84,9 @@ impl ShowcaseView {
     }
 }
 
-impl super::panes::Panes {
+impl super::super::pages::panes::Panes {
     /// Who has the keys on `pane`.
-    pub(in crate::view) fn keys(&mut self, pane: Option<Pane>) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self, pane: Option<Pane>) -> Keys<'_> {
         match pane {
             Some(Pane::Input) => self.input.keys(),
             Some(Pane::Todo) => self.todo.keys(),

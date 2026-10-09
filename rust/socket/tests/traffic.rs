@@ -16,9 +16,9 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
+use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
 use toy::ToyHost;
-use wire::{
+use socket::{
     AgentPort, Bound, Config, ConnId, Host, Reply, Server, ServerMsg, Traffic, decode_client,
     decode_server,
 };

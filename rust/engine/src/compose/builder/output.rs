@@ -1,7 +1,7 @@
-use crate::compositor::{Compositor, SceneNode};
-use crate::input::{InputState, ViewId};
-use crate::layout::ComputedBounds;
-use crate::view::ViewContext;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::control::input::{InputState, ViewId};
+use crate::compose::layout::ComputedBounds;
+use crate::compose::view::ViewContext;
 
 use super::Element;
 

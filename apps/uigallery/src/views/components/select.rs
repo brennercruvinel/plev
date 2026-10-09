@@ -10,10 +10,10 @@
 //! pill's, or the open option's, which the panel highlights (task-75
 //! phase 2c).
 
-use comps::prelude::{EventResult, Rect, Select, WidgetEvent};
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{ControlSize, Theme};
-use sem::{Request, SemId, SnapshotBuilder, Value};
+use engine::widgets::prelude::{EventResult, Rect, Select, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::{ControlSize, Theme};
+use accord::{Request, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, child_id, key_under, root_id, under};
 

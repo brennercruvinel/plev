@@ -14,9 +14,9 @@ mod summary;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use engine::headless::{Frame, Viewport};
+use engine::drawing::headless::{Frame, Viewport};
 use serde::Serialize;
-use showcase::view::PAGES;
+use uigallery::views::PAGES;
 
 use crate::baseline::{Key, read_png};
 use crate::classify::{Decision, Verdict, classify};

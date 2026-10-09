@@ -1,7 +1,7 @@
 //! typed errors of the recorder and of the reader. neither ever panics on
 //! what it is given.
 
-use sem::SemId;
+use accord::SemId;
 
 /// a recorded stream that cannot be read back as it claims.
 #[derive(Debug, PartialEq, thiserror::Error)]
@@ -25,7 +25,7 @@ pub enum FrameError {
     /// the frame does not fit the monster IR limits (u16 node count and
     /// asset ids of the container).
     #[error("the frame does not fit the monster IR: {0}")]
-    Raise(#[from] monster::RaiseError),
+    Raise(#[from] motion::RaiseError),
 }
 
 /// a session file that cannot be written or read back. the reader is

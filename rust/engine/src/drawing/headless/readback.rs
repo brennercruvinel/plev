@@ -5,7 +5,7 @@ use std::path::Path;
 use image::ImageEncoder;
 
 use super::HeadlessError;
-use crate::gpu::GpuContext;
+use crate::drawing::gpu::GpuContext;
 
 /// Bytes per texel of every format the readback accepts.
 const TEXEL: u32 = 4;

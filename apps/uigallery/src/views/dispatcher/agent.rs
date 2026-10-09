@@ -1,7 +1,7 @@
-use engine::compositor::Compositor;
-use rec::Recorder;
-use sem::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
-use wire::{AgentPort, Bound, Host};
+use engine::drawing::compositor::Compositor;
+use record::Recorder;
+use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
+use socket::{AgentPort, Bound, Host};
 
 use super::ShowcaseView;
 
@@ -105,11 +105,11 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::compositor::Compositor;
-    use sem::{Actor, Change, Rejection, SemId, Stage, StateRef, Value};
-    use wire::{Act, AgentPort, Client, Config, Observe, Reply, ServerMsg, encode_server};
+    use engine::drawing::compositor::Compositor;
+    use accord::{Actor, Change, Rejection, SemId, Stage, StateRef, Value};
+    use socket::{Act, AgentPort, Client, Config, Observe, Reply, ServerMsg, encode_server};
 
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).unwrap()
@@ -216,15 +216,15 @@ mod tests {
         c
     }
 
-    fn snapshot(reply: Reply) -> wire::SnapshotReply {
+    fn snapshot(reply: Reply) -> socket::SnapshotReply {
         match reply {
             Reply::Snapshot(s) => s,
             other => panic!("a snapshot: {other:?}"),
         }
     }
 
-    fn act(c: &mut Client, target: &str, action: &str, r: sem::Revision) -> Vec<Stage> {
-        let act = Act::from_revision(sid(target), sem::ActionName::parse(action).unwrap(), r);
+    fn act(c: &mut Client, target: &str, action: &str, r: accord::Revision) -> Vec<Stage> {
+        let act = Act::from_revision(sid(target), accord::ActionName::parse(action).unwrap(), r);
         c.act(act, |_| {})
             .unwrap()
             .into_iter()
@@ -236,10 +236,10 @@ mod tests {
         c: &mut Client,
         target: &str,
         action: &str,
-        r: sem::Revision,
+        r: accord::Revision,
         param: Value,
     ) -> Vec<Stage> {
-        let act = Act::from_revision(sid(target), sem::ActionName::parse(action).unwrap(), r)
+        let act = Act::from_revision(sid(target), accord::ActionName::parse(action).unwrap(), r)
             .with_param(param);
         c.act(act, |_| {})
             .unwrap()
@@ -353,7 +353,7 @@ mod tests {
         let agent = Actor::Agent {
             name: "claude".into(),
         };
-        let Some(receipt) = view.panes.todo.receipt(sem::RequestId::parse("1").unwrap()) else {
+        let Some(receipt) = view.panes.todo.receipt(accord::RequestId::parse("1").unwrap()) else {
             panic!("the page's dispatcher kept the first request");
         };
         assert_eq!(receipt.request.actor, agent);
@@ -369,13 +369,13 @@ mod tests {
             let r = snapshot(c.observe(Observe::default()).unwrap()).revision;
             poke(&pokes, Poke::OpenModal);
             let stages = act(&mut c, "todo.item[1]", "toggle", r);
-            let refused = c.call(wire::Ask::Confirm {
-                request: sem::RequestId::parse("1").unwrap(),
+            let refused = c.call(socket::Ask::Confirm {
+                request: accord::RequestId::parse("1").unwrap(),
             });
             assert!(matches!(
                 refused,
-                Err(wire::WireError::Refused(
-                    wire::ProtoError::NotEnabled { .. }
+                Err(socket::WireError::Refused(
+                    socket::ProtoError::NotEnabled { .. }
                 ))
             ));
             stages
@@ -477,7 +477,7 @@ mod tests {
                     .unwrap();
                 let keyed = c
                     .observe(Observe {
-                        keys: Some(vec![sem::StateKey::parse("completed").unwrap()]),
+                        keys: Some(vec![accord::StateKey::parse("completed").unwrap()]),
                         ..Observe::default()
                     })
                     .unwrap();

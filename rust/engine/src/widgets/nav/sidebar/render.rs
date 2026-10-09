@@ -2,12 +2,12 @@
 //! group captions and links (clipped, with the overflow fades), the
 //! pinned footer links and the footer hints.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::{SidebarMode, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::{SidebarMode, Theme};
 
-use crate::core::Rect;
-use crate::icons;
+use crate::widgets::widget::Rect;
+use crate::widgets::icons;
 
 use super::{NavGroup, Sidebar};
 
@@ -175,7 +175,7 @@ impl Sidebar {
         } else {
             "chevron-right"
         };
-        let size = theme.control.icon(engine::theme::IconSize::Sm);
+        let size = theme.control.icon(crate::styling::theme::IconSize::Sm);
         let icon_y = r.y + (r.h - size) / 2.0;
         let icon_x = if mode == SidebarMode::Rail {
             r.x + (r.w - size) / 2.0

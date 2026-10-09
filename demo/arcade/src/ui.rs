@@ -1,7 +1,7 @@
 //! Scene building for the Snake example.
 
-use engine::compositor::{Compositor, RoundedRectParams, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
+use engine::drawing::compositor::{Compositor, RoundedRectParams, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use web_time::Instant;
 
 use crate::state::*;

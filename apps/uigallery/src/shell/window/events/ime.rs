@@ -17,8 +17,8 @@ use winit::{
     window::WindowId,
 };
 
-use super::super::App;
-use crate::view::ImeEvent;
+use super::super::super::App;
+use crate::views::ImeEvent;
 
 /// winit's IME event as the view takes it; `Enabled` tells the view
 /// nothing.
@@ -35,7 +35,7 @@ impl App {
     /// A step of the input method, from whichever window has the focus:
     /// a commit is the person typing (recorded, the state after it, a
     /// frame); a preedit or its end is only a frame.
-    pub(in crate::app) fn ime(&mut self, ime: &Ime) {
+    pub(in crate::shell) fn ime(&mut self, ime: &Ime) {
         let Some(event) = translate(ime) else {
             return;
         };
@@ -63,7 +63,7 @@ impl App {
     /// page has a caret for it, with its candidate window there, and off
     /// otherwise (winit keeps a repeated on or off a no-op).
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    pub(in crate::app) fn sync_ime(&self, id: WindowId) {
+    pub(in crate::shell) fn sync_ime(&self, id: WindowId) {
         if Some(id) != self.main {
             return;
         }
@@ -81,13 +81,13 @@ impl App {
 #[cfg(test)]
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod tests {
-    use rec::{InputKind, Kind, Limits};
-    use sem::{StateRef, Value};
+    use record::{InputKind, Kind, Limits};
+    use accord::{StateRef, Value};
     use winit::event::Ime;
 
-    use super::super::super::App;
+    use super::super::super::super::App;
     use super::super::super::record::Recording;
-    use crate::view::{EditKey, ShowcaseView};
+    use crate::views::{EditKey, ShowcaseView};
 
     fn text(app: &App) -> Option<Value> {
         let at = StateRef::parse("input_page.field[0]:text").unwrap();
@@ -115,7 +115,7 @@ mod tests {
         app.ime(&Ime::Disabled);
 
         let (path, _) = app.recording.as_mut().unwrap().save().expect("saved");
-        let session = rec::Session::open(&path).expect("the session opens");
+        let session = record::Session::open(&path).expect("the session opens");
         let inputs: Vec<InputKind> = session
             .events()
             .iter()

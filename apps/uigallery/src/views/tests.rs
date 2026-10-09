@@ -4,8 +4,8 @@
 
 use super::components::scroll_area::ScrollAreaPage;
 use super::*;
-use comps::prelude::WidgetEvent;
-use engine::compositor::{Compositor, SceneNode};
+use engine::widgets::prelude::WidgetEvent;
+use engine::drawing::compositor::{Compositor, SceneNode};
 
 #[test]
 fn starts_on_the_first_page_with_the_core_theme() {
@@ -15,7 +15,7 @@ fn starts_on_the_first_page_with_the_core_theme() {
     // The page is the kit's paper, shade 1.
     assert_eq!(
         view.theme.colors.bg.0,
-        engine::theme::hoff_core::SHADES[0].0
+        engine::styling::theme::hoff_core::SHADES[0].0
     );
 }
 
@@ -112,11 +112,11 @@ fn sidebar_labels_fit_their_slot_in_the_ui_font() {
     let link_w = link_rects(&view)[0].w;
     let style = NavLink::label_style(t);
     let (hint_w, _) =
-        engine::text::TextMeasurer::measure_styled("14", &t.typography.caption_r(), None);
+        engine::drawing::text::TextMeasurer::measure_styled("14", &t.typography.caption_r(), None);
     let slot =
         link_w - t.spacing.sm * 2.0 - NavLink::icon_slot(t) - t.spacing.xs - hint_w - t.spacing.sm;
     for page in PAGES {
-        let (w, _) = engine::text::TextMeasurer::measure_styled(page.title, &style, None);
+        let (w, _) = engine::drawing::text::TextMeasurer::measure_styled(page.title, &style, None);
         assert!(
             w <= slot,
             "{} label measures {w:.1}px, over the {slot:.1}px slot",

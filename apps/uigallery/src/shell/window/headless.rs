@@ -5,10 +5,10 @@
 //! in the form `plev observe` serves. Desktop only, like the binary that
 //! calls it.
 
-use crate::view::ShowcaseView;
-use engine::compositor::Compositor;
-use engine::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
-use sem::Snapshot;
+use crate::views::ShowcaseView;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
+use accord::Snapshot;
 
 /// Animation steps a headless frame may take before it is drawn: the
 /// window keeps drawing while anything moves, so the frame it settles
@@ -163,9 +163,9 @@ impl StagedPage {
 /// the nodes in projection order, and the focus when there is one.
 #[derive(serde::Serialize)]
 struct SnapshotJson<'a> {
-    nodes: Vec<sem::Node>,
+    nodes: Vec<accord::Node>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    focused: Option<&'a sem::SemId>,
+    focused: Option<&'a accord::SemId>,
 }
 
 /// `snapshot` as pretty JSON in the serde form of `sem`, the form an agent
@@ -207,9 +207,9 @@ pub fn render_page(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::view::PAGES;
-    use engine::gpu::RenderConfig;
-    use engine::headless::Viewport;
+    use crate::views::PAGES;
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::Viewport;
 
     /// The launch theme and the dark glass theme whose page background
     /// is the documented 48,48,48.
@@ -246,7 +246,7 @@ mod tests {
 
     /// The theme background as the 8-bit sRGB a frame holds.
     fn background(theme: &str) -> [u8; 3] {
-        let Some(t) = engine::theme::Theme::named(theme) else {
+        let Some(t) = engine::styling::theme::Theme::named(theme) else {
             panic!("no theme {theme}");
         };
         let [r, g, b, _] = t.colors.bg.to_array();

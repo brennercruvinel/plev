@@ -15,9 +15,9 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::{Context, Result, bail};
-use llm::stream::{self, Request};
-use llm::text::Text;
-use llm::{Device, Event, Model, chat};
+use llmrun::stream::{self, Request};
+use llmrun::prompt::tokenizer::Text;
+use llmrun::{Device, Event, Model, prompt::chat};
 
 const PROMPT: &str =
     "Write a short story about a lighthouse keeper who finds a message in a bottle.";
@@ -40,7 +40,7 @@ fn value(it: &mut impl Iterator<Item = String>, flag: &str) -> Result<String> {
 fn parse() -> Result<Args> {
     let mut args = Args {
         imp: String::new(),
-        model: std::env::var_os(llm::MODEL_ENV)
+        model: std::env::var_os(llmrun::MODEL_ENV)
             .map(PathBuf::from)
             .unwrap_or_default(),
         device: Device::Metal,
@@ -68,7 +68,7 @@ fn parse() -> Result<Args> {
         }
     }
     if args.model.as_os_str().is_empty() {
-        bail!("no model: pass --model DIR or set {}", llm::MODEL_ENV);
+        bail!("no model: pass --model DIR or set {}", llmrun::MODEL_ENV);
     }
     if args.imp.is_empty() {
         let built: Vec<&str> = [
@@ -95,20 +95,20 @@ fn load(args: &Args) -> Result<Box<dyn Model>> {
     }
     match args.imp.as_str() {
         #[cfg(feature = "candle")]
-        "candle" => Ok(Box::new(llm::candle::CandleModel::load(
+        "candle" => Ok(Box::new(llmrun::models::candle::CandleModel::load(
             &args.model,
             args.device,
         )?)),
         #[cfg(feature = "burn")]
         "burn" => {
-            use llm::burn::LinearLayout;
+            use llmrun::models::burn::LinearLayout;
             let layout = match args.layout.as_deref() {
-                None => llm::burn::layout_for(args.device),
+                None => llmrun::models::burn::layout_for(args.device),
                 Some("row") => LinearLayout::Row,
                 Some("col") => LinearLayout::Col,
                 Some(other) => bail!("layout {other}: row or col"),
             };
-            Ok(llm::burn::load_with(&args.model, args.device, layout)?)
+            Ok(llmrun::models::burn::load_with(&args.model, args.device, layout)?)
         }
         other => bail!("{other} is not built in; build with --features {other}"),
     }

@@ -29,13 +29,13 @@
 //! applied on the first poll awake. A recorded session keeps the link's
 //! look at the gallery and its receipt's stages, as an agent's; no input.
 
-use engine::platform::links::{Delivered, LinkSource, default_links};
-use engine::theme::Intent;
-use engine::window::Background;
-use sem::{Receipt, Rejection, Revision, Stage};
+use engine::runtime::platform::links::{Delivered, LinkSource, default_links};
+use engine::styling::theme::Intent;
+use engine::runtime::window::Background;
+use accord::{Receipt, Rejection, Revision, Stage};
 
-use super::App;
-use crate::view::ShowcaseView;
+use super::super::App;
+use crate::views::ShowcaseView;
 
 /// The gallery's URL scheme.
 pub const SCHEME: &str = "plev-showcase";
@@ -151,7 +151,7 @@ impl App {
                 if let Ok(proxy) = proxy.lock()
                     && let Some(proxy) = proxy.as_ref()
                 {
-                    let _ = proxy.send_event(super::UserEvent::Link);
+                    let _ = proxy.send_event(super::super::UserEvent::Link);
                 }
             }
         };
@@ -191,11 +191,11 @@ impl App {
         let recorder = self
             .recording
             .as_ref()
-            .map(super::record::Recording::recorder);
+            .map(super::super::window::record::Recording::recorder);
         let mut looked = |view: &mut ShowcaseView, revision: Revision| {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             if let Some(recorder) = recorder {
-                recorder.observed(view.now(), engine::platform::links::actor(), None, revision);
+                recorder.observed(view.now(), engine::runtime::platform::links::actor(), None, revision);
             }
             #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
             let _ = (view, revision);

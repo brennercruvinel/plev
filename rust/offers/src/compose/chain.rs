@@ -22,7 +22,7 @@
 //! what they did. when every step completed, the composite completes with
 //! how many steps ran and their requests.
 
-use sem::{
+use accord::{
     ActionName, Actor, Change, Dispatcher, Millis, Observation, Operable, Outcome, Receipt,
     Rejection, Request, RequestId, SemId, Snapshot, SnapshotBuilder, Stage, Value,
 };

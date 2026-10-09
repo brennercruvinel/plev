@@ -10,9 +10,9 @@
 #[allow(dead_code)]
 mod support;
 
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Actor, Role, SemId, Snapshot, Stage, Value};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Actor, Role, SemId, Snapshot, Stage, Value};
 use support::{Rig, completed};
 
 fn id(text: &str) -> SemId {
@@ -46,7 +46,7 @@ fn nodes_under(snap: &Snapshot, prefix: &str) -> Vec<String> {
 
 /// The person writes `intent` in the line and proposes, each through the
 /// dispatcher; the receipt of the proposal.
-fn propose(rig: &mut Rig, intent: &str) -> sem::Receipt {
+fn propose(rig: &mut Rig, intent: &str) -> accord::Receipt {
     let write = rig.ask(
         Actor::Human,
         "ide_surface.intent",

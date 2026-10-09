@@ -21,12 +21,12 @@ use std::alloc::{GlobalAlloc, Layout, System};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use comps::editor::{EditorTheme, EditorView};
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{Renderer, Viewport};
-use engine::layout::ComputedBounds;
-use rope::{Document, Selection, SelectionSet};
+use engine::widgets::editor::{EditorTheme, EditorView};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Renderer, Viewport};
+use engine::compose::layout::ComputedBounds;
+use editor::{Document, Selection, SelectionSet};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 // -- the allocator that counts ------------------------------------------------

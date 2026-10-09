@@ -3,10 +3,10 @@
 mod extraction;
 
 use super::*;
-use crate::view::{View, ViewContext};
+use crate::compose::view::{View, ViewContext};
 
 
-fn render(el: &Element) -> Vec<crate::compositor::SceneNode> {
+fn render(el: &Element) -> Vec<crate::drawing::compositor::SceneNode> {
     el.render(&mut ViewContext::new(800.0, 600.0))
 }
 
@@ -79,7 +79,7 @@ fn parse_text_with_show() {
     let el = parse_narrate(r#"text { show "Hello" }"#).unwrap();
     let nodes = render(&el);
     assert_eq!(nodes.len(), 1);
-    if let crate::compositor::SceneNode::Text { key, .. } = &nodes[0] {
+    if let crate::drawing::compositor::SceneNode::Text { key, .. } = &nodes[0] {
         assert_eq!(key.text, "Hello");
     } else {
         panic!("expected Text node");
@@ -163,7 +163,7 @@ fn parse_rounded_string_preset() {
     assert_eq!(nodes.len(), 1);
     assert!(matches!(
         &nodes[0],
-        crate::compositor::SceneNode::RoundedRect { corner_radius, .. }
+        crate::drawing::compositor::SceneNode::RoundedRect { corner_radius, .. }
             if (*corner_radius - 12.0).abs() < 0.01
     ));
 }
@@ -175,7 +175,7 @@ fn parse_rounded_numeric() {
     assert_eq!(nodes.len(), 1);
     assert!(matches!(
         &nodes[0],
-        crate::compositor::SceneNode::RoundedRect { corner_radius, .. }
+        crate::drawing::compositor::SceneNode::RoundedRect { corner_radius, .. }
             if (*corner_radius - 8.0).abs() < 0.01
     ));
 }

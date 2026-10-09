@@ -3,12 +3,12 @@
 //! the compositor seam: lowered scenes feed Compositor::resolve_scene
 //! headless, where the dirty hash makes unchanged pushes free.
 
-use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Timeline, Value};
-use crate::lower::{LoweredAsset, lower_node, lower_scene};
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Timeline, Value};
+use crate::mappings::lower::{LoweredAsset, lower_node, lower_scene};
 use crate::play::MonsterPlayer;
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::ImageHandle;
-use engine::path::TessellatedPath;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::TessellatedPath;
 
 fn node(id: u16, depth: u16, kind: NodeKind, props: Props) -> Node {
     Node {
@@ -222,13 +222,13 @@ fn asset_timeline() -> Timeline {
                 ),
             ],
         }],
-        tracks: vec![crate::ir::Track {
+        tracks: vec![crate::timeline::Track {
             node_id: 1,
             prop: Prop::X,
             start_t: 0.0,
-            segments: vec![crate::ir::Segment {
+            segments: vec![crate::timeline::Segment {
                 target: Value::Scalar(300.0),
-                easing: crate::easing::Easing::Linear,
+                easing: crate::timeline::easing::Easing::Linear,
                 dur_s: 1.0,
             }],
         }],

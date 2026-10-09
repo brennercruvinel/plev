@@ -4,15 +4,15 @@
 //! name -> registry), and the actions that act on a capability through
 //! the workbench.
 
-use comps::form::{ClipKey, EditKey};
-use engine::actions::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
-use engine::clipboard::default_clipboard;
-use rec::InputKind;
+use engine::widgets::form::{ClipKey, EditKey};
+use engine::control::keymap::{Action, ContextStack, KeyContext, MatchResult, keystroke_from_key_event};
+use engine::runtime::platform::clipboard::default_clipboard;
+use record::InputKind;
 use winit::event::KeyEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use crate::{App, actions};
+use crate::{App, interfaces::window::keymap};
 
 impl App {
     /// Keyboard handling: text input for the commit form, everything else
@@ -137,7 +137,7 @@ impl App {
         if action.is::<actions::Quit>() {
             event_loop.exit();
             false
-        } else if action.is::<ide::record::Save>() {
+        } else if action.is::<crate::interfaces::window::record::Save>() {
             self.save_session("key");
             false
         } else if action.is::<actions::Toggle>() {

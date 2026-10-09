@@ -17,11 +17,11 @@
 
 use std::time::Duration;
 
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::Frame;
-use engine::theme::hoff::PAGE_BG;
-use engine::window::{Background, Routed, WindowHost, Windows};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::Frame;
+use engine::styling::theme::hoff::PAGE_BG;
+use engine::runtime::window::{Background, Routed, WindowHost, Windows};
 use engine::winit::event::WindowEvent;
 use engine::winit::window::WindowId;
 use web_time::Instant;

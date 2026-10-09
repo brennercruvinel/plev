@@ -22,7 +22,7 @@
 use winit::keyboard::ModifiersState;
 
 use super::keystroke::Keystroke;
-use super::winit_keys::keystroke_from_logical_key;
+use super::winit::keystroke_from_logical_key;
 
 /// An ordered list of keystroke → id bindings. First match wins (bind
 /// order is the priority order).

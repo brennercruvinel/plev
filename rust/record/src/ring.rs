@@ -15,19 +15,19 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use sem::redact::Secrets;
-use sem::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage};
+use accord::redactor::Secrets;
+use accord::{Actor, Change, Millis, Receipt, Request, RequestId, Revision, SemId, Snapshot, Stage};
 
-use engine::compositor::SceneNode;
+use engine::drawing::compositor::SceneNode;
 
 use crate::bound::Bound;
 use crate::error::FrameError;
 use crate::event::{Event, InputKind, Kind};
 use crate::limits::{Limits, Stats};
-use crate::screen::Screen;
+use crate::visuals::reader::Screen;
 use crate::session::Session;
 use crate::track::Track;
-use crate::visual::{Cadence, Visual};
+use crate::visuals::{Cadence, Visual};
 
 #[derive(Debug, Default)]
 pub(crate) struct Inner {

@@ -4,12 +4,12 @@
 //! see gix or git types; this module is the single conversion point,
 //! so swapping the backend touches nothing else.
 
-use crate::views::diff_view::{DiffLine, DiffLineKind};
-use crate::views::multi_stack_view::{CommitEntry, Stack};
-use crate::views::unassigned_view::{FileEntry, FileStatus};
+use crate::interfaces::panels::diff::{DiffLine, DiffLineKind};
+use crate::interfaces::panels::stacks::{CommitEntry, Stack};
+use crate::interfaces::panels::unassigned::{FileEntry, FileStatus};
 
 /// Converts a status listing into file rows, preserving git's path order.
-pub fn file_entries(status: &[git::FileStatus]) -> Vec<FileEntry> {
+pub fn file_entries(status: &[gitdrv::FileStatus]) -> Vec<FileEntry> {
     status
         .iter()
         .map(|s| FileEntry {
@@ -20,20 +20,20 @@ pub fn file_entries(status: &[git::FileStatus]) -> Vec<FileEntry> {
         .collect()
 }
 
-fn status_kind(kind: git::StatusKind) -> FileStatus {
+fn status_kind(kind: gitdrv::StatusKind) -> FileStatus {
     match kind {
-        git::StatusKind::Added => FileStatus::Added,
-        git::StatusKind::Modified => FileStatus::Modified,
-        git::StatusKind::Deleted => FileStatus::Deleted,
-        git::StatusKind::Renamed => FileStatus::Renamed,
-        git::StatusKind::Untracked => FileStatus::Untracked,
+        gitdrv::StatusKind::Added => FileStatus::Added,
+        gitdrv::StatusKind::Modified => FileStatus::Modified,
+        gitdrv::StatusKind::Deleted => FileStatus::Deleted,
+        gitdrv::StatusKind::Renamed => FileStatus::Renamed,
+        gitdrv::StatusKind::Untracked => FileStatus::Untracked,
     }
 }
 
 /// Builds the stacks panel: the checked-out branch carries the HEAD log,
 /// other local branches appear as headers (their logs are not walked —
 /// `git::GitRepo::log` follows HEAD only).
-pub fn stacks(branches: &[git::Branch], log: &[git::Commit]) -> Vec<Stack> {
+pub fn stacks(branches: &[gitdrv::Branch], log: &[gitdrv::Commit]) -> Vec<Stack> {
     let now = unix_now();
     let mut stacks: Vec<Stack> = Vec::with_capacity(branches.len().max(1));
     for branch in branches {
@@ -64,7 +64,7 @@ pub fn stacks(branches: &[git::Branch], log: &[git::Commit]) -> Vec<Stack> {
     stacks
 }
 
-fn commit_entry(commit: &git::Commit, now: i64) -> CommitEntry {
+fn commit_entry(commit: &gitdrv::Commit, now: i64) -> CommitEntry {
     CommitEntry {
         sha: commit.sha.clone(),
         message: commit.message.clone(),
@@ -76,7 +76,7 @@ fn commit_entry(commit: &git::Commit, now: i64) -> CommitEntry {
 
 /// Flattens diff hunks into renderable lines (hunk headers become
 /// `DiffLineKind::Header` rows).
-pub fn diff_lines(hunks: &[git::Hunk]) -> Vec<DiffLine> {
+pub fn diff_lines(hunks: &[gitdrv::Hunk]) -> Vec<DiffLine> {
     let mut lines = Vec::new();
     for hunk in hunks {
         lines.push(DiffLine {
@@ -88,9 +88,9 @@ pub fn diff_lines(hunks: &[git::Hunk]) -> Vec<DiffLine> {
         for line in &hunk.lines {
             lines.push(DiffLine {
                 kind: match line.kind {
-                    git::DiffLineKind::Context => DiffLineKind::Context,
-                    git::DiffLineKind::Add => DiffLineKind::Added,
-                    git::DiffLineKind::Remove => DiffLineKind::Removed,
+                    gitdrv::DiffLineKind::Context => DiffLineKind::Context,
+                    gitdrv::DiffLineKind::Add => DiffLineKind::Added,
+                    gitdrv::DiffLineKind::Remove => DiffLineKind::Removed,
                 },
                 line_no_old: line.old_no,
                 line_no_new: line.new_no,
@@ -143,16 +143,16 @@ mod tests {
     #[test]
     fn stacks_put_active_branch_first_with_log() {
         let branches = vec![
-            git::Branch {
+            gitdrv::Branch {
                 name: "feature/x".into(),
                 is_head: false,
             },
-            git::Branch {
+            gitdrv::Branch {
                 name: "main".into(),
                 is_head: true,
             },
         ];
-        let log = vec![git::Commit {
+        let log = vec![gitdrv::Commit {
             sha: "a".repeat(40),
             short_sha: "aaaaaaa".into(),
             message: "subject".into(),
@@ -172,17 +172,17 @@ mod tests {
 
     #[test]
     fn diff_lines_flatten_hunks_with_headers() {
-        let hunks = vec![git::Hunk {
+        let hunks = vec![gitdrv::Hunk {
             header: "@@ -1,2 +1,2 @@".into(),
             lines: vec![
-                git::DiffLine {
-                    kind: git::DiffLineKind::Remove,
+                gitdrv::DiffLine {
+                    kind: gitdrv::DiffLineKind::Remove,
                     content: "old".into(),
                     old_no: Some(1),
                     new_no: None,
                 },
-                git::DiffLine {
-                    kind: git::DiffLineKind::Add,
+                gitdrv::DiffLine {
+                    kind: gitdrv::DiffLineKind::Add,
                     content: "new".into(),
                     old_no: None,
                     new_no: Some(1),

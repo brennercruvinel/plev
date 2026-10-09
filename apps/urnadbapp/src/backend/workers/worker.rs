@@ -14,9 +14,9 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
-use super::backend::UrnaBackend;
-use super::types::{SearchMode, SearchResultsView};
-pub use super::types::{UrnaCommand, UrnaEvent};
+use super::super::sources::native::UrnaBackend;
+use super::messages::{SearchMode, SearchResultsView};
+pub use super::messages::{UrnaCommand, UrnaEvent};
 
 /// Called on the worker thread right after every event is queued, so the
 /// platform shell can wake its event loop (winit sleeps between input
@@ -156,7 +156,7 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &dyn
                     Some(data) => {
                         // Layout in a fixed 1000×1000 world box; the view
                         // fits it to the viewport with a ViewTransform.
-                        Ok(engine::graph::compute_layout(&data, 1000.0, 1000.0))
+                        Ok(engine::widgets::graph::geometry::compute_layout(&data, 1000.0, 1000.0))
                     }
                     None => Err("no graph section in this file".to_string()),
                 },
@@ -183,7 +183,7 @@ fn run_command(backend: &mut Option<UrnaBackend>, command: UrnaCommand, tx: &dyn
         }
         UrnaCommand::CheckEmbedder => {
             tx(UrnaEvent::EmbedderStatus(
-                crate::model::embed::check_embedder(),
+                crate::backend::workers::embed::check_embedder(),
             ));
         }
         UrnaCommand::Validate => {
@@ -227,7 +227,7 @@ fn load_frame(db: &UrnaBackend, ordinal: usize, max_side: u32) -> Result<Vec<u8>
         .blob_range(span.blob_index as usize)
         .ok_or_else(|| "the media bytes are not inlined in this file (sidecar blob)".to_string())?;
     let path = db.path().to_string_lossy().into_owned();
-    crate::model::frames::decode_frame(&path, range, frame, max_side).map_err(|e| e.to_string())
+    crate::backend::sources::frames::decode_frame(&path, range, frame, max_side).map_err(|e| e.to_string())
 }
 
 /// Embed-then-search: the offline embedder produces the query vector
@@ -243,12 +243,12 @@ fn search_by_text(
     let vector = match mode {
         SearchMode::Space { name } => {
             let (dim, model_hash) = db.space_identity(name).map_err(|e| e.to_string())?;
-            crate::model::embed::embed_query_space(name, dim, &model_hash, query)
+            crate::backend::workers::embed::embed_query_space(name, dim, &model_hash, query)
                 .map_err(|e| e.to_string())?
         }
         _ => {
             let (model, dim, model_hash) = db.embed_identity().map_err(|e| e.to_string())?;
-            crate::model::embed::embed_query(&model, dim, &model_hash, query)
+            crate::backend::workers::embed::embed_query(&model, dim, &model_hash, query)
                 .map_err(|e| e.to_string())?
         }
     };

@@ -41,10 +41,10 @@ use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageError, ImageStore};
-use engine::gpu::{ImageHandle, RenderConfig, replace_image_rgba, stream_image_rgba};
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageError, ImageStore};
+use engine::drawing::gpu::{ImageHandle, RenderConfig, replace_image_rgba, stream_image_rgba};
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
 
 const WIDTH: u32 = 640;
 const HEIGHT: u32 = 360;
@@ -390,7 +390,7 @@ fn a_stream_of_frames_fills_the_grow_only_atlas() {
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 mod child {
     use super::*;
-    use engine::platform::capture::{
+    use engine::runtime::platform::capture::{
         Capture, CaptureSettings, CaptureState, Device, DeviceKind, FfmpegCapture, Input,
     };
 

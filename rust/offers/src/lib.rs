@@ -72,8 +72,8 @@ pub use prompt::prompt;
 pub use rules::Rules;
 pub use words::{GRAMMAR, Part};
 
-use sem::Snapshot;
-use uir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, verify};
+use accord::Snapshot;
+use plevir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, verify};
 
 /// what a proposer is asked: the intent and everything it may build from.
 #[derive(Clone, Copy, Debug)]

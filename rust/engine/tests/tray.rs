@@ -6,9 +6,9 @@
 //! the tray following a moved projection (an item disabled, an item gone),
 //! and the target without a tray.
 
-use engine::platform::menu::{Clicked, MenuItem, Predefined, Submenu};
-use engine::platform::tray::{FakeTray, NoTray, Tray, TrayError, TrayImage, TrayModel};
-use sem::{
+use engine::runtime::platform::menu::{Clicked, MenuItem, Predefined, Submenu};
+use engine::runtime::platform::tray::{FakeTray, NoTray, Tray, TrayError, TrayImage, TrayModel};
+use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Stage, Value,
 };
@@ -46,7 +46,7 @@ impl Semantics for Counter {
             .parent("counter")
             .action("activate")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     agent: false,
                     ..sem::Actors::default()
                 },
@@ -159,7 +159,7 @@ fn a_click_on_the_fake_tray_is_the_request_the_button_makes_and_gets_its_receipt
     let tray_id = dispatcher.dispatch(&mut app, by_tray, 20);
     let tray_receipt = dispatcher.receipt(tray_id).unwrap();
     assert_eq!(app.count, 2);
-    let stages = |r: &sem::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
+    let stages = |r: &accord::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
     assert_eq!(stages(tray_receipt), stages(&button_receipt));
     assert_eq!(
         stages(tray_receipt),
@@ -195,7 +195,7 @@ fn a_click_on_the_fake_tray_is_the_request_the_button_makes_and_gets_its_receipt
     let stale_id = dispatcher.dispatch(&mut app, stale, 40);
     assert!(matches!(
         dispatcher.receipt(stale_id).unwrap().stage(),
-        Some(Stage::Rejected(sem::Rejection::Stale { .. }))
+        Some(Stage::Rejected(accord::Rejection::Stale { .. }))
     ));
     assert_eq!(app.count, 2, "nothing ran");
 
@@ -209,7 +209,7 @@ fn a_click_on_the_fake_tray_is_the_request_the_button_makes_and_gets_its_receipt
     let id = dispatcher.dispatch(&mut app, req, 50);
     assert!(matches!(
         dispatcher.receipt(id).unwrap().stage(),
-        Some(Stage::Rejected(sem::Rejection::NotAuthorized { actor })) if *actor == agent
+        Some(Stage::Rejected(accord::Rejection::NotAuthorized { actor })) if *actor == agent
     ));
     assert_eq!(app.shown, 1);
 }

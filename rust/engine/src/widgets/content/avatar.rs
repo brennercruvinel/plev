@@ -3,13 +3,13 @@
 //! initial letter in the active text tone. An optional online dot in the
 //! knob gradient sits on the top-left rim.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::image::ImageHandle;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::gpu::image::ImageHandle;
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, Theme};
 
-use crate::core::Rect;
-use crate::recipe::glass_pill;
+use crate::widgets::widget::Rect;
+use crate::widgets::recipe::glass_pill;
 
 /// Avatar sizes on the control ladder.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

@@ -5,9 +5,9 @@
 
 mod toy;
 
-use sem::{Actor, Change, Rejection, RequestId, Revision, Stage, StateRef, Value};
+use accord::{Actor, Change, Rejection, RequestId, Revision, Stage, StateRef, Value};
 use toy::ToyHost;
-use wire::{
+use socket::{
     ConnId, DeltaReply, Host, MAX_ACTORS, ProtoError, Reply, Server, ServerMsg, SnapshotReply,
     StageReply, decode_client,
 };

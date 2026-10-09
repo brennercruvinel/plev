@@ -6,7 +6,7 @@ use web_time::Instant;
 use winit::event::WindowEvent;
 
 use super::host::WindowHost;
-use crate::input::FileDrop;
+use crate::control::input::FileDrop;
 
 pub(crate) enum BufferedEvent {
     CursorMoved(f32, f32),

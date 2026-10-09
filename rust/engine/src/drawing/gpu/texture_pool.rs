@@ -209,7 +209,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn clear_forgets_every_texture() {
-        use crate::gpu::{GpuContext, RenderConfig};
+        use crate::drawing::gpu::{GpuContext, RenderConfig};
         let Some(gpu) = pollster::block_on(GpuContext::new_headless(8, 8, RenderConfig::default()))
         else {
             eprintln!("no GPU adapter; skipping");

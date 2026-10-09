@@ -11,10 +11,10 @@
 
 use std::path::Path;
 
-use engine::headless::{Renderer, Viewport};
-use sem::{SemId, Snapshot};
+use engine::drawing::headless::{Renderer, Viewport};
+use accord::{SemId, Snapshot};
 use serde_json::json;
-use wire::{Reply, ServerMsg, SnapshotReply, encode_server};
+use socket::{Reply, ServerMsg, SnapshotReply, encode_server};
 
 use crate::args::Args;
 use crate::bench::{self, Bench};

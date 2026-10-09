@@ -5,12 +5,12 @@
 //! `activate` starts or stops the spinners as its click does; its label
 //! says which. The spinners themselves have no projection in comps yet.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, Rect, Spinner, SpinnerSize, WidgetEvent,
 };
-use engine::compositor::Compositor;
-use engine::theme::{ControlSize, Theme};
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{ControlSize, Theme};
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 
@@ -200,9 +200,9 @@ mod tests {
         assert!(!page.tick(FRAME), "at rest until the person starts it");
         page.spinning = true;
         assert!(page.tick(FRAME), "with motion");
-        engine::animation::set_reduced_motion(true);
+        engine::compose::animation::set_reduced_motion(true);
         let moved = page.tick(FRAME);
-        engine::animation::set_reduced_motion(false);
+        engine::compose::animation::set_reduced_motion(false);
         assert!(!moved, "reduced: it stands still");
         assert!(page.tick(FRAME), "motion again");
     }

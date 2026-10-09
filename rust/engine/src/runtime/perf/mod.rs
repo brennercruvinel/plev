@@ -25,8 +25,8 @@ pub use hud::PerfHud;
 pub use memory::{MemoryStats, process_rss_bytes};
 pub use samples::RollingWindow;
 
-use crate::animation::AnimationTick;
-use crate::compositor::RenderStats;
+use crate::compose::animation::AnimationTick;
+use crate::drawing::compositor::RenderStats;
 
 /// Rolling window length used by [`PerfMonitor::new`]: two seconds of
 /// frames at 60 fps.

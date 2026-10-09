@@ -2,7 +2,7 @@
 //! oscillator phase, and a short ring buffer of past positions for the motion
 //! trail. coordinates are in logical pixels (the demo's css-pixel world).
 
-use crate::sim::params::TRAIL_LEN;
+use crate::simulation::parameters::TRAIL_LEN;
 
 /// one swarm particle. prime fields are fixed at spawn; the rest evolve.
 #[derive(Clone, Debug)]

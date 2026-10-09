@@ -7,7 +7,7 @@
 //! near-black clear is the opposite case and is linearized on the cpu via
 //! `engine::color::Color::to_linear_array` in the bin.
 
-use crate::sim::params::{CohMode, MAX_PRIME_INDEX};
+use crate::simulation::parameters::{CohMode, MAX_PRIME_INDEX};
 
 /// the base saturation and lightness of every particle swatch (demo: 85%, 60%).
 const SATURATION: f32 = 0.85;
@@ -77,7 +77,7 @@ fn hue_to_channel(p: f32, q: f32, mut t: f32) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sim::params::DEFAULT_MODULUS;
+    use crate::simulation::parameters::DEFAULT_MODULUS;
 
     fn close(a: [f32; 4], b: [f32; 4]) -> bool {
         a.iter().zip(b).all(|(x, y)| (x - y).abs() < 1e-3)

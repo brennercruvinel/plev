@@ -13,11 +13,11 @@
 
 use std::sync::{Mutex, OnceLock};
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::{ImageHandle, RenderConfig, load_image_rgba};
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use engine::text::TextStyle;
-use engine::theme::hoff::PAGE_BG;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::gpu::{ImageHandle, RenderConfig, load_image_rgba};
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::drawing::text::TextStyle;
+use engine::styling::theme::hoff::PAGE_BG;
 use engine::wgpu;
 
 const IMAGE_RGBA: [u8; 4] = [20, 200, 40, 255];

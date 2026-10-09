@@ -31,13 +31,13 @@ use std::cell::RefCell;
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
 
-use sem::redact::Secrets;
-use sem::{
+use accord::redactor::Secrets;
+use accord::{
     Actor, Change, Mark, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId,
     Snapshot, Stage, StateRef,
 };
 
-use crate::proto::{
+use crate::protocol::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Reply, ServerMsg, SnapshotReply,
     StageReply,
 };

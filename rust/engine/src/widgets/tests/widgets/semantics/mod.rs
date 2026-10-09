@@ -11,9 +11,9 @@ mod roving;
 mod buttons;
 
 use super::*;
-use sem::{
+use accord::{
     Actor, Change, ParamSpec, Rejection, Request, Role, SemId, Snapshot, SnapshotBuilder, Value,
-    ValueKind, Verdict, check,
+    ValueKind, Verdict, decision,
 };
 
 fn id(text: &str) -> SemId {

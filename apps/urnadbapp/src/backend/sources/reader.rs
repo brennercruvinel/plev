@@ -26,12 +26,12 @@ use std::path::PathBuf;
 
 use web_time::Instant;
 
-use super::bench::{BenchmarkView, gen_queries, latency_stats};
-use super::types::{
+use super::super::benchmark::{BenchmarkView, gen_queries, latency_stats};
+use super::super::workers::messages::{
     ChunkMeta, ChunksData, InspectView, ManifestView, OpenedDbView, SearchHitView,
     SearchResultsView, SectionInfo,
 };
-use engine::graph::GraphData;
+use engine::widgets::graph::geometry::GraphData;
 
 // Section ids (mirror urna_format::layout; the view model never names
 // urna crates).

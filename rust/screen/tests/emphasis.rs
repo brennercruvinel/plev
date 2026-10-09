@@ -9,13 +9,13 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::Rect;
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
-use sem::{Actor, Role, SnapshotBuilder};
+use engine::widgets::Rect;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
+use accord::{Actor, Role, SnapshotBuilder};
 use support::{id, settle};
-use surface::SurfaceHost;
-use uir::{Capabilities, GenerationPolicy, Op, verify_json};
+use screen::SurfaceHost;
+use plevir::{Capabilities, GenerationPolicy, Op, verify_json};
 
 const AREA: Rect = Rect {
     x: 0.0,

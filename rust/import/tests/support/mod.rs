@@ -11,10 +11,10 @@ pub mod checks;
 use std::fs;
 use std::path::PathBuf;
 
-use engine::theme::Theme;
-use parser::{Imported, Tokens, TypeStyle, Value};
-use sem::{ParamSpec, Role, Snapshot, SnapshotBuilder, ValueKind};
-use uir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
+use engine::styling::theme::Theme;
+use import::{Imported, Tokens, TypeStyle, Value};
+use accord::{ParamSpec, Role, Snapshot, SnapshotBuilder, ValueKind};
+use plevir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
 pub fn fixture_path(rel: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -73,7 +73,7 @@ pub fn corpus() -> Option<(String, String, String)> {
     ))
 }
 
-fn style(s: engine::text::TextStyle) -> TypeStyle {
+fn style(s: engine::drawing::text::TextStyle) -> TypeStyle {
     TypeStyle {
         size: s.font_size,
         line_height: s.line_height,
@@ -181,7 +181,7 @@ pub fn tokens(theme: &Theme) -> Tokens {
             ),
             (
                 "engine::theme::hoff::CARD_OVERLAY".into(),
-                Value::Color(engine::theme::hoff::CARD_OVERLAY.0),
+                Value::Color(engine::styling::theme::hoff::CARD_OVERLAY.0),
             ),
             ("theme.radius.xl".into(), Value::Length(theme.radius.xl)),
             (
@@ -200,11 +200,11 @@ pub fn hoff() -> Tokens {
 
 pub fn import_react() -> Imported {
     let (tsx, sass, vars) = react_sources();
-    parser::import_react((TSX, &tsx), (SASS, &sass), &vars, &hoff()).expect("react import")
+    import::import_react((TSX, &tsx), (SASS, &sass), &vars, &hoff()).expect("react import")
 }
 
 pub fn import_gpui() -> Imported {
-    parser::import_gpui(("separator.rs", &gpui_source()), &hoff()).expect("gpui import")
+    import::import_gpui(("separator.rs", &gpui_source()), &hoff()).expect("gpui import")
 }
 
 /// The HTML note card (`fixtures/html`, task-71 phase 2).
@@ -212,7 +212,7 @@ pub const HTML: &str = "note-card.html";
 
 pub fn import_html() -> Imported {
     let src = fixture("html/note-card.html");
-    parser::import_html((HTML, &src), &hoff()).expect("html import")
+    import::import_html((HTML, &src), &hoff()).expect("html import")
 }
 
 /// The Figma screen (`fixtures/figma`, exported by `script/figma-fixture`).
@@ -220,7 +220,7 @@ pub const FIGMA: &str = "settings.json";
 
 pub fn import_figma() -> Imported {
     let src = fixture("figma/settings.json");
-    parser::import_figma((FIGMA, &src), &hoff()).expect("figma import")
+    import::import_figma((FIGMA, &src), &hoff()).expect("figma import")
 }
 
 /// The app the note card is written for: its data and its two actions,

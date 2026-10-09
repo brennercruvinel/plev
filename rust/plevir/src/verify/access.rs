@@ -3,14 +3,14 @@
 //! control named, a focus order that follows what a person sees, no
 //! control that is only visual).
 
-use sem::{Actor, Actors, Confirm};
+use accord::{Actor, Actors, Confirm};
 
 use super::{Ctx, Walk};
-use crate::caps::ActionCap;
+use crate::capabilities::ActionCap;
 use crate::error::{Ptr, Rule};
 use crate::ir::IrNode;
 use crate::token::Layout;
-use crate::vocab::{Component, Named, is_control, role_of, spec_of};
+use crate::vocabulary::{Component, Named, is_control, role_of, spec_of};
 
 /// true when `actors` lets `actor` ask, the mapping `sem::check` uses.
 fn allows(actors: &Actors, actor: &Actor) -> bool {

@@ -1,9 +1,9 @@
-use engine::animation::Spring;
-use engine::compositor::{Compositor, SceneNode};
-use engine::input::scroll::ScrollState;
-use engine::theme::Theme;
+use crate::compose::animation::Spring;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::control::input::scroll::ScrollState;
+use crate::styling::theme::Theme;
 
-use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Seconds without scroll activity before the bar fades out.
 const IDLE_HIDE_SECS: f32 = 1.0;

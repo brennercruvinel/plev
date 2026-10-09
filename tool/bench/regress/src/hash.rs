@@ -32,7 +32,7 @@
 //! same page gets another id after other pages loaded theirs. A change
 //! of an image's pixels at the same size does not change the hash.
 
-use engine::compositor::{Layer, LayerEffect, SceneNode};
+use engine::drawing::compositor::{Layer, LayerEffect, SceneNode};
 
 /// The version of the hash encoding; hashed first, so another encoding
 /// changes every hash.
@@ -278,7 +278,7 @@ fn node_into(h: &mut Fnv, node: &SceneNode) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::compositor::{Compositor, LayerId};
+    use engine::drawing::compositor::{Compositor, LayerId};
 
     use crate::scene::capture;
     use crate::scene::tests::{BLUE, RED, VIEW, page, rect};

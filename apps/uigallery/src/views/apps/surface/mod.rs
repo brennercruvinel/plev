@@ -47,19 +47,19 @@
 pub(crate) mod asking;
 mod page;
 
-use comps::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use sem::{
+use engine::widgets::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use accord::{
     Actor, Receipt, Request, RequestId, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder,
 };
-use surface::{Dispatch, SurfaceHost};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use screen::{Dispatch, SurfaceHost};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::EditKey;
-use super::app::TodoPage;
-use crate::view::clipboard::Keys;
+use super::todo::TodoPage;
+use crate::views::text_input::clipboard::Keys;
 use page::Page;
 use offering::{Proposing, Row, Said};
 
@@ -365,7 +365,7 @@ impl SurfacePage {
 
     /// Who has the keys (a chord, the field's menu): the intent field, a
     /// field of the surface, or the todo's.
-    pub(in crate::view) fn keys<'a>(&'a mut self, todo: &'a mut TodoPage) -> Keys<'a> {
+    pub(in crate::views) fn keys<'a>(&'a mut self, todo: &'a mut TodoPage) -> Keys<'a> {
         if self.proposing.intent.is_focused() {
             return Keys::Field(&mut self.proposing.intent);
         }
@@ -376,8 +376,8 @@ impl SurfacePage {
     }
 
     /// Select all in the field of the surface that has the keys.
-    pub(in crate::view) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
-        let all = comps::form::EditKey::SelectAll;
+    pub(in crate::views) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
+        let all = engine::widgets::form::EditKey::SelectAll;
         self.host
             .iter_mut()
             .any(|s| s.handle_edit_key(all, &mut Todo(todo)))

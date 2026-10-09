@@ -4,8 +4,8 @@
 //! accents, Inter tracked -0.02em, radii 8 / 10 / 12 / 16 / 22 and the
 //! measured shadow stacks of its depths page.
 
-use super::button::ButtonTokens;
-use super::core::Theme;
+use super::super::super::widgets::buttons::tokens::ButtonTokens;
+use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
@@ -13,7 +13,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use crate::color::Color;
+use crate::styling::color::Color;
 
 /// Shade 1..9 of the colors page, paper to ink.
 pub const SHADES: [Color; 9] = [

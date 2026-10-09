@@ -121,8 +121,8 @@ pub(crate) fn record_range(
 /// stay 1:1 with the layer's `Text` draw commands (see
 /// `Layer::assign_text_ranges`).
 pub fn merge_text_groups(
-    groups: Vec<(Vec<crate::text::TextVertex>, Vec<u32>, Option<ClipRect>)>,
-) -> (Vec<crate::text::TextVertex>, Vec<u32>, Vec<DrawRange>) {
+    groups: Vec<(Vec<crate::drawing::text::TextVertex>, Vec<u32>, Option<ClipRect>)>,
+) -> (Vec<crate::drawing::text::TextVertex>, Vec<u32>, Vec<DrawRange>) {
     let mut vertices = Vec::new();
     let mut indices = Vec::new();
     let mut ranges = Vec::new();

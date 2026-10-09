@@ -340,13 +340,13 @@ pub enum UrnaEvent {
     SearchResults(Result<SearchResultsView, String>),
     ChunksLoaded(Result<ChunksData, String>),
     /// The laid-out graph (positions included — computed by the worker).
-    GraphLoaded(Result<engine::graph::GraphScene, String>),
+    GraphLoaded(Result<engine::widgets::graph::geometry::GraphScene, String>),
     /// Benchmark progress heartbeat (`done` of `total` queries).
     BenchmarkProgress {
         done: usize,
         total: usize,
     },
-    BenchmarkDone(Result<crate::model::bench::BenchmarkView, String>),
+    BenchmarkDone(Result<crate::backend::benchmark::BenchmarkView, String>),
     /// Embedder probe: `Ok` carries a short status line, `Err` the reason
     /// text search is unavailable.
     EmbedderStatus(Result<String, String>),

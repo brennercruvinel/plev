@@ -6,15 +6,15 @@
 //! system's fonts, so the geometry is checked against the same measurer
 //! with the same style, never against numbers.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
-use sem::{SemId, SnapshotBuilder, StateRef, Value};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::Theme;
+use accord::{SemId, SnapshotBuilder, StateRef, Value};
 
-use crate::core::Rect;
-use crate::form::TextField;
-use crate::form::text_input::*;
-use crate::wake::Wake;
+use crate::widgets::widget::Rect;
+use crate::widgets::form::TextField;
+use crate::widgets::form::text_input::*;
+use crate::widgets::wake::Wake;
 
 /// `にほんご`: four kana of three bytes each.
 const NIHONGO: &str = "にほんご";

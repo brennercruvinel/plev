@@ -27,8 +27,8 @@
 //! surface projects into the builder that holds the app's own projection:
 //! one snapshot, one contract.
 
-use sem::{SemId, Snapshot, SnapshotBuilder, StateRef};
-use uir::Component;
+use accord::{SemId, Snapshot, SnapshotBuilder, StateRef};
+use plevir::Component;
 
 use crate::draw::{closed, shown_text};
 use crate::expand::Node;
@@ -60,7 +60,7 @@ pub(crate) fn projected(tree: &[Node], shown: &Snapshot) -> Vec<bool> {
             }
         }
         let own =
-            uir::role_of(node.component, &node.bind).is_some() && shown.get(&node.id).is_none();
+            plevir::role_of(node.component, &node.bind).is_some() && shown.get(&node.id).is_none();
         if let Some(p) = out.get_mut(at) {
             *p = !skipped && own;
         }
@@ -76,7 +76,7 @@ pub(crate) fn shown_as(tree: &[Node], projected: &[bool], at: &StateRef) -> Opti
         .filter(|&(_, &p)| p)
         .find_map(|(node, _)| {
             let (prop, _) = node.bind.state.iter().find(|&(_, r)| r == at)?;
-            let key = sem::StateKey::parse(prop).ok()?;
+            let key = accord::StateKey::parse(prop).ok()?;
             Some(StateRef::new(node.id.clone(), key))
         })
 }
@@ -93,11 +93,11 @@ pub(crate) fn project(
     focused: Option<&SemId>,
 ) {
     if shown.get(id).is_none() {
-        b.node(id, sem::Role::Region, title).inert(inert);
+        b.node(id, accord::Role::Region, title).inert(inert);
     }
     let projected = projected(tree, shown);
     for (node, _) in tree.iter().zip(&projected).filter(|&(_, &p)| p) {
-        let Some(role) = uir::role_of(node.component, &node.bind) else {
+        let Some(role) = plevir::role_of(node.component, &node.bind) else {
             continue;
         };
         let parent = node.parent.and_then(|p| tree.get(p)).map_or(id, |p| &p.id);

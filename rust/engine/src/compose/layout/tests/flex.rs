@@ -1,7 +1,7 @@
 //! Flex behavior: stacking, padding, gap, flex-grow, align/justify.
 
 use super::{container, leaf};
-use crate::layout::*;
+use crate::compose::layout::*;
 
 #[test]
 fn test_single_node_fills_viewport() {

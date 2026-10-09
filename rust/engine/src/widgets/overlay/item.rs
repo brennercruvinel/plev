@@ -44,7 +44,7 @@ pub enum OverlayKind {
 #[derive(Debug, Clone)]
 pub(super) struct OverlayAnim {
     /// Progress 0.0 (hidden) -> 1.0 (fully shown).
-    pub(super) spring: engine::animation::Spring<f32>,
+    pub(super) spring: crate::compose::animation::Spring<f32>,
     /// When true the spring is heading back to 0.0; the overlay is removed
     /// once it settles.
     pub(super) closing: bool,

@@ -1,8 +1,8 @@
 //! Shape primitives, color palette and typography for the SDF shapes demo.
 
-use engine::compositor::{Compositor, ShadowParams};
-use engine::path::PathBuilder;
-use engine::text::TextStyle;
+use engine::drawing::compositor::{Compositor, ShadowParams};
+use engine::drawing::path::PathBuilder;
+use engine::drawing::text::TextStyle;
 
 // ---------------------------------------------------------------------------
 // Color palette

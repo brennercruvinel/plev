@@ -173,7 +173,7 @@ fn compare(c: &Compare) -> Result<Verdict, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::headless::Frame;
+    use engine::drawing::headless::Frame;
 
     fn args(s: &str) -> Vec<String> {
         s.split_whitespace().map(String::from).collect()

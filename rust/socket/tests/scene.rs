@@ -14,10 +14,10 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::{
+use accord::{
     Actor, ReceiptSink, Request, RequestId, Revision, Role, SemId, Snapshot, SnapshotBuilder,
 };
-use wire::{
+use socket::{
     AgentPort, Ask, BlobReply, Bound, Client, ClientMsg, Config, Host, LayerBody, MAX_BLOB,
     MAX_LINE, Observe, Offer, OfferLayer, Outgoing, ProtoError, Reply, SCENE_PART, SCENE_QUEUE,
     SceneAsk, SceneLayer, SceneReader, SceneReply, Server, ServerMsg, decode_client, decode_server,
@@ -665,7 +665,7 @@ fn a_watch_has_a_name_and_the_app_is_told_of_it() {
     };
     assert_eq!(
         s.take_scene_watches(),
-        [wire::SceneWatch {
+        [socket::SceneWatch {
             actor: claude.clone(),
             window: "page".into(),
             began: true,
@@ -677,7 +677,7 @@ fn a_watch_has_a_name_and_the_app_is_told_of_it() {
     s.close(1);
     assert_eq!(
         s.take_scene_watches(),
-        [wire::SceneWatch {
+        [socket::SceneWatch {
             actor: claude,
             window: "page".into(),
             began: false,

@@ -59,13 +59,13 @@
 
 use accesskit::{Action, Live, Node as AkNode, Rect, Toggled, Tree, TreeId, TreeUpdate};
 use rustc_hash::{FxHashMap, FxHashSet};
-use sem::{Node, Role, SemId, Snapshot, StateKey, Value};
+use accord::{Node, Role, SemId, Snapshot, StateKey, Value};
 
 use super::action;
 use super::ids::{NodeIds, ROOT};
 use super::present::{self, Kind, Presented};
 use super::role;
-use crate::compositor::{Binding, Compositor, intersect_rects};
+use crate::drawing::compositor::{Binding, Compositor, intersect_rects};
 
 /// What the window adds around the app's meaning.
 #[derive(Clone, Copy, Debug)]

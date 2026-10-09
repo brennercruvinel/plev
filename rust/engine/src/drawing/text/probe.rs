@@ -25,10 +25,10 @@ use std::cell::RefCell;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight, fontdb};
 use rustc_hash::FxHashSet;
 
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::gpu::RenderConfig;
-use crate::headless::{HeadlessError, Renderer, Viewport};
-use crate::text::TextStyle;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::gpu::RenderConfig;
+use crate::drawing::headless::{HeadlessError, Renderer, Viewport};
+use crate::drawing::text::TextStyle;
 
 /// Background, linear. The sRGB target encodes it to about 108.
 const CLEAR: [f32; 4] = [0.15, 0.15, 0.15, 1.0];
@@ -139,7 +139,7 @@ impl Rendered {
     }
 
     pub fn write_png(&self, path: impl AsRef<std::path::Path>) -> Result<(), HeadlessError> {
-        crate::headless::write_png(path.as_ref(), self.width, self.height, &self.rgba)
+        crate::drawing::headless::write_png(path.as_ref(), self.width, self.height, &self.rgba)
     }
 }
 

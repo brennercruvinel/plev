@@ -14,12 +14,12 @@
 //! diff region only while it shows one of them. Never the workspace whole
 //! and never the surface shown.
 
-use sem::{Execution, Outcome, RequestId, Snapshot, Value};
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use accord::{Execution, Outcome, RequestId, Snapshot, Value};
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
-use super::Workbench;
-use super::generated::shown;
-use crate::generated::{Said, scope};
+use super::super::capability::Workbench;
+use super::shown;
+use crate::generative::{Said, scope};
 
 fn int(n: usize) -> Value {
     Value::Int(i64::try_from(n).unwrap_or(i64::MAX))

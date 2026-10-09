@@ -1,4 +1,4 @@
-use crate::layout::{
+use crate::compose::layout::{
     Align as TaffyAlign, Direction as TaffyDirection, Justify as TaffyJustify, LayoutItem,
     LayoutStyle as TaffyLayoutStyle, TextMeasureSpec,
 };
@@ -80,7 +80,7 @@ pub(crate) fn to_layout_style(element: &Element) -> TaffyLayoutStyle {
     // is memoized by content, so layout and emit share one decode).
     let image_size = match &element.kind {
         ElementKind::Image { bytes: Some(bytes) } => {
-            crate::gpu::image::load_image_bytes(bytes).ok()
+            crate::drawing::gpu::image::load_image_bytes(bytes).ok()
         }
         _ => None,
     };

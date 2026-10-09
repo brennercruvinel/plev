@@ -5,10 +5,10 @@
 
 use std::collections::HashSet;
 
-use crate::gem::{self, Mat, Sub};
-use crate::kfr::{eval, eval_path, eval1, eval2};
-use crate::mdl::{Animation, Layer, Shape, Transform};
-use engine::path::TessellatedPath;
+use crate::formats::lottie::geometry::{self, Mat, Sub};
+use crate::formats::lottie::keyframe::{eval, eval_path, eval1, eval2};
+use crate::formats::lottie::schema::{Animation, Layer, Shape, Transform};
+use engine::drawing::path::TessellatedPath;
 
 pub struct Player {
     pub anim: Animation,

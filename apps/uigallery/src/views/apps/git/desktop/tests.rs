@@ -2,8 +2,8 @@
 //! the git worker's events draw: only with the page on screen.
 
 use super::*;
-use crate::view::ShowcaseView;
-use sem::SemId;
+use crate::views::ShowcaseView;
+use accord::SemId;
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;

@@ -10,7 +10,7 @@
 use std::collections::VecDeque;
 use std::sync::Arc;
 
-use sem::{Millis, Snapshot};
+use accord::{Millis, Snapshot};
 
 use crate::event::{Event, Kind};
 use crate::weigh;
@@ -158,13 +158,13 @@ impl Track {
 mod tests {
     use std::sync::Arc;
 
-    use sem::{Role, SnapshotBuilder};
+    use accord::{Role, SnapshotBuilder};
 
     use super::Track;
     use crate::event::{Event, InputKind, Kind};
     use crate::weigh;
 
-    fn key(t: u64, snapshot: &Arc<sem::Snapshot>) -> Event {
+    fn key(t: u64, snapshot: &Arc<accord::Snapshot>) -> Event {
         Event {
             t,
             kind: Kind::Snapshot {
@@ -188,7 +188,7 @@ mod tests {
     /// the bytes the track claims, recomputed from what it holds with
     /// every distinct snapshot counted once.
     fn recount(track: &Track) -> usize {
-        let mut seen: Vec<&Arc<sem::Snapshot>> = Vec::new();
+        let mut seen: Vec<&Arc<accord::Snapshot>> = Vec::new();
         let mut total = 0;
         for segment in track.segments() {
             total += segment.events.iter().map(weigh::event).sum::<usize>();

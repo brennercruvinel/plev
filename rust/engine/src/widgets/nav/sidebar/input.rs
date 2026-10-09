@@ -1,9 +1,9 @@
 //! Sidebar event routing: pinned footer links, a wheel over the band,
 //! group captions that fold, the links, the drawer's close-on-outside.
 
-use engine::theme::{SidebarMode, Theme};
+use crate::styling::theme::{SidebarMode, Theme};
 
-use crate::core::{EventResult, WidgetEvent};
+use crate::widgets::widget::{EventResult, WidgetEvent};
 
 use super::Sidebar;
 

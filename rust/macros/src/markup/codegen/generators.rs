@@ -1,4 +1,4 @@
-use crate::parse::block_item::{BindStmt, BlockItem, EachStmt, OnStmt, WhenStmt};
+use crate::markup::parse::block_item::{BindStmt, BlockItem, EachStmt, OnStmt, WhenStmt};
 use proc_macro2::TokenStream;
 use quote::quote;
 

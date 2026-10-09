@@ -2,7 +2,7 @@
 //! host's compositor and presented through the engine's shared frame tail
 //! (`WindowHost::present`, the `present_frame` every app uses).
 
-use engine::compositor::{LayerId, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{LayerId, SceneNode, TextNodeKey};
 use engine::winit::window::WindowId;
 
 use crate::LayersDemoApp;
@@ -10,7 +10,7 @@ use crate::palette::*;
 use crate::ui;
 
 fn clear_linear() -> [f32; 4] {
-    engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2]).to_linear_array()
+    engine::styling::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2]).to_linear_array()
 }
 
 /// The animated demo: a static dot grid on the background layer, the

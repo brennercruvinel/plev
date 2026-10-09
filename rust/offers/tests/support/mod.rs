@@ -5,9 +5,9 @@
 
 use std::path::PathBuf;
 
-use propose::Ask;
-use sem::Snapshot;
-use uir::{Capabilities, GenerationPolicy, IrNode, VerifiedIr, verify_json};
+use offers::Ask;
+use accord::Snapshot;
+use plevir::{Capabilities, GenerationPolicy, IrNode, VerifiedIr, verify_json};
 
 fn read(rel: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(rel);
@@ -117,7 +117,7 @@ pub fn bindings(root: &IrNode) -> Vec<(String, Vec<String>)> {
 /// Who may ask for the vault's actions: a person, at the screen or
 /// through assistive technology, and a test; never an agent (the
 /// showcase's `PERSON_ONLY`).
-pub const PERSON_ONLY: sem::Actors = sem::Actors {
+pub const PERSON_ONLY: accord::Actors = accord::Actors {
     human: true,
     agent: false,
     assistive: true,
@@ -126,7 +126,7 @@ pub const PERSON_ONLY: sem::Actors = sem::Actors {
 
 /// A vault whose lock and open are kept from agents, and a secret code.
 pub fn vault() -> Snapshot {
-    use sem::{Constraints, Policy, Role, SnapshotBuilder};
+    use accord::{Constraints, Policy, Role, SnapshotBuilder};
     let kept = Policy {
         actors: PERSON_ONLY,
         ..Policy::default()
@@ -168,8 +168,8 @@ pub struct Changing {
     pub app: Snapshot,
     pub caps: Capabilities,
     pub policy: GenerationPolicy,
-    pub current: uir::Adapted,
-    pub by: sem::Actor,
+    pub current: plevir::Adapted,
+    pub by: accord::Actor,
 }
 
 impl Changing {
@@ -187,18 +187,18 @@ impl Changing {
             app,
             caps,
             policy,
-            current: uir::Adapted::new(verified),
-            by: sem::Actor::Human,
+            current: plevir::Adapted::new(verified),
+            by: accord::Actor::Human,
         }
     }
 
-    pub fn by(mut self, by: sem::Actor) -> Changing {
+    pub fn by(mut self, by: accord::Actor) -> Changing {
         self.by = by;
         self
     }
 
-    pub fn ask<'a>(&'a self, intent: &'a str) -> propose::Adapt<'a> {
-        propose::Adapt {
+    pub fn ask<'a>(&'a self, intent: &'a str) -> offers::Adapt<'a> {
+        offers::Adapt {
             intent,
             caps: &self.caps,
             app: &self.app,
@@ -210,8 +210,8 @@ impl Changing {
 }
 
 /// An agent, as the port names one.
-pub fn agent() -> sem::Actor {
-    sem::Actor::Agent {
+pub fn agent() -> accord::Actor {
+    accord::Actor::Agent {
         name: "claude".to_owned(),
     }
 }
@@ -228,6 +228,6 @@ pub fn claude_review() -> String {
 }
 
 /// The ids of the nodes set aside on `adapted`, in id order.
-pub fn aside(adapted: &uir::Adapted) -> Vec<String> {
+pub fn aside(adapted: &plevir::Adapted) -> Vec<String> {
     adapted.aside().map(|a| a.node.sem.to_string()).collect()
 }

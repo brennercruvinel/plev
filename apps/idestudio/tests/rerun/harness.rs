@@ -27,8 +27,8 @@
 
 use std::collections::HashMap;
 
-use rec::{Kind, Session};
-use sem::{Actor, Millis, Receipt, Rejection, Request, RequestId, Snapshot, Stage, Value};
+use record::{Kind, Session};
+use accord::{Actor, Millis, Receipt, Rejection, Request, RequestId, Snapshot, Stage, Value};
 
 use crate::marks::{Anchor, Mark, What, render};
 use crate::report::{

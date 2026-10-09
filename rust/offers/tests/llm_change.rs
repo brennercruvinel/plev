@@ -14,10 +14,10 @@ mod support;
 
 use std::collections::VecDeque;
 
-use propose::{Llm, Model, ModelError, ProposeError, Transformed, transform_verified};
-use sem::{Actor, SemId};
+use offers::{Llm, Model, ModelError, ProposeError, Transformed, transform_verified};
+use accord::{Actor, SemId};
 use support::{Changing, VAULT_PANEL, agent, compact, todo, vault};
-use uir::{GenerationPolicy, Op};
+use plevir::{GenerationPolicy, Op};
 
 /// A model that answers from a script and keeps every prompt it read.
 #[derive(Default)]
@@ -68,7 +68,7 @@ fn an_answer_of_operations_is_applied() {
                 id: sid("todo_panel.counts")
             },
             Op::Density {
-                step: uir::Step::Denser
+                step: plevir::Step::Denser
             }
         ]
     );

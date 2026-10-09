@@ -9,11 +9,11 @@
 //! With `IME_FIELD_OUT=<dir>` and a GPU, the Input page test also writes
 //! `ime-field.png` there: the page with a field composing `にほんご`.
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::gpu::RenderConfig;
-use engine::headless::{HeadlessError, Renderer, Viewport};
-use sem::Value;
-use showcase::view::{EditKey, ImeEvent};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
+use accord::Value;
+use uigallery::views::{EditKey, ImeEvent};
 
 use super::harness::{Gallery, gallery, sid};
 

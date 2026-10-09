@@ -22,21 +22,21 @@
 //! [`Component::run`] alike: the person, a reader and an agent end in the
 //! same state.
 
-use engine::theme::Intent;
-use sem::{
+use engine::styling::theme::Intent;
+use accord::{
     Execution, Operable, Outcome, Receipt, Request, RequestId, Role, SemErrors, SemId, Semantics,
     Snapshot, SnapshotBuilder,
 };
 
-use super::super::apps::app::TodoPage;
+use super::super::apps::todo::TodoPage;
 use super::super::components::toast::ToastPage;
-use super::super::panes::Panes;
+use super::super::pages::panes::Panes;
 use super::super::{Pane, ShowcaseView};
 
 /// What the view does once a component page ran a request: the page
 /// asks, and the view owns the toasts and the overlays.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(in crate::view) enum After {
+pub(in crate::views) enum After {
     /// Nothing beyond the page's own state.
     #[default]
     Nothing,
@@ -48,7 +48,7 @@ pub(in crate::view) enum After {
 
 /// A component page as the view's projection and the gallery's
 /// dispatcher see it.
-pub(in crate::view) trait Component {
+pub(in crate::views) trait Component {
     /// The root of the page's ids; `None` when they did not parse (the
     /// page's test proves they do), and the page projects nothing.
     fn root(&self) -> Option<&SemId>;
@@ -74,7 +74,7 @@ pub(in crate::view) trait Component {
 }
 
 /// Whether `id` is `root` or under it (`root.x`, `root[k]`).
-pub(in crate::view) fn under(root: &SemId, id: &SemId) -> bool {
+pub(in crate::views) fn under(root: &SemId, id: &SemId) -> bool {
     id.as_str()
         .strip_prefix(root.as_str())
         .is_some_and(|rest| rest.is_empty() || rest.starts_with(['.', '[']))
@@ -86,7 +86,7 @@ macro_rules! components {
     ($($pane:ident => $field:ident),* $(,)?) => {
         impl Panes {
             /// The page of `pane`, when it is a component page.
-            pub(in crate::view) fn component(&self, pane: Pane) -> Option<&dyn Component> {
+            pub(in crate::views) fn component(&self, pane: Pane) -> Option<&dyn Component> {
                 match pane {
                     $(Pane::$pane => Some(&self.$field),)*
                     _ => None,
@@ -167,7 +167,7 @@ impl Operable for Page<'_> {
 impl ShowcaseView {
     /// The component page of `pane` projected now, under its region;
     /// `None` for a pane whose page is not one.
-    pub(in crate::view) fn component_semantics(
+    pub(in crate::views) fn component_semantics(
         &self,
         pane: Pane,
     ) -> Option<Result<Snapshot, SemErrors>> {
@@ -191,7 +191,7 @@ impl ShowcaseView {
     /// the person's pointer, through the gallery's one dispatcher: the
     /// receipt as it stands, after what the page asked of the view is
     /// done. `None` when the active page is not a component page.
-    pub(in crate::view) fn act_component(&mut self, req: Request) -> Option<Receipt> {
+    pub(in crate::views) fn act_component(&mut self, req: Request) -> Option<Receipt> {
         let pane = self.pane()?;
         let title = self.current().title;
         let inert = self.overlay_holds_pointer();
@@ -213,7 +213,7 @@ impl ShowcaseView {
 
     /// What a component page asked of the view, done: the click's path
     /// and the dispatcher's end here alike.
-    pub(in crate::view) fn after_component(&mut self, after: After) {
+    pub(in crate::views) fn after_component(&mut self, after: After) {
         match after {
             After::Nothing => {}
             After::Toast(intent) => {
@@ -227,7 +227,7 @@ impl ShowcaseView {
     /// Keyboard focus from a screen reader to a node of the active
     /// component page; refused while an overlay holds the pointer (the
     /// page is inert then).
-    pub(in crate::view) fn focus_component(&mut self, id: &SemId) -> bool {
+    pub(in crate::views) fn focus_component(&mut self, id: &SemId) -> bool {
         if self.overlay_holds_pointer() {
             return false;
         }
@@ -240,7 +240,7 @@ impl ShowcaseView {
     }
 
     /// Escape on a component page: the focus a reader left goes.
-    pub(in crate::view) fn blur_component(&mut self) -> bool {
+    pub(in crate::views) fn blur_component(&mut self) -> bool {
         let Some(pane) = self.pane() else {
             return false;
         };

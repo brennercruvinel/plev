@@ -6,11 +6,11 @@
 //! landed on and clicks nothing. Dragging a control (a slider) by touch is
 //! not there yet.
 
-use comps::prelude::WidgetEvent;
+use engine::widgets::prelude::WidgetEvent;
 use winit::event::TouchPhase;
 use winit::window::WindowId;
 
-use super::App;
+use super::super::App;
 
 /// How far a finger travels, in logical pixels, before it scrolls.
 const SLOP: f32 = 8.0;

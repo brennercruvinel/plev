@@ -8,15 +8,15 @@
 //! shown by the surface as before, and a slider in the middle of a drag
 //! goes on dragging after the change.
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use sem::{Actor, Request, Stage, Value};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use accord::{Actor, Request, Stage, Value};
 
 use super::super::super::SilencesPage;
 use super::super::{TURN, frame, setup, sid, value, wide};
 use super::{fixture, show};
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
 

@@ -7,8 +7,8 @@
 
 use std::collections::BTreeSet;
 
-use rec::{Limits, Recorder, Session};
-use sem::{
+use record::{Limits, Recorder, Session};
+use accord::{
     Actor, Confirm, Dispatcher, Execution, Millis, Operable, Outcome, ParamSpec, Policy, Receipt,
     Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Stage, Value, ValueKind,
 };

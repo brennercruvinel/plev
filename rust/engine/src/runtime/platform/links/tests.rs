@@ -1,7 +1,7 @@
 //! The grammar of a link, case by case: what reads, what is refused and
 //! why, and the form a link is shown in.
 
-use sem::{Actor, Policy, Role, SnapshotBuilder, Value};
+use accord::{Actor, Policy, Role, SnapshotBuilder, Value};
 
 use super::*;
 

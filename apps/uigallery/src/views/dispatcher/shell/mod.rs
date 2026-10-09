@@ -37,9 +37,9 @@
 //! [`ShowcaseView::gallery_semantics`], the one snapshot the agent port
 //! serves and the menu is built from.
 
-use engine::platform::menu::Clicked;
-use engine::platform::notify::Notification;
-use sem::{
+use engine::runtime::platform::menu::Clicked;
+use engine::runtime::platform::notify::Notification;
+use accord::{
     Actor, Actors, Constraints, Execution, Operable, Outcome, ParamSpec, Policy, Receipt, Request,
     RequestId, Role, SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Stage,
     Value, ValueKind,

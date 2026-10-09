@@ -1,7 +1,7 @@
 //! Render pipeline for the counter demo: scene building + GPU submission.
 
-use engine::compositor::{SceneNode, TextNodeKey};
-use engine::view::ViewContext;
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
+use engine::compose::view::ViewContext;
 
 use crate::lifecycle::*;
 use crate::{AppState, CounterApp};
@@ -88,7 +88,7 @@ pub fn render(app: &mut CounterApp) {
 
     // -- Resolve & render --
     app.compositor
-        .resolve(&engine::compositor::ResolveResources {
+        .resolve(&engine::drawing::compositor::ResolveResources {
             msaa_samples: gpu.config.msaa_samples,
             device: &gpu.device,
             queue: &gpu.queue,
@@ -102,7 +102,7 @@ pub fn render(app: &mut CounterApp) {
 
     // Resolve text per clip group so the ranges patched into the
     // draw sequence line up 1:1 with its Text commands.
-    engine::window::resolve_layer_text(&mut app.compositor, gpu, text_system);
+    engine::runtime::window::resolve_layer_text(&mut app.compositor, gpu, text_system);
     text_system.finish_frame();
 
     let mut encoder = gpu
@@ -180,7 +180,7 @@ pub fn render(app: &mut CounterApp) {
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,
                             g: lg as f64,
@@ -221,7 +221,7 @@ pub fn render(app: &mut CounterApp) {
 // Scene-building helpers
 // ---------------------------------------------------------------------------
 
-fn build_info_card(comp: &mut engine::compositor::Compositor, w: f32) {
+fn build_info_card(comp: &mut engine::drawing::compositor::Compositor, w: f32) {
     let content_w = w - MARGIN * 2.0;
     let left_card_w = content_w * 0.55;
     let gap = 16.0;
@@ -285,7 +285,7 @@ fn build_info_card(comp: &mut engine::compositor::Compositor, w: f32) {
     );
 }
 
-fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32) {
+fn build_footer(comp: &mut engine::drawing::compositor::Compositor, w: f32, h: f32) {
     let footer_y = h - FOOTER_H;
     comp.push(SceneNode::Rect {
         x: 0.0,

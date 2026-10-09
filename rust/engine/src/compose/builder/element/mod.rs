@@ -1,7 +1,7 @@
 mod builders;
 
 use super::style::*;
-use crate::view::ViewContext;
+use crate::compose::view::ViewContext;
 
 pub struct ClickEvent {
     pub x: f32,
@@ -43,7 +43,7 @@ pub(crate) enum ElementKind {
         truncate_chars: Option<usize>,
     },
     Path {
-        data: crate::path::TessellatedPath,
+        data: crate::drawing::path::TessellatedPath,
     },
     Image {
         /// Encoded image bytes (png/jpeg); resolved to an atlas handle at
@@ -59,7 +59,7 @@ pub struct Element {
     #[allow(dead_code)]
     pub(crate) events: EventHandlers,
     pub(crate) children: Vec<Element>,
-    pub(crate) intent: Option<crate::theme::Intent>,
+    pub(crate) intent: Option<crate::styling::theme::Intent>,
 }
 
 pub trait IntoView {
@@ -113,7 +113,7 @@ pub fn text(content: &str) -> Element {
 }
 
 pub fn button(label: &str) -> Element {
-    use crate::color::Color;
+    use crate::styling::color::Color;
     div()
         .bg(Color::rgba(0.25, 0.25, 0.35, 1.0))
         .rounded(4.0)
@@ -121,7 +121,7 @@ pub fn button(label: &str) -> Element {
         .child(text(label).font_size(14.0))
 }
 
-pub fn path(data: crate::path::TessellatedPath) -> Element {
+pub fn path(data: crate::drawing::path::TessellatedPath) -> Element {
     Element {
         kind: ElementKind::Path { data },
         style: Style::default(),

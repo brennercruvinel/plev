@@ -18,10 +18,10 @@ mod support;
 
 use proptest::prelude::*;
 use proptest::sample::select;
-use sem::{ActionName, SemId, StateRef};
+use accord::{ActionName, SemId, StateRef};
 use serde_json::Value;
 use support::caps;
-use uir::{
+use plevir::{
     Align, Axis, CapabilityRef, ColorRole, Component, ControlSize, Elevation, GenerationPolicy, Ir,
     IrNode, Layout, Props, Repeat, Rule, ShapeRole, Size, SizeToken, SpacingToken, Surface,
     TypographyRole, decode, names, schema, verify,
@@ -354,7 +354,7 @@ fn a_tree_deeper_than_any_policy_is_refused_without_exhausting_the_stack() {
     };
     let errors = verify(&ir, &caps(), &unbounded).unwrap_err();
     assert_eq!(errors.len(), 1);
-    assert_eq!(errors[0].rule, uir::Rule::Limits);
+    assert_eq!(errors[0].rule, plevir::Rule::Limits);
     assert!(
         errors[0].reason.contains("depth 257"),
         "{}",

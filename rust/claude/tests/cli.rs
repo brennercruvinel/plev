@@ -14,12 +14,12 @@ use std::process::{Command, Stdio};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use claude_model::{ClaudeCli, SESSION_VARS};
-use propose::{Ask, Llm, ProposeError, prompt, propose_verified};
-use sem::Snapshot;
+use claude::{ClaudeCli, SESSION_VARS};
+use offers::{Ask, Llm, ProposeError, prompt, propose_verified};
+use accord::Snapshot;
 use serde_json::json;
 use tempfile::TempDir;
-use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 const INTENT: &str = "only what is active and the add field";
 
@@ -257,7 +257,7 @@ fn a_call_cancelled_from_another_thread_kills_the_child() {
     assert_eq!(cli.calls().len(), 2);
 
     // a new signal, a new call
-    cli.cancel = claude_model::Cancel::new();
+    cli.cancel = claude::Cancel::new();
     std::fs::write(dir.path().join("mode"), "ok").unwrap();
     let ir = propose_verified(&mut Llm::new(&mut cli), &todo.ask()).expect("verifies");
     assert_eq!(ir.ir().surface.id.as_str(), "todo_panel");

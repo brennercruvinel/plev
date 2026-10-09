@@ -12,11 +12,11 @@
 
 use std::sync::{Arc, Mutex};
 
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use propose::compose::{Detector, Found, Listener, Target};
-use rec::{Kind, Limits, Recorder, Session};
-use sem::{Actor, Request, SemId};
-use showcase::view::ShowcaseView;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use offers::compose::{Detector, Found, Listener, Target};
+use record::{Kind, Limits, Recorder, Session};
+use accord::{Actor, Request, SemId};
+use uigallery::views::ShowcaseView;
 
 fn agent() -> Actor {
     Actor::Agent {
@@ -33,7 +33,7 @@ fn act(view: &mut ShowcaseView, target: &str, action: &str) {
     let seen = view.semantics().expect("the page projects");
     let req = Request::observe(&seen, agent(), target, action, None).expect("observed");
     let receipt = view.act(req).expect("taken");
-    assert_eq!(receipt.stage().map(sem::Stage::name), Some("completed"));
+    assert_eq!(receipt.stage().map(accord::Stage::name), Some("completed"));
 }
 
 /// Every stage event of the session, in the order of the file, into a

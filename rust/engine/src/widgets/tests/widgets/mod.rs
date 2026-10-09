@@ -9,10 +9,10 @@ mod nav;
 mod semantics;
 mod buttons;
 
-use crate::core::*;
-use crate::prelude::*;
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::{Intent, Theme};
+use crate::widgets::widget::*;
+use crate::widgets::prelude::*;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::styling::theme::{Intent, Theme};
 
 fn hoff() -> Theme {
     Theme::hoff()

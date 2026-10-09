@@ -6,10 +6,10 @@
 //! to ask it yet: the tree sets a value only through `set_value` (and a
 //! select's `select`), and the contract has no splitter role.
 
-use comps::prelude::{EventResult, Rect, SplitDirection, SplitPane, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Request, SemId, SnapshotBuilder, Value};
+use engine::widgets::prelude::{EventResult, Rect, SplitDirection, SplitPane, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Request, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, child_id, panel, root_id, text, under};
 

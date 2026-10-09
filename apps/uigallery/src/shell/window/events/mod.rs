@@ -5,14 +5,14 @@
 //! host's; the close and the redraw are answered per window. The input
 //! method's events go to the view as well (`ime.rs`).
 
-use comps::prelude::WidgetEvent;
+use engine::widgets::prelude::WidgetEvent;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::event_loop::ActiveEventLoop;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::WindowId;
 
-use super::App;
-use crate::keys;
+use super::super::App;
+use crate::keyboard;
 
 impl App {
     /// One event of one window (`ApplicationHandler::window_event`).
@@ -238,7 +238,7 @@ impl App {
             // page takes it, whichever window it is in (task-76: the
             // Files page).
             other => {
-                if let Some(drop) = engine::input::FileDrop::from_window_event(&other)
+                if let Some(drop) = engine::control::input::FileDrop::from_window_event(&other)
                     && self.view.handle_file_drop(&drop)
                 {
                     self.changed();

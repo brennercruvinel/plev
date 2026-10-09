@@ -7,7 +7,7 @@
 //! misses nothing. A rect asked about is taken exactly, by pixel center,
 //! so two controls that touch never share a pixel.
 
-use engine::headless::Frame;
+use engine::drawing::headless::Frame;
 use serde::Serialize;
 
 /// What became of the pixel question for one baseline.

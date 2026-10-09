@@ -18,7 +18,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use sem::{ActionName, Actor, Receipt, ReceiptSink, Request, RequestId, SemId, Stage};
+use accord::{ActionName, Actor, Receipt, ReceiptSink, Request, RequestId, SemId, Stage};
 
 use super::{Found, Shape, Step, Target, item_of};
 

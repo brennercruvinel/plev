@@ -23,9 +23,9 @@ mod jsonschema;
 
 use std::path::PathBuf;
 
-use sem::Snapshot;
+use accord::Snapshot;
 use serde_json::{Value, json};
-use uir::{Capabilities, GenerationPolicy, Ir, Rule, parse, schema, verify};
+use plevir::{Capabilities, GenerationPolicy, Ir, Rule, parse, schema, verify};
 
 const COMMIT_FORM: &str = "ide-commit-form.ir.json";
 const REVIEW: &str = "ide-review-commit.ir.json";
@@ -142,7 +142,7 @@ fn the_review_template_names_one_capability_per_changed_file() {
         ]
     );
     let each = caps.datum(&"changes:files".parse().unwrap()).unwrap();
-    assert_eq!(each.kind, sem::ValueKind::List);
+    assert_eq!(each.kind, accord::ValueKind::List);
 }
 
 #[test]

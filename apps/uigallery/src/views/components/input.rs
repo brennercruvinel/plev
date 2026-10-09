@@ -9,15 +9,15 @@
 //! as typing would. The preview line is a label, `input_page.preview`. The
 //! focus a reader asks for is the page's own (the caret).
 
-use comps::form::TextField;
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Request, Role, SemId, SnapshotBuilder, Value};
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 
 use super::{After, Component, EditKey, child_id, root_id, text, under};
-use crate::view::ImeEvent;
-use crate::view::clipboard::Keys;
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
 
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
@@ -177,7 +177,7 @@ impl InputPage {
     }
 
     /// The focused field has the keys (a chord, the field's menu).
-    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
         match self.focused() {
             Some(i) => Keys::Field(&mut self.fields[i]),
             None => Keys::Nobody,
@@ -292,8 +292,8 @@ impl Component for InputPage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::compositor::SceneNode;
-    use engine::text::TextMeasurer;
+    use engine::drawing::compositor::SceneNode;
+    use engine::drawing::text::TextMeasurer;
 
     fn content() -> Rect {
         Rect::new(288.0, 80.0, 760.0, 700.0)
@@ -304,7 +304,7 @@ mod tests {
         let mut c = Compositor::new();
         c.begin_frame();
         page.render(&mut c, content(), &theme);
-        c.layer(engine::compositor::LayerId::DEFAULT)
+        c.layer(engine::drawing::compositor::LayerId::DEFAULT)
             .unwrap()
             .nodes()
             .iter()
@@ -417,7 +417,7 @@ mod tests {
             let mut c = Compositor::new();
             c.begin_frame();
             p.render(&mut c, content(), &theme);
-            c.layer(engine::compositor::LayerId::DEFAULT)
+            c.layer(engine::drawing::compositor::LayerId::DEFAULT)
                 .unwrap()
                 .nodes()
                 .iter()

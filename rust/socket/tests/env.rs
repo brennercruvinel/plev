@@ -12,7 +12,7 @@
 
 use std::process::Command;
 
-use wire::AgentPort;
+use socket::AgentPort;
 
 /// the acceptance: with `PLEV_AGENT` unset (or not `1`) no socket is
 /// created. `1` opens the port only in a build with debug assertions.
@@ -114,22 +114,22 @@ fn the_scene_is_shared_only_with_plev_mirror() {
 /// an app that projects nothing and takes nothing.
 struct Nothing;
 
-impl wire::Host for Nothing {
-    fn project(&self) -> Option<sem::Snapshot> {
+impl socket::Host for Nothing {
+    fn project(&self) -> Option<accord::Snapshot> {
         None
     }
 
-    fn dispatch(&mut self, _req: sem::Request) -> Option<sem::RequestId> {
+    fn dispatch(&mut self, _req: accord::Request) -> Option<accord::RequestId> {
         None
     }
 
-    fn add_sink(&mut self, _sink: Box<dyn sem::ReceiptSink>) {}
+    fn add_sink(&mut self, _sink: Box<dyn accord::ReceiptSink>) {}
 }
 
 #[test]
 fn scene_from_env_in_a_child() {
     use std::time::{Duration, Instant};
-    use wire::{Client, ProtoError, Reply, WireError};
+    use socket::{Client, ProtoError, Reply, WireError};
 
     if std::env::var_os("WIRE_T79_CHILD").is_none() {
         return;

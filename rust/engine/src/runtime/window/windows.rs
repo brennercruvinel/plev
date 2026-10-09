@@ -18,7 +18,7 @@ use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::gpu::RenderConfig;
+use crate::drawing::gpu::RenderConfig;
 
 use super::host::WindowHost;
 
@@ -164,7 +164,7 @@ impl Windows {
 
     /// The device a shell requested asynchronously for window `id`
     /// (wasm). `false` when the window closed meanwhile.
-    pub fn attach_gpu(&mut self, id: WindowId, gpu: crate::gpu::GpuContext) -> bool {
+    pub fn attach_gpu(&mut self, id: WindowId, gpu: crate::drawing::gpu::GpuContext) -> bool {
         match self.get_mut(id) {
             Some(host) => {
                 host.attach_gpu(gpu);

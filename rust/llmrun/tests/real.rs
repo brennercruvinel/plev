@@ -7,14 +7,14 @@
 
 use std::path::PathBuf;
 
-use llm::text::{Engine, Text};
-use llm::{Device, Event, Model, Stop};
+use llmrun::prompt::tokenizer::{Engine, Text};
+use llmrun::{Device, Event, Model, Stop};
 
 const PROMPT: &str = "What is the capital of France?";
 const NEW: usize = 16;
 
 fn model_dir() -> Option<PathBuf> {
-    let dir = PathBuf::from(std::env::var_os(llm::MODEL_ENV)?);
+    let dir = PathBuf::from(std::env::var_os(llmrun::MODEL_ENV)?);
     dir.is_dir().then_some(dir)
 }
 
@@ -66,7 +66,7 @@ fn candle_generates_sixteen_tokens() {
         eprintln!("PLEV_LLM_MODEL not set; skipped");
         return;
     };
-    let model = llm::candle::CandleModel::load(&dir, device()).expect("load");
+    let model = llmrun::models::candle::CandleModel::load(&dir, device()).expect("load");
     let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
     assert!(answer.contains("Paris"), "{answer:?}");
 }
@@ -79,7 +79,7 @@ fn burn_generates_sixteen_tokens() {
         eprintln!("PLEV_LLM_MODEL not set; skipped");
         return;
     };
-    let model = llm::burn::load(&dir, device()).expect("load");
+    let model = llmrun::models::burn::load(&dir, device()).expect("load");
     let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
     assert!(answer.contains("Paris"), "{answer:?}");
 }
@@ -91,20 +91,20 @@ fn burn_generates_sixteen_tokens() {
 #[test]
 #[ignore = "needs the model in PLEV_LLM_MODEL"]
 fn burn_on_the_engine_s_device_generates_sixteen_tokens() {
-    use engine::compositor::Compositor;
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
+    use engine::drawing::compositor::Compositor;
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
 
     let Some(dir) = model_dir() else {
         eprintln!("PLEV_LLM_MODEL not set; skipped");
         return;
     };
     let config = RenderConfig {
-        compute: Some(llm::plev::features()),
+        compute: Some(llmrun::engine::features()),
         ..RenderConfig::default()
     };
     let mut renderer = Renderer::new(Viewport::new(64.0, 48.0, 2.0), config).expect("renderer");
-    let model = llm::plev::load(&dir, renderer.gpu()).expect("load");
+    let model = llmrun::engine::load(&dir, renderer.gpu()).expect("load");
     let answer = sixteen_tokens(model, Text::from_dir(&dir).expect("tokenizer"));
     assert!(answer.contains("Paris"), "{answer:?}");
 

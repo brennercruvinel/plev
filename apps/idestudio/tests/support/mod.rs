@@ -6,9 +6,9 @@ use std::process::Command;
 use std::sync::mpsc::{Receiver, channel};
 use std::time::Duration;
 
-use git::{GitClient, GitEvent};
-use ide::workbench::Workbench;
-use sem::{Actor, Outcome, Receipt, Request, RequestId, Snapshot, Stage, Value};
+use gitdrv::{GitClient, GitEvent};
+use idestudio::capability::Workbench;
+use accord::{Actor, Outcome, Receipt, Request, RequestId, Snapshot, Stage, Value};
 use tempfile::TempDir;
 
 /// How long a git answer may take before a test fails.
@@ -61,7 +61,7 @@ impl Rig {
     #[allow(dead_code)]
     pub fn review() -> Rig {
         let dir = TempDir::new().expect("temp dir");
-        ide::lab_repo::review_in(dir.path()).expect("the review's repository");
+        idestudio::repository::eval_repo::review_in(dir.path()).expect("the review's repository");
         Rig::connect(dir)
     }
 
@@ -200,7 +200,7 @@ impl Rig {
 
     /// The toasts on screen, as projected: their messages.
     pub fn notices(&self) -> Vec<String> {
-        let notices = sem::SemId::parse("notices").expect("id");
+        let notices = accord::SemId::parse("notices").expect("id");
         self.look()
             .children(&notices)
             .map(|n| n.label.clone())

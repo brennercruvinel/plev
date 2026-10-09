@@ -2,11 +2,11 @@
 //! calls the model and shows its text; nothing here reads the session on
 //! its own or works an answer out again.
 
-use comps::content::{CodeLine, LineKind};
-use engine::text::{TextMeasurer, TextStyle};
-use inspect::{Control, Inspector, Why, text};
-use rec::ReadError;
-use sem::{Millis, SemId};
+use engine::widgets::content::{CodeLine, LineKind};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use replay::{Control, Inspector, Why, prose};
+use record::ReadError;
+use accord::{Millis, SemId};
 
 /// one control at one instant, and what came after it.
 #[derive(Clone, Debug, PartialEq)]

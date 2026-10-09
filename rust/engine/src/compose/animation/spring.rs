@@ -74,7 +74,7 @@ impl<T: SpringInterpolate> Spring<T> {
     }
 
     /// Configure spring from theme MotionPhysics.
-    pub fn with_motion(self, motion: &crate::theme::MotionPhysics) -> Self {
+    pub fn with_motion(self, motion: &crate::styling::theme::MotionPhysics) -> Self {
         let (s, d, m) = motion.to_spring_config();
         self.with_config(s, d, m)
     }

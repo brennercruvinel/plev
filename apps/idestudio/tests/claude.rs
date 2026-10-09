@@ -20,10 +20,10 @@ mod support;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use claude_model::ClaudeCli;
-use git::GitEvent;
-use ide::lab_repo::{FIRST, REVIEWED, UNCOMMITTED};
-use sem::{Actor, Receipt, RequestId, SemId, Stage, Value};
+use claude::ClaudeCli;
+use gitdrv::GitEvent;
+use idestudio::repository::eval_repo::{FIRST, REVIEWED, UNCOMMITTED};
+use accord::{Actor, Receipt, RequestId, SemId, Stage, Value};
 use support::{Rig, completed};
 
 /// A turn of the loop, as the window's wake takes it.

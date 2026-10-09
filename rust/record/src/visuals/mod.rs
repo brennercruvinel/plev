@@ -30,11 +30,11 @@ use std::collections::{HashMap, VecDeque};
 use std::mem::size_of;
 use std::sync::Arc;
 
-use engine::compositor::{SceneNode, TextNodeKey};
-use engine::gpu::ImageHandle;
-use engine::path::TessellatedPath;
-use monster::{AssetBank, DiscoverConfig, LoweredAsset, Node, RaiseError, Unsupported};
-use sem::Millis;
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::TessellatedPath;
+use motion::{AssetBank, DiscoverConfig, LoweredAsset, Node, RaiseError, Unsupported};
+use accord::Millis;
 
 use crate::bound::{self, Bound, Step, Steps, Taken};
 use crate::error::FrameError;
@@ -67,14 +67,14 @@ pub(crate) fn asset_weight(asset: &LoweredAsset) -> usize {
             LoweredAsset::Image(_) => 0,
             LoweredAsset::Path(path) => {
                 size_of::<TessellatedPath>()
-                    + path.vertices.len() * size_of::<engine::compositor::QuadVertex>()
+                    + path.vertices.len() * size_of::<engine::drawing::compositor::QuadVertex>()
                     + path.indices.len() * size_of::<u32>()
             }
         }
 }
 
 fn node_weight(node: &Node) -> usize {
-    size_of::<Node>() + node.props.len() * size_of::<(monster::Prop, monster::Value)>()
+    size_of::<Node>() + node.props.len() * size_of::<(motion::Prop, motion::Value)>()
 }
 
 /// one closed chunk: a monster v0 file of the frames it took.
@@ -243,10 +243,10 @@ impl Visual {
         &mut self,
         t: Millis,
         scene: impl Iterator<Item = &'a SceneNode>,
-    ) -> Result<monster::Raised, RaiseError> {
+    ) -> Result<motion::Raised, RaiseError> {
         let open = self.open.get_or_insert_with(|| Open::new(t));
         let before = open.bank.len();
-        let raised = monster::raise_scene(scene, &mut open.bank)?;
+        let raised = motion::raise_scene(scene, &mut open.bank)?;
         let added: usize = open.bank.assets()[before..].iter().map(asset_weight).sum();
         open.bytes += added;
         Ok(raised)
@@ -459,9 +459,9 @@ fn encode(frames: Vec<(Millis, Vec<Node>)>) -> Vec<Piece> {
         .into_iter()
         .map(|(t, nodes)| (seconds(rel(t)), nodes))
         .collect();
-    let encoded = monster::discover(&samples, &config())
+    let encoded = motion::discover(&samples, &config())
         .ok()
-        .and_then(|timeline| monster::encode(&timeline, &[], &[]).ok());
+        .and_then(|timeline| motion::encode(&timeline, &[], &[]).ok());
     match encoded {
         Some(bytes) => vec![(start, times, bytes)],
         None if samples.len() > 1 => {

@@ -7,9 +7,9 @@ mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
 
-    use crate::signal::api::*;
-    use crate::signal::execution::execute_effect;
-    use crate::signal::runtime::{
+    use crate::runtime::signal::api::*;
+    use crate::runtime::signal::execution::execute_effect;
+    use crate::runtime::signal::runtime::{
         FxIndexSet, NodeKind, NodeState, RUNTIME, ReactiveNode, ReactiveRuntime,
     };
 
@@ -23,7 +23,7 @@ mod tests {
         let (read, write) = create_signal(0);
         let count = Rc::new(Cell::new(0));
         let c = count.clone();
-        let effect_id = crate::signal::runtime::with_runtime(|rt| {
+        let effect_id = crate::runtime::signal::runtime::with_runtime(|rt| {
             rt.nodes.insert(ReactiveNode {
                 value: None,
                 kind: NodeKind::Effect {

@@ -4,9 +4,9 @@
 //! svgs under refs/ (gitignored study material, so the test skips when it
 //! is absent rather than failing a clean checkout).
 
-use crate::{SvgError, convert};
-use monster::asset_path::unpack;
-use monster::{decode, stage_size};
+use crate::formats::svg::{SvgError, convert};
+use motion::encoding::asset_path::unpack;
+use motion::{decode, stage_size};
 
 const RECT: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="80">
   <rect x="10" y="10" width="80" height="60" fill="#ff8800"/>

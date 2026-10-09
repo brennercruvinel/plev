@@ -2,8 +2,8 @@
 //! the actors, every request with how it ended, and every refusal with its
 //! causal chain.
 
-use rec::ReadError;
-use sem::{ActionName, Actor, Millis, RequestId, SemId, Stage};
+use record::ReadError;
+use accord::{ActionName, Actor, Millis, RequestId, SemId, Stage};
 
 use crate::describe;
 use crate::index::{Inspector, Stamp};

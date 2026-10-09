@@ -5,17 +5,17 @@
 
 use std::path::PathBuf;
 
-use comps::Rect;
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::Rect;
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 use indexmap::IndexMap;
-use sem::{
+use accord::{
     Constraints, Dispatcher, Execution, Node, Operable, Outcome, ParamSpec, Receipt, Request,
     RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, StateKey, StateRef, Value,
     ValueKind,
 };
-use surface::{Dispatch, Surface};
-use uir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, parse, verify};
+use screen::{Dispatch, Surface};
+use plevir::{Capabilities, GenerationPolicy, Ir, VerifiedIr, parse, verify};
 
 pub const COMMIT_FORM: &str = "ide-commit-form.ir.json";
 pub const REVIEW: &str = "ide-review-commit.ir.json";

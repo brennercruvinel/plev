@@ -5,8 +5,8 @@
 mod stages;
 
 use super::*;
-use crate::animation::AnimationTick;
-use crate::compositor::{Compositor, LayerId, RenderStats, SceneNode};
+use crate::compose::animation::AnimationTick;
+use crate::drawing::compositor::{Compositor, LayerId, RenderStats, SceneNode};
 
 fn tick(dt: f32) -> AnimationTick {
     AnimationTick {

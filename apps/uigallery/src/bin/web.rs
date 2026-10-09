@@ -6,7 +6,7 @@
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
-    showcase::run_web();
+    uigallery::run_web();
 }
 
 #[cfg(not(target_arch = "wasm32"))]

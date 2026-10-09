@@ -3,7 +3,7 @@
 //! the 3x3 cells around a point. bins keep insertion order, so the traversal
 //! is deterministic (a prerequisite for reproducible runs).
 
-use crate::sim::particle::Particle;
+use crate::simulation::particle::Particle;
 
 /// a grid of cells, each holding the indices of the particles inside it.
 pub struct Grid {

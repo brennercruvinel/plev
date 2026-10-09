@@ -3,15 +3,15 @@
 //! timelines (values on the twips/rgba8/bezier-u8 quantization grid, so
 //! the wire is lossless), plus byte determinism of the encoder.
 
-use crate::container::{Asset, AssetKind, Desc};
-use crate::easing::{Easing, PRESETS};
-use crate::ir::{
+use crate::encoding::container::{Asset, AssetKind, Desc};
+use crate::timeline::easing::{Easing, PRESETS};
+use crate::timeline::{
     Keyframe, Node, NodeKind, PlaceNode, Prop, Props, RemoveNode, ReplaceNode, Segment, Timeline,
     Track, Value,
 };
-use crate::quant;
-use crate::read::decode;
-use crate::write::encode;
+use crate::encoding::quantize;
+use crate::encoding::read::decode;
+use crate::encoding::write::encode;
 use proptest::collection::vec as pvec;
 use proptest::prelude::*;
 

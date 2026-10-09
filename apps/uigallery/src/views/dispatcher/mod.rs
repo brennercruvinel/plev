@@ -2,12 +2,12 @@
 //! event, its visible-only tick and its drawing. One match per verb over
 //! `pages::Pane`, so the rest of the view never names a pane's field.
 
-use comps::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::input::FileDrop;
-use engine::platform::capture::Capture;
-use engine::theme::Theme;
-use sem::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
+use engine::widgets::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::control::input::FileDrop;
+use engine::runtime::platform::capture::Capture;
+use engine::styling::theme::Theme;
+use accord::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
 
 use super::{Layers, Pane, ShowcaseView, panel};
 use component::After;
@@ -535,7 +535,7 @@ mod agent;
 
 /// The component pages whose widgets project in comps, projected and run
 /// through the gallery's dispatcher (task-75 phase 2b).
-pub(in crate::view) mod component;
+pub(in crate::views) mod component;
 
 /// The active page in a window of its own as well (task-76 item 2): the
 /// view's side of the second window.
@@ -544,7 +544,7 @@ pub use detached::Detached;
 
 /// The keyboard on the component pages (task-75 phase 2c): Tab over the
 /// projection, the arrow keys by widget, Enter and Space press.
-pub(in crate::view) mod keyboard;
+pub(in crate::views) mod keyboard;
 
 /// The view's own layer over the page, projected and run through the
 /// gallery's dispatcher (task-75 phase 2a): the toasts, the modal, the

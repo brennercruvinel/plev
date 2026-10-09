@@ -5,14 +5,14 @@
 
 use std::collections::BTreeSet;
 
-use sem::{StateRef, ValueKind};
+use accord::{StateRef, ValueKind};
 
 use super::{Ctx, Walk};
-use crate::caps::ActionCap;
+use crate::capabilities::ActionCap;
 use crate::error::{Ptr, Rule};
 use crate::ir::{CapabilityRef, IrNode, Repeat};
 use crate::item::{self, Pattern};
-use crate::vocab::{Component, spec_of};
+use crate::vocabulary::{Component, spec_of};
 
 /// the names a list of state props or events offers, for a reason.
 fn offered<'a>(names: impl Iterator<Item = &'a str>) -> String {

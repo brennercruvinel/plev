@@ -13,9 +13,9 @@ mod scrolling;
 mod wake;
 
 use super::*;
-use crate::views::unassigned_view::{FileEntry, FileStatus};
-use comps::overlay::OverlayKind;
-use engine::compositor::Compositor;
+use crate::interfaces::panels::unassigned::{FileEntry, FileStatus};
+use engine::widgets::overlay::OverlayKind;
+use engine::drawing::compositor::Compositor;
 
 fn sample_files() -> Vec<FileEntry> {
     let entry = |path: &str, status, staged| FileEntry {
@@ -65,8 +65,8 @@ fn many_files(n: usize) -> Vec<FileEntry> {
         .collect()
 }
 
-fn sample_stacks(commits: usize) -> Vec<crate::views::multi_stack_view::Stack> {
-    use crate::views::multi_stack_view::{CommitEntry, Stack};
+fn sample_stacks(commits: usize) -> Vec<crate::interfaces::panels::stacks::Stack> {
+    use crate::interfaces::panels::stacks::{CommitEntry, Stack};
     vec![Stack {
         branch_name: "main".into(),
         is_active: true,
@@ -82,8 +82,8 @@ fn sample_stacks(commits: usize) -> Vec<crate::views::multi_stack_view::Stack> {
     }]
 }
 
-fn sample_diff(lines: usize) -> Vec<crate::views::diff_view::DiffLine> {
-    use crate::views::diff_view::{DiffLine, DiffLineKind};
+fn sample_diff(lines: usize) -> Vec<crate::interfaces::panels::diff::DiffLine> {
+    use crate::interfaces::panels::diff::{DiffLine, DiffLineKind};
     (0..lines)
         .map(|i| DiffLine {
             kind: DiffLineKind::Context,

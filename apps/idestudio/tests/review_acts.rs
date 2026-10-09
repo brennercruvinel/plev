@@ -23,14 +23,14 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use git::GitEvent;
-use sem::{
+use engine::drawing::compositor::Compositor;
+use gitdrv::GitEvent;
+use accord::{
     ActionName, Actor, Change, Receipt, ReceiptSink, Rejection, RequestId, SemId, Stage, StateRef,
     Value,
 };
 use support::{Rig, completed};
-use wire::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("an id")
@@ -174,7 +174,7 @@ fn shell<T: Send + 'static>(
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {
-        app: ide::agent::APP.into(),
+        app: idestudio::capability::agent::APP.into(),
         dir: dir.path().to_owned(),
         ring: 16,
     };
@@ -190,13 +190,13 @@ fn shell<T: Send + 'static>(
     while !agent.is_finished() {
         assert!(Instant::now() < deadline, "the agent did not finish");
         if woke.recv_timeout(Duration::from_millis(2)).is_ok()
-            && ide::agent::serve(&mut port, &mut rig.bench, &shown)
+            && idestudio::capability::agent::serve(&mut port, &mut rig.bench, &shown)
         {
             shown = frame(rig);
         }
         while let Some(event) = rig.event(Duration::ZERO) {
             rig.bench.apply(event);
-            ide::agent::serve(&mut port, &mut rig.bench, &shown);
+            idestudio::capability::agent::serve(&mut port, &mut rig.bench, &shown);
             shown = frame(rig);
         }
         while let Ok((control, done)) = poked.try_recv() {

@@ -10,10 +10,10 @@
 #[allow(dead_code)]
 mod support;
 
-use sem::{ActionName, Actor, Request, Snapshot, SnapshotBuilder};
+use accord::{ActionName, Actor, Request, Snapshot, SnapshotBuilder};
 use support::{REVIEW_SILENCES, SILENCES, copy, id, page, snapshot, verified_local};
-use surface::{SurfaceError, SurfaceHost};
-use uir::Op;
+use screen::{SurfaceError, SurfaceHost};
+use plevir::Op;
 
 const COMPOSITE: &str = "preview_segment_then_apply_cut";
 

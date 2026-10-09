@@ -13,14 +13,14 @@
 //! draws and hit-tests with, and [`Button::project`] declares the button
 //! in a semantic projection.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ButtonMetrics, ButtonRecipe, Intent, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ButtonMetrics, ButtonRecipe, Intent, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::press::{Press, paint_surface};
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::icons;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::icons;
 
 /// Which recipe of `theme.button` the surface reads.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

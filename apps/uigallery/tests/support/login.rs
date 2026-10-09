@@ -7,8 +7,8 @@
 //! bound to the id the projection gives it; the projection marks the
 //! password and the pin secret, as a page would.
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use sem::{Constraints, Role, Snapshot, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use accord::{Constraints, Role, Snapshot, SnapshotBuilder};
 
 /// What the user field shows: it travels.
 pub const USER: &str = "brenner-at-the-desk";
@@ -125,8 +125,8 @@ pub fn form(c: &mut Compositor, secret: &str) -> Snapshot {
         .parent("login")
         .state("text", USER)
         .action("set_value")
-        .param(sem::ParamSpec {
-            kind: sem::ValueKind::Text,
+        .param(accord::ParamSpec {
+            kind: accord::ValueKind::Text,
             constrained: false,
         });
     b.node("login.password", Role::TextInput, "password")
@@ -134,8 +134,8 @@ pub fn form(c: &mut Compositor, secret: &str) -> Snapshot {
         .state("text", secret)
         .constraints(secret_field)
         .action("set_value")
-        .param(sem::ParamSpec {
-            kind: sem::ValueKind::Text,
+        .param(accord::ParamSpec {
+            kind: accord::ValueKind::Text,
             constrained: false,
         });
     b.node("login.pin", Role::Status, "pin")

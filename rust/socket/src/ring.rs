@@ -6,7 +6,7 @@
 
 use std::collections::VecDeque;
 
-use sem::{Revision, Snapshot};
+use accord::{Revision, Snapshot};
 
 /// how many served revisions a port keeps unless told otherwise.
 pub const DEFAULT_RING: usize = 16;

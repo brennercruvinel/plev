@@ -5,7 +5,7 @@
 //! surface shown did not come: the intent asks for none, nothing on the
 //! surface takes it, or an operation was refused.
 
-use uir::{IrError, TransformError};
+use plevir::{IrError, TransformError};
 
 use crate::words::Part;
 

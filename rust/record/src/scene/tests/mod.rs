@@ -6,9 +6,9 @@
 #[cfg(test)]
 mod mask;
 
-use engine::compositor::{Compositor, LayerEffect, LayerId, QuadVertex, SceneNode, TextNodeKey};
-use engine::gpu::load_image_rgba;
-use engine::path::TessellatedPath;
+use engine::drawing::compositor::{Compositor, LayerEffect, LayerId, QuadVertex, SceneNode, TextNodeKey};
+use engine::drawing::gpu::load_image_rgba;
+use engine::drawing::path::TessellatedPath;
 
 use super::*;
 
@@ -465,7 +465,7 @@ fn a_cut_or_broken_body_is_an_error_never_a_panic() {
 /// loads nothing.
 #[test]
 fn a_stream_travels_without_its_pixels() {
-    use engine::gpu::{replace_image_rgba, stream_image_rgba};
+    use engine::drawing::gpu::{replace_image_rgba, stream_image_rgba};
     let slot = stream_image_rgba(64, 32).expect("a slot");
     let mut shown = slot;
     let mut sender = Sender::new();

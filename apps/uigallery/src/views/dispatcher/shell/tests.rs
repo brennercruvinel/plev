@@ -4,12 +4,12 @@
 //! pick refused as a button's would be, the gallery projection beside
 //! the page's, and a menu click running the page's capability.
 
-use engine::platform::menu::Clicked;
-use sem::{Actor, Rejection, Request, RequestId, Role, SemId, Stage, Value};
+use engine::runtime::platform::menu::Clicked;
+use accord::{Actor, Rejection, Request, RequestId, Role, SemId, Stage, Value};
 
 use super::PERSON_ONLY;
-use crate::view::foundations::theme::THEMES;
-use crate::view::{PAGES, ShowcaseView};
+use crate::views::foundations::theme::THEMES;
+use crate::views::{PAGES, ShowcaseView};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("a valid id")
@@ -22,7 +22,7 @@ fn view(page: &str) -> ShowcaseView {
     view
 }
 
-fn receipt(view: &ShowcaseView, n: u64) -> sem::Receipt {
+fn receipt(view: &ShowcaseView, n: u64) -> accord::Receipt {
     view.panes
         .todo
         .receipt(RequestId::parse(&n.to_string()).unwrap())
@@ -82,16 +82,16 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
     assert!(!page.focusable, "nothing on screen takes the focus for it");
     let select = &page.actions[0];
     assert_eq!(select.name.as_str(), "select");
-    assert_eq!(select.param.map(|p| p.kind), Some(sem::ValueKind::Text));
+    assert_eq!(select.param.map(|p| p.kind), Some(accord::ValueKind::Text));
     assert_eq!(select.reads, ["shell.page:selected".parse().unwrap()]);
-    assert_eq!(select.policy, sem::Policy::default(), "anyone picks a page");
+    assert_eq!(select.policy, accord::Policy::default(), "anyone picks a page");
 
     let theme = shell.get(&sid("shell.theme")).unwrap();
     assert_eq!(theme.role, Role::Select);
     assert_eq!(theme.state["selected"], Value::Text("core".into()));
     let names: Vec<String> = THEMES.iter().map(|t| (*t).to_owned()).collect();
     assert_eq!(theme.constraints.options.as_deref(), Some(names.as_slice()));
-    assert_eq!(theme.actions[0].policy, sem::Policy::default());
+    assert_eq!(theme.actions[0].policy, accord::Policy::default());
 
     let detach = shell.get(&sid("shell.detach")).unwrap();
     assert_eq!(detach.role, Role::Toggle);
@@ -221,7 +221,7 @@ fn the_keys_ask_through_the_dispatcher_and_leave_receipts() {
 
 #[test]
 fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
-    use comps::prelude::WidgetEvent;
+    use engine::widgets::prelude::WidgetEvent;
     let mut view = view("Theme");
     let content = view.page_rect();
     // a point on a card that is not the current theme, found by asking the
@@ -350,7 +350,7 @@ fn a_stale_theme_pick_is_refused_as_a_button_would_be() {
     assert_eq!(changes.len(), 1);
     assert!(matches!(
         &changes[0],
-        sem::Change::StateChanged { at, before: Some(Value::Text(b)), after: Some(Value::Text(a)), .. }
+        accord::Change::StateChanged { at, before: Some(Value::Text(b)), after: Some(Value::Text(a)), .. }
             if *at == "shell.theme:selected".parse().unwrap() && b == "core" && a == "hoff"
     ));
     assert_eq!(view.theme_name, "hoff", "nothing ran");
@@ -418,8 +418,8 @@ fn print_settled(view: &mut ShowcaseView) -> bool {
 fn the_print_is_a_persons_and_needs_a_destination() {
     use std::sync::{Arc, Mutex};
 
-    use engine::platform::menu::locked;
-    use engine::platform::print::{FakePrinter, NoPrinter};
+    use engine::runtime::platform::menu::locked;
+    use engine::runtime::platform::print::{FakePrinter, NoPrinter};
 
     use super::ShellTarget;
 

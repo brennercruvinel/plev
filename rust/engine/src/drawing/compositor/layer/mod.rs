@@ -4,14 +4,14 @@ mod texture;
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
-use crate::compositor::clip::{ClipRect, DrawRange};
-use crate::compositor::scene::SceneNode;
-use crate::compositor::sequence::{DrawCommand, DrawKind};
-use crate::compositor::vertex::{
+use crate::drawing::compositor::clip::{ClipRect, DrawRange};
+use crate::drawing::compositor::scene::SceneNode;
+use crate::drawing::compositor::sequence::{DrawCommand, DrawKind};
+use crate::drawing::compositor::vertex::{
     BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex,
 };
-use crate::gpu::vec::GpuVec;
-use crate::perf::stages::{self, Stage};
+use crate::drawing::gpu::vec::GpuVec;
+use crate::runtime::perf::stages::{self, Stage};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct LayerId(pub u32);
@@ -83,7 +83,7 @@ pub struct Layer {
     pub(crate) backdrop_vb: Option<GpuVec>,
     pub(crate) backdrop_ib: Option<GpuVec>,
     pub(crate) backdrop_index_count: u32,
-    pub(crate) text_vertices: Vec<crate::text::TextVertex>,
+    pub(crate) text_vertices: Vec<crate::drawing::text::TextVertex>,
     pub(crate) text_indices: Vec<u32>,
     pub(crate) text_ranges: Vec<DrawRange>,
     pub(crate) text_vb: Option<GpuVec>,
@@ -328,7 +328,7 @@ impl Layer {
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        vertices: Vec<crate::text::TextVertex>,
+        vertices: Vec<crate::drawing::text::TextVertex>,
         indices: Vec<u32>,
     ) {
         // Single unclipped range covering everything (callers that resolve
@@ -349,7 +349,7 @@ impl Layer {
         &mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
-        vertices: Vec<crate::text::TextVertex>,
+        vertices: Vec<crate::drawing::text::TextVertex>,
         indices: Vec<u32>,
         ranges: Vec<DrawRange>,
     ) {

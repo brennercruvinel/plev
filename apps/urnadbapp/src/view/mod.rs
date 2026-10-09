@@ -19,9 +19,9 @@ mod overview;
 mod search;
 mod stats;
 
-use comps::prelude::{Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Rect, ToastManager, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::styling::theme::Theme;
 
 /// Non-character editing keys bridged from winit by `keys.rs` (the view
 /// stays winit-free). Enter submits; Tab is reserved for focus traversal.
@@ -88,7 +88,7 @@ pub enum Action {
     RunSearch {
         query: String,
         is_vector: bool,
-        mode: crate::model::types::SearchMode,
+        mode: crate::backend::workers::messages::SearchMode,
         k: i32,
     },
     /// Copy `text` to the clipboard and toast about it.
@@ -121,9 +121,9 @@ pub enum Action {
 pub struct ChunkLookup<'a> {
     pub ids: &'a [String],
     pub index: Option<&'a std::collections::HashMap<String, usize>>,
-    pub chunks: Option<&'a crate::model::types::ChunksData>,
+    pub chunks: Option<&'a crate::backend::workers::messages::ChunksData>,
     pub frames:
-        &'a std::collections::HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+        &'a std::collections::HashMap<usize, Result<engine::drawing::gpu::image::ImageHandle, String>>,
 }
 
 impl ChunkLookup<'_> {
@@ -141,7 +141,7 @@ impl ChunkLookup<'_> {
         self.text(ordinal).and_then(|t| t.lines().next())
     }
 
-    pub fn meta(&self, ordinal: usize) -> Option<&crate::model::types::ChunkMeta> {
+    pub fn meta(&self, ordinal: usize) -> Option<&crate::backend::workers::messages::ChunkMeta> {
         self.chunks?.metas.get(ordinal)
     }
 
@@ -150,7 +150,7 @@ impl ChunkLookup<'_> {
     pub fn frame(
         &self,
         ordinal: usize,
-    ) -> Option<&Result<engine::gpu::image::ImageHandle, String>> {
+    ) -> Option<&Result<engine::drawing::gpu::image::ImageHandle, String>> {
         self.frames.get(&ordinal)
     }
 
@@ -226,8 +226,8 @@ impl UrnauiView {
     /// open), and a cancel clears the hover. Always a frame. The browser
     /// never sends one (no drag on the canvas); the web build compiles the
     /// same route.
-    pub fn handle_file_drop(&mut self, drop: &engine::input::FileDrop) -> bool {
-        use engine::input::FileDrop;
+    pub fn handle_file_drop(&mut self, drop: &engine::control::input::FileDrop) -> bool {
+        use engine::control::input::FileDrop;
         match drop {
             FileDrop::Hovered { .. } => self.explorer.set_file_hover(true),
             FileDrop::Cancelled => self.explorer.set_file_hover(false),
@@ -237,7 +237,7 @@ impl UrnauiView {
                     self.explorer.open_database(path.clone());
                     self.toasts.push(
                         "opening dropped file…",
-                        engine::theme::Intent::Informational,
+                        engine::styling::theme::Intent::Informational,
                         &self.theme,
                     );
                 }
@@ -267,7 +267,7 @@ impl UrnauiView {
     /// Global shortcut dispatch (Cmd/Ctrl+O, Cmd/Ctrl+1..=6): the shell
     /// turns winit keys into engine `Keystroke`s; the view never sees
     /// winit types.
-    pub fn handle_keystroke(&mut self, keystroke: &engine::actions::Keystroke) -> bool {
+    pub fn handle_keystroke(&mut self, keystroke: &engine::control::keymap::Keystroke) -> bool {
         self.explorer.handle_keystroke(keystroke)
     }
 
@@ -407,7 +407,7 @@ pub(crate) fn fmt_bytes(n: u64) -> String {
 pub(crate) mod fixtures {
     use std::path::PathBuf;
 
-    use crate::model::types::{
+    use crate::backend::workers::messages::{
         ChunkMeta, ChunksData, InspectView, ManifestView, OpenedDbView, SectionInfo,
     };
 
@@ -476,7 +476,7 @@ pub(crate) mod fixtures {
     /// The fake db as a media corpus: one inlined av1 blob, a vision
     /// space, and every chunk mapped to one frame of the blob.
     pub fn fake_media_db() -> Box<OpenedDbView> {
-        use crate::model::types::{BlobInfo, SpaceInfo};
+        use crate::backend::workers::messages::{BlobInfo, SpaceInfo};
         let mut db = fake_db();
         db.inspect.blobs = vec![BlobInfo {
             content_hash: format!("sha256:{}", "3".repeat(64)),
@@ -493,7 +493,7 @@ pub(crate) mod fixtures {
             n_vectors: 3,
             band_bytes: 1536,
         }];
-        db.inspect.manifest.capabilities_ext = Some(crate::model::types::CapabilitiesExtView {
+        db.inspect.manifest.capabilities_ext = Some(crate::backend::workers::messages::CapabilitiesExtView {
             supports_multimodal: Some(true),
             graph_present: None,
             blobs_present: Some(true),
@@ -506,7 +506,7 @@ pub(crate) mod fixtures {
 
     /// Chunks of [`fake_media_db`]: each text maps to frame `i` of blob 0.
     pub fn fake_media_chunks() -> ChunksData {
-        use crate::model::types::BlobSpan;
+        use crate::backend::workers::messages::BlobSpan;
         let mut data = fake_chunks();
         for (i, m) in data.metas.iter_mut().enumerate() {
             m.source_uri = "media://cards-av1.mp4".into();
@@ -548,23 +548,23 @@ pub(crate) mod fixtures {
     }
 
     /// A small laid-out graph over the fake db's 3 chunks (0→1→2 chain).
-    pub fn fake_graph_scene() -> engine::graph::GraphScene {
-        let spec = engine::graph::GraphSpec {
+    pub fn fake_graph_scene() -> engine::widgets::graph::geometry::GraphScene {
+        let spec = engine::widgets::graph::geometry::GraphSpec {
             n_nodes: 3,
             edges: vec![
-                engine::graph::GraphEdge {
+                engine::widgets::graph::geometry::GraphEdge {
                     from: 0,
                     to: 1,
                     kind: 0,
                 },
-                engine::graph::GraphEdge {
+                engine::widgets::graph::geometry::GraphEdge {
                     from: 1,
                     to: 2,
                     kind: 0,
                 },
             ],
         };
-        engine::graph::compute_layout(&engine::graph::GraphData::from_spec(&spec), 1000.0, 1000.0)
+        engine::widgets::graph::geometry::compute_layout(&engine::widgets::graph::geometry::GraphData::from_spec(&spec), 1000.0, 1000.0)
     }
 }
 
@@ -576,7 +576,7 @@ mod tests {
     fn starts_on_the_open_screen_with_the_hoff_theme() {
         let view = UrnauiView::new(1200.0, 800.0);
         // Page frame is the HOFF #444444.
-        assert_eq!(view.theme.colors.bg.0, engine::theme::hoff::PAGE_BG.0);
+        assert_eq!(view.theme.colors.bg.0, engine::styling::theme::hoff::PAGE_BG.0);
         #[cfg(not(target_arch = "wasm32"))]
         assert_eq!(view.explorer.screen(), Screen::Open);
     }
@@ -586,7 +586,7 @@ mod tests {
     /// the file with a toast.
     #[test]
     fn a_file_drag_shows_the_hover_and_a_drop_opens_the_file() {
-        use engine::input::FileDrop;
+        use engine::control::input::FileDrop;
         use std::path::PathBuf;
 
         let mut view = UrnauiView::new(1200.0, 800.0);
@@ -635,7 +635,7 @@ mod tests {
         view.wake(5.0);
         view.toasts.push(
             "opening dropped file",
-            engine::theme::Intent::Informational,
+            engine::styling::theme::Intent::Informational,
             &theme,
         );
         let mut drawn = vec![(0, view.wake(0.004))];

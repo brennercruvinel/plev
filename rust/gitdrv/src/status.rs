@@ -7,7 +7,7 @@
 //! NUL-separated records: no quoting issues with spaces or unicode paths.
 
 use crate::error::{GitError, Result};
-use crate::types::{FileStatus, StatusKind};
+use crate::domain::{FileStatus, StatusKind};
 
 /// Parses NUL-separated `status --porcelain=v2 -z` output.
 ///

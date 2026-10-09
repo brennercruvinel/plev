@@ -3,8 +3,8 @@
 //! due. none of them has anything to send: the view holds the session and
 //! nothing that could act on it.
 
-use comps::{Rect, WidgetEvent};
-use sem::Millis;
+use engine::widgets::{Rect, WidgetEvent};
+use accord::Millis;
 
 use crate::view::{InspectorView, Key, Press};
 

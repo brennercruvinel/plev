@@ -1,10 +1,10 @@
 //! Scene-building helpers: header, info card, footer, foreground card.
 
-use engine::compositor::{LayerId, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{LayerId, SceneNode, TextNodeKey};
 
 use crate::palette::*;
 
-pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f32) {
+pub fn build_header(comp: &mut engine::drawing::compositor::Compositor, w: f32, margin: f32) {
     let header_h = 70.0;
     comp.push_to_layer(
         LayerId::DEFAULT,
@@ -54,7 +54,7 @@ pub fn build_header(comp: &mut engine::compositor::Compositor, w: f32, margin: f
     );
 }
 
-pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margin: f32) {
+pub fn build_info_card(comp: &mut engine::drawing::compositor::Compositor, _w: f32, margin: f32) {
     let header_h = 70.0;
     let card_x = margin;
     let card_y = header_h + 20.0;
@@ -173,7 +173,7 @@ pub fn build_info_card(comp: &mut engine::compositor::Compositor, _w: f32, margi
     );
 }
 
-pub fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32, margin: f32) {
+pub fn build_footer(comp: &mut engine::drawing::compositor::Compositor, w: f32, h: f32, margin: f32) {
     let footer_h = 32.0;
     let footer_y = h - footer_h;
     comp.push_to_layer(
@@ -212,8 +212,8 @@ pub fn build_footer(comp: &mut engine::compositor::Compositor, w: f32, h: f32, m
 }
 
 pub fn build_foreground(
-    comp: &mut engine::compositor::Compositor,
-    fg_layer: engine::compositor::LayerId,
+    comp: &mut engine::drawing::compositor::Compositor,
+    fg_layer: engine::drawing::compositor::LayerId,
     frame_count: u64,
     w: f32,
     h: f32,

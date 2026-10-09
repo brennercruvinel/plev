@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use sem::{
+use accord::{
     ActionName, Actors, Confirm, Constraints, ParamSpec, Policy, Role, SemError, SemErrors, SemId,
     Semantics, Snapshot, SnapshotBuilder, StateRef, Value, ValueKind,
 };

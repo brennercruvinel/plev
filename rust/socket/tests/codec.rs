@@ -5,11 +5,11 @@
 use std::collections::BTreeSet;
 
 use proptest::prelude::*;
-use sem::{
+use accord::{
     ActionName, Actor, Change, Observation, Outcome, Rejection, Request, RequestId, Revision, Role,
     SemId, SnapshotBuilder, Stage, StateKey, StateRef, Value,
 };
-use wire::{
+use socket::{
     Act, Ask, Bound, ClientMsg, DeltaReply, Observe, ProtoError, Refusal, Reply, ServerMsg,
     SnapshotReply, StageReply, decode_client, decode_server, encode_client, encode_server,
 };
@@ -30,7 +30,7 @@ fn request_id(n: &str) -> RequestId {
     RequestId::parse(n).unwrap()
 }
 
-fn snapshot() -> sem::Snapshot {
+fn snapshot() -> accord::Snapshot {
     let mut b = SnapshotBuilder::new();
     b.node("todo", Role::Region, "todo");
     b.node("todo.input", Role::TextInput, "new todo")
@@ -88,7 +88,7 @@ fn every_ask() -> Vec<Ask> {
         Ask::Decline {
             request: request_id("7"),
         },
-        Ask::Scene(wire::SceneAsk {
+        Ask::Scene(socket::SceneAsk {
             window: "main".into(),
         }),
     ]
@@ -183,7 +183,7 @@ fn every_reply() -> Vec<Reply> {
             revision: seen.revision(),
         }),
         Reply::Error(ProtoError::NotObserved {
-            reads: vec![sem::StateRef::parse("todo.item[1]:completed").unwrap()],
+            reads: vec![accord::StateRef::parse("todo.item[1]:completed").unwrap()],
         }),
         Reply::Error(ProtoError::NotEnabled {
             reason: "why".into(),
@@ -191,10 +191,10 @@ fn every_reply() -> Vec<Reply> {
         Reply::Error(ProtoError::SceneNotShared {
             reason: "why".into(),
         }),
-        Reply::Scene(wire::SceneReply {
+        Reply::Scene(socket::SceneReply {
             seq: 1,
             head: Some(vec![0, 1, 2, 255]),
-            layers: vec![wire::SceneLayer {
+            layers: vec![socket::SceneLayer {
                 key: 3,
                 hash: 0x3ba6_94e7_d394_1ec0,
                 body: Some(vec![9; 7]),
@@ -205,7 +205,7 @@ fn every_reply() -> Vec<Reply> {
                 rect: [1.0, 2.5, 300.0, 40.0],
             }]),
         }),
-        Reply::SceneBlob(wire::BlobReply {
+        Reply::SceneBlob(socket::BlobReply {
             key: 7,
             at: 0,
             total: 2,
@@ -360,8 +360,8 @@ fn the_forms_an_agent_writes_are_pinned() {
         id: Some("9".into()),
         reply: Reply::Error(ProtoError::NotObserved {
             reads: vec![
-                sem::StateRef::parse("changes:staged").unwrap(),
-                sem::StateRef::parse("commit.message:text").unwrap(),
+                accord::StateRef::parse("changes:staged").unwrap(),
+                accord::StateRef::parse("commit.message:text").unwrap(),
             ],
         }),
     };
@@ -570,14 +570,14 @@ fn a_question_for_a_person_is_pinned_and_optional() {
             .with_ask(q)
             .ask_fault()
     };
-    assert_eq!(fault(&"x".repeat(wire::MAX_ASK)), None);
+    assert_eq!(fault(&"x".repeat(socket::MAX_ASK)), None);
     assert_eq!(
-        fault("é".repeat(wire::MAX_ASK).as_str()),
+        fault("é".repeat(socket::MAX_ASK).as_str()),
         None,
         "characters, not bytes"
     );
     for bad in [
-        "x".repeat(wire::MAX_ASK + 1),
+        "x".repeat(socket::MAX_ASK + 1),
         String::new(),
         " \t ".into(),
         "one\ntwo".into(),

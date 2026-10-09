@@ -9,8 +9,8 @@
 //! These need a GPU adapter. Where there is none they skip rather than fail,
 //! so the suite still runs on adapterless CI.
 
-use engine::text::TextStyle;
-use engine::text::probe::{Rendered, Specimen, render};
+use engine::drawing::text::TextStyle;
+use engine::drawing::text::probe::{Rendered, Specimen, render};
 
 const W: u32 = 900;
 const SCALE: f32 = 2.0;
@@ -19,7 +19,7 @@ const BAND_Y: u32 = 0;
 const BAND_H: u32 = 80;
 
 fn scene(extra: &[(String, TextStyle)]) -> Vec<Specimen> {
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let mut out = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
     for (i, (text, style)) in extra.iter().enumerate() {
         out.push(Specimen::new(
@@ -62,7 +62,7 @@ fn a_string_renders_identically_whether_or_not_the_atlas_grew() {
         eprintln!("no GPU adapter; skipping");
         return;
     };
-    let filling = engine::text::probe::atlas_filling_specimens();
+    let filling = engine::drawing::text::probe::atlas_filling_specimens();
     let Some(crowded) = render_scene(&filling) else {
         return;
     };
@@ -85,7 +85,7 @@ fn a_string_renders_identically_whether_or_not_the_atlas_grew() {
 /// not disturb the first one.
 #[test]
 fn repeating_a_string_does_not_change_the_first_copy() {
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let solo = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
     let Some(a) = render(&solo, W, 160, SCALE) else {
         eprintln!("no GPU adapter; skipping");
@@ -117,7 +117,7 @@ fn repeating_a_string_does_not_change_the_first_copy() {
 /// the 2x render of the same text.
 #[test]
 fn raster_scale_does_not_leak_between_renders() {
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
     let Some(first) = render(&s, W, 160, 2.0) else {
         eprintln!("no GPU adapter; skipping");
@@ -140,9 +140,9 @@ fn raster_scale_does_not_leak_between_renders() {
 /// from the start.
 #[test]
 fn a_scale_change_does_not_leave_stale_glyphs_behind() {
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let mut s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
-    for (i, (text, style)) in engine::text::probe::atlas_filling_specimens()
+    for (i, (text, style)) in engine::drawing::text::probe::atlas_filling_specimens()
         .into_iter()
         .enumerate()
     {
@@ -174,7 +174,7 @@ fn a_scale_change_does_not_leave_stale_glyphs_behind() {
 /// `crowded.ink() > alone.ink()` would then just be comparing image areas.
 #[test]
 fn ink_counts_glyph_coverage_not_background() {
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
     let Some(img) = render(&s, W, 200, SCALE) else {
         eprintln!("no GPU adapter; skipping");
@@ -194,7 +194,7 @@ fn ink_counts_glyph_coverage_not_background() {
 /// repack out from under it.
 #[test]
 fn a_static_layer_survives_frames_of_atlas_churn() {
-    use engine::text::probe::{Layer, render_frames};
+    use engine::drawing::text::probe::{Layer, render_frames};
 
     let sidebar_style = TextStyle::new(14.0).with_line_height(19.6).with_weight(500);
     let heading = TextStyle::new(28.0).with_line_height(28.0).with_weight(600);

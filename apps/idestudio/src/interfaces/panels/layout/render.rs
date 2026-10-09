@@ -1,5 +1,5 @@
 use super::WorkspaceView;
-use engine::compositor::{Compositor, SceneNode};
+use engine::drawing::compositor::{Compositor, SceneNode};
 
 impl WorkspaceView {
     /// Full render of the workspace into its frame. The host owns the

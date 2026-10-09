@@ -6,14 +6,14 @@
 
 use std::collections::HashMap;
 
-use engine::compositor::SceneNode;
-use sem::{Millis, Receipt, RequestId, SemId, Stage};
+use engine::drawing::compositor::SceneNode;
+use accord::{Millis, Receipt, RequestId, SemId, Stage};
 
 use crate::bound::{self, Bound};
 use crate::error::ReadError;
 use crate::event::{Event, Kind};
 use crate::format::Build;
-use crate::screen::Screen;
+use crate::visuals::reader::Screen;
 use crate::state::State;
 
 /// a recorded window, read by time: the semantic track (events) and the

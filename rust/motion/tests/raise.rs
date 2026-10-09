@@ -3,11 +3,11 @@
 //! carry are reported with their position, each distinct asset enters the
 //! bank once, and raised frames feed discover and play back.
 
-use engine::compositor::{SceneNode, TextNodeKey};
-use engine::gpu::ImageHandle;
-use engine::path::{PathBuilder, TessellatedPath};
-use monster::lower::lower_scene;
-use monster::{
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::{PathBuilder, TessellatedPath};
+use motion::mappings::lower::lower_scene;
+use motion::{
     AssetBank, DiscoverConfig, MAX_RAISED, MonsterPlayer, NodeKind, Prop, RaiseError, Skipped,
     Unsupported, Value, decode, discover, encode, quantize_value, raise_scene,
 };

@@ -5,13 +5,13 @@ use std::borrow::Cow;
 
 use indexmap::IndexMap;
 
-use crate::decl::{ActionDecl, Constraints};
+use crate::manifest::{ActionDecl, Constraints};
 #[cfg(feature = "serde")]
-use crate::decl::{is_default, is_false, is_true, yes};
-use crate::id::SemId;
-use crate::name::StateKey;
-use crate::role::Role;
-use crate::value::Value;
+use crate::manifest::{is_default, is_false, is_true, yes};
+use crate::identity::SemId;
+use crate::notation::StateKey;
+use crate::taxonomy::Role;
+use crate::property::Value;
 
 /// one control: who it is, what it means, its state, what it accepts and
 /// what bounds it.

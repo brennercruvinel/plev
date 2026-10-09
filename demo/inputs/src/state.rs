@@ -2,10 +2,10 @@
 
 use std::sync::Arc;
 
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::input::{InputEvent, InputState, PressState, ViewId};
-use engine::text::TextSystem;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::control::input::{InputEvent, InputState, PressState, ViewId};
+use engine::drawing::text::TextSystem;
 use engine::winit::window::Window;
 
 // Ready is ~2320 B vs 0 for Uninitialized; one instance lives for the

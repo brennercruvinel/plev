@@ -6,10 +6,10 @@ use lyon_tessellation::{
     VertexBuffers,
 };
 
-use crate::compositor::QuadVertex;
+use crate::drawing::compositor::QuadVertex;
 
 use super::builder::PathBuilder;
-use super::types::{TessellatedPath, compute_commands_hash};
+use super::mesh::{TessellatedPath, compute_commands_hash};
 
 // ---------------------------------------------------------------------------
 // FillVertexConstructor bridge -- Lyon -> QuadVertex

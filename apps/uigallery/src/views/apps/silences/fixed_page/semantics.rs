@@ -30,19 +30,19 @@
 //! and ends them with `Dispatcher::complete` or `fail`, through the same
 //! lending.
 
-use comps::prelude::EventResult;
-use engine::perf::stages::{self, Stage};
-use sem::{
+use engine::widgets::prelude::EventResult;
+use engine::runtime::perf::stages::{self, Stage};
+use accord::{
     Actor, Execution, Operable, Receipt, Request, RequestId, Role, SemError, SemErrors, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use showcase::model::silences::{Decision, Settings, TEST_VIDEO};
+use crate::domain::silences::{Decision, Settings, TEST_VIDEO};
 
-use super::generated::page::{Page, project_all};
+use super::super::generative::page::{Page, project_all};
 use super::jobs::frame_ref;
 use super::worker::Job;
-use super::{Focus, Said, SilencesPage};
-use crate::view::apps::app::TodoPage;
+use super::super::{Focus, Said, SilencesPage};
+use crate::views::apps::todo::TodoPage;
 
 /// The ids the page projects and binds, parsed once.
 pub(super) struct Ids {
@@ -317,7 +317,7 @@ impl Operable for SilencesPage {
                 req.action, req.target
             ));
         };
-        let mut outcome = sem::Outcome::default();
+        let mut outcome = accord::Outcome::default();
         match op {
             Op::Set(which, v) => {
                 self.slider_mut(which).set_value(v as f32);
@@ -566,7 +566,7 @@ impl SilencesPage {
         .clamped()
     }
 
-    pub(super) fn slider_mut(&mut self, which: Which) -> &mut comps::prelude::Slider {
+    pub(super) fn slider_mut(&mut self, which: Which) -> &mut engine::widgets::prelude::Slider {
         match which {
             Which::Threshold => &mut self.threshold,
             Which::MinDuration => &mut self.min_duration,

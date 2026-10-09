@@ -1,4 +1,4 @@
-use engine::builder::{Element, div, text};
+use engine::compose::builder::{Element, div, text};
 
 use crate::theme::*;
 
@@ -48,7 +48,7 @@ impl StatCardBuilder {
         let mut value_row = div()
             .row()
             .gap(hud().space_xs)
-            .align_items(engine::builder::Align::End);
+            .align_items(engine::compose::builder::Align::End);
 
         value_row = value_row.child(
             text(&self.value)

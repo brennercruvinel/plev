@@ -25,11 +25,11 @@ fn main() {
 mod cli {
     use std::path::PathBuf;
 
-    use sem::{ActionName, Actor, Rejection, Revision, SemId, Stage, StateKey, Value};
+    use accord::{ActionName, Actor, Rejection, Revision, SemId, Stage, StateKey, Value};
     use serde::Deserialize;
     use serde::de::IntoDeserializer;
     use serde::de::value::{Error as DeError, StrDeserializer};
-    use wire::{
+    use socket::{
         Act, Ask, Client, Observe, ProtoError, Reply, ServerMsg, StageReply, WireError,
         encode_server, find, socket_dir,
     };
@@ -368,7 +368,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 "plev: a person acted since this agent looked ({}); to act over that, ask the \
                  person first: add --ask \"<why>\" to the act (one line, at most {} characters)",
                 people.join("; "),
-                wire::MAX_ASK
+                socket::MAX_ASK
             )
         })
     }
@@ -550,8 +550,8 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
             };
             assert_eq!((common.timeout, plain.ask), (30_000, None));
 
-            let long = "x".repeat(wire::MAX_ASK + 1);
-            let exact = "x".repeat(wire::MAX_ASK);
+            let long = "x".repeat(socket::MAX_ASK + 1);
+            let exact = "x".repeat(socket::MAX_ASK);
             for (question, ok) in [
                 (exact.as_str(), true),
                 (long.as_str(), false),
@@ -570,7 +570,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
             let one_line = USAGE.split_whitespace().collect::<Vec<_>>().join(" ");
             for words in [
                 "[--ask <question>]",
-                &format!("at most {} characters", wire::MAX_ASK),
+                &format!("at most {} characters", socket::MAX_ASK),
                 "a decline ends it (rejected, declined, exit 1). an agent never answers.",
                 "its acted names a person (human or assistive), plev writes one line on stderr",
                 "points at --ask; none after a decline.",
@@ -583,7 +583,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
         /// decline, with only agents, when the act asked, or else (task-94).
         #[test]
         fn a_stale_refusal_naming_a_person_points_at_the_question() {
-            let acted = |id: &str, actor: Actor| sem::Acted {
+            let acted = |id: &str, actor: Actor| accord::Acted {
                 id: text(id).unwrap(),
                 actor,
                 target: text("changes.file[src/session.rs]").unwrap(),
@@ -610,7 +610,7 @@ exit: 0 observed or completed, 1 rejected, 2 failed, 3 error.";
                 (named, true),
                 (stale(vec![acted("5", agent)]), false),
                 (declined, false),
-                (Stage::Completed(sem::Outcome::default()), false),
+                (Stage::Completed(accord::Outcome::default()), false),
                 (Stage::Failed { error: "no".into() }, false),
             ] {
                 assert_eq!(ask_hint(&stage, asked), None, "{stage:?}, asked: {asked}");

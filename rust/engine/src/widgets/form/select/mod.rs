@@ -21,15 +21,15 @@
 
 mod panel;
 
-use crate::icons;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::input::scroll::ScrollState;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, IconSize, Theme};
-use sem::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
+use crate::widgets::icons;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::control::input::scroll::ScrollState;
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, IconSize, Theme};
+use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
-use crate::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::widgets::recipe::focus_ring;
 
 /// Label style for the control and its options: base-2m.
 fn label_style(theme: &Theme) -> TextStyle {
@@ -355,10 +355,10 @@ impl Select {
         if self.focused {
             compositor.push(focus_ring(bounds, radius, theme));
         }
-        compositor.push(crate::recipe::rounded_rect(
+        compositor.push(crate::widgets::recipe::rounded_rect(
             bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
         ));
-        compositor.push(crate::recipe::rounded_rect_stroke(
+        compositor.push(crate::widgets::recipe::rounded_rect_stroke(
             bounds.x,
             bounds.y,
             bounds.w,

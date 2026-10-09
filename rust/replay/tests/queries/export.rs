@@ -7,9 +7,9 @@
 use std::path::Path;
 use std::process::{Command, Output};
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use rec::{Limits, Recorder, Session};
-use sem::{Dispatcher, Millis, Request, SemId};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use record::{Limits, Recorder, Session};
+use accord::{Dispatcher, Millis, Request, SemId};
 
 use crate::apps::{Git, agent, look};
 
@@ -27,7 +27,7 @@ fn text(out: &Output) -> String {
 
 /// the frame of the toy at `t`: a row per staged file, and the commit
 /// button, bound, drifting a pixel every 50 ms so each frame differs.
-fn draw(c: &mut Compositor, layer: LayerId, git: &Git, t: Millis) -> Result<(), sem::SemError> {
+fn draw(c: &mut Compositor, layer: LayerId, git: &Git, t: Millis) -> Result<(), accord::SemError> {
     c.begin_frame();
     for (n, _) in git.staged.iter().enumerate() {
         let y = 20.0 * n as f32;
@@ -86,7 +86,7 @@ fn recorded(dir: &Path) -> Result<(std::path::PathBuf, Session), Box<dyn std::er
                 let now = look(&git);
                 let req = Request::observe(
                     &now,
-                    sem::Actor::Human,
+                    accord::Actor::Human,
                     "changes",
                     "unstage",
                     Some("B".into()),
@@ -152,7 +152,7 @@ fn a_stretch_reopens_with_the_same_content_on_both_tracks() -> Fallible {
     // it opens at the keyframes of both tracks that govern t0, and ends at
     // t1.
     let first = part.events().first().ok_or("an empty stretch")?;
-    assert!(matches!(first.kind, rec::Kind::Snapshot { .. }), "keyed");
+    assert!(matches!(first.kind, record::Kind::Snapshot { .. }), "keyed");
     assert!(first.t <= t0 && first.t > start, "{} of {t0}", first.t);
     assert_eq!(whole.keyframe_at(t0), Some(first));
     let (key, end) = part.frames_span().ok_or("frames")?;
@@ -177,7 +177,7 @@ fn a_stretch_reopens_with_the_same_content_on_both_tracks() -> Fallible {
     assert_eq!(held, same);
     let ends: Vec<&str> = held
         .iter()
-        .filter_map(|r| r.receipt.stage().map(sem::Stage::name))
+        .filter_map(|r| r.receipt.stage().map(accord::Stage::name))
         .collect();
     assert_eq!(ends, ["rejected", "completed"], "both submits");
 

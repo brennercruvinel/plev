@@ -29,10 +29,10 @@
 #[cfg(test)]
 mod tests;
 
-use crate::discover_fit::{dist, grid_step, value_of};
-use crate::easing::Easing;
-use crate::ir::{IrError, NodeId, Prop, Segment, Timeline, Track, Value};
-use crate::play_eval::{default_value, lerp_value};
+use crate::discover::fit::{dist, grid_step, value_of};
+use crate::timeline::easing::Easing;
+use crate::timeline::{IrError, NodeId, Prop, Segment, Timeline, Track, Value};
+use crate::play::evaluation::{default_value, lerp_value};
 
 /// Tuning of the optimizer; tolerances are in quantization steps of
 /// the prop's wire grid. `Default` is conservative: half a step, so

@@ -32,13 +32,13 @@
 pub mod system;
 pub mod window;
 
-use crate::view::ShowcaseView;
-use comps::prelude::WidgetEvent;
-use engine::animation::FrameClock;
-use engine::gpu::GpuContext;
+use crate::views::ShowcaseView;
+use engine::widgets::prelude::WidgetEvent;
+use engine::compose::animation::FrameClock;
+use engine::drawing::gpu::GpuContext;
 #[cfg(test)]
-use engine::window::WindowHost;
-use engine::window::Windows;
+use engine::runtime::window::WindowHost;
+use engine::runtime::window::Windows;
 use winit::application::ApplicationHandler;
 use winit::event::{StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
@@ -128,7 +128,7 @@ pub struct App {
     focus: Option<WindowId>,
     /// Where the app's links come from (`links`; `None` before the main
     /// window is up).
-    links: Option<Box<dyn engine::platform::links::LinkSource>>,
+    links: Option<Box<dyn engine::runtime::platform::links::LinkSource>>,
     /// View source (`source`): a cmd+click taking the button until it is
     /// released, a literal edited in place.
     #[cfg(all(
@@ -145,7 +145,7 @@ impl App {
         // the browser has no process arguments: the page's query stands
         // in for them (`?page=Data%20Table&theme=hoff`)
         #[cfg(target_arch = "wasm32")]
-        let args = engine::window::launch_args(&["page", "theme"]).into_iter();
+        let args = engine::runtime::window::launch_args(&["page", "theme"]).into_iter();
         Self::with_view(Self::launch_view(args))
     }
 
@@ -157,7 +157,7 @@ impl App {
     /// source reads it once the window is up (`links.rs`).
     fn launch_view(args: impl Iterator<Item = String>) -> ShowcaseView {
         let mut view = ShowcaseView::new(1200.0, 800.0);
-        let mut args = args.filter(|a| !engine::platform::links::is_link(a, links::SCHEME));
+        let mut args = args.filter(|a| !engine::runtime::platform::links::is_link(a, links::SCHEME));
         if let Some(page) = args.next() {
             view.jump_to_page(&page);
         }
@@ -421,7 +421,7 @@ impl ApplicationHandler<UserEvent> for App {
         }
 
         #[cfg(target_arch = "wasm32")]
-        if let Err(e) = engine::window::setup_wasm_canvas(&window) {
+        if let Err(e) = engine::runtime::window::setup_wasm_canvas(&window) {
             log::error!("WASM canvas setup failed: {e}");
         }
 

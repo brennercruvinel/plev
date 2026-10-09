@@ -16,8 +16,8 @@ use std::num::NonZeroUsize;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use lru::LruCache;
 
-use crate::layout::ComputedBounds;
-use crate::perf::stages::{self, Stage};
+use crate::compose::layout::ComputedBounds;
+use crate::runtime::perf::stages::{self, Stage};
 
 use super::backend::TextStyle;
 use super::cluster_cache::{CLUSTER_CACHE_BUDGET, ClusterCache, ClusterKey};
@@ -337,7 +337,7 @@ impl TextMeasurer {
     pub fn measure_styled(text: &str, style: &TextStyle, max_width: Option<f32>) -> (f32, f32) {
         // literal hot reload: measure what the window will show
         #[cfg(hot_reload)]
-        if let Some(now) = crate::hot_reload::literals::text(text) {
+        if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
             return Self::measure_styled(&now, style, max_width);
         }
         if text.is_empty() {

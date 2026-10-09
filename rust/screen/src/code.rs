@@ -10,14 +10,14 @@
 //! lines (another diff) start at the top. the offset is the widget's,
 //! never projected: it changes what shows, not what anyone may do.
 
-use comps::content::{CodeBlock, CodeLine};
-use comps::feedback::Scrollbar;
-use comps::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::input::scroll::ScrollState;
-use engine::theme::Theme;
-use sem::{Snapshot, Value};
-use uir::LineKind;
+use engine::widgets::content::{CodeBlock, CodeLine};
+use engine::widgets::feedback::Scrollbar;
+use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::control::input::scroll::ScrollState;
+use engine::styling::theme::Theme;
+use accord::{Snapshot, Value};
+use plevir::LineKind;
 
 use crate::expand::Node;
 use crate::token;

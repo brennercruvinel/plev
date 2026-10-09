@@ -3,7 +3,7 @@
 //! the driver for nothing.
 
 use super::{Compositor, Layer};
-use crate::gpu::vec::GpuVec;
+use crate::drawing::gpu::vec::GpuVec;
 
 /// Layer textures use the (4-byte) surface format; MSAA targets hold 4
 /// samples per pixel (the engine clamps msaa_samples to 1 or 4).
@@ -53,7 +53,7 @@ impl Compositor {
 
 #[cfg(test)]
 mod tests {
-    use crate::compositor::Compositor;
+    use crate::drawing::compositor::Compositor;
 
     #[test]
     fn headless_compositor_reports_zero_gpu_memory() {

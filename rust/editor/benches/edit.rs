@@ -3,7 +3,7 @@
 //! iterations (so the bench measures edit cost, not unbounded growth).
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use rope::{Document, Transaction};
+use editor::{Document, Transaction};
 
 fn big_body(lines: usize) -> String {
     (0..lines)

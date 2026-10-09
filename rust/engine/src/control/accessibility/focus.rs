@@ -12,7 +12,7 @@
 //! own focus to the id this module names, the same way it answers a
 //! screen reader's `Assist::Focus`.
 
-use sem::{Node, SemId, Snapshot};
+use accord::{Node, SemId, Snapshot};
 
 use super::tree::tree_order;
 
@@ -64,7 +64,7 @@ pub fn next(snapshot: &Snapshot, direction: Direction) -> Option<SemId> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{Role, SnapshotBuilder};
+    use accord::{Role, SnapshotBuilder};
 
     fn sid(text: &str) -> SemId {
         match SemId::parse(text) {

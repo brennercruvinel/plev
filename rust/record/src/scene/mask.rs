@@ -28,8 +28,8 @@
 
 use std::borrow::Cow;
 
-use engine::compositor::{SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 
 /// a place of a frame whose drawing does not travel: `rect`, `(x, y, w,
 /// h)` in logical pixels, on the layer `layer` (the app's `LayerId`).

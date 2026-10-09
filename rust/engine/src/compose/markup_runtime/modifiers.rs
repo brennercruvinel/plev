@@ -6,7 +6,7 @@
 //! - body parsing (`show`, child elements)
 //! - skipping dynamic blocks (`on`, `when`, `each`, `bind`)
 
-use crate::builder::Element;
+use crate::compose::builder::Element;
 
 use super::keywords::{is_block_keyword, is_element_keyword, is_modifier_keyword};
 use super::parser::Parser;

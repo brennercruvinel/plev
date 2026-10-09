@@ -23,9 +23,9 @@
 
 use std::path::PathBuf;
 
-use engine::headless::Viewport;
-use sem::Snapshot;
-use showcase::app::{semantics_json, stage_page};
+use engine::drawing::headless::Viewport;
+use accord::Snapshot;
+use uigallery::shell::{semantics_json, stage_page};
 
 const FIXTURE: &str = "../uir/fixtures/showcase-todo.snapshot.json";
 

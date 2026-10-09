@@ -8,11 +8,11 @@
 #![cfg(feature = "plev")]
 
 use burn::tensor::{Tensor, TensorData};
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use llm::LlmError;
-use llm::plev::{self, Shared};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use llmrun::LlmError;
+use llmrun::engine::{self, Shared};
 
 const RED: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
 const CLEAR: [f32; 4] = [0.0, 0.0, 0.0, 1.0];

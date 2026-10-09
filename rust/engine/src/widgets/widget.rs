@@ -6,8 +6,8 @@
 //! app decided to give it, answers with an [`EventResult`], and renders by
 //! pushing scene nodes. No GPU, no window, no global state.
 
-use engine::color::Color;
-use engine::theme::{Intent, Theme};
+use crate::styling::color::Color;
+use crate::styling::theme::{Intent, Theme};
 
 // ---------------------------------------------------------------------------
 // Geometry

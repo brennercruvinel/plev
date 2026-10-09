@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 #[test]
 fn lerp_f32() {
@@ -197,7 +197,7 @@ fn tween_with_reverse() {
 
 #[test]
 fn tween_from_motion_uses_settling_time() {
-    use crate::theme::Theme;
+    use crate::styling::theme::Theme;
     let theme = Theme::dark();
     let mut tw = Tween::from_motion(0.0_f32, &theme.motion, Easing::EaseInOut);
     let expected = theme.motion.settling_time().clamp(0.1, 2.0);
@@ -211,7 +211,7 @@ fn tween_from_motion_uses_settling_time() {
 
 #[test]
 fn tween_from_motion_destructive_faster() {
-    use crate::theme::{Intent, Theme};
+    use crate::styling::theme::{Intent, Theme};
     let theme = Theme::dark();
     let neutral = Tween::from_motion(0.0_f32, &theme.motion, Easing::EaseInOut);
     let destructive = Tween::from_motion(

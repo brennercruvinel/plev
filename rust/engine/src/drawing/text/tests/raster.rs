@@ -8,9 +8,9 @@
 
 use cosmic_text::{Attrs, Buffer, Family, Metrics, Shaping, Weight};
 
-use super::atlas::{COLOR_TEXELS, GLYPH_PADDING, bitmap_x, glyph_uv_rect, slot_width};
-use super::backend::TextStyle;
-use super::cache::GlyphEntry;
+use super::super::atlas::{COLOR_TEXELS, GLYPH_PADDING, bitmap_x, glyph_uv_rect, slot_width};
+use super::super::backend::TextStyle;
+use super::super::cache::GlyphEntry;
 
 /// Shape `text` the way `TextSystem::resolve_for_layer` does and return one
 /// `CacheKey` per glyph, at the raster scale the window would use.
@@ -18,10 +18,10 @@ fn glyph_keys(
     text: &str,
     style: &TextStyle,
     raster_scale: f32,
-) -> Vec<super::cache::GlyphCacheKey> {
+) -> Vec<super::super::cache::GlyphCacheKey> {
     let mut fs = {
         let mut db = cosmic_text::fontdb::Database::new();
-        super::fonts::register_embedded_fonts(&mut db);
+        super::super::fonts::register_embedded_fonts(&mut db);
         cosmic_text::FontSystem::new_with_locale_and_db("en-US".to_string(), db)
     };
     let mut buffer = Buffer::new(&mut fs, Metrics::new(style.font_size, style.line_height));
@@ -51,7 +51,7 @@ fn glyph_keys(
 /// onto one atlas entry.
 #[test]
 fn glyph_cache_key_is_the_whole_cosmic_key() {
-    fn assert_is_cosmic_key(_: &super::cache::GlyphCacheKey) {}
+    fn assert_is_cosmic_key(_: &super::super::cache::GlyphCacheKey) {}
     let key = glyph_keys("A", &TextStyle::new(16.0), 2.0)[0];
     assert_is_cosmic_key(&key);
 }
@@ -60,7 +60,7 @@ fn glyph_cache_key_is_the_whole_cosmic_key() {
 /// bin is a distinct bitmap: keys must keep them distinct.
 #[test]
 fn same_char_in_different_subpixel_bins_gets_distinct_keys() {
-    let style = crate::theme::TypographyScale::hoff().title();
+    let style = crate::styling::theme::TypographyScale::hoff().title();
     let keys = glyph_keys("Expense Tracker", &style, 1.0);
 
     // The three `e`s of "Expense Tracker" (indices 3, 6 and 13).
@@ -270,11 +270,11 @@ fn color_uvs_are_negative_and_span_four_texels_per_pixel() {
 /// sampled off-grid is blurry no matter how correct the cache is.
 #[test]
 fn glyph_quads_land_on_whole_physical_pixels() {
-    let style = crate::theme::TypographyScale::hoff().title();
+    let style = crate::styling::theme::TypographyScale::hoff().title();
     for scale in [1.0f32, 2.0, 3.0] {
         let mut fs = {
             let mut db = cosmic_text::fontdb::Database::new();
-            super::fonts::register_embedded_fonts(&mut db);
+            super::super::fonts::register_embedded_fonts(&mut db);
             cosmic_text::FontSystem::new_with_locale_and_db("en-US".to_string(), db)
         };
         let mut buffer = Buffer::new(&mut fs, Metrics::new(style.font_size, style.line_height));
@@ -326,7 +326,7 @@ fn set_raster_scale_reports_whether_it_changed() {
     assert!(!sys.set_raster_scale(1.5));
 }
 
-fn test_text_system() -> Option<crate::text::TextSystem> {
+fn test_text_system() -> Option<crate::drawing::text::TextSystem> {
     let instance = wgpu::Instance::default();
     let adapter =
         pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions::default()))
@@ -357,5 +357,5 @@ fn test_text_system() -> Option<crate::text::TextSystem> {
             },
         ],
     });
-    Some(crate::text::TextSystem::new(&device, &bgl))
+    Some(crate::drawing::text::TextSystem::new(&device, &bgl))
 }

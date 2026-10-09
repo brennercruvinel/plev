@@ -1,7 +1,7 @@
 use super::*;
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
 
 /// The page as a capability: projection, the one path, bindings, inert.
 mod semantics;
@@ -79,7 +79,7 @@ fn layout_holds_at_narrow_and_wide_widths() {
         assert_eq!(l.panel.w, content.w.min(MAX_W), "vw {vw}");
         assert!(l.panel.x >= content.x);
         // Field height is TextInput's own font_size * 2 rule.
-        assert_eq!(l.input.h, comps::form::TextField::height(&Theme::hoff()));
+        assert_eq!(l.input.h, engine::widgets::form::TextField::height(&Theme::hoff()));
         assert!(l.input.x + l.input.w <= l.panel.x + l.panel.w);
         assert!(
             l.list.y + l.list.h <= l.divider_y,

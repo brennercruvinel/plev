@@ -3,13 +3,13 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::decl::{ActionDecl, Constraints};
-use crate::id::SemId;
-use crate::name::StateKey;
-use crate::node::Node;
-use crate::role::Role;
+use crate::manifest::{ActionDecl, Constraints};
+use crate::identity::SemId;
+use crate::notation::StateKey;
+use crate::controls::Node;
+use crate::taxonomy::Role;
 use crate::snapshot::Snapshot;
-use crate::value::{StateRef, Value};
+use crate::property::{StateRef, Value};
 
 /// one semantic difference between two snapshots.
 ///

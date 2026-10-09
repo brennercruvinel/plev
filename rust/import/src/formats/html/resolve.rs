@@ -22,11 +22,11 @@ mod frame;
 use std::collections::HashSet;
 
 use crate::ParserError;
-use crate::css_map::{is_text_prop, px};
-use crate::emit_ir::sanitize;
-use crate::html::{CssDecl, HtmlChild, HtmlDoc, HtmlNode};
-use crate::html_map::{self, Mapped, Selector};
-use crate::ir::{
+use crate::formats::react::css::{is_text_prop, px};
+use crate::emit::plevir::sanitize;
+use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlDoc, HtmlNode};
+use crate::formats::html::css::{self, Mapped, Selector};
+use crate::tree::{
     Dropped, Note, NoteKind, Origin, ParserNode, Prop, Resolution, Src, Tag, TextValue,
 };
 
@@ -432,7 +432,7 @@ fn font_size_of(props: &[Prop]) -> Option<f32> {
         .iter()
         .find(|p| p.name == "font_size")
         .and_then(|p| match p.args.first() {
-            Some(crate::ir::Arg::F32(v)) => Some(*v),
+            Some(crate::tree::Arg::F32(v)) => Some(*v),
             _ => None,
         })
 }

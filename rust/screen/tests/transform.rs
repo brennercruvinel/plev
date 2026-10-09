@@ -10,17 +10,17 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::form::EditKey;
-use comps::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Role, SemId, Snapshot, StateRef, Value};
+use engine::widgets::form::EditKey;
+use engine::widgets::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Role, SemId, Snapshot, StateRef, Value};
 use support::{
     App, COLUMNS, MIXER_LEFT, MIXER_RIGHT, SHOWCASE, TODO, id, mixer, page, settle, snapshot,
     verified, verified_local,
 };
-use surface::{Surface, SurfaceError, SurfaceHost};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use screen::{Surface, SurfaceError, SurfaceHost};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 const AREA: Rect = Rect {
     x: 40.0,

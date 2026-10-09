@@ -27,7 +27,7 @@ fn commit_form_keys_and_buttons_ask_without_acting() {
     c.begin_frame();
     w.render(&mut c);
     let submit = c
-        .binding(&sem::SemId::parse("commit.submit").unwrap())
+        .binding(&accord::SemId::parse("commit.submit").unwrap())
         .unwrap()
         .rect;
     assert!(w.handle_click(submit[0] + 2.0, submit[1] + 2.0));

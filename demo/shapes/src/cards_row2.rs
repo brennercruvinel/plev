@@ -1,7 +1,7 @@
 //! Row 2 cards: Animated Pulse, Button Gallery, Color Palette, Bezier Paths.
 
-use engine::compositor::{Compositor, RoundedRectParams, SceneNode, TextNodeKey};
-use engine::path::PathBuilder;
+use engine::drawing::compositor::{Compositor, RoundedRectParams, SceneNode, TextNodeKey};
+use engine::drawing::path::PathBuilder;
 
 use crate::shapes::*;
 

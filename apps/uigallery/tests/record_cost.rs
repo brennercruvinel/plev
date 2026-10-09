@@ -11,13 +11,13 @@
 
 use std::time::{Duration, Instant};
 
-use comps::prelude::WidgetEvent;
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{Renderer, Viewport};
-use rec::{InputKind, Limits, Recorder, Stats};
-use sem::{Actor, Dispatcher, Millis, Request, SemId};
-use showcase::view::ShowcaseView;
+use engine::widgets::prelude::WidgetEvent;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Renderer, Viewport};
+use record::{InputKind, Limits, Recorder, Stats};
+use accord::{Actor, Dispatcher, Millis, Request, SemId};
+use uigallery::views::ShowcaseView;
 
 use crate::apps::{Git, look};
 
@@ -218,7 +218,7 @@ fn the_todo_page_records_through_its_compositor() -> Result<(), Box<dyn std::err
         .filter(|e| {
             matches!(
                 e.kind,
-                rec::Kind::Input {
+                record::Kind::Input {
                     target: Some(_),
                     ..
                 }
@@ -301,7 +301,7 @@ fn persisted(rec: &Recorder, name: &str) -> Result<(), Box<dyn std::error::Error
     let written = rec.persist(&path)?;
     let wrote = at.elapsed();
     let at = Instant::now();
-    let back = rec::Session::open(&path)?;
+    let back = record::Session::open(&path)?;
     let read = at.elapsed();
     assert_eq!(back.events().len(), written.events);
     println!(
@@ -374,9 +374,9 @@ fn measure_the_cost_of_recording() -> Result<(), Box<dyn std::error::Error>> {
     );
     println!(
         "  inline sizes: Event {} B, Change {} B, Node {} B, Request {} B",
-        std::mem::size_of::<rec::Event>(),
-        std::mem::size_of::<sem::Change>(),
-        std::mem::size_of::<sem::Node>(),
+        std::mem::size_of::<record::Event>(),
+        std::mem::size_of::<accord::Change>(),
+        std::mem::size_of::<accord::Node>(),
         std::mem::size_of::<Request>()
     );
     persisted(&rec, "rec-measure-semantic.monster")

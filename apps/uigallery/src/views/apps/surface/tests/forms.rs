@@ -10,14 +10,14 @@
 
 use std::path::PathBuf;
 
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{HeadlessError, Renderer, Viewport};
-use sem::SemId;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
+use accord::SemId;
 
 use super::super::FORMS;
-use crate::app::semantics_json;
-use crate::view::ShowcaseView;
+use crate::shell::semantics_json;
+use crate::views::ShowcaseView;
 
 const DESKTOP: Viewport = Viewport {
     width: 1200.0,

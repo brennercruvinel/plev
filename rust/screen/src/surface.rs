@@ -4,18 +4,18 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use comps::form::EditKey;
-use comps::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::Theme;
-use sem::{Actor, Receipt, Request, Revision, SemId, Snapshot, SnapshotBuilder, Value};
-use uir::{Axis, CapabilityRef, VerifiedIr};
+use engine::widgets::form::EditKey;
+use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::Theme;
+use accord::{Actor, Receipt, Request, Revision, SemId, Snapshot, SnapshotBuilder, Value};
+use plevir::{Axis, CapabilityRef, VerifiedIr};
 
 use crate::draw::{self, closed};
 use crate::expand::{Node, expand};
 use crate::host::{Dispatch, Frames, NoFrames};
 use crate::layout::{self, axis_of};
-use crate::motion::{self, Ghost, Motion};
+use crate::transition::{self, Ghost, Motion};
 use crate::project;
 use crate::widget::{Kind, Widget};
 

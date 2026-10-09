@@ -37,16 +37,16 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use comps::prelude::WidgetEvent;
-use engine::gpu::RenderConfig;
-use engine::headless::Frame;
-use engine::platform::capture::FakeCapture;
-use engine::window::WindowHost;
-use rec::scene::{Head, Sender};
-use sem::{Actor, Request};
-use showcase::app::mirror::{Hand, MAIN, Pressed, Scenes, Viewer, offer};
-use showcase::view::{PAGES, ShowcaseView};
-use wire::{AgentPort, Client, Config, Reply, WireError, encode_server};
+use engine::widgets::prelude::WidgetEvent;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::Frame;
+use engine::runtime::platform::capture::FakeCapture;
+use engine::runtime::window::WindowHost;
+use record::scene::{Head, Sender};
+use accord::{Actor, Request};
+use uigallery::shell::window::mirror::{Hand, MAIN, Pressed, Scenes, Viewer, offer};
+use uigallery::views::{PAGES, ShowcaseView};
+use socket::{AgentPort, Client, Config, Reply, WireError, encode_server};
 
 const WIDTH: u32 = 1280;
 const HEIGHT: u32 = 800;
@@ -217,7 +217,7 @@ fn the_viewer_hits_the_control_the_app_hits() {
             view.apply_theme(theme);
             view.resize(WIDTH as f32, HEIGHT as f32, 1.0);
             settle(&mut view);
-            let mut c = engine::compositor::Compositor::new();
+            let mut c = engine::drawing::compositor::Compositor::new();
             view.render(&mut c);
             let mut server = watched(1);
             let frame = Sender::new().frame(&c, head([0.0; 4]));
@@ -249,25 +249,25 @@ fn the_viewer_hits_the_control_the_app_hits() {
 }
 
 /// A server whose scenes the app's person shares (`PLEV_MIRROR=1`).
-fn shared_server() -> wire::Server {
-    let mut server = wire::Server::new("mirror", 8);
+fn shared_server() -> socket::Server {
+    let mut server = socket::Server::new("mirror", 8);
     server.share_scenes(true);
     server
 }
 
 /// `conn` names itself and watches the main window.
-fn watch_on(server: &mut wire::Server, conn: u64) {
+fn watch_on(server: &mut socket::Server, conn: u64) {
     for ask in [
-        wire::Ask::Hello {
+        socket::Ask::Hello {
             name: format!("viewer{conn}"),
         },
-        wire::Ask::Scene(wire::SceneAsk {
+        socket::Ask::Scene(socket::SceneAsk {
             window: MAIN.into(),
         }),
     ] {
         let out = server.handle(
             conn,
-            wire::ClientMsg {
+            socket::ClientMsg {
                 id: format!("w{conn}"),
                 ask,
             },
@@ -281,7 +281,7 @@ fn watch_on(server: &mut wire::Server, conn: u64) {
 }
 
 /// A shared server with `conn` watching the main window.
-fn watched(conn: u64) -> wire::Server {
+fn watched(conn: u64) -> socket::Server {
     let mut server = shared_server();
     watch_on(&mut server, conn);
     server
@@ -290,16 +290,16 @@ fn watched(conn: u64) -> wire::Server {
 /// A host for a server driven in process: the scene asks nothing of it.
 struct NoHost;
 
-impl wire::Host for NoHost {
-    fn project(&self) -> Option<sem::Snapshot> {
+impl socket::Host for NoHost {
+    fn project(&self) -> Option<accord::Snapshot> {
         None
     }
 
-    fn dispatch(&mut self, _req: Request) -> Option<sem::RequestId> {
+    fn dispatch(&mut self, _req: Request) -> Option<accord::RequestId> {
         None
     }
 
-    fn add_sink(&mut self, _sink: Box<dyn sem::ReceiptSink>) {}
+    fn add_sink(&mut self, _sink: Box<dyn accord::ReceiptSink>) {}
 }
 
 // -- Between two processes ----------------------------------------------------
@@ -641,7 +641,7 @@ impl Watch {
             .any(|p| p.windows(run.len()).any(|w| w == run));
         let long = pixel.repeat(64);
         let texts: Vec<String> = (0..4)
-            .map(|shift| wire::encode_base64(&long[shift..])[8..72].to_owned())
+            .map(|shift| socket::encode_base64(&long[shift..])[8..72].to_owned())
             .collect();
         let in_lines = self
             .wire
@@ -834,15 +834,15 @@ fn viewer_on(path: &str, host: WindowHost) -> (Watch, Hand) {
 
 /// `name` acts `action` on `target` over its own connection, from what
 /// it observes first; the terminal stage.
-fn agent_act(path: &str, name: &str, target: &str, action: &str) -> wire::StageReply {
+fn agent_act(path: &str, name: &str, target: &str, action: &str) -> socket::StageReply {
     let mut c = Client::connect(std::path::Path::new(path)).expect("the agent connects");
     c.set_timeout(Some(60_000)).expect("a timeout");
     c.hello(name).expect("hello");
-    let Reply::Snapshot(seen) = c.observe(wire::Observe::default()).expect("observed") else {
+    let Reply::Snapshot(seen) = c.observe(socket::Observe::default()).expect("observed") else {
         panic!("a snapshot");
     };
-    let target = sem::SemId::parse(target).expect("an id");
-    let act = wire::Act::from_revision(target, action.parse().expect("an action"), seen.revision);
+    let target = accord::SemId::parse(target).expect("an id");
+    let act = socket::Act::from_revision(target, action.parse().expect("an action"), seen.revision);
     let mut stages = c.act(act, |_| {}).expect("its stages");
     stages.pop().expect("a terminal stage")
 }
@@ -923,7 +923,7 @@ fn the_app_takes_the_mirror_s_click_over_the_socket() {
     let refused = hand.click(&w.viewer, x + bw / 2.0, y + bh / 2.0, |_, _| {});
     assert_eq!(
         refused.stage(),
-        Some(&sem::Stage::Rejected(sem::Rejection::NotAuthorized {
+        Some(&accord::Stage::Rejected(accord::Rejection::NotAuthorized {
             actor: Actor::Agent {
                 name: "mirror".into()
             }
@@ -941,9 +941,9 @@ fn the_app_takes_the_mirror_s_click_over_the_socket() {
 /// A page staged for the band: the view, its compositor, a watch.
 struct Band {
     view: ShowcaseView,
-    c: engine::compositor::Compositor,
+    c: engine::drawing::compositor::Compositor,
     sender: Sender,
-    server: wire::Server,
+    server: socket::Server,
     clear: [f32; 4],
 }
 
@@ -957,7 +957,7 @@ impl Band {
         let clear = view.theme.colors.bg.to_linear_array();
         let mut band = Band {
             view,
-            c: engine::compositor::Compositor::new(),
+            c: engine::drawing::compositor::Compositor::new(),
             sender: Sender::new(),
             server: shared_server(),
             clear,

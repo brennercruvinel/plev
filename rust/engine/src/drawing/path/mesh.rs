@@ -4,7 +4,7 @@ use std::hash::{Hash, Hasher};
 
 use rustc_hash::FxHasher;
 
-use crate::compositor::QuadVertex;
+use crate::drawing::compositor::QuadVertex;
 
 // ---------------------------------------------------------------------------
 // TessellatedPath -- pre-tessellated geometry ready for the GPU

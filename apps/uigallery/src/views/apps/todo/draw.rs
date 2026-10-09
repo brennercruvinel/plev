@@ -7,17 +7,17 @@
 //! as its `todo.item[<id>]`, each pill as its `todo.filter[..]`; the field
 //! binds itself as `todo.input`.
 
-use comps::icons;
-use comps::prelude::{Rect, glass_pill, rounded_rect};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
-use showcase::model::todo::Filter;
+use engine::widgets::icons;
+use engine::widgets::prelude::{Rect, glass_pill, rounded_rect};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
+use crate::domain::todo::Filter;
 
 use super::TodoPage;
 use super::layout::*;
 use super::semantics::bounds;
-use crate::view::{panel, text, with_alpha};
+use crate::views::{panel, text, with_alpha};
 
 impl TodoPage {
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {

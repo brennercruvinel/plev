@@ -10,11 +10,11 @@ use std::fmt;
 use std::path::PathBuf;
 use std::process::Command;
 
-use sem::{SemId, Snapshot};
+use accord::{SemId, Snapshot};
 
 use super::{Site, literals, project_root};
-use crate::compositor::{ClipRect, Compositor, SceneNode, TextNodeKey, intersect_rects};
-use crate::text::{TextMeasurer, TextStyle};
+use crate::drawing::compositor::{ClipRect, Compositor, SceneNode, TextNodeKey, intersect_rects};
+use crate::drawing::text::{TextMeasurer, TextStyle};
 
 /// What made the pixel at a point.
 #[derive(Debug, PartialEq)]
@@ -255,10 +255,10 @@ fn command_line(cmd: &Command) -> String {
 mod tests {
     use std::sync::Once;
 
-    use sem::{Role, SnapshotBuilder};
+    use accord::{Role, SnapshotBuilder};
 
     use super::*;
-    use crate::compositor::LayerId;
+    use crate::drawing::compositor::LayerId;
 
     /// The sources the text tests find their literals in.
     const PAGE: &str = "const A: &str = \"view-source-probe-once\";\n\

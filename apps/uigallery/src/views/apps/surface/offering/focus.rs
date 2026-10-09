@@ -3,7 +3,7 @@
 //! widget (the ring it draws), and the row projects whichever has it, so
 //! a screen reader that moved the focus there hears it there.
 
-use sem::SemId;
+use accord::SemId;
 
 use super::{Ids, Proposing};
 

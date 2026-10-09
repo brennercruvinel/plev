@@ -11,7 +11,7 @@ pub mod easing;
 #[cfg(test)]
 mod tests;
 
-use crate::easing::Easing;
+use crate::timeline::easing::Easing;
 
 /// Instance identity of a node across keyframes and tracks.
 pub type NodeId = u16;

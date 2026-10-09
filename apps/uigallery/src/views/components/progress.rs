@@ -1,8 +1,8 @@
 //! Progress page: three bars, one per intent.
 
-use comps::prelude::{EventResult, ProgressBar, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
+use engine::widgets::prelude::{EventResult, ProgressBar, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{Intent, Theme};
 
 pub struct ProgressPage {
     bars: [ProgressBar; 3],

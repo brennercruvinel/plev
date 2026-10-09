@@ -3,7 +3,7 @@
 //! timeline. split from `crate::ir` to keep the model file within the
 //! repository's size budget; the impl stays on [`Timeline`].
 
-use crate::ir::{Depth, IrError, Node, NodeId, Prop, Timeline, Value};
+use crate::timeline::{Depth, IrError, Node, NodeId, Prop, Timeline, Value};
 
 fn check_value(prop: Prop, value: Value) -> Result<(), IrError> {
     let ok = match value {

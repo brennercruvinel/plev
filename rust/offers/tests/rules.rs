@@ -11,10 +11,10 @@
 #[allow(dead_code)]
 mod support;
 
-use propose::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
-use sem::{Actor, Actors, Policy, Role, SnapshotBuilder};
+use offers::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};
+use accord::{Actor, Actors, Policy, Role, SnapshotBuilder};
 use support::{Asking, bindings, columns, compact, ide, ids, todo, verified};
-use uir::{Capabilities, GenerationPolicy, Ir, IrNode, Layout, VerifiedIr, verify};
+use plevir::{Capabilities, GenerationPolicy, Ir, IrNode, Layout, VerifiedIr, verify};
 
 fn propose(asking: &Asking, intent: &str) -> VerifiedIr {
     propose_verified(&mut Rules, &asking.ask(intent))
@@ -262,7 +262,7 @@ fn an_intent_the_rules_do_not_understand_is_a_clear_error() {
         matches!(&e, ProposeError::NoMatch { words, .. } if words == &["purple", "sparkly"]),
         "{e:?}"
     );
-    let empty = Asking::new(sem::Snapshot::default());
+    let empty = Asking::new(accord::Snapshot::default());
     let e = propose_verified(&mut Rules, &empty.ask("everything")).unwrap_err();
     assert_eq!(e, ProposeError::Empty);
     let e = propose_verified(&mut Rules, &empty.ask("add")).unwrap_err();
@@ -420,7 +420,7 @@ fn the_same_rules_list_the_ides_files() {
         );
         // by sense: the status alone, the four actions as one group
         assert_eq!(item.children.len(), 2);
-        assert_eq!(item.children[0].component, Some(uir::Component::Text));
+        assert_eq!(item.children[0].component, Some(plevir::Component::Text));
         let actions = &item.children[1];
         assert!(
             actions.sem.as_str().ends_with("[{item}].actions"),
@@ -496,7 +496,7 @@ fn a_list_is_found_by_structure_and_an_empty_one_is_nothing() {
         let mut b = SnapshotBuilder::new();
         let list: Vec<String> = items.iter().map(|s| (*s).to_owned()).collect();
         b.node("shelf", Role::List, "shelf")
-            .state("books", sem::Value::List(list));
+            .state("books", accord::Value::List(list));
         for c in children {
             let id = format!("shelf.book[{c}]");
             let mut n = b.node(id.as_str(), Role::ListItem, *c);

@@ -38,18 +38,18 @@ use std::collections::VecDeque;
 use std::path::Path;
 use std::time::Instant;
 
-use comps::prelude::Wake;
-use engine::compositor::Compositor;
-use engine::platform::alerts::{Alerts, Parent};
-use git::{GitClient, GitEvent};
-use sem::{
+use engine::widgets::prelude::Wake;
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::alerts::{Alerts, Parent};
+use gitdrv::{GitClient, GitEvent};
+use accord::{
     Actor, Dispatcher, Millis, Receipt, ReceiptSink, Request, RequestId, SemError, SemErrors,
     SemId, Semantics, Snapshot, SnapshotBuilder,
 };
 
-use crate::generated::Generated;
-use crate::session::GitSession;
-use crate::views::workspace::{UiRequest, WorkspaceView};
+use crate::generative::Generated;
+use crate::repository::git::GitSession;
+use crate::interfaces::panels::layout::{UiRequest, WorkspaceView};
 use truth::Inflight;
 
 pub use project::{DIFF_LINES, FILES_PROJECTED};

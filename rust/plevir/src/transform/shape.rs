@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use sem::SemId;
+use accord::SemId;
 
 use super::tree::{self, Step};
 use super::{Aside, Draft, Inverse, Op, TransformError, refused};

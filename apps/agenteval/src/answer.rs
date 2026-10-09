@@ -13,10 +13,10 @@
 
 use std::time::{Duration, Instant};
 
-use comps::overlay::OverlayKind;
-use ide::workbench::Workbench;
-use rec::InputKind;
-use sem::{Millis, Receipt, RequestId, Stage};
+use engine::widgets::overlay::OverlayKind;
+use idestudio::capability::Workbench;
+use record::InputKind;
+use accord::{Millis, Receipt, RequestId, Stage};
 
 use crate::args::Answer;
 use crate::lab::Lab;
@@ -239,10 +239,10 @@ fn modal_on_screen(bench: &Workbench) -> Option<(String, String)> {
 /// the instant the person's answer landed on `receipt`: the stage right
 /// after its wait for her (`AwaitingConfirmation`), the same one the
 /// report calls `answered_at`.
-fn answered_at(receipt: Option<&sem::Receipt>) -> Option<Millis> {
+fn answered_at(receipt: Option<&accord::Receipt>) -> Option<Millis> {
     let stages = &receipt?.stages;
     let waiting = stages
         .iter()
-        .position(|(stage, _)| matches!(stage, sem::Stage::AwaitingConfirmation))?;
+        .position(|(stage, _)| matches!(stage, accord::Stage::AwaitingConfirmation))?;
     stages.get(waiting + 1).map(|(_, t)| *t)
 }

@@ -6,7 +6,7 @@
 //! (docs/how-to/code-against-the-plev-engine.md). any text measure the
 //! ui needs comes from TextMeasurer at draw time, never from this model.
 
-use engine::animation::{Easing, Tween};
+use engine::compose::animation::{Easing, Tween};
 
 /// Seconds for the enter fade-in of a freshly added item.
 const ENTER_SECS: f32 = 0.3;

@@ -7,13 +7,13 @@
 //! With `TEXT_FIELD_BIDI_OUT=<dir>` and a GPU, the field test also
 //! writes `text-field-bidi.png` there, to look at.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::text::{ClusterBox, TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::drawing::text::{ClusterBox, TextMeasurer, TextStyle};
+use crate::styling::theme::Theme;
 
-use crate::core::{Rect, WidgetEvent};
-use crate::form::text_input::*;
-use crate::form::{EditKey, TextField};
+use crate::widgets::widget::{Rect, WidgetEvent};
+use crate::widgets::form::text_input::*;
+use crate::widgets::form::{EditKey, TextField};
 
 const MIXED_HEBREW: &str = "abc אבג def";
 const MIXED_ARABIC: &str = "hello مرحبا 123 world";
@@ -361,8 +361,8 @@ fn write_png(
     theme: &Theme,
     dir: &std::path::Path,
 ) {
-    use engine::gpu::RenderConfig;
-    use engine::headless::{HeadlessError, Renderer, Viewport};
+    use crate::drawing::gpu::RenderConfig;
+    use crate::drawing::headless::{HeadlessError, Renderer, Viewport};
     let last = bounds(fields.len() as f32 - 1.0);
     let viewport = Viewport::new(last.x * 2.0 + last.w, last.y + last.h + 16.0, 2.0);
     let mut renderer = match Renderer::new(viewport, RenderConfig::default()) {

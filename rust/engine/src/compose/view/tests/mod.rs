@@ -4,8 +4,8 @@
 mod lifecycle;
 
 use super::*;
-use crate::compositor::{SceneNode, TextNodeKey};
-use crate::layout::{ComputedBounds, LayoutStyle};
+use crate::drawing::compositor::{SceneNode, TextNodeKey};
+use crate::compose::layout::{ComputedBounds, LayoutStyle};
 
 fn test_cx() -> ViewContext {
     ViewContext::new(800.0, 600.0)

@@ -7,20 +7,20 @@
 
 use std::sync::Arc;
 
-use engine::builder::{Element, Justify, div, text};
-use engine::color::Color;
-use engine::compositor::Compositor;
-use engine::gpu::{GpuContext, RenderConfig};
-use engine::input::InputState;
-use engine::text::TextSystem;
-use engine::theme::Theme;
-use engine::view::ViewContext;
-use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::compose::builder::{Element, Justify, div, text};
+use engine::styling::color::Color;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::{GpuContext, RenderConfig};
+use engine::control::input::InputState;
+use engine::drawing::text::TextSystem;
+use engine::styling::theme::Theme;
+use engine::compose::view::ViewContext;
+use engine::runtime::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
 use engine::winit::window::{Window, WindowAttributes, WindowId};
-use parser::ir::{Arg, ParserNode, Tag, TextValue};
+use import::tree::{Arg, ParserNode, Tag, TextValue};
 
 const BG: [f64; 3] = [0.0090, 0.0105, 0.0137];
 
@@ -38,12 +38,12 @@ fn color_of(theme: &Theme, token: &str) -> Color {
         "theme.glass.edge_soft" => theme.glass.edge_soft,
         "theme.glass.edge" => theme.glass.edge,
         "theme.glass.button" => theme.glass.button,
-        "engine::theme::hoff::CARD_OVERLAY" => engine::theme::hoff::CARD_OVERLAY,
+        "engine::theme::hoff::CARD_OVERLAY" => engine::styling::theme::hoff::CARD_OVERLAY,
         t if t.starts_with("engine::theme::hoff::n2(") => {
-            engine::theme::hoff::n2(call(t).unwrap_or(1.0))
+            engine::styling::theme::hoff::n2(call(t).unwrap_or(1.0))
         }
         t if t.starts_with("engine::theme::hoff::n3(") => {
-            engine::theme::hoff::n3(call(t).unwrap_or(1.0))
+            engine::styling::theme::hoff::n3(call(t).unwrap_or(1.0))
         }
         t if t.starts_with("engine::color::Color::rgba(") => {
             let inner = t.split_once('(').map(|(_, r)| r.trim_end_matches(')'));
@@ -144,7 +144,7 @@ fn build(node: &ParserNode, theme: &Theme) -> Element {
             div()
                 .min_h(64.0)
                 .rounded(12.0)
-                .bg(engine::theme::hoff::n2(0.06))
+                .bg(engine::styling::theme::hoff::n2(0.06))
         }
     };
     for prop in &node.props {
@@ -162,8 +162,8 @@ enum AppState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
+        effects: engine::drawing::effects::EffectProcessor,
+        texture_pool: engine::drawing::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -202,7 +202,7 @@ impl PreviewApp {
             .child(build(&self.root, &theme));
         self.compositor.begin_frame();
         let mut cx = ViewContext::new(w, h).with_theme(theme);
-        engine::builder::render_element_to_compositor(
+        engine::compose::builder::render_element_to_compositor(
             &scene,
             &mut self.compositor,
             &mut self.input,
@@ -223,7 +223,7 @@ impl PreviewApp {
         let surface_view = gpu.surface_render_view(&output);
         text_system.begin_frame();
         self.compositor
-            .resolve(&engine::compositor::ResolveResources {
+            .resolve(&engine::drawing::compositor::ResolveResources {
                 device: &gpu.device,
                 queue: &gpu.queue,
                 format: gpu.surface_format(),
@@ -293,12 +293,12 @@ impl ApplicationHandler for PreviewApp {
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,
             effects,
-            texture_pool: engine::gpu::texture_pool::TexturePool::new(),
+            texture_pool: engine::drawing::gpu::texture_pool::TexturePool::new(),
         };
     }
 
@@ -343,15 +343,15 @@ fn main() {
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_else(|| p.clone())
     };
-    let component = match parser::tsx::parse_tsx(&read(tsx)) {
+    let component = match import::formats::react::parse::parse_tsx(&read(tsx)) {
         Ok(c) => c,
         Err(e) => {
             eprintln!("tsx: {e}");
             std::process::exit(1);
         }
     };
-    let rules = parser::sass::parse_sass(&read(sass), &read(vars));
-    let res = parser::resolve_react::resolve_react(&component, &rules, &name(tsx), &name(sass));
+    let rules = import::formats::react::sass::parse_sass(&read(sass), &read(vars));
+    let res = import::formats::react::resolve::resolve_react(&component, &rules, &name(tsx), &name(sass));
     let title = format!(
         "parser preview: {} - {} mapeadas, {} droplist",
         res.fn_name,

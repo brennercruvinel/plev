@@ -11,9 +11,9 @@
 
 use std::collections::HashMap;
 
-use crate::tess;
-use monster::asset_path::pack_chunks;
-use monster::{
+use crate::formats::svg::tessellate;
+use motion::encoding::asset_path::pack_chunks;
+use motion::{
     Asset, AssetKind, Desc, DiscoverConfig, DiscoverError, Node, NodeKind, Props, WriteError,
     discover, encode,
 };

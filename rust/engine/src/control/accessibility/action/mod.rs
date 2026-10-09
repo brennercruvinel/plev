@@ -36,7 +36,7 @@
 use std::fmt;
 
 use accesskit::{Action, ActionData, ActionRequest, NodeId, TreeId};
-use sem::{ActionDecl, Actor, Node, Request, Role, SemError, SemId, Value, ValueKind};
+use accord::{ActionDecl, Actor, Node, Request, Role, SemError, SemId, Value, ValueKind};
 
 use super::tree::Shown;
 

@@ -19,21 +19,21 @@
 //! `control_size`, that control height at the frame's usual aspect (a
 //! thumbnail in a row).
 
-use comps::Rect;
-use comps::action::Badge;
-use comps::charts::draw as chart;
-use comps::content::{EmptyState, Panel, Separator, Stat, Table};
-use comps::feedback::ProgressBar;
-use comps::form::{Slider, TextField};
-use comps::nav::Tabs;
-use comps::recipe::{rounded_rect, shadow_stack};
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::image::ImageHandle;
-use engine::layout::TextMeasureSpec;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Elevation, Theme};
-use sem::{Snapshot, Value};
-use uir::{Axis, ChartKind, Component, SpacingToken};
+use engine::widgets::Rect;
+use engine::widgets::buttons::Badge;
+use engine::widgets::charts::draw as chart;
+use engine::widgets::content::{EmptyState, Panel, Separator, Stat, Table};
+use engine::widgets::feedback::ProgressBar;
+use engine::widgets::form::{Slider, TextField};
+use engine::widgets::nav::Tabs;
+use engine::widgets::recipe::{rounded_rect, shadow_stack};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::gpu::image::ImageHandle;
+use engine::compose::layout::TextMeasureSpec;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{ControlSize, Elevation, Theme};
+use accord::{Snapshot, Value};
+use plevir::{Axis, ChartKind, Component, SpacingToken};
 
 use crate::code;
 use crate::expand::Node;
@@ -283,7 +283,7 @@ pub(crate) fn draw(
             | Widget::Slider(_)
             | Widget::Chip(_)
     );
-    if !binds_itself && uir::role_of(node.component, &node.bind).is_some() {
+    if !binds_itself && plevir::role_of(node.component, &node.bind).is_some() {
         c.bind(&node.id, [rect.x, rect.y, rect.w, rect.h]);
     }
     match (node.component, widget) {
@@ -512,12 +512,12 @@ fn draw_chart(c: &mut Compositor, kind: ChartKind, data: &[String], rect: Rect, 
 
 #[cfg(test)]
 mod tests {
-    use comps::Rect;
-    use comps::content::Table;
-    use engine::compositor::{Compositor, LayerId, SceneNode};
-    use engine::theme::Theme;
-    use sem::{Role, Snapshot, SnapshotBuilder};
-    use uir::{Capabilities, GenerationPolicy, verify_json};
+    use engine::widgets::Rect;
+    use engine::widgets::content::Table;
+    use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+    use engine::styling::theme::Theme;
+    use accord::{Role, Snapshot, SnapshotBuilder};
+    use plevir::{Capabilities, GenerationPolicy, verify_json};
 
     use crate::surface::Surface;
 

@@ -5,10 +5,10 @@
 //! in this compositor, so no recorded control ever answers a hit test as a
 //! live one. every color is the theme's or the recording's own.
 
-use comps::Rect;
-use comps::overlay::OverlayManager;
-use comps::recipe::{focus_ring, rounded_rect_stroke};
-use engine::compositor::{Compositor, LayerId, SceneNode};
+use engine::widgets::Rect;
+use engine::widgets::overlay::OverlayManager;
+use engine::widgets::recipe::{focus_ring, rounded_rect_stroke};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 
 use crate::view::InspectorView;
 
@@ -96,6 +96,6 @@ impl InspectorView {
                 "the session holds no frame at or before it".to_owned(),
             ),
         };
-        comps::content::EmptyState::new(title, message).render(c, into, &self.theme);
+        engine::widgets::content::EmptyState::new(title, message).render(c, into, &self.theme);
     }
 }

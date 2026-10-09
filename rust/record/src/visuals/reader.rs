@@ -12,15 +12,15 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use engine::compositor::SceneNode;
-use engine::gpu::ImageHandle;
-use engine::path::TessellatedPath;
-use monster::{LoweredAsset, MonsterPlayer};
-use sem::Millis;
+use engine::drawing::compositor::SceneNode;
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::TessellatedPath;
+use motion::{LoweredAsset, MonsterPlayer};
+use accord::Millis;
 
 use crate::bound::{self, Bound, Step};
 use crate::error::ReadError;
-use crate::visual::{AssetKey, Visual, seconds};
+use crate::visuals::{AssetKey, Visual, seconds};
 
 /// one asset of a window.
 #[derive(Clone, Debug, PartialEq)]
@@ -169,7 +169,7 @@ impl Screen {
         let Some((chunk, at)) = self.locate(t) else {
             return Ok(None);
         };
-        let doc = monster::decode(&chunk.bytes).map_err(|e| ReadError::Chunk(e.to_string()))?;
+        let doc = motion::decode(&chunk.bytes).map_err(|e| ReadError::Chunk(e.to_string()))?;
         let mut player =
             MonsterPlayer::new(doc.timeline).map_err(|e| ReadError::Chunk(e.to_string()))?;
         let assets = chunk

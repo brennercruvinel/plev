@@ -19,8 +19,8 @@ mod support;
 use std::path::PathBuf;
 use std::process::Command;
 
-use git::GitEvent;
-use sem::{Actor, Snapshot};
+use gitdrv::GitEvent;
+use accord::{Actor, Snapshot};
 use support::{Rig, completed};
 
 /// The date of the rig's first commit, so its sha, the key of its node in

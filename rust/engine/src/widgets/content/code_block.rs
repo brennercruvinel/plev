@@ -11,12 +11,12 @@
 //! `+` and `-` of a diff included, so the kind never rests on the hue
 //! alone. Without rows the block draws exactly as it did.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::Theme;
 
-use crate::core::{Rect, with_alpha};
-use crate::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{Rect, with_alpha};
+use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
 
 /// The kind of one row of a code block: what a diff says of the line.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -297,13 +297,13 @@ impl CodeBlock {
 
 #[cfg(test)]
 mod tests {
-    use engine::color::Color;
-    use engine::compositor::{Compositor, LayerId, SceneNode};
-    use engine::text::TextMeasurer;
-    use engine::theme::Theme;
+    use crate::styling::color::Color;
+    use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    use crate::drawing::text::TextMeasurer;
+    use crate::styling::theme::Theme;
 
     use super::{CodeBlock, CodeLine, LineKind};
-    use crate::core::{Rect, with_alpha};
+    use crate::widgets::widget::{Rect, with_alpha};
 
     fn nodes(block: &CodeBlock, bounds: Rect, theme: &Theme) -> Vec<SceneNode> {
         let mut c = Compositor::new();

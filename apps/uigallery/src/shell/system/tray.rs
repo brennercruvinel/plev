@@ -21,13 +21,13 @@
 
 use std::sync::Mutex;
 
-use engine::platform::menu::{MenuItem, Predefined, Submenu};
-use engine::platform::tray::{Tray, TrayImage, TrayModel, default_tray};
-use sem::SemId;
+use engine::runtime::platform::menu::{MenuItem, Predefined, Submenu};
+use engine::runtime::platform::tray::{Tray, TrayImage, TrayModel, default_tray};
+use accord::SemId;
 
 use super::menu::view_menu;
-use super::{App, UserEvent};
-use crate::view::ShowcaseView;
+use super::super::{App, UserEvent};
+use crate::views::ShowcaseView;
 
 /// The shell's capability the icon asks for, as the projection names it
 /// (`view::dispatch::shell`).
@@ -147,12 +147,12 @@ pub(super) fn model(view: &ShowcaseView) -> TrayModel {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::platform::menu::{Entry, locked};
-    use engine::platform::tray::{FakeTray, TrayModel};
-    use sem::{SemId, Value};
+    use engine::runtime::platform::menu::{Entry, locked};
+    use engine::runtime::platform::tray::{FakeTray, TrayModel};
+    use accord::{SemId, Value};
 
-    use super::super::App;
-    use crate::view::{PAGES, ShowcaseView};
+    use super::super::super::App;
+    use crate::views::{PAGES, ShowcaseView};
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).expect("a valid id")
@@ -231,7 +231,7 @@ mod tests {
         );
         assert!(matches!(
             tray.menu.entries.last(),
-            Some(Entry::Predefined(engine::platform::menu::Predefined::Quit))
+            Some(Entry::Predefined(engine::runtime::platform::menu::Predefined::Quit))
         ));
 
         // the icon clicked: the shell is asked to show the window

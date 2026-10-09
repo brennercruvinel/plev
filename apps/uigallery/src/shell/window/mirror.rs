@@ -32,21 +32,21 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use engine::accessibility::primary;
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use rec::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
-use sem::redact::is_secret;
-use sem::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
+use engine::control::accessibility::primary;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use record::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
+use accord::redactor::is_secret;
+use accord::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use winit::window::WindowId;
-use wire::{
+use socket::{
     Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
     SceneWatch, SnapshotReply, StageReply,
 };
 
-use super::App;
+use super::super::App;
 
 /// The main window's name on the scene channel.
-pub const MAIN: &str = wire::MAIN_WINDOW;
+pub const MAIN: &str = socket::MAIN_WINDOW;
 
 /// The page's own window's name on the scene channel.
 pub const PAGE: &str = "page";
@@ -581,12 +581,12 @@ const LABEL: [f32; 4] = [0.35, 0.02, 0.16, 0.85];
 mod tests {
     use std::time::{Duration, Instant};
 
-    use engine::compositor::Compositor;
-    use wire::{AgentPort, Client, Config};
+    use engine::drawing::compositor::Compositor;
+    use socket::{AgentPort, Client, Config};
 
-    use super::super::App;
+    use super::super::super::App;
     use super::*;
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     /// The shell on the Todo page with its port in `dir`, and the main
     /// window's frame built.
@@ -606,7 +606,7 @@ mod tests {
         app.access.agent = Some(port);
         app.recording = Some(super::super::record::Recording::new(
             dir.join("sessions"),
-            rec::Limits::default(),
+            record::Limits::default(),
         ));
         app.draw_main();
         app
@@ -633,7 +633,7 @@ mod tests {
                         return seq;
                     }
                 }
-                Err(wire::WireError::Timeout(_)) => {}
+                Err(socket::WireError::Timeout(_)) => {}
                 Err(e) => panic!("{e}"),
             }
         }
@@ -730,14 +730,14 @@ mod tests {
         let looked = session
             .events()
             .iter()
-            .filter(|e| matches!(&e.kind, rec::Kind::Observed { actor, .. } if *actor == mirror))
+            .filter(|e| matches!(&e.kind, record::Kind::Observed { actor, .. } if *actor == mirror))
             .count();
         assert_eq!(looked, 2, "the watch and the look");
         let acted: Vec<(String, &str)> = session
             .events()
             .iter()
             .filter_map(|e| match &e.kind {
-                rec::Kind::Stage { request, stage, .. } if request.actor == mirror => Some((
+                record::Kind::Stage { request, stage, .. } if request.actor == mirror => Some((
                     format!("{} {}", request.target, request.action),
                     stage.name(),
                 )),
@@ -788,7 +788,7 @@ mod tests {
 
         let mut c = Client::connect(&path).expect("the client connects");
         c.set_timeout(Some(50)).expect("a timeout");
-        c.send(wire::Ask::Hello {
+        c.send(socket::Ask::Hello {
             name: "mirror".into(),
         })
         .expect("the viewer names itself");
@@ -809,7 +809,7 @@ mod tests {
             .events()
             .iter()
             .filter_map(|e| match &e.kind {
-                rec::Kind::Observed { actor, scope, .. } => Some((actor.clone(), scope.clone())),
+                record::Kind::Observed { actor, scope, .. } => Some((actor.clone(), scope.clone())),
                 _ => None,
             })
             .collect();
@@ -850,7 +850,7 @@ mod tests {
             .expect("the filter of the items done")
             .rect;
         app.view
-            .handle_event(&comps::prelude::WidgetEvent::MouseMove {
+            .handle_event(&engine::widgets::prelude::WidgetEvent::MouseMove {
                 x: rect[0] + rect[2] / 2.0,
                 y: rect[1] + rect[3] / 2.0,
             });

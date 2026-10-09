@@ -4,7 +4,7 @@ use winit::window::Window;
 
 use super::config::RenderConfig;
 use super::loss::DeviceLoss;
-use super::utils::{ortho_projection, texture_sampler_bgl, uniform_bgl};
+use super::presets::{ortho_projection, texture_sampler_bgl, uniform_bgl};
 
 /// Per-pipeline WGSL source: read from disk when `hot-reload` is enabled,
 /// embedded at compile time otherwise.
@@ -12,7 +12,7 @@ macro_rules! shader_src {
     ($name:literal) => {{
         #[cfg(hot_reload)]
         {
-            crate::hot_reload::shader_source($name)
+            crate::runtime::hot_reload::shader_source($name)
         }
         #[cfg(not(hot_reload))]
         {
@@ -71,15 +71,15 @@ pub struct GpuContext {
     /// Timestamp queries around the passes of `window::draw_frame`, only
     /// with `RenderConfig::gpu_timestamps` on a device that has
     /// `TIMESTAMP_QUERY`; `None` otherwise (see `perf::gpu_time`).
-    pub(crate) timestamps: Option<crate::perf::gpu_time::GpuTimestamps>,
+    pub(crate) timestamps: Option<crate::runtime::perf::gpu_time::GpuTimestamps>,
     /// Desktop debug builds: watches `src/gpu/shaders/`, see `hot_reload`.
     #[cfg(hot_reload)]
-    pub(crate) shader_watcher: Option<crate::hot_reload::ShaderWatcher>,
+    pub(crate) shader_watcher: Option<crate::runtime::hot_reload::ShaderWatcher>,
     /// Desktop debug builds: literal changes applied in place, code changes
     /// rebuild and relaunch. It lives here only because this is the one
     /// constructor every app calls.
     #[cfg(hot_reload)]
-    pub(super) _source_watcher: Option<crate::hot_reload::SourceWatcher>,
+    pub(super) _source_watcher: Option<crate::runtime::hot_reload::SourceWatcher>,
 }
 
 impl GpuContext {
@@ -257,7 +257,7 @@ impl GpuContext {
     /// in either constructor (before any await).
     fn apply_config(config: &mut RenderConfig) {
         config.msaa_samples = config.effective_msaa_samples();
-        crate::path::set_default_tolerance(config.path_tolerance);
+        crate::drawing::path::set_default_tolerance(config.path_tolerance);
     }
 
     fn new_instance() -> wgpu::Instance {
@@ -305,7 +305,7 @@ impl GpuContext {
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
         let timestamps =
-            crate::perf::gpu_time::device_features(adapter.features(), config.gpu_timestamps);
+            crate::runtime::perf::gpu_time::device_features(adapter.features(), config.gpu_timestamps);
         let (required_features, required_limits) = match config.compute {
             None => (timestamps, wgpu::Limits::default()),
             Some(asked) => {
@@ -451,7 +451,7 @@ impl GpuContext {
         });
 
         let timestamps = if config.gpu_timestamps {
-            crate::perf::gpu_time::GpuTimestamps::new(&device, &queue)
+            crate::runtime::perf::gpu_time::GpuTimestamps::new(&device, &queue)
         } else {
             None
         };
@@ -499,9 +499,9 @@ impl GpuContext {
     #[cfg(hot_reload)]
     fn with_source_watchers(mut self, window: &Arc<Window>) -> Self {
         self.shader_watcher = {
-            let dir = crate::hot_reload::shader_dir();
+            let dir = crate::runtime::hot_reload::shader_dir();
             let wake = window.clone();
-            match crate::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
+            match crate::runtime::hot_reload::ShaderWatcher::new(&dir, move || wake.request_redraw()) {
                 Ok(w) => {
                     log::info!("shader hot reload on: {}", dir.display());
                     Some(w)
@@ -514,8 +514,8 @@ impl GpuContext {
         };
         self._source_watcher = {
             let wake = window.clone();
-            match crate::hot_reload::SourceWatcher::new(
-                &crate::hot_reload::source_dirs(),
+            match crate::runtime::hot_reload::SourceWatcher::new(
+                &crate::runtime::hot_reload::source_dirs(),
                 move || wake.request_redraw(),
             ) {
                 Ok(w) => {

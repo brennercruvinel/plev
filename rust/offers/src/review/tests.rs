@@ -2,8 +2,8 @@
 //! commits" over a workbench with four commits, the same in portuguese,
 //! the files of the ide's own golden, and every refusal with why.
 
-use sem::{Confirm, Policy, Role, Snapshot, SnapshotBuilder};
-use uir::{
+use accord::{Confirm, Policy, Role, Snapshot, SnapshotBuilder};
+use plevir::{
     Capabilities, Component, GenerationPolicy, IrNode, Layout, SizeToken, TypographyRole,
     VerifiedIr,
 };

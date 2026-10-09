@@ -5,11 +5,11 @@
 
 use std::path::PathBuf;
 
-use engine::compositor::{SceneNode, TextNodeKey};
-use engine::gpu::ImageHandle;
-use engine::path::PathBuilder;
-use rec::{Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
-use sem::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
+use engine::drawing::compositor::{SceneNode, TextNodeKey};
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::PathBuilder;
+use record::{Build, Event, FileError, FileKind, InputKind, Kind, Limits, Recorder, Session, probe};
+use accord::{Actor, Dispatcher, Millis, Request, Role, Semantics, SnapshotBuilder, Value};
 
 use crate::apps::{Git, agent, id, look};
 
@@ -132,7 +132,7 @@ fn the_thesis_session_persists_and_reads_back_the_same() -> Fallible {
         );
         assert_eq!(file.scene_at(t)?, memory.scene_at(t)?, "scene at {t}");
     }
-    let sources = |s: &Session| -> Vec<Option<sem::Source>> {
+    let sources = |s: &Session| -> Vec<Option<accord::Source>> {
         let state = s.state_at(1_600).ok().flatten();
         state
             .map(|st| st.nodes().iter().map(|n| n.source.clone()).collect())
@@ -384,8 +384,8 @@ fn a_foreign_header_is_refused_by_name() -> Fallible {
         Err(FileError::StartMismatch { header: 7, .. })
     ));
     assert!(matches!(
-        monster::decode(&bytes),
-        Err(monster::ReadError::BadMagic)
+        motion::decode(&bytes),
+        Err(motion::ReadError::BadMagic)
     ));
     Ok(())
 }
@@ -403,7 +403,7 @@ fn an_animation_handed_to_the_session_reader_is_named() -> Fallible {
     .collect();
     let bytes = std::fs::read(golden)?;
     assert_eq!(probe(&bytes), FileKind::Animation);
-    assert!(monster::decode(&bytes).is_ok());
+    assert!(motion::decode(&bytes).is_ok());
     let refused = Session::from_bytes(&bytes);
     assert!(matches!(refused, Err(FileError::Animation)), "{refused:?}");
     let message = refused.err().map(|e| e.to_string()).unwrap_or_default();
@@ -476,7 +476,7 @@ fn a_path_comes_back_on_the_twips_grid_and_an_image_as_its_size() -> Fallible {
     };
     // the same triangles, corner by corner, within half a twip (monster
     // packs vertices in first-use order, so compare through the indices).
-    let corners = |p: &engine::path::TessellatedPath| -> Vec<[f32; 2]> {
+    let corners = |p: &engine::drawing::path::TessellatedPath| -> Vec<[f32; 2]> {
         p.indices
             .iter()
             .filter_map(|&i| p.vertices.get(i as usize).map(|v| v.position))
@@ -518,7 +518,7 @@ fn an_event_with_no_json_form_is_left_out_with_the_changes_after_it() -> Fallibl
     assert_eq!(written.dropped, 4, "the NaN change and the three after it");
     let file = Session::from_bytes(&bytes)?;
     let v = |t| -> Result<Option<Value>, Box<dyn std::error::Error>> {
-        let at = sem::StateRef::parse("gauge:v")?;
+        let at = accord::StateRef::parse("gauge:v")?;
         Ok(file.state_at(t)?.and_then(|s| s.value(&at).cloned()))
     };
     assert_eq!(v(0)?, Some(Value::Num(1.0)));
@@ -621,7 +621,7 @@ fn a_node_added_by_id_alone_reads_as_the_node_its_snapshot_holds() -> Fallible {
         return Err(format!("a whole snapshot at 10: {:?}", window.events()).into());
     };
     let mail = snapshot.get(&id("todo.item[mail]")).ok_or("no mail")?;
-    assert_eq!(changes, &[sem::Change::NodeAdded(Box::new(mail.clone()))]);
+    assert_eq!(changes, &[accord::Change::NodeAdded(Box::new(mail.clone()))]);
     let (bytes, _) = window.to_bytes()?;
 
     let old = events_before_83(&window, None)?;
@@ -680,7 +680,7 @@ fn open_the_named_sessions() -> Fallible {
             }
             if let Kind::Snapshot { changes, .. } = &event.kind {
                 for change in changes {
-                    if let sem::Change::NodeAdded(node) = change {
+                    if let accord::Change::NodeAdded(node) = change {
                         added.push(format!("{} ({:?} {:?})", node.id, node.role, node.label));
                     }
                 }

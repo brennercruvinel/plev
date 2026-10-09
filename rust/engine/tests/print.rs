@@ -23,15 +23,15 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::gpu::RenderConfig;
-use engine::headless::{HeadlessError, Renderer, Viewport};
-use engine::platform::print::{
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
+use engine::runtime::platform::print::{
     Destination, JobId, JobStatus, PAPER_DPI, PrintDocument, PrintError, PrintOptions, Printer,
     fit_scale, paper_scale,
 };
-use engine::text::TextStyle;
-use engine::text::probe::Rendered;
+use engine::drawing::text::TextStyle;
+use engine::drawing::text::probe::Rendered;
 
 /// One line of the Todo page, at the body size.
 const TEXT: &str = "Absorb the plev demos into the showcase";
@@ -196,7 +196,7 @@ fn the_document_from_the_headless_render_is_the_frame_at_the_papers_dpi() {
 #[cfg(all(unix, not(any(target_os = "android", target_os = "ios"))))]
 mod cups {
     use super::*;
-    use engine::platform::print::CupsPrinter;
+    use engine::runtime::platform::print::CupsPrinter;
 
     fn fake(name: &str) -> PathBuf {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -1,6 +1,6 @@
 use super::host::{Gpu, WindowHost};
-use crate::compositor::Layer;
-use crate::theme::Theme;
+use crate::drawing::compositor::Layer;
+use crate::styling::theme::Theme;
 
 /// Where a frame goes: a window's surface texture, presented at the end,
 /// or a headless host's target, read back by a test.
@@ -86,7 +86,7 @@ impl WindowHost {
         }
 
         // Resolve compositor
-        compositor.resolve(&crate::compositor::ResolveResources {
+        compositor.resolve(&crate::drawing::compositor::ResolveResources {
             device: &gpu.device,
             queue: &gpu.queue,
             format: gpu.surface_format(),
@@ -142,7 +142,7 @@ impl WindowHost {
             // tone instead of a washed-out ~2.5x lighter gray.
             let bg = theme.colors.bg.to_linear_array();
             #[cfg(hot_reload)]
-            let bg = crate::hot_reload::literals::linear(bg);
+            let bg = crate::runtime::hot_reload::literals::linear(bg);
             wgpu::Color {
                 r: bg[0] as f64,
                 g: bg[1] as f64,
@@ -192,11 +192,11 @@ impl WindowHost {
 
         // Feed the perf monitor from the existing per-frame sources.
         perf.record_frame(*tick, compositor.stats());
-        perf.record_memory(crate::perf::MemoryStats {
+        perf.record_memory(crate::runtime::perf::MemoryStats {
             glyph_atlas_bytes: text_system.atlas_memory_bytes(),
             texture_pool_bytes: texture_pool.memory_bytes(),
             layer_bytes: compositor.gpu_memory_bytes(),
-            process_rss_bytes: crate::perf::process_rss_bytes(),
+            process_rss_bytes: crate::runtime::perf::process_rss_bytes(),
         });
         if gpu.config.perf_log
             && gpu.config.perf_log_interval > 0

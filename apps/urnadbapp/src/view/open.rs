@@ -4,12 +4,12 @@
 //! The screen owns only widget state; recents, status and the embedder /
 //! ffmpeg probes live in `UrnauiView` and flow in as render context.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     Button, EventResult, Rect, Spinner, SpinnerSize, Wake, WidgetEvent, rounded_rect_stroke,
 };
-use engine::compositor::Compositor;
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
 
 #[cfg(not(target_arch = "wasm32"))]
 use super::field::Field;
@@ -59,7 +59,7 @@ impl OpenScreen {
             path: Field::new("/path/to/corpus.urna"),
             open_button: Button::new(label).icon("folder-open"),
             #[cfg(not(target_arch = "wasm32"))]
-            browse_button: Button::new("Browse…").variant(comps::prelude::ButtonVariant::Outline),
+            browse_button: Button::new("Browse…").variant(engine::widgets::prelude::ButtonVariant::Outline),
             recents_hover: None,
             spinner: Spinner::new().size(SpinnerSize::Sm),
             opening: false,
@@ -224,7 +224,7 @@ impl OpenScreen {
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme, ctx: &OpenContext) {
-        let style_14 = engine::text::TextStyle::new(14.0).with_weight(400);
+        let style_14 = engine::drawing::text::TextStyle::new(14.0).with_weight(400);
         let button = self.button_rect(content, theme);
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -380,7 +380,7 @@ impl OpenScreen {
             group_label(c, "RECENT FILES", content.x, y - 24.0, theme);
             for (i, (path, rect)) in ctx.recents.iter().zip(&rects).enumerate() {
                 if self.recents_hover == Some(i) {
-                    c.push(comps::prelude::rounded_rect(
+                    c.push(engine::widgets::prelude::rounded_rect(
                         rect.x,
                         rect.y,
                         rect.w,
@@ -389,7 +389,7 @@ impl OpenScreen {
                         theme.glass.surface_hover.0,
                     ));
                 }
-                if let Some(node) = comps::icons::icon_at(
+                if let Some(node) = engine::widgets::icons::icon_at(
                     "file",
                     16.0,
                     theme.glass.text_faint.0,
@@ -423,7 +423,7 @@ impl OpenScreen {
                 2.0,
             ));
             let hint = "release to open";
-            let (tw, _) = engine::text::TextMeasurer::measure_styled(hint, &style_14, None);
+            let (tw, _) = engine::drawing::text::TextMeasurer::measure_styled(hint, &style_14, None);
             panel(
                 c,
                 Rect::new(

@@ -27,25 +27,25 @@
 //! proposal would show it, so no model is asked; and an operation of
 //! task-70 applied to the surface shown, as the host applies one.
 
-use engine::gpu::image::ImageHandle;
-use propose::compose::Composite;
-use propose::{Ask, Rules, propose_verified};
-use sem::{
+use engine::drawing::gpu::image::ImageHandle;
+use offers::compose::Composite;
+use offers::{Ask, Rules, propose_verified};
+use accord::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
-use uir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr, verify_json};
 
 use super::super::SilencesPage;
-use super::super::jobs::instant_of;
-use super::super::semantics::ms;
+use super::super::fixed_page::jobs::instant_of;
+use super::super::fixed_page::semantics::ms;
 use super::access::{self, Pressed};
 use super::offer::{Answer as Reply, beside};
-use crate::view::ShowcaseView;
-use crate::view::apps::app::TodoPage;
-use crate::view::apps::surface_page::asking::{Answer, Job, Pending, Proposal};
-use crate::view::apps::surface_page::proposing::changing::{self, Changing};
-use crate::view::apps::surface_page::proposing::{Op, Proposer, Said, int};
+use crate::views::ShowcaseView;
+use crate::views::apps::todo::TodoPage;
+use crate::views::apps::surface::asking::{Answer, Job, Pending, Proposal};
+use crate::views::apps::surface::offering::changing::{self, Changing};
+use crate::views::apps::surface::offering::{Op, Proposer, Said, int};
 
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.
@@ -62,7 +62,7 @@ fn result(surface: &SemId, nodes: usize) -> Outcome {
 
 /// The whole page as its dispatcher sees it for a request: the fixed
 /// screen (`app`) with its generated block.
-pub(in crate::view::apps::silences) struct Page<'a> {
+pub(in crate::views::apps::silences) struct Page<'a> {
     pub app: &'a mut SilencesPage,
 }
 
@@ -374,7 +374,7 @@ impl Page<'_> {
             None => return Some(Err("the surface shows none of its steps".to_owned())),
         };
         let target = composite.template()?;
-        let op = uir::Op::Promote {
+        let op = plevir::Op::Promote {
             target,
             action: composite.name.clone(),
             into,
@@ -447,7 +447,7 @@ impl Page<'_> {
 
 /// The whole page projected: the fixed screen, then its generated block
 /// (the surface, the row, the close).
-pub(in crate::view::apps::silences) fn project_all(app: &SilencesPage, b: &mut SnapshotBuilder) {
+pub(in crate::views::apps::silences) fn project_all(app: &SilencesPage, b: &mut SnapshotBuilder) {
     app.project(b);
     app.generated.project(b);
 }
@@ -573,7 +573,7 @@ impl ShowcaseView {
     /// host's history with its inverse. The row says nothing: a person or
     /// an agent asks for a change through the row's `propose`. The
     /// operation in a line, or why it made no surface.
-    pub fn stage_silences_op(&mut self, op: uir::Op, by: Actor) -> Result<String, String> {
+    pub fn stage_silences_op(&mut self, op: plevir::Op, by: Actor) -> Result<String, String> {
         let page = &mut self.panes.silences;
         let app = page.snapshot().map_err(|e| e.to_string())?;
         let generated = &mut page.generated;

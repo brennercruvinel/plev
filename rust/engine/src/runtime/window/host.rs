@@ -34,18 +34,18 @@ use std::sync::Arc;
 use web_time::Instant;
 use winit::window::{Window, WindowId};
 
-use crate::animation::{AnimationTick, FrameClock};
-use crate::compositor::Compositor;
-use crate::effects::EffectProcessor;
-use crate::gpu::GpuContext;
+use crate::compose::animation::{AnimationTick, FrameClock};
+use crate::drawing::compositor::Compositor;
+use crate::drawing::effects::EffectProcessor;
+use crate::drawing::gpu::GpuContext;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::gpu::RenderConfig;
-use crate::gpu::texture_pool::TexturePool;
-use crate::input::{InputState, TouchInputState, TouchPointerSynth};
-use crate::perf::{PerfHud, PerfMonitor};
-use crate::platform::SafeAreaInsets;
-use crate::platform::ime::ImeState;
-use crate::text::TextSystem;
+use crate::drawing::gpu::RenderConfig;
+use crate::drawing::gpu::texture_pool::TexturePool;
+use crate::control::input::{InputState, TouchInputState, TouchPointerSynth};
+use crate::runtime::perf::{PerfHud, PerfMonitor};
+use crate::runtime::platform::SafeAreaInsets;
+use crate::runtime::platform::ime::ImeState;
+use crate::drawing::text::TextSystem;
 
 use super::events::{BufferedEvent, logical_projection_size};
 
@@ -109,7 +109,7 @@ pub struct WindowHost {
     /// Frames drawn so far.
     pub(crate) frames: u64,
     #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-    pub(crate) a11y: Option<crate::accessibility::Bridge>,
+    pub(crate) a11y: Option<crate::control::accessibility::Bridge>,
 }
 
 impl Default for WindowHost {
@@ -467,7 +467,7 @@ impl WindowHost {
         let Some(gpu) = self.gpu.as_mut() else {
             return false;
         };
-        let recovered = crate::gpu::recover_or_skip(
+        let recovered = crate::drawing::gpu::recover_or_skip(
             &mut self.compositor,
             &mut gpu.gpu,
             &mut gpu.text_system,
@@ -485,19 +485,19 @@ impl WindowHost {
     /// `Err(DeviceLost)` while the device is gone, `Err(NoAdapter)` for a
     /// host that has no target to read.
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn read(&self) -> Result<crate::headless::Frame, crate::headless::HeadlessError> {
-        use crate::headless::HeadlessError;
+    pub fn read(&self) -> Result<crate::drawing::headless::Frame, crate::drawing::headless::HeadlessError> {
+        use crate::drawing::headless::HeadlessError;
         let (Some(gpu), Some(target)) = (self.gpu.as_ref(), self.target.as_ref()) else {
             return Err(HeadlessError::NoAdapter);
         };
         if gpu.gpu.poll_device_loss() {
-            let lost = gpu.gpu.lost_device().unwrap_or(crate::gpu::LostDevice {
+            let lost = gpu.gpu.lost_device().unwrap_or(crate::drawing::gpu::LostDevice {
                 reason: wgpu::DeviceLostReason::Unknown,
                 message: String::new(),
             });
             return Err(HeadlessError::DeviceLost(lost));
         }
-        crate::headless::read_texture(&gpu.gpu, target)
+        crate::drawing::headless::read_texture(&gpu.gpu, target)
     }
 
     /// The app went to the background and the platform takes the window
@@ -540,12 +540,12 @@ impl WindowHost {
     /// it before the host handles it, and every frame's tree comes from
     /// this host's bindings.
     #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-    pub fn set_accessibility(&mut self, bridge: crate::accessibility::Bridge) {
+    pub fn set_accessibility(&mut self, bridge: crate::control::accessibility::Bridge) {
         self.a11y = Some(bridge);
     }
 
     #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
-    pub fn accessibility_mut(&mut self) -> Option<&mut crate::accessibility::Bridge> {
+    pub fn accessibility_mut(&mut self) -> Option<&mut crate::control::accessibility::Bridge> {
         self.a11y.as_mut()
     }
 

@@ -50,7 +50,7 @@ fn write(output: &str, bytes: &[u8]) {
 }
 
 fn lottie(json: &str, name: &str, output: &str) {
-    let (bytes, stats) = match lot::convert(json, name) {
+    let (bytes, stats) = match import::formats::lottie::convert(json, name) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("conversion failed: {e}");
@@ -85,7 +85,7 @@ fn lottie(json: &str, name: &str, output: &str) {
 }
 
 fn svg(svg: &str, name: &str, output: &str) {
-    let (bytes, stats) = match svg::convert(svg, name) {
+    let (bytes, stats) = match import::formats::svg::convert(svg, name) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("conversion failed: {e}");

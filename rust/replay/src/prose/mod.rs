@@ -9,7 +9,7 @@
 
 use std::fmt::Write as _;
 
-use sem::{Millis, Node, Rejection, RequestId, SemId};
+use accord::{Millis, Node, Rejection, RequestId, SemId};
 
 use crate::control::Control;
 use crate::describe;
@@ -311,7 +311,7 @@ fn scope_text(scope: Option<&SemId>) -> String {
     }
 }
 
-fn input_name(input: rec::InputKind) -> String {
+fn input_name(input: record::InputKind) -> String {
     match serde_json::to_value(input) {
         Ok(serde_json::Value::String(name)) => name,
         _ => format!("{input:?}"),

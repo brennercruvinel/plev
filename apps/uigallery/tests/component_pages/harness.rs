@@ -6,13 +6,13 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use comps::prelude::WidgetEvent;
-use engine::accessibility::accesskit::{Action, ActionData, ActionRequest, TreeId, TreeUpdate};
-use engine::accessibility::{self, Assist, Chrome, Shown};
-use engine::compositor::Compositor;
-use sem::{ActionName, Node, SemId, Stage, StateRef, Value};
-use showcase::view::ShowcaseView;
-use wire::{Act, AgentPort, Client, Config, Observe, Reply};
+use engine::widgets::prelude::WidgetEvent;
+use engine::control::accessibility::accesskit::{Action, ActionData, ActionRequest, TreeId, TreeUpdate};
+use engine::control::accessibility::{self, Assist, Chrome, Shown};
+use engine::drawing::compositor::Compositor;
+use accord::{ActionName, Node, SemId, Stage, StateRef, Value};
+use uigallery::views::ShowcaseView;
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 pub(crate) const CHROME: Chrome<'static> = Chrome {
     title: "plev, design system showcase",
@@ -118,7 +118,7 @@ impl Gallery {
             Ok(Assist::Request(r)) => r,
             other => panic!("{id} {action:?}: {other:?}"),
         };
-        assert_eq!(req.actor, sem::Actor::Assistive);
+        assert_eq!(req.actor, accord::Actor::Assistive);
         let receipt = self.view.act(req).expect("the page takes it");
         assert!(
             matches!(receipt.stage(), Some(Stage::Completed(_))),

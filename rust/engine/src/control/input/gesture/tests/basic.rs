@@ -1,9 +1,9 @@
 use std::time::Duration;
 use web_time::Instant;
 
-use crate::input::{GestureEvent, Phase, Point, SwipeDirection};
+use crate::control::input::{GestureEvent, Phase, Point, SwipeDirection};
 
-use crate::input::gesture::GestureRecognizer;
+use crate::control::input::gesture::GestureRecognizer;
 
 // Helpers for deterministic timing
 fn t0() -> Instant {

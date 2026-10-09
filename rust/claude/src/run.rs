@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use propose::ModelError;
+use offers::ModelError;
 
 use crate::Cancel;
 

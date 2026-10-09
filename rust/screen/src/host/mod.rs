@@ -31,18 +31,18 @@ mod prefer;
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use comps::Wake;
-use engine::compositor::Compositor;
-use engine::gpu::image::ImageHandle;
-use engine::theme::Theme;
-use sem::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
-use uir::{
+use engine::widgets::Wake;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::ImageHandle;
+use engine::styling::theme::Theme;
+use accord::{Actor, Receipt, Request, SemId, Snapshot, SnapshotBuilder};
+use plevir::{
     Adapted, Capabilities, Context, GenerationPolicy, Inverse, Op, Preference, Preferences,
     TransformError, VerifiedIr,
 };
 
 use crate::expand::expand;
-use crate::motion::{Ghost, tick_ghosts};
+use crate::transition::{Ghost, tick_ghosts};
 use crate::surface::Surface;
 
 /// the app, as a surface reaches it: its one dispatcher and its

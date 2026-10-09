@@ -9,8 +9,8 @@
 //! because discovery fits and RDP each spend strictly less than half a
 //! step. byte and B/s numbers print with --nocapture.
 
-use engine::compositor::SceneNode;
-use monster::{
+use engine::drawing::compositor::SceneNode;
+use motion::{
     DiscoverConfig, Easing, MonsterPlayer, Node, NodeKind, OptimizeCfg, Prop, Props, Value, decode,
     discover, encode, optimize, quantize_value,
 };
@@ -159,7 +159,7 @@ fn mode_b_discover_optimize_encode_decode_play_round_trip() {
         }
     }
 
-    let segs = |tl: &monster::Timeline| tl.tracks.iter().map(|t| t.segments.len()).sum::<usize>();
+    let segs = |tl: &motion::Timeline| tl.tracks.iter().map(|t| t.segments.len()).sum::<usize>();
     println!("== mode B end to end (20 nodes, 60 fps x 4 s = 241 samples) ==");
     println!(
         "  discovered: keyframes {}  tracks {}  segments {}  place/replace/remove {}/{}/{}",

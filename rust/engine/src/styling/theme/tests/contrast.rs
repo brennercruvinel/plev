@@ -22,8 +22,8 @@
 //! passing (take it off the list) and when a pair that passed starts
 //! failing.
 
-use crate::color::Color;
-use crate::theme::{ButtonRecipe, Theme};
+use crate::styling::color::Color;
+use crate::styling::theme::{ButtonRecipe, Theme};
 
 /// WCAG 2.2 AA: text (1.4.3).
 const TEXT: f64 = 4.5;

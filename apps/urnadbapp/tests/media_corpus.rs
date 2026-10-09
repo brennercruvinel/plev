@@ -17,8 +17,8 @@ use urna_format::{
     SPACE_DTYPE_F32, SpaceEntry, UrnaFileBuilder, encode_blob_data, encode_blob_refs,
     encode_blob_span_overlay, encode_space_table,
 };
-use urnaui::model::backend::UrnaBackend;
-use urnaui::model::types::SearchMode;
+use urnadbapp::backend::sources::native::UrnaBackend;
+use urnadbapp::backend::workers::messages::SearchMode;
 
 const TEXT_DIM: usize = 4;
 const VIS_DIM: usize = 2;
@@ -210,9 +210,9 @@ fn frame_plumbing_resolves_the_blob_range() {
         BLOB
     );
     // ffmpeg on a non-media blob: a typed failure, never a panic.
-    if urnaui::model::frames::ffmpeg_available() {
+    if urnadbapp::backend::sources::frames::ffmpeg_available() {
         let err =
-            urnaui::model::frames::decode_frame(backend.path().to_str().unwrap(), range, 1, 64)
+            urnadbapp::backend::sources::frames::decode_frame(backend.path().to_str().unwrap(), range, 1, 64)
                 .unwrap_err();
         assert!(!err.to_string().is_empty());
     }

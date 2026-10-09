@@ -5,19 +5,19 @@
 //! the session. Installed, it is an action of the app on every cut, and,
 //! with the review open, a button in each cut of it.
 
-use engine::compositor::Compositor;
-use engine::gpu::image::load_image_rgba;
-use sem::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::load_image_rgba;
+use accord::{Actor, Rejection, Request, RequestId, SemId, Stage, StateRef, Value};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::super::SilencesPage;
-use super::super::generated::page::Page;
-use super::super::semantics::ms;
+use super::super::generative::page::Page;
+use super::super::fixed_page::semantics::ms;
 use super::agent::{Dir, act, gallery, sid, snapshot};
 use super::{TURN, center, click, dispatch_as_test, frame, setup, stage, tester, wide};
-use crate::view::ShowcaseView;
-use crate::view::apps::app::TodoPage;
-use engine::theme::Theme;
+use crate::views::ShowcaseView;
+use crate::views::apps::todo::TodoPage;
+use engine::styling::theme::Theme;
 
 const BAND: &str = "silences_surface.composite";
 const INSTALL: &str = "silences_surface.composite.install";
@@ -180,18 +180,18 @@ fn declined_it_goes_and_the_same_sequence_is_not_offered_again() {
 fn through_the_port_an_agent_does_not_accept() {
     let dir = Dir(std::env::temp_dir().join(format!("plev-t70c-{}-offer", std::process::id())));
     let (seen, view) = gallery(&dir.0, |path| {
-        let mut c = wire::Client::connect(&path).unwrap();
+        let mut c = socket::Client::connect(&path).unwrap();
         c.set_timeout(Some(20_000)).unwrap();
         c.hello("claude").unwrap();
         let mut stages = Vec::new();
         for cut in [1, 2] {
             for action in ["preview_segment", "apply_cut"] {
-                let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+                let now = snapshot(c.observe(socket::Observe::default()).unwrap());
                 let target = format!("silences.cut[{cut}]");
                 stages.push(act(&mut c, &target, action, now.revision));
             }
         }
-        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        let now = snapshot(c.observe(socket::Observe::default()).unwrap());
         let offer = now.nodes.iter().any(|n| n.id == sid(BAND));
         let install = act(&mut c, INSTALL, "install", now.revision);
         (stages, offer, install)
@@ -258,7 +258,7 @@ fn installed_it_is_an_action_on_every_cut_and_a_button_in_the_open_review() {
             composite.label.as_deref(),
             Some("preview segment, then apply cut")
         );
-        assert_eq!(composite.policy, sem::Policy::default());
+        assert_eq!(composite.policy, accord::Policy::default());
     }
 
     // promoted by the host into each cut of the review, as the tester

@@ -4,8 +4,8 @@
 
 use std::sync::Arc;
 
-use rec::{Event, InputKind, Kind, Limits, ReadError, Recorder, Session};
-use sem::{Change, Dispatcher, Request, Role, Semantics, SnapshotBuilder, Stage};
+use record::{Event, InputKind, Kind, Limits, ReadError, Recorder, Session};
+use accord::{Change, Dispatcher, Request, Role, Semantics, SnapshotBuilder, Stage};
 
 use crate::apps::{Git, id, look};
 
@@ -163,7 +163,7 @@ fn two_dispatchers_never_mix_their_request_ids() -> Fallible {
     let ask = |git: &Git| {
         Request::observe(
             &look(git),
-            sem::Actor::Human,
+            accord::Actor::Human,
             "commit.submit",
             "submit",
             None,

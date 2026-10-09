@@ -2,11 +2,11 @@
 //! the counter are measured with TextMeasurer (one style per run, shared
 //! with drawing); constants exist only as min, max and gap.
 
-use comps::form::TextField;
-use comps::prelude::Rect;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Theme, TypographyScale};
-use showcase::model::todo::Filter;
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::Rect;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{Theme, TypographyScale};
+use crate::domain::todo::Filter;
 
 pub(super) const PAD: f32 = 24.0;
 /// Readability clamp: the app card never stretches past this width.

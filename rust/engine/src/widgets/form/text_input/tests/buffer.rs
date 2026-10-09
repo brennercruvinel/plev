@@ -1,4 +1,4 @@
-use crate::form::text_input::*;
+use crate::widgets::form::text_input::*;
 
 // -- TextBuffer tests --
 
@@ -208,17 +208,17 @@ fn set_text_resets() {
 
 #[test]
 fn cursor_x_start_is_zero() {
-    assert!((engine::text::TextMeasurer::cursor_x("hello", 16.0, 0) - 0.0).abs() < 0.01);
+    assert!((crate::drawing::text::TextMeasurer::cursor_x("hello", 16.0, 0) - 0.0).abs() < 0.01);
 }
 
 #[test]
 fn hit_test_far_right_caps_at_end() {
-    let pos = engine::text::TextMeasurer::hit_test("hello", 16.0, None, 1000.0, 10.0);
+    let pos = crate::drawing::text::TextMeasurer::hit_test("hello", 16.0, None, 1000.0, 10.0);
     assert_eq!(pos, 5);
 }
 
 #[test]
 fn hit_test_far_left_is_start() {
-    let pos = engine::text::TextMeasurer::hit_test("hello", 16.0, None, -10.0, 10.0);
+    let pos = crate::drawing::text::TextMeasurer::hit_test("hello", 16.0, None, -10.0, 10.0);
     assert_eq!(pos, 0);
 }

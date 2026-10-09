@@ -3,12 +3,12 @@
 //! pushing a node outside a sane envelope. Nothing here checks pixels;
 //! it checks that no widget assumes HOFF, a wide window or a mouse.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::{Intent, Theme};
-use sem::{Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::styling::theme::{Intent, Theme};
+use accord::{Role, SemId, SnapshotBuilder};
 
-use crate::core::Rect;
-use crate::prelude::*;
+use crate::widgets::widget::Rect;
+use crate::widgets::prelude::*;
 
 const THEMES: [&str; 12] = [
     "hoff",

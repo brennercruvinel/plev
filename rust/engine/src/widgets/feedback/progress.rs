@@ -2,10 +2,10 @@
 //! rim, a thinner fill bar inside it with the 90 degree white gradient
 //! (or the intent tint). Track and fill heights are `control` tokens.
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::theme::{Intent, Theme};
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::styling::theme::{Intent, Theme};
 
-use crate::core::{Rect, intent_fill};
+use crate::widgets::widget::{Rect, intent_fill};
 
 /// Determinate progress bar, colored by intent.
 #[derive(Clone, Debug)]

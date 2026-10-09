@@ -3,9 +3,9 @@
 //! the bindings refused with nothing declared and accepted by the app, the
 //! goldens.
 
-use parser::{Imported, Need, Report};
-use sem::Snapshot;
-use uir::{Capabilities, GenerationPolicy, IrNode, Rule, verify};
+use import::{Imported, Need, Report};
+use accord::Snapshot;
+use plevir::{Capabilities, GenerationPolicy, IrNode, Rule, verify};
 
 use super::check_golden;
 
@@ -152,7 +152,7 @@ pub fn refused_for_its_bindings(imported: &Imported) {
     }
 }
 
-pub fn accepted_by(imported: &Imported, app: &Snapshot) -> uir::VerifiedIr {
+pub fn accepted_by(imported: &Imported, app: &Snapshot) -> plevir::VerifiedIr {
     verify(
         &imported.ir,
         &Capabilities::from_snapshot(app),
@@ -169,6 +169,6 @@ pub fn goldens(imported: &Imported, dir: &str) {
         &imported.report.to_json_string(),
     );
     // the golden reads back as the same IR, through uir's one reader
-    let back = uir::parse(&ir).unwrap_or_else(|e| panic!("{e:#?}"));
+    let back = plevir::parse(&ir).unwrap_or_else(|e| panic!("{e:#?}"));
     assert_eq!(back, imported.ir);
 }

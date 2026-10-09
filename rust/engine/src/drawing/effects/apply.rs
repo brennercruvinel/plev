@@ -1,8 +1,8 @@
 use wgpu::util::DeviceExt;
 
-use super::processor::EffectProcessor;
-use super::types::*;
-use crate::gpu::texture_pool::{TextureHandle, TexturePool};
+use super::sequencer::EffectProcessor;
+use super::parameters::*;
+use crate::drawing::gpu::texture_pool::{TextureHandle, TexturePool};
 
 /// Shared GPU context for effect passes.
 pub(crate) struct EffectContext<'a> {

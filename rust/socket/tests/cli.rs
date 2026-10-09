@@ -11,9 +11,9 @@ use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::Revision;
+use accord::Revision;
 use toy::ToyHost;
-use wire::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server};
+use socket::{AgentPort, Config, Host, ProtoError, Reply, ServerMsg, decode_server};
 
 struct Run {
     code: i32,
@@ -172,7 +172,7 @@ fn observe_and_act_by_app_name_with_their_exit_codes() {
         panic!("a stage");
     };
     let asked = first.asked.as_ref().unwrap();
-    assert_eq!(asked.actor, sem::Actor::Agent { name: "cli".into() });
+    assert_eq!(asked.actor, accord::Actor::Agent { name: "cli".into() });
 
     // the completed line carries the revision the app is at, and the next
     // command takes it: a delta since it, an act resting on it.
@@ -378,7 +378,7 @@ fn an_act_that_reads_a_node_its_name_never_observed_is_the_error_exit() {
     let asked = first.asked.as_ref().unwrap();
     assert_eq!(
         asked.actor,
-        sem::Actor::Agent {
+        accord::Actor::Agent {
             name: "fresh".into()
         }
     );
@@ -386,13 +386,13 @@ fn an_act_that_reads_a_node_its_name_never_observed_is_the_error_exit() {
 }
 
 /// the request that waits for a person, if one does.
-fn waiting(host: &ToyHost) -> Option<sem::RequestId> {
+fn waiting(host: &ToyHost) -> Option<accord::RequestId> {
     (1..=64)
-        .filter_map(|n| sem::RequestId::parse(&n.to_string()).ok())
+        .filter_map(|n| accord::RequestId::parse(&n.to_string()).ok())
         .find(|id| {
             host.dispatcher
                 .receipt(*id)
-                .is_some_and(|r| r.stage() == Some(&sem::Stage::AwaitingConfirmation))
+                .is_some_and(|r| r.stage() == Some(&accord::Stage::AwaitingConfirmation))
         })
 }
 
@@ -412,11 +412,11 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
                 host.clock += 1;
                 if confirm {
                     host.dispatcher
-                        .confirm(&mut host.app, id, sem::Actor::Human, host.clock)
+                        .confirm(&mut host.app, id, accord::Actor::Human, host.clock)
                         .unwrap();
                 } else {
                     host.dispatcher
-                        .decline(id, sem::Actor::Human, host.clock)
+                        .decline(id, accord::Actor::Human, host.clock)
                         .unwrap();
                 }
             }
@@ -470,8 +470,8 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
     };
     assert_eq!(
         last.stage,
-        sem::Stage::Rejected(sem::Rejection::Declined {
-            by: sem::Actor::Human
+        accord::Stage::Rejected(accord::Rejection::Declined {
+            by: accord::Actor::Human
         })
     );
     assert!(last.revision.is_some(), "a terminal stage");
@@ -481,7 +481,7 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
         "the person answered: nothing points at asking"
     );
 
-    let long = "x".repeat(wire::MAX_ASK + 1);
+    let long = "x".repeat(socket::MAX_ASK + 1);
     let refused = plev(
         &mut port,
         &woke,
@@ -497,7 +497,7 @@ fn act_ask_waits_for_the_person_and_exits_by_the_answer() {
 /// a person's act through the toy's dispatcher by assistive technology.
 fn assistive(host: &mut ToyHost, target: &str, action: &str) {
     let seen = host.snapshot();
-    let req = sem::Request::observe(&seen, sem::Actor::Assistive, target, action, None).unwrap();
+    let req = accord::Request::observe(&seen, accord::Actor::Assistive, target, action, None).unwrap();
     host.clock += 1;
     host.dispatcher.dispatch(&mut host.app, req, host.clock);
 }
@@ -533,7 +533,7 @@ fn a_stale_refusal_naming_a_person_points_at_the_question_on_stderr() {
     let canonical: String = by_people
         .out
         .iter()
-        .map(|m| format!("{}\n", wire::encode_server(m)))
+        .map(|m| format!("{}\n", socket::encode_server(m)))
         .collect();
     assert_eq!(by_people.stdout, canonical, "the stages and nothing else");
     assert_eq!(

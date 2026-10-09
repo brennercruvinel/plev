@@ -4,8 +4,8 @@
 //! normalization and constant grid counts replaced by a nice-tick axis and
 //! a gutter sized from real text measurement.
 
-use crate::core::Rect;
-use engine::text::TextStyle;
+use crate::widgets::widget::Rect;
+use crate::drawing::text::TextStyle;
 
 use super::{Axis, Label, drop_colliding, format_tick, nice_ticks};
 

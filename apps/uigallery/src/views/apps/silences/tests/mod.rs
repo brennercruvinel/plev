@@ -13,17 +13,17 @@ mod composites;
 mod ffmpeg;
 mod generative;
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode};
-use engine::theme::Theme;
-use sem::{Actor, Change, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value};
-use showcase::model::silences::{Decision, PROBE_STDERR, parse};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::styling::theme::Theme;
+use accord::{Actor, Change, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value};
+use crate::domain::silences::{Decision, PROBE_STDERR, parse};
 
 use super::SilencesPage;
-use super::semantics::Ids;
-use super::worker::Worker;
-use crate::view::EditKey;
-use crate::view::apps::app::TodoPage;
+use super::fixed_page::semantics::Ids;
+use super::fixed_page::worker::Worker;
+use crate::views::EditKey;
+use crate::views::apps::todo::TodoPage;
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;
@@ -127,7 +127,7 @@ fn decisions(page: &SilencesPage) -> Vec<Decision> {
 
 /// The image nodes of the frame (the video box and the thumbnails).
 fn images(c: &Compositor) -> usize {
-    c.layer(engine::compositor::LayerId::DEFAULT)
+    c.layer(engine::drawing::compositor::LayerId::DEFAULT)
         .map(|l| {
             l.nodes()
                 .iter()
@@ -342,15 +342,15 @@ fn apply_by_click_and_reject_by_request_reach_the_same_state() {
     frame(&mut page, content, &theme);
     assert_eq!(
         page.rows[0].apply.variant,
-        comps::prelude::ButtonVariant::Secondary
+        engine::widgets::prelude::ButtonVariant::Secondary
     );
     assert_eq!(
         page.rows[0].reject.variant,
-        comps::prelude::ButtonVariant::Outline
+        engine::widgets::prelude::ButtonVariant::Outline
     );
     assert_eq!(
         page.rows[1].reject.variant,
-        comps::prelude::ButtonVariant::Secondary
+        engine::widgets::prelude::ButtonVariant::Secondary
     );
     assert_eq!(
         page.counts_text(),
@@ -433,7 +433,7 @@ fn detect_silence_starts_and_completes_in_the_wake_with_new_cuts() {
     // nothing arrived yet: the wake asks to look again, no frame now
     let wake = page.wake(TURN, &mut todo);
     assert!(!wake.now);
-    assert_eq!(wake.next, Some(super::worker::POLL));
+    assert_eq!(wake.next, Some(super::fixed_page::worker::POLL));
     assert!(matches!(stage(&todo, id), Stage::Executing));
 
     page.worker.release();
@@ -477,7 +477,7 @@ fn detect_silence_starts_and_completes_in_the_wake_with_new_cuts() {
     assert!(page.frames.values().all(Result::is_ok));
     let c = frame(&mut page, wide(), &theme);
     assert_eq!(images(&c), 3, "the video box and two thumbnails");
-    assert_eq!(page.wake(TURN, &mut todo), comps::prelude::Wake::idle());
+    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
 }
 
 /// A preview: the row's click shows the cut's middle; its frame is
@@ -549,8 +549,8 @@ fn preview_segment_shows_the_cut_and_decodes_its_frame() {
     // a click on a mark of the band previews too (the band is in the
     // fixed screen's rect, under the proposing row)
     let fixed = page.halves(content, &theme).fixed;
-    let mark = super::layout::mark_rect(
-        super::layout::compute(&page, fixed, &theme).timeline,
+    let mark = super::fixed_page::layout::mark_rect(
+        super::fixed_page::layout::compute(&page, fixed, &theme).timeline,
         page.model.cuts()[1].segment(),
         12.0,
     );
@@ -793,7 +793,7 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
         assert!(h.surface.is_none());
         assert_eq!((h.fixed.x, h.fixed.w), (content.x, content.w));
         assert!(h.fixed.y >= h.row.band.bottom());
-        let l = super::layout::compute(&page, h.fixed, &theme);
+        let l = super::fixed_page::layout::compute(&page, h.fixed, &theme);
         let wide = content.w >= theme.size.card_min_w * 2.0 + theme.spacing.xl;
         if wide {
             assert_eq!(l.side_card.y, l.video_card.y, "side by side");
@@ -859,7 +859,7 @@ fn wide_and_narrow_viewports_lay_the_cards_out_and_bind_the_same_ids() {
 /// it. `UIR_BLESS=1` writes it again.
 #[test]
 fn the_app_projection_is_the_uir_golden() {
-    let mut view = crate::view::ShowcaseView::new(1200.0, 800.0);
+    let mut view = crate::views::ShowcaseView::new(1200.0, 800.0);
     view.jump_to_page("silences");
     let mut c = Compositor::new();
     view.render(&mut c);
@@ -874,7 +874,7 @@ fn the_app_projection_is_the_uir_golden() {
         snap.get(&sid("silences_surface.intent")).is_none(),
         "the row is the page's, not the app's"
     );
-    let mut text = crate::app::semantics_json(&snap, false).expect("json prints");
+    let mut text = crate::shell::semantics_json(&snap, false).expect("json prints");
     text.push('\n');
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../uir/fixtures/showcase-silences.snapshot.json");
@@ -896,7 +896,7 @@ fn the_app_projection_is_the_uir_golden() {
 /// a detect ends failed, saying why.
 #[test]
 fn the_gallery_routes_the_page() {
-    let mut view = crate::view::ShowcaseView::new(1200.0, 800.0);
+    let mut view = crate::views::ShowcaseView::new(1200.0, 800.0);
     view.jump_to_page("silences");
     assert_eq!(view.page_title(), "Silences");
     let snap = view.semantics().expect("the page projects");

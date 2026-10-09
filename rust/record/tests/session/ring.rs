@@ -2,8 +2,8 @@
 //! least the last `max_age` and not much more, it stays under
 //! `max_bytes`, and what it keeps always opens at a full snapshot.
 
-use rec::{InputKind, Kind, Limits, Recorder, Session};
-use sem::{
+use record::{InputKind, Kind, Limits, Recorder, Session};
+use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Request, RequestId, Role, Semantics,
     SnapshotBuilder,
 };

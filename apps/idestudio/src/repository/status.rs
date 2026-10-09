@@ -3,8 +3,8 @@
 //! accents, so file states map onto those instead of a foreign
 //! yellow/blue/purple palette.
 
-use engine::color::Color;
-use engine::theme::Theme;
+use engine::styling::color::Color;
+use engine::styling::theme::Theme;
 
 pub struct StatusColors {
     pub modified: Color,

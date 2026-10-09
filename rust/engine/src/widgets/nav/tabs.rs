@@ -10,13 +10,13 @@
 //! [`Tabs::project`] declares the strip in a semantic projection; the app
 //! still owns `active`.
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::{ControlSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::{ControlSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::{focus_ring, focus_ring_inside, glass_pill, shadow_node};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::recipe::{focus_ring, focus_ring_inside, glass_pill, shadow_node};
 
 /// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
 /// give the widget [`Tabs::height`] (one `Md` control) for the canonical

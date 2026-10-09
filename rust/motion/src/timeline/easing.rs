@@ -11,8 +11,8 @@
 //! named presets beyond linear/hold/ae-default, so the dense table ends
 //! at 0x20. 0x21..=0xFE stay reserved.
 
-use crate::quant;
-use engine::animation::Easing as PlevEasing;
+use crate::encoding::quantize;
+use engine::compose::animation::Easing as PlevEasing;
 
 /// Wire id of a custom cubic bezier segment.
 pub const CUSTOM_BEZIER_BYTE: u8 = 0xFF;
@@ -160,7 +160,7 @@ impl Easing {
     /// Sample the eased progress at `t` in [0,1] through plev's own
     /// `ease()`, so the player and ui animation share one curve library.
     pub fn sample(self, t: f32) -> f32 {
-        engine::animation::ease(t, self.into())
+        engine::compose::animation::ease(t, self.into())
     }
 }
 

@@ -1,6 +1,6 @@
 use web_time::Instant;
 
-use crate::input::{
+use crate::control::input::{
     DOUBLE_TAP_TIMEOUT, DoubleTapEvent, DragEvent, GestureEvent, LONG_PRESS_DURATION,
     LongPressEvent, Phase, PinchEvent, Point, SWIPE_MIN_DIST, SWIPE_MIN_VEL, SwipeEvent,
     TAP_MAX_DURATION, TOUCH_SLOP, TapEvent,

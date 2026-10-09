@@ -8,15 +8,15 @@
 
 use std::collections::BTreeSet;
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Actor, SemId, StateRef, Value};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Actor, SemId, StateRef, Value};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::{FORMS, SurfacePage};
-use crate::view::EditKey;
-use crate::view::apps::app::TodoPage;
+use crate::views::EditKey;
+use crate::views::apps::todo::TodoPage;
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;
@@ -214,7 +214,7 @@ fn the_page_projects_the_todo_and_the_surface_as_one_snapshot() {
         assert!(snap.get(&sid(id)).is_some(), "{id}");
     }
     let add = snap.get(&sid("todo_panel.add")).unwrap();
-    assert_eq!(add.role, sem::Role::Button);
+    assert_eq!(add.role, accord::Role::Button);
     // blank field: the add is the todo's submit, disabled as it is
     assert!(!add.enabled);
     assert_eq!(

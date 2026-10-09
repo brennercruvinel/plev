@@ -9,14 +9,14 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use sem::{ActionName, Actor, RequestId, SemId, StateRef, Value};
-use showcase::model::silences::{PROBE_STDERR, parse};
-use wire::{Act, AgentPort, Client, Config, Observe, Reply};
+use engine::drawing::compositor::Compositor;
+use accord::{ActionName, Actor, RequestId, SemId, StateRef, Value};
+use crate::domain::silences::{PROBE_STDERR, parse};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
-use super::super::worker::Worker;
+use super::super::fixed_page::worker::Worker;
 use super::TURN;
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 pub(super) fn sid(text: &str) -> SemId {
     SemId::parse(text).unwrap()
@@ -87,7 +87,7 @@ pub(super) fn gallery_with<T: Send + 'static>(
     (agent.join().unwrap(), view)
 }
 
-pub(super) fn snapshot(reply: Reply) -> wire::SnapshotReply {
+pub(super) fn snapshot(reply: Reply) -> socket::SnapshotReply {
     match reply {
         Reply::Snapshot(s) => s,
         other => panic!("a snapshot: {other:?}"),
@@ -98,7 +98,7 @@ pub(super) fn act(
     c: &mut Client,
     target: &str,
     action: &str,
-    r: sem::Revision,
+    r: accord::Revision,
 ) -> Vec<&'static str> {
     let act = Act::from_revision(sid(target), ActionName::parse(action).unwrap(), r);
     c.act(act, |_| {})
@@ -108,7 +108,7 @@ pub(super) fn act(
         .collect()
 }
 
-fn state<'a>(reply: &'a wire::SnapshotReply, id: &str, key: &str) -> Option<&'a Value> {
+fn state<'a>(reply: &'a socket::SnapshotReply, id: &str, key: &str) -> Option<&'a Value> {
     reply
         .nodes
         .iter()

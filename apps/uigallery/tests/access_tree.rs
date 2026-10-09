@@ -24,14 +24,14 @@
 //! it shows (`view::dispatch::component`).
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use engine::accessibility::accesskit::{
+use engine::control::accessibility::accesskit::{
     Action, ActionData, ActionRequest, Live, Node as AkNode, NodeId, Role as AkRole, TreeId,
     TreeUpdate,
 };
-use engine::accessibility::{self, Assist, Chrome, Shown, focus};
-use engine::compositor::Compositor;
-use sem::{Actor, Request, Role, SemId, StateKey, Value};
-use showcase::view::{PAGES, ShowcaseView};
+use engine::control::accessibility::{self, Assist, Chrome, Shown, focus};
+use engine::drawing::compositor::Compositor;
+use accord::{Actor, Request, Role, SemId, StateKey, Value};
+use uigallery::views::{PAGES, ShowcaseView};
 
 /// The pages that project their meaning, in sidebar order: since phase
 /// 2b every component page whose widgets project in comps ("Alert
@@ -281,7 +281,7 @@ impl Seen {
         out
     }
 
-    fn sem(&self, id: &SemId) -> &sem::Node {
+    fn sem(&self, id: &SemId) -> &accord::Node {
         match self.shown.snapshot.get(id) {
             Some(n) => n,
             None => panic!("{id} is in the tree and not in the snapshot"),
@@ -515,13 +515,13 @@ const UNREACHABLE: &[&str] = &[
 /// is disabled, so the tree does not offer the press until it is on (a
 /// field with no text, a propose with no intent). The press is there the
 /// moment the action is.
-fn off(node: &sem::Node) -> bool {
+fn off(node: &accord::Node) -> bool {
     accessibility::primary(node).is_some_and(|d| !d.enabled || !node.enabled)
 }
 
 /// The node with its list `expanded` the other way: a select's press is
 /// `open` while shut and `close` while open, so both are reached by it.
-fn flipped(node: &sem::Node) -> sem::Node {
+fn flipped(node: &accord::Node) -> accord::Node {
     let mut other = node.clone();
     let open = matches!(node.state.get("expanded"), Some(Value::Bool(true)));
     if let Ok(key) = StateKey::parse("expanded") {
@@ -680,9 +680,9 @@ fn the_focus_a_reader_leaves_goes_with_escape_and_with_a_click() {
         };
         let (x, y) = (x + w / 2.0, y + h / 2.0);
         seen.view
-            .handle_event(&comps::prelude::WidgetEvent::MouseDown { x, y });
+            .handle_event(&engine::widgets::prelude::WidgetEvent::MouseDown { x, y });
         seen.view
-            .handle_event(&comps::prelude::WidgetEvent::MouseUp { x, y });
+            .handle_event(&engine::widgets::prelude::WidgetEvent::MouseUp { x, y });
         assert_eq!(
             focused(&seen.view).as_deref(),
             Some(field),

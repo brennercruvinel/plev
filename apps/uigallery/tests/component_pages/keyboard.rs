@@ -5,12 +5,12 @@
 //! (`handle_key(" ")`), Escape (`close_top_overlay`) and the wheel
 //! (`handle_event`). No window, no key of the system.
 
-use comps::prelude::WidgetEvent;
-use engine::accessibility::focus;
-use engine::compositor::SceneNode;
-use engine::theme::Theme;
-use sem::{Role, SemId, Snapshot, Value};
-use showcase::view::{EditKey, NavKey};
+use engine::widgets::prelude::WidgetEvent;
+use engine::control::accessibility::focus;
+use engine::drawing::compositor::SceneNode;
+use engine::styling::theme::Theme;
+use accord::{Role, SemId, Snapshot, Value};
+use uigallery::views::{EditKey, NavKey};
 use winit::keyboard::ModifiersState;
 
 use super::harness::{Gallery, gallery, sid};

@@ -8,8 +8,8 @@
 //! The layer is created lazily on the first draw and removed by
 //! [`PerfHud::clear`], so a disabled HUD costs no layer texture.
 
-use crate::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::text::{TextMeasurer, TextStyle};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
 
 use super::{PerfSnapshot, mb};
 

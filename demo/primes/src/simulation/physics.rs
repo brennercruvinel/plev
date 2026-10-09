@@ -8,10 +8,10 @@
 //! rather than mutated mid-scan (the demo's Gauss-Seidel); visually identical
 //! and free of aliasing.
 
-use crate::sim::coherence::CoherenceMatrix;
-use crate::sim::grid::Grid;
-use crate::sim::params as p;
-use crate::sim::particle::Particle;
+use crate::simulation::coherence::CoherenceMatrix;
+use crate::simulation::grid::Grid;
+use crate::simulation::parameters as p;
+use crate::simulation::particle::Particle;
 use std::f32::consts::{PI, TAU};
 
 /// a drawn bond between two particles for this frame (the demo's lineBuffer).

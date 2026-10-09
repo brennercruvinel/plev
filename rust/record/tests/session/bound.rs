@@ -3,9 +3,9 @@
 //! stacking order, read back from memory and from the file, cut with the
 //! ring and the export, and absent from a file written before it.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use rec::{Bound, FileError, Limits, Recorder, Session};
-use sem::{Millis, SemId};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use record::{Bound, FileError, Limits, Recorder, Session};
+use accord::{Millis, SemId};
 use sha2::{Digest, Sha256};
 
 type Fallible = Result<(), Box<dyn std::error::Error>>;
@@ -211,7 +211,7 @@ fn the_bindings_of_a_frame_are_kept_when_they_change_and_read_back_at_any_time()
     let written = rec.persist(&path)?;
     assert!(written.bindings_bytes > 0, "{written:?}");
     let bytes = std::fs::read(&path)?;
-    assert_eq!(bytes[4..6], rec::VERSION_BINDINGS.to_le_bytes());
+    assert_eq!(bytes[4..6], record::VERSION_BINDINGS.to_le_bytes());
     let file = Session::open(&path)?;
     for t in 90..400 {
         assert_eq!(file.bindings_at(t), memory.bindings_at(t), "at {t}");
@@ -276,7 +276,7 @@ fn every_chunk_opens_with_the_whole_list_so_the_ring_and_the_export_keep_them() 
 /// its index entry dropped, the offsets moved up, the version 0.
 fn without_bindings(bytes: &[u8]) -> Vec<u8> {
     const ENTRY: usize = 49;
-    let build = rec::Build::current();
+    let build = record::Build::current();
     let count_at = 4 + 2 + 2 + 8 + 1 + build.version.len() + 1 + build.git.len();
     let entries = count_at + 2;
     let count = u16::from_le_bytes([bytes[count_at], bytes[count_at + 1]]);
@@ -316,14 +316,14 @@ fn a_file_from_before_the_bindings_opens_with_none() -> Fallible {
     let bare = Recorder::default();
     bare.frame_scene(10, &[rect(0.0, 0.0, 4.0, 4.0)])?;
     let (bare, written) = bare.snapshot_window().to_bytes()?;
-    assert_eq!(bare[4..6], rec::VERSION.to_le_bytes());
+    assert_eq!(bare[4..6], record::VERSION.to_le_bytes());
     assert_eq!(written.bindings_bytes, 0);
     let back = Session::from_bytes(&bare)?;
     assert_eq!(back.bindings_at(10), Some(Vec::new()));
 
     // and a version 0 file does not carry section B.
     let mut forged = bytes.clone();
-    forged[4..6].copy_from_slice(&rec::VERSION.to_le_bytes());
+    forged[4..6].copy_from_slice(&record::VERSION.to_le_bytes());
     assert!(matches!(
         Session::from_bytes(&forged),
         Err(FileError::UnknownSection(b'B'))
@@ -335,7 +335,7 @@ fn a_file_from_before_the_bindings_opens_with_none() -> Fallible {
 /// sha256 and length made right, so only the payload is wrong.
 fn with_section_b(bytes: &[u8], payload: &[u8]) -> Vec<u8> {
     const ENTRY: usize = 49;
-    let build = rec::Build::current();
+    let build = record::Build::current();
     let entries = 4 + 2 + 2 + 8 + 1 + build.version.len() + 1 + build.git.len() + 2;
     let b_entry = entries + 4 * ENTRY;
     let b_offset = u64::from_le_bytes(bytes[b_entry + 1..b_entry + 9].try_into().unwrap_or([0; 8]));

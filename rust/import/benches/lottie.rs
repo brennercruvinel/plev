@@ -5,7 +5,7 @@
 //! discovery and the encode pipeline.
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use lot::convert;
+use import::formats::lottie::convert;
 
 const LOTTIE: &str = r#"{
   "fr": 30, "ip": 0, "op": 30, "w": 200, "h": 200,

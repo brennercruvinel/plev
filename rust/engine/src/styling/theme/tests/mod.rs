@@ -6,7 +6,7 @@ mod scales;
 // tests.rs file; the same-name nesting is deliberate.
 #[allow(clippy::module_inception)]
 mod tests {
-    use crate::theme::*;
+    use crate::styling::theme::*;
 
     // -- Theme construction --
 
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn hoff_base_palette_exact() {
-        use crate::theme::hoff;
+        use crate::styling::theme::hoff;
         assert_eq!(hoff::N1.0, rgba8(0xff, 0xff, 0xff, 1.0));
         assert_eq!(hoff::N2.0, rgba8(0xf8, 0xf8, 0xf8, 1.0));
         assert_eq!(hoff::N3.0, rgba8(0x28, 0x28, 0x28, 1.0));

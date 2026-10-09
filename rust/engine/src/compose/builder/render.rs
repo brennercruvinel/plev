@@ -1,12 +1,12 @@
-use crate::compositor::SceneNode;
-use crate::input::ViewId;
-use crate::layout::LayoutEngine;
-use crate::view::{View, ViewContext};
+use crate::drawing::compositor::SceneNode;
+use crate::control::input::ViewId;
+use crate::compose::layout::LayoutEngine;
+use crate::compose::view::{View, ViewContext};
 
 use super::element::Element;
 use super::emit::emit_scene_nodes;
 use super::layout_pipeline::collect_layout_items;
-use super::types::{HitRegionEntry, RenderResult};
+use super::output::{HitRegionEntry, RenderResult};
 
 // ---------------------------------------------------------------------------
 // View implementation -- Taffy-powered layout

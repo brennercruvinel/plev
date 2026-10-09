@@ -2,17 +2,17 @@
 
 use std::ops::Range;
 
-use rope::{Document, GoalColumn, Selection};
+use editor::{Document, GoalColumn, Selection};
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::input::scroll::ScrollState;
-use engine::layout::ComputedBounds;
-use engine::text::TextMeasurer;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::control::input::scroll::ScrollState;
+use crate::compose::layout::ComputedBounds;
+use crate::drawing::text::TextMeasurer;
 
 use super::config::{EditorConfig, EditorTheme};
-use crate::form::text_input::visual::VisualLine;
-use crate::wake::{Blink, Wake};
-use engine::clipboard::{ClipboardProvider, default_clipboard};
+use crate::widgets::form::text_input::visual::VisualLine;
+use crate::widgets::wake::{Blink, Wake};
+use crate::runtime::platform::clipboard::{ClipboardProvider, default_clipboard};
 
 /// Active IME composition, rendered inline at the primary cursor.
 #[derive(Clone, Debug, PartialEq, Eq)]

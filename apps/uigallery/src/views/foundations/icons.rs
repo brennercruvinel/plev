@@ -1,10 +1,10 @@
 //! Icons section: the full Lucide set in a hoverable grid.
 
-use comps::icons;
-use comps::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
+use engine::widgets::icons;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
 
 const CELL_W: f32 = 104.0;
 const CELL_H: f32 = 72.0;

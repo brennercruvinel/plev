@@ -10,15 +10,15 @@
 //! the worker directly — submissions bubble up as [`Action::RunSearch`]
 //! and the shell validates against the open database.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     Button, EventResult, IconButton, Rect, Select, Slider, Spinner, SpinnerSize, Tabs, VirtualList,
     Wake, WidgetEvent,
 };
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 
-use crate::model::types::{OpenedDbView, SearchMode, SearchResultsView};
+use crate::backend::workers::messages::{OpenedDbView, SearchMode, SearchResultsView};
 
 use super::field::{Field, field_h};
 use super::{Action, ChunkLookup, EditKey, group_label, panel, short_id, span_label, text};
@@ -79,7 +79,7 @@ impl SearchScreen {
             search_button: Button::new("Search").icon("search"),
             results: VirtualList::new(ROW_H),
             copy_citation: IconButton::new("copy")
-                .variant(comps::prelude::IconButtonVariant::Ghost),
+                .variant(engine::widgets::prelude::IconButtonVariant::Ghost),
             spinner: Spinner::new().size(SpinnerSize::Sm),
             result: None,
             error: String::new(),
@@ -494,7 +494,7 @@ fn render_results(
         let pad = 12.0;
         // Score meter (engine charts helper) + numeric value.
         let bar_w = 64.0;
-        comps::charts::draw::meter(
+        engine::widgets::charts::draw::meter(
             c,
             hit.score,
             Rect::new(row.x + pad, row.y + 10.0, bar_w, 6.0),
@@ -753,7 +753,7 @@ struct Layout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::types::SearchHitView;
+    use crate::backend::workers::messages::SearchHitView;
     use crate::view::fixtures;
     use std::collections::HashMap;
 

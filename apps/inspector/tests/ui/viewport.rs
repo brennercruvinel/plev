@@ -3,10 +3,10 @@
 //! nothing drawn past the window, and a click on the frame still picks
 //! the control under it.
 
-use comps::content::CodeBlock;
-use comps::{Rect, Theme};
-use engine::compositor::{LayerId, SceneNode};
-use engine::theme::{Breakpoint, SidebarMode};
+use engine::widgets::content::CodeBlock;
+use engine::widgets::{Rect, Theme};
+use engine::drawing::compositor::{LayerId, SceneNode};
+use engine::styling::theme::{Breakpoint, SidebarMode};
 
 use crate::support::{Fallible, click_control, draw, id, open};
 
@@ -84,7 +84,7 @@ fn check(width: f32, height: f32, breakpoint: Breakpoint) -> Fallible {
     // the wrapped rows fit the panel.
     let style = CodeBlock::text_style(&theme);
     for row in view.shown_rows() {
-        let w = engine::text::TextMeasurer::measure_styled(&row.text, &style, None).0;
+        let w = engine::drawing::text::TextMeasurer::measure_styled(&row.text, &style, None).0;
         assert!(w <= layout.panel.w, "{width}: {:?}", row.text);
     }
     Ok(())

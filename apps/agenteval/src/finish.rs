@@ -3,8 +3,8 @@
 //! the person, what the agent asked her and what she answered, the costs,
 //! and the report written as json and printed.
 
-use rec::Session;
-use sem::{SemId, Stage, Value};
+use record::Session;
+use accord::{SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
 use crate::asked;

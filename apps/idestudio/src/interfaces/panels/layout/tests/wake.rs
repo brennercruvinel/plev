@@ -3,7 +3,7 @@
 //! instant it leaves.
 
 use super::*;
-use comps::prelude::Wake;
+use engine::widgets::prelude::Wake;
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;

@@ -1,7 +1,7 @@
-use crate::compositor::{
+use crate::drawing::compositor::{
     ClipRect, DrawCommand, DrawKind, LayerEffect, clip_to_scissor, intersect_scissors,
 };
-use crate::perf::gpu_time::FrameStamps;
+use crate::runtime::perf::gpu_time::FrameStamps;
 
 /// Scissor for one draw command: the command's clip (intersection of the
 /// PushClip stack, in scene coordinates scaled to physical pixels by
@@ -44,9 +44,9 @@ pub(crate) fn must_resolve_text(layer_dirty: bool, atlas_disturbed: bool) -> boo
 /// at physical resolution, or text renders blurry (bitmaps stretched by
 /// the projection). Derived here so every app gets it without plumbing.
 pub fn resolve_layer_text(
-    compositor: &mut crate::compositor::Compositor,
-    gpu: &crate::gpu::GpuContext,
-    text_system: &mut crate::text::TextSystem,
+    compositor: &mut crate::drawing::compositor::Compositor,
+    gpu: &crate::drawing::gpu::GpuContext,
+    text_system: &mut crate::drawing::text::TextSystem,
 ) {
     let (scale, _) = gpu.clip_scale();
     // A scale change resets the glyph cache and repacks the atlas, so every
@@ -80,7 +80,7 @@ pub fn resolve_layer_text(
                 (vertices, indices, clip)
             })
             .collect();
-        let (vertices, indices, ranges) = crate::compositor::merge_text_groups(resolved);
+        let (vertices, indices, ranges) = crate::drawing::compositor::merge_text_groups(resolved);
         if let Some(layer) = compositor.layer_mut(layer_id) {
             layer.set_text_data_with_ranges(&gpu.device, &gpu.queue, vertices, indices, ranges);
         }
@@ -93,9 +93,9 @@ pub fn resolve_layer_text(
 fn bind_draw_kind(
     pass: &mut wgpu::RenderPass<'_>,
     kind: DrawKind,
-    layer: &crate::compositor::Layer,
-    gpu: &crate::gpu::GpuContext,
-    text_system: &crate::text::TextSystem,
+    layer: &crate::drawing::compositor::Layer,
+    gpu: &crate::drawing::gpu::GpuContext,
+    text_system: &crate::drawing::text::TextSystem,
 ) -> bool {
     let buffers = match kind {
         DrawKind::Quad => layer.quad_buffers(),
@@ -169,11 +169,11 @@ fn begin_layer_pass<'e>(
 /// state allocation-free.
 #[allow(clippy::too_many_arguments)]
 fn resolve_blurred_backdrop(
-    compositor: &crate::compositor::Compositor,
-    layer_id: crate::compositor::LayerId,
-    gpu: &crate::gpu::GpuContext,
-    effects: &crate::effects::EffectProcessor,
-    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
+    compositor: &crate::drawing::compositor::Compositor,
+    layer_id: crate::drawing::compositor::LayerId,
+    gpu: &crate::drawing::gpu::GpuContext,
+    effects: &crate::drawing::effects::EffectProcessor,
+    texture_pool: &mut crate::drawing::gpu::texture_pool::TexturePool,
     background: wgpu::Color,
     sigma: f32,
     encoder: &mut wgpu::CommandEncoder,
@@ -230,7 +230,7 @@ fn resolve_blurred_backdrop(
     // 2) Two-pass Gaussian blur of the composed backdrop.
     let compose_view = compose.view().clone();
     let blurred = effects.apply_blur(
-        &mut crate::effects::EffectContext {
+        &mut crate::drawing::effects::EffectContext {
             device: &gpu.device,
             queue: &gpu.queue,
             encoder,
@@ -282,13 +282,13 @@ fn resolve_blurred_backdrop(
 /// Returns the number of draw calls issued.
 #[allow(clippy::too_many_arguments)]
 pub fn encode_layer_passes(
-    compositor: &crate::compositor::Compositor,
-    gpu: &crate::gpu::GpuContext,
-    text_system: &crate::text::TextSystem,
-    effects: &crate::effects::EffectProcessor,
-    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
+    compositor: &crate::drawing::compositor::Compositor,
+    gpu: &crate::drawing::gpu::GpuContext,
+    text_system: &crate::drawing::text::TextSystem,
+    effects: &crate::drawing::effects::EffectProcessor,
+    texture_pool: &mut crate::drawing::gpu::texture_pool::TexturePool,
     background: wgpu::Color,
-    dirty_layer_ids: &[crate::compositor::LayerId],
+    dirty_layer_ids: &[crate::drawing::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
 ) -> u32 {
     encode_layer_passes_timed(
@@ -309,13 +309,13 @@ pub fn encode_layer_passes(
 /// its start and end while `stamps` has room.
 #[allow(clippy::too_many_arguments)] // the public one's, plus the stamps
 pub(crate) fn encode_layer_passes_timed(
-    compositor: &crate::compositor::Compositor,
-    gpu: &crate::gpu::GpuContext,
-    text_system: &crate::text::TextSystem,
-    effects: &crate::effects::EffectProcessor,
-    texture_pool: &mut crate::gpu::texture_pool::TexturePool,
+    compositor: &crate::drawing::compositor::Compositor,
+    gpu: &crate::drawing::gpu::GpuContext,
+    text_system: &crate::drawing::text::TextSystem,
+    effects: &crate::drawing::effects::EffectProcessor,
+    texture_pool: &mut crate::drawing::gpu::texture_pool::TexturePool,
     background: wgpu::Color,
-    dirty_layer_ids: &[crate::compositor::LayerId],
+    dirty_layer_ids: &[crate::drawing::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
     mut stamps: Option<&mut FrameStamps<'_>>,
 ) -> u32 {
@@ -442,13 +442,13 @@ pub(crate) fn encode_layer_passes_timed(
 
 impl super::host::WindowHost {
     pub(super) fn apply_layer_effects(
-        compositor: &crate::compositor::Compositor,
-        gpu: &mut crate::gpu::GpuContext,
-        effect_processor: &crate::effects::EffectProcessor,
-        texture_pool: &mut crate::gpu::texture_pool::TexturePool,
+        compositor: &crate::drawing::compositor::Compositor,
+        gpu: &mut crate::drawing::gpu::GpuContext,
+        effect_processor: &crate::drawing::effects::EffectProcessor,
+        texture_pool: &mut crate::drawing::gpu::texture_pool::TexturePool,
         encoder: &mut wgpu::CommandEncoder,
-    ) -> Vec<(crate::compositor::LayerId, wgpu::BindGroup)> {
-        let mut effect_results: Vec<(crate::compositor::LayerId, wgpu::BindGroup)> = Vec::new();
+    ) -> Vec<(crate::drawing::compositor::LayerId, wgpu::BindGroup)> {
+        let mut effect_results: Vec<(crate::drawing::compositor::LayerId, wgpu::BindGroup)> = Vec::new();
         let sw = gpu.surface_config.width;
         let sh = gpu.surface_config.height;
 
@@ -476,7 +476,7 @@ impl super::host::WindowHost {
                 );
                 continue;
             };
-            let mut current_view_owner: Option<crate::gpu::texture_pool::TextureHandle> = None;
+            let mut current_view_owner: Option<crate::drawing::gpu::texture_pool::TextureHandle> = None;
 
             for effect in effects {
                 let sv = current_view_owner
@@ -485,7 +485,7 @@ impl super::host::WindowHost {
                     .unwrap_or(source_view);
                 let handle = match effect {
                     LayerEffect::Blur { sigma } => effect_processor.apply_blur(
-                        &mut crate::effects::EffectContext {
+                        &mut crate::drawing::effects::EffectContext {
                             device: &gpu.device,
                             queue: &gpu.queue,
                             encoder,
@@ -498,7 +498,7 @@ impl super::host::WindowHost {
                         *sigma,
                     ),
                     LayerEffect::Shadow { sigma, color } => effect_processor.apply_shadow(
-                        &mut crate::effects::EffectContext {
+                        &mut crate::drawing::effects::EffectContext {
                             device: &gpu.device,
                             queue: &gpu.queue,
                             encoder,
@@ -547,11 +547,11 @@ impl super::host::WindowHost {
 /// Encode the composite pass drawing all visible layers to the surface.
 /// Returns the number of draw calls issued.
 pub fn encode_composite_pass(
-    compositor: &crate::compositor::Compositor,
+    compositor: &crate::drawing::compositor::Compositor,
     clear_color: wgpu::Color,
-    gpu: &crate::gpu::GpuContext,
+    gpu: &crate::drawing::gpu::GpuContext,
     surface_view: &wgpu::TextureView,
-    effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
+    effect_results: &[(crate::drawing::compositor::LayerId, wgpu::BindGroup)],
     encoder: &mut wgpu::CommandEncoder,
 ) -> u32 {
     encode_composite_pass_timed(
@@ -568,11 +568,11 @@ pub fn encode_composite_pass(
 /// [`encode_composite_pass`] with the frame's timestamps: the pass writes
 /// one at its start and end when `stamps` is given.
 pub(crate) fn encode_composite_pass_timed(
-    compositor: &crate::compositor::Compositor,
+    compositor: &crate::drawing::compositor::Compositor,
     clear_color: wgpu::Color,
-    gpu: &crate::gpu::GpuContext,
+    gpu: &crate::drawing::gpu::GpuContext,
     surface_view: &wgpu::TextureView,
-    effect_results: &[(crate::compositor::LayerId, wgpu::BindGroup)],
+    effect_results: &[(crate::drawing::compositor::LayerId, wgpu::BindGroup)],
     encoder: &mut wgpu::CommandEncoder,
     stamps: Option<&FrameStamps<'_>>,
 ) -> u32 {

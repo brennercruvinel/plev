@@ -16,7 +16,7 @@ use winit::event_loop::EventLoopBuilder;
 use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
 use winit::window::{WindowAttributes, WindowLevel};
 
-use super::UserEvent;
+use super::super::UserEvent;
 
 fn wanted() -> bool {
     std::env::var_os("PLEV_BACKGROUND").is_some_and(|v| v == "1")

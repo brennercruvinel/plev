@@ -11,16 +11,16 @@ mod bind;
 
 use std::collections::BTreeMap;
 
-use sem::SemId;
+use accord::SemId;
 
-use crate::caps::Capabilities;
+use crate::capabilities::Capabilities;
 use crate::decode::parse;
 use crate::error::{IrError, Ptr, Rule};
 use crate::ir::{Ir, IrNode, Repeat, VERSION};
 use crate::item::{self, Pattern};
 use crate::policy::{GenerationPolicy, HARD_DEPTH};
 use crate::token::{Layout, MAX_FLEX, MAX_RATIO, MIN_RATIO};
-use crate::vocab::{Component, spec_of};
+use crate::vocabulary::{Component, spec_of};
 
 /// an IR that passed every check against one capability registry under
 /// one policy. there is no other way to build one: no public constructor,

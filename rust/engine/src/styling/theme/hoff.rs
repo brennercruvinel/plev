@@ -25,8 +25,8 @@
 // screen sits on the graphite container, never on pure black.
 // ============================================================================
 
-use super::button::ButtonTokens;
-use super::core::Theme;
+use super::super::super::widgets::buttons::tokens::ButtonTokens;
+use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
@@ -34,7 +34,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use crate::color::Color;
+use crate::styling::color::Color;
 
 const N2_F: f32 = 248.0 / 255.0;
 

@@ -3,8 +3,8 @@
 //! moved in those values between the observation and the request and which
 //! receipt ran then, the stages, the verdict with its delta, the result.
 
-use rec::{InputKind, Kind, ReadError, State};
-use sem::{
+use record::{InputKind, Kind, ReadError, State};
+use accord::{
     ActionName, Actor, Change, Millis, Node, Outcome, Rejection, Request, RequestId, Revision,
     SemId, Stage, StateRef, Value,
 };

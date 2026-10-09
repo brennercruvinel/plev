@@ -23,8 +23,8 @@ use std::collections::BTreeSet;
 use std::path::Path;
 use std::process::Command;
 
-use rec::Session;
-use sem::{SemId, StateRef, Value};
+use record::Session;
+use accord::{SemId, StateRef, Value};
 use serde_json::Value as Json;
 
 /// how long one run may take before the test fails it.
@@ -336,7 +336,7 @@ fn without_the_person_the_agent_commits_the_task_with_no_refusal() {
     let done = session.receipts_for(&submit, end);
     assert_eq!(done.len(), 1, "one submit, completed");
     assert_eq!(
-        done[0].receipt.stage().map(sem::Stage::name),
+        done[0].receipt.stage().map(accord::Stage::name),
         Some("completed")
     );
 }
@@ -641,8 +641,8 @@ fn answered_in_the_session(run: &Run, q: &Json) {
         session.events().iter().any(|e| e.t == answered
             && matches!(
                 &e.kind,
-                rec::Kind::Input {
-                    kind: rec::InputKind::PointerDown,
+                record::Kind::Input {
+                    kind: record::InputKind::PointerDown,
                     at: Some(_),
                     target: None,
                 }
@@ -661,17 +661,17 @@ fn answered_in_the_session(run: &Run, q: &Json) {
         .receipt
         .stages
         .iter()
-        .skip_while(|(s, _)| *s != sem::Stage::AwaitingConfirmation)
+        .skip_while(|(s, _)| *s != accord::Stage::AwaitingConfirmation)
         .nth(1)
         .cloned()
         .expect("a stage after the wait");
     let expected = if q["answer"] == "allowed" {
-        sem::Stage::Confirmed {
-            by: sem::Actor::Human,
+        accord::Stage::Confirmed {
+            by: accord::Actor::Human,
         }
     } else {
-        sem::Stage::Rejected(sem::Rejection::Declined {
-            by: sem::Actor::Human,
+        accord::Stage::Rejected(accord::Rejection::Declined {
+            by: accord::Actor::Human,
         })
     };
     assert_eq!(after_wait, (expected, answered));

@@ -36,10 +36,10 @@ mod props;
 use std::collections::BTreeSet;
 use std::str::FromStr;
 
-use uir::{Axis, Component, Ir, IrNode, Layout, Surface};
+use plevir::{Axis, Component, Ir, IrNode, Layout, Surface};
 
 use crate::ParserError;
-use crate::ir::{Arg, DropKind, NoteKind, ParserNode, Resolution, Src, Tag, TextValue, snake_case};
+use crate::tree::{Arg, DropKind, NoteKind, ParserNode, Resolution, Src, Tag, TextValue, snake_case};
 use crate::report::{Binding, Ledger, Need, Report, Verdict};
 use crate::tokens::{Tokens, color_distance, role_named};
 use control::{Control, infer};

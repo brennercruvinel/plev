@@ -5,11 +5,11 @@
 use std::path::Path;
 use std::time::{Duration, Instant};
 
-use engine::gpu::RenderConfig;
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use sem::Snapshot;
-use showcase::app::semantics_json;
-use showcase::view::PAGES;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use accord::Snapshot;
+use uigallery::shell::semantics_json;
+use uigallery::views::PAGES;
 
 use crate::baseline::{self, Baseline, Image, Key, Meta, Settle};
 use crate::cli::{self, Command, Request};

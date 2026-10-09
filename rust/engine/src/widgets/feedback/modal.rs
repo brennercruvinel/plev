@@ -9,14 +9,14 @@
 //! and hit-tests them with, and [`Modal::project`] declares the dialog in
 //! a semantic projection.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Elevation, Intent, Theme};
-use sem::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{Elevation, Intent, Theme};
+use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
-use crate::action::{Button, ButtonVariant};
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::{glass_pill, inset_keylight, shadow_stack};
+use crate::widgets::buttons::{Button, ButtonVariant};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::recipe::{glass_pill, inset_keylight, shadow_stack};
 
 /// Title: the HOFF `=title` mixin.
 fn title_style(theme: &Theme) -> TextStyle {

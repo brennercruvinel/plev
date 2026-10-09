@@ -10,10 +10,10 @@ mod support;
 
 use std::collections::BTreeSet;
 
-use sem::{Actor, ParamSpec, SemId, ValueKind};
+use accord::{Actor, ParamSpec, SemId, ValueKind};
 use serde_json::{Value, json};
 use support::caps;
-use uir::{
+use plevir::{
     ActionCap, Adapted, Capabilities, ColorRole, Context, DataCap, GenerationPolicy, Ir, IrNode,
     Op, Preference, Preferences, SpacingToken, Step, TypographyRole, verify, verify_json,
 };
@@ -299,7 +299,7 @@ fn a_density_is_one_step_and_one_takes_the_place_of_the_other() {
         Some(SpacingToken::Md)
     );
     let gap = |a: &Adapted, at: &str| match node(a, at).layout {
-        Some(uir::Layout::Stack { gap, .. }) => gap,
+        Some(plevir::Layout::Stack { gap, .. }) => gap,
         _ => None,
     };
     assert_eq!(gap(&after, "look.root"), Some(SpacingToken::Sm));

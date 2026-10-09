@@ -37,7 +37,7 @@ mod keyframes;
 mod lottie;
 
 use keyframes::{Kfs, cb, rect, starfish_limbs};
-use monster::{
+use motion::{
     Asset, AssetKind, Easing, Keyframe, Node, NodeKind, OptimizeCfg, Prop, Props, Timeline, decode,
     encode, optimize,
 };

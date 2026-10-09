@@ -5,11 +5,11 @@
 //! round-trip and the helpers live in tests_discover.
 
 use crate::discover::discover;
-use crate::ir::{Node, PlaceNode, RemoveNode, ReplaceNode};
+use crate::timeline::{Node, PlaceNode, RemoveNode, ReplaceNode};
 use crate::play::MonsterPlayer;
-use crate::tests::discover::{assert_reproduced, cfg, seg};
-use crate::tests::write::rect;
-use engine::compositor::SceneNode;
+use crate::discover::tests::discover::{assert_reproduced, cfg, seg};
+use crate::encoding::tests::write::rect;
+use engine::drawing::compositor::SceneNode;
 
 fn rect_x(scene: &[SceneNode], at: usize) -> f32 {
     match &scene[at] {

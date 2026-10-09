@@ -4,7 +4,7 @@
 use std::thread::sleep;
 use std::time::Duration;
 
-use super::FrameClock;
+use super::super::FrameClock;
 
 #[test]
 fn since_last_is_the_real_gap_and_dt_stays_clamped() {

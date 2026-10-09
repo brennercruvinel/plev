@@ -20,14 +20,14 @@
 
 use std::sync::Arc;
 
-use engine::compositor::TextNodeKey;
-use engine::path::TessellatedPath;
-use monster::LoweredAsset;
-use monster::asset_path::{pack_chunks, unpack};
+use engine::drawing::compositor::TextNodeKey;
+use engine::drawing::path::TessellatedPath;
+use motion::LoweredAsset;
+use motion::encoding::asset_path::{pack_chunks, unpack};
 
 use crate::error::FileError;
 use crate::format::{Cur, len32, put_u16, put_u32};
-use crate::screen::Asset;
+use crate::visuals::reader::Asset;
 
 const TEXT: u8 = 0;
 const IMAGE: u8 = 1;

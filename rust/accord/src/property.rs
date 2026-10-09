@@ -4,10 +4,10 @@ use std::collections::BTreeSet;
 use std::fmt;
 use std::str::FromStr;
 
-use crate::error::SemError;
-use crate::id::SemId;
-use crate::name::StateKey;
-use crate::text::text_serde;
+use crate::failures::SemError;
+use crate::identity::SemId;
+use crate::notation::StateKey;
+use crate::encoding::text_serde;
 
 /// one piece of state.
 ///

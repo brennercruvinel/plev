@@ -2,10 +2,10 @@
 //! full mode, with a brand, grouped links (fold a group by its caption)
 //! and footer hints.
 
-use comps::nav::{NavGroup, NavLink, Sidebar};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{SidebarMode, Theme};
+use engine::widgets::nav::{NavGroup, NavLink, Sidebar};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::{SidebarMode, Theme};
 
 use super::panel;
 

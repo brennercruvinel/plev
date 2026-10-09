@@ -3,13 +3,13 @@
 
 use std::fmt;
 
-use crate::builder::resolve;
-use crate::error::SemError;
-use crate::hash::Revision;
-use crate::id::SemId;
-use crate::name::ActionName;
+use crate::assembly::resolve;
+use crate::failures::SemError;
+use crate::revision::Revision;
+use crate::identity::SemId;
+use crate::notation::ActionName;
 use crate::snapshot::Snapshot;
-use crate::value::{StateRef, Value};
+use crate::property::{StateRef, Value};
 
 /// who asks for an action. one kind per column of `Actors`, which a
 /// policy maps directly: `Human` to `human`, `Agent` to `agent`,

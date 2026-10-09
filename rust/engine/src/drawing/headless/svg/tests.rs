@@ -6,13 +6,13 @@
 use super::super::{HeadlessError, Renderer, Viewport};
 use super::write::{escape, hex, num, opacity};
 use super::*;
-use crate::compositor::{
+use crate::drawing::compositor::{
     Compositor, GradientRectParams, RoundedRectParams, SceneNode, TextNodeKey,
 };
-use crate::gpu::RenderConfig;
-use crate::path::PathBuilder;
-use crate::text::{TextMeasurer, TextStyle};
-use crate::theme::hoff::PAGE_BG;
+use crate::drawing::gpu::RenderConfig;
+use crate::drawing::path::PathBuilder;
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::hoff::PAGE_BG;
 
 fn renderer(viewport: Viewport) -> Option<Renderer> {
     match Renderer::new(viewport, RenderConfig::default()) {
@@ -360,7 +360,7 @@ fn approximate_scene(c: &mut Compositor) {
         90.0,
         20.0,
         20.0,
-        crate::gpu::image::ImageHandle {
+        crate::drawing::gpu::image::ImageHandle {
             id: 7,
             atlas_x: 1,
             atlas_y: 1,
@@ -546,11 +546,11 @@ fn a_mesh_that_is_not_a_partition_falls_back_to_triangles() {
     let Some(mut r) = renderer(Viewport::new(100.0, 100.0, 1.0)) else {
         return;
     };
-    let v = |x: f32, y: f32| crate::compositor::QuadVertex {
+    let v = |x: f32, y: f32| crate::drawing::compositor::QuadVertex {
         position: [x, y],
         color: [1.0, 0.0, 0.0, 1.0],
     };
-    let data = crate::path::TessellatedPath {
+    let data = crate::drawing::path::TessellatedPath {
         vertices: vec![v(0.0, 0.0), v(10.0, 0.0), v(0.0, 10.0), v(10.0, 10.0)],
         indices: vec![0, 1, 2, 0, 1, 3],
         hash: 1,

@@ -10,8 +10,8 @@ mod tests {
     use std::cell::Cell;
     use std::rc::Rc;
 
-    use crate::signal::api::*;
-    use crate::signal::runtime::{RUNTIME, ReactiveRuntime};
+    use crate::runtime::signal::api::*;
+    use crate::runtime::signal::runtime::{RUNTIME, ReactiveRuntime};
 
     fn reset_runtime() {
         RUNTIME.with(|rt| *rt.borrow_mut() = ReactiveRuntime::new());

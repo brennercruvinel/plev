@@ -6,7 +6,7 @@ use lru::LruCache;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::num::NonZeroUsize;
 
-use crate::compositor::{SceneNode, TextNodeKey};
+use crate::drawing::compositor::{SceneNode, TextNodeKey};
 
 use super::atlas::{
     self, create_atlas_bind_group, create_atlas_sampler, create_atlas_texture, emit_glyphs,

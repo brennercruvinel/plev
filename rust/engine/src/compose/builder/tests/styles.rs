@@ -1,9 +1,9 @@
 //! Builder API surface: children composition and style sugar.
 
 use super::test_cx;
-use crate::builder::*;
-use crate::compositor::SceneNode;
-use crate::view::View;
+use crate::compose::builder::*;
+use crate::drawing::compositor::SceneNode;
+use crate::compose::view::View;
 
 #[test]
 fn child_composition() {

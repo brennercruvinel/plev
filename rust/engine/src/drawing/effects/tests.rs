@@ -99,8 +99,8 @@ fn scaled_weights_stop_at_what_the_uniform_holds() {
 /// effect is: the alpha of the middle row. `None` without a GPU.
 #[cfg(not(target_arch = "wasm32"))]
 fn layer_effect(shadow: bool, scale: f32) -> Option<Vec<u8>> {
-    use crate::gpu::texture_pool::TexturePool;
-    use crate::gpu::{GpuContext, HEADLESS_FORMAT, RenderConfig};
+    use crate::drawing::gpu::texture_pool::TexturePool;
+    use crate::drawing::gpu::{GpuContext, HEADLESS_FORMAT, RenderConfig};
 
     let (w, h) = ((100.0 * scale) as u32, (20.0 * scale) as u32);
     let gpu = pollster::block_on(GpuContext::new_headless(w, h, RenderConfig::default()))?;
@@ -179,7 +179,7 @@ fn layer_effect(shadow: bool, scale: f32) -> Option<Vec<u8>> {
         effects.composite_pass(&gpu.device, &gpu.queue, &mut pass, result.view(), 1.0);
     }
     gpu.queue.submit(std::iter::once(encoder.finish()));
-    let frame = match crate::headless::read_texture(&gpu, &out) {
+    let frame = match crate::drawing::headless::read_texture(&gpu, &out) {
         Ok(f) => f,
         Err(e) => panic!("read back: {e}"),
     };

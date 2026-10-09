@@ -5,9 +5,9 @@
 
 use std::sync::LazyLock;
 
-use engine::compositor::Compositor;
-use engine::text::TextStyle;
-use engine::theme::Theme;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::text::TextStyle;
+use engine::styling::theme::Theme;
 
 pub(crate) struct Palette {
     pub bg: [f32; 4],

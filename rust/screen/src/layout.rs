@@ -19,12 +19,12 @@
 //! narrower than its longest word (the flex minimum of a text would be
 //! one glyph: the engine measures its min-content at width zero).
 
-use comps::Rect;
-use engine::layout::TextMeasureSpec;
-use engine::layout::{Align as FlexAlign, Direction, LayoutEngine, LayoutItem, LayoutStyle};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
-use uir::{Align, Axis, Layout};
+use engine::widgets::Rect;
+use engine::compose::layout::TextMeasureSpec;
+use engine::compose::layout::{Align as FlexAlign, Direction, LayoutEngine, LayoutItem, LayoutStyle};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
+use plevir::{Align, Axis, Layout};
 
 use crate::expand::Node;
 use crate::token::{self, Dim};
@@ -251,7 +251,7 @@ impl Pass<'_> {
     /// wraps when an earlier pass found it overflowing.
     fn container(&self, at: usize, node: &Node, style: &mut LayoutStyle) {
         let theme = self.theme;
-        let gap = |g: Option<uir::SpacingToken>| g.map_or(0.0, |g| token::spacing(g, theme));
+        let gap = |g: Option<plevir::SpacingToken>| g.map_or(0.0, |g| token::spacing(g, theme));
         match node.layout {
             None | Some(Layout::Overlay) => {}
             Some(Layout::Stack {
@@ -360,8 +360,8 @@ pub(crate) fn axis_of(node: &Node) -> Axis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::SemId;
-    use uir::{Bind, Props, Size, SizeToken, SpacingToken};
+    use accord::SemId;
+    use plevir::{Bind, Props, Size, SizeToken, SpacingToken};
 
     fn node(id: &str, layout: Option<Layout>, children: Vec<usize>) -> Node {
         Node {

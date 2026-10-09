@@ -10,7 +10,7 @@
 
 use std::collections::BTreeSet;
 
-use uir::{
+use plevir::{
     Align, Axis, Component, ControlSize, IrNode, Props, Repeat, Size, SpacingToken, TypographyRole,
 };
 
@@ -19,7 +19,7 @@ use crate::list::List;
 use crate::rules::{Build, stack};
 
 /// a state's key as a label: `cut_secs` reads "cut secs".
-fn label(key: &sem::StateKey) -> String {
+fn label(key: &accord::StateKey) -> String {
     key.as_str().replace('_', " ")
 }
 

@@ -4,12 +4,12 @@
 //! follow their node through place and remove. codec coverage of the
 //! same document lives in tests_ops.
 
-use crate::ir::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
+use crate::timeline::{Keyframe, PlaceNode, Prop, RemoveNode, Track};
 use crate::play::MonsterPlayer;
-use crate::tests::ops::ops_timeline;
-use crate::tests::write::{rect, seg};
-use engine::animation::AnimationTick;
-use engine::compositor::SceneNode;
+use crate::encoding::tests::operations::ops_timeline;
+use crate::encoding::tests::write::{rect, seg};
+use engine::compose::animation::AnimationTick;
+use engine::drawing::compositor::SceneNode;
 
 fn rect_x(scene: &[SceneNode], at: usize) -> f32 {
     match &scene[at] {
@@ -60,7 +60,7 @@ fn track_on_a_placed_node_animates_from_the_placed_value() {
         node_id: 2,
         prop: Prop::X,
         start_t: 0.5,
-        segments: vec![seg(60.0, crate::easing::Easing::Linear)],
+        segments: vec![seg(60.0, crate::timeline::easing::Easing::Linear)],
     });
     let mut p = MonsterPlayer::new(tl).unwrap();
     assert_eq!(rect_x(&p.scene_at(0.5), 1), 40.0, "chain starts at place");
@@ -139,8 +139,8 @@ fn playback_with_ops_is_deterministic_and_scrub_consistent() {
 
 #[test]
 fn decoded_ops_file_plays_like_the_authored_timeline() {
-    let bytes = crate::write::encode(&ops_timeline(), &[], &[]).unwrap();
-    let doc = crate::read::decode(&bytes).unwrap();
+    let bytes = crate::encoding::write::encode(&ops_timeline(), &[], &[]).unwrap();
+    let doc = crate::encoding::read::decode(&bytes).unwrap();
     let mut authored = MonsterPlayer::new(ops_timeline()).unwrap();
     let mut decoded = MonsterPlayer::new(doc.timeline).unwrap();
     for i in 0..=20 {

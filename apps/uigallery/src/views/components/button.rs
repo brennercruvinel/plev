@@ -10,14 +10,14 @@
 //! by its icon, the submit button "submit". A button here does nothing but
 //! press, so its `activate` changes nothing.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
     Rect, SubmitButton, WidgetEvent, rounded_rect, rounded_rect_stroke,
 };
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::{Theme, hoff_core};
-use sem::{Request, Role, SemId, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::{Theme, hoff_core};
+use accord::{Request, Role, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 
@@ -336,11 +336,11 @@ impl ButtonPage {
         theme.spacing.lg
     }
 
-    fn title_style(theme: &Theme) -> engine::text::TextStyle {
+    fn title_style(theme: &Theme) -> engine::drawing::text::TextStyle {
         theme.typography.exact(theme.typography.title_sm, 28.0, 500)
     }
 
-    fn chip_style(theme: &Theme) -> engine::text::TextStyle {
+    fn chip_style(theme: &Theme) -> engine::drawing::text::TextStyle {
         theme.typography.exact(theme.typography.caption, 16.0, 500)
     }
 

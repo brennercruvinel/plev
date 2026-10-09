@@ -3,7 +3,7 @@
 //! action, what was observed, the precondition, what came before, the
 //! verdict, what changed, the result), in plain english.
 
-use inspect::{Inspector, text};
+use replay::{Inspector, prose};
 
 use crate::thesis::record;
 
@@ -155,11 +155,11 @@ fn outside_and_ambiguous_moves_say_so() -> Fallible {
     let seen = lab.observe(10, crate::apps::agent());
     lab.outside_unstages(20, "D");
     for (t, actor, file) in [
-        (30, sem::Actor::Human, "B"),
-        (31, sem::Actor::Assistive, "C"),
+        (30, accord::Actor::Human, "B"),
+        (31, accord::Actor::Assistive, "C"),
     ] {
         let req =
-            sem::Request::observe(&lab.look(), actor, "changes", "unstage", Some(file.into()))?;
+            accord::Request::observe(&lab.look(), actor, "changes", "unstage", Some(file.into()))?;
         lab.dispatcher.dispatch(&mut lab.git, req, t);
     }
     lab.rec.snapshot(31, &lab.look());

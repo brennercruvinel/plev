@@ -4,8 +4,8 @@
 //! again and its commit completes with a sha. recorded through the
 //! dispatcher's sink and explicit calls, then read back.
 
-use rec::{InputKind, Kind, Limits, Recorder, Session};
-use sem::{
+use record::{InputKind, Kind, Limits, Recorder, Session};
+use accord::{
     Actor, Change, Dispatcher, Millis, Rejection, Request, Snapshot, Stage, StateRef, Value,
 };
 

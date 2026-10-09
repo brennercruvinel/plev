@@ -7,13 +7,13 @@
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use sem::{Stage, Value};
+use engine::drawing::compositor::Compositor;
+use accord::{Stage, Value};
 
 use super::super::SilencesPage;
-use super::super::worker::Worker;
+use super::super::fixed_page::worker::Worker;
 use super::{TURN, dispatch_as_test, stage, value, wide};
-use crate::view::apps::app::TodoPage;
+use crate::views::apps::todo::TodoPage;
 
 /// Wakes the page until `until` holds or `limit` passes.
 fn wait(
@@ -36,8 +36,8 @@ fn wait(
 #[test]
 #[ignore = "runs ffmpeg: cargo test -p showcase --lib silences::tests::ffmpeg -- --ignored --nocapture"]
 fn the_real_ffmpeg_generates_the_video_detects_the_silences_and_decodes_a_frame() {
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
 
     let program = match Worker::find_program() {
         Ok(p) => p,
@@ -153,8 +153,8 @@ fn the_real_ffmpeg_generates_the_video_detects_the_silences_and_decodes_a_frame(
 
     // drawn headless, and with a GPU its pixels
     let content = wide();
-    let theme = engine::theme::Theme::hoff_core();
-    let mut view = crate::view::ShowcaseView::new(1200.0, 800.0);
+    let theme = engine::styling::theme::Theme::hoff_core();
+    let mut view = crate::views::ShowcaseView::new(1200.0, 800.0);
     view.jump_to_page("silences");
     // the page of the gallery takes this page's state, so the frame is
     // the gallery's frame of it
@@ -179,7 +179,7 @@ fn the_real_ffmpeg_generates_the_video_detects_the_silences_and_decodes_a_frame(
         frame
             .write_png(path.with_extension("png"))
             .expect("the png writes");
-        let json = crate::app::semantics_json(&snap, false).expect("the json");
+        let json = crate::shell::semantics_json(&snap, false).expect("the json");
         std::fs::write(path.with_extension("json"), json).expect("the json writes");
         println!("wrote {}.png and .json", path.display());
     }

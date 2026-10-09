@@ -9,11 +9,11 @@
 //! the focused one in view, and the focus follows the wheel (task-75
 //! phase 2d).
 
-use comps::icons;
-use comps::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::theme::Theme;
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::icons;
+use engine::widgets::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::styling::theme::Theme;
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, key_under, panel, root_id, text, under};
 
@@ -29,7 +29,7 @@ pub struct ScrollAreaPage {
 
 impl ScrollAreaPage {
     pub fn new(theme: &Theme) -> Self {
-        let mut list = VirtualList::new(theme.control.height(engine::theme::ControlSize::Xs));
+        let mut list = VirtualList::new(theme.control.height(engine::styling::theme::ControlSize::Xs));
         list.set_item_count(10_000);
         let root = root_id("scroll_area_page");
         let list = match child_id(root.as_ref(), "list") {
@@ -103,7 +103,7 @@ impl ScrollAreaPage {
         let mid = theme.colors.text_mid.0;
         let body = theme.typography.base_2r();
         let small = theme.typography.caption_r();
-        let icon = theme.control.icon(engine::theme::IconSize::Sm);
+        let icon = theme.control.icon(engine::styling::theme::IconSize::Sm);
         let pad = theme.spacing.md;
         self.list.render_with_to_layer(
             c,
@@ -132,7 +132,7 @@ impl ScrollAreaPage {
                     },
                 );
                 let tag = format!("#{:04}", index % 10_000);
-                let (tag_w, _) = engine::text::TextMeasurer::measure_styled(&tag, &small, None);
+                let (tag_w, _) = engine::drawing::text::TextMeasurer::measure_styled(&tag, &small, None);
                 c.push_to_layer(
                     list_layer,
                     SceneNode::Text {

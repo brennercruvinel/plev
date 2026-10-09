@@ -3,10 +3,10 @@
 //! component (doctype, `<html>`, `<head>`, `<body>`, `<title>`, `<style>`,
 //! `<script>`) and the attributes a node carries.
 
-use super::{Ctx, FRAME, SCRIPT, Styled, label};
-use crate::html::{CssDecl, HtmlChild, HtmlNode};
-use crate::html_map::{self, Selector};
-use crate::ir::{Attr, Dropped, Src};
+use super::resolve::{Ctx, FRAME, SCRIPT, Styled, label};
+use crate::formats::html::parse::{CssDecl, HtmlChild, HtmlNode};
+use crate::formats::html::css::{self, Selector};
+use crate::tree::{Attr, Dropped, Src};
 
 /// The selectors of a list, split on the commas outside parentheses.
 fn split_list(list: &str) -> Vec<&str> {

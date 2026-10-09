@@ -1,5 +1,5 @@
 use super::{generate, interpolation::parse_interpolation};
-use crate::parse::NarrateBlock;
+use crate::markup::parse::NarrateBlock;
 use quote::quote;
 
 fn codegen_str(tokens: proc_macro2::TokenStream) -> String {

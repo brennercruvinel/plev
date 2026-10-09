@@ -8,7 +8,7 @@
 // value from this file; it reads it from `&Theme`.
 // ============================================================================
 
-use crate::color::Color;
+use crate::styling::color::Color;
 
 // ----------------------------------------------------------------------------
 // Shape: corner radius by role

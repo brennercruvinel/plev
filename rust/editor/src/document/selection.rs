@@ -2,8 +2,8 @@
 
 use ropey::Rope;
 
-use crate::movement::line_content_end;
-use crate::transaction::{Bias, Transaction};
+use crate::document::movement::line_content_end;
+use crate::document::transaction::{Bias, Transaction};
 
 /// A single selection as a pair of byte offsets. `anchor` is the fixed end,
 /// `head` the moving end (where the cursor blinks). A caret is a selection

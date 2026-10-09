@@ -15,13 +15,13 @@
 //! element it is (`ir::Origin`), for the plev IR emitter's report; the code
 //! emitter reads neither.
 
-use crate::css_map::{MapOut, is_text_prop, map_decl, noop_is_merge, px};
-use crate::ir::{
+use crate::formats::react::css::{MapOut, is_text_prop, map_decl, noop_is_merge, px};
+use crate::tree::{
     Attr, Dropped, Note, NoteKind, Origin, Param, ParserNode, Prop, Resolution, Src, Tag,
     TextValue, snake_case,
 };
-use crate::sass::{Decl, Rule, class_decls};
-use crate::tsx::{TsxChild, TsxComponent, TsxNode};
+use crate::formats::react::sass::{Decl, Rule, class_decls};
+use crate::formats::react::parse::{TsxChild, TsxComponent, TsxNode};
 use std::collections::{HashMap, HashSet};
 
 const OVERLAY_RULE: &str =
@@ -100,8 +100,8 @@ fn element_label(tsx: &TsxNode) -> String {
 }
 
 /// `onClick={onOpen}`, `placeholder="Reply"`, `hidden`.
-fn attr_label(name: &str, value: &crate::ir::AttrValue) -> String {
-    use crate::ir::AttrValue::*;
+fn attr_label(name: &str, value: &crate::tree::AttrValue) -> String {
+    use crate::tree::AttrValue::*;
     match value {
         Text(t) => format!("{name}=\"{t}\""),
         Ident(e) | Expr(e) => format!("{name}={{{e}}}"),

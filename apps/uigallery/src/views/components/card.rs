@@ -1,10 +1,10 @@
 //! Cards section: the HOFF card deck — every `CardVariant` with sample
 //! data, laid out as a content-driven masonry grid.
 
-use comps::prelude::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use engine::styling::theme::Theme;
 
 use super::group_label;
 

@@ -11,8 +11,8 @@ mod palette;
 mod render;
 mod ui;
 
-use engine::compositor::LayerId;
-use engine::window::{Routed, Windows};
+use engine::drawing::compositor::LayerId;
+use engine::runtime::window::{Routed, Windows};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};

@@ -9,8 +9,8 @@ use notify::EventKind;
 use notify::RecursiveMode;
 use notify_debouncer_full::new_debouncer;
 
-use crate::builder::Element;
-use crate::narrate_runtime;
+use crate::compose::builder::Element;
+use crate::compose::markup_runtime;
 
 // ── Narrate DSL Override Map ──
 

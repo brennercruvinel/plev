@@ -4,8 +4,8 @@
 //! they declined did not run. Made from the receipt, in the words of the
 //! ui.
 
-use engine::theme::Intent;
-use sem::{Acted, Actor, Change, Receipt, Rejection, Request, SemId, Stage};
+use engine::styling::theme::Intent;
+use accord::{Acted, Actor, Change, Receipt, Rejection, Request, SemId, Stage};
 
 use super::Workbench;
 

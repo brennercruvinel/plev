@@ -6,9 +6,9 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use engine::compositor::SceneNode;
-use rec::{InputKind, Kind, Recorder, Session, install_panic_hook};
-use sem::{Role, SnapshotBuilder};
+use engine::drawing::compositor::SceneNode;
+use record::{InputKind, Kind, Recorder, Session, install_panic_hook};
+use accord::{Role, SnapshotBuilder};
 
 fn sessions_in(dir: &std::path::Path) -> Vec<std::path::PathBuf> {
     let mut out: Vec<_> = std::fs::read_dir(dir)

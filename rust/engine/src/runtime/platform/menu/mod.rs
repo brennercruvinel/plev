@@ -25,11 +25,11 @@ use std::collections::VecDeque;
 use std::fmt;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use sem::{ActionName, Actor, Request, Role, SemError, SemId, Snapshot, StateKey, Value};
+use accord::{ActionName, Actor, Request, Role, SemError, SemId, Snapshot, StateKey, Value};
 
 /// The `muda` side; the tray (`platform::tray`) builds its menu with it.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub(in crate::platform) mod native;
+pub(in crate::runtime::platform) mod native;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub use native::MudaMenu;
 
@@ -238,14 +238,14 @@ impl MenuItem {
     }
 }
 
-fn bool_state(node: &sem::Node, key: &str) -> Option<bool> {
+fn bool_state(node: &accord::Node, key: &str) -> Option<bool> {
     match node.state.get(&StateKey::parse(key).ok()?) {
         Some(Value::Bool(on)) => Some(*on),
         _ => None,
     }
 }
 
-fn text_state(node: &sem::Node, key: &str) -> Option<String> {
+fn text_state(node: &accord::Node, key: &str) -> Option<String> {
     match node.state.get(&StateKey::parse(key).ok()?) {
         Some(Value::Text(text)) => Some(text.clone()),
         _ => None,
@@ -607,7 +607,7 @@ pub fn default_menu(wake: impl Fn() + Send + Sync + 'static) -> Box<dyn NativeMe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{Constraints, Policy, SnapshotBuilder};
+    use accord::{Constraints, Policy, SnapshotBuilder};
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).unwrap()
@@ -631,8 +631,8 @@ mod tests {
                 ..Constraints::default()
             })
             .action("select")
-            .param(sem::ParamSpec {
-                kind: sem::ValueKind::Text,
+            .param(accord::ParamSpec {
+                kind: accord::ValueKind::Text,
                 constrained: true,
             })
             .reads("shell.theme:selected");
@@ -641,7 +641,7 @@ mod tests {
             .enabled(can_save)
             .action("activate")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     agent: false,
                     ..sem::Actors::default()
                 },
@@ -651,7 +651,7 @@ mod tests {
             .parent("shell")
             .action("activate")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     human: false,
                     ..sem::Actors::default()
                 },

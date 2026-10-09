@@ -57,20 +57,20 @@ pub mod buttons;
 pub mod widget;
 
 pub use widget::{EventResult, Rect, WidgetEvent};
-pub use engine::theme::{self, Intent, Theme};
+pub use crate::styling::theme::{self, Intent, Theme};
 pub use wake::Wake;
 
 /// Everything an app screen usually needs, in one import.
 pub mod prelude {
-    pub use crate::action::*;
-    pub use crate::content::*;
-    pub use crate::core::{EventResult, Rect, WidgetEvent};
-    pub use crate::feedback::*;
-    pub use crate::form::*;
-    pub use crate::graph::{EdgeTone, GraphView};
-    pub use crate::nav::*;
-    pub use crate::recipe::*;
-    pub use crate::shell::{AppShell, SafeArea, ShellLayout};
-    pub use crate::wake::Wake;
-    pub use engine::theme::{Intent, Theme};
+    pub use crate::widgets::buttons::*;
+    pub use crate::widgets::content::*;
+    pub use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+    pub use crate::widgets::feedback::*;
+    pub use crate::widgets::form::*;
+    pub use crate::widgets::graph::{EdgeTone, GraphView};
+    pub use crate::widgets::nav::*;
+    pub use crate::widgets::recipe::*;
+    pub use crate::widgets::shell::{AppShell, SafeArea, ShellLayout};
+    pub use crate::widgets::wake::Wake;
+    pub use crate::styling::theme::{Intent, Theme};
 }

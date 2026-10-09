@@ -4,12 +4,12 @@
 //! content-driven sizes, the pointer contract, and the breakpoint
 //! behavior (rail, drawer, dropped columns, collapsed crumbs).
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::text::TextMeasurer;
-use engine::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
 
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::prelude::*;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::prelude::*;
 
 fn hoff() -> Theme {
     Theme::hoff()
@@ -259,9 +259,9 @@ fn skeleton_stands_still_with_reduced_motion() {
         other => panic!("a block: {other:?}"),
     };
     let before = color(&sk);
-    engine::animation::set_reduced_motion(true);
+    crate::compose::animation::set_reduced_motion(true);
     let moved = sk.tick(t.duration.slow);
-    engine::animation::set_reduced_motion(false);
+    crate::compose::animation::set_reduced_motion(false);
     assert!(!moved, "no frame asked");
     assert_eq!(color(&sk), before, "the wash stands where it was");
     assert!(sk.tick(t.duration.slow), "motion again");

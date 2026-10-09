@@ -5,15 +5,15 @@
 //! `sha · author · time` in caption-r at the tertiary tone. Branch
 //! headers show the success dot when the branch is checked out.
 
-use comps::content::{Avatar, AvatarSize};
-use comps::feedback::Scrollbar;
-use comps::nav::PanelHeader;
-use comps::prelude::{Rect, Wake, edge_light, inset_keylight, rounded_rect};
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::input::scroll::ScrollState;
-use engine::text::TextMeasurer;
-use engine::theme::{ControlSize, Theme};
-use sem::SemId;
+use engine::widgets::content::{Avatar, AvatarSize};
+use engine::widgets::feedback::Scrollbar;
+use engine::widgets::nav::PanelHeader;
+use engine::widgets::prelude::{Rect, Wake, edge_light, inset_keylight, rounded_rect};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::{ControlSize, Theme};
+use accord::SemId;
 
 /// A commit in a stack.
 #[derive(Clone, Debug)]

@@ -82,7 +82,7 @@ mod tests {
         assert_eq!(config.msaa_samples, 4);
         assert_eq!(config.present_mode, wgpu::PresentMode::AutoVsync);
         assert_eq!(config.path_tolerance, 0.1);
-        assert_eq!(crate::path::default_tolerance(), 0.1);
+        assert_eq!(crate::drawing::path::default_tolerance(), 0.1);
         // Perf instrumentation is opt-in: no log spam, no HUD by default.
         assert!(!config.perf_log);
         assert_eq!(config.perf_log_interval, 120);

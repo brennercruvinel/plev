@@ -28,9 +28,9 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::compositor::Compositor;
+use crate::drawing::compositor::Compositor;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::headless::{Frame, HeadlessError, Renderer};
+use crate::drawing::headless::{Frame, HeadlessError, Renderer};
 
 use super::menu::locked;
 

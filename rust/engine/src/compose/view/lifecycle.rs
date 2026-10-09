@@ -1,7 +1,7 @@
 //! Component<L> -- wraps a Lifecycle impl with persistent state.
 
-use crate::compositor::SceneNode;
-use crate::view::ViewContext;
+use crate::drawing::compositor::SceneNode;
+use crate::compose::view::ViewContext;
 
 use super::Lifecycle;
 

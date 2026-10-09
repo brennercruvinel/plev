@@ -26,14 +26,14 @@ use std::sync::Arc;
 use std::sync::mpsc::{self, Receiver, Sender};
 
 use accesskit::{ActionHandler, ActionRequest, ActivationHandler, DeactivationHandler, TreeUpdate};
-use sem::Snapshot;
+use accord::Snapshot;
 use winit::event::WindowEvent;
 use winit::event_loop::ActiveEventLoop;
 use winit::window::Window;
 
 use super::action::{self, Assist};
 use super::tree::{self, Chrome, Shown};
-use crate::compositor::Compositor;
+use crate::drawing::compositor::Compositor;
 
 /// Asks the app's event loop for a turn, from any thread.
 pub type Wake = Arc<dyn Fn() + Send + Sync>;
@@ -98,7 +98,7 @@ impl Bridge {
         if window.is_visible() == Some(true) {
             return Err(BridgeError::WindowVisible);
         }
-        super::motion::follow_system();
+        super::reduced_motion::follow_system();
         let (activation, actions, deactivation, inbox) = handlers(Arc::new(wake));
         let adapter = accesskit_winit::Adapter::with_direct_handlers(
             event_loop,
@@ -121,7 +121,7 @@ impl Bridge {
     /// once more: the person may have changed it while away.
     pub fn process_event(&mut self, window: &Window, event: &WindowEvent) {
         if matches!(event, WindowEvent::Focused(true)) {
-            super::motion::follow_system();
+            super::reduced_motion::follow_system();
         }
         self.adapter.process_event(window, event);
     }
@@ -236,7 +236,7 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use accesskit::{Action, TreeId};
-    use sem::{Actor, Role, SemId, SnapshotBuilder};
+    use accord::{Actor, Role, SemId, SnapshotBuilder};
 
     use super::*;
 

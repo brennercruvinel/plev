@@ -5,9 +5,9 @@
 
 use std::sync::Arc;
 
-use engine::compositor::QuadVertex;
-use engine::gpu::ImageHandle;
-use engine::path::TessellatedPath;
+use engine::drawing::compositor::QuadVertex;
+use engine::drawing::gpu::ImageHandle;
+use engine::drawing::path::TessellatedPath;
 
 use super::SceneError;
 use super::bytes::{Put, Take, fnv};

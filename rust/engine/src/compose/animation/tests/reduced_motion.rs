@@ -1,7 +1,7 @@
 //! Reduced motion (task-75 phase 1): with the thread's preference on,
 //! every transition ends on its first tick; with it off, nothing changes.
 
-use super::*;
+use super::super::*;
 
 /// The preference on for one test, off again when it ends (a test runs
 /// on a thread of its own; the guard keeps it so even if one did not).

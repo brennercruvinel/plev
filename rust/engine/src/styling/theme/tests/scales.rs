@@ -3,13 +3,13 @@
 //! The radii / shadow / motion assertions used to live in the ide's own
 //! theme copy; they guard the same numbers here, at the single source.
 
-use super::*;
+use super::super::*;
 
 fn close(a: f32, b: f32) -> bool {
     (a - b).abs() < 1e-6
 }
 
-fn assert_color(c: crate::color::Color, r: u8, g: u8, b: u8, a: f32) {
+fn assert_color(c: crate::styling::color::Color, r: u8, g: u8, b: u8, a: f32) {
     let [cr, cg, cb, ca] = c.0;
     assert!(close(cr, r as f32 / 255.0), "r: {cr} != {r}");
     assert!(close(cg, g as f32 / 255.0), "g: {cg} != {g}");
@@ -192,13 +192,13 @@ fn elevation_picks_the_stack_bottom_first() {
 
 #[test]
 fn shadow_spread_folds_into_the_cast_rect() {
-    let spec = ShadowSpec::new([0.0, 0.0], 8.0, -4.0, crate::color::Color::hex(0x000000));
+    let spec = ShadowSpec::new([0.0, 0.0], 8.0, -4.0, crate::styling::color::Color::hex(0x000000));
     assert_eq!(
         spec.cast_rect(10.0, 10.0, 100.0, 50.0),
         Some((14.0, 14.0, 92.0, 42.0))
     );
     // A spread that eats the surface casts nothing.
-    let eaten = ShadowSpec::new([0.0, 0.0], 8.0, -30.0, crate::color::Color::hex(0x000000));
+    let eaten = ShadowSpec::new([0.0, 0.0], 8.0, -30.0, crate::styling::color::Color::hex(0x000000));
     assert_eq!(eaten.cast_rect(0.0, 0.0, 50.0, 50.0), None);
 }
 

@@ -5,8 +5,8 @@
 //! one fails here, and asks for the test of its case (the ones of the
 //! Capture, Files and Silences pages are the pattern).
 
-use sem::Role;
-use showcase::view::PAGES;
+use accord::Role;
+use uigallery::views::PAGES;
 
 use super::harness::gallery;
 

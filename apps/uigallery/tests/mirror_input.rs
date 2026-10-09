@@ -27,13 +27,13 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use engine::platform::capture::FakeCapture;
-use rec::scene::Head;
-use sem::{Actor, Rejection, Revision, SemId, Stage, StateRef, Value};
-use showcase::app::mirror::{Hand, MAIN, Pressed, Scenes, Viewer};
-use showcase::view::ShowcaseView;
-use wire::{Act, AgentPort, Client, Config, Observe, Reply};
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::capture::FakeCapture;
+use record::scene::Head;
+use accord::{Actor, Rejection, Revision, SemId, Stage, StateRef, Value};
+use uigallery::shell::window::mirror::{Hand, MAIN, Pressed, Scenes, Viewer};
+use uigallery::views::ShowcaseView;
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 const WIDTH: f32 = 1280.0;
 const HEIGHT: f32 = 800.0;
@@ -231,11 +231,11 @@ impl Eye {
     }
 
     /// One line of the watch, kept and taken.
-    fn take(&mut self, msg: wire::ServerMsg) -> Option<u64> {
+    fn take(&mut self, msg: socket::ServerMsg) -> Option<u64> {
         if let Reply::Error(e) = &msg.reply {
             panic!("the watch was refused: {e}");
         }
-        self.lines.push(wire::encode_server(&msg));
+        self.lines.push(socket::encode_server(&msg));
         match &msg.reply {
             Reply::Scene(f) => {
                 self.parts.extend(f.head.clone());
@@ -483,7 +483,7 @@ fn an_old_scene_is_refused_as_stale() {
 fn person_acts(view: &mut ShowcaseView, target: &str, action: &str, param: Option<&str>) {
     let seen = view.semantics().expect("the page projects");
     let param = param.map(|p| Value::Text(p.to_owned()));
-    let req = sem::Request::observe(&seen, Actor::Human, target, action, param)
+    let req = accord::Request::observe(&seen, Actor::Human, target, action, param)
         .unwrap_or_else(|e| panic!("{target} {action}: {e}"));
     let receipt = view.act(req).expect("the page takes it");
     assert_eq!(
@@ -518,7 +518,7 @@ fn unshared_the_mirror_has_nothing_to_click() {
         let pressed = hand.click(&viewer, x + w / 2.0, y + h / 2.0, |_, _| {});
         (refusal, pressed)
     });
-    let Reply::Error(wire::ProtoError::SceneNotShared { reason }) = refusal else {
+    let Reply::Error(socket::ProtoError::SceneNotShared { reason }) = refusal else {
         panic!("refused as not shared: {refusal:?}");
     };
     assert!(reason.contains("PLEV_MIRROR=1"), "{reason}");
@@ -576,10 +576,10 @@ fn a_camera_s_frames_never_cross_whatever_the_mirror_clicks() {
             .iter()
             .flat_map(|l| l.nodes())
             .filter_map(|n| match n {
-                engine::compositor::SceneNode::Image { image, .. }
-                    if engine::gpu::image_is_stream(image) =>
+                engine::drawing::compositor::SceneNode::Image { image, .. }
+                    if engine::drawing::gpu::image_is_stream(image) =>
                 {
-                    engine::gpu::image_pixels(image)
+                    engine::drawing::gpu::image_pixels(image)
                 }
                 _ => None,
             })
@@ -593,18 +593,18 @@ fn a_camera_s_frames_never_cross_whatever_the_mirror_clicks() {
 
 /// The app of the login form, for the port: its projection, and nothing
 /// that takes a request.
-struct Login(sem::Snapshot);
+struct Login(accord::Snapshot);
 
-impl wire::Host for Login {
-    fn project(&self) -> Option<sem::Snapshot> {
+impl socket::Host for Login {
+    fn project(&self) -> Option<accord::Snapshot> {
         Some(self.0.clone())
     }
 
-    fn dispatch(&mut self, _req: sem::Request) -> Option<sem::RequestId> {
+    fn dispatch(&mut self, _req: accord::Request) -> Option<accord::RequestId> {
         None
     }
 
-    fn add_sink(&mut self, _sink: Box<dyn sem::ReceiptSink>) {}
+    fn add_sink(&mut self, _sink: Box<dyn accord::ReceiptSink>) {}
 }
 
 /// `sem`'s redaction, which this phase extends to the scene: a password
@@ -666,7 +666,7 @@ fn a_secret_leaves_as_its_length_and_never_as_what_it_draws() {
     let chars = |t: &str| Some(Value::Int(t.chars().count() as i64));
     assert_eq!(value("login.password", "text"), chars(secret));
     assert_eq!(value("login.pin", "message"), chars(login::PIN));
-    let look = wire::encode_server(&wire::ServerMsg {
+    let look = socket::encode_server(&socket::ServerMsg {
         id: None,
         reply: Reply::Snapshot(shown),
     });
@@ -694,7 +694,7 @@ fn the_person_s_preference_never_leaves_by_the_port() {
     const LARGER: &str = "silences_surface.access.larger_text";
     let mut g = Gallery::open("Silences", true);
     g.view.stage_silences_frames(&mut |_ms| {
-        engine::gpu::image::load_image_rgba(4, 4, vec![128; 64]).map_err(|e| e.to_string())
+        engine::drawing::gpu::image::load_image_rgba(4, 4, vec![128; 64]).map_err(|e| e.to_string())
     });
     let rules = "the list with the video and the counts";
     person_acts(

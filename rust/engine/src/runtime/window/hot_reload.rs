@@ -8,7 +8,7 @@ impl super::App {
             return false;
         };
         for path in &changed_paths {
-            crate::hot_reload::process_narrate_file(path);
+            crate::runtime::hot_reload::process_narrate_file(path);
         }
         !changed_paths.is_empty()
     }

@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use proptest::prelude::*;
-use sem::{Change, Constraints, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
+use accord::{Change, Constraints, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("valid id")

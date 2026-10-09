@@ -6,8 +6,8 @@
 use std::path::Path;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError, TryLockError};
 
-use engine::compositor::{Compositor, Layer, SceneNode};
-use sem::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
+use engine::drawing::compositor::{Compositor, Layer, SceneNode};
+use accord::{Actor, Millis, Receipt, ReceiptSink, Revision, SemId, Snapshot, Stage};
 
 use crate::bound;
 use crate::error::{FileError, FrameError};

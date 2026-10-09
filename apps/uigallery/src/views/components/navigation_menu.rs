@@ -8,11 +8,11 @@
 //! click does. The rail form is a picture of the first link: its own
 //! `NavLink`, with no id, that mirrors it.
 
-use comps::nav::NavLink;
-use comps::prelude::{Badge, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::nav::NavLink;
+use engine::widgets::prelude::{Badge, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 

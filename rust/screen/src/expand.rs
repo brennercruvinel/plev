@@ -8,8 +8,8 @@
 
 use std::collections::BTreeSet;
 
-use sem::{SemId, Snapshot, StateRef, Value};
-use uir::{Bind, CapabilityRef, Component, ITEM, IrNode, Layout, Props, Size};
+use accord::{SemId, Snapshot, StateRef, Value};
+use plevir::{Bind, CapabilityRef, Component, ITEM, IrNode, Layout, Props, Size};
 
 /// one node of the unrolled tree: the IR node, or one instance of a
 /// template, with its bindings resolved to the item.

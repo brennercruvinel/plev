@@ -7,10 +7,10 @@
 #[allow(dead_code)]
 mod support;
 
-use sem::{Actor, SemId, ValueKind};
+use accord::{Actor, SemId, ValueKind};
 use serde_json::{Value, json};
 use support::caps;
-use uir::{
+use plevir::{
     Adapted, Capabilities, ChartKind, ColorRole, Component, Context, ControlSize, DataCap,
     Elevation, GenerationPolicy, Inverse, Ir, IrNode, Layout, Op, Rule, SpacingToken, Step,
     TransformError, TypographyRole, verify,

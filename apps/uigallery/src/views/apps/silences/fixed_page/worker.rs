@@ -21,8 +21,8 @@ use std::path::PathBuf;
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 use std::time::Duration;
 
-use engine::gpu::image::ImageHandle;
-use showcase::model::silences::{Detected, Settings, TEST_VIDEO};
+use engine::drawing::gpu::image::ImageHandle;
+use crate::domain::silences::{Detected, Settings, TEST_VIDEO};
 
 /// How often the page looks at the channel while a job runs.
 pub(super) const POLL: Duration = Duration::from_millis(100);
@@ -271,7 +271,7 @@ impl Fake {
                     .collect();
                 Done::Frame {
                     ms,
-                    result: engine::gpu::image::load_image_rgba(w, h, pixels)
+                    result: engine::drawing::gpu::image::load_image_rgba(w, h, pixels)
                         .map_err(|e| e.to_string()),
                     took: Duration::from_millis(3),
                 }
@@ -291,8 +291,8 @@ mod child {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::gpu::image::{ImageHandle, load_image_bytes};
-    use showcase::model::silences::{Detected, Settings, parse};
+    use engine::drawing::gpu::image::{ImageHandle, load_image_bytes};
+    use crate::domain::silences::{Detected, Settings, parse};
 
     use super::{Done, Job};
 

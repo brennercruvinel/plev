@@ -10,10 +10,10 @@
 //! stays disabled and `shell:print` says "no destination"; the tests use
 //! the fake.
 
-use engine::platform::print::default_printer;
+use engine::runtime::platform::print::default_printer;
 use winit::keyboard::{Key, ModifiersState};
 
-use super::App;
+use super::super::App;
 
 /// The keys that print the page, as the person reads them: `p` with the
 /// primary modifier (cmd on macOS, ctrl elsewhere), the platform's own
@@ -65,14 +65,14 @@ mod tests {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::platform::menu::{FakeMenu, Shortcut, locked};
-    use engine::platform::print::FakePrinter;
-    use sem::{SemId, Value};
+    use engine::runtime::platform::menu::{FakeMenu, Shortcut, locked};
+    use engine::runtime::platform::print::FakePrinter;
+    use accord::{SemId, Value};
     use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-    use super::super::App;
+    use super::super::super::App;
     use super::{PRINT_KEYS, is_print_key};
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     /// The primary modifier of the platform, as the print keys read it.
     const PRIMARY: ModifiersState = if cfg!(target_os = "macos") {

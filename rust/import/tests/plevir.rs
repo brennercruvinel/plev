@@ -13,13 +13,13 @@
 #[allow(dead_code)]
 mod support;
 
-use parser::gpui::{GExpr, GFn};
-use parser::tokens::{color_distance, nearest, px_distance, type_distance};
-use parser::tsx::{TsxChild, TsxNode};
-use parser::{Category, Need, Tokens, Verdict};
+use import::formats::gpui::parse::{GExpr, GFn};
+use import::tokens::{color_distance, nearest, px_distance, type_distance};
+use import::formats::react::parse::{TsxChild, TsxNode};
+use import::{Category, Need, Tokens, Verdict};
 use support::checks::*;
 use support::*;
-use uir::{Capabilities, ColorRole, GenerationPolicy, SpacingToken, verify};
+use plevir::{Capabilities, ColorRole, GenerationPolicy, SpacingToken, verify};
 
 /// Every construct of a react source: the component, each element with
 /// its attributes and conditional classes, each text and expression child,
@@ -43,10 +43,10 @@ fn react_census(files: (&str, &str), tsx: &str, sass: &str, vars: &str) -> Vec<S
             }
         }
     }
-    let comp = parser::tsx::parse_tsx(tsx).expect("tsx");
+    let comp = import::formats::react::parse::parse_tsx(tsx).expect("tsx");
     let mut out = vec![site(files.0, comp.line, format!("component {}", comp.name))];
     walk(&comp.root, files.0, &mut out);
-    for rule in parser::sass::parse_sass(sass, vars) {
+    for rule in import::formats::react::sass::parse_sass(sass, vars) {
         for d in &rule.decls {
             out.push(site(files.1, d.line, format!("{}: {}", d.prop, d.value)));
         }
@@ -94,7 +94,7 @@ fn gpui_census(file: &str, src: &str) -> Vec<Site> {
             GExpr::Src { .. } => {}
         }
     }
-    let g = parser::gpui::parse_gpui(src).expect("gpui");
+    let g = import::formats::gpui::parse::parse_gpui(src).expect("gpui");
     let mut out = vec![site(file, g.widget_line, "impl RenderOnce")];
     let render = g.fns.iter().find(|f| f.name == "render").expect("render");
     let tail = render.tail.as_ref().expect("render ends in a chain");
@@ -114,7 +114,7 @@ fn the_separator_ir_and_its_report() {
     goldens(&imported, "gpui");
     let r = &imported.report;
     // the droplist is extended, not lost: each of its entries, at its line
-    let out = parser::transpile_gpui(("separator.rs", &gpui_source())).expect("gpui");
+    let out = import::transpile_gpui(("separator.rs", &gpui_source())).expect("gpui");
     for d in &out.dropped {
         let e = r
             .at(&d.at)
@@ -124,7 +124,7 @@ fn the_separator_ir_and_its_report() {
             Category::Impossible => {
                 assert!(matches!(&e.verdict, Verdict::Impossible { reason } if *reason == d.why))
             }
-            Category::Transformed => assert_eq!(d.kind, parser::ir::DropKind::Rewritten, "{d:?}"),
+            Category::Transformed => assert_eq!(d.kind, import::tree::DropKind::Rewritten, "{d:?}"),
             other => panic!("{}: {other:?}", d.what),
         }
     }
@@ -171,7 +171,7 @@ fn the_note_card_ir_and_its_report() {
     let imported = import_react();
     goldens(&imported, "react");
     let (tsx, sass, vars) = react_sources();
-    let code = parser::transpile_react((TSX, &tsx), (SASS, &sass), &vars).expect("react");
+    let code = import::transpile_react((TSX, &tsx), (SASS, &sass), &vars).expect("react");
     check_golden("react/expected.rs", &code.code);
     let r = &imported.report;
     let at = |at: &str, what: &str| {
@@ -258,11 +258,11 @@ fn the_note_cards_controls_need_the_app_and_invent_nothing() {
         ]
     );
     // an app that declares all but one: refused for that one only
-    let mut b = sem::SnapshotBuilder::new();
-    let mut props = b.node("note_card.props", sem::Role::Group, "note card");
+    let mut b = accord::SnapshotBuilder::new();
+    let mut props = b.node("note_card.props", accord::Role::Group, "note card");
     props.state("title", "t").state("content", "c");
-    props.action("reply").param(sem::ParamSpec {
-        kind: sem::ValueKind::Text,
+    props.action("reply").param(accord::ParamSpec {
+        kind: accord::ValueKind::Text,
         constrained: false,
     });
     let without_open = b.finish().expect("projects");
@@ -293,17 +293,17 @@ const Bar = ({ go }: Props) => (
 );
 "#;
     let imported =
-        parser::import_react(("bar.tsx", tsx), ("bar.sass", ""), "", &hoff()).expect("imports");
+        import::import_react(("bar.tsx", tsx), ("bar.sass", ""), "", &hoff()).expect("imports");
     let kids = &imported.ir.surface.root.children;
-    let shown: Vec<(Option<uir::Component>, Option<&str>)> = kids
+    let shown: Vec<(Option<plevir::Component>, Option<&str>)> = kids
         .iter()
         .map(|k| (k.component, k.label.as_deref()))
         .collect();
     assert_eq!(
         shown,
         [
-            (Some(uir::Component::Button), Some("Go")),
-            (Some(uir::Component::Button), Some("Stop now")),
+            (Some(plevir::Component::Button), Some("Go")),
+            (Some(plevir::Component::Button), Some("Stop now")),
         ]
     );
     let actions: Vec<&str> = imported
@@ -329,11 +329,11 @@ fn an_import_is_deterministic() {
 #[test]
 fn a_broken_source_is_an_error_and_an_empty_table_loses_values_loudly() {
     assert!(matches!(
-        parser::import_gpui(("x.rs", "fn broken( {{{"), &hoff()),
-        Err(parser::ParserError::Parse(_))
+        import::import_gpui(("x.rs", "fn broken( {{{"), &hoff()),
+        Err(import::ParserError::Parse(_))
     ));
     assert!(
-        parser::import_react(
+        import::import_react(
             ("x.tsx", "const X = (=> <div<"),
             ("x.sass", ""),
             "",
@@ -345,7 +345,7 @@ fn a_broken_source_is_an_error_and_an_empty_table_loses_values_loudly() {
     // impossible, said so, and the IR still verifies
     let empty = Tokens::default();
     assert!(!empty.missing().is_empty());
-    let imported = parser::import_gpui(("separator.rs", &gpui_source()), &empty).expect("imports");
+    let imported = import::import_gpui(("separator.rs", &gpui_source()), &empty).expect("imports");
     let padding = imported
         .report
         .at("separator.rs:145")
@@ -394,7 +394,7 @@ fn the_tolerances_measured_on_hoff() {
     assert!(close(card.tolerance, 16.0));
     let pill = nearest(&t.shapes, &32.0, px_distance).expect("pill");
     assert!(close(pill.tolerance, 4.0));
-    let caption = t.type_of(uir::TypographyRole::CaptionR).expect("caption_r");
+    let caption = t.type_of(plevir::TypographyRole::CaptionR).expect("caption_r");
     let near = nearest(&t.typography, &caption, type_distance).expect("near");
     assert!(close(near.tolerance, 1.0));
 }
@@ -406,7 +406,7 @@ fn the_corpus_card_when_present() {
     let Some((tsx, sass, vars)) = corpus() else {
         return;
     };
-    let imported = parser::import_react(
+    let imported = import::import_react(
         ("index.tsx", &tsx),
         ("HoffResearchCard.module.sass", &sass),
         &vars,

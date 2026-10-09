@@ -12,16 +12,16 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use comps::overlay::OverlayManager;
-use comps::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::platform::files::FileDialogs;
-use engine::theme::{Intent, Theme};
+use engine::widgets::overlay::OverlayManager;
+use engine::widgets::prelude::{Button, EventResult, Rect, Tabs, ToastManager, Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::runtime::platform::files::FileDialogs;
+use engine::styling::theme::{Intent, Theme};
 
-use crate::model::Worker;
+use crate::backend::Worker;
 #[cfg(not(target_arch = "wasm32"))]
-use crate::model::recents;
-use crate::model::types::{ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent};
+use crate::recents;
+use crate::backend::workers::messages::{ChunksData, OpenedDbView, SearchMode, UrnaCommand, UrnaEvent};
 
 use super::chunks::{ChunksContext, ChunksScreen};
 use super::graph::{GraphContext, GraphScreen};
@@ -65,7 +65,7 @@ pub struct Explorer {
     pick_requested: bool,
     /// Global shortcuts (Cmd/Ctrl+O, Cmd/Ctrl+1..=6), matched as engine
     /// `Keystroke`s so the view stays winit-free.
-    shortcuts: engine::actions::shortcuts::ShortcutMap,
+    shortcuts: engine::control::keymap::shortcuts::ShortcutMap,
     embedder: Option<Result<String, String>>,
     file_hover: bool,
     chunks: Option<ChunksData>,
@@ -74,7 +74,7 @@ pub struct Explorer {
     chunk_index: Option<HashMap<String, usize>>,
     /// Decoded frame previews by chunk ordinal (`Err` = why the decode
     /// failed), plus the ordinals whose decode is in flight.
-    frames: HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+    frames: HashMap<usize, Result<engine::drawing::gpu::image::ImageHandle, String>>,
     frames_pending: std::collections::HashSet<usize>,
     /// Last `Validate` outcome: `Ok(ms)` or the reader's error.
     validation: Option<Result<f64, String>>,
@@ -82,11 +82,11 @@ pub struct Explorer {
     /// ffmpeg availability, probed once per open (frame previews).
     ffmpeg: Option<bool>,
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-    clipboard: engine::clipboard::SystemClipboard,
+    clipboard: engine::runtime::platform::clipboard::SystemClipboard,
     /// The platform's file dialogs (Browse…, blob export): native on the
     /// desktop, none on wasm and mobile, the fake in tests.
     dialogs: Box<dyn FileDialogs>,
-    empty_state: comps::prelude::EmptyState,
+    empty_state: engine::widgets::prelude::EmptyState,
     open: OpenScreen,
     overview: OverviewScreen,
     search: SearchScreen,
@@ -134,9 +134,9 @@ impl Explorer {
             validating: false,
             ffmpeg: None,
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            clipboard: engine::clipboard::SystemClipboard::new(),
-            dialogs: engine::platform::files::default_dialogs(),
-            empty_state: comps::prelude::EmptyState::new(
+            clipboard: engine::runtime::platform::clipboard::SystemClipboard::new(),
+            dialogs: engine::runtime::platform::files::default_dialogs(),
+            empty_state: engine::widgets::prelude::EmptyState::new(
                 "no database open yet",
                 "Open a .urna file from the Open tab to explore it here.",
             )
@@ -259,7 +259,7 @@ impl Explorer {
                     #[cfg(not(target_arch = "wasm32"))]
                     {
                         self.worker.send(UrnaCommand::CheckEmbedder);
-                        self.ffmpeg = Some(crate::model::frames::ffmpeg_available());
+                        self.ffmpeg = Some(crate::backend::sources::frames::ffmpeg_available());
                     }
                     self.screen = Screen::Overview;
                     toasts.push(format!("opened {path}"), Intent::Constructive, theme);
@@ -328,7 +328,7 @@ impl Explorer {
                 UrnaEvent::FrameLoaded { ordinal, result } => {
                     self.frames_pending.remove(&ordinal);
                     let handle = result.and_then(|png| {
-                        engine::gpu::image::load_image_bytes(&png).map_err(|e| e.to_string())
+                        engine::drawing::gpu::image::load_image_bytes(&png).map_err(|e| e.to_string())
                     });
                     self.frames.insert(ordinal, handle);
                 }
@@ -474,7 +474,7 @@ impl Explorer {
 
     /// Global shortcut dispatch: the shell turns winit keys into engine
     /// `Keystroke`s; the map resolves them to "open" / "tab:N".
-    pub fn handle_keystroke(&mut self, keystroke: &engine::actions::Keystroke) -> bool {
+    pub fn handle_keystroke(&mut self, keystroke: &engine::control::keymap::Keystroke) -> bool {
         let Some(id) = self.shortcuts.get(keystroke) else {
             return false;
         };
@@ -495,7 +495,7 @@ impl Explorer {
 
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     fn copy(&mut self, text: &str) {
-        use engine::clipboard::ClipboardProvider;
+        use engine::runtime::platform::clipboard::ClipboardProvider;
         self.clipboard.set_text(text);
     }
 
@@ -768,10 +768,10 @@ impl Explorer {
     fn tabs_rect(&self) -> Rect {
         // Equal-width segments; the strip is sized from the longest label
         // (real measurement) rather than a hardcoded width.
-        let style = engine::theme::TypographyScale::hoff().base_2sm();
+        let style = engine::styling::theme::TypographyScale::hoff().base_2sm();
         let max_label = Screen::TABS
             .iter()
-            .map(|s| engine::text::TextMeasurer::measure_styled(s.title(), &style, None).0)
+            .map(|s| engine::drawing::text::TextMeasurer::measure_styled(s.title(), &style, None).0)
             .fold(0.0, f32::max);
         let seg_w = max_label + 48.0;
         let w = (seg_w * Screen::TABS.len() as f32 + 8.0).min(self.width - PAD * 2.0);
@@ -804,8 +804,8 @@ impl Explorer {
             Some(db) => db.path.display().to_string(),
             None => "no database open".to_string(),
         };
-        let subtitle_style = engine::text::TextStyle::new(12.0);
-        let subtitle = engine::text::TextMeasurer::truncate_to_width(
+        let subtitle_style = engine::drawing::text::TextStyle::new(12.0);
+        let subtitle = engine::drawing::text::TextMeasurer::truncate_to_width(
             &subtitle,
             &subtitle_style,
             (self.width - PAD * 2.0 - 90.0).max(80.0),
@@ -974,8 +974,8 @@ impl Explorer {
 /// The global shortcut table: Cmd/Ctrl+O jumps to Open, Cmd/Ctrl+1..=6
 /// jump to tabs. Both modifier spellings bind the same id (macOS vs the
 /// rest).
-fn build_shortcuts() -> engine::actions::shortcuts::ShortcutMap {
-    let mut map = engine::actions::shortcuts::ShortcutMap::new()
+fn build_shortcuts() -> engine::control::keymap::shortcuts::ShortcutMap {
+    let mut map = engine::control::keymap::shortcuts::ShortcutMap::new()
         .bind("cmd-o", "open")
         .bind("ctrl-o", "open");
     for i in 0..Screen::TABS.len() {
@@ -1024,7 +1024,7 @@ mod tests {
     #[test]
     fn shortcuts_jump_to_tabs() {
         let (mut ex, _, _) = harness();
-        let ks = |s: &str| s.parse::<engine::actions::Keystroke>().unwrap();
+        let ks = |s: &str| s.parse::<engine::control::keymap::Keystroke>().unwrap();
         assert!(ex.handle_keystroke(&ks("cmd-3")));
         assert_eq!(ex.screen(), Screen::Search);
         assert!(ex.handle_keystroke(&ks("ctrl-5")));
@@ -1075,7 +1075,7 @@ mod tests {
     /// the dialog is asked with the corpus title and extensions.
     #[test]
     fn browse_opens_what_the_dialog_picked_and_nothing_when_cancelled() {
-        use engine::platform::files::{DialogKind, FakeDialogs};
+        use engine::runtime::platform::files::{DialogKind, FakeDialogs};
         use std::sync::{Arc, Mutex};
 
         let (mut ex, mut toasts, theme) = harness();
@@ -1114,7 +1114,7 @@ mod tests {
         assert_eq!(ex.screen(), Screen::Open);
 
         // a target without dialogs: the toast says so, nothing opens
-        ex.set_dialogs(Box::new(engine::platform::files::NoDialogs));
+        ex.set_dialogs(Box::new(engine::runtime::platform::files::NoDialogs));
         let before = toasts.len();
         assert!(ex.action(Action::PickFile, &mut toasts, &theme));
         assert!(!ex.opening);
@@ -1127,7 +1127,7 @@ mod tests {
     /// answers the failure); a target without dialogs says so.
     #[test]
     fn export_asks_a_save_dialog_named_after_the_blob() {
-        use engine::platform::files::{DialogKind, FakeDialogs};
+        use engine::runtime::platform::files::{DialogKind, FakeDialogs};
         use std::sync::{Arc, Mutex};
 
         let (mut ex, mut toasts, theme) = harness();

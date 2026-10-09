@@ -4,8 +4,8 @@
 
 use std::fmt::Write as _;
 
-use engine::perf::RollingWindow;
-use engine::perf::stages::{Stage, StageCost};
+use engine::runtime::perf::RollingWindow;
+use engine::runtime::perf::stages::{Stage, StageCost};
 
 use crate::harness::{DT, Sample};
 use crate::scenarios::{Config, Run, WARM_UP};

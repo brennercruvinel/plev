@@ -4,11 +4,11 @@
 //! layers with the same nodes, bit for bit. no GPU: the pixels are
 //! compared in crates/showcase/tests/mirror.rs.
 
-use engine::compositor::Compositor;
-use engine::headless::Viewport;
-use rec::scene::{Brought, Head, Incoming, Mirror, Sender};
-use showcase::app::stage_page;
-use showcase::view::PAGES;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::headless::Viewport;
+use record::scene::{Brought, Head, Incoming, Mirror, Sender};
+use uigallery::shell::stage_page;
+use uigallery::views::PAGES;
 
 const VIEWPORT: Viewport = Viewport {
     width: 1280.0,

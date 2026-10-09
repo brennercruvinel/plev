@@ -15,7 +15,7 @@ use burn::tensor::backend::Backend;
 use burn::tensor::{Bool, DType, Int, Tensor};
 
 use super::cache::KvCache;
-use super::rope::Rope;
+use super::rotary::Rope;
 
 /// The shape of a llama checkpoint, read from its `config.json`.
 #[derive(Clone, Debug, PartialEq)]

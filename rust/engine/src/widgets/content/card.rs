@@ -17,13 +17,13 @@
 //! and text only, plus the play icon; every element stacks correctly
 //! within a single layer (quads, shadows, SDF, images, text).
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::image::ImageHandle;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, IconSize, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::gpu::image::ImageHandle;
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, IconSize, Theme};
 
-use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
-use crate::recipe::{glass_pill, inset_keylight};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::widgets::recipe::{glass_pill, inset_keylight};
 
 /// One row of a [`CardVariant::List`] (expense-tracker / download rows).
 #[derive(Clone, Debug)]
@@ -876,7 +876,7 @@ impl Card {
         // the embedded UI faces and would silently rasterize from a
         // system font.
         let play_icon = theme.control.icon(IconSize::Lg);
-        if let Some(icon) = crate::icons::icon_at(
+        if let Some(icon) = crate::widgets::icons::icon_at(
             "play",
             play_icon,
             text.0,

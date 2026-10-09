@@ -7,14 +7,14 @@
 //! draws and hit-tests with, and [`Checkbox::project`] declares the
 //! checkbox in a semantic projection; the app still owns `checked`.
 
-use crate::icons;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::{IconSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::widgets::icons;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::{IconSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
-use crate::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
+use crate::widgets::recipe::focus_ring;
 
 /// Retained checkbox with optional trailing label. The whole bounds act
 /// as the hit area (box + label), like every native toolkit.
@@ -171,7 +171,7 @@ impl Checkbox {
             // Filled white ($text-primary) with a dark check on top (push
             // order is preserved across primitive types).
             let fill = theme.colors.text;
-            compositor.push(crate::recipe::rounded_rect(
+            compositor.push(crate::widgets::recipe::rounded_rect(
                 bx,
                 by,
                 box_size,

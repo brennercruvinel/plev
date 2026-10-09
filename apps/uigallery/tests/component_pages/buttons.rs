@@ -1,6 +1,6 @@
 //! Buttons: a press from the three, and the focus a reader leaves.
 
-use comps::prelude::WidgetEvent;
+use engine::widgets::prelude::WidgetEvent;
 
 use super::harness::{Gallery, ask, by_agent, gallery, same, sid};
 

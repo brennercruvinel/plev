@@ -11,10 +11,10 @@ use std::ops::Range;
 
 use ropey::Rope;
 
-use crate::history::{CommitKind, History};
-use crate::movement::{next_grapheme_boundary, prev_grapheme_boundary};
-use crate::selection::{Selection, SelectionSet};
-use crate::transaction::{Bias, Transaction};
+use crate::document::history::{CommitKind, History};
+use crate::document::movement::{next_grapheme_boundary, prev_grapheme_boundary};
+use crate::document::selection::{Selection, SelectionSet};
+use crate::document::transaction::{Bias, Transaction};
 
 #[derive(Debug)]
 pub struct Document {

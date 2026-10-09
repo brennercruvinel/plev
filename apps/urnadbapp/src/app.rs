@@ -20,12 +20,12 @@
 use std::sync::Arc;
 
 use crate::view::UrnauiView;
-use crate::{keys, renderer};
-use comps::prelude::{Wake, WidgetEvent};
-use engine::animation::FrameClock;
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use crate::{keyboard, renderer};
+use engine::widgets::prelude::{Wake, WidgetEvent};
+use engine::compose::animation::FrameClock;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use web_time::Instant;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
@@ -50,8 +50,8 @@ pub(crate) enum UserEvent {
     GpuReady {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
+        effects: engine::drawing::effects::EffectProcessor,
+        texture_pool: engine::drawing::gpu::texture_pool::TexturePool,
     },
     /// The browser file picker delivered the picked .urna's bytes.
     #[cfg(target_arch = "wasm32")]
@@ -66,8 +66,8 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
+        effects: engine::drawing::effects::EffectProcessor,
+        texture_pool: engine::drawing::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -213,7 +213,7 @@ impl ApplicationHandler<UserEvent> for App {
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
 
         #[cfg(target_arch = "wasm32")]
-        if let Err(e) = engine::window::setup_wasm_canvas(&window) {
+        if let Err(e) = engine::runtime::window::setup_wasm_canvas(&window) {
             log::error!("WASM canvas setup failed: {e}");
         }
 
@@ -224,12 +224,12 @@ impl ApplicationHandler<UserEvent> for App {
         {
             let gpu = pollster::block_on(GpuContext::new(window));
             let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-            let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+            let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
             self.state = GpuState::Ready {
                 gpu,
                 text_system,
                 effects,
-                texture_pool: engine::gpu::texture_pool::TexturePool::new(),
+                texture_pool: engine::drawing::gpu::texture_pool::TexturePool::new(),
             };
             self.configure_viewport();
         }
@@ -242,12 +242,12 @@ impl ApplicationHandler<UserEvent> for App {
                 let gpu = GpuContext::new(window).await;
                 let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
                 let effects =
-                    engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+                    engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
                 let _ = proxy.send_event(UserEvent::GpuReady {
                     gpu,
                     text_system,
                     effects,
-                    texture_pool: engine::gpu::texture_pool::TexturePool::new(),
+                    texture_pool: engine::drawing::gpu::texture_pool::TexturePool::new(),
                 });
             });
         }
@@ -329,8 +329,8 @@ impl ApplicationHandler<UserEvent> for App {
                             target_os = "ios"
                         )))]
                         if paste {
-                            use engine::clipboard::ClipboardProvider;
-                            let mut clipboard = engine::clipboard::SystemClipboard::new();
+                            use engine::runtime::platform::clipboard::ClipboardProvider;
+                            let mut clipboard = engine::runtime::platform::clipboard::SystemClipboard::new();
                             if let Some(text) = clipboard.get_text()
                                 && self.view.handle_paste(&text)
                             {
@@ -346,7 +346,7 @@ impl ApplicationHandler<UserEvent> for App {
                         // winit-free).
                         if !plain
                             && !paste
-                            && let Some(ks) = engine::actions::keystroke_from_logical_key(
+                            && let Some(ks) = engine::control::keymap::keystroke_from_logical_key(
                                 &key_event.logical_key,
                                 self.modifiers,
                             )
@@ -455,7 +455,7 @@ impl ApplicationHandler<UserEvent> for App {
             // event (it knows which platform events say so); the view
             // opens what was dropped.
             other => {
-                if let Some(drop) = engine::input::FileDrop::from_window_event(&other)
+                if let Some(drop) = engine::control::input::FileDrop::from_window_event(&other)
                     && self.view.handle_file_drop(&drop)
                 {
                     self.invalidate();

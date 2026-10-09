@@ -6,11 +6,11 @@
 //! colors are sRGB; the gpu linearizes them in the shader. push order is
 //! preserved by the engine's layer encoder, so the layering reads correctly.
 
-use engine::compositor::{Compositor, RoundedRectParams};
-use engine::path::PathBuilder;
-use prime::color::hsl_to_srgb;
-use prime::sim::Simulation;
-use prime::sim::particle::Particle;
+use engine::drawing::compositor::{Compositor, RoundedRectParams};
+use engine::drawing::path::PathBuilder;
+use crate::color::hsl_to_srgb;
+use crate::simulation::Simulation;
+use crate::simulation::particle::Particle;
 
 /// the demo's particle radius: max(0.5, mass*1.5) breathing with the phase.
 fn core_radius(p: &Particle) -> f32 {

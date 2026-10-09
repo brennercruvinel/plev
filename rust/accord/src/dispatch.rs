@@ -5,11 +5,11 @@
 use std::collections::{BTreeMap, VecDeque};
 use std::fmt;
 
-use crate::builder::{Semantics, SnapshotBuilder};
-use crate::check::{Acted, Rejection, Verdict, check};
-use crate::error::SemError;
-use crate::receipt::{Mark, Millis, Outcome, Receipt, RequestId, Stage};
-use crate::request::{Actor, Request};
+use crate::assembly::{Semantics, SnapshotBuilder};
+use crate::decision::{Acted, Rejection, Verdict, check};
+use crate::failures::SemError;
+use crate::receipts::{Mark, Millis, Outcome, Receipt, RequestId, Stage};
+use crate::requests::{Actor, Request};
 
 /// an app whose actions run through the dispatcher.
 ///

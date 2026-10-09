@@ -3,7 +3,7 @@
 //! repeat's item) is one node here, the one the IR holds; its instances
 //! exist only where a surface unrolls it.
 
-use sem::SemId;
+use accord::SemId;
 
 use crate::ir::IrNode;
 use crate::item::{self, Pattern};

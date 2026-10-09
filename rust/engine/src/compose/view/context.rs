@@ -1,8 +1,8 @@
 //! ViewContext -- information provided to Views during render.
 
-use crate::layout::ComputedBounds;
-use crate::platform::SafeAreaInsets;
-use crate::theme::Theme;
+use crate::compose::layout::ComputedBounds;
+use crate::runtime::platform::SafeAreaInsets;
+use crate::styling::theme::Theme;
 
 pub struct ViewContext {
     pub width: f32,

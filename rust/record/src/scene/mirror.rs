@@ -9,9 +9,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::gpu::{ImageHandle, load_image_rgba};
-use engine::path::TessellatedPath;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::gpu::{ImageHandle, load_image_rgba};
+use engine::drawing::path::TessellatedPath;
 
 use super::SceneError;
 use super::asset::{self, Asset};

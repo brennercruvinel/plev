@@ -28,15 +28,15 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use git::GitEvent;
-use ide::record::Recording;
-use ide::workbench::Workbench;
-use inspect::{Basis, By, Ending, Inspector};
-use rec::{InputKind, Kind, Limits, Session};
-use sem::{ActionName, Actor, Rejection, Revision, SemId, Stage, Value};
+use engine::drawing::compositor::Compositor;
+use gitdrv::GitEvent;
+use idestudio::interfaces::window::record::Recording;
+use idestudio::capability::Workbench;
+use replay::{Basis, By, Ending, Inspector};
+use record::{InputKind, Kind, Limits, Session};
+use accord::{ActionName, Actor, Rejection, Revision, SemId, Stage, Value};
 use support::Rig;
-use wire::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("an id")
@@ -93,7 +93,7 @@ impl Shell<'_> {
     }
 
     fn serve(&mut self) -> bool {
-        ide::agent::serve_recorded(
+        idestudio::capability::agent::serve_recorded(
             &mut self.port,
             &mut self.rig.bench,
             &self.frame,
@@ -157,7 +157,7 @@ fn shell<T: Send + 'static>(
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {
-        app: ide::agent::APP.into(),
+        app: idestudio::capability::agent::APP.into(),
         dir: dir.path().to_owned(),
         ring: 16,
     };

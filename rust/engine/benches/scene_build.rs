@@ -1,9 +1,9 @@
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::layout::{LayoutEngine, LayoutItem, LayoutStyle};
-use engine::path::PathBuilder;
-use engine::signal::create_signal;
-use engine::text::{TextMeasurer, TextStyle};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::compose::layout::{LayoutEngine, LayoutItem, LayoutStyle};
+use engine::drawing::path::PathBuilder;
+use engine::runtime::signal::create_signal;
+use engine::drawing::text::{TextMeasurer, TextStyle};
 
 // ---------------------------------------------------------------------------
 // Group 1: Scene construction (push_rects)
@@ -195,7 +195,7 @@ fn bench_text_hashing(c: &mut Criterion) {
 
 /// Two layers, 200 rects and 20 text runs, 20 ids bound, the frame a small
 /// page builds.
-fn probed_scene(comp: &mut Compositor, second: LayerId, ids: &[sem::SemId], shade: f32) {
+fn probed_scene(comp: &mut Compositor, second: LayerId, ids: &[accord::SemId], shade: f32) {
     comp.begin_frame();
     for i in 0..200 {
         let f = i as f32;
@@ -218,8 +218,8 @@ fn probed_scene(comp: &mut Compositor, second: LayerId, ids: &[sem::SemId], shad
 
 fn bench_probed_paths(c: &mut Criterion) {
     let mut group = c.benchmark_group("probed_paths");
-    let ids: Vec<sem::SemId> = (0..20)
-        .filter_map(|i| sem::SemId::parse(&format!("bench.row{i}")).ok())
+    let ids: Vec<accord::SemId> = (0..20)
+        .filter_map(|i| accord::SemId::parse(&format!("bench.row{i}")).ok())
         .collect();
 
     // build, bind, hit ten times, resolve: hashes both layers, rebuilds none

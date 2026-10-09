@@ -7,10 +7,10 @@
 //! agent's capability is never a notification's button, and the target
 //! without notifications says so.
 
-use engine::platform::notify::{
+use engine::runtime::platform::notify::{
     Action, FakeNotifier, Level, NoNotifier, Notification, Notifier, NotifyError,
 };
-use sem::{
+use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Stage, Value,
 };
@@ -41,7 +41,7 @@ impl Semantics for Inbox {
                 .action("open")
                 .reads("inbox:unread")
                 .policy(Policy {
-                    actors: sem::Actors {
+                    actors: accord::Actors {
                         agent: false,
                         ..sem::Actors::default()
                     },
@@ -52,7 +52,7 @@ impl Semantics for Inbox {
             .parent("inbox")
             .action("archive")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     human: false,
                     ..sem::Actors::default()
                 },
@@ -152,7 +152,7 @@ fn a_click_on_the_notification_is_the_request_the_button_makes_and_gets_its_rece
     assert_eq!(by_click.action.as_str(), "open");
     let click_id = dispatcher.dispatch(&mut app, by_click, 20);
     let click_receipt = dispatcher.receipt(click_id).unwrap();
-    let stages = |r: &sem::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
+    let stages = |r: &accord::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
     assert_eq!(stages(click_receipt), stages(&button_receipt));
     let Some(Stage::Completed(outcome)) = click_receipt.stage() else {
         panic!("completed: {:?}", click_receipt.stage());
@@ -167,7 +167,7 @@ fn a_click_on_the_notification_is_the_request_the_button_makes_and_gets_its_rece
     let stale_id = dispatcher.dispatch(&mut app, stale, 30);
     assert!(matches!(
         dispatcher.receipt(stale_id).unwrap().stage(),
-        Some(Stage::Rejected(sem::Rejection::Stale { .. }))
+        Some(Stage::Rejected(accord::Rejection::Stale { .. }))
     ));
     assert_eq!(app.opened, 2, "nothing ran");
 }
@@ -236,7 +236,7 @@ fn an_agents_capability_is_never_the_notifications_button() {
     let id = dispatcher.dispatch(&mut app, req, 10);
     assert!(matches!(
         dispatcher.receipt(id).unwrap().stage(),
-        Some(Stage::Rejected(sem::Rejection::NotAuthorized { actor })) if *actor == agent
+        Some(Stage::Rejected(accord::Rejection::NotAuthorized { actor })) if *actor == agent
     ));
     assert_eq!(app.unread, 3);
 }

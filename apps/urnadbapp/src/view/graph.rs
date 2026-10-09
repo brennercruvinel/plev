@@ -7,16 +7,16 @@
 //! CITATION=2) and the widget's default tones match the old hand-rolled
 //! canvas: dim neutral / accent / info.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, GraphView, IconButton, IconButtonVariant, Rect,
     Spinner, SpinnerSize, Wake, WidgetEvent, menu_shadow,
 };
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::graph::GraphScene;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::widgets::graph::geometry::GraphScene;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 
-use crate::model::types::ChunksData;
+use crate::backend::workers::messages::ChunksData;
 
 use super::field::field_h;
 use super::{Action, group_label, panel, short_id, text};
@@ -176,7 +176,7 @@ impl GraphScreen {
             ("semantic", theme.colors.accent.0),
             ("citation", theme.colors.info.0),
         ] {
-            c.push(comps::prelude::rounded_rect(
+            c.push(engine::widgets::prelude::rounded_rect(
                 lx,
                 legend_y + 2.0,
                 10.0,
@@ -287,7 +287,7 @@ impl GraphScreen {
         let y = (sy - h - 10.0).max(canvas.y + 4.0);
         let rect = Rect::new(x, y, w, h);
         c.push(menu_shadow(rect, theme.radius.md, theme));
-        for node in comps::prelude::glass_pill(
+        for node in engine::widgets::prelude::glass_pill(
             rect,
             theme.radius.md,
             theme.glass.edge_soft.0,

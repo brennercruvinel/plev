@@ -217,7 +217,7 @@ impl Decoder {
 
     fn bind(&mut self, v: &Value, at: &Ptr) -> Option<Bind> {
         let map = self.object(v, at, "a binding", BIND)?;
-        let state = self.entries::<sem::StateRef>(map, at, "state", Rule::State);
+        let state = self.entries::<accord::StateRef>(map, at, "state", Rule::State);
         let actions = self.capabilities(map, at);
         Some(Bind {
             state: state?,

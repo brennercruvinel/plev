@@ -24,10 +24,10 @@
 
 use std::collections::HashSet;
 
-use git::{Branch, Commit, GitClient, GitCommand, GitEvent, NewCommit};
+use gitdrv::{Branch, Commit, GitClient, GitCommand, GitEvent, NewCommit};
 
-use crate::adapters;
-use crate::views::workspace::WorkspaceView;
+use crate::repository::adapters;
+use crate::interfaces::panels::layout::WorkspaceView;
 
 /// How many commits the stacks panel loads per refresh.
 pub const LOG_LIMIT: usize = 100;

@@ -4,14 +4,14 @@
 //! logical. The lines are the phase-1 audit's two mixed phrases and one
 //! right-to-left phrase.
 
-use rope::{Document, Selection};
+use editor::{Document, Selection};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::layout::ComputedBounds;
-use engine::text::{ClusterBox, TextMeasurer};
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::compose::layout::ComputedBounds;
+use crate::drawing::text::{ClusterBox, TextMeasurer};
 
-use super::{EditorConfig, EditorTheme, EditorView};
+use super::super::{EditorConfig, EditorTheme, EditorView};
 
 /// Line 0 starts at 0, line 1 at 15, line 2 at 42; the text ends at 59.
 const DOC: &str = "abc אבג def\nhello مرحبا 123 world\nשלום עולם";
@@ -34,7 +34,7 @@ fn editor(text: &str) -> EditorView {
 }
 
 fn at(ed: &mut EditorView, pos: usize) {
-    ed.document.set_selections(rope::SelectionSet::caret(pos));
+    ed.document.set_selections(editor::SelectionSet::caret(pos));
 }
 
 fn press(ed: &mut EditorView, key: NamedKey, mods: ModifiersState) -> usize {
@@ -187,7 +187,7 @@ fn the_caret_draws_on_the_latin_side_and_a_click_there_keeps_it() {
 fn a_selected_newline_shows_on_the_side_its_paragraph_ends() {
     let mut ed = editor("שלום\nabc\n");
     ed.document
-        .set_selections(rope::SelectionSet::single(Selection::new(0, 13)));
+        .set_selections(editor::SelectionSet::single(Selection::new(0, 13)));
     let washes = rects(&mut ed, EditorTheme::default().selection);
     assert_eq!(washes.len(), 2, "{washes:?}");
     let origin = ed.text_origin_x();

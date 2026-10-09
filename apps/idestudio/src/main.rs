@@ -71,16 +71,16 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
-use engine::actions::{ActionRegistry, KeymapMatcher};
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::gpu::texture_pool::TexturePool;
-use engine::text::TextSystem;
-use git::{GitClient, GitEvent};
-use ide::record::Recording;
-use ide::views::workspace::Side;
-use ide::workbench::Workbench;
-use rec::InputKind;
+use engine::control::keymap::{ActionRegistry, KeymapMatcher};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::gpu::texture_pool::TexturePool;
+use engine::drawing::text::TextSystem;
+use gitdrv::{GitClient, GitEvent};
+use idestudio::interfaces::window::record::Recording;
+use idestudio::interfaces::panels::layout::Side;
+use idestudio::capability::Workbench;
+use record::InputKind;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, MouseScrollDelta, StartCause, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
@@ -109,7 +109,7 @@ enum GpuState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
+        effects: engine::drawing::effects::EffectProcessor,
         texture_pool: TexturePool,
     },
 }
@@ -139,14 +139,14 @@ struct App {
     /// commit field caret, the toasts). Ticks when the loop wakes and when
     /// a frame is drawn; its `since_last` is the real time since the last
     /// tick, a slept-through deadline included.
-    clock: engine::animation::FrameClock,
+    clock: engine::compose::animation::FrameClock,
     /// A catch-up tick since the last frame changed something visible
     /// (a deadline came due as the loop woke): the next frame shows it.
     caught_up: bool,
 
     /// The agent port, when `PLEV_AGENT=1` in a debug build.
     #[cfg(unix)]
-    port: Option<wire::AgentPort>,
+    port: Option<socket::AgentPort>,
 
     /// The window comes up without taking the focus (`PLEV_BACKGROUND=1`
     /// on macOS).
@@ -174,7 +174,7 @@ impl App {
             modifiers: ModifiersState::empty(),
             matcher: KeymapMatcher::new(actions::default_keymap()),
             registry: actions::registry(),
-            clock: engine::animation::FrameClock::new(),
+            clock: engine::compose::animation::FrameClock::new(),
             caught_up: false,
             #[cfg(unix)]
             port: None,
@@ -207,7 +207,7 @@ impl App {
     fn serve_agent(&mut self) {
         #[cfg(unix)]
         if let Some(port) = self.port.as_mut()
-            && ide::agent::serve_recorded(
+            && idestudio::capability::agent::serve_recorded(
                 port,
                 &mut self.bench,
                 &self.compositor,
@@ -251,7 +251,7 @@ impl ApplicationHandler<AppEvent> for App {
             // The platform's dialog, a sheet of this window; the drawn
             // modal otherwise.
             self.bench.confirm_natively(
-                engine::platform::alerts::default_alerts(),
+                engine::runtime::platform::alerts::default_alerts(),
                 Some(Box::new(window.clone())),
             );
         }
@@ -259,7 +259,7 @@ impl ApplicationHandler<AppEvent> for App {
         self.scale_factor = window.scale_factor();
         let gpu = pollster::block_on(GpuContext::new(window.clone()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = GpuState::Ready {
             gpu,
             text_system,
@@ -588,7 +588,7 @@ fn main() {
     #[cfg(unix)]
     {
         let agent = event_loop.create_proxy();
-        app.port = ide::agent::port(move || {
+        app.port = idestudio::capability::agent::port(move || {
             let _ = agent.send_event(AppEvent::Agent);
         });
         if let Some(port) = &app.port {

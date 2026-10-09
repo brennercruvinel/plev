@@ -1,5 +1,5 @@
-use crate::form::text_input::*;
-use crate::wake::Wake;
+use crate::widgets::form::text_input::*;
+use crate::widgets::wake::Wake;
 
 #[test]
 fn text_input_new() {
@@ -121,8 +121,8 @@ fn text_input_click_positions_cursor() {
     let mut ti = TextInput::new();
     ti.buffer.set_text("hello");
     // Click exactly where the real caret for byte 3 sits.
-    let style = engine::text::TextStyle::new(16.0);
-    let x = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
+    let style = crate::drawing::text::TextStyle::new(16.0);
+    let x = crate::drawing::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
     ti.handle_click(x, &style);
     assert!(ti.focused);
     assert_eq!(ti.buffer.cursor(), 3);
@@ -136,8 +136,8 @@ fn text_input_click_proportional_narrow_chars() {
     let text = "iiiiiiiiii";
     ti.buffer.set_text(text);
 
-    let style = engine::text::TextStyle::new(16.0);
-    let x = engine::text::TextMeasurer::cursor_x_styled(text, &style, None, 7);
+    let style = crate::drawing::text::TextStyle::new(16.0);
+    let x = crate::drawing::text::TextMeasurer::cursor_x_styled(text, &style, None, 7);
     ti.handle_click(x, &style);
     assert_eq!(ti.buffer.cursor(), 7);
 
@@ -153,9 +153,9 @@ fn text_input_click_proportional_narrow_chars() {
 fn text_input_click_middle_of_glyph_rounds_to_nearest_boundary() {
     let mut ti = TextInput::new();
     ti.buffer.set_text("hello");
-    let style = engine::text::TextStyle::new(16.0);
-    let b2 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 2);
-    let b3 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
+    let style = crate::drawing::text::TextStyle::new(16.0);
+    let b2 = crate::drawing::text::TextMeasurer::cursor_x_styled("hello", &style, None, 2);
+    let b3 = crate::drawing::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
     // Click slightly left of the midpoint of the third glyph -> cursor 2.
     ti.handle_click(b2 + (b3 - b2) * 0.25, &style);
     assert_eq!(ti.buffer.cursor(), 2);
@@ -171,9 +171,9 @@ fn text_input_cursor_x_round_trip_all_positions() {
     ti.buffer.set_text(text);
     let mut cursors: Vec<usize> = text.char_indices().map(|(i, _)| i).collect();
     cursors.push(text.len());
-    let style = engine::text::TextStyle::new(16.0);
+    let style = crate::drawing::text::TextStyle::new(16.0);
     for cursor in cursors {
-        let x = engine::text::TextMeasurer::cursor_x_styled(text, &style, None, cursor);
+        let x = crate::drawing::text::TextMeasurer::cursor_x_styled(text, &style, None, cursor);
         ti.handle_click(x, &style);
         assert_eq!(
             ti.buffer.cursor(),
@@ -185,15 +185,15 @@ fn text_input_cursor_x_round_trip_all_positions() {
 
 #[test]
 fn text_field_empty_unfocused_draws_field_and_placeholder() {
-    use crate::form::TextField;
-    use engine::compositor::{Compositor, LayerId, SceneNode};
-    let theme = engine::theme::Theme::hoff();
+    use crate::widgets::form::TextField;
+    use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    let theme = crate::styling::theme::Theme::hoff();
     let field = TextField::new("Type here...");
     let mut c = Compositor::new();
     c.begin_frame();
     field.render(
         &mut c,
-        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        crate::widgets::widget::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
         &theme,
     );
     let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
@@ -211,9 +211,9 @@ fn text_field_empty_unfocused_draws_field_and_placeholder() {
 
 #[test]
 fn text_field_focused_with_text_draws_ring_text_and_caret() {
-    use crate::form::TextField;
-    use engine::compositor::{Compositor, LayerId, SceneNode};
-    let theme = engine::theme::Theme::hoff();
+    use crate::widgets::form::TextField;
+    use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("");
     field.focus();
     field.insert("hi");
@@ -221,7 +221,7 @@ fn text_field_focused_with_text_draws_ring_text_and_caret() {
     c.begin_frame();
     field.render(
         &mut c,
-        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        crate::widgets::widget::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
         &theme,
     );
     let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
@@ -257,9 +257,9 @@ fn text_input_handle_ime_unfocused() {
 
 #[test]
 fn text_field_selection_draws_the_accent_wash() {
-    use crate::form::{EditKey, TextField};
-    use engine::compositor::{Compositor, LayerId, SceneNode};
-    let theme = engine::theme::Theme::hoff();
+    use crate::widgets::form::{EditKey, TextField};
+    use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+    let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("");
     field.focus();
     field.insert("hello");
@@ -268,7 +268,7 @@ fn text_field_selection_draws_the_accent_wash() {
     c.begin_frame();
     field.render(
         &mut c,
-        crate::core::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
+        crate::widgets::widget::Rect::new(0.0, 0.0, 200.0, TextField::height(&theme)),
         &theme,
     );
     let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
@@ -284,13 +284,13 @@ fn text_field_selection_draws_the_accent_wash() {
 
 #[test]
 fn text_field_click_places_the_caret_on_the_glyph() {
-    use crate::core::{Rect, WidgetEvent};
-    use crate::form::TextField;
-    let theme = engine::theme::Theme::hoff();
+    use crate::widgets::widget::{Rect, WidgetEvent};
+    use crate::widgets::form::TextField;
+    let theme = crate::styling::theme::Theme::hoff();
     let mut field = TextField::new("").with_text("hello");
     let bounds = Rect::new(10.0, 10.0, 200.0, TextField::height(&theme));
     let style = TextField::text_style(&theme);
-    let caret_3 = engine::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
+    let caret_3 = crate::drawing::text::TextMeasurer::cursor_x_styled("hello", &style, None, 3);
     let x = bounds.x + theme.spacing.md + caret_3;
     let r = field.handle_event(&WidgetEvent::MouseDown { x, y: 20.0 }, bounds, &theme);
     assert!(r.clicked);

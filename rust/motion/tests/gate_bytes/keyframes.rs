@@ -2,7 +2,7 @@
 //! property (boundaries, values, easings), plus the starfish limb data
 //! lifted verbatim from refs/anim/lottie-samples/starfish.json.
 
-use monster::{Easing, Node, NodeKind, Prop, Props, Segment, Track, Value};
+use motion::{Easing, Node, NodeKind, Prop, Props, Segment, Track, Value};
 
 pub fn cb(x1: f32, y1: f32, x2: f32, y2: f32) -> Easing {
     Easing::CustomBezier { x1, y1, x2, y2 }

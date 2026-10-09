@@ -2,7 +2,7 @@
 //! the page's meaning change (its projection, by `Snapshot::diff`), and
 //! did what it draws change (a layer's hash, a binding's rect).
 
-use sem::{Change, Snapshot};
+use accord::{Change, Snapshot};
 use serde::Serialize;
 
 use crate::scene::{BindRecord, LayerRecord, Scene};
@@ -170,7 +170,7 @@ pub fn delta(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{Role, SemId, SnapshotBuilder};
+    use accord::{Role, SemId, SnapshotBuilder};
 
     fn layer(name: &str, hash: u64) -> LayerRecord {
         LayerRecord {

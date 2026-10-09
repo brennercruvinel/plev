@@ -24,11 +24,11 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use comps::{Rect, Wake};
-use engine::animation::{self, Easing, Spring, Tween};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
-use sem::{SemId, Snapshot};
+use engine::widgets::{Rect, Wake};
+use engine::compose::animation::{self, Easing, Spring, Tween};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
+use accord::{SemId, Snapshot};
 
 use crate::draw;
 use crate::expand::Node;

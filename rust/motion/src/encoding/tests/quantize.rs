@@ -1,7 +1,7 @@
 //! quantization round-trip tests: exact identity from the quantized
 //! side, bounded error from the float side, clamping at the edges.
 
-use crate::quant::*;
+use crate::encoding::quantize::*;
 
 #[test]
 fn twips_roundtrip_exact_from_quantized_side() {

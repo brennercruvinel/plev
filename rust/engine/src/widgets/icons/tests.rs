@@ -138,7 +138,7 @@ fn the_tessellation_cost() {
     use std::time::{Duration, Instant};
 
     const ROUNDS: usize = 20;
-    let sizes = engine::theme::Theme::hoff_core().control.icons;
+    let sizes = crate::styling::theme::Theme::hoff_core().control.icons;
     let vertex = std::mem::size_of::<QuadVertex>();
     println!(
         "| size | icons | tessellate, sum (us) | median (us) | max (us) | vertices | indices | cache (bytes) | baked (bytes) |"

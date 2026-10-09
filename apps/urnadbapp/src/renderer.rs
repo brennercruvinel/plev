@@ -4,12 +4,12 @@
 //! (including backdrop-blur resolves), composites and presents.
 
 use crate::view::UrnauiView;
-use engine::compositor::Compositor;
-use engine::effects::EffectProcessor;
-use engine::gpu::GpuContext;
-use engine::gpu::texture_pool::TexturePool;
-use engine::text::TextSystem;
-use engine::window::present_frame;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::effects::EffectProcessor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::gpu::texture_pool::TexturePool;
+use engine::drawing::text::TextSystem;
+use engine::runtime::window::present_frame;
 
 pub fn render_frame(
     gpu: &mut GpuContext,

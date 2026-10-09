@@ -10,10 +10,10 @@ mod ui;
 
 use std::sync::Arc;
 
-use engine::gpu::GpuContext;
-use engine::platform::SafeAreaInsets;
-use engine::platform::lifecycle::AppState;
-use engine::text::TextSystem;
+use engine::drawing::gpu::GpuContext;
+use engine::runtime::platform::SafeAreaInsets;
+use engine::runtime::platform::lifecycle::AppState;
+use engine::drawing::text::TextSystem;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};

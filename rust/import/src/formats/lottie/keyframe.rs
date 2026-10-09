@@ -2,7 +2,7 @@
 //! cubic-bezier temporal easing (Newton solve of x(t)=u, bisection-free
 //! with clamping; 8 iterations is plenty at frame granularity).
 
-use crate::mdl::Prop;
+use crate::formats::lottie::schema::Prop;
 use serde_json::Value;
 
 fn to_vec(v: &Value) -> Vec<f64> {

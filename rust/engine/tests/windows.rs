@@ -11,12 +11,12 @@
 //! without a window can prove it; the tests skip without a GPU adapter,
 //! like their neighbours.
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::gpu::{ImageHandle, RenderConfig, load_image_rgba};
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use engine::text::TextStyle;
-use engine::theme::hoff::PAGE_BG;
-use engine::window::{Routed, WindowHost, Windows};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::gpu::{ImageHandle, RenderConfig, load_image_rgba};
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::drawing::text::TextStyle;
+use engine::styling::theme::hoff::PAGE_BG;
+use engine::runtime::window::{Routed, WindowHost, Windows};
 use engine::winit::dpi::PhysicalPosition;
 use engine::winit::event::{DeviceId, WindowEvent};
 use engine::winit::window::WindowId;

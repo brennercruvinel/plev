@@ -1,8 +1,8 @@
 //! Toggles and values: the same flip, value, text and option from the
 //! three.
 
-use engine::accessibility::accesskit::{Action, ActionData};
-use sem::Value;
+use engine::control::accessibility::accesskit::{Action, ActionData};
+use accord::Value;
 
 use super::harness::{ask, ask_with, by_agent, gallery, same};
 

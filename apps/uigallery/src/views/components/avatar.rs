@@ -1,9 +1,9 @@
 //! Avatar page: initials in three sizes, one online.
 
-use comps::content::{Avatar, AvatarSize};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::content::{Avatar, AvatarSize};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 
 use super::flow;
 

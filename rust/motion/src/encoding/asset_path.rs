@@ -16,9 +16,9 @@
 //! limit splits at triangle boundaries into several payloads; the
 //! split is deterministic, so dedup still holds across frames.
 
-use crate::quant::{bytes_to_rgba, px_to_twips, rgba_to_bytes, twips_to_px};
-use engine::compositor::QuadVertex;
-use engine::path::TessellatedPath;
+use crate::encoding::quantize::{bytes_to_rgba, px_to_twips, rgba_to_bytes, twips_to_px};
+use engine::drawing::compositor::QuadVertex;
+use engine::drawing::path::TessellatedPath;
 
 /// Fixed payload head: color rgba8 + vertex_count u16 + index_count u32.
 const HEAD: usize = 4 + 2 + 4;

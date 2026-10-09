@@ -7,14 +7,14 @@
 //! it draws and hit-tests with, and [`SubmitButton::project`] declares
 //! the button in a semantic projection, `active` as its `busy` state.
 
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{ButtonRecipe, ButtonSurface, IconButtonMetrics, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::{ButtonRecipe, ButtonSurface, IconButtonMetrics, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::IconButtonSize;
 use super::press::{Press, paint_surface};
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::icons;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::icons;
 
 #[derive(Clone, Debug)]
 pub struct SubmitButton {

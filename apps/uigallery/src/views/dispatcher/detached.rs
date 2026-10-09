@@ -4,12 +4,12 @@
 //! compositor, takes its pointer events, paces it, and projects the
 //! window beside the page.
 
-use comps::overlay::OverlayManager;
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode};
-use engine::input::scroll::ScrollState;
-use engine::theme::Theme;
-use sem::{Role, SemErrors, Snapshot, Value};
+use engine::widgets::overlay::OverlayManager;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::control::input::scroll::ScrollState;
+use engine::styling::theme::Theme;
+use accord::{Role, SemErrors, Snapshot, Value};
 
 use super::super::{Layers, Pane, ShowcaseView};
 
@@ -179,7 +179,7 @@ impl ShowcaseView {
 /// contract has no way to carry a finished snapshot into another; that
 /// is the change `sem` would need to keep it.
 pub(super) fn with_window(page: &Snapshot, title: &str) -> Result<Snapshot, SemErrors> {
-    let mut b = sem::SnapshotBuilder::new();
+    let mut b = accord::SnapshotBuilder::new();
     let roots: Vec<String> = page.roots().map(|n| n.id.to_string()).collect();
     b.node("window", Role::Window, format!("plev, {title}"))
         .state("page", Value::Text(title.to_string()))
@@ -193,7 +193,7 @@ pub(super) fn with_window(page: &Snapshot, title: &str) -> Result<Snapshot, SemE
 /// finished snapshot joins another (the window beside the page, the
 /// shell beside the page). What the rebuild loses is each node's
 /// `source`: the builder records its call site, and that is here.
-pub(super) fn extend(b: &mut sem::SnapshotBuilder, page: &Snapshot) {
+pub(super) fn extend(b: &mut accord::SnapshotBuilder, page: &Snapshot) {
     for node in page.nodes().values() {
         let mut n = b.node(&node.id, node.role, node.label.clone());
         if let Some(parent) = &node.parent {

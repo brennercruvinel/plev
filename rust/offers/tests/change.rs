@@ -12,19 +12,19 @@
 #[allow(dead_code)]
 mod support;
 
-use propose::{
+use offers::{
     Adaptation, ProposeError, Rules, Transformed, Transformer, reads_as_change, transform_verified,
 };
-use sem::{Role, SnapshotBuilder, Value};
+use accord::{Role, SnapshotBuilder, Value};
 use support::{Changing, aside, claude_review, compact, silences, todo};
-use uir::{ChartKind, Component, IrNode, Op, Step, TypographyRole};
+use plevir::{ChartKind, Component, IrNode, Op, Step, TypographyRole};
 
-fn sid(text: &str) -> sem::SemId {
-    sem::SemId::parse(text).unwrap()
+fn sid(text: &str) -> accord::SemId {
+    accord::SemId::parse(text).unwrap()
 }
 
 /// What the rules change for `intent`, verified.
-fn changed(changing: &Changing, intent: &str) -> (Vec<Op>, uir::Adapted) {
+fn changed(changing: &Changing, intent: &str) -> (Vec<Op>, plevir::Adapted) {
     match transform_verified(&mut Rules, &changing.ask(intent)) {
         Ok(Transformed::Changed { ops, adapted }) => (ops, *adapted),
         other => panic!("\"{intent}\": {other:?}"),
@@ -137,7 +137,7 @@ fn cant_compare_on_the_silences_says_why() {
 
 /// A board with a list of points (numbers) and a list of players (the
 /// keys of its children: ids).
-fn board() -> sem::Snapshot {
+fn board() -> accord::Snapshot {
     let mut b = SnapshotBuilder::new();
     b.node("board", Role::Region, "board")
         .state(

@@ -7,15 +7,15 @@
 //! list for a chart: a list repeats its cuts' template, and no state of
 //! the app is a list of durations.
 
-use comps::prelude::Rect;
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use sem::{Actor, SemId};
-use uir::{ChartKind, Component, Op};
+use engine::widgets::prelude::Rect;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use accord::{Actor, SemId};
+use plevir::{ChartKind, Component, Op};
 
 use super::super::TURN;
 use super::super::sid;
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 /// The Claude's review of the checkpoint's first round, as IR.
 const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
@@ -207,7 +207,7 @@ fn the_list_of_the_cuts_does_not_swap_for_a_chart() {
         .flat_map(|n| {
             n.state
                 .iter()
-                .filter(|(_, v)| v.kind() == sem::ValueKind::List)
+                .filter(|(_, v)| v.kind() == accord::ValueKind::List)
                 .map(move |(k, _)| format!("{}:{k}", n.id))
         })
         .collect();

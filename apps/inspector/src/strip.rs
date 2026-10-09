@@ -6,15 +6,15 @@
 //! count. under the lanes, the scrub (comps `Slider`) over the same span,
 //! so a mark and the knob at its time line up.
 
-use comps::action::Chip;
-use comps::form::Slider;
-use comps::recipe::rounded_rect;
-use comps::{Intent, Rect, Theme};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::ControlSize;
-use inspect::{Tally, Timeline, What};
-use sem::{Actor, Millis};
+use engine::widgets::buttons::Chip;
+use engine::widgets::form::Slider;
+use engine::widgets::recipe::rounded_rect;
+use engine::widgets::{Intent, Rect, Theme};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::ControlSize;
+use replay::{Tally, Timeline, What};
+use accord::{Actor, Millis};
 
 /// what an event mark says, by its kind (and a stage by how it ended).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

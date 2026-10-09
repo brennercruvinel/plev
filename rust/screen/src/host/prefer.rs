@@ -6,8 +6,8 @@
 //! change, at every new form, and when the preferences change. only the
 //! person turns them on: an agent is refused.
 
-use sem::{Actor, Snapshot};
-use uir::{Adapted, Capabilities, Context, GenerationPolicy, Preferences, VerifiedIr};
+use accord::{Actor, Snapshot};
+use plevir::{Adapted, Capabilities, Context, GenerationPolicy, Preferences, VerifiedIr};
 
 use super::{Adapting, Change, SurfaceError, SurfaceHost};
 

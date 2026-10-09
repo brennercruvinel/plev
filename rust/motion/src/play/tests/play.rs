@@ -3,11 +3,11 @@
 //! grow between boundaries), reactive signals, sub-epsilon skip, and
 //! sampling through plev's own ease() + Interpolate.
 
-use crate::easing::Easing;
-use crate::ir::{IrError, Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
+use crate::timeline::easing::Easing;
+use crate::timeline::{IrError, Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
 use crate::play::{EPSILON_S, MonsterPlayer};
-use engine::animation::{AnimationTick, Interpolate};
-use engine::compositor::SceneNode;
+use engine::compose::animation::{AnimationTick, Interpolate};
+use engine::drawing::compositor::SceneNode;
 
 fn tick(dt: f32) -> AnimationTick {
     // elapsed is wall-clock data; the player must key off dt alone.
@@ -242,7 +242,7 @@ fn sampling_matches_plev_ease_and_interpolate() {
     // first segment of node 1: 0 -> 100 over 0.5s, EaseInOut
     let expected = 0.0f32.lerp(
         &100.0,
-        engine::animation::ease(0.25 / 0.5, engine::animation::Easing::EaseInOut),
+        engine::compose::animation::ease(0.25 / 0.5, engine::compose::animation::Easing::EaseInOut),
     );
     assert_eq!(rect_x(&p.scene_at(0.25), 0), expected);
 }
@@ -284,7 +284,7 @@ fn next_keyframe_snapshot_resets_earlier_tracks() {
     // and node 2's own chain (240 -> 0, EaseOutCubic) is halfway in
     let expected = 240.0f32.lerp(
         &0.0,
-        engine::animation::ease(0.5, engine::animation::Easing::EaseOutCubic),
+        engine::compose::animation::ease(0.5, engine::compose::animation::Easing::EaseOutCubic),
     );
     assert_eq!(rect_x(&scene, 1), expected);
 }
@@ -303,8 +303,8 @@ fn track_before_start_keeps_snapshot_value() {
 fn decoded_file_plays_like_the_authored_timeline() {
     // grid-aligned values round-trip the codec exactly, so the decoded
     // player must produce bit-identical scenes (codec -> player seam)
-    let bytes = crate::write::encode(&demo(), &[], &[]).unwrap();
-    let doc = crate::read::decode(&bytes).unwrap();
+    let bytes = crate::encoding::write::encode(&demo(), &[], &[]).unwrap();
+    let doc = crate::encoding::read::decode(&bytes).unwrap();
     let mut authored = MonsterPlayer::new(demo()).unwrap();
     let mut decoded = MonsterPlayer::new(doc.timeline).unwrap();
     for i in 0..=20 {

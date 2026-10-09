@@ -2,13 +2,13 @@
 //! every node kind and value type. malformed-input and fuzz coverage
 //! lives in tests_read_malformed.rs.
 
-use crate::container::{Asset, AssetKind, Desc};
-use crate::easing::{Easing, quantize_curve};
-use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
-use crate::quant;
-use crate::read::decode;
-use crate::tests::golden::golden_doc;
-use crate::write::encode;
+use crate::encoding::container::{Asset, AssetKind, Desc};
+use crate::timeline::easing::{Easing, quantize_curve};
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
+use crate::encoding::quantize;
+use crate::encoding::read::decode;
+use crate::encoding::tests::golden::golden_doc;
+use crate::encoding::write::encode;
 
 const GOLDEN: &[u8] = include_bytes!("../../fixtures/golden_v0_minimal.monster");
 

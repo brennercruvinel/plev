@@ -4,7 +4,7 @@ use winit::window::{WindowAttributes, WindowId};
 
 use super::AppEvent;
 use super::windows::Routed;
-use crate::platform::lifecycle::AppState;
+use crate::runtime::platform::lifecycle::AppState;
 
 /// The window's title, which also names the root of its accessibility
 /// tree.
@@ -78,7 +78,7 @@ impl super::App {
         // needs no wake: the next frame sends the tree.
         #[cfg(all(feature = "accessibility", not(target_arch = "wasm32")))]
         if let Some(window) = host.window().cloned() {
-            match crate::accessibility::Bridge::new(event_loop, &window, TITLE, || {}) {
+            match crate::control::accessibility::Bridge::new(event_loop, &window, TITLE, || {}) {
                 Ok(bridge) => host.set_accessibility(bridge),
                 Err(e) => log::warn!("accessibility: {e}"),
             }
@@ -92,7 +92,7 @@ impl super::App {
         if let (Some(proxy), Some(window)) = (self.event_loop_proxy.take(), host.window().cloned())
         {
             wasm_bindgen_futures::spawn_local(async move {
-                let gpu = crate::gpu::GpuContext::new(window).await;
+                let gpu = crate::drawing::gpu::GpuContext::new(window).await;
                 let _ = proxy.send_event(AppEvent::GpuReady { window: id, gpu });
             });
         }

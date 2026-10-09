@@ -28,9 +28,9 @@ use winit::event_loop::ActiveEventLoop;
 use winit::event_loop::EventLoopProxy;
 use winit::window::WindowId;
 
-use crate::gpu::GpuContext;
-use crate::platform::lifecycle::LifecycleManager;
-use crate::signal::{ReadSignal, WriteSignal, create_signal};
+use crate::drawing::gpu::GpuContext;
+use crate::runtime::platform::lifecycle::LifecycleManager;
+use crate::runtime::signal::{ReadSignal, WriteSignal, create_signal};
 
 pub enum AppEvent {
     /// The device a browser shell asked for asynchronously, for the
@@ -46,7 +46,7 @@ pub enum AppEvent {
 /// host's compositor before presenting.
 pub struct App {
     pub(crate) windows: Windows,
-    theme: crate::theme::Theme,
+    theme: crate::styling::theme::Theme,
     frame_read: ReadSignal<u64>,
     frame_write: WriteSignal<u64>,
     lifecycle: LifecycleManager,
@@ -56,7 +56,7 @@ pub struct App {
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
     #[cfg(hot_reload)]
-    narrate_watcher: Option<crate::hot_reload::NarrateWatcher>,
+    narrate_watcher: Option<crate::runtime::hot_reload::NarrateWatcher>,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
@@ -72,16 +72,16 @@ impl App {
         let (frame_read, frame_write) = create_signal(0u64);
         Self {
             windows: Windows::new(),
-            theme: crate::theme::Theme::default(),
+            theme: crate::styling::theme::Theme::default(),
             frame_read,
             frame_write,
             lifecycle: LifecycleManager::new(),
             is_animating: false,
             #[cfg(hot_reload)]
             narrate_watcher: {
-                let dirs = crate::hot_reload::source_dirs();
+                let dirs = crate::runtime::hot_reload::source_dirs();
                 let dirs: Vec<&std::path::Path> = dirs.iter().map(|d| d.as_path()).collect();
-                match crate::hot_reload::NarrateWatcher::new(&dirs) {
+                match crate::runtime::hot_reload::NarrateWatcher::new(&dirs) {
                     Ok(w) => {
                         log::info!("narrate hot reload on: crates/*/src");
                         Some(w)
@@ -121,7 +121,7 @@ impl App {
         let (frame_read, frame_write) = create_signal(0u64);
         Self {
             windows: Windows::new(),
-            theme: crate::theme::Theme::default(),
+            theme: crate::styling::theme::Theme::default(),
             frame_read,
             frame_write,
             lifecycle: LifecycleManager::new(),

@@ -15,7 +15,7 @@
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match cli::parse(&args) {
-        Ok(cli::Mode::Window) => showcase::run(),
+        Ok(cli::Mode::Window) => uigallery::run(),
         Ok(cli::Mode::Help) => println!("{}", cli::USAGE),
         Ok(cli::Mode::Render(request)) => {
             if let Err(e) = cli::render(&request) {
@@ -32,7 +32,7 @@ fn main() {
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
-    showcase::run_web();
+    uigallery::run_web();
 }
 
 // Keep the binary target compilable when the whole crate is built for a
@@ -44,8 +44,8 @@ fn main() {}
 mod cli {
     use std::path::PathBuf;
 
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
 
     pub const USAGE: &str = "\
 usage:
@@ -179,7 +179,7 @@ the sidebar's (\"Data Table\").";
     /// needs none.
     pub fn render(r: &Request) -> Result<(), Box<dyn std::error::Error>> {
         let viewport = Viewport::new(r.width, r.height, r.scale);
-        let mut staged = showcase::app::stage_page(viewport, &r.page, &r.theme, r.scroll)?;
+        let mut staged = uigallery::shell::stage_page(viewport, &r.page, &r.theme, r.scroll)?;
         let where_ = format!(
             "{} / {} at {}x{} scale {}",
             staged.title(),
@@ -216,7 +216,7 @@ the sidebar's (\"Data Table\").";
         }
         if let Some(path) = &r.semantics {
             let snapshot = staged.semantics()?;
-            std::fs::write(path, showcase::app::semantics_json(&snapshot, r.source)?)?;
+            std::fs::write(path, uigallery::shell::semantics_json(&snapshot, r.source)?)?;
             println!(
                 "wrote {} ({} nodes, revision {}, {where_})",
                 path.display(),

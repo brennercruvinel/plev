@@ -9,7 +9,7 @@ use std::cell::RefCell;
 use std::collections::{HashSet, VecDeque};
 use std::rc::Rc;
 
-use sem::{Actor, Mark, Millis, Receipt, ReceiptSink, RequestId, Stage};
+use accord::{Actor, Mark, Millis, Receipt, ReceiptSink, RequestId, Stage};
 
 use crate::shown::Looks;
 

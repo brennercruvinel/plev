@@ -26,11 +26,11 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::thread::JoinHandle;
 
-use sem::{
+use accord::{
     Acted, ActionName, Actor, Change, Node, Outcome, Rejection, Revision, SemId, Stage, StateKey,
     Value,
 };
-use wire::{
+use socket::{
     Act, Client, Observe, Reply, ServerMsg, SnapshotReply, StageReply, WireError, encode_server,
 };
 

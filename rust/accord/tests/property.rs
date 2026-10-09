@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use proptest::prelude::*;
-use sem::{
+use accord::{
     ActionDecl, ActionName, Actors, Confirm, Constraints, Policy, SemError, SemId, StateKey,
     StateRef, Value, ValueKind,
 };

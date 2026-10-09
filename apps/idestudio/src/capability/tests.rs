@@ -5,15 +5,15 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use engine::compositor::Compositor;
-use sem::{
+use engine::drawing::compositor::Compositor;
+use accord::{
     Actor, Confirm, Mark, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Snapshot, Stage,
-    Value, Verdict, check,
+    Value, Verdict, decision,
 };
 
 use super::*;
-use crate::views::multi_stack_view::{CommitEntry, Stack};
-use crate::views::unassigned_view::{FileEntry, FileStatus};
+use crate::interfaces::panels::stacks::{CommitEntry, Stack};
+use crate::interfaces::panels::unassigned::{FileEntry, FileStatus};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("id")
@@ -894,7 +894,7 @@ fn modal_text(bench: &Workbench) -> Option<(String, String, String)> {
         .iter()
         .rev()
         .find_map(|overlay| match &overlay.kind {
-            comps::overlay::OverlayKind::Modal {
+            engine::widgets::overlay::OverlayKind::Modal {
                 title,
                 body,
                 confirm,

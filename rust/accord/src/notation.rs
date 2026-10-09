@@ -6,8 +6,8 @@ use std::fmt;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::error::SemError;
-use crate::text::text_serde;
+use crate::failures::SemError;
+use crate::encoding::text_serde;
 
 /// true for a character a name may hold.
 pub(crate) fn is_name_char(c: char) -> bool {

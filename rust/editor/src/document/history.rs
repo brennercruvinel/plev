@@ -8,8 +8,8 @@
 //! also breaks on selection changes, non-typing edits, undo/redo, or an
 //! explicit [`History::commit_group`].
 
-use crate::selection::SelectionSet;
-use crate::transaction::Transaction;
+use crate::document::selection::SelectionSet;
+use crate::document::transaction::Transaction;
 
 /// How a commit was produced; drives undo-group coalescing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,7 +114,7 @@ mod tests {
     use ropey::Rope;
 
     use super::*;
-    use crate::selection::SelectionSet;
+    use crate::document::selection::SelectionSet;
 
     /// Type one character at `pos`, committing it to history.
     fn type_char(history: &mut History, rope: &mut Rope, pos: usize, ch: char) {

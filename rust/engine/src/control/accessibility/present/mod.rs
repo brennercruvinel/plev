@@ -34,7 +34,7 @@
 //! item's rect would win a reader's hit test from the item, children
 //! first (accesskit_consumer 0.36.0 node.rs:346-373).
 
-use sem::{ActionDecl, Node, Role, SemId, Snapshot};
+use accord::{ActionDecl, Node, Role, SemId, Snapshot};
 
 use super::action;
 use super::tree::toggled_key;

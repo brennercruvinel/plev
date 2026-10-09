@@ -1,9 +1,9 @@
 //! Hairline separators in the divider tone, one rim width thick.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::styling::theme::Theme;
 
-use crate::core::Rect;
+use crate::widgets::widget::Rect;
 
 /// Separator direction.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

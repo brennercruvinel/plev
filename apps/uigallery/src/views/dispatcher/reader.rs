@@ -19,13 +19,13 @@
 //! With nothing only a reader hears, the snapshot is the view's, byte for
 //! byte.
 
-use sem::{Role, SemId, Snapshot, SnapshotBuilder};
+use accord::{Role, SemId, Snapshot, SnapshotBuilder};
 
 use super::super::{Pane, ShowcaseView};
 use super::detached;
 
 /// The id of the notice's status in the reader's snapshot.
-pub(in crate::view) const NOTICE: &str = "shell.notice";
+pub(in crate::views) const NOTICE: &str = "shell.notice";
 
 impl ShowcaseView {
     /// What a screen reader is shown this frame: [`ShowcaseView::semantics`]

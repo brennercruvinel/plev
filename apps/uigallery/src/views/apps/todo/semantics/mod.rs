@@ -23,13 +23,13 @@
 //! item's `text` (the IR names an instance by its item, the id, and does
 //! not interpolate a label).
 
-use comps::prelude::{EventResult, Rect};
-use engine::perf::stages::{self, Stage};
-use sem::{
+use engine::widgets::prelude::{EventResult, Rect};
+use engine::runtime::perf::stages::{self, Stage};
+use accord::{
     Actor, Execution, Operable, Outcome, Policy, Request, RequestId, Role, SemError, SemErrors,
     SemId, Semantics, Snapshot, SnapshotBuilder, Value,
 };
-use showcase::model::todo::Filter;
+use crate::domain::todo::Filter;
 
 use super::TodoPage;
 use super::layout::ROW_H;
@@ -276,7 +276,7 @@ impl TodoPage {
     /// in the todo's `execute`.
     pub(crate) fn with_dispatcher<R>(
         &mut self,
-        f: impl FnOnce(&mut sem::Dispatcher, &mut TodoPage, sem::Millis) -> R,
+        f: impl FnOnce(&mut accord::Dispatcher, &mut TodoPage, accord::Millis) -> R,
     ) -> R {
         let now = u64::try_from(self.clock.elapsed().as_millis()).unwrap_or(u64::MAX);
         let mut dispatcher = std::mem::take(&mut self.dispatcher);
@@ -287,13 +287,13 @@ impl TodoPage {
 
     /// The receipt the page's dispatcher keeps for `id` (the shell logs
     /// what a screen reader's request came to).
-    pub(crate) fn receipt(&self, id: RequestId) -> Option<&sem::Receipt> {
+    pub(crate) fn receipt(&self, id: RequestId) -> Option<&accord::Receipt> {
         self.dispatcher.receipt(id)
     }
 
     /// A sink on the page's dispatcher: it sees every stage of every
     /// receipt from now on (the agent port hears its requests there).
-    pub(crate) fn add_sink(&mut self, sink: Box<dyn sem::ReceiptSink>) {
+    pub(crate) fn add_sink(&mut self, sink: Box<dyn accord::ReceiptSink>) {
         self.dispatcher.add_sink(sink);
     }
 

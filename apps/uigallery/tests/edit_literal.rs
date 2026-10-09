@@ -16,13 +16,13 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::headless::Viewport;
-use engine::hot_reload::literals::{self, Change, Refused};
-use engine::hot_reload::project_root;
-use engine::hot_reload::view_source::{Origin, origin_at};
-use sem::Actor;
-use showcase::app::stage_page;
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::headless::Viewport;
+use engine::runtime::hot_reload::literals::{self, Change, Refused};
+use engine::runtime::hot_reload::project_root;
+use engine::runtime::hot_reload::view_source::{Origin, origin_at};
+use accord::Actor;
+use uigallery::shell::stage_page;
 
 /// The gallery's page table, where the Todo title is written.
 const TABLE: &str = "crates/showcase/src/view/pages/table.rs";

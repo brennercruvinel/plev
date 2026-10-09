@@ -9,7 +9,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sem::{ActionName, ParamSpec, Policy, SemId, Snapshot, StateRef, ValueKind};
+use accord::{ActionName, ParamSpec, Policy, SemId, Snapshot, StateRef, ValueKind};
 use serde::Serialize;
 
 /// one piece of state the app shows.
@@ -159,7 +159,7 @@ impl Capabilities {
 mod tests {
     use std::collections::BTreeSet;
 
-    use sem::{Confirm, Constraints, Role, SnapshotBuilder};
+    use accord::{Confirm, Constraints, Role, SnapshotBuilder};
 
     use super::*;
 

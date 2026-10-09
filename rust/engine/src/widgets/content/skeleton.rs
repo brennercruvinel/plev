@@ -7,11 +7,11 @@
 //! pulse stands still and `tick` says so, and the placeholder still reads
 //! as one (task-75 phase 2a).
 
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::Theme;
 
-use crate::core::{Rect, mix};
-use crate::recipe::rounded_rect;
+use crate::widgets::widget::{Rect, mix};
+use crate::widgets::recipe::rounded_rect;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum SkeletonShape {
@@ -50,7 +50,7 @@ impl Skeleton {
     /// Advance the breathing: `true`, a visible skeleton animates; with
     /// reduced motion on, the pulse stands still and it is `false`.
     pub fn tick(&mut self, dt: f32) -> bool {
-        if engine::animation::reduced_motion() {
+        if crate::compose::animation::reduced_motion() {
             return false;
         }
         self.phase += dt;

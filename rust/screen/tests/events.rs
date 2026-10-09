@@ -8,12 +8,12 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Actor, Change, Rejection, Request, SemId, Stage, StateRef, Value};
+use engine::widgets::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Actor, Change, Rejection, Request, SemId, Stage, StateRef, Value};
 use support::{App, IDE, REVIEW, id, page, snapshot, verified};
-use surface::{Dispatch, Surface};
+use screen::{Dispatch, Surface};
 
 const AREA: Rect = Rect {
     x: 40.0,

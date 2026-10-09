@@ -8,10 +8,10 @@
 //! whether or not the pointer hovers). The button does nothing but press,
 //! so its `activate` changes nothing.
 
-use comps::prelude::{Button, ButtonVariant, EventResult, Rect, Tooltip, WidgetEvent};
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::Theme;
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Rect, Tooltip, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::Theme;
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, root_id, under};
 

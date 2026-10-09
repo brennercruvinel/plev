@@ -4,12 +4,12 @@
 //! the todo's dispatcher, by whoever acted, and the fixed todo shows it,
 //! and back; a change of form keeps each item's instance.
 
-use comps::prelude::WidgetEvent;
-use sem::{Actor, Request, SemId, Stage, Value};
+use engine::widgets::prelude::WidgetEvent;
+use accord::{Actor, Request, SemId, Stage, Value};
 
 use super::super::{FORMS, SurfacePage};
 use super::{center, click, frame, settle, setup, sid, text, value, wide};
-use crate::view::apps::app::TodoPage;
+use crate::views::apps::todo::TodoPage;
 
 /// The instances of the surface's items the page projects, in order.
 fn instances(page: &SurfacePage, todo: &TodoPage) -> Vec<String> {

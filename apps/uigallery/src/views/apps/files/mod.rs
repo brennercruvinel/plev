@@ -38,17 +38,17 @@ mod tests;
 
 use std::path::PathBuf;
 
-use comps::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::input::FileDrop;
-use engine::platform::alerts::Alerts;
-use engine::platform::files::FileDialogs;
-use engine::platform::notify::Notification;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Intent, Theme};
-use sem::Value;
+use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::control::input::FileDrop;
+use engine::runtime::platform::alerts::Alerts;
+use engine::runtime::platform::files::FileDialogs;
+use engine::runtime::platform::notify::Notification;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{ControlSize, Intent, Theme};
+use accord::Value;
 
-use super::app::TodoPage;
+use super::todo::TodoPage;
 use super::{EditKey, panel};
 use semantics::{Ids, Target, bounds};
 
@@ -117,13 +117,13 @@ impl FilesPage {
     pub fn new() -> Self {
         #[cfg(not(test))]
         let (dialogs, alerts) = (
-            engine::platform::files::default_dialogs(),
-            engine::platform::alerts::default_alerts(),
+            engine::runtime::platform::files::default_dialogs(),
+            engine::runtime::platform::alerts::default_alerts(),
         );
         #[cfg(test)]
         let (dialogs, alerts): (Box<dyn FileDialogs>, Box<dyn Alerts>) = (
-            Box::new(engine::platform::files::FakeDialogs::new()),
-            Box::new(engine::platform::alerts::FakeAlerts::new()),
+            Box::new(engine::runtime::platform::files::FakeDialogs::new()),
+            Box::new(engine::runtime::platform::alerts::FakeAlerts::new()),
         );
         Self::with(dialogs, alerts)
     }

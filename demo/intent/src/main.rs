@@ -21,10 +21,10 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
-use claude_model::ClaudeCli;
-use propose::{Ask, Llm, Model, ModelError, Rules, prompt, propose_verified};
-use sem::Snapshot;
-use uir::{
+use claude::ClaudeCli;
+use offers::{Ask, Llm, Model, ModelError, Rules, prompt, propose_verified};
+use accord::Snapshot;
+use plevir::{
     Capabilities, Component, GenerationPolicy, IrNode, VerifiedIr, parse, verify, verify_json,
 };
 

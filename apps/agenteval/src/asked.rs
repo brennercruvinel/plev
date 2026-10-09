@@ -11,7 +11,7 @@ use std::collections::BTreeSet;
 
 use serde_json::{Value as Json, json};
 
-use sem::{Actor, Millis, Receipt, Rejection, RequestId, Stage, StateRef};
+use accord::{Actor, Millis, Receipt, Rejection, RequestId, Stage, StateRef};
 
 use crate::answer::Waited;
 use crate::report::row;
@@ -20,7 +20,7 @@ use crate::story::ActStory;
 /// the longest question the report keeps, in characters: the port's own
 /// limit on a question (`wire::MAX_ASK`); a longer one, from inside the
 /// process, is cut there.
-const MAX_TEXT: usize = wire::MAX_ASK;
+const MAX_TEXT: usize = socket::MAX_ASK;
 
 /// one request of an agent that waited for a person, told.
 #[derive(Clone, Debug, PartialEq)]
@@ -368,7 +368,7 @@ mod tests {
     use super::*;
     use std::time::Duration;
 
-    use sem::{Acted, ActionName, Observation, Outcome, Request, SemId};
+    use accord::{Acted, ActionName, Observation, Outcome, Request, SemId};
 
     use crate::answer::{Answered, Answers};
     use crate::args::Answer;
@@ -383,7 +383,7 @@ mod tests {
         }
     }
 
-    fn revision() -> sem::Revision {
+    fn revision() -> accord::Revision {
         serde_json::from_str("\"00000000000000aa\"").expect("a revision")
     }
 

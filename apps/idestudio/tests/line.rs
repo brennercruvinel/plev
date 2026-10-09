@@ -21,10 +21,10 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use sem::{ActionName, Actor, SemId, Stage, Value};
+use engine::drawing::compositor::Compositor;
+use accord::{ActionName, Actor, SemId, Stage, Value};
 use support::{Rig, completed};
-use wire::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply, SnapshotReply, StageReply};
 
 /// The window of the rig.
 const W: f32 = 1280.0;
@@ -188,8 +188,8 @@ fn the_person_reaches_the_line_by_the_pointer_and_the_keys() {
 /// focused nothing takes them.
 #[test]
 fn the_intent_field_takes_the_clipboard_keys() {
-    use comps::form::ClipKey;
-    use engine::clipboard::{ClipboardProvider, LocalClipboard};
+    use engine::widgets::form::ClipKey;
+    use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 
     let mut rig = Rig::new(&["a.txt"], &[]);
     rig.bench.host_surfaces_with(None);
@@ -294,7 +294,7 @@ fn shell<T: Send + 'static>(rig: &mut Rig, agent: impl FnOnce(PathBuf) -> T + Se
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {
-        app: ide::agent::APP.into(),
+        app: idestudio::capability::agent::APP.into(),
         dir: dir.path().to_owned(),
         ring: 16,
     };
@@ -309,13 +309,13 @@ fn shell<T: Send + 'static>(rig: &mut Rig, agent: impl FnOnce(PathBuf) -> T + Se
     while !agent.is_finished() {
         assert!(Instant::now() < deadline, "the agent did not finish");
         if woke.recv_timeout(Duration::from_millis(2)).is_ok()
-            && ide::agent::serve(&mut port, &mut rig.bench, &shown)
+            && idestudio::capability::agent::serve(&mut port, &mut rig.bench, &shown)
         {
             shown = frame(rig);
         }
         while let Some(event) = rig.event(Duration::ZERO) {
             rig.bench.apply(event);
-            ide::agent::serve(&mut port, &mut rig.bench, &shown);
+            idestudio::capability::agent::serve(&mut port, &mut rig.bench, &shown);
             shown = frame(rig);
         }
     }

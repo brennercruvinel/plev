@@ -183,7 +183,7 @@ fn select_highlight_follows_the_row_under_a_still_pointer_as_the_wheel_scrolls()
     let mut s = twenty();
     s.open();
     let panel = s.dropdown_rect(B, &theme);
-    let row_h = theme.control.height(engine::theme::ControlSize::Md);
+    let row_h = theme.control.height(crate::styling::theme::ControlSize::Md);
     let (x, y) = (
         panel.x + panel.w / 2.0,
         panel.y + theme.control.menu_pad + row_h / 2.0,

@@ -11,11 +11,11 @@
 
 use std::f32::consts::TAU;
 
-use engine::compositor::Compositor;
-use engine::path::PathBuilder;
-use engine::theme::{IconSize, Theme};
+use crate::drawing::compositor::Compositor;
+use crate::drawing::path::PathBuilder;
+use crate::styling::theme::{IconSize, Theme};
 
-use crate::core::Rect;
+use crate::widgets::widget::Rect;
 
 /// Full turns per second.
 const SPEED: f32 = 0.9;
@@ -79,7 +79,7 @@ impl Spinner {
     /// while the spinner is on screen), except with reduced motion on,
     /// when the arc stands still and it returns `false`.
     pub fn tick(&mut self, dt: f32) -> bool {
-        if engine::animation::reduced_motion() {
+        if crate::compose::animation::reduced_motion() {
             return false;
         }
         self.angle = (self.angle + dt * SPEED * TAU) % TAU;

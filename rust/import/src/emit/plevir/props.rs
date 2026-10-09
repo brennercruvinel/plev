@@ -7,11 +7,11 @@
 //! difference, past it `impossible` and the field is left to the
 //! component's default.
 
-use uir::{
+use plevir::{
     Align, ColorRole, MAX_FLEX, Props, ShapeRole, Size, SizeToken, SpacingToken, TypographyRole,
 };
 
-use crate::ir::{Arg, Prop, Src};
+use crate::tree::{Arg, Prop, Src};
 use crate::report::Verdict;
 use crate::tokens::{Near, Tokens, TypeStyle, color_distance, nearest, px_distance, role_named};
 
@@ -652,7 +652,7 @@ mod tests {
             (role, d.verdict.category()),
             (Some(ColorRole::Bg), Category::Supported)
         );
-        let surface = crate::css_map::color_token((46, 46, 46, 1.0));
+        let surface = crate::formats::react::css::color_token((46, 46, 46, 1.0));
         let (role, d) = color(&surface, "background", &[src(1)], &t());
         assert_eq!(role, Some(ColorRole::Surface));
         assert_eq!(d.verdict.category(), Category::Transformed);

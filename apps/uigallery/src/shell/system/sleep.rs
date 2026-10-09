@@ -21,7 +21,7 @@
 
 use winit::window::WindowId;
 
-use super::App;
+use super::super::App;
 
 impl App {
     /// The app falls asleep: no window draws and nothing settles until
@@ -55,7 +55,7 @@ impl App {
     /// shell catches up (`Windows::resume` wakes the windows).
     #[cfg(target_os = "android")]
     pub(super) fn resume(&mut self, event_loop: &winit::event_loop::ActiveEventLoop) {
-        let attrs = || winit::window::WindowAttributes::default().with_title(super::TITLE);
+        let attrs = || winit::window::WindowAttributes::default().with_title(super::super::TITLE);
         match self.windows.resume(event_loop, attrs) {
             Ok(ids) => {
                 if let Some(&id) = ids.first() {
@@ -83,15 +83,15 @@ impl App {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::platform::menu::locked;
-    use engine::platform::notify::FakeNotifier;
-    use engine::theme::Intent;
-    use engine::window::Background;
-    use sem::{Actor, Request, SemId, Stage, Value};
+    use engine::runtime::platform::menu::locked;
+    use engine::runtime::platform::notify::FakeNotifier;
+    use engine::styling::theme::Intent;
+    use engine::runtime::window::Background;
+    use accord::{Actor, Request, SemId, Stage, Value};
     use winit::window::WindowId;
 
-    use super::super::App;
-    use crate::view::ShowcaseView;
+    use super::super::super::App;
+    use crate::views::ShowcaseView;
 
     /// The shell on `page` with a bare main window and a fake notifier.
     fn app(page: &str) -> (App, Arc<Mutex<FakeNotifier>>) {

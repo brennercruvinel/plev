@@ -7,9 +7,9 @@ use std::iter::Peekable;
 use std::str::{CharIndices, FromStr};
 use std::sync::Arc;
 
-use crate::error::SemError;
-use crate::name::{is_name_char, name_fault};
-use crate::text::text_serde;
+use crate::failures::SemError;
+use crate::notation::{is_name_char, name_fault};
+use crate::encoding::text_serde;
 
 /// the logical identity of a node.
 ///

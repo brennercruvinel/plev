@@ -1,16 +1,16 @@
 // GPU resolve and submit for the input demo.
 
-use engine::compositor::Compositor;
+use engine::drawing::compositor::Compositor;
 
 use crate::palette::pal;
 
 pub fn gpu_resolve_and_submit(
     compositor: &mut Compositor,
-    gpu: &mut engine::gpu::GpuContext,
-    text_system: &mut engine::text::TextSystem,
+    gpu: &mut engine::drawing::gpu::GpuContext,
+    text_system: &mut engine::drawing::text::TextSystem,
     surface_view: &engine::wgpu::TextureView,
 ) {
-    compositor.resolve(&engine::compositor::ResolveResources {
+    compositor.resolve(&engine::drawing::compositor::ResolveResources {
         msaa_samples: gpu.config.msaa_samples,
         device: &gpu.device,
         queue: &gpu.queue,
@@ -24,7 +24,7 @@ pub fn gpu_resolve_and_submit(
 
     // Resolve text per clip group so the ranges patched into the
     // draw sequence line up 1:1 with its Text commands.
-    engine::window::resolve_layer_text(compositor, gpu, text_system);
+    engine::runtime::window::resolve_layer_text(compositor, gpu, text_system);
     text_system.finish_frame();
 
     let mut encoder = gpu
@@ -96,7 +96,7 @@ pub fn gpu_resolve_and_submit(
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
+                            engine::styling::color::Color::rgb(pal().bg[0], pal().bg[1], pal().bg[2])
                                 .to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,

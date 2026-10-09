@@ -8,7 +8,7 @@
 
 use std::sync::{Arc, Mutex, PoisonError};
 
-use sem::{ActionName, Request, RequestId, SemId, Snapshot, SnapshotBuilder};
+use accord::{ActionName, Request, RequestId, SemId, Snapshot, SnapshotBuilder};
 
 use super::chain::Chain;
 use super::composite::Composite;

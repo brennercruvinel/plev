@@ -14,11 +14,11 @@
 mod input;
 mod render;
 
-use engine::input::scroll::ScrollState;
-use engine::theme::{SidebarMode, Theme};
+use crate::control::input::scroll::ScrollState;
+use crate::styling::theme::{SidebarMode, Theme};
 
-use crate::core::Rect;
-use crate::nav::NavLink;
+use crate::widgets::widget::Rect;
+use crate::widgets::nav::NavLink;
 
 /// A run of `len` consecutive links under one caption. The groups of a
 /// sidebar partition its links in order; the active index space is

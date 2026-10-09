@@ -46,10 +46,10 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use sem::Actor;
+use accord::Actor;
 
-use crate::b64;
-use crate::proto::{Bound, ProtoError, Reply, ServerMsg};
+use crate::framing::base64;
+use crate::protocol::{Bound, ProtoError, Reply, ServerMsg};
 use crate::server::{ConnId, Outgoing};
 
 /// the longest line a client may send, in bytes; the scene channel

@@ -5,9 +5,9 @@
 
 use std::collections::BTreeSet;
 
-use sem::{Acted, Actor, Millis, Receipt, Rejection, RequestId, Revision, Stage, StateRef, Value};
+use accord::{Acted, Actor, Millis, Receipt, Rejection, RequestId, Revision, Stage, StateRef, Value};
 use serde_json::{Value as Json, json};
-use wire::Traffic;
+use socket::Traffic;
 
 use crate::host::{ActSeen, Intervention, Served};
 

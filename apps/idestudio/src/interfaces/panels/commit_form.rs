@@ -6,13 +6,13 @@
 //! button as `commit.submit`. Cancel is the form's own `cancel`, so it
 //! sits inside the form's binding instead of carrying a second id.
 
-use comps::action::{Button, ButtonVariant};
-use comps::form::{ClipKey, EditKey, TextField};
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::clipboard::ClipboardProvider;
-use engine::compositor::{Compositor, SceneNode};
-use engine::theme::Theme;
-use sem::SemId;
+use engine::widgets::buttons::{Button, ButtonVariant};
+use engine::widgets::form::{ClipKey, EditKey, TextField};
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::runtime::platform::clipboard::ClipboardProvider;
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::styling::theme::Theme;
+use accord::SemId;
 
 /// State for the inline commit form.
 pub struct CommitForm {
@@ -231,8 +231,8 @@ impl Default for CommitForm {
 
 #[cfg(test)]
 mod tests {
-    use comps::form::ClipKey;
-    use engine::clipboard::{ClipboardProvider, LocalClipboard};
+    use engine::widgets::form::ClipKey;
+    use engine::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 
     use super::CommitForm;
 

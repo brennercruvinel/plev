@@ -73,11 +73,11 @@ mod run {
     use std::thread;
     use std::time::{Duration, Instant};
 
-    use engine::compositor::Compositor;
-    use rec::{Limits, Persisted};
-    use showcase::app::record::{self, Recording};
-    use showcase::view::ShowcaseView;
-    use wire::{AgentPort, Config};
+    use engine::drawing::compositor::Compositor;
+    use record::{Limits, Persisted};
+    use uigallery::shell::window::record::{self, Recording};
+    use uigallery::views::ShowcaseView;
+    use socket::{AgentPort, Config};
 
     use crate::agent::agent;
     use crate::shell::{Answer, Poke, Shell};

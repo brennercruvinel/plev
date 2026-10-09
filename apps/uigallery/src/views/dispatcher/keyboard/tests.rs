@@ -4,7 +4,7 @@
 //! the one highlight follows the focus; Enter picks the item through the
 //! dispatcher, as a click does.
 
-use crate::view::{ActiveOverlay, EditKey, NavKey, ShowcaseView};
+use crate::views::{ActiveOverlay, EditKey, NavKey, ShowcaseView};
 
 fn focused(view: &ShowcaseView) -> Option<String> {
     view.semantics()

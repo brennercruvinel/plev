@@ -11,17 +11,17 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::form::EditKey;
-use comps::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Actor, Actors, Policy, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
+use engine::widgets::form::EditKey;
+use engine::widgets::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Actor, Actors, Policy, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
 use support::{
     App, MIXER_LEFT, REVIEW_SILENCES, SHOWCASE, SILENCES, TODO, id, mixer, page, settle, snapshot,
     verified, verified_local,
 };
-use surface::{Change, Surface, SurfaceError, SurfaceHost};
-use uir::{Capabilities, Component, GenerationPolicy, Inverse, Op, TransformError, verify_json};
+use screen::{Change, Surface, SurfaceError, SurfaceHost};
+use plevir::{Capabilities, Component, GenerationPolicy, Inverse, Op, TransformError, verify_json};
 
 const AREA: Rect = Rect {
     x: 40.0,
@@ -274,7 +274,7 @@ fn the_host_keeps_every_change_and_undoes_the_last() {
     let at_open = written(&host);
 
     let dense = Op::Density {
-        step: uir::Step::Denser,
+        step: plevir::Step::Denser,
     };
     host.apply(&panel, dense.clone(), agent(), &now)
         .expect("denser");

@@ -3,10 +3,10 @@
 //! `toast_page.button[<intent>]`, whose `activate` asks the view for the
 //! toast a click queues.
 
-use comps::prelude::{Button, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{Intent, Theme};
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, flow, root_id, under};
 

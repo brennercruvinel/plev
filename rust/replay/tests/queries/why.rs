@@ -3,9 +3,9 @@
 //! then (another actor, nobody from the app, or several), the stages and
 //! the result.
 
-use inspect::{Basis, By, Ending, Inspector, Unrecorded, Why};
-use rec::InputKind;
-use sem::{Actor, Change, Rejection, RequestId, Stage, Value};
+use replay::{Basis, By, Ending, Inspector, Unrecorded, Why};
+use record::InputKind;
+use accord::{Actor, Change, Rejection, RequestId, Stage, Value};
 
 use crate::apps::{Lab, agent, id, rid, sha};
 use crate::thesis::record;
@@ -16,7 +16,7 @@ fn set(items: &[&str]) -> Value {
     Value::Set(items.iter().map(|i| (*i).to_owned()).collect())
 }
 
-fn why(session: &rec::Session, id: RequestId) -> Result<Why, Box<dyn std::error::Error>> {
+fn why(session: &record::Session, id: RequestId) -> Result<Why, Box<dyn std::error::Error>> {
     Ok(Inspector::new(session)
         .why(0, id)?
         .ok_or("no such request")?)
@@ -271,7 +271,7 @@ fn two_receipts_in_the_window_are_ambiguous_and_both_shown() -> Fallible {
     let seen = lab.observe(10, agent());
     // each one acts on the app as it is, and the app projects only once
     // after both: one recorded change, two receipts before it.
-    let person = sem::Request::observe(
+    let person = accord::Request::observe(
         &lab.look(),
         Actor::Human,
         "changes",
@@ -279,7 +279,7 @@ fn two_receipts_in_the_window_are_ambiguous_and_both_shown() -> Fallible {
         Some("B".into()),
     )?;
     let one = lab.dispatcher.dispatch(&mut lab.git, person, 20);
-    let assistive = sem::Request::observe(
+    let assistive = accord::Request::observe(
         &lab.look(),
         Actor::Assistive,
         "changes",
@@ -366,16 +366,16 @@ fn a_request_the_window_does_not_hold_is_none() -> Fallible {
 #[test]
 fn a_request_cut_by_the_window_is_not_whole() -> Fallible {
     let thesis = record();
-    let events: Vec<rec::Event> = thesis
+    let events: Vec<record::Event> = thesis
         .session
         .events()
         .iter()
         .filter(|e| {
-            !matches!(&e.kind, rec::Kind::Stage { id, stage: Stage::Requested, .. } if *id == thesis.stale)
+            !matches!(&e.kind, record::Kind::Stage { id, stage: Stage::Requested, .. } if *id == thesis.stale)
         })
         .cloned()
         .collect();
-    let cut = rec::Session::from_events(events);
+    let cut = record::Session::from_events(events);
     let why = why(&cut, thesis.stale)?;
     assert!(!why.whole);
     assert_eq!(why.stages.len(), 1);
@@ -429,7 +429,7 @@ fn a_receipt_running_across_the_window_is_not_named() -> Fallible {
     lab.git.staged.clear();
     lab.rec.snapshot(40, &lab.look());
     lab.dispatcher
-        .complete(person, sem::Outcome::default(), 50)?;
+        .complete(person, accord::Outcome::default(), 50)?;
     lab.git.slow = false;
     let submit = lab.act(60, &seen, agent(), "commit.submit", "submit", None);
     let why = why(&lab.session(), submit)?;

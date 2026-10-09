@@ -6,8 +6,8 @@
 
 use std::fmt::Write as _;
 
-use sem::{Actors, Confirm, Node, Value};
-use uir::{Component, IrError, IrNode, LineKind, Named, Rule, schema};
+use accord::{Actors, Confirm, Node, Value};
+use plevir::{Component, IrError, IrNode, LineKind, Named, Rule, schema};
 
 use crate::Ask;
 
@@ -204,7 +204,7 @@ pub(crate) fn registry(out: &mut String, ask: &Ask<'_>) {
     for n in ask.app.nodes().values() {
         node_line(out, n);
         for (key, v) in &n.state {
-            let at = sem::StateRef::new(n.id.clone(), key.clone());
+            let at = accord::StateRef::new(n.id.clone(), key.clone());
             if let Some(d) = ask.caps.datum(&at) {
                 let _ = writeln!(out, "  state {at}: {} = {}", d.kind.as_str(), value(v));
             }
@@ -235,7 +235,7 @@ pub(crate) fn registry(out: &mut String, ask: &Ask<'_>) {
             out.push('\n');
         }
     }
-    let shown = |node: &sem::SemId| ask.app.get(node).is_some();
+    let shown = |node: &accord::SemId| ask.app.get(node).is_some();
     for d in ask.caps.data().iter().filter(|d| !shown(&d.at.node)) {
         let _ = writeln!(out, "state {}: {}", d.at, d.kind.as_str());
     }

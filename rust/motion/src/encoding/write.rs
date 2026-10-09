@@ -6,9 +6,9 @@
 //! whose op lists are already in canonical order, the decoder's output
 //! order.
 
-use crate::container::{self, Asset, DeltaOp, Desc, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section};
-use crate::easing::EasingTable;
-use crate::ir::{Depth, IrError, Keyframe, NodeId, Prop, Segment, Timeline};
+use crate::encoding::container::{self, Asset, DeltaOp, Desc, SEC_DELTA, SEC_DESC, SEC_KEYFRAME, Section};
+use crate::timeline::easing::EasingTable;
+use crate::timeline::{Depth, IrError, Keyframe, NodeId, Prop, Segment, Timeline};
 
 #[derive(Debug, PartialEq, thiserror::Error)]
 pub enum WriteError {

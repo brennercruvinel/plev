@@ -42,9 +42,9 @@
 //!
 //! T payload := desc_count u16, (keyframe u16, len u16, utf8)*
 
-use crate::easing::{Easing, EasingTable, quantize_curve};
-use crate::ir::{Depth, Node, NodeId, NodeKind, Prop, Segment, Value};
-use crate::quant;
+use crate::timeline::easing::{Easing, EasingTable, quantize_curve};
+use crate::timeline::{Depth, Node, NodeId, NodeKind, Prop, Segment, Value};
+use crate::encoding::quantize;
 use sha2::{Digest, Sha256};
 
 pub const MAGIC: [u8; 4] = *b"MON0";

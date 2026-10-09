@@ -17,16 +17,16 @@
 use std::sync::mpsc::{self, Receiver};
 use std::thread;
 
-use engine::window::Windows;
-use sem::{SemId, Stage};
-use showcase::app::mirror::{Hand, Viewer, said};
+use engine::runtime::window::Windows;
+use accord::{SemId, Stage};
+use uigallery::shell::window::mirror::{Hand, Viewer, said};
 use winit::application::ApplicationHandler;
 use winit::dpi::LogicalSize;
 use winit::event::{ElementState, MouseButton, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::keyboard::{Key, NamedKey};
 use winit::window::{WindowAttributes, WindowId};
-use wire::{Client, ServerMsg};
+use socket::{Client, ServerMsg};
 
 use crate::cli::{self, NAME, Opts};
 
@@ -207,7 +207,7 @@ impl ApplicationHandler<Came> for Show {
                 return;
             }
         };
-        if let wire::Reply::Error(e) = &msg.reply {
+        if let socket::Reply::Error(e) = &msg.reply {
             // a refusal: the app's person did not share its scenes
             // (`scene_not_shared`), or the watch was refused otherwise
             eprintln!("mirror: {e}");

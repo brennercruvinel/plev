@@ -6,16 +6,16 @@
 //! helper come from tests_optimize.
 
 use crate::discover::discover;
-use crate::easing::Easing;
-use crate::ir::{IrError, Keyframe, Node, Prop, Timeline};
+use crate::timeline::easing::Easing;
+use crate::timeline::{IrError, Keyframe, Node, Prop, Timeline};
 use crate::optimize::{OptimizeCfg, optimize};
 use crate::play::MonsterPlayer;
-use crate::read::decode;
-use crate::tests::discover::{assert_reproduced, cfg as discover_cfg};
-use crate::tests::optimize::{assert_quantized_parity, col, lin, seg, track};
-use crate::tests::write::rect;
-use crate::write::encode;
-use engine::compositor::SceneNode;
+use crate::encoding::read::decode;
+use crate::discover::tests::discover::{assert_reproduced, cfg as discover_cfg};
+use crate::optimize::tests::optimize::{assert_quantized_parity, col, lin, seg, track};
+use crate::encoding::tests::write::rect;
+use crate::encoding::write::encode;
+use engine::drawing::compositor::SceneNode;
 
 /// 2 px on coordinates, 40/255 per color channel, 0.6 px for RDP.
 fn aggressive() -> OptimizeCfg {

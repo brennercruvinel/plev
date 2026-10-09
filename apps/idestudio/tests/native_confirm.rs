@@ -18,12 +18,12 @@ mod support;
 
 use std::sync::{Arc, Mutex};
 
-use engine::platform::alerts::{Alerts, Dialog, FakeAlerts};
-use ide::record::Recording;
-use ide::workbench::Workbench;
-use inspect::{Ending, Inspector};
-use rec::{Kind, Limits, Session};
-use sem::{Actor, Rejection, RequestId, SemError, Stage, Value};
+use engine::runtime::platform::alerts::{Alerts, Dialog, FakeAlerts};
+use idestudio::interfaces::window::record::Recording;
+use idestudio::capability::Workbench;
+use replay::{Ending, Inspector};
+use record::{Kind, Limits, Session};
+use accord::{Actor, Rejection, RequestId, SemError, Stage, Value};
 use support::{Rig, agent};
 
 type Shared = Arc<Mutex<FakeAlerts>>;

@@ -6,13 +6,13 @@
 //! page's `Operable`, lent the todo's dispatcher, leaves the todo's
 //! projection and receipts exactly as the todo's own path does.
 
-use sem::{Actor, Receipt, Request, RequestId, SemId, Stage, StateRef, Value};
+use accord::{Actor, Receipt, Request, RequestId, SemId, Stage, StateRef, Value};
 
 use super::super::SurfacePage;
-use super::super::proposing::Said;
+use super::super::offering::Said;
 use super::{center, click, frame, narrow, setup, sid, text, value, wide};
-use crate::view::EditKey;
-use crate::view::apps::app::TodoPage;
+use crate::views::EditKey;
+use crate::views::apps::todo::TodoPage;
 
 const INTENT: &str = "only what is active and the add field";
 
@@ -197,7 +197,7 @@ fn the_page_operable_forwards_to_the_todo_as_the_todo_runs_it() {
     // page's snapshot holds more than the todo's), and every stage
     let shape = |r: &Receipt| -> (Request, Vec<Stage>) {
         let mut req = r.request.clone();
-        req.observed.revision = sem::Snapshot::default().revision();
+        req.observed.revision = accord::Snapshot::default().revision();
         (req, r.stages.iter().map(|(s, _)| s.clone()).collect())
     };
     for (target, action, param) in asks {
@@ -252,9 +252,9 @@ fn the_proposing_nodes_are_the_pages_own() {
     let (todo, page, _) = setup();
     let snap = page.snapshot(&todo).expect("projects");
     let region = snap.get(&sid("surface_page")).expect("the region");
-    assert_eq!(region.role, sem::Role::Region);
+    assert_eq!(region.role, accord::Role::Region);
     let intent = snap.get(&sid("surface_page.intent")).expect("the intent");
-    assert_eq!(intent.role, sem::Role::TextInput);
+    assert_eq!(intent.role, accord::Role::TextInput);
     let actions: Vec<&str> = snap
         .get(&sid("surface_page.propose"))
         .expect("the button")

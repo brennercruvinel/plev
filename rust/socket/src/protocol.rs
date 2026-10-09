@@ -11,7 +11,7 @@
 //! canonical text, a `Revision` as 16 hex digits, a `RequestId` as decimal
 //! text, a `Value` as `{"kind": .., "value": ..}`.
 
-use sem::{
+use accord::{
     ActionName, Actor, Change, Millis, Node, Observation, Request, RequestId, Revision, SemId,
     Stage, StateKey, StateRef, Value,
 };

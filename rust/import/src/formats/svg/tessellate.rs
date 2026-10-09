@@ -14,7 +14,7 @@
 
 use std::collections::HashSet;
 
-use engine::path::{PathBuilder, TessellatedPath};
+use engine::drawing::path::{PathBuilder, TessellatedPath};
 use usvg::tiny_skia_path::{Path as SkPath, Point, Transform};
 use usvg::{Group, Node, Paint};
 

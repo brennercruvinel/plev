@@ -38,16 +38,16 @@ mod settings {
     include!("../fixtures/figma/expected.rs");
 }
 
-use comps::Rect;
-use engine::builder::{Align, Element, div};
-use engine::compositor::{Compositor, SceneNode};
-use engine::gpu::RenderConfig;
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use engine::theme::Theme;
-use engine::view::{View, ViewContext};
-use sem::Snapshot;
+use engine::widgets::Rect;
+use engine::compose::builder::{Align, Element, div};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::styling::theme::Theme;
+use engine::compose::view::{View, ViewContext};
+use accord::Snapshot;
 use support::*;
-use surface::Surface;
+use screen::Surface;
 
 fn renderer(w: f32, h: f32) -> Option<Renderer> {
     match Renderer::new(Viewport::new(w, h, 1.0), RenderConfig::default()) {
@@ -127,16 +127,16 @@ fn builder(el: Element, r: &mut Renderer, theme: &Theme) -> Drawn {
 /// The IR, verified against the app's registry and materialized over the
 /// app's state, drawn in the whole area.
 fn materialized(
-    imported: &parser::Imported,
+    imported: &import::Imported,
     app: &Snapshot,
     r: &mut Renderer,
     theme: &Theme,
 ) -> Drawn {
     let v = r.viewport();
-    let verified = uir::verify(
+    let verified = plevir::verify(
         &imported.ir,
-        &uir::Capabilities::from_snapshot(app),
-        &uir::GenerationPolicy::default(),
+        &plevir::Capabilities::from_snapshot(app),
+        &plevir::GenerationPolicy::default(),
     )
     .unwrap_or_else(|e| panic!("{e:#?}"));
     let mut surface = Surface::materialize(verified, app);
@@ -393,7 +393,7 @@ fn the_note_card_by_pixel() {
 /// texts it holds in the source's order.
 struct Case {
     name: &'static str,
-    imported: parser::Imported,
+    imported: import::Imported,
     app: Snapshot,
     code: Element,
     size: [f32; 2],
@@ -413,7 +413,7 @@ fn phase2() -> [Case; 2] {
         Case {
             name: "figma-settings",
             imported: import_figma(),
-            app: sem::SnapshotBuilder::new().finish().expect("an empty app"),
+            app: accord::SnapshotBuilder::new().finish().expect("an empty app"),
             code: settings::settings(),
             size: [393.0, 852.0],
             texts: &[

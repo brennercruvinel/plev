@@ -5,12 +5,12 @@
 //! responsibility: that file is frozen past the file-hygiene limit and
 //! may only shrink.
 
-use comps::prelude::ToastManager;
-use engine::platform::files::DialogRequest;
-use engine::theme::{Intent, Theme};
+use engine::widgets::prelude::ToastManager;
+use engine::runtime::platform::files::DialogRequest;
+use engine::styling::theme::{Intent, Theme};
 
 use super::Explorer;
-use crate::model::types::UrnaCommand;
+use crate::backend::workers::messages::UrnaCommand;
 
 impl Explorer {
     /// The Browse… button: the platform's open dialog, filtered to the

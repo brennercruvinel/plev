@@ -18,10 +18,10 @@ use std::path::Path;
 
 use burn::backend::wgpu::{RuntimeOptions, WgpuDevice, WgpuSetup, init_device};
 use burn::nn::LinearLayout;
-use engine::gpu::GpuContext;
+use engine::drawing::gpu::GpuContext;
 use engine::wgpu;
 
-use crate::burn::BurnModel;
+use crate::models::burn::BurnModel;
 use crate::{LlmError, Model};
 
 /// burn on a wgpu device through cubecl's wgsl compiler.

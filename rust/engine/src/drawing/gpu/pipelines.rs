@@ -1,8 +1,8 @@
-use crate::compositor::{BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
-use crate::text::TextVertex;
+use crate::drawing::compositor::{BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex};
+use crate::drawing::text::TextVertex;
 
 use super::context::GpuContext;
-use super::utils::premultiplied_blend;
+use super::presets::premultiplied_blend;
 
 // ---------------------------------------------------------------------------
 // Pipeline creation (extracted for hot-reload support)

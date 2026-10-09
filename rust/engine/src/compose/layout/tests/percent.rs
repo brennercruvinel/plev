@@ -1,7 +1,7 @@
 //! Percentage dimensions (parallel width_percent/height_percent fields).
 
 use super::{container, leaf};
-use crate::layout::*;
+use crate::compose::layout::*;
 
 #[test]
 fn test_width_percent_of_parent() {

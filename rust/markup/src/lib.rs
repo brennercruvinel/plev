@@ -3,7 +3,7 @@
 //! is (the showcase is the template). Do not build new app code on this
 //! crate without an ADR (docs/ADR/official-app-pattern.md).
 
-pub use narrate_macro::plev_narrate;
+pub use macros::markup::plev_narrate;
 
 /// Bridge module: re-exports from the real `engine::builder` API.
 ///
@@ -12,17 +12,17 @@ pub use narrate_macro::plev_narrate;
 /// builder implementations instead of the previous stubs.
 pub mod builder {
     // Re-export everything from the real builder
-    pub use engine::builder::{
+    pub use engine::compose::builder::{
         Align, ClickEvent, Direction, Element, EventHandlers, FocusEvent, HoverEvent, IntoF32,
         IntoRadius, IntoView, Justify, KeyEvent, LayoutConfig, Scope, ScrollEvent, SizeConstraint,
         Spacing, Style, div,
     };
-    pub use engine::color::{Color, IntoColor};
+    pub use engine::styling::color::{Color, IntoColor};
 
     /// No-arg `text()` for DSL — creates an empty text element.
     /// Content is set via `.child("content")` which merges into the text node.
     pub fn text() -> Element {
-        engine::builder::text("")
+        engine::compose::builder::text("")
     }
 
     /// No-arg `button()` for DSL — creates a styled container.
@@ -36,11 +36,11 @@ pub mod builder {
 
     /// Placeholder `image()` constructor for DSL.
     pub fn image() -> Element {
-        engine::builder::image()
+        engine::compose::builder::image()
     }
 
     /// `spacer()` constructor — grows to fill available space.
     pub fn spacer() -> Element {
-        engine::builder::spacer()
+        engine::compose::builder::spacer()
     }
 }

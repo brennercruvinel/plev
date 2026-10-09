@@ -12,7 +12,7 @@ mod vertex;
 mod tests;
 mod layer_operations;
 
-use crate::perf::stages::{self, Stage};
+use crate::runtime::perf::stages::{self, Stage};
 
 pub use binding::Binding;
 pub use clip::{

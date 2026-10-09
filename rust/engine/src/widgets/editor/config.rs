@@ -1,7 +1,7 @@
 //! Editor configuration and color theme.
 
-use engine::text::backend::TextStyle;
-use engine::theme::Theme;
+use crate::drawing::text::backend::TextStyle;
+use crate::styling::theme::Theme;
 
 /// Visual and behavioral configuration of an [`EditorView`](super::EditorView).
 #[derive(Clone, Debug, PartialEq)]

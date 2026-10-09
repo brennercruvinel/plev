@@ -27,9 +27,9 @@
 //! path a click on the modal, a screen reader's press and an agent's act
 //! take; the key adds no capability and no path of its own.
 
-use engine::accessibility::focus::{self, Direction};
-use engine::accessibility::primary;
-use sem::{Actor, Node, Request, Role, SemId, Snapshot, Value};
+use engine::control::accessibility::focus::{self, Direction};
+use engine::control::accessibility::primary;
+use accord::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 
 use super::super::ShowcaseView;
 use super::super::components::key_under;
@@ -40,7 +40,7 @@ const CONTINUOUS_STEPS: f64 = 100.0;
 
 /// A key the keyboard walks the projection with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(in crate::view) enum Walk {
+pub(in crate::views) enum Walk {
     /// Tab, or Shift-Tab while the shift key is held.
     Tab,
     Up,
@@ -152,7 +152,7 @@ fn number(value: Option<&Value>) -> Option<f64> {
 impl ShowcaseView {
     /// Whether the keyboard walks the projection: on a component page, or
     /// while an overlay holds the pointer (the modal, the menu).
-    pub(in crate::view) fn walks(&self) -> bool {
+    pub(in crate::views) fn walks(&self) -> bool {
         self.overlay_holds_pointer()
             || self
                 .pane()
@@ -161,7 +161,7 @@ impl ShowcaseView {
 
     /// One key over the projection as it stands: `true` when it moved the
     /// focus or asked for something.
-    pub(in crate::view) fn walk(&mut self, key: Walk) -> bool {
+    pub(in crate::views) fn walk(&mut self, key: Walk) -> bool {
         let Some(seen) = self.semantics() else {
             return false;
         };

@@ -1,6 +1,6 @@
 // UI scene construction helpers for the mobile input demo.
 
-use engine::compositor::TextNodeKey;
+use engine::drawing::compositor::TextNodeKey;
 
 use crate::palette::*;
 use crate::state::MobileInputApp;

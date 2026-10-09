@@ -2,8 +2,8 @@
 //! mutable node under construction (ParserNode plus the flags the flank
 //! rewrite needs) and accessors over the parsed chain mini-AST.
 
-use crate::gpui::{GCall, GExpr, GFn};
-use crate::ir::{Origin, ParserNode, Prop, Src, Tag, TextValue};
+use crate::formats::gpui::parse::{GCall, GExpr, GFn};
+use crate::tree::{Origin, ParserNode, Prop, Src, Tag, TextValue};
 
 /// Node under construction: a ParserNode plus the absolute/full-width flags
 /// consumed by the flank rewrite.

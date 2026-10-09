@@ -1,12 +1,12 @@
 use super::{INITIAL_IB_SIZE, INITIAL_VB_SIZE, Layer};
-use crate::compositor::clip::{ClipStack, record_range};
-use crate::compositor::scene::SceneNode;
-use crate::compositor::sequence::{DrawCommand, DrawKind, push_geometry};
-use crate::compositor::vertex::{
+use crate::drawing::compositor::clip::{ClipStack, record_range};
+use crate::drawing::compositor::scene::SceneNode;
+use crate::drawing::compositor::sequence::{DrawCommand, DrawKind, push_geometry};
+use crate::drawing::compositor::vertex::{
     BackdropVertex, ImageVertex, QuadVertex, RectSdfVertex, ShadowVertex, gradient_direction,
     shadow_padding, shadow_sigma,
 };
-use crate::gpu::vec::GpuVec;
+use crate::drawing::gpu::vec::GpuVec;
 
 /// Resolved per-rect parameters shared by the solid and gradient SDF paths.
 struct SdfRect {
@@ -57,7 +57,7 @@ fn emit_sdf_rect(vertices: &mut Vec<RectSdfVertex>, indices: &mut Vec<u32>, r: &
 fn emit_sdf_node(
     vertices: &mut Vec<RectSdfVertex>,
     indices: &mut Vec<u32>,
-    ranges: &mut Vec<crate::compositor::clip::DrawRange>,
+    ranges: &mut Vec<crate::drawing::compositor::clip::DrawRange>,
     sequence: &mut Vec<DrawCommand>,
     rect: &SdfRect,
     viewport: (f32, f32),

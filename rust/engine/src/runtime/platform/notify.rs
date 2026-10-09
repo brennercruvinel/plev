@@ -35,7 +35,7 @@ use std::fmt;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
 
-use sem::{ActionName, SemId, Snapshot, Value};
+use accord::{ActionName, SemId, Snapshot, Value};
 
 pub use super::alerts::Level;
 use super::menu::{Clicked, MenuItem, locked};
@@ -405,7 +405,7 @@ pub fn default_notifier(wake: impl Fn() + Send + Sync + 'static) -> Box<dyn Noti
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{Policy, Role, SnapshotBuilder};
+    use accord::{Policy, Role, SnapshotBuilder};
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).unwrap()
@@ -420,7 +420,7 @@ mod tests {
             .parent("inbox")
             .action("open")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     agent: false,
                     ..sem::Actors::default()
                 },
@@ -430,7 +430,7 @@ mod tests {
             .parent("inbox")
             .action("archive")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     human: false,
                     ..sem::Actors::default()
                 },

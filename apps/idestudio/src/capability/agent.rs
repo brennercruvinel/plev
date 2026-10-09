@@ -21,13 +21,13 @@
 //! scope and revision, on the workbench's clock, and the state an act left
 //! right after the drain that ran it.
 
-use engine::compositor::Compositor;
-use rec::Recorder;
-use sem::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
-use wire::{AgentPort, Bound, Host};
+use engine::drawing::compositor::Compositor;
+use record::Recorder;
+use accord::{Actor, ReceiptSink, Request, RequestId, Revision, SemId, Snapshot};
+use socket::{AgentPort, Bound, Host};
 
-use crate::record::Recording;
-use crate::workbench::Workbench;
+use crate::interfaces::window::record::Recording;
+use crate::capability::Workbench;
 
 /// The name the ide's port opens under: its socket is
 /// `$TMPDIR/plev/ide-<pid>.sock`, and `plev --app ide` finds it.

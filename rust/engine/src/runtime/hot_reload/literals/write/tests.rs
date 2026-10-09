@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use sem::Actor;
+use accord::Actor;
 
 use super::super::{Change, sites_of, snapshot, take_baseline, text};
 use super::*;

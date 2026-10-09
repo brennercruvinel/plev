@@ -24,7 +24,7 @@ use gix::objs::FindExt;
 use crate::diff::parse_unified;
 use crate::error::{GitError, Result, repo_err};
 use crate::status::parse_porcelain_v2;
-use crate::types::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
+use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 pub struct GitRepo {
     repo: gix::Repository,
@@ -287,7 +287,7 @@ impl GitRepo {
     }
 
     fn synthesize_untracked_hunk(&self, path: &str) -> Result<Vec<Hunk>> {
-        use crate::types::{DiffLine, DiffLineKind};
+        use crate::domain::{DiffLine, DiffLineKind};
         let content = std::fs::read_to_string(self.workdir.join(path))?;
         let lines: Vec<DiffLine> = content
             .lines()

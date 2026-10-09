@@ -9,11 +9,11 @@ mod shapes;
 
 use std::sync::Arc;
 
-use engine::animation::{Easing, FrameClock, Tween};
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::gpu::texture_pool::TexturePool;
-use engine::text::TextSystem;
+use engine::compose::animation::{Easing, FrameClock, Tween};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::gpu::texture_pool::TexturePool;
+use engine::drawing::text::TextSystem;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};

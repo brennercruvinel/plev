@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 #[test]
 fn spring_at_rest_by_default() {
@@ -156,7 +156,7 @@ fn spring_critically_damped_no_overshoot() {
 
 #[test]
 fn spring_with_motion_configures() {
-    use crate::theme::MotionPhysics;
+    use crate::styling::theme::MotionPhysics;
     let motion = MotionPhysics {
         mass: 1.5,
         stiffness: 200.0,
@@ -170,7 +170,7 @@ fn spring_with_motion_configures() {
 
 #[test]
 fn spring_with_motion_from_theme() {
-    use crate::theme::Theme;
+    use crate::styling::theme::Theme;
     let theme = Theme::dark();
     let s: Spring<f32> = Spring::new(0.0).with_motion(&theme.motion);
     assert_eq!(s.stiffness, theme.motion.stiffness);
@@ -180,7 +180,7 @@ fn spring_with_motion_from_theme() {
 
 #[test]
 fn spring_with_intent_motion_destructive_faster() {
-    use crate::theme::{Intent, Theme};
+    use crate::styling::theme::{Intent, Theme};
     let theme = Theme::dark();
     let neutral: Spring<f32> = Spring::new(0.0).with_motion(&theme.motion);
     let destructive: Spring<f32> =
@@ -192,7 +192,7 @@ fn spring_with_intent_motion_destructive_faster() {
 
 #[test]
 fn spring_with_motion_converges() {
-    use crate::theme::Theme;
+    use crate::styling::theme::Theme;
     let theme = Theme::dark();
     let mut s: Spring<f32> = Spring::new(0.0).with_motion(&theme.motion);
     s.set_target(100.0);

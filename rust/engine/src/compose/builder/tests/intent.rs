@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod tests {
-    use crate::builder::*;
-    use crate::color::Color;
-    use crate::compositor::SceneNode;
-    use crate::view::{View, ViewContext};
+    use crate::compose::builder::*;
+    use crate::styling::color::Color;
+    use crate::drawing::compositor::SceneNode;
+    use crate::compose::view::{View, ViewContext};
 
     fn test_cx() -> ViewContext {
         ViewContext::new(800.0, 600.0)
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn intent_stored() {
-        use crate::theme::Intent;
+        use crate::styling::theme::Intent;
         let el = div().intent(Intent::Destructive);
         assert_eq!(el.intent, Some(Intent::Destructive));
     }
@@ -46,21 +46,21 @@ mod tests {
 
     #[test]
     fn intent_on_text() {
-        use crate::theme::Intent;
+        use crate::styling::theme::Intent;
         let el = text("delete").intent(Intent::Destructive);
         assert_eq!(el.intent, Some(Intent::Destructive));
     }
 
     #[test]
     fn intent_on_button() {
-        use crate::theme::Intent;
+        use crate::styling::theme::Intent;
         let el = button("Cancel").intent(Intent::Destructive);
         assert_eq!(el.intent, Some(Intent::Destructive));
     }
 
     #[test]
     fn intent_resolves_bg_color_with_theme() {
-        use crate::theme::{Intent, Theme};
+        use crate::styling::theme::{Intent, Theme};
         let theme = Theme::dark();
         let el = div().w(100.0).h(50.0).intent(Intent::Destructive);
         let mut cx = ViewContext::new(800.0, 600.0).with_theme(theme.clone());
@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn intent_resolves_text_color_with_theme() {
-        use crate::theme::{Intent, Theme};
+        use crate::styling::theme::{Intent, Theme};
         let theme = Theme::dark();
         let el = text("Error").intent(Intent::Destructive);
         let mut cx = ViewContext::new(800.0, 600.0).with_theme(theme.clone());

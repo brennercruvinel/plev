@@ -5,11 +5,11 @@
 //! field's place masked holds no byte of what the secret draws, and the
 //! same bytes whatever the secret is; a receiver draws the box there.
 
-use engine::compositor::{Compositor, LayerId, QuadVertex, SceneNode, TextNodeKey};
-use engine::gpu::load_image_rgba;
-use engine::path::TessellatedPath;
+use engine::drawing::compositor::{Compositor, LayerId, QuadVertex, SceneNode, TextNodeKey};
+use engine::drawing::gpu::load_image_rgba;
+use engine::drawing::path::TessellatedPath;
 
-use super::*;
+use super::super::*;
 
 const HEAD: Head = Head {
     width: 640.0,

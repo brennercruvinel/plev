@@ -1,9 +1,9 @@
 //! Drawing helpers the section modules share: a text run, the uppercase
 //! group label, the soft panel container.
 
-use comps::prelude::{Rect, rounded_rect, rounded_rect_stroke};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Rect, rounded_rect, rounded_rect_stroke};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::styling::theme::Theme;
 
 /// RGBA with overridden alpha.
 pub(crate) fn with_alpha(c: [f32; 4], a: f32) -> [f32; 4] {

@@ -15,7 +15,7 @@ use std::borrow::Cow;
 use ropey::Rope;
 use unicode_segmentation::UnicodeSegmentation;
 
-use crate::selection::Selection;
+use crate::document::selection::Selection;
 
 /// Remembered target column (in graphemes) for vertical movement. The
 /// caller keeps it across consecutive up/down moves and resets it on any

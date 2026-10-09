@@ -3,10 +3,10 @@
 //! The frame tail is driven through `headless::Renderer`, the window's
 //! own path; those tests skip without a GPU adapter.
 
-use super::stages::{self, Stage, StageFrame};
-use crate::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::layout::{LayoutEngine, LayoutItem, LayoutStyle};
-use crate::text::{TextMeasurer, TextStyle};
+use super::super::stages::{self, Stage, StageFrame};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::compose::layout::{LayoutEngine, LayoutItem, LayoutStyle};
+use crate::drawing::text::{TextMeasurer, TextStyle};
 
 /// Stages on for one test, off again when it ends.
 struct On;
@@ -25,8 +25,8 @@ impl Drop for On {
     }
 }
 
-fn sem_id(text: &str) -> sem::SemId {
-    match sem::SemId::parse(text) {
+fn sem_id(text: &str) -> accord::SemId {
+    match accord::SemId::parse(text) {
         Ok(id) => id,
         Err(e) => panic!("{text}: {e}"),
     }
@@ -45,7 +45,7 @@ fn leaf() -> LayoutItem {
 }
 
 /// Two layers: the default one with two rects, a second with one.
-fn two_layers(c: &mut Compositor, second: crate::compositor::LayerId, shade: f32) {
+fn two_layers(c: &mut Compositor, second: crate::drawing::compositor::LayerId, shade: f32) {
     c.begin_frame();
     c.draw_rect(0.0, 0.0, 10.0, 10.0, [shade, 0.0, 0.0, 1.0]);
     c.draw_rect(20.0, 0.0, 10.0, 10.0, [0.0, 1.0, 0.0, 1.0]);
@@ -178,8 +178,8 @@ fn binds_count_once_per_id_and_a_hit_scans_the_bindings() {
 #[cfg(not(target_arch = "wasm32"))]
 mod frame_tail {
     use super::*;
-    use crate::gpu::RenderConfig;
-    use crate::headless::{HeadlessError, Renderer, Viewport};
+    use crate::drawing::gpu::RenderConfig;
+    use crate::drawing::headless::{HeadlessError, Renderer, Viewport};
 
     fn renderer() -> Option<Renderer> {
         match Renderer::new(Viewport::new(160.0, 120.0, 1.0), RenderConfig::default()) {
@@ -290,7 +290,7 @@ mod frame_tail {
             gpu_timestamps: true,
             ..RenderConfig::default()
         };
-        let probe = pollster::block_on(crate::gpu::GpuContext::new_headless(1, 1, config.clone()));
+        let probe = pollster::block_on(crate::drawing::gpu::GpuContext::new_headless(1, 1, config.clone()));
         if !probe.is_some_and(|gpu| gpu.timestamps.is_some()) {
             eprintln!("no GPU adapter with timestamp queries; skipping");
             return None;
@@ -357,7 +357,7 @@ mod frame_tail {
         );
         assert!(span.nanos < 1_000_000_000, "a plausible frame: {span:?}");
 
-        let mut perf = crate::perf::PerfMonitor::new();
+        let mut perf = crate::runtime::perf::PerfMonitor::new();
         let Some(micros) = second.gpu_micros() else {
             panic!("a timed frame reads a gpu time: {second:?}");
         };

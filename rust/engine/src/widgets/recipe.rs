@@ -8,10 +8,10 @@
 //! nodes for widgets that batch and push themselves; the `Compositor`
 //! functions push straight to a layer for app views.
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::{Elevation, ShadowSpec, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::styling::theme::{Elevation, ShadowSpec, Theme};
 
-use crate::core::Rect;
+use crate::widgets::widget::Rect;
 
 // ---------------------------------------------------------------------------
 // Rounded-rect node shorthands

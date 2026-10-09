@@ -10,12 +10,12 @@
 
 use std::sync::Once;
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::headless::Viewport;
-use engine::hot_reload::view_source::{Origin, origin_at, text_at};
-use engine::hot_reload::{Site, literals, source_dirs};
-use sem::SemId;
-use showcase::app::{StagedPage, stage_page};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::headless::Viewport;
+use engine::runtime::hot_reload::view_source::{Origin, origin_at, text_at};
+use engine::runtime::hot_reload::{Site, literals, source_dirs};
+use accord::SemId;
+use uigallery::shell::{StagedPage, stage_page};
 
 /// The Todo page's subtitle, a string literal written once in the sources.
 const SUBTITLE: &str = "A complete small todo app: domain state, per-item animation, input.";

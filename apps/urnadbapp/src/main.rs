@@ -5,12 +5,12 @@
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
-    urnaui::run();
+    urnadbapp::run();
 }
 
 #[cfg(target_arch = "wasm32")]
 fn main() {
-    urnaui::run_web();
+    urnadbapp::run_web();
 }
 
 // Keep the binary target compilable when the whole crate is built for a

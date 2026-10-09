@@ -1,5 +1,5 @@
-use super::dock::*;
-use comps::prelude::Rect;
+use super::super::dock::*;
+use engine::widgets::prelude::Rect;
 
 const DT: f32 = 1.0 / 60.0;
 

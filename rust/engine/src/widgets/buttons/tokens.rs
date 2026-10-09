@@ -10,9 +10,9 @@
 //! other theme derives flat recipes from its palette through
 //! [`ButtonTokens::derive`], so the widgets render under all of them.
 
-use super::scales::ShadowSpec;
-use super::tokens::ColorTokens;
-use crate::color::Color;
+use super::super::super::styling::theme::scales::ShadowSpec;
+use super::super::super::styling::theme::tokens::ColorTokens;
+use crate::styling::color::Color;
 
 /// One surface state: fill, shadow list, label color.
 #[derive(Clone, Debug, PartialEq)]

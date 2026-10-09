@@ -6,7 +6,7 @@
 
 use std::fmt::Write as _;
 
-use sem::{Actor, Rejection, Stage};
+use accord::{Actor, Rejection, Stage};
 
 use super::{
     cont, control_line, deeper, field, input_name, item, request, scope_text, stamp, state_line,

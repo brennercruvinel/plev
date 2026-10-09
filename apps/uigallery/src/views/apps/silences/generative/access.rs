@@ -20,16 +20,16 @@
 //! says as a toggle button's state. The port and a model's prompt never
 //! get it.
 
-use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use sem::{Policy, Request, RequestId, Role, SemId, SnapshotBuilder};
-use uir::{Preference, Preferences};
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use accord::{Policy, Request, RequestId, Role, SemId, SnapshotBuilder};
+use plevir::{Preference, Preferences};
 
 use super::super::SilencesPage;
-use crate::view::apps::app::TodoPage;
-use crate::view::dispatch::PERSON_ONLY;
+use crate::views::apps::todo::TodoPage;
+use crate::views::dispatcher::PERSON_ONLY;
 
 /// The words that open the band, alone in the intent, any case.
 pub const WORDS: [&str; 2] = ["accessibility", "acessibilidade"];
@@ -254,7 +254,7 @@ impl Access {
 
 impl SilencesPage {
     /// A person presses a button of the accessibility band.
-    pub(in crate::view::apps::silences) fn press(
+    pub(in crate::views::apps::silences) fn press(
         &mut self,
         todo: &mut TodoPage,
         pressed: Pressed,

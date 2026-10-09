@@ -21,7 +21,7 @@ mod tokenizer;
 #[cfg(test)]
 mod tests;
 
-use crate::builder::{self, Element};
+use crate::compose::builder::{self, Element};
 
 // Re-export public API items.
 pub use extraction::extract_narrate_blocks;

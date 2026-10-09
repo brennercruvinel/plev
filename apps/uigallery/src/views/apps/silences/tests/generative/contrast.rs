@@ -10,11 +10,11 @@
 
 use std::collections::BTreeSet;
 
-use comps::prelude::Rect;
-use engine::compositor::{Compositor, SceneNode};
-use engine::theme::Theme;
-use surface::NoFrames;
-use uir::{Component, Preference, Preferences};
+use engine::widgets::prelude::Rect;
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::styling::theme::Theme;
+use screen::NoFrames;
+use plevir::{Component, Preference, Preferences};
 
 use super::super::super::SilencesPage;
 use super::super::{setup, tester};

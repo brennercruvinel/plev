@@ -3,14 +3,14 @@
 //! and remove mid-timeline, canonical op ordering and the op-specific
 //! validation errors. player behavior lives in tests_play_ops.
 
-use crate::container::SEC_DELTA;
-use crate::easing::Easing;
-use crate::ir::{
+use crate::encoding::container::SEC_DELTA;
+use crate::timeline::easing::Easing;
+use crate::timeline::{
     IrError, Keyframe, PlaceNode, Prop, RemoveNode, ReplaceNode, Timeline, Track, Value,
 };
-use crate::read::decode;
-use crate::tests::write::{parse, rect, seg};
-use crate::write::encode;
+use crate::encoding::read::decode;
+use crate::encoding::tests::write::{parse, rect, seg};
+use crate::encoding::write::encode;
 
 const GOLDEN_OPS: &[u8] = include_bytes!("../../fixtures/golden_v0_ops.monster");
 

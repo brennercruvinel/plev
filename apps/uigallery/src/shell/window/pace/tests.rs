@@ -3,11 +3,11 @@
 //! runs with the real elapsed time), so it counts its time from the
 //! change, however long the window sat idle before it.
 
-use comps::prelude::Wake;
-use engine::theme::Intent;
+use engine::widgets::prelude::Wake;
+use engine::styling::theme::Intent;
 
 use super::App;
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 /// One turn of a 60 Hz display.
 const TURN: f32 = 1.0 / 60.0;

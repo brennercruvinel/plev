@@ -2,13 +2,13 @@
 
 use std::collections::BTreeSet;
 
-use sem::{Constraints, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
+use accord::{Constraints, Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value};
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("valid id")
 }
 
-fn names<'a>(nodes: impl Iterator<Item = &'a sem::Node>) -> Vec<&'a str> {
+fn names<'a>(nodes: impl Iterator<Item = &'a accord::Node>) -> Vec<&'a str> {
     nodes.map(|n| n.id.as_str()).collect()
 }
 
@@ -363,9 +363,9 @@ fn a_revision_travels_as_sixteen_hex_digits() {
     let rev = Git::base().snapshot().revision();
     let text = rev.to_string();
     let d: StrDeserializer<'_, Error> = text.as_str().into_deserializer();
-    assert_eq!(sem::Revision::deserialize(d).unwrap(), rev);
+    assert_eq!(accord::Revision::deserialize(d).unwrap(), rev);
     for bad in ["", "12", "XYZ", "ABCDEF0123456789", "+bcdef0123456789"] {
         let d: StrDeserializer<'_, Error> = bad.into_deserializer();
-        assert!(sem::Revision::deserialize(d).is_err(), "{bad:?}");
+        assert!(accord::Revision::deserialize(d).is_err(), "{bad:?}");
     }
 }

@@ -38,8 +38,8 @@ use proc_macro2::{Delimiter, Group, TokenStream, TokenTree};
 use rustc_hash::FxHasher;
 
 use super::Site;
-use crate::color::Color;
-use crate::compositor::SceneNode;
+use crate::styling::color::Color;
+use crate::drawing::compositor::SceneNode;
 
 mod write;
 pub use write::{Refused, write};

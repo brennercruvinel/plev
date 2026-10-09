@@ -3,7 +3,7 @@
 
 use std::process::ExitStatus;
 
-use propose::ModelError;
+use offers::ModelError;
 use serde_json::Value;
 
 /// the longest a piece of the child's output is quoted in an error, in

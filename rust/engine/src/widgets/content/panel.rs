@@ -4,12 +4,12 @@
 //! caption ramp and the panel padding as the content inset. Static: a
 //! panel frames, the widgets inside it react.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::TextStyle;
-use engine::theme::{Elevation, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::TextStyle;
+use crate::styling::theme::{Elevation, Theme};
 
-use crate::core::Rect;
-use crate::recipe::{glass_surface, shadow_stack};
+use crate::widgets::widget::Rect;
+use crate::widgets::recipe::{glass_surface, shadow_stack};
 
 #[derive(Clone, Debug, Default)]
 pub struct Panel {

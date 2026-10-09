@@ -99,7 +99,7 @@ an act through the app's contract, as the agent \"mirror\".";
     pub fn parse(args: &[String]) -> Result<Option<Opts>, String> {
         let mut opts = Opts {
             app: None,
-            window: wire::MAIN_WINDOW.to_owned(),
+            window: socket::MAIN_WINDOW.to_owned(),
             frames: None,
             png: None,
             bindings: true,
@@ -142,16 +142,16 @@ an act through the app's contract, as the agent \"mirror\".";
         if let Some(path) = app.map(PathBuf::from).filter(|p| p.exists()) {
             return Ok(path);
         }
-        wire::find(&wire::socket_dir(), app).map_err(|e| e.to_string())
+        socket::find(&socket::socket_dir(), app).map_err(|e| e.to_string())
     }
 }
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod headless {
-    use engine::gpu::RenderConfig;
-    use engine::window::WindowHost;
-    use showcase::app::mirror::{Hand, Pressed, Viewer, said};
-    use wire::{Client, Reply, WireError, encode_server};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::runtime::window::WindowHost;
+    use uigallery::shell::window::mirror::{Hand, Pressed, Viewer, said};
+    use socket::{Client, Reply, WireError, encode_server};
 
     use crate::cli::{self, NAME, Opts};
 

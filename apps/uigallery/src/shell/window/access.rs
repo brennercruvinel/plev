@@ -7,15 +7,15 @@
 use winit::event_loop::{ActiveEventLoop, EventLoopProxy};
 use winit::window::Window;
 
-use super::{TITLE, UserEvent};
-use crate::view::ShowcaseView;
+use super::super::{TITLE, UserEvent};
+use crate::views::ShowcaseView;
 
 /// The window's outside actors (a screen reader, agents through the port)
 /// and how their threads wake the event loop.
 #[derive(Default)]
 pub(super) struct Access {
-    pub(super) bridge: Option<engine::accessibility::Bridge>,
-    pub(super) agent: Option<wire::AgentPort>,
+    pub(super) bridge: Option<engine::control::accessibility::Bridge>,
+    pub(super) agent: Option<socket::AgentPort>,
     pub(super) proxy: Option<EventLoopProxy<UserEvent>>,
     /// The windows' scenes, written for the port's watches (`mirror`).
     pub(super) scenes: super::mirror::Scenes,
@@ -31,7 +31,7 @@ impl Access {
                 let _ = proxy.send_event(UserEvent::Access);
             }
         };
-        match engine::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
+        match engine::control::accessibility::Bridge::new(event_loop, window, TITLE, wake) {
             Ok(bridge) => self.bridge = Some(bridge),
             Err(e) => log::error!("accessibility: {e}"),
         }
@@ -46,7 +46,7 @@ impl Access {
         };
         for assist in bridge.take() {
             match assist {
-                engine::accessibility::Assist::Request(req) => {
+                engine::control::accessibility::Assist::Request(req) => {
                     let asked = format!("{} {}", req.target, req.action);
                     match view.act(req) {
                         Some(receipt) => {
@@ -55,7 +55,7 @@ impl Access {
                         None => log::debug!("accessibility: no page takes {asked}"),
                     }
                 }
-                engine::accessibility::Assist::Focus(id) => {
+                engine::control::accessibility::Assist::Focus(id) => {
                     if !view.assist_focus(&id) {
                         log::debug!("accessibility: no page takes focus on {id}");
                     }
@@ -71,13 +71,13 @@ mod tests {
     //! tree it sends: the toasts, the counter and the shell's notice are
     //! heard where they are, and the focus stays.
 
-    use comps::prelude::Intent;
-    use engine::accessibility::accesskit::{Live, Node, TreeUpdate};
-    use engine::accessibility::{self, Chrome, NodeIds};
-    use engine::compositor::Compositor;
-    use sem::{Role, SemId, Snapshot};
+    use engine::widgets::prelude::Intent;
+    use engine::control::accessibility::accesskit::{Live, Node, TreeUpdate};
+    use engine::control::accessibility::{self, Chrome, NodeIds};
+    use engine::drawing::compositor::Compositor;
+    use accord::{Role, SemId, Snapshot};
 
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     const CHROME: Chrome<'static> = Chrome {
         title: "plev, design system showcase",
@@ -196,7 +196,7 @@ mod tests {
         assert_eq!(counter.value(), Some("2 active · 1 done"));
         let seen = view.semantics().unwrap_or_default();
         let Ok(req) =
-            sem::Request::observe(&seen, sem::Actor::Assistive, "todo.item[1]", "toggle", None)
+            accord::Request::observe(&seen, accord::Actor::Assistive, "todo.item[1]", "toggle", None)
         else {
             panic!("the row toggles");
         };
@@ -250,9 +250,9 @@ mod tests {
         );
         let gallery = view.gallery_semantics().unwrap_or_default();
         let said = gallery
-            .value(&sem::StateRef::parse("shell:notice").unwrap_or_else(|e| panic!("{e}")))
+            .value(&accord::StateRef::parse("shell:notice").unwrap_or_else(|e| panic!("{e}")))
             .cloned();
-        assert_eq!(said, Some(sem::Value::from("silences detected: 2 cuts")));
+        assert_eq!(said, Some(accord::Value::from("silences detected: 2 cuts")));
         // a page without meaning hears it too
         let mut view = view_on("card");
         view.set_notice("done");

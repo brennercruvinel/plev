@@ -25,18 +25,18 @@
 
 use std::path::PathBuf;
 
-use comps::prelude::{EventResult, Rect};
-use engine::perf::stages::{self, Stage};
-use engine::platform::alerts::Alert;
-use engine::platform::files::DialogRequest;
-use engine::platform::notify::{Action, Notification};
-use sem::{
+use engine::widgets::prelude::{EventResult, Rect};
+use engine::runtime::perf::stages::{self, Stage};
+use engine::runtime::platform::alerts::Alert;
+use engine::runtime::platform::files::DialogRequest;
+use engine::runtime::platform::notify::{Action, Notification};
+use accord::{
     Actor, Actors, Execution, Operable, Outcome, ParamSpec, Policy, Receipt, Request, RequestId,
     Role, SemError, SemErrors, SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };
 
 use super::{FilesPage, Said};
-use crate::view::apps::app::TodoPage;
+use crate::views::apps::todo::TodoPage;
 
 /// Who may ask for a native panel (the file dialog, the alert): a person
 /// at the screen or through assistive technology, and a test (over the

@@ -7,10 +7,10 @@
 //! knob springs) as a click does. The focus a reader or the keyboard
 //! asks for is the page's own (the ring).
 
-use comps::prelude::{EventResult, Rect, Switch, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{ControlSize, Theme};
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{EventResult, Rect, Switch, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{ControlSize, Theme};
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, Focus, child_id, root_id, text, under};
 

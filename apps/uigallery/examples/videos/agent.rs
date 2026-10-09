@@ -7,8 +7,8 @@ use std::path::Path;
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::{ActionName, RequestId, SemId, Stage, StateKey, Value};
-use wire::{Act, Client, Observe, Reply, SnapshotReply, StageReply};
+use accord::{ActionName, RequestId, SemId, Stage, StateKey, Value};
+use socket::{Act, Client, Observe, Reply, SnapshotReply, StageReply};
 
 use crate::run::{COMPARE, IDLE_WAIT, Request, TIMEOUT_MS};
 use crate::shell::{Poke, Pokes, poke};

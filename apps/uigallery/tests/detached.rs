@@ -9,12 +9,12 @@
 //! skips without a GPU adapter, like the headless tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use comps::prelude::WidgetEvent;
-use engine::gpu::RenderConfig;
-use engine::headless::Frame;
-use engine::window::WindowHost;
-use sem::{Role, SemId, Value};
-use showcase::view::ShowcaseView;
+use engine::widgets::prelude::WidgetEvent;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::Frame;
+use engine::runtime::window::WindowHost;
+use accord::{Role, SemId, Value};
+use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);
 const PAGE: (u32, u32) = (900, 640);
@@ -197,10 +197,10 @@ fn a_page_window_scrolls_on_its_own_and_a_placeholder_has_none() {
 
     // a placeholder page has nothing to show in a window of its own
     let mut view = ShowcaseView::new(MAIN.0 as f32, MAIN.1 as f32);
-    let placeholder = showcase::view::PAGES
+    let placeholder = uigallery::views::PAGES
         .iter()
         .position(|p| p.pane().is_none())
-        .map(|i| showcase::view::PAGES[i].title);
+        .map(|i| uigallery::views::PAGES[i].title);
     if let Some(title) = placeholder {
         view.jump_to_page(title);
         assert!(!view.detach(400.0, 300.0, 1.0));

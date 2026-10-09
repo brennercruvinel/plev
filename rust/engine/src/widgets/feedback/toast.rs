@@ -15,16 +15,16 @@
 
 use std::time::Duration;
 
-use crate::icons;
-use engine::animation::Spring;
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Breakpoint, IconSize, Intent, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::widgets::icons;
+use crate::compose::animation::Spring;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{Breakpoint, IconSize, Intent, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
-use crate::recipe::{rounded_rect, rounded_rect_stroke};
-use crate::wake::Wake;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::wake::Wake;
 
 /// The per-theme geometry the rects, the hit test and the render share.
 struct Metrics {

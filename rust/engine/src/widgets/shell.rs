@@ -5,12 +5,12 @@
 //! applied. The shell owns nothing about what a screen shows: it hands
 //! the screen its rect and routes the events the chrome did not take.
 
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{Breakpoint, SidebarMode, Theme};
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::{Breakpoint, SidebarMode, Theme};
 
-use crate::action::{IconButton, IconButtonVariant};
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::nav::{PanelHeader, Sidebar};
+use crate::widgets::buttons::{IconButton, IconButtonVariant};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::nav::{PanelHeader, Sidebar};
 
 /// Insets the platform reserves (notch, home indicator, status bar), in
 /// logical px. Zero on a desktop window.

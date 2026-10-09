@@ -7,7 +7,7 @@
 //! Modifier application and body/skip logic live in `modifiers.rs`
 //! (an `impl Parser` extension) to keep each file under 300 lines.
 
-use crate::builder::{self, Element};
+use crate::compose::builder::{self, Element};
 
 use super::tokenizer::{Token, tokenize};
 
@@ -136,7 +136,7 @@ impl Parser {
             "col" => builder::div().flex().col(),
             "text" => builder::text(""),
             "button" => builder::div()
-                .bg(crate::color::Color::rgba(0.25, 0.25, 0.35, 1.0))
+                .bg(crate::styling::color::Color::rgba(0.25, 0.25, 0.35, 1.0))
                 .rounded(4.0_f32)
                 .p(8.0_f32),
             "image" => builder::image(),

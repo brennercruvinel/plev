@@ -12,14 +12,14 @@
 //! row it holds to the rects it draws and hit-tests them with, and
 //! [`Table::project`] declares the table in a semantic projection.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::content::VirtualList;
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::rounded_rect;
+use crate::widgets::content::VirtualList;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::recipe::rounded_rect;
 
 /// Horizontal alignment of a column's cells.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

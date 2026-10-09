@@ -1,7 +1,7 @@
 //! tests for the todo domain model: filters, counts, toggle, delete and
 //! dt-based animation convergence. no gpu, no mocks, real tweens.
 
-use super::todo::{Counts, Filter, TodoModel};
+use super::super::todo::{Counts, Filter, TodoModel};
 
 /// One simulated frame at 60 fps.
 const DT: f32 = 1.0 / 60.0;

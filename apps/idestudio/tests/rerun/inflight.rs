@@ -18,8 +18,8 @@
 //! read it asked for lands), on purpose and only here: the harness, the
 //! `Fixture` trait and the marks are as they were.
 
-use ide::workbench::Workbench;
-use sem::{Actor, Millis, Receipt, Request, RequestId, Snapshot, Stage};
+use idestudio::capability::Workbench;
+use accord::{Actor, Millis, Receipt, Request, RequestId, Snapshot, Stage};
 
 use crate::harness::{Fixture, rerun};
 use crate::lab::{Lab, fixture};

@@ -4,13 +4,13 @@
 //! centered as a unit, and the message wraps against the available width
 //! (clamped by a readability maximum, never a viewport constant).
 
-use crate::icons;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{IconSize, Theme};
+use crate::widgets::icons;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{IconSize, Theme};
 
-use crate::action::Button;
-use crate::core::{EventResult, Rect, WidgetEvent};
+use crate::widgets::buttons::Button;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// The message column never exceeds this share of the bounds (long lines
 /// wrap instead of running edge to edge), and never the readable maximum.

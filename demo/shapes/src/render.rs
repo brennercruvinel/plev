@@ -26,7 +26,7 @@ pub(crate) fn render(app: &mut App) {
 
 fn build_scene(app: &mut App, vw: f32, vh: f32) {
     use crate::shapes::{DIVIDER, TEXT, TEXT_DIM, body_style, title_style};
-    use engine::compositor::{SceneNode, TextNodeKey};
+    use engine::drawing::compositor::{SceneNode, TextNodeKey};
 
     app.compositor.begin_frame();
 
@@ -130,7 +130,7 @@ fn submit_gpu(app: &mut App, _vw: f32, _vh: f32) {
     let surface_view = gpu.surface_render_view(&output);
     text_system.begin_frame();
     app.compositor
-        .resolve(&engine::compositor::ResolveResources {
+        .resolve(&engine::drawing::compositor::ResolveResources {
             msaa_samples: gpu.config.msaa_samples,
             device: &gpu.device,
             queue: &gpu.queue,
@@ -143,7 +143,7 @@ fn submit_gpu(app: &mut App, _vw: f32, _vh: f32) {
         });
     // Resolve text per clip group so the ranges patched into the
     // draw sequence line up 1:1 with its Text commands.
-    engine::window::resolve_layer_text(&mut app.compositor, gpu, text_system);
+    engine::runtime::window::resolve_layer_text(&mut app.compositor, gpu, text_system);
     text_system.finish_frame();
     let mut encoder = gpu
         .device
@@ -219,7 +219,7 @@ fn submit_gpu(app: &mut App, _vw: f32, _vh: f32) {
                 ops: engine::wgpu::Operations {
                     load: engine::wgpu::LoadOp::Clear({
                         let [lr, lg, lb, la] =
-                            engine::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
+                            engine::styling::color::Color::rgb(BG[0], BG[1], BG[2]).to_linear_array();
                         engine::wgpu::Color {
                             r: lr as f64,
                             g: lg as f64,

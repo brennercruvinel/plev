@@ -12,7 +12,7 @@
 //! stop one offset. In Latin text the stops are the byte order and every
 //! x is the one [`TextMeasurer::cursor_x_styled`] gives.
 
-use engine::text::{ClusterBox, TextMeasurer, TextStyle};
+use crate::drawing::text::{ClusterBox, TextMeasurer, TextStyle};
 use unicode_segmentation::UnicodeSegmentation;
 
 /// A caret stop: a byte offset, where the caret draws, and its place in

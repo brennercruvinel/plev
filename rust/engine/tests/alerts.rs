@@ -8,10 +8,10 @@
 
 use std::sync::{Arc, Mutex};
 
-use engine::platform::alerts::{
+use engine::runtime::platform::alerts::{
     Alert, AlertKind, Alerts, Answered, Confirm, Dialog, FakeAlerts, Level, NoAlerts,
 };
-use sem::{
+use accord::{
     Actor, Actors, Confirm as Policy, Dispatcher, Execution, Operable, Outcome, Policy as Care,
     Rejection, Request, RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, Stage, Value,
 };
@@ -262,7 +262,7 @@ fn the_platforms_confirmation_answers_into_the_dispatcher_as_the_person() {
     assert!(
         matches!(
             d.confirm(&mut app, second, agent, 4),
-            Err(sem::SemError::ConfirmByMachine { .. })
+            Err(accord::SemError::ConfirmByMachine { .. })
         ),
         "an agent never answers a panel"
     );

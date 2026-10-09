@@ -4,8 +4,8 @@ mod render;
 
 use std::sync::Arc;
 
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use engine::wgpu;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::{ElementState, MouseButton, MouseScrollDelta, WindowEvent};

@@ -18,9 +18,9 @@ use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use engine::gpu::image::MAX_IMAGE_ATLAS_SIZE;
-use monster::{LoweredAsset, NodeKind};
-use sem::Millis;
+use engine::drawing::gpu::image::MAX_IMAGE_ATLAS_SIZE;
+use motion::{LoweredAsset, NodeKind};
+use accord::Millis;
 use serde_json::Value as Json;
 
 use crate::bound::{self, Step};
@@ -28,7 +28,7 @@ use crate::error::FileError;
 use crate::event::{Event, Kind};
 use crate::format::{self, Cur, len32, put_u32, put_u64};
 use crate::payload::{Read, put_asset, read_asset};
-use crate::screen::{Asset, Screen, Shown};
+use crate::visuals::reader::{Asset, Screen, Shown};
 use crate::session::Session;
 
 /// what a write put in the file.
@@ -285,7 +285,7 @@ fn read_assets(payload: &[u8]) -> Result<Vec<Asset>, FileError> {
                 // its size and draws nothing.
                 let fits = image.width.max(image.height) <= MAX_IMAGE_ATLAS_SIZE;
                 let handle = image.pixels.as_ref().filter(|_| fits).and_then(|p| {
-                    engine::gpu::load_image_rgba(image.width, image.height, p.to_vec()).ok()
+                    engine::drawing::gpu::load_image_rgba(image.width, image.height, p.to_vec()).ok()
                 });
                 Asset::Image {
                     width: image.width,
@@ -372,7 +372,7 @@ fn check_chunk(
     refs: &[u32],
     assets: &[Asset],
 ) -> Result<(), FileError> {
-    let doc = monster::decode(bytes).map_err(|e| FileError::Chunk {
+    let doc = motion::decode(bytes).map_err(|e| FileError::Chunk {
         chunk,
         reason: e.to_string(),
     })?;
@@ -412,13 +412,13 @@ fn check_chunk(
 mod tests {
     use std::sync::Arc;
 
-    use engine::compositor::SceneNode;
-    use engine::gpu::ImageHandle;
-    use monster::LoweredAsset;
+    use engine::drawing::compositor::SceneNode;
+    use engine::drawing::gpu::ImageHandle;
+    use motion::LoweredAsset;
 
     use crate::format::{self, Cur};
     use crate::recorder::Recorder;
-    use crate::screen::{Asset, Screen};
+    use crate::visuals::reader::{Asset, Screen};
     use crate::session::Session;
 
     fn rect(x: f32) -> SceneNode {
@@ -468,7 +468,7 @@ mod tests {
             };
             let inside = &body[at as usize..(at + len) as usize];
             assert_eq!(inside, chunk.bytes.as_slice(), "chunk {n} verbatim");
-            assert!(monster::decode(inside).is_ok(), "chunk {n} decodes");
+            assert!(motion::decode(inside).is_ok(), "chunk {n} decodes");
         }
     }
 

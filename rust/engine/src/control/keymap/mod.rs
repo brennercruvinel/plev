@@ -87,12 +87,12 @@ macro_rules! actions {
             #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
             pub struct $name;
 
-            impl $crate::actions::Action for $name {
+            impl $crate::control::keymap::Action for $name {
                 fn name(&self) -> &'static str {
                     concat!(stringify!($namespace), "::", stringify!($name))
                 }
 
-                fn boxed_clone(&self) -> ::std::boxed::Box<dyn $crate::actions::Action> {
+                fn boxed_clone(&self) -> ::std::boxed::Box<dyn $crate::control::keymap::Action> {
                     ::std::boxed::Box::new(*self)
                 }
 
@@ -166,7 +166,7 @@ impl ActionRegistry {
 mod tests {
     use super::*;
 
-    crate::actions!(test_ns, [Save, Open, Quit]);
+    crate::control::keymap!(test_ns, [Save, Open, Quit]);
 
     // A manually implemented action carrying data.
     #[derive(Clone, Debug, PartialEq, Eq)]
@@ -197,7 +197,7 @@ mod tests {
 
     #[test]
     fn macro_accepts_trailing_comma() {
-        crate::actions!(trailing, [One, Two,]);
+        crate::control::keymap!(trailing, [One, Two,]);
         assert_eq!(One.name(), "trailing::One");
         assert_eq!(Two.name(), "trailing::Two");
     }

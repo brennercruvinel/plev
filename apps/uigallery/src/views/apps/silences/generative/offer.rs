@@ -14,20 +14,20 @@
 //! after (`composed`), and goes on from the page's wake when a step
 //! waited for a frame.
 
-use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use propose::compose::{Chain, Composer, Composite, Found, Shape, Target};
-use sem::{
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use offers::compose::{Chain, Composer, Composite, Found, Shape, Target};
+use accord::{
     Dispatcher, Execution, Millis, Policy, Request, RequestId, Role, SemId, Snapshot,
     SnapshotBuilder, Value,
 };
-use uir::IrNode;
+use plevir::IrNode;
 
 use super::super::SilencesPage;
-use crate::view::apps::app::TodoPage;
-use crate::view::dispatch::PERSON_ONLY;
+use crate::views::apps::todo::TodoPage;
+use crate::views::dispatcher::PERSON_ONLY;
 
 /// How many times in a row a sequence is repeated before the page offers
 /// it: the seed has two cuts, and an offer is only an offer.
@@ -298,7 +298,7 @@ fn on(shape: &Shape) -> String {
 impl SilencesPage {
     /// A person answers the composite offered: makes it one action, or
     /// not now.
-    pub(in crate::view::apps::silences) fn answer(
+    pub(in crate::views::apps::silences) fn answer(
         &mut self,
         todo: &mut TodoPage,
         answer: Answer,
@@ -314,14 +314,14 @@ impl SilencesPage {
     /// The composite offer read again from the page's composer: only a
     /// sequence of the page's own capabilities (its nodes, and the cuts
     /// as the items of their collection) is offered.
-    pub(in crate::view::apps::silences) fn refresh_offer(&mut self) {
+    pub(in crate::views::apps::silences) fn refresh_offer(&mut self) {
         let app = self.snapshot().ok();
         let ids = &self.ids;
         self.generated.offer.refresh(app.as_ref(), |shape| {
             ids.as_ref().is_some_and(|ids| {
                 shape.steps.iter().all(|s| match &s.target {
-                    propose::compose::Target::Node(id) => ids.holds(id),
-                    propose::compose::Target::Item(base) => base == ids.collection(),
+                    offers::compose::Target::Node(id) => ids.holds(id),
+                    offers::compose::Target::Item(base) => base == ids.collection(),
                 })
             })
         });
@@ -331,7 +331,7 @@ impl SilencesPage {
     /// composer hears it (the sink comes before the page's first
     /// request), the composites it started run their steps in the same
     /// lending, and the offer is read again after.
-    pub(in crate::view::apps::silences) fn composed<R>(
+    pub(in crate::views::apps::silences) fn composed<R>(
         &mut self,
         todo: &mut TodoPage,
         ask: impl FnOnce(&mut SilencesPage, &mut Dispatcher, Millis) -> R,
@@ -349,7 +349,7 @@ impl SilencesPage {
     /// `execute` of a composite installed: its chain is kept, to run
     /// right after the dispatch, and the request stays open until it
     /// ends. `None` for any other request.
-    pub(in crate::view::apps::silences) fn start_composite(
+    pub(in crate::views::apps::silences) fn start_composite(
         &mut self,
         id: RequestId,
         req: &Request,
@@ -363,7 +363,7 @@ impl SilencesPage {
     /// The composites running go on over the page until each ends or
     /// waits for a step that started (a frame to decode). True when one
     /// was running.
-    pub(in crate::view::apps::silences) fn run_chains(
+    pub(in crate::views::apps::silences) fn run_chains(
         &mut self,
         d: &mut Dispatcher,
         now: Millis,

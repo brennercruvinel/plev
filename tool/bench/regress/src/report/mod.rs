@@ -13,7 +13,7 @@ pub use describe::describe;
 pub use json::write_json;
 pub use text::{body, text};
 
-use sem::{Change, Snapshot};
+use accord::{Change, Snapshot};
 use serde::Serialize;
 
 use crate::compare::{LayerDelta, Status};
@@ -311,8 +311,8 @@ mod tests {
     use crate::compare;
     use crate::pixels;
     use crate::scene::LayerRecord;
-    use engine::headless::Frame;
-    use sem::{Role, SemId, SnapshotBuilder};
+    use engine::drawing::headless::Frame;
+    use accord::{Role, SemId, SnapshotBuilder};
     use std::time::Duration;
 
     fn id(text: &str) -> SemId {

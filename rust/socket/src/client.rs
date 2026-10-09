@@ -6,12 +6,12 @@ use std::os::unix::net::UnixStream;
 use std::path::Path;
 use std::time::Duration;
 
-use sem::Actor;
+use accord::Actor;
 
-use crate::codec::{decode_server, encode_client};
+use crate::framing::{decode_server, encode_client};
 use crate::error::WireError;
 use crate::place::io;
-use crate::proto::{Act, Ask, ClientMsg, Observe, Reply, ServerMsg, StageReply};
+use crate::protocol::{Act, Ask, ClientMsg, Observe, Reply, ServerMsg, StageReply};
 
 /// a connection to an agent port. ids are numbered from 1.
 pub struct Client {

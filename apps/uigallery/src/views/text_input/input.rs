@@ -4,17 +4,17 @@
 //! active overlay, the open select, the chrome, the page, the page
 //! scroll), and the demo overlays the Dialog and Context Menu pages open.
 
-use comps::overlay::OverlayKind;
-use comps::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
-use engine::input::FileDrop;
-use engine::theme::Intent;
+use engine::widgets::overlay::OverlayKind;
+use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use engine::control::input::FileDrop;
+use engine::styling::theme::Intent;
 
-use sem::Value;
+use accord::Value;
 
-use super::components::context_menu;
-use super::dispatch::keyboard::Walk;
-use super::dispatch::{ShellTarget, overlay};
-use super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
+use super::super::components::context_menu;
+use super::super::dispatcher::keyboard::Walk;
+use super::super::dispatcher::{ShellTarget, overlay};
+use super::super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
 /// headless tests can drive them).
@@ -50,7 +50,7 @@ impl EditKey {
 
 /// The field-level subset. Tab is focus traversal, never an edit, so it
 /// is the one key that panics here: callers match it out first.
-impl From<EditKey> for comps::form::EditKey {
+impl From<EditKey> for engine::widgets::form::EditKey {
     fn from(key: EditKey) -> Self {
         match key {
             EditKey::Backspace => Self::Backspace,
@@ -393,7 +393,7 @@ impl ShowcaseView {
         // the dispatcher (`dispatch::overlay`), as a reader's press is.
         let held = self.overlay_holds_pointer();
         if held && let Some(active) = &mut self.active_overlay {
-            let (asked, changed): (Option<(sem::SemId, &str)>, bool) = match active {
+            let (asked, changed): (Option<(accord::SemId, &str)>, bool) = match active {
                 ActiveOverlay::Modal { widget, .. } => {
                     let (action, r) = widget.handle_event(event, &self.theme, vw, vh);
                     let button = match action {

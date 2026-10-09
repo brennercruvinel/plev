@@ -7,11 +7,11 @@
 use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{HeadlessError, Renderer, Viewport};
-use git::{GitClient, GitEvent};
-use ide::workbench::Workbench;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
+use gitdrv::{GitClient, GitEvent};
+use idestudio::capability::Workbench;
 
 use crate::repo::Repo;
 

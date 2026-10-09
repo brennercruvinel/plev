@@ -6,12 +6,12 @@
 //! with nothing declared the verifier refuses the IR naming what is
 //! missing, and with the app's registry it passes.
 
-use uir::{CapabilityRef, Component, IrNode};
+use plevir::{CapabilityRef, Component, IrNode};
 
 use super::props::{Decision, text};
 use super::{Cx, parse_as, sanitize};
 use crate::ParserError;
-use crate::ir::{AttrValue, ParserNode, Tag, TextValue, snake_case};
+use crate::tree::{AttrValue, ParserNode, Tag, TextValue, snake_case};
 use crate::report::{Binding, Need, Verdict};
 
 /// A control the source names.
@@ -457,7 +457,7 @@ impl Cx<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::{Attr, Src};
+    use crate::tree::{Attr, Src};
 
     fn element(tag: &str, attrs: &[(&str, AttrValue)]) -> ParserNode {
         let mut p = ParserNode::new(Tag::Div, vec![], vec![]);

@@ -3,7 +3,7 @@
 //! app's one dispatcher as a screen reader's requests.
 
 use accesskit::{Action, ActionData, ActionRequest, Node as AkNode, Role as Ak, Toggled, TreeId};
-use sem::{
+use accord::{
     Actor, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec, Policy, Request,
     RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, Stage, Value, ValueKind,
 };
@@ -11,7 +11,7 @@ use sem::{
 use super::super::action::{Assist, Unmapped, primary, setter, translate};
 use super::super::ids::{NodeIds, ROOT};
 use super::super::tree::{self, Chrome, Shown};
-use crate::compositor::Compositor;
+use crate::drawing::compositor::Compositor;
 
 fn sid(text: &str) -> SemId {
     match SemId::parse(text) {

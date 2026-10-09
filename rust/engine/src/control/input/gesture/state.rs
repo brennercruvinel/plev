@@ -1,4 +1,4 @@
-use crate::input::SwipeDirection;
+use crate::control::input::SwipeDirection;
 
 // ---------------------------------------------------------------------------
 // GestureState -- 6-state machine

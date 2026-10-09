@@ -1,8 +1,8 @@
 //! Badge page: counts and tags, per intent, flowing in a row.
 
-use comps::prelude::{Badge, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
+use engine::widgets::prelude::{Badge, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{Intent, Theme};
 
 use super::flow;
 

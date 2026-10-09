@@ -8,8 +8,8 @@
 use std::path::PathBuf;
 
 use urna_format::{ChunkInput, Edge, Manifest, UrnaFileBuilder, encode_graph_adjacency};
-use urnaui::model::backend::UrnaBackend;
-use urnaui::model::types::SearchMode;
+use urnadbapp::backend::sources::native::UrnaBackend;
+use urnadbapp::backend::workers::messages::SearchMode;
 
 /// Build a small 3-chunk float32 corpus in a tempdir and return its path
 /// (the tempdir guard is leaked so the path outlives the test body — the

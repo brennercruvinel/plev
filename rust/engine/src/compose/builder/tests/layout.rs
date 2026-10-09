@@ -2,9 +2,9 @@
 //! (one `TextStyle` shared by measurement and drawing).
 
 use super::test_cx;
-use crate::builder::*;
-use crate::compositor::SceneNode;
-use crate::view::View;
+use crate::compose::builder::*;
+use crate::drawing::compositor::SceneNode;
+use crate::compose::view::View;
 
 #[test]
 fn column_layout_stacks_vertically() {
@@ -54,7 +54,7 @@ fn tracking_reaches_text_measure_spec() {
     let el = text("Research Social").tracking(2.0);
     let mut items = Vec::new();
     let mut elements = Vec::new();
-    crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+    crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
     let spec = items[0]
         .text
         .as_ref()
@@ -83,7 +83,7 @@ fn measure_spec_and_node_key_share_one_text_style() {
 
     let mut items = Vec::new();
     let mut elements = Vec::new();
-    crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+    crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
     let spec = items[0].text.as_ref().expect("measure spec").clone();
 
     let nodes = el.render(&mut test_cx());
@@ -107,8 +107,8 @@ fn tracking_widens_builder_text_measurement() {
     let measure = |el: Element| {
         let mut items = Vec::new();
         let mut elements = Vec::new();
-        crate::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
-        let mut engine = crate::layout::LayoutEngine::new();
+        crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+        let mut engine = crate::compose::layout::LayoutEngine::new();
         engine.compute(&items, 800.0, 600.0)[0].width
     };
     let plain = measure(text("Research Social"));

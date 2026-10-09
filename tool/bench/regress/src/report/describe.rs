@@ -1,11 +1,11 @@
 //! A semantic change in a few words, and the node it is about.
 
-use sem::{Change, Value};
+use accord::{Change, Value};
 
 /// The node a semantic change is about (`None`: the page, for the focus
 /// and the order of the roots), and the change in a few words.
 pub fn describe(change: &Change) -> (Option<String>, String) {
-    let id = |id: &sem::SemId| Some(id.to_string());
+    let id = |id: &accord::SemId| Some(id.to_string());
     match change {
         Change::NodeAdded(node) => (
             id(&node.id),
@@ -33,7 +33,7 @@ pub fn describe(change: &Change) -> (Option<String>, String) {
             before,
             after,
         } => {
-            let names = |a: &[sem::ActionDecl]| {
+            let names = |a: &[accord::ActionDecl]| {
                 a.iter()
                     .map(|d| d.name.to_string())
                     .collect::<Vec<_>>()
@@ -86,7 +86,7 @@ pub fn describe(change: &Change) -> (Option<String>, String) {
     }
 }
 
-fn opt(id: &Option<sem::SemId>) -> String {
+fn opt(id: &Option<accord::SemId>) -> String {
     id.as_ref().map_or("none".to_string(), ToString::to_string)
 }
 
@@ -108,7 +108,7 @@ fn value(v: Option<&Value>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{SemId, StateRef};
+    use accord::{SemId, StateRef};
 
     fn id(text: &str) -> SemId {
         match SemId::parse(text) {

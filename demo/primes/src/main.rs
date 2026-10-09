@@ -15,14 +15,14 @@ mod scene;
 
 use std::sync::Arc;
 
-use engine::color::Color;
-use engine::compositor::{Compositor, ResolveResources};
-use engine::effects::EffectProcessor;
-use engine::gpu::GpuContext;
-use engine::gpu::texture_pool::TexturePool;
-use engine::text::TextSystem;
-use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
-use prime::sim::{Simulation, params};
+use engine::styling::color::Color;
+use engine::drawing::compositor::{Compositor, ResolveResources};
+use engine::drawing::effects::EffectProcessor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::gpu::texture_pool::TexturePool;
+use engine::drawing::text::TextSystem;
+use engine::runtime::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use primes::simulation::{Simulation, parameters};
 use web_time::Instant;
 use winit::application::ApplicationHandler;
 use winit::event::{ElementState, MouseButton, WindowEvent};
@@ -264,7 +264,7 @@ impl ApplicationHandler<UserEvent> for App {
         let window = Arc::new(event_loop.create_window(attrs).unwrap());
 
         #[cfg(target_arch = "wasm32")]
-        if let Err(e) = engine::window::setup_wasm_canvas(&window) {
+        if let Err(e) = engine::runtime::window::setup_wasm_canvas(&window) {
             log::error!("wasm canvas setup failed: {e}");
         }
 

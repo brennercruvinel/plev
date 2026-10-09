@@ -3,10 +3,10 @@
 
 use accesskit::NodeId;
 use rustc_hash::FxHashSet;
-use sem::{Constraints, ParamSpec, SnapshotBuilder, ValueKind};
+use accord::{Constraints, ParamSpec, SnapshotBuilder, ValueKind};
 
 use super::*;
-use crate::compositor::SceneNode;
+use crate::drawing::compositor::SceneNode;
 
 fn sid(text: &str) -> SemId {
     match SemId::parse(text) {

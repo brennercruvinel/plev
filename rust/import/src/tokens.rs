@@ -18,9 +18,9 @@
 //! - typography: the larger of the font size and line height differences in
 //!   pixels, among the roles of the same weight when there is one.
 
-use uir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
+use plevir::{ColorRole, ShapeRole, SizeToken, SpacingToken, TypographyRole};
 
-use crate::css_map::token_rgba;
+use crate::formats::react::css::token_rgba;
 
 /// A text style of the type ramp: what `theme.typography.<role>()` gives.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -148,7 +148,7 @@ impl Tokens {
         for t in SizeToken::ALL {
             check("size", t.as_str(), self.sizes.iter().any(|(k, _)| k == t));
         }
-        for e in crate::css_map::NAMED_EXPRS {
+        for e in crate::formats::react::css::NAMED_EXPRS {
             check("expression", e, self.exprs.iter().any(|(k, _)| k == e));
         }
         out

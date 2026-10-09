@@ -31,7 +31,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-use propose::{Model, ModelError};
+use offers::{Model, ModelError};
 
 /// the Claude Code a `ClaudeCli` runs, when `PLEV_CLAUDE` names no other.
 pub const PROGRAM: &str = "claude";

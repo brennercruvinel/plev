@@ -19,20 +19,20 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use engine::animation::FrameClock;
-use engine::compositor::{Compositor, QuadVertex};
-use engine::gpu::{GpuContext, RenderConfig};
-use engine::headless::{Renderer, Viewport, read_texture};
-use engine::path::TessellatedPath;
-use engine::text::TextSystem;
-use engine::window::{draw_frame, present_frame};
+use engine::compose::animation::FrameClock;
+use engine::drawing::compositor::{Compositor, QuadVertex};
+use engine::drawing::gpu::{GpuContext, RenderConfig};
+use engine::drawing::headless::{Renderer, Viewport, read_texture};
+use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::TextSystem;
+use engine::runtime::window::{draw_frame, present_frame};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::{ElementState, WindowEvent};
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
 use engine::winit::keyboard::{Key, NamedKey};
 use engine::winit::window::{Window, WindowAttributes, WindowId};
-use monster::asset_path::unpack;
-use monster::{AssetKind, LoweredAsset, MonsterPlayer};
+use motion::encoding::asset_path::unpack;
+use motion::{AssetKind, LoweredAsset, MonsterPlayer};
 
 // Linear clear values (sRGB graphite #171A1F linearized): the sRGB
 // surface re-encodes on write, raw sRGB here would render ~2.5x light.
@@ -48,8 +48,8 @@ enum AppState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
+        effects: engine::drawing::effects::EffectProcessor,
+        texture_pool: engine::drawing::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -192,12 +192,12 @@ impl ApplicationHandler for MonsterApp {
             surface.configure(&gpu.device, &gpu.surface_config);
         }
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,
             effects,
-            texture_pool: engine::gpu::texture_pool::TexturePool::new(),
+            texture_pool: engine::drawing::gpu::texture_pool::TexturePool::new(),
         };
         self.player.play();
     }
@@ -354,14 +354,14 @@ fn main() {
         );
         std::process::exit(1);
     }
-    let doc = match monster::decode(&bytes) {
+    let doc = match motion::decode(&bytes) {
         Ok(d) => d,
         Err(e) => {
             eprintln!("cannot decode {path}: {e}");
             std::process::exit(1);
         }
     };
-    let (sw, sh) = monster::stage_size(&doc.descs).unwrap_or((WINDOW, WINDOW));
+    let (sw, sh) = motion::stage_size(&doc.descs).unwrap_or((WINDOW, WINDOW));
     let scale = (WINDOW / sw).min(WINDOW / sh) * 0.95;
     let (dx, dy) = ((WINDOW - sw * scale) / 2.0, (WINDOW - sh * scale) / 2.0);
     let assets: Vec<LoweredAsset> = doc

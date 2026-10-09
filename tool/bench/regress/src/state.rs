@@ -27,12 +27,12 @@
 //! instant, so no ffmpeg runs and the frame is the same on every machine
 //! (a layer hashes an image by its size, `hash.rs`).
 
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use engine::headless::{Frame, Renderer, Viewport};
-use sem::{Actor, Request, Snapshot, Value};
-use showcase::app::{RenderError, StagedPage, stage_page};
-use showcase::view::ShowcaseView;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use engine::drawing::headless::{Frame, Renderer, Viewport};
+use accord::{Actor, Request, Snapshot, Value};
+use uigallery::shell::{RenderError, StagedPage, stage_page};
+use uigallery::views::ShowcaseView;
 
 /// Animation steps a state may take to settle, and one step: the clock of
 /// `stage_page` (120 steps at 60 Hz), so a state settles as a page does.
@@ -334,7 +334,7 @@ impl StagedState {
             }
         }
         for json in state.ops {
-            let op: uir::Op =
+            let op: plevir::Op =
                 serde_json::from_str(json).map_err(|e| format!("{}: {json}: {e}", state.name))?;
             view.stage_silences_op(op, harness())
                 .map_err(|e| format!("{}: {e}", state.name))?;
@@ -390,7 +390,7 @@ fn act(
         .act(req)
         .ok_or_else(|| format!("{target} {action}: not taken"))?;
     match receipt.stage() {
-        Some(sem::Stage::Completed(_)) => Ok(()),
+        Some(accord::Stage::Completed(_)) => Ok(()),
         other => Err(format!("{target} {action}: {other:?}")),
     }
 }
@@ -420,7 +420,7 @@ fn ask(view: &mut ShowcaseView, asked: &Asked) -> Result<(), String> {
     .map_err(|e| format!("propose: {e}"))?;
     let receipt = view.act(req).ok_or("propose: not taken")?;
     match (receipt.stage(), asked.taken) {
-        (Some(sem::Stage::Completed(_)), true) | (Some(sem::Stage::Failed { .. }), false) => Ok(()),
+        (Some(accord::Stage::Completed(_)), true) | (Some(accord::Stage::Failed { .. }), false) => Ok(()),
         (other, _) => Err(format!("\"{}\": {other:?}", asked.intent)),
     }
 }

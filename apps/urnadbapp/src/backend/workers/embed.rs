@@ -175,8 +175,8 @@ fn locate_script(rel: &Path) -> Option<PathBuf> {
 /// success; the shared subprocess helper drains the pipes so a long JSON
 /// vector can never wedge the child.
 fn run_with_timeout(program: &str, args: &[String]) -> Result<Vec<u8>, EmbedError> {
-    use crate::model::subprocess::RunError;
-    crate::model::subprocess::run(program, args, EMBED_TIMEOUT).map_err(|e| match e {
+    use crate::backend::workers::subprocess::RunError;
+    crate::backend::workers::subprocess::run(program, args, EMBED_TIMEOUT).map_err(|e| match e {
         RunError::Spawn(source) => EmbedError::Spawn {
             interpreter: program.to_string(),
             source,

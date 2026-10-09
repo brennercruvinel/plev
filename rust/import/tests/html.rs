@@ -11,8 +11,8 @@
 #[allow(dead_code)]
 mod support;
 
-use parser::Category;
-use parser::html::{HtmlChild, HtmlNode};
+use import::Category;
+use import::formats::html::parse::{HtmlChild, HtmlNode};
 use support::checks::*;
 use support::*;
 
@@ -50,7 +50,7 @@ fn census(src: &str) -> Vec<Site> {
             }
         }
     }
-    let doc = parser::html::parse_html(src).expect("html");
+    let doc = import::formats::html::parse::parse_html(src).expect("html");
     let mut out = Vec::new();
     for n in &doc.nodes {
         walk(n, &mut out);
@@ -70,7 +70,7 @@ fn census(src: &str) -> Vec<Site> {
 fn the_html_note_card_ir_its_report_and_its_code() {
     let imported = import_html();
     goldens(&imported, "html");
-    let code = parser::transpile_html((FILE, &source())).expect("html");
+    let code = import::transpile_html((FILE, &source())).expect("html");
     check_golden("html/expected.rs", &code.code);
     let r = &imported.report;
     let at = |line: u32, what: &str| {
@@ -122,8 +122,8 @@ fn the_html_note_card_needs_the_same_app_as_the_react_one() {
         .bindings
         .iter()
         .map(|b| match &b.need {
-            parser::Need::Action { action, .. } => action.clone(),
-            parser::Need::State { reference, .. } => reference.clone(),
+            import::Need::Action { action, .. } => action.clone(),
+            import::Need::State { reference, .. } => reference.clone(),
         })
         .collect();
     assert_eq!(actions, ["reply", "open"]);
@@ -135,6 +135,6 @@ fn the_html_note_card_needs_the_same_app_as_the_react_one() {
 #[test]
 fn an_html_import_is_deterministic_and_a_broken_one_an_error() {
     assert_eq!(import_html(), import_html());
-    let broken = parser::import_html(("x.html", "<style>.a { color: }}}</style>"), &hoff());
-    assert!(matches!(broken, Err(parser::ParserError::Parse(_))));
+    let broken = import::import_html(("x.html", "<style>.a { color: }}}</style>"), &hoff());
+    assert!(matches!(broken, Err(import::ParserError::Parse(_))));
 }

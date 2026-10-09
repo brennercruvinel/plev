@@ -25,7 +25,7 @@ use std::collections::VecDeque;
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
-use sem::{SemId, Value};
+use accord::{SemId, Value};
 
 use super::menu::{Clicked, MenuError, MenuItem, Submenu, locked};
 
@@ -347,9 +347,9 @@ pub fn default_tray(wake: impl Fn() + Send + Sync + 'static) -> Box<dyn Tray> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{ActionName, Constraints, Policy, Role, Snapshot, SnapshotBuilder};
+    use accord::{ActionName, Constraints, Policy, Role, Snapshot, SnapshotBuilder};
 
-    use crate::platform::menu::Predefined;
+    use crate::runtime::platform::menu::Predefined;
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).unwrap()
@@ -365,7 +365,7 @@ mod tests {
             .enabled(can_show)
             .action("activate")
             .policy(Policy {
-                actors: sem::Actors {
+                actors: accord::Actors {
                     agent: false,
                     ..sem::Actors::default()
                 },
@@ -380,8 +380,8 @@ mod tests {
                 ..Constraints::default()
             })
             .action("select")
-            .param(sem::ParamSpec {
-                kind: sem::ValueKind::Text,
+            .param(accord::ParamSpec {
+                kind: accord::ValueKind::Text,
                 constrained: true,
             })
             .reads("shell.theme:selected");

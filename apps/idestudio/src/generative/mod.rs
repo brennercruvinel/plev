@@ -31,17 +31,17 @@ mod column;
 
 use std::time::Duration;
 
-use claude_model::ClaudeCli;
-use comps::prelude::{Button, ButtonSize, Select, TextField, Wake};
-use propose::{Ask, Llm, Model, Rules, propose_verified};
-use sem::{
+use claude::ClaudeCli;
+use engine::widgets::prelude::{Button, ButtonSize, Select, TextField, Wake};
+use offers::{Ask, Llm, Model, Rules, propose_verified};
+use accord::{
     Actor, Execution, Outcome, Request, RequestId, Role, SemError, SemErrors, SemId, Snapshot,
     SnapshotBuilder, Value,
 };
-use surface::SurfaceHost;
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use screen::SurfaceHost;
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
-use crate::workbench::Workbench;
+use crate::capability::Workbench;
 use claude::{Claude, POLL, Pending};
 
 /// The region the line projects under.

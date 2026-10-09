@@ -1,9 +1,9 @@
 //! Stat page: readouts with unit and delta in three sizes.
 
-use comps::content::{Stat, StatSize};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
+use engine::widgets::content::{Stat, StatSize};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{Intent, Theme};
 
 use super::flow;
 

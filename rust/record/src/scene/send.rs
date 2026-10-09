@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 
-use engine::compositor::{Compositor, Layer, SceneNode};
+use engine::drawing::compositor::{Compositor, Layer, SceneNode};
 
 use super::asset::{self, Pixels};
 use super::bytes::fnv;
@@ -123,13 +123,13 @@ impl Sender {
         assets: &mut Vec<(u64, Arc<[u8]>)>,
     ) -> Drawn {
         let (key, build): (u64, &dyn Fn() -> Arc<[u8]>) = match node {
-            SceneNode::Image { image, .. } if engine::gpu::image_is_stream(image) => {
+            SceneNode::Image { image, .. } if engine::drawing::gpu::image_is_stream(image) => {
                 (asset::image_key(image, true), &|| {
                     asset::image_asset(image, Pixels::Live)
                 })
             }
             SceneNode::Image { image, .. } => (asset::image_key(image, false), &|| {
-                let pixels = engine::gpu::image_pixels(image);
+                let pixels = engine::drawing::gpu::image_pixels(image);
                 let pixels = pixels.as_deref().map_or(Pixels::Missing, Pixels::Here);
                 asset::image_asset(image, pixels)
             }),

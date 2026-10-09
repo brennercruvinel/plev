@@ -3,8 +3,8 @@
 //! stale case, the bindings beside the scene, and the inert background.
 
 use super::*;
-use crate::view::apps::app::semantics::bounds;
-use sem::{
+use crate::views::apps::todo::semantics::bounds;
+use accord::{
     Actor, Change, Rejection, Request, Role, SemId, Snapshot, Stage, StateRef, Value, Verdict,
 };
 
@@ -399,7 +399,7 @@ fn an_inert_page_refuses_every_request_and_takes_no_input() {
     let seen = s.snapshot().unwrap();
     let req = Request::observe(&seen, Actor::Human, "todo.item[2]", "remove", None).unwrap();
     assert!(matches!(
-        sem::check(&req, &seen),
+        accord::decision(&req, &seen),
         Verdict::Rejected(Rejection::Inert { .. })
     ));
 
@@ -410,7 +410,7 @@ fn an_inert_page_refuses_every_request_and_takes_no_input() {
 
 #[test]
 fn an_open_modal_leaves_the_todo_page_inert() {
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     let mut view = ShowcaseView::new(1200.0, 800.0);
     view.jump_to_page("todo");

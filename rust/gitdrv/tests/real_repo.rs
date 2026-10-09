@@ -8,7 +8,7 @@ use std::process::Command;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-use git::{CommitCheck, DiffLineKind, GitClient, GitCommand, GitEvent, GitRepo, StatusKind};
+use gitdrv::{CommitCheck, DiffLineKind, GitClient, GitCommand, GitEvent, GitRepo, StatusKind};
 use tempfile::TempDir;
 
 /// Creates a repo with a deterministic identity and one initial commit

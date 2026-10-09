@@ -10,7 +10,7 @@
 //! what the widget already declares. a new component needs the widget in
 //! comps first and an ADR.
 
-use sem::{Role, ValueKind};
+use accord::{Role, ValueKind};
 use serde::{Deserialize, Serialize};
 
 use crate::ir::Bind;

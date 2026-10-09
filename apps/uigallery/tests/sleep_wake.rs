@@ -10,13 +10,13 @@
 //! the headless tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use engine::gpu::RenderConfig;
-use engine::headless::Frame;
-use engine::window::{Background, Routed, WindowHost, Windows};
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::Frame;
+use engine::runtime::window::{Background, Routed, WindowHost, Windows};
 use engine::winit::event::WindowEvent;
 use engine::winit::window::WindowId;
-use sem::{Actor, Request, SemId, Value};
-use showcase::view::ShowcaseView;
+use accord::{Actor, Request, SemId, Value};
+use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);
 const A: WindowId = WindowId::dummy();
@@ -79,7 +79,7 @@ fn toggle(view: &mut ShowcaseView, item: &SemId) {
     let req = Request::observe(&seen, Actor::Human, item, "toggle", None).expect("observed");
     let receipt = view.act(req).expect("the page takes it");
     assert!(
-        matches!(receipt.stage(), Some(sem::Stage::Completed(_))),
+        matches!(receipt.stage(), Some(accord::Stage::Completed(_))),
         "{:?}",
         receipt.stage()
     );

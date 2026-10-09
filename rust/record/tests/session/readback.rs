@@ -3,8 +3,8 @@
 //! recording exactly as they were. the reader holds no dispatcher and no
 //! app; a session rebuilt from its events alone reads the same.
 
-use rec::{Limits, Recorder, Session};
-use sem::{Actor, Dispatcher, Request, RequestId, SemId};
+use record::{Limits, Recorder, Session};
+use accord::{Actor, Dispatcher, Request, RequestId, SemId};
 
 use crate::apps::{Git, agent, look};
 

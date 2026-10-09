@@ -26,15 +26,15 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 
-use comps::form::TextField;
-use comps::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
-use engine::input::scroll::ScrollState;
-use engine::theme::Theme;
-use sem::Dispatcher;
-use showcase::model::todo::{Filter, TodoModel};
+use engine::widgets::form::TextField;
+use engine::widgets::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
+use engine::control::input::scroll::ScrollState;
+use engine::styling::theme::Theme;
+use accord::Dispatcher;
+use crate::domain::todo::{Filter, TodoModel};
 
 use super::EditKey;
-use crate::view::clipboard::Keys;
+use crate::views::text_input::clipboard::Keys;
 use layout::*;
 use semantics::{Ids, Target};
 
@@ -280,7 +280,7 @@ impl TodoPage {
 
     /// The add field has the keys while focused (a chord), not while an
     /// overlay holds the page.
-    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
         if self.inert || !self.input.is_focused() {
             return Keys::Nobody;
         }

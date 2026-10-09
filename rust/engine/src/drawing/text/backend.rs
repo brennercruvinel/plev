@@ -7,7 +7,7 @@
 
 use std::ops::Range;
 
-use crate::layout::ComputedBounds;
+use crate::compose::layout::ComputedBounds;
 
 use super::measure::{ShapedText, TextMeasurer};
 

@@ -5,8 +5,8 @@
 
 use std::collections::BTreeSet;
 
-use sem::{ActionDecl, Actor, Actors, Node, Role, SemId, Snapshot, StateRef, Value, ValueKind};
-use uir::{Capabilities, CapabilityRef};
+use accord::{ActionDecl, Actor, Actors, Node, Role, SemId, Snapshot, StateRef, Value, ValueKind};
+use plevir::{Capabilities, CapabilityRef};
 
 use crate::list::{List, lists};
 use crate::words::{fold, folded, split};

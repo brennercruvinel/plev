@@ -2,10 +2,10 @@
 //! the person's request), on a `LocalClipboard`: no test here touches
 //! the system's clipboard.
 
-use engine::clipboard::{ClipboardProvider, LocalClipboard};
+use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 
-use crate::form::text_input::*;
-use crate::form::{ClipKey, TextField};
+use crate::widgets::form::text_input::*;
+use crate::widgets::form::{ClipKey, TextField};
 
 fn field(text: &str) -> TextField {
     let mut f = TextField::new("Full name").with_text(text);

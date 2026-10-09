@@ -1,7 +1,7 @@
 //! `Limits`, what the ring keeps and how often it keys a track, and
 //! `Stats`, what the recorder counted while recording.
 
-use sem::Millis;
+use accord::Millis;
 
 /// what the ring keeps, by time and by bytes, and how often it keys each
 /// track. both limits cut only at a keyframe, so what the ring keeps

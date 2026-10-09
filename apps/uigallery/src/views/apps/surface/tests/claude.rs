@@ -19,19 +19,19 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use claude_model::ClaudeCli;
-use engine::compositor::Compositor;
-use sem::{Actor, Rejection, Request, RequestId, Stage, StateRef, Value};
+use claude::ClaudeCli;
+use engine::drawing::compositor::Compositor;
+use accord::{Actor, Rejection, Request, RequestId, Stage, StateRef, Value};
 use serde_json::json;
 use tempfile::TempDir;
-use wire::{Act, AgentPort, Client, Config, Observe, Reply};
+use socket::{Act, AgentPort, Client, Config, Observe, Reply};
 
 use super::super::SurfacePage;
 use super::super::asking::{Claude, POLL};
-use super::super::proposing::Said;
+use super::super::offering::Said;
 use super::{TURN, center, click, frame, setup, sid, text, value, wide};
-use crate::view::ShowcaseView;
-use crate::view::apps::app::TodoPage;
+use crate::views::ShowcaseView;
+use crate::views::apps::todo::TodoPage;
 
 const INTENT: &str = "the items as a list with the add field on top";
 
@@ -348,7 +348,7 @@ fn the_claude_answers_and_the_surface_takes_the_form_with_what_was_typed() {
         center(&c, "todo_panel.input"),
     );
     type_in(&mut page, &mut todo, "buy");
-    assert!(page.handle_edit_key(crate::view::EditKey::Left, &mut todo));
+    assert!(page.handle_edit_key(crate::views::EditKey::Left, &mut todo));
     assert!(
         page.snapshot(&todo)
             .unwrap()
@@ -441,7 +441,7 @@ fn without_the_program_the_proposer_offers_the_rules_alone() {
     let proposer = snap
         .get(&sid("surface_page.proposer"))
         .expect("the proposer");
-    assert_eq!(proposer.role, sem::Role::Select);
+    assert_eq!(proposer.role, accord::Role::Select);
     assert_eq!(proposer.constraints.options, Some(vec!["rules".to_owned()]));
     assert_eq!(
         value(&page, &todo, "surface_page.proposer:selected"),
@@ -552,7 +552,7 @@ fn gallery<T: Send + 'static>(
     (agent.join().unwrap(), view, c)
 }
 
-fn snapshot(reply: Reply) -> wire::SnapshotReply {
+fn snapshot(reply: Reply) -> socket::SnapshotReply {
     match reply {
         Reply::Snapshot(s) => s,
         other => panic!("a snapshot: {other:?}"),
@@ -563,10 +563,10 @@ fn act(
     c: &mut Client,
     target: &str,
     action: &str,
-    r: sem::Revision,
+    r: accord::Revision,
     param: Option<Value>,
 ) -> Vec<&'static str> {
-    let mut act = Act::from_revision(sid(target), sem::ActionName::parse(action).unwrap(), r);
+    let mut act = Act::from_revision(sid(target), accord::ActionName::parse(action).unwrap(), r);
     if let Some(p) = param {
         act = act.with_param(p);
     }
@@ -584,7 +584,7 @@ fn agent_proposes(
     path: PathBuf,
     intent: &str,
     timeout_ms: u64,
-) -> (Vec<&'static str>, wire::SnapshotReply) {
+) -> (Vec<&'static str>, socket::SnapshotReply) {
     let mut c = Client::connect(&path).unwrap();
     c.set_timeout(Some(timeout_ms)).unwrap();
     c.hello("claude").unwrap();
@@ -618,9 +618,9 @@ fn agent_proposes(
     (proposed, after)
 }
 
-fn state_of(reply: &wire::SnapshotReply, id: &str, key: &str) -> Option<Value> {
+fn state_of(reply: &socket::SnapshotReply, id: &str, key: &str) -> Option<Value> {
     let node = reply.nodes.iter().find(|n| n.id == sid(id))?;
-    node.state.get(&sem::StateKey::parse(key).unwrap()).cloned()
+    node.state.get(&accord::StateKey::parse(key).unwrap()).cloned()
 }
 
 /// Through the real port, no window: an agent chooses the Claude (the
@@ -693,8 +693,8 @@ fn an_agent_asks_the_claude_through_the_port_and_the_act_completes_later() {
 #[test]
 #[ignore = "asks the real claude: a call of the plan, seconds to minutes"]
 fn the_real_claude_proposes_through_the_port() {
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
 
     let cli = ClaudeCli::new();
     assert!(
@@ -759,7 +759,7 @@ fn the_real_claude_proposes_through_the_port() {
         frame
             .write_png(path.with_extension("png"))
             .expect("the png writes");
-        let json = crate::app::semantics_json(&snap, false).expect("the json");
+        let json = crate::shell::semantics_json(&snap, false).expect("the json");
         std::fs::write(path.with_extension("json"), json).expect("the json writes");
         println!("wrote {}.png and .json", path.display());
     }

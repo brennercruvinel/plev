@@ -7,14 +7,14 @@
 //! `toggle`, `set_value`, `select`, `confirm`, `cancel`) and its value;
 //! the surface turns it into a request for the capability the IR bound.
 
-use comps::action::{Button, ButtonVariant, Chip, IconButton, SubmitButton};
-use comps::content::{Column, Table};
-use comps::form::{Checkbox, Select, Slider, Switch, TextField};
-use comps::nav::Tabs;
-use comps::{EventResult, Rect, Wake, WidgetEvent};
-use engine::theme::{ControlSize, Theme};
-use sem::{Snapshot, Value};
-use uir::{CapabilityRef, Component};
+use engine::widgets::buttons::{Button, ButtonVariant, Chip, IconButton, SubmitButton};
+use engine::widgets::content::{Column, Table};
+use engine::widgets::form::{Checkbox, Select, Slider, Switch, TextField};
+use engine::widgets::nav::Tabs;
+use engine::widgets::{EventResult, Rect, Wake, WidgetEvent};
+use engine::styling::theme::{ControlSize, Theme};
+use accord::{Snapshot, Value};
+use plevir::{CapabilityRef, Component};
 
 use crate::code::Code;
 use crate::expand::Node;
@@ -73,7 +73,7 @@ pub(crate) enum Widget {
 pub(crate) fn declared<'a>(
     shown: &'a Snapshot,
     cap: &CapabilityRef,
-) -> Option<(&'a sem::Node, &'a sem::ActionDecl)> {
+) -> Option<(&'a accord::Node, &'a accord::ActionDecl)> {
     let node = shown.get(&cap.target)?;
     let decl = node.actions.iter().find(|a| a.name == cap.action)?;
     Some((node, decl))
@@ -522,8 +522,8 @@ pub(crate) fn dialog_buttons(d: &DialogButtons, rect: Rect, theme: &Theme) -> (R
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sem::{SemId, StateRef};
-    use uir::{Bind, Props, Size};
+    use accord::{SemId, StateRef};
+    use plevir::{Bind, Props, Size};
 
     fn button(busy: bool) -> Node {
         let mut bind = Bind::default();

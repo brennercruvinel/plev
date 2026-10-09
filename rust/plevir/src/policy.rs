@@ -2,7 +2,7 @@
 //! within. the defaults are conservative: an agent wrote it, and it is
 //! sized for a surface a person reads at once.
 
-use sem::Actor;
+use accord::Actor;
 
 /// how deep a tree is ever walked, whatever the policy says: past it the
 /// decoder and the verifier stop descending, so a pathological input

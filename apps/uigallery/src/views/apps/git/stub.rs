@@ -1,13 +1,13 @@
 //! The git section where no git worker can run (web, mobile): one line
 //! saying so, same contract as the desktop section.
 
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 
 use super::super::text;
 use super::{GitWake, NavKey};
-use crate::view::clipboard::Keys;
+use crate::views::text_input::clipboard::Keys;
 
 pub struct GitPage;
 
@@ -29,7 +29,7 @@ impl GitPage {
     }
 
     /// No field: nobody has the keys.
-    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
         Keys::Nobody
     }
 

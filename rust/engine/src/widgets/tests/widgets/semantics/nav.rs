@@ -1,7 +1,7 @@
 //! tabs, nav link, breadcrumb and split pane.
 
 use super::*;
-use sem::Constraints;
+use accord::Constraints;
 
 // Tabs
 

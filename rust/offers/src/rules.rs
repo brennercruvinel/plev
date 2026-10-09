@@ -51,8 +51,8 @@
 
 use std::collections::BTreeSet;
 
-use sem::{Node, Role};
-use uir::{
+use accord::{Node, Role};
+use plevir::{
     Align, Axis, Component, Elevation, Ir, IrNode, Layout, Props, Size, SizeToken, SpacingToken,
     Surface,
 };
@@ -88,7 +88,7 @@ impl Chosen {
 
 /// the views of `m` the intent shows: every one with "compare", the ones
 /// a word names by their key, else the first.
-fn views(m: &Media, r: &Reading) -> Vec<(sem::StateRef, String)> {
+fn views(m: &Media, r: &Reading) -> Vec<(accord::StateRef, String)> {
     if r.compare {
         return m.views.clone();
     }
@@ -166,7 +166,7 @@ fn choose(r: &Reading, parts: &Parts) -> Chosen {
 /// reshapes it.
 fn shown(parts: &Parts, current: &IrNode) -> Chosen {
     let on = anchors(current);
-    let cap = |c: &uir::CapabilityRef| on.contains(&Anchor::Action(c.clone()));
+    let cap = |c: &plevir::CapabilityRef| on.contains(&Anchor::Action(c.clone()));
     let choices = parts
         .choices
         .iter()
@@ -442,7 +442,7 @@ impl Build<'_> {
 }
 
 /// the label of the app's first region, for a new surface's card.
-fn region(app: &sem::Snapshot) -> Option<String> {
+fn region(app: &accord::Snapshot) -> Option<String> {
     app.nodes()
         .values()
         .find(|n: &&Node| n.role == Role::Region && !n.label.trim().is_empty())

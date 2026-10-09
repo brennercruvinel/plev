@@ -7,22 +7,22 @@
 //! the same way; the keys while the intent field or a field of a surface
 //! has the keyboard. Where they sit is `crate::generated::row`.
 
-use comps::form::text_input::single_line;
-use comps::form::{ClipKey, EditKey};
-use comps::prelude::{EventResult, WidgetEvent};
-use engine::clipboard::ClipboardProvider;
-use engine::compositor::Compositor;
-use sem::{Actor, Receipt, Request, SemId, Snapshot};
-use surface::SurfaceHost;
+use engine::widgets::form::text_input::single_line;
+use engine::widgets::form::{ClipKey, EditKey};
+use engine::widgets::prelude::{EventResult, WidgetEvent};
+use engine::runtime::platform::clipboard::ClipboardProvider;
+use engine::drawing::compositor::Compositor;
+use accord::{Actor, Receipt, Request, SemId, Snapshot};
+use screen::SurfaceHost;
 
-use super::Workbench;
-use crate::generated::row::Asked;
+use super::super::capability::Workbench;
+use crate::generative::row::Asked;
 
 /// The workbench as a surface reaches it: the one dispatcher, and the
 /// workspace's own projection, which is what the surface shows.
 struct App<'a>(&'a mut Workbench);
 
-impl surface::Dispatch for App<'_> {
+impl screen::Dispatch for App<'_> {
     fn dispatch(&mut self, req: Request) -> Option<Receipt> {
         let id = self.0.dispatch(req);
         self.0.receipt(id).cloned()

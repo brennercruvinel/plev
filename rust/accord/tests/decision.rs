@@ -4,9 +4,9 @@
 use std::collections::BTreeSet;
 
 use proptest::prelude::*;
-use sem::{
+use accord::{
     ActionName, Actor, Actors, Change, Confirm, Constraints, ParamSpec, Policy, Rejection, Request,
-    Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value, ValueKind, Verdict, check,
+    Role, SemId, Snapshot, SnapshotBuilder, StateRef, Value, ValueKind, Verdict, decision,
 };
 
 fn id(text: &str) -> SemId {

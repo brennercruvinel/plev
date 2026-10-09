@@ -5,11 +5,11 @@
 
 use std::convert::Infallible;
 
-use crate::id::SemId;
-use crate::name::ActionName;
-use crate::receipt::RequestId;
-use crate::request::Actor;
-use crate::value::StateRef;
+use crate::identity::SemId;
+use crate::notation::ActionName;
+use crate::receipts::RequestId;
+use crate::requests::Actor;
+use crate::property::StateRef;
 
 /// one violation of the contract.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]

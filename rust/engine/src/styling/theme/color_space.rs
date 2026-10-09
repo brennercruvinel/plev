@@ -9,7 +9,7 @@
 // sRGB -> linear RGB -> LMS (cone response) -> OKLab -> OKLCH
 // ============================================================================
 
-use crate::color::Color;
+use crate::styling::color::Color;
 
 /// OKLCH color: Lightness [0,1], Chroma [0,~0.4], Hue [0,360).
 #[derive(Clone, Copy, Debug, PartialEq)]

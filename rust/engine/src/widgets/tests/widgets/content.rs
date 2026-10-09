@@ -185,7 +185,7 @@ fn card_list_marks_active_row_with_strong_border() {
     let theme = Theme::hoff();
     let card = &sample_cards()[3];
     let nodes = card_nodes(card, &theme);
-    let row_h = theme.control.height(engine::theme::ControlSize::Lg) + theme.spacing.xs * 2.0;
+    let row_h = theme.control.height(crate::styling::theme::ControlSize::Lg) + theme.spacing.xs * 2.0;
     let active = theme.colors.border_active.0;
     let soft = theme.glass.edge_soft.0;
 

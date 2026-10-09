@@ -2,7 +2,7 @@
 //! the plev builder. Obeys the engine manual: theme tokens where resolved,
 //! typography on the text run (one TextStyle per run), content-driven flow.
 
-use crate::ir::{Arg, Param, ParserNode, Resolution, Tag, TextValue};
+use crate::tree::{Arg, Param, ParserNode, Resolution, Tag, TextValue};
 
 const IND: &str = "    ";
 
@@ -114,12 +114,12 @@ fn render(node: &ParserNode, depth: usize) -> String {
 
 fn fmt_arg(arg: &Arg) -> String {
     match arg {
-        Arg::F32(v) => crate::css_map::fmt_f32(*v),
+        Arg::F32(v) => crate::formats::react::css::fmt_f32(*v),
         Arg::Int(i) => i.to_string(),
         Arg::Pair([x, y]) => format!(
             "[{}, {}]",
-            crate::css_map::fmt_f32(*x),
-            crate::css_map::fmt_f32(*y)
+            crate::formats::react::css::fmt_f32(*x),
+            crate::formats::react::css::fmt_f32(*y)
         ),
         Arg::Token(t) => t.clone(),
     }
@@ -128,7 +128,7 @@ fn fmt_arg(arg: &Arg) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::Prop;
+    use crate::tree::Prop;
 
     #[test]
     fn emits_deterministic_chain() {

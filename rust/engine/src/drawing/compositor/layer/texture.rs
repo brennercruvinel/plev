@@ -1,5 +1,5 @@
 use super::Layer;
-use crate::compositor::ResolveResources;
+use crate::drawing::compositor::ResolveResources;
 
 impl Layer {
     pub(crate) fn ensure_texture(&mut self, res: &ResolveResources<'_>, width: u32, height: u32) {

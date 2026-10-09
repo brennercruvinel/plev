@@ -40,14 +40,14 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use engine::compositor::Compositor;
-use rec::{FileError, InputKind, Limits, Persisted, Recorder};
+use engine::drawing::compositor::Compositor;
+use record::{FileError, InputKind, Limits, Persisted, Recorder};
 use winit::event::ElementState;
 use winit::keyboard::{Key, ModifiersState};
 use winit::window::WindowId;
 
-use super::App;
-use crate::view::ShowcaseView;
+use super::super::App;
+use crate::views::ShowcaseView;
 
 /// The variable that turns the recording on in a debug build.
 pub const ENV: &str = "PLEV_RECORD";
@@ -210,7 +210,7 @@ impl Recording {
     /// (`rec::install_panic_hook`), before the hook installed before runs.
     pub fn catch_panics(&self) -> io::Result<()> {
         private_dir(&self.dir)?;
-        rec::install_panic_hook(self.rec.clone(), self.dir.clone());
+        record::install_panic_hook(self.rec.clone(), self.dir.clone());
         Ok(())
     }
 }
@@ -331,11 +331,11 @@ impl App {
 mod tests {
     use std::ffi::OsStr;
 
-    use rec::{InputKind, Kind, Limits};
+    use record::{InputKind, Kind, Limits};
     use winit::keyboard::{Key, ModifiersState, NamedKey};
 
     use super::{ENV, Recording, is_save_key, kind_of, says};
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     /// The primary modifier of the platform, as the save keys read it.
     const PRIMARY: ModifiersState = if cfg!(target_os = "macos") {
@@ -394,7 +394,7 @@ mod tests {
         view.jump_to_page("silences");
         view.resize(1200.0, 800.0, 1.0);
         recording.attach(&mut view);
-        let mut c = engine::compositor::Compositor::new();
+        let mut c = engine::drawing::compositor::Compositor::new();
         view.render(&mut c);
         recording.frame(&mut view, &c);
         let [x, y, w, h] = c
@@ -421,7 +421,7 @@ mod tests {
                 .join(format!("showcase-{pid}-1.monster"))
         );
 
-        let session = rec::Session::open(&path).expect("the session opens");
+        let session = record::Session::open(&path).expect("the session opens");
         let kinds: Vec<&str> = session.events().iter().map(|e| e.kind.name()).collect();
         assert_eq!(kinds, ["snapshot", "input", "input"], "{kinds:?}");
         let inputs: Vec<(InputKind, Option<String>)> = session

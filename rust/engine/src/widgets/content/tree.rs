@@ -1,12 +1,12 @@
-use crate::icons;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{IconSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::widgets::icons;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{IconSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::list::reachable;
-use crate::core::{EventResult, Rect, WidgetEvent, with_alpha};
-use crate::recipe::focus_ring_inside;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
+use crate::widgets::recipe::focus_ring_inside;
 
 /// The per-theme geometry the hit test and the render share: a dense
 /// base-2r row (line box plus `xs` above and below), one `lg` step of
@@ -322,7 +322,7 @@ impl Tree {
             if is_selected || is_hovered {
                 let seam_x = m.gap / 2.0;
                 let seam_y = theme.control.edge_width;
-                compositor.push(crate::recipe::rounded_rect(
+                compositor.push(crate::widgets::recipe::rounded_rect(
                     row_rect.x + seam_x,
                     row_rect.y + seam_y,
                     row_rect.w - seam_x * 2.0,

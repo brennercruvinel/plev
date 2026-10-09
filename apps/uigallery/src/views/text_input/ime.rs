@@ -7,9 +7,9 @@
 //! letters are the gallery's shortcuts, and a Japanese input source would
 //! compose them instead.
 
-use comps::prelude::Rect;
+use engine::widgets::prelude::Rect;
 
-use super::{Pane, ShowcaseView};
+use super::super::{Pane, ShowcaseView};
 
 /// A step of the platform's input method, as the shell forwards it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

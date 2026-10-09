@@ -39,7 +39,7 @@ fn corpus() -> Option<PathBuf> {
     root.exists().then_some(root)
 }
 
-fn react_output() -> Option<parser::Transpiled> {
+fn react_output() -> Option<import::Transpiled> {
     let root = match corpus() {
         Some(r) => r,
         None => {
@@ -51,7 +51,7 @@ fn react_output() -> Option<parser::Transpiled> {
         fs::read_to_string(root.join(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
     };
     Some(
-        parser::transpile_react(
+        import::transpile_react(
             ("index.tsx", &read("components/HoffResearchCard/index.tsx")),
             (
                 "HoffResearchCard.module.sass",
@@ -63,8 +63,8 @@ fn react_output() -> Option<parser::Transpiled> {
     )
 }
 
-fn gpui_output() -> parser::Transpiled {
-    parser::transpile_gpui(("separator.rs", &fixture("gpui/separator.rs"))).expect("gpui transpile")
+fn gpui_output() -> import::Transpiled {
+    import::transpile_gpui(("separator.rs", &fixture("gpui/separator.rs"))).expect("gpui transpile")
 }
 
 #[test]

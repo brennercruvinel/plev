@@ -5,10 +5,10 @@ use std::fmt;
 
 use indexmap::IndexMap;
 
-use crate::hash::{self, Revision};
-use crate::id::SemId;
-use crate::node::Node;
-use crate::value::{StateRef, Value};
+use crate::revision::{self, Revision};
+use crate::identity::SemId;
+use crate::controls::Node;
+use crate::property::{StateRef, Value};
 
 /// a validated projection.
 ///

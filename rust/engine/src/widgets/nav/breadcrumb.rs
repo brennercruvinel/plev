@@ -11,14 +11,14 @@
 //! Keyboard focus on a crumb ([`Breadcrumb::set_focused`], driven by the
 //! owning view) rings it where it is drawn.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{IconSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{IconSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::icons;
-use crate::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::icons;
+use crate::widgets::recipe::focus_ring;
 
 const ELLIPSIS: &str = "\u{2026}";
 

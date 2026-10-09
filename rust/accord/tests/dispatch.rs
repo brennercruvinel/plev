@@ -7,10 +7,10 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 
 use indexmap::IndexMap;
-use sem::{
+use accord::{
     Acted, Actor, Change, Confirm, Constraints, Dispatcher, Execution, Mark, Operable, Outcome,
     ParamSpec, Policy, Receipt, ReceiptSink, Rejection, Request, RequestId, Role, SemError,
-    Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, check,
+    Semantics, Snapshot, SnapshotBuilder, Stage, StateRef, Value, ValueKind, Verdict, decision,
 };
 
 fn at(text: &str) -> StateRef {

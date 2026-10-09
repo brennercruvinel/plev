@@ -1,5 +1,5 @@
-use super::backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
-use super::measure::TextMeasurer;
+use super::super::backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
+use super::super::measure::TextMeasurer;
 
 fn sans(font_size: f32) -> TextStyle {
     TextStyle::new(font_size).with_family("Inclusive Sans")
@@ -357,7 +357,7 @@ fn letter_spacing_distinguishes_measure_cache() {
 
 #[test]
 fn text_node_key_distinguishes_letter_spacing() {
-    use crate::compositor::TextNodeKey;
+    use crate::drawing::compositor::TextNodeKey;
     use std::hash::{Hash, Hasher};
 
     let style = sans(14.0);
@@ -376,7 +376,7 @@ fn text_node_key_distinguishes_letter_spacing() {
 
 #[test]
 fn text_node_key_from_style_carries_every_field() {
-    use crate::compositor::TextNodeKey;
+    use crate::drawing::compositor::TextNodeKey;
 
     let style = TextStyle::new(14.0)
         .with_line_height(23.8)
@@ -411,7 +411,7 @@ fn line_metrics_come_from_real_faces() {
 #[test]
 fn vertical_center_centers_glyph_box_in_44px_pill() {
     // base-2sm inside the canonical 44px HOFF button.
-    let style = crate::theme::TypographyScale::hoff().base_2sm();
+    let style = crate::styling::theme::TypographyScale::hoff().base_2sm();
     let container_h = 44.0;
     let y = TextMeasurer::vertical_center(&style, container_h);
     let m = TextMeasurer::line_metrics(&style);
@@ -427,7 +427,7 @@ fn vertical_center_centers_glyph_box_in_44px_pill() {
 #[test]
 fn vertical_center_consistent_across_ramp() {
     // Every HOFF style stays strictly inside a 44px control.
-    let ramp = crate::theme::TypographyScale::hoff();
+    let ramp = crate::styling::theme::TypographyScale::hoff();
     for style in [
         ramp.caption_sm(),
         ramp.base_2sm(),
@@ -615,7 +615,7 @@ fn marks_merge_into_their_letter_cluster() {
 
 #[test]
 fn clusters_shape_once_per_line_text() {
-    use super::measure::cached_cluster_lines;
+    use super::super::measure::cached_cluster_lines;
     let style = sans(14.0);
     let line = "let cached = \u{5d0}\u{5d1}\u{5d2} + 41;";
     let before = cached_cluster_lines();

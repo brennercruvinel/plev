@@ -1,9 +1,9 @@
 use super::super::style::*;
-use super::super::traits::{IntoF32, IntoRadius};
+use super::super::conversions::{IntoF32, IntoRadius};
 use super::{
     ClickEvent, Element, ElementKind, FocusEvent, HoverEvent, IntoView, KeyEvent, ScrollEvent,
 };
-use crate::color::IntoColor;
+use crate::styling::color::IntoColor;
 
 impl Element {
     /// Inspect children (Mantra-15: testable without GPU).
@@ -386,7 +386,7 @@ impl Element {
         self
     }
 
-    pub fn intent(mut self, intent: crate::theme::Intent) -> Self {
+    pub fn intent(mut self, intent: crate::styling::theme::Intent) -> Self {
         self.intent = Some(intent);
         self
     }

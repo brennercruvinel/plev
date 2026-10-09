@@ -2,9 +2,9 @@
 //! says. every answer the panel shows is the model's, called, not worked
 //! out again.
 
-use comps::content::{CodeBlock, CodeLine, LineKind};
-use engine::text::TextMeasurer;
-use inspect::{Inspector, text};
+use engine::widgets::content::{CodeBlock, CodeLine, LineKind};
+use engine::drawing::text::TextMeasurer;
+use replay::{Inspector, prose};
 use inspector::{Key, Tone, wrap};
 
 use crate::support::{Fallible, click, click_control, draw, id, open, texts};
@@ -55,7 +55,7 @@ fn the_instant_moves_by_the_scrub_and_by_event() -> Fallible {
 #[test]
 fn the_frame_is_the_one_on_screen_at_the_instant() -> Fallible {
     let mut view = open("a2ppa", 1280.0, 800.0)?;
-    let session = rec::Session::open(crate::support::fixture("a2ppa"))?;
+    let session = record::Session::open(crate::support::fixture("a2ppa"))?;
     for t in session.frame_times() {
         view.seek(t);
         assert_eq!(view.frame_time(), session.frame_at(t));
@@ -85,7 +85,7 @@ fn the_frame_is_the_one_on_screen_at_the_instant() -> Fallible {
 #[test]
 fn the_pointer_names_the_control_under_it() -> Fallible {
     let mut view = open("a2ppa", 1280.0, 800.0)?;
-    let session = rec::Session::open(crate::support::fixture("a2ppa"))?;
+    let session = record::Session::open(crate::support::fixture("a2ppa"))?;
     let t = session.frame_times()[5];
     view.seek(t);
     let fit = view.fit().ok_or("a frame")?;
@@ -110,7 +110,7 @@ fn the_pointer_names_the_control_under_it() -> Fallible {
 #[test]
 fn a_click_picks_and_the_panel_is_the_models() -> Fallible {
     let mut view = open("a2ppa", 1280.0, 800.0)?;
-    let session = rec::Session::open(crate::support::fixture("a2ppa"))?;
+    let session = record::Session::open(crate::support::fixture("a2ppa"))?;
     let inspector = Inspector::new(&session);
     let message = id("commit.message");
     view.seek(session.frame_times()[6]);
@@ -180,7 +180,7 @@ fn a_request_of_the_list_goes_to_its_instant_and_its_control() -> Fallible {
 #[test]
 fn the_strip_puts_every_event_on_its_actors_lane() -> Fallible {
     let view = open("a2ppa", 1280.0, 800.0)?;
-    let session = rec::Session::open(crate::support::fixture("a2ppa"))?;
+    let session = record::Session::open(crate::support::fixture("a2ppa"))?;
     let timeline = Inspector::new(&session).timeline();
     let strip = view.strip();
     assert_eq!(strip.marks.len(), timeline.entries.len(), "every event");
@@ -204,7 +204,7 @@ fn the_strip_puts_every_event_on_its_actors_lane() -> Fallible {
 
 #[test]
 fn a_long_row_wraps_and_keeps_every_character() {
-    let theme = comps::Theme::default();
+    let theme = engine::widgets::Theme::default();
     let style = CodeBlock::text_style(&theme);
     let rows = vec![
         CodeLine::new(

@@ -5,7 +5,7 @@
 use std::fmt::Write as _;
 use std::hint::black_box;
 
-use engine::perf::stages::{self, Stage};
+use engine::runtime::perf::stages::{self, Stage};
 use web_time::Instant;
 
 /// Probes per round.

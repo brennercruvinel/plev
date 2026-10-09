@@ -7,8 +7,8 @@
 //! desk declares its composites and runs them as chains, the way the
 //! Silences page does.
 
-use propose::compose::{Chain, Composer};
-use sem::{
+use offers::compose::{Chain, Composer};
+use accord::{
     Actor, Actors, Confirm, Constraints, Dispatcher, Execution, Millis, Operable, Outcome,
     ParamSpec, Policy, Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Value,
     ValueKind,
@@ -260,10 +260,10 @@ impl Bench {
         }
     }
 
-    pub fn stage(&self, id: RequestId) -> sem::Stage {
+    pub fn stage(&self, id: RequestId) -> accord::Stage {
         self.dispatcher
             .receipt(id)
-            .and_then(sem::Receipt::stage)
+            .and_then(accord::Receipt::stage)
             .cloned()
             .expect("a receipt")
     }

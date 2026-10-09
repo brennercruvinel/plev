@@ -58,8 +58,8 @@ fn main() {}
 mod cli {
     use std::path::PathBuf;
 
-    use engine::headless::Viewport;
-    use engine::perf::stages;
+    use engine::drawing::headless::Viewport;
+    use engine::runtime::perf::stages;
 
     use crate::report;
     use crate::scenarios::{self, Config};

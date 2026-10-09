@@ -29,12 +29,12 @@ use dispatcher::keyboard::Walk;
 
 use winit::keyboard::{Key, ModifiersState};
 
-use comps::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
-use comps::overlay::{OverlayId, OverlayManager};
-use comps::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
-use engine::compositor::LayerId;
-use engine::input::scroll::ScrollState;
-use engine::theme::Theme;
+use engine::widgets::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
+use engine::widgets::overlay::{OverlayId, OverlayManager};
+use engine::widgets::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
+use engine::drawing::compositor::LayerId;
+use engine::control::input::scroll::ScrollState;
+use engine::styling::theme::Theme;
 
 /// Digit hotkeys `1`..`9` and `0` (as ten) reach the first pages of the
 /// table; the rest are reachable from the sidebar.
@@ -96,7 +96,7 @@ pub struct ShowcaseView {
     /// The button of the modal or the item of the menu a screen reader
     /// moved the focus to (`dispatcher::overlay`); `None`, the overlay's
     /// own (the modal's cancel, the menu's first item).
-    overlay_focus: Option<sem::SemId>,
+    overlay_focus: Option<accord::SemId>,
     /// The shift key is held: Tab walks backward (`dispatcher::keyboard`).
     shift: bool,
 
@@ -104,7 +104,7 @@ pub struct ShowcaseView {
     panes: panes::Panes,
     /// The clipboard of the text fields, made on first use
     /// (`clipboard.rs`).
-    clipboard: Option<Box<dyn engine::clipboard::ClipboardProvider>>,
+    clipboard: Option<Box<dyn engine::runtime::platform::clipboard::ClipboardProvider>>,
 }
 
 #[derive(Clone, Copy)]

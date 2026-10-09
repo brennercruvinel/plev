@@ -6,10 +6,10 @@
 //! closes it. A click on a leaf is its `select`; on a branch, both (the
 //! comps tree toggles and selects it, `Tree::handle_event`).
 
-use comps::prelude::{EventResult, Rect, Tree, TreeNode, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{EventResult, Rect, Tree, TreeNode, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, key_under, panel, root_id, under};
 

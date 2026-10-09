@@ -4,9 +4,9 @@
 //! call these hooks where something happens (see the shell's module doc).
 //! Without a recording every hook is an `Option` check.
 
-use ide::record::{self, Recording};
-use ide::workbench::Workbench;
-use rec::InputKind;
+use crate::interfaces::window::record::{self, Recording};
+use crate::capability::Workbench;
+use record::InputKind;
 
 use crate::App;
 

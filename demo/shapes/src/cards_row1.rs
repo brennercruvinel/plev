@@ -1,6 +1,6 @@
 //! Row 1 cards: Rounded Rects, Circles & Rings, Polygons, Depth & Shadow.
 
-use engine::compositor::{Compositor, RoundedRectParams, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Compositor, RoundedRectParams, SceneNode, TextNodeKey};
 
 use crate::shapes::*;
 

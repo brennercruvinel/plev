@@ -9,11 +9,11 @@
 //! so the line becomes two `grow(1.0)` segments flanking the chip; same
 //! pixels, content-driven flow (the manual's rule).
 
-use crate::gpui::{GCall, GExpr, GFn, GpuiSource};
-use crate::gpui_ir::{
+use crate::formats::gpui::parse::{GCall, GExpr, GFn, GpuiSource};
+use crate::formats::gpui::node::{
     Applied, WNode, arg_px, call_label, call_sites, closure_body, expr_line, finish,
 };
-use crate::ir::{Dropped, Note, NoteKind, Param, Prop, Resolution, Src, TextValue, snake_case};
+use crate::tree::{Dropped, Note, NoteKind, Param, Prop, Resolution, Src, TextValue, snake_case};
 
 /// Variant configuration of the transpiled instance.
 const TARGET_ARMS: &[(&str, &str)] = &[("axis", "Horizontal"), ("line_style", "Solid")];
@@ -187,7 +187,7 @@ impl<'a> Ctx<'a> {
                 let (text_props, box_props): (Vec<Prop>, Vec<Prop>) = node
                     .props
                     .drain(..)
-                    .partition(|p| crate::css_map::is_text_prop(p.name));
+                    .partition(|p| crate::formats::react::css::is_text_prop(p.name));
                 node.props = box_props;
                 child.props = text_props;
                 node.children.push(child);

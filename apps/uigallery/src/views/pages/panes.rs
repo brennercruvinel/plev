@@ -1,16 +1,16 @@
 //! The pages' state: one struct per pane (`pages::Pane`), built once
 //! with the theme and owned by the view for the app's whole life.
 
-use engine::theme::Theme;
+use engine::styling::theme::Theme;
 
-use super::apps::{app, builder, capture, dock, editor, files, git, silences, surface_page};
-use super::components::{
+use super::super::apps::{todo, builder, capture, dock, editor, files, git, silences, surface};
+use super::super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
     resizable, scroll_area, select, separator, sidebar, skeleton, slider, spinner, stat, switch,
     table, tabs, toast, tooltip, tree,
 };
-use super::foundations::{effects, icons, theme, typography};
+use super::super::foundations::{effects, icons, theme, typography};
 
 pub struct Panes {
     // -- foundations
@@ -69,17 +69,17 @@ pub struct Panes {
     pub capture: capture::CapturePage,
     pub dock: dock::DockPage,
     pub editor: editor::EditorPage,
-    pub git: git::GitPage,
+    pub git: gitdrv::GitPage,
     pub builder: builder::BuilderPage,
     /// Where the active page shows when it left the main window: a
     /// window of its own (task-76 item 2, `dispatch::Detached`). `None`,
     /// the usual: in the main window.
-    pub detached: Option<super::dispatch::Detached>,
+    pub detached: Option<super::super::dispatcher::Detached>,
     /// The shell's capabilities (task-76 item 4, `dispatch::Shell`): the
     /// page, the theme, the page in a window of its own, the recording's
     /// save, projected and run through the gallery's dispatcher; what was
     /// asked of the windows and the recording waits here for the shell.
-    pub shell: super::dispatch::Shell,
+    pub shell: super::super::dispatcher::Shell,
 }
 
 impl Panes {
@@ -132,10 +132,10 @@ impl Panes {
             capture: capture::CapturePage::new(theme),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
-            git: git::GitPage::new(),
+            git: gitdrv::GitPage::new(),
             builder: builder::BuilderPage::new(),
             detached: None,
-            shell: super::dispatch::Shell::new(),
+            shell: super::super::dispatcher::Shell::new(),
         }
     }
 }

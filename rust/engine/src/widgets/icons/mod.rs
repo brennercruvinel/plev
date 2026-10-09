@@ -23,8 +23,8 @@ use std::hash::{Hash, Hasher};
 
 use rustc_hash::FxHasher;
 
-use engine::compositor::{QuadVertex, SceneNode};
-use engine::path::{PathBuilder, TessellatedPath};
+use crate::drawing::compositor::{QuadVertex, SceneNode};
+use crate::drawing::path::{PathBuilder, TessellatedPath};
 
 /// Lucide design constants: 24x24 viewBox, stroke-width 2.
 const VIEWBOX: f32 = 24.0;

@@ -1,6 +1,6 @@
-use crate::compositor::{SceneNode, TextNodeKey};
-use crate::layout::ComputedBounds;
-use crate::text::TextStyle;
+use crate::drawing::compositor::{SceneNode, TextNodeKey};
+use crate::compose::layout::ComputedBounds;
+use crate::drawing::text::TextStyle;
 
 use super::element::{Element, ElementKind};
 
@@ -23,7 +23,7 @@ struct TextProps<'a> {
 pub(crate) fn emit_scene_nodes(
     root: &Element,
     bounds: &[ComputedBounds],
-    theme: Option<&crate::theme::Theme>,
+    theme: Option<&crate::styling::theme::Theme>,
     out: &mut Vec<SceneNode>,
 ) {
     let mut cursor = 0usize;
@@ -33,7 +33,7 @@ pub(crate) fn emit_scene_nodes(
 fn emit_element(
     element: &Element,
     bounds: &[ComputedBounds],
-    theme: Option<&crate::theme::Theme>,
+    theme: Option<&crate::styling::theme::Theme>,
     cursor: &mut usize,
     out: &mut Vec<SceneNode>,
 ) {
@@ -79,7 +79,7 @@ fn emit_element(
             {
                 // Memoized by content hash; failures are remembered and
                 // logged once inside the store.
-                if let Ok(handle) = crate::gpu::image::load_image_bytes(bytes) {
+                if let Ok(handle) = crate::drawing::gpu::image::load_image_bytes(bytes) {
                     out.push(SceneNode::Image {
                         x: b.x,
                         y: b.y,
@@ -113,7 +113,7 @@ fn emit_element(
 fn emit_div(
     element: &Element,
     b: &ComputedBounds,
-    intent_color: Option<crate::color::Color>,
+    intent_color: Option<crate::styling::color::Color>,
     out: &mut Vec<SceneNode>,
 ) {
     let has_bg = element.style.bg.is_some() || intent_color.is_some();
@@ -156,7 +156,7 @@ fn emit_div(
     if (has_bg || has_gradient || has_border) && (b.width > 0.0 || b.height > 0.0) {
         let bg_color = intent_color
             .or(element.style.bg)
-            .unwrap_or(crate::color::Color::TRANSPARENT)
+            .unwrap_or(crate::styling::color::Color::TRANSPARENT)
             .to_array();
 
         if let Some(gradient) = element.style.bg_gradient {
@@ -328,7 +328,7 @@ pub(crate) fn resolved_text_style(
 fn emit_text(
     element: &Element,
     b: &ComputedBounds,
-    intent_color: Option<crate::color::Color>,
+    intent_color: Option<crate::styling::color::Color>,
     props: &TextProps<'_>,
     out: &mut Vec<SceneNode>,
 ) {

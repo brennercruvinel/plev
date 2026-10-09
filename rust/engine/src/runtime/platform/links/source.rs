@@ -22,7 +22,7 @@ use std::fmt;
 use std::sync::{Arc, Mutex};
 
 use super::{Link, LinkError, excerpt, is_link};
-use crate::platform::menu::locked;
+use crate::runtime::platform::menu::locked;
 
 /// A text that came as a link and is not one of this app's: what came,
 /// shortened to one line a person can read ([`excerpt`]), and why.
@@ -215,7 +215,7 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     use super::*;
-    use crate::platform::links::MAX_LEN;
+    use crate::runtime::platform::links::MAX_LEN;
 
     const SCHEME: &str = "plev-test";
 

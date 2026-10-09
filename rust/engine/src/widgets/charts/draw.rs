@@ -7,13 +7,13 @@
 
 use std::f32::consts::TAU;
 
-use crate::charts as geom;
-use crate::core::Rect;
-use crate::recipe::rounded_rect;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::path::PathBuilder;
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
+use crate::widgets::charts as geom;
+use crate::widgets::widget::Rect;
+use crate::widgets::recipe::rounded_rect;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::path::PathBuilder;
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::Theme;
 
 /// RGBA with overridden alpha (the widgets' `with_alpha` takes a `Color`;
 /// chart drawing works in raw RGBA from theme tokens).

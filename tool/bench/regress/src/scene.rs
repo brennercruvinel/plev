@@ -15,9 +15,9 @@
 
 use std::collections::HashMap;
 
-use engine::compositor::{Compositor, Layer, LayerId, SceneNode, shadow_padding};
-use engine::headless::Viewport;
-use engine::text::{TextMeasurer, TextStyle};
+use engine::drawing::compositor::{Compositor, Layer, LayerId, SceneNode, shadow_padding};
+use engine::drawing::headless::Viewport;
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use serde::{Deserialize, Serialize};
 
 use crate::hash::stable_hash;
@@ -266,7 +266,7 @@ mod hex {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use sem::SemId;
+    use accord::SemId;
 
     pub(crate) const VIEW: Viewport = Viewport {
         width: 400.0,
@@ -376,7 +376,7 @@ pub(crate) mod tests {
         let mut c = Compositor::new();
         let style = TextStyle::new(20.0);
         c.push(SceneNode::Text {
-            key: engine::compositor::TextNodeKey::from_style("Walk the dog", &style, None),
+            key: engine::drawing::compositor::TextNodeKey::from_style("Walk the dog", &style, None),
             x: 40.0,
             y: 60.0,
             color: RED,

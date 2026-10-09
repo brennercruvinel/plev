@@ -7,13 +7,13 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::Rect;
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
-use sem::StateRef;
+use engine::widgets::Rect;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
+use accord::StateRef;
 use support::{App, MIXER_LEFT, SILENCES, id, mixer, page, snapshot, verified_local};
-use surface::Surface;
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use screen::Surface;
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 const AREA: Rect = Rect {
     x: 16.0,
@@ -68,7 +68,7 @@ fn a_slider_draws_its_label_and_its_value_above_its_track() {
     );
     assert_eq!(
         track[3],
-        theme.control.height(engine::theme::ControlSize::Xs),
+        theme.control.height(engine::styling::theme::ControlSize::Xs),
         "the track is the control's height"
     );
 
@@ -77,9 +77,9 @@ fn a_slider_draws_its_label_and_its_value_above_its_track() {
     let y = track[1] + track[3] / 2.0;
     let x = |t: f32| track[0] + knob / 2.0 + t * (track[2] - knob);
     for event in [
-        comps::WidgetEvent::MouseMove { x: x(0.5), y },
-        comps::WidgetEvent::MouseDown { x: x(0.5), y },
-        comps::WidgetEvent::MouseMove { x: x(0.75), y },
+        engine::widgets::WidgetEvent::MouseMove { x: x(0.5), y },
+        engine::widgets::WidgetEvent::MouseDown { x: x(0.5), y },
+        engine::widgets::WidgetEvent::MouseMove { x: x(0.75), y },
     ] {
         surface.handle_event(&event, &theme, &mut app);
     }
@@ -146,5 +146,5 @@ fn a_number_shows_two_decimals_at_most_on_screen_and_in_the_projection() {
     let start = projected.get(&id("numbers.start")).expect("projected");
     assert_eq!(start.label, "3.02", "a text is named by what it shows");
     let kept = StateRef::parse("silences.cut[1]:start").unwrap();
-    assert_eq!(app.value(&kept), Some(&sem::Value::Num(3.018594)));
+    assert_eq!(app.value(&kept), Some(&accord::Value::Num(3.018594)));
 }

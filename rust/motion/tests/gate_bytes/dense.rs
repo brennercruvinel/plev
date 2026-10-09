@@ -4,7 +4,7 @@
 //! run: cargo test -p monster --test bench_lottie -- --nocapture
 
 use crate::lot::{Scan, f, scan_layer};
-use monster::{
+use motion::{
     Asset, AssetKind, Keyframe, Node, NodeKind, OptimizeCfg, Props, Timeline, decode, encode,
     optimize,
 };

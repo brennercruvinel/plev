@@ -3,7 +3,7 @@
 //! through AccessKit action requests, and checked by its receipts.
 
 use accesskit::{Action, ActionData, ActionRequest, NodeId, TreeId};
-use sem::{
+use accord::{
     Actor, Confirm, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec, Policy,
     Rejection, Request, RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, Stage, Value,
     ValueKind,
@@ -12,7 +12,7 @@ use sem::{
 use super::super::ids::ROOT;
 use super::super::tree::{self, Chrome, Shown};
 use super::*;
-use crate::compositor::Compositor;
+use crate::drawing::compositor::Compositor;
 
 fn sid(text: &str) -> SemId {
     match SemId::parse(text) {
@@ -206,7 +206,7 @@ fn a_click_asks_for_the_primary_action_as_assistive_technology() {
     assert_eq!(
         req.observed.values,
         vec![(
-            sem::StateRef::parse("shop.gift:checked").unwrap_or_else(|e| panic!("{e}")),
+            accord::StateRef::parse("shop.gift:checked").unwrap_or_else(|e| panic!("{e}")),
             Some(Value::Bool(false))
         )]
     );

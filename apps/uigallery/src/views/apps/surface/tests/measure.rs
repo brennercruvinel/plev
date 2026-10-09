@@ -13,13 +13,13 @@
 
 use std::time::{Duration, Instant};
 
-use engine::compositor::Compositor;
-use engine::gpu::RenderConfig;
-use engine::headless::{Renderer, Viewport};
-use propose::{Ask, Rules, propose_verified};
-use uir::{Capabilities, GenerationPolicy};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Renderer, Viewport};
+use offers::{Ask, Rules, propose_verified};
+use plevir::{Capabilities, GenerationPolicy};
 
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 const ROUNDS: usize = 20;
 const INTENT: &str = "only what is active and the add field";
@@ -61,7 +61,7 @@ fn intent_to_verified_ir_and_to_first_frame() {
             intent: INTENT,
             caps: &caps,
             app: &app,
-            current: current.map(surface::Surface::verified),
+            current: current.map(screen::Surface::verified),
             policy: &policy,
         };
         let start = Instant::now();

@@ -14,14 +14,14 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::gpu::RenderConfig;
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use engine::platform::menu::locked;
-use engine::platform::print::{FakePrinter, PAPER_DPI, paper_scale};
-use engine::window::Background;
-use sem::{Actor, Receipt, ReceiptSink, Request, SemId, Stage, Value};
-use showcase::view::ShowcaseView;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::runtime::platform::menu::locked;
+use engine::runtime::platform::print::{FakePrinter, PAPER_DPI, paper_scale};
+use engine::runtime::window::Background;
+use accord::{Actor, Receipt, ReceiptSink, Request, SemId, Stage, Value};
+use uigallery::views::ShowcaseView;
 
 const MAIN: (f32, f32) = (1200.0, 800.0);
 /// The paper scale of the shell: 300 dpi in points.
@@ -167,7 +167,7 @@ fn control(item: &SemId) -> Option<Frame> {
 
 /// The end of the print, or a skip on a machine without a GPU (the job
 /// fails saying so).
-fn ended_or_skip(stages: &Stages) -> Option<sem::Outcome> {
+fn ended_or_skip(stages: &Stages) -> Option<accord::Outcome> {
     match stages.ended("shell.print").expect("the request ended") {
         Stage::Completed(outcome) => Some(outcome),
         Stage::Failed { error } if error.contains("no GPU adapter") => {

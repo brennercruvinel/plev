@@ -3,9 +3,9 @@
 
 use std::path::PathBuf;
 
-use engine::compositor::{Compositor, SceneNode};
+use engine::drawing::compositor::{Compositor, SceneNode};
 use inspector::InspectorView;
-use sem::SemId;
+use accord::SemId;
 
 pub type Fallible = Result<(), Box<dyn std::error::Error>>;
 

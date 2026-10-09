@@ -36,7 +36,7 @@
 use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
-use sem::{Millis, RequestId, StateRef, Value};
+use accord::{Millis, RequestId, StateRef, Value};
 
 /// where a mark is read.
 #[derive(Clone, Debug, PartialEq)]

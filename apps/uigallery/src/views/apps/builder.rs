@@ -6,13 +6,13 @@
 //! embedded UI family. Named
 //! builder_tour to not collide with the engine's engine::builder.
 
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::builder::{Element, button, div, text as btext};
-use engine::color::Color;
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
-use engine::view::ViewContext;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::compose::builder::{Element, button, div, text as btext};
+use engine::styling::color::Color;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
+use engine::compose::view::ViewContext;
 
 use super::{group_label, panel};
 
@@ -259,7 +259,7 @@ impl BuilderPage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::compositor::LayerId;
+    use engine::drawing::compositor::LayerId;
 
     fn content(w: f32) -> Rect {
         Rect::new(288.0, 118.0, w, 682.0)

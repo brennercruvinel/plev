@@ -13,11 +13,11 @@
 #[allow(dead_code)]
 mod support;
 
-use parser::Category;
-use parser::figma::FigNode;
+use import::Category;
+use import::formats::figma::parse::FigNode;
 use support::checks::*;
 use support::*;
-use uir::{Capabilities, GenerationPolicy, verify};
+use plevir::{Capabilities, GenerationPolicy, verify};
 
 const FILE: &str = FIGMA;
 
@@ -36,7 +36,7 @@ fn census(src: &str) -> Vec<Site> {
             walk(c, out);
         }
     }
-    let doc = parser::figma::parse_figma(src).expect("figma");
+    let doc = import::formats::figma::parse::parse_figma(src).expect("figma");
     let mut out = Vec::new();
     walk(&doc.document, &mut out);
     out
@@ -46,7 +46,7 @@ fn census(src: &str) -> Vec<Site> {
 fn the_figma_settings_ir_its_report_and_its_code() {
     let imported = import_figma();
     goldens(&imported, "figma");
-    let code = parser::transpile_figma((FILE, &source())).expect("figma");
+    let code = import::transpile_figma((FILE, &source())).expect("figma");
     check_golden("figma/expected.rs", &code.code);
     let r = &imported.report;
     for c in Category::ALL {
@@ -103,6 +103,6 @@ fn a_design_names_no_capability_so_the_ir_verifies_as_it_is() {
 #[test]
 fn a_figma_import_is_deterministic_and_a_broken_one_an_error() {
     assert_eq!(import_figma(), import_figma());
-    let broken = parser::import_figma(("x.json", "{\"document\": 1}"), &hoff());
-    assert!(matches!(broken, Err(parser::ParserError::Parse(_))));
+    let broken = import::import_figma(("x.json", "{\"document\": 1}"), &hoff());
+    assert!(matches!(broken, Err(import::ParserError::Parse(_))));
 }

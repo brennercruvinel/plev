@@ -1,7 +1,7 @@
 //! the ring of served revisions: a hit, an eviction, a refresh.
 
-use sem::{Role, Snapshot, SnapshotBuilder};
-use wire::{DEFAULT_RING, Ring};
+use accord::{Role, Snapshot, SnapshotBuilder};
+use socket::{DEFAULT_RING, Ring};
 
 fn snap(text: &str) -> Snapshot {
     let mut b = SnapshotBuilder::new();

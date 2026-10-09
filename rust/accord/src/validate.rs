@@ -4,11 +4,11 @@
 
 use indexmap::IndexMap;
 
-use crate::error::{SemError, SemErrors};
-use crate::id::SemId;
-use crate::node::Node;
+use crate::failures::{SemError, SemErrors};
+use crate::identity::SemId;
+use crate::controls::Node;
 use crate::snapshot::Snapshot;
-use crate::value::Value;
+use crate::property::Value;
 
 /// turns the collected nodes into a snapshot, or reports every violation.
 /// `errors` holds what the builder already rejected (ids, keys, refs that

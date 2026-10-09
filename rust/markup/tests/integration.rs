@@ -1,4 +1,4 @@
-use narrate::plev_narrate;
+use markup::plev_narrate;
 
 #[test]
 fn simple_div() {

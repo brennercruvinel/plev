@@ -298,7 +298,7 @@ impl KeymapMatcher {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::actions::context::KeyContext;
+    use crate::control::keymap::context::KeyContext;
 
     fn ks(s: &str) -> Keystroke {
         s.parse().unwrap()

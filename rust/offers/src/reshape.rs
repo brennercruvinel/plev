@@ -26,8 +26,8 @@
 
 use std::collections::BTreeSet;
 
-use sem::{SemId, StateRef, Value, ValueKind};
-use uir::{Adapted, Capabilities, ChartKind, Component, IrNode, Layout, Op, Step};
+use accord::{SemId, StateRef, Value, ValueKind};
+use plevir::{Adapted, Capabilities, ChartKind, Component, IrNode, Layout, Op, Step};
 
 use crate::adapt::{Adapt, Adaptation, Transformer};
 use crate::change::{Asked, CHANGES, read};

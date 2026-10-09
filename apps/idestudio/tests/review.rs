@@ -13,11 +13,11 @@
 #[allow(dead_code)]
 mod support;
 
-use git::GitEvent;
-use ide::lab_repo::REVIEWED;
-use sem::{Actor, Node, SemId, StateRef, Value, ValueKind};
+use gitdrv::GitEvent;
+use idestudio::repository::eval_repo::REVIEWED;
+use accord::{Actor, Node, SemId, StateRef, Value, ValueKind};
 use support::{Rig, completed};
-use uir::Capabilities;
+use plevir::Capabilities;
 
 fn id(text: &str) -> SemId {
     SemId::parse(text).expect("an id")
@@ -130,15 +130,15 @@ fn the_diff_says_the_kind_of_each_line_beside_it() {
         };
         assert_eq!(kinds.len(), shown.len(), "{}", node.id);
         for (line, kind) in shown.iter().zip(&kinds) {
-            let named = uir::LineKind::parse(kind).unwrap_or_else(|| panic!("{kind}"));
+            let named = plevir::LineKind::parse(kind).unwrap_or_else(|| panic!("{kind}"));
             let want = match line.chars().next() {
-                Some('+') => uir::LineKind::Added,
-                Some('-') => uir::LineKind::Removed,
-                Some(' ') => uir::LineKind::Context,
-                _ => uir::LineKind::Header,
+                Some('+') => plevir::LineKind::Added,
+                Some('-') => plevir::LineKind::Removed,
+                Some(' ') => plevir::LineKind::Context,
+                _ => plevir::LineKind::Header,
             };
             assert_eq!(named, want, "{line:?}");
-            if named == uir::LineKind::Header {
+            if named == plevir::LineKind::Header {
                 assert!(line.contains("@@ -"), "a hunk's header: {line:?}");
             }
         }
@@ -148,7 +148,7 @@ fn the_diff_says_the_kind_of_each_line_beside_it() {
 
 /// The person writes `intent` in the line and proposes, each through the
 /// dispatcher; the receipt of the proposal.
-fn propose(rig: &mut Rig, intent: &str) -> sem::Receipt {
+fn propose(rig: &mut Rig, intent: &str) -> accord::Receipt {
     let write = rig.ask(
         Actor::Human,
         "ide_surface.intent",
@@ -196,7 +196,7 @@ fn review_these_three_commits_opens_a_verified_surface_with_their_files_and_the_
         let button = snap
             .get(&id(&format!("{card}.show_diff")))
             .expect("its diff");
-        assert_eq!(button.role, sem::Role::Button);
+        assert_eq!(button.role, accord::Role::Button);
         assert!(button.enabled);
     }
     let first = id(&format!("proposed.{}", commits[REVIEWED.len()].id));
@@ -268,7 +268,7 @@ fn a_review_the_rules_do_not_read_is_refused_and_nothing_opens() {
     let mut rig = Rig::review();
     rig.bench.host_surfaces();
     let receipt = propose(&mut rig, "review these three potatoes");
-    let Some(sem::Stage::Failed { error }) = receipt.stage() else {
+    let Some(accord::Stage::Failed { error }) = receipt.stage() else {
         panic!("{receipt:?}");
     };
     assert!(
@@ -280,7 +280,7 @@ fn a_review_the_rules_do_not_read_is_refused_and_nothing_opens() {
         Value::Text(error.clone())
     );
     let receipt = propose(&mut rig, "review these nine commits");
-    let Some(sem::Stage::Failed { error }) = receipt.stage() else {
+    let Some(accord::Stage::Failed { error }) = receipt.stage() else {
         panic!("{receipt:?}");
     };
     assert_eq!(error, "9 commit asked for, and stacks has 4");

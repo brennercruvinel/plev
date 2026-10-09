@@ -10,13 +10,13 @@
 //! a window draws into its surface texture, `engine::headless` draws into
 //! an offscreen texture, and both run the same function.
 
-use crate::compositor::Compositor;
-use crate::effects::EffectProcessor;
-use crate::gpu::GpuContext;
-use crate::gpu::texture_pool::TexturePool;
-use crate::perf::gpu_time::FrameStamps;
-use crate::perf::stages::{self, Stage};
-use crate::text::TextSystem;
+use crate::drawing::compositor::Compositor;
+use crate::drawing::effects::EffectProcessor;
+use crate::drawing::gpu::GpuContext;
+use crate::drawing::gpu::texture_pool::TexturePool;
+use crate::runtime::perf::gpu_time::FrameStamps;
+use crate::runtime::perf::stages::{self, Stage};
+use crate::drawing::text::TextSystem;
 
 use super::render_passes::{
     encode_composite_pass_timed, encode_layer_passes_timed, resolve_layer_text,
@@ -61,7 +61,7 @@ pub fn present_frame(
     // a loss wgpu only reports on a poll. Recover and draw on the new
     // device, or skip the frame.
     if gpu.poll_device_loss()
-        && !crate::gpu::recover_or_skip(compositor, gpu, text_system, effects, texture_pool, label)
+        && !crate::drawing::gpu::recover_or_skip(compositor, gpu, text_system, effects, texture_pool, label)
     {
         return None;
     }
@@ -141,7 +141,7 @@ pub fn draw_frame(
     label: &str,
 ) -> u32 {
     let draw = stages::span(Stage::Draw);
-    compositor.resolve(&crate::compositor::ResolveResources {
+    compositor.resolve(&crate::drawing::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
         format: gpu.surface_format(),
@@ -176,7 +176,7 @@ pub fn draw_frame(
         .collect();
 
     #[cfg(hot_reload)]
-    let clear_linear = crate::hot_reload::literals::linear(clear_linear);
+    let clear_linear = crate::runtime::hot_reload::literals::linear(clear_linear);
     let [r, g, b, a] = clear_linear;
     let clear_color = wgpu::Color {
         r: r as f64,

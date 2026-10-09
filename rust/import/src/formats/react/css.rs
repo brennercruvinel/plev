@@ -3,7 +3,7 @@
 //! HOFF palette become theme tokens (docs/how-to/code-against-the-plev-engine
 //! .md: tokens over literals); everything else stays an exact literal.
 
-use crate::ir::{Arg, Prop};
+use crate::tree::{Arg, Prop};
 
 /// Outcome of mapping a single declaration.
 pub enum MapOut {

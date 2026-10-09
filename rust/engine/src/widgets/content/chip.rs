@@ -13,13 +13,13 @@
 //! chip in a semantic projection. Keyboard focus ([`Chip::set_focused`],
 //! driven by the owning view) rings a chip the pointer reaches.
 
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Intent, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{Intent, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
-use crate::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 
 /// Status/tag pill. See the module docs for the interactivity contract.
 #[derive(Clone, Debug)]

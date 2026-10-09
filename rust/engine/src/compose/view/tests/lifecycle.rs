@@ -3,9 +3,9 @@
 // tests.rs file; the same-name nesting is deliberate.
 #[allow(clippy::module_inception)]
 mod tests {
-    use crate::component::{Component, Lifecycle};
-    use crate::compositor::{SceneNode, TextNodeKey};
-    use crate::view::ViewContext;
+    use crate::compose::view::{Component, Lifecycle};
+    use crate::drawing::compositor::{SceneNode, TextNodeKey};
+    use crate::compose::view::ViewContext;
     use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
     // -- Minimal test lifecycle --
@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn render_with_theme_in_context() {
-        use crate::theme::Theme;
+        use crate::styling::theme::Theme;
         struct ThemeReader;
         impl Lifecycle for ThemeReader {
             type State = bool;

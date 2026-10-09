@@ -6,7 +6,7 @@
 //! expression child is kept too, so the resolvers can report it.
 
 use crate::ParserError;
-use crate::ir::AttrValue;
+use crate::tree::AttrValue;
 use tree_sitter::Node;
 
 #[derive(Debug, Clone)]

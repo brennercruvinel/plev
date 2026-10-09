@@ -31,19 +31,19 @@
 //! `settle` reads nothing meanwhile, so an answer that arrives asleep
 //! waits on the channel for the first wake after the app wakes.
 
-use engine::window::Background;
-use propose::{Ask, Rules, propose_verified};
-use sem::{
+use engine::runtime::window::Background;
+use offers::{Ask, Rules, propose_verified};
+use accord::{
     Actor, Execution, Operable, Outcome, Request, RequestId, SemId, Semantics, SnapshotBuilder,
     Value,
 };
-use surface::SurfaceHost;
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use screen::SurfaceHost;
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
-use super::super::app::TodoPage;
+use super::super::todo::TodoPage;
 use super::asking::{Answer, Job, Pending, Proposal};
-use super::proposing::changing::{self, Changing};
-use super::proposing::{Op, Proposer, Proposing, Said, int};
+use super::offering::changing::{self, Changing};
+use super::offering::{Op, Proposer, Proposing, Said, int};
 
 /// The outcome of a proposal shown: the surface and how many nodes it
 /// has.
@@ -385,15 +385,15 @@ mod tests {
         use std::thread;
         use std::time::{Duration, Instant};
 
-        use claude_model::ClaudeCli;
-        use engine::window::Background;
-        use sem::{Stage, Value};
+        use claude::ClaudeCli;
+        use engine::runtime::window::Background;
+        use accord::{Stage, Value};
         use serde_json::json;
         use tempfile::TempDir;
 
-        use crate::view::apps::app::TodoPage;
-        use crate::view::apps::surface_page::SurfacePage;
-        use crate::view::apps::surface_page::asking::Claude;
+        use crate::views::apps::todo::TodoPage;
+        use crate::views::apps::surface::SurfacePage;
+        use crate::views::apps::surface::asking::Claude;
 
         /// One turn of a 60 Hz display.
         const TURN: f32 = 1.0 / 60.0;
@@ -433,7 +433,7 @@ mod tests {
             (todo, page, dir)
         }
 
-        fn stage(todo: &TodoPage, id: sem::RequestId) -> Stage {
+        fn stage(todo: &TodoPage, id: accord::RequestId) -> Stage {
             todo.receipt(id)
                 .expect("kept")
                 .stage()
@@ -442,7 +442,7 @@ mod tests {
         }
 
         /// Wakes the page until the request `id` ends, within `max`.
-        fn pump(page: &mut SurfacePage, todo: &mut TodoPage, id: sem::RequestId, max: Duration) {
+        fn pump(page: &mut SurfacePage, todo: &mut TodoPage, id: accord::RequestId, max: Duration) {
             let started = Instant::now();
             while matches!(stage(todo, id), Stage::Executing) {
                 assert!(started.elapsed() < max, "the fake answers within {max:?}");

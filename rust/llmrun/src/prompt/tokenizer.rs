@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex};
 use tokenizers::Tokenizer;
 
 use crate::stream::{self, Detok, Model, Request, Stream};
-use crate::{Info, LlmError, chat};
+use crate::{Info, LlmError, prompt::chat};
 
 /// The model's tokenizer (`tokenizer.json`).
 #[derive(Clone)]

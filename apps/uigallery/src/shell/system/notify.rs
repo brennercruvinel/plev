@@ -25,13 +25,13 @@
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex};
 
-use engine::platform::menu::locked;
-use engine::platform::notify::{Action, Notification, Notifier, default_notifier};
-use sem::{Receipt, ReceiptSink, SemId, Stage, Value};
+use engine::runtime::platform::menu::locked;
+use engine::runtime::platform::notify::{Action, Notification, Notifier, default_notifier};
+use accord::{Receipt, ReceiptSink, SemId, Stage, Value};
 use winit::window::WindowId;
 
-use super::{App, UserEvent};
-use crate::view::ShowcaseView;
+use super::super::{App, UserEvent};
+use crate::views::ShowcaseView;
 
 /// The shell's capability a notice's button asks for, as the projection
 /// names it (`view::dispatch::shell`).
@@ -207,15 +207,15 @@ fn show_action(view: &ShowcaseView) -> Option<Action> {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::input::FileDrop;
-    use engine::platform::menu::locked;
-    use engine::platform::notify::{FakeNotifier, Level};
-    use sem::{Actor, Request, SemId, Value};
+    use engine::control::input::FileDrop;
+    use engine::runtime::platform::menu::locked;
+    use engine::runtime::platform::notify::{FakeNotifier, Level};
+    use accord::{Actor, Request, SemId, Value};
     use winit::window::WindowId;
 
-    use super::super::App;
+    use super::super::super::App;
     use super::Finished;
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).expect("a valid id")
@@ -326,7 +326,7 @@ mod tests {
         .unwrap();
         let receipt = app.view.act(req).expect("the page takes it");
         assert!(
-            matches!(receipt.stage(), Some(sem::Stage::Executing)),
+            matches!(receipt.stage(), Some(accord::Stage::Executing)),
             "{:?}",
             receipt.stage()
         );

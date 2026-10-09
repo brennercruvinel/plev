@@ -3,12 +3,12 @@
 //! optional count badge and trailing actions on the right. One `Xl`
 //! control tall plus the blurb line when there is one.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, Theme};
 
-use crate::action::Badge;
-use crate::core::Rect;
+use crate::widgets::buttons::Badge;
+use crate::widgets::widget::Rect;
 
 #[derive(Clone, Debug)]
 pub struct PanelHeader {

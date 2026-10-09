@@ -10,8 +10,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sem::{SemId, Snapshot, StateRef};
-use uir::{CapabilityRef, Ir, IrNode};
+use accord::{SemId, Snapshot, StateRef};
+use plevir::{CapabilityRef, Ir, IrNode};
 
 /// what a bound node is there for: the capability it operates, or the
 /// state it shows when it operates none, or the list it repeats over.

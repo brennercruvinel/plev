@@ -46,16 +46,16 @@ mod generative;
 use std::collections::HashMap;
 use std::time::Duration;
 
-use comps::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
-use engine::gpu::image::ImageHandle;
-use engine::theme::Theme;
-use sem::{Receipt, Request, RequestId, Snapshot};
-use showcase::model::silences::{Decision, Settings, SilencesModel};
-use surface::{Dispatch, SurfaceHost};
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
+use engine::drawing::gpu::image::ImageHandle;
+use engine::styling::theme::Theme;
+use accord::{Receipt, Request, RequestId, Snapshot};
+use crate::domain::silences::{Decision, Settings, SilencesModel};
+use screen::{Dispatch, SurfaceHost};
 
-use super::app::TodoPage;
+use super::todo::TodoPage;
 use super::{EditKey, panel};
-use crate::view::clipboard::Keys;
+use crate::views::text_input::clipboard::Keys;
 use generative::{Generated, Halves, page::Page};
 use layout::{compute, row_parts};
 use semantics::{Ids, Target, Which};
@@ -415,7 +415,7 @@ impl SilencesPage {
 
     /// Who has the keys (a chord, the field's menu): the intent field or
     /// a field of the surface; nobody while an overlay holds the page.
-    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
         if self.inert {
             return Keys::Nobody;
         }
@@ -429,8 +429,8 @@ impl SilencesPage {
     }
 
     /// Select all in the field of the surface that has the keys.
-    pub(in crate::view) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
-        let all = comps::form::EditKey::SelectAll;
+    pub(in crate::views) fn select_all_in(&mut self, todo: &mut TodoPage) -> bool {
+        let all = engine::widgets::form::EditKey::SelectAll;
         self.with_host(|host, page| {
             let mut app = App { page, todo };
             host.iter_mut().any(|s| s.handle_edit_key(all, &mut app))
@@ -537,7 +537,7 @@ impl SilencesPage {
     /// which holds the page's projection: which preference is on, on the
     /// band's buttons. Never in `projection` or `snapshot`, which the port
     /// and a model's prompt read.
-    pub(crate) fn reader_states(&self, b: &mut sem::SnapshotBuilder) {
+    pub(crate) fn reader_states(&self, b: &mut accord::SnapshotBuilder) {
         let on = self.generated.host.preferences();
         self.generated.access.reader_states(b, on);
     }

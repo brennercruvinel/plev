@@ -34,13 +34,13 @@
 
 use std::collections::{BTreeSet, HashSet};
 
-use sem::{Confirm, Constraints, Policy, Role, Semantics, SnapshotBuilder, Value};
-use uir::LineKind;
+use accord::{Confirm, Constraints, Policy, Role, Semantics, SnapshotBuilder, Value};
+use plevir::LineKind;
 
 use super::Workbench;
-use crate::ids::Ids;
-use crate::views::diff_view::DiffLineKind;
-use crate::views::workspace::WorkspaceView;
+use crate::capability::ids::Ids;
+use crate::interfaces::panels::diff::DiffLineKind;
+use crate::interfaces::panels::layout::WorkspaceView;
 
 /// How many diff lines the projection carries: an agent reads a bounded
 /// diff, `count` says how many there are.

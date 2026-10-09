@@ -12,8 +12,8 @@ use std::fmt::Write as _;
 
 use cosmic_text::{CacheKey, Command, FontSystem, SwashCache};
 
-use crate::compositor::TextNodeKey;
-use crate::text::TextSystem;
+use crate::drawing::compositor::TextNodeKey;
+use crate::drawing::text::TextSystem;
 
 use super::write::{Svg, escape, fill, num};
 

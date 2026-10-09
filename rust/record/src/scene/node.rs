@@ -2,7 +2,7 @@
 //! layer's body and patch, the frame's head. the layout is in the module
 //! doc of `scene`.
 
-use engine::compositor::{Layer, LayerEffect, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Layer, LayerEffect, SceneNode, TextNodeKey};
 
 use super::SceneError;
 use super::asset::{image_key, path_key};

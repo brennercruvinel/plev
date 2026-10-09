@@ -2,14 +2,14 @@
 //! and edits the middle, and what it draws is the document (task-74,
 //! phase 7). Headless, real shaping.
 
-use rope::{Document, Selection, SelectionSet};
+use editor::{Document, Selection, SelectionSet};
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::layout::ComputedBounds;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::compose::layout::ComputedBounds;
 
-use super::{EditorTheme, EditorView};
-use engine::clipboard::LocalClipboard;
+use super::super::{EditorTheme, EditorView};
+use crate::runtime::platform::clipboard::LocalClipboard;
 
 const LINES: usize = 1_000_000;
 

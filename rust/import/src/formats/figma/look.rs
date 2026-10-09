@@ -5,10 +5,10 @@
 
 use serde_json::Value;
 
-use super::Ctx;
-use crate::css_map::color_token;
-use crate::figma::FigNode;
-use crate::ir::{Arg, Prop, Src};
+use super::resolve::Ctx;
+use crate::formats::react::css::color_token;
+use crate::formats::figma::parse::FigNode;
+use crate::tree::{Arg, Prop, Src};
 
 /// A paint as the builder's color expression, or why it has none.
 fn paint_color(p: &Value) -> Result<String, String> {

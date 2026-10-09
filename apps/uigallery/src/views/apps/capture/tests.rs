@@ -12,17 +12,17 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::platform::capture::{CaptureState, FakeCapture};
-use engine::platform::menu::locked;
-use engine::theme::Theme;
-use engine::window::Background;
-use sem::{Actor, Rejection, Request, Role, SemId, Stage, StateRef, Value};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::runtime::platform::capture::{CaptureState, FakeCapture};
+use engine::runtime::platform::menu::locked;
+use engine::styling::theme::Theme;
+use engine::runtime::window::Background;
+use accord::{Actor, Rejection, Request, Role, SemId, Stage, StateRef, Value};
 
 use super::*;
-use crate::view::apps::app::TodoPage;
-use crate::view::dispatch::PERSON_ONLY;
+use crate::views::apps::todo::TodoPage;
+use crate::views::dispatcher::PERSON_ONLY;
 
 type Shared = Arc<Mutex<FakeCapture>>;
 
@@ -183,7 +183,7 @@ fn the_frame_enters_the_texture_on_the_wake_and_not_before() {
     c.begin_frame();
     page.render(&mut c, content(), &theme);
     let drawn = c.layers().iter().flat_map(|l| l.nodes().iter()).any(
-        |n| matches!(n, engine::compositor::SceneNode::Image { image, .. } if image == &second),
+        |n| matches!(n, engine::drawing::compositor::SceneNode::Image { image, .. } if image == &second),
     );
     assert!(drawn, "the frame box draws the newest frame");
 }

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use crate::color::Color;
-    use crate::theme::Oklch;
+    use crate::styling::color::Color;
+    use crate::styling::theme::Oklch;
 
     // -- OKLCH round-trip --
 

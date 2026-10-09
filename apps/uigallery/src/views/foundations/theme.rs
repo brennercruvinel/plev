@@ -1,9 +1,9 @@
 //! Theme section: the HOFF token strip, palette cards, typography ramp.
 
-use comps::icons;
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::theme::Theme;
+use engine::widgets::icons;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::styling::theme::Theme;
 
 use super::{group_label, text};
 
@@ -70,7 +70,7 @@ impl ThemePage {
     /// The HOFF signature strip: the canonical white-alpha ramp and the
     /// four chromatic accents, drawn with the current theme's glass.
     fn render_hoff_tokens(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        use engine::theme::hoff;
+        use engine::styling::theme::hoff;
         group_label(c, "HOFF ALPHAS — #F8F8F8", content.x, content.y, theme);
         let alphas: [(f32, &str); 7] = [
             (0.02, ".02"),
@@ -206,7 +206,7 @@ impl ThemePage {
 
             // Card painted with the *target* theme's own colors; the
             // current-theme check icon pushed later stacks on top.
-            c.push(comps::prelude::rounded_rect(
+            c.push(engine::widgets::prelude::rounded_rect(
                 rect.x,
                 rect.y,
                 rect.w,
@@ -214,7 +214,7 @@ impl ThemePage {
                 theme.radius.lg,
                 t.colors.bg_panel.0,
             ));
-            c.push(comps::prelude::rounded_rect_stroke(
+            c.push(engine::widgets::prelude::rounded_rect_stroke(
                 rect.x,
                 rect.y,
                 rect.w,

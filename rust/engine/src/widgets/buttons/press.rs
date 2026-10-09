@@ -3,11 +3,11 @@
 //! a [`ButtonRecipe`] state into scene nodes. The three button widgets
 //! are thin over this.
 
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{ButtonRecipe, ButtonSurface, Theme};
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::{focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::recipe::{focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets};
 
 /// Pointer state of a pressable control.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -96,7 +96,7 @@ pub fn paint_surface(
         .iter()
         .map(|s| {
             let mut s = *s;
-            s.color = engine::color::Color(faded(s.color.0, alpha));
+            s.color = crate::styling::color::Color(faded(s.color.0, alpha));
             s
         })
         .collect();

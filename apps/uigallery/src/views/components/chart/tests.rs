@@ -2,9 +2,9 @@
 //! lifecycle (replay on click, settles, no busy loop) and a headless
 //! mid-reveal scene probe. No GPU anywhere.
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
 
 use super::ChartPage;
 

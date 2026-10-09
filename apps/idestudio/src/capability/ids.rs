@@ -4,7 +4,7 @@
 //! sha, never by a row index, so a capability keeps its id while its row
 //! moves, scrolls away or comes back.
 
-use sem::{SemError, SemId};
+use accord::{SemError, SemId};
 
 pub(crate) struct Ids {
     /// `changes`: the changed files.

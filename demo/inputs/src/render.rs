@@ -1,7 +1,7 @@
 // Rendering: scene construction and GPU submission for the input demo.
 
-use engine::compositor::{Compositor, TextNodeKey};
-use engine::text::TextMeasurer;
+use engine::drawing::compositor::{Compositor, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
 
 use crate::palette::*;
 use crate::state::{InputDemoApp, State};

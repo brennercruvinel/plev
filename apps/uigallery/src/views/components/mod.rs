@@ -39,10 +39,10 @@ pub mod toast;
 pub mod tooltip;
 pub mod tree;
 
-pub(in crate::view) use super::dispatch::component::{After, Component, under};
+pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};
 
-use sem::SemId;
+use accord::SemId;
 
 /// A component page's root id, `<name>` (`checkbox_page`); `None`, logged,
 /// when the name does not parse, which each page's test proves it does.
@@ -91,11 +91,11 @@ impl Focus {
 /// `(content.x, y)`, wrapping at the content's right edge. Returns the
 /// rects and the total height used.
 pub(crate) fn flow(
-    content: comps::prelude::Rect,
+    content: engine::widgets::prelude::Rect,
     y: f32,
     gap: f32,
     sizes: impl Iterator<Item = (f32, f32)>,
-) -> (Vec<comps::prelude::Rect>, f32) {
+) -> (Vec<engine::widgets::prelude::Rect>, f32) {
     let mut rects = Vec::new();
     let mut x = content.x;
     let mut line_h: f32 = 0.0;
@@ -106,7 +106,7 @@ pub(crate) fn flow(
             row_y += line_h + gap;
             line_h = 0.0;
         }
-        rects.push(comps::prelude::Rect::new(x, row_y, w, h));
+        rects.push(engine::widgets::prelude::Rect::new(x, row_y, w, h));
         x += w + gap;
         line_h = line_h.max(h);
     }

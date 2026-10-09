@@ -20,9 +20,9 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use sem::{ActionName, Actor, Rejection, SemId, Stage, Value};
+use accord::{ActionName, Actor, Rejection, SemId, Stage, Value};
 use toy::ToyHost;
-use wire::{
+use socket::{
     Act, AgentPort, Client, Config, MAX_LINE, Observe, ProtoError, Reply, WireError, find,
     socket_path,
 };
@@ -96,7 +96,7 @@ fn client(path: &Path, name: &str) -> Client {
     c
 }
 
-fn revision_of(reply: &Reply) -> sem::Revision {
+fn revision_of(reply: &Reply) -> accord::Revision {
     match reply {
         Reply::Snapshot(s) => s.revision,
         Reply::Delta(d) => d.revision,
@@ -181,7 +181,7 @@ fn observe_act_and_the_stale_case_over_the_socket() {
     };
     assert!(matches!(
         &changes[..],
-        [sem::Change::StateChanged { before: Some(Value::Text(b)), after: Some(Value::Text(a)), .. }]
+        [accord::Change::StateChanged { before: Some(Value::Text(b)), after: Some(Value::Text(a)), .. }]
             if b == "buy bread" && a == "buy bread and eggs"
     ));
     assert_eq!(host.app.items.len(), 3, "nothing was added");
@@ -211,7 +211,7 @@ fn a_broken_line_answers_an_error_and_the_connection_goes_on() {
         for _ in 0..4 {
             let mut line = String::new();
             reader.read_line(&mut line).unwrap();
-            lines.push(wire::decode_server(line.trim_end()).unwrap());
+            lines.push(socket::decode_server(line.trim_end()).unwrap());
         }
         lines
     });
@@ -242,7 +242,7 @@ fn a_line_past_the_limit_ends_the_connection() {
         let _ = reader.read_to_end(&mut rest);
         (line, rest)
     });
-    let msg = wire::decode_server(reply.trim_end()).unwrap();
+    let msg = socket::decode_server(reply.trim_end()).unwrap();
     assert!(matches!(
         msg.reply,
         Reply::Error(ProtoError::BadMessage { reason }) if reason.contains("at most")
@@ -288,7 +288,7 @@ fn a_client_that_stops_sending_still_gets_its_replies() {
     let out = agent.join().unwrap();
     let ids: Vec<Option<String>> = out
         .lines()
-        .map(|l| wire::decode_server(l).unwrap().id)
+        .map(|l| socket::decode_server(l).unwrap().id)
         .collect();
     assert_eq!(ids, [Some("h".into()), Some("o".into())], "{out}");
 }
@@ -316,7 +316,7 @@ fn two_agents_at_once_each_under_its_own_name() {
             )
             .unwrap();
         // confirming is a person's, never an agent's.
-        let e = a.call(wire::Ask::Confirm {
+        let e = a.call(socket::Ask::Confirm {
             request: sb[0].request,
         });
         assert!(matches!(
@@ -510,7 +510,7 @@ fn random_lines_over_the_socket_never_break_the_port() {
         let last = loop {
             let mut line = String::new();
             assert!(reader.read_line(&mut line).unwrap() > 0, "the port hung up");
-            let msg = wire::decode_server(line.trim_end()).unwrap();
+            let msg = socket::decode_server(line.trim_end()).unwrap();
             answered += 1;
             if msg.id.as_deref() == Some("last") {
                 break msg.reply;
@@ -538,7 +538,7 @@ fn a_persons_answer_reaches_an_agent_that_only_waits() {
     let agent = thread::spawn(move || {
         let mut c = client(&path, "claude");
         let r = revision_of(&c.observe(Observe::default()).unwrap());
-        let mut each = |s: &wire::StageReply| {
+        let mut each = |s: &socket::StageReply| {
             if s.stage == Stage::AwaitingConfirmation {
                 let _ = asked_tx.send(s.request);
             }
@@ -584,7 +584,7 @@ fn a_persons_answer_reaches_an_agent_that_only_waits() {
         }
     }
     let (first, second) = agent.join().unwrap();
-    let names = |stages: &[wire::StageReply]| -> Vec<&str> {
+    let names = |stages: &[socket::StageReply]| -> Vec<&str> {
         stages.iter().map(|s| s.stage.name()).collect()
     };
     assert_eq!(

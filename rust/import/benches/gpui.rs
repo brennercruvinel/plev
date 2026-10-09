@@ -3,7 +3,7 @@
 //! anywhere the crate builds, no external sources needed.
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use parser::transpile_gpui;
+use import::transpile_gpui;
 
 const SEPARATOR: &str = include_str!("../fixtures/gpui/separator.rs");
 

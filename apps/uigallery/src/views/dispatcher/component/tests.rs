@@ -5,10 +5,10 @@
 
 use std::sync::{Arc, Mutex};
 
-use sem::{Actor, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Stage};
+use accord::{Actor, Receipt, ReceiptSink, Rejection, Request, Role, SemId, Stage};
 
 use super::under;
-use crate::view::{PAGES, ShowcaseView};
+use crate::views::{PAGES, ShowcaseView};
 
 fn sid(text: &str) -> SemId {
     match SemId::parse(text) {

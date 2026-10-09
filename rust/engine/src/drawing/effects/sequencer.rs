@@ -1,6 +1,6 @@
 use wgpu::util::DeviceExt;
 
-use super::types::*;
+use super::parameters::*;
 
 // ---------------------------------------------------------------------------
 // EffectProcessor -- owns pipelines and processes effects
@@ -88,7 +88,7 @@ impl EffectProcessor {
         // -- Effect pipelines (extracted for hot-reload support) --
 
         #[cfg(hot_reload)]
-        let blur_src = crate::hot_reload::shader_source("blur.wgsl");
+        let blur_src = crate::runtime::hot_reload::shader_source("blur.wgsl");
         #[cfg(not(hot_reload))]
         let blur_src: std::borrow::Cow<'_, str> = include_str!("../gpu/shaders/blur.wgsl").into();
         let blur_pipeline = Self::create_blur_pipeline(
@@ -107,7 +107,7 @@ impl EffectProcessor {
         );
 
         #[cfg(hot_reload)]
-        let shadow_src = crate::hot_reload::shader_source("shadow.wgsl");
+        let shadow_src = crate::runtime::hot_reload::shader_source("shadow.wgsl");
         #[cfg(not(hot_reload))]
         let shadow_src: std::borrow::Cow<'_, str> =
             include_str!("../gpu/shaders/shadow.wgsl").into();
@@ -120,7 +120,7 @@ impl EffectProcessor {
         );
 
         #[cfg(hot_reload)]
-        let comp_src = crate::hot_reload::shader_source("composite.wgsl");
+        let comp_src = crate::runtime::hot_reload::shader_source("composite.wgsl");
         #[cfg(not(hot_reload))]
         let comp_src: std::borrow::Cow<'_, str> =
             include_str!("../gpu/shaders/composite.wgsl").into();

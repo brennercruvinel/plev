@@ -12,7 +12,7 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::{Map, Value as Json};
 
-use crate::proto::{Ask, ClientMsg, ProtoError, Reply, ServerMsg, VERSION};
+use crate::protocol::{Ask, ClientMsg, ProtoError, Reply, ServerMsg, VERSION};
 
 /// a line refused before it reached the app, and why. `id` is the line's
 /// id when it could be read.

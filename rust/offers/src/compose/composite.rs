@@ -11,7 +11,7 @@
 //! when it comes), and its policy is the narrowest of theirs, so an agent
 //! never runs a composite one of whose steps is kept from it.
 
-use sem::{
+use accord::{
     ActionDecl, ActionName, Actors, Confirm, Node, Policy, SemId, Snapshot, SnapshotBuilder,
     StateRef,
 };

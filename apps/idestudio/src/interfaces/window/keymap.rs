@@ -6,15 +6,15 @@
 //! shortcuts are data, not `match` arms — a user keymap can later be
 //! appended on top of the default one to override bindings.
 
-use engine::actions::{ActionRegistry, Keymap};
+use engine::control::keymap::{ActionRegistry, Keymap};
 
-engine::actions!(app, [Quit]);
-engine::actions!(theme, [Toggle]);
-engine::actions!(nav, [Up, Down]);
-engine::actions!(file, [ShowDiff, Stage, Discard]);
-engine::actions!(commit, [OpenForm, Submit, Cancel, Backspace]);
-engine::actions!(overlay, [Close]);
-engine::actions!(edit, [Copy, Cut, Paste, SelectAll]);
+engine::control::keymap!(app, [Quit]);
+engine::control::keymap!(theme, [Toggle]);
+engine::control::keymap!(nav, [Up, Down]);
+engine::control::keymap!(file, [ShowDiff, Stage, Discard]);
+engine::control::keymap!(commit, [OpenForm, Submit, Cancel, Backspace]);
+engine::control::keymap!(overlay, [Close]);
+engine::control::keymap!(edit, [Copy, Cut, Paste, SelectAll]);
 
 /// All actions the app can dispatch, in palette-friendly order.
 pub fn registry() -> ActionRegistry {
@@ -47,7 +47,7 @@ pub fn default_keymap() -> Keymap {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::actions::{ContextStack, KeyContext, KeymapMatcher, MatchResult};
+    use engine::control::keymap::{ContextStack, KeyContext, KeymapMatcher, MatchResult};
 
     fn stack(names: &[&str]) -> ContextStack {
         names

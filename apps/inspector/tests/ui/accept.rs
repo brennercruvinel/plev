@@ -4,7 +4,7 @@
 //! the refusal with "removed: B", then the acceptance and the sha.
 
 use inspector::InspectorView;
-use sem::Millis;
+use accord::Millis;
 
 use crate::support::{Fallible, click_control, draw, id, open, row_after, rows, texts};
 
@@ -110,7 +110,7 @@ fn the_commit_scenario_in_the_inspector() -> Fallible {
     // row by row, the panel shows the refusal's delta, then the sha.
     let panel = view.layout().panel;
     let (x, y) = panel.center();
-    let step = comps::content::CodeBlock::row_h(view.theme());
+    let step = engine::widgets::content::CodeBlock::row_h(view.theme());
     let mut drawn = texts(&draw(&mut view));
     while view.scroll(x, y, step) {
         drawn.extend(texts(&draw(&mut view)));

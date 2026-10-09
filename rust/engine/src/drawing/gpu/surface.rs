@@ -4,7 +4,7 @@ use std::sync::Arc;
 use winit::window::Window;
 
 use super::context::GpuContext;
-use super::utils::ortho_projection;
+use super::presets::ortho_projection;
 
 // ---------------------------------------------------------------------------
 // Surface management: resize, drop, recreate

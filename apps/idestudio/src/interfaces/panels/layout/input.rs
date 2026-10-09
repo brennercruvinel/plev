@@ -6,7 +6,7 @@
 
 use super::super::commit_form::CommitFormAction;
 use super::{PendingAction, UiRequest, WorkspaceView};
-use comps::prelude::WidgetEvent;
+use engine::widgets::prelude::WidgetEvent;
 
 impl WorkspaceView {
     /// Handle a left click at (cx, cy). Returns true if state changed.
@@ -136,7 +136,7 @@ impl WorkspaceView {
 
     /// Handle a right-click at (cx, cy). Returns true if an overlay was opened.
     pub(crate) fn handle_right_click(&mut self, cx: f32, cy: f32) -> bool {
-        use comps::overlay::MenuItem;
+        use engine::widgets::overlay::MenuItem;
 
         // A modal asks the person something: it holds the screen.
         if self.modal_open() {

@@ -12,7 +12,7 @@ use std::collections::BTreeSet;
 use std::error::Error;
 
 use indexmap::IndexMap;
-use sem::{
+use accord::{
     Actor, Change, Dispatcher, Execution, Operable, Outcome, ParamSpec, Receipt, Rejection,
     Request, RequestId, Role, Semantics, Snapshot, SnapshotBuilder, Stage, Value, ValueKind,
 };

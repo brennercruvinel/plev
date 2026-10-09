@@ -20,9 +20,9 @@
 use std::path::Path;
 use std::process::Command;
 
-use inspect::Inspector;
-use rec::{InputKind, Kind, Session};
-use sem::{Actor, SemId};
+use replay::Inspector;
+use record::{InputKind, Kind, Session};
+use accord::{Actor, SemId};
 use serde_json::Value as Json;
 
 /// What the person writes, as the laboratory writes it.

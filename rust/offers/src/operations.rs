@@ -11,7 +11,7 @@
 use std::fmt::Write as _;
 
 use serde_json::Value;
-use uir::Op;
+use plevir::Op;
 
 use crate::adapt::Adapt;
 use crate::prompt::{REPLY_CHARS, RULES, clip, components, registry, rule};
@@ -184,10 +184,10 @@ pub(crate) fn repair(base: &str, attempt: usize, reply: &str, why: &[String]) ->
 
 /// the reasons an operation `op`, the `at`th, was refused: one per error
 /// of the verifier, or the refusal.
-pub(crate) fn reasons(at: usize, op: &Op, error: &uir::TransformError) -> Vec<String> {
+pub(crate) fn reasons(at: usize, op: &Op, error: &plevir::TransformError) -> Vec<String> {
     let head = format!("operation {at}, `{op}`, was refused");
     match error {
-        uir::TransformError::Unverified(errors) => errors
+        plevir::TransformError::Unverified(errors) => errors
             .iter()
             .map(|e| format!("{head}: the surface it makes does not verify: {e}"))
             .collect(),

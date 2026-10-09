@@ -9,13 +9,13 @@
 //! widget state and the filter's index list only. Nothing here re-reads
 //! the file.
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     EventResult, IconButton, Rect, Scrollbar, Spinner, SpinnerSize, VirtualList, Wake, WidgetEvent,
 };
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::input::scroll::ScrollState;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::control::input::scroll::ScrollState;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 
 use super::field::{Field, field_h};
 use super::search::render_frame_box;
@@ -59,7 +59,7 @@ pub struct ChunksScreen {
 
 impl ChunksScreen {
     pub fn new() -> Self {
-        let ghost = || IconButton::new("copy").variant(comps::prelude::IconButtonVariant::Ghost);
+        let ghost = || IconButton::new("copy").variant(engine::widgets::prelude::IconButtonVariant::Ghost);
         Self {
             filter: Field::new("filter by text, chunk id or urna:// citation"),
             filtered: None,
@@ -609,7 +609,7 @@ struct Layout {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::types::{ChunksData, OpenedDbView};
+    use crate::backend::workers::messages::{ChunksData, OpenedDbView};
     use crate::view::fixtures;
     use std::collections::HashMap;
 
@@ -617,7 +617,7 @@ mod tests {
         db: Box<OpenedDbView>,
         chunks: ChunksData,
         index: HashMap<String, usize>,
-        frames: HashMap<usize, Result<engine::gpu::image::ImageHandle, String>>,
+        frames: HashMap<usize, Result<engine::drawing::gpu::image::ImageHandle, String>>,
     }
 
     impl Fix {

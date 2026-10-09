@@ -7,13 +7,13 @@
 //! draws and hit-tests with, and [`Switch::project`] declares the switch
 //! in a semantic projection; the app still owns `on`.
 
-use engine::animation::Spring;
-use engine::compositor::{Compositor, SceneNode};
-use engine::theme::{MotionPhysics, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::compose::animation::Spring;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::styling::theme::{MotionPhysics, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::core::{EventResult, Rect, WidgetEvent, mix};
-use crate::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, mix};
+use crate::widgets::recipe::focus_ring;
 
 // HOFF switch: `control.switch_size` track (pill), `control.switch_knob`
 // knob inset by the derived pad. The widget centers the track inside its

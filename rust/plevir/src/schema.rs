@@ -16,7 +16,7 @@ use crate::token::{
     Align, Axis, ColorRole, ControlSize, Elevation, MAX_FLEX, MAX_RATIO, MIN_RATIO, ShapeRole,
     SizeToken, SpacingToken, TypographyRole,
 };
-use crate::vocab::{ChartKind, Component, names};
+use crate::vocabulary::{ChartKind, Component, names};
 
 /// an object with exactly these properties, `required` among them.
 fn object(required: &[&str], properties: Value) -> Value {

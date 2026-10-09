@@ -19,10 +19,10 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use engine::effects::EffectProcessor;
-use engine::gpu::{GpuContext, RenderConfig};
-use engine::perf::process_rss_bytes;
-use engine::text::{TextMeasurer, TextSystem};
+use engine::drawing::effects::EffectProcessor;
+use engine::drawing::gpu::{GpuContext, RenderConfig};
+use engine::runtime::perf::process_rss_bytes;
+use engine::drawing::text::{TextMeasurer, TextSystem};
 use wgpu::naga;
 
 /// Repetitions of a CPU step; the best one is reported.

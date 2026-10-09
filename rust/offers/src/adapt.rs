@@ -17,8 +17,8 @@
 //! the `Proposer` of task-69 is untouched: a transformer is its sibling,
 //! and `Rules` and `Llm` are both.
 
-use sem::{Actor, Snapshot};
-use uir::{Adapted, Capabilities, Context, GenerationPolicy, Op, TransformError};
+use accord::{Actor, Snapshot};
+use plevir::{Adapted, Capabilities, Context, GenerationPolicy, Op, TransformError};
 
 use crate::error::ProposeError;
 

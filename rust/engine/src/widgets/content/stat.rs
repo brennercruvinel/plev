@@ -3,12 +3,12 @@
 //! badge. The stat card's numbers and every "N chunks / 1.3 GB" line in
 //! an app are this one block, so they line up.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Intent, Theme};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{Intent, Theme};
 
-use crate::action::Badge;
-use crate::core::Rect;
+use crate::widgets::buttons::Badge;
+use crate::widgets::widget::Rect;
 
 /// Value size on the type ramp.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]

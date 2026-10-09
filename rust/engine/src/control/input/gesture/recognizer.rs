@@ -1,7 +1,7 @@
 use web_time::Instant;
 
-use crate::input::touch::TouchTracker;
-use crate::input::{
+use crate::control::input::touch::TouchTracker;
+use crate::control::input::{
     DOUBLE_TAP_SLOP, DragEvent, GestureEvent, Phase, PinchEvent, Point, TOUCH_SLOP,
 };
 

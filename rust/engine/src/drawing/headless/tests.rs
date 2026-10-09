@@ -4,8 +4,8 @@
 //! the suite still runs on adapterless CI.
 
 use super::*;
-use crate::compositor::{Compositor, LayerId, RoundedRectParams, SceneNode, TextNodeKey};
-use crate::theme::hoff::PAGE_BG;
+use crate::drawing::compositor::{Compositor, LayerId, RoundedRectParams, SceneNode, TextNodeKey};
+use crate::styling::theme::hoff::PAGE_BG;
 
 /// Background of the documented pixel sample: the HOFF page tone #303030,
 /// which every window measures as 48,48,48.
@@ -54,7 +54,7 @@ fn scene(c: &mut Compositor, overlay: LayerId) {
     c.push(SceneNode::Text {
         key: TextNodeKey::from_style(
             "headless",
-            &crate::text::TextStyle::new(16.0).with_line_height(22.4),
+            &crate::drawing::text::TextStyle::new(16.0).with_line_height(22.4),
             None,
         ),
         x: 50.0,

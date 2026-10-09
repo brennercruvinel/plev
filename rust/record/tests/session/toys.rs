@@ -5,7 +5,7 @@
 use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
-use sem::{
+use accord::{
     Actor, Constraints, Execution, Operable, Outcome, ParamSpec, Request, RequestId, Role, SemId,
     Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };

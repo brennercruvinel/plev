@@ -15,15 +15,15 @@
 //!
 //! Needs a GPU adapter; without one every test skips.
 
-use engine::compositor::{
+use engine::drawing::compositor::{
     Compositor, GradientRectParams, LayerEffect, RoundedRectParams, SceneNode, ShadowParams,
     TextNodeKey,
 };
-use engine::gpu::{RenderConfig, load_image_rgba};
-use engine::headless::{Frame, HeadlessError, Renderer, Viewport};
-use engine::path::PathBuilder;
-use engine::text::TextStyle;
-use engine::theme::hoff::PAGE_BG;
+use engine::drawing::gpu::{RenderConfig, load_image_rgba};
+use engine::drawing::headless::{Frame, HeadlessError, Renderer, Viewport};
+use engine::drawing::path::PathBuilder;
+use engine::drawing::text::TextStyle;
+use engine::styling::theme::hoff::PAGE_BG;
 
 const WIDTH: f32 = 240.0;
 const HEIGHT: f32 = 160.0;

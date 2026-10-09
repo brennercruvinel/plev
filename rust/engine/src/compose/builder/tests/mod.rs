@@ -8,7 +8,7 @@ mod layout;
 mod styles;
 mod intent;
 
-use crate::view::ViewContext;
+use crate::compose::view::ViewContext;
 
 fn test_cx() -> ViewContext {
     ViewContext::new(800.0, 600.0)

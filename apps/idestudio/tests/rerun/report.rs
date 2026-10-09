@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use sem::{Change, Rejection, RequestId, Stage};
+use accord::{Change, Rejection, RequestId, Stage};
 
 /// how a recorded stage and a rerun one compared.
 #[derive(Clone, Debug, PartialEq)]

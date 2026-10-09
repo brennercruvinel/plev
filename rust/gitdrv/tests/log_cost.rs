@@ -14,7 +14,7 @@ use std::path::Path;
 use std::process::Command;
 use std::time::{Duration, Instant};
 
-use git::GitRepo;
+use gitdrv::GitRepo;
 
 /// The limit the ide's stacks panel asks for.
 const LIMIT: usize = 100;

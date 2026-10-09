@@ -3,10 +3,10 @@
 
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use crate::core::Rect;
-use engine::text::TextStyle;
+use crate::widgets::widget::Rect;
+use crate::drawing::text::TextStyle;
 
-use super::{donut, rects_overlap, slice_polygon};
+use super::super::{donut, rects_overlap, slice_polygon};
 
 fn center_style() -> TextStyle {
     TextStyle::new(20.0).with_weight(600)

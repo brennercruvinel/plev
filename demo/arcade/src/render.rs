@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::{ElementState, WindowEvent};
 use engine::winit::event_loop::ActiveEventLoop;
@@ -82,7 +82,7 @@ impl SnakeApp {
         self.game.build_scene(&mut self.compositor, w, h);
 
         self.compositor
-            .resolve(&engine::compositor::ResolveResources {
+            .resolve(&engine::drawing::compositor::ResolveResources {
                 device: &gpu.device,
                 queue: &gpu.queue,
                 format: gpu.surface_format(),
@@ -96,7 +96,7 @@ impl SnakeApp {
 
         // Resolve text per clip group so the ranges patched into the
         // draw sequence line up 1:1 with its Text commands.
-        engine::window::resolve_layer_text(&mut self.compositor, gpu, text_system);
+        engine::runtime::window::resolve_layer_text(&mut self.compositor, gpu, text_system);
         text_system.finish_frame();
 
         let mut encoder =

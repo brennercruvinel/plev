@@ -45,7 +45,7 @@ pub enum SceneNode {
         color: [f32; 4],
     },
     Path {
-        data: crate::path::TessellatedPath,
+        data: crate::drawing::path::TessellatedPath,
     },
     /// An image from the image atlas, optionally with rounded corners.
     Image {
@@ -53,7 +53,7 @@ pub enum SceneNode {
         y: f32,
         w: f32,
         h: f32,
-        image: crate::gpu::image::ImageHandle,
+        image: crate::drawing::gpu::image::ImageHandle,
         corner_radius: f32,
     },
     /// Push a clip rect onto the clip stack: following nodes are scissored
@@ -124,7 +124,7 @@ pub struct TextNodeKey {
 /// The string as the source has it now (literal hot reload), else as given.
 fn live_text(text: &str) -> String {
     #[cfg(hot_reload)]
-    if let Some(now) = crate::hot_reload::literals::text(text) {
+    if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
         return now;
     }
     text.to_string()
@@ -146,7 +146,7 @@ impl TextNodeKey {
     /// Build the key from a [`TextStyle`], so widgets measure and render
     /// with exactly the same typography (size, line height, weight,
     /// letter spacing, family).
-    pub fn from_style(text: &str, style: &crate::text::TextStyle, max_width: Option<f32>) -> Self {
+    pub fn from_style(text: &str, style: &crate::drawing::text::TextStyle, max_width: Option<f32>) -> Self {
         Self {
             text: live_text(text),
             font_size_bits: style.font_size.to_bits(),

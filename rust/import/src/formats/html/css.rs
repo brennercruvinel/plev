@@ -11,8 +11,8 @@
 //! weights), so both sources read one mapper and react's output does not
 //! move.
 
-use crate::css_map::{MapOut, map_decl, px};
-use crate::ir::{AttrValue, Prop};
+use crate::formats::react::css::{MapOut, map_decl, px};
+use crate::tree::{AttrValue, Prop};
 
 /// What one declaration becomes.
 #[derive(Debug, Clone, PartialEq)]
@@ -357,7 +357,7 @@ pub fn attr(name: &str, value: Option<&str>) -> (String, AttrValue) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ir::Arg;
+    use crate::tree::Arg;
 
     #[test]
     fn selectors_of_the_subset_and_why_the_rest_is_not() {

@@ -130,8 +130,8 @@ fn toast_render_emits_nodes() {
 
 // Scrollbar
 
-fn scrolled_state() -> engine::input::scroll::ScrollState {
-    let mut s = engine::input::scroll::ScrollState::new();
+fn scrolled_state() -> crate::control::input::scroll::ScrollState {
+    let mut s = crate::control::input::scroll::ScrollState::new();
     s.set_viewport(200.0);
     s.set_content(800.0);
     s
@@ -191,7 +191,7 @@ fn scrollbar_drag_moves_scroll() {
 fn scrollbar_inert_when_content_fits() {
     let mut sb = Scrollbar::new();
     let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
-    let mut scroll = engine::input::scroll::ScrollState::new();
+    let mut scroll = crate::control::input::scroll::ScrollState::new();
     scroll.set_viewport(200.0);
     scroll.set_content(100.0);
     let r = sb.handle_event(&down(295.0, 100.0), bounds, &mut scroll, &hoff());
@@ -306,10 +306,10 @@ fn spinner_stands_still_with_reduced_motion() {
     let mut s = Spinner::new();
     s.tick(0.1);
     let at = s.angle();
-    engine::animation::set_reduced_motion(true);
+    crate::compose::animation::set_reduced_motion(true);
     let moved = s.tick(0.1);
     let still = s.angle();
-    engine::animation::set_reduced_motion(false);
+    crate::compose::animation::set_reduced_motion(false);
     assert!(!moved, "no frame asked");
     assert_eq!(still, at, "the arc stands where it was");
     assert!(s.tick(0.1) && s.angle() > at, "motion again");

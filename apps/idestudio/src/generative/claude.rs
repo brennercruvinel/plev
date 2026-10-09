@@ -18,10 +18,10 @@
 use std::sync::mpsc::{Receiver, Sender, TryRecvError};
 use std::time::{Duration, Instant};
 
-use claude_model::{Cancel, ClaudeCli};
-use propose::{Ask, Llm, Model, ModelError, ProposeError, propose_verified};
-use sem::{Actor, RequestId, Snapshot};
-use uir::{Capabilities, GenerationPolicy, VerifiedIr};
+use claude::{Cancel, ClaudeCli};
+use offers::{Ask, Llm, Model, ModelError, ProposeError, propose_verified};
+use accord::{Actor, RequestId, Snapshot};
+use plevir::{Capabilities, GenerationPolicy, VerifiedIr};
 
 /// How often the workbench looks at the channel while it waits.
 pub(crate) const POLL: Duration = Duration::from_millis(100);

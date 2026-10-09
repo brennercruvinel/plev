@@ -7,9 +7,9 @@
 
 mod toy;
 
-use sem::{Acted, Actor, Rejection, RequestId, Revision, SemId, Stage};
+use accord::{Acted, Actor, Rejection, RequestId, Revision, SemId, Stage};
 use toy::ToyHost;
-use wire::{ConnId, Host, Reply, Server, ServerMsg, StageReply, decode_client};
+use socket::{ConnId, Host, Reply, Server, ServerMsg, StageReply, decode_client};
 
 const A: ConnId = 1;
 

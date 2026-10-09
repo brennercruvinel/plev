@@ -1,15 +1,15 @@
 //! `check`, the decision on a request against the current state, and its
 //! answer: `Verdict`, with a `Rejection` that says why.
 
-use crate::decl::{ActionDecl, Actors, Confirm, Constraints};
-use crate::diff::{Change, state_change};
-use crate::error::SemErrors;
-use crate::id::SemId;
-use crate::name::ActionName;
-use crate::receipt::RequestId;
-use crate::request::{Actor, Request};
+use crate::manifest::{ActionDecl, Actors, Confirm, Constraints};
+use crate::mutation::{Change, state_change};
+use crate::failures::SemErrors;
+use crate::identity::SemId;
+use crate::notation::ActionName;
+use crate::receipts::RequestId;
+use crate::requests::{Actor, Request};
 use crate::snapshot::Snapshot;
-use crate::value::{StateRef, Value};
+use crate::property::{StateRef, Value};
 
 /// the answer to a request.
 #[derive(Clone, Debug, PartialEq, Eq)]

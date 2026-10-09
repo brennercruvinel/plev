@@ -1,10 +1,10 @@
 //! Built-in View implementations: ContainerView, RectView, TextView.
 
-use crate::compositor::{SceneNode, TextNodeKey};
-use crate::layout::LayoutStyle;
+use crate::drawing::compositor::{SceneNode, TextNodeKey};
+use crate::compose::layout::LayoutStyle;
 
 use super::context::ViewContext;
-use super::trait_def::View;
+use super::View;
 
 // ---------------------------------------------------------------------------
 // ContainerView -- applies layout to children, optional background

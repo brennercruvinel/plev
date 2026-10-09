@@ -13,10 +13,10 @@ use std::process::Command;
 use std::sync::mpsc::channel;
 use std::time::Duration;
 
-use git::{GitClient, GitEvent};
-use ide::workbench::Workbench;
-use sem::{SemId, Snapshot};
-use wire::{Reply, ServerMsg, SnapshotReply, encode_server};
+use gitdrv::{GitClient, GitEvent};
+use idestudio::capability::Workbench;
+use accord::{SemId, Snapshot};
+use socket::{Reply, ServerMsg, SnapshotReply, encode_server};
 
 #[test]
 #[ignore = "a measurement on this repository, run by hand"]

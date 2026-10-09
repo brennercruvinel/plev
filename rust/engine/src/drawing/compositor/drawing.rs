@@ -1,5 +1,5 @@
 use super::{Compositor, LayerId, SceneNode};
-use crate::compositor::scene::TextNodeKey;
+use crate::drawing::compositor::scene::TextNodeKey;
 
 /// Parameters for drawing a rounded rectangle with optional border.
 pub struct RoundedRectParams {
@@ -52,7 +52,7 @@ impl Compositor {
 
     pub fn push_to_layer(&mut self, layer_id: LayerId, node: SceneNode) {
         #[cfg(hot_reload)]
-        let node = crate::hot_reload::literals::recolor(node);
+        let node = crate::runtime::hot_reload::literals::recolor(node);
         if let Some(layer) = self.layers.iter_mut().find(|l| l.id == layer_id) {
             layer.nodes.push(node);
         } else {
@@ -78,7 +78,7 @@ impl Compositor {
         self.push(SceneNode::Text { key, x, y, color });
     }
 
-    pub fn draw_path(&mut self, data: crate::path::TessellatedPath) {
+    pub fn draw_path(&mut self, data: crate::drawing::path::TessellatedPath) {
         self.push(SceneNode::Path { data });
     }
 
@@ -102,7 +102,7 @@ impl Compositor {
         y: f32,
         w: f32,
         h: f32,
-        image: crate::gpu::image::ImageHandle,
+        image: crate::drawing::gpu::image::ImageHandle,
         corner_radius: f32,
     ) {
         self.push(SceneNode::Image {

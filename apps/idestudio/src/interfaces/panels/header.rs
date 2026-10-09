@@ -3,12 +3,12 @@
 //! branch centered in base-2r at the faint tone, and the theme toggle as
 //! a small glass pill on the right.
 
-use super::workspace::ThemeMode;
-use comps::action::{Badge, Button, ButtonSize};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::text::TextMeasurer;
-use engine::theme::{ControlSize, Theme};
+use super::layout::ThemeMode;
+use engine::widgets::buttons::{Badge, Button, ButtonSize};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::{ControlSize, Theme};
 
 pub struct Header {
     theme_btn: Button,

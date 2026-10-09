@@ -9,15 +9,15 @@
 //! frame (`engine::perf::stages`); the GPU time a turn's timestamps read
 //! feeds a `PerfMonitor`, as a window's loop would.
 
-use comps::editor::{EditorTheme, EditorView, MouseEvent};
-use comps::prelude::{Wake, WidgetEvent};
-use engine::compositor::{Compositor, SceneNode};
-use engine::headless::Renderer;
-use engine::layout::ComputedBounds;
-use engine::perf::stages::{self, Stage, StageFrame};
-use engine::perf::{PerfMonitor, PerfSnapshot};
-use engine::theme::Theme;
-use showcase::view::ShowcaseView;
+use engine::widgets::editor::{EditorTheme, EditorView, MouseEvent};
+use engine::widgets::prelude::{Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::headless::Renderer;
+use engine::compose::layout::ComputedBounds;
+use engine::runtime::perf::stages::{self, Stage, StageFrame};
+use engine::runtime::perf::{PerfMonitor, PerfSnapshot};
+use engine::styling::theme::Theme;
+use uigallery::views::ShowcaseView;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 /// The fixed step of every tick: a 60 Hz display.
@@ -65,7 +65,7 @@ impl Surface for ShowcaseView {
             Input::Named(NamedKey::Escape) => self.close_top_overlay(),
             Input::Named(named) => {
                 self.handle_editor_key(&Key::Named(*named), none)
-                    || showcase::keys::handle_named(self, named, none.shift_key())
+                    || uigallery::keyboard::handle_named(self, named, none.shift_key())
             }
             Input::Char(c) => {
                 let text = c.to_string();

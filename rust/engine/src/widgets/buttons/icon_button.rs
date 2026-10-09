@@ -7,13 +7,13 @@
 //! button in a semantic projection. An icon names nothing, so the
 //! projection takes its accessible label from the app.
 
-use engine::compositor::{Compositor, LayerId};
-use engine::theme::{ButtonRecipe, IconButtonMetrics, Intent, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::{ButtonRecipe, IconButtonMetrics, Intent, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::press::{Press, paint_surface};
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::icons;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::icons;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum IconButtonVariant {

@@ -24,7 +24,7 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 use proc_macro2::{TokenStream, TokenTree};
-use sem::Actor;
+use accord::Actor;
 
 use super::{BASELINE, Change, EDITED, Lit, Site, apply_change, same_code, snapshot, unquote};
 
@@ -68,7 +68,7 @@ impl fmt::Display for Refused {
 
 /// `file` from the workspace root, as a person reads it.
 fn rel(file: &Path) -> String {
-    file.strip_prefix(crate::hot_reload::project_root())
+    file.strip_prefix(crate::runtime::hot_reload::project_root())
         .unwrap_or(file)
         .display()
         .to_string()

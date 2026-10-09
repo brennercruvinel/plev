@@ -17,7 +17,7 @@
 
 use accesskit::NodeId;
 use rustc_hash::{FxHashMap, FxHashSet};
-use sem::{ActionName, SemId};
+use accord::{ActionName, SemId};
 
 /// The window, the root of every tree this module builds.
 pub const ROOT: NodeId = NodeId(0);

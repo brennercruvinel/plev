@@ -1,7 +1,7 @@
 //! `Receipt`, `Stage` and the legal transitions, `RequestId`.
 
 use indexmap::IndexMap;
-use sem::{
+use accord::{
     Actor, Change, Outcome, Receipt, Rejection, Request, RequestId, Role, SemError, SemId,
     SnapshotBuilder, Stage, Value,
 };

@@ -35,7 +35,7 @@ pub use composite::Composite;
 pub use detect::{Detector, Listener, MAX_STEPS};
 pub use offer::Composer;
 
-use sem::{ActionName, Actor, SemId};
+use accord::{ActionName, Actor, SemId};
 
 /// where a step acts.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -63,7 +63,7 @@ impl Target {
     pub fn template(&self) -> SemId {
         match self {
             Target::Node(id) => id.clone(),
-            Target::Item(base) => base.key(uir::ITEM),
+            Target::Item(base) => base.key(plevir::ITEM),
         }
     }
 }

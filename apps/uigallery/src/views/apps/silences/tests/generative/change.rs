@@ -13,11 +13,11 @@
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use sem::{Actor, Request, RequestId, SemId, Stage, Value};
+use accord::{Actor, Request, RequestId, SemId, Stage, Value};
 
 use super::super::super::SilencesPage;
 use super::super::{TURN, setup, sid, stage};
-use crate::view::apps::app::TodoPage;
+use crate::views::apps::todo::TodoPage;
 
 const REVIEW: &str = "the list with the video and the counts";
 
@@ -71,7 +71,7 @@ fn a_person_asks_for_less_through_the_row_and_undoes_it() {
     let before = written(&page);
     assert_eq!(
         page.generated.host.policy(&sid("proposed")),
-        Some(&uir::GenerationPolicy::by(Actor::Human)),
+        Some(&plevir::GenerationPolicy::by(Actor::Human)),
         "the host keeps the policy the review was verified under"
     );
     assert!(shown(&page, "proposed.counts"), "the counts, asked for");
@@ -188,8 +188,8 @@ fn an_intent_for_a_surface_still_proposes_one() {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 mod claude {
     use super::*;
-    use crate::view::apps::surface_page::asking::Claude;
-    use claude_model::ClaudeCli;
+    use crate::views::apps::surface::asking::Claude;
+    use claude::ClaudeCli;
 
     /// The fake claude in a directory of its own, in `mode`, answering
     /// `good` (and `bad` first in `repair`) as the claude's json result.

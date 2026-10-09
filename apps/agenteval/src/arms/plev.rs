@@ -9,9 +9,9 @@ use std::sync::mpsc::RecvTimeoutError;
 use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 
-use rec::{Limits, Recorder};
-use sem::{Millis, Rejection, SemId, Stage};
-use wire::{AgentPort, Config};
+use record::{Limits, Recorder};
+use accord::{Millis, Rejection, SemId, Stage};
+use socket::{AgentPort, Config};
 
 use crate::answer::Answers;
 use crate::args::{Args, Arm, Until};
@@ -27,7 +27,7 @@ const TICK: Duration = Duration::from_millis(10);
 /// the messages the server answered: what a drain serves. `hello` is not
 /// among them, so the first message the laboratory sees is the agent's
 /// first observation, one round trip after it connected.
-fn served_messages(t: &wire::Traffic) -> u64 {
+fn served_messages(t: &socket::Traffic) -> u64 {
     t.observes_snapshot + t.observes_delta + t.acts
 }
 
@@ -68,10 +68,10 @@ pub struct Timing {
 /// who acted on the state it rested on.
 pub struct StaleSeen {
     pub t: Millis,
-    pub request: sem::RequestId,
+    pub request: accord::RequestId,
     pub head: String,
-    pub changes: Vec<sem::Change>,
-    pub acted: Vec<sem::Acted>,
+    pub changes: Vec<accord::Change>,
+    pub acted: Vec<accord::Acted>,
 }
 
 pub struct Lab {

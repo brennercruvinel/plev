@@ -8,16 +8,16 @@ mod large;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use rope::{Document, Selection, SelectionSet};
+use editor::{Document, Selection, SelectionSet};
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::layout::ComputedBounds;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::compose::layout::ComputedBounds;
 
 use super::view::visible_line_range;
 use super::{EditorConfig, EditorTheme, EditorView, MouseEvent};
-use engine::clipboard::{ClipboardProvider, LocalClipboard};
+use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
 
 const VIEW_W: f32 = 800.0;
 /// Exactly 20 lines at the default line height (the theme's mono ramp).

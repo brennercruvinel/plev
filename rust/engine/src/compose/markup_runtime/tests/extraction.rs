@@ -124,9 +124,9 @@ fn build() {
     );
 
     let file_key = "test_e2e_dynamic.rs";
-    crate::hot_reload::update_narrate_overrides(file_key, blocks);
+    crate::runtime::hot_reload::update_narrate_overrides(file_key, blocks);
 
-    let el = crate::hot_reload::narrate_override(file_key, line);
+    let el = crate::runtime::hot_reload::narrate_override(file_key, line);
     assert!(
         el.is_some(),
         "override must return Some(Element) even with skipped blocks"
@@ -136,7 +136,7 @@ fn build() {
     let text_nodes: Vec<_> = nodes
         .iter()
         .filter_map(|n| {
-            if let crate::compositor::SceneNode::Text { key, .. } = n {
+            if let crate::drawing::compositor::SceneNode::Text { key, .. } = n {
                 Some(key.text.as_str())
             } else {
                 None
@@ -153,7 +153,7 @@ fn build() {
     );
 
     // Clean up
-    crate::hot_reload::update_narrate_overrides(file_key, vec![]);
+    crate::runtime::hot_reload::update_narrate_overrides(file_key, vec![]);
 }
 
 #[test]
@@ -176,7 +176,7 @@ fn parse_skip_preserves_siblings_before_and_after() {
     );
     let text_nodes: Vec<_> = nodes
         .iter()
-        .filter(|n| matches!(n, crate::compositor::SceneNode::Text { .. }))
+        .filter(|n| matches!(n, crate::drawing::compositor::SceneNode::Text { .. }))
         .collect();
     assert_eq!(
         text_nodes.len(),
@@ -203,7 +203,7 @@ fn parse_skip_mixed_on_when_each_preserves_static_content() {
     let text_nodes: Vec<_> = nodes
         .iter()
         .filter_map(|n| {
-            if let crate::compositor::SceneNode::Text { key, .. } = n {
+            if let crate::drawing::compositor::SceneNode::Text { key, .. } = n {
                 Some(key.text.as_str())
             } else {
                 None

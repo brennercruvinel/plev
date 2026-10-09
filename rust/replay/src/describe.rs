@@ -2,7 +2,7 @@
 //! change, a stage, a rejection, a role. the timeline keeps them in its
 //! entries and the text views print them.
 
-use sem::{Change, Outcome, Rejection, Role, Stage, Value};
+use accord::{Change, Outcome, Rejection, Role, Stage, Value};
 
 /// a value as a person reads it: text quoted, a list in brackets, a set in
 /// braces.

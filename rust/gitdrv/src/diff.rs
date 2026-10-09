@@ -8,7 +8,7 @@
 //! same route Zed's `git` crate takes for worktree diffs.
 
 use crate::error::{GitError, Result};
-use crate::types::{DiffLine, DiffLineKind, Hunk};
+use crate::domain::{DiffLine, DiffLineKind, Hunk};
 
 /// Parses `git diff` / `git show --patch` output into hunks.
 ///

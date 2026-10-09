@@ -4,12 +4,12 @@
 //! when the session is), and the answer sets each window's deadline and
 //! the loop's wait (see the shell's module doc).
 
-use comps::prelude::Wake;
+use engine::widgets::prelude::Wake;
 use web_time::Instant;
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
 use winit::window::WindowId;
 
-use super::App;
+use super::super::App;
 
 impl App {
     /// The frame of window `id`, once its GPU is ready: the tick, the

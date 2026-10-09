@@ -40,10 +40,10 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-use crate::codec::{Refusal, decode_client, encode_server};
+use crate::framing::{Refusal, decode_client, encode_server};
 use crate::error::WireError;
 use crate::place::{check_app, clear_stale, io, private_dir, socket_dir, socket_path};
-use crate::proto::{Ask, ClientMsg, ProtoError, Reply};
+use crate::protocol::{Ask, ClientMsg, ProtoError, Reply};
 use crate::ring::DEFAULT_RING;
 use crate::scene::{MAX_LINE, Offer, SceneWatch};
 use crate::server::{ConnId, Host, Outgoing, Server, Traffic};

@@ -26,7 +26,7 @@
 
 use std::collections::{BTreeSet, VecDeque};
 
-use sem::{
+use accord::{
     Actor, Change, Mark, Receipt, RequestId, Revision, SemId, Snapshot, Stage, StateKey, StateRef,
     Value,
 };

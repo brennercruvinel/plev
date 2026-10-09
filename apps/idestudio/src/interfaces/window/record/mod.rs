@@ -34,16 +34,16 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use engine::actions::{ActionRegistry, Keymap, KeymapError};
-use engine::compositor::Compositor;
-use rec::{FileError, InputKind, Limits, Persisted, Recorder};
+use engine::control::keymap::{ActionRegistry, Keymap, KeymapError};
+use engine::drawing::compositor::Compositor;
+use record::{FileError, InputKind, Limits, Persisted, Recorder};
 
-use crate::workbench::Workbench;
+use crate::capability::Workbench;
 
 /// The variable that turns the recording on in a debug build.
 pub const ENV: &str = "PLEV_RECORD";
 
-engine::actions!(session, [Save]);
+engine::control::keymap!(session, [Save]);
 
 /// The keys that save the retained window, in every context of the
 /// workspace (the commit form's too): `cmd` is the Command key on macOS.
@@ -181,15 +181,15 @@ impl Recording {
     /// (`rec::install_panic_hook`), before the hook installed before runs.
     pub fn catch_panics(&self) -> io::Result<()> {
         private_dir(&self.dir)?;
-        rec::install_panic_hook(self.rec.clone(), self.dir.clone());
+        record::install_panic_hook(self.rec.clone(), self.dir.clone());
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use engine::actions::{ActionRegistry, ContextStack, KeyContext, Keymap, KeymapMatcher};
-    use engine::actions::{Keystroke, MatchResult};
+    use engine::control::keymap::{ActionRegistry, ContextStack, KeyContext, Keymap, KeymapMatcher};
+    use engine::control::keymap::{Keystroke, MatchResult};
 
     use super::{SAVE_KEYS, bind_keys};
 

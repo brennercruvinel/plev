@@ -12,11 +12,11 @@
 //! no model lives here. a provider (a local model or an API) implements
 //! `Model` in phase 3b; the tests use models that answer from a script.
 
-use uir::{Ir, IrError, parse, verify};
+use plevir::{Ir, IrError, parse, verify};
 
 use crate::adapt::{Adapt, Adaptation, Transformer, apply_all};
 use crate::error::ProposeError;
-use crate::ops;
+use crate::operations;
 use crate::prompt::{prompt, repair};
 use crate::{Ask, Proposer};
 

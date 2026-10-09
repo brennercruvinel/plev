@@ -4,12 +4,12 @@
 //! Every text is measured with the style it is drawn with; constants
 //! exist only as ratios and the theme's tokens.
 
-use comps::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Theme};
-use showcase::model::silences::Segment;
+use engine::widgets::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{ControlSize, Theme};
+use crate::domain::silences::Segment;
 
-use super::SilencesPage;
+use super::super::SilencesPage;
 
 /// The frame's aspect, width over height: the test video's, and the
 /// common one.

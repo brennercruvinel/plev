@@ -21,7 +21,7 @@
 use winit::event_loop::ActiveEventLoop;
 use winit::window::{WindowAttributes, WindowId};
 
-use super::App;
+use super::super::App;
 
 /// The page's own window and the cursor in it (logical pixels).
 pub(super) struct PageWindow {
@@ -53,7 +53,7 @@ impl App {
             .with_inner_size(winit::dpi::LogicalSize::new(900u32, 640u32));
         #[cfg(target_os = "macos")]
         {
-            attrs = super::background::window(attrs);
+            attrs = super::super::system::background::window(attrs);
         }
         let id = match self.windows.open(event_loop, attrs) {
             Ok(id) => id,

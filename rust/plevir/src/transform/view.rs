@@ -2,14 +2,14 @@
 //! `SwapView` (the same datum by another component) and `Promote` (a
 //! button for an action the app declares and the surface does not show).
 
-use sem::{ActionName, Actor, Actors, SemId};
+use accord::{ActionName, Actor, Actors, SemId};
 
 use super::tree;
 use super::{Draft, Inverse, Op, TransformError, refused};
-use crate::caps::{ActionCap, Capabilities};
+use crate::capabilities::{ActionCap, Capabilities};
 use crate::ir::{CapabilityRef, IrNode};
 use crate::item::Pattern;
-use crate::vocab::{Component, spec_of};
+use crate::vocabulary::{Component, spec_of};
 
 /// the name of a component in a message, a chart with its kind.
 pub(super) fn name(c: Component) -> String {

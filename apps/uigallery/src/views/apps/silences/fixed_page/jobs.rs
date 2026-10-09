@@ -19,16 +19,16 @@
 
 use std::collections::HashMap;
 
-use engine::gpu::image::ImageHandle;
-use engine::window::Background;
-use sem::{SemId, Value};
-use showcase::model::silences::{Decision, TEST_VIDEO, Video};
-use surface::Frames;
+use engine::drawing::gpu::image::ImageHandle;
+use engine::runtime::window::Background;
+use accord::{SemId, Value};
+use crate::domain::silences::{Decision, TEST_VIDEO, Video};
+use screen::Frames;
 
 use super::semantics::{count, micros, ms};
 use super::worker::{Done, Job};
-use super::{Said, SilencesPage};
-use crate::view::apps::app::TodoPage;
+use super::super::{Said, SilencesPage};
+use crate::views::apps::todo::TodoPage;
 
 /// The frame ref of the instant `t` of the media node `video`.
 pub(super) fn frame_ref(video: &SemId, t: f64) -> String {
@@ -116,7 +116,7 @@ impl SilencesPage {
                             let cuts = self.model.cuts().len();
                             self.said = Said::Detected { took };
                             self.want_frames();
-                            let mut outcome = sem::Outcome::default();
+                            let mut outcome = accord::Outcome::default();
                             outcome.result.insert("cuts".to_owned(), count(cuts));
                             outcome
                                 .result
@@ -147,7 +147,7 @@ impl SilencesPage {
                     for (id, _) in ready {
                         let ended = todo.with_dispatcher(|d, _, now| match &result {
                             Ok(_) => {
-                                let mut outcome = sem::Outcome::default();
+                                let mut outcome = accord::Outcome::default();
                                 outcome
                                     .result
                                     .insert("shown".to_owned(), Value::Num(ms as f64 / 1000.0));
@@ -192,8 +192,8 @@ impl SilencesPage {
 
 #[cfg(test)]
 mod tests {
-    use sem::{Actor, Request, Stage};
-    use showcase::model::silences::{PROBE_STDERR, parse};
+    use accord::{Actor, Request, Stage};
+    use crate::domain::silences::{PROBE_STDERR, parse};
 
     use super::super::worker::Worker;
     use super::*;

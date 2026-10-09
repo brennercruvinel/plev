@@ -2,11 +2,11 @@
 //! draws the shared accent focus ring when focused, skips it when not,
 //! and disabled controls refuse focus entirely.
 
-use crate::core::*;
-use crate::prelude::*;
-use crate::recipe::*;
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
+use crate::widgets::widget::*;
+use crate::widgets::prelude::*;
+use crate::widgets::recipe::*;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::styling::theme::Theme;
 
 const B: Rect = Rect {
     x: 40.0,
@@ -324,7 +324,7 @@ fn the_keys_move_the_one_highlight_of_a_menu_and_of_an_open_select() {
 
     let theme = Theme::hoff();
     let options: Vec<String> = (0..40).map(|i| format!("option {i}")).collect();
-    let id = sem::SemId::name("pick").expect("an id");
+    let id = accord::SemId::name("pick").expect("an id");
     let mut select = Select::new(options, 0).sem(id.clone());
     select.set_highlighted(Some(3));
     assert_eq!(

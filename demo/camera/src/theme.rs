@@ -6,8 +6,8 @@
 
 use std::sync::LazyLock;
 
-use engine::color::Color;
-use engine::theme::Theme;
+use engine::styling::color::Color;
+use engine::styling::theme::Theme;
 
 pub struct HudTheme {
     pub surface_1: Color,

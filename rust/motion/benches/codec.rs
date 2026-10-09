@@ -3,7 +3,7 @@
 //! with quantizable scalar props, the cheapest representative payload.
 
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
-use monster::{
+use motion::{
     Keyframe, Node, NodeKind, OptimizeCfg, Prop, Props, Timeline, Value, decode, encode, optimize,
 };
 

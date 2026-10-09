@@ -8,8 +8,8 @@
 //! the end say what "default" is for each field; `enabled` is the one
 //! flag that is on unless said otherwise.
 
-use crate::name::ActionName;
-use crate::value::{StateRef, ValueKind};
+use crate::notation::ActionName;
+use crate::property::{StateRef, ValueKind};
 
 /// the conditions that bound a node's value.
 ///

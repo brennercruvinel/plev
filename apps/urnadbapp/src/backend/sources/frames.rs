@@ -13,7 +13,7 @@
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
-use super::backend::BlobRange;
+use super::native::BlobRange;
 
 /// Hard cap on one decode: a wedged ffmpeg must not wedge the worker.
 const DECODE_TIMEOUT: Duration = Duration::from_secs(20);
@@ -83,8 +83,8 @@ pub fn decode_frame(
         "png".to_string(),
         "pipe:1".to_string(),
     ];
-    use super::subprocess::RunError;
-    let out = super::subprocess::run("ffmpeg", &args, DECODE_TIMEOUT).map_err(|e| match e {
+    use super::super::workers::subprocess::RunError;
+    let out = super::super::workers::subprocess::run("ffmpeg", &args, DECODE_TIMEOUT).map_err(|e| match e {
         RunError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => FrameError::FfmpegMissing,
         RunError::Spawn(e) => FrameError::Failed(e.to_string()),
         RunError::Timeout => FrameError::Timeout,

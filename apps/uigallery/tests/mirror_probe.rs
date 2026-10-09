@@ -17,8 +17,8 @@
 
 use std::collections::BTreeMap;
 
-use engine::compositor::Compositor;
-use showcase::view::{PAGES, ShowcaseView};
+use engine::drawing::compositor::Compositor;
+use uigallery::views::{PAGES, ShowcaseView};
 
 const WIDTH: f32 = 1280.0;
 const HEIGHT: f32 = 800.0;
@@ -34,7 +34,7 @@ fn settle(view: &mut ShowcaseView) {
 }
 
 /// `(z, rank, order)`: where a binding stacks, as `Compositor::hit` ranks.
-fn stack(c: &Compositor, id: &sem::SemId) -> Option<(i32, usize, u32)> {
+fn stack(c: &Compositor, id: &accord::SemId) -> Option<(i32, usize, u32)> {
     let b = c.binding(id)?;
     let (rank, layer) = c
         .layers()
@@ -66,7 +66,7 @@ fn probe() {
             let mut c = Compositor::new();
             view.render(&mut c);
             let snap = view.gallery_semantics().ok();
-            let bound: Vec<(sem::SemId, [f32; 4])> = c
+            let bound: Vec<(accord::SemId, [f32; 4])> = c
                 .visible_bindings()
                 .map(|(id, r)| (id.clone(), r))
                 .collect();
@@ -98,7 +98,7 @@ fn probe() {
                 let press = snap.as_ref().and_then(|s| s.get(id)).map_or(
                     "(not projected)".to_owned(),
                     |n| {
-                        engine::accessibility::primary(n)
+                        engine::control::accessibility::primary(n)
                             .map_or("(none)".to_owned(), |a| a.name.to_string())
                     },
                 );

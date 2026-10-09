@@ -10,7 +10,7 @@
 //! `docs/ADR/glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
 
-use engine::text::probe::{Specimen, render};
+use engine::drawing::text::probe::{Specimen, render};
 
 fn main() {
     let _ = env_logger::builder()
@@ -20,7 +20,7 @@ fn main() {
     let out = args.next().unwrap_or_else(|| "text_probe.png".into());
     let scale: f32 = args.next().and_then(|s| s.parse().ok()).unwrap_or(2.0);
 
-    let ramp = engine::theme::TypographyScale::hoff();
+    let ramp = engine::styling::theme::TypographyScale::hoff();
     let mut specimens = vec![
         ("Builder".to_string(), ramp.title()),
         ("Expense Tracker".to_string(), ramp.title()),
@@ -38,7 +38,7 @@ fn main() {
     ];
 
     if std::env::var("PROBE_FILL").is_ok() {
-        specimens.extend(engine::text::probe::atlas_filling_specimens());
+        specimens.extend(engine::drawing::text::probe::atlas_filling_specimens());
     }
 
     let scene: Vec<_> = specimens

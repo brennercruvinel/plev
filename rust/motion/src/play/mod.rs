@@ -1,14 +1,14 @@
 mod evaluation;
 #[cfg(test)]
 mod tests;
-use crate::ir::{IrError, Node, Timeline};
-use crate::lower::{LoweredAsset, lower_scene};
-use crate::play_eval::{
+use crate::timeline::{IrError, Node, Timeline};
+use crate::mappings::lower::{LoweredAsset, lower_scene};
+use crate::play::evaluation::{
     Cursor, DEAD, KfPlan, apply_ops, default_value, derive_cursor, plan, sample,
 };
-use engine::animation::AnimationTick;
-use engine::compositor::SceneNode;
-use engine::signal::{ReadSignal, WriteSignal, create_signal};
+use engine::compose::animation::AnimationTick;
+use engine::drawing::compositor::SceneNode;
+use engine::runtime::signal::{ReadSignal, WriteSignal, create_signal};
 
 /// Ticks advancing the playhead by less than this many seconds are
 /// dropped whole: at the format's quantization grid nothing visible can

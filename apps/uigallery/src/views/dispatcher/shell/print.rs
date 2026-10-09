@@ -27,10 +27,10 @@ use std::time::Duration;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use std::time::Instant;
 
-use comps::prelude::Wake;
-use engine::platform::print::{Destination, Printer};
-use engine::window::Background;
-use sem::{Policy, RequestId, Role, SnapshotBuilder, Value};
+use engine::widgets::prelude::Wake;
+use engine::runtime::platform::print::{Destination, Printer};
+use engine::runtime::window::Background;
+use accord::{Policy, RequestId, Role, SnapshotBuilder, Value};
 
 use super::super::super::ShowcaseView;
 use super::{Ids, PERSON_ONLY};
@@ -225,7 +225,7 @@ impl ShowcaseView {
     /// job was taken up: started, or held for the wake.
     pub fn request_print(&mut self) -> bool {
         let receipt = self.ask_shell_receipt(super::ShellTarget::Print, "activate", None);
-        receipt.is_some_and(|r| matches!(r.stage(), Some(sem::Stage::Executing)))
+        receipt.is_some_and(|r| matches!(r.stage(), Some(accord::Stage::Executing)))
             && self.panes.shell.print.busy()
     }
 
@@ -322,7 +322,7 @@ impl ShowcaseView {
                             destination: destination.clone(),
                             status: printed.status.clone(),
                         });
-                        let mut outcome = sem::Outcome::default();
+                        let mut outcome = accord::Outcome::default();
                         let result = &mut outcome.result;
                         result.insert("job".to_owned(), Value::Text(printed.job));
                         result.insert("destination".to_owned(), Value::Text(destination));
@@ -356,7 +356,7 @@ impl ShowcaseView {
     }
 
     /// Ends request `id` through the gallery's dispatcher, at its clock.
-    fn end_print(&mut self, id: RequestId, ended: Result<sem::Outcome, String>) {
+    fn end_print(&mut self, id: RequestId, ended: Result<accord::Outcome, String>) {
         let closed = self.panes.todo.with_dispatcher(|d, _, now| match ended {
             Ok(outcome) => d.complete(id, outcome, now),
             Err(why) => d.fail(id, why, now),
@@ -375,14 +375,14 @@ mod desktop {
     use std::thread;
     use std::time::Instant;
 
-    use engine::compositor::Compositor;
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
-    use engine::platform::menu::locked;
-    use engine::platform::print::{
+    use engine::drawing::compositor::Compositor;
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
+    use engine::runtime::platform::menu::locked;
+    use engine::runtime::platform::print::{
         PAPER_DPI, POINTS_PER_INCH, PrintDocument, PrintError, PrintOptions, fit_scale, paper_scale,
     };
-    use sem::RequestId;
+    use accord::RequestId;
 
     use super::super::super::super::ShowcaseView;
     use super::{Done, Printed, Running, Shared};

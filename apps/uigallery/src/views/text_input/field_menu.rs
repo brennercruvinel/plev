@@ -13,11 +13,11 @@
 //! screen reader; an agent's pick is refused, since the clipboard is the
 //! person's (`dispatch/overlay.rs`).
 
-use comps::form::ClipKey;
-use comps::prelude::{ContextMenu, MenuEntry};
+use engine::widgets::form::ClipKey;
+use engine::widgets::prelude::{ContextMenu, MenuEntry};
 
 use super::clipboard::Keys;
-use super::{Pane, ShowcaseView};
+use super::super::{Pane, ShowcaseView};
 
 /// The items' ids, apart from the Context Menu page's demo items.
 const CUT: u64 = 101;
@@ -27,7 +27,7 @@ const SELECT_ALL: u64 = 104;
 
 /// The clipboard key an item of the field's menu names; `None` for any
 /// other menu's item.
-pub(in crate::view) fn clip_of(item: u64) -> Option<ClipKey> {
+pub(in crate::views) fn clip_of(item: u64) -> Option<ClipKey> {
     Some(match item {
         CUT => ClipKey::Cut,
         COPY => ClipKey::Copy,
@@ -38,7 +38,7 @@ pub(in crate::view) fn clip_of(item: u64) -> Option<ClipKey> {
 }
 
 /// The label of the item for `key`.
-pub(in crate::view) fn label(key: ClipKey) -> &'static str {
+pub(in crate::views) fn label(key: ClipKey) -> &'static str {
     match key {
         ClipKey::Cut => "Cut",
         ClipKey::Copy => "Copy",
@@ -65,7 +65,7 @@ impl ShowcaseView {
     /// field takes the keys and its menu opens there. `false` off the
     /// fields, or while an overlay holds the pointer (one fading out
     /// gives way).
-    pub(in crate::view) fn open_field_menu(&mut self, x: f32, y: f32) -> bool {
+    pub(in crate::views) fn open_field_menu(&mut self, x: f32, y: f32) -> bool {
         if self.overlay_holds_pointer() {
             return false;
         }

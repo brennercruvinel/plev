@@ -1,10 +1,10 @@
 //! Graph page: a small three-kind demo graph on the pan/zoom canvas.
 //! Drag, wheel, click a node.
 
-use comps::prelude::{EventResult, GraphView, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::graph::{GraphEdge, GraphSpec};
-use engine::theme::Theme;
+use engine::widgets::prelude::{EventResult, GraphView, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::widgets::graph::geometry::{GraphEdge, GraphSpec};
+use engine::styling::theme::Theme;
 
 use super::{panel, text};
 

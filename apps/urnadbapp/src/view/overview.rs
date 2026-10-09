@@ -8,12 +8,12 @@
 //! (optional manifest fields, spaces and blobs add rows), never from
 //! viewport constants.
 
-use comps::prelude::{Button, EventResult, IconButton, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Button, EventResult, IconButton, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 
-use crate::model::types::OpenedDbView;
+use crate::backend::workers::messages::OpenedDbView;
 
 use super::{Action, fmt_bytes, group_label, panel, text};
 
@@ -66,11 +66,11 @@ struct Layout {
 
 /// A capability chip: present = Constructive, absent = Neutral outline
 /// (engine `Chip`; static — capabilities are not clickable).
-fn chip_for(label: &str, present: bool) -> comps::prelude::Chip {
-    comps::prelude::Chip::new(label).intent(if present {
-        engine::theme::Intent::Constructive
+fn chip_for(label: &str, present: bool) -> engine::widgets::prelude::Chip {
+    engine::widgets::prelude::Chip::new(label).intent(if present {
+        engine::styling::theme::Intent::Constructive
     } else {
-        engine::theme::Intent::Neutral
+        engine::styling::theme::Intent::Neutral
     })
 }
 
@@ -306,7 +306,7 @@ pub struct OverviewScreen {
     validate: Button,
     /// Page scroll: the overview is taller than the viewport (cards +
     /// section table), so it scrolls like a HOFF page.
-    scroll: engine::input::scroll::ScrollState,
+    scroll: engine::control::input::scroll::ScrollState,
 }
 
 impl OverviewScreen {
@@ -315,16 +315,16 @@ impl OverviewScreen {
             buttons: Vec::new(),
             validate: Button::new("Validate")
                 .icon("eye")
-                .size(comps::prelude::ButtonSize::Sm)
-                .variant(comps::prelude::ButtonVariant::Outline),
-            scroll: engine::input::scroll::ScrollState::new(),
+                .size(engine::widgets::prelude::ButtonSize::Sm)
+                .variant(engine::widgets::prelude::ButtonVariant::Outline),
+            scroll: engine::control::input::scroll::ScrollState::new(),
         }
     }
 
     /// Rebuild the row buttons for a freshly opened db (spaces and blobs
     /// change the set) and reset the page scroll.
     pub fn reset(&mut self, db: &OpenedDbView) {
-        self.scroll = engine::input::scroll::ScrollState::new();
+        self.scroll = engine::control::input::scroll::ScrollState::new();
         self.rebuild_buttons(db);
     }
 
@@ -339,7 +339,7 @@ impl OverviewScreen {
                 };
                 (
                     b,
-                    IconButton::new(icon).variant(comps::prelude::IconButtonVariant::Ghost),
+                    IconButton::new(icon).variant(engine::widgets::prelude::IconButtonVariant::Ghost),
                 )
             })
             .collect();

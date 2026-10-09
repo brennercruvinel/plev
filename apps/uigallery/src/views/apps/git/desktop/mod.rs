@@ -2,18 +2,18 @@
 //! Every click and key that acts on the repository or the commit form goes
 //! through the workbench's dispatcher, the same path as in the ide.
 
-use comps::prelude::{EventResult, Rect, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 
 use super::super::text;
 use super::{GitWake, NavKey};
-use crate::view::clipboard::Keys;
+use crate::views::text_input::clipboard::Keys;
 use std::sync::mpsc::{Receiver, Sender, channel};
 
-use git::{GitClient, GitEvent};
-use ide::views::workspace::{Side, ThemeMode};
-use ide::workbench::Workbench;
+use gitdrv::{GitClient, GitEvent};
+use idestudio::interfaces::panels::layout::{Side, ThemeMode};
+use idestudio::capability::Workbench;
 
 pub struct GitPage {
     bench: Workbench,
@@ -148,7 +148,7 @@ impl GitPage {
 
     /// The visible commit form's field has the keys (a chord, the
     /// field's menu).
-    pub(in crate::view) fn keys(&mut self) -> Keys<'_> {
+    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
         match self.bench.workspace_mut().commit_form.typing_field() {
             Some(field) => Keys::Field(field),
             None => Keys::Nobody,

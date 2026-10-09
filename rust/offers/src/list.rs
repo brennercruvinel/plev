@@ -18,8 +18,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use sem::{ActionDecl, Node, SemId, Snapshot, StateRef, Value, ValueKind};
-use uir::{Capabilities, CapabilityRef, ITEM};
+use accord::{ActionDecl, Node, SemId, Snapshot, StateRef, Value, ValueKind};
+use plevir::{Capabilities, CapabilityRef, ITEM};
 
 use crate::words::{fold, split};
 
@@ -187,7 +187,7 @@ impl List {
         usable: &impl Fn(&Node, &ActionDecl) -> bool,
         frame: &impl Fn(&Value) -> bool,
     ) -> List {
-        let slot = |key: &sem::StateKey| StateRef::new(item.clone(), key.clone());
+        let slot = |key: &accord::StateKey| StateRef::new(item.clone(), key.clone());
         let cap = |decl: &ActionDecl| CapabilityRef {
             target: item.clone(),
             action: decl.name.clone(),
@@ -211,7 +211,7 @@ impl List {
             })
             .unwrap_or_default();
         // the action of every item that reads `key` of it and nothing else
-        let flip = |key: &sem::StateKey, taken: &BTreeSet<sem::ActionName>| {
+        let flip = |key: &accord::StateKey, taken: &BTreeSet<accord::ActionName>| {
             bare.iter().copied().find(|a| {
                 !taken.contains(&a.name)
                     && members.iter().all(|m| {
@@ -223,7 +223,7 @@ impl List {
         };
         // a text that two actions or more of every item read, and nothing
         // else: they set it, among few values
-        let decided = |key: &sem::StateKey| {
+        let decided = |key: &accord::StateKey| {
             members.iter().all(|m| {
                 let own = [StateRef::new(m.id.clone(), key.clone())];
                 let setters = bare.iter().filter(|a| {

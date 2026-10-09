@@ -5,9 +5,9 @@
 use std::path::Path;
 use std::time::Duration;
 
-use rec::Stats;
+use record::Stats;
 use serde_json::{Value as Json, json};
-use wire::Traffic;
+use socket::Traffic;
 
 use crate::repo::{Repo, is_the_task};
 

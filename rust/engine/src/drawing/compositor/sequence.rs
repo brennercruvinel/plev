@@ -8,7 +8,7 @@
 //! commands of the same kind and clip are merged so steady-state scenes
 //! still issue few draws.
 
-use crate::compositor::clip::{ClipRect, DrawRange};
+use crate::drawing::compositor::clip::{ClipRect, DrawRange};
 
 /// Which geometry buffers / pipeline a draw command targets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

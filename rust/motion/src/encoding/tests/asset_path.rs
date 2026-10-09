@@ -2,9 +2,9 @@
 //! deterministic dedup across packs, chunk splitting under the u16
 //! asset limit, and graceful rejection of malformed bytes.
 
-use crate::asset_path::{pack_chunks, unpack};
-use engine::compositor::QuadVertex;
-use engine::path::TessellatedPath;
+use crate::encoding::asset_path::{pack_chunks, unpack};
+use engine::drawing::compositor::QuadVertex;
+use engine::drawing::path::TessellatedPath;
 
 fn path(positions: &[[f32; 2]], indices: &[u32], color: [f32; 4]) -> TessellatedPath {
     TessellatedPath {

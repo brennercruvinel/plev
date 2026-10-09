@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::Path;
 
-use engine::headless::Viewport;
-use sem::{Change, Snapshot};
+use engine::drawing::headless::Viewport;
+use accord::{Change, Snapshot};
 
 use crate::baseline::{Baseline, SCENE, SEMANTICS};
 use crate::compare::Status;
@@ -137,10 +137,10 @@ fn a_page_in_a_state_checked_against_its_own_bless_holds() {
             panic!("{state}: no projection");
         };
         for id in [surface, "silences", "silences_surface"] {
-            let at = sem::SemId::parse(id).unwrap_or_else(|e| panic!("{id}: {e}"));
+            let at = accord::SemId::parse(id).unwrap_or_else(|e| panic!("{id}: {e}"));
             assert!(snap.get(&at).is_some(), "{state}: {id}");
         }
-        let controls = sem::SemId::parse("review.controls").unwrap_or_else(|e| panic!("{e}"));
+        let controls = accord::SemId::parse("review.controls").unwrap_or_else(|e| panic!("{e}"));
         let name = state.to_lowercase();
         let (fixture, adapted) = (name.contains("claude"), name.ends_with("adapted"));
         assert_eq!(

@@ -44,13 +44,13 @@ static ROUTE: Once = Once::new();
 /// What the tray's menu puts before every item id, so the two consumers
 /// of the one queue tell their clicks apart. A key (`sem#action[#param]`)
 /// never starts with it: an id has no `:`.
-pub(in crate::platform) const TRAY_PREFIX: &str = "tray:";
+pub(in crate::runtime::platform) const TRAY_PREFIX: &str = "tray:";
 
 /// Sends every `muda` click of this process to `CLICKS` and wakes the
 /// shell through `wake`. The handler is set once (`muda` keeps one per
 /// process); the waker is the last one given, which is the one loop's
 /// proxy however many menus the process shows.
-pub(in crate::platform) fn route_clicks_to(wake: impl Fn() + Send + Sync + 'static) {
+pub(in crate::runtime::platform) fn route_clicks_to(wake: impl Fn() + Send + Sync + 'static) {
     *locked(&WAKER) = Some(Box::new(wake));
     ROUTE.call_once(|| {
         MenuEvent::set_event_handler(Some(|event: MenuEvent| {
@@ -61,7 +61,7 @@ pub(in crate::platform) fn route_clicks_to(wake: impl Fn() + Send + Sync + 'stat
 }
 
 /// Wakes the shell's loop, if one asked to be woken.
-pub(in crate::platform) fn wake() {
+pub(in crate::runtime::platform) fn wake() {
     if let Some(wake) = locked(&WAKER).as_ref() {
         wake();
     }
@@ -69,7 +69,7 @@ pub(in crate::platform) fn wake() {
 
 /// The queued ids `mine` claims, in order, taken out of the queue; the
 /// rest stay for their owner.
-pub(in crate::platform) fn take_clicks(mut mine: impl FnMut(&MenuId) -> bool) -> Vec<MenuId> {
+pub(in crate::runtime::platform) fn take_clicks(mut mine: impl FnMut(&MenuId) -> bool) -> Vec<MenuId> {
     let mut queue = locked(&CLICKS);
     let mut taken = Vec::new();
     queue.retain(|id| {
@@ -101,8 +101,8 @@ pub struct MudaMenu {
 
 /// One submenu as `muda` shows it, with a handle on every entry. The tray
 /// shows one as its whole menu (`muda::Submenu` is a context menu too).
-pub(in crate::platform) struct Installed {
-    pub(in crate::platform) submenu: NativeSubmenu,
+pub(in crate::runtime::platform) struct Installed {
+    pub(in crate::runtime::platform) submenu: NativeSubmenu,
     entries: Vec<Handle>,
 }
 
@@ -224,7 +224,7 @@ impl NativeMenu for MudaMenu {
 
 /// `submenu` as `muda` items, appended in order; every item's id, `prefix`
 /// then its key, goes into `ids` with the capability it names.
-pub(in crate::platform) fn build(
+pub(in crate::runtime::platform) fn build(
     submenu: &Submenu,
     ids: &mut HashMap<MenuId, Clicked>,
     prefix: &str,
@@ -277,7 +277,7 @@ pub(in crate::platform) fn build(
 
 /// The entries of `installed` follow `submenu`, of the same shape: only
 /// what shows differently is touched.
-pub(in crate::platform) fn refresh(installed: &mut Installed, submenu: &Submenu) {
+pub(in crate::runtime::platform) fn refresh(installed: &mut Installed, submenu: &Submenu) {
     for (handle, entry) in installed.entries.iter_mut().zip(&submenu.entries) {
         match (handle, entry) {
             (Handle::Item(h), Entry::Item(item)) => {

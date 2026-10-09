@@ -30,14 +30,14 @@ use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use comps::overlay::OverlayKind;
-use engine::compositor::Compositor;
-use git::GitEvent;
-use ide::record::Recording;
-use ide::workbench::Workbench;
-use sem::{Acted, ActionName, Actor, Change, Rejection, Revision, SemId, Stage, StateRef, Value};
+use engine::widgets::overlay::OverlayKind;
+use engine::drawing::compositor::Compositor;
+use gitdrv::GitEvent;
+use idestudio::interfaces::window::record::Recording;
+use idestudio::capability::Workbench;
+use accord::{Acted, ActionName, Actor, Change, Rejection, Revision, SemId, Stage, StateRef, Value};
 use support::{Rig, set};
-use wire::{
+use socket::{
     Act, AgentPort, Ask, Client, Config, Observe, Reply, ServerMsg, SnapshotReply, StageReply,
     decode_server, encode_server,
 };
@@ -191,7 +191,7 @@ impl Shell<'_> {
 
     /// One drain of the port, recorded when the shell records.
     fn serve(&mut self) -> bool {
-        ide::agent::serve_recorded(
+        idestudio::capability::agent::serve_recorded(
             &mut self.port,
             &mut self.rig.bench,
             &self.frame,
@@ -277,7 +277,7 @@ fn run_shell<'a, T: Send + 'static>(
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let (tx, woke): (Sender<()>, Receiver<()>) = mpsc::channel();
     let config = Config {
-        app: ide::agent::APP.into(),
+        app: idestudio::capability::agent::APP.into(),
         dir: dir.path().to_owned(),
         ring: 16,
     };
@@ -820,7 +820,7 @@ fn asked_modal() -> Asked {
 fn the_agent_asks_the_person_who_confirms_and_the_three_files_are_committed() {
     let mut rig = Rig::new(&TASK, &[]);
     let dir = tempfile::TempDir::new().expect("a temp dir");
-    let mut recording = Recording::new(dir.path().join("sessions"), rec::Limits::default());
+    let mut recording = Recording::new(dir.path().join("sessions"), record::Limits::default());
     recording.attach(&mut rig.bench);
     let story = a2b(&mut rig, Some(&recording), true);
 
@@ -853,7 +853,7 @@ fn the_agent_asks_the_person_who_confirms_and_the_three_files_are_committed() {
 
     // the recording, read back as plev-inspect reads it.
     let (path, _) = recording.save().expect("the window is saved");
-    let session = rec::Session::open(&path).expect("the session opens");
+    let session = record::Session::open(&path).expect("the session opens");
     let kept = PathBuf::from(env!("CARGO_TARGET_TMPDIR")).join("ide-ask-test.monster");
     std::fs::copy(&path, &kept).expect("kept for plev-inspect");
     let id = story.asked[0].request;
@@ -861,16 +861,16 @@ fn the_agent_asks_the_person_who_confirms_and_the_three_files_are_committed() {
         .events()
         .iter()
         .find_map(|e| match &e.kind {
-            rec::Kind::Stage { origin, id: at, .. } if *at == id => Some(*origin),
+            record::Kind::Stage { origin, id: at, .. } if *at == id => Some(*origin),
             _ => None,
         })
         .expect("the asked stage is recorded");
-    let why = inspect::Inspector::new(&session)
+    let why = replay::Inspector::new(&session)
         .why(origin, id)
         .expect("the session reads")
         .expect("the request is in the window");
     assert_eq!(why.request.ask.as_deref(), Some(QUESTION));
-    let text = inspect::text::why(&why);
+    let text = replay::prose::why(&why);
     for line in [
         format!("asked         agent:test-agent asked a person first: \"{QUESTION}\""),
         "answered      human confirmed it, at".to_owned(),

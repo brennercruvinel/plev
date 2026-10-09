@@ -12,13 +12,13 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::{Rect, Wake};
-use engine::theme::Theme;
-use sem::{Actor, Snapshot};
+use engine::widgets::{Rect, Wake};
+use engine::styling::theme::Theme;
+use accord::{Actor, Snapshot};
 use support::{COMPARE_SILENCES, REVIEW_SILENCES, SILENCES, id, page, settle, snapshot};
 use support::{TURN, verified_local};
-use surface::{SurfaceError, SurfaceHost};
-use uir::{
+use screen::{SurfaceError, SurfaceHost};
+use plevir::{
     Adapted, Capabilities, ColorRole, Context, GenerationPolicy, Op, Preference, Preferences,
     TypographyRole,
 };
@@ -80,7 +80,7 @@ fn made(app: &Snapshot, asked: &Adapted, prefs: Preferences) -> Adapted {
 fn typography(host: &SurfaceHost, at: &str) -> Option<TypographyRole> {
     let surface = host.get(&id("review")).expect("open");
     let root = &surface.verified().ir().surface.root;
-    fn find<'a>(n: &'a uir::IrNode, at: &str) -> Option<&'a uir::IrNode> {
+    fn find<'a>(n: &'a plevir::IrNode, at: &str) -> Option<&'a plevir::IrNode> {
         if n.sem.as_str() == at {
             return Some(n);
         }

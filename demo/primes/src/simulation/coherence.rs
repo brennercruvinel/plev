@@ -5,7 +5,7 @@
 //! affinity. raw values compute in f64 (the demo's Math space) and store f32
 //! (its Float32Array).
 
-use crate::sim::params::CohMode;
+use crate::simulation::parameters::CohMode;
 
 /// a row-major N x N matrix of coherence values. `get(i, j)` is the affinity
 /// between the i-th and j-th primes; the matrix is symmetric.
@@ -69,7 +69,7 @@ fn pair_coherence(p: u32, q: u32, mode: CohMode, modulus: u32) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::sim::params::DEFAULT_MODULUS;
+    use crate::simulation::parameters::DEFAULT_MODULUS;
 
     const PRIMES: [u32; 5] = [2, 3, 5, 7, 11];
 

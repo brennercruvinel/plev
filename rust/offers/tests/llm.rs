@@ -12,9 +12,9 @@ mod support;
 
 use std::collections::VecDeque;
 
-use propose::{Llm, Model, ModelError, ProposeError, prompt, propose_verified};
+use offers::{Llm, Model, ModelError, ProposeError, prompt, propose_verified};
 use support::{Asking, compact, todo, verified};
-use uir::{Capabilities, Component, IrError, verify_json};
+use plevir::{Capabilities, Component, IrError, verify_json};
 
 /// A model that answers from a script and keeps every prompt it read.
 #[derive(Default)]
@@ -205,7 +205,7 @@ fn the_prompt_carries_the_schema_the_registry_and_the_ids_to_keep() {
     }
     assert!(text.contains("- `todo_panel.add`: button, activate -> todo.input submit"));
     // the schema, whole
-    let schema = serde_json::to_string_pretty(&uir::schema()).unwrap();
+    let schema = serde_json::to_string_pretty(&plevir::schema()).unwrap();
     assert!(text.contains(&schema));
 
     let fresh = Asking::new(todo());

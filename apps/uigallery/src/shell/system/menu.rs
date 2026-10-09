@@ -22,13 +22,13 @@
 
 use std::sync::Mutex;
 
-use engine::platform::menu::{
+use engine::runtime::platform::menu::{
     MenuItem, MenuModel, NativeMenu, Predefined, Shortcut, Submenu, default_menu,
 };
-use sem::{Role, SemId, Snapshot};
+use accord::{Role, SemId, Snapshot};
 
-use super::{App, UserEvent, print, record};
-use crate::view::ShowcaseView;
+use super::super::{App, UserEvent, system::print, window::record};
+use crate::views::ShowcaseView;
 
 /// The shell's capabilities by their ids, as the projection names them
 /// (`view::dispatch::shell`).
@@ -265,11 +265,11 @@ fn page_label(gallery: &Snapshot, item: &MenuItem) -> String {
 mod tests {
     use std::sync::{Arc, Mutex};
 
-    use engine::platform::menu::{Entry, FakeMenu, MenuItem, MenuModel, Shortcut, locked};
-    use sem::{SemId, Value};
+    use engine::runtime::platform::menu::{Entry, FakeMenu, MenuItem, MenuModel, Shortcut, locked};
+    use accord::{SemId, Value};
 
-    use super::super::{App, record};
-    use crate::view::{PAGES, ShowcaseView};
+    use super::super::super::{App, window::record};
+    use crate::views::{PAGES, ShowcaseView};
 
     fn sid(text: &str) -> SemId {
         SemId::parse(text).expect("a valid id")
@@ -353,7 +353,7 @@ mod tests {
         let theme = app.view.theme.clone();
         app.view
             .toasts
-            .push("saved", comps::prelude::Intent::Constructive, &theme);
+            .push("saved", engine::widgets::prelude::Intent::Constructive, &theme);
         app.sync_menu();
         let bar = shown(&fake);
         assert!(bar.find(&sid("toasts[0]"), "dismiss", None).is_none());

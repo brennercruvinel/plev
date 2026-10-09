@@ -11,17 +11,17 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::form::EditKey;
-use comps::{Rect, Wake, WidgetEvent};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
-use sem::{Actor, Rejection, Request, SemId, SnapshotBuilder, Stage, StateRef, Value};
+use engine::widgets::form::EditKey;
+use engine::widgets::{Rect, Wake, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
+use accord::{Actor, Rejection, Request, SemId, SnapshotBuilder, Stage, StateRef, Value};
 use support::{
     App, MIXER_LEFT, MIXER_RIGHT, SHOWCASE, TODO, TURN, id, mixer, page, settle, snapshot,
     verified, verified_local,
 };
-use surface::{Dispatch, Surface, SurfaceHost};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use screen::{Dispatch, Surface, SurfaceHost};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 const AREA: Rect = Rect {
     x: 40.0,
@@ -254,7 +254,7 @@ fn a_node_back_before_its_picture_is_gone_is_the_same_instance() {
 }
 
 /// The page's projection, as the host adds its surfaces to it.
-fn projected(host: &SurfaceHost, app: &App) -> sem::Snapshot {
+fn projected(host: &SurfaceHost, app: &App) -> accord::Snapshot {
     let mut b = SnapshotBuilder::new();
     for node in app.snapshot().nodes().values() {
         support::copy(&mut b, node);
@@ -339,10 +339,10 @@ fn a_dismissal_fades_the_surface_out_and_then_lets_it_go() {
 #[test]
 fn the_thread_s_reduced_motion_makes_the_change_instant_from_its_first_frame() {
     assert!(
-        !engine::animation::reduced_motion(),
+        !engine::compose::animation::reduced_motion(),
         "a thread starts with motion"
     );
-    engine::animation::set_reduced_motion(true);
+    engine::compose::animation::set_reduced_motion(true);
     let theme = Theme::hoff_core();
     let (app, mut surface, _) = mixer_left(&theme);
     to_right(&mut surface, &app);
@@ -362,5 +362,5 @@ fn the_thread_s_reduced_motion_makes_the_change_instant_from_its_first_frame() {
     frame(host.get_mut(&panel).expect("open"), &theme);
     assert!(host.close(&panel));
     assert_eq!(host.wake(TURN), Wake::idle(), "let go at once");
-    engine::animation::set_reduced_motion(false);
+    engine::compose::animation::set_reduced_motion(false);
 }

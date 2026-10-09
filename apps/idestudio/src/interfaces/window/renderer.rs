@@ -4,13 +4,13 @@
 //! order (quads/paths, shadows, SDF rects, images, text and backdrop-blur
 //! resolves interleaved as pushed), composites and presents.
 
-use engine::compositor::Compositor;
-use engine::effects::EffectProcessor;
-use engine::gpu::GpuContext;
-use engine::gpu::texture_pool::TexturePool;
-use engine::text::TextSystem;
-use engine::window::present_frame;
-use ide::workbench::Workbench;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::effects::EffectProcessor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::gpu::texture_pool::TexturePool;
+use engine::drawing::text::TextSystem;
+use engine::runtime::window::present_frame;
+use crate::capability::Workbench;
 
 /// Render a single frame: build the scene, resolve layers, encode GPU passes,
 /// and present. Called once per `RedrawRequested`.

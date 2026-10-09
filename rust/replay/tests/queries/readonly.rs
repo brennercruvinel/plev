@@ -6,8 +6,8 @@
 
 use std::path::Path;
 
-use inspect::{Inspector, text};
-use sem::{RequestId, SemId};
+use replay::{Inspector, prose};
+use accord::{RequestId, SemId};
 
 use crate::apps::{Lab, agent};
 
@@ -15,7 +15,7 @@ type Fallible = Result<(), Box<dyn std::error::Error>>;
 
 /// every answer the inspector gives, at every instant the session holds,
 /// rendered: the number of lines it printed.
-fn inspect_everything(session: &rec::Session) -> Result<usize, Box<dyn std::error::Error>> {
+fn inspect_everything(session: &record::Session) -> Result<usize, Box<dyn std::error::Error>> {
     let inspector = Inspector::new(session);
     let mut lines = text::summary(&inspector.summary()?).lines().count();
     lines += text::timeline(&inspector.timeline()).lines().count();
@@ -57,7 +57,7 @@ fn inspecting_a_session_runs_nothing_and_asks_for_nothing() -> Fallible {
     assert!(lines > 0);
     // a session rebuilt from its events alone, with nothing else near it,
     // answers the same.
-    let cold = rec::Session::from_events(session.events().to_vec());
+    let cold = record::Session::from_events(session.events().to_vec());
     assert_eq!(inspect_everything(&cold)?, lines);
 
     assert_eq!(lab.git.executed, executed, "nothing was executed");

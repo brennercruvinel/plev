@@ -15,11 +15,11 @@
 
 use std::collections::HashMap;
 
-use crate::gem::Mat;
-use crate::mdl::Animation;
-use crate::rnd::Player;
-use monster::asset_path::pack_chunks;
-use monster::{
+use crate::formats::lottie::geometry::Mat;
+use crate::formats::lottie::schema::Animation;
+use crate::formats::lottie::render::Player;
+use motion::encoding::asset_path::pack_chunks;
+use motion::{
     Asset, AssetKind, Desc, DiscoverConfig, DiscoverError, Node, NodeKind, Props, WriteError,
     discover, encode,
 };

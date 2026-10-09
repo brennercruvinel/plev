@@ -34,14 +34,14 @@
 use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::Duration;
 
-use propose::ProposeError;
-use sem::{Actor, RequestId, Snapshot};
-use uir::{Adapted, Capabilities, GenerationPolicy, Op, VerifiedIr};
+use offers::ProposeError;
+use accord::{Actor, RequestId, Snapshot};
+use plevir::{Adapted, Capabilities, GenerationPolicy, Op, VerifiedIr};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use claude_model::{Cancel, ClaudeCli};
+use claude::{Cancel, ClaudeCli};
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use engine::window::Background;
+use engine::runtime::window::Background;
 
 /// How often the page looks at the channel while it waits.
 pub(crate) const POLL: Duration = Duration::from_millis(100);
@@ -255,7 +255,7 @@ impl Claude {
 fn spawn(held: Held) -> Result<Receiver<Msg>, String> {
     use std::sync::mpsc::Sender;
 
-    use propose::{
+    use offers::{
         Adapt, Ask, Llm, Model, ModelError, Transformed, propose_verified, transform_verified,
     };
 

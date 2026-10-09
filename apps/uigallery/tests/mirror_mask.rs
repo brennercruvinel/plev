@@ -16,13 +16,13 @@
 
 mod login;
 
-use engine::gpu::RenderConfig;
-use engine::window::WindowHost;
-use rec::scene::{Head, Mask, SECRET_LABEL, Sender};
-use sem::Request;
-use showcase::app::mirror::{MAIN, Viewer, masks, offer};
-use showcase::view::{PAGES, ShowcaseView};
-use wire::{Outgoing, Reply, encode_server};
+use engine::drawing::gpu::RenderConfig;
+use engine::runtime::window::WindowHost;
+use record::scene::{Head, Mask, SECRET_LABEL, Sender};
+use accord::Request;
+use uigallery::shell::window::mirror::{MAIN, Viewer, masks, offer};
+use uigallery::views::{PAGES, ShowcaseView};
+use socket::{Outgoing, Reply, encode_server};
 
 fn host(w: f32, h: f32) -> Option<WindowHost> {
     let host = WindowHost::headless(w as u32, h as u32, 1.0, RenderConfig::default());
@@ -42,20 +42,20 @@ fn head(w: f32, h: f32, clear: [f32; 4]) -> Head {
 }
 
 /// A server whose scenes are shared, with one watch of the main window.
-fn watched() -> wire::Server {
-    let mut server = wire::Server::new("mirror", 8);
+fn watched() -> socket::Server {
+    let mut server = socket::Server::new("mirror", 8);
     server.share_scenes(true);
     for ask in [
-        wire::Ask::Hello {
+        socket::Ask::Hello {
             name: "mirror".into(),
         },
-        wire::Ask::Scene(wire::SceneAsk {
+        socket::Ask::Scene(socket::SceneAsk {
             window: MAIN.into(),
         }),
     ] {
         let out = server.handle(
             1,
-            wire::ClientMsg {
+            socket::ClientMsg {
                 id: "w".into(),
                 ask,
             },
@@ -68,16 +68,16 @@ fn watched() -> wire::Server {
 
 struct NoHost;
 
-impl wire::Host for NoHost {
-    fn project(&self) -> Option<sem::Snapshot> {
+impl socket::Host for NoHost {
+    fn project(&self) -> Option<accord::Snapshot> {
         None
     }
 
-    fn dispatch(&mut self, _req: Request) -> Option<sem::RequestId> {
+    fn dispatch(&mut self, _req: Request) -> Option<accord::RequestId> {
         None
     }
 
-    fn add_sink(&mut self, _sink: Box<dyn sem::ReceiptSink>) {}
+    fn add_sink(&mut self, _sink: Box<dyn accord::ReceiptSink>) {}
 }
 
 /// Every line of `out` as the port writes it, and every binary part in

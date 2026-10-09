@@ -92,8 +92,8 @@ impl ScrollState {
 // SpringScroll -- scroll with physics-based deceleration via MotionPhysics
 // ---------------------------------------------------------------------------
 
-use crate::animation::Spring;
-use crate::theme::MotionPhysics;
+use crate::compose::animation::Spring;
+use crate::styling::theme::MotionPhysics;
 
 pub struct SpringScroll {
     state: ScrollState,
@@ -261,7 +261,7 @@ mod tests {
 
     #[test]
     fn spring_scroll_destructive_motion_faster() {
-        use crate::theme::{Intent, Theme};
+        use crate::styling::theme::{Intent, Theme};
         let theme = Theme::dark();
         let neutral_motion = &theme.motion;
         let destructive_motion = theme.intent_motion(Intent::Destructive);

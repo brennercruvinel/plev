@@ -32,7 +32,7 @@
 
 use std::fmt;
 
-use sem::{Actor, Request, SemError, SemId, Snapshot, Value};
+use accord::{Actor, Request, SemError, SemId, Snapshot, Value};
 
 mod source;
 

@@ -137,7 +137,7 @@ fn driving_every_handler_leaves_the_session_as_it_was() -> Fallible {
             draw(&mut view);
         }
 
-        let fresh = rec::Session::open(fixture(name))?;
+        let fresh = record::Session::open(fixture(name))?;
         assert!(view.session() == &fresh, "{name}: the session is as it was");
         assert_eq!(std::fs::read(fixture(name))?, bytes, "{name}: the file too");
     }

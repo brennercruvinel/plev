@@ -6,10 +6,10 @@
 //! (advances, wrapped heights) is a live `TextMeasurer` value, never an
 //! eyeballed constant.
 
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::{Compositor, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{Theme, TypographyScale};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{Theme, TypographyScale};
 
 use super::{group_label, panel};
 
@@ -306,7 +306,7 @@ const WRAPPING_TEXT: &str = "Inclusive Sans ships in every UI weight (400/500/60
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::compositor::SceneNode;
+    use engine::drawing::compositor::SceneNode;
 
     fn narrow() -> Rect {
         Rect::new(288.0, 80.0, 472.0, 440.0)
@@ -324,7 +324,7 @@ mod tests {
             let mut c = Compositor::new();
             section.render(&mut c, content, &theme);
             let nodes = c
-                .layer(engine::compositor::LayerId::DEFAULT)
+                .layer(engine::drawing::compositor::LayerId::DEFAULT)
                 .unwrap()
                 .nodes();
             assert!(nodes.len() > 30, "thin scene: {} nodes", nodes.len());

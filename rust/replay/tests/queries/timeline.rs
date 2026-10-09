@@ -1,8 +1,8 @@
 //! the timeline: one entry per event, with its time from the start, and
 //! the tallies by kind and by actor.
 
-use inspect::{Inspector, What};
-use sem::Actor;
+use replay::{Inspector, What};
+use accord::Actor;
 
 use crate::apps::agent;
 use crate::thesis::record;
@@ -98,7 +98,7 @@ fn the_tallies_count_each_actor() {
 
 #[test]
 fn an_empty_session_has_an_empty_timeline() {
-    let session = rec::Session::default();
+    let session = record::Session::default();
     let timeline = Inspector::new(&session).timeline();
     assert!(timeline.entries.is_empty() && timeline.kinds.is_empty() && timeline.actors.is_empty());
     assert_eq!((timeline.start, timeline.end), (0, 0));

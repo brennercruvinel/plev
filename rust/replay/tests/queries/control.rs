@@ -2,8 +2,8 @@
 //! to then, each with its causal chain as the window up to then tells it.
 
 use indexmap::IndexMap;
-use inspect::{Ending, Inspector};
-use sem::{Outcome, Value};
+use replay::{Ending, Inspector};
+use accord::{Outcome, Value};
 
 use crate::apps::{Lab, agent, id};
 use crate::thesis::record;

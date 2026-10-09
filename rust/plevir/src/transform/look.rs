@@ -5,13 +5,13 @@
 //! it; each is refused when it means nothing for the node. their inverse
 //! is the props and layouts before.
 
-use sem::SemId;
+use accord::SemId;
 
 use super::tree;
 use super::{Draft, Inverse, Look, Step, TransformError, refused};
 use crate::ir::IrNode;
 use crate::token::{ColorRole, ControlSize, Elevation, Layout, SpacingToken, TypographyRole};
-use crate::vocab::Component;
+use crate::vocabulary::Component;
 
 fn look(node: &IrNode) -> Look {
     Look {
@@ -277,10 +277,10 @@ pub(super) fn restyle(
 
 #[cfg(test)]
 mod tests {
-    use sem::{Actor, Role, SnapshotBuilder};
+    use accord::{Actor, Role, SnapshotBuilder};
 
     use super::*;
-    use crate::caps::Capabilities;
+    use crate::capabilities::Capabilities;
     use crate::policy::GenerationPolicy;
     use crate::transform::{Adapted, Context, Op};
     use crate::verify::verify_json;

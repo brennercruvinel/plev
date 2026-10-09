@@ -2,13 +2,13 @@
 //! `run_web`, android `android_main`, iOS `showcase_ios_main`. Each builds
 //! the winit event loop its platform wants and drives the same [`App`].
 
-use super::{App, UserEvent};
+use super::super::{App, UserEvent};
 use winit::event_loop::EventLoop;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use super::{background, record};
+use super::super::{system::background, window::record};
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 /// Desktop entry: build the winit event loop and run the showcase.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

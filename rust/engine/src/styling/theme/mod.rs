@@ -6,7 +6,7 @@ mod scales;
 mod tests;
 mod tokens;
 
-pub use crate::theme::button::{
+pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
 };
 pub use self::color_space::Oklch;
@@ -23,7 +23,7 @@ pub use self::tokens::{
 // Theme -- the root struct (RULE-08)
 // ============================================================================
 
-use crate::color::Color;
+use crate::styling::color::Color;
 
 #[derive(Clone, Debug)]
 pub struct Theme {

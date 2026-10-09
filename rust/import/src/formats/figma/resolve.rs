@@ -22,9 +22,9 @@
 mod look;
 
 use crate::ParserError;
-use crate::emit_ir::sanitize;
-use crate::figma::{FigDoc, FigNode};
-use crate::ir::{
+use crate::emit::plevir::sanitize;
+use crate::formats::figma::parse::{FigDoc, FigNode};
+use crate::tree::{
     Dropped, Note, NoteKind, Origin, ParserNode, Prop, Resolution, Src, Tag, TextValue, snake_case,
 };
 

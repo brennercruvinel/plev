@@ -26,10 +26,10 @@ use std::fmt;
 
 use super::context::GpuContext;
 use super::loss::LostDevice;
-use crate::compositor::Compositor;
-use crate::effects::EffectProcessor;
-use crate::gpu::texture_pool::TexturePool;
-use crate::text::TextSystem;
+use crate::drawing::compositor::Compositor;
+use crate::drawing::effects::EffectProcessor;
+use crate::drawing::gpu::texture_pool::TexturePool;
+use crate::drawing::text::TextSystem;
 
 /// Why a lost device could not be replaced. The context keeps its dead
 /// device and stays lost; a later attempt may succeed.

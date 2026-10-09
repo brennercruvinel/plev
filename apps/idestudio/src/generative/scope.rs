@@ -11,10 +11,10 @@
 //! files, a file's diff), every other commit, the authors, the branch, a
 //! commit message being written, the notices, the path of the repository.
 
-use sem::{Role, SemErrors, SemId, Snapshot, SnapshotBuilder, Value};
-use uir::{Ir, IrNode};
+use accord::{Role, SemErrors, SemId, Snapshot, SnapshotBuilder, Value};
+use plevir::{Ir, IrNode};
 
-use crate::ids::Ids;
+use crate::capability::ids::Ids;
 
 /// The commits `ir` binds (a state it shows or an action it asks), in
 /// the order it first binds them, each once.

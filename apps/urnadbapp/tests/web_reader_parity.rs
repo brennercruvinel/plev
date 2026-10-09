@@ -6,9 +6,9 @@
 #![cfg(not(target_arch = "wasm32"))]
 
 use urna_format::{ChunkInput, Edge, Manifest, UrnaFileBuilder, encode_graph_adjacency};
-use urnaui::model::backend::UrnaBackend;
-use urnaui::model::types::SearchMode;
-use urnaui::model::urnaread::UrnaBytes;
+use urnadbapp::backend::sources::native::UrnaBackend;
+use urnadbapp::backend::workers::messages::SearchMode;
+use urnadbapp::backend::sources::reader::UrnaBytes;
 
 fn demo_manifest() -> Manifest {
     Manifest {

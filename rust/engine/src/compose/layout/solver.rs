@@ -1,9 +1,9 @@
 use taffy::prelude::*;
 
-use crate::perf::stages::{self, Stage};
-use crate::text::TextMeasurer;
+use crate::runtime::perf::stages::{self, Stage};
+use crate::drawing::text::TextMeasurer;
 
-use super::types::{
+use super::style::{
     Align, ComputedBounds, Direction, Justify, LayoutItem, LayoutStyle, TextMeasureSpec,
 };
 

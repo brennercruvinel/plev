@@ -5,9 +5,9 @@ pub mod jsonschema;
 
 use std::collections::BTreeSet;
 
-use sem::{Actors, Confirm, Constraints, ParamSpec, Policy, Role, SnapshotBuilder, ValueKind};
+use accord::{Actors, Confirm, Constraints, ParamSpec, Policy, Role, SnapshotBuilder, ValueKind};
 use serde_json::{Value, json};
-use uir::{Capabilities, GenerationPolicy, IrError, Rule};
+use plevir::{Capabilities, GenerationPolicy, IrError, Rule};
 
 /// The registry of a projection like the ide's (changes with two files,
 /// the commit form), plus the odd capabilities the policy rules need.
@@ -177,7 +177,7 @@ pub fn without(mut doc: Value, pointer: &str) -> Value {
 
 /// The errors of `doc` under `policy`, read and verified.
 pub fn errors_under(doc: &Value, policy: &GenerationPolicy) -> Vec<IrError> {
-    match uir::verify_json(&doc.to_string(), &caps(), policy) {
+    match plevir::verify_json(&doc.to_string(), &caps(), policy) {
         Ok(_) => Vec::new(),
         Err(errors) => errors,
     }

@@ -19,13 +19,13 @@ pub mod geometry;
 
 use std::collections::HashMap;
 
-use engine::compositor::{Compositor, SceneNode};
-use engine::graph::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
-use engine::path::PathBuilder;
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::widgets::graph::geometry::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
+use crate::drawing::path::PathBuilder;
+use crate::styling::theme::Theme;
 
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::recipe::rounded_rect_stroke;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::recipe::rounded_rect_stroke;
 
 /// Fixed world box the layout runs in when the widget computes it.
 const WORLD: f32 = 1000.0;
@@ -351,7 +351,7 @@ impl Default for GraphView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::graph::GraphEdge;
+    use crate::widgets::graph::geometry::GraphEdge;
 
     fn bounds() -> Rect {
         Rect::new(0.0, 0.0, 800.0, 600.0)

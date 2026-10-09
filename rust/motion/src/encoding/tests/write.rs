@@ -3,10 +3,10 @@
 //! frozen golden fixture lives in `tests_golden`, which borrows the
 //! builders and the header parser from here.
 
-use crate::container::{self, Asset, AssetKind, DeltaOp, Desc, SEC_DELTA};
-use crate::easing::{Easing, EasingTable};
-use crate::ir::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
-use crate::write::{WriteError, encode};
+use crate::encoding::container::{self, Asset, AssetKind, DeltaOp, Desc, SEC_DELTA};
+use crate::timeline::easing::{Easing, EasingTable};
+use crate::timeline::{Keyframe, Node, NodeKind, Prop, Props, Segment, Timeline, Track, Value};
+use crate::encoding::write::{WriteError, encode};
 
 pub(crate) fn scalar(v: f32) -> Value {
     Value::Scalar(v)

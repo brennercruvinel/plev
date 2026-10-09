@@ -5,10 +5,10 @@
 //! comps projects it: the tags are labels, the last one a toggle whose
 //! `toggle` flips it as a click does.
 
-use comps::prelude::{Chip, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{Intent, Theme};
-use sem::{Request, SemId, SnapshotBuilder};
+use engine::widgets::prelude::{Chip, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{Intent, Theme};
+use accord::{Request, SemId, SnapshotBuilder};
 
 use super::{After, Component, child_id, flow, root_id, under};
 

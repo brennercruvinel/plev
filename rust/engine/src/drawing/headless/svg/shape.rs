@@ -6,8 +6,8 @@
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
-use crate::compositor::{QuadVertex, gradient_direction, shadow_padding, shadow_sigma};
-use crate::path::TessellatedPath;
+use crate::drawing::compositor::{QuadVertex, gradient_direction, shadow_padding, shadow_sigma};
+use crate::drawing::path::TessellatedPath;
 
 use super::write::{Svg, fill, hex, num, opacity};
 

@@ -211,7 +211,7 @@ fn rounded_rect(x: f32, y: f32, w: f32, h: f32) -> SceneNode {
 
 #[test]
 fn image_node_emits_pixel_uvs_and_ranges() {
-    let handle = crate::gpu::image::ImageHandle {
+    let handle = crate::drawing::gpu::image::ImageHandle {
         id: 7,
         atlas_x: 100,
         atlas_y: 200,
@@ -252,7 +252,7 @@ fn image_node_emits_pixel_uvs_and_ranges() {
 
 #[test]
 fn image_nodes_respect_culling_and_clip() {
-    let handle = crate::gpu::image::ImageHandle {
+    let handle = crate::drawing::gpu::image::ImageHandle {
         id: 1,
         atlas_x: 0,
         atlas_y: 0,
@@ -444,8 +444,8 @@ fn text_node_groups_split_by_clip() {
 
 #[test]
 fn merge_text_groups_rebases_indices_and_builds_ranges() {
-    fn vertex(x: f32) -> crate::text::TextVertex {
-        crate::text::TextVertex {
+    fn vertex(x: f32) -> crate::drawing::text::TextVertex {
+        crate::drawing::text::TextVertex {
             position: [x, 0.0],
             uv: [0.0, 0.0],
             color: [1.0; 4],
@@ -852,8 +852,8 @@ fn culling_applies_to_rounded_rects() {
 fn culling_applies_to_paths_via_bounds() {
     let mut comp = Compositor::new();
     let offscreen =
-        crate::path::PathBuilder::circle(-100.0, -100.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
-    let onscreen = crate::path::PathBuilder::circle(50.0, 50.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
+        crate::drawing::path::PathBuilder::circle(-100.0, -100.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let onscreen = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 10.0).fill([1.0, 0.0, 0.0, 1.0]);
     let visible_vertex_count = onscreen.vertices.len();
 
     comp.begin_frame();
@@ -1027,7 +1027,7 @@ fn sequence_preserves_push_order_across_kinds() {
     });
     comp.push(rounded_rect(10.0, 10.0, 50.0, 30.0));
     comp.push(SceneNode::Path {
-        data: crate::path::PathBuilder::circle(30.0, 25.0, 6.0).fill([1.0; 4]),
+        data: crate::drawing::path::PathBuilder::circle(30.0, 25.0, 6.0).fill([1.0; 4]),
     });
     comp.push(rect(0.0, 0.0, 20.0, 20.0));
     comp.resolve_scene((800.0, 600.0));
@@ -1364,8 +1364,8 @@ fn layer_with_backdrop_redraws_when_lower_layer_changes() {
 
 #[test]
 fn merge_text_groups_keeps_one_range_per_group() {
-    fn vertex(x: f32) -> crate::text::TextVertex {
-        crate::text::TextVertex {
+    fn vertex(x: f32) -> crate::drawing::text::TextVertex {
+        crate::drawing::text::TextVertex {
             position: [x, 0.0],
             uv: [0.0, 0.0],
             color: [1.0; 4],
@@ -1399,7 +1399,7 @@ fn merge_text_groups_keeps_one_range_per_group() {
 fn path_node_participates_in_dirty_tracking() {
     let mut comp = Compositor::new();
 
-    let path_data = crate::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
+    let path_data = crate::drawing::path::PathBuilder::circle(50.0, 50.0, 25.0).fill([1.0, 0.0, 0.0, 1.0]);
 
     comp.begin_frame();
     comp.push(SceneNode::Path {
@@ -1422,7 +1422,7 @@ fn path_node_participates_in_dirty_tracking() {
 
     comp.mark_layer_clean(LayerId::DEFAULT);
     comp.begin_frame();
-    let different = crate::path::PathBuilder::circle(100.0, 100.0, 10.0).fill([0.0, 1.0, 0.0, 1.0]);
+    let different = crate::drawing::path::PathBuilder::circle(100.0, 100.0, 10.0).fill([0.0, 1.0, 0.0, 1.0]);
     comp.push(SceneNode::Path { data: different });
     for layer in &mut comp.layers {
         layer.resolve_dirty();
@@ -1436,10 +1436,10 @@ fn path_node_participates_in_dirty_tracking() {
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 fn drop_gpu_resources_forgets_every_layer_and_marks_it_dirty() {
-    let Some(gpu) = pollster::block_on(crate::gpu::GpuContext::new_headless(
+    let Some(gpu) = pollster::block_on(crate::drawing::gpu::GpuContext::new_headless(
         16,
         16,
-        crate::gpu::RenderConfig::default(),
+        crate::drawing::gpu::RenderConfig::default(),
     )) else {
         eprintln!("no GPU adapter; skipping");
         return;

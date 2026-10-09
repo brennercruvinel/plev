@@ -7,17 +7,17 @@
 #[allow(dead_code)]
 mod support;
 
-use comps::Rect;
-use engine::compositor::Compositor;
-use engine::theme::Theme;
+use engine::widgets::Rect;
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
 use support::{CASES, snapshot, verified};
-use surface::Surface;
-use uir::IrNode;
+use screen::Surface;
+use plevir::IrNode;
 
 /// The fixed ids of `node`'s subtree that take a role (a repeat's
 /// template ids are left out: their instances are keyed by item).
 fn roled(node: &IrNode, out: &mut Vec<String>) {
-    if uir::role_of(node.component, &node.bind).is_some() {
+    if plevir::role_of(node.component, &node.bind).is_some() {
         out.push(node.sem.to_string());
     }
     for child in &node.children {

@@ -12,7 +12,7 @@
 //! are not compared pixel by pixel: [`Verdict::Resized`], with the
 //! reason when a decision declares a size difference.
 
-use engine::headless::Frame;
+use engine::drawing::headless::Frame;
 use serde::{Deserialize, Serialize};
 
 use crate::pixels::centers;

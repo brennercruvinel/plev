@@ -20,12 +20,12 @@
 use std::collections::{BTreeMap, HashSet};
 use std::time::{Duration, Instant};
 
-use comps::prelude::WidgetEvent;
-use engine::compositor::{Compositor, Layer, LayerEffect, SceneNode, TextNodeKey};
-use engine::headless::Viewport;
-use monster::{AssetBank, DiscoverConfig, LoweredAsset, Node};
-use showcase::app::stage_page;
-use showcase::view::{PAGES, ShowcaseView};
+use engine::widgets::prelude::WidgetEvent;
+use engine::drawing::compositor::{Compositor, Layer, LayerEffect, SceneNode, TextNodeKey};
+use engine::drawing::headless::Viewport;
+use motion::{AssetBank, DiscoverConfig, LoweredAsset, Node};
+use uigallery::shell::stage_page;
+use uigallery::views::{PAGES, ShowcaseView};
 
 const VIEWPORT: Viewport = Viewport {
     width: 1280.0,
@@ -410,17 +410,17 @@ fn monster(frames: &[Vec<SceneNode>]) -> Monster {
     let mut skipped = [0usize; 4];
     let mut samples: Vec<(f32, Vec<Node>)> = Vec::new();
     for (n, frame) in frames.iter().enumerate() {
-        let raised = monster::raise_scene(frame, &mut bank).expect("the scene raises");
+        let raised = motion::raise_scene(frame, &mut bank).expect("the scene raises");
         for s in &raised.skipped {
-            if let Some(k) = monster::Unsupported::ALL.iter().position(|u| *u == s.kind) {
+            if let Some(k) = motion::Unsupported::ALL.iter().position(|u| *u == s.kind) {
                 skipped[k] += 1;
             }
         }
         samples.push((n as f32 / 60.0, raised.nodes));
     }
-    let bytes = monster::discover(&samples, &discovery())
+    let bytes = motion::discover(&samples, &discovery())
         .ok()
-        .and_then(|t| monster::encode(&t, &[], &[]).ok())
+        .and_then(|t| motion::encode(&t, &[], &[]).ok())
         .map_or(0, |b| b.len());
     let took = at.elapsed();
     let assets = bank
@@ -441,7 +441,7 @@ fn monster(frames: &[Vec<SceneNode>]) -> Monster {
             LoweredAsset::Image(_) => 5 + 9,
             LoweredAsset::Path(p) => {
                 5 + 4
-                    + monster::asset_path::pack_chunks(p)
+                    + motion::encoding::asset_path::pack_chunks(p)
                         .iter()
                         .map(|c| 4 + c.len())
                         .sum::<usize>()

@@ -11,14 +11,14 @@
 
 use std::ops::Range;
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::input::scroll::ScrollState;
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::control::input::scroll::ScrollState;
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::Theme;
 
 use super::{Metrics, Select, label_style};
-use crate::core::{EventResult, Rect};
-use crate::recipe::{glass_pill, menu_shadow};
+use crate::widgets::widget::{EventResult, Rect};
+use crate::widgets::recipe::{glass_pill, menu_shadow};
 
 /// Handled with nothing visible changed: the event stops at the panel.
 const CONSUMED: EventResult = EventResult {

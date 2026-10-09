@@ -4,7 +4,7 @@
 //! counts), static path weights, paint counts and the text document
 //! weight. mapping honesty notes live in dense.rs next to the tests.
 
-use monster::Easing;
+use motion::Easing;
 use serde_json::Value as J;
 
 pub fn f(v: &J) -> f32 {

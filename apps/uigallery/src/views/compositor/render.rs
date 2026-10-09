@@ -2,12 +2,12 @@
 //! (chrome, the clipped page, the alias note or placeholder, the active
 //! overlay, the toasts).
 
-use comps::overlay::OverlayManager;
-use comps::prelude::{Rect, Wake};
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::widgets::overlay::OverlayManager;
+use engine::widgets::prelude::{Rect, Wake};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 
-use super::components::scroll_area::ScrollAreaPage;
-use super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
+use super::super::components::scroll_area::ScrollAreaPage;
+use super::super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
 
 impl ShowcaseView {
     // -- Animation -------------------------------------------------------------
@@ -148,7 +148,7 @@ impl ShowcaseView {
 
     /// The note an alias page shows above the shared example: which
     /// page's example it is, and what its own still lacks.
-    fn render_note(&self, c: &mut Compositor, content: Rect, theme: &engine::theme::Theme) {
+    fn render_note(&self, c: &mut Compositor, content: Rect, theme: &engine::styling::theme::Theme) {
         let Body::Alias { pane, gap } = self.current().body else {
             return;
         };
@@ -166,8 +166,8 @@ impl ShowcaseView {
 
 #[cfg(test)]
 mod tests {
-    use comps::prelude::{Wake, WidgetEvent};
-    use engine::compositor::Compositor;
+    use engine::widgets::prelude::{Wake, WidgetEvent};
+    use engine::drawing::compositor::Compositor;
 
     use super::ShowcaseView;
 

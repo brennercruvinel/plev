@@ -23,12 +23,12 @@ pub use svg::{Approximation, SvgExport};
 
 use std::fmt;
 
-use crate::compositor::Compositor;
-use crate::effects::EffectProcessor;
-use crate::gpu::texture_pool::TexturePool;
-use crate::gpu::{GpuContext, HEADLESS_FORMAT, LostDevice, RenderConfig};
-use crate::text::TextSystem;
-use crate::window::draw_frame;
+use crate::drawing::compositor::Compositor;
+use crate::drawing::effects::EffectProcessor;
+use crate::drawing::gpu::texture_pool::TexturePool;
+use crate::drawing::gpu::{GpuContext, HEADLESS_FORMAT, LostDevice, RenderConfig};
+use crate::drawing::text::TextSystem;
+use crate::runtime::window::draw_frame;
 
 /// What a headless frame covers: a logical size (the coordinates a scene is
 /// laid out in, CSS pixels) and the scale from logical to physical pixels.
@@ -206,7 +206,7 @@ impl Renderer {
     /// does for a window; the target is recreated with it.
     pub fn draw(&mut self, compositor: &mut Compositor, clear_linear: [f32; 4]) -> u32 {
         if self.gpu.poll_device_loss() {
-            if !crate::gpu::recover_or_skip(
+            if !crate::drawing::gpu::recover_or_skip(
                 compositor,
                 &mut self.gpu,
                 &mut self.text_system,

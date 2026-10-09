@@ -5,13 +5,13 @@
 //! benchmark runs on the worker; this screen owns the controls, the
 //! progress counter and the last `BenchmarkView`.
 
-use comps::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, Wake, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::Theme;
+use engine::widgets::prelude::{Button, EventResult, Rect, Slider, Spinner, SpinnerSize, Wake, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 
-use crate::model::bench::{BenchmarkView, LatencyStats};
-use crate::model::types::OpenedDbView;
+use crate::backend::benchmark::{BenchmarkView, LatencyStats};
+use crate::backend::workers::messages::OpenedDbView;
 
 use super::{Action, fmt_bytes, group_label, panel, text};
 
@@ -278,7 +278,7 @@ impl StatsScreen {
             .iter()
             .map(|s| (s.name.clone(), s.size as f64, fmt_bytes(s.size)))
             .collect();
-        comps::charts::draw::hbars(
+        engine::widgets::charts::draw::hbars(
             c,
             &items,
             Rect::new(
@@ -397,10 +397,10 @@ mod tests {
             dim: 4,
             dtype: "float32".into(),
             simd_backend: "neon".into(),
-            exact: crate::model::bench::latency_stats(
+            exact: crate::backend::benchmark::latency_stats(
                 &(0..50).map(|i| i as f64 * 0.1).collect::<Vec<_>>(),
             ),
-            ann: Some(crate::model::bench::latency_stats(
+            ann: Some(crate::backend::benchmark::latency_stats(
                 &(0..50).map(|i| i as f64 * 0.02).collect::<Vec<_>>(),
             )),
             recall_at_k: Some(0.97),

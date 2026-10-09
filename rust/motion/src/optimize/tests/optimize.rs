@@ -4,12 +4,12 @@
 //! path) lives in tests_optimize_pipe, which borrows the builders and
 //! assertion helpers from here.
 
-use crate::easing::Easing;
-use crate::ir::{Keyframe, Prop, Segment, Timeline, Track, Value};
+use crate::timeline::easing::Easing;
+use crate::timeline::{Keyframe, Prop, Segment, Timeline, Track, Value};
 use crate::optimize::{OptimizeCfg, optimize};
 use crate::play::MonsterPlayer;
-use crate::tests::discover::q_scene;
-use crate::tests::write::rect;
+use crate::discover::tests::discover::q_scene;
+use crate::encoding::tests::write::rect;
 
 pub(crate) fn seg(target: f32, dur_s: f32, easing: Easing) -> Segment {
     Segment {

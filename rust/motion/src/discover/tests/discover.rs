@@ -7,16 +7,16 @@
 //! tests_discover_ops, which borrows the helpers from here.
 
 use crate::discover::{DiscoverConfig, DiscoverError, discover};
-use crate::discover_fit::quantize_value;
-use crate::easing::Easing;
-use crate::ir::{IrError, Node, NodeKind, Prop, Props, Segment, Timeline, Value};
-use crate::lower::lower_scene;
+use crate::discover::fit::quantize_value;
+use crate::timeline::easing::Easing;
+use crate::timeline::{IrError, Node, NodeKind, Prop, Props, Segment, Timeline, Value};
+use crate::mappings::lower::lower_scene;
 use crate::play::MonsterPlayer;
-use crate::quant;
-use crate::read::decode;
-use crate::tests::write::rect;
-use crate::write::encode;
-use engine::compositor::SceneNode;
+use crate::encoding::quantize;
+use crate::encoding::read::decode;
+use crate::encoding::tests::write::rect;
+use crate::encoding::write::encode;
+use engine::drawing::compositor::SceneNode;
 
 pub(crate) fn cfg(keyframe_every_s: f32, scalar_jump: f32) -> DiscoverConfig {
     DiscoverConfig {

@@ -5,11 +5,11 @@
 //! makes and the same receipt, the menu following a moved projection (an
 //! item disabled, an item gone), and the target without a menu.
 
-use engine::platform::menu::{
+use engine::runtime::platform::menu::{
     Clicked, FakeMenu, MenuError, MenuItem, MenuModel, NativeMenu, NoMenu, Predefined, Shortcut,
     Submenu,
 };
-use sem::{
+use accord::{
     Actor, Dispatcher, Execution, Operable, Outcome, Request, RequestId, Role, SemId, Semantics,
     Snapshot, SnapshotBuilder, Stage, Value,
 };
@@ -205,7 +205,7 @@ fn a_click_on_the_fake_menu_is_the_request_the_button_makes_and_gets_its_receipt
     assert_eq!(app.count, 2);
 
     // the same stages, in the same order, with the outcome the button got
-    let stages = |r: &sem::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
+    let stages = |r: &accord::Receipt| r.stages.iter().map(|(s, _)| s.name()).collect::<Vec<_>>();
     assert_eq!(stages(menu_receipt), stages(&button_receipt));
     assert_eq!(
         stages(menu_receipt),
@@ -221,7 +221,7 @@ fn a_click_on_the_fake_menu_is_the_request_the_button_makes_and_gets_its_receipt
     let stale_id = dispatcher.dispatch(&mut app, stale, 30);
     assert!(matches!(
         dispatcher.receipt(stale_id).unwrap().stage(),
-        Some(Stage::Rejected(sem::Rejection::Stale { .. }))
+        Some(Stage::Rejected(accord::Rejection::Stale { .. }))
     ));
     assert_eq!(app.count, 2, "nothing ran");
 }

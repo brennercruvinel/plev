@@ -4,11 +4,11 @@ mod interpolation;
 #[cfg(test)]
 mod tests;
 
-use crate::parse::NarrateBlock;
-use crate::parse::element::NarrateElement;
-use crate::parse::keywords::ElementKind;
-use crate::parse::modifier::Modifier;
-use crate::parse::value::ModifierValue;
+use crate::markup::parse::NarrateBlock;
+use crate::markup::parse::element::NarrateElement;
+use crate::markup::parse::keywords::ElementKind;
+use crate::markup::parse::modifier::Modifier;
+use crate::markup::parse::value::ModifierValue;
 use proc_macro2::TokenStream;
 use quote::quote;
 

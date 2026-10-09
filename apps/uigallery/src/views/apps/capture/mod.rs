@@ -34,17 +34,17 @@ mod tests;
 
 use std::time::Duration;
 
-use comps::prelude::{
+use engine::widgets::prelude::{
     EventResult, ProgressBar, Rect, Switch, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
 };
-use engine::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::gpu::image::{ImageHandle, replace_image_rgba, stream_image_rgba};
-use engine::platform::capture::{
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::gpu::image::{ImageHandle, replace_image_rgba, stream_image_rgba};
+use engine::runtime::platform::capture::{
     Capture, CaptureSettings, CaptureState, DeviceKind, Frame, NoCapture,
 };
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, Theme};
-use engine::window::Background;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::{ControlSize, Theme};
+use engine::runtime::window::Background;
 
 use super::{EditKey, panel};
 use semantics::{Ids, bounds};
@@ -440,7 +440,7 @@ impl CapturePage {
         event: &WidgetEvent,
         content: Rect,
         theme: &Theme,
-        todo: &mut super::app::TodoPage,
+        todo: &mut super::todo::TodoPage,
         inert: bool,
     ) -> EventResult {
         self.set_inert(inert);
@@ -479,7 +479,7 @@ impl CapturePage {
     }
 
     /// Enter flips the focused switch: `toggle` by the person.
-    pub fn handle_enter(&mut self, todo: &mut super::app::TodoPage, inert: bool) -> bool {
+    pub fn handle_enter(&mut self, todo: &mut super::todo::TodoPage, inert: bool) -> bool {
         self.set_inert(inert);
         let Some(kind) = self.focused.filter(|_| !inert) else {
             return false;

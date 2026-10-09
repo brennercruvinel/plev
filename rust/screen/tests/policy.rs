@@ -8,10 +8,10 @@
 #[allow(dead_code)]
 mod support;
 
-use sem::{Actor, Actors, Policy, Role, Snapshot, SnapshotBuilder};
+use accord::{Actor, Actors, Policy, Role, Snapshot, SnapshotBuilder};
 use support::{MIXER_LEFT, id, mixer, verified_local};
-use surface::{SurfaceError, SurfaceHost};
-use uir::{Capabilities, GenerationPolicy, Op, Step, TransformError, verify_json};
+use screen::{SurfaceError, SurfaceHost};
+use plevir::{Capabilities, GenerationPolicy, Op, Step, TransformError, verify_json};
 
 fn agent() -> Actor {
     Actor::Agent {

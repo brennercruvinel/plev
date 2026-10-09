@@ -5,13 +5,13 @@
 mod toy;
 
 use proptest::prelude::*;
-use sem::redact::REDACTED;
-use sem::{
+use accord::redactor::REDACTED;
+use accord::{
     Actor, Change, Node, ReceiptSink, Rejection, Request, RequestId, Revision, SemId, Snapshot,
     Stage, StateRef, Value,
 };
 use toy::ToyHost;
-use wire::{
+use socket::{
     Bound, ClientMsg, ConnId, DeltaReply, Host, ProtoError, Reply, Server, ServerMsg,
     SnapshotReply, StageReply, decode_client, encode_client,
 };
@@ -139,7 +139,7 @@ fn hello_names_the_actor_once() {
     for name in ["", "   ", "tab\there", &"x".repeat(65)] {
         let line = encode_client(&ClientMsg {
             id: "n".into(),
-            ask: wire::Ask::Hello { name: name.into() },
+            ask: socket::Ask::Hello { name: name.into() },
         });
         let e = error(one(say(&mut server, &mut host, B, &line)));
         assert!(
@@ -955,7 +955,7 @@ fn no_projection_no_revision() {
         "toggle",
         &from(r),
     );
-    let line = wire::encode_server(&out[out.len() - 1]);
+    let line = socket::encode_server(&out[out.len() - 1]);
     let out = stages(out, "d");
     assert_eq!(names(&out).last(), Some(&"completed"));
     assert!(out.iter().all(|s| s.revision.is_none()), "{out:?}");
@@ -1226,9 +1226,9 @@ fn stages_reach_only_the_connection_that_asked() {
         A,
         ClientMsg {
             id: "mine".into(),
-            ask: wire::Ask::Act(wire::Act::from_revision(
+            ask: socket::Ask::Act(socket::Act::from_revision(
                 sid("todo.sync"),
-                sem::ActionName::parse("sync").unwrap(),
+                accord::ActionName::parse("sync").unwrap(),
                 r,
             )),
         },
@@ -1647,7 +1647,7 @@ fn a_question_that_does_not_fit_is_refused_before_the_dispatcher() {
     let (mut server, mut host) = setup();
     let r = snapshot(observe(&mut server, &mut host, A, "")).revision;
     for bad in [
-        "x".repeat(wire::MAX_ASK + 1),
+        "x".repeat(socket::MAX_ASK + 1),
         "  ".to_owned(),
         "put it\nback?".to_owned(),
     ] {
@@ -1673,7 +1673,7 @@ fn a_question_that_does_not_fit_is_refused_before_the_dispatcher() {
         "nothing was dispatched"
     );
 
-    let exact = "x".repeat(wire::MAX_ASK);
+    let exact = "x".repeat(socket::MAX_ASK);
     let observed = r#","observed":{"revision":"0000000000000001","values":[["todo.item[1]:completed",{"kind":"bool","value":false}]]}"#;
     let out = stages(
         act(

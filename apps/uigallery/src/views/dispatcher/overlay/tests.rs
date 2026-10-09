@@ -6,18 +6,18 @@
 
 use std::sync::{Arc, Mutex};
 
-use comps::prelude::WidgetEvent;
-use engine::accessibility::accesskit::{
+use engine::widgets::prelude::WidgetEvent;
+use engine::control::accessibility::accesskit::{
     Action, ActionRequest, Live, Node, Role as AkRole, TreeId, TreeUpdate,
 };
-use engine::accessibility::{self, Assist, Chrome, Shown};
-use engine::compositor::Compositor;
-use engine::theme::Intent;
-use sem::{Actor, Receipt, ReceiptSink, Request, SemId, Stage};
+use engine::control::accessibility::{self, Assist, Chrome, Shown};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Intent;
+use accord::{Actor, Receipt, ReceiptSink, Request, SemId, Stage};
 
 use super::super::reader::NOTICE;
 use super::{DIALOG, MENU, TOASTS, id};
-use crate::view::{ActiveOverlay, ShowcaseView};
+use crate::views::{ActiveOverlay, ShowcaseView};
 
 const CHROME: Chrome<'static> = Chrome {
     title: "plev, design system showcase",
@@ -267,7 +267,7 @@ fn a_toast_is_read_and_dismissed_by_an_agent_as_by_a_reader() {
     view.toasts.push("saved", Intent::Constructive, &theme);
     let gallery = view.gallery_semantics().unwrap_or_else(|e| panic!("{e}"));
     let toast = gallery.get(&sid("toasts[0]"));
-    assert_eq!(toast.map(|n| n.role), Some(sem::Role::Status));
+    assert_eq!(toast.map(|n| n.role), Some(accord::Role::Status));
     assert!(view.is_overlay(&sid("toasts[0]")) && view.is_overlay(&sid("toasts")));
     let agent = Actor::Agent {
         name: "tester".to_owned(),

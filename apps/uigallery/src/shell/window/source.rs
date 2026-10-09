@@ -19,19 +19,19 @@
 //! engine refuses (the file's code changed since this build, the literal
 //! moved), are told in a toast and logged.
 
-use comps::form::{EditKey, TextField};
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::hot_reload::Site;
-use engine::hot_reload::literals::{self, Change, Refused};
-use engine::hot_reload::view_source::{self, Origin, origin_at, text_run_at};
-use engine::theme::{Intent, Theme};
-use sem::Actor;
+use engine::widgets::form::{EditKey, TextField};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::runtime::hot_reload::Site;
+use engine::runtime::hot_reload::literals::{self, Change, Refused};
+use engine::runtime::hot_reload::view_source::{self, Origin, origin_at, text_run_at};
+use engine::styling::theme::{Intent, Theme};
+use accord::Actor;
 use winit::event::ElementState;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 use winit::window::WindowId;
 
-use super::App;
+use super::super::App;
 
 /// The shell's view source: the button a click took, the literal edited
 /// in place, the layer its field is drawn on.
@@ -327,13 +327,13 @@ mod tests {
     use std::path::Path;
     use std::time::{Duration, Instant};
 
-    use comps::prelude::WidgetEvent;
-    use engine::compositor::SceneNode;
-    use engine::hot_reload::{literals, source_dirs};
-    use sem::{SemId, Value};
+    use engine::widgets::prelude::WidgetEvent;
+    use engine::drawing::compositor::SceneNode;
+    use engine::runtime::hot_reload::{literals, source_dirs};
+    use accord::{SemId, Value};
 
     use super::*;
-    use crate::view::ShowcaseView;
+    use crate::views::ShowcaseView;
 
     const PRIMARY: ModifiersState = if cfg!(target_os = "macos") {
         ModifiersState::SUPER
@@ -360,7 +360,7 @@ mod tests {
     /// The bare main window of the tests.
     const MAIN: WindowId = WindowId::dummy();
 
-    fn compositor(app: &App) -> &engine::compositor::Compositor {
+    fn compositor(app: &App) -> &engine::drawing::compositor::Compositor {
         app.windows.get(MAIN).unwrap().compositor()
     }
 

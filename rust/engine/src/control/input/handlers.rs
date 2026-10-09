@@ -3,7 +3,7 @@ use winit::keyboard::{Key, NamedKey};
 
 use super::drop::FileDrop;
 use super::touch::SyntheticPointerEvent;
-use super::types::*;
+use super::events::*;
 
 impl super::InputState {
     pub fn handle_cursor_moved(&mut self, x: f32, y: f32) {

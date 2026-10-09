@@ -1,5 +1,5 @@
-use engine::builder::{Element, div, text};
-use engine::color::Color;
+use engine::compose::builder::{Element, div, text};
+use engine::styling::color::Color;
 
 use crate::theme::*;
 

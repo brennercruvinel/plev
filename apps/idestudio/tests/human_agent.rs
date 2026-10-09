@@ -9,9 +9,9 @@ mod support;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use comps::feedback::{ContextMenu, MenuEntry};
-use engine::compositor::Compositor;
-use sem::{Actor, Change, Receipt, ReceiptSink, Rejection, Revision, SemId, Stage, Value};
+use engine::widgets::feedback::{ContextMenu, MenuEntry};
+use engine::drawing::compositor::Compositor;
+use accord::{Actor, Change, Receipt, ReceiptSink, Rejection, Revision, SemId, Stage, Value};
 use support::{Rig, agent, completed, set};
 
 fn tester() -> Actor {
@@ -390,7 +390,7 @@ fn a_person_who_closes_the_modal_declines_and_the_next_request_is_asked() {
 
     // Git agrees nothing ran: a fresh status still lists both changes.
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     assert_eq!(
         rig.value("changes:files"),
         Value::List(vec!["README".into(), "new.txt".into()])
@@ -434,7 +434,7 @@ fn a_click_on_commit_and_a_test_request_commit_the_same() {
     let mut person = Rig::new(&["A", "B"], &[]);
     assert!(person.bench.nav_down());
     assert!(person.bench.stage_selected());
-    person.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    person.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     assert!(person.bench.toggle_commit_form());
     for ch in "add A".chars() {
         person.bench.workspace_mut().commit_form.append_char(ch);
@@ -443,7 +443,7 @@ fn a_click_on_commit_and_a_test_request_commit_the_same() {
     let (x, y) = center(&c, "commit.submit");
     assert_eq!(c.hit(x, y), Some(&SemId::parse("commit.submit").unwrap()));
     assert!(person.bench.click(x, y));
-    person.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    person.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
 
     // A test: the same capabilities, by request.
     let mut test = Rig::new(&["A", "B"], &[]);
@@ -492,7 +492,7 @@ fn a_status_read_before_a_stage_never_takes_the_file_back_out() {
     let mut rig = Rig::new(&["A", "B"], &[]);
     let a = rig.ask(agent(), "changes.file[A]", "stage", None);
     // The answer to stage A sends a refresh, which waits at the worker.
-    rig.until(|e| matches!(e, git::GitEvent::Staged { .. }));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Staged { .. }));
     assert!(completed(&rig.receipt(a)).is_some(), "{:?}", rig.receipt(a));
 
     // Stage B leaves behind that refresh: its status is read before
@@ -500,7 +500,7 @@ fn a_status_read_before_a_stage_never_takes_the_file_back_out() {
     let b = rig.ask(agent(), "changes.file[B]", "stage", None);
     assert_eq!(rig.value("changes:staged"), set(&["A", "B"]));
 
-    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Status(_)));
     assert_eq!(
         rig.value("changes:staged"),
         set(&["A", "B"]),
@@ -518,12 +518,12 @@ fn a_status_read_before_an_unstage_never_puts_the_file_back() {
     let mut rig = Rig::new(&["A", "B", "C"], &["A", "B", "C"]);
     rig.agent_writes("only C");
     let a = rig.ask(agent(), "changes.file[A]", "unstage", None);
-    rig.until(|e| matches!(e, git::GitEvent::Unstaged { .. }));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Unstaged { .. }));
 
     // The person takes B out while the refresh for A waits at the worker.
     let b = rig.ask(Actor::Human, "changes.file[B]", "unstage", None);
     assert_eq!(rig.value("changes:staged"), set(&["C"]));
-    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Status(_)));
     assert_eq!(
         rig.value("changes:staged"),
         set(&["C"]),
@@ -553,14 +553,14 @@ fn a_status_read_before_an_unstage_never_puts_the_file_back() {
 fn a_status_read_before_a_discard_never_brings_the_file_back() {
     let mut rig = Rig::new(&["A", "B"], &[]);
     let a = rig.ask(agent(), "changes.file[A]", "stage", None);
-    rig.until(|e| matches!(e, git::GitEvent::Staged { .. }));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Staged { .. }));
 
     // The person discards B (a new file: discard deletes it) behind the
     // refresh for A.
     let b = rig.ask(Actor::Human, "changes.file[B]", "discard", None);
     assert_eq!(rig.stages(b), ["requested", "accepted", "executing"]);
     assert_eq!(rig.value("changes:files"), Value::List(vec!["A".into()]));
-    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Status(_)));
     assert_eq!(
         rig.value("changes:files"),
         Value::List(vec!["A".into()]),
@@ -582,7 +582,7 @@ fn a_change_from_outside_lands_with_the_refresh_after_the_last_mutation() {
     // shows it.
     rig.git(&["add", "C"]);
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     assert_eq!(rig.value("changes:staged"), set(&["C"]));
 
     // A terminal stages B and the watcher asks for a refresh; stage A
@@ -590,7 +590,7 @@ fn a_change_from_outside_lands_with_the_refresh_after_the_last_mutation() {
     rig.git(&["add", "B"]);
     rig.bench.refresh();
     let a = rig.ask(agent(), "changes.file[A]", "stage", None);
-    rig.until(|e| matches!(e, git::GitEvent::Status(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Status(_)));
     assert_eq!(
         rig.value("changes:staged"),
         set(&["A", "C"]),
@@ -673,14 +673,14 @@ fn the_commit_a_receipt_announces_is_projected_before_any_refresh() {
     // B changes again in the worktree: a staged row and an unstaged one.
     std::fs::write(rig.dir.path().join("B"), "B again\n").expect("write B");
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     assert_eq!(rig.value("changes:staged"), set(&["A", "B"]));
     assert_eq!(rig.value("changes.file[B]:unstaged"), Value::Bool(true));
     rig.agent_writes("fix login");
 
     let id = rig.ask(agent(), "commit.submit", "submit", None);
     // The answer to the commit, and not one event more.
-    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Committed(_)));
     let (sha, files) = committed(&rig.receipt(id));
     assert_eq!(files, ["A", "B"]);
 
@@ -700,7 +700,7 @@ fn the_commit_a_receipt_announces_is_projected_before_any_refresh() {
     assert_eq!(rig.value("changes.file[B]:unstaged"), Value::Bool(true));
 
     // The refresh the answer sent: the same, now read from git.
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     shows_commit(&rig, &sha, &files);
     assert_eq!(rig.head(), sha);
     assert_eq!(rig.head_files(), files);
@@ -725,7 +725,7 @@ fn no_answer_after_the_commit_takes_it_back() {
     rig.bench.refresh();
     let id = rig.ask(agent(), "commit.submit", "submit", None);
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Committed(_)));
     let (sha, files) = committed(&rig.receipt(id));
     shows_commit(&rig, &sha, &files);
 
@@ -749,7 +749,7 @@ fn a_path_unstaged_after_the_commit_left_is_left_for_the_refresh() {
     let unstage = rig.ask(Actor::Human, "changes.file[B]", "unstage", None);
     assert_eq!(rig.value("changes:staged"), set(&["A"]));
 
-    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Committed(_)));
     let (sha, files) = committed(&rig.receipt(id));
     assert_eq!(files, ["A", "B"]);
     shows_commit(&rig, &sha, &files);
@@ -776,7 +776,7 @@ fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
     )
     .expect("move README");
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     for path in ["README", "docs/README"] {
         let id = rig.ask(agent(), &format!("changes.file[{path}]"), "stage", None);
         rig.settle(id);
@@ -794,7 +794,7 @@ fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
     rig.agent_writes("move the readme");
 
     let id = rig.ask(agent(), "commit.submit", "submit", None);
-    rig.until(|e| matches!(e, git::GitEvent::Committed(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Committed(_)));
     let (sha, files) = committed(&rig.receipt(id));
     assert_eq!(
         files,
@@ -805,7 +805,7 @@ fn a_commit_with_a_rename_holds_both_paths_in_the_receipt_and_the_node() {
     assert_eq!(rig.value("changes:files"), list(&[]));
 
     // After the refresh the node comes from the log: the same paths.
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
     shows_commit(&rig, &sha, &files);
     assert_eq!(rig.head(), sha);
     assert_eq!(
@@ -824,7 +824,7 @@ fn the_last_commit_the_ide_made_keeps_its_files_past_the_newest() {
     let (sha, files) = committed(&rig.receipt(id));
 
     // Enough commits land from a terminal to push it past the newest.
-    let newest = ide::workbench::FILES_PROJECTED;
+    let newest = idestudio::capability::FILES_PROJECTED;
     for n in 0..newest {
         rig.git(&[
             "commit",
@@ -835,7 +835,7 @@ fn the_last_commit_the_ide_made_keeps_its_files_past_the_newest() {
         ]);
     }
     rig.bench.refresh();
-    rig.until(|e| matches!(e, git::GitEvent::Branches(_)));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::Branches(_)));
 
     let seen = rig.look();
     let stacks = SemId::parse("stacks").expect("id");
@@ -917,7 +917,7 @@ fn a_chain_the_person_starts_on_what_the_agent_saw_is_named_whole() {
     let c = frame(&mut rig);
     let (x, y) = center(&c, "changes.file[B]");
     assert!(rig.bench.click(x, y));
-    rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::DiffWorkdir { .. }));
 
     let seen = rig.look();
     assert_eq!(rig.value("changes:selected"), Value::from("B"));
@@ -997,7 +997,7 @@ fn click_a_new_row_then_unstage(rig: &mut Rig, log: &Log, seen: Revision) -> (Re
         Some(seen),
         "the selection moved the revision before the diff was asked for"
     );
-    rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+    rig.until(|e| matches!(e, gitdrv::GitEvent::DiffWorkdir { .. }));
     unstage_from_the_menu(rig, "B");
     let unstage = last(log);
     assert_eq!(asked(&unstage), human("changes.file[B]", "unstage"));
@@ -1050,14 +1050,14 @@ fn without_a_look_a_click_on_a_new_row_leaves_the_chain_nowhere_to_start() {
 /// as the window's agent's does.
 #[cfg(unix)]
 mod through_the_port {
-    use sem::{ActionName, Rejection, Revision, SemId, Stage, Value};
-    use wire::{Act, Ask, ClientMsg, Observe, Reply, Server, StageReply};
+    use accord::{ActionName, Rejection, Revision, SemId, Stage, Value};
+    use socket::{Act, Ask, ClientMsg, Observe, Reply, Server, StageReply};
 
     use super::support::{Rig, agent};
     use super::{Log, asked, click_a_new_row_then_unstage, frame, human};
 
     /// The one connection of the agent.
-    const CONN: wire::ConnId = 1;
+    const CONN: socket::ConnId = 1;
 
     struct Port {
         server: Server,
@@ -1067,10 +1067,10 @@ mod through_the_port {
         /// A port on the workbench of `rig`, and the agent's hello.
         fn hello(rig: &mut Rig) -> Port {
             let mut port = Port {
-                server: Server::new(ide::agent::APP, 16),
+                server: Server::new(idestudio::capability::agent::APP, 16),
             };
             let name = match agent() {
-                sem::Actor::Agent { name } => name,
+                accord::Actor::Agent { name } => name,
                 other => panic!("an agent: {other:?}"),
             };
             match port.ask(rig, Ask::Hello { name }).as_slice() {
@@ -1083,7 +1083,7 @@ mod through_the_port {
         /// the frame on screen; the replies.
         fn ask(&mut self, rig: &mut Rig, ask: Ask) -> Vec<Reply> {
             let compositor = frame(rig);
-            let mut host = ide::agent::Served {
+            let mut host = idestudio::capability::agent::Served {
                 bench: &mut rig.bench,
                 compositor: &compositor,
                 recorder: None,
@@ -1142,7 +1142,7 @@ mod through_the_port {
 
     /// `(id, (actor, target, action))` of each entry of the stale refusal
     /// the last stage of `stages` holds.
-    fn named(stages: &[StageReply]) -> Vec<(sem::RequestId, (String, String, String))> {
+    fn named(stages: &[StageReply]) -> Vec<(accord::RequestId, (String, String, String))> {
         let Some(Stage::Rejected(Rejection::Stale { acted, .. })) = stages.last().map(|s| &s.stage)
         else {
             panic!("stale: {stages:?}");
@@ -1207,10 +1207,10 @@ mod through_the_port {
         rig.agent_writes("login and session");
         let mut port = Port::hello(&mut rig);
         port.observe(&mut rig, Some("commit.form"));
-        let show = rig.ask(sem::Actor::Human, "changes.file[A]", "show_diff", None);
-        rig.until(|e| matches!(e, git::GitEvent::DiffWorkdir { .. }));
+        let show = rig.ask(accord::Actor::Human, "changes.file[A]", "show_diff", None);
+        rig.until(|e| matches!(e, gitdrv::GitEvent::DiffWorkdir { .. }));
         let changes = port.observe(&mut rig, Some("changes"));
-        let unstage = rig.ask(sem::Actor::Human, "changes.file[B]", "unstage", None);
+        let unstage = rig.ask(accord::Actor::Human, "changes.file[B]", "unstage", None);
 
         let text = Some(Value::from("login and session"));
         let set = port.act(&mut rig, "commit.message", "set_value", text, changes);

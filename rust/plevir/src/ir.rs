@@ -13,11 +13,11 @@
 
 use std::collections::BTreeMap;
 
-use sem::{ActionName, SemError, SemId, StateRef};
+use accord::{ActionName, SemError, SemId, StateRef};
 use serde::Serialize;
 
 use crate::token::{Layout, Props, Size};
-use crate::vocab::Component;
+use crate::vocabulary::Component;
 
 /// the version this crate reads and writes, the value of `plev_ir`.
 pub const VERSION: u32 = 1;

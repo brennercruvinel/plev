@@ -11,16 +11,16 @@
 //! Keyboard focus ([`NavLink::set_focused`], driven by the owning view)
 //! rings the row.
 
-use engine::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::text::{TextMeasurer, TextStyle};
-use engine::theme::{ControlSize, IconSize, Theme};
-use sem::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::{ControlSize, IconSize, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::action::Badge;
-use crate::core::{EventResult, Rect, WidgetEvent};
-use crate::icons;
-use crate::recipe::focus_ring;
-use crate::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::buttons::Badge;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::icons;
+use crate::widgets::recipe::focus_ring;
+use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
 
 #[derive(Clone, Debug)]
 pub struct NavLink {

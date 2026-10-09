@@ -9,8 +9,8 @@ mod state;
 
 use std::sync::Arc;
 
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};

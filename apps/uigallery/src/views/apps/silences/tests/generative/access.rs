@@ -11,19 +11,19 @@
 //! task-75 phase 2a a person with a screen reader hears which preference
 //! is on, in the reader's snapshot alone.
 
-use engine::accessibility::accesskit::{Action, ActionRequest, Toggled, TreeId, TreeUpdate};
-use engine::accessibility::{self, Assist, Chrome, Shown};
-use engine::compositor::{Compositor, LayerId, SceneNode};
-use engine::theme::Theme;
-use sem::{Actor, Rejection, Request, Stage, Value};
-use uir::{Preference, Preferences};
+use engine::control::accessibility::accesskit::{Action, ActionRequest, Toggled, TreeId, TreeUpdate};
+use engine::control::accessibility::{self, Assist, Chrome, Shown};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::styling::theme::Theme;
+use accord::{Actor, Rejection, Request, Stage, Value};
+use plevir::{Preference, Preferences};
 
 use super::super::super::SilencesPage;
 use super::super::agent::{Dir, act as port_act, gallery_with, snapshot};
 use super::super::{TURN, setup, sid, stage, tester};
-use crate::view::ShowcaseView;
-use crate::view::apps::app::TodoPage;
-use crate::view::dispatch::PERSON_ONLY;
+use crate::views::ShowcaseView;
+use crate::views::apps::todo::TodoPage;
+use crate::views::dispatcher::PERSON_ONLY;
 
 const RULES: &str = "the list with the video and the counts";
 const BAND: &str = "silences_surface.access";
@@ -170,10 +170,10 @@ fn through_the_port_an_agent_turns_nothing_on() {
     let dir = Dir(std::env::temp_dir().join(format!("plev-t70d-{}-access", std::process::id())));
     let open_band = |view: &mut ShowcaseView| view.panes.silences.generated.access.open();
     let (seen, view) = gallery_with(&dir.0, open_band, |path| {
-        let mut c = wire::Client::connect(&path).unwrap();
+        let mut c = socket::Client::connect(&path).unwrap();
         c.set_timeout(Some(20_000)).unwrap();
         c.hello("claude").unwrap();
-        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        let now = snapshot(c.observe(socket::Observe::default()).unwrap());
         let band = now
             .nodes
             .iter()
@@ -182,9 +182,9 @@ fn through_the_port_an_agent_turns_nothing_on() {
             .collect::<Vec<_>>();
         let pressed = port_act(&mut c, LARGER, "activate", now.revision);
         let contrast = port_act(&mut c, CONTRAST, "activate", now.revision);
-        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        let now = snapshot(c.observe(socket::Observe::default()).unwrap());
         let wrote = {
-            let mut act = wire::Act::from_revision(
+            let mut act = socket::Act::from_revision(
                 sid("silences_surface.intent"),
                 "set_value".parse().unwrap(),
                 now.revision,
@@ -192,7 +192,7 @@ fn through_the_port_an_agent_turns_nothing_on() {
             act.param = Some(Value::Text("accessibility".into()));
             c.act(act, |_| {}).unwrap()
         };
-        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        let now = snapshot(c.observe(socket::Observe::default()).unwrap());
         let asked = port_act(&mut c, "silences_surface.propose", "propose", now.revision);
         (band, pressed, contrast, wrote.len(), asked)
     });
@@ -348,11 +348,11 @@ mod claude {
     use std::path::PathBuf;
     use std::time::{Duration, Instant};
 
-    use claude_model::ClaudeCli;
-    use sem::RequestId;
+    use claude::ClaudeCli;
+    use accord::RequestId;
 
     use super::*;
-    use crate::view::apps::surface_page::asking::Claude;
+    use crate::views::apps::surface::asking::Claude;
 
     const DENSER: &str = r#"{"ops": [{"op": "density", "step": "denser"}]}"#;
 
@@ -409,7 +409,7 @@ mod claude {
         let on = Preferences {
             larger_text: true,
             more_contrast: true,
-            density: Some(uir::Step::Sparser),
+            density: Some(plevir::Step::Sparser),
         };
         for intent in ["too much information", "the cuts with a frame each"] {
             let off = prompt(intent, Preferences::default());
@@ -546,10 +546,10 @@ fn the_preference_a_reader_hears_never_goes_out_through_the_port() {
         assert!(view.panes.silences.generated.host.preferences().larger_text);
     };
     let (band, view) = gallery_with(&dir.0, before, |path| {
-        let mut c = wire::Client::connect(&path).unwrap();
+        let mut c = socket::Client::connect(&path).unwrap();
         c.set_timeout(Some(20_000)).unwrap();
         c.hello("claude").unwrap();
-        let now = snapshot(c.observe(wire::Observe::default()).unwrap());
+        let now = snapshot(c.observe(socket::Observe::default()).unwrap());
         now.nodes
             .iter()
             .filter(|n| n.parent.as_ref() == Some(&sid(BAND)))
@@ -559,7 +559,7 @@ fn the_preference_a_reader_hears_never_goes_out_through_the_port() {
     assert_eq!(band.len(), 5, "the band's buttons, observed");
     assert!(band.iter().all(|(_, bare)| *bare), "no state: {band:?}");
 
-    let on = |snap: &sem::Snapshot| {
+    let on = |snap: &accord::Snapshot| {
         snap.get(&sid(LARGER))
             .and_then(|n| n.state.get("on").cloned())
     };

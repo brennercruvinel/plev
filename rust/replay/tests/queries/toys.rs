@@ -7,8 +7,8 @@
 use std::collections::BTreeSet;
 
 use indexmap::IndexMap;
-use rec::{InputKind, Limits, Recorder, Session};
-use sem::{
+use record::{InputKind, Limits, Recorder, Session};
+use accord::{
     Actor, Dispatcher, Execution, Millis, Operable, Outcome, ParamSpec, Request, RequestId, Role,
     SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };

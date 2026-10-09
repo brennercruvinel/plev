@@ -21,35 +21,35 @@
 //! screen reader's press and an agent's act are the same request, and a
 //! toast's `dismiss` is how a reader or an agent takes one away.
 
-use comps::overlay::{OverlayId, OverlayManager};
-use comps::prelude::{ContextMenu, MenuEntry, ModalAction, ToastManager};
-use engine::theme::{Intent, Theme};
-use sem::{
+use engine::widgets::overlay::{OverlayId, OverlayManager};
+use engine::widgets::prelude::{ContextMenu, MenuEntry, ModalAction, ToastManager};
+use engine::styling::theme::{Intent, Theme};
+use accord::{
     Actor, Execution, Operable, Outcome, Receipt, Request, RequestId, SemErrors, SemId, Semantics,
     Snapshot, SnapshotBuilder, Value,
 };
 
-use comps::form::ClipKey;
+use engine::widgets::form::ClipKey;
 
 use super::super::components::context_menu;
-use super::super::field_menu;
+use super::super::text_input::field_menu;
 use super::super::{ActiveOverlay, ShowcaseView};
 
 /// The ids the view gives its overlays.
-pub(in crate::view) const TOASTS: &str = "toasts";
-pub(in crate::view) const DIALOG: &str = "dialog";
-pub(in crate::view) const MENU: &str = "context_menu";
+pub(in crate::views) const TOASTS: &str = "toasts";
+pub(in crate::views) const DIALOG: &str = "dialog";
+pub(in crate::views) const MENU: &str = "context_menu";
 
 /// The id of one of the overlays; `None` (logged) if the name does not
 /// parse, which a test proves it does.
-pub(in crate::view) fn id(name: &str) -> Option<SemId> {
+pub(in crate::views) fn id(name: &str) -> Option<SemId> {
     SemId::name(name)
         .inspect_err(|e| log::warn!("overlay: {name}: {e}"))
         .ok()
 }
 
 /// Whether `active` holds the pointer: on the stack and not leaving.
-pub(in crate::view) fn holds(mgr: &OverlayManager, active: &ActiveOverlay) -> bool {
+pub(in crate::views) fn holds(mgr: &OverlayManager, active: &ActiveOverlay) -> bool {
     let id = active.id();
     mgr.stack.iter().any(|o| o.id == id && !o.is_closing())
 }
@@ -258,13 +258,13 @@ impl Operable for Overlays<'_> {
 impl ShowcaseView {
     /// Whether a toast is on screen, or an overlay holds the pointer: the
     /// view's projection carries them then.
-    pub(in crate::view) fn overlays_shown(&self) -> bool {
+    pub(in crate::views) fn overlays_shown(&self) -> bool {
         self.toasts.visible().any(|t| !t.is_closing()) || self.overlay_holds_pointer()
     }
 
     /// The toasts on screen and the overlay that holds the pointer, into
     /// `b`, after the page.
-    pub(in crate::view) fn project_overlays(&self, b: &mut SnapshotBuilder) {
+    pub(in crate::views) fn project_overlays(&self, b: &mut SnapshotBuilder) {
         project(
             &self.toasts,
             &self.overlay_mgr,
@@ -298,7 +298,7 @@ impl ShowcaseView {
 
     /// A request aimed at an overlay, from any actor, through the
     /// gallery's one dispatcher: the receipt as it stands.
-    pub(in crate::view) fn act_overlay(&mut self, req: Request) -> Option<Receipt> {
+    pub(in crate::views) fn act_overlay(&mut self, req: Request) -> Option<Receipt> {
         let mut clip = None;
         let mut op = Overlays {
             toasts: &mut self.toasts,
@@ -321,7 +321,7 @@ impl ShowcaseView {
     /// A person's click on a button of the modal or an item of the menu
     /// (`target`, `action`): observed on the overlays as they are now, by
     /// the person, through the dispatcher. `true` when it ran.
-    pub(in crate::view) fn ask_overlay(&mut self, target: &SemId, action: &str) -> bool {
+    pub(in crate::views) fn ask_overlay(&mut self, target: &SemId, action: &str) -> bool {
         let seen = match self.overlay_semantics() {
             Ok(seen) => seen,
             Err(e) => {
@@ -347,7 +347,7 @@ impl ShowcaseView {
     /// Keyboard focus from a screen reader to a button of the modal or an
     /// item of the menu that holds the pointer: the overlay keeps it and
     /// projects it. `false` for anything else of the overlays.
-    pub(in crate::view) fn focus_overlay(&mut self, id: &SemId) -> bool {
+    pub(in crate::views) fn focus_overlay(&mut self, id: &SemId) -> bool {
         let Ok(seen) = self.overlay_semantics() else {
             return false;
         };

@@ -7,8 +7,8 @@
 
 use std::collections::BTreeSet;
 
-use git::{GitEvent, NewCommit};
-use sem::{Change, Outcome, Rejection, RequestId, StateRef, Value};
+use gitdrv::{GitEvent, NewCommit};
+use accord::{Change, Outcome, Rejection, RequestId, StateRef, Value};
 
 use super::Workbench;
 
@@ -87,7 +87,7 @@ impl Workbench {
 
     fn answer(
         &mut self,
-        result: &git::Result<()>,
+        result: &gitdrv::Result<()>,
         waits: impl Fn(&Inflight) -> bool,
     ) -> Option<(RequestId, End)> {
         let (id, _) = self.take(waits)?;
@@ -103,7 +103,7 @@ impl Workbench {
     /// the stack), the form clears unless its message moved since the
     /// commit left, and then the receipt ends with the commit's sha and
     /// files.
-    fn committed(&mut self, result: &git::Result<NewCommit>) -> Option<(RequestId, End)> {
+    fn committed(&mut self, result: &gitdrv::Result<NewCommit>) -> Option<(RequestId, End)> {
         let (id, message, _) = self.take_commit()?;
         let commit = match result {
             Ok(commit) => commit,

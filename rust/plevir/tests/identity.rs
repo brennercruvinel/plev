@@ -15,9 +15,9 @@ use std::path::PathBuf;
 
 use proptest::prelude::*;
 use proptest::sample::select;
-use sem::{Actor, SemId, Snapshot};
+use accord::{Actor, SemId, Snapshot};
 use support::caps;
-use uir::{
+use plevir::{
     Adapted, Align, Axis, Capabilities, CapabilityRef, ChartKind, ColorRole, Component, Context,
     ControlSize, Elevation, GenerationPolicy, Inverse, Ir, IrNode, Layout, Op, Props, Repeat,
     ShapeRole, SizeToken, SpacingToken, Step, Surface, TransformError, TypographyRole, parse,

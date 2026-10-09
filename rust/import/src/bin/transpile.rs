@@ -22,7 +22,7 @@ fn main() {
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_else(|| p.to_string())
     };
-    match parser::transpile_react((&name(tsx), &tsx_src), (&name(sass), &sass_src), &vars_src) {
+    match import::transpile_react((&name(tsx), &tsx_src), (&name(sass), &sass_src), &vars_src) {
         Ok(out) => {
             println!("{}", out.code);
             eprintln!(

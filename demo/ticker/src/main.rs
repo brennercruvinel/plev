@@ -11,10 +11,10 @@ mod render;
 
 use std::sync::Arc;
 
-use engine::component::Component;
-use engine::compositor::Compositor;
-use engine::gpu::GpuContext;
-use engine::text::TextSystem;
+use engine::compose::view::Component;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::GpuContext;
+use engine::drawing::text::TextSystem;
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::WindowEvent;
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};

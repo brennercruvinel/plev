@@ -5,8 +5,8 @@
 
 use std::collections::BTreeSet;
 
-use git::GitCommand;
-use sem::{Execution, Operable, Outcome, Request, RequestId, Value};
+use gitdrv::GitCommand;
+use accord::{Execution, Operable, Outcome, Request, RequestId, Value};
 
 use super::Workbench;
 use super::truth::Inflight;

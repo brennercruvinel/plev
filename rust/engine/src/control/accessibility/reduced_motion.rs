@@ -17,7 +17,7 @@
 //! through UIKit and Android through its settings over JNI. There the
 //! answer is `None`, and nothing changes.
 
-use crate::animation;
+use crate::compose::animation;
 
 /// Whether the system asks for reduced motion; `None` where it cannot be
 /// read (another system, or `defaults` did not answer).

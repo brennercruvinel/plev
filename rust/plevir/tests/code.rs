@@ -10,9 +10,9 @@ mod jsonschema;
 
 use std::path::PathBuf;
 
-use sem::{Role, Snapshot, SnapshotBuilder};
+use accord::{Role, Snapshot, SnapshotBuilder};
 use serde_json::{Value, json};
-use uir::{
+use plevir::{
     Capabilities, Component, GenerationPolicy, Ir, IrError, LineKind, Rule, parse, schema, verify,
 };
 
@@ -67,7 +67,7 @@ fn doc(code: Value) -> Value {
     })
 }
 
-fn verified(v: &Value) -> Result<uir::VerifiedIr, Vec<IrError>> {
+fn verified(v: &Value) -> Result<plevir::VerifiedIr, Vec<IrError>> {
     let ir: Ir = serde_json::from_value(v.clone()).expect("it reads");
     verify(&ir, &caps(), &GenerationPolicy::default())
 }

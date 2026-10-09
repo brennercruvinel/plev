@@ -5,13 +5,13 @@
 //! `visual` and `sdf_shapes` engine examples; everything is static, so an
 //! idle section settles (render-on-demand contract).
 
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::{
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::{
     Compositor, GradientRectParams, RoundedRectParams, SceneNode, ShadowParams, TextNodeKey,
 };
-use engine::path::PathBuilder;
-use engine::text::TextStyle;
-use engine::theme::Theme;
+use engine::drawing::path::PathBuilder;
+use engine::drawing::text::TextStyle;
+use engine::styling::theme::Theme;
 
 use super::{group_label, panel, text};
 
@@ -268,7 +268,7 @@ impl EffectsPage {
             corner_radius: theme.radius.md,
             sigma: theme.effects.blur_sigma,
         });
-        c.push(comps::prelude::rounded_rect_stroke(
+        c.push(engine::widgets::prelude::rounded_rect_stroke(
             frost.x,
             frost.y,
             frost.w,
@@ -299,7 +299,7 @@ impl EffectsPage {
         let offset = 40.0; // static scroll offset: edges cut on both sides
         for row in 0..8 {
             let ry = l.clip_panel.y + 8.0 + row as f32 * 28.0 - offset;
-            c.push(comps::prelude::rounded_rect(
+            c.push(engine::widgets::prelude::rounded_rect(
                 l.clip_panel.x + 8.0,
                 ry,
                 l.clip_panel.w + 60.0, // wider than the panel on purpose
@@ -413,7 +413,7 @@ fn draw_polygon(c: &mut Compositor, cx: f32, cy: f32, r: f32, sides: u32, color:
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::compositor::LayerId;
+    use engine::drawing::compositor::LayerId;
 
     fn narrow() -> Rect {
         Rect::new(288.0, 80.0, 472.0, 440.0)

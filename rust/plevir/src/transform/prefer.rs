@@ -23,14 +23,14 @@
 
 use std::fmt;
 
-use sem::Actor;
+use accord::Actor;
 use serde::{Deserialize, Serialize};
 
 use super::tree;
 use super::{Adapted, Context, Inverse, Op, Step, TransformError};
 use crate::ir::IrNode;
 use crate::token::ColorRole;
-use crate::vocab::Component;
+use crate::vocabulary::Component;
 
 /// one preference of accessibility, as the history names it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

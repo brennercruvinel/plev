@@ -1,4 +1,4 @@
-use super::*;
+use super::super::*;
 
 #[test]
 fn hit_test_basic() {

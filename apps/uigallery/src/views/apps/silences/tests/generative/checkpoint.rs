@@ -9,17 +9,17 @@
 //! structure the Claude proposed, its sliders now with their label and
 //! value, its durations with two decimals at most, its rows inside.
 
-use comps::prelude::Rect;
-use engine::compositor::Compositor;
-use engine::gpu::image::{ImageHandle, load_image_rgba};
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
-use sem::Snapshot;
-use showcase::model::silences::{PROBE_STDERR, parse};
+use engine::widgets::prelude::Rect;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
+use accord::Snapshot;
+use crate::domain::silences::{PROBE_STDERR, parse};
 
-use super::super::super::worker::Worker;
+use super::super::super::fixed_page::worker::Worker;
 use super::super::{TURN, frame, images, narrow, setup, sid};
-use crate::view::ShowcaseView;
+use crate::views::ShowcaseView;
 
 /// The Claude's review of the checkpoint's first round, as IR.
 const CLAUDE: &str = "fixtures/ir/silences-review-claude.ir.json";
@@ -294,12 +294,12 @@ fn the_claudes_review_is_usable_at_the_default_window() {
     .collect();
     whole_words(&c, &snap, &view.theme, &ids);
     let drawn: Vec<(String, f32, f32)> = c
-        .layer(engine::compositor::LayerId::DEFAULT)
+        .layer(engine::drawing::compositor::LayerId::DEFAULT)
         .map(|l| {
             l.nodes()
                 .iter()
                 .filter_map(|n| match n {
-                    engine::compositor::SceneNode::Text { key, x, y, .. } => {
+                    engine::drawing::compositor::SceneNode::Text { key, x, y, .. } => {
                         Some((key.text.clone(), *x, *y))
                     }
                     _ => None,

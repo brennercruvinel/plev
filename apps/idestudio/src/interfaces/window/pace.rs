@@ -4,7 +4,7 @@
 
 use std::time::Instant;
 
-use comps::prelude::Wake;
+use engine::widgets::prelude::Wake;
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
 
 use crate::App;
@@ -67,8 +67,8 @@ mod tests {
     //! `catch_up` runs with the real elapsed time), so it counts its time
     //! from the change, however long the window sat idle before it.
 
-    use comps::prelude::Wake;
-    use ide::workbench::Workbench;
+    use engine::widgets::prelude::Wake;
+    use crate::capability::Workbench;
 
     use crate::App;
 
@@ -111,7 +111,7 @@ mod tests {
     /// The toasts the workbench projects.
     fn notices(app: &App) -> usize {
         let snap = app.bench.snapshot().expect("snapshot");
-        let id: sem::SemId = "notices".parse().expect("id");
+        let id: accord::SemId = "notices".parse().expect("id");
         snap.children(&id).count()
     }
 

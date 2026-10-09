@@ -15,12 +15,12 @@
 
 use indexmap::IndexMap;
 use rustc_hash::{FxBuildHasher, FxHashSet};
-use sem::SemId;
+use accord::SemId;
 
 use super::clip::{ClipRect, ClipStack, intersect_rects};
 use super::{Compositor, LayerId, SceneNode};
-use crate::input::ViewId;
-use crate::perf::stages::{self, Stage};
+use crate::control::input::ViewId;
+use crate::runtime::perf::stages::{self, Stage};
 
 /// Where one logical identity sits in the current frame.
 #[derive(Clone, Copy, Debug, PartialEq)]

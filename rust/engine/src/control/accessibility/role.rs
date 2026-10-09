@@ -3,7 +3,7 @@
 //! does not compile until it has a mapping here.
 
 use accesskit::Role as Ak;
-use sem::Role;
+use accord::Role;
 
 /// The AccessKit role of a contract role. `secret` turns a text input
 /// into a password field (its value is never exposed either, see

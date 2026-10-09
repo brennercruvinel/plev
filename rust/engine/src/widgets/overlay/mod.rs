@@ -3,8 +3,8 @@
 mod tests;
 mod item;
 
-use engine::animation::Spring;
-use engine::theme::MotionPhysics;
+use crate::compose::animation::Spring;
+use crate::styling::theme::MotionPhysics;
 use item::OverlayAnim;
 
 pub use item::{MenuItem, Overlay, OverlayId, OverlayKind};

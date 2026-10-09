@@ -1,10 +1,10 @@
 //! Skeleton page: disc, lines and block placeholders. They breathe only
 //! while toggled on (a press on the row), so an idle page settles.
 
-use comps::content::{Skeleton, SkeletonShape};
-use comps::prelude::{EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::{ControlSize, Theme};
+use engine::widgets::content::{Skeleton, SkeletonShape};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::{ControlSize, Theme};
 
 pub struct SkeletonPage {
     skeletons: [Skeleton; 3],
@@ -97,9 +97,9 @@ mod tests {
         assert!(!page.tick(FRAME), "at rest until the person starts it");
         page.breathing = true;
         assert!(page.tick(FRAME), "with motion");
-        engine::animation::set_reduced_motion(true);
+        engine::compose::animation::set_reduced_motion(true);
         let moved = page.tick(FRAME);
-        engine::animation::set_reduced_motion(false);
+        engine::compose::animation::set_reduced_motion(false);
         assert!(!moved, "reduced: it stands still");
         assert!(page.tick(FRAME), "motion again");
     }

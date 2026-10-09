@@ -6,7 +6,7 @@
 use std::io;
 use std::path::PathBuf;
 
-use crate::proto::ProtoError;
+use crate::protocol::ProtoError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum WireError {

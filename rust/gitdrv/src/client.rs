@@ -12,7 +12,7 @@ use std::thread::JoinHandle;
 
 use crate::error::Result;
 use crate::repo::GitRepo;
-use crate::types::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
+use crate::domain::{Branch, Commit, CommitCheck, FileStatus, Hunk, NewCommit};
 
 /// Requests the worker thread understands.
 #[derive(Clone, Debug)]

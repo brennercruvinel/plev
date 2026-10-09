@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use crate::proto::{Bound, ProtoError, Reply};
+use crate::protocol::{Bound, ProtoError, Reply};
 use crate::scene::{BlobReply, SceneReply};
 
 /// the largest blob a reader takes: an image the engine's atlas holds

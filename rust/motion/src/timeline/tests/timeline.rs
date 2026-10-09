@@ -1,8 +1,8 @@
 //! IR model tests: minimal timeline construction (happy path), every
 //! validation error path, and the per-kind animatable surfaces.
 
-use crate::easing::Easing;
-use crate::ir::*;
+use crate::timeline::easing::Easing;
+use crate::timeline::*;
 
 fn rect_props(x: f32, y: f32, w: f32, h: f32, color: [f32; 4]) -> Props {
     Props::new()

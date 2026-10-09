@@ -2,14 +2,14 @@
 
 use std::ops::Range;
 
-use engine::text::TextStyle;
-use rope::{Rope, Selection, SelectionSet, Transaction, movement};
+use crate::drawing::text::TextStyle;
+use editor::{Rope, Selection, SelectionSet, Transaction, document::movement};
 use unicode_segmentation::UnicodeSegmentation;
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState, NamedKey};
 
 use super::view::{ClickRecord, DragState, EditorView, Preedit};
-use crate::form::text_input::visual::VisualLine;
+use crate::widgets::form::text_input::visual::VisualLine;
 
 /// Max delay between clicks of a multi-click, in seconds.
 const MULTI_CLICK_SECS: f32 = 0.4;
@@ -152,7 +152,7 @@ impl EditorView {
     }
 
     /// Apply a horizontal/jump movement to every selection.
-    fn move_each(&mut self, f: impl FnMut(&rope::Rope, Selection) -> Selection) {
+    fn move_each(&mut self, f: impl FnMut(&editor::Rope, Selection) -> Selection) {
         self.document.transform_selections(f);
         self.goal.clear();
         self.scroll_to_cursor();
@@ -163,7 +163,7 @@ impl EditorView {
     fn move_vertical(&mut self, delta: isize, extend: bool) {
         let count = self.document.selections().len();
         if self.goal.len() != count {
-            self.goal = vec![rope::GoalColumn::new(); count];
+            self.goal = vec![editor::GoalColumn::new(); count];
         }
         let goals = &mut self.goal;
         let mut i = 0;

@@ -7,17 +7,17 @@
 
 use std::sync::Arc;
 
-use engine::animation::FrameClock;
-use engine::compositor::Compositor;
-use engine::gpu::{GpuContext, RenderConfig};
-use engine::text::TextSystem;
-use engine::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
+use engine::compose::animation::FrameClock;
+use engine::drawing::compositor::Compositor;
+use engine::drawing::gpu::{GpuContext, RenderConfig};
+use engine::drawing::text::TextSystem;
+use engine::runtime::window::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 use engine::winit::application::ApplicationHandler;
 use engine::winit::event::{ElementState, WindowEvent};
 use engine::winit::event_loop::{ActiveEventLoop, EventLoop};
 use engine::winit::keyboard::{Key, NamedKey};
 use engine::winit::window::{Window, WindowAttributes, WindowId};
-use lot::{Mat, Player};
+use import::formats::lottie::{Mat, Player};
 
 const DEFAULT_FILE: &str = "refs/lottie/SNAKE/fd5e87b4-1189-11ee-9745-e700d1385b38.json";
 
@@ -31,8 +31,8 @@ enum AppState {
     Ready {
         gpu: GpuContext,
         text_system: TextSystem,
-        effects: engine::effects::EffectProcessor,
-        texture_pool: engine::gpu::texture_pool::TexturePool,
+        effects: engine::drawing::effects::EffectProcessor,
+        texture_pool: engine::drawing::gpu::texture_pool::TexturePool,
     },
 }
 
@@ -130,7 +130,7 @@ impl LottieApp {
 
         text_system.begin_frame();
         self.compositor
-            .resolve(&engine::compositor::ResolveResources {
+            .resolve(&engine::drawing::compositor::ResolveResources {
                 device: &gpu.device,
                 queue: &gpu.queue,
                 format: gpu.surface_format(),
@@ -201,12 +201,12 @@ impl ApplicationHandler for LottieApp {
         self.window = Some(window.clone());
         let gpu = pollster::block_on(GpuContext::new_with_config(window, RenderConfig::default()));
         let text_system = TextSystem::new(&gpu.device, &gpu.text_bind_group_layout);
-        let effects = engine::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
+        let effects = engine::drawing::effects::EffectProcessor::new(&gpu.device, gpu.surface_format());
         self.state = AppState::Ready {
             gpu,
             text_system,
             effects,
-            texture_pool: engine::gpu::texture_pool::TexturePool::new(),
+            texture_pool: engine::drawing::gpu::texture_pool::TexturePool::new(),
         };
     }
 
@@ -255,7 +255,7 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let anim = match lot::Animation::from_json(&text) {
+    let anim = match import::formats::lottie::Animation::from_json(&text) {
         Ok(a) => a,
         Err(e) => {
             eprintln!("cannot parse {path}: {e}");

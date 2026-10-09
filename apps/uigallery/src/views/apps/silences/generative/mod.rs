@@ -27,13 +27,13 @@ pub(super) mod access;
 pub(super) mod offer;
 pub(super) mod page;
 
-use comps::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use engine::theme::Theme;
-use sem::{Request, Role, SemId, SnapshotBuilder};
-use surface::SurfaceHost;
+use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use accord::{Request, Role, SemId, SnapshotBuilder};
+use screen::SurfaceHost;
 
-use crate::view::apps::surface_page::proposing::{Asked, Proposing, Row};
+use crate::views::apps::surface::offering::{Asked, Proposing, Row};
 use access::{Access, Pressed};
 use offer::{Answer, Band, Offer};
 

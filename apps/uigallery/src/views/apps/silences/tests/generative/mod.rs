@@ -25,21 +25,21 @@ mod transform;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-use comps::prelude::{Rect, WidgetEvent};
-use engine::compositor::Compositor;
-use sem::{Actor, Rejection, Request, SemId, Stage, StateRef, Value};
-use showcase::model::silences::{Decision, PROBE_STDERR, parse};
-use uir::{Capabilities, GenerationPolicy, verify_json};
+use engine::widgets::prelude::{Rect, WidgetEvent};
+use engine::drawing::compositor::Compositor;
+use accord::{Actor, Rejection, Request, SemId, Stage, StateRef, Value};
+use crate::domain::silences::{Decision, PROBE_STDERR, parse};
+use plevir::{Capabilities, GenerationPolicy, verify_json};
 
 use super::super::SilencesPage;
-use super::super::generated::page::Page;
-use super::super::worker::Worker;
+use super::super::generative::page::Page;
+use super::super::fixed_page::worker::Worker;
 use super::{
     TURN, ask_as_test, center, click, frame, images, narrow, setup, sid, stage, text, value, wide,
 };
-use crate::view::EditKey;
-use crate::view::ShowcaseView;
-use crate::view::apps::app::TodoPage;
+use crate::views::EditKey;
+use crate::views::ShowcaseView;
+use crate::views::apps::todo::TodoPage;
 
 const REVIEW: &str = "../surface/tests/fixtures/showcase-silences-review.ir.json";
 const COMPARE: &str = "../surface/tests/fixtures/showcase-silences-compare.ir.json";
@@ -95,7 +95,7 @@ fn settle(
     page: &mut SilencesPage,
     todo: &mut TodoPage,
     content: Rect,
-    theme: &engine::theme::Theme,
+    theme: &engine::styling::theme::Theme,
 ) -> (Compositor, usize) {
     let mut c = frame(page, content, theme);
     let mut frames = 0;
@@ -207,7 +207,7 @@ fn the_review_opens_beside_the_fixed_screen_and_draws_its_frames() {
     // at a time, and the page polls while they run
     let wake = page.wake(TURN, &mut todo);
     assert!(page.worker.busy(), "the frames are asked for");
-    assert_eq!(wake.next, Some(super::super::worker::POLL));
+    assert_eq!(wake.next, Some(super::super::fixed_page::worker::POLL));
     drain(&mut page, &mut todo);
     let mut at: Vec<u64> = page.frames.keys().copied().collect();
     at.sort_unstable();
@@ -223,7 +223,7 @@ fn the_review_opens_beside_the_fixed_screen_and_draws_its_frames() {
     let under = h.surface.expect("open");
     assert!(under.y >= h.fixed.bottom(), "{:?} {under:?}", h.fixed);
     assert!(page.content_height(narrow(), &theme) >= under.y - narrow().y);
-    assert_eq!(page.wake(TURN, &mut todo), comps::prelude::Wake::idle());
+    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
 }
 
 /// The acceptance: a click on a cut's apply button on the generated
@@ -245,7 +245,7 @@ fn applying_on_the_generated_surface_moves_the_fixed_screen_and_back() {
     );
     assert_eq!(value(&page, "silences.cut[1]:decision"), text("apply"));
     let receipt = todo
-        .receipt(sem::RequestId::parse("1").unwrap())
+        .receipt(accord::RequestId::parse("1").unwrap())
         .expect("kept");
     assert_eq!(receipt.request.actor, Actor::Human);
     assert_eq!(receipt.request.target, sid("silences.cut[1]"));
@@ -255,7 +255,7 @@ fn applying_on_the_generated_surface_moves_the_fixed_screen_and_back() {
     frame(&mut page, content, &theme);
     assert_eq!(
         page.rows[0].apply.variant,
-        comps::prelude::ButtonVariant::Secondary
+        engine::widgets::prelude::ButtonVariant::Secondary
     );
     assert_eq!(page.model.cuts()[0].decision(), Decision::Apply);
     // and the surface shows the badge and the count
@@ -377,9 +377,9 @@ fn the_comparison_keeps_what_continues_and_close_undoes_it() {
     assert!(wake.is_continuous(), "the exit runs: {wake:?}");
     let (_, frames) = settle(&mut page, &mut todo, content, &theme);
     assert!(frames > 1, "the exit took {frames} frames");
-    assert_eq!(page.wake(TURN, &mut todo), comps::prelude::Wake::idle());
+    assert_eq!(page.wake(TURN, &mut todo), engine::widgets::prelude::Wake::idle());
     let receipt = todo
-        .receipt(sem::RequestId::parse("2").unwrap())
+        .receipt(accord::RequestId::parse("2").unwrap())
         .expect("the close");
     assert_eq!(receipt.request.target, sid("silences_surface.close"));
     assert!(matches!(receipt.stage(), Some(Stage::Completed(_))));
@@ -462,9 +462,9 @@ fn the_gallery_routes_the_row_the_surface_and_the_keys() {
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 #[test]
 fn the_claude_answers_the_review_off_the_thread() {
-    use claude_model::ClaudeCli;
+    use claude::ClaudeCli;
 
-    use crate::view::apps::surface_page::asking::Claude;
+    use crate::views::apps::surface::asking::Claude;
 
     let (mut todo, mut page, _) = setup(false);
     let dir = tempfile::tempdir().unwrap();
@@ -510,7 +510,7 @@ fn the_claude_answers_the_review_off_the_thread() {
     ));
     assert!(has(&page, "review.cut[1].frame"));
     assert!(
-        page.halves(wide(), &engine::theme::Theme::hoff_core())
+        page.halves(wide(), &engine::styling::theme::Theme::hoff_core())
             .surface
             .is_some()
     );
@@ -523,8 +523,8 @@ fn the_claude_answers_the_review_off_the_thread() {
 /// with their projections).
 #[test]
 fn the_page_draws_headless_with_the_review_and_the_comparison() {
-    use engine::gpu::RenderConfig;
-    use engine::headless::{HeadlessError, Renderer, Viewport};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{HeadlessError, Renderer, Viewport};
 
     let viewport = Viewport {
         width: 1200.0,
@@ -580,7 +580,7 @@ fn the_page_draws_headless_with_the_review_and_the_comparison() {
             frame
                 .write_png(path.with_extension("png"))
                 .expect("the png writes");
-            let json = crate::app::semantics_json(&snap, false).expect("the json");
+            let json = crate::shell::semantics_json(&snap, false).expect("the json");
             std::fs::write(path.with_extension("json"), json).expect("the json writes");
             println!("wrote {}.png and .json", path.display());
         }
@@ -595,8 +595,8 @@ fn the_page_draws_headless_with_the_review_and_the_comparison() {
 #[test]
 #[ignore = "runs ffmpeg: cargo test -p showcase --lib silences::tests::generated::the_real -- --ignored --nocapture"]
 fn the_real_ffmpeg_draws_the_review_and_the_comparison() {
-    use engine::gpu::RenderConfig;
-    use engine::headless::{Renderer, Viewport};
+    use engine::drawing::gpu::RenderConfig;
+    use engine::drawing::headless::{Renderer, Viewport};
 
     let program = match Worker::find_program() {
         Ok(p) => p,
@@ -700,7 +700,7 @@ fn the_real_ffmpeg_draws_the_review_and_the_comparison() {
             frame
                 .write_png(path.with_extension("png"))
                 .expect("the png writes");
-            let json = crate::app::semantics_json(&snap, false).expect("the json");
+            let json = crate::shell::semantics_json(&snap, false).expect("the json");
             std::fs::write(path.with_extension("json"), json).expect("the json writes");
             println!("wrote {}.png and .json", path.display());
         }

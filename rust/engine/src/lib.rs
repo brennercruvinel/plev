@@ -19,7 +19,7 @@ pub mod styling;
 // -- Widgets: the design system, one category per module (the former `comps`)
 pub mod widgets;
 
-pub use macros::component;
+pub use macros::view::component;
 
 pub use wgpu;
 pub use winit;

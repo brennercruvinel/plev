@@ -9,13 +9,13 @@
 //! tests.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-use engine::gpu::RenderConfig;
-use engine::headless::Frame;
-use engine::platform::links::read;
-use engine::window::WindowHost;
-use sem::{Stage, StateRef, Value};
-use showcase::app::links::{OPEN, SCHEME, follow};
-use showcase::view::ShowcaseView;
+use engine::drawing::gpu::RenderConfig;
+use engine::drawing::headless::Frame;
+use engine::runtime::platform::links::read;
+use engine::runtime::window::WindowHost;
+use accord::{Stage, StateRef, Value};
+use uigallery::shell::system::links::{OPEN, SCHEME, follow};
+use uigallery::views::ShowcaseView;
 
 const MAIN: (u32, u32) = (1200, 800);
 /// One turn of a 60 Hz display.

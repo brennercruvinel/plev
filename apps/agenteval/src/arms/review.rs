@@ -33,14 +33,14 @@
 
 use std::path::{Path, PathBuf};
 
-use comps::content::{Avatar, CodeBlock, CodeLine};
-use comps::nav::PanelHeader;
-use engine::text::TextMeasurer;
-use engine::theme::Theme;
-use git::GitEvent;
-use ide::lab_repo::REVIEWED;
-use rec::{InputKind, Kind, Limits, Recorder, Session};
-use sem::{Actor, Millis, SemId, Stage, Value};
+use engine::widgets::content::{Avatar, CodeBlock, CodeLine};
+use engine::widgets::nav::PanelHeader;
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::Theme;
+use gitdrv::GitEvent;
+use idestudio::repository::eval_repo::REVIEWED;
+use record::{InputKind, Kind, Limits, Recorder, Session};
+use accord::{Actor, Millis, SemId, Stage, Value};
 use serde_json::{Value as Json, json};
 
 use crate::args::Args;
@@ -405,7 +405,7 @@ impl Demo {
                 .whole(&code)
                 .ok_or("the diff's code is not whole on screen")?;
             let block = CodeBlock::lines(vec![CodeLine::default()]).caption("lines");
-            let area = block.rows_rect(comps::Rect::new(x, y, w, h), &theme);
+            let area = block.rows_rect(engine::widgets::Rect::new(x, y, w, h), &theme);
             // half a pixel is the layout's rounding of the block, not a
             // row cut (as `whole` takes it)
             let fit = ((area.h + 0.5) / CodeBlock::row_h(&theme)).floor().max(0.0) as usize;

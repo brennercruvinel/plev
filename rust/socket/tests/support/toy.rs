@@ -8,11 +8,11 @@
 
 use std::collections::BTreeSet;
 
-use sem::{
+use accord::{
     Confirm, Constraints, Dispatcher, Execution, Operable, Outcome, ParamSpec, Policy, ReceiptSink,
     Request, RequestId, Role, SemId, Semantics, Snapshot, SnapshotBuilder, Value, ValueKind,
 };
-use wire::{Bound, Host};
+use socket::{Bound, Host};
 
 pub struct Toy {
     /// id, text, done.
@@ -194,7 +194,7 @@ impl ToyHost {
     /// a person's click, through the same dispatcher.
     pub fn click(&mut self, target: &str, action: &str) {
         let seen = self.snapshot();
-        let req = Request::observe(&seen, sem::Actor::Human, target, action, None).unwrap();
+        let req = Request::observe(&seen, accord::Actor::Human, target, action, None).unwrap();
         self.clock += 1;
         self.dispatcher.dispatch(&mut self.app, req, self.clock);
     }

@@ -6,16 +6,16 @@
 
 use std::path::Path;
 
-use comps::content::{CodeBlock, CodeLine, EmptyState};
-use comps::feedback::Tooltip;
-use comps::nav::{NavLink, PanelHeader, Sidebar};
-use comps::shell::{AppShell, ShellLayout};
-use comps::{Rect, Theme};
-use engine::compositor::{LayerId, SceneNode};
-use engine::theme::Breakpoint;
-use inspect::{Inspector, Line, text};
-use rec::{Bound, FileError, ReadError, Session};
-use sem::{Millis, SemId};
+use engine::widgets::content::{CodeBlock, CodeLine, EmptyState};
+use engine::widgets::feedback::Tooltip;
+use engine::widgets::nav::{NavLink, PanelHeader, Sidebar};
+use engine::widgets::shell::{AppShell, ShellLayout};
+use engine::widgets::{Rect, Theme};
+use engine::drawing::compositor::{LayerId, SceneNode};
+use engine::styling::theme::Breakpoint;
+use replay::{Inspector, Line, prose};
+use record::{Bound, FileError, ReadError, Session};
+use accord::{Millis, SemId};
 
 use crate::fit::{self, Fit};
 use crate::panel::Panel;
@@ -356,7 +356,7 @@ impl InspectorView {
             Some(Ok(panel)) => panel.rows(),
             Some(Err(e)) => vec![CodeLine::new(
                 format!("the session does not read at this instant: {e}"),
-                comps::content::LineKind::Removed,
+                engine::widgets::content::LineKind::Removed,
             )],
             None => Vec::new(),
         };
