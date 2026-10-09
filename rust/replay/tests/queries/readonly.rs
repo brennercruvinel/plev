@@ -120,6 +120,6 @@ fn the_crate_holds_nothing_that_runs_an_action() -> Fallible {
         .filter(|l| !l.is_empty() && !l.starts_with('#'))
         .filter_map(|l| l.split(['.', ' ', '=']).next())
         .collect();
-    assert_eq!(names, ["rec", "sem", "serde", "serde_json"]);
+    assert_eq!(names, ["record", "accord", "serde", "serde_json"]);
     Ok(())
 }

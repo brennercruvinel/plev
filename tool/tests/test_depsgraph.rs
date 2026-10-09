@@ -82,13 +82,10 @@ fn dependency_names(manifest: &toml::Table) -> Vec<String> {
 }
 
 fn allowed(from: &str, to: &str) -> bool {
-    match (home(from), home(to)) {
-        ("rust", "rust") => true,
-        ("apps", "rust" | "apps") => true,
-        ("demo", "rust") => true,
-        ("tool", "rust" | "apps") => true,
-        _ => false,
-    }
+    matches!(
+        (home(from), home(to)),
+        ("rust", "rust") | ("apps", "rust" | "apps") | ("demo", "rust") | ("tool", "rust" | "apps")
+    )
 }
 
 #[test]

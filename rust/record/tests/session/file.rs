@@ -397,7 +397,8 @@ fn an_animation_handed_to_the_session_reader_is_named() -> Fallible {
     let golden: PathBuf = [
         env!("CARGO_MANIFEST_DIR"),
         "..",
-        "monster",
+        "motion",
+        "tests",
         "fixtures",
         "golden_v0_minimal.monster",
     ]

@@ -231,7 +231,7 @@ fn canonical(v: &Value) -> String {
 #[test]
 fn an_ir_of_before_reads_and_writes_back_the_same_document() {
     let found = fixtures_of_before();
-    assert_eq!(found.len(), 8, "{found:?}");
+    assert_eq!(found.len(), 9, "{found:?}");
     for at in &found {
         let text = std::fs::read_to_string(at).expect("the fixture");
         assert!(

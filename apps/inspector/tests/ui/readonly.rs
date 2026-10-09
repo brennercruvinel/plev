@@ -72,7 +72,7 @@ fn the_crate_holds_nothing_that_runs_an_action_or_sends_anything() -> Fallible {
         .filter(|l| !l.is_empty() && !l.starts_with('#'))
         .filter_map(|l| l.split(['.', ' ', '=']).next())
         .collect();
-    assert_eq!(names, ["comps", "engine", "inspect", "rec", "sem"]);
+    assert_eq!(names, ["engine", "replay", "record", "accord"]);
     assert!(
         !manifest.contains("[dev-dependencies]"),
         "nothing more for the tests"

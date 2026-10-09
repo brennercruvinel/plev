@@ -81,9 +81,9 @@ impl SourceWatcher {
     }
 }
 
-/// The directories that hold the crates: the libraries, the apps, the demos
-/// and the benches.
-const CRATE_ROOTS: [&str; 4] = ["rust", "apps", "demo", "tool/bench"];
+/// The directories that hold the crates: the libraries, the apps and the
+/// demos (the benches were examples before the move and were never watched).
+const CRATE_ROOTS: [&str; 3] = ["rust", "apps", "demo"];
 
 /// `src/` of every crate in the workspace (not the crate dirs themselves:
 /// urnadbapp keeps its own target/ in there).
