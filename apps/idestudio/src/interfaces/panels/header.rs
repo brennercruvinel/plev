@@ -38,6 +38,7 @@ impl Header {
         self.theme_btn_rect.contains(cx, cy)
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn render(
         &mut self,
         compositor: &mut Compositor,

@@ -81,6 +81,8 @@ fn faded(c: [f32; 4], alpha: f32) -> [f32; 4] {
 /// Paint one surface state at `bounds`: drop shadows, gradient fill,
 /// overlay wash, inset layers, focus ring. Returns the label color to
 /// draw the content with, faded like the rest when disabled.
+// eight inputs, one per part of the surface state the paint reads.
+#[allow(clippy::too_many_arguments)]
 pub fn paint_surface(
     c: &mut Compositor,
     layer: LayerId,

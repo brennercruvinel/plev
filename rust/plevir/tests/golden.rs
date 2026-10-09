@@ -19,6 +19,7 @@
 //! `uir::schema()` written out; `UIR_BLESS=1` writes it again.
 
 // the validator for the keywords the schema uses (no schema dependency).
+#[allow(dead_code)]
 mod support;
 
 use std::path::PathBuf;

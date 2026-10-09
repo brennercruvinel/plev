@@ -6,6 +6,7 @@
 //! the same bytes.
 
 // the validator for the keywords the schema uses (no schema dependency).
+#[allow(dead_code)]
 mod support;
 
 use std::path::PathBuf;
