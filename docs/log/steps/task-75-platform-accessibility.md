@@ -507,7 +507,7 @@ o alvo rodar.
 
 ### linha para o índice de ADRs
 
-| 2026-09-25 | [accessibility-is-production-ready-per-platform](accessibility-is-production-ready-per-platform.md) | proposed | a matriz do que o AccessKit do lock entrega por plataforma (macOS roda; windows e linux esperam o alvo; iOS e web sem adapter; android fora do lock); a árvore de toda página testada; status polida e alerta assertivo sem mover o foco, o toast na árvore do leitor; 301 pares de contraste medidos, 102 falhando listados sem mudar token; reduced motion no ponto único de animação, lido do macOS pela ponte; o web em aberto entre espelho DOM gerado do snapshot e nada por enquanto (task-75 fase 1) |
+| 2026-09-25 | [accessibility-is-production-ready-per-platform](../../adr/interface/0068-accessibility-is-production-ready-per-platform.md) | proposed | a matriz do que o AccessKit do lock entrega por plataforma (macOS roda; windows e linux esperam o alvo; iOS e web sem adapter; android fora do lock); a árvore de toda página testada; status polida e alerta assertivo sem mover o foco, o toast na árvore do leitor; 301 pares de contraste medidos, 102 falhando listados sem mudar token; reduced motion no ponto único de animação, lido do macOS pela ponte; o web em aberto entre espelho DOM gerado do snapshot e nada por enquanto (task-75 fase 1) |
 
 ## fase 2a: a sonda (2026-09-25)
 
@@ -954,7 +954,7 @@ verde.
 
 ### linha para o índice de ADRs
 
-| 2026-09-25 | [accessibility-is-production-ready-per-platform](accessibility-is-production-ready-per-platform.md) | proposed | fase 2a: nas páginas que projetam, as ações de um item que ele mesmo não alcança são controles que a árvore apresenta dentro dele, o select abre pelo aperto e se escolhe pelo valor, o aperto só com a ação ligada, a mensagem de uma status é o nome dela; as páginas projetam o foco que tomam; o toast, o modal e o menu na projeção da view, pelo dispatcher; o aviso do shell e a preferência de accessibility só na árvore do leitor, nunca no port nem no prompt; spinner e skeleton seguem o reduced motion (task-75 fase 2a) |
+| 2026-09-25 | [accessibility-is-production-ready-per-platform](../../adr/interface/0068-accessibility-is-production-ready-per-platform.md) | proposed | fase 2a: nas páginas que projetam, as ações de um item que ele mesmo não alcança são controles que a árvore apresenta dentro dele, o select abre pelo aperto e se escolhe pelo valor, o aperto só com a ação ligada, a mensagem de uma status é o nome dela; as páginas projetam o foco que tomam; o toast, o modal e o menu na projeção da view, pelo dispatcher; o aviso do shell e a preferência de accessibility só na árvore do leitor, nunca no port nem no prompt; spinner e skeleton seguem o reduced motion (task-75 fase 2a) |
 
 ### o que fica para a fase 2b
 
@@ -1436,7 +1436,7 @@ arquivo.
 
 ### linha para o índice de ADRs
 
-| 2026-09-25 | [accessibility-is-production-ready-per-platform](accessibility-is-production-ready-per-platform.md) | proposed | fase 2b: as páginas de componente cujos widgets se projetam no comps projetam o que mostram (30 páginas, 19 panes), por um trait e uma tabela, sob uma região com o título da página, cada pedido pelo dispatcher da galeria; o clique da pessoa fica no widget e a projeção segue o estado; a pessoa, o leitor e um agente pelo port chegam ao mesmo estado; a barra de menu as deixa de fora; a árvore diz a linha selecionada da tabela; as 46 páginas que ficam, cada uma com o motivo (task-75 fase 2b) |
+| 2026-09-25 | [accessibility-is-production-ready-per-platform](../../adr/interface/0068-accessibility-is-production-ready-per-platform.md) | proposed | fase 2b: as páginas de componente cujos widgets se projetam no comps projetam o que mostram (30 páginas, 19 panes), por um trait e uma tabela, sob uma região com o título da página, cada pedido pelo dispatcher da galeria; o clique da pessoa fica no widget e a projeção segue o estado; a pessoa, o leitor e um agente pelo port chegam ao mesmo estado; a barra de menu as deixa de fora; a árvore diz a linha selecionada da tabela; as 46 páginas que ficam, cada uma com o motivo (task-75 fase 2b) |
 
 ### o que fica para a próxima fase
 

@@ -31,7 +31,7 @@ o naming inicial do projeto era phi (φ) e boitata; o codec era anm (.anm, magic
 - nenhuma mudanca de API publica, so organizacao e naming.
 
 ## referencias
-- adr [workspace-engine-at-root-libs-in-crates-demos-in-examples](../../../adr/workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
+- adr [workspace-engine-at-root-libs-in-crates-demos-in-examples](../../adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
 - commits a4ad0c0 (rebrand anm/boitata), b08bce8 (phi -> plev, kdb), 99929b9 (crates com nomes curtos), c2a90f1 (cargo workspace), 8aa4a8f (cargo profissional), e6f7091 (demos viram examples), 92c3aaa (shaders para src/gpu/shaders)
 
 ## fora de escopo

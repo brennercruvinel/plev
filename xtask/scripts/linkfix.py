@@ -33,6 +33,9 @@ for _f in OLD_FILES:
     while _d:
         OLD_DIRS.add(_d)
         _d = os.path.dirname(_d)
+# a link that differs from the tracked path only in case resolved on a
+# case-insensitive checkout (macOS): `docs/adr/x.md` for `docs/ADR/x.md`
+LOWER = {f.lower(): f for f in OLD_FILES}
 LINK = re.compile(r"(\]\(|href=\")([^)\"\s]+)")
 MANUAL = []
 
@@ -61,6 +64,8 @@ def fix(path, check):
         if not target:
             return m.group(0)
         resolved = os.path.normpath(os.path.join(old_dir, target))
+        if resolved not in OLD_FILES and resolved not in OLD_DIRS:
+            resolved = LOWER.get(resolved.lower(), resolved)
         if resolved in MOVES:
             new_target = MOVES[resolved]
         elif resolved in OLD_DIRS:

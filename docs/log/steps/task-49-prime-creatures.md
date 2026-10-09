@@ -32,7 +32,7 @@ o demo de referencia desenha motion trails de graca: cada frame pinta um rect tr
 - o trail e mais curto e grosseiro que a acumulacao suave do canvas; le como movimento, nao e pixel-identico a fonte (ver ADR).
 
 ## referencias
-- adr [motion-trails-by-position-history](../../../adr/motion-trails-by-position-history.md)
+- adr [motion-trails-by-position-history](../../adr/rendering/0014-motion-trails-by-position-history.md)
 - commits c749d12 (port), d2f1060 (merge feat/prime-number-creatures)
 
 ## fora de escopo

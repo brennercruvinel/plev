@@ -30,9 +30,9 @@ o codebase acumulou 27+ arquivos acima de 300 linhas, o maior (`narrate_runtime.
 - so divisao estrutural, nenhum refactor de logica.
 
 ## referencias
-- adr [adr-003-srp-modularization](../../../adr/adr-003-srp-modularization.md) (decisao formal)
-- adr [srp-modularization](../../../adr/srp-modularization.md) (detalhes de sessao, armadilhas, metricas antes/depois)
-- adr [clippy-zero-warnings](../../../adr/clippy-zero-warnings.md) (a passada de lint que acompanhou)
+- adr [adr-003-srp-modularization](../../adr/structure/0015-srp-modularization.md) (decisao formal)
+- adr [srp-modularization](../../ref/srp-modularization.md) (detalhes de sessao, armadilhas, metricas antes/depois)
+- adr [clippy-zero-warnings](../../ref/clippy-zero-warnings.md) (a passada de lint que acompanhou)
 - commit b9d9ee7 (divisao por SRP dos arquivos grandes)
 
 ## fora de escopo

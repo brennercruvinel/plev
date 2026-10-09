@@ -33,7 +33,7 @@ import por conversao, nunca por embedding. o lottie ja embarcou um motor js inte
 - o valor do importer depende do subset: ele cobre o caminho de shape/transform/precomp, nao a superficie inteira do lottie. masks e mattes ficam de fora por design.
 
 ## referencias
-- adr [import-foreign-formats-by-conversion-not-embedding](../../../adr/import-foreign-formats-by-conversion-not-embedding.md)
+- adr [import-foreign-formats-by-conversion-not-embedding](../../adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md)
 - commits a044613 (lot cnv), c5535c8 (ponte lot->cnv, payload Path)
 
 ## fora de escopo

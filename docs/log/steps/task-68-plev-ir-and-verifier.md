@@ -613,7 +613,7 @@ ausência.
   the plev IR: a surface described by meaning (ids, a closed component
   vocabulary, props by theme token, state and actions bound to the
   capabilities an app projects), and `verify`, the only way to a
-  `VerifiedIr` ([docs/adr/generated/0049-plev-ir-typed-and-verified.md](docs/adr/generated/0049-plev-ir-typed-and-verified.md))."
+  `VerifiedIr` ([docs/adr/generated/0049-plev-ir-typed-and-verified.md](../../adr/generated/0049-plev-ir-typed-and-verified.md))."
 - `docs/ATLAS.toml`:
 
   ```toml

@@ -26,7 +26,9 @@ exclude_path = [
 exclude = [
     "^file:///.*/(urna|refs)/",
     "^mailto:",
+    # an elided path quoted from a log (`file:///.../target/debug/`)
+    "^file:///\\.\\.\\./",
 ]
 
-# a link to a directory resolves to the directory itself.
-include_fragments = true
+# a #fragment must name a heading of the file it points into.
+include_fragments = "anchor-only"

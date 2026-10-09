@@ -36,8 +36,8 @@ a sub-area mais madura do experimento mon. as opcoes existentes falham cada uma 
 - 34 arquivos .rs, ~7130 LOC, 124 testes (incluindo proptest de round-trip), bench `benches/codec.rs`.
 
 ## referencias
-- adr [binary-animation-format-with-discovered-deltas](../../../adr/binary-animation-format-with-discovered-deltas.md)
-- spec [monster-format-v0](../../../adr/monster-format-v0.md)
+- adr [binary-animation-format-with-discovered-deltas](../../adr/importing/0010-binary-animation-format-with-discovered-deltas.md)
+- spec [monster-format-v0](../../ref/monster-format-v0.md)
 - commits a4ad0c0 (rebrand anm->monster), aa802ff (codec v0)
 
 ## fora de escopo

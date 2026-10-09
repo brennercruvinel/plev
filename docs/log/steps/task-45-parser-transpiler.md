@@ -32,7 +32,7 @@ um transpiler so vale pela taxa de drop. um que cospe droplist gigante em todo i
 - 10 arquivos .rs, ~2242 LOC, 20 testes, examples `transpile` e `preview` (preview ao vivo do output na tela).
 
 ## referencias
-- adr [transpiler-reports-every-unmapped-construct](../../../adr/transpiler-reports-every-unmapped-construct.md)
+- adr [transpiler-reports-every-unmapped-construct](../../adr/importing/0012-transpiler-reports-every-unmapped-construct.md)
 - commits 5eecb0a (poc do parser), f93a57e (preview ao vivo), aafc091 (rebrand prs->parser)
 
 ## fora de escopo

@@ -33,7 +33,7 @@ o port do gitbutler comecou em `experiment/gitbutler-plev/` (task-42). o dispatc
 
 ## referencias
 - task-42 (origem: dispatch + overlay + port inicial)
-- usa adr [git-backend-gix-reads-cli-mutations](../../../adr/git-backend-gix-reads-cli-mutations.md) e [text-editing-core-follows-helix](../../../adr/text-editing-core-follows-helix.md)
+- usa adr [git-backend-gix-reads-cli-mutations](../../adr/structure/0020-git-backend-gix-reads-cli-mutations.md) e [text-editing-core-follows-helix](../../adr/interface/0021-text-editing-core-follows-helix.md)
 - commit f15198a (medicao real de texto no ide, fim da heuristica)
 
 ## fora de escopo

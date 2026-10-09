@@ -31,7 +31,7 @@ duas falhas a evitar: fazer git na ui thread trava o frame loop (status ou diff 
 - git precisa estar no PATH. um build pure-gix removeria isso mas exigiria dono da superficie de mutacao/porcelain na mao, adiado ate gix ter porcelain estavel.
 
 ## referencias
-- adr [git-backend-gix-reads-cli-mutations](../../../adr/git-backend-gix-reads-cli-mutations.md)
+- adr [git-backend-gix-reads-cli-mutations](../../adr/structure/0020-git-backend-gix-reads-cli-mutations.md)
 - antes era `git_backend`, virou `git` na reorganizacao por crates
 
 ## fora de escopo

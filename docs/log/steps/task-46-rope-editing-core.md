@@ -31,7 +31,7 @@ editar texto sobre uma String plana e O(n) por edit e perde a posicao do cursor 
 - antes do rename era `editor_core`; virou `rope` na reorganizacao por crates.
 
 ## referencias
-- adr [text-editing-core-follows-helix](../../../adr/text-editing-core-follows-helix.md)
+- adr [text-editing-core-follows-helix](../../adr/interface/0021-text-editing-core-follows-helix.md)
 - commit e0d6e3c (rename de crates), entrada no changelog unreleased (editor_core to rope)
 
 ## fora de escopo
