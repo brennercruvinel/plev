@@ -46,8 +46,8 @@ memmap2 = "0.9"
 # needs hoffresearch/urna at v0.4.0 or later (the `urna-*` crate names).
 # urna pins sha2 0.11 while urnadbapp pins 0.10 — both coexist in the lockfile,
 # no unification needed.
-urna-format = { path = "../../../urna/crates/urna-format" }
-urna-runtime = { path = "../../../urna/crates/urna-runtime" }
+urna-format = { path = "../../../urna/rust/format" }
+urna-runtime = { path = "../../../urna/rust/engine", package = "urna-engine" }
 
 # The urna backend is mmap + std::fs based: native only for now. The view
 # model types it produces are the future wasm backend's target shape.

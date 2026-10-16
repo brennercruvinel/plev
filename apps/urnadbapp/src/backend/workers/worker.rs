@@ -250,8 +250,9 @@ fn search_by_text(
                 .map_err(|e| e.to_string())?
         }
         _ => {
-            let (model, dim, model_hash) = db.embed_identity().map_err(|e| e.to_string())?;
-            crate::backend::workers::embed::embed_query(&model, dim, &model_hash, query)
+            let (model, dim, model_hash, truncated) =
+                db.embed_identity().map_err(|e| e.to_string())?;
+            crate::backend::workers::embed::embed_query(&model, dim, &model_hash, truncated, query)
                 .map_err(|e| e.to_string())?
         }
     };

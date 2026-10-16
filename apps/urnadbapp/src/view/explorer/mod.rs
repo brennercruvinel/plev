@@ -759,7 +759,7 @@ impl Explorer {
     /// mid-turn); what they ask of the loop, merged.
     pub fn wake(&mut self, dt: f32) -> Wake {
         self.open
-            .wake(dt)
+            .wake(dt, self.opening)
             .merge(self.search.wake(dt))
             .merge(self.chunks_screen.wake(dt))
             .merge(self.graph_screen.wake(dt))
