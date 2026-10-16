@@ -53,7 +53,7 @@ fi
 # `accord` ("multiple different versions of crate `accord`"). the leg gets
 # its own subdirectory then; without CARGO_TARGET_DIR it uses
 # apps/urnadbapp/target.
-if [ -f ../urna/crates/urna-format/Cargo.toml ]; then
+if [ -f ../urna/rust/format/Cargo.toml ]; then
     (
         if [ -n "${CARGO_TARGET_DIR:-}" ]; then
             export CARGO_TARGET_DIR="$CARGO_TARGET_DIR/urnadbapp"

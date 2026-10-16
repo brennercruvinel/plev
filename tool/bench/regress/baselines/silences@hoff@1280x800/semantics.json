@@ -353,7 +353,7 @@
       "state": {
         "selected": {
           "kind": "text",
-          "value": "claude"
+          "value": "rules"
         },
         "expanded": {
           "kind": "bool",
@@ -387,8 +387,7 @@
       "constraints": {
         "editable": true,
         "options": [
-          "rules",
-          "claude"
+          "rules"
         ]
       },
       "focusable": true

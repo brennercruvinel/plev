@@ -35,6 +35,12 @@ extend-exclude = [
     # -> scroll). flagging them is exactly backwards.
     "rust/macros/src/markup/parse/keywords/tests.rs",
     "rust/macros/src/markup/parse/tests/errors.rs",
+    # the text corpus is shaping fixtures in a dozen scripts and languages
+    # (portuguese, arabic, hebrew, cjk...): every line reads as a typo.
+    "rust/engine/tests/fixtures/text_corpus/",
+    # regress baselines are generated snapshots (labels carry short commit
+    # hashes such as "e3779ba"); they change through `regress bless`, not by hand.
+    "tool/bench/regress/baselines/",
 ]
 
 [default.extend-words]
@@ -76,12 +82,21 @@ tema = "tema"
 essencial = "essencial"
 interprete = "interprete"
 exata = "exata"
+itens = "itens"
+rever = "rever"
+eles = "eles"
 # false positives in code/strings: "caf" is "Café"/"café" with the accent
 # escaped (\u{00e9}) or truncated in a grapheme test; "mis" is the "mis-sized"
 # prefix; "ovrlap" is a deliberate short chart label that tests label overlap.
 caf = "caf"
 mis = "mis"
 ovrlap = "ovrlap"
+# deliberate fragments in tests: "hel" is "hello" typed halfway (caret and
+# input tests), "ect" the tail of "sel-ect" around a right-to-left override,
+# "fo" a base64 test vector ("fo" -> "Zm8=").
+hel = "hel"
+ect = "ect"
+fo = "fo"
 
 [default.extend-identifiers]
 # code identifiers that read as typos but are intentional: `iy` pairs with
@@ -95,6 +110,10 @@ clik = "clik"
 # tests.
 lits = "lits"
 ba = "ba"
+# external api names: burn's `NdArray` backend, candle's
+# `VarBuilder::from_mmaped_safetensors`.
+NdArray = "NdArray"
+from_mmaped_safetensors = "from_mmaped_safetensors"
 
 [default]
 # the project writes docs and comments in english and portuguese; let the
@@ -102,5 +121,5 @@ ba = "ba"
 locale = "en"
 # a semantic revision is 16 lowercase hex digits (`sem.revision.v1`); split
 # into words it reads as typos ("3ba694e7..." gives "ba"). "PNGs" splits into
-# "PN" + "Gs".
-extend-ignore-re = ["\\b[0-9a-f]{16}\\b", "PNGs"]
+# "PN" + "Gs". "[ot]tf" is the font glob (otf or ttf) in the subsetter.
+extend-ignore-re = ["\\b[0-9a-f]{16}\\b", "PNGs", "\\[ot\\]tf"]

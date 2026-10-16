@@ -686,8 +686,7 @@
       "constraints": {
         "editable": true,
         "options": [
-          "rules",
-          "claude"
+          "rules"
         ]
       },
       "focusable": true

@@ -73,13 +73,16 @@ pub struct StagedPage {
 }
 
 /// Stage `page` under `theme` at `viewport`, scrolled to `scroll` when
-/// given. Needs no GPU: the scene is built into a plain compositor.
+/// given. Needs no GPU: the scene is built into a plain compositor. The
+/// page is the same on every machine: it offers no Claude found on the
+/// host (`stage_without_host`).
 pub fn stage_page(
     viewport: Viewport,
     page: &str,
     theme: &str,
     scroll: Option<f32>,
 ) -> Result<StagedPage, RenderError> {
+    crate::views::stage_without_host();
     let mut view = ShowcaseView::new(viewport.width, viewport.height);
     view.jump_to_page(page);
     if !view.page_title().eq_ignore_ascii_case(page) {

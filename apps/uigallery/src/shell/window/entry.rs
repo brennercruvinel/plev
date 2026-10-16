@@ -5,8 +5,10 @@
 use super::super::{App, UserEvent};
 use winit::event_loop::EventLoop;
 
+#[cfg(target_os = "macos")]
+use super::super::system::background;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-use super::super::{system::background, window::record};
+use super::super::window::record;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use crate::views::ShowcaseView;
 

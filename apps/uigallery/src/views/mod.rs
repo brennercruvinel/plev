@@ -23,6 +23,8 @@ pub use pages::{Body, Group, PAGES, Page, Pane};
 pub use text_input::ime::ImeEvent;
 pub use text_input::input::EditKey;
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub(crate) use apps::surface::asking::stage_without_host;
 pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
 use dispatcher::keyboard::Walk;
