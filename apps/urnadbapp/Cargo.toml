@@ -43,7 +43,8 @@ memmap2 = "0.9"
 # the native open / save dialogs (Browse…, blob export) come from
 # engine::runtime::platform::files, which holds rfd on the desktop.
 # urna vector database (sibling workspace, read-only): the native backend.
-# needs hoffresearch/urna at v0.4.0 or later (the `urna-*` crate names).
+# needs hoffresearch/urna at v0.5.5 or later (the rust/ layout: rust/format,
+# and rust/engine, whose package urna-engine is imported as urna_runtime).
 # urna pins sha2 0.11 while urnadbapp pins 0.10 — both coexist in the lockfile,
 # no unification needed.
 urna-format = { path = "../../../urna/rust/format" }
