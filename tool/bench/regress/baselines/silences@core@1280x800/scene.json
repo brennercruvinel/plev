@@ -11,14 +11,14 @@
     "settled": true
   },
   "semantics": {
-    "revision": "d3c64aa094fd9c52",
+    "revision": "e5fc7376e9aa417b",
     "nodes": 17
   },
   "layers": [
     {
       "name": "silences_surface+silences",
       "z": 0,
-      "hash": "a5c90c2242eac117",
+      "hash": "723cb260c891873d",
       "nodes": 97,
       "bounds": [
         283.0,
@@ -77,7 +77,7 @@
       "rect": [
         288.0,
         134.2,
-        655.0,
+        666.0,
         44.0
       ],
       "clip": [
@@ -91,9 +91,9 @@
       "id": "silences_surface.proposer",
       "layer": "silences_surface+silences",
       "rect": [
-        951.0,
+        962.0,
         134.2,
-        101.0,
+        90.0,
         44.0
       ],
       "clip": [

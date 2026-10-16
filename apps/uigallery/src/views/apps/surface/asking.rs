@@ -43,6 +43,20 @@ use claude::{Cancel, ClaudeCli};
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use engine::runtime::window::Background;
 
+/// Set once a page is staged without a window (`shell::stage_page`): a
+/// staged frame is the same on every machine, so from then on `find`
+/// does not look for the program on the host and the page offers the
+/// rules alone, as on a machine without it (the regress baselines, which
+/// CI checks on runners without `claude`).
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+static STAGED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Called by `shell::stage_page` before it builds a page.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+pub(crate) fn stage_without_host() {
+    STAGED.store(true, std::sync::atomic::Ordering::Relaxed);
+}
+
 /// How often the page looks at the channel while it waits.
 pub(crate) const POLL: Duration = Duration::from_millis(100);
 
@@ -140,6 +154,7 @@ impl Claude {
     /// Looks for the program without running it. In the crate's own
     /// tests it is never looked for: no test of the gate reaches the
     /// real program, and a test that wants the fake sets it (`with`).
+    /// Nor on a staged page (`stage_without_host`).
     pub fn find() -> Claude {
         #[cfg(all(
             not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")),
@@ -147,7 +162,7 @@ impl Claude {
         ))]
         let cli = {
             let cli = ClaudeCli::new();
-            cli.exists().then_some(cli)
+            (!STAGED.load(std::sync::atomic::Ordering::Relaxed) && cli.exists()).then_some(cli)
         };
         #[cfg(all(
             not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")),
