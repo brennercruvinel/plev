@@ -58,6 +58,12 @@ pub struct ManifestView {
     pub version: Option<String>,
     pub created: Option<String>,
     pub description: Option<String>,
+    /// The source model's dim when the default space keeps an MRL prefix
+    /// of it (`embedding_dim < full_dim`); the query is cut to match.
+    pub full_dim: Option<u32>,
+    /// The tool and version that wrote the file (`urna 0.5.6`); absent on
+    /// files written before urna recorded it.
+    pub producer: Option<String>,
 }
 
 /// One row of the .urna section table, from the inspect document.

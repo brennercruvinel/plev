@@ -2,12 +2,11 @@
 //! subprocess and parse the query vector back, with the same model gate
 //! the urna CLI applies.
 //!
-//! Three scripts, routed like `urna ask`/`retrieve`: potion corpora take
-//! `python/forge/embed_query_potion.py` (static table, no torch), any
-//! other manifest model takes the sentence-transformers bridge
-//! (`python/embed_query.py`), and a multimodal SPACE (e.g. the clip text
-//! tower for a "clip-vit-b32" band) takes the registry embedder
-//! (`python/forge/embed_query_model.py --preset <space>`).
+//! Two scripts of the `urna` python package, routed like `urna ask`/
+//! `retrieve`: potion corpora take `embed/potionqry.py` (static table, no
+//! torch), any other manifest model and every multimodal SPACE (e.g. the
+//! clip text tower for a "clip-vit-b32" band, with `--preset <space>`)
+//! take the registry embedder `embed/presetqry.py`.
 //!
 //! This is a minimal port of `urna-cli`'s `cmd/embed_gate.rs` and
 //! `cmd/pyenv.rs::resolve_interpreter`: interpreter resolution
@@ -31,8 +30,8 @@ const EMBED_TIMEOUT: Duration = Duration::from_secs(120);
 pub enum EmbedError {
     /// No embedder script found at any of the candidate locations.
     #[error(
-        "offline embedder script not found (looked in the repo layout, \
-             $XDG_DATA_HOME/urna/forge and next to the executable)"
+        "offline embedder script not found (looked in the urna repo layout \
+             and in <data root>/urna/python; `urna setup` installs it)"
     )]
     EmbedderNotFound,
     /// Spawning the interpreter failed (python3 absent, bad URNA_PYTHON…).
@@ -56,8 +55,8 @@ pub enum EmbedError {
     Gate(String),
 }
 
-/// The embedder's JSON contract (shared by `embed_query.py` and
-/// `embed_query_potion.py`): the compact `model_hash` is the source of
+/// The embedder's JSON contract (shared by `potionqry.py` and
+/// `presetqry.py`): the compact `model_hash` is the source of
 /// truth for the manifest gate.
 #[derive(serde::Deserialize)]
 struct EmbedderOutput {
@@ -72,13 +71,54 @@ const PLACEHOLDER_MODEL_HASH: &str =
     "sha256:0000000000000000000000000000000000000000000000000000000000000000";
 
 /// The python interpreter the embedder runs under: `URNA_PYTHON` wins,
-/// then the nearest `.venv/bin/python` walking up to four ancestors of the
-/// current dir, then `python3` on PATH. Mirrors `pyenv::resolve_interpreter`.
+/// then the venv `urna setup` manages (`<data root>/urna/venv`, which
+/// carries the deps by construction), then the nearest `.venv/bin/python`
+/// walking up to four ancestors of the current dir, then `python3` on
+/// PATH. Mirrors `pyenv::resolve_interpreter`.
 pub fn resolve_interpreter() -> String {
     resolve_interpreter_from(
-        std::env::var("URNA_PYTHON").ok(),
+        std::env::var("URNA_PYTHON").ok().or_else(setup_python),
         std::env::current_dir().ok(),
     )
+}
+
+/// The places urna lays its payload down, in the CLI's order
+/// (`paths::data_roots`): `URNA_DATA_DIR`, `XDG_DATA_HOME`,
+/// `~/.local/share`, `LOCALAPPDATA`, then `<exe>/../share`.
+fn data_roots() -> Vec<PathBuf> {
+    let env = |k: &str| {
+        std::env::var_os(k)
+            .filter(|v| !v.is_empty())
+            .map(PathBuf::from)
+    };
+    let mut roots: Vec<PathBuf> = Vec::new();
+    roots.extend(env("URNA_DATA_DIR"));
+    roots.extend(env("XDG_DATA_HOME"));
+    roots.extend(env("HOME").map(|h| h.join(".local").join("share")));
+    roots.extend(env("LOCALAPPDATA"));
+    roots.extend(
+        std::env::current_exe()
+            .ok()
+            .and_then(|e| e.parent().map(|p| p.join("..").join("share"))),
+    );
+    roots.dedup();
+    roots
+}
+
+/// The interpreter of the venv `urna setup` created, when one exists.
+fn setup_python() -> Option<String> {
+    data_roots()
+        .into_iter()
+        .map(|r| {
+            let venv = r.join("urna").join("venv");
+            if cfg!(windows) {
+                venv.join("Scripts").join("python.exe")
+            } else {
+                venv.join("bin").join("python")
+            }
+        })
+        .find(|p| p.is_file())
+        .map(|p| p.to_string_lossy().into_owned())
 }
 
 /// Testable core of [`resolve_interpreter`].
@@ -101,33 +141,26 @@ fn resolve_interpreter_from(urna_python: Option<String>, start: Option<PathBuf>)
 }
 
 /// Script that can reproduce the corpus model, from the manifest's
-/// `embedding_model`: potion corpora take the offline potion table, any
-/// other name takes the sentence-transformers bridge (`embed_query.py`),
-/// which echoes the manifest name and fingerprints the local snapshot —
-/// mirroring the CLI, where `search-text` uses `embed_query.py` and
-/// `ask`/`retrieve` use the potion script.
+/// `embedding_model`, routed like the CLI's `embed_and_search`: potion
+/// corpora take the offline potion table (`embed/potionqry.py`), any other
+/// model the registry embedder (`embed/presetqry.py`), which hands a model
+/// no preset names to the sentence-transformers bridge itself.
 fn embedder_script_rel(embedding_model: &str) -> PathBuf {
-    if embedding_model.contains("potion") {
-        PathBuf::from("python")
-            .join("forge")
-            .join("embed_query_potion.py")
+    let name = if embedding_model.starts_with("minishlab/potion") {
+        "potionqry.py"
     } else {
-        PathBuf::from("python").join("embed_query.py")
-    }
+        "presetqry.py"
+    };
+    PathBuf::from("embed").join(name)
 }
 
 /// The registry embedder: one script for every preset (clip, siglip2,
 /// wemm, jina…), selected with `--preset`. Used for multimodal spaces.
 fn space_embedder_script_rel() -> PathBuf {
-    PathBuf::from("python")
-        .join("forge")
-        .join("embed_query_model.py")
+    PathBuf::from("embed").join("presetqry.py")
 }
 
-/// Locate the embedder script for `embedding_model`. Resolution order
-/// mirrors the CLI (`default_potion_embedder_path`): the urna repo layout
-/// relative to the cwd, the urna dev checkout sibling of this crate, the
-/// XDG data dir, and `<exe>/../share/urna/`.
+/// Locate the embedder script for `embedding_model`.
 pub fn default_embedder_path(embedding_model: &str) -> Option<PathBuf> {
     locate_script(&embedder_script_rel(embedding_model))
 }
@@ -137,38 +170,31 @@ pub fn default_space_embedder_path() -> Option<PathBuf> {
     locate_script(&space_embedder_script_rel())
 }
 
-/// Resolve a repo-relative script path against every candidate root.
+/// Resolve `rel`, a path inside the `urna` python package, with the CLI's
+/// ladder (`embed_gate::installed_script_in`): the repo layout
+/// (`rust/bridge/python/urna/<rel>`) from the cwd, its parent and the urna
+/// checkout beside this repo, then `<root>/urna/python/urna/<rel>` in every
+/// data root, where `urna setup` lays the payload down.
 fn locate_script(rel: &Path) -> Option<PathBuf> {
-    // Installed layouts drop the repo's `python/` prefix: the scripts land
-    // under `urna/` directly (`urna/forge/embed_query_potion.py`,
-    // `urna/embed_query.py`).
-    let installed_rel: PathBuf = rel.components().skip(1).collect();
-    let data_home = std::env::var("XDG_DATA_HOME")
-        .ok()
-        .map(PathBuf::from)
-        .or_else(|| {
-            std::env::var("HOME")
-                .ok()
-                .map(|h| PathBuf::from(h).join(".local").join("share"))
-        });
-    let exe_share = std::env::current_exe()
-        .ok()
-        .and_then(|e| e.parent().map(|p| p.to_path_buf()))
-        .map(|bin| bin.join("..").join("share"));
-    let candidates = [
-        std::env::current_dir().ok().map(|p| p.join(rel)),
-        std::env::current_dir().ok().map(|p| p.join("..").join(rel)),
+    let package: PathBuf = ["rust", "bridge", "python", "urna"].iter().collect();
+    let in_repo = package.join(rel);
+    let cwd = std::env::current_dir().ok();
+    let repos = [
+        cwd.clone(),
+        cwd.map(|p| p.join("..")),
         // Dev convenience: urnaui's workspace sits next to the urna
         // checkout in the standard hoff layout.
-        Some(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../../urna")
-                .join(rel),
-        ),
-        data_home.map(|d| d.join("urna").join(&installed_rel)),
-        exe_share.map(|s| s.join("urna").join(&installed_rel)),
+        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../urna")),
     ];
-    candidates.into_iter().flatten().find(|c| c.exists())
+    let installed = data_roots()
+        .into_iter()
+        .map(|r| r.join("urna").join("python").join("urna").join(rel));
+    repos
+        .into_iter()
+        .flatten()
+        .map(|r| r.join(&in_repo))
+        .chain(installed)
+        .find(|c| c.exists())
 }
 
 /// Run `program args…` with the embed timeout, returning stdout on
@@ -225,20 +251,25 @@ fn gate(
 }
 
 /// Embed `query` offline and validate the result against the corpus
-/// identity. Returns the L2-normalized query vector.
+/// identity. Returns the L2-normalized query vector. `truncated` is set
+/// when the manifest records `full_dim` (the default space was built with
+/// an MRL prefix): both embedders then cut the vector to `embedding_dim`.
 pub fn embed_query(
     embedding_model: &str,
     embedding_dim: usize,
     model_hash: &str,
+    truncated: bool,
     query: &str,
 ) -> Result<Vec<f32>, EmbedError> {
     let embedder = default_embedder_path(embedding_model).ok_or(EmbedError::EmbedderNotFound)?;
     let interpreter = resolve_interpreter();
-    let args = vec![
-        embedder.to_string_lossy().into_owned(),
-        embedding_model.to_string(),
-        query.to_string(),
-    ];
+    let mut args = vec![embedder.to_string_lossy().into_owned()];
+    if truncated {
+        args.push("--mrl-dim".to_string());
+        args.push(embedding_dim.to_string());
+    }
+    args.push(embedding_model.to_string());
+    args.push(query.to_string());
     let stdout = run_with_timeout(&interpreter, &args)?;
     let payload: EmbedderOutput =
         serde_json::from_slice(&stdout).map_err(|e| EmbedError::InvalidOutput(e.to_string()))?;
@@ -354,10 +385,9 @@ mod tests {
 
     #[test]
     fn dispatches_the_script_by_manifest_model() {
-        assert!(
-            embedder_script_rel("minishlab/potion-base-8M/v1").ends_with("embed_query_potion.py")
-        );
-        assert!(embedder_script_rel("all-MiniLM-L6-v2").ends_with("embed_query.py"));
+        assert!(embedder_script_rel("minishlab/potion-base-8M/v1").ends_with("embed/potionqry.py"));
+        assert!(embedder_script_rel("all-MiniLM-L6-v2").ends_with("embed/presetqry.py"));
+        assert!(space_embedder_script_rel().ends_with("embed/presetqry.py"));
     }
 
     #[test]

@@ -274,13 +274,15 @@ impl UrnaBackend {
     }
 
     /// Corpus identity for the embedder gate: `(embedding_model,
-    /// embedding_dim, model_hash)` from the manifest.
-    pub fn embed_identity(&self) -> Result<(String, usize, String)> {
+    /// embedding_dim, model_hash, truncated)` from the manifest, where
+    /// `truncated` says the default space keeps an MRL prefix (`full_dim`).
+    pub fn embed_identity(&self) -> Result<(String, usize, String, bool)> {
         let inspect = self.inspect()?;
         Ok((
             inspect.manifest.embedding_model,
             inspect.manifest.embedding_dim as usize,
             inspect.manifest.model_hash,
+            inspect.manifest.full_dim.is_some(),
         ))
     }
 

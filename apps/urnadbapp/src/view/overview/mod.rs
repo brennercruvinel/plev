@@ -15,6 +15,10 @@ use engine::widgets::prelude::{Button, EventResult, IconButton, Rect, WidgetEven
 
 use crate::backend::workers::messages::OpenedDbView;
 
+mod cards;
+
+use cards::{Card, RowButton, cards, chip_for, chips};
+
 use super::{Action, fmt_bytes, group_label, panel, text};
 
 const CARD_PAD: f32 = 20.0;
@@ -35,23 +39,6 @@ pub struct OverviewContext<'a> {
     pub validating: bool,
 }
 
-/// One card's rows: (key, value, row button).
-struct Card {
-    title: &'static str,
-    rows: Vec<(String, String, Option<RowButton>)>,
-}
-
-/// A retained per-row button: copy a hash, or export a blob.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
-enum RowButton {
-    CopyFile,
-    CopyContent,
-    CopyModel,
-    CopySpace(usize),
-    CopyBlob(usize),
-    ExportBlob(usize),
-}
-
 /// Rects the screen needs for hit testing, produced by [`layout`].
 struct Layout {
     cards: Vec<Rect>,
@@ -64,161 +51,23 @@ struct Layout {
     total_h: f32,
 }
 
-/// A capability chip: present = Constructive, absent = Neutral outline
-/// (engine `Chip`; static — capabilities are not clickable).
-fn chip_for(label: &str, present: bool) -> engine::widgets::prelude::Chip {
-    engine::widgets::prelude::Chip::new(label).intent(if present {
-        engine::styling::theme::Intent::Constructive
-    } else {
-        engine::styling::theme::Intent::Neutral
-    })
-}
-
-fn chips(db: &OpenedDbView) -> Vec<(&'static str, bool)> {
-    let caps = &db.inspect.manifest.capabilities;
-    let ext = db.inspect.manifest.capabilities_ext.as_ref();
-    vec![
-        ("exact", caps.supports_exact),
-        ("ann", db.has_ann),
-        ("bm25", db.has_bm25),
-        ("citations", caps.supports_citations),
-        ("reproducible", caps.supports_reproducible_build),
-        ("graph", db.has_graph),
-        ("blobs", ext.and_then(|e| e.blobs_present).unwrap_or(false)),
-        ("inlined media", db.has_blob_data),
-        ("spaces", db.has_spaces),
-    ]
-}
-
-/// Card contents derived from the snapshot. Value column strings are
-/// truncated at render time against the real column width. Cards with
-/// nothing to show (no spaces, no blobs) are omitted.
-fn cards(db: &OpenedDbView) -> Vec<Card> {
-    let m = &db.inspect.manifest;
-    type Row = (String, String, Option<RowButton>);
-    let row = |k: &str, v: String, b: Option<RowButton>| -> Row { (k.to_string(), v, b) };
-
-    let mut manifest_rows = vec![
-        row("embedding_model", m.embedding_model.clone(), None),
-        row("embedding_dim", m.embedding_dim.to_string(), None),
-        row("dtype", m.dtype.clone(), None),
-        row("metric", m.metric.clone(), None),
-        row("index_type", m.index_type.clone(), None),
-        row("n_chunks", m.n_chunks.to_string(), None),
-        row("chunker_version", m.chunker_version.clone(), None),
-        row(
-            "model_hash",
-            m.model_hash.clone(),
-            Some(RowButton::CopyModel),
-        ),
-    ];
-    if let Some(title) = &m.title {
-        manifest_rows.push(row("title", title.clone(), None));
-    }
-    if let Some(version) = &m.version {
-        manifest_rows.push(row("version", version.clone(), None));
-    }
-    if let Some(created) = &m.created {
-        manifest_rows.push(row("created", created.clone(), None));
-    }
-
-    let mut out = vec![
-        Card {
-            title: "IDENTITY",
-            rows: vec![
-                row("path", db.path.display().to_string(), None),
-                row("magic", db.inspect.magic.clone(), None),
-                row("file size", fmt_bytes(db.inspect.file_size), None),
-                row(
-                    "file_hash",
-                    db.inspect.file_hash.clone(),
-                    Some(RowButton::CopyFile),
-                ),
-                row(
-                    "content_hash",
-                    db.inspect.content_hash.clone(),
-                    Some(RowButton::CopyContent),
-                ),
-                row("simd backend", db.inspect.simd_backend.clone(), None),
-            ],
-        },
-        Card {
-            title: "MANIFEST",
-            rows: manifest_rows,
-        },
-    ];
-
-    // One row per multimodal space: what `search-space` can score.
-    if !db.inspect.spaces.is_empty() {
-        let rows = db
-            .inspect
-            .spaces
-            .iter()
-            .enumerate()
-            .map(|(i, s)| {
-                row(
-                    &s.name,
-                    format!(
-                        "{} vectors × {} {} · band {} · {}",
-                        s.n_vectors,
-                        s.dim,
-                        s.dtype,
-                        fmt_bytes(s.band_bytes),
-                        s.model_hash
-                    ),
-                    Some(RowButton::CopySpace(i)),
-                )
-            })
-            .collect();
-        out.push(Card {
-            title: "SPACES",
-            rows,
-        });
-    }
-
-    // One row per media blob; inlined ones export straight off the file.
-    if !db.inspect.blobs.is_empty() {
-        let rows = db
-            .inspect
-            .blobs
-            .iter()
-            .enumerate()
-            .map(|(i, b)| {
-                let button = if b.inlined && db.has_blob_data {
-                    RowButton::ExportBlob(i)
-                } else {
-                    RowButton::CopyBlob(i)
-                };
-                row(
-                    b.original_uri.trim_start_matches("media://"),
-                    format!(
-                        "{} · {} · {}",
-                        fmt_bytes(b.byte_len),
-                        if b.inlined { "inlined" } else { "sidecar" },
-                        b.content_hash
-                    ),
-                    Some(button),
-                )
-            })
-            .collect();
-        out.push(Card {
-            title: "MEDIA",
-            rows,
-        });
-    }
-    out
+/// Whether a row spanning `y..y + h` overlaps the viewport. Rows outside it
+/// emit nothing: a corpus with tens of thousands of media blobs would
+/// otherwise push every row's glyphs past the GPU's max buffer size.
+fn on_screen(viewport: Rect, y: f32, h: f32) -> bool {
+    y + h > viewport.y && y < viewport.bottom()
 }
 
 /// Pure layout: card rects, row-button rects, section row rects and the
-/// total content height, all derived from `content` and the data.
-fn layout(content: Rect, db: &OpenedDbView, theme: &Theme) -> Layout {
-    let card_list = cards(db);
+/// total content height, all derived from `content`, the data and its
+/// `cards(db)`.
+fn layout(content: Rect, db: &OpenedDbView, card_list: &[Card], theme: &Theme) -> Layout {
     let card_h = |card: &Card| CARD_PAD * 2.0 + 24.0 + card.rows.len() as f32 * ROW_H;
 
     let mut cards_rects = Vec::with_capacity(card_list.len());
     let mut buttons = Vec::new();
     let mut y = content.y;
-    for card in &card_list {
+    for card in card_list {
         let rect = Rect::new(content.x, y, content.w, card_h(card));
         for (i, (_, _, button)) in card.rows.iter().enumerate() {
             if let Some(b) = button {
@@ -301,7 +150,15 @@ fn layout(content: Rect, db: &OpenedDbView, theme: &Theme) -> Layout {
 }
 
 pub struct OverviewScreen {
-    /// Retained row buttons, keyed by what they act on; rebuilt per db.
+    /// `cards(db)`, built once per db: a corpus with 38k media blobs
+    /// formats 38k rows, about 10 ms a build, and every event and frame
+    /// reads them.
+    cards: Vec<Card>,
+    /// The db `cards` was built from: path, content hash, blob and space
+    /// counts.
+    cards_of: Option<(std::path::PathBuf, String, usize, usize)>,
+    /// Retained row buttons, in the order of `cards`' rows; rebuilt with
+    /// them.
     buttons: Vec<(RowButton, IconButton)>,
     validate: Button,
     /// Page scroll: the overview is taller than the viewport (cards +
@@ -312,6 +169,8 @@ pub struct OverviewScreen {
 impl OverviewScreen {
     pub fn new() -> Self {
         Self {
+            cards: Vec::new(),
+            cards_of: None,
             buttons: Vec::new(),
             validate: Button::new("Validate")
                 .icon("eye")
@@ -325,11 +184,35 @@ impl OverviewScreen {
     /// change the set) and reset the page scroll.
     pub fn reset(&mut self, db: &OpenedDbView) {
         self.scroll = engine::control::input::scroll::ScrollState::new();
-        self.rebuild_buttons(db);
+        self.cards_of = None;
+        self.sync_cards(db);
     }
 
-    fn rebuild_buttons(&mut self, db: &OpenedDbView) {
-        self.buttons = cards(db)
+    /// Rebuild the cards and their row buttons when `db` is not the one
+    /// they were built from (a db set without `reset`: tests, or a
+    /// snapshot swap).
+    fn sync_cards(&mut self, db: &OpenedDbView) {
+        let fresh = self
+            .cards_of
+            .as_ref()
+            .is_some_and(|(path, hash, blobs, spaces)| {
+                *path == db.path
+                    && *hash == db.inspect.content_hash
+                    && *blobs == db.inspect.blobs.len()
+                    && *spaces == db.inspect.spaces.len()
+            });
+        if fresh {
+            return;
+        }
+        self.cards = cards(db);
+        self.cards_of = Some((
+            db.path.clone(),
+            db.inspect.content_hash.clone(),
+            db.inspect.blobs.len(),
+            db.inspect.spaces.len(),
+        ));
+        self.buttons = self
+            .cards
             .iter()
             .flat_map(|card| card.rows.iter().filter_map(|(_, _, b)| *b))
             .map(|b| {
@@ -349,13 +232,10 @@ impl OverviewScreen {
     /// Clamp the scroll offset to the current viewport/content (resize can
     /// shrink content; the offset must follow).
     fn sync_scroll(&mut self, viewport: Rect, db: &OpenedDbView, theme: &Theme) {
+        self.sync_cards(db);
         self.scroll.set_viewport(viewport.h);
-        self.scroll.set_content(layout(viewport, db, theme).total_h);
-        // A db set without `reset` (tests, or a snapshot swap) still gets
-        // its buttons.
-        if self.buttons.is_empty() {
-            self.rebuild_buttons(db);
-        }
+        self.scroll
+            .set_content(layout(viewport, db, &self.cards, theme).total_h);
     }
 
     /// The layout rect shifted up by the scroll offset. Layout, hit
@@ -370,11 +250,15 @@ impl OverviewScreen {
         )
     }
 
-    fn button_for(&mut self, target: RowButton) -> Option<&mut IconButton> {
-        self.buttons
-            .iter_mut()
-            .find(|(b, _)| *b == target)
-            .map(|(_, w)| w)
+    /// Each retained button beside its rect: both lists walk `self.cards`'
+    /// rows in the same order, so they pair by position. A lookup per rect
+    /// would be quadratic, and a corpus with 38k media blobs held the main
+    /// thread for 20 s on every mouse move.
+    fn row_buttons<'a>(
+        &'a mut self,
+        l: &'a Layout,
+    ) -> impl Iterator<Item = (&'a mut (RowButton, IconButton), &'a (RowButton, Rect))> {
+        self.buttons.iter_mut().zip(&l.buttons)
     }
 
     fn action_for(db: &OpenedDbView, target: RowButton) -> Action {
@@ -411,7 +295,7 @@ impl OverviewScreen {
     ) -> (EventResult, Action) {
         let db = ctx.db;
         self.sync_scroll(content, db, theme);
-        let l = layout(self.scrolled(content), db, theme);
+        let l = layout(self.scrolled(content), db, &self.cards, theme);
         let mut result = EventResult::IGNORED;
 
         self.validate.disabled = ctx.validating;
@@ -421,10 +305,10 @@ impl OverviewScreen {
         }
         result = result.merge(r);
 
-        for (target, rect) in &l.buttons {
-            let Some(button) = self.button_for(*target) else {
+        for ((target, button), (_, rect)) in self.row_buttons(&l) {
+            if !on_screen(content, rect.y, rect.h) {
                 continue;
-            };
+            }
             let r = button.handle_event(event, *rect);
             if r.clicked {
                 return (r, Self::action_for(db, *target));
@@ -461,15 +345,17 @@ impl OverviewScreen {
         let db = ctx.db;
         self.sync_scroll(viewport, db, theme);
         let content = self.scrolled(viewport);
-        let l = layout(content, db, theme);
-        let card_list = cards(db);
+        let l = layout(content, db, &self.cards, theme);
         let value_style = TextStyle::new(13.0).with_weight(400);
 
-        for (card, rect) in card_list.iter().zip(&l.cards) {
+        for (card, rect) in self.cards.iter().zip(&l.cards) {
             panel(c, *rect, theme);
             group_label(c, card.title, rect.x + CARD_PAD, rect.y + CARD_PAD, theme);
             for (i, (key, value, button)) in card.rows.iter().enumerate() {
                 let row_y = rect.y + CARD_PAD + 24.0 + i as f32 * ROW_H;
+                if !on_screen(viewport, row_y, ROW_H) {
+                    continue;
+                }
                 let key_w = (rect.w - CARD_PAD * 2.0) * KEY_FRAC;
                 let key = TextMeasurer::truncate_to_width(key, &value_style, key_w - 8.0);
                 text(
@@ -499,8 +385,8 @@ impl OverviewScreen {
                 );
             }
         }
-        for (target, rect) in &l.buttons {
-            if let Some(button) = self.button_for(*target) {
+        for ((_, button), (_, rect)) in self.row_buttons(&l) {
+            if on_screen(viewport, rect.y, rect.h) {
                 button.render(c, *rect, theme);
             }
         }
@@ -552,6 +438,9 @@ impl OverviewScreen {
         let id_w = 72.0;
         let size_w = 96.0;
         for (section, rect) in db.inspect.sections.iter().zip(&l.section_rows) {
+            if !on_screen(viewport, rect.y, rect.h) {
+                continue;
+            }
             text(
                 c,
                 &format!("0x{:02X}", section.section_id),
@@ -624,7 +513,7 @@ mod tests {
         for (w, h) in [(800.0, 600.0), (1600.0, 1000.0)] {
             let mut screen = OverviewScreen::new();
             let content = Rect::new(40.0, 128.0, w - 80.0, h - 128.0 - 40.0);
-            let rect = layout(content, &db, &Theme::hoff()).buttons[0].1;
+            let rect = layout(content, &db, &cards(&db), &Theme::hoff()).buttons[0].1;
             let (r, action) = click(&mut screen, content, &ctx, rect);
             assert!(r.clicked);
             match action {
@@ -639,7 +528,7 @@ mod tests {
         let db = fixtures::fake_db();
         let mut screen = OverviewScreen::new();
         let content = Rect::new(40.0, 128.0, 1200.0, 700.0);
-        let rect = layout(content, &db, &Theme::hoff()).validate;
+        let rect = layout(content, &db, &cards(&db), &Theme::hoff()).validate;
         let (r, action) = click(&mut screen, content, &ctx(&db), rect);
         assert!(r.clicked);
         assert_eq!(action, Action::Validate);
@@ -659,7 +548,7 @@ mod tests {
         assert_eq!(titles, ["IDENTITY", "MANIFEST", "SPACES", "MEDIA"]);
         let mut screen = OverviewScreen::new();
         let content = Rect::new(40.0, 128.0, 1200.0, 700.0);
-        let l = layout(content, &db, &Theme::hoff());
+        let l = layout(content, &db, &cards(&db), &Theme::hoff());
         let export = l
             .buttons
             .iter()
@@ -680,7 +569,7 @@ mod tests {
         let mut sidecar = fixtures::fake_media_db();
         sidecar.has_blob_data = false;
         assert!(
-            layout(content, &sidecar, &Theme::hoff())
+            layout(content, &sidecar, &cards(&sidecar), &Theme::hoff())
                 .buttons
                 .iter()
                 .any(|(b, _)| *b == RowButton::CopyBlob(0))

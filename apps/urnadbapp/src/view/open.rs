@@ -45,7 +45,6 @@ pub struct OpenScreen {
     browse_button: Button,
     recents_hover: Option<usize>,
     spinner: Spinner,
-    opening: bool,
 }
 
 impl OpenScreen {
@@ -63,7 +62,6 @@ impl OpenScreen {
                 .variant(engine::widgets::prelude::ButtonVariant::Outline),
             recents_hover: None,
             spinner: Spinner::new().size(SpinnerSize::Sm),
-            opening: false,
         }
     }
 
@@ -112,7 +110,6 @@ impl OpenScreen {
         opening: bool,
         theme: &Theme,
     ) -> (EventResult, Action) {
-        self.opening = opening;
         #[cfg(not(target_arch = "wasm32"))]
         {
             self.open_button.disabled = opening || self.path.is_empty();
@@ -212,9 +209,11 @@ impl OpenScreen {
 
     /// The spinner every turn while an open is in flight; the path
     /// field's caret at its flips (native only: the web opens through the
-    /// browser's picker).
-    pub fn wake(&mut self, dt: f32) -> Wake {
-        let spinning = Wake::moving(self.opening && self.spinner.tick(dt));
+    /// browser's picker). `opening` is the explorer's own flag, read each
+    /// turn: a copy taken from the last event went stale once the screen
+    /// left Open, and spun the hidden spinner forever.
+    pub fn wake(&mut self, dt: f32, opening: bool) -> Wake {
+        let spinning = Wake::moving(opening && self.spinner.tick(dt));
         #[cfg(not(target_arch = "wasm32"))]
         return spinning.merge(self.path.wake(dt));
         #[cfg(target_arch = "wasm32")]
