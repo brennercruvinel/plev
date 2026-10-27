@@ -153,17 +153,31 @@ impl HitGrid {
         )
     }
 
-    /// The topmost owner under `p` (world px); `tol` (world px) widens thin strokes.
+    /// The topmost owner under `p` (world px); `tol` (world px) widens thin
+    /// strokes. A primitive within `tol` of `p` may be bucketed only in a
+    /// neighbouring cell, so every cell the square `p ± tol` touches is
+    /// asked, and the latest drawn of the answers wins.
     pub fn hit(&self, p: (f32, f32), tol: f32) -> Option<Hit> {
         if self.cells.is_empty() {
             return None;
         }
-        let (c, r) = self.cell_of(p);
-        self.cells[r * self.cols + c]
-            .iter()
-            .rev()
-            .map(|&i| self.prims[i as usize])
-            .find(|(prim, _)| prim.contains(p, tol))
-            .map(|(_, hit)| hit)
+        let (c0, r0) = self.cell_of((p.0 - tol, p.1 - tol));
+        let (c1, r1) = self.cell_of((p.0 + tol, p.1 + tol));
+        let mut top: Option<u32> = None;
+        for row in r0..=r1 {
+            for col in c0..=c1 {
+                // a cell lists its primitives in draw order: from the end,
+                // the first that contains `p` is that cell's topmost
+                let found = self.cells[row * self.cols + col]
+                    .iter()
+                    .rev()
+                    .take_while(|&&i| top.is_none_or(|t| i > t))
+                    .find(|&&i| self.prims[i as usize].0.contains(p, tol));
+                if let Some(&i) = found {
+                    top = Some(i);
+                }
+            }
+        }
+        top.map(|i| self.prims[i as usize].1)
     }
 }

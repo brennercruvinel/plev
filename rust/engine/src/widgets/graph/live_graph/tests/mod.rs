@@ -449,3 +449,20 @@ fn a_graph_holds_only_its_own_indices() {
     assert!(!graph(Vec::new(), vec![group(vec![2], Vec::new())]).holds());
     assert!(!graph(Vec::new(), vec![group(Vec::new(), vec![1])]).holds());
 }
+
+#[test]
+fn a_hit_within_the_tolerance_reaches_across_a_cell_border() {
+    use super::hit::HitGrid;
+    // three circles of radius 1 on a line from x 0 to 100: cells of 16
+    // world px from x -1, so the one at 13 sits in the first cell only
+    let mut grid = HitGrid::default();
+    grid.push_circle((0.0, 0.0), 1.0, Hit::Node(0));
+    grid.push_circle((13.0, 0.0), 1.0, Hit::Node(1));
+    grid.push_circle((100.0, 0.0), 1.0, Hit::Node(2));
+    grid.build();
+    // 17.5 is in the second cell, 4.5 from the circle's center: inside
+    // its radius plus a tolerance of 4
+    assert_eq!(grid.hit((17.5, 0.0), 4.0), Some(Hit::Node(1)));
+    assert_eq!(grid.hit((17.5, 0.0), 3.0), None, "and not past it");
+    assert_eq!(grid.hit((100.5, 0.0), 0.0), Some(Hit::Node(2)));
+}
