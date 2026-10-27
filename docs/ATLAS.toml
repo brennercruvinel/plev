@@ -343,8 +343,8 @@ role = "demo: plays a .monster file"
 path = "demo/shapes"
 role = "demo: sdf shapes: cards, borders, shadows"
 
-[crates.corpus]
-path = "demo/corpus"
+[crates.graphs]
+path = "demo/graphs"
 role = "demo: graphs of the gramorph corpus drawn live (d3 force with node drag, cytoscape compound nodes) through LiveGraph and App::with_view, desktop and web; its inputs are data/graphs/d3/les-mis.json and data/graphs/cytoscape/compound.json, embedded"
 
 [crates.ticker]
@@ -366,7 +366,7 @@ role = "thin objc shell (Sources/main.m) calling uigallery_ios_main, linked agai
 [demos]
 # one crate per demo under demo/, run with `cargo run -p <name>`; they were
 # the engine's examples (and two of other crates) before the 2026-10 tree.
-windowed = ["arcade", "camera", "corpus", "inputs", "layers", "lottie", "mobile", "mockup", "player", "primes", "shapes", "ticker"]
+windowed = ["arcade", "camera", "graphs", "inputs", "layers", "lottie", "mobile", "mockup", "player", "primes", "shapes", "ticker"]
 cli = ["commit", "intent"]
 # binaries of the libraries: the importer's converter (lottie and svg to
 # .monster) and transpiler, the engine's headless text probe.

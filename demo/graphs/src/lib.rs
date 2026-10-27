@@ -1,4 +1,4 @@
-//! Graphs of the gramorph corpus drawn live by plev. Two pages: `lesmis`
+//! Graphs drawn live by plev, from two inputs of the gramorph corpus. Two pages: `lesmis`
 //! (d3-force's Les Miserables: a live simulation, drag a node and the rest
 //! follow) and `compound` (cytoscape's compound nodes: drag a group and its
 //! children come along, a child under the pointer is the child, not the
@@ -18,7 +18,7 @@ use engine::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use engine::runtime::window::HostedView;
 
-// the corpus inputs live with the repository's data, by source format
+// the inputs live with the repository's data, by source format
 // (data/graphs/<format>/), and are embedded so the web build needs no fetch.
 const LES_MIS: &str = include_str!("../../../data/graphs/d3/les-mis.json");
 const COMPOUND: &str = include_str!("../../../data/graphs/cytoscape/compound.json");
@@ -56,15 +56,15 @@ impl Page {
     }
 }
 
-pub struct CorpusView {
+pub struct GraphsView {
     page: Page,
     pub graph: LiveGraph,
     frame: u64,
 }
 
-impl CorpusView {
-    pub fn new(page: Page) -> Result<CorpusView, String> {
-        Ok(CorpusView {
+impl GraphsView {
+    pub fn new(page: Page) -> Result<GraphsView, String> {
+        Ok(GraphsView {
             page,
             graph: LiveGraph::new(page.spec()?),
             frame: 0,
@@ -137,7 +137,7 @@ impl CorpusView {
     }
 }
 
-impl HostedView for CorpusView {
+impl HostedView for GraphsView {
     fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
         let result = self.graph.handle_event(event, bounds);
         if result.clicked || matches!(event, WidgetEvent::MouseUp { .. }) {
@@ -173,10 +173,10 @@ pub fn start() {
             .first()
             .map_or("lesmis", String::as_str),
     );
-    let view = match CorpusView::new(page) {
+    let view = match GraphsView::new(page) {
         Ok(view) => view,
         Err(e) => {
-            log::error!("corpus: {e}");
+            log::error!("graphs: {e}");
             return;
         }
     };
