@@ -34,12 +34,23 @@ pub enum Page {
 }
 
 impl Page {
-    pub fn from_name(name: &str) -> Page {
-        if name.eq_ignore_ascii_case("compound") {
-            Page::Compound
-        } else {
-            Page::LesMis
+    /// Every page, the first one the default.
+    pub const ALL: [Page; 2] = [Page::LesMis, Page::Compound];
+
+    /// The page `name` names, in any case; an empty name is the default
+    /// page. A name no page has is an error listing the ones there are,
+    /// so a typo never opens another page in silence.
+    pub fn from_name(name: &str) -> Result<Page, String> {
+        if name.is_empty() {
+            return Ok(Page::ALL[0]);
         }
+        Page::ALL
+            .into_iter()
+            .find(|p| p.name().eq_ignore_ascii_case(name))
+            .ok_or_else(|| {
+                let names: Vec<&str> = Page::ALL.iter().map(|p| p.name()).collect();
+                format!("no page {name:?}; the pages are {}", names.join(", "))
+            })
     }
 
     pub fn name(self) -> &'static str {
@@ -189,12 +200,8 @@ pub fn start() {
 
     console_error_panic_hook::set_once();
     let _ = console_log::init_with_level(log::Level::Info);
-    let page = Page::from_name(
-        launch_args(&["page"])
-            .first()
-            .map_or("lesmis", String::as_str),
-    );
-    let view = match GraphsView::new(page) {
+    let page = Page::from_name(launch_args(&["page"]).first().map_or("", String::as_str));
+    let view = match page.and_then(GraphsView::new) {
         Ok(view) => view,
         Err(e) => {
             log::error!("graphs: {e}");
@@ -206,4 +213,17 @@ pub fn start() {
         .expect("event loop");
     let app = App::new_with_proxy(event_loop.create_proxy()).with_view(Box::new(view));
     event_loop.spawn_app(app);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Page;
+
+    #[test]
+    fn a_page_is_named_and_a_typo_is_an_error() {
+        assert_eq!(Page::from_name(""), Ok(Page::LesMis));
+        assert_eq!(Page::from_name("Compound"), Ok(Page::Compound));
+        let err = Page::from_name("compund").unwrap_err();
+        assert!(err.contains("lesmis, compound"), "{err}");
+    }
 }

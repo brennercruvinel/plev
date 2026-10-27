@@ -6,8 +6,8 @@ fn main() {
     use engine::runtime::window::{App, AppEvent};
 
     env_logger::init();
-    let page = graphs::Page::from_name(&std::env::args().nth(1).unwrap_or_default());
-    let view = match graphs::GraphsView::new(page) {
+    let name = std::env::args().nth(1).unwrap_or_default();
+    let view = match graphs::Page::from_name(&name).and_then(graphs::GraphsView::new) {
         Ok(view) => view,
         Err(e) => {
             eprintln!("graphs: {e}");
