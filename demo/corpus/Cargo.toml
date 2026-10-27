@@ -1,0 +1,34 @@
+[package]
+name = "corpus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+description = "Graphs of the gramorph corpus drawn live by plev: d3's Les Miserables with its force simulation and node drag, cytoscape's compound nodes, desktop and web"
+
+# the lib is the web build (wasm32 cdylib, `#[wasm_bindgen(start)]`); the bin is the desktop window
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+engine = { workspace = true, default-features = false }
+serde.workspace = true
+serde_json.workspace = true
+log.workspace = true
+winit.workspace = true
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+env_logger.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen.workspace = true
+console_log.workspace = true
+console_error_panic_hook.workspace = true
+web-sys = { workspace = true, features = ["HtmlElement", "DomStringMap"] }
+
+[features]
+# EXPERIMENT (gramorph proof 1): passes the engine's Noto-less build through, to weigh the web build
+experiment-no-noto = ["engine/experiment-no-noto"]
+
+[lints]
+workspace = true

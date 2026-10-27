@@ -1,0 +1,98 @@
+{
+ "elements": [
+  {
+   "data": {
+    "id": "frontend",
+    "label": "Frontend"
+   }
+  },
+  {
+   "data": {
+    "id": "backend",
+    "label": "Backend"
+   }
+  },
+  {
+   "data": {
+    "id": "react",
+    "label": "React",
+    "parent": "frontend"
+   }
+  },
+  {
+   "data": {
+    "id": "next",
+    "label": "Next.js",
+    "parent": "frontend"
+   }
+  },
+  {
+   "data": {
+    "id": "vite",
+    "label": "Vite",
+    "parent": "frontend"
+   }
+  },
+  {
+   "data": {
+    "id": "express",
+    "label": "Express",
+    "parent": "backend"
+   }
+  },
+  {
+   "data": {
+    "id": "fastify",
+    "label": "Fastify",
+    "parent": "backend"
+   }
+  },
+  {
+   "data": {
+    "id": "prisma",
+    "label": "Prisma",
+    "parent": "backend"
+   }
+  },
+  {
+   "data": {
+    "source": "react",
+    "target": "next"
+   }
+  },
+  {
+   "data": {
+    "source": "next",
+    "target": "express"
+   }
+  },
+  {
+   "data": {
+    "source": "next",
+    "target": "fastify"
+   }
+  },
+  {
+   "data": {
+    "source": "vite",
+    "target": "react"
+   }
+  },
+  {
+   "data": {
+    "source": "express",
+    "target": "prisma"
+   }
+  },
+  {
+   "data": {
+    "source": "fastify",
+    "target": "prisma"
+   }
+  }
+ ],
+ "layout": {
+  "name": "cose",
+  "animate": false
+ }
+}

@@ -945,6 +945,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "corpus"
+version = "0.1.0"
+dependencies = [
+ "console_error_panic_hook",
+ "console_log",
+ "engine",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "web-sys",
+ "winit",
+]
+
+[[package]]
 name = "cosmic-text"
 version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
