@@ -87,8 +87,8 @@ env_logger.workspace = true
 # rfd is the native file dialog (macos, windows, linux) behind
 # `platform::files`; it has no android/ios backend either, and on wasm it
 # is async and gives bytes, not paths, so it is desktop-only too. its
-# default features are off: they only pick the linux backend (the xdg
-# portal through ashpd, or gtk3), which is the linux bring-up's choice.
+# default features are off here: they only pick the linux backend, and
+# its build script refuses linux without one, so linux picks it below.
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "android"), not(target_os = "ios")))'.dependencies]
 arboard.workspace = true
 rfd = { version = "0.15", default-features = false }
@@ -97,6 +97,12 @@ rfd = { version = "0.15", default-features = false }
 # wasm. its default features (`gtk3`, `libxdo`) only pick the linux
 # backend, which is the linux bring-up's choice, so they are off.
 muda = { version = "0.20", default-features = false }
+
+# rfd's linux backend: the xdg desktop portal (ashpd over zbus, pure rust,
+# no gtk headers on the build host) on async-std, rfd's own default pair.
+# cargo unions these features with the desktop entry above.
+[target.'cfg(target_os = "linux")'.dependencies]
+rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
 
 # tray-icon is the system tray icon (macos: an NSStatusItem; windows: the
 # notification area) behind `platform::tray`, with a `muda` menu as its

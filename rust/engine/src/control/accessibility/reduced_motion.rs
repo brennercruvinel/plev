@@ -46,8 +46,9 @@ pub fn system_reduces_motion() -> Option<bool> {
 }
 
 /// What `defaults read com.apple.universalaccess reduceMotion` said: on
-/// for `1` (or `true`), off for `0` (or `false`) and for a pair that does
-/// not exist (never turned on); `None` for anything else.
+/// for `1` (or `true`), off for `0` (or `false`) and for a key that does
+/// not exist (never turned on: "does not exist" up to macOS 26, "Could not
+/// find key" from macOS 27); `None` for anything else.
 #[cfg(any(target_os = "macos", test))]
 fn read_defaults(ok: bool, stdout: &str, stderr: &str) -> Option<bool> {
     if ok {
@@ -57,7 +58,7 @@ fn read_defaults(ok: bool, stdout: &str, stderr: &str) -> Option<bool> {
             _ => None,
         };
     }
-    stderr.contains("does not exist").then_some(false)
+    (stderr.contains("does not exist") || stderr.contains("Could not find key")).then_some(false)
 }
 
 /// Reads the system's preference and makes it this thread's motion
@@ -94,6 +95,13 @@ mod tests {
             read_defaults(false, "", never),
             Some(false),
             "never set: off"
+        );
+        let never_27 = "Error: Could not find key 'reduceMotion' in domain \
+                        'com.apple.universalaccess'.\n";
+        assert_eq!(
+            read_defaults(false, "", never_27),
+            Some(false),
+            "never set, macOS 27 wording: off"
         );
         assert_eq!(read_defaults(false, "", "Could not read domain"), None);
     }
