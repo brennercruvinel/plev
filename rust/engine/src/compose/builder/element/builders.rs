@@ -6,7 +6,7 @@ use super::{
 use crate::styling::color::IntoColor;
 
 impl Element {
-    /// Inspect children (Mantra-15: testable without GPU).
+    /// Inspect children, so a tree is testable without a GPU.
     pub fn children_ref(&self) -> &[Element] {
         &self.children
     }

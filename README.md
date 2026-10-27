@@ -196,10 +196,10 @@ edits, `motion` codec, `import` lottie conversion and gpui transpile.
 - [docs/ATLAS.toml](docs/ATLAS.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/adr/](docs/adr/): the decision records.
 - [docs/ref/code-against-the-plev-engine.md](docs/ref/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/ref/](docs/ref/): pixel validation, the web target, orchestrating agents.
-- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
+- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis is [docs/pub/generative-runtime-thesis.md](docs/pub/generative-runtime-thesis.md) and the rules every agent follows [docs/ref/generative-runtime-guidelines.md](docs/ref/generative-runtime-guidelines.md).
 - [docs/log/changelog.md](docs/log/changelog.md): what changed, newest first.
 - [docs/TERMS.toml](docs/TERMS.toml): the names of the tree, old and new, crate by crate and module by module.
-- [.devops/](.devops/): the tool contracts (`check/`), the agents' rules (`rules/`) and skills (`agent/`).
+- [.devops/check/](.devops/check/): the tool contracts (lychee, nextest, typos).
 
 ## license
 

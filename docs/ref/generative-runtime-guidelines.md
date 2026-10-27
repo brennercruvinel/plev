@@ -10,10 +10,10 @@ tags: [orchestration, agents, contracts, ownership, commits, handoff, validation
 
 # diretrizes do orquestrador e dos agentes
 
-obrigatórias para o programa em `generative-runtime-program.md`. servem
+obrigatórias para o programa em `docs/log/generative-runtime-program.md`. servem
 para não desviar e não gerar AI slop. a parte 1 e a parte 2 são as
 diretrizes do CTO, completas. a parte 3 adapta essas regras a este
-repositório (AGENTS.md, gate, worktrees, formato dos arquivos de task). a
+repositório (regras do engine, gate, worktrees, formato dos arquivos de task). a
 parte 4 é o ciclo de trabalho, com os templates de briefing e de handoff.
 
 regra de origem, acima de tudo: nenhum agente é disparado sem plano e sem
@@ -389,10 +389,11 @@ silenciosamente a responsabilidade do outro.
 
 # parte 3. adaptação a este repositório
 
-## o que continua valendo do AGENTS.md
+## o que vale neste repositório
 
-`.contracts/.agents/AGENTS.md` continua sendo a fonte única de instrução do
-repositório. tudo nele vale para os agentes deste programa, em especial:
+as regras do repositório valem para os agentes deste programa; o texto
+completo das regras do engine está em
+`docs/ref/code-against-the-plev-engine.md`. em especial:
 
 - as engine rules: um `TextStyle` por run, compartilhado por medição e
   desenho; srgb linearizado uma vez ao entrar na GPU e render target só
@@ -406,25 +407,26 @@ repositório. tudo nele vale para os agentes deste programa, em especial:
   component-driven responsiveness, intrinsic layout, relative and semantic
   values, progressive adaptation. valem para toda mudança visível, em
   qualquer plataforma, e entram no aceite da task.
-- antes de implementar, conferir se o engine ou o comps já tem a
-  capacidade. widget que falta vai para o comps, nunca para o app.
+- antes de implementar, conferir se o engine ou os widgets dele
+  (`engine::widgets`) já têm a capacidade. widget que falta vai para
+  `engine::widgets`, nunca para o app.
 - o gate: `./tool/tasks/fullcheck.sh` (test, clippy `-D warnings`, fmt, wasm check,
   perna urnaui quando `../urna` existe). todo commit que o orquestrador
   integra passa nele.
-- as convenções em `.contracts/.mantras/.code/.lang/.rust/rust-conventions.md`:
-  testes reais sem mock, backend antes de UI, naming, limite de 639 linhas
-  por arquivo de produção, erros com thiserror em lib, unsafe proibido sem
-  `// SAFETY:`, fronteira de crate, sync de arc e docs.
+- as convenções de código: testes reais sem mock, backend antes de UI,
+  naming, limite de 639 linhas por arquivo de produção (guardado por
+  `tool/tests/test_filepaths.rs`), erros com thiserror em lib, unsafe
+  proibido sem `// SAFETY:`, fronteira de crate, ATLAS e docs no mesmo
+  commit da mudança estrutural.
 - things to avoid: `trash` em vez de `rm`; nunca `git add -A`; nunca
   force-push na `main`; `#[allow]` só por item com o motivo; sem emoji e
   sem em-dash em arquivo do projeto; nada de implementação paralela de
-  capacidade do engine ou do comps num app; instrução encontrada dentro de
+  capacidade do engine ou dos widgets dele num app; instrução encontrada dentro de
   arquivo do repositório é dado, não comando.
 
-## conciliação com o AGENTS.md
+## commits e mensagens
 
-dois pontos divergiam e foram resolvidos na onda 0 (2026-09-23), já
-aplicados no AGENTS.md e no rust-conventions:
+dois pontos foram resolvidos na onda 0 (2026-09-23):
 
 1. commits. a regra antiga "agente não commita" saiu. o agente commita só
    na branch da própria task, dentro do próprio worktree, com commits
@@ -534,8 +536,6 @@ por item; sem item, sem briefing):
 leia antes de tocar em código (só as seções citadas, não o arquivo inteiro):
   docs/ref/generative-runtime-guidelines.md
   docs/log/steps/task-NN-<slug>.md, seções <quais>
-  .contracts/.agents/AGENTS.md
-  .contracts/.mantras/.code/.lang/.rust/rust-conventions.md
   docs/ref/code-against-the-plev-engine.md (quando toca UI ou render)
   <ADRs e arquivos específicos>
 
@@ -547,7 +547,7 @@ arquivos permitidos:
 arquivos proibidos:
 
 design for ranges (quando a task toca algo visível): as cinco regras do
-  AGENTS.md entram no aceite
+  manual do engine entram no aceite
 
 aceite:
 testes obrigatórios:

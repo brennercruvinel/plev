@@ -12,11 +12,13 @@ o plev é uma engine de composição GPU-first em rust que está virando um
 runtime de interação generativa: cada controle é também dado (um contrato
 semântico), que a pessoa, o leitor de tela e um agente operam pelo mesmo
 dispatcher. o que é, para onde vai e o estado de cada task ficam no
-programa (`generative-runtime-program.md`, seção 12); a tese e as regras
-dos agentes ficam ao lado (`generative-runtime-thesis.md`,
-`generative-runtime-guidelines.md`), e o modo de operação do orquestrador
-em `autonomy.md`. as tasks abertas estão em `steps/ongoing/`, as que ainda
-não começaram em `steps/pending/` e as fechadas em `steps/checked/`.
+programa (`generative-runtime-program.md`, seção 12); a tese está em
+`docs/pub/generative-runtime-thesis.md`, as regras dos agentes em
+`docs/ref/generative-runtime-guidelines.md` e o modo de operação do
+orquestrador em `docs/ref/autonomy.md`. cada task tem o seu arquivo em
+`steps/`, e o estado dela fica no `status:` do cabeçalho (`in-progress`,
+`pending`, `done`); as pastas `ongoing/`, `pending/` e `checked/` citadas
+no estado abaixo e nos registros antigos viraram esse campo.
 
 este arquivo guarda o mapa histórico das tasks 01 a 56 (de 2021 a
 2026-06-29), a fase anterior ao programa. o estado atual vem em resumo
