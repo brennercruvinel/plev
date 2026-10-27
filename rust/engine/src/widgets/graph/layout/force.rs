@@ -94,11 +94,6 @@ impl Sim {
         self.alpha >= self.alpha_min || self.alpha_target > 0.0
     }
 
-    /// Restarts the cooling from `alpha`, as d3's `simulation.alpha(a).restart()`.
-    pub fn reheat(&mut self, alpha: f64) {
-        self.alpha = self.alpha.max(alpha);
-    }
-
     /// Ticks until the simulation cools, the way d3 runs a layout to rest (300 ticks).
     pub fn settle(&mut self) {
         while self.alpha >= self.alpha_min {
