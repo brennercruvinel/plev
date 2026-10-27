@@ -67,6 +67,7 @@ pub mod prelude {
     pub use crate::widgets::content::*;
     pub use crate::widgets::feedback::*;
     pub use crate::widgets::form::*;
+    pub use crate::widgets::graph::live::LiveGraph;
     pub use crate::widgets::graph::{EdgeTone, GraphView};
     pub use crate::widgets::nav::*;
     pub use crate::widgets::recipe::*;

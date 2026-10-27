@@ -14,8 +14,20 @@
 //! each edge is its own `end_open` sub-path because lyon panics on a
 //! `begin` without `end` (the nestui graph discovered this). Nodes are
 //! accent circles, radius clamped per zoom level.
+//!
+//! [`live::LiveGraph`] is the other canvas here: positions as state, a live
+//! d3-style simulation or a compound layout, nodes and groups dragged by the
+//! pointer, labels, edge widths and heads ([`net::NetSpec`]).
 
+pub mod compound;
+pub mod force;
 pub mod geometry;
+pub mod hit;
+pub mod live;
+mod live_draw;
+pub mod net;
+#[cfg(test)]
+mod tests_live;
 
 use std::collections::HashMap;
 
