@@ -7,6 +7,7 @@ mod lifecycle;
 mod render;
 mod render_passes;
 mod sleep;
+mod view;
 mod windows;
 
 pub use frame::{draw_frame, present_frame};
@@ -14,6 +15,7 @@ pub use host::WindowHost;
 pub use launch::launch_query;
 pub use render_passes::{encode_composite_pass, encode_layer_passes, resolve_layer_text};
 pub use sleep::Background;
+pub use view::HostedView;
 pub use windows::{Routed, Windows};
 
 #[cfg(target_arch = "wasm32")]
@@ -57,6 +59,11 @@ pub struct App {
     pub(crate) event_loop_proxy: Option<EventLoopProxy<AppEvent>>,
     #[cfg(hot_reload)]
     narrate_watcher: Option<crate::runtime::hot_reload::NarrateWatcher>,
+    /// The one view this app hosts, if any (`with_view`), its pointer
+    /// events since the last frame, and when it last ticked.
+    view: Option<Box<dyn HostedView>>,
+    pointer: view::Pointer,
+    last_tick: Option<web_time::Instant>,
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
@@ -77,6 +84,9 @@ impl App {
             frame_write,
             lifecycle: LifecycleManager::new(),
             is_animating: false,
+            view: None,
+            pointer: view::Pointer::default(),
+            last_tick: None,
             #[cfg(hot_reload)]
             narrate_watcher: {
                 let dirs = crate::runtime::hot_reload::source_dirs();
@@ -93,6 +103,13 @@ impl App {
                 }
             },
         }
+    }
+
+    /// Hosts `view` in the app's window: it gets the pointer, ticks while it
+    /// moves, and draws every frame (`HostedView`).
+    pub fn with_view(mut self, view: Box<dyn HostedView>) -> Self {
+        self.view = Some(view);
+        self
     }
 
     /// Keep rendering frames continuously while `animating` is true.
@@ -126,6 +143,9 @@ impl App {
             frame_write,
             lifecycle: LifecycleManager::new(),
             is_animating: false,
+            view: None,
+            pointer: view::Pointer::default(),
+            last_tick: None,
             event_loop_proxy: Some(proxy),
         }
     }

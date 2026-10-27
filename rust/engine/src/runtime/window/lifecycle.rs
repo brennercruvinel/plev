@@ -133,6 +133,13 @@ impl super::App {
         window_id: WindowId,
         event: WindowEvent,
     ) {
+        if self.view.is_some() {
+            let scale = self
+                .windows
+                .get(window_id)
+                .map_or(1.0, super::WindowHost::scale_factor);
+            self.pointer.take(&event, scale);
+        }
         match self.windows.route(window_id, &event) {
             Routed::Redraw if self.windows.awake(window_id) => self.render_window(window_id),
             Routed::Redraw => {}
@@ -155,8 +162,20 @@ impl super::App {
         };
         let counter_value = self.frame_read.get();
         self.frame_write.set(counter_value + 1);
-        host.render(&self.theme);
-        if host.needs_redraw() {
+        let mut moving = false;
+        if let Some(view) = self.view.as_deref_mut() {
+            let (w, h) = host.logical_size();
+            let bounds = crate::widgets::widget::Rect::new(0.0, 0.0, w, h);
+            for event in self.pointer.queue.drain(..) {
+                view.handle_event(&event, bounds);
+            }
+            let now = web_time::Instant::now();
+            let dt = self.last_tick.map_or(0.0, |t| (now - t).as_secs_f32());
+            self.last_tick = Some(now);
+            moving = view.tick(dt);
+        }
+        host.render_view(&self.theme, self.view.as_deref_mut());
+        if moving || host.needs_redraw() {
             host.request_redraw();
         }
     }
