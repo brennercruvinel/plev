@@ -193,8 +193,39 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     // platform fallback chain.
     db.set_sans_serif_family("Inclusive Sans");
     db.set_monospace_family("Inclusive Sans");
-    db.faces()
+    let embedded: Vec<ID> = db
+        .faces()
         .filter(|f| !before.contains(&f.id))
         .map(|f| f.id)
-        .collect()
+        .collect();
+    remove_system_twins(db, &embedded);
+    embedded
+}
+
+/// Removes every face loaded before the embedded ones (a desktop's system
+/// fonts) that carries a family name an embedded face carries. A family
+/// installed on the system under the same name (an Inclusive Sans in
+/// ~/Library/Fonts) loads first and wins a query for that name, so text
+/// would measure and draw with whatever version the machine holds instead
+/// of the face the engine ships. The other system faces stay, the fallback
+/// for what the embedded set does not cover.
+fn remove_system_twins(db: &mut Database, embedded: &[ID]) {
+    let names: std::collections::HashSet<String> = db
+        .faces()
+        .filter(|f| embedded.contains(&f.id))
+        .flat_map(|f| f.families.iter().map(|(name, _)| name.to_lowercase()))
+        .collect();
+    let twins: Vec<ID> = db
+        .faces()
+        .filter(|f| !embedded.contains(&f.id))
+        .filter(|f| {
+            f.families
+                .iter()
+                .any(|(name, _)| names.contains(&name.to_lowercase()))
+        })
+        .map(|f| f.id)
+        .collect();
+    for id in twins {
+        db.remove_face(id);
+    }
 }
