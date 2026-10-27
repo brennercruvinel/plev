@@ -22,6 +22,7 @@ accord.workspace = true
 # the prompt carries the schema and the current surface as JSON.
 serde_json.workspace = true
 thiserror.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

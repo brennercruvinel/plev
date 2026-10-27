@@ -1,0 +1,37 @@
+# cargo hakari keeps rust/unions: one crate every member depends on, which
+# asks for the union of the features the workspace activates. without it,
+# `cargo run -p arcade` resolves serde, syn, regex and friends with fewer
+# features than `cargo test --workspace`, cargo builds them a second time
+# and target/ keeps both copies (65 crates rebuilt for `-p uigallery`,
+# measured 2026-10-27). cargo's own `resolver.feature-unification` does the
+# same, but needs nightly.
+#
+#   cargo hakari generate      rewrite rust/unions after a dependency change
+#   cargo hakari manage-deps   give a new member its `unions` line
+#   cargo hakari verify        what the gate runs
+#
+# hakari reads this file at this fixed path only, hence .config/ at the root.
+# options: https://docs.rs/cargo-hakari/latest/cargo_hakari/config
+
+hakari-package = "unions"
+dep-format-version = "4"
+resolver = "2"
+workspace-hack-line-style = "workspace-dotted"
+
+# where people build: the Mac, and the linux runners of CI. wasm32 is left
+# out: its builds go to their own target directory, so there is no second
+# copy to save there.
+platforms = [
+    "aarch64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+]
+
+# proc-macro2 stays out. the engine's hot-reload turns its span-locations on
+# for the engine's own proc-macro2 only, never for the one the proc macros
+# build with (rust/engine/Cargo.toml); hakari copies target features onto
+# the host, which would grow every Span in rust/macros and trip clippy's
+# large_enum_variant there.
+[final-excludes]
+third-party = [
+    { name = "proc-macro2" },
+]

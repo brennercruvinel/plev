@@ -29,6 +29,7 @@ accord = { workspace = true, features = ["serde"] }
 serde.workspace = true
 # the serde names in the plain-english forms, and the cli's --json.
 serde_json.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 # the synthetic sessions of the tests are recorded the way an app records

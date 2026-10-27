@@ -9,6 +9,7 @@ description = "the thesis scenario (generative-runtime-thesis.md, sections 8 and
 [dependencies]
 accord.workspace = true
 indexmap.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

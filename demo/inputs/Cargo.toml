@@ -9,6 +9,7 @@ description = "Input system demo -- hit regions, hover states, event queue"
 [dependencies]
 engine.workspace = true
 log.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true

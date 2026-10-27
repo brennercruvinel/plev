@@ -18,6 +18,7 @@ offers.workspace = true
 # `claude -p --output-format json` answers one object: the reply, or the
 # error, with the cost and the turns.
 serde_json.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 # the tests and the example read the goldens of task-68 and verify.

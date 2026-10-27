@@ -33,6 +33,17 @@ else
     echo "         is not installed (Homebrew rust). the leg runs in CI." >&2
 fi
 
+# unions: rust/unions still holds the union of the workspace's features
+# (.config/hakari.toml), and every member depends on it. the fix for a red
+# here is the same command without the flag.
+if command -v cargo-hakari >/dev/null 2>&1; then
+    cargo hakari generate --diff
+    cargo hakari manage-deps --dry-run
+else
+    echo "warning: skipping unions — cargo-hakari not installed (cargo install --locked cargo-hakari)." >&2
+    echo "         the leg runs in CI." >&2
+fi
+
 # docs links: every link into the repository resolves (lychee, offline).
 if command -v lychee >/dev/null 2>&1; then
     lychee --no-progress --config .devops/check/lychee.toml --offline .

@@ -24,6 +24,7 @@ engine.workspace = true
 # the widgets every component is drawn by.
 log.workspace = true
 thiserror.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 # the fixtures of task-68 are JSON, and so are the snapshots they are

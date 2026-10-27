@@ -25,6 +25,7 @@ tree-sitter-typescript.workspace = true
 tree-sitter-rust.workspace = true
 tree-sitter-html = "=0.23.2"
 tree-sitter-css = "=0.25.0"
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true

@@ -9,6 +9,7 @@ description = "Rope-based text editing core: document, transactions, multi-curso
 [dependencies]
 ropey.workspace = true
 unicode-segmentation.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

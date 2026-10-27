@@ -13,6 +13,7 @@ accord.workspace = true
 socket.workspace = true
 winit.workspace = true
 log.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

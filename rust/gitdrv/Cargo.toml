@@ -13,6 +13,7 @@ description = "Git backend for plev apps: gix for reads, git CLI for the rest. N
 # "parallel" swaps internal Rc for Arc so Repository can move into the
 # GitClient worker thread.
 gix.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
