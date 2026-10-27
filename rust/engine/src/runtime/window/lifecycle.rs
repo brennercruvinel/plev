@@ -171,8 +171,10 @@ impl super::App {
             }
             let now = web_time::Instant::now();
             let dt = self.last_tick.map_or(0.0, |t| (now - t).as_secs_f32());
-            self.last_tick = Some(now);
             moving = view.tick(dt);
+            // at rest the clock stops, so the frame that wakes the view
+            // counts from there, not from the frame it last moved in
+            self.last_tick = moving.then_some(now);
         }
         host.render_view(&self.theme, self.view.as_deref_mut());
         if moving || host.needs_redraw() {
