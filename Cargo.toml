@@ -157,8 +157,21 @@ tempfile = "3"
 lto = "thin"
 codegen-units = 1
 
-# Dev: dependencies compiled with optimization (incremental builds of our
-# own code stay fast, but heavy deps like wgpu do not drag the debug
-# runtime).
+# Dev: our crates keep only line tables (a panic backtrace still names the
+# file and line); dependencies carry no debug info and are compiled with
+# optimization (heavy deps like wgpu do not drag the debug runtime). Full
+# debug info is the cargo default and the bulk of target/: it is what the
+# linker reads for every test binary. The recipe is cargo's own
+# (guide/build-performance.html in the toolchain docs).
+[profile.dev]
+debug = "line-tables-only"
+
 [profile.dev.package."*"]
 opt-level = 2
+debug = false
+
+# A debugger session that needs variables: `--profile debugging` (its
+# output goes to target/debugging/, the dev build is left as it was).
+[profile.debugging]
+inherits = "dev"
+debug = true
