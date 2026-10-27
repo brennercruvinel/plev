@@ -13,19 +13,13 @@ use crate::widgets::graph::model::{Edge, Graph, Group, Node};
 use crate::widgets::widget::{Rect, WidgetEvent};
 
 fn node(id: &str) -> Node {
-    Node {
-        id: id.into(),
-        label: id.into(),
-        kind: 0,
-    }
+    Node::new(id)
 }
 
 fn edge(from: usize, to: usize, directed: bool) -> Edge {
     Edge {
-        from,
-        to,
-        weight: 1.0,
         directed,
+        ..Edge::new(from, to)
     }
 }
 

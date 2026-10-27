@@ -21,64 +21,55 @@ const ITERS_SMALL: usize = 300;
 const ITERS_LARGE: usize = 80;
 const LARGE_N: usize = 800;
 
-/// One directed edge: `from → to` of a given `kind` (an app-defined u8 —
-/// the widget maps kinds to theme tones via `set_edge_tone`).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct GraphEdge {
-    pub from: u32,
-    pub to: u32,
-    pub kind: u8,
-}
+use crate::widgets::graph::model::Graph;
 
-/// Graph input: a node count plus the edge list. Node payloads stay with
-/// the app — everything here indexes nodes by ordinal.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GraphSpec {
-    pub n_nodes: usize,
-    pub edges: Vec<GraphEdge>,
-}
-
-/// CSR adjacency built from a [`GraphSpec`]: `offsets[node..=node]` bounds
-/// the node's run in `neighbors`/`kinds`.
+/// CSR adjacency built from a [`Graph`]: `offsets[node..=node]` bounds the
+/// node's run in `neighbors`/`kinds`. It is the index a layout walks, not
+/// the graph: an app with tens of thousands of nodes (the urna explorer)
+/// fills it straight from its own index, with no `Graph` in between.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GraphData {
     pub n_nodes: usize,
     /// Row pointers, len `n_nodes + 1`.
     pub offsets: Vec<u32>,
     pub neighbors: Vec<u32>,
-    /// Edge kind per neighbor entry.
+    /// Edge kind per neighbor entry (a [`Graph`] edge's `kind`, past 255
+    /// counted as 255).
     pub kinds: Vec<u8>,
 }
 
 impl GraphData {
-    /// CSR-build from an edge list (edges to out-of-range nodes are
-    /// dropped; the input order is preserved within each node).
-    pub fn from_spec(spec: &GraphSpec) -> Self {
+    /// CSR-build from a graph's edges, one entry `from → to` per edge
+    /// (edges to out-of-range nodes are dropped; the input order is
+    /// preserved within each node).
+    pub fn from_graph(graph: &Graph) -> Self {
+        let n = graph.nodes.len();
+        let fits = |from: usize, to: usize| from < n && to < n;
         let mut data = GraphData {
-            n_nodes: spec.n_nodes,
-            offsets: vec![0; spec.n_nodes + 1],
-            neighbors: Vec::with_capacity(spec.edges.len()),
-            kinds: Vec::with_capacity(spec.edges.len()),
+            n_nodes: n,
+            offsets: vec![0; n + 1],
+            neighbors: Vec::with_capacity(graph.edges.len()),
+            kinds: Vec::with_capacity(graph.edges.len()),
         };
         // Count out-degrees, prefix-sum into offsets, then fill.
-        for e in &spec.edges {
-            if (e.from as usize) < spec.n_nodes && (e.to as usize) < spec.n_nodes {
-                data.offsets[e.from as usize + 1] += 1;
+        for e in &graph.edges {
+            if fits(e.from, e.to) {
+                data.offsets[e.from + 1] += 1;
             }
         }
-        for i in 0..spec.n_nodes {
+        for i in 0..n {
             data.offsets[i + 1] += data.offsets[i];
         }
         let mut cursor = data.offsets.clone();
-        let total = data.offsets[spec.n_nodes] as usize;
+        let total = data.offsets[n] as usize;
         data.neighbors = vec![0; total];
         data.kinds = vec![0; total];
-        for e in &spec.edges {
-            if (e.from as usize) < spec.n_nodes && (e.to as usize) < spec.n_nodes {
-                let slot = cursor[e.from as usize] as usize;
-                data.neighbors[slot] = e.to;
-                data.kinds[slot] = e.kind;
-                cursor[e.from as usize] += 1;
+        for e in &graph.edges {
+            if fits(e.from, e.to) {
+                let slot = cursor[e.from] as usize;
+                data.neighbors[slot] = e.to as u32;
+                data.kinds[slot] = u8::try_from(e.kind).unwrap_or(u8::MAX);
+                cursor[e.from] += 1;
             }
         }
         data
@@ -372,28 +363,26 @@ impl ViewTransform {
 mod tests {
     use super::*;
 
+    use crate::widgets::graph::model::{Edge, Node};
+
+    /// `n` nodes named by their index and `(from, to, kind)` edges.
+    fn graph(n: usize, edges: &[(usize, usize, usize)]) -> Graph {
+        Graph {
+            nodes: (0..n).map(|i| Node::new(i.to_string())).collect(),
+            edges: edges
+                .iter()
+                .map(|&(from, to, kind)| Edge {
+                    kind,
+                    ..Edge::new(from, to)
+                })
+                .collect(),
+            groups: Vec::new(),
+        }
+    }
+
     /// 4 nodes: 0→1 (kind 0), 1→2 (kind 0), 0→2 (kind 1), 3 isolated.
     fn demo_graph() -> GraphData {
-        GraphData::from_spec(&GraphSpec {
-            n_nodes: 4,
-            edges: vec![
-                GraphEdge {
-                    from: 0,
-                    to: 1,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 1,
-                    to: 2,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 0,
-                    to: 2,
-                    kind: 1,
-                },
-            ],
-        })
+        GraphData::from_graph(&graph(4, &[(0, 1, 0), (1, 2, 0), (0, 2, 1)]))
     }
 
     #[test]
@@ -412,27 +401,8 @@ mod tests {
     }
 
     #[test]
-    fn spec_builder_drops_out_of_range_edges() {
-        let g = GraphData::from_spec(&GraphSpec {
-            n_nodes: 2,
-            edges: vec![
-                GraphEdge {
-                    from: 0,
-                    to: 1,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 0,
-                    to: 9,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 9,
-                    to: 0,
-                    kind: 0,
-                },
-            ],
-        });
+    fn csr_builder_drops_out_of_range_edges() {
+        let g = GraphData::from_graph(&graph(2, &[(0, 1, 0), (0, 9, 0), (9, 0, 0)]));
         assert_eq!(g.neighbors(0), &[1]);
         assert_eq!(g.neighbors(1), &[] as &[u32]);
     }
@@ -469,17 +439,8 @@ mod tests {
     fn subsample_keeps_the_budget_and_reindexes() {
         // Chain of 3000 nodes: subsample to the cap.
         let n = 3000usize;
-        let spec = GraphSpec {
-            n_nodes: n,
-            edges: (0..(n - 1) as u32)
-                .map(|i| GraphEdge {
-                    from: i,
-                    to: i + 1,
-                    kind: 0,
-                })
-                .collect(),
-        };
-        let scene = compute_layout(&GraphData::from_spec(&spec), 1000.0, 1000.0);
+        let chain: Vec<(usize, usize, usize)> = (0..n - 1).map(|i| (i, i + 1, 0)).collect();
+        let scene = compute_layout(&GraphData::from_graph(&graph(n, &chain)), 1000.0, 1000.0);
         assert!(scene.subsampled);
         assert_eq!(scene.graph.n_nodes, MAX_LAYOUT_NODES);
         assert_eq!(scene.positions.len(), MAX_LAYOUT_NODES);

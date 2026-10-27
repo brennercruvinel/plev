@@ -3,7 +3,7 @@
 //! selection with incident-edge highlight.
 //!
 //! The app owns the data and the side panels: feed a
-//! [`GraphSpec`](crate::widgets::graph::geometry::GraphSpec) (or a precomputed
+//! [`Graph`](crate::widgets::graph::model::Graph) (or a precomputed
 //! [`GraphScene`](crate::widgets::graph::geometry::GraphScene) when the layout ran off the UI
 //! thread), then read [`GraphView::hovered`]/[`selected`](GraphView::selected)
 //! to drive your own tooltip/detail — the widget never owns a Tooltip.
@@ -23,10 +23,11 @@ pub mod geometry;
 
 use std::collections::HashMap;
 
-use self::geometry::{GraphData, GraphScene, GraphSpec, ViewTransform, compute_layout};
+use self::geometry::{GraphData, GraphScene, ViewTransform, compute_layout};
 use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::drawing::path::PathBuilder;
 use crate::styling::theme::Theme;
+use crate::widgets::graph::model::Graph;
 
 use crate::widgets::recipe::rounded_rect_stroke;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -101,8 +102,8 @@ impl GraphView {
     /// Set the graph and lay it out inline (O(n²) force iterations on this
     /// thread — fine for the widget's demo scale; for thousands of nodes
     /// precompute on a worker and hand over the scene via `set_scene`).
-    pub fn set_graph(&mut self, spec: &GraphSpec) {
-        self.set_scene(compute_layout(&GraphData::from_spec(spec), WORLD, WORLD));
+    pub fn set_graph(&mut self, graph: &Graph) {
+        self.set_scene(compute_layout(&GraphData::from_graph(graph), WORLD, WORLD));
     }
 
     /// Set a precomputed scene (the off-thread path for large graphs).
@@ -355,42 +356,28 @@ impl Default for GraphView {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::widgets::graph::geometry::GraphEdge;
+    use crate::widgets::graph::model::{Edge, Node};
 
     fn bounds() -> Rect {
         Rect::new(0.0, 0.0, 800.0, 600.0)
     }
 
-    fn demo_spec() -> GraphSpec {
-        GraphSpec {
-            n_nodes: 6,
+    /// 0→1→2→3 (kind 0), 0→4 (kind 1), 4→5 (kind 2).
+    fn demo_graph() -> Graph {
+        let edge = |from, to, kind| Edge {
+            kind,
+            ..Edge::new(from, to)
+        };
+        Graph {
+            nodes: (0..6).map(|i| Node::new(i.to_string())).collect(),
             edges: vec![
-                GraphEdge {
-                    from: 0,
-                    to: 1,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 1,
-                    to: 2,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 2,
-                    to: 3,
-                    kind: 0,
-                },
-                GraphEdge {
-                    from: 0,
-                    to: 4,
-                    kind: 1,
-                },
-                GraphEdge {
-                    from: 4,
-                    to: 5,
-                    kind: 2,
-                },
+                edge(0, 1, 0),
+                edge(1, 2, 0),
+                edge(2, 3, 0),
+                edge(0, 4, 1),
+                edge(4, 5, 2),
             ],
+            groups: Vec::new(),
         }
     }
 
@@ -408,7 +395,7 @@ mod tests {
     fn hover_click_pan_and_zoom_drive_the_state() {
         let theme = Theme::hoff();
         let mut view = GraphView::new();
-        view.set_graph(&demo_spec());
+        view.set_graph(&demo_graph());
         let (sx, sy) = node0_screen(&mut view, &theme);
 
         // Hover.
@@ -459,7 +446,7 @@ mod tests {
         let mut c = Compositor::new();
         view.render(&mut c, bounds(), &theme);
 
-        view.set_graph(&demo_spec());
+        view.set_graph(&demo_graph());
         let r = view.handle_event(&WidgetEvent::MouseMove { x: 900.0, y: 900.0 }, bounds());
         assert_eq!(r, EventResult::IGNORED);
         assert_eq!(view.hovered(), None);
@@ -469,7 +456,7 @@ mod tests {
     fn renders_narrow_and_wide_without_gpu() {
         let theme = Theme::hoff();
         let mut view = GraphView::new();
-        view.set_graph(&demo_spec());
+        view.set_graph(&demo_graph());
         for (w, h) in [(300.0, 200.0), (1600.0, 1000.0)] {
             let mut c = Compositor::new();
             view.render(&mut c, Rect::new(0.0, 0.0, w, h), &theme);

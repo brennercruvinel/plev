@@ -3,7 +3,7 @@
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use engine::widgets::graph::geometry::{GraphEdge, GraphSpec};
+use engine::widgets::graph::{Edge, Graph, Node};
 use engine::widgets::prelude::{EventResult, GraphView, Rect, WidgetEvent};
 
 use super::{panel, text};
@@ -16,30 +16,19 @@ impl GraphPage {
     pub fn new() -> Self {
         // A next chain plus two cross links (accent) and one citation
         // (info).
-        let mut edges: Vec<GraphEdge> = (0..11u32)
-            .map(|i| GraphEdge {
-                from: i,
-                to: i + 1,
-                kind: 0,
-            })
-            .collect();
-        edges.push(GraphEdge {
-            from: 0,
-            to: 6,
-            kind: 1,
-        });
-        edges.push(GraphEdge {
-            from: 3,
-            to: 9,
-            kind: 1,
-        });
-        edges.push(GraphEdge {
-            from: 5,
-            to: 1,
-            kind: 2,
-        });
+        let edge = |from, to, kind| Edge {
+            kind,
+            ..Edge::new(from, to)
+        };
+        let mut edges: Vec<Edge> = (0..11).map(|i| edge(i, i + 1, 0)).collect();
+        edges.extend([edge(0, 6, 1), edge(3, 9, 1), edge(5, 1, 2)]);
+        let data = Graph {
+            nodes: (0..12).map(|i| Node::new(i.to_string())).collect(),
+            edges,
+            groups: Vec::new(),
+        };
         let mut graph = GraphView::new();
-        graph.set_graph(&GraphSpec { n_nodes: 12, edges });
+        graph.set_graph(&data);
         Self { graph }
     }
 

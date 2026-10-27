@@ -15,8 +15,9 @@
 //!   selection. Built from a `Graph`, a `Look` and a `Layout`.
 //! - [`graph_view`]: [`GraphView`], a layout computed once
 //!   ([`geometry::compute_layout`], subsampled past a few thousand nodes)
-//!   from its own `GraphSpec`; the urna explorer and the gallery's Graph
-//!   page draw it.
+//!   from the same `Graph` (`set_graph`), or from a `GraphData` index an
+//!   app fills itself; the urna explorer and the gallery's Graph page draw
+//!   it.
 
 pub mod graph_view;
 pub mod layout;

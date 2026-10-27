@@ -30,6 +30,9 @@ pub struct Node {
 pub struct Edge {
     pub from: usize,
     pub to: usize,
+    /// A category of the relation (an app's edge type, a class), 0 when it
+    /// has none. A look may color by it.
+    pub kind: usize,
     /// The strength the source gives the link (d3's `value`), 1 when none.
     pub weight: f32,
     /// From `from` to `to` only; an undirected edge links both ways.
@@ -43,6 +46,32 @@ pub struct Group {
     pub label: String,
     pub nodes: Vec<usize>,
     pub groups: Vec<usize>,
+}
+
+impl Node {
+    /// A node named by its id, with no kind.
+    pub fn new(id: impl Into<String>) -> Node {
+        let id = id.into();
+        Node {
+            label: id.clone(),
+            id,
+            kind: 0,
+        }
+    }
+}
+
+impl Edge {
+    /// An undirected edge of weight 1 and no kind; `Edge { directed: true,
+    /// ..Edge::new(a, b) }` changes what differs.
+    pub fn new(from: usize, to: usize) -> Edge {
+        Edge {
+            from,
+            to,
+            kind: 0,
+            weight: 1.0,
+            directed: false,
+        }
+    }
 }
 
 impl Graph {

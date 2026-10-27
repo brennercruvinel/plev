@@ -67,10 +67,8 @@ pub fn d3(text: &str) -> Result<(Graph, Forces), String> {
             ));
         };
         edges.push(Edge {
-            from,
-            to,
             weight: l.value.unwrap_or(1.0),
-            directed: false,
+            ..Edge::new(from, to)
         });
     }
     let forces = Forces {
@@ -176,10 +174,8 @@ pub fn cytoscape(text: &str) -> Result<Graph, String> {
             ));
         };
         edges.push(Edge {
-            from,
-            to,
-            weight: 1.0,
             directed: true,
+            ..Edge::new(from, to)
         });
     }
     Ok(Graph {
