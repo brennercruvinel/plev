@@ -7,7 +7,7 @@
 
 use serde::Deserialize;
 
-use engine::widgets::graph::net::{
+use engine::widgets::graph::live_graph::net::{
     ForceParams, LabelAt, NetEdge, NetGroup, NetLayout, NetNode, NetSpec, Tone,
 };
 

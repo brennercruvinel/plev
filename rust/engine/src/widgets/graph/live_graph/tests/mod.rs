@@ -3,8 +3,8 @@
 //! hits that prefer the child over its group, group and child drags, and the
 //! overlay layer that a hover alone changes.
 
+use super::LiveGraph;
 use super::hit::Hit;
-use super::live::LiveGraph;
 use super::net::{ForceParams, LabelAt, NetEdge, NetGroup, NetLayout, NetNode, NetSpec, Tone};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;

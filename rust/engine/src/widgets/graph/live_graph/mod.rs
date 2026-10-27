@@ -5,15 +5,22 @@
 //! by group (`compound`); a drag moves a node, or a group with all it holds,
 //! and the group boxes follow. Pan (drag on empty space), wheel zoom at the
 //! cursor, hover and click selection work on both, over a hit grid of what
-//! was drawn (`hit`). Drawing is `live_draw`.
+//! was drawn (`hit`). Drawing is `draw`.
+
+pub mod compound;
+mod draw;
+pub mod force;
+pub mod hit;
+pub mod net;
+#[cfg(test)]
+mod tests;
 
 use web_time::Instant;
 
-use super::compound;
-use super::force::{Link, Params, Sim};
-use super::geometry::ViewTransform;
-use super::hit::{Hit, HitGrid};
-use super::net::{NetLayout, NetSpec};
+use self::force::{Link, Params, Sim};
+use self::hit::{Hit, HitGrid};
+use self::net::{NetLayout, NetSpec};
+use super::graph_view::geometry::ViewTransform;
 use crate::drawing::compositor::LayerId;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 

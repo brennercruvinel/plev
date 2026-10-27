@@ -33,7 +33,7 @@ libraries = "rust (accord, claude, editor, engine, gitdrv, import, llmrun, macro
 apps = "apps (agenteval, idestudio, inspector, mirroring, uigallery, urnadbapp)"
 demos = "demo (one crate per demo: arcade, camera, commit, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker)"
 tooling = "tool (bench/measure and bench/regress: the measurement and the structural regression; tasks: the scripts; tests: the architecture tests)"
-data = "data (media/lottie: the lottie references the importer and the gates read)"
+data = "data (media/lottie: the lottie references the importer and the gates read; graphs/<format>: the graph inputs a demo draws, d3 and cytoscape, from the gramorph corpus)"
 knowledge = "docs (adr by theme + log + pub + ref; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
 web = "apps/uigallery/web (Trunk.toml + index.html + dist output; tool/tasks/webtarget.sh is the dev loop; apps/urnadbapp/web + tool/tasks/webtarget.sh urnadbapp for the urnadbapp target)"
 scripts = "tool/tasks (fullcheck.sh = the gate: test, clippy, fmt, wasm check, docs links, urnadbapp leg; webtarget.sh = trunk dev loop; screencap.sh web|ios|android = one gallery page or all of them on a target, classified against the desktop frame; mobileapp.sh android|ios|ios-run = the mobile builds; figmapull.py = a .fig screen to the importer's Figma fixture; subsetter.py = the embedded Noto subsets, reproducible, --check compares byte for byte; depscheck.sh, namecheck.sh = the architecture tests; precommit = the git hook)"
@@ -122,8 +122,8 @@ path = "rust/engine/src/styling/theme"
 role = "the design tokens: measured hoff colors + glass recipe, typography ramp, spacing, radius ladder + shape roles, control sizes, container sizes, durations, layout breakpoints/gutters/sidebar mode, shadow stacks by elevation, intents, oklch tooling; hoff dark + hoff light + hoff core (the typescript kit: nine shades, six accents, depths, Inter, plus theme.button: a recipe per button variant and state, the tailwind class lists as tokens) + 11 named palettes. every widget in rust/engine/src/widgets reads from here; no widget restates a number"
 
 [modules.graph]
-path = "rust/engine/src/widgets/graph/geometry.rs"
-role = "graph model + force layout + view transform (the pan/zoom widget is engine::widgets::graph::GraphView)"
+path = "rust/engine/src/widgets/graph"
+role = "two graph components, one folder each: graph_view (GraphView: a layout computed once in graph_view/geometry.rs, CSR model + deterministic force layout + view transform, re-exported as engine::widgets::graph::geometry) and live_graph (LiveGraph: positions as state; net.rs the spec, force.rs d3-force ported, compound.rs groups laid out from the inside, hit.rs the hit grid, draw.rs the two layers)"
 
 [modules.clipboard]
 path = "rust/engine/src/runtime/platform/clipboard.rs"
@@ -345,7 +345,7 @@ role = "demo: sdf shapes: cards, borders, shadows"
 
 [crates.corpus]
 path = "demo/corpus"
-role = "demo: graphs of the gramorph corpus drawn live (d3 force with node drag, cytoscape compound nodes) through LiveGraph and App::with_view, desktop and web"
+role = "demo: graphs of the gramorph corpus drawn live (d3 force with node drag, cytoscape compound nodes) through LiveGraph and App::with_view, desktop and web; its inputs are data/graphs/d3/les-mis.json and data/graphs/cytoscape/compound.json, embedded"
 
 [crates.ticker]
 path = "demo/ticker"

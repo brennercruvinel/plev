@@ -7,9 +7,9 @@
 
 use web_time::Instant;
 
+use super::LiveGraph;
 use super::compound::LABEL;
 use super::hit::Hit;
-use super::live::LiveGraph;
 use super::net::{LabelAt, Tone};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::path::PathBuilder;

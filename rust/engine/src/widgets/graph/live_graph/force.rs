@@ -3,7 +3,7 @@
 //! many-body charge (exact, n² over the small graphs it serves), a centering
 //! shift and circle collision, integrated with velocity decay while alpha
 //! cools from 1 toward 0. A pinned body (`fx`, `fy`) is where a drag holds
-//! it. Unlike [`compute_layout`](super::geometry::compute_layout), which runs
+//! it. Unlike [`compute_layout`](crate::widgets::graph::graph_view::geometry::compute_layout), which runs
 //! once, this one ticks frame by frame (`LiveGraph::tick`). f64 inside, as
 //! d3: the integration is long and the drawing takes f32 at the end.
 

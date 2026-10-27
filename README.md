@@ -157,7 +157,8 @@ homes by what it is.
 | tooling | `tool/` | `bench/measure` and `bench/regress` (cost tables and the structural regression), `tasks` (the scripts), `tests` (the architecture tests) |
 
 `data/media/lottie` holds the lottie references the importer and the gates
-read; [docs/TERMS.toml](docs/TERMS.toml) maps every former name (sem,
+read, and `data/graphs/<format>` the graph inputs the corpus demo draws (d3,
+cytoscape); [docs/TERMS.toml](docs/TERMS.toml) maps every former name (sem,
 showcase, comps, ...) to its place in this tree.
 
 ## contracts

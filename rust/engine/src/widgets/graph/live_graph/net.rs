@@ -1,4 +1,4 @@
-//! The data a [`LiveGraph`](super::live::LiveGraph) draws: nodes with a label,
+//! The data a [`LiveGraph`](super::LiveGraph) draws: nodes with a label,
 //! a radius and a tone; edges with a width, an alpha and an optional arrow;
 //! groups (compound nodes) that hold nodes and other groups; and the layout
 //! to run. Nothing here knows a source format: an app reads d3, cytoscape or

@@ -11,15 +11,17 @@ pub mod read;
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use engine::widgets::graph::hit::Hit;
-use engine::widgets::graph::live::{FrameStats, LiveGraph};
-use engine::widgets::graph::net::NetSpec;
+use engine::widgets::graph::live_graph::hit::Hit;
+use engine::widgets::graph::live_graph::net::NetSpec;
+use engine::widgets::graph::live_graph::{FrameStats, LiveGraph};
 use engine::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use engine::runtime::window::HostedView;
 
-const LES_MIS: &str = include_str!("../data/les-mis.d3.json");
-const COMPOUND: &str = include_str!("../data/compound.cy.json");
+// the corpus inputs live with the repository's data, by source format
+// (data/graphs/<format>/), and are embedded so the web build needs no fetch.
+const LES_MIS: &str = include_str!("../../../data/graphs/d3/les-mis.json");
+const COMPOUND: &str = include_str!("../../../data/graphs/cytoscape/compound.json");
 
 /// Publish the numbers every this many frames.
 const PUBLISH_EVERY: u64 = 10;
