@@ -17,7 +17,13 @@
 //! (`tests/fixtures/blur_at_scale_1.png`, recorded at `3a30113e`, the
 //! base of phase 1b, with `PLEV_RECORD_BLUR_FIXTURE=1`). Bytes depend on
 //! the GPU and its compiler, so the comparison runs on the adapter that
-//! recorded it and skips elsewhere, saying so.
+//! recorded it and skips elsewhere, saying so. The adapter's name does
+//! not see the system move under it: on 2026-10-27, under macOS 27.0.1,
+//! the base commit itself (`7127f65a`) drew 565 text pixels of the
+//! fixture differently, the glass and the shadows unchanged, and the head
+//! of the tree drew the same bytes as the base. The fixture is that frame
+//! of the base, drawn again on the same Apple M4; when the system moves
+//! again, record it from the base the same way, never from the head.
 //!
 //! Needs a GPU adapter; without one every test skips.
 
