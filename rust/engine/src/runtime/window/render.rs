@@ -20,7 +20,14 @@ impl WindowHost {
     ///
     /// `theme` gives the window's clear color (the app's, shared by every
     /// window). Nothing happens without a device.
-    pub(crate) fn render(&mut self, theme: &Theme) {
+    ///
+    /// A hosted view (`HostedView`, from `App::with_view`) draws into the
+    /// frame before the resolve.
+    pub(crate) fn render_view(
+        &mut self,
+        theme: &Theme,
+        hosted: Option<&mut (dyn super::HostedView + 'static)>,
+    ) {
         // Tick frame clock (and take the pending request as served)
         self.begin_frame();
 
@@ -70,6 +77,18 @@ impl WindowHost {
         };
 
         text_system.begin_frame();
+
+        if let Some(hosted) = hosted {
+            let (w, h) = gpu.logical_size.unwrap_or((
+                gpu.surface_config.width as f32,
+                gpu.surface_config.height as f32,
+            ));
+            hosted.render(
+                compositor,
+                crate::widgets::widget::Rect::new(0.0, 0.0, w, h),
+                theme,
+            );
+        }
 
         // Perf HUD: engine-drawn overlay on its own high-z layer, fed with
         // the previous frame's snapshot (this frame's numbers land after

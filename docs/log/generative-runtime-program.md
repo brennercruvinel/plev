@@ -11,8 +11,8 @@ tags: [program, goals, dependencies, contracts, ownership, waves]
 
 # programa: de GPU UI engine a generative interaction runtime
 
-a tese está em `generative-runtime-thesis.md`. as regras de trabalho estão
-em `generative-runtime-guidelines.md` e são obrigatórias para o
+a tese está em `docs/pub/generative-runtime-thesis.md`. as regras de
+trabalho estão em `docs/ref/generative-runtime-guidelines.md` e são obrigatórias para o
 orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
 o estado real do código, o grafo de dependências, a ordem de integração,
 os contratos entre tasks, o ownership das superfícies compartilhadas e os

@@ -24,6 +24,10 @@ accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # Off by default so downstream apps (uigallery, idestudio, ...) can define
 # their own browser entry without colliding with the engine's.
 web-entry = []
+# Provisional, off by default: leaves the Noto faces out to weigh the web
+# build (gramorph proof 1). Arabic, hebrew, devanagari, CJK and emoji draw
+# nothing while it is on; it goes once the web build's fonts are decided.
+experiment-no-noto = []
 android-game-activity = ["winit/android-game-activity"]
 # Exports the engine's own `android_main` entry on android. Off by default so
 # downstream apps can ship their own GameActivity entry without symbol clash.

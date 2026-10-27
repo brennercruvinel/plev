@@ -25,7 +25,8 @@
 //! - [`overlay`]: the overlay stack (menus, modals, toasts) with spring
 //!   motion
 //! - [`charts`]: pure chart geometry plus scene emission
-//! - [`graph`]: pan/zoom network canvas over `engine::widgets::graph::geometry`
+//! - [`graph`]: node-link canvases, `GraphView` (a layout computed once)
+//!   and `LiveGraph` (positions as state, d3's force simulation live)
 //! - [`editor`]: multi-cursor text editor over `rope`
 //! - [`shell`]: the app chrome (sidebar by breakpoint, header, content
 //!   rect, safe area)
@@ -67,7 +68,7 @@ pub mod prelude {
     pub use crate::widgets::content::*;
     pub use crate::widgets::feedback::*;
     pub use crate::widgets::form::*;
-    pub use crate::widgets::graph::{EdgeTone, GraphView};
+    pub use crate::widgets::graph::{EdgeTone, GraphView, LiveGraph};
     pub use crate::widgets::nav::*;
     pub use crate::widgets::recipe::*;
     pub use crate::widgets::shell::{AppShell, SafeArea, ShellLayout};

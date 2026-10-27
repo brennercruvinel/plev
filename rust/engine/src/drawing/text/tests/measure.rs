@@ -635,3 +635,32 @@ fn clusters_shape_once_per_line_text() {
     assert_eq!(cached_cluster_lines(), before + 2);
     assert_eq!(TextMeasurer::clusters_styled(line, &style, None), first);
 }
+
+/// A family installed on the system under an embedded family's name (an
+/// Inclusive Sans in ~/Library/Fonts) loads before the embedded faces, as
+/// a desktop's system fonts do, and would answer for that name: text would
+/// measure and draw with the machine's copy. The embedded face answers.
+#[test]
+fn an_installed_twin_of_an_embedded_family_never_answers_for_it() {
+    use cosmic_text::fontdb::{Database, Family, Query, Weight};
+    let mut db = Database::new();
+    db.load_font_data(
+        include_bytes!("../../../../assets/fonts/InclusiveSans-Regular.ttf").to_vec(),
+    );
+    let twins: Vec<_> = db.faces().map(|f| f.id).collect();
+    let embedded = super::super::fonts::register_embedded_fonts(&mut db);
+    let query = Query {
+        families: &[Family::Name("Inclusive Sans"), Family::SansSerif],
+        weight: Weight::NORMAL,
+        ..Query::default()
+    };
+    let id = db.query(&query).expect("Inclusive Sans resolves");
+    assert!(
+        embedded.contains(&id),
+        "the system's copy answered for Inclusive Sans"
+    );
+    assert!(
+        twins.iter().all(|t| db.face(*t).is_none()),
+        "the system's copy left the database"
+    );
+}
