@@ -75,7 +75,8 @@ const NOTO: [&[u8]; 12] = [
 /// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `tool/tasks/subsetter.py`.
 #[cfg(not(feature = "experiment-no-noto"))]
 const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
-// EXPERIMENT, not committed: the web build weighed without the Noto faces
+// provisional (`experiment-no-noto`, off by default): the web build weighed
+// without the Noto faces; the scripts they cover draw nothing while it is on
 #[cfg(feature = "experiment-no-noto")]
 const NOTO: [&[u8]; 0] = [];
 #[cfg(feature = "experiment-no-noto")]
