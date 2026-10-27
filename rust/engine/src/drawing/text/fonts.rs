@@ -55,6 +55,7 @@ const EMBEDDED_LOCALE: &str = "en-US";
 /// Noto Sans subsets (SIL OFL, assets/fonts/LICENSE-Noto-OFL.txt), made by
 /// `tool/tasks/subsetter.py`. The order is the fallback order among faces of the
 /// same weight: SC before JP is the Han order, see the module docs.
+#[cfg(not(feature = "experiment-no-noto"))]
 const NOTO: [&[u8]; 12] = [
     include_bytes!("../../../assets/fonts/NotoSansArabic-Regular.ttf"),
     include_bytes!("../../../assets/fonts/NotoSansArabic-Bold.ttf"),
@@ -72,7 +73,13 @@ const NOTO: [&[u8]; 12] = [
 
 /// Noto Color Emoji, a CBDT subset (SIL OFL,
 /// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `tool/tasks/subsetter.py`.
+#[cfg(not(feature = "experiment-no-noto"))]
 const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
+// EXPERIMENT, not committed: the web build weighed without the Noto faces
+#[cfg(feature = "experiment-no-noto")]
+const NOTO: [&[u8]; 0] = [];
+#[cfg(feature = "experiment-no-noto")]
+const NOTO_EMOJI: &[u8] = &[];
 
 /// The faces a font system holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -171,7 +178,9 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     for face in NOTO {
         db.load_font_source(Source::Binary(Arc::new(face)));
     }
-    db.load_font_source(Source::Binary(Arc::new(NOTO_EMOJI)));
+    if !NOTO_EMOJI.is_empty() {
+        db.load_font_source(Source::Binary(Arc::new(NOTO_EMOJI)));
+    }
 
     // `font_family: None` (the engine default) shapes as `Family::SansSerif`.
     // cosmic-text points that at "Open Sans", which is neither embedded nor
