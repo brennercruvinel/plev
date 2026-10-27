@@ -89,6 +89,8 @@ pub struct LiveGraph {
     pub(super) hovered: Option<Hit>,
     pub(super) selected: Option<Hit>,
     gesture: Gesture,
+    /// What was drawn, in world px; rebuilt when positions or boxes move,
+    /// never for a pan or a zoom.
     pub(super) grid: HitGrid,
     pub(super) grid_dirty: bool,
     pub(super) overlay: Option<LayerId>,
@@ -97,10 +99,20 @@ pub struct LiveGraph {
 
 impl LiveGraph {
     /// `look` holds one look per node and per edge of `graph` ([`Look::of`]).
+    ///
+    /// # Panics
+    ///
+    /// When `look` does not fit `graph`, or when an edge or a group names
+    /// a node or a group the graph does not have ([`Graph::holds`]): a
+    /// reader of a source format refuses those before a graph is built.
     pub fn new(graph: Graph, look: Look, layout: Layout) -> Self {
         assert!(
             look.fits(&graph),
             "a LiveGraph's look has one NodeLook per node and one EdgeLook per edge"
+        );
+        assert!(
+            graph.holds(),
+            "a LiveGraph's edges and groups name only the graph's own nodes and groups"
         );
         let (_, group_parent) = graph.parents();
         let depth = |mut g: usize| {
@@ -218,7 +230,11 @@ impl LiveGraph {
         self.sim.as_ref().is_some_and(Sim::hot) || matches!(self.gesture, Gesture::Drag { .. })
     }
 
-    /// One frame of motion: a simulation step while warm. `true` while it still moves.
+    /// One frame of motion: a simulation step while warm. `true` while it
+    /// still moves on its own. A drag on a force graph keeps the simulation
+    /// warm (`alpha_target`), so it counts here; a drag on a compound graph
+    /// moves only with the pointer, whose events already ask for the frame,
+    /// so a press held still asks for none.
     pub fn tick(&mut self, _dt: f32) -> bool {
         let t0 = Instant::now();
         let hot = match &mut self.sim {
@@ -232,7 +248,7 @@ impl LiveGraph {
             self.sync();
             FrameStats::push(&mut self.stats.tick_ms, t0.elapsed().as_secs_f32() * 1000.0);
         }
-        hot || matches!(self.gesture, Gesture::Drag { .. })
+        hot
     }
 
     fn sync(&mut self) {
@@ -293,7 +309,6 @@ impl LiveGraph {
         t.offset.1 += bounds.y - y * t.scale;
         self.transform = t;
         self.fitted = Some(bounds);
-        self.grid_dirty = true;
     }
 
     pub(super) fn record_build(&mut self, ms: f32) {
@@ -355,7 +370,6 @@ impl LiveGraph {
                     self.transform.pan_by(x - last.0, y - last.1);
                     let dist = dist + (x - last.0).abs() + (y - last.1).abs();
                     self.gesture = Gesture::Pan { last: (x, y), dist };
-                    self.grid_dirty = true;
                     EventResult::changed()
                 }
                 Gesture::Drag {
@@ -406,8 +420,8 @@ impl LiveGraph {
                 EventResult::changed()
             }
             WidgetEvent::Scroll { delta, .. } => {
+                // the hit grid is in world px: a new view leaves it valid
                 self.transform.zoom_at((x, y), (-delta * 0.002).exp());
-                self.grid_dirty = true;
                 EventResult::changed()
             }
         }

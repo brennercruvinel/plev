@@ -375,3 +375,77 @@ fn a_hover_changes_the_overlay_and_leaves_the_base_layer_alone() {
         "a press without travel selects"
     );
 }
+
+#[test]
+fn a_press_held_still_on_a_compound_graph_asks_for_no_frame() {
+    let mut g = compound_graph();
+    frame(&mut g);
+    let react = g.to_screen(g.positions()[0]);
+    g.handle_event(
+        &WidgetEvent::MouseDown {
+            x: react.0,
+            y: react.1,
+        },
+        VIEW,
+    );
+    assert!(
+        !g.tick(1.0 / 60.0),
+        "nothing moves on its own; the pointer's events ask for the frames"
+    );
+}
+
+#[test]
+fn the_hit_grid_holds_through_a_pan_and_a_zoom() {
+    let mut g = compound_graph();
+    frame(&mut g);
+    let before = g.to_screen(g.positions()[0]);
+    g.handle_event(&WidgetEvent::MouseDown { x: 5.0, y: 5.0 }, VIEW);
+    g.handle_event(&WidgetEvent::MouseMove { x: 25.0, y: 15.0 }, VIEW);
+    g.handle_event(&WidgetEvent::MouseUp { x: 25.0, y: 15.0 }, VIEW);
+    let panned = g.to_screen(g.positions()[0]);
+    assert!(
+        (panned.0 - before.0 - 20.0).abs() < 1e-3 && (panned.1 - before.1 - 10.0).abs() < 1e-3,
+        "the press was on empty space: a pan"
+    );
+    // zoomed in at the node itself, so it stays where it is on screen
+    g.handle_event(
+        &WidgetEvent::Scroll {
+            x: panned.0,
+            y: panned.1,
+            delta: -120.0,
+        },
+        VIEW,
+    );
+    assert!(!g.grid_dirty, "a new view leaves the world-px grid valid");
+    frame(&mut g);
+    let react = g.to_screen(g.positions()[0]);
+    assert!(VIEW.contains(react.0, react.1));
+    g.handle_event(
+        &WidgetEvent::MouseMove {
+            x: react.0,
+            y: react.1,
+        },
+        VIEW,
+    );
+    assert_eq!(g.hovered(), Some(Hit::Node(0)), "hit where it is drawn now");
+}
+
+#[test]
+fn a_graph_holds_only_its_own_indices() {
+    let graph = |edges: Vec<Edge>, groups: Vec<Group>| Graph {
+        nodes: vec![node("a"), node("b")],
+        edges,
+        groups,
+    };
+    assert!(graph(vec![edge(0, 1, false)], Vec::new()).holds());
+    assert!(!graph(vec![edge(0, 2, false)], Vec::new()).holds());
+    let group = |nodes: Vec<usize>, groups: Vec<usize>| Group {
+        id: "g".into(),
+        label: "g".into(),
+        nodes,
+        groups,
+    };
+    assert!(graph(Vec::new(), vec![group(vec![0, 1], Vec::new())]).holds());
+    assert!(!graph(Vec::new(), vec![group(vec![2], Vec::new())]).holds());
+    assert!(!graph(Vec::new(), vec![group(Vec::new(), vec![1])]).holds());
+}

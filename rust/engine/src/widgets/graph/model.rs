@@ -75,6 +75,18 @@ impl Edge {
 }
 
 impl Graph {
+    /// Every index points inside the graph: each edge's ends are nodes, each
+    /// group's members are nodes and groups it has. A component that draws
+    /// every element (`LiveGraph`) needs it; `GraphData::from_graph` drops
+    /// the edges that miss instead.
+    pub fn holds(&self) -> bool {
+        let (n, g) = (self.nodes.len(), self.groups.len());
+        self.edges.iter().all(|e| e.from < n && e.to < n)
+            && self.groups.iter().all(|group| {
+                group.nodes.iter().all(|&i| i < n) && group.groups.iter().all(|&k| k < g)
+            })
+    }
+
     /// The group holding each node and each group, if any: `(node_parent, group_parent)`.
     pub fn parents(&self) -> (Vec<Option<usize>>, Vec<Option<usize>>) {
         let mut nodes = vec![None; self.nodes.len()];
