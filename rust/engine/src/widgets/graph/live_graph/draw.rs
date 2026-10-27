@@ -126,16 +126,15 @@ impl LiveGraph {
                     h: h * s,
                     color: with_alpha(Tone::Panel.color(theme), 0.5),
                     corner_radius: 0.0,
-                    border_width: 1.0,
+                    border_width: theme.control.edge_width,
                     border_color: Tone::BorderActive.color(theme),
                 },
             );
             let at = self.to_screen((x + w / 2.0, y - LABEL / 2.0));
-            let label = self.graph.groups[g].label.clone();
             centered_text(
                 c,
                 base,
-                &label,
+                &self.graph.groups[g].label,
                 self.look.group_font * s,
                 at,
                 Tone::TextMid.color(theme),
@@ -180,7 +179,8 @@ impl LiveGraph {
                     data: PathBuilder::circle(sx, sy, r).fill(n.fill.color(theme)),
                 },
             );
-            let ring = PathBuilder::circle(sx, sy, r).stroke(n.stroke.color(theme), 1.0);
+            let ring = PathBuilder::circle(sx, sy, r)
+                .stroke(n.stroke.color(theme), theme.control.edge_width);
             c.push_to_layer(base, SceneNode::Path { data: ring });
             if rebuild {
                 self.grid.push_circle(self.pos[i], n.radius, Hit::Node(i));
@@ -193,11 +193,11 @@ impl LiveGraph {
                 LabelAt::Center => (x, y),
                 LabelAt::Above(gap) => (x, y - gap),
             };
-            let (label, at) = (self.graph.nodes[i].label.clone(), self.to_screen(at));
+            let at = self.to_screen(at);
             centered_text(
                 c,
                 base,
-                &label,
+                &self.graph.nodes[i].label,
                 self.look.node_font * s,
                 at,
                 Tone::Text.color(theme),
@@ -206,7 +206,11 @@ impl LiveGraph {
         c.push_to_layer(base, SceneNode::PopClip);
         let overlay = self.overlay_layer(c);
         c.push_to_layer(overlay, clip);
-        let marks = [(self.hovered, 1.5_f32), (self.selected, 2.5_f32)];
+        // a hover is an edge light, a selection a focus ring
+        let marks = [
+            (self.hovered, theme.control.edge_width_strong),
+            (self.selected, theme.control.focus_ring_width),
+        ];
         for (mark, width) in marks.into_iter().filter_map(|(m, w)| m.map(|m| (m, w))) {
             self.draw_mark(c, overlay, mark, width, theme);
         }
