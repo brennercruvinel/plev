@@ -7,20 +7,19 @@
 //! cursor, hover and click selection work on both, over a hit grid of what
 //! was drawn (`hit`). Drawing is `draw`.
 
-pub mod compound;
 mod draw;
-pub mod force;
 pub mod hit;
-pub mod net;
 #[cfg(test)]
 mod tests;
 
 use web_time::Instant;
 
-use self::force::{Link, Params, Sim};
 use self::hit::{Hit, HitGrid};
-use self::net::{NetLayout, NetSpec};
 use super::graph_view::geometry::ViewTransform;
+use super::layout::force::{Link, Params, Sim};
+use super::layout::{Layout, compound};
+use super::look::Look;
+use super::model::Graph;
 use crate::drawing::compositor::LayerId;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -76,7 +75,8 @@ impl FrameStats {
 }
 
 pub struct LiveGraph {
-    pub(super) spec: NetSpec,
+    pub(super) graph: Graph,
+    pub(super) look: Look,
     pub(super) pos: Vec<(f32, f32)>,
     sim: Option<Sim>,
     pub(super) boxes: Vec<Option<[f32; 4]>>,
@@ -96,8 +96,13 @@ pub struct LiveGraph {
 }
 
 impl LiveGraph {
-    pub fn new(spec: NetSpec) -> Self {
-        let (_, group_parent) = spec.parents();
+    /// `look` holds one look per node and per edge of `graph` ([`Look::of`]).
+    pub fn new(graph: Graph, look: Look, layout: Layout) -> Self {
+        assert!(
+            look.fits(&graph),
+            "a LiveGraph's look has one NodeLook per node and one EdgeLook per edge"
+        );
+        let (_, group_parent) = graph.parents();
         let depth = |mut g: usize| {
             let mut d = 0;
             while let Some(p) = group_parent[g] {
@@ -109,11 +114,11 @@ impl LiveGraph {
             }
             d
         };
-        let mut group_order: Vec<usize> = (0..spec.groups.len()).collect();
+        let mut group_order: Vec<usize> = (0..graph.groups.len()).collect();
         group_order.sort_by_key(|&g| depth(g));
-        let (pos, sim, world) = match spec.layout {
-            NetLayout::Force { params, world } => {
-                let links: Vec<Link> = spec
+        let (pos, sim, world) = match layout {
+            Layout::Force { forces, world } => {
+                let links: Vec<Link> = graph
                     .edges
                     .iter()
                     .map(|e| Link {
@@ -123,11 +128,11 @@ impl LiveGraph {
                     .collect();
                 let center = (world.0 as f64 / 2.0, world.1 as f64 / 2.0);
                 let p = Params {
-                    link_distance: params.link_distance,
-                    charge: params.charge,
+                    link_distance: forces.link_distance,
+                    charge: forces.charge,
                     center,
                 };
-                let sim = Sim::new(&vec![params.collide; spec.nodes.len()], &links, p);
+                let sim = Sim::new(&vec![forces.collide; graph.nodes.len()], &links, p);
                 let pos = sim
                     .bodies
                     .iter()
@@ -135,14 +140,15 @@ impl LiveGraph {
                     .collect();
                 (pos, Some(sim), [0.0, 0.0, world.0, world.1])
             }
-            NetLayout::Compound { params } => {
-                let pos = compound::layout(&spec, params);
+            Layout::Compound { forces } => {
+                let pos = compound::layout(&graph, &look, forces);
                 (pos, None, [0.0; 4])
             }
         };
-        let mut graph = Self {
-            boxes: vec![None; spec.groups.len()],
-            spec,
+        let mut live = Self {
+            boxes: vec![None; graph.groups.len()],
+            graph,
+            look,
             pos,
             sim,
             group_order,
@@ -157,11 +163,11 @@ impl LiveGraph {
             overlay: None,
             stats: FrameStats::default(),
         };
-        graph.refresh_boxes();
-        if graph.sim.is_none() {
-            graph.world = graph.extent();
+        live.refresh_boxes();
+        if live.sim.is_none() {
+            live.world = live.extent();
         }
-        graph
+        live
     }
 
     /// Runs the simulation to rest, for a still drawing (a test, an export).
@@ -180,8 +186,12 @@ impl LiveGraph {
         self.selected
     }
 
-    pub fn spec(&self) -> &NetSpec {
-        &self.spec
+    pub fn graph(&self) -> &Graph {
+        &self.graph
+    }
+
+    pub fn look(&self) -> &Look {
+        &self.look
     }
 
     /// Screen px per world px under the current view.
@@ -189,7 +199,7 @@ impl LiveGraph {
         self.transform.scale
     }
 
-    /// World positions of the nodes, in spec order.
+    /// World positions of the nodes, in the graph's order.
     pub fn positions(&self) -> &[(f32, f32)] {
         &self.pos
     }
@@ -235,8 +245,8 @@ impl LiveGraph {
     }
 
     fn refresh_boxes(&mut self) {
-        if !self.spec.groups.is_empty() {
-            self.boxes = compound::group_boxes(&self.spec, &self.pos);
+        if !self.graph.groups.is_empty() {
+            self.boxes = compound::group_boxes(&self.graph, &self.look, &self.pos);
         }
         self.grid_dirty = true;
     }
@@ -250,7 +260,7 @@ impl LiveGraph {
             f32::NEG_INFINITY,
         ];
         for (i, &(x, y)) in self.pos.iter().enumerate() {
-            let r = self.spec.nodes[i].radius;
+            let r = self.look.nodes[i].radius;
             b = [
                 b[0].min(x - r),
                 b[1].min(y - r),
@@ -416,7 +426,7 @@ impl LiveGraph {
             }
             (Hit::Group(g), None) => {
                 let (dx, dy) = (world.0 - last.0, world.1 - last.1);
-                for i in self.spec.descendants(g) {
+                for i in self.graph.descendants(g) {
                     self.pos[i].0 += dx;
                     self.pos[i].1 += dy;
                 }

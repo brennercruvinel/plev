@@ -1,18 +1,15 @@
 //! The two inputs of the gramorph corpus this demo draws, read into the
-//! engine's `NetSpec`: a d3-force preset (`nodes` with a `group`, `links`
-//! with a `value`, `chargeStrength`, `linkDistance`) and a cytoscape element
-//! list (nodes with an optional `parent`, edges). The look copies the
-//! gallery page that draws each (gramorph's `D3ForceDemo.tsx` and
-//! `CytoscapeDemo.tsx`), in theme tones.
+//! engine's [`Graph`]: a d3-force preset (`nodes` with a `group`, `links`
+//! with a `value`, plus the preset's `chargeStrength` and `linkDistance`)
+//! and a cytoscape element list (nodes with an optional `parent`, edges).
+//! Only the data: how each looks is `look.rs`, where its nodes go `lib.rs`.
 
 use serde::Deserialize;
 
-use engine::widgets::graph::live_graph::net::{
-    ForceParams, LabelAt, NetEdge, NetGroup, NetLayout, NetNode, NetSpec, Tone,
-};
+use engine::widgets::graph::{Edge, Forces, Graph, Group, Node};
 
-/// d3 demo's viewBox: its `forceCenter` pulls to the middle of it.
-const D3_WORLD: (f32, f32) = (700.0, 500.0);
+/// d3's collision radius in the demo, world px.
+const D3_COLLIDE: f64 = 15.0;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,33 +45,17 @@ struct D3Link {
     value: Option<f32>,
 }
 
-/// The d3 demo's five tiers, by `group % 5`: accent, text secondary, text
-/// muted, border active, border.
-const TIERS: [Tone; 5] = [
-    Tone::Accent,
-    Tone::TextMid,
-    Tone::TextDim,
-    Tone::BorderActive,
-    Tone::Divider,
-];
-
-pub fn d3(text: &str) -> Result<NetSpec, String> {
+/// A d3 preset: its graph, and the forces the preset carries.
+pub fn d3(text: &str) -> Result<(Graph, Forces), String> {
     let d: D3 = serde_json::from_str(text).map_err(|e| format!("d3 json: {e}"))?;
     let index = |id: &str| d.nodes.iter().position(|n| n.id == id);
     let nodes = d
         .nodes
         .iter()
-        .map(|n| NetNode {
+        .map(|n| Node {
+            id: n.id.clone(),
             label: n.id.clone(),
-            // the demo: radius 10 for a hub or group 0, 7 otherwise; the label 14 px above
-            radius: if n.id.starts_with("hub") || n.group == 0 {
-                10.0
-            } else {
-                7.0
-            },
-            fill: TIERS[n.group % TIERS.len()],
-            stroke: Tone::BorderActive,
-            label_at: LabelAt::Above(14.0),
+            kind: n.group,
         })
         .collect();
     let mut edges = Vec::with_capacity(d.links.len());
@@ -85,32 +66,24 @@ pub fn d3(text: &str) -> Result<NetSpec, String> {
                 l.source, l.target
             ));
         };
-        let width = l.value.unwrap_or(1.0);
-        edges.push(NetEdge {
+        edges.push(Edge {
             from,
             to,
-            width,
-            alpha: 0.6,
-            tone: Tone::Divider,
-            arrow: false,
+            weight: l.value.unwrap_or(1.0),
+            directed: false,
         });
     }
-    let params = ForceParams {
+    let forces = Forces {
         link_distance: d.link_distance,
         charge: d.charge_strength,
-        collide: 15.0,
+        collide: D3_COLLIDE,
     };
-    Ok(NetSpec {
+    let graph = Graph {
         nodes,
         edges,
         groups: Vec::new(),
-        layout: NetLayout::Force {
-            params,
-            world: D3_WORLD,
-        },
-        node_font: 9.0,
-        group_font: 13.0,
-    })
+    };
+    Ok((graph, forces))
 }
 
 #[derive(Deserialize)]
@@ -132,10 +105,8 @@ struct CyData {
     target: Option<String>,
 }
 
-/// The cytoscape demo's node: a 76 px circle with its label inside.
-const CY_RADIUS: f32 = 38.0;
-
-pub fn cytoscape(text: &str) -> Result<NetSpec, String> {
+/// A cytoscape element list: a node that is some node's `parent` is a group.
+pub fn cytoscape(text: &str) -> Result<Graph, String> {
     let cy: Cy = serde_json::from_str(text).map_err(|e| format!("cytoscape json: {e}"))?;
     let all: Vec<&CyData> = cy
         .elements
@@ -152,18 +123,17 @@ pub fn cytoscape(text: &str) -> Result<NetSpec, String> {
             d.id.clone()
                 .ok_or("cytoscape json: a node without `data.id`")?;
         if is_parent(&id) {
-            groups.push(NetGroup {
+            groups.push(Group {
+                id: id.clone(),
                 label: label(d),
-                ..NetGroup::default()
+                ..Group::default()
             });
             group_ids.push(id);
         } else {
-            nodes.push(NetNode {
+            nodes.push(Node {
+                id: id.clone(),
                 label: label(d),
-                radius: CY_RADIUS,
-                fill: Tone::Fill,
-                stroke: Tone::Divider,
-                label_at: LabelAt::Center,
+                kind: 0,
             });
             node_ids.push(id);
         }
@@ -205,26 +175,16 @@ pub fn cytoscape(text: &str) -> Result<NetSpec, String> {
                 d.source, d.target
             ));
         };
-        edges.push(NetEdge {
+        edges.push(Edge {
             from,
             to,
-            width: 1.0,
-            alpha: 1.0,
-            tone: Tone::TextDim,
-            arrow: true,
+            weight: 1.0,
+            directed: true,
         });
     }
-    let params = ForceParams {
-        link_distance: 120.0,
-        charge: -400.0,
-        collide: CY_RADIUS as f64 + 10.0,
-    };
-    Ok(NetSpec {
+    Ok(Graph {
         nodes,
         edges,
         groups,
-        layout: NetLayout::Compound { params },
-        node_font: 11.0,
-        group_font: 13.0,
     })
 }

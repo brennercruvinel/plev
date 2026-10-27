@@ -5,59 +5,82 @@
 
 use super::LiveGraph;
 use super::hit::Hit;
-use super::net::{ForceParams, LabelAt, NetEdge, NetGroup, NetLayout, NetNode, NetSpec, Tone};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
+use crate::widgets::graph::layout::{Forces, Layout};
+use crate::widgets::graph::look::{EdgeLook, LabelAt, Look, NodeLook, Tone};
+use crate::widgets::graph::model::{Edge, Graph, Group, Node};
 use crate::widgets::widget::{Rect, WidgetEvent};
 
-fn node(label: &str, radius: f32) -> NetNode {
-    NetNode {
-        label: label.into(),
-        radius,
-        fill: Tone::Fill,
-        stroke: Tone::Divider,
-        label_at: LabelAt::Center,
+fn node(id: &str) -> Node {
+    Node {
+        id: id.into(),
+        label: id.into(),
+        kind: 0,
     }
 }
 
-fn edge(from: usize, to: usize, arrow: bool) -> NetEdge {
-    NetEdge {
+fn edge(from: usize, to: usize, directed: bool) -> Edge {
+    Edge {
         from,
         to,
-        width: 1.0,
-        alpha: 1.0,
-        tone: Tone::TextDim,
-        arrow,
+        weight: 1.0,
+        directed,
     }
+}
+
+/// Every node `radius` wide, a head on every directed edge.
+fn look(graph: &Graph, radius: f32) -> Look {
+    Look::of(
+        graph,
+        |_| NodeLook {
+            radius,
+            fill: Tone::Fill,
+            stroke: Tone::Divider,
+            label_at: LabelAt::Center,
+        },
+        |e| EdgeLook {
+            width: 1.0,
+            alpha: 1.0,
+            tone: Tone::TextDim,
+            arrow: e.directed,
+        },
+    )
 }
 
 /// A ring of 24 with chords: enough to show d3's settling.
-fn force_spec() -> NetSpec {
-    let nodes = (0..24).map(|i| node(&format!("n{i}"), 7.0)).collect();
-    let mut edges: Vec<NetEdge> = (0..24).map(|i| edge(i, (i + 1) % 24, false)).collect();
+fn force_graph() -> LiveGraph {
+    let nodes = (0..24).map(|i| node(&format!("n{i}"))).collect();
+    let mut edges: Vec<Edge> = (0..24).map(|i| edge(i, (i + 1) % 24, false)).collect();
     edges.extend((0..24).step_by(3).map(|i| edge(i, (i + 7) % 24, false)));
-    let params = ForceParams {
+    let graph = Graph {
+        nodes,
+        edges,
+        groups: Vec::new(),
+    };
+    let look = Look {
+        node_font: 9.0,
+        ..look(&graph, 7.0)
+    };
+    let forces = Forces {
         link_distance: 60.0,
         charge: -200.0,
         collide: 15.0,
     };
-    NetSpec {
-        nodes,
-        edges,
-        groups: Vec::new(),
-        layout: NetLayout::Force {
-            params,
+    LiveGraph::new(
+        graph,
+        look,
+        Layout::Force {
+            forces,
             world: (700.0, 500.0),
         },
-        node_font: 9.0,
-        group_font: 13.0,
-    }
+    )
 }
 
 /// Cytoscape's compound example: frontend {react, next, vite}, backend {express, fastify, prisma}.
-fn compound_spec() -> NetSpec {
+fn compound_graph() -> LiveGraph {
     let names = ["react", "next", "vite", "express", "fastify", "prisma"];
-    let nodes = names.iter().map(|n| node(n, 38.0)).collect();
+    let nodes = names.iter().map(|n| node(n)).collect();
     let edges = vec![
         edge(0, 1, true),
         edge(1, 3, true),
@@ -67,30 +90,31 @@ fn compound_spec() -> NetSpec {
         edge(4, 5, true),
     ];
     let groups = vec![
-        NetGroup {
+        Group {
+            id: "frontend".into(),
             label: "Frontend".into(),
             nodes: vec![0, 1, 2],
             groups: Vec::new(),
         },
-        NetGroup {
+        Group {
+            id: "backend".into(),
             label: "Backend".into(),
             nodes: vec![3, 4, 5],
             groups: Vec::new(),
         },
     ];
-    let params = ForceParams {
+    let graph = Graph {
+        nodes,
+        edges,
+        groups,
+    };
+    let look = look(&graph, 38.0);
+    let forces = Forces {
         link_distance: 120.0,
         charge: -400.0,
         collide: 48.0,
     };
-    NetSpec {
-        nodes,
-        edges,
-        groups,
-        layout: NetLayout::Compound { params },
-        node_font: 11.0,
-        group_font: 13.0,
-    }
+    LiveGraph::new(graph, look, Layout::Compound { forces })
 }
 
 const VIEW: Rect = Rect {
@@ -113,7 +137,7 @@ fn intersects(a: [f32; 4], b: [f32; 4]) -> bool {
 
 #[test]
 fn force_settles_centered_without_overlap_and_the_same_every_time() {
-    let (mut a, mut b) = (LiveGraph::new(force_spec()), LiveGraph::new(force_spec()));
+    let (mut a, mut b) = (force_graph(), force_graph());
     a.settle();
     b.settle();
     assert_eq!(a.positions(), b.positions(), "deterministic");
@@ -135,7 +159,7 @@ fn force_settles_centered_without_overlap_and_the_same_every_time() {
 
 #[test]
 fn a_drag_pins_the_node_and_its_neighbor_follows() {
-    let mut g = LiveGraph::new(force_spec());
+    let mut g = force_graph();
     g.settle();
     frame(&mut g);
     let start = g.to_screen(g.positions()[0]);
@@ -184,12 +208,12 @@ fn a_drag_pins_the_node_and_its_neighbor_follows() {
 
 #[test]
 fn compound_boxes_hold_their_members_and_no_one_else() {
-    let mut g = LiveGraph::new(compound_spec());
+    let mut g = compound_graph();
     frame(&mut g);
-    for (k, group) in g.spec().groups.clone().iter().enumerate() {
+    for (k, group) in g.graph().groups.clone().iter().enumerate() {
         let b = g.group_box(k).unwrap();
         for (i, &(x, y)) in g.positions().iter().enumerate() {
-            let r = g.spec().nodes[i].radius;
+            let r = g.look().nodes[i].radius;
             let nb = [x - r, y - r, 2.0 * r, 2.0 * r];
             let inside = nb[0] >= b[0]
                 && nb[1] >= b[1]
@@ -213,7 +237,7 @@ fn compound_boxes_hold_their_members_and_no_one_else() {
 
 #[test]
 fn the_child_is_hit_over_its_group_and_the_corner_is_the_group() {
-    let mut g = LiveGraph::new(compound_spec());
+    let mut g = compound_graph();
     frame(&mut g);
     let react = g.to_screen(g.positions()[0]);
     g.handle_event(
@@ -238,7 +262,7 @@ fn the_child_is_hit_over_its_group_and_the_corner_is_the_group() {
 
 #[test]
 fn a_group_drag_brings_its_children_and_a_child_drag_grows_the_box() {
-    let mut g = LiveGraph::new(compound_spec());
+    let mut g = compound_graph();
     frame(&mut g);
     let before: Vec<(f32, f32)> = g.positions().to_vec();
     let [x, y, _, _] = g.group_box(0).unwrap();
@@ -309,7 +333,7 @@ fn a_group_drag_brings_its_children_and_a_child_drag_grows_the_box() {
 
 #[test]
 fn a_hover_changes_the_overlay_and_leaves_the_base_layer_alone() {
-    let mut g = LiveGraph::new(compound_spec());
+    let mut g = compound_graph();
     let c0 = frame(&mut g);
     let react = g.to_screen(g.positions()[0]);
     g.handle_event(

@@ -8,13 +8,13 @@
 use web_time::Instant;
 
 use super::LiveGraph;
-use super::compound::LABEL;
 use super::hit::Hit;
-use super::net::{LabelAt, Tone};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::path::PathBuilder;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
+use crate::widgets::graph::layout::compound::LABEL;
+use crate::widgets::graph::look::{LabelAt, Tone};
 use crate::widgets::widget::Rect;
 
 /// The overlay's place above the base layer.
@@ -67,14 +67,14 @@ fn head(from: (f32, f32), tip: (f32, f32), size: f32) -> PathBuilder {
 impl LiveGraph {
     /// An edge's ends in world px: center to center, or border to border under a head.
     fn edge_ends(&self, k: usize) -> ((f32, f32), (f32, f32)) {
-        let e = &self.spec.edges[k];
+        let e = &self.graph.edges[k];
         let (a, b) = (self.pos[e.from], self.pos[e.to]);
-        if !e.arrow {
+        if !self.look.edges[k].arrow {
             return (a, b);
         }
         let (dx, dy) = (b.0 - a.0, b.1 - a.1);
         let len = dx.hypot(dy).max(1e-6);
-        let (ra, rb) = (self.spec.nodes[e.from].radius, self.spec.nodes[e.to].radius);
+        let (ra, rb) = (self.look.nodes[e.from].radius, self.look.nodes[e.to].radius);
         if len <= ra + rb {
             return (a, b);
         }
@@ -131,12 +131,12 @@ impl LiveGraph {
                 },
             );
             let at = self.to_screen((x + w / 2.0, y - LABEL / 2.0));
-            let label = self.spec.groups[g].label.clone();
+            let label = self.graph.groups[g].label.clone();
             centered_text(
                 c,
                 base,
                 &label,
-                self.spec.group_font * s,
+                self.look.group_font * s,
                 at,
                 Tone::TextMid.color(theme),
             );
@@ -144,9 +144,9 @@ impl LiveGraph {
                 self.grid.push_box([x, y, w, h], Hit::Group(g));
             }
         }
-        for k in 0..self.spec.edges.len() {
+        for k in 0..self.graph.edges.len() {
             let (a, b) = self.edge_ends(k);
-            let e = &self.spec.edges[k];
+            let e = self.look.edges[k];
             let color = with_alpha(e.tone.color(theme), e.alpha);
             let (sa, sb) = (self.to_screen(a), self.to_screen(b));
             let line = PathBuilder::new()
@@ -171,7 +171,7 @@ impl LiveGraph {
                 self.grid.push_segment(a, b, e.width.max(1.0), Hit::Edge(k));
             }
         }
-        for (i, n) in self.spec.nodes.iter().enumerate() {
+        for (i, n) in self.look.nodes.iter().enumerate() {
             let (sx, sy) = self.to_screen(self.pos[i]);
             let r = n.radius * s;
             c.push_to_layer(
@@ -186,19 +186,19 @@ impl LiveGraph {
                 self.grid.push_circle(self.pos[i], n.radius, Hit::Node(i));
             }
         }
-        for i in 0..self.spec.nodes.len() {
-            let n = &self.spec.nodes[i];
+        for i in 0..self.graph.nodes.len() {
+            let n = &self.look.nodes[i];
             let (x, y) = self.pos[i];
             let at = match n.label_at {
                 LabelAt::Center => (x, y),
                 LabelAt::Above(gap) => (x, y - gap),
             };
-            let (label, at) = (n.label.clone(), self.to_screen(at));
+            let (label, at) = (self.graph.nodes[i].label.clone(), self.to_screen(at));
             centered_text(
                 c,
                 base,
                 &label,
-                self.spec.node_font * s,
+                self.look.node_font * s,
                 at,
                 Tone::Text.color(theme),
             );
@@ -226,7 +226,7 @@ impl LiveGraph {
         let edge = |c: &mut Compositor, k: usize| {
             let (a, b) = self.edge_ends(k);
             let (sa, sb) = (self.to_screen(a), self.to_screen(b));
-            let w = (self.spec.edges[k].width * s).max(0.5) + width;
+            let w = (self.look.edges[k].width * s).max(0.5) + width;
             let line = PathBuilder::new()
                 .move_to(sa.0, sa.1)
                 .line_to(sb.0, sb.1)
@@ -242,7 +242,7 @@ impl LiveGraph {
             Hit::Node(i) => {
                 if Some(mark) == self.selected {
                     let incident = self
-                        .spec
+                        .graph
                         .edges
                         .iter()
                         .enumerate()
@@ -252,7 +252,7 @@ impl LiveGraph {
                     }
                 }
                 let (sx, sy) = self.to_screen(self.pos[i]);
-                let r = self.spec.nodes[i].radius * s + width;
+                let r = self.look.nodes[i].radius * s + width;
                 c.push_to_layer(
                     layer,
                     SceneNode::Path {

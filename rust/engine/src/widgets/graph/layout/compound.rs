@@ -7,8 +7,10 @@
 //! the overlap a flat layout plus member bounding boxes produces (measured in
 //! gramorph on mermaid subgraphs: 11 nodes covered by groups not theirs).
 
+use super::Forces;
 use super::force::{Link, Params, Sim};
-use super::net::{ForceParams, NetSpec};
+use crate::widgets::graph::look::Look;
+use crate::widgets::graph::model::Graph;
 
 /// Cytoscape's compound padding, and the room a group label takes above its box.
 pub const PAD: f32 = 10.0;
@@ -30,32 +32,35 @@ struct Solved {
     bounds: Bounds,
 }
 
-/// The center of every node, in `spec.nodes` order, around the origin.
-pub fn layout(spec: &NetSpec, params: ForceParams) -> Vec<(f32, f32)> {
-    let (node_parent, group_parent) = spec.parents();
+/// The center of every node, in `graph.nodes` order, around the origin; a
+/// node takes the room of its radius in `look`.
+pub fn layout(graph: &Graph, look: &Look, forces: Forces) -> Vec<(f32, f32)> {
+    let (node_parent, group_parent) = graph.parents();
     let ctx = Ctx {
-        spec,
+        graph,
+        look,
         node_parent: &node_parent,
         group_parent: &group_parent,
-        params,
+        forces,
     };
     let solved = ctx.solve(None, 0);
-    let mut centers = vec![(0.0, 0.0); spec.nodes.len()];
+    let mut centers = vec![(0.0, 0.0); graph.nodes.len()];
     place(&solved, (0.0, 0.0), &mut centers);
     centers
 }
 
 struct Ctx<'a> {
-    spec: &'a NetSpec,
+    graph: &'a Graph,
+    look: &'a Look,
     node_parent: &'a [Option<usize>],
     group_parent: &'a [Option<usize>],
-    params: ForceParams,
+    forces: Forces,
 }
 
 impl Ctx<'_> {
     fn members(&self, level: Option<usize>) -> Vec<Member> {
-        let nodes = (0..self.spec.nodes.len()).filter(|&i| self.node_parent[i] == level);
-        let groups = (0..self.spec.groups.len()).filter(|&g| self.group_parent[g] == level);
+        let nodes = (0..self.graph.nodes.len()).filter(|&i| self.node_parent[i] == level);
+        let groups = (0..self.graph.groups.len()).filter(|&g| self.group_parent[g] == level);
         nodes
             .map(Member::Node)
             .chain(groups.map(Member::Group))
@@ -65,7 +70,7 @@ impl Ctx<'_> {
     /// The member of `level` that holds `node`, walking up the groups.
     fn ancestor_at(&self, node: usize, level: Option<usize>) -> Option<Member> {
         let mut at = Member::Node(node);
-        for _ in 0..=self.spec.groups.len() {
+        for _ in 0..=self.graph.groups.len() {
             let up = match at {
                 Member::Node(i) => self.node_parent[i],
                 Member::Group(g) => self.group_parent[g],
@@ -83,7 +88,7 @@ impl Ctx<'_> {
         let mut inner: Vec<Option<Solved>> = members
             .iter()
             .map(|m| match m {
-                Member::Group(g) if depth < self.spec.groups.len() => {
+                Member::Group(g) if depth < self.graph.groups.len() => {
                     Some(self.solve(Some(*g), depth + 1))
                 }
                 _ => None,
@@ -94,7 +99,7 @@ impl Ctx<'_> {
             .zip(&inner)
             .map(|(m, solved)| match (m, solved) {
                 (Member::Node(i), _) => {
-                    let d = 2.0 * self.spec.nodes[*i].radius as f64;
+                    let d = 2.0 * self.look.nodes[*i].radius as f64;
                     (d, d)
                 }
                 (Member::Group(_), Some(s)) => body_of(s.bounds),
@@ -105,12 +110,12 @@ impl Ctx<'_> {
             .iter()
             .zip(&sizes)
             .map(|(m, (w, h))| match m {
-                Member::Node(_) => self.params.collide,
+                Member::Node(_) => self.forces.collide,
                 Member::Group(_) => 0.5 * (w * w + h * h).sqrt() + PAD as f64,
             })
             .collect();
         let mut links = Vec::new();
-        for e in &self.spec.edges {
+        for e in &self.graph.edges {
             let a = self.ancestor_at(e.from, level);
             let b = self.ancestor_at(e.to, level);
             let (Some(a), Some(b)) = (a, b) else { continue };
@@ -126,8 +131,8 @@ impl Ctx<'_> {
             }
         }
         let params = Params {
-            link_distance: self.params.link_distance,
-            charge: self.params.charge,
+            link_distance: self.forces.link_distance,
+            charge: self.forces.charge,
             center: (0.0, 0.0),
         };
         let mut sim = Sim::new(&radii, &links, params);
@@ -184,10 +189,10 @@ fn place(solved: &Solved, origin: (f64, f64), centers: &mut [(f32, f32)]) {
 /// Every group's box (`x, y, w, h`, world px) from where its members are now:
 /// the members' box with padding, a nested group counted with its label's
 /// room. The label sits above the box.
-pub fn group_boxes(spec: &NetSpec, centers: &[(f32, f32)]) -> Vec<Option<[f32; 4]>> {
-    let mut boxes: Vec<Option<[f32; 4]>> = vec![None; spec.groups.len()];
-    for _ in 0..=spec.groups.len() {
-        for (g, group) in spec.groups.iter().enumerate() {
+pub fn group_boxes(graph: &Graph, look: &Look, centers: &[(f32, f32)]) -> Vec<Option<[f32; 4]>> {
+    let mut boxes: Vec<Option<[f32; 4]>> = vec![None; graph.groups.len()];
+    for _ in 0..=graph.groups.len() {
+        for (g, group) in graph.groups.iter().enumerate() {
             if boxes[g].is_some() {
                 continue;
             }
@@ -207,7 +212,7 @@ pub fn group_boxes(spec: &NetSpec, centers: &[(f32, f32)]) -> Vec<Option<[f32; 4
             };
             for &n in &group.nodes {
                 let (x, y) = centers[n];
-                let r = spec.nodes[n].radius;
+                let r = look.nodes[n].radius;
                 grow([x - r, y - r, x + r, y + r]);
             }
             for [x, y, w, h] in inner {

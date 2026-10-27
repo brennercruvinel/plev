@@ -7,13 +7,14 @@
 //! page is `?page=`, and every few frames the timings and the screen
 //! position of each node land in `<body data-plev>` for a script to read.
 
+pub mod look;
 pub mod read;
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::graph::live_graph::hit::Hit;
-use engine::widgets::graph::live_graph::net::NetSpec;
 use engine::widgets::graph::live_graph::{FrameStats, LiveGraph};
+use engine::widgets::graph::{Forces, Layout};
 use engine::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use engine::runtime::window::HostedView;
@@ -48,11 +49,31 @@ impl Page {
         }
     }
 
-    pub fn spec(self) -> Result<NetSpec, String> {
-        match self {
-            Page::LesMis => read::d3(LES_MIS),
-            Page::Compound => read::cytoscape(COMPOUND),
-        }
+    /// The page's graph (`read`), its look (`look`) and where its nodes go:
+    /// d3's simulation in the demo's 700 × 500 viewBox with the preset's
+    /// forces, or cytoscape's groups solved from the inside.
+    pub fn graph(self) -> Result<LiveGraph, String> {
+        Ok(match self {
+            Page::LesMis => {
+                let (graph, forces) = read::d3(LES_MIS)?;
+                let look = look::d3(&graph);
+                let layout = Layout::Force {
+                    forces,
+                    world: (700.0, 500.0),
+                };
+                LiveGraph::new(graph, look, layout)
+            }
+            Page::Compound => {
+                let graph = read::cytoscape(COMPOUND)?;
+                let look = look::cytoscape(&graph);
+                let forces = Forces {
+                    link_distance: 120.0,
+                    charge: -400.0,
+                    collide: look::CY_RADIUS as f64 + 10.0,
+                };
+                LiveGraph::new(graph, look, Layout::Compound { forces })
+            }
+        })
     }
 }
 
@@ -66,16 +87,16 @@ impl GraphsView {
     pub fn new(page: Page) -> Result<GraphsView, String> {
         Ok(GraphsView {
             page,
-            graph: LiveGraph::new(page.spec()?),
+            graph: page.graph()?,
             frame: 0,
         })
     }
 
     fn label(&self, hit: Option<Hit>) -> String {
-        let spec = self.graph.spec();
+        let data = self.graph.graph();
         match hit {
-            Some(Hit::Node(i)) => spec.nodes[i].label.clone(),
-            Some(Hit::Group(g)) => spec.groups[g].label.clone(),
+            Some(Hit::Node(i)) => data.nodes[i].label.clone(),
+            Some(Hit::Group(g)) => data.groups[g].label.clone(),
             Some(Hit::Edge(k)) => format!("edge {k}"),
             None => String::new(),
         }
@@ -88,8 +109,8 @@ impl GraphsView {
             let (p50, p95, max) = FrameStats::summary(list);
             serde_json::json!([p50, p95, max])
         };
-        let spec = self.graph.spec();
-        let nodes: serde_json::Map<String, serde_json::Value> = spec
+        let data = self.graph.graph();
+        let nodes: serde_json::Map<String, serde_json::Value> = data
             .nodes
             .iter()
             .zip(self.graph.positions())
@@ -98,7 +119,7 @@ impl GraphsView {
                 (n.label.clone(), serde_json::json!([x, y]))
             })
             .collect();
-        let groups: serde_json::Map<String, serde_json::Value> = spec
+        let groups: serde_json::Map<String, serde_json::Value> = data
             .groups
             .iter()
             .enumerate()
