@@ -31,5 +31,5 @@ pub use graph_view::geometry;
 pub use graph_view::{EdgeTone, GraphView};
 pub use layout::{Forces, Layout};
 pub use live_graph::LiveGraph;
-pub use look::{EdgeLook, LabelAt, Look, NodeLook, Tone};
+pub use look::{EdgeLook, GroupLook, LabelAt, Look, NodeLook, Tone};
 pub use model::{Edge, Graph, Group, Node};

@@ -111,6 +111,7 @@ impl LiveGraph {
             h: bounds.h,
         };
         c.push_to_layer(base, clip.clone());
+        let group = self.look.group;
         for k in 0..self.group_order.len() {
             let g = self.group_order[k];
             let Some([x, y, w, h]) = self.boxes[g] else {
@@ -124,10 +125,10 @@ impl LiveGraph {
                     y: sy,
                     w: w * s,
                     h: h * s,
-                    color: with_alpha(Tone::Panel.color(theme), 0.5),
+                    color: with_alpha(group.fill.color(theme), group.alpha),
                     corner_radius: 0.0,
                     border_width: theme.control.edge_width,
-                    border_color: Tone::BorderActive.color(theme),
+                    border_color: group.border.color(theme),
                 },
             );
             let at = self.to_screen((x + w / 2.0, y - LABEL / 2.0));
@@ -162,7 +163,7 @@ impl LiveGraph {
                 c.push_to_layer(
                     base,
                     SceneNode::Path {
-                        data: head(sa, sb, 8.0 * s.sqrt()).fill(color),
+                        data: head(sa, sb, self.look.head * s.sqrt()).fill(color),
                     },
                 );
             }

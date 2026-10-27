@@ -65,6 +65,15 @@ pub struct EdgeLook {
     pub arrow: bool,
 }
 
+/// How a group (a compound node) draws its box: a fill in a tone at an
+/// alpha, so what lies under it shows through, and a border.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GroupLook {
+    pub fill: Tone,
+    pub alpha: f32,
+    pub border: Tone,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Look {
     /// One per node of the graph, in its order.
@@ -74,12 +83,27 @@ pub struct Look {
     /// Label sizes in world px.
     pub node_font: f32,
     pub group_font: f32,
+    /// Every group's box.
+    pub group: GroupLook,
+    /// An arrow head's length in screen px at scale 1; it grows with the
+    /// square root of the zoom, so it stays readable without swallowing
+    /// a short edge.
+    pub head: f32,
 }
 
 impl Look {
-    /// Default label sizes in world px; `Look { node_font, ..Look::of(..) }` changes them.
+    /// Default label sizes in world px; `Look { node_font, ..Look::of(..) }`
+    /// changes them, as it does `group` and `head`.
     pub const NODE_FONT: f32 = 11.0;
     pub const GROUP_FONT: f32 = 13.0;
+    /// Default group box: the panel at half its opacity, the active border.
+    pub const GROUP: GroupLook = GroupLook {
+        fill: Tone::Panel,
+        alpha: 0.5,
+        border: Tone::BorderActive,
+    };
+    /// Default arrow head length, screen px at scale 1.
+    pub const HEAD: f32 = 8.0;
 
     /// The look of every element of `graph`, computed from its data.
     pub fn of(
@@ -92,6 +116,8 @@ impl Look {
             edges: graph.edges.iter().map(edge).collect(),
             node_font: Self::NODE_FONT,
             group_font: Self::GROUP_FONT,
+            group: Self::GROUP,
+            head: Self::HEAD,
         }
     }
 
