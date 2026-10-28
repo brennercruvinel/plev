@@ -1,0 +1,301 @@
+{
+  "id": "root",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+    "elk.spacing.nodeNode": "28",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "48",
+    "elk.padding": "[top=28,left=16,bottom=16,right=16]"
+  },
+  "children": [
+    {
+      "id": "client",
+      "labels": [
+        {
+          "text": "Client"
+        }
+      ],
+      "width": 70,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes"
+      }
+    },
+    {
+      "id": "gateway",
+      "labels": [
+        {
+          "text": "API Gateway"
+        }
+      ],
+      "width": 108,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "auth",
+      "labels": [
+        {
+          "text": "Auth Service"
+        }
+      ],
+      "width": 115,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "orders",
+      "labels": [
+        {
+          "text": "Orders"
+        }
+      ],
+      "width": 70,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "catalog",
+      "labels": [
+        {
+          "text": "Catalog"
+        }
+      ],
+      "width": 77,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "payments",
+      "labels": [
+        {
+          "text": "Payments"
+        }
+      ],
+      "width": 85,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "queue",
+      "labels": [
+        {
+          "text": "Event Bus"
+        }
+      ],
+      "width": 92,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes"
+      }
+    },
+    {
+      "id": "db",
+      "labels": [
+        {
+          "text": "Postgres"
+        }
+      ],
+      "width": 85,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    },
+    {
+      "id": "cache",
+      "labels": [
+        {
+          "text": "Redis"
+        }
+      ],
+      "width": 64,
+      "height": 38,
+      "properties": {
+        "appearance.shape": "rectangle",
+        "appearance.border-radius": "yes",
+        "appearance.fill": "yes"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "sources": [
+        "client"
+      ],
+      "targets": [
+        "gateway"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      },
+      "labels": [
+        {
+          "text": "HTTPS"
+        }
+      ]
+    },
+    {
+      "id": "e1",
+      "sources": [
+        "gateway"
+      ],
+      "targets": [
+        "auth"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      },
+      "labels": [
+        {
+          "text": "verify"
+        }
+      ]
+    },
+    {
+      "id": "e2",
+      "sources": [
+        "gateway"
+      ],
+      "targets": [
+        "orders"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e3",
+      "sources": [
+        "gateway"
+      ],
+      "targets": [
+        "catalog"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e4",
+      "sources": [
+        "orders"
+      ],
+      "targets": [
+        "payments"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      },
+      "labels": [
+        {
+          "text": "charge"
+        }
+      ]
+    },
+    {
+      "id": "e5",
+      "sources": [
+        "orders"
+      ],
+      "targets": [
+        "db"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e6",
+      "sources": [
+        "catalog"
+      ],
+      "targets": [
+        "cache"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle",
+        "appearance.stroke-dasharray": "dashed"
+      },
+      "labels": [
+        {
+          "text": "read"
+        }
+      ]
+    },
+    {
+      "id": "e7",
+      "sources": [
+        "catalog"
+      ],
+      "targets": [
+        "db"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e8",
+      "sources": [
+        "payments"
+      ],
+      "targets": [
+        "queue"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle",
+        "appearance.stroke-dasharray": "dashed"
+      },
+      "labels": [
+        {
+          "text": "emit"
+        }
+      ]
+    },
+    {
+      "id": "e9",
+      "sources": [
+        "orders"
+      ],
+      "targets": [
+        "queue"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle",
+        "appearance.stroke-dasharray": "dashed"
+      },
+      "labels": [
+        {
+          "text": "emit"
+        }
+      ]
+    }
+  ]
+}
