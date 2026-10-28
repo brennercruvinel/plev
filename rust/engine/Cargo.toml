@@ -72,6 +72,7 @@ accord.workspace = true
 editor.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }
+unions.workspace = true
 
 [dev-dependencies]
 markup.workspace = true

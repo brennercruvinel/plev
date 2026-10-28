@@ -90,6 +90,7 @@ fn untracked(name: &str) -> bool {
 fn the_root_holds_the_workspace_files_and_the_nine_directories() {
     let want = [
         ".cargo",
+        ".config",
         ".design",
         ".devops",
         ".editorconfig",

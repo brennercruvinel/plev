@@ -24,6 +24,7 @@ members = [
     "rust/replay",
     "rust/screen",
     "rust/socket",
+    "rust/unions",
     "apps/agenteval",
     "apps/idestudio",
     "apps/inspector",
@@ -89,6 +90,7 @@ replay = { path = "rust/replay" }
 screen = { path = "rust/screen" }
 socket = { path = "rust/socket" }
 uigallery = { path = "apps/uigallery" }
+unions = { path = "rust/unions" }
 # -- gpu / window
 wgpu = "29"
 winit = { version = "0.30", features = ["rwh_06"] }

@@ -1,0 +1,118 @@
+# unions: the union of the features the workspace activates, so a build of
+# one member (`cargo run -p arcade`) reuses the dependencies a build of the
+# whole workspace compiled, instead of compiling a second copy. every member
+# depends on it; it holds no code. the section below is written by
+# `cargo hakari generate` (see .config/hakari.toml), never by hand.
+[package]
+name = "unions"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+description = "The union of the workspace's dependency features, so one member's build reuses the workspace's (managed by cargo hakari)"
+
+### BEGIN HAKARI SECTION
+[dependencies]
+crossbeam-utils = { version = "0.8" }
+hashbrown = { version = "0.17" }
+indexmap = { version = "2", features = ["serde"] }
+jiff = { version = "0.2" }
+log = { version = "0.4", default-features = false, features = ["std"] }
+num-traits = { version = "0.2", features = ["libm"] }
+once_cell = { version = "1" }
+regex = { version = "1", default-features = false, features = ["perf", "std", "unicode"] }
+regex-automata = { version = "0.4", default-features = false, features = ["dfa-onepass", "dfa-search", "hybrid", "meta", "nfa-backtrack", "perf-inline", "perf-literal", "std", "unicode"] }
+regex-syntax = { version = "0.8" }
+serde = { version = "1", features = ["alloc", "derive", "rc"] }
+serde_core = { version = "1", default-features = false, features = ["alloc", "rc", "result", "std"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+smallvec = { version = "1", default-features = false, features = ["write"] }
+winit = { version = "0.30", features = ["android-game-activity"] }
+zerocopy = { version = "0.8", default-features = false, features = ["derive", "simd"] }
+
+[build-dependencies]
+crossbeam-utils = { version = "0.8" }
+hashbrown = { version = "0.17" }
+indexmap = { version = "2", features = ["serde"] }
+jiff = { version = "0.2" }
+log = { version = "0.4", default-features = false, features = ["std"] }
+num-traits = { version = "0.2", features = ["libm"] }
+once_cell = { version = "1" }
+regex = { version = "1", default-features = false, features = ["perf", "std", "unicode"] }
+regex-automata = { version = "0.4", default-features = false, features = ["dfa-onepass", "dfa-search", "hybrid", "meta", "nfa-backtrack", "perf-inline", "perf-literal", "std", "unicode"] }
+regex-syntax = { version = "0.8" }
+serde = { version = "1", features = ["alloc", "derive", "rc"] }
+serde_core = { version = "1", default-features = false, features = ["alloc", "rc", "result", "std"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+smallvec = { version = "1", default-features = false, features = ["write"] }
+syn = { version = "2", features = ["extra-traits", "full", "visit-mut"] }
+winit = { version = "0.30", features = ["android-game-activity"] }
+zerocopy = { version = "0.8", default-features = false, features = ["derive", "simd"] }
+
+[target.aarch64-apple-darwin.dependencies]
+half = { version = "2", default-features = false, features = ["num-traits"] }
+libc = { version = "0.2" }
+objc2-app-kit = { version = "0.2", features = ["NSAccessibility", "NSAccessibilityConstants", "NSAccessibilityElement", "NSAccessibilityProtocols", "NSAppearance", "NSApplication", "NSBitmapImageRep", "NSButton", "NSColor", "NSControl", "NSCursor", "NSDragging", "NSEvent", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSMenu", "NSMenuItem", "NSOpenGLView", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSScreen", "NSText", "NSTextInputClient", "NSTextInputContext", "NSView", "NSWindow", "NSWindowScripting", "NSWindowTabGroup"] }
+smallvec = { version = "1", default-features = false, features = ["union"] }
+
+[target.aarch64-apple-darwin.build-dependencies]
+half = { version = "2", default-features = false, features = ["num-traits"] }
+libc = { version = "0.2" }
+objc2-app-kit = { version = "0.2", features = ["NSAccessibility", "NSAccessibilityConstants", "NSAccessibilityElement", "NSAccessibilityProtocols", "NSAppearance", "NSApplication", "NSBitmapImageRep", "NSButton", "NSColor", "NSControl", "NSCursor", "NSDragging", "NSEvent", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSMenu", "NSMenuItem", "NSOpenGLView", "NSPasteboard", "NSResponder", "NSRunningApplication", "NSScreen", "NSText", "NSTextInputClient", "NSTextInputContext", "NSView", "NSWindow", "NSWindowScripting", "NSWindowTabGroup"] }
+smallvec = { version = "1", default-features = false, features = ["union"] }
+
+[target.x86_64-unknown-linux-gnu.dependencies]
+arrayvec = { version = "0.7", default-features = false, features = ["std"] }
+bytemuck = { version = "1", default-features = false, features = ["aarch64_simd", "derive", "extern_crate_alloc", "min_const_generics"] }
+fastrand = { version = "2" }
+half = { version = "2", default-features = false, features = ["num-traits"] }
+libc = { version = "0.2" }
+linux-raw-sys = { version = "0.12", default-features = false, features = ["auxvec", "elf", "errno", "general", "if_ether", "ioctl", "net", "netlink", "no_std", "prctl", "system", "xdp"] }
+memchr = { version = "2" }
+phf_shared = { version = "0.13", default-features = false, features = ["std"] }
+ppv-lite86 = { version = "0.2", default-features = false, features = ["simd", "std"] }
+rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
+rand_chacha = { version = "0.9", default-features = false, features = ["std"] }
+rustix = { version = "1", features = ["event", "net", "pipe", "process", "shm", "system", "time"] }
+smallvec = { version = "1", default-features = false, features = ["const_new", "union"] }
+strict-num = { version = "0.1" }
+syn = { version = "2", features = ["extra-traits", "fold", "full", "visit-mut"] }
+tiny-skia-path = { version = "0.11" }
+toml_datetime = { version = "1", features = ["serde"] }
+toml_parser = { version = "1" }
+tracing = { version = "0.1" }
+tracing-core = { version = "0.1", default-features = false, features = ["std"] }
+ttf-parser = { version = "0.25", default-features = false, features = ["apple-layout", "glyph-names", "gvar-alloc", "no-std-float", "opentype-layout", "variable-fonts"] }
+wayland-sys = { version = "0.31", default-features = false, features = ["dlopen", "egl"] }
+winnow = { version = "1" }
+zvariant = { version = "5", features = ["enumflags2", "url"] }
+
+[target.x86_64-unknown-linux-gnu.build-dependencies]
+arrayvec = { version = "0.7", default-features = false, features = ["std"] }
+bytemuck = { version = "1", default-features = false, features = ["aarch64_simd", "derive", "extern_crate_alloc", "min_const_generics"] }
+fastrand = { version = "2" }
+half = { version = "2", default-features = false, features = ["num-traits"] }
+libc = { version = "0.2" }
+linux-raw-sys = { version = "0.12", default-features = false, features = ["auxvec", "elf", "errno", "general", "if_ether", "ioctl", "net", "netlink", "no_std", "prctl", "system", "xdp"] }
+memchr = { version = "2" }
+phf_shared = { version = "0.13", default-features = false, features = ["std"] }
+ppv-lite86 = { version = "0.2", default-features = false, features = ["simd", "std"] }
+rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
+rand_chacha = { version = "0.9", default-features = false, features = ["std"] }
+rustix = { version = "1", features = ["event", "net", "pipe", "process", "shm", "system", "time"] }
+smallvec = { version = "1", default-features = false, features = ["const_new", "union"] }
+strict-num = { version = "0.1" }
+syn = { version = "2", default-features = false, features = ["fold"] }
+tiny-skia-path = { version = "0.11" }
+toml_datetime = { version = "1", features = ["serde"] }
+toml_parser = { version = "1" }
+tracing = { version = "0.1" }
+tracing-core = { version = "0.1", default-features = false, features = ["std"] }
+ttf-parser = { version = "0.25", default-features = false, features = ["apple-layout", "glyph-names", "gvar-alloc", "no-std-float", "opentype-layout", "variable-fonts"] }
+wayland-sys = { version = "0.31", default-features = false, features = ["dlopen", "egl"] }
+winnow = { version = "1" }
+zvariant = { version = "5", features = ["enumflags2", "url"] }
+
+### END HAKARI SECTION

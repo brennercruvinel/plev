@@ -9,6 +9,7 @@ description = "Experimental declarative UI DSL facade for plev"
 [dependencies]
 macros.workspace = true
 engine.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

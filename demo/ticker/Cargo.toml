@@ -8,6 +8,7 @@ description = "Component Counter -- demonstrates the Component<T> + Lifecycle pa
 
 [dependencies]
 engine.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true

@@ -9,6 +9,7 @@ description = "Live preview: point at any react component (tsx + sass + vars) an
 [dependencies]
 engine.workspace = true
 import.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true
