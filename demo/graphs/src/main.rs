@@ -1,5 +1,5 @@
 //! Desktop window of the graphs demo: `cargo run -p graphs [lesmis|compound]`.
-//! The web build is the lib (`graphs::start`).
+//! The web build is the `graphs-web` bin (`graphs::run_web`, `trunk serve` here).
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {

@@ -191,10 +191,10 @@ impl HostedView for GraphsView {
     }
 }
 
-/// The browser entry: the page from `?page=`, hosted by the engine's `App`.
+/// The browser entry, run by the `graphs-web` binary: the page from
+/// `?page=`, hosted by the engine's `App`.
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen::prelude::wasm_bindgen(start)]
-pub fn start() {
+pub fn run_web() {
     use engine::runtime::window::{App, AppEvent, launch_args};
     use winit::platform::web::EventLoopExtWebSys;
 
