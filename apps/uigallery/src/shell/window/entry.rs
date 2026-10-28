@@ -56,6 +56,11 @@ pub fn run_web() {
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().unwrap();
     let mut app = App::new();
     app.proxy = Some(event_loop.create_proxy());
+    // the Noto faces are fetched when a page first shows their scripts
+    let faces = event_loop.create_proxy();
+    engine::drawing::text::on_faces_arrived(move || {
+        let _ = faces.send_event(UserEvent::Faces);
+    });
     event_loop.spawn_app(app);
 }
 

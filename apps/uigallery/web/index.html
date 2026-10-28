@@ -8,6 +8,10 @@
     <!-- Trunk builds the uigallery-web bin to wasm and injects the JS glue
          (not the uigallery bin: the lib's cdylib shares that name). -->
     <link data-trunk rel="rust" href="../Cargo.toml" data-bin="uigallery-web" />
+    <!-- The Noto faces stay out of the wasm and are fetched from fonts/
+         when a text first shows their script (engine drawing/text/on_demand.rs,
+         issue #137); the licenses travel with them. -->
+    <link data-trunk rel="copy-dir" href="../../../rust/engine/assets/fonts" />
     <style>
       /* Match the uigallery's dark surface so there's no white flash
          while the wasm module loads and the GPU initializes. */

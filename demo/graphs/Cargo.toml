@@ -26,9 +26,5 @@ console_log.workspace = true
 console_error_panic_hook.workspace = true
 web-sys = { workspace = true, features = ["HtmlElement", "DomStringMap"] }
 
-[features]
-# EXPERIMENT (gramorph proof 1): passes the engine's Noto-less build through, to weigh the web build
-experiment-no-noto = ["engine/experiment-no-noto"]
-
 [lints]
 workspace = true
