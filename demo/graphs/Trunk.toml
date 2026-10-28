@@ -1,0 +1,16 @@
+# Trunk config for the web build of the graphs demo (`trunk serve` from this
+# directory). index.html points at this crate's Cargo.toml (bin "graphs-web");
+# the page comes from the query (`?page=compound`, `lesmis` by default),
+# read by `graphs::run_web`. Ports: the uigallery 8080, the urnadbapp
+# 8081, this one 8082, the primes 8083, so all run at once.
+
+[build]
+target = "index.html"
+dist = "dist"
+# Engine plus cosmic-text in debug wasm is huge and slow; always ship opt.
+release = true
+
+[serve]
+addresses = ["127.0.0.1"]
+port = 8082
+open = false

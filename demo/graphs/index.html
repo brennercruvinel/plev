@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="icon" href="data:,">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>plev, graphs</title>
+    <!-- Trunk builds the graphs-web bin to wasm and injects the JS glue; it
+         opens the page named by ?page= (lesmis, compound). Serve from this
+         directory: `trunk serve` (WebGPU only, Chrome/Edge 113+). -->
+    <link data-trunk rel="rust" href="Cargo.toml" data-bin="graphs-web" />
+    <style>
+      /* The theme's dark surface, so there is no white flash while the wasm
+         module loads and the GPU initializes. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #303030;
+      }
+
+      /* The canvas is CSS-sized; winit's ResizeObserver turns CSS size
+         changes into WindowEvent::Resized, so the graph tracks the window. */
+      canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>

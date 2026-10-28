@@ -351,7 +351,7 @@ role = "demo: sdf shapes: cards, borders, shadows"
 
 [crates.graphs]
 path = "demo/graphs"
-role = "demo: graphs of the gramorph corpus drawn live (d3 force with node drag, cytoscape compound nodes) through LiveGraph and App::with_view, desktop and web; its inputs are data/graphs/d3/les-mis.json and data/graphs/cytoscape/compound.json, embedded"
+role = "demo: graphs of the gramorph corpus drawn live (d3 force with node drag, cytoscape compound nodes) through LiveGraph and App::with_view, desktop (bin graphs) and web (bin graphs-web, trunk serve from demo/graphs on :8082, ?page=compound); its inputs are data/graphs/d3/les-mis.json and data/graphs/cytoscape/compound.json, embedded"
 
 [crates.ticker]
 path = "demo/ticker"
