@@ -23,6 +23,13 @@ crate-type = ["lib", "cdylib", "staticlib"]
 name = "urnadbapp"
 path = "src/main.rs"
 
+# the web entry trunk builds (web/index.html, `data-bin`): its own name,
+# because the lib's cdylib and the desktop bin are both "urnadbapp" and trunk
+# refuses to pick between two artifacts of one name (the uigallery-web shape)
+[[bin]]
+name = "urnadbapp-web"
+path = "src/bin/web.rs"
+
 [dependencies]
 engine = { path = "../../rust/engine" }
 wgpu = "29"
