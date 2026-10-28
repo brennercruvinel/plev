@@ -158,11 +158,10 @@ impl TypographyPage {
             });
         }
         right.push(Line::Group("SCRIPTS — NOTO SANS"));
-        // The scripts the embedded Noto faces cover (docs/adr/rendering/0071):
-        // wasm, android and ios draw them with those faces, the web build
-        // fetching each script's the first time this page shows it (engine
-        // drawing/text/on_demand.rs); a desktop still draws them with the
-        // system's faces, as that ADR keeps it.
+        // The embedded Noto faces (docs/adr/rendering/0071), on every target
+        // (adr 0079: a desktop names them before its system's faces); the
+        // web build fetches each script's the first time this page shows it
+        // (engine drawing/text/on_demand.rs).
         for text in SCRIPTS {
             right.push(Line::Plain {
                 style: TextStyle::new(14.0).with_line_height(21.0),

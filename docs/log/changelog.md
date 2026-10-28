@@ -9,6 +9,13 @@ status: living
 
 ## unreleased
 
+- a desktop draws the scripts with the embedded faces (2026-10-27, adr
+  a-desktop-draws-the-scripts-with-the-embedded-faces): the engine's own
+  fallback names the Noto face of each script before the platform's, so
+  arabic, hebrew, devanagari, CJK and emoji no longer come from Geeza Pro,
+  Hiragino or Apple Color Emoji, and the Typography page is equal in every
+  byte between the desktop and the web.
+
 - the web build fetches the Noto faces when a text first needs them
   (2026-10-27, issue #137, adr the-web-fetches-the-noto-faces-on-demand):
   the wasm embeds the latin faces only, each script's Noto files come from

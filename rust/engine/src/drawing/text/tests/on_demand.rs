@@ -129,3 +129,34 @@ fn measuring_a_text_asks_for_its_packs_once() {
         "the faces that arrived are the ones the desktop embeds: {width} then {again}"
     );
 }
+
+/// On a desktop, the system's faces for these scripts (Geeza Pro, Hiragino,
+/// Apple Color Emoji, ...) were found before the embedded ones: every
+/// machine drew them with its own fonts and the web measured them
+/// otherwise. Each script shapes from its embedded Noto face, the spaces
+/// from the UI face.
+#[test]
+fn every_script_shapes_from_its_embedded_face_on_the_desktop() {
+    let style = TextStyle::new(14.0);
+    for (text, family) in [
+        ("مرحبا بالعالم", "Noto Sans Arabic"),
+        ("שלום עולם", "Noto Sans Hebrew"),
+        ("नमस्ते दुनिया", "Noto Sans Devanagari"),
+        ("你好世界", "Noto Sans SC"),
+        ("こんにちは", "Noto Sans JP"),
+        ("안녕하세요 세계", "Noto Sans KR"),
+        ("🙂 🎉 🚀", "Noto Color Emoji"),
+    ] {
+        let faces = TextMeasurer::resolved_faces(text, &style);
+        assert!(
+            faces.iter().any(|(f, _)| f == family),
+            "{text}: no {family} in {faces:?}"
+        );
+        assert!(
+            faces
+                .iter()
+                .all(|(f, _)| f == family || f == "Inclusive Sans"),
+            "{text}: shaped from {faces:?}"
+        );
+    }
+}

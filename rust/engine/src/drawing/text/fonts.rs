@@ -42,10 +42,11 @@
 //! embedded face has but the heart (Inter's) and the joiner.
 
 use std::cell::Cell;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
-use cosmic_text::FontSystem;
 use cosmic_text::fontdb::{Database, ID, Source};
+use cosmic_text::{Fallback, FontSystem, PlatformFallback};
+use unicode_script::Script;
 
 /// The locale of the embedded path. cosmic-text reads it for Han
 /// unification in its platform lists; the embedded faces are reached past
@@ -135,10 +136,12 @@ pub(super) fn with_text_system_faces<R>(set: FaceSet, f: impl FnOnce() -> R) -> 
 }
 
 /// System fonts (desktop) are fallback only; the embedded faces are the
-/// source of truth so rasterization matches `TextMeasurer`.
+/// source of truth so rasterization matches `TextMeasurer`. The system's
+/// locale and faces, with the embedded faces first in the fallback.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn target_font_system() -> FontSystem {
-    FontSystem::new()
+    let (locale, db) = FontSystem::new().into_locale_and_db();
+    FontSystem::new_with_locale_and_db_and_fallback(locale, db, EmbeddedFirst)
 }
 
 #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
@@ -147,7 +150,55 @@ fn target_font_system() -> FontSystem {
 }
 
 fn embedded_font_system() -> FontSystem {
-    FontSystem::new_with_locale_and_db(EMBEDDED_LOCALE.to_string(), Database::new())
+    FontSystem::new_with_locale_and_db_and_fallback(
+        EMBEDDED_LOCALE.to_string(),
+        Database::new(),
+        EmbeddedFirst,
+    )
+}
+
+/// cosmic-text's fallback with the embedded Noto face of a script named
+/// first. A desktop holds the system's faces too, and cosmic-text's own
+/// lists name the platform's per script (Geeza Pro for arabic, Hiragino
+/// for kana, Apple Color Emoji), which a query reaches before the embedded
+/// faces: every machine drew those scripts with its own fonts, and the
+/// web, with the embedded faces alone, measured them otherwise. A script
+/// the embedded faces cover names its Noto face alone, so a glyph a subset
+/// lacks still reaches the platform's faces past the common list; the
+/// other scripts keep the platform's lists, and the common list starts
+/// with the embedded emoji. The web build uses the same rule, so before
+/// its faces arrive the names find nothing and nothing changes.
+struct EmbeddedFirst;
+
+/// cosmic-text's lists for this platform, read through a value that lives
+/// as long as they do.
+static PLATFORM: PlatformFallback = PlatformFallback;
+
+impl Fallback for EmbeddedFirst {
+    fn common_fallback(&self) -> &[&'static str] {
+        static COMMON: OnceLock<Vec<&'static str>> = OnceLock::new();
+        COMMON.get_or_init(|| {
+            std::iter::once("Noto Color Emoji")
+                .chain(PLATFORM.common_fallback().iter().copied())
+                .collect()
+        })
+    }
+
+    fn forbidden_fallback(&self) -> &[&'static str] {
+        PLATFORM.forbidden_fallback()
+    }
+
+    fn script_fallback(&self, script: Script, locale: &str) -> &[&'static str] {
+        match script {
+            Script::Arabic => &["Noto Sans Arabic"],
+            Script::Hebrew => &["Noto Sans Hebrew"],
+            Script::Devanagari => &["Noto Sans Devanagari"],
+            Script::Han => &["Noto Sans SC"],
+            Script::Hiragana | Script::Katakana => &["Noto Sans JP"],
+            Script::Hangul => &["Noto Sans KR"],
+            _ => PLATFORM.script_fallback(script, locale),
+        }
+    }
 }
 
 /// Register every embedded face and pin the generic family defaults.
