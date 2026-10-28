@@ -94,8 +94,9 @@ cargo run -p idestudio -- .
 
 ### in the browser
 
-each command prints the address to open. they use different ports, so they
-can all run at once. resize the window and the layout follows.
+each command prints the address to open. a port already taken is skipped
+for the next free one, so they can all run at once. resize the window and
+the layout follows.
 
 ```
 tool/tasks/webtarget.sh uigallery
