@@ -145,9 +145,8 @@ impl TypographyPage {
         });
         right.push(Line::Group("UNICODE"));
         // Only glyphs the embedded faces actually cover: anything else
-        // silently rasterizes from a system font (the engine warns about
-        // non-embedded faces at raster time). Inclusive Sans is Latin-only;
-        // CJK/math/Greek demos would be that fallback, not our typography.
+        // rasterizes from a system font (the engine warns about
+        // non-embedded faces at raster time).
         for text in [
             "Café naïve résumé façade über",
             "¿Qué? ¡Sí! «guillemets» „quotes“ — dash …",
@@ -155,6 +154,17 @@ impl TypographyPage {
         ] {
             right.push(Line::Plain {
                 style: TextStyle::new(14.0).with_line_height(20.0),
+                text: text.to_string(),
+            });
+        }
+        right.push(Line::Group("SCRIPTS — NOTO SANS"));
+        // The embedded Noto faces (docs/adr/rendering/0071), on every target
+        // (adr 0079: a desktop names them before its system's faces); the
+        // web build fetches each script's the first time this page shows it
+        // (engine drawing/text/on_demand.rs).
+        for text in SCRIPTS {
+            right.push(Line::Plain {
+                style: TextStyle::new(14.0).with_line_height(21.0),
                 text: text.to_string(),
             });
         }
@@ -297,6 +307,18 @@ impl TypographyPage {
         }
     }
 }
+
+/// One line per embedded script: arabic, hebrew, devanagari, simplified
+/// chinese, japanese, korean, emoji.
+const SCRIPTS: [&str; 7] = [
+    "مرحبا بالعالم",
+    "שלום עולם",
+    "नमस्ते दुनिया",
+    "你好，世界",
+    "こんにちは、世界",
+    "안녕하세요 세계",
+    "🙂 🎉 🚀 👍",
+];
 
 const WRAPPING_TEXT: &str = "Inclusive Sans ships in every UI weight (400/500/600/700) as static \
     faces embedded in the engine, so shaping never depends on host fonts. cosmic-text only keeps \

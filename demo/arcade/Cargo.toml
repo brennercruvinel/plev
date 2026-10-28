@@ -9,6 +9,7 @@ description = "Snake Game -- auto-playing AI snake built entirely on plev primit
 [dependencies]
 engine.workspace = true
 web-time.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true

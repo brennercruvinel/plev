@@ -36,8 +36,15 @@ use crate::runtime::signal::{ReadSignal, WriteSignal, create_signal};
 
 pub enum AppEvent {
     /// The device a browser shell asked for asynchronously, for the
-    /// window it was asked for (`Windows::attach_gpu`).
-    GpuReady { window: WindowId, gpu: GpuContext },
+    /// window it was asked for (`Windows::attach_gpu`); boxed, so the
+    /// event that carries nothing is not as large as a device.
+    GpuReady {
+        window: WindowId,
+        gpu: Box<GpuContext>,
+    },
+    /// A face the web build fetched arrived (`drawing::text::on_faces_arrived`):
+    /// every window draws its text again with it.
+    FacesArrived,
 }
 
 /// The engine's own application handler: one window through
@@ -136,6 +143,10 @@ impl App {
     #[cfg(any(target_arch = "wasm32", target_os = "android"))]
     pub fn new_with_proxy(proxy: EventLoopProxy<AppEvent>) -> Self {
         let (frame_read, frame_write) = create_signal(0u64);
+        let faces = proxy.clone();
+        crate::drawing::text::on_faces_arrived(move || {
+            let _ = faces.send_event(AppEvent::FacesArrived);
+        });
         Self {
             windows: Windows::new(),
             theme: crate::styling::theme::Theme::default(),

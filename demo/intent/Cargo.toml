@@ -12,6 +12,7 @@ offers.workspace = true
 accord.workspace = true
 plevir.workspace = true
 serde_json.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

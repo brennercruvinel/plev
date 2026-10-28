@@ -130,6 +130,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -153,6 +154,7 @@ dependencies = [
  "serde_json",
  "socket",
  "tempfile",
+ "unions",
 ]
 
 [[package]]
@@ -330,6 +332,7 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
+ "unions",
  "web-time",
 ]
 
@@ -761,6 +764,7 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
+ "unions",
  "wgpu",
 ]
 
@@ -855,6 +859,7 @@ dependencies = [
  "plevir",
  "serde_json",
  "tempfile",
+ "unions",
 ]
 
 [[package]]
@@ -908,6 +913,7 @@ version = "0.1.0"
 dependencies = [
  "accord",
  "indexmap",
+ "unions",
 ]
 
 [[package]]
@@ -1211,6 +1217,7 @@ dependencies = [
  "proptest",
  "ropey",
  "unicode-segmentation",
+ "unions",
 ]
 
 [[package]]
@@ -1254,6 +1261,7 @@ dependencies = [
  "image",
  "import",
  "indexmap",
+ "js-sys",
  "log",
  "lru",
  "lyon_path",
@@ -1270,10 +1278,13 @@ dependencies = [
  "rustc-hash 2.1.2",
  "serde",
  "serde_json",
+ "sha2",
  "slotmap",
  "taffy",
  "tray-icon",
+ "unicode-script",
  "unicode-segmentation",
+ "unions",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1682,6 +1693,7 @@ version = "0.1.0"
 dependencies = [
  "gix",
  "tempfile",
+ "unions",
 ]
 
 [[package]]
@@ -2620,6 +2632,7 @@ dependencies = [
  "serde_json",
  "socket",
  "tempfile",
+ "unions",
  "winit",
 ]
 
@@ -2686,6 +2699,7 @@ dependencies = [
  "tree-sitter-html",
  "tree-sitter-rust",
  "tree-sitter-typescript",
+ "unions",
  "usvg",
 ]
 
@@ -2729,6 +2743,7 @@ dependencies = [
  "env_logger",
  "log",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -2739,6 +2754,7 @@ dependencies = [
  "engine",
  "record",
  "replay",
+ "unions",
 ]
 
 [[package]]
@@ -2759,6 +2775,7 @@ dependencies = [
  "offers",
  "plevir",
  "serde_json",
+ "unions",
 ]
 
 [[package]]
@@ -2986,6 +3003,7 @@ version = "0.1.0"
 dependencies = [
  "engine",
  "env_logger",
+ "unions",
 ]
 
 [[package]]
@@ -3082,6 +3100,7 @@ dependencies = [
  "import",
  "log",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -3133,6 +3152,7 @@ dependencies = [
  "quote",
  "syn 2.0.117",
  "trybuild",
+ "unions",
 ]
 
 [[package]]
@@ -3141,6 +3161,7 @@ version = "0.1.0"
 dependencies = [
  "engine",
  "macros",
+ "unions",
 ]
 
 [[package]]
@@ -3161,6 +3182,7 @@ dependencies = [
  "editor",
  "engine",
  "uigallery",
+ "unions",
  "web-time",
  "winit",
 ]
@@ -3220,6 +3242,7 @@ dependencies = [
  "log",
  "socket",
  "uigallery",
+ "unions",
  "winit",
 ]
 
@@ -3230,6 +3253,7 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -3240,6 +3264,7 @@ dependencies = [
  "env_logger",
  "import",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -3252,6 +3277,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -3724,6 +3750,7 @@ dependencies = [
  "plevir",
  "serde_json",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -3924,6 +3951,7 @@ dependencies = [
  "log",
  "motion",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -3934,6 +3962,7 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
+ "unions",
 ]
 
 [[package]]
@@ -4056,6 +4085,7 @@ dependencies = [
  "env_logger",
  "log",
  "pollster",
+ "unions",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
@@ -4289,6 +4319,7 @@ dependencies = [
  "sha2",
  "tempfile",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -4359,6 +4390,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "uigallery",
+ "unions",
 ]
 
 [[package]]
@@ -4378,6 +4410,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
+ "unions",
 ]
 
 [[package]]
@@ -4517,6 +4550,7 @@ dependencies = [
  "plevir",
  "serde_json",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -4647,6 +4681,7 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
+ "unions",
  "winit",
 ]
 
@@ -4800,6 +4835,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror 2.0.18",
+ "unions",
 ]
 
 [[package]]
@@ -4959,6 +4995,7 @@ version = "0.1.0"
 dependencies = [
  "serde_json",
  "toml",
+ "unions",
 ]
 
 [[package]]
@@ -5008,6 +5045,7 @@ dependencies = [
  "engine",
  "env_logger",
  "pollster",
+ "unions",
 ]
 
 [[package]]
@@ -5301,6 +5339,7 @@ dependencies = [
  "serde_json",
  "socket",
  "tempfile",
+ "unions",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-time",
@@ -5369,6 +5408,52 @@ name = "unicode-xid"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ebc1c04c71510c7f702b52b7c350734c9ff1295c464a03335b00bb84fc54f853"
+
+[[package]]
+name = "unions"
+version = "0.1.0"
+dependencies = [
+ "arrayvec",
+ "bytemuck",
+ "crossbeam-utils",
+ "fastrand",
+ "half",
+ "hashbrown 0.17.1",
+ "indexmap",
+ "jiff",
+ "libc",
+ "linux-raw-sys 0.12.1",
+ "log",
+ "memchr",
+ "num-traits",
+ "objc2-app-kit 0.2.2",
+ "once_cell",
+ "phf_shared",
+ "ppv-lite86",
+ "rand",
+ "rand_chacha",
+ "regex",
+ "regex-automata",
+ "regex-syntax",
+ "rustix 1.1.4",
+ "serde",
+ "serde_core",
+ "serde_json",
+ "smallvec",
+ "strict-num",
+ "syn 2.0.117",
+ "tiny-skia-path",
+ "toml_datetime",
+ "toml_parser",
+ "tracing",
+ "tracing-core",
+ "ttf-parser",
+ "wayland-sys",
+ "winit",
+ "winnow 1.0.3",
+ "zerocopy",
+ "zvariant",
+]
 
 [[package]]
 name = "url"

@@ -117,6 +117,22 @@ jobs:
       - run: cargo clippy --manifest-path apps/urnadbapp/Cargo.toml --all-targets -- -D warnings
       - run: cargo check --manifest-path apps/urnadbapp/Cargo.toml --target wasm32-unknown-unknown
 
+  unions:
+    # rust/unions is the union of the workspace's dependency features
+    # (.config/hakari.toml): generate --diff fails when a dependency change
+    # left it behind, manage-deps --dry-run when a member does not depend on
+    # it. the fix for either is the same command without the flag.
+    name: unions (cargo hakari)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hakari
+      - run: cargo hakari generate --diff
+      - run: cargo hakari manage-deps --dry-run
+
   links:
     name: docs links (lychee, offline)
     runs-on: ubuntu-latest

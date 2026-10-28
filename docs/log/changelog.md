@@ -9,6 +9,21 @@ status: living
 
 ## unreleased
 
+- a desktop draws the scripts with the embedded faces (2026-10-27, adr
+  a-desktop-draws-the-scripts-with-the-embedded-faces): the engine's own
+  fallback names the Noto face of each script before the platform's, so
+  arabic, hebrew, devanagari, CJK and emoji no longer come from Geeza Pro,
+  Hiragino or Apple Color Emoji, and the Typography page is equal in every
+  byte between the desktop and the web.
+
+- the web build fetches the Noto faces when a text first needs them
+  (2026-10-27, issue #137, adr the-web-fetches-the-noto-faces-on-demand):
+  the wasm embeds the latin faces only, each script's Noto files come from
+  `fonts/` beside the page, checked by sha256, and the measurer and the
+  renderer take them in the desktop's order and draw the text again. the
+  uigallery's wasm went from 8.2 MB to 2.85 MB with gzip; the Typography
+  page shows one line per embedded script; `experiment-no-noto` is gone.
+
 - the repository catches up with itself (2026-09-26): four decision
   records for what the last rounds settled (the person's composition and
   clipboard stay the person's, a renderer upgrade is proven by a full

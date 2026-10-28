@@ -96,6 +96,12 @@ impl ClusterCache {
         }
     }
 
+    /// Drops every entry: the faces they were shaped with changed.
+    pub(super) fn clear(&mut self) {
+        self.entries.clear();
+        self.bytes = 0;
+    }
+
     #[cfg(test)]
     pub(super) fn len(&self) -> usize {
         self.entries.len()

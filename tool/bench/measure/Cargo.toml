@@ -12,6 +12,7 @@ engine.workspace = true
 editor.workspace = true
 winit.workspace = true
 web-time.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

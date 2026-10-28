@@ -7,6 +7,10 @@
     <title>urnadbapp — urna database explorer</title>
     <!-- Trunk builds the urnadbapp bin to wasm and injects the JS glue. -->
     <link data-trunk rel="rust" href="../Cargo.toml" data-bin="urnadbapp" />
+    <!-- The Noto faces stay out of the wasm and are fetched from fonts/
+         when a text first shows their script (engine drawing/text/on_demand.rs,
+         issue #137); the licenses travel with them. -->
+    <link data-trunk rel="copy-dir" href="../../../rust/engine/assets/fonts" />
     <style>
       /* Match the app's dark surface so there's no white flash
          while the wasm module loads and the GPU initializes. */

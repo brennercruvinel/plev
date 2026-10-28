@@ -19,6 +19,7 @@ serde = ["dep:serde", "indexmap/serde"]
 indexmap.workspace = true
 serde = { workspace = true, optional = true }
 thiserror.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

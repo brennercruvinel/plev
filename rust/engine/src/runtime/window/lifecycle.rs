@@ -93,7 +93,10 @@ impl super::App {
         {
             wasm_bindgen_futures::spawn_local(async move {
                 let gpu = crate::drawing::gpu::GpuContext::new(window).await;
-                let _ = proxy.send_event(AppEvent::GpuReady { window: id, gpu });
+                let _ = proxy.send_event(AppEvent::GpuReady {
+                    window: id,
+                    gpu: Box::new(gpu),
+                });
             });
         }
 
@@ -111,8 +114,14 @@ impl super::App {
         match event {
             AppEvent::GpuReady { window, gpu } => {
                 log::info!("GPU context ready (async)");
-                if !self.windows.attach_gpu(window, gpu) {
+                if !self.windows.attach_gpu(window, *gpu) {
                     log::warn!("GPU context ready for a window that closed meanwhile");
+                }
+            }
+            AppEvent::FacesArrived => {
+                let ids: Vec<_> = self.windows.ids().collect();
+                for id in ids {
+                    self.windows.request_redraw(id);
                 }
             }
         }

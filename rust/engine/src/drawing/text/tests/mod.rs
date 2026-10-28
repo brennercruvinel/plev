@@ -3,4 +3,6 @@
 #[cfg(test)]
 pub(super) mod measure;
 #[cfg(test)]
+pub(super) mod on_demand;
+#[cfg(test)]
 pub(super) mod raster;

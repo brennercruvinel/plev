@@ -31,6 +31,7 @@ replay.workspace = true
 record.workspace = true
 # the ids, the times and the actors the model speaks in.
 accord.workspace = true
+unions.workspace = true
 
 [lints]
 workspace = true

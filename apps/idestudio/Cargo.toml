@@ -42,6 +42,7 @@ screen.workspace = true
 # way the uigallery asks it (claude -p as a child process; the rules stay
 # the first choice, and a test only ever runs the repository's fake).
 claude.workspace = true
+unions.workspace = true
 
 [dev-dependencies]
 # the recording test reads the session back the way plev-inspect does,

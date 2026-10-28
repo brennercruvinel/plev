@@ -39,6 +39,7 @@ plevir.workspace = true
 # the Surface page's intent field proposes a surface by the rules (task-69
 # phase 3a), through the todo's dispatcher.
 offers.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
