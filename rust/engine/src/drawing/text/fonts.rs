@@ -55,6 +55,7 @@ const EMBEDDED_LOCALE: &str = "en-US";
 /// Noto Sans subsets (SIL OFL, assets/fonts/LICENSE-Noto-OFL.txt), made by
 /// `tool/tasks/subsetter.py`. The order is the fallback order among faces of the
 /// same weight: SC before JP is the Han order, see the module docs.
+#[cfg(not(feature = "experiment-no-noto"))]
 const NOTO: [&[u8]; 12] = [
     include_bytes!("../../../assets/fonts/NotoSansArabic-Regular.ttf"),
     include_bytes!("../../../assets/fonts/NotoSansArabic-Bold.ttf"),
@@ -72,7 +73,14 @@ const NOTO: [&[u8]; 12] = [
 
 /// Noto Color Emoji, a CBDT subset (SIL OFL,
 /// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `tool/tasks/subsetter.py`.
+#[cfg(not(feature = "experiment-no-noto"))]
 const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
+// provisional (`experiment-no-noto`, off by default): the web build weighed
+// without the Noto faces; the scripts they cover draw nothing while it is on
+#[cfg(feature = "experiment-no-noto")]
+const NOTO: [&[u8]; 0] = [];
+#[cfg(feature = "experiment-no-noto")]
+const NOTO_EMOJI: &[u8] = &[];
 
 /// The faces a font system holds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -171,7 +179,9 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     for face in NOTO {
         db.load_font_source(Source::Binary(Arc::new(face)));
     }
-    db.load_font_source(Source::Binary(Arc::new(NOTO_EMOJI)));
+    if !NOTO_EMOJI.is_empty() {
+        db.load_font_source(Source::Binary(Arc::new(NOTO_EMOJI)));
+    }
 
     // `font_family: None` (the engine default) shapes as `Family::SansSerif`.
     // cosmic-text points that at "Open Sans", which is neither embedded nor
@@ -183,8 +193,39 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     // platform fallback chain.
     db.set_sans_serif_family("Inclusive Sans");
     db.set_monospace_family("Inclusive Sans");
-    db.faces()
+    let embedded: Vec<ID> = db
+        .faces()
         .filter(|f| !before.contains(&f.id))
         .map(|f| f.id)
-        .collect()
+        .collect();
+    remove_system_twins(db, &embedded);
+    embedded
+}
+
+/// Removes every face loaded before the embedded ones (a desktop's system
+/// fonts) that carries a family name an embedded face carries. A family
+/// installed on the system under the same name (an Inclusive Sans in
+/// ~/Library/Fonts) loads first and wins a query for that name, so text
+/// would measure and draw with whatever version the machine holds instead
+/// of the face the engine ships. The other system faces stay, the fallback
+/// for what the embedded set does not cover.
+fn remove_system_twins(db: &mut Database, embedded: &[ID]) {
+    let names: std::collections::HashSet<String> = db
+        .faces()
+        .filter(|f| embedded.contains(&f.id))
+        .flat_map(|f| f.families.iter().map(|(name, _)| name.to_lowercase()))
+        .collect();
+    let twins: Vec<ID> = db
+        .faces()
+        .filter(|f| !embedded.contains(&f.id))
+        .filter(|f| {
+            f.families
+                .iter()
+                .any(|(name, _)| names.contains(&name.to_lowercase()))
+        })
+        .map(|f| f.id)
+        .collect();
+    for id in twins {
+        db.remove_face(id);
+    }
 }

@@ -27,8 +27,8 @@ pub fn load(name: &str) -> J {
 }
 
 /// The dense benches measure against large lottie json under `data/media/lottie`,
-/// which is gitignored study material (AGENTS.md). when it is absent (a fresh
-/// clone, CI, a sandbox), the bench has nothing to weigh, so it skips with a
+/// the curated references the repository tracks. when one is absent (a checkout
+/// without it, a sandbox), the bench has nothing to weigh, so it skips with a
 /// notice instead of failing: a missing study fixture is not a regression.
 /// returns true (and prints the skip line) when the fixture is not present.
 pub fn fixture_missing(name: &str) -> bool {

@@ -31,11 +31,11 @@ the mantra every change is judged against:
 
 ## the official app pattern
 
-state lives in plain structs, ui is built from retained widgets (`comps`,
-the design system crate: `engine::widgets::prelude::*`), and every visible mutation
-invalidates (`EventResult::changed` / request redraw). the showcase is the
+state lives in plain structs, ui is built from retained widgets (the
+design system, `engine::widgets::prelude::*`), and every visible mutation
+invalidates (`EventResult::changed` / request redraw). the uigallery is the
 template app. the declarative builder (`engine::compose::builder`) is supported for
-prototypes and demos; `view`, `component`, `signal` and `narrate` are
+prototypes and demos; `view`, `component`, `signal` and `markup` are
 experimental: do not start app code on them (docs/adr/structure/0023-official-app-pattern.md).
 
 task-69 adds a second supported pattern (surfaces materialized from
@@ -55,8 +55,8 @@ what exists (updated at each task close-out):
   `Semantics` trait, `SnapshotBuilder` (text or typed ids, every
   violation reported by `finish`), `Snapshot` with a stable `Revision`
   and `Snapshot::diff`. the engine (the binding table, accessibility),
-  comps (the widgets' `.sem` and `project`), the showcase and the ide
-  depend on it, and so do `wire` and `rec`.
+  `engine::widgets` (the widgets' `.sem` and `project`), the uigallery and
+  the idestudio depend on it, and so do `socket` and `record`.
 - the dispatcher, also in `rust/accord` (task-58, adr
   actions-carry-observed-state): `Request::observe` records the values the
   actor saw for the action's `reads`; `check` decides in a fixed order and
@@ -70,20 +70,20 @@ what exists (updated at each task close-out):
   `Dispatcher` for every actor projects the app at dispatch, runs
   `Operable::execute(id, req)` only after acceptance or a person's
   confirmation (`Actor::Human` or `Actor::Assistive`), and keeps a
-  `Receipt` whose stages sinks see as they happen. `cargo run -p accord
-  --example commit` is the thesis scenario in thirty lines of app.
+  `Receipt` whose stages sinks see as they happen. `cargo run -p commit`
+  (demo/commit) is the thesis scenario in thirty lines of app.
 - the binding table (task-59, adr semantic-binding-beside-the-scene): a
   widget with a `SemId` calls `Compositor::bind` (or `bind_to_layer` on
   the layer it draws into) with the rect it draws and hit-tests with;
   the table sits beside the scene, never in a layer hash, and
   `Compositor::hit(x, y)` answers which capability is under a point.
-  19 interactive comps widgets take `.sem(id)` and have a `project`
+  19 interactive widgets take `.sem(id)` and have a `project`
   helper that declares its role, state and actions (children as keys
   under its id); an app gives a widget an id, calls its helper in
-  `Semantics::project`, and the render binds it. seven widgets that
+  `Semantics::project`, and the render binds it. eight widgets that
   handle events have neither yet: `Scrollbar`, `Card`, `GraphView`,
-  `AppShell`, `EmptyState`, `Sidebar` and `EditorView`.
-- the first app on the one path is the showcase todo page
+  `LiveGraph`, `AppShell`, `EmptyState`, `Sidebar` and `EditorView`.
+- the first app on the one path is the uigallery todo page
   (`apps/uigallery/src/views/apps/todo/semantics/mod.rs`): `Semantics +
   Operable`, owner of a `Dispatcher`; every click, the Enter key and the
   filter pills become `Request::observe(.., Actor::Human, ..)`; the model
@@ -92,7 +92,7 @@ what exists (updated at each task close-out):
   this shape.
 - the second app on the one path is the git client (task-62):
   `idestudio::capability::Workbench` owns the view, the git session and the
-  dispatcher, for the ide binary and the showcase Git page alike. it shows
+  dispatcher, for the ide binary and the uigallery Git page alike. it shows
   the asynchronous shape: `execute` sends the command to the worker and
   returns `Execution::Started`, and the worker's answer ends the receipt
   (`complete`, `fail`, `reject_at_truth`). a precondition whose truth
@@ -184,7 +184,7 @@ as the tasks land, these rules become binding (each line names its task):
   in recordings, not to agents (task-57). whatever carries a request or a
   stage out of the process reduces what aims at a secret node with
   `accord::redactor`, the one rule; never write a second one (task-57b).
-- the sem serde form is lean: a field at its default is not written and
+- the accord serde form is lean: a field at its default is not written and
   reads back when absent; `source` travels only when the node has one and
   leaves an agent's observation unless asked (`plev observe --source`).
   pin a form in a test by its lean text, and let an old text read
@@ -210,22 +210,22 @@ geometry. a number a screen needs that is not a token yet becomes one in
 an app frames its screens with `engine::widgets::shell::AppShell` (full sidebar,
 rail, or a drawer behind a menu button on a phone; header; content rect;
 safe area). the only tokens an app may own are domain semantics derived
-from the theme (the ide's file-status colors).
+from the theme (the idestudio's file-status colors).
 
-every comps widget renders under every built-in theme at a phone and a
+every widget renders under every built-in theme at a phone and a
 desktop width (`rust/engine/src/widgets/tests/matrix.rs`); a new widget joins
-that matrix in the same change, and ships its showcase page.
+that matrix in the same change, and ships its uigallery page.
 
 ## before writing anything
 
-check whether the engine or comps already provides the capability. the
+check whether the engine or its widgets already provide the capability. the
 most expensive failure pattern in this project was app-layer
 reimplementation of an existing feature (a second theme, five copied
 widgets, per-app ellipsis helpers). grep `rust/engine/src` and
 `rust/engine/src/widgets` first, read docs/ref/component-catalog.md, and find one screen that
-already does it right (the showcase pages).
+already does it right (the uigallery pages).
 
-the same rule holds for the new layer: one `sem` crate, one dispatcher,
+the same rule holds for the new layer: one `accord` crate, one dispatcher,
 one binding table, one accessibility projection. never a local copy.
 
 ## text
@@ -313,9 +313,10 @@ names a web mechanism, the platform's equivalent counts.
   motion derived from proportions, not from breakpoints; tests over
   continuous ranges of dimensions and states, not only device presets
 
-the same five rules are in AGENTS.md and, one checkbox each, in the pull
-request template; an edit to one lands in the others in the same change
-(adr design-for-ranges-not-screens-and-devices).
+this section holds the full text of the five rules; the README's
+contracts and the ATLAS `[contracts]` carry the short form, and an edit
+here lands there in the same change (adr
+design-for-ranges-not-screens-and-devices).
 
 ## layout and responsiveness
 
@@ -360,7 +361,7 @@ request template; an edit to one lands in the others in the same change
   (ADR worker-results-wake-the-event-loop); the agent socket (task-61)
   and the accessibility action handler (task-60) follow the same pattern.
 - `cargo check --target wasm32-unknown-unknown -p uigallery` stays green;
-  a crate that the engine depends on (`sem`) must compile for wasm too.
+  a crate that the engine depends on (`accord`) must compile for wasm too.
 
 ## definition of done for ui work
 

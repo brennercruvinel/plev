@@ -25,7 +25,7 @@ pub struct HitRegionEntry {
 
 /// Render an Element tree and push results to the compositor and input state.
 /// This is the app-facing entry point -- app code calls this instead of
-/// touching Compositor or SceneNode directly (Mantra-01).
+/// touching Compositor or SceneNode directly.
 pub fn render_element_to_compositor(
     element: &Element,
     compositor: &mut Compositor,

@@ -558,26 +558,14 @@ pub(crate) mod fixtures {
 
     /// A small laid-out graph over the fake db's 3 chunks (0→1→2 chain).
     pub fn fake_graph_scene() -> engine::widgets::graph::geometry::GraphScene {
-        let spec = engine::widgets::graph::geometry::GraphSpec {
-            n_nodes: 3,
-            edges: vec![
-                engine::widgets::graph::geometry::GraphEdge {
-                    from: 0,
-                    to: 1,
-                    kind: 0,
-                },
-                engine::widgets::graph::geometry::GraphEdge {
-                    from: 1,
-                    to: 2,
-                    kind: 0,
-                },
-            ],
+        use engine::widgets::graph::geometry::{GraphData, compute_layout};
+        use engine::widgets::graph::{Edge, Graph, Node};
+        let chain = Graph {
+            nodes: (0..3).map(|i| Node::new(i.to_string())).collect(),
+            edges: vec![Edge::new(0, 1), Edge::new(1, 2)],
+            groups: Vec::new(),
         };
-        engine::widgets::graph::geometry::compute_layout(
-            &engine::widgets::graph::geometry::GraphData::from_spec(&spec),
-            1000.0,
-            1000.0,
-        )
+        compute_layout(&GraphData::from_graph(&chain), 1000.0, 1000.0)
     }
 }
 

@@ -10,9 +10,9 @@ tags: [orchestration, autonomy, loop, status]
 # modo de operação: orquestrador autônomo
 
 desde 2026-09-23 o brenner não supervisiona cada integração. o orquestrador
-segue sozinho dentro da missão (`generative-runtime-thesis.md`),
-das regras (`generative-runtime-guidelines.md`) e do programa
-(`generative-runtime-program.md`). o objetivo não é executar a
+segue sozinho dentro da missão (`docs/pub/generative-runtime-thesis.md`),
+das regras (`docs/ref/generative-runtime-guidelines.md`) e do programa
+(`docs/log/generative-runtime-program.md`). o objetivo não é executar a
 lista de tasks: é manter um ciclo contínuo de implementação, validação,
 aprendizado e reorganização do programa.
 
@@ -33,7 +33,7 @@ o agente sondar primeiro, parando se o resultado for outro.
    de planejar com ela.
 2. **choose.** fechar antes de abrir (regra de 2026-09-25, abaixo em
    "contra gasto de tokens"): o próximo trabalho sai da lista de tasks
-   abertas em `steps/ongoing/`, a mais perto do próprio critério de
+   abertas (`status: in-progress` em `docs/log/steps/`), a mais perto do próprio critério de
    aceite, nunca a fase seguinte da task que acabou de integrar só porque
    ela está à mão. dentro disso, maior ganho para a missão, respeitando
    dependências, nesta ordem: invariantes quebradas; bugs achados por validação real; contratos
@@ -144,7 +144,7 @@ de 500 a 660 mil tokens. as regras:
 
 1. **uma task fecha pelo critério de aceite do arquivo dela.** antes de
    cada briefing o orquestrador confere a seção "critérios de aceitação"
-   item por item. bateu, a task vai para `steps/checked/` e não abre fase.
+   item por item. bateu, a task passa a `status: done` e não abre fase.
 2. **todo briefing diz qual critério de aceite ele fecha.** fase que não
    fecha nenhum item do critério não tem briefing.
 3. **o que sobra de uma entrega vira pendência, não fase.** vai para a

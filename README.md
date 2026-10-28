@@ -153,11 +153,12 @@ homes by what it is.
 |---|---|---|
 | libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling, and the design system as `engine::widgets`; the inventory is [docs/ref/component-catalog.md](docs/ref/component-catalog.md)), `accord` (the semantic contract), `plevir` (plev IR and its verifier), `screen` (surfaces materialized from the IR), `offers` (the proposers), `claude` (the Claude as a proposer), `socket` (the agent port and the plev cli), `record` (the flight recorder), `replay` (reading a session back, plev-inspect), `motion` (the .monster codec), `import` (lottie, svg, react, html, figma, gpui in), `editor` (the rope editing core), `gitdrv` (git), `markup` + `macros` (the markup dsl and the proc-macros), `unions` (no code: one feature set for every build, kept by cargo hakari), `llmrun` (own workspace) |
 | apps | `apps/` | `uigallery` (the design-system gallery, desktop, web, android, ios), `idestudio` (the git client), `agenteval` (the experiment's lab), `inspector` (the session inspector window), `mirroring` (a page mirrored over the scene socket), `urnadbapp` (the `.urna` explorer, own workspace) |
-| demos | `demo/` | one crate per demo: arcade, camera, commit, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker |
+| demos | `demo/` | one crate per demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker |
 | tooling | `tool/` | `bench/measure` and `bench/regress` (cost tables and the structural regression), `tasks` (the scripts), `tests` (the architecture tests) |
 
 `data/media/lottie` holds the lottie references the importer and the gates
-read; [docs/TERMS.toml](docs/TERMS.toml) maps every former name (sem,
+read, and `data/graphs/<format>` the graph inputs the graphs demo draws (d3,
+cytoscape); [docs/TERMS.toml](docs/TERMS.toml) maps every former name (sem,
 showcase, comps, ...) to its place in this tree.
 
 ## contracts
@@ -195,10 +196,10 @@ edits, `motion` codec, `import` lottie conversion and gpui transpile.
 - [docs/ATLAS.toml](docs/ATLAS.toml): the architecture in one file. tables for machines, prose for humans, the frame-flow diagram at the end.
 - [docs/adr/](docs/adr/): the decision records.
 - [docs/ref/code-against-the-plev-engine.md](docs/ref/code-against-the-plev-engine.md): the operating manual, read before touching ui or rendering code. its siblings in [docs/ref/](docs/ref/): pixel validation, the web target, orchestrating agents.
-- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis and the rules every agent follows sit next to it.
+- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): where plev is going, from GPU UI engine to generative interaction runtime, with the task graph and the state of each task. the thesis is [docs/pub/generative-runtime-thesis.md](docs/pub/generative-runtime-thesis.md) and the rules every agent follows [docs/ref/generative-runtime-guidelines.md](docs/ref/generative-runtime-guidelines.md).
 - [docs/log/changelog.md](docs/log/changelog.md): what changed, newest first.
 - [docs/TERMS.toml](docs/TERMS.toml): the names of the tree, old and new, crate by crate and module by module.
-- [.devops/](.devops/): the tool contracts (`check/`), the agents' rules (`rules/`) and skills (`agent/`).
+- [.devops/check/](.devops/check/): the tool contracts (lychee, nextest, typos).
 
 ## license
 

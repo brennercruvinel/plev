@@ -33,6 +33,7 @@ members = [
     "demo/arcade",
     "demo/camera",
     "demo/commit",
+    "demo/graphs",
     "demo/inputs",
     "demo/intent",
     "demo/layers",
