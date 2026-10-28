@@ -98,6 +98,8 @@ cosmic-text = "0.18"
 taffy = "0.9"
 ropey = "1.6"
 unicode-segmentation = "1"
+# the Script cosmic-text's Fallback trait speaks in (its own version, 0.5)
+unicode-script = "0.5"
 lyon_tessellation = "1"
 lyon_path = "1"
 etagere = "0.2"

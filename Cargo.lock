@@ -1275,6 +1275,7 @@ dependencies = [
  "slotmap",
  "taffy",
  "tray-icon",
+ "unicode-script",
  "unicode-segmentation",
  "wasm-bindgen",
  "wasm-bindgen-futures",

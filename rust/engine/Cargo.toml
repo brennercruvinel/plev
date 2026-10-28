@@ -46,6 +46,8 @@ hot-reload = [
 wgpu.workspace = true
 winit.workspace = true
 cosmic-text.workspace = true
+# the scripts of cosmic-text's Fallback trait (drawing/text/fonts.rs)
+unicode-script.workspace = true
 etagere.workspace = true
 bytemuck.workspace = true
 lru.workspace = true
