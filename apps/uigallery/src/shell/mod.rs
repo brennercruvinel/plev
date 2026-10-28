@@ -77,6 +77,9 @@ enum UserEvent {
     Link,
     /// The main window's device, requested off the loop (wasm).
     GpuReady { gpu: GpuContext },
+    /// A face the web build fetched arrived: draw the text again with it
+    /// (`engine::drawing::text::on_faces_arrived`, wasm).
+    Faces,
 }
 
 pub struct App {
@@ -488,6 +491,7 @@ impl ApplicationHandler<UserEvent> for App {
                 self.detach_requested(event_loop);
             }
             UserEvent::Agent => self.serve_agent(),
+            UserEvent::Faces => self.changed(),
             // The clicks on the bar, the tray and the notifications,
             // dispatched as the person's requests; what the shell owns
             // (the windows, the recording) is taken right after.
