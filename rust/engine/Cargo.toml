@@ -24,10 +24,6 @@ accessibility = ["dep:accesskit", "dep:accesskit_winit"]
 # Off by default so downstream apps (uigallery, idestudio, ...) can define
 # their own browser entry without colliding with the engine's.
 web-entry = []
-# Provisional, off by default: leaves the Noto faces out to weigh the web
-# build (gramorph proof 1). Arabic, hebrew, devanagari, CJK and emoji draw
-# nothing while it is on; it goes once the web build's fonts are decided.
-experiment-no-noto = []
 android-game-activity = ["winit/android-game-activity"]
 # Exports the engine's own `android_main` entry on android. Off by default so
 # downstream apps can ship their own GameActivity entry without symbol clash.
@@ -58,6 +54,9 @@ log.workspace = true
 macros.workspace = true
 taffy.workspace = true
 slotmap.workspace = true
+# the Noto files the web build fetches are taken only when they hash to the
+# sha256 the engine knows (drawing/text/on_demand.rs)
+sha2.workspace = true
 web-time.workspace = true
 indexmap.workspace = true
 lyon_tessellation.workspace = true
@@ -134,7 +133,9 @@ proc-macro2 = { workspace = true, optional = true }
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
-web-sys.workspace = true
+# Response: the Noto files fetched on demand (drawing/text/on_demand.rs)
+web-sys = { workspace = true, features = ["Response"] }
+js-sys.workspace = true
 console_log.workspace = true
 console_error_panic_hook.workspace = true
 

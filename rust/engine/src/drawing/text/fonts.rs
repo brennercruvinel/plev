@@ -54,9 +54,11 @@ const EMBEDDED_LOCALE: &str = "en-US";
 
 /// Noto Sans subsets (SIL OFL, assets/fonts/LICENSE-Noto-OFL.txt), made by
 /// `tool/tasks/subsetter.py`. The order is the fallback order among faces of the
-/// same weight: SC before JP is the Han order, see the module docs.
-#[cfg(not(feature = "experiment-no-noto"))]
-const NOTO: [&[u8]; 12] = [
+/// same weight: SC before JP is the Han order, see the module docs. The web
+/// build leaves them out and fetches each script's files the first time a
+/// text holds it (`super::on_demand`, in this same order).
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) const NOTO: [&[u8]; 12] = [
     include_bytes!("../../../assets/fonts/NotoSansArabic-Regular.ttf"),
     include_bytes!("../../../assets/fonts/NotoSansArabic-Bold.ttf"),
     include_bytes!("../../../assets/fonts/NotoSansHebrew-Regular.ttf"),
@@ -73,13 +75,12 @@ const NOTO: [&[u8]; 12] = [
 
 /// Noto Color Emoji, a CBDT subset (SIL OFL,
 /// assets/fonts/LICENSE-NotoColorEmoji-OFL.txt), made by `tool/tasks/subsetter.py`.
-#[cfg(not(feature = "experiment-no-noto"))]
-const NOTO_EMOJI: &[u8] = include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
-// provisional (`experiment-no-noto`, off by default): the web build weighed
-// without the Noto faces; the scripts they cover draw nothing while it is on
-#[cfg(feature = "experiment-no-noto")]
+#[cfg(not(target_arch = "wasm32"))]
+pub(super) const NOTO_EMOJI: &[u8] =
+    include_bytes!("../../../assets/fonts/NotoColorEmoji-CBDT.ttf");
+#[cfg(target_arch = "wasm32")]
 const NOTO: [&[u8]; 0] = [];
-#[cfg(feature = "experiment-no-noto")]
+#[cfg(target_arch = "wasm32")]
 const NOTO_EMOJI: &[u8] = &[];
 
 /// The faces a font system holds.

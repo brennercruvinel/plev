@@ -48,6 +48,11 @@ pub fn resolve_layer_text(
     gpu: &crate::drawing::gpu::GpuContext,
     text_system: &mut crate::drawing::text::TextSystem,
 ) {
+    // Faces fetched since the last frame (the web build's Noto, issue
+    // #137): every layer draws its text again with them.
+    if text_system.sync_late_faces() {
+        compositor.mark_all_dirty();
+    }
     let (scale, _) = gpu.clip_scale();
     // A scale change resets the glyph cache and repacks the atlas, so every
     // layer's text vertices are stale — including layers whose scene did not
