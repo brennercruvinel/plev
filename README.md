@@ -56,83 +56,88 @@ if any of this resonates, come build with me.
 
 ## run
 
-rust through [rustup](https://rustup.rs), which reads `rust-toolchain.toml`
-(stable, rustfmt, clippy, the wasm32 target; rust 1.87 or later). the web
-needs [trunk](https://trunkrs.dev) (`cargo install trunk`) and a browser with
-WebGPU (Chrome or Edge 113+). every command runs from the repository root.
+you need [rustup](https://rustup.rs) (it reads `rust-toolchain.toml` and
+installs the right rust). for the browser you also need trunk
+(`cargo install trunk`) and Chrome or Edge 113+. run every command from the
+repository root; the first build takes a few minutes.
 
-apps, desktop:
+### on the desktop
 
-```
-cargo run -p uigallery                                   # the design-system gallery, one page per component
-cargo run -p uigallery -- Typography hoff                # one page, one theme (core, hoff, dark, light)
-cargo run -p idestudio -- .                              # the git client, on a repository
-cargo run --manifest-path apps/urnadbapp/Cargo.toml      # the .urna explorer (urna cloned at ../urna)
-cargo run -p inspector --bin plev-inspector -- <session.monster>   # a recorded session, in a window
-```
-
-demos, desktop:
+the design-system gallery, every component on its own page:
 
 ```
-cargo run -p graphs -- lesmis                            # d3's Les Misérables, the force simulation live: drag a node
-cargo run -p graphs -- compound                          # cytoscape's compound nodes: drag a group and its children follow
-cargo run -p primes                                      # prime-coherence particle swarm
-cargo run -p arcade                                      # snake, played by an AI
-cargo run -p shapes                                      # sdf shapes: cards, borders, shadows
-cargo run -p layers                                      # layers, opacity and effects, in two windows
-cargo run -p camera                                      # a 3d scene behind a hud of components
-cargo run -p inputs                                      # text fields on the gpu: selection, the IME
-cargo run -p mobile                                      # touch, safe areas, the soft keyboard
-cargo run -p ticker                                      # a counter on the component lifecycle
-cargo run -p lottie                                      # a lottie played directly (data/media/lottie/snakeloop, or a path)
-cargo run -p import --bin convert -- data/media/lottie/cardstack/animation.json /tmp/cardstack.monster   # a lottie to .monster
-cargo run --release -p player -- /tmp/cardstack.monster  # a .monster, played
-cargo run -p mockup -- rust/import/tests/fixtures/react/index.tsx rust/import/tests/fixtures/react/NoteCard.module.sass rust/import/tests/fixtures/react/note-card-variables.sass   # a react component, transpiled live
-cargo run -p commit                                      # the thesis scenario, in the terminal
-cargo run -p intent -- --app todo "show the filter as chips"   # an intent to a verified surface, by the local claude -p
+cargo run -p uigallery
 ```
 
-web, in the browser (each one serves on its own port, so all run at once;
-resize the window and the layout follows):
+the demos:
 
 ```
-tool/tasks/webtarget.sh                                  # the gallery, http://127.0.0.1:8080 (?page=Typography&theme=hoff)
-tool/tasks/webtarget.sh urnadbapp                        # the .urna explorer, http://127.0.0.1:8081
-(cd demo/graphs && trunk serve)                          # the graphs, http://127.0.0.1:8082 (?page=compound)
-(cd demo/primes && trunk serve)                          # the swarm, http://127.0.0.1:8083
-tool/tasks/webtarget.sh build --release                  # the gallery's static build, into apps/uigallery/web/dist
-python3 -m http.server 8080 -d apps/uigallery/web/dist   # that build, served as it is
+cargo run -p graphs -- lesmis
+cargo run -p graphs -- compound
+cargo run -p primes
+cargo run -p arcade
+cargo run -p shapes
+cargo run -p layers
+cargo run -p camera
+cargo run -p inputs
+cargo run -p mobile
+cargo run -p ticker
+cargo run -p lottie
+cargo run -p commit
 ```
 
-mobile:
+the git client, opened on this repository:
 
 ```
-tool/tasks/mobileapp.sh ios && tool/tasks/mobileapp.sh ios-run   # the gallery on the iOS simulator (xcode, xcodegen)
-tool/tasks/mobileapp.sh android                          # the gallery's apk (sdk/ndk, jdk 17, cargo-ndk)
+cargo run -p idestudio -- .
 ```
 
-tools:
+### in the browser
+
+each command prints the address to open. they use different ports, so they
+can all run at once. resize the window and the layout follows.
 
 ```
-./tool/tasks/fullcheck.sh                                # the gate: test, clippy, fmt, wasm check, docs links, urnadbapp leg
-cargo run -p uigallery -- --render Todo --theme hoff --out todo.png   # any page to png, no window
-cargo run -p regress -- check                            # structural regression: meaning, then layers, then pixels
-cargo run --release -p measure -- --out measurements.md  # what each stage of a frame costs
-cargo run -p agenteval -- --arm scripted                 # the agent lab: the ide's workbench served to an agent
-PLEV_AGENT=1 cargo run -p uigallery -- Todo              # the gallery with its agent port open, then:
-cargo run -p socket --bin plev -- observe --scope todo --app showcase   # what an agent sees
-cargo run -p socket --bin plev -- act 'todo.item[1]' toggle --from-revision <rev>   # an act on what it saw
-PLEV_AGENT=1 PLEV_MIRROR=1 cargo run -p uigallery         # the gallery sharing its scene, then:
-cargo run -p mirroring -- --show                         # its window, mirrored in another process
-cargo run -p replay --bin plev-inspect -- <session.monster>   # a recorded session, read back as text
-cargo bench -p editor                                    # criterion benches, one crate
-cargo test --manifest-path rust/llmrun/Cargo.toml --features candle,burn   # the in-process language model (own workspace)
-cargo run --release --manifest-path rust/llmrun/Cargo.toml --features candle,metal --bin llm-bench -- --impl candle --model <dir> --device metal   # its benchmark, weights outside the repo
+tool/tasks/webtarget.sh uigallery
+tool/tasks/webtarget.sh graphs
+tool/tasks/webtarget.sh primes
 ```
 
-a debug build reloads itself: save a `.wgsl`, a string or a hex color and the
-open window shows it, state intact; save code and the bin rebuilds and
-relaunches. in the gallery, cmd+click opens the source line of a control.
+add `?page=Typography&theme=hoff` to the gallery's address to open one page
+in one theme, and `?page=compound` to the graphs' for the other graph.
+
+### on a phone
+
+the iOS simulator needs Xcode and xcodegen; Android needs its SDK and NDK,
+JDK 17 and cargo-ndk.
+
+```
+tool/tasks/mobileapp.sh ios
+tool/tasks/mobileapp.sh ios-run
+tool/tasks/mobileapp.sh android
+```
+
+### the .urna explorer
+
+it reads `.urna` files with [urna](https://github.com/hoffresearch/urna),
+cloned next to this repository (`../urna`, v0.4.0 or later).
+
+```
+cargo run --manifest-path apps/urnadbapp/Cargo.toml
+tool/tasks/webtarget.sh urnadbapp
+```
+
+### checks
+
+```
+./tool/tasks/fullcheck.sh
+cargo run -p regress -- check
+```
+
+the tools beyond these (a page to png, the cost of a frame, the agent port,
+the mirror, recorded sessions, the importers, the language model) are in
+[docs/ref/run-the-tools.md](docs/ref/run-the-tools.md). a debug build reloads
+itself: save a `.wgsl`, a string or a color and the open window shows it.
 
 ## workspace
 
@@ -169,11 +174,6 @@ violations are defects even when the pixels look right.
 
 a guard test scans the repo and fails if any code draws text by
 constructing a raw key instead of going through the one-TextStyle path.
-
-## gate
-
-`./tool/tasks/fullcheck.sh` runs every check a change passes (the first line
-of tools above); CI runs the same parts as separate jobs.
 
 ## docs
 

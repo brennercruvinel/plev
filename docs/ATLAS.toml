@@ -36,7 +36,7 @@ demos = "demo (one crate per demo: arcade, camera, commit, graphs, inputs, inten
 tooling = "tool (bench/measure and bench/regress: the measurement and the structural regression; tasks: the scripts; tests: the architecture tests)"
 data = "data (media/lottie: the lottie references the importer and the gates read; graphs/<format>: the graph inputs a demo draws, d3 and cytoscape, from the gramorph corpus)"
 knowledge = "docs (adr by theme + log + pub + ref; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
-web = "apps/uigallery/web (Trunk.toml + index.html + dist output; tool/tasks/webtarget.sh is the dev loop; apps/urnadbapp/web + tool/tasks/webtarget.sh urnadbapp for the urnadbapp target)"
+web = "tool/tasks/webtarget.sh <target> [serve|build]: uigallery (apps/uigallery/web, :8080, the default), urnadbapp (apps/urnadbapp/web, :8081), graphs (demo/graphs, :8082), primes (demo/primes, :8083); each a Trunk.toml + index.html + dist output, each wasm bin named apart from its lib (uigallery-web, urnadbapp-web, graphs-web, primes)"
 scripts = "tool/tasks (fullcheck.sh = the gate: test, clippy, fmt, wasm check, docs links, urnadbapp leg; webtarget.sh = trunk dev loop; screencap.sh web|ios|android = one gallery page or all of them on a target, classified against the desktop frame; mobileapp.sh android|ios|ios-run = the mobile builds; figmapull.py = a .fig screen to the importer's Figma fixture; subsetter.py = the embedded Noto subsets, reproducible, --check compares byte for byte; depscheck.sh, namecheck.sh = the architecture tests; precommit = the git hook)"
 contracts = ".devops/check (lychee, nextest and typos configs); .github/workflows/gatecheck.yml is the CI"
 
