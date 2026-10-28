@@ -10,133 +10,16 @@
 //! embedded faces from `super::fonts`: Inclusive Sans 300/400/500/600/700
 //! and Codicons) so measurements match what is rasterized.
 
-use std::cell::RefCell;
-use std::num::NonZeroUsize;
-
-use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
-use lru::LruCache;
+use cosmic_text::{Buffer, Metrics, Shaping};
 
 use crate::compose::layout::ComputedBounds;
 use crate::runtime::perf::stages::{self, Stage};
 
 use super::backend::TextStyle;
-use super::cluster_cache::{CLUSTER_CACHE_BUDGET, ClusterCache, ClusterKey};
-
-const MEASURE_CACHE_CAPACITY: usize = 2048;
-const VMETRICS_CACHE_CAPACITY: usize = 256;
-
-thread_local! {
-    static MEASURE_CTX: RefCell<MeasureContext> = RefCell::new(MeasureContext::new());
-}
-
-struct MeasureContext {
-    font_system: FontSystem,
-    // Scratch buffer reused across measure/hit-test queries.
-    scratch: Buffer,
-    // Measurement cache keyed by (text, style, width bucket).
-    cache: LruCache<MeasureKey, (f32, f32)>,
-    // Vertical metrics per style (small: one entry per distinct style).
-    vmetrics_cache: LruCache<VMetricsKey, LineMetrics>,
-    // Shaped clusters per line of text (see `super::cluster_cache`).
-    clusters: ClusterCache,
-}
-
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct MeasureKey {
-    text: String,
-    font_size_bits: u32,
-    line_height_bits: u32,
-    font_weight: u16,
-    letter_spacing_bits: u32,
-    font_family: Option<String>,
-    // Wrap width rounded to whole pixels (plan: "largura-bucket").
-    width_bucket: Option<i32>,
-}
-
-impl MeasureKey {
-    fn new(text: &str, style: &TextStyle, max_width: Option<f32>) -> Self {
-        Self {
-            text: text.to_string(),
-            font_size_bits: style.font_size.to_bits(),
-            line_height_bits: style.line_height.to_bits(),
-            font_weight: style.font_weight,
-            letter_spacing_bits: style.letter_spacing.to_bits(),
-            font_family: style.font_family.clone(),
-            width_bucket: max_width.map(|w| w.round() as i32),
-        }
-    }
-}
-
-/// Cache key for [`LineMetrics`]: the vertical metrics of a style do not
-/// depend on the text or on letter spacing.
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct VMetricsKey {
-    font_size_bits: u32,
-    line_height_bits: u32,
-    font_weight: u16,
-    font_family: Option<String>,
-}
-
-impl VMetricsKey {
-    fn new(style: &TextStyle) -> Self {
-        Self {
-            font_size_bits: style.font_size.to_bits(),
-            line_height_bits: style.line_height.to_bits(),
-            font_weight: style.font_weight,
-            font_family: style.font_family.clone(),
-        }
-    }
-}
-
-impl MeasureContext {
-    fn new() -> Self {
-        let mut font_system = new_font_system();
-        let scratch = Buffer::new(&mut font_system, Metrics::new(16.0, 20.8));
-        Self {
-            font_system,
-            scratch,
-            cache: LruCache::new(NonZeroUsize::new(MEASURE_CACHE_CAPACITY).unwrap()),
-            vmetrics_cache: LruCache::new(NonZeroUsize::new(VMETRICS_CACHE_CAPACITY).unwrap()),
-            clusters: ClusterCache::new(CLUSTER_CACHE_BUDGET),
-        }
-    }
-
-    /// Shape `text` into the scratch buffer with the given style and wrap width.
-    fn prepare(&mut self, text: &str, style: &TextStyle, max_width: Option<f32>) {
-        let _probe = stages::span(Stage::Shape).items(text.len() as u64);
-        let fs = &mut self.font_system;
-        self.scratch
-            .set_metrics(fs, Metrics::new(style.font_size, style.line_height));
-        self.scratch.set_size(fs, max_width, None);
-        self.scratch
-            .set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
-        self.scratch.shape_until_scroll(fs, false);
-    }
-}
-
-/// Lines in this thread's cluster cache (tests read the cache through it).
+use super::cluster_cache::ClusterKey;
 #[cfg(test)]
-pub(super) fn cached_cluster_lines() -> usize {
-    MEASURE_CTX.with(|ctx| ctx.borrow().clusters.len())
-}
-
-fn new_font_system() -> FontSystem {
-    // Exactly the faces TextSystem::new registers, so measurements match
-    // what is rasterized regardless of installed system fonts.
-    super::fonts::font_system(super::fonts::FaceSet::Target).0
-}
-
-fn attrs_for(style: &TextStyle) -> Attrs<'_> {
-    let mut attrs = Attrs::new().weight(Weight(style.font_weight));
-    if style.letter_spacing != 0.0 && style.font_size > 0.0 {
-        // cosmic-text tracking is in EM; the engine API is px.
-        attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
-    }
-    match style.font_family {
-        Some(ref family) => attrs.family(Family::Name(family)),
-        None => attrs,
-    }
-}
+pub(super) use super::measure_context::cached_cluster_lines;
+use super::measure_context::{MeasureKey, VMetricsKey, attrs_for, with_ctx};
 
 /// Byte offset of the start of each buffer line, splitting on the same line
 /// endings cosmic-text's `LineIter` recognizes (LF, CRLF, CR, LFCR).
@@ -344,8 +227,7 @@ impl TextMeasurer {
             return (0.0, 0.0);
         }
         let key = MeasureKey::new(text, style, max_width);
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             if let Some(&size) = ctx.cache.get(&key) {
                 stages::count(Stage::MeasureHit, 0);
                 return size;
@@ -374,8 +256,7 @@ impl TextMeasurer {
         if text.is_empty() {
             return 0;
         }
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             ctx.prepare(text, style, max_width);
             hit_to_byte(&ctx.scratch, &line_starts(text), x, y)
         })
@@ -396,8 +277,7 @@ impl TextMeasurer {
         if text.is_empty() {
             return 0.0;
         }
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             ctx.prepare(text, style, max_width);
             cursor_rect_in(&ctx.scratch, &line_starts(text), cursor_byte).x
         })
@@ -416,8 +296,7 @@ impl TextMeasurer {
         if text.is_empty() {
             return Vec::new();
         }
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             let key = ClusterKey::new(text, style, max_width);
             if let Some(hit) = ctx.clusters.get(&key) {
                 return hit;
@@ -519,8 +398,7 @@ impl TextMeasurer {
     /// (cosmic-text only keeps the requested family on an *exact* weight
     /// match, otherwise it walks per-word fallback lists).
     pub fn resolved_faces(text: &str, style: &TextStyle) -> Vec<(String, u16)> {
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             ctx.prepare(text, style, None);
             let mut faces: Vec<(String, u16)> = Vec::new();
             for run in ctx.scratch.layout_runs() {
@@ -548,8 +426,7 @@ impl TextMeasurer {
     /// so the probe's glyphs only pin the resolved face, not the values.
     pub fn line_metrics(style: &TextStyle) -> LineMetrics {
         let key = VMetricsKey::new(style);
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
             if let Some(&m) = ctx.vmetrics_cache.get(&key) {
                 return m;
             }
@@ -592,8 +469,8 @@ impl TextMeasurer {
     /// Shape `text` into an owned, queryable `ShapedText` (for `TextBackend`).
     pub fn shape(text: &str, style: &TextStyle, max_width: Option<f32>) -> ShapedText {
         let _probe = stages::span(Stage::Shape).items(text.len() as u64);
-        MEASURE_CTX.with(|ctx| {
-            let ctx = &mut *ctx.borrow_mut();
+        with_ctx(|ctx| {
+            super::on_demand::want(text);
             let fs = &mut ctx.font_system;
             let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
             buffer.set_size(fs, max_width, None);

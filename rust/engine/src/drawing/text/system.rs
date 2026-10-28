@@ -69,6 +69,10 @@ pub struct TextSystem {
     /// is still pointing at the old slot, so the caller has to re-resolve
     /// everything. Read and cleared with [`Self::take_atlas_disturbed`].
     pub(super) atlas_disturbed: bool,
+    /// The late faces this font system holds (`super::on_demand`) and the
+    /// generation they are of.
+    late: Vec<cosmic_text::fontdb::ID>,
+    late_generation: u64,
 }
 
 pub(super) const INITIAL_ATLAS_SIZE: u32 = 512;
@@ -114,7 +118,33 @@ impl TextSystem {
             embedded_fonts: embedded_fonts.into_iter().collect(),
             warned_fallback_fonts: FxHashSet::default(),
             atlas_disturbed: false,
+            late: Vec::new(),
+            late_generation: 0,
         }
+    }
+
+    /// Loads the late faces again when more arrived (`super::on_demand`),
+    /// and drops every run shaped and every glyph rasterized without them.
+    /// `true` when they changed: every layer's text has to be drawn again,
+    /// the layers whose scene did not change included, since their pixels
+    /// hold the text as it was shaped before.
+    pub(crate) fn sync_late_faces(&mut self) -> bool {
+        let generation = super::on_demand::generation();
+        if generation == self.late_generation {
+            return false;
+        }
+        for id in &self.late {
+            self.embedded_fonts.remove(id);
+        }
+        self.late = super::on_demand::load(self.font_system.db_mut(), &self.late);
+        self.embedded_fonts.extend(self.late.iter().copied());
+        self.late_generation = generation;
+        self.shaping_cache.clear();
+        self.glyph_cache.clear();
+        self.allocator =
+            BucketedAtlasAllocator::new(size2(self.atlas_size as i32, self.atlas_size as i32));
+        self.atlas_disturbed = true;
+        true
     }
 
     /// Physical pixels per logical pixel (HiDPI raster scale). Glyph bitmaps
@@ -254,6 +284,7 @@ impl TextSystem {
         if self.shaping_cache.contains_key(key) {
             return;
         }
+        super::on_demand::want(&key.text);
         let font_size = f32::from_bits(key.font_size_bits);
         let line_height = f32::from_bits(key.line_height_bits);
         let letter_spacing = f32::from_bits(key.letter_spacing_bits);
