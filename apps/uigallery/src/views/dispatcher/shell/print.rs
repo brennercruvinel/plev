@@ -1,4 +1,4 @@
-//! Printing the page (task-76 item 9), the view's side. `shell.print` is
+//! Printing the page `shell.print` is
 //! a button a person asks for (cmd-p, the menu item), and the shell
 //! prints the frame of the main window as it stands: the same scene the
 //! window draws, at a paper scale, through the system's printer
