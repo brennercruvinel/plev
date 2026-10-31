@@ -19,7 +19,7 @@ use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
 
 mod menu;
-pub use menu::{MenuStyle, MenuTokens};
+pub use menu::{MenuStyle, MenuTokens, MenubarTokens};
 
 /// The tokens of front B's overlays.
 #[derive(Clone, Debug, PartialEq)]
@@ -32,6 +32,7 @@ pub struct OverlayTokens {
     pub menu: MenuTokens,
     pub file_menu: MenuTokens,
     pub filter_menu: MenuTokens,
+    pub menubar: MenubarTokens,
     pub modal: ModalTokens,
     pub sheet: SheetTokens,
     pub drawer: DrawerTokens,
@@ -47,6 +48,7 @@ impl OverlayTokens {
             menu: MenuTokens::hoff_core(),
             file_menu: MenuTokens::hoff_core_file(),
             filter_menu: MenuTokens::hoff_core_filter(),
+            menubar: MenubarTokens::hoff_core(),
             modal: ModalTokens::hoff_core(),
             sheet: SheetTokens::hoff_core(),
             drawer: DrawerTokens::hoff_core(),
@@ -63,6 +65,7 @@ impl OverlayTokens {
             menu: MenuTokens::derive(theme),
             file_menu: MenuTokens::derive(theme),
             filter_menu: MenuTokens::derive(theme),
+            menubar: MenubarTokens::derive(theme),
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
             drawer: DrawerTokens::derive(theme),
@@ -132,7 +135,29 @@ pub struct PopoverTokens {
     pub widths: [f32; 2],
     /// Space between the panel's edge and its content (`p-2`).
     pub pad: f32,
+    /// A line of the panel ([`PopoverLineTokens`]).
+    pub line: PopoverLineTokens,
     pub trigger: TriggerTokens,
+}
+
+/// A line of the popover's panel (the kit's zoom `Line`): a check slot, a
+/// label at the start, its keys in a cap at the end.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PopoverLineTokens {
+    pub height: f32,
+    pub pad_x: f32,
+    pub radius: f32,
+    /// The check's slot and the space after it; the check inside it.
+    pub slot: f32,
+    pub slot_gap: f32,
+    pub check: f32,
+    pub check_color: Color,
+    pub label: TextStyle,
+    pub text: Color,
+    /// Under the pointer or the keys.
+    pub hover_fill: Color,
+    /// The narrowest cap of its keys.
+    pub key_min_w: f32,
 }
 
 fn hex(v: u32) -> Color {
@@ -212,6 +237,24 @@ impl PopoverTokens {
             widths: [204.0, 384.0],
             // p-2 (Zoom:54).
             pad: 8.0,
+            // The zoom line (`Zoom/index.tsx:14-35`): `h-9 px-2
+            // rounded-[0.625rem] hover:bg-[#F1F1F1]`, the check's slot
+            // `size-6 mr-1` with `size-4 fill-[#7B7B7B]` in it, the title
+            // `text-[0.75rem] leading-[1rem] font-medium text-[#000]`, the
+            // cap `min-w-8.5`.
+            line: PopoverLineTokens {
+                height: 36.0,
+                pad_x: 8.0,
+                radius: 10.0,
+                slot: 24.0,
+                slot_gap: 4.0,
+                check: 16.0,
+                check_color: hex(0x7B7B7B),
+                label: TypographyScale::hoff_core().exact(12.0, 16.0, 500),
+                text: hex(0x000000),
+                hover_fill: shade3,
+                key_min_w: 34.0,
+            },
             trigger: TriggerTokens {
                 rest,
                 hover,
@@ -263,8 +306,25 @@ impl PopoverTokens {
             shadow: vec![ring(colors.border_active)],
             ..rest.clone()
         };
+        // The line as the theme's menu rows: their height, padding, radius,
+        // label, colors and icon; the slot the icon and its gap.
+        let m = MenuTokens::derive(theme);
+        let line = PopoverLineTokens {
+            height: m.item_h,
+            pad_x: m.item_pad_x,
+            radius: m.item_radius,
+            slot: m.icon,
+            slot_gap: m.gap,
+            check: m.icon,
+            check_color: m.icon_color,
+            label: m.label,
+            text: m.text,
+            hover_fill: m.hover_fill,
+            ..kit.line
+        };
         Self {
             panel,
+            line,
             radius: theme.shape.dropdown,
             radius_menu: theme.shape.dropdown,
             trigger: TriggerTokens {

@@ -30,7 +30,7 @@ mod place;
 mod render;
 
 pub use place::{Align, Placement, Side, place};
-pub use render::{PopoverTrigger, render_panel};
+pub use render::{Line, PopoverTrigger, render_line, render_panel};
 
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 

@@ -6,7 +6,61 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ControlSize, IconSize, Theme, TypographyScale};
+use crate::styling::theme::{ButtonSurface, ControlSize, IconSize, Theme, TypographyScale};
+
+/// The menubar's bar (the kit's `Toolbar`): a raised surface the titles
+/// sit in, padded, a gap between them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct MenubarTokens {
+    /// Its fill, its shadows and its border as a ring.
+    pub surface: ButtonSurface,
+    pub radius: f32,
+    pub pad: f32,
+    pub gap: f32,
+}
+
+impl MenubarTokens {
+    /// `Toolbar/index.tsx:72-73`: `shadow-[0px_1px_4px_-4px_rgba(0,0,0,0.08),
+    /// 0px_8px_16px_-12px_rgba(0,0,0,0.13)] border border-[#ececec]
+    /// bg-[#fcfcfc] rounded-[1.25rem]`, the actions `flex gap-2 p-2`.
+    pub fn hoff_core() -> Self {
+        let paper = hex(0xFCFCFC);
+        Self {
+            surface: ButtonSurface {
+                fill: [paper, paper],
+                overlay: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                shadow: vec![
+                    ShadowSpec::new([0.0, 1.0], 4.0, -4.0, Color::rgba(0.0, 0.0, 0.0, 0.08)),
+                    ShadowSpec::new([0.0, 8.0], 16.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.13)),
+                    ShadowSpec::new([0.0, 0.0], 0.0, 1.0, hex(0xECECEC)),
+                ],
+                text: hex(INK),
+            },
+            radius: 20.0,
+            pad: 8.0,
+            gap: 8.0,
+        }
+    }
+
+    /// The theme's floating surface: the popover glass, the floating
+    /// shadow and the soft edge as its ring, the dropdown radius, the
+    /// menu's padding, an `xs` gap.
+    pub fn derive(theme: &Theme) -> Self {
+        let glass = &theme.glass;
+        let ring = ShadowSpec::new([0.0, 0.0], 0.0, theme.control.edge_width, glass.edge_soft);
+        Self {
+            surface: ButtonSurface {
+                fill: [glass.popover, glass.popover],
+                overlay: Color::rgba(0.0, 0.0, 0.0, 0.0),
+                shadow: [theme.shadows.floating.as_slice(), &[ring]].concat(),
+                text: theme.colors.text,
+            },
+            radius: theme.shape.dropdown,
+            pad: theme.control.menu_pad,
+            gap: theme.spacing.xs,
+        }
+    }
+}
 
 /// Which of the kit's menus a context menu draws as.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
