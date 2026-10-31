@@ -86,6 +86,10 @@ pub struct SelectRecipe {
     pub minimal: SelectSurfaces,
     pub inline: SelectSurfaces,
     pub height: f32,
+    /// A select's width where the composition gives it one (the kit's
+    /// `w-44`); a small or minimal one is as wide as it measures, and the
+    /// `Rect` it gets always wins.
+    pub width: f32,
     /// The small control's height and text (`h-8 text-[0.75rem]`), the
     /// inline one's too.
     pub small_height: f32,
@@ -229,6 +233,8 @@ impl SelectRecipe {
             minimal,
             inline,
             height: 36.0,
+            // `templates/DropdownPage/index.tsx:30`, `w-44`.
+            width: 176.0,
             small_height: 32.0,
             small_text,
             pad_start: 12.0,
@@ -293,6 +299,7 @@ impl SelectRecipe {
             minimal,
             inline,
             height: option_h,
+            width: theme.size.menu_w,
             small_height: theme.control.height(ControlSize::Sm),
             small_text: theme.typography.caption_r(),
             pad_start: pad_x,
