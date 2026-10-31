@@ -11,7 +11,7 @@ topics: [performance, rendering, signals]
 relations: [experiment-benchmarks-v02]
 source: [docs/log/steps/task-25-benchmarks.md, docs/log/changes/task-25.md]
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-10-31
 review: reviewed
 ---
 
@@ -48,4 +48,4 @@ suite de criterion benchmarks cobrindo scene construction, dirty tracking, tesse
 - [`benchmarks-v02/`](../../experiments/benchmarks-v02/README.md), resultados
 
 ### modificados
-- `Cargo.toml`, criterion dev-dependency, [[bench]] config
+- `Cargo.toml`, criterion dev-dependency, `[[bench]]` config
