@@ -258,6 +258,21 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, need, over(color, under), under);
     }
+    // the color picker on a card: its texts (the bare box's) on its box
+    // at rest and hovered, at AAA
+    for (bg, surface) in [
+        ("form.color.rest.fill", &f.color.rest),
+        ("form.color.hover.fill", &f.color.hover),
+    ] {
+        let under = over(surface.fill, card);
+        add(
+            "form.bare.text_color",
+            bg,
+            AAA,
+            over(f.bare.text_color, under),
+            under,
+        );
+    }
     // task-104 front C: the inline alert on a card, its runs and its
     // unread dot, and the intent's icon on its badge (ink or paper,
     // whichever reads on the fill, `contrast_text`).
@@ -1121,7 +1136,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 773,
+        count, 781,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

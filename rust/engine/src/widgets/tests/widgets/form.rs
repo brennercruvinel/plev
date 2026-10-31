@@ -1445,3 +1445,176 @@ fn a_command_dialog_draws_no_panel_over_its_sheet() {
         assert!(bare.len() < full.len(), "the panel goes");
     }
 }
+
+// Color picker
+
+fn picker() -> crate::widgets::form::color_picker::ColorPicker {
+    crate::widgets::form::color_picker::ColorPicker::new("F4F4F4", 100)
+        .sem(SemId::parse("s.color").unwrap())
+}
+
+/// A hex of six digits is the color as it is typed; a box left with
+/// something else shows the color again; the opacity takes a number up
+/// to 100.
+#[test]
+fn a_color_picker_takes_what_is_a_color() {
+    use crate::widgets::form::color_picker::ColorPart;
+    let mut p = picker();
+    assert_eq!(p.value(), "#F4F4F4FF");
+    assert!(p.focus(ColorPart::Hex));
+    p.hex.select_all();
+    assert!(p.hex.insert("#00ff7a-zz"));
+    assert_eq!(p.hex.text(), "00ff7a", "only hex digits, six at most");
+    assert_eq!(p.rgb(), [0x00, 0xFF, 0x7A], "a color as soon as typed");
+    p.hex.edit(EditKey::Backspace);
+    assert_eq!(p.rgb(), [0xF4; 3], "five digits: the color kept");
+    p.hex.insert("A");
+    assert!(p.tab(true));
+    assert_eq!(p.hex.text(), "00FF7A", "left, it shows the color");
+    p.alpha.select_all();
+    p.alpha.insert("5a0");
+    assert_eq!(p.opacity(), 50);
+    assert_eq!(p.value(), "#00FF7A80");
+    p.alpha.select_all();
+    p.alpha.insert("250");
+    assert_eq!(p.opacity(), 100, "over 100 is no opacity: the one kept");
+    assert!(p.blur());
+    assert_eq!(p.alpha.text(), "100");
+    assert!(p.set_hex("#ABC") && p.rgb() == [0xAA, 0xBB, 0xCC]);
+    assert!(!p.set_hex("12345") && !p.set_opacity("101"));
+    assert!(p.set_opacity("0%") && p.opacity() == 0);
+}
+
+/// Tab goes from the hex to the opacity and Shift+Tab back, out at
+/// either end; Escape puts back the color the caret came in to; Enter
+/// keeps what was typed.
+#[test]
+fn a_color_picker_walks_its_texts_and_escape_puts_the_color_back() {
+    use crate::widgets::form::color_picker::ColorPart;
+    let mut p = picker();
+    assert!(!p.tab(true), "no caret: the page's");
+    p.focus(ColorPart::Hex);
+    assert!(!p.tab(false), "Shift+Tab out of the hex");
+    assert!(p.tab(true));
+    assert_eq!(p.focused(), Some(ColorPart::Alpha));
+    assert!(!p.tab(true), "Tab out of the opacity");
+    assert!(p.tab(false));
+    assert_eq!(p.focused(), Some(ColorPart::Hex));
+    p.hex.select_all();
+    p.hex.insert("112233");
+    assert!(p.escape());
+    assert_eq!((p.focused(), p.hex.text()), (None, "F4F4F4"));
+    assert!(!p.escape());
+    p.focus(ColorPart::Alpha);
+    p.alpha.select_all();
+    p.alpha.insert("040");
+    assert!(p.enter());
+    assert_eq!(
+        (p.focused(), p.alpha.text()),
+        (Some(ColorPart::Alpha), "40")
+    );
+    assert!(p.escape());
+    assert_eq!(p.opacity(), 100, "Escape goes back past Enter");
+}
+
+/// A press on the swatch or the hex puts the caret in the hex, on the
+/// opacity's part in the opacity, off the box lets it go; hover lights
+/// the box.
+#[test]
+fn a_color_picker_takes_a_press_in_the_part_pressed() {
+    use crate::widgets::form::color_picker::ColorPart;
+    let theme = Theme::hoff_core();
+    let mut p = picker();
+    let at = Rect::new(10.0, 10.0, theme.form.color.width, 0.0);
+    let l = p.layout(at, &theme);
+    for (r, part) in [
+        (l.swatch, ColorPart::Hex),
+        (l.hex, ColorPart::Hex),
+        (l.suffix, ColorPart::Alpha),
+        (l.alpha, ColorPart::Alpha),
+    ] {
+        let (x, y) = r.center();
+        assert!(p.handle_event(&down(x, y), at, &theme).clicked);
+        assert_eq!(p.focused(), Some(part), "{r:?}");
+    }
+    assert!(p.handle_event(&down(500.0, 500.0), at, &theme).changed);
+    assert_eq!(p.focused(), None);
+    let (x, y) = l.whole.center();
+    let before = nodes_of(|c| p.render(c, at, &theme));
+    p.handle_event(&WidgetEvent::MouseMove { x, y }, at, &theme);
+    assert_ne!(nodes_of(|c| p.render(c, at, &theme)), before, "hovered");
+    let mut off = picker().disabled(true);
+    assert!(!off.handle_event(&down(x, y), at, &theme).clicked);
+    assert!(!off.focus(ColorPart::Hex) && !off.set_hex("000000"));
+}
+
+/// The parts sit in the box in order, swatch, hex, divider, opacity and
+/// its `%`, from a narrow box to a wide one in every theme; the kit's
+/// box is 38 tall with a 28 swatch, its opacity part 64 wide.
+#[test]
+fn a_color_picker_lays_its_parts_in_the_box() {
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        let p = picker();
+        for w in [96.0, 160.0, theme.form.color.width, 480.0] {
+            let l = p.layout(Rect::new(0.0, 0.0, w, 0.0), &theme);
+            let inside = |r: Rect| {
+                r.x >= l.whole.x - 0.01
+                    && r.right() <= l.whole.right() + 0.01
+                    && r.y >= l.whole.y - 0.01
+                    && r.bottom() <= l.whole.bottom() + 0.01
+            };
+            for r in [l.swatch, l.hex, l.divider, l.alpha, l.suffix] {
+                assert!(inside(r), "{w}: {r:?} in {:?}", l.whole);
+            }
+            assert!(l.swatch.right() <= l.hex.x + 0.01);
+            assert!(l.hex.right() <= l.divider.x + 0.01);
+            assert!(l.divider.right() <= l.alpha.x + 0.01);
+            assert!(l.alpha.right() <= l.suffix.x + 0.01);
+        }
+    }
+    let core = Theme::hoff_core();
+    let l = picker().layout(Rect::new(0.0, 0.0, 218.0, 0.0), &core);
+    assert_eq!((l.whole.h, l.swatch.w, l.alpha_part.w), (38.0, 28.0, 64.0));
+}
+
+/// The swatch paints the color at its opacity over its base.
+#[test]
+fn a_color_picker_paints_its_swatch() {
+    let theme = Theme::hoff_core();
+    let mut p = picker();
+    assert!(p.set_hex("336699") && p.set_opacity("50"));
+    let at = Rect::new(0.0, 0.0, 218.0, 0.0);
+    let s = p.layout(at, &theme).swatch;
+    let want = p.color().0;
+    assert!((want[3] - 0.5).abs() < 1e-6);
+    let painted = nodes_of(|c| p.render(c, at, &theme)).iter().any(|n| {
+        matches!(n, SceneNode::RoundedRect { x, w, color, .. }
+            if *x == s.x && *w == s.w && *color == want)
+    });
+    assert!(painted);
+}
+
+/// A reader finds a group with the color as its value and the two texts
+/// in it.
+#[test]
+fn a_color_picker_projects_its_value_and_texts() {
+    let parent = SemId::parse("s").unwrap();
+    let p = picker();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    p.project(&mut b, p.sem_id().unwrap(), "Fill", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let group = snap.get(&SemId::parse("s.color").unwrap()).unwrap();
+    assert_eq!(group.role, Role::Group);
+    let value = snap.value(&accord::StateRef::parse("s.color:value").unwrap());
+    assert_eq!(value, Some(&Value::Text("#F4F4F4FF".into())));
+    for (id, name) in [("s.color.hex", "Hex"), ("s.color.alpha", "Opacity")] {
+        let node = snap.get(&SemId::parse(id).unwrap()).unwrap();
+        assert_eq!((node.role, node.label.as_str()), (Role::TextInput, name));
+    }
+}

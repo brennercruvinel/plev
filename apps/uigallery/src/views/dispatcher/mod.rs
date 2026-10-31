@@ -449,7 +449,7 @@ impl ShowcaseView {
                 Pane::Empty => self.panes.empty.render(c, content, theme),
                 Pane::Graph => self.panes.graph.render(c, content, theme),
                 Pane::IconButton => self.panes.icon_button.render(c, content, theme),
-                Pane::Input => self.panes.input.render(c, content, theme),
+                Pane::Input => self.panes.input.render(c, layers.overlay, content, theme),
                 Pane::NavigationMenu => self.panes.navigation_menu.render(c, content, theme),
                 Pane::Panel => self.panes.panel.render(c, content, theme),
                 Pane::PanelHeader => self.panes.panel_header.render(c, content, theme),
