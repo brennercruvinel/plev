@@ -25,6 +25,12 @@ pub mod kbd;
 pub mod pagination;
 pub mod tokens;
 
+pub use accordion::{Accordion, AccordionMode};
+pub use collapsible::{Collapsible, DisclosureLook};
+pub use tokens::{
+    DisclosureMotion, DisclosureRecipe, DisclosureSurface, DisclosureTile, DisclosureTokens,
+};
+
 pub use avatar::{Avatar, AvatarSize};
 pub use card::{Card, CardListRow, CardVariant};
 pub use code_block::{CodeBlock, CodeLine, LineKind};

@@ -212,6 +212,20 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
         Rect::new(content.x, 3700.0, content.w, 200.0),
         theme,
     );
+    let accordion = Accordion::new(AccordionMode::Single)
+        .item("3D Objects", "Meshes and primitives on the canvas.")
+        .item("Materials", "Surfaces and the maps that drive them.")
+        .opened(0)
+        .disabled_item(1);
+    let h = accordion.height(content.w, theme);
+    accordion.render(&mut c, Rect::new(content.x, 4300.0, content.w, h), theme);
+    let mut collapsible = Collapsible::new("Explore").icon("house").current(true);
+    collapsible.set_focused(true);
+    collapsible.toggle();
+    collapsible.wake(0.1);
+    let h = collapsible.height(content.w, 80.0, theme);
+    let at = Rect::new(content.x, 4700.0, content.w, h);
+    collapsible.render(&mut c, at, 80.0, theme, |_, _| {});
     let mut table = Table::new(
         vec![Column::new("a", theme), Column::new("b", theme).priority(0)],
         theme,

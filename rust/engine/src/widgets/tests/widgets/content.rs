@@ -431,3 +431,245 @@ fn empty_state_renders_narrow_and_wide_without_gpu() {
         .render(&mut c, Rect::new(0.0, 0.0, w, 600.0), &theme);
     }
 }
+
+// Collapsible and Accordion (task-104d)
+
+use accord::{Role, SemId, SnapshotBuilder};
+
+fn core() -> Theme {
+    Theme::hoff_core()
+}
+
+/// Lets a motion land: 2 s of frames.
+fn settle(c: &mut Collapsible) {
+    for _ in 0..120 {
+        c.wake(1.0 / 60.0);
+    }
+}
+
+#[test]
+fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
+    let kit = DisclosureTokens::hoff_core();
+    assert_eq!(DisclosureTokens::derive(&core()), kit);
+    assert_eq!(core().disclosure, kit);
+    // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
+    // `p-4 pt-0` body; the Dropdown's `p-0.75 pr-3 rounded-xl`; 500 ms.
+    assert_eq!(kit.accordion.pad, [12.0, 16.0, 12.0, 16.0]);
+    assert_eq!(kit.accordion.content_pad, [0.0, 16.0, 16.0, 16.0]);
+    assert_eq!(kit.collapsible.pad, [3.0, 12.0, 3.0, 3.0]);
+    assert_eq!(kit.collapsible.radius, 12.0);
+    assert_eq!(kit.motion.reveal, 0.5);
+}
+
+#[test]
+fn a_trigger_is_as_tall_as_the_kit_draws_it() {
+    let theme = core();
+    let accordion = |first| {
+        Collapsible::new("3D Objects")
+            .look(DisclosureLook::Accordion)
+            .first(first)
+    };
+    // py-3 around the size-6 chevron box; the divider above the others.
+    assert_eq!(accordion(true).trigger_height(240.0, &theme), 48.0);
+    assert_eq!(accordion(false).trigger_height(240.0, &theme), 49.0);
+    // border, p-0.75 around the size-8 tile.
+    let dropdown = Collapsible::new("Explore").icon("house");
+    assert_eq!(dropdown.trigger_height(240.0, &theme), 40.0);
+    // A long title wraps, and the trigger grows.
+    let long = Collapsible::new("Materials imported from the shared library of the studio")
+        .look(DisclosureLook::Accordion);
+    assert!(long.trigger_height(160.0, &theme) > long.trigger_height(1200.0, &theme));
+}
+
+#[test]
+fn a_collapsible_starts_at_rest_and_opens_to_its_content() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets").open(true);
+    assert_eq!(c.wake(1.0 / 60.0), Wake::idle());
+    let trigger = c.trigger_height(240.0, &theme);
+    let [top, _, bottom, _] = theme.disclosure.collapsible.content_pad;
+    assert_eq!(
+        c.height(240.0, 100.0, &theme),
+        trigger + top + 100.0 + bottom
+    );
+    assert!(c.toggle());
+    settle(&mut c);
+    assert_eq!(c.height(240.0, 100.0, &theme), trigger);
+}
+
+#[test]
+fn opening_moves_the_height_and_lands() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    let closed = c.height(240.0, 100.0, &theme);
+    assert!(c.toggle() && c.is_open());
+    assert_eq!(c.wake(0.1), Wake::continuous());
+    let mid = c.height(240.0, 100.0, &theme);
+    assert!(mid > closed && c.revealed() < 1.0, "it moves: {mid}");
+    for _ in 0..60 {
+        c.wake(1.0 / 60.0);
+    }
+    assert!(!c.is_animating());
+    assert_eq!(c.revealed(), 1.0);
+    assert_eq!(
+        c.wake(1.0 / 60.0),
+        Wake::idle(),
+        "at rest it asks for nothing"
+    );
+}
+
+#[test]
+fn with_reduced_motion_a_collapsible_opens_at_once() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    crate::compose::animation::set_reduced_motion(true);
+    let toggled = c.toggle();
+    let wake = c.wake(1.0 / 60.0);
+    crate::compose::animation::set_reduced_motion(false);
+    assert!(toggled);
+    assert_eq!(c.revealed(), 1.0);
+    assert_eq!(wake, Wake::idle());
+    assert!(c.height(240.0, 100.0, &theme) > c.trigger_height(240.0, &theme));
+}
+
+#[test]
+fn a_click_on_the_trigger_flips_it_and_a_drag_away_does_not() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let (x, y) = c.trigger_rect(bounds, &theme).center();
+    assert!(c.handle_event(&move_to(x, y), bounds, &theme).changed);
+    c.handle_event(&down(x, y), bounds, &theme);
+    assert!(c.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(c.is_open());
+    c.handle_event(&down(x, y), bounds, &theme);
+    let r = c.handle_event(&up(x, y + 500.0), bounds, &theme);
+    assert!(!r.clicked && c.is_open(), "released outside: nothing");
+}
+
+#[test]
+fn a_disabled_collapsible_neither_flips_nor_projects_enabled() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets").disabled(true);
+    assert!(!c.toggle() && !c.set_open(true));
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let (x, y) = c.trigger_rect(bounds, &theme).center();
+    c.handle_event(&down(x, y), bounds, &theme);
+    assert_eq!(
+        c.handle_event(&up(x, y), bounds, &theme),
+        EventResult::IGNORED
+    );
+    assert!(!c.is_open());
+    let id = SemId::parse("d.assets").unwrap();
+    let mut b = SnapshotBuilder::new();
+    c.project(&mut b, &id, None);
+    assert!(!b.finish().unwrap().get(&id).unwrap().enabled);
+}
+
+#[test]
+fn the_trigger_projects_expanded_and_the_region_only_while_open() {
+    let id = SemId::parse("d.assets").unwrap();
+    let project = |c: &Collapsible| {
+        let mut b = SnapshotBuilder::new();
+        c.project(&mut b, &id, None);
+        c.project_panel(&mut b, &id, None);
+        b.finish().unwrap()
+    };
+    let mut c = Collapsible::new("Assets").sem(id.clone());
+    let closed = project(&c);
+    let node = closed.get(&id).unwrap();
+    assert_eq!(node.role, Role::Button);
+    assert_eq!(
+        node.state.get("expanded"),
+        Some(&accord::Value::Bool(false))
+    );
+    assert!(
+        node.actions
+            .iter()
+            .any(|a| a.name.as_str() == "toggle_expanded")
+    );
+    let panel = id.child("panel").unwrap();
+    assert!(closed.get(&panel).is_none());
+    c.toggle();
+    let open = project(&c);
+    assert_eq!(open.get(&panel).map(|n| n.role), Some(Role::Region));
+}
+
+/// The trigger binds where it draws; the content draws only while some
+/// of it shows, clipped, and the region binds only while open.
+#[test]
+fn the_render_binds_the_trigger_and_clips_the_content() {
+    let theme = core();
+    let id = SemId::parse("d.assets").unwrap();
+    let panel = id.child("panel").unwrap();
+    let draw = |c: &Collapsible| {
+        let mut comp = Compositor::new();
+        comp.begin_frame();
+        let h = c.height(240.0, 80.0, &theme);
+        let mut drawn = false;
+        c.render(
+            &mut comp,
+            Rect::new(0.0, 0.0, 240.0, h),
+            80.0,
+            &theme,
+            |_, _| drawn = true,
+        );
+        (comp, drawn)
+    };
+    let mut c = Collapsible::new("Assets").sem(id.clone());
+    let (comp, drawn) = draw(&c);
+    assert!(!drawn && comp.binding(&panel).is_none());
+    let trigger = c.trigger_rect(Rect::new(0.0, 0.0, 240.0, 0.0), &theme);
+    assert_eq!(
+        comp.binding(&id).unwrap().rect,
+        [trigger.x, trigger.y, trigger.w, trigger.h]
+    );
+    c = c.open(true);
+    let (comp, drawn) = draw(&c);
+    assert!(drawn && comp.binding(&panel).is_some());
+    let nodes = comp.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::PushClip { .. }))
+    );
+}
+
+#[test]
+fn a_single_accordion_keeps_one_open_and_a_multiple_one_many() {
+    let theme = core();
+    let make = |mode| {
+        Accordion::new(mode)
+            .item("3D Objects", "meshes")
+            .item("Materials", "surfaces")
+            .opened(0)
+    };
+    let mut single = make(AccordionMode::Single);
+    assert!(single.toggle(1));
+    assert!(single.is_open(1) && !single.is_open(0));
+    let mut multiple = make(AccordionMode::Multiple);
+    assert!(multiple.toggle(1));
+    assert!(multiple.is_open(0) && multiple.is_open(1));
+    assert!(!multiple.toggle(7), "no such section");
+    // The sections stack, the first without a divider, in the height.
+    let bounds = Rect::new(0.0, 0.0, 240.0, multiple.height(240.0, &theme));
+    let rects = multiple.item_rects(bounds, &theme);
+    assert_eq!(rects[1].y, rects[0].bottom());
+    assert_eq!(rects[1].bottom(), bounds.bottom());
+}
+
+#[test]
+fn a_click_in_a_single_accordion_closes_the_open_section() {
+    let theme = core();
+    let mut a = Accordion::new(AccordionMode::Single)
+        .item("3D Objects", "meshes")
+        .item("Materials", "surfaces")
+        .opened(0);
+    let bounds = Rect::new(0.0, 0.0, 240.0, a.height(240.0, &theme));
+    let second = a.item_rects(bounds, &theme)[1];
+    let (x, y) = a.items()[1].trigger_rect(second, &theme).center();
+    a.handle_event(&down(x, y), bounds, &theme);
+    assert!(a.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(a.is_open(1) && !a.is_open(0));
+    assert_eq!(a.wake(1.0 / 60.0), Wake::continuous());
+}
