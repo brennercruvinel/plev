@@ -21,7 +21,7 @@ use crate::widgets::content::DisclosureTile;
 mod data;
 mod plot;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
-pub use plot::ChartRecipe;
+pub use plot::{ChartRecipe, GraphRecipe};
 
 /// A text run: size, line height and weight in px, in the theme's family;
 /// tracked as the theme tracks unless the run names its own (in em).
@@ -159,6 +159,7 @@ pub struct NavigationTokens {
     pub stat: StatRecipe,
     pub code: CodeRecipe,
     pub chart: ChartRecipe,
+    pub graph: GraphRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -263,6 +264,7 @@ impl NavigationTokens {
             stat: StatRecipe::hoff_core(),
             code: CodeRecipe::hoff_core(),
             chart: ChartRecipe::hoff_core(),
+            graph: GraphRecipe::hoff_core(),
         }
     }
 
@@ -296,6 +298,7 @@ impl NavigationTokens {
             stat: StatRecipe::derive(theme),
             code: CodeRecipe::derive(theme),
             chart: ChartRecipe::derive(theme),
+            graph: GraphRecipe::derive(theme),
         }
     }
 

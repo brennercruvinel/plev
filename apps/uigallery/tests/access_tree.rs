@@ -51,6 +51,7 @@ const PROJECTING: &[&str] = &[
     "Data Table",
     "Dialog",
     "Field",
+    "Graph",
     "Hover Card",
     "Icon Button",
     "Input",
@@ -142,10 +143,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
-    ),
-    (
-        "Graph",
-        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
     ),
     ("Input Group", PLACEHOLDER),
     ("Input OTP", PLACEHOLDER),

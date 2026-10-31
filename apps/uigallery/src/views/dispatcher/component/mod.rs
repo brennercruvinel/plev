@@ -139,6 +139,7 @@ components! {
     // task-104 front G, navigation and data
     Chart => chart,
     CodeBlock => code_block,
+    Graph => graph,
     Stat => stat,
 }
 

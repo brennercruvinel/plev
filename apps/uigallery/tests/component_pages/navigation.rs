@@ -103,3 +103,20 @@ fn a_chart_says_its_data_to_the_reader_and_the_agent() {
     );
     let _ = g.middle(id);
 }
+
+/// A node of the graph: the person's click, the reader's press and the
+/// agent's `select` choose it the same.
+#[test]
+fn a_graph_node_is_selected_the_same_from_the_three() {
+    let node = "graph_page.group[0].card[0][4]";
+    let mut person = gallery("Graph");
+    person.click(node);
+    let mut reader = gallery("Graph");
+    reader.press(node);
+    let agent = by_agent("Graph", "node", vec![ask(node, "select")]);
+    same("Graph", &person, &reader, &agent);
+    assert_eq!(
+        person.value("graph_page.group[0].card[0]:selected"),
+        Some(Value::Text("4".into()))
+    );
+}

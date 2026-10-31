@@ -489,3 +489,90 @@ fn a_chart_projects_an_image_over_its_data() {
         Some("tue: 5")
     );
 }
+
+// Graph
+
+/// adr-0081: the look names a tone and the theme resolves it, now from
+/// the graph recipe: the kit's blue nodes in core, the theme's colors of
+/// before elsewhere.
+#[test]
+fn graph_tones_resolve_from_the_recipe() {
+    use crate::styling::theme::hoff_core::BLUE;
+    use crate::widgets::graph::look::Tone;
+    assert_eq!(Tone::Accent.color(&core()), BLUE.0);
+    let t = hoff();
+    assert_eq!(Tone::Accent.color(&t), t.colors.accent.0);
+    assert_eq!(Tone::Fill.color(&t), t.colors.bg_hover.0);
+    assert_eq!(t.navigation.graph.edge_dim, t.glass.edge);
+}
+
+/// A canvas projects its selection and a selectable item per node; the
+/// selection a request makes is the one a click makes, and a node it
+/// does not hold is refused.
+#[test]
+fn graph_view_projects_and_selects() {
+    use crate::widgets::graph::{Edge, Graph, Node};
+    use accord::{Role, SemId, SnapshotBuilder, Value};
+    let data = Graph {
+        nodes: (0..3).map(|i| Node::new(i.to_string())).collect(),
+        edges: vec![Edge::new(0, 1), Edge::new(1, 2)],
+        groups: Vec::new(),
+    };
+    let mut view = GraphView::new();
+    view.set_graph(&data);
+    let id = SemId::parse("g").unwrap();
+    view.set_sem(id.clone());
+    assert!(view.select(Some(2)));
+    assert!(!view.select(Some(2)), "no change");
+    assert!(!view.select(Some(9)), "not a node");
+    let mut b = SnapshotBuilder::new();
+    view.project(&mut b, &id, "graph", None, |i| format!("n{i}"));
+    let snap = b.finish().unwrap();
+    let canvas = snap.get(&id).unwrap();
+    assert_eq!(canvas.role, Role::Canvas);
+    assert_eq!(canvas.state.get("selected"), Some(&Value::Text("2".into())));
+    let item = snap.get(&id.key("2")).unwrap();
+    assert!(item.focusable, "the selected node is the stop of Tab");
+
+    let t = core();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 200.0);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    view.set_focused(Some(1));
+    view.render(&mut c, bounds, &t);
+    assert!(c.binding(&id.key("1")).is_some(), "each node binds");
+}
+
+/// A canvas away from the window's corner draws, binds and hit-tests its
+/// nodes inside its bounds: the fit is the canvas's own, placed at its
+/// origin (before, the nodes landed as if the canvas sat at 0, 0).
+#[test]
+fn graph_view_draws_its_nodes_where_its_bounds_are() {
+    use crate::widgets::graph::{Edge, Graph, Node};
+    use accord::SemId;
+    let data = Graph {
+        nodes: (0..6).map(|i| Node::new(i.to_string())).collect(),
+        edges: (0..5).map(|i| Edge::new(i, i + 1)).collect(),
+        groups: Vec::new(),
+    };
+    let mut view = GraphView::new();
+    view.set_graph(&data);
+    let id = SemId::parse("g").unwrap();
+    view.set_sem(id.clone());
+    let bounds = Rect::new(320.0, 240.0, 400.0, 300.0);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    view.render(&mut c, bounds, &core());
+    for i in 0..6 {
+        let (x, y) = view.node_screen_pos(i).unwrap();
+        assert!(bounds.contains(x, y), "node {i} at {x},{y}");
+        assert!(
+            c.binding(&id.key(i.to_string())).is_some(),
+            "node {i} binds"
+        );
+    }
+    let (x, y) = view.node_screen_pos(3).unwrap();
+    view.handle_event(&down(x, y), bounds);
+    assert!(view.handle_event(&up(x, y), bounds).clicked);
+    assert_eq!(view.selected(), Some(3));
+}

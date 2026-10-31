@@ -5,7 +5,8 @@
 //! blue then orange (the pair that passes the categorical checks: the
 //! lightness band, the chroma floor, ΔE 30 under protanopia and 36 in
 //! normal vision; blue and purple fail at 4.4), the ring in the ink ramp
-//! the kit's grays already are. `derive` writes back what the charts
+//! the kit's grays already are; and the graph's tones, its nodes in the
+//! same first series. `derive` writes back what the charts and the graph
 //! drew with before the slot.
 
 use super::NavText;
@@ -169,4 +170,91 @@ impl ChartRecipe {
 /// `c` at alpha `a` (the hue kept, its own alpha replaced).
 fn alpha(c: Color, a: f32) -> Color {
     Color([c.0[0], c.0[1], c.0[2], a])
+}
+
+/// The graph's tones (adr-0081: the look names a tone, the theme resolves
+/// it when the graph draws): what each `Tone` of a node or a group and
+/// each `EdgeTone` of an edge is, the alphas of the cool and the hot
+/// pass, the ring on a hovered or selected node and the frame around a
+/// canvas with a selection.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GraphRecipe {
+    pub accent: Color,
+    pub text: Color,
+    pub text_mid: Color,
+    pub text_dim: Color,
+    pub border_active: Color,
+    pub divider: Color,
+    pub fill: Color,
+    pub panel: Color,
+    pub edge_dim: Color,
+    pub edge_info: Color,
+    pub edge_success: Color,
+    pub edge_danger: Color,
+    pub edge_cool_alpha: f32,
+    pub edge_hot_alpha: f32,
+    pub node_rest_alpha: f32,
+    pub ring: Color,
+    pub frame: Color,
+    pub frame_radius: f32,
+}
+
+impl GraphRecipe {
+    /// The kit's derivation: nodes in the charts' first series (blue),
+    /// a second kind of edge in their second (orange), the structural
+    /// edges in the kit's gray; text in ink and gray, rules `#ECECEC`,
+    /// the active border `#E2E2E2`, fills `#F1F1F1` and the panel
+    /// `#F8F7F7`; the ring in ink, the frame the card shell's rim at the
+    /// card radius (`Card/index.tsx:36`, `rounded-2xl`).
+    pub fn hoff_core() -> Self {
+        use crate::styling::theme::hoff_core::{GREEN, RED};
+        let [_, well, wash, line, active, gray, _, _, ink] = SHADES;
+        Self {
+            accent: BLUE,
+            text: ink,
+            text_mid: gray,
+            text_dim: gray,
+            border_active: active,
+            divider: line,
+            fill: wash,
+            panel: well,
+            edge_dim: gray,
+            edge_info: ORANGE,
+            edge_success: GREEN,
+            edge_danger: RED,
+            edge_cool_alpha: 0.35,
+            edge_hot_alpha: 0.9,
+            node_rest_alpha: 0.65,
+            ring: ink,
+            frame: line,
+            frame_radius: 16.0,
+        }
+    }
+
+    /// The graph of before: every tone the theme's color of that name,
+    /// the structural edges the glass edge, the frame the glass edge at
+    /// the nav radius.
+    pub fn derive(theme: &Theme) -> Self {
+        let c = &theme.colors;
+        Self {
+            accent: c.accent,
+            text: c.text,
+            text_mid: c.text_mid,
+            text_dim: c.text_dim,
+            border_active: c.border_active,
+            divider: c.divider,
+            fill: c.bg_hover,
+            panel: c.bg_panel,
+            edge_dim: theme.glass.edge,
+            edge_info: c.info,
+            edge_success: c.success,
+            edge_danger: c.danger,
+            edge_cool_alpha: 0.35,
+            edge_hot_alpha: 0.9,
+            node_rest_alpha: 0.65,
+            ring: c.text,
+            frame: theme.glass.edge,
+            frame_radius: theme.shape.nav,
+        }
+    }
 }
