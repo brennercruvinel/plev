@@ -576,3 +576,37 @@ fn graph_view_draws_its_nodes_where_its_bounds_are() {
     assert!(view.handle_event(&up(x, y), bounds).clicked);
     assert_eq!(view.selected(), Some(3));
 }
+
+/// The fit takes the box of the nodes, not the world the layout ran in:
+/// the graph spans its canvas less the margin on its longer side.
+#[test]
+fn graph_view_fits_its_nodes_to_the_canvas() {
+    use crate::widgets::graph::{Edge, Graph, Node};
+    let data = Graph {
+        nodes: (0..8).map(|i| Node::new(i.to_string())).collect(),
+        edges: (0..7).map(|i| Edge::new(i, i + 1)).collect(),
+        groups: Vec::new(),
+    };
+    let t = core();
+    let mut view = GraphView::new();
+    view.set_graph(&data);
+    let bounds = Rect::new(100.0, 50.0, 600.0, 400.0);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    view.render(&mut c, bounds, &t);
+    let pts: Vec<(f32, f32)> = (0..8).filter_map(|i| view.node_screen_pos(i)).collect();
+    let span = |f: fn(&(f32, f32)) -> f32| {
+        let v: Vec<f32> = pts.iter().map(f).collect();
+        v.iter().copied().fold(f32::MIN, f32::max) - v.iter().copied().fold(f32::MAX, f32::min)
+    };
+    let margin = t.spacing.xl;
+    let fills_w = (span(|p| p.0) - (bounds.w - margin * 2.0)).abs() < 1.0;
+    let fills_h = (span(|p| p.1) - (bounds.h - margin * 2.0)).abs() < 1.0;
+    assert!(
+        fills_w || fills_h,
+        "w {} h {}",
+        span(|p| p.0),
+        span(|p| p.1)
+    );
+    assert!(pts.iter().all(|&(x, y)| bounds.contains(x, y)));
+}
