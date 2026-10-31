@@ -94,10 +94,7 @@ mod tests {
                         assert!(card.right() <= w + 0.5, "{w}: card");
                         assert!(rect.x >= card.x && rect.right() <= card.right() + 0.5);
                         assert!(rect.bottom() <= card.bottom() + 0.5);
-                        let crate::views::components::field::spec::Spec::Group(g) = &spec.spec
-                        else {
-                            panic!("a group");
-                        };
+                        let g: &InputGroup = spec.spec.get().expect("a group");
                         let l = g.layout(*rect, &theme);
                         for addon in [l.start, l.end].into_iter().flatten() {
                             assert!(addon.x >= l.input.x && addon.right() <= l.input.right());

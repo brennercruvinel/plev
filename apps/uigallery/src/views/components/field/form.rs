@@ -174,7 +174,7 @@ impl FormPage {
                 let card_w = showcase::card_width(g.columns, content, theme);
                 g.cards
                     .iter()
-                    .map(|c| c.spec.size(card_w, side, theme))
+                    .map(|c| c.spec.size_in(card_w, side, theme))
                     .collect()
             })
             .collect();
@@ -301,7 +301,7 @@ impl TextHost for FormPage {
         };
         let selected = self
             .spec(at)
-            .and_then(Spec::text)
+            .and_then(|s| s.text())
             .is_some_and(|t| t.has_selection());
         if self.focused() == Some(at) && selected {
             return true;

@@ -1,7 +1,13 @@
 //! What a card of a form page shows: one widget of the form family, with
-//! what the page asks of each the same way (its size in the card, its
-//! draw, its pointer, its projection, its parts and their ids). The text
-//! routes reach the widget's text field through [`Spec::text_mut`].
+//! what the page asks of each the same way ([`CardWidget`]: its size in
+//! the card, its draw, its pointer, its projection, its parts and their
+//! ids). A widget plugs in by implementing the trait, here for the field,
+//! the label and the input group, in its own page's file for the others.
+//! The text routes reach the widget's text field through
+//! [`CardWidget::text_mut`].
+
+#[cfg(test)]
+use std::any::Any;
 
 use accord::{SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
@@ -17,12 +23,6 @@ pub(crate) const FIELD_W: f32 = 240.0;
 /// An input group is the kit's Search, `w-54`.
 pub(crate) const GROUP_W: f32 = 216.0;
 
-pub(crate) enum Spec {
-    Field(Box<Field>),
-    Label(Label),
-    Group(Box<InputGroup>),
-}
-
 /// A part of a widget a request or a reader's focus names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Part {
@@ -36,128 +36,119 @@ pub(crate) enum Part {
     Action,
 }
 
-impl From<Field> for Spec {
-    fn from(f: Field) -> Self {
-        Spec::Field(Box::new(f))
+/// A widget of a form page's card. Only the size, the draw and the
+/// projection are its own; the rest has the answer of a widget without
+/// a text box or parts.
+pub(crate) trait CardWidget: 'static {
+    /// The widget with the id its draw binds to.
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget>;
+
+    /// Its size with `room` across.
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32);
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme);
+
+    /// Declares the widget under `parent`, as the comps projects it.
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId);
+
+    fn handle_event(&mut self, _event: &WidgetEvent, _rect: Rect, _theme: &Theme) -> EventResult {
+        EventResult::IGNORED
+    }
+
+    /// The text field the keys go to.
+    fn text(&self) -> Option<&TextField> {
+        None
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        None
+    }
+
+    /// The id of `part` of the widget.
+    fn part_id(&self, _part: Part) -> Option<SemId> {
+        None
+    }
+
+    /// The keyboard focus on a part other than the box (whose focus is
+    /// the caret), or off them.
+    fn set_part_focus(&mut self, _part: Option<Part>) {}
+
+    fn part_focus(&self) -> Option<Part> {
+        None
+    }
+
+    /// Whether `(x, y)` is on the text box, laid out in `rect`.
+    fn on_box(&self, _x: f32, _y: f32, _rect: Rect, _theme: &Theme) -> bool {
+        false
+    }
+
+    /// Where the input method's window goes for the focused box.
+    fn ime_area(&self, _rect: Rect, _theme: &Theme) -> Option<Rect> {
+        None
+    }
+
+    /// Runs `action` on `part`; `false` when the widget has no such
+    /// thing. The box's `set_value` sets the text whole, refused where
+    /// the field does not take it ([`TextField::set_value`]).
+    fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
+        match (part, action, param) {
+            (Part::Box, "set_value", Some(Value::Text(text))) => {
+                self.text_mut().is_some_and(|t| t.set_value(text))
+            }
+            _ => false,
+        }
+    }
+
+    /// The widget as itself, for a test to read what only it has.
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any;
+}
+
+/// A card's widget.
+pub(crate) struct Spec(Box<dyn CardWidget>);
+
+impl<W: CardWidget> From<W> for Spec {
+    fn from(w: W) -> Self {
+        Spec(Box::new(w))
     }
 }
 
-impl From<Label> for Spec {
-    fn from(l: Label) -> Self {
-        Spec::Label(l)
+impl std::ops::Deref for Spec {
+    type Target = dyn CardWidget;
+
+    fn deref(&self) -> &Self::Target {
+        self.0.as_ref()
     }
 }
 
-impl From<InputGroup> for Spec {
-    fn from(g: InputGroup) -> Self {
-        Spec::Group(Box::new(g))
+impl std::ops::DerefMut for Spec {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.0.as_mut()
     }
 }
 
 impl Spec {
-    /// The widget with the id its draw binds to.
     pub(crate) fn sem(self, id: SemId) -> Self {
-        match self {
-            Spec::Field(f) => Spec::Field(Box::new((*f).sem(id))),
-            Spec::Label(l) => Spec::Label(l.sem(id)),
-            Spec::Group(g) => Spec::Group(Box::new((*g).sem(id))),
-        }
+        Spec(self.0.with_sem(id))
     }
 
-    /// The field, for what only a field has (its layout, its eye).
+    /// The widget as a `W`, for what only it has (a field's layout, its
+    /// eye).
+    #[cfg(test)]
+    pub(crate) fn get<W: CardWidget>(&self) -> Option<&W> {
+        self.0.as_any().downcast_ref()
+    }
+
+    /// The field, when the card shows one.
     #[cfg(test)]
     pub(crate) fn field(&self) -> Option<&Field> {
-        match self {
-            Spec::Field(f) => Some(f.as_ref()),
-            _ => None,
-        }
-    }
-
-    /// The text field the keys go to.
-    pub(crate) fn text(&self) -> Option<&TextField> {
-        match self {
-            Spec::Field(f) => Some(&f.input),
-            Spec::Group(g) => Some(&g.input),
-            Spec::Label(_) => None,
-        }
-    }
-
-    pub(crate) fn text_mut(&mut self) -> Option<&mut TextField> {
-        match self {
-            Spec::Field(f) => Some(&mut f.input),
-            Spec::Group(g) => Some(&mut g.input),
-            Spec::Label(_) => None,
-        }
+        self.get()
     }
 
     /// Its size in a card `card_w` wide with `side` kept clear on either
-    /// side: a field `w-60` and a group `w-54` wide at most, a label
-    /// wrapped to the room.
-    pub(crate) fn size(&self, card_w: f32, side: f32, theme: &Theme) -> (f32, f32) {
-        let room = (card_w - side * 2.0).max(0.0);
-        match self {
-            Spec::Field(f) => {
-                let w = FIELD_W.min(room);
-                (w, f.height_for(w, theme))
-            }
-            Spec::Label(l) => l.size(Some(room), theme),
-            Spec::Group(g) => (GROUP_W.min(room), g.height(theme)),
-        }
-    }
-
-    pub(crate) fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
-        match self {
-            Spec::Field(f) => f.render(c, rect, theme),
-            Spec::Label(l) => l.render(c, rect, theme),
-            Spec::Group(g) => g.render(c, rect, theme),
-        }
-    }
-
-    pub(crate) fn handle_event(
-        &mut self,
-        event: &WidgetEvent,
-        rect: Rect,
-        theme: &Theme,
-    ) -> EventResult {
-        match self {
-            Spec::Field(f) => f.handle_event(event, rect, theme),
-            Spec::Label(_) => EventResult::IGNORED,
-            Spec::Group(g) => g.handle_event(event, rect, theme),
-        }
-    }
-
-    /// Declares the widget under `parent`, as the comps projects it.
-    pub(crate) fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
-        match self {
-            Spec::Field(f) => {
-                if let Some(id) = f.sem_id() {
-                    f.project(b, id, Some(parent));
-                }
-            }
-            Spec::Label(l) => {
-                if let Some(id) = l.sem_id() {
-                    l.project(b, id, Some(parent));
-                }
-            }
-            Spec::Group(g) => {
-                if let Some(id) = g.sem_id() {
-                    let name = g.input.input.placeholder.clone();
-                    g.project(b, id, name, Some(parent));
-                }
-            }
-        }
-    }
-
-    /// The id of `part` of the widget.
-    pub(crate) fn part_id(&self, part: Part) -> Option<SemId> {
-        match (self, part) {
-            (Spec::Field(f), Part::Box) => f.sem_id().cloned(),
-            (Spec::Field(f), Part::Reveal) => f.reveal_id(),
-            (Spec::Field(f), Part::Link) => f.link_id(),
-            (Spec::Group(g), Part::Box) => g.sem_id().cloned(),
-            (Spec::Group(g), Part::Action) => g.action_id(),
-            _ => None,
-        }
+    /// side.
+    pub(crate) fn size_in(&self, card_w: f32, side: f32, theme: &Theme) -> (f32, f32) {
+        self.0.size((card_w - side * 2.0).max(0.0), theme)
     }
 
     /// The part of the widget `id` names.
@@ -166,68 +157,187 @@ impl Spec {
             .into_iter()
             .find(|p| self.part_id(*p).as_ref() == Some(id))
     }
+}
 
-    /// The keyboard focus on a part other than the box (whose focus is the
-    /// caret), or off them.
-    pub(crate) fn set_part_focus(&mut self, part: Option<Part>) {
-        match self {
-            Spec::Field(f) => f.set_part_focus(match part {
+impl CardWidget for Field {
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        Box::new((*self).sem(id))
+    }
+
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        let w = FIELD_W.min(room);
+        (w, self.height_for(w, theme))
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        Field::render(self, c, rect, theme);
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        if let Some(id) = self.sem_id() {
+            Field::project(self, b, id, Some(parent));
+        }
+    }
+
+    fn handle_event(&mut self, event: &WidgetEvent, rect: Rect, theme: &Theme) -> EventResult {
+        Field::handle_event(self, event, rect, theme)
+    }
+
+    fn text(&self) -> Option<&TextField> {
+        Some(&self.input)
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        Some(&mut self.input)
+    }
+
+    fn part_id(&self, part: Part) -> Option<SemId> {
+        match part {
+            Part::Box => self.sem_id().cloned(),
+            Part::Reveal => self.reveal_id(),
+            Part::Link => self.link_id(),
+            Part::Action => None,
+        }
+    }
+
+    fn set_part_focus(&mut self, part: Option<Part>) {
+        Field::set_part_focus(
+            self,
+            match part {
                 Some(Part::Reveal) => Some(FieldPart::Reveal),
                 Some(Part::Link) => Some(FieldPart::Link),
                 _ => None,
-            }),
-            Spec::Group(g) => g.set_action_focus(part == Some(Part::Action)),
-            Spec::Label(_) => {}
-        }
-    }
-
-    pub(crate) fn part_focus(&self) -> Option<Part> {
-        match self {
-            Spec::Field(f) => match f.part_focus() {
-                Some(FieldPart::Reveal) => Some(Part::Reveal),
-                Some(FieldPart::Link) => Some(Part::Link),
-                _ => None,
             },
-            Spec::Group(g) => g.has_action_focus().then_some(Part::Action),
-            Spec::Label(_) => None,
+        );
+    }
+
+    fn part_focus(&self) -> Option<Part> {
+        match Field::part_focus(self) {
+            Some(FieldPart::Reveal) => Some(Part::Reveal),
+            Some(FieldPart::Link) => Some(Part::Link),
+            _ => None,
         }
     }
 
-    /// Whether `(x, y)` is on the text box, laid out in `rect`.
-    pub(crate) fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
-        match self {
-            Spec::Field(f) => f.part_at(x, y, rect, theme) == Some(FieldPart::Input),
-            Spec::Group(g) => {
-                g.layout(rect, theme).input.contains(x, y) && !g.on_action(x, y, rect, theme)
-            }
-            Spec::Label(_) => false,
-        }
+    fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
+        self.part_at(x, y, rect, theme) == Some(FieldPart::Input)
     }
 
-    /// Where the input method's window goes for the focused box.
-    pub(crate) fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
-        match self {
-            Spec::Field(f) => Some(f.input.ime_area(f.layout(rect, theme).input, theme)),
-            Spec::Group(g) => Some(g.ime_area(rect, theme)),
-            Spec::Label(_) => None,
-        }
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        Some(self.input.ime_area(self.layout(rect, theme).input, theme))
     }
 
-    /// Runs `action` on `part`: the box's `set_value` types, the eye's
-    /// `toggle` reveals, a link's or an icon button's `activate` presses.
-    /// `false` when the widget has no such thing.
-    pub(crate) fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
+    /// The eye's `toggle` reveals; a link's `activate` does what a click
+    /// does (nothing more).
+    fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
         match (part, action, param) {
-            (Part::Box, "set_value", Some(Value::Text(text))) => {
-                self.text_mut().map(|t| t.set_text(text)).is_some()
-            }
-            (Part::Reveal, "toggle", None) => match self {
-                Spec::Field(f) => f.toggle_reveal(),
-                _ => false,
-            },
-            (Part::Link, "activate", None) => matches!(self, Spec::Field(_)),
-            (Part::Action, "activate", None) => matches!(self, Spec::Group(_)),
+            (Part::Box, "set_value", Some(Value::Text(text))) => self.input.set_value(text),
+            (Part::Reveal, "toggle", None) => self.toggle_reveal(),
+            (Part::Link, "activate", None) => true,
             _ => false,
         }
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl CardWidget for Label {
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        Box::new((*self).sem(id))
+    }
+
+    /// Wrapped to the room.
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        Label::size(self, Some(room), theme)
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        Label::render(self, c, rect, theme);
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        if let Some(id) = self.sem_id() {
+            Label::project(self, b, id, Some(parent));
+        }
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+impl CardWidget for InputGroup {
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        Box::new((*self).sem(id))
+    }
+
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        (GROUP_W.min(room), self.height(theme))
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        InputGroup::render(self, c, rect, theme);
+    }
+
+    /// Named by its placeholder.
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        if let Some(id) = self.sem_id() {
+            let name = self.input.input.placeholder.clone();
+            InputGroup::project(self, b, id, name, Some(parent));
+        }
+    }
+
+    fn handle_event(&mut self, event: &WidgetEvent, rect: Rect, theme: &Theme) -> EventResult {
+        InputGroup::handle_event(self, event, rect, theme)
+    }
+
+    fn text(&self) -> Option<&TextField> {
+        Some(&self.input)
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        Some(&mut self.input)
+    }
+
+    fn part_id(&self, part: Part) -> Option<SemId> {
+        match part {
+            Part::Box => self.sem_id().cloned(),
+            Part::Action => self.action_id(),
+            _ => None,
+        }
+    }
+
+    fn set_part_focus(&mut self, part: Option<Part>) {
+        self.set_action_focus(part == Some(Part::Action));
+    }
+
+    fn part_focus(&self) -> Option<Part> {
+        self.has_action_focus().then_some(Part::Action)
+    }
+
+    fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
+        self.layout(rect, theme).input.contains(x, y) && !self.on_action(x, y, rect, theme)
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        Some(InputGroup::ime_area(self, rect, theme))
+    }
+
+    /// The icon button's `activate` does what a click does.
+    fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
+        match (part, action, param) {
+            (Part::Box, "set_value", Some(Value::Text(text))) => self.input.set_value(text),
+            (Part::Action, "activate", None) => self.action().is_some(),
+            _ => false,
+        }
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
