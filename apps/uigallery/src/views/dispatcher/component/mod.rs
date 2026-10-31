@@ -143,9 +143,11 @@ components! {
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,
+    Carousel => carousel,
     Collapsible => collapsible,
     Item => item,
     Kbd => kbd,
+    Pagination => pagination,
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     RadioGroup => radio_group,

@@ -107,9 +107,11 @@ pub enum Pane {
     // task-104 front D, disclosure and display (#157)
     Accordion,
     AspectRatio,
+    Carousel,
     Collapsible,
     Item,
     Kbd,
+    Pagination,
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
     RadioGroup,

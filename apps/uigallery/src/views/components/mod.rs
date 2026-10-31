@@ -64,9 +64,11 @@ pub mod message_scroller;
 // task-104 front D, disclosure and display (#157)
 pub mod accordion;
 pub mod aspect_ratio;
+pub mod carousel;
 pub mod collapsible;
 pub mod item;
 pub mod kbd;
+pub mod pagination;
 
 // task-104 front E, selection and dates (#158)
 pub mod button_group;

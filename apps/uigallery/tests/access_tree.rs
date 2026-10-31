@@ -45,6 +45,7 @@ const PROJECTING: &[&str] = &[
     "Bubble",
     "Button",
     "Button Group",
+    "Carousel",
     "Checkbox",
     "Chip",
     "Collapsible",
@@ -64,6 +65,7 @@ const PROJECTING: &[&str] = &[
     "Message",
     "Message Scroller",
     "Navigation Menu",
+    "Pagination",
     "Popover",
     "Radio Group",
     "Resizable",
@@ -123,7 +125,6 @@ const SILENT: &[(&str, Why)] = &[
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
-    ("Carousel", PLACEHOLDER),
     (
         "Chart",
         Unprojected("the charts: an image with a text alternative, or a table of the data"),
@@ -152,7 +153,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
-    ("Pagination", PLACEHOLDER),
     ("Panel", Nothing("the glass surface alone")),
     (
         "Panel Header",

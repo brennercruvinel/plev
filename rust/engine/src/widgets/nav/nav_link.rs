@@ -1,7 +1,7 @@
 //! HOFF nav link: the sidebar row. One `Lg` control tall at the nav
 //! radius, an icon in its slot (the small icon centered in an `Xs`-wide
-//! box), a base-2sm label, an optional trailing hint (a shortcut digit)
-//! or count badge. Faint at rest, text-default hovered, text-active plus
+//! box), a base-2sm label, an optional trailing shortcut (in the kit's
+//! key cap, task-104d), hint (plain text) or count badge. Faint at rest, text-default hovered, text-active plus
 //! the surface-active wash and the edge rim when active. In a rail (no
 //! room for labels) only the icon slot draws, centered.
 //!
@@ -17,6 +17,7 @@ use crate::styling::theme::{ControlSize, IconSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
+use crate::widgets::content::Kbd;
 use crate::widgets::icons;
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
@@ -26,8 +27,10 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 pub struct NavLink {
     pub label: String,
     pub icon: Option<&'static str>,
-    /// Trailing hint text (a shortcut) in the placeholder tone.
+    /// Trailing hint text in the placeholder tone (a status, a count).
     pub hint: Option<String>,
+    /// Trailing keyboard shortcut, drawn in the kit's key cap.
+    pub shortcut: Option<String>,
     /// Trailing count badge (unread, changes).
     pub badge: Option<Badge>,
     pub active: bool,
@@ -43,6 +46,7 @@ impl NavLink {
             label: label.into(),
             icon: None,
             hint: None,
+            shortcut: None,
             badge: None,
             active: false,
             hovered: false,
@@ -93,6 +97,12 @@ impl NavLink {
 
     pub fn hint(mut self, hint: impl Into<String>) -> Self {
         self.hint = Some(hint.into());
+        self
+    }
+
+    /// A keyboard shortcut, drawn in the kit's key cap.
+    pub fn shortcut(mut self, keys: impl Into<String>) -> Self {
+        self.shortcut = Some(keys.into());
         self
     }
 
@@ -152,7 +162,9 @@ impl NavLink {
             w += Self::icon_slot(theme) + theme.spacing.xs;
         }
         w += TextMeasurer::measure_styled(&self.label, &Self::label_style(theme), None).0;
-        if let Some(hint) = &self.hint {
+        if let Some(keys) = &self.shortcut {
+            w += theme.spacing.lg + Kbd::new(keys.as_str()).preferred_size(theme).0;
+        } else if let Some(hint) = &self.hint {
             w += theme.spacing.lg
                 + TextMeasurer::measure_styled(hint, &Self::hint_style(theme), None).0;
         }
@@ -289,6 +301,13 @@ impl NavLink {
                 Rect::new(right, bounds.y + (bounds.h - bh) / 2.0, bw, bh),
                 theme,
             );
+            right -= theme.spacing.sm;
+        } else if let Some(keys) = &self.shortcut {
+            let cap = Kbd::new(keys.as_str());
+            let (kw, kh) = cap.preferred_size(theme);
+            right -= kw;
+            let at = Rect::new(right, bounds.y + (bounds.h - kh) / 2.0, kw, kh);
+            cap.render_to_layer(c, layer, at, theme);
             right -= theme.spacing.sm;
         } else if let Some(hint) = &self.hint {
             let style = Self::hint_style(theme);

@@ -82,6 +82,8 @@ impl ShowcaseView {
                 Pane::Collapsible => self.panes.collapsible.content_height(content, t),
                 Pane::Item => self.panes.item.content_height(content, t),
                 Pane::Kbd => self.panes.kbd.content_height(content, t),
+                Pane::Carousel => self.panes.carousel.content_height(content, t),
+                Pane::Pagination => self.panes.pagination.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
@@ -223,6 +225,8 @@ impl ShowcaseView {
                 Pane::Collapsible => self.panes.collapsible.handle_event(event, content, t),
                 Pane::Item => self.panes.item.handle_event(event, content, t),
                 Pane::Kbd => self.panes.kbd.handle_event(event, content, t),
+                Pane::Carousel => self.panes.carousel.handle_event(event, content, t),
+                Pane::Pagination => self.panes.pagination.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
@@ -486,6 +490,8 @@ impl ShowcaseView {
                 Pane::Collapsible => self.panes.collapsible.render(c, content, theme),
                 Pane::Item => self.panes.item.render(c, content, theme),
                 Pane::Kbd => self.panes.kbd.render(c, content, theme),
+                Pane::Carousel => self.panes.carousel.render(c, content, theme),
+                Pane::Pagination => self.panes.pagination.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
