@@ -1,8 +1,17 @@
 ---
+id: adr-NNNN
+title: "the decision, said as what holds once it is taken"
+project: plev
 type: adr
 status: proposed
-tags: []
 date: YYYY-MM-DD
+date_basis: text
+topics: []
+relations: []
+source: reconstruction
+source_revision: SHA
+revised: YYYY-MM-DD
+review: reviewed
 ---
 
 # the decision, said as what holds once it is taken
@@ -11,8 +20,10 @@ date: YYYY-MM-DD
      NNNN is the next free number across every theme, the theme is the
      directory whose decisions this one sits with (generated, importing,
      interface, recording, rendering, semantics, structure, workflows).
-     status: proposed until someone decides, then accepted (or superseded
-     by NNNN). write it in the present tense, without hedging. -->
+     status: proposed until someone decides, then accepted (or superseded,
+     with the record that supersedes it in relations). write it in the
+     present tense, without hedging. list it in docs/adr/README.md. the
+     header fields are in docs/ref/operations/docs-conventions.md. -->
 
 ## context
 

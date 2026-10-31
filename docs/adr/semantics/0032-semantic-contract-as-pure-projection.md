@@ -1,11 +1,22 @@
 ---
+id: adr-0032
+title: "semantic contract as a pure projection of app state"
+project: plev
 type: adr
 status: accepted
-tags: [sem, semantic-contract, identity, accessibility, agents, recorder, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [semantics, agents, accessibility, recording]
+relations: [adr-0036, task-57, task-59, task-60, task-61, task-62, task-63, task-73, task-80]
+source: docs/adr/semantics/0032-semantic-contract-as-pure-projection.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # semantic contract as a pure projection of app state
+
+Decides that the semantic contract is a pure projection of the app's state: each control has an identity (`SemId`) chosen by the app itself and a node with role, label, state, actions and constraints, produced on demand from the live state by the `rust/accord` crate (at the time, `sem`). This contract replaces five representations that diverged (visual tree, accessibility tree, test selectors, agent tools and recorder events) and comes to be read by all of them. The snapshot revision is 64-bit FNV-1a over a versioned encoding, so that it is the same across processes.
 
 ## context
 
@@ -111,7 +122,7 @@ agent observes is a question of scope, and scope belongs to task-61.
   `sem` and no binding names a capability; the ide sends the keys that act
   on one through its `Workbench`, which asks the dispatcher as the person,
   and left a keymap entry naming a capability out on purpose
-  (docs/adr/semantics/0036-commit-checks-the-index-it-observed.md, "the person asks,
+  ([`0036-commit-checks-the-index-it-observed.md`](0036-commit-checks-the-index-it-observed.md), "the person asks,
   execute acts").
 
 ## avoid

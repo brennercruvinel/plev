@@ -1,7 +1,7 @@
 //! raising plev `SceneNode`s to monster IR nodes, the mirror of
 //! [`crate::lower`]: a recorder samples the frame the compositor holds,
 //! raises it and feeds the frames to [`crate::discover`]. the IR stays
-//! the codec's own model (docs/ref/monster-format-v0.md, "node model"):
+//! the codec's own model (docs/ref/architecture/monster-format-v0.md, "node model"):
 //! raising maps the compositor enum onto it and never widens it.
 //!
 //! the IR v0 carries rect, rounded_rect, gradient_rect, text, image and

@@ -138,6 +138,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: docs headers, links, anchors and catalog
+        run: python3 tool/tasks/docbase.py check
       - uses: lycheeverse/lychee-action@v2
         with:
           args: --config .devops/check/lychee.toml --offline .

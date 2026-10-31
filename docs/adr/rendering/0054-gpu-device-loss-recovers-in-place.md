@@ -1,17 +1,28 @@
 ---
+id: adr-0054
+title: "a lost GPU device is recovered in place, and the next frame draws the same"
+project: plev
 type: adr
 status: accepted
-tags: [gpu, wgpu, device-lost, robustness, headless, frame-path, platform-integration]
 date: 2026-09-24
+date_basis: header
+topics: [rendering, gpu, platform]
+relations: [adr-0024, task-76]
+source: docs/adr/rendering/0054-gpu-device-loss-recovers-in-place.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a lost GPU device is recovered in place, and the next frame draws the same
+
+Decides that the loss of the GPU device (the driver restarts, the GPU goes away or is disconnected, a suspension the driver does not survive) is detected by a flag and recovered in place: the engine requests a new adapter and a new device, rebuilds the resources that lived on it and draws the same frame again, without the app needing to do anything beyond the state it keeps on the device. Before, the loss gave no signal: the window kept the last image with no error, and the headless read panicked when using a dead resource that wgpu still validated. The task-76 probe measured these cases on Metal, and the recovery applies to every window and to the headless renderer.
 
 ## context
 
 the engine handled one kind of loss: the surface. `SurfaceError::Lost`
 and `Outdated` reconfigured the swapchain (`window/frame.rs`,
-`window/render.rs`) and the next redraw went on. the device itself (the
+`window/render.rs`, hoje em `rust/engine/src/runtime/window/`) and the next redraw went on. the device itself (the
 driver reset, the GPU switched or unplugged, a sleep the driver did not
 survive, wgpu invalidating it) had no signal and no way back. everything
 that lives on the device dies with it: device and queue, the surface's
@@ -41,7 +52,7 @@ the probe (task-76, phase 1) measured what happens today on metal, with
 
 one flag, one recovery, one place in the frame.
 
-- **the signal** (`gpu::loss`). `GpuContext::from_device`, the body both
+- **the signal** (`gpu::loss`, `rust/engine/src/drawing/gpu/loss.rs:49`). `GpuContext::from_device`, the body both
   constructors end in, installs `Device::set_device_lost_callback` on
   every device it builds. the callback raises an atomic flag and keeps
   the reason (`LostDevice { reason, message }`); the frame reads it
@@ -49,7 +60,7 @@ one flag, one recovery, one place in the frame.
   `poll_device_loss` polls once without waiting first, so a `Destroyed`
   that only arrives with a poll is seen too. a `Destroyed` the engine
   caused itself (the context's own drop) is expected and not a loss.
-- **the recovery** (`gpu::recover`). `GpuContext::recover` asks the
+- **the recovery** (`gpu::recover`, `rust/engine/src/drawing/gpu/recover.rs:146`). `GpuContext::recover` asks the
   context's own instance for an adapter (compatible with the surface,
   when there is one) and a device again, and rebuilds the context through
   `from_device`: nothing is built a second way, and a hot reloaded
@@ -67,7 +78,7 @@ one flag, one recovery, one place in the frame.
   (`TextSystem::recreate_atlas`: same size, empty, cache and allocator
   reset, `atlas_disturbed` raised so every layer re-resolves; the glyphs
   come back on the next frame through the raster path, a cache miss, so
-  the raster identity ADR holds unchanged), the effect pipelines
+  the [raster identity ADR](0024-glyph-raster-identity-and-atlas-isolation.md) holds unchanged), the effect pipelines
   (`EffectProcessor::new`), the texture pool (`clear`), the compositor's
   layer textures and buffers (`Compositor::drop_gpu_resources`, every
   layer dirty). `mark_all_dirty` was not enough: a layer texture is
@@ -126,6 +137,10 @@ one flag, one recovery, one place in the frame.
 - a second window (task-76 item 2) gets its images from the same log
   and recovers its own context the same way; the store is shared, the
   atlases are per context.
+
+## alternatives
+
+O texto registra três caminhos recusados. `mark_all_dirty` não basta para recuperar o compositor: a textura de camada só é refeita quando muda o tamanho, e o `GpuVec` só quando muda a capacidade, então ambos escreveriam no device morto (decision). Drenar a loja de imagens no upload deixa a primeira atlas a preparar com os pixels de todas as outras (avoid). Reconstruir a partir do callback, na thread do wgpu, corre contra o frame, e reagir só a `SurfaceError::Lost` perde o contexto headless e a perda entre quadros (avoid).
 
 ## avoid
 

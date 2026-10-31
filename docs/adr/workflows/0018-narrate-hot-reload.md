@@ -1,12 +1,22 @@
 ---
+id: adr-0018
+title: "adotamos runtime parser + override map para hot reload de plev_narrate! DSL"
 project: plev
-audience: [ai-agents, contributors]
-status: reference
-last-updated: 2024-02-18
-domain: hot-reload
+type: adr
+status: accepted
+date: 2024-02-18
+date_basis: header
+topics: [hot-reload, dsl]
+relations: []
+source: docs/adr/workflows/0018-narrate-hot-reload.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # adotamos runtime parser + override map para hot reload de plev_narrate! DSL
+
+Decides the hot reload of `plev_narrate!` with a hand-written runtime parser and an override map: the DSL block is reparsed when accessed, without recompiling. Among three approaches (literal pool, full reparse and manual check), the full reparse was chosen, because the literal pool was complex and the manual check was limited. The result is that colors, sizes, layout and static text change in about 500 ms, while the `on`, `when`, `each` and `bind` blocks are not interpreted.
 
 brenner@plev.engineer
 

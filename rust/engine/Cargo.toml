@@ -120,7 +120,7 @@ tray-icon = { version = "0.25", default-features = false }
 # macos the UserNotifications framework refuses a process without an app
 # bundle (`objc2-user-notifications` 0.3 would enter with the classes it
 # uses, plus `objc2` and `objc2-foundation` directly; see the item 5 probe
-# in docs/log/steps/task-76-platform-integration.md), and the
+# in docs/tasks/task-76-platform-integration/README.md), and the
 # bundle is the platform bring-up's. until then `NativeNotifier` says why.
 
 [target.'cfg(target_os = "android")'.dependencies]

@@ -1,11 +1,22 @@
 ---
+id: adr-0029
+title: "embed an app view by giving it a frame origin"
+project: plev
 type: adr
 status: accepted
-tags: [showcase, ide, comps, layout]
 date: 2026-09-21
+date_basis: header
+topics: [layout, platform]
+relations: [adr-0026]
+source: docs/adr/rendering/0029-embed-an-app-view-by-frame-origin.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # embed an app view by giving it a frame origin
+
+Decides that an embedded view receives a frame with an origin (`set_frame`), not its own `begin_frame`: the view that owns the window keeps `vw` and `vh`, and the host passes the rectangle. The reason: the showcase needed to host the editor and the git client, and the ide workspace drew from (0, 0). The result is that the editor and git become app sections, and the limitations are made explicit: the ide header, the modal dialog and the toasts still center on the window.
 
 ## context
 

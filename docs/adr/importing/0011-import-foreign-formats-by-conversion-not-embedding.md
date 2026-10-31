@@ -1,12 +1,23 @@
 ---
+id: adr-0011
+title: "import foreign formats by conversion, never by embedding a foreign runtime"
+project: plev
 type: adr
 status: accepted
-tags: [lottie, lot, monster, import, architecture]
 date: 2025-06-10
-commit: a044613
+date_basis: header
+topics: [importing, formats, animation]
+relations: []
+source: docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [a044613]
 ---
 
 # import foreign formats by conversion, never by embedding a foreign runtime
+
+Decides to import foreign formats by a single conversion, never by embedding a foreign runtime: `lot` reads the Lottie JSON once, offline, and writes `.monster`. The reason is that an embedded player brings its own engine and pays the parsing cost on every frame. The result is that playback runs in `monster::Player` with no Lottie code at all, and the importer records what does not convert instead of faking it.
 
 ## context
 

@@ -4,7 +4,7 @@
 // layout (breakpoints, gutters, density) and elevation (shadow stacks).
 //
 // Every number here was a literal somewhere in a widget, an app theme or a
-// showcase section (docs/ref/component-catalog.md, section 3). A widget never restates a
+// showcase section (docs/ref/architecture/component-catalog.md, section 3). A widget never restates a
 // value from this file; it reads it from `&Theme`.
 // ============================================================================
 

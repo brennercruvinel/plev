@@ -1,11 +1,22 @@
 ---
+id: adr-0034
+title: "headless render shares the frame path"
+project: plev
 type: adr
 status: accepted
-tags: [headless, rendering, frame-path, wgpu, srgb, png, ci, agents, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [rendering, gpu, determinism]
+relations: [task-77, generative-runtime-thesis]
+source: docs/adr/rendering/0034-headless-render-shares-the-frame-path.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # headless render shares the frame path
+
+Decides that headless rendering uses the same frame path as the window: `window::draw_frame` does the drawing, and `present_frame` only acquires the surface, calls `draw_frame` and presents. With this, `engine::headless::Renderer` produces the window's pixels, and the separate `text::probe` pipeline, which no window ever ran, goes away. Measured on macOS, the `hoff` page reads 48,48,48 headless, a value that a window capture also reads after conversion to sRGB, and two runs give the same png bytes across the 312 frames; it matters because CI, reports, the inspector and the agents now compare pixels through a single path.
 
 ## context
 

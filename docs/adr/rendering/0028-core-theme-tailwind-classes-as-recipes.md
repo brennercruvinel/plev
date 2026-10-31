@@ -1,11 +1,22 @@
 ---
+id: adr-0028
+title: "core theme: the tailwind class lists as button recipes"
+project: plev
 type: adr
 status: accepted
-tags: [design-system, theme, tokens, comps, buttons, shaders]
 date: 2026-09-21
+date_basis: header
+topics: [design-system, gpu]
+relations: []
+source: docs/adr/rendering/0028-core-theme-tailwind-classes-as-recipes.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # core theme: the tailwind class lists as button recipes
+
+Decides that the Tailwind classes of the TypeScript kit become button recipes in tokens (one `ButtonRecipe` per variant, with rest, hover and active states), and that no visual literal enters a widget. The reason: the dark HOFF theme did not match the kit, with different radii and borders with a dark fringe. The result is two global fixes: the blending of border and fill now happens in premultiplied linear, and zero-blur shadows get anti-aliasing with a minimum sigma of 0.5 px.
 
 ## context
 

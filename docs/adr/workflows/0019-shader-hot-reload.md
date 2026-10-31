@@ -1,13 +1,22 @@
 ---
+id: adr-0019
+title: "adotamos shader hot reload via notify file watcher sobre dylib reloading"
 project: plev
-audience: [ai-agents, contributors]
-status: reference
-last-updated: 2024-02-06
-domain: hot-reload
-commit: 3a53399
+type: adr
+status: accepted
+date: 2024-02-06
+date_basis: header
+topics: [hot-reload, gpu]
+relations: [adr-0031, architecture-hot-reload-design, task-56]
+source: docs/adr/workflows/0019-shader-hot-reload.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # adotamos shader hot reload via notify file watcher sobre dylib reloading
+
+Decides shader hot reload through a file watcher that recreates the pipeline, following vello's pattern, and not through dylib reloading, which breaks with `Box<dyn Any + Send>` in the action queue because the typeid changes between loads, which is silent UB. The result is shader iteration on WGSL in about 500 ms, and invalid WGSL keeps the old pipeline. A note of 2026-09-22 reverses the polling in `about_to_wait`, which the 2024 decision had chosen.
 
 > 2026-09-22: adr-3 (channel polling in about_to_wait) is reversed: the watcher now wakes the loop with `Window::request_redraw` and the poll sits in `present_frame`, and the watcher moved from `window::App` (which no app uses) into `GpuContext`. see [hot-reload-on-by-default-in-gpu-context](0031-hot-reload-on-by-default-in-gpu-context.md).
 
@@ -101,7 +110,7 @@ perdemos: polling vs push. em teoria, push seria mais imediato, mas com debounce
 | `src/window.rs` | +58 | watcher integration |
 | `src/lib.rs` | +4 | mod declaration |
 | `mission/rules.md` | +9 | hot reload section |
-| `mission/knowledge/hot-reload-design.md` | +123 | design doc (pesquisa) |
+| [`hot-reload-design.md`](../../ref/architecture/hot-reload-design.md) | +123 | design doc (pesquisa) |
 | `mission/steps/ongoing/GAP-1-hot-reload.md` | +59 | task checklist |
-| `mission/steps/ongoing/changelogs/GAP-1.md` | +22 | changelog |
+| [`task-56-hot-reload.md`](../../tasks/task-56-hot-reload/README.md) | +22 | changelog |
 | `CLAUDE.md` | +3 | comando hot-reload |

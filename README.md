@@ -214,7 +214,7 @@ tool/tasks/runcheck.sh arcade lottie
 
 As ferramentas além dessas (uma página para PNG, o custo de um frame, o agent
 port, o mirror, as sessões gravadas, os importers, o modelo de linguagem)
-estão em [docs/ref/run-the-tools.md](docs/ref/run-the-tools.md). Uma build de
+estão em [docs/ref/operations/run-the-tools.md](docs/ref/operations/run-the-tools.md). Uma build de
 debug faz hot reload: salve um `.wgsl`, uma string ou uma cor e a janela
 aberta mostra a mudança.
 
@@ -225,7 +225,7 @@ quatro casas, conforme o que ela é.
 
 | Casa | Onde | O quê |
 |---|---|---|
-| Libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling e o design system em `engine::widgets`; o inventário está em [docs/ref/component-catalog.md](docs/ref/component-catalog.md)), `accord` (o contrato semântico), `plevir` (a IR do plev e seu verifier), `screen` (surfaces materializadas a partir da IR), `offers` (os proposers), `claude` (o Claude como proposer), `socket` (o agent port e a CLI do plev), `record` (o flight recorder), `replay` (a leitura de uma sessão gravada, plev-inspect), `motion` (o codec .monster), `import` (Lottie, SVG, React, HTML, Figma e gpui para dentro), `editor` (o core de edição em rope), `gitdrv` (git), `markup` + `macros` (a markup DSL e as proc-macros), `unions` (sem código: um só feature set para toda build, mantido pelo cargo hakari), `llmrun` (workspace próprio) |
+| Libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling e o design system em `engine::widgets`; o inventário está em [docs/ref/architecture/component-catalog.md](docs/ref/architecture/component-catalog.md)), `accord` (o contrato semântico), `plevir` (a IR do plev e seu verifier), `screen` (surfaces materializadas a partir da IR), `offers` (os proposers), `claude` (o Claude como proposer), `socket` (o agent port e a CLI do plev), `record` (o flight recorder), `replay` (a leitura de uma sessão gravada, plev-inspect), `motion` (o codec .monster), `import` (Lottie, SVG, React, HTML, Figma e gpui para dentro), `editor` (o core de edição em rope), `gitdrv` (git), `markup` + `macros` (a markup DSL e as proc-macros), `unions` (sem código: um só feature set para toda build, mantido pelo cargo hakari), `llmrun` (workspace próprio) |
 | Apps | `apps/` | `uigallery` (a gallery do design system: desktop, web, Android, iOS), `idestudio` (o cliente git), `agenteval` (o lab do experimento), `inspector` (a janela do session inspector), `mirroring` (uma página espelhada pelo scene socket), `urnadbapp` (o explorer de `.urna`, workspace próprio) |
 | Demos | `demo/` | uma crate por demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker |
 | Tooling | `tool/` | `bench/measure` e `bench/regress` (as tabelas de custo e a regressão estrutural), `tasks` (os scripts), `tests` (os testes de arquitetura) |
@@ -260,9 +260,9 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 ## Docs
 
 - [docs/ATLAS.toml](docs/ATLAS.toml): a arquitetura num arquivo só. Tabelas para as máquinas, prosa para as pessoas, o diagrama do frame flow no fim.
-- [docs/adr/](docs/adr/): os ADRs.
-- [docs/ref/code-against-the-plev-engine.md](docs/ref/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/ref/](docs/ref/): validação de pixels, o target web, orquestração de agentes.
-- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/pub/generative-runtime-thesis.md](docs/pub/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/ref/generative-runtime-guidelines.md](docs/ref/generative-runtime-guidelines.md).
+- [docs/](docs/README.md): o acervo, com a [linha do tempo](docs/log/timeline.md), as tasks, os ADRs em [docs/adr/](docs/adr/README.md), as pesquisas e os aprendizados.
+- [docs/ref/operations/code-against-the-plev-engine.md](docs/ref/operations/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/ref/operations/](docs/ref/operations/): validação de pixels, o target web, orquestração de agentes.
+- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/research/generative-runtime-thesis.md](docs/research/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/ref/operations/generative-runtime-guidelines.md](docs/ref/operations/generative-runtime-guidelines.md).
 - [docs/log/changelog.md](docs/log/changelog.md): o que mudou, do mais novo para o mais antigo.
 - [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo.
 - [.devops/check/](.devops/check/): os contratos das ferramentas (lychee, nextest, typos).

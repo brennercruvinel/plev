@@ -1,11 +1,22 @@
 ---
+id: adr-0055
+title: "file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person"
+project: plev
 type: adr
 status: accepted
-tags: [platform-integration, file-dialog, drag-and-drop, input, semantic-contract, agents, rfd, winit]
 date: 2026-09-24
+date_basis: header
+topics: [platform, input, semantics, agents]
+relations: [adr-0057, adr-0058, task-76]
+source: docs/adr/interface/0055-file-dialogs-and-drops-are-capabilities.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person
+
+Records the decision that file dialogs and file drops are engine capabilities: a single dialog implementation, one point that translates the window's events, and a native dialog that only a person opens. The result is that urnaui stops using `rfd` and winit's drop event directly, and no test opens a real dialog. It matters because asking to open a file, through the menu, the button or the drop, becomes one capability of the contract. It comes from item 3 of task-76.
 
 ## context
 
@@ -21,7 +32,7 @@ integration that is an action to be a capability of the contract: the
 several representations.
 
 the probe (the handoff of item 3 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76](../../tasks/task-76-platform-integration/README.md)) measured:
 
 - `rfd` 0.15 has a backend for macos, windows, linux and wasm, none for
   android or ios; on wasm it is asynchronous only and answers bytes (a
@@ -114,6 +125,13 @@ docs/log/steps/task-76-platform-integration.md) measured:
   file dispatches `open_file` by the person, as the button does. item 8
   (native alerts and confirmations) reuses the trait-with-a-fake shape
   and `rfd::MessageDialog`, already in the engine's dependency.
+
+## alternatives
+
+- `rfd` com as features padrão: o lock da raiz ganharia `ashpd` e a árvore de zbus e wayland como entradas só de linux. Ficou com `default-features = false`, e o backend de linux fica para o bring-up (*context*, *decision*).
+- Diálogo assíncrono que só devolve bytes, como o seletor do navegador: seria um segundo contrato. Fica nomeado, sem meia implementação (*reason*).
+- Posição fixa para o drop, a do último cursor: mentiria, porque o ponteiro não se move enquanto o arquivo é arrastado (*reason*).
+- Checar quem pode abrir o diálogo dentro de `execute`: seria uma segunda regra escondida. A política fica declarada no nó (*reason*).
 
 ## avoid
 

@@ -1,12 +1,23 @@
 ---
+id: adr-0009
+title: "touch input synthesizes pointer events into the existing mouse path"
+project: plev
 type: adr
 status: accepted
-tags: [input, touch, mobile, gestures, events]
 date: 2025-01-27
-commit: 5854941
+date_basis: header
+topics: [input, mobile]
+relations: []
+source: docs/adr/interface/0009-touch-as-synthesized-pointer-events.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [5854941]
 ---
 
 # touch input synthesizes pointer events into the existing mouse path
+
+Decides that touch becomes synthesized pointer events on top of the existing mouse path: a pure state machine translates the first finger into position and button, without touching the widgets. The reason was the engine's touch stack, which ended in a debug log, and iOS or Android apps, which would ignore every touch. The result is that tap, drag and focus now work on all widgets without any change to them.
 
 ## context
 

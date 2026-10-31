@@ -1,11 +1,22 @@
 ---
+id: adr-0026
+title: "background results wake the event loop; child pipes drain from the start"
+project: plev
 type: adr
 status: accepted
-tags: [urnaui, worker, winit, render-on-demand, subprocess]
 date: 2026-09-18
+date_basis: header
+topics: [urna, performance, rendering]
+relations: []
+source: docs/adr/rendering/0026-worker-results-wake-the-event-loop.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # background results wake the event loop; child pipes drain from the start
+
+Decides that the worker wakes the event loop through a wake callback that sends a user event, and that every child process drains stdout and stderr from the spawn onward, through the single subprocess helper. The reason: a result that arrived seconds after the last input stayed parked in the channel until the next mouse movement, and a child that writes more than the pipe buffer blocks on write until the timeout. The result is that the result appears the moment it exists, and a stuck child costs only the timeout and a typed error.
 
 ## context
 

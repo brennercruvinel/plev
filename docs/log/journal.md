@@ -1,11 +1,23 @@
 ---
+id: journal
+title: "autonomous cycle journal"
 project: plev
-audience: [orchestrator, brenner]
-type: journal
-tags: [journal, autonomy, status]
+type: record
+status: reference
+date: 2026-09-23
+date_basis: text
+topics: [agents, process, git, recording, platform]
+relations: [adr-0046, adr-0048, adr-0052, truth-2026-09, operations-autonomy, operations-generative-runtime-guidelines, generative-runtime-program, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, generative-runtime-thesis]
+source: docs/log/journal.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [6e284bf, 4573c81, 460c854, 37c5e0c, 0071764, 4593a4c, 7d9c569, f101359, fed9c8d, 22d59fb, de95a20, d611fa4, c60b9f6, 871f0dd, ecf51ba, 29373d4, 804e57d, 042d34e, f309ab4, f248dd1, 96c20a0, 8e6e814, 5f57fe7, d02b4d1, c433751, 79b8c93, 0e0a7b3, 7f866e8, eea529b, e6560a2, 49e2822, 7528309, a6fec8d, 365d8fd, 476bbb4, 78f463c, 1bf6606, 2d4aa4b, 4896451, 7621403, 1ecc84c, c07a7f0, c5fdf36]
 ---
 
-# journal do ciclo autônomo
+# autonomous cycle journal
+
+Records, from newest to oldest, what changed the `status` of plev's autonomous cycle in the sections from 2026-09-23 to 2026-09-26: interventions by Brenner, tasks triggered and integrated, autonomous decisions, defects found in validation, and publications in PRs. Each entry summarizes the event and points to the task where the detail lives. The record shows the change to autonomous orchestration, requested by Brenner, and the integration done only with the local gate while GitHub CI was halted over billing.
 
 uma entrada por acontecimento que importa para o `status`: intervenção do
 brenner, integração, decisão autônoma, bug relevante, agente disparado ou
@@ -190,7 +202,7 @@ task; aqui fica o que aconteceu e onde ler.
   fase, e não parava quando o resto dependia do brenner. custo dos agentes
   de hoje: 75 fase 2a uns 660 mil tokens, 75 fase 2b uns 630 mil, 79 fase 2
   uns 500 mil.
-- **correção do processo:** `autonomy.md`, seção "contra gasto de tokens",
+- **correção do processo:** [`autonomy.md`](../ref/operations/autonomy.md), seção "contra gasto de tokens",
   e o template de briefing nas diretrizes (critério de aceite que a rodada
   fecha, economia de leitura e de saída, pendências em vez de fase).
 - **arrumação:** o programa, a tese e as diretrizes subiram para
@@ -690,7 +702,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **revisão:** sem defeito. conferido que o aviso na tela não carrega
   texto de fora sem checagem (o caractere recusado sai escapado).
 - **task-76 concluída:** os dez itens na `main`; o arquivo foi para
-  `checked/` e as referências dos ADRs, do `truth.md`, dos learnings e do
+  `checked/` e as referências dos ADRs, do [`truth.md`](truth.md), dos learnings e do
   manifesto do engine foram atualizadas. o que resta é bring-up de
   plataforma (bundle do macOS, linux, windows) e as provas em tela real
   do brenner.
@@ -1223,7 +1235,7 @@ task; aqui fica o que aconteceu e onde ler.
   resposta decidiu (A4c1 commitou com `allow`, A4c2 parou com
   `decline`). a leitura: falta de descoberta, não de vontade. P2, vira
   a task-94; a quinta rodada fica registrada antes de rodar. detalhe em
-  `task-62-ide-human-agent-proof.md`.
+  [`task-62-ide-human-agent-proof.md`](../tasks/task-62-ide-human-agent-proof/README.md).
 - **parada parcial, serviço pago:** o github não inicia os jobs do CI
   (pagamento da conta ou limite de gasto). o PR #68 (task-69 fase 2)
   fica aberto, sem merge. a integração local continua com o gate; a
@@ -1346,7 +1358,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **experimento (P1, critério da onda 5):** quatro corridas com LLM sob a
   regra da task-89. segurança sustentada nas quatro; tarefa feita em
   três; o A2''b parou para não desfazer a ação da pessoa. resultado em
-  `task-62-ide-human-agent-proof.md`, "resultado da terceira rodada".
+  [`task-62-ide-human-agent-proof.md`](../tasks/task-62-ide-human-agent-proof/README.md), "resultado da terceira rodada".
 - **decisão autônoma importante (para o brenner revisar):** o critério
   escrito antes ("uma corrida que falhe a tarefa") disparou ao pé da
   letra no A2''b. li como não sendo falha da hipótese central: o
@@ -1398,7 +1410,7 @@ task; aqui fica o que aconteceu e onde ler.
 
 - aprovou o fluxo recursivo e pediu para continuar como está.
 - regra nova: toda descoberta recebe P0 a P3 antes de virar task
-  (`docs/ref/autonomy.md`, "severidade antes de priorizar"); só P0 e
+  ([`autonomy.md`](../ref/operations/autonomy.md), "severidade antes de priorizar"); só P0 e
   P1 bloqueiam. ownership: a próxima task que disputa uma superfície em
   uso dá lugar a trabalho independente da onda. a onda seguinte espera os
   critérios essenciais da atual, sem perfeição local. ciclo: observar →
@@ -1646,7 +1658,7 @@ task; aqui fica o que aconteceu e onde ler.
 ### ciclo 1: replanejamento pela verdade
 
 - **disparados:** agente de docs (`task/docs-follow-code`, sem build:
-  corrige as divergências 1 a 25, 31 e 32 do `truth.md`) e task-82 fase b
+  corrige as divergências 1 a 25, 31 e 32 do [`truth.md`](truth.md)) e task-82 fase b
   (`task/82b-wake-everywhere`).
 - **decisão autônoma:** a fase b da task-82 sobe na fila. motivo: a
   auditoria mostrou que a promessa "no change, no frame" do README está
@@ -1664,7 +1676,7 @@ task; aqui fica o que aconteceu e onde ler.
   (2073 passaram), laboratório reproduzido pelo orquestrador (seis
   corridas certas).
 - **integrada:** a auditoria de verdade (`7621403`),
-  `docs/log/truth.md`. achados que mudam o plano: o binário
+  [`truth.md`](truth.md). achados que mudam o plano: o binário
   `ide` não abre a porta do agente (o checkpoint a rodou só no
   `ide-lab`); digitar não passa pelo dispatcher; 32 divergências entre
   docs e código.
@@ -1673,7 +1685,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **disparada:** task-85 (o commit que o receipt anuncia já está na
   projeção, com `files`), no lugar que a 84 liberou.
 - **decisão autônoma:** as 32 divergências se corrigem antes de planejar
-  a partir dos docs; um agente de docs, sem build, com `truth.md` como
+  a partir dos docs; um agente de docs, sem build, com [`truth.md`](truth.md) como
   fonte; o orquestrador corrige o programa.
 
 ### ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar
@@ -1688,7 +1700,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **disparados:** task-83 (delta com o nó, recusa com autor, regra de stale
   escrita; `task/83-delta-and-refusal`), task-84 (corrida do `Refresh` no
   ide; `task/84-refresh-order`), auditoria de verdade (`task/truth-audit`,
-  só leitura; escreve `state/truth.md`).
+  só leitura; escreve [`truth.md`](truth.md)).
 - **decisão autônoma:** a recusa com autor usa uma regra exata e limitada
   (ações de outros atores checadas sobre a mesma revisão que o autor viu e
   que chegaram a rodar), preenchida só pelo `Dispatcher`. motivo: a revisão
@@ -1711,7 +1723,7 @@ task; aqui fica o que aconteceu e onde ler.
   (PR com merge commit). máquina: `caffeinate`, notificação do macOS,
   allowlist de comandos de leitura.
 - mudou o modo de operação para **orquestrador autônomo**
-  (`docs/ref/autonomy.md`): ciclo observe → choose → brief → implement
+  ([`autonomy.md`](../ref/operations/autonomy.md)): ciclo observe → choose → brief → implement
   → validate → learn → update → replan, parada só nas condições listadas.
   os checkpoints param quando caem nessas condições.
 - estado da `main` nesse momento: `c5fdf36` (57b, 62c, 66b, 82a

@@ -1,18 +1,26 @@
 ---
+id: generative-runtime-program
+title: "program: from GPU UI engine to generative interaction runtime"
 project: plev
-audience: [ai-agents, contributors]
 type: program
-status: in-progress
-last-updated: 2026-09-23
-domain: generative-runtime
-base: plevrev b8ba096 (gate green 2026-09-23)
-tags: [program, goals, dependencies, contracts, ownership, waves]
+status: active
+date: 2026-09-23
+date_basis: header
+topics: [process, agents, semantics, ir, generated-surfaces]
+relations: [adr-0023, adr-0024, adr-0035, adr-0037, adr-0040, adr-0041, adr-0043, adr-0044, adr-0045, adr-0047, adr-0048, adr-0049, adr-0050, adr-0072, architecture-monster-format-v0, truth-2026-09, adr-index, operations-autonomy, operations-generative-runtime-guidelines, project-state-2026-09, generative-runtime-thesis, task-18, task-19, task-20, task-39, task-41, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
+source: docs/log/generative-runtime-program.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [b8ba096, 1d384d4, 860b029, 20c601e, f71dc20, f5b7cee, c6738be, ed814da, 91fdb33, 8978602, d26c9b1, c62a05d, 8e6e814, 0ec72f9, 3ba5b04, dc6fde2, 7b3e48f, a7a6735, d97a375, a6fec8d, efc87b6, 78f463c, 4896451, 476bbb4, 365d8fd, e6560a2, d611fa4, 7f866e8, d02b4d1, 871f0dd, 22d59fb, 4593a4c, 4573c81, 460c854, 29373d4, 79b8c93, 042d34e, 96c20a0, 49e2822, 7621403, f101359, 654d740, 37c5e0c]
 ---
 
-# programa: de GPU UI engine a generative interaction runtime
+# program: from GPU UI engine to generative interaction runtime
 
-a tese está em `docs/pub/generative-runtime-thesis.md`. as regras de
-trabalho estão em `docs/ref/generative-runtime-guidelines.md` e são obrigatórias para o
+Records the program that turns plev from a GPU UI engine into a generative interaction runtime: the goal, the code diagnosis of 2026-09-23, the graph and the waves of tasks 57 to 97, the contracts between them, the ownership of the shared surfaces, and the decision points. The status of each task (section 12) runs up to 2026-09-26, when brenner decided to keep candle and burn in task-78.
+
+a tese está em [`generative-runtime-thesis.md`](../research/generative-runtime-thesis.md). as regras de
+trabalho estão em [`generative-runtime-guidelines.md`](../ref/operations/generative-runtime-guidelines.md) e são obrigatórias para o
 orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
 o estado real do código, o grafo de dependências, a ordem de integração,
 os contratos entre tasks, o ownership das superfícies compartilhadas e os
@@ -70,9 +78,9 @@ elas.
 ## 3. estado real do código (diagnóstico, 2026-09-23)
 
 > esta seção é o diagnóstico de antes da onda 1 e ficou velha. o retrato
-> do código agora é `docs/log/truth.md` (truth), que vence esta
+> do código agora é [`truth.md`](truth.md) (truth), que vence esta
 > seção quando os dois divergem. o modo de operação é
-> `docs/ref/autonomy.md`.
+> [`autonomy.md`](../ref/operations/autonomy.md).
 
 base: branch `plevrev` em `b8ba096`, dois commits à frente de `main`
 (`c89d11e`), com o hot reload. gate completo verde nesta base (test,
@@ -92,16 +100,16 @@ o que a tese precisa e o que existe hoje:
 | ação com precondição | o commit do ide vai do clique ao git sem conferir nada | `apps/idestudio/src/interfaces/panels/layout/input.rs:47` e `:259-267` (`submit_commit`), `apps/idestudio/src/interfaces/panels/layout/mod.rs:115-123` (`UiRequest`), `apps/idestudio/src/repository/git.rs:76` (`GitCommand::Commit`), `rust/gitdrv/src/repo.rs:187` (`git commit --message`) | o cenário da tese acontece hoje: o index é commitado como estiver no instante em que o worker executa |
 | estado semântico versus visual no ide | `FileEntry.staged` (vai no commit) e `UnassignedView.selected_idx` (linha em destaque, não vai) | `apps/idestudio/src/interfaces/panels/unassigned.rs:51-61` | os dois são campos soltos; nada diz que o primeiro invalida um commit e o segundo não |
 | reconciliação otimista | o ide atualiza a view e recarrega tudo depois de cada mutação | `apps/idestudio/src/repository/git.rs:118-138` | a view pode divergir do index por um instante; a precondição precisa ser checada também no ponto de verdade (o worker) |
-| flight recorder | monster: codec com IR próprio desacoplado de `SceneNode`, container v1 congelado com sha256 por seção, discover (modo B), player determinístico | `rust/motion/src/lib.rs`, `docs/ref/monster-format-v0.md` | grava animação, não sessão: faltam eventos, semântica, recursos, ações, origem e resultados |
+| flight recorder | monster: codec com IR próprio desacoplado de `SceneNode`, container v1 congelado com sha256 por seção, discover (modo B), player determinístico | `rust/motion/src/lib.rs`, [`monster-format-v0.md`](../ref/architecture/monster-format-v0.md) | grava animação, não sessão: faltam eventos, semântica, recursos, ações, origem e resultados |
 | compiler target | parser parse-resolve-emit com IR próprio (`ParserNode`) que emite código builder e droplist com arquivo:linha | `rust/import/src/tree.rs`, `rust/import/src/lib.rs` | emite código Rust, não IR de runtime; sem semântica; marcado experimental |
 | pixel para código | hot reload de literal: skeleton + lista de literais por arquivo via proc-macro2 | `rust/engine/src/runtime/hot_reload/literals/mod.rs`, `rust/engine/Cargo.toml:84` | sem posição (proc-macro2 sem `span-locations`); só no sentido código para pixel |
 | headless | `text_probe`: wgpu offscreen para png | `rust/engine/src/drawing/text/probe.rs`, `rust/engine/src/bin` | só texto; não generalizado para página, tema, viewport ou frame de monster |
 | testes estruturais | hash por layer para dirty tracking | `rust/engine/src/drawing/compositor/layer/mod.rs:43` | hash não é exportado nem nomeado para regressão |
-| incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | `docs/ATLAS.toml` (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
+| incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | [`ATLAS.toml`](../ATLAS.toml) (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
 | texto | cosmic-text 0.18, fontes embutidas só Inclusive Sans, Inter e codicons; rope com transações, multi-cursor e history; editor em comps; `ImeState` básico | `rust/engine/src/drawing/text/fonts.rs:38-52`, `rust/editor/src/document`, `rust/engine/src/widgets/editor`, `rust/engine/src/runtime/platform/ime.rs` | árabe, CJK e emoji caem em fallback não embutido; IME e bidi sem cobertura de teste |
 | integração de plataforma | clipboard (arboard no desktop, local no mobile e wasm), diálogos nativos e drop de arquivo no urnaui, lifecycle, safe areas | `rust/engine/src/runtime/platform/clipboard.rs`, `apps/urnadbapp/src/app.rs`, `rust/engine/src/runtime/platform` | sem menus, tray, notificações, múltiplas janelas, device loss, deep links, câmera, microfone, impressão |
-| determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | `README.md` (contracts), `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md`, tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
-| padrão de app | estado em structs, widgets retained, invalidação explícita; builder suportado para protótipo; view, component, signal e narrate experimentais | `docs/adr/structure/0023-official-app-pattern.md` | superfície materializada a partir de IR não é nenhum dos padrões atuais: precisa de ADR |
+| determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | [`project-state.md`](project-state.md) (contracts), [`0024-glyph-raster-identity-and-atlas-isolation.md`](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md), tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
+| padrão de app | estado em structs, widgets retained, invalidação explícita; builder suportado para protótipo; view, component, signal e narrate experimentais | [`0023-official-app-pattern.md`](../adr/structure/0023-official-app-pattern.md) | superfície materializada a partir de IR não é nenhum dos padrões atuais: precisa de ADR |
 
 ## 4. tasks
 
@@ -184,7 +192,7 @@ quando as superfícies (seção 8) são disjuntas.
 - checkpoint a (seção 9) depois da fase c da task-62.
 - onda 5: task-64, task-65, task-67. critérios essenciais para abrir a
   onda 6 (fixados em 2026-09-23, regra de severidade de
-  `docs/ref/autonomy.md`):
+  [`autonomy.md`](../ref/operations/autonomy.md)):
   - [x] regressão por significado antes de pixel (task-67);
   - [x] uma sessão gravada responde "por que" sobre qualquer request
     (task-64 fase a);
@@ -199,7 +207,7 @@ quando as superfícies (seção 8) são disjuntas.
     recuperam de `not_observed` e de escrever e encadear.
 
   (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
-  passar por cima da pessoa, `task-62-ide-human-agent-proof.md`.)
+  passar por cima da pessoa, [`task-62-ide-human-agent-proof.md`](../tasks/task-62-ide-human-agent-proof/README.md).)
   não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
   agente perguntar à pessoa (handoff, achado da terceira rodada); o todo
   projetar os itens como lista (a superfície gerada repete sobre eles,
@@ -258,8 +266,8 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | `rust/engine/src/styling/theme` | ninguém sem aprovação | tocado por 65 (leitura de token) só depois de proposta aprovada |
 | `rust/engine/src/drawing/text` | 74 | 66 toca só `probe.rs` e o novo módulo headless |
 | `rust/import` | 71 | |
-| `Cargo.toml` (members e workspace deps), `docs/ATLAS.toml`, `README.md` | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
-| `.contracts/`, `docs/adr/README.md`, `docs/log/` | orquestrador | agente propõe no handoff |
+| `Cargo.toml` (members e workspace deps), [`ATLAS.toml`](../ATLAS.toml), [`project-state.md`](project-state.md) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
+| `.contracts/`, [`adr/`](../adr/README.md), `docs/log/` | orquestrador | agente propõe no handoff |
 
 ## 9. checkpoints e critérios de parada
 
@@ -329,10 +337,10 @@ decididas em 2026-09-23:
    `Refresh` (task-84) antes da onda 5; a onda 5 espera o experimento
    rodar de novo com as correções.
 9. modo de operação (2026-09-23): orquestrador autônomo
-   (`docs/ref/autonomy.md`). o item 4 continua valendo com duas
+   ([`autonomy.md`](../ref/operations/autonomy.md)). o item 4 continua valendo com duas
    mudanças: o orquestrador publica cada integração no GitHub (PR com
    merge commit), e os checkpoints da seção 9 param só quando o resultado
-   cai numa das condições de parada de `autonomy.md`.
+   cai numa das condições de parada de [`autonomy.md`](../ref/operations/autonomy.md).
 
 10. checkpoint a, segunda rodada (2026-09-23, decisão autônoma dentro do
     item 9): o experimento rodou de novo com as tasks 83, 84 e 85, o mesmo
@@ -341,11 +349,11 @@ decididas em 2026-09-23:
     tokens nas três). nenhuma condição de parada: a onda 5 abre. antes,
     duas correções pequenas que a rodada achou: o aviso sem segunda pessoa
     (feito) e a revisão no `completed` (task-87). resultado em
-    `task-62-ide-human-agent-proof.md`, "resultado da segunda rodada".
+    [`task-62-ide-human-agent-proof.md`](../tasks/task-62-ide-human-agent-proof/README.md), "resultado da segunda rodada".
 
 11. regra de severidade (2026-09-23, intervenção do brenner): toda
     descoberta recebe P0 a P3 antes de virar task
-    (`docs/ref/autonomy.md`); só P0 e P1 bloqueiam; próxima task
+    ([`autonomy.md`](../ref/operations/autonomy.md)); só P0 e P1 bloqueiam; próxima task
     disputando superfície em uso dá lugar a trabalho independente da onda;
     a onda seguinte espera só os critérios essenciais da atual (seção 6),
     sem perfeição local.
@@ -433,7 +441,7 @@ atualizado em cada integração.
 | task-65 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase c integrada, cmd+shift+clique edita um literal na janela e o Enter grava no `.rs` (só a pessoa, só com o código do baseline); fases a e b integradas; o color picker e a fase d ficam como pendência | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |
 | task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
-| auditoria de verdade | integrada | `7621403` | `docs/log/truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
+| auditoria de verdade | integrada | `7621403` | [`truth.md`](truth.md): contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
 | task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
 | task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
 | task-94 | integrada (P2) | `37c5e0c` | um `plev act` sem `--ask` recusado stale com uma pessoa no `acted` escreve no stderr uma linha que nomeia o request dela e aponta para o `--ask`; nenhuma depois de um `declined`, com só agentes, ou quando o ato perguntava; o stdout igual byte a byte; o cenário da quarta rodada pela porta real com o binário `plev` como agente |

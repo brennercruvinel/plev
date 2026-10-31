@@ -1,18 +1,29 @@
 ---
+id: adr-0052
+title: "proposers propose, the runtime verifies"
+project: plev
 type: adr
 status: accepted
-tags: [propose, uir, plev-ir, verifier, surface, llm, dispatcher, generative-runtime]
 date: 2026-09-24
+date_basis: header
+topics: [generated-surfaces, ir, llm, agents, semantics]
+relations: [adr-0049, adr-0051, task-68, task-69, task-95]
+source: docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # proposers propose, the runtime verifies
 
+Defines that a proposer, whether deterministic rules or a language model, delivers IR only through `propose_verified`, the only exit, which checks the proposal against the same registry and the same policy before any runtime consumes it. The addenda record the list of items, the media read by structure, and the wiring of Claude as the model, called through `claude -p` outside the app's thread, with a deadline and cancellation. It matters because the model receives exactly what the verifier checks, and the `offers` crate has no network, credentials or provider.
+
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 phases 1 and 2 turned
+([`0049-plev-ir-typed-and-verified.md`](0049-plev-ir-typed-and-verified.md)). task-69 phases 1 and 2 turned
 a `VerifiedIr` into a live surface and let it change form in place,
-reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md
+reconciled by `SemId` ([`0051-materialized-surfaces-from-verified-ir.md`](0051-materialized-surfaces-from-verified-ir.md)
 and its addendum). what was missing is the step before: an intent in text
 becoming an IR. the thesis puts it as "the model proposes, the runtime
 verifies, plev executes" (sections 2, 5 and 15). phase 3a builds every
@@ -171,6 +182,15 @@ what phase 3b adds, orders of magnitude above it.
   proposal it still names the last hand-written form, and a click on it
   goes back to that form.
 
+## alternatives
+
+- proponente dentro de `uir`: descartado. A IR continua uma linguagem com seu verificador, e o provedor de modelo não chega a `uir`, que compila para wasm e não tem I/O.
+- devolver uma `Ir` ao runtime sem verificação: descartado. Só `propose_verified` entrega `VerifiedIr`, qualquer que seja o proponente.
+- dicionário de tradução entre idiomas nas regras: descartado. Traduzir a palavra da pessoa para a do app é trabalho do modelo; as regras não têm léxico entre idiomas.
+- API paga com chave no código, na fase 3b-i: descartado. O Claude entra pelo `claude -p` já logado nesta máquina, sem API paga nova e sem chave no código.
+- chamar o modelo na thread do app, na fase 3b-ii: descartado. A chamada síncrona segurava a thread por 5 a 90 s; a página passou a usar o contrato do próprio despachante (`Execution::Started`, depois `complete` ou `fail`).
+- segundo despachante para as capacidades da página: descartado. A numeração dos pedidos e o lugar dos recibos ficam em um só.
+
 ## avoid
 
 - returning an `Ir` from anything a runtime consumes: only
@@ -237,6 +257,7 @@ had no part that repeats.
   items" gives the whole list with the Active chip and count.
 - a list the filter empties has no list to find; a surface that already
   shows it keeps its list node, with no instance.
+
 ## addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i, accepted)
 
 ### context
@@ -465,7 +486,7 @@ over the silences app the probe of phase 4b got `"video" is not a word
 of the app`, and the review the thesis asks for (the video, the counts,
 the cuts with a frame each) was out of the rules' reach. the app now
 projects a frame ref per frame it offers (a text naming a media node and
-an instant, the addendum of `materialized-surfaces-from-verified-ir.md`),
+an instant, the addendum of [`0051-materialized-surfaces-from-verified-ir.md`](0051-materialized-surfaces-from-verified-ir.md)),
 which is structure the rules can read without an app's name.
 
 ### decision

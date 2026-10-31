@@ -1,11 +1,23 @@
 ---
-type: ses
-tags: [session, responsiveness, wasm, webgpu, touch, text-measurement, gamma, rust, wgpu, taffy, cosmic-text]
+id: responsiveness-and-fidelity
+title: "session record: responsiveness, real measurement, web target, touch"
+project: plev
+type: record
+status: reference
 date: 2025-02-19
-commit: bb34a1c
+date_basis: header
+topics: [layout, text, rendering, web-wasm, input]
+relations: [adr-0001, adr-0002, adr-0006, adr-0007, adr-0009, learning-apps-bypass-the-engine, learning-the-two-gamma-bugs, operations-build-and-serve-the-web-target, operations-orchestrate-coding-agents-on-this-repo, operations-validate-visuals-by-pixel]
+source: docs/log/responsiveness-multiplatform-and-fidelity.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [bb34a1c, f15198a, 5854941, 15f096f, 30337de, 55c8aa7, 69013d1, 2a33933]
 ---
 
 # session record: responsiveness, real measurement, web target, touch
+
+Record of the session that handled responsiveness, real text measurement, the web target and touch: for each episode, the path that failed, what worked and the commit that closed it. The result is the switch from layout with constants to content-driven layout, from heuristic measurement to a single TextStyle, and from the wrong gamut on the web to sRGB display, verified pixel by pixel on both targets. It matters because it preserves the process lessons the project kept.
 
 cross-referenced from the session transcript, `git log` (95 commits at
 time of writing) and the system docs (docs/plano-tecnico.md as the stable

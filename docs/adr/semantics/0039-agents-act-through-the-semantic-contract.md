@@ -1,11 +1,22 @@
 ---
+id: adr-0039
+title: "agents act through the semantic contract"
+project: plev
 type: adr
 status: accepted
-tags: [wire, agents, protocol, socket, sem, dispatcher, one-path, security, cli, showcase, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [agents, semantics, formats]
+relations: [adr-0026, adr-0032, adr-0033, adr-0035, adr-0038, adr-0040, adr-0043, adr-0044, adr-0047, task-57b, task-62, task-64, task-79, task-83, task-86, task-87, task-89, task-92]
+source: docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # agents act through the semantic contract
+
+Decides that agents operate a plev app through a local channel, the `rust/socket` crate with protocol v1 over JSON lines, and that every action goes through the same `Dispatcher` as a click by the person, with no path of its own. The agent observes identity, state and declared actions instead of capturing the screen, and acts on the revision it observed. The socket is a local Unix socket and, by default, opens only with `PLEV_AGENT=1` in a debug build; no message executes code, reads a file or calls a backend.
 
 ## context
 
@@ -17,14 +28,14 @@ click landed (section 8).
 
 the contract that makes the screen unnecessary already existed. every
 control has an identity, a role, a state and the actions it accepts, as a
-projection of the app (`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`);
+projection of the app ([`0032-semantic-contract-as-pure-projection.md`](0032-semantic-contract-as-pure-projection.md));
 every action goes through one `Dispatcher` that checks the state its actor
-observed (`docs/adr/semantics/0033-actions-carry-observed-state.md`); the compositor knows
+observed ([`0033-actions-carry-observed-state.md`](0033-actions-carry-observed-state.md)); the compositor knows
 where each id sits in the frame on screen
-(`docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`); and the showcase shell
+([`0035-semantic-binding-beside-the-scene.md`](0035-semantic-binding-beside-the-scene.md)); and the showcase shell
 already routes one actor that is not the page's own input, a screen
 reader, through the page's hooks and an `EventLoopProxy`
-(`docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md`). what was
+([`0038-accessibility-projects-the-semantic-snapshot.md`](../interface/0038-accessibility-projects-the-semantic-snapshot.md)). what was
 missing was a door: a channel from a process outside, carrying the
 contract and nothing else.
 
@@ -105,7 +116,7 @@ it), the revisions it gave it and what each one showed; an act on
 that showed it to that actor. a read never shown is refused before the
 dispatcher with `not_observed`. a terminal stage's revision shows no
 state, and a delta shows only what it carries. the rule, its bounds and
-the name as the agent: `docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md`.
+the name as the agent: [`0047-an-act-rests-on-what-its-actor-was-shown.md`](0047-an-act-rests-on-what-its-actor-was-shown.md).
 
 ### one path, through the host
 
@@ -127,7 +138,7 @@ one thread accepts; per connection one thread reads, decodes and queues,
 one writes. they never touch the app: a message goes into a bounded queue
 and the thread wakes the loop through the closure the shell passed (its
 `EventLoopProxy`, the pattern of
-`docs/adr/rendering/0026-worker-results-wake-the-event-loop.md`); wakes coalesce until
+[`0026-worker-results-wake-the-event-loop.md`](../rendering/0026-worker-results-wake-the-event-loop.md)); wakes coalesce until
 the next drain. `drain` runs on the app's thread and does every
 projection and every dispatch there (the ide's `Workbench` is not
 `Send`). the app never waits on a socket: a client that does not read its
@@ -248,7 +259,7 @@ verbose form this task shipped, and stay as its record. the lean form of
 task-57b replaced it (see the consequences): a whole observation is now
 2039 B with 3 items and 26237 B with 103, one row 361 B, a delta after
 one toggle still 624 B; the new numbers are in
-`docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`, consequences.
+[`0040-lean-semantic-form-and-one-redaction.md`](0040-lean-semantic-form-and-one-redaction.md), consequences.
 
 ## reason
 
@@ -280,7 +291,7 @@ one toggle still 624 B; the new numbers are in
   stages go out, and draws only when an act ran. the visible part of a
   binding is `Binding::visible_rect` in the engine, read by both hosts.
   proved in a real window with a person's clicks and an agent at once
-  (`docs/log/steps/task-86-the-ide-opens-the-agent-port.md`).
+  ([`task-86-the-ide-opens-the-agent-port.md`](../../tasks/task-86-the-ide-opens-the-agent-port/README.md)).
   updated on 2026-09-24 (task-92): a stage of an agent's request that
   ends outside a drain (a person's answer to a confirmation, the second
   check refusing, a worker's answer) wakes the port through its sink, so
@@ -295,7 +306,7 @@ one toggle still 624 B; the new numbers are in
   percent of a whole observation, fields at their default about 40 more).
   task-57b made the sem form lean and `source` opt-in on the port
   (`observe {"source": true}`, `plev observe --source`), still protocol
-  v1: `docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`.
+  v1: [`0040-lean-semantic-form-and-one-redaction.md`](0040-lean-semantic-form-and-one-redaction.md).
 - the redaction rule of a secret was written twice, in `rec` and in
   `wire`, and had diverged; it lives once now, in `sem::redact` (same
   ADR).
@@ -303,7 +314,7 @@ one toggle still 624 B; the new numbers are in
   served as a snapshot's, a stale refusal names in `acted` who ran
   something on the state the agent saw, and the stale rule is in `plev
   --help` and the doc of `Act`:
-  `docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`.
+  [`0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`](0043-a-delta-carries-the-node-a-refusal-names-who-acted.md).
 - task-87, still protocol v1: a terminal stage (`completed`, `rejected`,
   `failed`) carries `revision`, the revision the app is at when that
   stage goes out. it includes what other actors changed until then, and
@@ -311,11 +322,11 @@ one toggle still 624 B; the new numbers are in
   so the next act needs no observation only to learn it. `forward`
   projects through the `Host` and serves it into the ring as `observe`
   does, once per call; it decides nothing and is not an observation:
-  `docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md`.
+  [`0044-a-terminal-stage-carries-the-revision.md`](0044-a-terminal-stage-carries-the-revision.md).
 - task-89, still protocol v1: an act on `from_revision` rests on what its
   actor was shown, never on the whole snapshot of the revision; a read
   never shown is `not_observed`:
-  `docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md`.
+  [`0047-an-act-rests-on-what-its-actor-was-shown.md`](0047-an-act-rests-on-what-its-actor-was-shown.md).
 - a process killed by a signal leaves its socket file behind. `plev`
   ignores a socket nobody answers on, and the next process with that pid
   replaces it; nothing else sweeps them.

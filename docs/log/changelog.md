@@ -1,11 +1,22 @@
 ---
-type: reference
-tags: [changelog, versions]
+id: changelog
+title: "plev changelog"
+project: plev
+type: record
+status: active
 date: 2026-06-20
-status: living
+date_basis: header
+topics: [agents, platform, rendering, generated-surfaces, text]
+relations: [adr-0003, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0016, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, task-18, task-19, task-20, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-73/phase-1-measurements, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, task-98, task-99, task-100, task-102, task-103, adr-0080, adr-0081, adr-0083, adr-0084]
+source: docs/log/changelog.md
+source_revision: ec0a224c
+revised: 2026-10-31
+review: reviewed
 ---
 
-# changelog
+# plev changelog
+
+Records what changed in plev, in roughly reverse date order: the `unreleased` section starts with the entries of 2026-10-27 and goes back to August 2026 (the October 2026 entries of tasks 98, 99, 100, 102 and 103 were written later, from those task pages and their commits), followed by undated entries, which come later in the file; the `earlier` section summarizes the period before the changelog. Many entries name the task or ADR that supports them and the measurement or test that verified them, which makes it possible to go from the change to the decision. That is why the file is the starting point for finding out when a behavior appeared and why it exists.
 
 ## unreleased
 
@@ -23,6 +34,46 @@ status: living
   renderer take them in the desktop's order and draw the text again. the
   uigallery's wasm went from 8.2 MB to 2.85 MB with gzip; the Typography
   page shows one line per embedded script; `experiment-no-noto` is gone.
+
+- every executable of the repository runs (2026-10-27, task-103):
+  `tool/tasks/runcheck.sh` starts each app, demo, crate command line and
+  tool and checks that it does its work, which the gate does not prove: a
+  window passes when it stays alive and its capture is not a single color,
+  a command line when it exits 0 or prints the expected line. a program
+  without its input (`llm-bench` without a model, `urnadbapp` without the
+  `../urna` checkout) is reported as such instead of failing.
+
+- one feature set for every build, and the web targets by one command
+  (2026-10-27, task-102, adr feature-unification, adr
+  web-targets-and-ports): `rust/unions`, kept by cargo hakari, asks for the
+  union of the features the members use, so `-p arcade`, `-p uigallery`
+  and `-p commit` recompile zero crates the workspace already built (54,
+  65 and 7 before). dev builds keep line tables only: `cargo test -p engine
+  --no-run` on a clean target went from 96 s and 3.8 GB to 85 s and 2.1 GB.
+  `tool/tasks/webtarget.sh` serves uigallery, urnadbapp, graphs and primes
+  from ports 8080 to 8083, or the next free one.
+
+- graphs drawn live from d3 and Cytoscape data (2026-10-27, task-100, adr
+  a-graph-separates-data-appearance-and-layout): `Graph` holds nodes, edges
+  and groups, `Look` the appearance and `Layout` the arrangement (force or
+  compound), and the graphs demo draws the gramorph corpus on the desktop
+  and the web. the ELK reader and its pages wait on
+  `feat/elk-ir-from-gramorph`.
+
+- the explorer follows urna's new layout, and the platforms catch up
+  (2026-10-16, task-99): the query embedder finds urna's scripts in the
+  repository or where `urna setup` installs them, the shared executor
+  drains stdout and stderr from the start so a large corpus no longer hangs
+  it, `rfd` uses the xdg portal on Linux, the background import is
+  macOS-only, and a reduced-motion preference macOS cannot find reads as
+  never set.
+
+- the repository in four homes (2026-10-09, task-98, issue #130, PR #131,
+  adr workspace-by-responsibility): libraries in `rust/`, apps in `apps/`,
+  demos in `demo/`, tools in `tool/`. the 1,861 moves sit alone in one
+  commit (`d3e65544`, every one R100), and the manifests, paths, tests and
+  docs follow in their own commits. the names old and new are in
+  `docs/TERMS.toml`.
 
 - the repository catches up with itself (2026-09-26): four decision
   records for what the last rounds settled (the person's composition and
@@ -849,7 +900,7 @@ status: living
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead (docs/log/steps/task-73-measurements.md).
+  ahead ([docs/log/steps/task-73-measurements.md](../tasks/task-73-incremental-dependency-system/phase-1-measurements.md)).
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
@@ -928,7 +979,7 @@ status: living
   Overlays and Lists split into one module per widget; `comps::nav::
   Sidebar` gains `NavGroup`; the launch argument is the page title.
   docs/adr/ became docs/adr/ with README.md as its index, the changelog
-  moved to docs/log/changelog.md.
+  moved to [docs/log/changelog.md](changelog.md).
 - core theme and the buttons poc (2026-09-21, adr
   core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
   typescript kit (nine shades, six accents, depths as shadow stacks,
@@ -973,7 +1024,7 @@ status: living
   `TextMeasurer::elide_path` came from the ide (and now drops several
   middle segments, the old helper dropped one). matrix test: every widget
   under 13 themes at phone and desktop widths. inventory and migration
-  record: docs/ref/component-catalog.md. workspace tests 855 -> 1414.
+  record: [docs/ref/component-catalog.md](../ref/architecture/component-catalog.md). workspace tests 855 -> 1414.
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
   end (crate, modules, types, apps/urnadbapp/web, tool/tasks/webtarget.sh urnadbapp, gate, ci)
   against hoffresearch/urna v0.4.0; the portable reader accepts both
@@ -1009,7 +1060,7 @@ status: living
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md
+  [docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
@@ -1043,7 +1094,7 @@ status: living
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for docs/ref/mon-experiment-notes.md. web/ owns
+  root for [docs/ref/mon-experiment-notes.md](../research/mon-experiment-notes.md). web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only

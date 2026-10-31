@@ -1,11 +1,22 @@
 ---
+id: adr-0046
+title: "the inspector reads a session, it never runs it"
+project: plev
 type: adr
 status: accepted
-tags: [inspect, rec, sem, session, inspector, receipts, correlation, cli, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [recording, semantics, agents]
+relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, truth-2026-09, operations-code-against-the-plev-engine]
+source: docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the inspector reads a session, it never runs it
+
+Records the decision that the session inspector reads a `rec::Session` and never runs it: the `rust/replay` crate provides the model (timeline, `why`, `control` and `summary`) and the `plev-inspect` binary, with no dispatcher, app or recorder nearby. The result was measured on the nine checkpoint sessions of task-62, which open with exit code 0 and keep the same sha256 after being read; the `apps/inspector` window shows the same model without recomputing responses. It matters because whoever opens the first `.monster` of a delegation can see what they need to trust it, and whoever changed a value appears as a correlation over time, never as a declared write.
 
 ## context
 
@@ -157,7 +168,7 @@ carried was outside that scope.
 
 ## consequences
 
-- the ui of phase b reads this model. it needs from `rec` what `state/truth.md`
+- the ui of phase b reads this model. it needs from `rec` what [`truth.md`](../../log/truth.md)
   2.4 already names: the frame's bindings, not recorded yet, to map a point
   on a replayed frame to a control. a read of the state after an event index
   in `Session` would replace the stretch the inspector rebuilds for each
@@ -198,7 +209,7 @@ outside the workspace.
   the pick) go to the view's handlers, never through a dispatcher: the
   inspector must never create a request, so they stand outside the rule
   that a click goes through the dispatcher
-  (docs/ref/code-against-the-plev-engine.md, definition of done, 6),
+  ([code-against-the-plev-engine](../../ref/operations/code-against-the-plev-engine.md), definition of done, 6),
   and they project nothing for accessibility yet.
 - the proof is in tests: the sources name nothing that runs, records or
   builds a request, and no socket, process, port or accessibility bridge;

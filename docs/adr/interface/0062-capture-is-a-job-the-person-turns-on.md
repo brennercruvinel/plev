@@ -1,11 +1,22 @@
 ---
+id: adr-0062
+title: "capture is a job the person turns on"
+project: plev
 type: adr
 status: accepted
-tags: [platform-integration, capture, camera, microphone, ffmpeg, image-atlas, semantic-contract, background, privacy, showcase]
 date: 2026-09-24
+date_basis: header
+topics: [platform, rendering, semantics, agents]
+relations: [adr-0060, task-76]
+source: docs/adr/interface/0062-capture-is-a-job-the-person-turns-on.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # capture is a job the person turns on
+
+Records that camera and microphone are captures that the person turns on, run by a child `ffmpeg` process with no new dependency, with the permission and the device state projected as state rather than as a failure. The result is an image slot for the stream that rewrites its own frame, the release of the device when the page cannot be seen, and tests that never open a device. It matters because the camera is the most private resource an app can turn on, and the decision keeps that choice with the person, including with respect to agents. It comes from item 10 of task-76.
 
 ## context
 
@@ -19,7 +30,7 @@ desktop machines the showcase already runs it on (the Silences page),
 with an input device per platform.
 
 the probe (the handoff of item 10 in
-docs/log/steps/task-76-platform-integration.md) opened no
+[task-76](../../tasks/task-76-platform-integration/README.md)) opened no
 device, ever: ffmpeg read `-f lavfi` sources only, paced by `-re` as a
 device paces itself, and the rest was read from `ffmpeg-devices(1)` and
 the strings of libavdevice.
@@ -150,6 +161,14 @@ the strings of libavdevice.
 - ffmpeg must be installed for the camera to come on; without it the
   page says "failed: capture: could not start ffmpeg: ...".
 
+## alternatives
+
+- Dependência nova para captura (`objc2-av-foundation`, `cpal`, `coreaudio`): o lock não tem essas crates e nenhuma dependência pode ser acrescentada. O ffmpeg como processo filho já é a forma que o engine usa (*context*, *reason*).
+- Pausar o dispositivo em vez de liberá-lo: a câmera ficaria aberta para ninguém (*reason*).
+- Quadro da câmera como imagem fixa: enche o atlas em segundos. Um slot de fluxo ocupa a memória de um quadro (*context*, *reason*).
+- Permissão negada como falha: `Denied` é um fato que a pessoa e o agente leem (*reason*).
+- Captura ligada pelo agente: a pessoa liga, e o agente só lê o estado (*decision*, *avoid*).
+
 ## bring-up
 
 - AVFoundation directly (`AVCaptureDevice` and its
@@ -184,4 +203,3 @@ página começa com `NoCapture` e só o shell de janela real instala o
 `default_capture()`; o estado `Starting` conta como vivo e pede prazo
 ao laço. P3 registrado: no tema core o interruptor da câmera e do
 microfone quase não aparece.
-
