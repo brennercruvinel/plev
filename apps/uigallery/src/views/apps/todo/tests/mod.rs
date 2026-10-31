@@ -91,9 +91,10 @@ fn layout_holds_at_narrow_and_wide_widths() {
         let last = l.pills[2];
         assert!(last.x + last.w <= l.panel.x + l.panel.w - PAD + 0.5);
         assert!(
-            l.pills[2].w > l.pills[0].w,
-            "Completed must out-measure All"
+            (l.pills[2].w - l.pills[0].w).abs() < 1e-3,
+            "the filters are equal segments of one group"
         );
+        assert!(l.pills[0].x >= l.filters.x && l.pills[2].right() <= l.filters.right());
         // The counter shares the row only when it fits; otherwise stacked.
         let cw = TextMeasurer::measure_styled(&s.counter_text(), &counter_style(), None).0;
         assert!(
@@ -310,5 +311,5 @@ fn list_scrolls_inside_and_footer_stays_pinned() {
         &Theme::hoff(),
     );
     assert!(!r.handled);
-    assert!(l.pills[0].y + PILL_H <= l.panel.y + l.panel.h);
+    assert!(l.filters.bottom() <= l.panel.y + l.panel.h);
 }

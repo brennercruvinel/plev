@@ -514,10 +514,11 @@ impl Component for PopoverPage {
 }
 
 impl super::super::ShowcaseView {
-    /// The container the live popover receives: the visible page under
+    /// The container a page's anchored overlay receives (the popover, the
+    /// hover card): the visible page under
     /// the header in the main window (`content` scrolls past it), the
     /// page itself in a detached one.
-    pub(in crate::views) fn popover_bounds(&self, content: Rect) -> Rect {
+    pub(in crate::views) fn anchored_bounds(&self, content: Rect) -> Rect {
         if content == self.page_rect() {
             self.content_rect()
         } else {

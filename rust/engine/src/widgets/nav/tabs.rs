@@ -218,6 +218,7 @@ impl Tabs {
                 glass.edge.0,
                 theme.control.edge_width_strong,
                 glass.surface_hover.0,
+                theme,
             ) {
                 compositor.push(node);
             }

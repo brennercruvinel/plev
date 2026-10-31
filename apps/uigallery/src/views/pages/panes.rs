@@ -16,12 +16,14 @@ use super::super::foundations::{effects, icons, theme, typography};
 // own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
 use super::super::components::field;
+use super::super::components::input_group;
+use super::super::components::label;
 
 // task-104 front B, overlays (#155)
-use super::super::components::popover;
+use super::super::components::{alert_dialog, dropdown_menu, hover_card, menubar, popover};
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::message;
+use super::super::components::{alert, bubble, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{
@@ -29,7 +31,7 @@ use super::super::components::{
 };
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::toggle;
+use super::super::components::{button_group, radio_group, toggle, toggle_group};
 
 pub struct Panes {
     // -- foundations
@@ -74,11 +76,20 @@ pub struct Panes {
     pub tree: tree::TreePage,
     // -- task-104: each front's pages under its anchor
     // task-104 front A, fields (#154)
-    pub field: field::FieldPage,
+    pub field: field::FormPage,
+    pub label: field::FormPage,
+    pub input_group: field::FormPage,
     // task-104 front B, overlays (#155)
+    pub alert_dialog: alert_dialog::AlertDialogPage,
+    pub dropdown_menu: dropdown_menu::DropdownMenuPage,
+    pub hover_card: hover_card::HoverCardPage,
+    pub menubar: menubar::MenubarPage,
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
+    pub alert: alert::AlertPage,
+    pub bubble: bubble::BubblePage,
     pub message: message::MessagePage,
+    pub message_scroller: message_scroller::MessageScrollerPage,
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
     pub aspect_ratio: aspect_ratio::AspectRatioPage,
@@ -89,7 +100,10 @@ pub struct Panes {
     pub pagination: pagination::PaginationPage,
     pub table_static: table_static::TableStaticPage,
     // task-104 front E, selection and dates (#158)
+    pub button_group: button_group::ButtonGroupPage,
+    pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
+    pub toggle_group: toggle_group::ToggleGroupPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -163,11 +177,20 @@ impl Panes {
             tooltip: tooltip::TooltipPage::new(),
             tree: tree::TreePage::new(),
             // task-104 front A, fields (#154)
-            field: field::FieldPage::new(),
+            field: field::page(),
+            label: label::page(),
+            input_group: input_group::page(),
             // task-104 front B, overlays (#155)
+            alert_dialog: alert_dialog::AlertDialogPage::new(),
+            dropdown_menu: dropdown_menu::DropdownMenuPage::new(),
+            hover_card: hover_card::HoverCardPage::new(),
+            menubar: menubar::MenubarPage::new(),
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
+            alert: alert::AlertPage::new(),
+            bubble: bubble::BubblePage::new(),
             message: message::MessagePage::new(),
+            message_scroller: message_scroller::MessageScrollerPage::new(),
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
             aspect_ratio: aspect_ratio::AspectRatioPage::new(),
@@ -178,7 +201,10 @@ impl Panes {
             pagination: pagination::PaginationPage::new(),
             table_static: table_static::TableStaticPage::new(theme),
             // task-104 front E, selection and dates (#158)
+            button_group: button_group::ButtonGroupPage::new(),
+            radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
+            toggle_group: toggle_group::ToggleGroupPage::new(theme),
             todo,
             surface,
             silences: silences::SilencesPage::new(),

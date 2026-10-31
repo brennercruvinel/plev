@@ -226,10 +226,10 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             card,
         ),
         (
-            "form.field.label_color",
+            "form.label.color",
             "colors.surface",
             TEXT,
-            f.field.label_color,
+            f.label.color,
             card,
         ),
         ("form.field.link_color", "colors.surface", TEXT, link, card),
@@ -250,11 +250,40 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, need, over(color, under), under);
     }
+    // task-104 front C: the inline alert on a card, its runs and its
+    // unread dot, and the intent's icon on its badge (ink or paper,
+    // whichever reads on the fill, `contrast_text`).
+    let a = &t.message.alert;
+    for (fg, need, color) in [
+        ("message.alert.title", TEXT, a.title.color),
+        ("message.alert.time", TEXT, a.time.color),
+        ("message.alert.detail", TEXT, a.detail.color),
+        ("message.alert.content", TEXT, a.content.color),
+        ("message.alert.unread", LARGE, a.unread),
+    ] {
+        add(fg, "colors.surface", need, over(color, card), card);
+    }
+    for (name, fill) in [
+        ("neutral", a.intents.neutral),
+        ("informational", a.intents.informational),
+        ("constructive", a.intents.constructive),
+        ("destructive", a.intents.destructive),
+    ] {
+        let under = over(fill, card);
+        let icon = Color(crate::widgets::widget::contrast_text(fill.0));
+        add(
+            "message.alert.icon",
+            &format!("message.alert.intents.{name}"),
+            LARGE,
+            over(icon, under),
+            under,
+        );
+    }
     out
 }
 
-/// The pairs that fail today, 115 of the 333 (core 41, hoff 18, dark 13,
-/// light 43), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 116 of the 369 (core 41, hoff 18, dark 13,
+/// light 44), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -490,6 +519,9 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
+    // task-104 front C: the alert's unread dot takes the info accent,
+    // which the light theme already draws under 3:1.
+    ("light", "message.alert.unread", "colors.surface", 2.87),
 ];
 
 #[test]
@@ -530,7 +562,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 333,
+        count, 369,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

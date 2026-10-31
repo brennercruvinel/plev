@@ -21,10 +21,10 @@
 //! beside the trigger, with a `close` of its own, under which the app
 //! declares the content.
 //!
-//! No entry or exit animation yet: the panel shows and leaves on the
-//! frame it is asked (the kit's 200 ms fade waits for a layer of its own
-//! in the view, task-104's full wave), which is also what reduced motion
-//! asks.
+//! The panel fades in and out with its entry's spring (the kit's
+//! `transition data-closed:opacity-0`): [`Popover::shown`] is the opacity
+//! the app gives the layer it draws the panel on. With reduced motion the
+//! spring ends on its first frame, a cut.
 
 mod place;
 mod render;
@@ -34,7 +34,7 @@ pub use render::{PopoverTrigger, render_panel};
 
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::styling::theme::Theme;
+use crate::styling::theme::{MotionPhysics, Theme};
 use crate::widgets::overlay::{OverlayId, OverlayKind, OverlayManager};
 use crate::widgets::widget::{Rect, WidgetEvent};
 
@@ -95,34 +95,59 @@ impl Popover {
         self.open && !trigger.contains(x, y) && !panel.contains(x, y) && self.close()
     }
 
-    /// Brings the stack in line with what was asked: an entry for an open
-    /// popover at `panel`, none for a closed one. An entry the stack no
-    /// longer holds (another hand popped it, Escape on the stack) closes
+    /// Brings the stack in line with what was asked: an entry, fading in
+    /// with `motion`, for an open popover at `panel`; its exit begun for a
+    /// closed one (the entry leaves the stack once its fade is done). An
+    /// entry another hand closed or popped (Escape on the stack) closes
     /// the popover. `true` when the stack or the popover changed.
-    pub fn sync(&mut self, mgr: &mut OverlayManager, panel: Rect) -> bool {
-        let held = self
+    pub fn sync(&mut self, mgr: &mut OverlayManager, panel: Rect, motion: &MotionPhysics) -> bool {
+        let on = |id: OverlayId| mgr.stack.iter().find(|o| o.id == id);
+        let entry = self
             .entry
-            .filter(|id| mgr.stack.iter().any(|o| o.id == *id && !o.is_closing()));
-        match (self.open, self.entry, held) {
-            // Lost from the stack: it is closed now.
-            (true, Some(_), None) => {
+            .and_then(|id| on(id).map(|o| (id, o.is_closing())));
+        match (self.open, entry) {
+            // Gone from the stack: the fade is over, or another hand
+            // popped it.
+            (_, None) if self.entry.is_some() => {
                 self.entry = None;
                 self.open = false;
                 true
             }
-            (true, None, _) => {
-                let id = mgr.push(OverlayKind::Anchored, panel.x, panel.y, panel.w, panel.h);
+            (true, None) => {
+                let id = mgr.push_animated(
+                    OverlayKind::Anchored,
+                    panel.x,
+                    panel.y,
+                    panel.w,
+                    panel.h,
+                    motion,
+                );
                 self.entry = Some(id);
                 true
             }
-            (false, Some(id), held) => {
-                if held.is_some() {
-                    mgr.pop_id(id);
-                }
-                self.entry = None;
+            // Leaving, and not by our hand: closed.
+            (true, Some((_, true))) => {
+                self.open = false;
+                true
+            }
+            (false, Some((id, false))) => {
+                mgr.pop_id_animated(id);
                 true
             }
             _ => false,
+        }
+    }
+
+    /// How much of the panel shows, 0 to 1: its entry's fade while it is on
+    /// the stack, entering or leaving; 0 while asked open and not yet on it;
+    /// `None` when there is nothing to draw.
+    pub fn shown(&self, mgr: &OverlayManager) -> Option<f32> {
+        let entry = self
+            .entry
+            .and_then(|id| mgr.stack.iter().find(|o| o.id == id));
+        match entry {
+            Some(o) => Some(o.opacity()),
+            None => self.open.then_some(0.0),
         }
     }
 
@@ -163,13 +188,28 @@ impl Popover {
         title: &str,
         parent: Option<&SemId>,
     ) -> Option<NodeBuilder<'b>> {
+        self.project_as(b, trigger, Role::Dialog, title, parent)
+    }
+
+    /// [`Popover::project`] with the panel's role: a dialog for a panel
+    /// the person works in, a group for one that only shows (a hover
+    /// card's preview).
+    #[track_caller]
+    pub fn project_as<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        trigger: &SemId,
+        role: Role,
+        title: &str,
+        parent: Option<&SemId>,
+    ) -> Option<NodeBuilder<'b>> {
         let expanded = format!("{trigger}:expanded");
         b.reopen(trigger)?.state("expanded", self.open);
         if !self.open {
             return None;
         }
         let id = Self::panel_id(trigger)?;
-        let mut panel = b.node(&id, Role::Dialog, title);
+        let mut panel = b.node(&id, role, title);
         if let Some(parent) = parent {
             panel.parent(parent);
         }

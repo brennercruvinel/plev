@@ -34,59 +34,14 @@ use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, 
 
 use crate::widgets::form::text_input::TextInput;
 use crate::widgets::form::text_input::view::LineFit;
-use crate::widgets::form::tokens::Slot;
+use crate::widgets::form::tokens::{InputRecipe, Look, Slot};
 use crate::widgets::recipe::{
     focus_ring, rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets,
 };
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
-/// Non-character editing keys a field understands. Apps map their key
-/// events onto these; Enter and Tab stay with the screen (submit and
-/// focus traversal are not the field's business). Left and Right move on
-/// screen (in a right-to-left run Left goes forward in the text); the
-/// `Select` variants are the same keys with Shift, extending the
-/// selection.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EditKey {
-    Backspace,
-    Delete,
-    Left,
-    Right,
-    Home,
-    End,
-    SelectAll,
-    SelectLeft,
-    SelectRight,
-    SelectHome,
-    SelectEnd,
-}
-
-/// The clipboard keys of a field: the primary modifier (cmd on macOS,
-/// ctrl elsewhere) with c, x, v or a. Apps map their chords onto these
-/// ([`ClipKey::of`]) and hand the field their clipboard
-/// ([`TextField::clip`]).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ClipKey {
-    Copy,
-    Cut,
-    Paste,
-    SelectAll,
-}
-
-impl ClipKey {
-    /// The clipboard key a character names with the primary modifier held
-    /// (either case); `None` for any other.
-    pub fn of(key: &str) -> Option<Self> {
-        Some(match key {
-            "c" | "C" => Self::Copy,
-            "x" | "X" => Self::Cut,
-            "v" | "V" => Self::Paste,
-            "a" | "A" => Self::SelectAll,
-            _ => return None,
-        })
-    }
-}
+pub use super::text_input::keys::{ClipKey, EditKey};
 
 /// Retained single-line text field over a [`TextInput`].
 #[derive(Clone, Debug)]
@@ -98,6 +53,8 @@ pub struct TextField {
     /// What takes the start and the end of the box (an icon, a button),
     /// which sets the text's inset there.
     slots: [Slot; 2],
+    /// Which input box it draws (`theme.form.recipe`).
+    look: Look,
 }
 
 impl TextField {
@@ -108,7 +65,34 @@ impl TextField {
             hovered: false,
             sem: None,
             slots: [Slot::Pad; 2],
+            look: Look::Field,
         }
+    }
+
+    /// Draw `look`'s input box instead of the Field's.
+    pub fn look(mut self, look: Look) -> Self {
+        self.look = look;
+        self
+    }
+
+    pub fn look_of(&self) -> Look {
+        self.look
+    }
+
+    fn recipe<'t>(&self, theme: &'t Theme) -> &'t InputRecipe {
+        theme.form.recipe(self.look)
+    }
+
+    /// The style this field's text is measured, hit-tested and drawn
+    /// with: its look's.
+    pub fn style(&self, theme: &Theme) -> TextStyle {
+        self.recipe(theme).text.clone()
+    }
+
+    /// This field's height: its look's, never shorter than its line.
+    pub fn box_height(&self, theme: &Theme) -> f32 {
+        let r = self.recipe(theme);
+        r.height.max(r.text.line_height)
     }
 
     /// Draw a bullet per grapheme in place of the text (a password); the
@@ -357,8 +341,14 @@ impl TextField {
     /// preedit's while composing, as a rect in the coordinates of `bounds`,
     /// one caret wide and one line tall.
     pub fn ime_area(&self, bounds: Rect, theme: &Theme) -> Rect {
-        let style = Self::text_style(theme);
-        let (x, y, w) = self.text_box(bounds, &style, theme);
+        self.ime_area_in(bounds, theme, self.slots)
+    }
+
+    /// [`ime_area`](Self::ime_area) with the ends taken by `slots`, for an
+    /// owner whose addons measure in the theme (an input group).
+    pub fn ime_area_in(&self, bounds: Rect, theme: &Theme, slots: [Slot; 2]) -> Rect {
+        let style = self.style(theme);
+        let (x, y, w) = self.text_box(bounds, &style, theme, slots);
         let fit = self.fit(&style, w, theme);
         Rect::new(
             x - fit.scroll + self.input.caret_x(&style, fit.width),
@@ -370,8 +360,18 @@ impl TextField {
 
     /// The text's box inside `bounds`: its origin, `x` and `y`, and its
     /// width, clear of what takes either end.
-    fn text_box(&self, bounds: Rect, style: &TextStyle, theme: &Theme) -> (f32, f32, f32) {
-        let [start, end] = self.slots.map(|slot| theme.form.inset(slot));
+    fn text_box(
+        &self,
+        bounds: Rect,
+        style: &TextStyle,
+        theme: &Theme,
+        slots: [Slot; 2],
+    ) -> (f32, f32, f32) {
+        let pad = self.recipe(theme).pad_x;
+        let [start, end] = slots.map(|slot| match slot {
+            Slot::Pad => pad,
+            slot => theme.form.inset(slot),
+        });
         (
             bounds.x + start,
             bounds.y + TextMeasurer::vertical_center(style, bounds.h),
@@ -410,6 +410,17 @@ impl TextField {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        self.handle_event_in(event, bounds, theme, self.slots)
+    }
+
+    /// [`handle_event`](Self::handle_event) with the ends taken by `slots`.
+    pub fn handle_event_in(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+        slots: [Slot; 2],
+    ) -> EventResult {
         if self.disabled {
             if self.hovered || self.input.focused {
                 self.hovered = false;
@@ -430,8 +441,8 @@ impl TextField {
             }
             WidgetEvent::MouseDown { x, y } => {
                 if bounds.contains(x, y) {
-                    let style = Self::text_style(theme);
-                    let (text_x, _, text_w) = self.text_box(bounds, &style, theme);
+                    let style = self.style(theme);
+                    let (text_x, _, text_w) = self.text_box(bounds, &style, theme, slots);
                     let fit = self.fit(&style, text_w, theme);
                     self.input
                         .handle_click_in(x - text_x + fit.scroll, &style, fit.width);
@@ -452,10 +463,23 @@ impl TextField {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        self.render_in(c, layer, bounds, theme, self.slots);
+    }
+
+    /// [`render_to_layer`](Self::render_to_layer) with the ends taken by
+    /// `slots`.
+    pub fn render_in(
+        &self,
+        c: &mut Compositor,
+        layer: LayerId,
+        bounds: Rect,
+        theme: &Theme,
+        slots: [Slot; 2],
+    ) {
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let recipe = &theme.form.input;
+        let recipe = self.recipe(theme);
         let alpha = if self.disabled {
             recipe.disabled_alpha
         } else {
@@ -463,7 +487,7 @@ impl TextField {
         };
         let fade = |color: Color| with_alpha(color, color.0[3] * alpha);
         let focused = self.input.focused;
-        let style = Self::text_style(theme);
+        let style = self.style(theme);
         let radius = recipe.radius.min(bounds.h / 2.0);
 
         if focused {
@@ -511,7 +535,7 @@ impl TextField {
         );
         shadow_insets(c, layer, bounds, radius, &shadows);
 
-        let (text_x, text_y, text_w) = self.text_box(bounds, &style, theme);
+        let (text_x, text_y, text_w) = self.text_box(bounds, &style, theme, slots);
         let fit = self.fit(&style, text_w, theme);
         // A line wider than the box draws under a clip of the text's box,
         // slid left by the fit's scroll.

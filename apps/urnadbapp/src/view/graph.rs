@@ -293,6 +293,7 @@ impl GraphScreen {
             theme.glass.edge_soft.0,
             1.0,
             theme.glass.popover.0,
+            theme,
         ) {
             c.push(node);
         }

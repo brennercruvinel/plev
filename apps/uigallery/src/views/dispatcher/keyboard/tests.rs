@@ -63,3 +63,44 @@ fn the_arrows_walk_the_context_menu_and_enter_picks() {
     });
     assert!(said, "the pick's toast");
 }
+
+/// A radio group (task-104 front E): the arrows move the focus along the
+/// group's radios, wrapping, and choose each one they land on; Home and
+/// End go to the ends. The same on a toggle group's segments.
+#[test]
+fn the_arrows_choose_along_a_radio_group() {
+    let checked = |view: &ShowcaseView, id: &str| {
+        view.semantics().and_then(|s| {
+            let id = accord::SemId::parse(id).ok()?;
+            s.get(&id)?.state.get("checked").cloned()
+        })
+    };
+    for (page, group) in [
+        ("Radio Group", "radio_group_page.group[0].card[0]"),
+        ("Toggle Group", "toggle_group_page.group[0].card[0]"),
+    ] {
+        let mut view = ShowcaseView::new(1280.0, 800.0);
+        view.jump_to_page(page);
+        let at = |i: usize| format!("{group}[{i}]");
+        let id = accord::SemId::parse(&at(1)).unwrap();
+        assert!(view.assist_focus(&id), "{page}");
+        let walk = [
+            (EditKey::Right, 2),
+            (EditKey::Right, 0),
+            (EditKey::Left, 2),
+            (EditKey::Home, 0),
+            (EditKey::End, 2),
+        ];
+        for (key, to) in walk {
+            assert!(view.handle_edit_key(key), "{page} {key:?}");
+            assert_eq!(focused(&view), Some(at(to)), "{page} {key:?}");
+            assert_eq!(
+                checked(&view, &at(to)),
+                Some(accord::Value::Bool(true)),
+                "{page} {key:?}: chosen"
+            );
+        }
+        assert!(view.handle_nav(NavKey::Up));
+        assert_eq!(focused(&view), Some(at(1)), "{page}: up is back");
+    }
+}
