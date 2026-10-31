@@ -15,7 +15,7 @@ mod table;
 mod tree;
 
 // task-104 front D, disclosure and display (#157): one module per widget,
-// and the front's token slot (`Theme::content`).
+// and the front's token slot (`Theme::disclosure`).
 pub mod accordion;
 pub mod aspect_ratio;
 pub mod carousel;

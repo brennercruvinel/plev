@@ -20,8 +20,8 @@ pub use crate::widgets::buttons::tokens::{
 };
 // task-104: one token slot per front (A fields, B overlays, C conversation,
 // D disclosure, E selection), each in its front's `tokens.rs`.
-pub use crate::widgets::content::tokens::ContentTokens;
-pub use crate::widgets::form::tokens::FormTokens;
+pub use crate::widgets::content::tokens::DisclosureTokens;
+pub use crate::widgets::form::tokens::FieldTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
 pub use crate::widgets::selection::tokens::SelectionTokens;
@@ -60,7 +60,7 @@ pub struct Theme {
     // other theme derives from its palette, as `button` does.
     /// Front A: field, label, input group, input OTP, textarea, combobox,
     /// command.
-    pub form: FormTokens,
+    pub fields: FieldTokens,
     /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
     /// sheet, drawer.
     pub overlay: OverlayTokens,
@@ -69,7 +69,7 @@ pub struct Theme {
     pub message: MessageTokens,
     /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
     /// pagination, table.
-    pub content: ContentTokens,
+    pub disclosure: DisclosureTokens,
     /// Front E: toggle, toggle group, button group, radio group, calendar,
     /// date picker.
     pub selection: SelectionTokens,
@@ -115,10 +115,10 @@ impl Theme {
         Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            form: FormTokens::derive(&colors),
+            fields: FieldTokens::derive(&colors),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
-            content: ContentTokens::derive(&colors),
+            disclosure: DisclosureTokens::derive(&colors),
             selection: SelectionTokens::derive(&colors),
             colors,
             typography: TypographyScale {
@@ -183,10 +183,10 @@ impl Theme {
         Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            form: FormTokens::derive(&colors),
+            fields: FieldTokens::derive(&colors),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
-            content: ContentTokens::derive(&colors),
+            disclosure: DisclosureTokens::derive(&colors),
             selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
@@ -352,10 +352,10 @@ impl Theme {
         Some(Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            form: FormTokens::derive(&colors),
+            fields: FieldTokens::derive(&colors),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
-            content: ContentTokens::derive(&colors),
+            disclosure: DisclosureTokens::derive(&colors),
             selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()

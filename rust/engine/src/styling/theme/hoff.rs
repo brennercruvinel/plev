@@ -32,7 +32,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{ContentTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{DisclosureTokens, FieldTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -142,10 +142,10 @@ impl Theme {
         let dark = Self::dark().colors;
         let mut theme = Self {
             button: ButtonTokens::derive(&dark),
-            form: FormTokens::derive(&dark),
+            fields: FieldTokens::derive(&dark),
             overlay: OverlayTokens::derive(&dark),
             message: MessageTokens::derive(&dark),
-            content: ContentTokens::derive(&dark),
+            disclosure: DisclosureTokens::derive(&dark),
             selection: SelectionTokens::derive(&dark),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
@@ -236,10 +236,10 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
         };
         theme.button = ButtonTokens::derive(&theme.colors);
-        theme.form = FormTokens::derive(&theme.colors);
+        theme.fields = FieldTokens::derive(&theme.colors);
         theme.overlay = OverlayTokens::derive(&theme.colors);
         theme.message = MessageTokens::derive(&theme.colors);
-        theme.content = ContentTokens::derive(&theme.colors);
+        theme.disclosure = DisclosureTokens::derive(&theme.colors);
         theme.selection = SelectionTokens::derive(&theme.colors);
         theme
     }
