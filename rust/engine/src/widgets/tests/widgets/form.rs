@@ -619,6 +619,30 @@ fn a_press_on_the_label_focuses_the_box() {
     assert!(!off.input.is_focused());
 }
 
+/// A label that reads right to left hangs from the end of its row, as
+/// its value does, and the link takes the start; its message too.
+#[test]
+fn a_right_to_left_label_hangs_from_the_end_of_its_row() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(10.0, 0.0, 240.0, 0.0);
+    let f = Field::new("הזינו כתובת דוא״ל")
+        .label("דוא״ל")
+        .link("שכחתם?")
+        .helper("נשלח אליכם קוד");
+    let l = f.layout(bounds, &theme);
+    let (label, link, message) = (l.label.unwrap(), l.link.unwrap(), l.message.unwrap());
+    assert!((label.right() - bounds.right()).abs() < 0.01, "{label:?}");
+    assert!((link.x - bounds.x).abs() < 0.01, "{link:?}");
+    assert!(
+        (message.right() - bounds.right()).abs() < 0.01,
+        "{message:?}"
+    );
+    let ltr = Field::new("Enter email").label("Email").link("Forgot?");
+    let l = ltr.layout(bounds, &theme);
+    assert_eq!(l.label.unwrap().x, bounds.x);
+    assert!((l.link.unwrap().right() - bounds.right()).abs() < 0.01);
+}
+
 // Input group
 
 fn search_group() -> crate::widgets::form::input_group::InputGroup {
@@ -658,6 +682,30 @@ fn a_search_keeps_its_text_between_its_addons() {
             let (_, h) = TextMeasurer::measure_styled(&text, &style, width);
             assert!(h <= style.line_height + 0.5, "{text:?} wraps");
         }
+    }
+}
+
+/// A right-to-left text hangs from the end of the box (laid out in the
+/// text's room, aligned to its right), and that room keeps the group's
+/// `addon_gap` from the `⌘ K`, in every theme.
+#[test]
+fn a_right_to_left_search_keeps_clear_of_its_hint() {
+    let text = "חיפוש במסמכים";
+    for (name, theme) in [
+        ("core", Theme::hoff_core()),
+        ("hoff", Theme::hoff()),
+        ("dark", Theme::dark()),
+    ] {
+        let g = search_group().with_text(text);
+        let bounds = Rect::new(10.0, 10.0, 320.0, 0.0);
+        let hint = g.layout(bounds, &theme).end.unwrap();
+        let gap = theme.form.group.addon_gap;
+        assert!(gap > 0.0, "{name}");
+        let nodes = nodes_of(|c| g.render(c, bounds, &theme));
+        let drawn = texts(&nodes).into_iter().find(|(t, ..)| t == text);
+        let (_, x, width) = drawn.unwrap_or_else(|| panic!("{name}: the text is drawn"));
+        let right = x + width.expect("a text that fits hangs from its room");
+        assert!(right <= hint.x - gap + 0.5, "{name}: {right} past {hint:?}");
     }
 }
 
