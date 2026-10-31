@@ -503,7 +503,8 @@ impl ModalTokens {
     /// bg-[#FCFCFC] rounded-[2rem] border border-[#ECECEC] shadow-2xl`,
     /// a centered body `p-6` with the title `text-[1.5rem] leading-[2rem]
     /// font-medium mb-2` and the text `text-[0.8125rem]
-    /// leading-[1.2188rem] text-[#7b7b7b]`, a footer `flex gap-3 p-6
+    /// leading-[1.2188rem] text-[#7b7b7b]` (in shade 7: the kit's gray
+    /// fails AA), a footer `flex gap-3 p-6
     /// bg-[#F8F7F7] border-t border-[#E2E2E2]` whose buttons share its
     /// width (`flex-1`), over the scrim `#323232/40`.
     pub fn hoff_core() -> Self {
@@ -526,7 +527,9 @@ impl ModalTokens {
             title: type_.exact(24.0, 32.0, 500),
             body: type_.exact(13.0, 19.5, 400),
             title_color: hex(0x121212),
-            body_color: hex(0x7B7B7B),
+            // The kit's #7b7b7b is 4.13:1 on its paper, under AA; shade 7
+            // (#323232) holds AAA (`styling/theme/tests/contrast.rs`).
+            body_color: hex(0x323232),
             title_gap: 8.0,
             actions_gap: 24.0,
             centered: true,
