@@ -1,11 +1,22 @@
 ---
+id: adr-0027
+title: "comps: one design system crate, every value a token"
+project: plev
 type: adr
 status: accepted
-tags: [ui, widgets, design-system, theme, tokens, responsive, comps]
 date: 2026-09-18
+date_basis: header
+topics: [design-system, layout, mobile]
+relations: [architecture-component-catalog]
+source: docs/adr/structure/0027-comps-one-design-system-crate.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # comps: one design system crate, every value a token
+
+Decides that the design system lives in a single crate, `rust/engine/src/widgets`, and that every visual value is a theme token. The reason was that the UI was scattered across four places, with literals in the widgets and no breakpoints: a phone got the desktop layout in a third of the width. The result is a theme with scales, widgets in place of what the apps drew by hand, and a theme × viewport matrix that covers every new widget.
 
 ## context
 
@@ -26,7 +37,7 @@ modal width, 248 sidebar width, `TextStyle::new(32.0).with_line_height(40.0)`
 in the card, `blur_radius: 16.0, offset: [2.0, 4.0]` in three places for
 the same key-light. nothing knew a viewport width: no breakpoint, no
 gutter, no sidebar mode; a phone got the desktop layout at a third of the
-width. docs/ref/component-catalog.md holds the full inventory that opened this change.
+width. [docs/ref/architecture/component-catalog.md](../../ref/architecture/component-catalog.md) holds the full inventory that opened this change.
 
 ## decision
 

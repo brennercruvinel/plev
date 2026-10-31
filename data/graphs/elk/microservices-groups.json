@@ -1,0 +1,441 @@
+{
+  "id": "root",
+  "layoutOptions": {
+    "elk.algorithm": "layered",
+    "elk.direction": "RIGHT",
+    "elk.hierarchyHandling": "INCLUDE_CHILDREN",
+    "elk.spacing.nodeNode": "28",
+    "elk.layered.spacing.nodeNodeBetweenLayers": "48",
+    "elk.padding": "[top=28,left=16,bottom=16,right=16]"
+  },
+  "children": [
+    {
+      "id": "Monitoring",
+      "labels": [
+        {
+          "text": "Monitoring"
+        }
+      ],
+      "children": [
+        {
+          "id": "PROM",
+          "labels": [
+            {
+              "text": "Prometheus"
+            }
+          ],
+          "width": 100,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "GRAF",
+          "labels": [
+            {
+              "text": "Grafana"
+            }
+          ],
+          "width": 77,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "LOG",
+          "labels": [
+            {
+              "text": "Loki"
+            }
+          ],
+          "width": 64,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        }
+      ],
+      "properties": {
+        "appearance.shape": "rectangle"
+      }
+    },
+    {
+      "id": "Data",
+      "labels": [
+        {
+          "text": "Data"
+        }
+      ],
+      "children": [
+        {
+          "id": "PG",
+          "labels": [
+            {
+              "text": "PostgreSQL"
+            }
+          ],
+          "width": 100,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "cylinder"
+          }
+        },
+        {
+          "id": "RD",
+          "labels": [
+            {
+              "text": "Redis"
+            }
+          ],
+          "width": 64,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "cylinder"
+          }
+        },
+        {
+          "id": "MQ",
+          "labels": [
+            {
+              "text": "RabbitMQ"
+            }
+          ],
+          "width": 85,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "S3",
+          "labels": [
+            {
+              "text": "Object Store"
+            }
+          ],
+          "width": 115,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        }
+      ],
+      "properties": {
+        "appearance.shape": "rectangle"
+      }
+    },
+    {
+      "id": "Services",
+      "labels": [
+        {
+          "text": "Services"
+        }
+      ],
+      "children": [
+        {
+          "id": "AUTH",
+          "labels": [
+            {
+              "text": "Auth Service"
+            }
+          ],
+          "width": 115,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "USR",
+          "labels": [
+            {
+              "text": "User Service"
+            }
+          ],
+          "width": 115,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "ORD",
+          "labels": [
+            {
+              "text": "Order Service"
+            }
+          ],
+          "width": 123,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "PAY",
+          "labels": [
+            {
+              "text": "Payment Service"
+            }
+          ],
+          "width": 138,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "INV",
+          "labels": [
+            {
+              "text": "Inventory Service"
+            }
+          ],
+          "width": 153,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        },
+        {
+          "id": "NOTIF",
+          "labels": [
+            {
+              "text": "Notification Service"
+            }
+          ],
+          "width": 176,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        }
+      ],
+      "properties": {
+        "appearance.shape": "rectangle"
+      }
+    },
+    {
+      "id": "Gateway",
+      "labels": [
+        {
+          "text": "Gateway"
+        }
+      ],
+      "children": [
+        {
+          "id": "GW",
+          "labels": [
+            {
+              "text": "API Gateway"
+            }
+          ],
+          "width": 108,
+          "height": 38,
+          "properties": {
+            "appearance.shape": "rectangle"
+          }
+        }
+      ],
+      "properties": {
+        "appearance.shape": "rectangle"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "sources": [
+        "GW"
+      ],
+      "targets": [
+        "AUTH"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e1",
+      "sources": [
+        "GW"
+      ],
+      "targets": [
+        "USR"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e2",
+      "sources": [
+        "GW"
+      ],
+      "targets": [
+        "ORD"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e3",
+      "sources": [
+        "AUTH"
+      ],
+      "targets": [
+        "RD"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e4",
+      "sources": [
+        "USR"
+      ],
+      "targets": [
+        "PG"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e5",
+      "sources": [
+        "ORD"
+      ],
+      "targets": [
+        "PAY"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e6",
+      "sources": [
+        "ORD"
+      ],
+      "targets": [
+        "INV"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e7",
+      "sources": [
+        "PAY"
+      ],
+      "targets": [
+        "MQ"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e8",
+      "sources": [
+        "INV"
+      ],
+      "targets": [
+        "PG"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e9",
+      "sources": [
+        "MQ"
+      ],
+      "targets": [
+        "NOTIF"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e10",
+      "sources": [
+        "NOTIF"
+      ],
+      "targets": [
+        "S3"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e11",
+      "sources": [
+        "AUTH"
+      ],
+      "targets": [
+        "PROM"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e12",
+      "sources": [
+        "USR"
+      ],
+      "targets": [
+        "PROM"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e13",
+      "sources": [
+        "ORD"
+      ],
+      "targets": [
+        "PROM"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e14",
+      "sources": [
+        "PROM"
+      ],
+      "targets": [
+        "GRAF"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    },
+    {
+      "id": "e15",
+      "sources": [
+        "LOG"
+      ],
+      "targets": [
+        "GRAF"
+      ],
+      "properties": {
+        "appearance.marker-end": "triangle"
+      }
+    }
+  ]
+}

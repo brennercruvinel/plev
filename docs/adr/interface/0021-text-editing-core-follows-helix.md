@@ -1,11 +1,22 @@
 ---
+id: adr-0021
+title: "the text editing core follows helix: document is rope plus selections plus history"
+project: plev
 type: adr
 status: accepted
-tags: [text-editing, rope, helix, transactions, undo]
 date: 2026-03-04
+date_basis: header
+topics: [text-editing, text]
+relations: []
+source: docs/adr/interface/0021-text-editing-core-follows-helix.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the text editing core follows helix: document is rope plus selections plus history
+
+Decides that the text-editing core follows the Helix model: a document is a rope, plus selections, plus history, in a `rope` crate with no dependency on UI or GPU. The reason is that a flat string costs O(n) per edit and loses the cursor positions at every change. The result is that every edit goes through a `Transaction`, with exact undo and selections that map without a special case per cursor, and the core is testable without a window.
 
 ## context
 

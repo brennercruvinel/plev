@@ -1,4 +1,3 @@
-//! The shell as a capability (task-76 item 4), without a window: what it
 //! projects and who may ask, the keys as requests with receipts, an agent
 //! switching the theme and the page and refused the window, a stale
 //! pick refused as a button's would be, the gallery projection beside

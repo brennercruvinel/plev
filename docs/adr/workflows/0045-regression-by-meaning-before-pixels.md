@@ -1,11 +1,22 @@
 ---
+id: adr-0045
+title: "regression by meaning before pixels"
+project: plev
 type: adr
 status: accepted
-tags: [regression, headless, semantics, binding, layer-hash, pixels, ci, showcase, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [determinism, semantics, rendering]
+relations: [task-57, task-59, task-66, task-77]
+source: docs/adr/workflows/0045-regression-by-meaning-before-pixels.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # regression by meaning before pixels
+
+Decides that visual regression asks about meaning first and about pixels only afterward: the check answers, in this order, whether the semantic projection changed (by `Revision`), whether any layer or binding changed (by content hash with a stable name), and only then which pixels changed, within the regions of the layers that moved. The verdict is the first two answers, so a machine without a GPU adapter reaches the same result as one with a GPU. Measured across the 157 committed baselines, the check finishes in about 0.61 s without opening a GPU; it matters because a failure now says which control changed, not just how many pixels differ.
 
 ## context
 

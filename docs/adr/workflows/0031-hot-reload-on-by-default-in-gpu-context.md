@@ -1,11 +1,22 @@
 ---
+id: adr-0031
+title: "hot reload on by default: shaders and literals in place, code by rebuild"
+project: plev
 type: adr
 status: accepted
-tags: [hot-reload, shaders, gpu, dev-loop, showcase]
 date: 2026-09-22
+date_basis: header
+topics: [hot-reload, gpu, process]
+relations: [adr-0007, adr-0018, adr-0019]
+source: docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # hot reload on by default: shaders and literals in place, code by rebuild
+
+Decides that hot reload is on by default in the GPU context: shaders and literals are swapped in place, and code is recompiled with a process restart. The audit that motivated the decision showed that the three 2024 ADRs had never reached a running app: the feature was off, the watcher lived in an `App` that no app uses, and the shader directory pointed to a path that does not exist. The result, verified in the showcase by a window capture with the same pid, is a shader edit applied in about half a second, with no user input.
 
 ## context
 

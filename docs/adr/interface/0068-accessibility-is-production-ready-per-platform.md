@@ -1,16 +1,27 @@
 ---
+id: adr-0068
+title: "accessibility is production-ready per platform"
+project: plev
 type: adr
 status: proposed
-tags: [accessibility, accesskit, platforms, voiceover, live-regions, contrast, wcag, reduced-motion, web, showcase, generative-runtime]
 date: 2026-09-25
+date_basis: header
+topics: [accessibility, platform, semantics, web-wasm]
+relations: [adr-0038, task-60, task-75]
+source: docs/adr/interface/0068-accessibility-is-production-ready-per-platform.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # accessibility is production-ready per platform
 
+States what a screen reader receives on each platform and what is already proven: the accessibility tree of each gallery page is tested, status messages are live regions that do not move focus, theme contrast is measured with the failures listed, and on macOS the system's reduced-motion preference is respected. The web stays open, because the choice between a DOM mirror with ARIA and nothing for now belongs to Brenner. It matters because being present in the code and being ready for production are different things, and whoever adopts plev needs to know, platform by platform, what reaches the screen reader.
+
 ## context
 
 task-60 projects the AccessKit tree from the semantic snapshot
-(`accessibility-projects-the-semantic-snapshot.md`) and VoiceOver was
+([`0038-accessibility-projects-the-semantic-snapshot.md`](0038-accessibility-projects-the-semantic-snapshot.md)) and VoiceOver was
 checked on macOS. the thesis (section 21) asks more: being present and
 being production-ready are different things, and a product adopting plev
 needs to know, per platform, what a screen reader gets, that every page
@@ -22,7 +33,7 @@ accesskit_winit 0.32.2, accesskit_macos 0.26.1, accesskit_windows 0.32.1,
 accesskit_unix 0.21.1 over accesskit_atspi_common 0.18.1, the consumers
 0.35.0 and 0.36.0, winit 0.30.13) and every page of the gallery. the
 matrix with file and line is in
-`docs/log/steps/task-75-platform-accessibility.md`, section
+[`task-75-platform-accessibility.md`](../../tasks/task-75-platform-accessibility/README.md), section
 "fase 1: a sonda".
 
 ## decision
@@ -150,6 +161,12 @@ two options, the decision is brenner's:
   preference, and the full keyboard.
 - a status is announced on macOS when its node appears: moving to a page
   announces its status lines once.
+
+## alternatives
+
+- para a web: o espelho DOM oculto com ARIA (opção 1 de `the web: open`) ou nada por enquanto (opção 2). As duas seguem abertas; a escolha é do Brenner.
+- uma segunda árvore só para os anúncios: rejeitada. As regiões vivas são nós da própria árvore, e elas não movem o foco (ver `avoid`).
+- mudar uma cor do tema para passar no teste de contraste: rejeitado. A cor é decisão de design e moveria todas as linhas de base (ver `contrast`).
 
 ## avoid
 

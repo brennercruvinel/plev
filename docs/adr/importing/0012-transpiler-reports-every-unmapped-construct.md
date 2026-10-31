@@ -1,12 +1,23 @@
 ---
+id: adr-0012
+title: "the transpiler reports every unmapped construct, never drops silently"
+project: plev
 type: adr
 status: accepted
-tags: [parser, transpiler, droplist, honesty, diagnostics]
 date: 2025-07-08
-commit: 5eecb0a
+date_basis: header
+topics: [importing, formats]
+relations: []
+source: docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [5eecb0a]
 ---
 
 # the transpiler reports every unmapped construct, never drops silently
+
+Decides that the parser emits the converted code together with a droplist: every construct it did not represent, with file, line and reason. The reason: stopping with an error is useless on a real file, and discarding silently is the way a transpiler lies. The result, on a real corpus of 40 components in two apps, was 402 mapped properties and 709 droplist entries, with no crash, and the counts frozen in a test.
 
 ## context
 

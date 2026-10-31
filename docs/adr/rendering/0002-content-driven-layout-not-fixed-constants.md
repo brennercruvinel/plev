@@ -1,12 +1,23 @@
 ---
+id: adr-0002
+title: "container geometry derives from available space, never from constants"
+project: plev
 type: adr
 status: accepted
-tags: [layout, taffy, flex, responsiveness, resize]
 date: 2024-09-18
-commit: 15f096f
+date_basis: header
+topics: [layout, rendering]
+relations: []
+source: docs/adr/rendering/0002-content-driven-layout-not-fixed-constants.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [15f096f]
 ---
 
 # container geometry derives from available space, never from constants
+
+Decides that every container dimension derives from the measured available space or from the flex engine, and that constants are valid only as a minimum, a maximum or a spacing. The reason is that the engine already had full flex layout, but the apps positioned rectangles with fixed constants, and the window did not reflow when shrinking nor use space when growing. The result is geometry tested without a GPU at explicit widths, such as 600 px stacking and 1272 px spreading, and a clamp that keeps the intent, not the clamped value.
 
 ## context
 

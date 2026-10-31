@@ -1,11 +1,22 @@
 ---
+id: adr-0014
+title: "motion trails come from position history, not framebuffer accumulation"
+project: plev
 type: adr
 status: accepted
-tags: [rendering, particles, trails, render-on-demand]
 date: 2025-09-24
+date_basis: header
+topics: [rendering, animation, effects]
+relations: []
+source: docs/adr/rendering/0014-motion-trails-by-position-history.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # motion trails come from position history, not framebuffer accumulation
+
+Decides that motion trails come from a per-particle history of positions, and not from accumulation in the framebuffer: each layer is cleared every frame and the swapchain is multi-buffered, so an accumulated trail would flicker. The result is a trail that is shorter and coarser than the original demo's, which reads as motion but is not pixel-identical. Faithful accumulation is postponed, because it requires a feedback texture and a blit pass, new GPU work.
 
 ## context
 

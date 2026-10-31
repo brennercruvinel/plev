@@ -1,12 +1,23 @@
 ---
+id: adr-0003
+title: "embed every font weight the UI uses, and pin the default families"
+project: plev
 type: adr
 status: accepted
-tags: [fonts, cosmic-text, typography, fontdb, rubik]
 date: 2025-01-08
-commit: 21fdc8c
+date_basis: header
+topics: [text, fonts]
+relations: []
+source: docs/adr/rendering/0003-embed-every-font-weight-in-use.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [21fdc8c]
 ---
 
 # embed every font weight the UI uses, and pin the default families
+
+Decides to embed every font weight the UI may request and to pin the default families, so that resolution does not depend on the system fonts. The reason: requesting non-embedded weights made cosmic-text fall back to system fonts, up to 35% wider, and titles came out with visibly off spacing. The result is deterministic rendering across machine, CI and wasm, with tests that pin the face of each weight. The family changed on 2026-08-30, but the decision to embed the weights stands.
 
 > updated 2026-08-30: rubik was replaced by inclusive sans (SIL OFL, five
 > upright weights 300–700 embedded; italics upstream but unused), and inter

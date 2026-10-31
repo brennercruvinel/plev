@@ -1,11 +1,22 @@
 ---
+id: adr-0063
+title: "a link is not a person"
+project: plev
 type: adr
 status: accepted
-tags: [platform-integration, deep-links, url-scheme, semantic-contract, dispatcher, agents, policy, security, showcase, macos, bring-up]
 date: 2026-09-24
+date_basis: header
+topics: [platform, semantics, agents]
+relations: [adr-0057, adr-0059, task-76]
+source: docs/adr/interface/0063-a-link-is-not-a-person.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a link is not a person
+
+Decides that a link from the app's URL scheme reaches the dispatcher as `Actor::Agent` named `link`, never as a person, and that it only executes what is on an open list written in the app itself. A refusal appears on screen in one line and is also kept in the log. Records the probe on the three platforms: on macOS the link enters through the launch argument until the app has a bundle, and a custom delegate is left out because it would break winit 0.30. It matters because any web page, mail or other app can open a link without anyone on screen having chosen it.
 
 ## context
 
@@ -19,7 +30,7 @@ person: any web page, mail or other app can open one, with no one at the
 screen having chosen it.
 
 the probe (the handoff of item 6 in
-docs/log/steps/task-76-platform-integration.md) found:
+[task-76-platform-integration.md](../../tasks/task-76-platform-integration/README.md)) found:
 
 - windows (a registry key with `URL Protocol` and `"<exe>" "%1"`) and
   linux (a `.desktop` with `x-scheme-handler/<scheme>` and `%u`) start a
@@ -155,6 +166,14 @@ docs/log/steps/task-76-platform-integration.md) found:
   `Followed`), so an integration test drives a link on a headless frame
   as the shell does.
 
+## alternatives
+
+- um link como `Actor::Human`: qualquer página poderia apertar qualquer botão que uma pessoa pode apertar, câmera e impressora inclusive (ver `reason`).
+- um ator próprio para links em `sem`: a coluna de agente é o contrato, e `sem` não muda (ver `decision` e `avoid`).
+- um delegate de aplicação próprio no macOS: o winit 0.30 depende do seu, e `ApplicationDelegate::get` entra em pânico com outro (ver `context`).
+- universal links (`https`): ficam fora; só o esquema do app (ver `bring-up`).
+- entregar o link à instância que já roda, agora: a segunda instância abre outra janela por enquanto; esse canal é do bring-up (ver `bring-up`).
+
 ## bring-up
 
 - macOS: the app bundle with `CFBundleURLTypes` naming `plev-showcase`
@@ -210,4 +229,3 @@ bundle. a revisão conferiu: todo pedido sai como `Actor::Agent` de nome
 recusado aparece escapado na mensagem (`escape_default`), e o texto
 decodificado com controle ou marca de direção é recusado sem eco, então
 o aviso na tela não carrega texto de fora sem checagem.
-

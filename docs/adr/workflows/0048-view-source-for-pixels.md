@@ -1,11 +1,22 @@
 ---
+id: adr-0048
+title: "view source for pixels: a control leads to its projection, a text to its literal"
+project: plev
 type: adr
 status: accepted
-tags: [hot-reload, view-source, sem, compositor, showcase, dev-loop, generative-runtime]
 date: 2026-09-24
+date_basis: header
+topics: [hot-reload, semantics, process]
+relations: [adr-0031, adr-0032, adr-0035, task-63, task-65]
+source: docs/adr/workflows/0048-view-source-for-pixels.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # view source for pixels: a control leads to its projection, a text to its literal
+
+Decides that a point in the development window leads to the code that produced it, only in a desktop debug build: the engine resolves the point in `hot_reload::view_source::origin_at` and the shell only opens it. A control leads to the line of the projection that declared it, and a text leads to the `.rs` literal that wrote it; when there is more than one candidate, all are listed and none is chosen by guessing. Phase c, of 2026-09-25, writes the edited literal back as a single-string `git diff`, and refuses the write when the code on disk has changed; it matters because a visual edit becomes a traceable code change, made only by the person.
 
 ## context
 
@@ -13,14 +24,14 @@ task-65 (phases a and b) asks that a pixel of the window lead to the code
 that made it, in a desktop debug build only. what existed:
 
 - `Compositor::hit(x, y)` names the topmost bound `SemId` at a point of
-  the frame on screen (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md).
+  the frame on screen ([adr-0035](../semantics/0035-semantic-binding-beside-the-scene.md)).
 - `Node.source` is the file, line and column of the call that projected
   the node, captured by `#[track_caller]`
-  (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md). the comps helpers
+  ([adr-0032](../semantics/0032-semantic-contract-as-pure-projection.md)). the comps helpers
   that project a widget (`TextField::project`, `Button::sem`, ...) are
   `#[track_caller]` too.
 - the literal hot reload keeps, per source file, a skeleton hash and its
-  literals in order (docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md),
+  literals in order ([adr-0031](0031-hot-reload-on-by-default-in-gpu-context.md)),
   but no position: `proc-macro2` was built without `span-locations`.
 - `hot_reload` exists only where the engine's build.rs sets the cfg:
   the `hot-reload` feature (on by default), a debug profile and a desktop

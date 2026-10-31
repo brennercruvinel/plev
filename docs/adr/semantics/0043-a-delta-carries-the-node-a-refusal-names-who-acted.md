@@ -1,18 +1,29 @@
 ---
+id: adr-0043
+title: "a delta carries the node it adds, and a stale refusal names who acted"
+project: plev
 type: adr
 status: accepted
-tags: [sem, wire, rec, ide, protocol, delta, stale, receipts, dispatcher, agents, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [semantics, agents, recording]
+relations: [adr-0040, task-57b, task-62, task-83, task-86, task-89, task-90, task-91]
+source: docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a delta carries the node it adds, and a stale refusal names who acted
+
+Decides that a `node_added` in a delta carries the whole node, and that a `stale` refusal says, in `acted`, who executed actions on the state the agent saw. The origin is checkpoint a of task-62, in which two agents operated the ide only through the contract and pointed to three gaps. The revision still decides nothing: `check` compares the reads, and `acted` only reads revisions to name who was there. The protocol stays at version 1.
 
 ## context
 
 checkpoint a (task-62 phase c) had two LLM agents operate the ide through
 the contract only. the contract held, and the agents pointed at three
 gaps, none of which stopped the task
-(`docs/log/steps/task-62-ide-human-agent-proof.md`, "o que o
+([`task-62-ide-human-agent-proof.md`](../../tasks/task-62-ide-human-agent-proof/README.md), "o que o
 experimento mostrou"):
 
 - a `node_added` in a delta carried only the id
@@ -45,7 +56,7 @@ the agent port serves the node of a delta's `node_added` as it serves a
 node of a snapshot. one function (`serve`, `rust/socket/src/server.rs`)
 cuts the state to the observation's `keys` and drops `source` unless the
 agent asked for it (`observe {"source": true}`); both replies go through
-it. this corrects `docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`,
+it. this corrects [`0040-lean-semantic-form-and-one-redaction.md`](0040-lean-semantic-form-and-one-redaction.md),
 which said a delta never carried `source` because a `Change` named ids
 and values only: a delta carries it now exactly when a snapshot would.
 

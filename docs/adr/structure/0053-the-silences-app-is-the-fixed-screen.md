@@ -1,11 +1,22 @@
 ---
+id: adr-0053
+title: "the silences app is the fixed screen the generated one is compared against"
+project: plev
 type: adr
 status: accepted
-tags: [showcase, silences, ffmpeg, worker, dispatcher, fixed-screen, checkpoint-b, generative-runtime]
 date: 2026-09-24
+date_basis: header
+topics: [generated-surfaces, semantics, agents]
+relations: [adr-0025, task-69]
+source: docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the silences app is the fixed screen the generated one is compared against
+
+Records that the silences app is the fixed screen against which the generated surface will be compared at checkpoint b of the program. The decision separates a pure model, a seeded state with the probe's recorded detection, and a worker that runs ffmpeg as a child process, and only once an actor asks for it. The result is a stable semantic projection, with the same golden and the same frame on any machine, and no external process when the page opens.
 
 ## context
 
@@ -23,7 +34,7 @@ page of the showcase's Apps Demo group.
 the constraints it had to meet: the official app pattern (state in
 structs, retained widgets, one dispatcher, the model changed only in
 `execute`, every action reading the state it changes); ffmpeg as a child
-process (docs/adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md),
+process ([adr-0025](../importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)),
 never a library; no test of the gate depending on ffmpeg; the showcase
 still compiling to wasm; render on demand; and a projection, a headless
 frame and a regression baseline that are the same on every machine.
@@ -157,6 +168,15 @@ gallery scrolls it.
   dispatcher; the receipts of silences requests are in the todo page's
   dispatcher, numbered with the gallery's.
 
+## alternatives
+
+- gerar o vídeo ao abrir a página, como pedia o briefing: perdeu. Um processo filho iniciado na abertura deixaria o quadro staged à mercê do tempo dele e escreveria em `/tmp` num render (`## decision`, “ffmpeg only after an actor asks”).
+- ffmpeg como biblioteca: perdeu desde o contexto. A restrição era processo filho, e nenhum teste do gate pode depender de ffmpeg.
+- despachante próprio da página: perdeu. O port soma um sink ao despachante da galeria e casa atos por `RequestId`; um despachante próprio ficaria sem ouvinte e colidiria nos ids (`## decision`, “the gallery's one dispatcher”).
+- segundo bind para os botões de cada linha: perdeu. A linha é o nó, e os botões são a affordance dela (`### the projection`).
+- reaproveitar o id de um corte entre detecções: rejeitado. Um pedido dirigido a um corte de detecção substituída atingiria outro silêncio com o mesmo número (`### the model, pure`, `## avoid`).
+- exportar o vídeo cortado nesta fase: adiado. Aplicar é uma decisão no modelo; a exportação real, com ffmpeg, fica para o checkpoint, se ele pedir (`## what phase 4b needs`).
+
 ## what phase 4b needs
 
 - an image component in the IR's vocabulary (`media` was left out of the
@@ -201,4 +221,3 @@ frame it can decode: `silences.video:original` (the instant shown) and
 `silences.video@4.017052`; an `image` of a generated surface binds its
 `source` to one of them and the page decodes the frame through
 `surface::Frames`. `silences.video:range` carries the span shown.
-

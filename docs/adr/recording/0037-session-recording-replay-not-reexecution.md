@@ -1,11 +1,22 @@
 ---
+id: adr-0037
+title: "session recording: replay, not re-execution"
+project: plev
 type: adr
 status: accepted
-tags: [rec, recorder, session, replay, monster, sem, receipts, file-format, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [recording, formats, semantics, rendering]
+relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, adr-0043, generative-runtime-thesis]
+source: docs/adr/recording/0037-session-recording-replay-not-reexecution.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # session recording: replay, not re-execution
+
+Records the decision that plev's session recording is a replay: it reconstructs what was presented and what happened, and never re-executes the app. The session is kept as data (snapshots, receipts and frames) in a window bounded by time and bytes, in the `rust/record` crate, with a semantic track and a visual one. The `.monster` format uses the magic `MONS`, separate from the animations' `MON0`, so that the animation container and its fixtures do not change; it matters because a bug report becomes an inspectable excerpt, and watching a commit being made must not make another commit.
 
 ## context
 

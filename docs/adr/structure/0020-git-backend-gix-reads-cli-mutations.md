@@ -1,11 +1,22 @@
 ---
+id: adr-0020
+title: "git backend: gix for reads, git CLI for mutations, a worker thread for the UI"
+project: plev
 type: adr
 status: accepted
-tags: [git, backend, gix, threading, apps]
 date: 2026-04-01
+date_basis: header
+topics: [git, performance, platform]
+relations: []
+source: docs/adr/structure/0020-git-backend-gix-reads-cli-mutations.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # git backend: gix for reads, git CLI for mutations, a worker thread for the UI
+
+Decides to split git work by what each tool does well: gix for reads (repository, history, refs) and the git CLI for status, diffs and every mutation, behind a worker thread that never blocks the UI. The reason is to keep the frame loop from stalling on git operations, and not to maintain the whole porcelain surface on its own. The result is a crate with no UI types, tested against real temporary repositories, and a `GitClient` whose responses come back through a callback.
 
 ## context
 

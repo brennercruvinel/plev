@@ -23,6 +23,10 @@ pub use engine::runtime::window::HostedView;
 // (data/graphs/<format>/), and are embedded so the web build needs no fetch.
 const LES_MIS: &str = include_str!("../../../data/graphs/d3/les-mis.json");
 const COMPOUND: &str = include_str!("../../../data/graphs/cytoscape/compound.json");
+// the rosetta's ir of two corpus tabs (graphviz/microservices, mermaid-microservices), as elk json
+// written by gramorph's `tool/tasks/capture/ir.ts`
+const ELK_MICROSERVICES: &str = include_str!("../../../data/graphs/elk/microservices.json");
+const ELK_GROUPS: &str = include_str!("../../../data/graphs/elk/microservices-groups.json");
 
 /// Publish the numbers every this many frames.
 const PUBLISH_EVERY: u64 = 10;
@@ -31,11 +35,15 @@ const PUBLISH_EVERY: u64 = 10;
 pub enum Page {
     LesMis,
     Compound,
+    /// graphviz/microservices through the rosetta: nine services, ten calls, three dashed
+    Elk,
+    /// mermaid-microservices through the rosetta: four groups, two cylinders
+    ElkGroups,
 }
 
 impl Page {
     /// Every page, the first one the default.
-    pub const ALL: [Page; 2] = [Page::LesMis, Page::Compound];
+    pub const ALL: [Page; 4] = [Page::LesMis, Page::Compound, Page::Elk, Page::ElkGroups];
 
     /// The page `name` names, in any case; an empty name is the default
     /// page. A name no page has is an error listing the ones there are,
@@ -57,6 +65,8 @@ impl Page {
         match self {
             Page::LesMis => "lesmis",
             Page::Compound => "compound",
+            Page::Elk => "elk",
+            Page::ElkGroups => "elk-groups",
         }
     }
 
@@ -81,6 +91,35 @@ impl Page {
                     link_distance: 120.0,
                     charge: -400.0,
                     collide: look::CY_RADIUS as f64 + 10.0,
+                };
+                LiveGraph::new(graph, look, Layout::Compound { forces })
+            }
+            // the ir names a layered layout; until the widgets have one, the force layout places it,
+            // and the groups are solved from the inside as cytoscape's are
+            Page::Elk => {
+                let graph = read::elk(ELK_MICROSERVICES)?;
+                let look = look::elk(&graph);
+                let forces = Forces {
+                    link_distance: 110.0,
+                    charge: -500.0,
+                    collide: 40.0,
+                };
+                LiveGraph::new(
+                    graph,
+                    look,
+                    Layout::Force {
+                        forces,
+                        world: (900.0, 600.0),
+                    },
+                )
+            }
+            Page::ElkGroups => {
+                let graph = read::elk(ELK_GROUPS)?;
+                let look = look::elk(&graph);
+                let forces = Forces {
+                    link_distance: 70.0,
+                    charge: -120.0,
+                    collide: 34.0,
                 };
                 LiveGraph::new(graph, look, Layout::Compound { forces })
             }
@@ -166,6 +205,15 @@ impl GraphsView {
         {
             let _ = body.dataset().set("plev", &self.report());
         }
+        // on the desktop, a measuring script asks for the report after that many frames
+        // (PLEV_REPORT=300): it is printed and the process ends, so a check needs no window to watch
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(after) = std::env::var("PLEV_REPORT").ok().and_then(|v| v.parse::<u64>().ok()) {
+            if self.frame >= after {
+                println!("{}", self.report());
+                std::process::exit(0);
+            }
+        }
     }
 }
 
@@ -186,6 +234,10 @@ impl HostedView for GraphsView {
         self.graph.render(c, bounds, theme);
         self.frame += 1;
         if self.frame % PUBLISH_EVERY == 1 || !self.graph.moving() {
+            self.publish();
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if std::env::var_os("PLEV_REPORT").is_some() {
             self.publish();
         }
     }
@@ -224,6 +276,6 @@ mod tests {
         assert_eq!(Page::from_name(""), Ok(Page::LesMis));
         assert_eq!(Page::from_name("Compound"), Ok(Page::Compound));
         let err = Page::from_name("compund").unwrap_err();
-        assert!(err.contains("lesmis, compound"), "{err}");
+        assert!(err.contains("lesmis, compound, elk, elk-groups"), "{err}");
     }
 }

@@ -1,11 +1,22 @@
 ---
+id: adr-0033
+title: "actions carry the state their actor observed"
+project: plev
 type: adr
 status: accepted
-tags: [sem, actions, preconditions, receipts, dispatcher, agents, generative-runtime]
 date: 2026-09-23
+date_basis: header
+topics: [semantics, agents, recording]
+relations: [adr-0032, task-57, task-58b, task-60, task-61, task-62, task-63, task-69, task-92]
+source: docs/adr/semantics/0033-actions-carry-observed-state.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # actions carry the state their actor observed
+
+Decides that every action carries the state its actor observed: a `Request` keeps the value seen for each state the action reads, together with the snapshot revision, and a single `Dispatcher` checks those values against the live projection before executing. The ide confirmed commits without any check, and an agent could decide on an index the person had already changed; the rule closes that window. At the point of truth, like the git index, the check is repeated just before the effect, and a refusal returns the delta of what changed. An update of 24/09 (task-92) lets the agent ask the person before acting.
 
 ## context
 
@@ -22,7 +33,7 @@ with an agent in the loop the world moves between observing and acting
 (thesis, section 8): the agent sees A, B and C staged and "fix login",
 decides to commit, and meanwhile the person unstages B. task-57 gave every
 control an identity, a state and, for each action, the state it reads
-(`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`). what was missing is
+([`0032-semantic-contract-as-pure-projection.md`](0032-semantic-contract-as-pure-projection.md)). what was missing is
 the rule for acting on it.
 
 ## decision

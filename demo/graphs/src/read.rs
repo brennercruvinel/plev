@@ -184,3 +184,155 @@ pub fn cytoscape(text: &str) -> Result<Graph, String> {
         groups,
     })
 }
+
+// -- the rosetta's ir: elk json from gramorph -----------------------------------------------------
+
+#[derive(Deserialize)]
+struct ElkNode {
+    id: String,
+    #[serde(default)]
+    labels: Vec<ElkLabel>,
+    #[serde(default)]
+    children: Vec<ElkNode>,
+    #[serde(default)]
+    properties: std::collections::HashMap<String, String>,
+}
+
+#[derive(Deserialize)]
+struct ElkLabel {
+    text: String,
+}
+
+#[derive(Deserialize)]
+struct ElkEdge {
+    sources: Vec<String>,
+    targets: Vec<String>,
+    #[serde(default)]
+    properties: std::collections::HashMap<String, String>,
+}
+
+#[derive(Deserialize)]
+struct Elk {
+    #[serde(default)]
+    children: Vec<ElkNode>,
+    #[serde(default)]
+    edges: Vec<ElkEdge>,
+}
+
+/// The ir gramorph's rosetta emits for a corpus tab: the elk json format, a node with `children`
+/// being a group, `properties` holding the grammar's appearance by concept id
+/// (`appearance.shape`, `appearance.marker-end`). The structure is read here; the look is
+/// `look::elk`. An edge whose head is `none` is undirected.
+pub fn elk(text: &str) -> Result<Graph, String> {
+    let root: Elk = serde_json::from_str(text).map_err(|e| format!("elk json: {e}"))?;
+    let (mut nodes, mut groups) = (Vec::new(), Vec::new());
+    let (mut node_ids, mut group_ids) = (Vec::new(), Vec::new());
+    // every node and group first, in document order, so an edge can point anywhere
+    fn walk(
+        n: &ElkNode,
+        parent: Option<usize>,
+        nodes: &mut Vec<Node>,
+        groups: &mut Vec<Group>,
+        node_ids: &mut Vec<String>,
+        group_ids: &mut Vec<String>,
+    ) {
+        let label = n
+            .labels
+            .first()
+            .map(|l| l.text.clone())
+            .filter(|t| !t.is_empty())
+            .unwrap_or_else(|| n.id.clone());
+        if n.children.is_empty() {
+            nodes.push(Node {
+                id: n.id.clone(),
+                label,
+                kind: shape_kind(n.properties.get("appearance.shape")),
+            });
+            node_ids.push(n.id.clone());
+            if let Some(g) = parent {
+                groups[g].nodes.push(nodes.len() - 1);
+            }
+        } else {
+            groups.push(Group {
+                id: n.id.clone(),
+                label,
+                ..Group::default()
+            });
+            group_ids.push(n.id.clone());
+            let me = groups.len() - 1;
+            if let Some(g) = parent {
+                groups[g].groups.push(me);
+            }
+            for c in &n.children {
+                walk(c, Some(me), nodes, groups, node_ids, group_ids);
+            }
+        }
+    }
+    for n in &root.children {
+        walk(n, None, &mut nodes, &mut groups, &mut node_ids, &mut group_ids);
+    }
+    let mut edges = Vec::with_capacity(root.edges.len());
+    for e in &root.edges {
+        let (Some(s), Some(t)) = (e.sources.first(), e.targets.first()) else {
+            return Err("elk json: an edge with no source or target".into());
+        };
+        let (Some(from), Some(to)) = (
+            node_ids.iter().position(|n| n == s),
+            node_ids.iter().position(|n| n == t),
+        ) else {
+            return Err(format!("elk json: an edge between missing nodes: {s} -> {t}"));
+        };
+        let head = e.properties.get("appearance.marker-end").map(String::as_str);
+        edges.push(Edge {
+            directed: head.is_some_and(|h| h != "none"),
+            kind: usize::from(e.properties.contains_key("appearance.stroke-dasharray")),
+            ..Edge::new(from, to)
+        });
+    }
+    Ok(Graph {
+        nodes,
+        edges,
+        groups,
+    })
+}
+
+/// The grammar's shapes (d2's names) as a node kind a look can draw by: 0 a box, 1 a round one
+/// (oval, circle), 2 a cylinder, 3 a record (class, sql_table).
+fn shape_kind(shape: Option<&String>) -> usize {
+    match shape.map(String::as_str) {
+        Some("oval" | "circle" | "ellipse") => 1,
+        Some("cylinder") => 2,
+        Some("class" | "sql_table") => 3,
+        _ => 0,
+    }
+}
+
+#[cfg(test)]
+mod elk_tests {
+    use super::elk;
+
+    const MICROSERVICES: &str = include_str!("../../../data/graphs/elk/microservices.json");
+    const GROUPS: &str = include_str!("../../../data/graphs/elk/microservices-groups.json");
+
+    #[test]
+    fn graphviz_microservices_reads_into_nine_nodes_and_ten_edges() {
+        let g = elk(MICROSERVICES).unwrap();
+        assert_eq!(g.nodes.len(), 9);
+        assert_eq!(g.edges.len(), 10);
+        assert!(g.groups.is_empty());
+        assert!(g.edges.iter().all(|e| e.directed), "a digraph: every edge has a head");
+        assert_eq!(g.edges.iter().filter(|e| e.kind == 1).count(), 3, "three dashed edges");
+        assert_eq!(g.nodes[0].label, "Client");
+    }
+
+    #[test]
+    fn mermaid_microservices_reads_its_four_groups() {
+        let g = elk(GROUPS).unwrap();
+        assert_eq!(g.groups.len(), 4);
+        assert_eq!(g.nodes.len(), 14);
+        assert_eq!(g.edges.len(), 16);
+        let data = g.groups.iter().find(|k| k.label == "Data").unwrap();
+        assert_eq!(data.nodes.len(), 4);
+        assert_eq!(g.nodes.iter().filter(|n| n.kind == 2).count(), 2, "two cylinders");
+    }
+}

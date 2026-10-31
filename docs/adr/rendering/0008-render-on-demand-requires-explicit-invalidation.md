@@ -1,12 +1,23 @@
 ---
+id: adr-0008
+title: "render on demand makes invalidation a correctness contract"
+project: plev
 type: adr
 status: accepted
-tags: [rendering, events, invalidation, render-on-demand, reactivity]
 date: 2024-10-07
-commit: 83720e3
+date_basis: header
+topics: [rendering, input, signals]
+relations: []
+source: docs/adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+evidence: [83720e3]
 ---
 
 # render on demand makes invalidation a correctness contract
+
+Fixes the contract that applies when the engine renders only on request: a handler that changes something visible must return `true` or invalidate and request the redraw. The case that motivated the decision was a consumed scroll event, with changed state, a handler returning `false`, and nothing invalidated, which left the whole showcase unresponsive. With this, invalidation is treated as correctness, and the regression tests verify invalidation, not just the mutated state.
 
 ## context
 
