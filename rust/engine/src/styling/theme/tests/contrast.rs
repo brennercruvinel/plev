@@ -279,6 +279,54 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // task-104 front B: the sheet's and the drawer's text and icons on
+    // their panel over the page, a drawer link's also on its lit fill. On
+    // core the kit's #7B7B7B hint and group label fail AA; they take
+    // shade 7 (`overlay/sheet/tokens.rs`), which these pairs hold.
+    let o = &t.overlay;
+    for (name, sheet_or_drawer, fill) in [
+        ("sheet", true, o.sheet.panel.fill),
+        ("drawer", false, o.drawer.panel.fill),
+    ] {
+        let under = over(fill, page);
+        let bg = format!("overlay.{name}.panel.fill");
+        let texts: Vec<(&str, f64, Color)> = if sheet_or_drawer {
+            let s = &o.sheet;
+            vec![
+                ("title_color", TEXT, s.title_color),
+                ("description_color", TEXT, s.description_color),
+                ("label_color", TEXT, s.label_color),
+                ("hint_color", TEXT, s.hint_color),
+                ("value_color", TEXT, s.value_color),
+            ]
+        } else {
+            let d = &o.drawer;
+            vec![
+                ("brand_color", TEXT, d.brand_color),
+                ("group_color", TEXT, d.group_color),
+                ("item_color", TEXT, d.item_color),
+                ("icon_color", LARGE, d.icon_color),
+            ]
+        };
+        for (fg, need, color) in texts {
+            add(
+                &format!("overlay.{name}.{fg}"),
+                &bg,
+                need,
+                over(color, under),
+                under,
+            );
+        }
+    }
+    let d = &o.drawer;
+    let lit = over(d.item_fill, over(d.panel.fill, page));
+    for (fg, need, color) in [
+        ("item_color", TEXT, d.item_color),
+        ("icon_active", LARGE, d.icon_active),
+    ] {
+        let fg = format!("overlay.drawer.{fg}");
+        add(&fg, "overlay.drawer.item_fill", need, over(color, lit), lit);
+    }
     out
 }
 
@@ -562,7 +610,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 369,
+        count, 413,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

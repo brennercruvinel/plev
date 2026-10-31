@@ -265,9 +265,10 @@ impl DrawerTokens {
         }
     }
 
-    /// The theme's surface and nav colors: the glass's text and its
-    /// active surface for a link hovered or current, the item radius,
-    /// its spacing; the kit's geometry.
+    /// The theme's surface, its text and secondary text (which hold AA on
+    /// its popover glass, where the glass's nav text does not on every
+    /// theme), its active surface for a link hovered or current, the item
+    /// radius, its spacing; the kit's geometry.
     pub fn derive(theme: &Theme) -> Self {
         let g = &theme.glass;
         let s = &theme.spacing;
@@ -286,13 +287,13 @@ impl DrawerTokens {
             item_radius: theme.shape.item,
             item_inline: s.md,
             item_label: t.base_2sm(),
-            item_color: g.text_active,
+            item_color: theme.colors.text,
             item_fill: g.surface_active,
             icon_box_radius: theme.shape.micro,
             icon_box_fill: g.surface_hover,
             icon_box_shadow: theme.shadows.raised,
-            icon_color: g.text_default,
-            icon_active: g.text_active,
+            icon_color: theme.colors.text_mid,
+            icon_active: theme.colors.text,
             ..Self::hoff_core()
         }
     }
