@@ -13,7 +13,7 @@ pub use self::scales::{
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
 };
 pub use self::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
@@ -109,6 +109,7 @@ impl Theme {
             info: Color::rgb(0.0, 0.85, 0.95),
             divider: Color::hex(0x222222),
             border_active: Color::hex(0x444444),
+            swatches: &[],
         };
         let radius = RadiusScale {
             none: 0.0,
@@ -191,6 +192,7 @@ impl Theme {
             info: Color::rgb(0.0, 0.65, 0.80),
             divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
             border_active: Color::hex(0x9699a3),
+            swatches: &[],
         };
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),

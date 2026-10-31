@@ -9,7 +9,7 @@ use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
 };
 use super::{
     DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
@@ -37,6 +37,37 @@ pub const ORANGE: Color = Color::hex(0xE36323);
 pub const YELLOW: Color = Color::hex(0xFFB73A);
 pub const RED: Color = Color::hex(0xFE5938);
 pub const PURPLE: Color = Color::hex(0x8755E9);
+
+/// The colors page (templates/ColorsPage/content.tsx): its two groups,
+/// each color under the kit's name, Shade 8 and the yellow and purple
+/// accents included, which no role holds.
+pub const PALETTE: [SwatchGroup; 2] = [
+    SwatchGroup {
+        title: "Shades",
+        colors: &[
+            ("Shade 1", SHADES[0]),
+            ("Shade 2", SHADES[1]),
+            ("Shade 3", SHADES[2]),
+            ("Shade 4", SHADES[3]),
+            ("Shade 5", SHADES[4]),
+            ("Shade 6", SHADES[5]),
+            ("Shade 7", SHADES[6]),
+            ("Shade 8", SHADES[7]),
+            ("Shade 9", SHADES[8]),
+        ],
+    },
+    SwatchGroup {
+        title: "Colors",
+        colors: &[
+            ("Green", GREEN),
+            ("Blue", BLUE),
+            ("Orange", ORANGE),
+            ("Yellow", YELLOW),
+            ("Red", RED),
+            ("Purple", PURPLE),
+        ],
+    },
+];
 
 fn ink(a: f32) -> Color {
     Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a)
@@ -188,6 +219,7 @@ impl Theme {
             info: BLUE,
             divider: shade4,
             border_active: shade5,
+            swatches: &PALETTE,
         };
         let radius = RadiusScale {
             none: 0.0,
