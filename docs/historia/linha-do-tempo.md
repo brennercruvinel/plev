@@ -39,7 +39,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2021-07-06 | [task-08: efeitos de compositing (blur, shadow, opacity)](../tarefas/task-08-efeitos-de-compositing.md) | concluido |
 | 2021-07-19 | [task-09: input system, keyboard + mouse](../tarefas/task-09-input-system-keyboard-mouse.md) | concluido |
 | 2021-07-26 | [DSL narrate, decisões de design](../referencia/arquitetura/dsl-narrate-design.md) | referencia |
-| 2021-08-02 | [task-10: input system, touch + gestures (done)](../tarefas/task-10-input-system-touch-gestures.md) | concluido |
+| 2021-08-02 | [task-10: input system, touch + gestures](../tarefas/task-10-input-system-touch-gestures.md) | concluido |
 | 2021-08-15 | [ios build - decisões e conhecimento](../referencia/plataformas/ios-build.md) | referencia |
 | 2021-08-16 | [task-11: android build + lifecycle](../tarefas/task-11-android-build-lifecycle.md) | concluido |
 | 2021-08-29 | [task-12: ios build + lifecycle](../tarefas/task-12-ios-build-lifecycle.md) | concluido |
@@ -71,7 +71,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2022-08-16 | [task-32: text system upgrade assessment](../tarefas/task-32-text-upgrade-assessment.md) | concluido |
 | 2022-09-08 | [WASM plugin architecture - research doc](../pesquisas/wasm-plugin-architecture.md) | referencia |
 | 2022-09-14 | [task-33: WASM plugin architecture](../tarefas/task-33-wasm-plugins.md) | concluido |
-| 2022-10-21 | [competitors-by-tier](../pesquisas/competitors-by-tier.md) | referencia |
+| 2022-10-21 | [concorrentes por tier](../pesquisas/competitors-by-tier.md) | referencia |
 | 2022-10-27 | [touch & gesture recognition design](../referencia/arquitetura/touch-gesture-design.md) | referencia |
 | 2022-11-19 | [makepad visual feature inventory vs plev gap analysis](../pesquisas/makepad-gap-analysis.md) | referencia |
 | 2022-12-10 | [relatorio tecnico: plev vs makepad](../pesquisas/plev-vs-makepad-report.md) | referencia |
@@ -81,9 +81,9 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 
 | Data | Documento | Estado |
 |---|---|---|
-| 2023-01-14 | [diferenciais](../pesquisas/artigo/diferenciais.md) | rascunho |
+| 2023-01-14 | [diferenciais do plev para o artigo](../pesquisas/artigo/diferenciais.md) | rascunho |
 | 2023-01-25 | [task-28: editable text](../tarefas/task-28-editable-text.md) | concluido |
-| 2023-02-09 | [plev](../pesquisas/artigo/rascunho.md) | rascunho |
+| 2023-02-09 | [rascunho do artigo sobre o plev](../pesquisas/artigo/rascunho.md) | rascunho |
 | 2023-02-13 | [task-26: paper arxiv](../tarefas/task-26-arxiv-paper.md) | concluido |
 | 2023-03-22 | [task-29: app demo real (proof of life)](../tarefas/task-29-app-demo-real.md) | concluido |
 | 2023-05-02 | [task-30: accessibility (accesskit)](../tarefas/task-30-accessibility.md) | concluido |
@@ -100,13 +100,13 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | Data | Documento | Estado |
 |---|---|---|
 | 2024-01-22 | [hot reload design - plev](../referencia/arquitetura/hot-reload-design.md) | referencia |
-| 2024-02-06 | [adotamos shader hot reload via notify file watcher sobre dylib reloading](../decisoes/processos/0019-shader-hot-reload.md) | referencia |
-| 2024-02-18 | [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](../decisoes/processos/0018-narrate-hot-reload.md) | referencia |
-| 2024-04-14 | [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](../decisoes/processos/0017-error-handling-lint-cleanup.md) | referencia |
-| 2024-05-21 | [modularizacao por single responsibility principle](../decisoes/estrutura/0015-srp-modularization.md) | referencia |
+| 2024-02-06 | [adotamos shader hot reload via notify file watcher sobre dylib reloading](../decisoes/processos/0019-shader-hot-reload.md) | aceito |
+| 2024-02-18 | [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](../decisoes/processos/0018-narrate-hot-reload.md) | aceito |
+| 2024-04-14 | [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](../decisoes/processos/0017-error-handling-lint-cleanup.md) | aceito |
+| 2024-05-21 | [modularizacao por single responsibility principle](../decisoes/estrutura/0015-srp-modularization.md) | aceito |
 | 2024-05-23 | [modularizacao SRP com limite de 300 linhas](../referencia/arquitetura/srp-modularization.md) | referencia |
 | 2024-05-29 | [task-52: modularizacao por single responsibility principle](../tarefas/task-52-srp-modularization.md) | concluido |
-| 2024-06-17 | [adotamos projecao ortografica em logical pixels para apps hidpi](../decisoes/renderizacao/0016-hidpi-projection.md) | referencia |
+| 2024-06-17 | [adotamos projecao ortografica em logical pixels para apps hidpi](../decisoes/renderizacao/0016-hidpi-projection.md) | aceito |
 | 2024-07-09 | [resolucao de 107 clippy warnings para zero](../referencia/arquitetura/clippy-zero-warnings.md) | referencia |
 | 2024-09-18 | [container geometry derives from available space, never from constants](../decisoes/renderizacao/0002-content-driven-layout-not-fixed-constants.md) | aceito |
 | 2024-10-07 | [render on demand makes invalidation a correctness contract](../decisoes/renderizacao/0008-render-on-demand-requires-explicit-invalidation.md) | aceito |
@@ -123,7 +123,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2025-01-27 | [touch input synthesizes pointer events into the existing mouse path](../decisoes/interface/0009-touch-as-synthesized-pointer-events.md) | aceito |
 | 2025-02-10 | [async GPU initialization and one wasm entry point per module](../decisoes/renderizacao/0001-async-gpu-init-and-single-wasm-entry.md) | aceito |
 | 2025-02-19 | [session record: responsiveness, real measurement, web target, touch](responsividade-e-fidelidade.md) | referencia |
-| 2025-03-26 | [monster format v0 specification](../referencia/arquitetura/monster-format-v0.md) | rascunho |
+| 2025-03-26 | [monster format v0 specification](../referencia/arquitetura/monster-format-v0.md) | referencia |
 | 2025-05-14 | [the monster animation format: keyframes plus discovered deltas](../decisoes/importacao/0010-binary-animation-format-with-discovered-deltas.md) | aceito |
 | 2025-05-21 | [task-43: monster, codec binario de animacao v0](../tarefas/task-43-monster-codec.md) | concluido |
 | 2025-06-10 | [import foreign formats by conversion, never by embedding a foreign runtime](../decisoes/importacao/0011-import-foreign-formats-by-conversion-not-embedding.md) | aceito |
@@ -163,8 +163,8 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-06-10 | [why the apps bypassed the engine, and what that costs](../aprendizados/apps-contornam-a-engine.md) | referencia |
 | 2026-06-10 | [the two gamma bugs: one assumption, two opposite failures](../aprendizados/dois-bugs-de-gamma.md) | referencia |
 | 2026-06-10 | [hoff visual tokens (measured)](tokens-hoff.md) | referencia |
-| 2026-06-12 | [experimento mon](../experimentos/mon-notas.md) | em-andamento |
-| 2026-06-20 | [changelog](changelog.md) | ativo |
+| 2026-06-12 | [experimento mon](../experimentos/mon-notas.md) | ativo |
+| 2026-06-20 | [Changelog do plev](changelog.md) | ativo |
 | 2026-07-13 | [one knowledge tree, and a minimal root](../decisoes/estrutura/0022-one-knowledge-tree-and-a-minimal-root.md) | aceito |
 | 2026-08-30 | [official app pattern: state in structs, retained widgets, explicit invalidation](../decisoes/estrutura/0023-official-app-pattern.md) | aceito |
 | 2026-08-31 | [glyph raster identity and atlas isolation](../decisoes/renderizacao/0024-glyph-raster-identity-and-atlas-isolation.md) | aceito |
@@ -183,7 +183,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-09-21 | [task-55: showcase, uma página por componente](../tarefas/task-55-showcase-one-page-per-component.md) | concluido |
 | 2026-09-22 | [hot reload on by default: shaders and literals in place, code by rebuild](../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md) | aceito |
 | 2026-09-22 | [sessão hot reload: o que funcionou e o que mordeu](../aprendizados/hot-reload.md) | referencia |
-| 2026-09-22 | [task-56 (gap-1): hot reload](../tarefas/task-56-hot-reload.md) | concluido |
+| 2026-09-22 | [task-56: hot reload](../tarefas/task-56-hot-reload.md) | concluido |
 | 2026-09-23 | [semantic contract as a pure projection of app state](../decisoes/semantica/0032-semantic-contract-as-pure-projection.md) | aceito |
 | 2026-09-23 | [actions carry the state their actor observed](../decisoes/semantica/0033-actions-carry-observed-state.md) | aceito |
 | 2026-09-23 | [headless render shares the frame path](../decisoes/renderizacao/0034-headless-render-shares-the-frame-path.md) | aceito |
@@ -200,8 +200,9 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-09-23 | [regression by meaning before pixels](../decisoes/processos/0045-regression-by-meaning-before-pixels.md) | aceito |
 | 2026-09-23 | [the inspector reads a session, it never runs it](../decisoes/gravacao/0046-the-inspector-reads-a-session-never-runs-it.md) | aceito |
 | 2026-09-23 | [an act rests on what its actor was shown](../decisoes/semantica/0047-an-act-rests-on-what-its-actor-was-shown.md) | aceito |
+| 2026-09-23 | [A integração na main é um pull request fundido por merge commit](../decisoes/processos/0085-integracao-por-merge-commit.md) | aceito |
 | 2026-09-23 | [o que o código da main faz agora](estado-do-codigo-2026-09.md) | referencia |
-| 2026-09-23 | [programa: de GPU UI engine a generative interaction runtime](programa-runtime-generativo.md) | em-andamento |
+| 2026-09-23 | [programa: de GPU UI engine a generative interaction runtime](programa-runtime-generativo.md) | ativo |
 | 2026-09-23 | [task-57: contrato semântico (crate `sem`)](../tarefas/task-57-semantic-contract.md) | concluido |
 | 2026-09-23 | [task-57b: forma JSON enxuta e uma redação só](../tarefas/task-57b-lean-wire-form-and-one-redaction.md) | concluido |
 | 2026-09-23 | [task-58: ação com precondição, dispatch e receipts](../tarefas/task-58-actions-preconditions-receipts.md) | concluido |
@@ -212,7 +213,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-09-23 | [task-62: prova no ide: stale-state rejection e handoff humano-agente](../tarefas/task-62-ide-human-agent-proof.md) | concluido |
 | 2026-09-23 | [task-66: headless como primeira classe](../tarefas/task-66-headless-first-class.md) | concluido |
 | 2026-09-23 | [task-66b: exportação SVG e `--semantics` no headless](../tarefas/task-66b-svg-export.md) | concluido |
-| 2026-09-23 | [task-67: regressão estrutural antes de pixel](../tarefas/task-67-structural-regression.md) | em-andamento |
+| 2026-09-23 | [task-67: regressão estrutural antes de pixel](../tarefas/task-67-structural-regression.md) | concluido |
 | 2026-09-23 | [task-68: plev IR e verifier](../tarefas/task-68-plev-ir-and-verifier.md) | concluido |
 | 2026-09-23 | [task-73: sistema de dependências incremental](../tarefas/task-73-incremental-dependency-system.md) | em-andamento |
 | 2026-09-23 | [task-73 phase 1: what each stage of a frame costs](../experimentos/task-73-medicoes.md) | ativo |
@@ -257,7 +258,7 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-09-24 | [task-95: o todo projeta os itens como lista](../tarefas/task-95-the-todo-projects-its-items-as-a-list.md) | concluido |
 | 2026-09-25 | [accessibility is production-ready per platform](../decisoes/interface/0068-accessibility-is-production-ready-per-platform.md) | proposto |
 | 2026-09-25 | [importers target plev IR, with a report in four categories](../decisoes/importacao/0069-importers-target-plev-ir.md) | aceito |
-| 2026-09-25 | [generative runtime results](../decisoes/geracao/0070-generative-runtime-results.md) | proposto |
+| 2026-09-25 | [each demo's method is written before it runs, and the result keeps its negatives](../decisoes/geracao/0070-generative-runtime-results.md) | proposto |
 | 2026-09-25 | [embed Noto Sans subsets for the non-Latin scripts](../decisoes/renderizacao/0071-embedded-fonts-by-script.md) | aceito |
 | 2026-09-25 | [text moves by screen order and shapes by line](../decisoes/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md) | aceito |
 | 2026-09-25 | [the keyboard walks the projection](../decisoes/interface/0076-the-keyboard-walks-the-projection.md) | aceito |
@@ -281,33 +282,33 @@ Os documentos pela data do que registram. A data vem do cabeçalho de cada pági
 | 2026-09-26 | [local llm inference in process: candle or burn](../decisoes/estrutura/0072-ai-native-single-process.md) | aceito |
 | 2026-09-26 | [a renderer upgrade is proven by a full capture](../decisoes/renderizacao/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md) | aceito |
 | 2026-09-26 | [the person's composition and clipboard stay the person's](../decisoes/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md) | aceito |
-| 2026-09-26 | [sessão do runtime generativo: o que funcionou e o que mordeu](../aprendizados/generative-runtime.md) | referencia |
-| 2026-09-26 | [plev, estado do projeto](mapa-das-fases.md) | ativo |
+| 2026-09-26 | [Sessão do runtime generativo: o que funcionou e o que mordeu](../aprendizados/generative-runtime.md) | referencia |
+| 2026-09-26 | [Mapa das fases e tasks, estado de 2026-09](mapa-das-fases.md) | ativo |
 | 2026-09-26 | [task-78: aplicações AI-native](../tarefas/task-78-ai-native-apps.md) | em-andamento |
 | 2026-09-29 | [design for ranges, not screens and devices](../decisoes/renderizacao/0073-design-for-ranges-not-screens-and-devices.md) | aceito |
-| 2026-09-29 | [knowledge base, plev](indice-historico.md) | ativo |
+| 2026-09-29 | [Índice histórico dos ADRs](indice-historico.md) | referencia |
 | 2026-10-09 | [O workspace separa bibliotecas, apps, demos e ferramentas](../decisoes/estrutura/0080-workspace-por-responsabilidade.md) | aceito |
-| 2026-10-09 | [the tree reorganization (issue #130, PR #131)](reorganizacao-2026-10.md) | concluido |
-| 2026-10-09 | [Task 98 — Reorganização do workspace](../tarefas/task-98-reorganizacao-do-workspace.md) | concluido |
-| 2026-10-16 | [Subprocessos drenam as saídas enquanto executam](../decisoes/processos/0083-subprocessos-drenam-saidas.md) | aceito |
+| 2026-10-09 | [Reorganização da árvore do repositório (issue #130, PR #131)](reorganizacao-2026-10.md) | concluido |
+| 2026-10-09 | [task-98: reorganização do workspace](../tarefas/task-98-reorganizacao-do-workspace.md) | concluido |
 | 2026-10-16 | [Por que esperar um processo pode bloquear a leitura da sua saída](../aprendizados/subprocessos-e-pipes.md) | referencia |
-| 2026-10-16 | [Task 99 — Integração do explorador e correções de plataforma](../tarefas/task-99-integracao-e-portabilidade.md) | concluido |
-| 2026-10-27 | [the web build fetches the Noto faces when a text first needs them](../decisoes/renderizacao/0078-the-web-fetches-the-noto-faces-on-demand.md) | proposto |
-| 2026-10-27 | [a desktop draws the scripts with the embedded faces, not the system's](../decisoes/renderizacao/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) | proposto |
+| 2026-10-16 | [task-99: integração do explorador e correções de plataforma](../tarefas/task-99-integracao-e-portabilidade.md) | concluido |
+| 2026-10-27 | [the web build fetches the Noto faces when a text first needs them](../decisoes/renderizacao/0078-the-web-fetches-the-noto-faces-on-demand.md) | aceito |
+| 2026-10-27 | [a desktop draws the scripts with the embedded faces, not the system's](../decisoes/renderizacao/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) | aceito |
 | 2026-10-27 | [Um grafo separa dados, aparência e layout](../decisoes/estrutura/0081-grafo-dados-aparencia-layout.md) | aceito |
 | 2026-10-27 | [Uma view hospedada usa a janela e o relógio da engine](../decisoes/renderizacao/0082-view-hospedada-sob-demanda.md) | aceito |
-| 2026-10-27 | [A união de features reduz compilações duplicadas](../decisoes/processos/0084-unificacao-de-features.md) | aceito |
-| 2026-10-27 | [Cada alvo web tem um comando e uma faixa de portas](../decisoes/processos/0085-alvos-web-e-portas.md) | aceito |
+| 2026-10-27 | [A união de features reduz compilações duplicadas](../decisoes/processos/0083-unificacao-de-features.md) | aceito |
+| 2026-10-27 | [Cada alvo web tem um comando e uma faixa de portas](../decisoes/processos/0084-alvos-web-e-portas.md) | aceito |
 | 2026-10-27 | [Separar dados, aparência e algoritmo em Rust](../aprendizados/dados-aparencia-e-algoritmo.md) | referencia |
-| 2026-10-27 | [Task 100 — Grafos interativos e importação do corpus](../tarefas/task-100-grafos-interativos.md) | concluido |
-| 2026-10-27 | [Task 101 — Fontes sob demanda e fallback determinístico](../tarefas/task-101-fontes-por-escrita.md) | concluido |
-| 2026-10-27 | [Task 102 — Builds reutilizáveis e comandos web](../tarefas/task-102-builds-e-comandos-web.md) | concluido |
+| 2026-10-27 | [task-100: grafos interativos e importação do corpus](../tarefas/task-100-grafos-interativos.md) | concluido |
+| 2026-10-27 | [task-101: fontes sob demanda e fallback determinístico](../tarefas/task-101-fontes-por-escrita.md) | concluido |
+| 2026-10-27 | [task-102: builds reutilizáveis e comandos web](../tarefas/task-102-builds-e-comandos-web.md) | concluido |
+| 2026-10-27 | [task-103: runcheck, cada executável do repositório roda](../tarefas/task-103-runcheck-cada-executavel-roda.md) | concluido |
 | 2026-10-30 | [Como ler as datas da trajetória](cronologia-e-fontes.md) | referencia |
 
 ## sem data
 
 | Data | Documento | Estado |
 |---|---|---|
-| sem data | [learnings](../aprendizados/general.md) | referencia |
+| sem data | [Aprendizados gerais](../aprendizados/general.md) | referencia |
 | sem data | [journal do ciclo autônomo](diario.md) | referencia |
 | sem data | [plev — Plano Técnico de Implementação](plano-tecnico-inicial.md) | referencia |

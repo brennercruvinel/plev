@@ -29,7 +29,7 @@ Cada trabalho com objetivo, execução, entrega e o que ficou pendente.
 | 2021-06-21 | [task-07: sistema de camadas independentes](task-07-sistema-de-camadas-independentes.md) | concluido |
 | 2021-07-06 | [task-08: efeitos de compositing (blur, shadow, opacity)](task-08-efeitos-de-compositing.md) | concluido |
 | 2021-07-19 | [task-09: input system, keyboard + mouse](task-09-input-system-keyboard-mouse.md) | concluido |
-| 2021-08-02 | [task-10: input system, touch + gestures (done)](task-10-input-system-touch-gestures.md) | concluido |
+| 2021-08-02 | [task-10: input system, touch + gestures](task-10-input-system-touch-gestures.md) | concluido |
 | 2021-08-16 | [task-11: android build + lifecycle](task-11-android-build-lifecycle.md) | concluido |
 | 2021-08-29 | [task-12: ios build + lifecycle](task-12-ios-build-lifecycle.md) | concluido |
 | 2021-09-12 | [task-13: mobile specifics, safe areas, IME, lifecycle](task-13-mobile-specifics-safe-areas-ime-lifecycle.md) | concluido |
@@ -71,7 +71,7 @@ Cada trabalho com objetivo, execução, entrega e o que ficou pendente.
 | 2026-09-21 | [task-53: editor e git no showcase](task-53-editor-and-git-in-the-showcase.md) | concluido |
 | 2026-09-21 | [task-54: core theme, buttons poc](task-54-core-theme-buttons-poc.md) | concluido |
 | 2026-09-21 | [task-55: showcase, uma página por componente](task-55-showcase-one-page-per-component.md) | concluido |
-| 2026-09-22 | [task-56 (gap-1): hot reload](task-56-hot-reload.md) | concluido |
+| 2026-09-22 | [task-56: hot reload](task-56-hot-reload.md) | concluido |
 | 2026-09-23 | [task-57: contrato semântico (crate `sem`)](task-57-semantic-contract.md) | concluido |
 | 2026-09-23 | [task-57b: forma JSON enxuta e uma redação só](task-57b-lean-wire-form-and-one-redaction.md) | concluido |
 | 2026-09-23 | [task-58: ação com precondição, dispatch e receipts](task-58-actions-preconditions-receipts.md) | concluido |
@@ -82,7 +82,7 @@ Cada trabalho com objetivo, execução, entrega e o que ficou pendente.
 | 2026-09-23 | [task-62: prova no ide: stale-state rejection e handoff humano-agente](task-62-ide-human-agent-proof.md) | concluido |
 | 2026-09-23 | [task-66: headless como primeira classe](task-66-headless-first-class.md) | concluido |
 | 2026-09-23 | [task-66b: exportação SVG e `--semantics` no headless](task-66b-svg-export.md) | concluido |
-| 2026-09-23 | [task-67: regressão estrutural antes de pixel](task-67-structural-regression.md) | em-andamento |
+| 2026-09-23 | [task-67: regressão estrutural antes de pixel](task-67-structural-regression.md) | concluido |
 | 2026-09-23 | [task-68: plev IR e verifier](task-68-plev-ir-and-verifier.md) | concluido |
 | 2026-09-23 | [task-73: sistema de dependências incremental](task-73-incremental-dependency-system.md) | em-andamento |
 | 2026-09-23 | [task-81: painel do `Select` com rolagem](task-81-select-scrolling-panel.md) | concluido |
@@ -121,10 +121,11 @@ Cada trabalho com objetivo, execução, entrega e o que ficou pendente.
 | 2026-09-25 | [task-96: uma superfície gerada no ide](task-96-ide-generated-surface.md) | concluido |
 | 2026-09-25 | [task-97: código e diff no vocabulário do IR](task-97-code-and-diff-in-the-ir.md) | concluido |
 | 2026-09-26 | [task-78: aplicações AI-native](task-78-ai-native-apps.md) | em-andamento |
-| 2026-10-09 | [Task 98 — Reorganização do workspace](task-98-reorganizacao-do-workspace.md) | concluido |
-| 2026-10-16 | [Task 99 — Integração do explorador e correções de plataforma](task-99-integracao-e-portabilidade.md) | concluido |
-| 2026-10-27 | [Task 100 — Grafos interativos e importação do corpus](task-100-grafos-interativos.md) | concluido |
-| 2026-10-27 | [Task 101 — Fontes sob demanda e fallback determinístico](task-101-fontes-por-escrita.md) | concluido |
-| 2026-10-27 | [Task 102 — Builds reutilizáveis e comandos web](task-102-builds-e-comandos-web.md) | concluido |
+| 2026-10-09 | [task-98: reorganização do workspace](task-98-reorganizacao-do-workspace.md) | concluido |
+| 2026-10-16 | [task-99: integração do explorador e correções de plataforma](task-99-integracao-e-portabilidade.md) | concluido |
+| 2026-10-27 | [task-100: grafos interativos e importação do corpus](task-100-grafos-interativos.md) | concluido |
+| 2026-10-27 | [task-101: fontes sob demanda e fallback determinístico](task-101-fontes-por-escrita.md) | concluido |
+| 2026-10-27 | [task-102: builds reutilizáveis e comandos web](task-102-builds-e-comandos-web.md) | concluido |
+| 2026-10-27 | [task-103: runcheck, cada executável do repositório roda](task-103-runcheck-cada-executavel-roda.md) | concluido |
 
 [Acervo plev](../README.md)

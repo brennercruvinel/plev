@@ -22,7 +22,7 @@ Os ADRs: contexto, decisão, consequências e alternativas, numerados numa sequ�
 
 | Data | Documento | Estado |
 |---|---|---|
-| 2024-05-21 | [modularizacao por single responsibility principle](estrutura/0015-srp-modularization.md) | referencia |
+| 2024-05-21 | [modularizacao por single responsibility principle](estrutura/0015-srp-modularization.md) | aceito |
 | 2025-08-18 | [engine at root, libraries and apps in crates, demos in examples](estrutura/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md) | aceito |
 | 2026-04-01 | [git backend: gix for reads, git CLI for mutations, a worker thread for the UI](estrutura/0020-git-backend-gix-reads-cli-mutations.md) | aceito |
 | 2026-07-13 | [one knowledge tree, and a minimal root](estrutura/0022-one-knowledge-tree-and-a-minimal-root.md) | aceito |
@@ -43,7 +43,7 @@ Os ADRs: contexto, decisão, consequências e alternativas, numerados numa sequ�
 | 2026-09-24 | [a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](geracao/0051-materialized-surfaces-from-verified-ir.md) | aceito |
 | 2026-09-24 | [proposers propose, the runtime verifies](geracao/0052-proposers-propose-the-runtime-verifies.md) | aceito |
 | 2026-09-24 | [adaptive transformations are small verified operations that preserve identity](geracao/0067-adaptive-transforms-preserve-identity.md) | aceito |
-| 2026-09-25 | [generative runtime results](geracao/0070-generative-runtime-results.md) | proposto |
+| 2026-09-25 | [each demo's method is written before it runs, and the result keeps its negatives](geracao/0070-generative-runtime-results.md) | proposto |
 
 ## gravacao
 
@@ -87,22 +87,22 @@ Os ADRs: contexto, decisão, consequências e alternativas, numerados numa sequ�
 
 | Data | Documento | Estado |
 |---|---|---|
-| 2024-02-06 | [adotamos shader hot reload via notify file watcher sobre dylib reloading](processos/0019-shader-hot-reload.md) | referencia |
-| 2024-02-18 | [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](processos/0018-narrate-hot-reload.md) | referencia |
-| 2024-04-14 | [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](processos/0017-error-handling-lint-cleanup.md) | referencia |
+| 2024-02-06 | [adotamos shader hot reload via notify file watcher sobre dylib reloading](processos/0019-shader-hot-reload.md) | aceito |
+| 2024-02-18 | [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](processos/0018-narrate-hot-reload.md) | aceito |
+| 2024-04-14 | [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](processos/0017-error-handling-lint-cleanup.md) | aceito |
 | 2026-09-22 | [hot reload on by default: shaders and literals in place, code by rebuild](processos/0031-hot-reload-on-by-default-in-gpu-context.md) | aceito |
 | 2026-09-23 | [regression by meaning before pixels](processos/0045-regression-by-meaning-before-pixels.md) | aceito |
+| 2026-09-23 | [A integração na main é um pull request fundido por merge commit](processos/0085-integracao-por-merge-commit.md) | aceito |
 | 2026-09-24 | [view source for pixels: a control leads to its projection, a text to its literal](processos/0048-view-source-for-pixels.md) | aceito |
 | 2026-09-24 | [what identical means](processos/0064-what-identical-means.md) | aceito |
-| 2026-10-16 | [Subprocessos drenam as saídas enquanto executam](processos/0083-subprocessos-drenam-saidas.md) | aceito |
-| 2026-10-27 | [A união de features reduz compilações duplicadas](processos/0084-unificacao-de-features.md) | aceito |
-| 2026-10-27 | [Cada alvo web tem um comando e uma faixa de portas](processos/0085-alvos-web-e-portas.md) | aceito |
+| 2026-10-27 | [A união de features reduz compilações duplicadas](processos/0083-unificacao-de-features.md) | aceito |
+| 2026-10-27 | [Cada alvo web tem um comando e uma faixa de portas](processos/0084-alvos-web-e-portas.md) | aceito |
 
 ## renderizacao
 
 | Data | Documento | Estado |
 |---|---|---|
-| 2024-06-17 | [adotamos projecao ortografica em logical pixels para apps hidpi](renderizacao/0016-hidpi-projection.md) | referencia |
+| 2024-06-17 | [adotamos projecao ortografica em logical pixels para apps hidpi](renderizacao/0016-hidpi-projection.md) | aceito |
 | 2024-09-18 | [container geometry derives from available space, never from constants](renderizacao/0002-content-driven-layout-not-fixed-constants.md) | aceito |
 | 2024-10-07 | [render on demand makes invalidation a correctness contract](renderizacao/0008-render-on-demand-requires-explicit-invalidation.md) | aceito |
 | 2024-10-29 | [one TextStyle per text run, shared by measurement and drawing](renderizacao/0006-one-text-style-for-measurement-and-drawing.md) | aceito |
@@ -125,8 +125,8 @@ Os ADRs: contexto, decisão, consequências e alternativas, numerados numa sequ�
 | 2026-09-25 | [embed Noto Sans subsets for the non-Latin scripts](renderizacao/0071-embedded-fonts-by-script.md) | aceito |
 | 2026-09-26 | [a renderer upgrade is proven by a full capture](renderizacao/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md) | aceito |
 | 2026-09-29 | [design for ranges, not screens and devices](renderizacao/0073-design-for-ranges-not-screens-and-devices.md) | aceito |
-| 2026-10-27 | [the web build fetches the Noto faces when a text first needs them](renderizacao/0078-the-web-fetches-the-noto-faces-on-demand.md) | proposto |
-| 2026-10-27 | [a desktop draws the scripts with the embedded faces, not the system's](renderizacao/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) | proposto |
+| 2026-10-27 | [the web build fetches the Noto faces when a text first needs them](renderizacao/0078-the-web-fetches-the-noto-faces-on-demand.md) | aceito |
+| 2026-10-27 | [a desktop draws the scripts with the embedded faces, not the system's](renderizacao/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) | aceito |
 | 2026-10-27 | [Uma view hospedada usa a janela e o relógio da engine](renderizacao/0082-view-hospedada-sob-demanda.md) | aceito |
 
 ## semantica

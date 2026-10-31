@@ -23,7 +23,7 @@ Referências estudadas, comparações, a tese e os rascunhos do artigo.
 | 2022-07-06 | [extracted patterns, 56 reference repos](extracted-patterns.md) | referencia |
 | 2022-08-11 | [parley vs cosmic-text - factual comparison for plev](parley-vs-cosmic-text.md) | referencia |
 | 2022-09-08 | [WASM plugin architecture - research doc](wasm-plugin-architecture.md) | referencia |
-| 2022-10-21 | [competitors-by-tier](competitors-by-tier.md) | referencia |
+| 2022-10-21 | [concorrentes por tier](competitors-by-tier.md) | referencia |
 | 2022-11-19 | [makepad visual feature inventory vs plev gap analysis](makepad-gap-analysis.md) | referencia |
 | 2022-12-10 | [relatorio tecnico: plev vs makepad](plev-vs-makepad-report.md) | referencia |
 | 2026-03-11 | [reference analysis: accessibility (accesskit)](accessibility.md) | referencia |
@@ -48,7 +48,7 @@ Referências estudadas, comparações, a tese e os rascunhos do artigo.
 | Data | Documento | Estado |
 |---|---|---|
 | 2022-05-24 | [plev: a GPU-first compositing engine for cross-platform UI rendering](artigo/estrutura.md) | rascunho |
-| 2023-01-14 | [diferenciais](artigo/diferenciais.md) | rascunho |
-| 2023-02-09 | [plev](artigo/rascunho.md) | rascunho |
+| 2023-01-14 | [diferenciais do plev para o artigo](artigo/diferenciais.md) | rascunho |
+| 2023-02-09 | [rascunho do artigo sobre o plev](artigo/rascunho.md) | rascunho |
 
 [Acervo plev](../README.md)

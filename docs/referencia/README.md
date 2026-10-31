@@ -35,7 +35,7 @@ Arquitetura de cada subsistema, operação do repositório e convenções.
 | 2024-01-22 | [hot reload design - plev](arquitetura/hot-reload-design.md) | referencia |
 | 2024-05-23 | [modularizacao SRP com limite de 300 linhas](arquitetura/srp-modularization.md) | referencia |
 | 2024-07-09 | [resolucao de 107 clippy warnings para zero](arquitetura/clippy-zero-warnings.md) | referencia |
-| 2025-03-26 | [monster format v0 specification](arquitetura/monster-format-v0.md) | rascunho |
+| 2025-03-26 | [monster format v0 specification](arquitetura/monster-format-v0.md) | referencia |
 | 2026-09-18 | [catálogo de componentes de ui](arquitetura/component-catalog.md) | ativo |
 
 ## editorial

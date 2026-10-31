@@ -26,9 +26,9 @@ O que os problemas e as implementações ensinaram.
 | 2026-09-21 | [sessão core buttons: o que funcionou e o que mordeu](core-buttons.md) | referencia |
 | 2026-09-21 | [sessão showcase pages: o que funcionou e o que mordeu](showcase-pages.md) | referencia |
 | 2026-09-22 | [sessão hot reload: o que funcionou e o que mordeu](hot-reload.md) | referencia |
-| 2026-09-26 | [sessão do runtime generativo: o que funcionou e o que mordeu](generative-runtime.md) | referencia |
+| 2026-09-26 | [Sessão do runtime generativo: o que funcionou e o que mordeu](generative-runtime.md) | referencia |
 | 2026-10-16 | [Por que esperar um processo pode bloquear a leitura da sua saída](subprocessos-e-pipes.md) | referencia |
 | 2026-10-27 | [Separar dados, aparência e algoritmo em Rust](dados-aparencia-e-algoritmo.md) | referencia |
-| sem data | [learnings](general.md) | referencia |
+| sem data | [Aprendizados gerais](general.md) | referencia |
 
 [Acervo plev](../README.md)
