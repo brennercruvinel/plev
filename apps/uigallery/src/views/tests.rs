@@ -526,7 +526,7 @@ fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
     view.jump_to_page("theme");
     let mut c = Compositor::new();
     view.render(&mut c);
-    let y_before = text_node_y(&c, LayerId::DEFAULT, "PALETTES").expect("palettes label rendered");
+    let y_before = text_node_y(&c, LayerId::DEFAULT, "Palettes").expect("palettes label rendered");
 
     let content = view.content_rect();
     let (cx, cy) = content.center();
@@ -536,7 +536,7 @@ fn page_scroll_shifts_rendered_nodes_and_clips_to_viewport() {
         delta: 100.0,
     }));
     view.render(&mut c);
-    let y_after = text_node_y(&c, LayerId::DEFAULT, "PALETTES").expect("still emitted");
+    let y_after = text_node_y(&c, LayerId::DEFAULT, "Palettes").expect("still emitted");
     assert!(
         (y_before - y_after - 100.0).abs() < 0.5,
         "nodes must shift up by the scrolled amount (before={y_before}, after={y_after})"
