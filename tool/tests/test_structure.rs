@@ -86,6 +86,20 @@ fn untracked(name: &str) -> bool {
     ) || name.ends_with(".log")
 }
 
+/// the paths .gitmodules declares: a submodule is a project kept from
+/// outside (a fork we work on), not a crate of this tree, and a checkout
+/// without `--recurse-submodules` leaves its directory empty
+fn submodules() -> BTreeSet<String> {
+    let Ok(text) = fs::read_to_string(root().join(".gitmodules")) else {
+        return BTreeSet::new();
+    };
+    text.lines()
+        .filter_map(|l| l.trim().strip_prefix("path"))
+        .filter_map(|rest| rest.trim_start().strip_prefix('='))
+        .map(|p| p.trim().to_owned())
+        .collect()
+}
+
 #[test]
 fn the_root_holds_the_workspace_files_and_the_nine_directories() {
     let want = [
@@ -97,6 +111,7 @@ fn the_root_holds_the_workspace_files_and_the_nine_directories() {
         ".gitattributes",
         ".github",
         ".gitignore",
+        ".gitmodules",
         ".secops",
         "Cargo.lock",
         "Cargo.toml",
@@ -129,11 +144,12 @@ fn the_root_holds_the_workspace_files_and_the_nine_directories() {
 #[test]
 fn every_crate_has_its_manifest_and_its_source() {
     let root = root();
+    let foreign = submodules();
     let mut bad = Vec::new();
     for home in ["rust", "apps", "demo", "tool/bench"] {
         for name in entries(&root.join(home)) {
             let dir = root.join(home).join(&name);
-            if !dir.is_dir() || untracked(&name) {
+            if !dir.is_dir() || untracked(&name) || foreign.contains(&format!("{home}/{name}")) {
                 continue;
             }
             if !dir.join("Cargo.toml").is_file() {
