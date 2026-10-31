@@ -126,18 +126,33 @@ impl ShowcaseView {
         c.push(SceneNode::PopClip);
 
         // Active overlay: fade via layer opacity driven by the manager.
+        // An edge panel slides instead: the layer stays opaque and the
+        // panel draws its entry's progress.
         let mut overlay_opacity = 1.0;
         if let Some(active) = &self.active_overlay {
             let id = active.id();
-            if let Some(overlay) = self.overlay_mgr.stack.iter().find(|o| o.id == id) {
-                overlay_opacity = overlay.opacity();
+            let shown = self
+                .overlay_mgr
+                .stack
+                .iter()
+                .find(|o| o.id == id)
+                .map_or(1.0, |o| o.progress());
+            if !active.slides() {
+                overlay_opacity = shown;
             }
+            let window = Rect::new(0.0, 0.0, self.width, self.height);
             match active {
                 ActiveOverlay::Modal { widget, .. } => {
                     widget.render(c, layers.overlay, &theme, self.width, self.height);
                 }
                 ActiveOverlay::Menu { widget, x, y, .. } => {
                     widget.render(c, layers.overlay, &theme, *x, *y);
+                }
+                ActiveOverlay::Sheet { widget, .. } => {
+                    widget.render(c, layers.overlay, &theme, window, shown);
+                }
+                ActiveOverlay::Drawer { widget, .. } => {
+                    widget.render(c, layers.overlay, &theme, window, shown);
                 }
             }
         }

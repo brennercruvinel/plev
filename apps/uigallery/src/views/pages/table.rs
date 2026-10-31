@@ -205,12 +205,12 @@ pub const PAGES: &[Page] = &[
         "Modal dialogs with spring motion per intent.",
         Pane::Dialog,
     ),
-    alias(
+    page(
+        C,
         "Drawer",
         "chevron-left",
-        "The sidebar as a drawer: this gallery's own chrome on a phone.",
-        Pane::Sidebar,
-        "a drawer apart from the app shell",
+        "The kit's navigation, slid in from the edge over the page.",
+        Pane::Drawer,
     ),
     page(
         C,
@@ -366,12 +366,12 @@ pub const PAGES: &[Page] = &[
         "Horizontal and vertical rules.",
         Pane::Separator,
     ),
-    alias(
+    page(
+        C,
         "Sheet",
         "chevron-left",
-        "The sidebar as a drawer sheet.",
-        Pane::Sidebar,
-        "a sheet from any edge, apart from the app shell",
+        "A panel held to any edge, blocking the page until it is answered.",
+        Pane::Sheet,
     ),
     page(
         C,

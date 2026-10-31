@@ -49,10 +49,12 @@ pub mod field;
 
 // task-104 front B, overlays (#155)
 pub mod alert_dialog;
+pub mod drawer;
 pub mod dropdown_menu;
 pub mod hover_card;
 pub mod menubar;
 pub mod popover;
+pub mod sheet;
 
 // task-104 front C, conversation and feedback (#156)
 pub mod message;

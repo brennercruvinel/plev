@@ -18,7 +18,9 @@ use super::super::foundations::{effects, icons, theme, typography};
 use super::super::components::field;
 
 // task-104 front B, overlays (#155)
-use super::super::components::{alert_dialog, dropdown_menu, hover_card, menubar, popover};
+use super::super::components::{
+    alert_dialog, drawer, dropdown_menu, hover_card, menubar, popover, sheet,
+};
 
 // task-104 front C, conversation and feedback (#156)
 use super::super::components::message;
@@ -75,10 +77,12 @@ pub struct Panes {
     pub field: field::FieldPage,
     // task-104 front B, overlays (#155)
     pub alert_dialog: alert_dialog::AlertDialogPage,
+    pub drawer: drawer::DrawerPage,
     pub dropdown_menu: dropdown_menu::DropdownMenuPage,
     pub hover_card: hover_card::HoverCardPage,
     pub menubar: menubar::MenubarPage,
     pub popover: popover::PopoverPage,
+    pub sheet: sheet::SheetPage,
     // task-104 front C, conversation and feedback (#156)
     pub message: message::MessagePage,
     // task-104 front D, disclosure and display (#157)
@@ -161,10 +165,12 @@ impl Panes {
             field: field::FieldPage::new(),
             // task-104 front B, overlays (#155)
             alert_dialog: alert_dialog::AlertDialogPage::new(),
+            drawer: drawer::DrawerPage::new(),
             dropdown_menu: dropdown_menu::DropdownMenuPage::new(),
             hover_card: hover_card::HoverCardPage::new(),
             menubar: menubar::MenubarPage::new(),
             popover: popover::PopoverPage::new(),
+            sheet: sheet::SheetPage::new(),
             // task-104 front C, conversation and feedback (#156)
             message: message::MessagePage::new(),
             // task-104 front D, disclosure and display (#157)

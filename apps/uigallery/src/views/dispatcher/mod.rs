@@ -66,6 +66,8 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
+                Pane::Drawer => self.panes.drawer.content_height(content, t),
+                Pane::Sheet => self.panes.sheet.content_height(content, t),
                 Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
                 Pane::Menubar => self.panes.menubar.content_height(content, t),
                 Pane::HoverCard => self.panes.hover_card.content_height(content, t),
@@ -173,6 +175,20 @@ impl ShowcaseView {
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => {
                     let (r, after) = self.panes.alert_dialog.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::Drawer => {
+                    let (r, after) = self.panes.drawer.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::Sheet => {
+                    let (r, after) = self.panes.sheet.handle_event(event, content, t);
                     if let Some(after) = after {
                         self.after_component(after);
                     }
@@ -397,6 +413,8 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.render(c, content, theme),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
+                Pane::Drawer => self.panes.drawer.render(c, content, theme),
+                Pane::Sheet => self.panes.sheet.render(c, content, theme),
                 Pane::Menubar => {
                     let bounds = self.anchored_bounds(content);
                     let page = &mut self.panes.menubar;
