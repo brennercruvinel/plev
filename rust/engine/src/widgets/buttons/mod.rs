@@ -13,4 +13,4 @@ pub use button::{Button, ButtonSize, ButtonVariant};
 pub use icon_button::{IconButton, IconButtonSize, IconButtonVariant};
 pub use press::Press;
 pub(crate) use press::paint_surface;
-pub use submit_button::SubmitButton;
+pub use submit_button::{SubmitButton, SubmitButtonSize};

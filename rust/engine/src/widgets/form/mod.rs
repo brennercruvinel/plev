@@ -11,6 +11,7 @@ pub mod text_input;
 // token slot (`Theme::form`).
 pub mod combobox;
 pub mod command;
+pub mod command_dialog;
 pub mod field;
 pub mod input_group;
 pub mod label;

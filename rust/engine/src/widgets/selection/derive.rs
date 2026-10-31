@@ -156,6 +156,20 @@ impl SelectionTokens {
             label: c.text,
             ..kit.radio
         };
+        // the folder picker's words on its hover over the popover glass:
+        // the color where it reads at AAA, else the text, else the text
+        // whole
+        let glass = theme.overlay.popover.panel.fill[0];
+        let lit: &[&[Color]] = &[&[c.bg, glass, c.bg_hover]];
+        let whole = Color::rgba(c.text.0[0], c.text.0[1], c.text.0[2], 1.0);
+        let words = |color: Color| {
+            legible_on(
+                TEXT_CONTRAST,
+                color,
+                legible_on(TEXT_CONTRAST, c.text, whole, lit),
+                lit,
+            )
+        };
         Self {
             segmented: SegmentedTokens {
                 text: legible(c.text_mid, c.text, track.fill[0], c.bg),
@@ -163,6 +177,23 @@ impl SelectionTokens {
                 thumb,
                 text_hover: c.text,
                 ..kit.segmented
+            },
+            // the panel is the theme's popover glass, the box and the hover
+            // its hover tone, the marks its mid tone where they read
+            folders: FoldersTokens {
+                placeholder: words(c.text_mid),
+                label: words(c.text),
+                panel: theme.overlay.popover.panel.clone(),
+                search: ButtonSurface {
+                    fill: [c.bg_hover; 2],
+                    overlay: NONE,
+                    shadow: vec![border(c.divider)],
+                    text: c.text,
+                },
+                row_hover: c.bg_hover,
+                mark: mark_on(&[c.text_mid, c.text], &[&[c.bg], &[c.bg, c.bg_hover]]),
+                hues: [c.warning, c.success, c.info, c.danger],
+                ..kit.folders.clone()
             },
             button_group,
             switch,

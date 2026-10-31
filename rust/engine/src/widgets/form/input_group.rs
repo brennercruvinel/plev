@@ -28,11 +28,12 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::widgets::content::kbd::{Kbd, KbdSize};
 use crate::widgets::form::select::Select;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::{Look, SelectLook, Slot};
 use crate::widgets::icons;
-use crate::widgets::recipe::{focus_ring_inside, rounded_rect, shadow_drops, shadow_insets};
+use crate::widgets::recipe::focus_ring_inside;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// What an end of the box holds.
@@ -168,8 +169,8 @@ impl InputGroup {
         match addon {
             Addon::Icon(_) => (g.icon_slot, (h - g.icon_edge * 2.0).max(0.0)),
             Addon::Hint(text) => {
-                let (w, th) = TextMeasurer::measure_styled(text, &g.hint_text, None);
-                (w.ceil() + g.hint_pad[0] * 2.0, th + g.hint_pad[1] * 2.0)
+                let (w, th) = Self::cap(text, false).preferred_size(theme);
+                (w.ceil(), th)
             }
             Addon::Text(text) => {
                 let style = self.input.style(theme);
@@ -177,6 +178,11 @@ impl InputGroup {
                 (w.ceil(), th)
             }
         }
+    }
+
+    /// A hint's key cap: the search's.
+    fn cap(keys: &str, disabled: bool) -> Kbd {
+        Kbd::new(keys).size(KbdSize::Md).disabled(disabled)
     }
 
     /// An addon's distance from its edge of the box.
@@ -369,21 +375,7 @@ impl InputGroup {
                     }
                 }
                 Addon::Hint(text) => {
-                    shadow_drops(c, layer, r, g.hint_radius, &g.hint_shadow);
-                    c.push_to_layer(
-                        layer,
-                        rounded_rect(r.x, r.y, r.w, r.h, g.hint_radius, fade(g.hint_fill)),
-                    );
-                    shadow_insets(c, layer, r, g.hint_radius, &g.hint_shadow);
-                    c.push_to_layer(
-                        layer,
-                        SceneNode::Text {
-                            key: TextNodeKey::from_style(text, &g.hint_text, None),
-                            x: r.x + g.hint_pad[0],
-                            y: r.y + g.hint_pad[1],
-                            color: fade(g.hint_color),
-                        },
-                    );
+                    Self::cap(text, self.input.disabled).render_to_layer(c, layer, r, theme);
                 }
                 Addon::Text(text) => {
                     let style = self.input.style(theme);

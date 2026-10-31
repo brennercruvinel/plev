@@ -270,3 +270,76 @@ fn only_the_glass_themes_light_a_surface() {
         ([2.0, 4.0], 16.0, true)
     );
 }
+
+/// A css ring is never painted under its box: on a clear surface (the
+/// derived themes' outline) it is a band just outside the bounds, not a
+/// shadow that would fill the button.
+#[test]
+fn a_ring_on_a_clear_surface_is_a_band_outside_it() {
+    let theme = Theme::hoff();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let b = IconButton::new("x").variant(IconButtonVariant::Outline);
+    let at = Rect::new(10.0, 10.0, 40.0, 40.0);
+    b.render(&mut c, at, &theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(
+        !nodes.iter().any(|n| matches!(n, SceneNode::Shadow { .. })),
+        "no shadow under a clear outline"
+    );
+    let band = nodes.iter().find_map(|n| match n {
+        SceneNode::RoundedRect {
+            x,
+            w,
+            border_width,
+            color,
+            ..
+        } if *border_width > 0.0 => Some((*x, *w, color[3])),
+        _ => None,
+    });
+    let (x, w, fill) = band.expect("the ring as a band");
+    assert_eq!((x, w, fill), (9.0, 42.0, 0.0));
+}
+
+/// The call to action (`Secondary`, a modal's confirm) is the strongest
+/// fill against the page in every theme, the pale `Primary` (its cancel)
+/// a quieter one: the kit's hierarchy reads the same in the dark.
+#[test]
+fn the_call_to_action_outweighs_the_primary_in_every_theme() {
+    use crate::widgets::widget::luminance;
+    let ratio = |a: [f32; 4], b: [f32; 4]| {
+        let (la, lb) = (luminance(a), luminance(b));
+        (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
+    };
+    let mut themes = vec![
+        ("core", Theme::hoff_core()),
+        ("hoff", Theme::hoff()),
+        ("hoff-light", Theme::hoff_light()),
+        ("dark", Theme::dark()),
+        ("light", Theme::light()),
+    ];
+    for name in ["catppuccin", "nord", "gruvbox", "moonlight"] {
+        themes.push((name, Theme::named(name).expect(name)));
+    }
+    // A fill as the page shows it: over the page, by its alpha.
+    let over = |f: [f32; 4], b: [f32; 4]| {
+        let a = f[3];
+        [0, 1, 2, 3].map(|i| {
+            if i == 3 {
+                1.0
+            } else {
+                f[i] * a + b[i] * (1.0 - a)
+            }
+        })
+    };
+    for (name, theme) in themes {
+        let bg = theme.colors.bg.0;
+        let b = &theme.button;
+        let cta = ratio(over(b.secondary.rest.fill[1].0, bg), bg);
+        let quiet = ratio(over(b.primary.rest.fill[1].0, bg), bg);
+        assert!(
+            cta > quiet,
+            "{name}: call to action {cta:.2} vs primary {quiet:.2}"
+        );
+    }
+}

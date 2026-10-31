@@ -149,7 +149,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
     page(
@@ -361,6 +361,13 @@ pub const PAGES: &[Page] = &[
         "layout-grid",
         "File, Edit and View: menus in a row, one open at a time.",
         Pane::Menubar,
+    ),
+    page(
+        C,
+        "Menus",
+        "folder",
+        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        Pane::Menus,
     ),
     page(
         C,

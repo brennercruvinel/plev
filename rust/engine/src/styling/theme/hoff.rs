@@ -230,7 +230,7 @@ impl Theme {
                 text_placeholder: n2(0.25),
                 text_active: n2(0.76),
                 text_default: n2(0.56),
-                disabled_alpha: 0.5,
+                disabled_alpha: 0.30,
                 wash_alpha: 0.14,
                 wash_hover_alpha: 0.22,
                 rim_fade: 0.0,
@@ -313,6 +313,9 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
             ..dark
         };
+        // Its own buttons, from its own palette: the dark theme's would
+        // put a pale call to action on the pale page.
+        theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }

@@ -159,6 +159,13 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
+            page: PageHeadRecipe {
+                narrow: header,
+                wide: header,
+                wide_from: 0.0,
+                bleed: false,
+            },
+            card: CardRecipe::derive(theme),
             split,
         }
     }
@@ -276,16 +283,15 @@ impl DisclosureTokens {
 
 impl HeaderRecipe {
     /// The head every theme drew before the kit, from `theme`: the page
-    /// head of the shell in every theme, and the panel head outside the
-    /// core.
+    /// head of the shell and the panel head outside the core.
     pub fn page_head(theme: &Theme) -> Self {
         let title = theme.typography.title();
         let blurb = theme.typography.base_2r();
         HeaderRecipe {
             pad_x: theme.spacing.md,
+            pad_y: 0.0,
             row: theme.control.height(crate::styling::theme::ControlSize::Xl),
             blurb_gap: theme.spacing.xs,
-            blurb_bottom: 0.0,
             title_size: title.font_size,
             title_line_height: title.line_height,
             title_weight: title.font_weight,
