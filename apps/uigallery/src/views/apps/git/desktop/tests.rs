@@ -133,3 +133,22 @@ fn worker_events_land_while_hidden_and_draw_only_on_the_git_page() {
     assert!(view.apply_git(), "on screen: a frame");
     assert!(!view.apply_git(), "nothing left to apply");
 }
+
+/// The workspace draws in the gallery's theme: core's light palette and
+/// face in its light slot, hoff's dark one in its dark slot.
+#[test]
+fn the_workspace_follows_the_gallery_s_theme() {
+    use idestudio::interfaces::panels::layout::ThemeMode;
+    let mut page = GitPage::new();
+    let core = Theme::hoff_core();
+    page.set_theme(&core);
+    let ws = page.bench.workspace();
+    assert_eq!(ws.theme_mode, ThemeMode::Light);
+    assert_eq!(ws.theme().colors.bg, core.colors.bg);
+    assert_eq!(ws.theme().typography.family, core.typography.family);
+    let hoff = Theme::hoff();
+    page.set_theme(&hoff);
+    let ws = page.bench.workspace();
+    assert_eq!(ws.theme_mode, ThemeMode::Dark);
+    assert_eq!(ws.theme().colors.bg, hoff.colors.bg);
+}

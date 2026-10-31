@@ -5,6 +5,7 @@
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
+use engine::widgets::widget::luminance;
 
 use super::super::text;
 use super::{GitWake, NavKey};
@@ -61,12 +62,19 @@ impl GitPage {
         }
     }
 
-    pub fn set_theme(&mut self, name: &str) {
-        self.bench.workspace_mut().theme_mode = if name == "light" {
+    /// The gallery's theme, whatever its name: a light one (core, light)
+    /// in the workspace's light slot, a dark one in its dark slot, so the
+    /// workspace draws in the page's palette and face.
+    pub fn set_theme(&mut self, theme: &Theme) {
+        let light = luminance(theme.colors.bg.0) > 0.5;
+        let mode = if light {
             ThemeMode::Light
         } else {
             ThemeMode::Dark
         };
+        self.bench
+            .workspace_mut()
+            .use_host_theme(theme.clone(), mode);
     }
 
     /// The three panels fill the viewport and scroll internally.

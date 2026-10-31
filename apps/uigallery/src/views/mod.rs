@@ -340,7 +340,7 @@ impl ShowcaseView {
     fn set_theme(&mut self, name: &str) {
         if let Some(theme) = foundations::theme::resolve(name) {
             self.panes.editor.set_theme(&theme);
-            self.panes.git.set_theme(name);
+            self.panes.git.set_theme(&theme);
             self.theme = theme;
             self.theme_name = name.to_string();
         }
