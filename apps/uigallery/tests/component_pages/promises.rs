@@ -35,8 +35,9 @@ const PROJECTING: usize = 31
     // projected before, through the pages they borrowed), Panel, Panel
     // Header
     + 7
-    // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat
-    + 4;
+    // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat,
+    // and in wave 3 Toolbar
+    + 5;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its
