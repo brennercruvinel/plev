@@ -151,7 +151,7 @@ impl Overlays<'_> {
             return;
         }
         if intent == Intent::Destructive {
-            let text = "Repository deleted (not really).";
+            let text = "File deleted (not really).";
             self.toasts.push(text, Intent::Destructive, self.theme);
         } else {
             self.toasts
