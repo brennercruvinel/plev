@@ -4,7 +4,6 @@
 //! accents, Inter tracked -0.02em, radii 8 / 10 / 12 / 16 / 22 and the
 //! measured shadow stacks of its depths page.
 
-use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
@@ -12,6 +11,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
+use super::{ContentTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -151,6 +151,11 @@ impl Theme {
                 wash_hover_alpha: 0.16,
             },
             button: ButtonTokens::hoff_core(),
+            form: FormTokens::hoff_core(),
+            overlay: OverlayTokens::hoff_core(),
+            message: MessageTokens::hoff_core(),
+            content: ContentTokens::hoff_core(),
+            selection: SelectionTokens::hoff_core(),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {

@@ -25,7 +25,6 @@
 // screen sits on the graphite container, never on pure black.
 // ============================================================================
 
-use super::Theme;
 use super::intent::MotionPhysics;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
@@ -33,6 +32,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
+use super::{ContentTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -138,8 +138,15 @@ impl TypographyScale {
 impl Theme {
     /// The HOFF dark-glass theme — plev's default.
     pub fn hoff() -> Self {
+        // placeholders: the recipes are derived again below, from these colors
+        let dark = Self::dark().colors;
         let mut theme = Self {
-            button: ButtonTokens::derive(&Self::dark().colors),
+            button: ButtonTokens::derive(&dark),
+            form: FormTokens::derive(&dark),
+            overlay: OverlayTokens::derive(&dark),
+            message: MessageTokens::derive(&dark),
+            content: ContentTokens::derive(&dark),
+            selection: SelectionTokens::derive(&dark),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.
@@ -229,6 +236,11 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
         };
         theme.button = ButtonTokens::derive(&theme.colors);
+        theme.form = FormTokens::derive(&theme.colors);
+        theme.overlay = OverlayTokens::derive(&theme.colors);
+        theme.message = MessageTokens::derive(&theme.colors);
+        theme.content = ContentTokens::derive(&theme.colors);
+        theme.selection = SelectionTokens::derive(&theme.colors);
         theme
     }
 }

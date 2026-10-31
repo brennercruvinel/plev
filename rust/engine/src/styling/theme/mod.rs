@@ -18,6 +18,13 @@ pub use self::tokens::{
 pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
 };
+// task-104: one token slot per front (A fields, B overlays, C conversation,
+// D disclosure, E selection), each in its front's `tokens.rs`.
+pub use crate::widgets::content::tokens::ContentTokens;
+pub use crate::widgets::form::tokens::FormTokens;
+pub use crate::widgets::message::tokens::MessageTokens;
+pub use crate::widgets::overlay::tokens::OverlayTokens;
+pub use crate::widgets::selection::tokens::SelectionTokens;
 
 // ============================================================================
 // Theme -- the root struct (RULE-08)
@@ -49,6 +56,23 @@ pub struct Theme {
     pub shadows: ShadowTokens,
     /// Button surfaces per variant and the button size ladders.
     pub button: ButtonTokens,
+    // task-104: one slot per front; `hoff_core()` copies the kit and every
+    // other theme derives from its palette, as `button` does.
+    /// Front A: field, label, input group, input OTP, textarea, combobox,
+    /// command.
+    pub form: FormTokens,
+    /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
+    /// sheet, drawer.
+    pub overlay: OverlayTokens,
+    /// Front C: message, bubble, message scroller, alert, attachment,
+    /// marker, questionnaire.
+    pub message: MessageTokens,
+    /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
+    /// pagination, table.
+    pub content: ContentTokens,
+    /// Front E: toggle, toggle group, button group, radio group, calendar,
+    /// date picker.
+    pub selection: SelectionTokens,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -91,6 +115,11 @@ impl Theme {
         Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
+            form: FormTokens::derive(&colors),
+            overlay: OverlayTokens::derive(&colors),
+            message: MessageTokens::derive(&colors),
+            content: ContentTokens::derive(&colors),
+            selection: SelectionTokens::derive(&colors),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -154,6 +183,11 @@ impl Theme {
         Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
+            form: FormTokens::derive(&colors),
+            overlay: OverlayTokens::derive(&colors),
+            message: MessageTokens::derive(&colors),
+            content: ContentTokens::derive(&colors),
+            selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
         }
@@ -318,6 +352,11 @@ impl Theme {
         Some(Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
+            form: FormTokens::derive(&colors),
+            overlay: OverlayTokens::derive(&colors),
+            message: MessageTokens::derive(&colors),
+            content: ContentTokens::derive(&colors),
+            selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
         })
