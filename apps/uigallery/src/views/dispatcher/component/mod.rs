@@ -125,6 +125,12 @@ components! {
     Toast => toast,
     Tooltip => tooltip,
     Tree => tree,
+    // task-104: each front's component pages under its anchor
+    // task-104 front A, fields (#154)
+    // task-104 front B, overlays (#155)
+    // task-104 front C, conversation and feedback (#156)
+    // task-104 front D, disclosure and display (#157)
+    // task-104 front E, selection and dates (#158)
 }
 
 /// The page's region, named by the page's title, inert while an overlay

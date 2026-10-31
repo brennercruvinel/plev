@@ -12,6 +12,18 @@ use super::super::components::{
 };
 use super::super::foundations::{effects, icons, theme, typography};
 
+// task-104: each front imports its pages under its anchor, a group of its
+// own (the blank lines keep rustfmt from sorting one front into another)
+// task-104 front A, fields (#154)
+
+// task-104 front B, overlays (#155)
+
+// task-104 front C, conversation and feedback (#156)
+
+// task-104 front D, disclosure and display (#157)
+
+// task-104 front E, selection and dates (#158)
+
 pub struct Panes {
     // -- foundations
     pub themes: theme::ThemePage,
@@ -53,6 +65,12 @@ pub struct Panes {
     pub toast: toast::ToastPage,
     pub tooltip: tooltip::TooltipPage,
     pub tree: tree::TreePage,
+    // -- task-104: each front's pages under its anchor
+    // task-104 front A, fields (#154)
+    // task-104 front B, overlays (#155)
+    // task-104 front C, conversation and feedback (#156)
+    // task-104 front D, disclosure and display (#157)
+    // task-104 front E, selection and dates (#158)
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -125,6 +143,11 @@ impl Panes {
             toast: toast::ToastPage::new(),
             tooltip: tooltip::TooltipPage::new(),
             tree: tree::TreePage::new(),
+            // task-104 front A, fields (#154)
+            // task-104 front B, overlays (#155)
+            // task-104 front C, conversation and feedback (#156)
+            // task-104 front D, disclosure and display (#157)
+            // task-104 front E, selection and dates (#158)
             todo,
             surface,
             silences: silences::SilencesPage::new(),

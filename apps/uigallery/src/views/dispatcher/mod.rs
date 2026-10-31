@@ -62,6 +62,11 @@ impl ShowcaseView {
                 Pane::Toast => self.panes.toast.content_height(content, t),
                 Pane::Tooltip => self.panes.tooltip.content_height(content, t),
                 Pane::Tree => self.panes.tree.content_height(content, t),
+                // task-104 front A, fields (#154)
+                // task-104 front B, overlays (#155)
+                // task-104 front C, conversation and feedback (#156)
+                // task-104 front D, disclosure and display (#157)
+                // task-104 front E, selection and dates (#158)
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -154,6 +159,11 @@ impl ShowcaseView {
                 }
                 Pane::Tooltip => self.panes.tooltip.handle_event(event, content, t),
                 Pane::Tree => self.panes.tree.handle_event(event, content, t),
+                // task-104 front A, fields (#154)
+                // task-104 front B, overlays (#155)
+                // task-104 front C, conversation and feedback (#156)
+                // task-104 front D, disclosure and display (#157)
+                // task-104 front E, selection and dates (#158)
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -237,6 +247,11 @@ impl ShowcaseView {
             Some(Pane::Silences) => self.panes.silences.wake(dt, &mut self.panes.todo),
             Some(Pane::Capture) => capture,
             Some(Pane::Editor) => self.panes.editor.wake(dt),
+            // task-104 front A, fields (#154)
+            // task-104 front B, overlays (#155)
+            // task-104 front C, conversation and feedback (#156)
+            // task-104 front D, disclosure and display (#157)
+            // task-104 front E, selection and dates (#158)
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -315,6 +330,11 @@ impl ShowcaseView {
                     );
                 }
                 Pane::Tree => self.panes.tree.render(c, content, theme),
+                // task-104 front A, fields (#154)
+                // task-104 front B, overlays (#155)
+                // task-104 front C, conversation and feedback (#156)
+                // task-104 front D, disclosure and display (#157)
+                // task-104 front E, selection and dates (#158)
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
