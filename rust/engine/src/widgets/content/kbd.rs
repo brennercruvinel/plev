@@ -184,4 +184,32 @@ mod tests {
         assert_eq!(shadows, theme.disclosure.kbd[0].shadow.len());
         assert!(nodes.iter().any(|n| matches!(n, SceneNode::Text { .. })));
     }
+
+    /// A nav link's shortcut is a cap, its hint stays text (task-104d:
+    /// the gallery's sidebar adopts the cap; the inspector's statuses do
+    /// not).
+    #[test]
+    fn a_nav_link_draws_its_shortcut_in_a_cap_and_its_hint_as_text() {
+        use crate::widgets::nav::NavLink;
+        let theme = Theme::hoff_core();
+        let bounds = Rect::new(0.0, 0.0, 240.0, NavLink::height(&theme));
+        let shadows = |link: NavLink| {
+            let mut c = Compositor::new();
+            c.begin_frame();
+            link.render(&mut c, bounds, &theme);
+            c.layer(LayerId::DEFAULT)
+                .unwrap()
+                .nodes()
+                .iter()
+                .filter(|n| matches!(n, SceneNode::Shadow { .. }))
+                .count()
+        };
+        let cap = theme.disclosure.kbd[0].shadow.len();
+        assert_eq!(shadows(NavLink::new("Accordion").shortcut("5")), cap);
+        assert_eq!(shadows(NavLink::new("Accordion").hint("done")), 0);
+        let wide = NavLink::new("Accordion")
+            .shortcut("⌘5")
+            .preferred_width(&theme);
+        assert!(wide > NavLink::new("Accordion").preferred_width(&theme));
+    }
 }

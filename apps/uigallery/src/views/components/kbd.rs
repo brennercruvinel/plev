@@ -89,7 +89,9 @@ impl KbdPage {
         ]
         .into_iter()
         .enumerate()
-        .map(|(i, (label, icon, hint))| NavLink::new(label).icon(icon).hint(hint).active(i == 0))
+        .map(|(i, (label, icon, hint))| {
+            NavLink::new(label).icon(icon).shortcut(hint).active(i == 0)
+        })
         .collect();
         let groups = vec![
             Group {
@@ -111,7 +113,7 @@ impl KbdPage {
                 columns: 2,
                 cards: vec![
                     Card {
-                        title: "Nav link hint: Default, Hover, Active, Focus",
+                        title: "Nav link shortcut: Default, Hover, Active, Focus",
                         body: Body::Links(links),
                     },
                     Card {
@@ -362,8 +364,8 @@ impl Component for KbdPage {
                                 continue;
                             };
                             let mut node = link.project(b, id, Some(&card_at));
-                            if let Some(hint) = &link.hint {
-                                node.description(format!("shortcut {hint}"));
+                            if let Some(keys) = &link.shortcut {
+                                node.description(format!("shortcut {keys}"));
                             }
                         }
                     }
