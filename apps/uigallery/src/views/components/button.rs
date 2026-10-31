@@ -11,20 +11,15 @@
 //! press, so its `activate` changes nothing.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use engine::drawing::compositor::Compositor;
 use engine::styling::theme::{Theme, hoff_core};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
-    Rect, SubmitButton, WidgetEvent, rounded_rect, rounded_rect_stroke,
+    Rect, SubmitButton, WidgetEvent,
 };
 
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
-
-/// A card is as tall as the page's `h-50`.
-const CARD_H: f32 = 200.0;
-/// Narrowest a card column may get before the row drops a column.
-const CARD_MIN_W: f32 = 300.0;
 
 enum Spec {
     Button(Button),
@@ -325,88 +320,28 @@ impl ButtonPage {
         }
     }
 
-    /// Group padding: the page's `p-12`, vertical only (the content rect
-    /// already carries the horizontal gutter).
-    fn pad(theme: &Theme) -> f32 {
-        theme.spacing.xxl
-    }
-
-    /// Space between the group title and its cards (`mb-5`).
-    fn title_gap(theme: &Theme) -> f32 {
-        theme.spacing.lg
-    }
-
-    fn title_style(theme: &Theme) -> engine::drawing::text::TextStyle {
-        theme.typography.exact(theme.typography.title_sm, 28.0, 500)
-    }
-
-    fn chip_style(theme: &Theme) -> engine::drawing::text::TextStyle {
-        theme.typography.exact(theme.typography.caption, 16.0, 500)
-    }
-
-    /// Columns a row actually gets at this width: the page's span until
-    /// the cards would get narrower than `CARD_MIN_W`.
-    fn columns(span: usize, w: f32, gap: f32) -> usize {
-        (1..=span)
-            .rev()
-            .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= CARD_MIN_W)
-            .unwrap_or(1)
-    }
-
-    /// Per group: the title baseline y, the card rects, the rule y.
-    fn layout(&self, content: Rect, theme: &Theme) -> Vec<(f32, Vec<Rect>, f32)> {
-        let pad = Self::pad(theme);
-        let gap = theme.spacing.sm;
-        let title_h = Self::title_style(theme).line_height;
-        let mut y = content.y;
-        let mut out = Vec::with_capacity(self.groups.len());
-        for group in &self.groups {
-            let title_y = y + pad;
-            let cols = Self::columns(group.columns, content.w, gap);
-            let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
-            let mut rects = Vec::with_capacity(group.cards.len());
-            let first_row = title_y + title_h + Self::title_gap(theme);
-            for (i, _) in group.cards.iter().enumerate() {
-                let col = i % cols;
-                let row = i / cols;
-                rects.push(Rect::new(
-                    content.x + col as f32 * (card_w + gap),
-                    first_row + row as f32 * (CARD_H + gap),
-                    card_w,
-                    CARD_H,
-                ));
-            }
-            let rows = group.cards.len().div_ceil(cols);
-            let rule_y = first_row + rows as f32 * CARD_H + (rows as f32 - 1.0) * gap + pad;
-            out.push((title_y, rects, rule_y));
-            y = rule_y;
-        }
-        out
+    /// Per group: the title's top, the card rects, the rule (the
+    /// showcase mold).
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let groups = self.groups.iter().map(|g| (g.columns, g.cards.len()));
+        showcase::layout(groups, content, theme)
     }
 
     fn widget_rect(spec: &Spec, card: Rect, theme: &Theme) -> Rect {
-        let (w, h) = spec.preferred_size(theme);
-        Rect::new(
-            (card.x + (card.w - w) / 2.0).round(),
-            (card.y + (card.h - h) / 2.0).round(),
-            w,
-            h,
-        )
+        showcase::centered(spec.preferred_size(theme), card)
     }
 
     /// Center of the first card's widget (the view tests probe hover
     /// there).
     #[cfg(test)]
     pub(crate) fn first_widget_center(&self, content: Rect, theme: &Theme) -> (f32, f32) {
-        let card = self.layout(content, theme)[0].1[0];
+        let card = self.layout(content, theme)[0].cards[0];
         let r = Self::widget_rect(&self.groups[0].cards[0].spec, card, theme);
         (r.x + r.w / 2.0, r.y + r.h / 2.0)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        self.layout(content, theme)
-            .last()
-            .map_or(0.0, |(_, _, rule)| rule - content.y)
+        showcase::content_height(&self.layout(content, theme), content)
     }
 
     pub fn handle_event(
@@ -420,8 +355,8 @@ impl ButtonPage {
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
-        for (group, (_, rects, _)) in self.groups.iter_mut().zip(&layout) {
-            for (card, rect) in group.cards.iter_mut().zip(rects) {
+        for (group, at) in self.groups.iter_mut().zip(&layout) {
+            for (card, rect) in group.cards.iter_mut().zip(&at.cards) {
                 let bounds = Self::widget_rect(&card.spec, *rect, theme);
                 result = result.merge(card.spec.handle_event(event, bounds));
             }
@@ -431,64 +366,17 @@ impl ButtonPage {
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
-        let title_style = Self::title_style(theme);
-        let chip_style = Self::chip_style(theme);
-        let chip_pad_x = theme.spacing.md;
-        let chip_pad_y = theme.spacing.xs;
-        let chip_inset = theme.spacing.sm;
         let last = self.groups.len() - 1;
-        for (i, (group, (title_y, rects, rule_y))) in self.groups.iter().zip(&layout).enumerate() {
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(group.title, &title_style, None),
-                x: content.x,
-                y: *title_y,
-                color: theme.colors.text.0,
-            });
-            for (card, rect) in group.cards.iter().zip(rects) {
-                // The card: a divider-colored hairline at the card radius.
-                c.push(rounded_rect_stroke(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    theme.shape.card,
-                    theme.colors.divider.0,
-                    1.0,
-                ));
-                // The chip naming the states.
-                let (tw, _) = TextMeasurer::measure_styled(card.title, &chip_style, None);
-                let chip = Rect::new(
-                    rect.x + chip_inset,
-                    rect.y + chip_inset,
-                    tw + chip_pad_x * 2.0,
-                    chip_style.line_height + chip_pad_y * 2.0,
-                );
-                c.push(rounded_rect(
-                    chip.x,
-                    chip.y,
-                    chip.w,
-                    chip.h,
-                    theme.shape.nav,
-                    theme.colors.bg_hover.0,
-                ));
-                c.push(SceneNode::Text {
-                    key: TextNodeKey::from_style(card.title, &chip_style, None),
-                    x: chip.x + chip_pad_x,
-                    y: chip.y + chip_pad_y,
-                    color: theme.colors.text.0,
-                });
+        for (i, (group, at)) in self.groups.iter().zip(&layout).enumerate() {
+            showcase::title(c, group.title, content, at.title_y, theme);
+            for (card, rect) in group.cards.iter().zip(&at.cards) {
+                showcase::card(c, *rect, card.title, theme);
                 card.spec
                     .render(c, Self::widget_rect(&card.spec, *rect, theme), theme);
             }
             // The rule under the group (`border-b`, none on the last).
             if i != last {
-                c.push(SceneNode::Rect {
-                    x: content.x,
-                    y: *rule_y,
-                    w: content.w,
-                    h: 1.0,
-                    color: theme.colors.divider.0,
-                });
+                showcase::rule(c, content, at.rule_y, theme);
             }
         }
     }
@@ -549,6 +437,7 @@ impl Component for ButtonPage {
 
 #[cfg(test)]
 mod tests {
+    use super::super::showcase::{CARD_H, CARD_MIN_W};
     use super::*;
 
     /// Narrow content: rows drop to one column instead of squeezing the
@@ -558,8 +447,8 @@ mod tests {
         let section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 500.0, 900.0);
         let layout = section.layout(content, &Theme::hoff_core());
-        for (_, rects, _) in &layout {
-            for r in rects {
+        for group in &layout {
+            for r in &group.cards {
                 assert_eq!(r.x, content.x);
                 assert!(r.w >= CARD_MIN_W);
             }
@@ -573,17 +462,17 @@ mod tests {
         let section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
         let layout = section.layout(content, &Theme::hoff_core());
-        let (_, first, _) = &layout[0];
+        let first = &layout[0].cards;
         assert_eq!(first.len(), 2);
         assert_eq!(first[0].y, first[1].y);
         assert!(first[1].x > first[0].x);
-        let toolbar = &layout[11].1;
+        let toolbar = &layout[11].cards;
         assert_eq!(toolbar.len(), 3);
         assert_eq!(toolbar[0].y, toolbar[2].y);
         let mut prev = 0.0;
-        for (title_y, _, rule_y) in &layout {
-            assert!(*title_y > prev);
-            prev = *rule_y;
+        for group in &layout {
+            assert!(group.title_y > prev);
+            prev = group.rule_y;
         }
         assert!(section.content_height(content, &Theme::hoff_core()) > 14.0 * CARD_H);
     }
@@ -594,7 +483,7 @@ mod tests {
         let mut section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
         let theme = Theme::hoff_core();
-        let card = section.layout(content, &theme)[0].1[0];
+        let card = section.layout(content, &theme)[0].cards[0];
         let center = (card.x + card.w / 2.0, card.y + card.h / 2.0);
         let r = section.handle_event(
             &WidgetEvent::MouseMove {

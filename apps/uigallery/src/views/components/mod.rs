@@ -27,6 +27,9 @@ pub mod resizable;
 pub mod scroll_area;
 pub mod select;
 pub mod separator;
+/// The showcase mold the kit's component pages share (groups, cards,
+/// chips), from the ButtonsPage.
+pub(crate) mod showcase;
 pub mod sidebar;
 pub mod skeleton;
 pub mod slider;
