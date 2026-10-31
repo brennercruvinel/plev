@@ -60,7 +60,7 @@ pub const PAGES: &[Page] = &[
         F,
         "Typography",
         "info",
-        "The theme's type styles in its own face, tabled as the kit's typography page.",
+        "The kit's type styles set in the theme's face; a value the theme does not hold reads as the kit's.",
         Pane::Typography,
     ),
     page(

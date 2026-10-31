@@ -37,9 +37,10 @@ const SCRIPTS: [&str; 7] = [
     "안녕하세요 세계",
     "🙂 🎉 🚀 👍",
 ];
-const WRAPPING_TEXT: &str = "Every weight of the theme's face is embedded in the engine, so \
-    shaping never depends on host fonts. This paragraph wraps against its card and re-wraps \
-    as the window resizes, measured with the same TextStyle that draws it.";
+const WRAPPING_TEXT: &str = "The theme's face is embedded in the engine, so shaping never \
+    depends on host fonts, and a weight it lacks draws in its nearest. This paragraph wraps \
+    against its card and re-wraps as the window resizes, measured with the same TextStyle \
+    that draws it.";
 
 /// The engine cards' styles and insets, from the theme.
 struct Styles {
@@ -97,7 +98,9 @@ impl Styles {
     fn content_h(&self, card: usize, w: f32) -> f32 {
         let lines = self.lines(card);
         let gaps = self.gap * lines.len().saturating_sub(1) as f32;
-        let wrap = (card == 2).then_some(w);
+        // The weights keep one line each; the scripts and the paragraph
+        // wrap to the card.
+        let wrap = (card > 0).then_some(w);
         gaps + lines
             .iter()
             .map(|(text, style)| TextMeasurer::measure_styled(text, style, wrap).1)
@@ -130,7 +133,7 @@ pub(super) fn draw(c: &mut Compositor, cards: &[Rect], theme: &Theme) {
         let room = card.w - s.pad * 2.0;
         let mut y = s.top(*card, theme);
         for (text, style) in s.lines(i) {
-            let wrap = (i == 2).then_some(room);
+            let wrap = (i > 0).then_some(room);
             let shown = if wrap.is_some() {
                 text.to_string()
             } else {
