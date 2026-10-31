@@ -152,6 +152,11 @@ fn every_crate_has_its_manifest_and_its_source() {
             if !dir.is_dir() || untracked(&name) || foreign.contains(&format!("{home}/{name}")) {
                 continue;
             }
+            // a static site (apps/zolaviews, a Zola site that reads docs/) is an
+            // app without a crate: its zola.toml stands where a Cargo.toml would
+            if home == "apps" && dir.join("zola.toml").is_file() {
+                continue;
+            }
             if !dir.join("Cargo.toml").is_file() {
                 bad.push(format!("{home}/{name}: no Cargo.toml"));
             }
