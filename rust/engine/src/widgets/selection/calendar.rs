@@ -4,8 +4,9 @@
 //! toolbar actions (`theme.button.toolbar`, through the buttons' own
 //! [`Press`] and `paint_surface`), the chosen day is the dark call to
 //! action (`theme.button.secondary`), today is ringed as the outline
-//! button, a day of another month speaks in the ghost button's quiet
-//! text, and the arrows are ghost [`IconButton`]s. Its own values (cell
+//! button, and the arrows are ghost [`IconButton`]s. The weeks keep their
+//! six rows, and a day of another month is a blank cell: neither drawn
+//! nor pressed, as the projection holds only the month shown. Its own values (cell
 //! range, gap, text) are `theme.selection.calendar`.
 //!
 //! The grid fits the `Rect` it gets: a day is a seventh of the width,
@@ -387,12 +388,15 @@ impl Calendar {
             self.turn(1);
         }
         result = result.merge(r);
+        // a day of another month is not drawn, so it does not press
         let grid = self.grid();
+        let live: Vec<bool> = grid
+            .iter()
+            .map(|d| d.month == self.shown.1 && self.allows(*d))
+            .collect();
         let mut chosen = None;
         for (i, (press, rect)) in self.presses.iter_mut().zip(&l.days).enumerate() {
-            let blocked = self.disabled
-                || self.min.is_some_and(|m| grid[i] < m)
-                || self.max.is_some_and(|m| grid[i] > m);
+            let blocked = !live[i];
             let r = press.handle(event, *rect, blocked);
             if r.clicked {
                 chosen = Some(grid[i]);
@@ -482,6 +486,9 @@ impl Calendar {
         let mut ring = b.outline.rest.clone();
         ring.fill = [Color::rgba(0.0, 0.0, 0.0, 0.0); 2];
         for (i, (date, r)) in grid.iter().zip(&l.days).enumerate() {
+            if date.month != self.shown.1 {
+                continue;
+            }
             let chosen = self.selected == Some(*date);
             let recipe = if chosen { &b.secondary } else { &b.toolbar };
             let alpha = if self.allows(*date) {
@@ -505,12 +512,15 @@ impl Calendar {
             if self.today == Some(*date) && !chosen {
                 paint_surface(c, LayerId::DEFAULT, *r, radius, &ring, alpha, false, theme);
             }
-            let ink = if date.month == self.shown.1 || chosen {
-                surface.text
-            } else {
-                b.ghost.rest.text
-            };
-            text(c, &date.day.to_string(), &day, *r, true, ink, alpha);
+            text(
+                c,
+                &date.day.to_string(),
+                &day,
+                *r,
+                true,
+                surface.text,
+                alpha,
+            );
         }
     }
 }

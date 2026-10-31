@@ -731,3 +731,19 @@ fn calendar_binds_its_days_under_every_theme_at_360_and_1280() {
         }
     }
 }
+
+/// A day of another month is a blank cell: a click on it chooses
+/// nothing and the month stays, as the projection offers only the month
+/// shown.
+#[test]
+fn calendar_days_of_another_month_do_not_press() {
+    let theme = Theme::hoff_core();
+    let mut cal = Calendar::new(2026, 10);
+    let (w, h) = cal.size_within(320.0, &theme);
+    let bounds = Rect::new(0.0, 0.0, w, h);
+    let (x, y) = cal.layout(bounds, &theme).days[0].center();
+    assert_eq!(cal.grid()[0], d(2026, 9, 28));
+    cal.handle_event(&down(x, y), bounds, &theme);
+    assert!(!cal.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert_eq!((cal.selected, cal.shown), (None, (2026, 10)));
+}

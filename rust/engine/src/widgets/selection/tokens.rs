@@ -14,6 +14,7 @@
 //! here.
 
 use crate::styling::color::Color;
+use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonSurface, Theme};
 
@@ -161,6 +162,37 @@ fn ring(color: Color) -> ShadowSpec {
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
+/// WCAG 2.2 AAA for text (1.4.6), the bar the front's text colors keep:
+/// a color of the kit or of a theme that falls under it gives way to one
+/// that passes (`theme/tests/contrast.rs` measures the pairs).
+pub const TEXT_CONTRAST: f32 = 7.0;
+
+/// `fg` composed over the opaque linear `under`, in linear light.
+fn over(fg: Color, under: [f32; 3]) -> [f32; 3] {
+    let [r, g, b, a] = fg.to_linear_array();
+    let mix = |c: f32, u: f32| c * a + u * (1.0 - a);
+    [mix(r, under[0]), mix(g, under[1]), mix(b, under[2])]
+}
+
+/// WCAG contrast of two linear colors, lighter over darker.
+fn ratio(a: [f32; 3], b: [f32; 3]) -> f32 {
+    let lum = |[r, g, b]: [f32; 3]| 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    let (la, lb) = (lum(a), lum(b));
+    (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
+}
+
+/// `preferred` where it reads at [`TEXT_CONTRAST`] on `fill` laid over
+/// `page`, else `fallback`: the kit's or the theme's quiet text where it
+/// is legible, the stronger one where it is not.
+pub fn legible(preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
+    let under = over(fill, over(page, [0.0; 3]));
+    if ratio(over(preferred, under), under) >= TEXT_CONTRAST {
+        preferred
+    } else {
+        fallback
+    }
+}
+
 /// The segment ladder, the same under every theme: the kit's heights
 /// and text, `font-semibold`; the line box is the text's own 1.5
 /// (tailwind's body leading, which the arbitrary sizes inherit).
@@ -291,7 +323,9 @@ impl SelectionTokens {
             weekday_size: 12.0,
             weekday_line: 16.0,
             weekday_weight: 500,
-            weekday: hex(0x7B7B7B),
+            // the kit's secondary #7B7B7B reads 4.1:1 on its paper; shade 7
+            // passes AAA, as front C's quiet text (message/tokens.rs)
+            weekday: legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]),
             day_size: 13.0,
             day_line: 16.0,
             day_weight: 500,
@@ -301,10 +335,11 @@ impl SelectionTokens {
             radio,
             calendar,
             segmented: SegmentedTokens {
+                // :43 `text-[#7B7B7B]`, :40 `hover:text-[#121212]`. The
+                // kit's gray reads 3.8:1 on its well; shade 7 passes AAA.
+                text: legible(hex(0x7B7B7B), SHADES[6], track.fill[0], SHADES[0]),
                 track,
                 thumb,
-                // :43 `text-[#7B7B7B]`, :40 `hover:text-[#121212]`.
-                text: hex(0x7B7B7B),
                 text_hover: ink,
                 track_radius: 12.0,
                 thumb_radius: 8.0,
@@ -370,16 +405,16 @@ impl SelectionTokens {
         };
         Self {
             segmented: SegmentedTokens {
+                text: legible(c.text_mid, c.text, track.fill[0], c.bg),
                 track,
                 thumb,
-                text: c.text_mid,
                 text_hover: c.text,
                 ..kit.segmented
             },
             button_group,
             radio,
             calendar: CalendarTokens {
-                weekday: c.text_mid,
+                weekday: legible(c.text_mid, c.text, c.surface, c.bg),
                 ..kit.calendar
             },
         }
