@@ -134,6 +134,8 @@ components! {
     // task-104: each front's component pages under its anchor
     // task-104 front A, fields (#154)
     Field => field,
+    Label => label,
+    InputGroup => input_group,
     // task-104 front B, overlays (#155)
     AlertDialog => alert_dialog,
     Drawer => drawer,
@@ -143,11 +145,23 @@ components! {
     Popover => popover,
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)
+    Alert => alert,
+    Bubble => bubble,
     Message => message,
+    MessageScroller => message_scroller,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
+    AspectRatio => aspect_ratio,
+    Carousel => carousel,
+    Collapsible => collapsible,
+    Item => item,
+    Kbd => kbd,
+    Pagination => pagination,
     // task-104 front E, selection and dates (#158)
+    ButtonGroup => button_group,
+    RadioGroup => radio_group,
     Toggle => toggle,
+    ToggleGroup => toggle_group,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

@@ -32,17 +32,19 @@ impl ShowcaseView {
     /// needed.
     pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         if ime == ImeEvent::Disabled {
-            let input = self.panes.input.handle_ime(ime);
-            let field = self.panes.field.handle_ime(ime);
+            let hosts = self.panes.each_text_host(|host| host.handle_ime(ime));
             let editor = self.panes.editor.handle_ime(ime);
-            return input || field || editor;
+            return hosts || editor;
         }
-        match self.pane() {
-            Some(Pane::Editor) => self.panes.editor.handle_ime(ime),
-            Some(Pane::Input) if !self.overlay_holds_pointer() => self.panes.input.handle_ime(ime),
-            Some(Pane::Field) if !self.overlay_holds_pointer() => self.panes.field.handle_ime(ime),
-            _ => false,
+        let pane = self.pane();
+        if pane == Some(Pane::Editor) {
+            return self.panes.editor.handle_ime(ime);
         }
+        !self.overlay_holds_pointer()
+            && self
+                .panes
+                .text_host_mut(pane)
+                .is_some_and(|host| host.handle_ime(ime))
     }
 
     /// Where the input method's candidate window goes, in the main
@@ -50,15 +52,15 @@ impl ShowcaseView {
     /// field, or the editor's. `None` when nothing on the page takes the
     /// input method; the shell turns it off then.
     pub fn ime_area(&self) -> Option<Rect> {
-        match self.pane()? {
-            Pane::Editor => Some(self.panes.editor.ime_area()),
-            Pane::Input if !self.overlay_holds_pointer() => {
-                self.panes.input.ime_area(self.page_rect(), &self.theme)
-            }
-            Pane::Field if !self.overlay_holds_pointer() => {
-                self.panes.field.ime_area(self.page_rect(), &self.theme)
-            }
-            _ => None,
+        let pane = self.pane()?;
+        if pane == Pane::Editor {
+            return Some(self.panes.editor.ime_area());
         }
+        if self.overlay_holds_pointer() {
+            return None;
+        }
+        self.panes
+            .text_host(Some(pane))?
+            .ime_area(self.page_rect(), &self.theme)
     }
 }

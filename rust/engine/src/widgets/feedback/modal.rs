@@ -310,7 +310,7 @@ impl Modal {
                     sigma: theme.effects.blur_sigma,
                 },
             );
-            for node in glass_pill(dialog, radius, m.border.0, m.border_w, m.fill.0) {
+            for node in glass_pill(dialog, radius, m.border.0, m.border_w, m.fill.0, theme) {
                 compositor.push_to_layer(layer, node);
             }
             inset_keylight(compositor, layer, dialog, radius, theme);

@@ -156,7 +156,7 @@ impl ShowcaseView {
             .map(|(i, p)| {
                 let link = NavLink::new(p.title).icon(p.icon);
                 if i < HOTKEY_PAGES {
-                    link.hint(format!("{}", (i + 1) % 10))
+                    link.shortcut(format!("{}", (i + 1) % 10))
                 } else {
                     link
                 }

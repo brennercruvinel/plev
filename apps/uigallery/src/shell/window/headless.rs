@@ -421,10 +421,15 @@ mod tests {
     /// one is on the report, and a report line names its node.
     #[test]
     fn the_effects_page_reports_its_shadows_gradients_and_blur() {
-        let Some(mut r) = renderer(DESKTOP) else {
+        // Tall enough for the compositor group, under the depths.
+        let tall = Viewport {
+            height: 1600.0,
+            ..DESKTOP
+        };
+        let Some(mut r) = renderer(tall) else {
             return;
         };
-        let export = match staged("Effects", "hoff", DESKTOP).svg(&mut r) {
+        let export = match staged("Effects", "hoff", tall).svg(&mut r) {
             Ok(e) => e,
             Err(e) => panic!("{e}"),
         };

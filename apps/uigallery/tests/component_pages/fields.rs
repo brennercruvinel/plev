@@ -39,7 +39,7 @@ fn a_field_takes_the_same_text_from_the_three() {
 /// The password: the same secret from the three, and none of them sees
 /// more of it than its length.
 #[test]
-fn a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only() {
+pub(super) fn a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only() {
     let mut person = gallery("Field");
     person.click(PASSWORD);
     person.type_in("hunter2");
@@ -109,4 +109,27 @@ fn a_password_menu_offers_no_cut_and_no_copy() {
         assert_eq!(enabled(&g, COPY), Some(offers), "{id}: Copy");
         assert_eq!(enabled(&g, CUT), Some(offers), "{id}: Cut");
     }
+}
+
+const LABELLED: &str = "label_page.group[1].card[0]";
+
+/// The Label page's field, named by its label: the same text from the
+/// three.
+#[test]
+fn a_labelled_field_takes_the_same_text_from_the_three() {
+    let mut person = gallery("Label");
+    person.click(LABELLED);
+    person.type_in("ada@hoff.dev");
+    let mut reader = gallery("Label");
+    reader.reader(
+        LABELLED,
+        Action::SetValue,
+        Some(ActionData::Value("ada@hoff.dev".into())),
+    );
+    let agent = by_agent(
+        "Label",
+        "label",
+        vec![ask_with(LABELLED, "set_value", Value::from("ada@hoff.dev"))],
+    );
+    same("Label", &person, &reader, &agent);
 }

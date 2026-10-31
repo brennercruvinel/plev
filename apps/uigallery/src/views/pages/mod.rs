@@ -92,6 +92,8 @@ pub enum Pane {
     // task-104: each front adds its variants under its anchor, with the page
     // task-104 front A, fields (#154)
     Field,
+    Label,
+    InputGroup,
     // task-104 front B, overlays (#155)
     AlertDialog,
     Drawer,
@@ -101,11 +103,23 @@ pub enum Pane {
     Popover,
     Sheet,
     // task-104 front C, conversation and feedback (#156)
+    Alert,
+    Bubble,
     Message,
+    MessageScroller,
     // task-104 front D, disclosure and display (#157)
     Accordion,
+    AspectRatio,
+    Carousel,
+    Collapsible,
+    Item,
+    Kbd,
+    Pagination,
     // task-104 front E, selection and dates (#158)
+    ButtonGroup,
+    RadioGroup,
     Toggle,
+    ToggleGroup,
     // apps demo
     Todo,
     Surface,
