@@ -51,6 +51,7 @@ pub mod field;
 pub mod popover;
 
 // task-104 front C, conversation and feedback (#156)
+pub mod alert;
 pub mod bubble;
 pub mod message;
 pub mod message_scroller;

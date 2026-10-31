@@ -21,7 +21,7 @@ use super::super::components::field;
 use super::super::components::popover;
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::{bubble, message, message_scroller};
+use super::super::components::{alert, bubble, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::accordion;
@@ -76,6 +76,7 @@ pub struct Panes {
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
+    pub alert: alert::AlertPage,
     pub bubble: bubble::BubblePage,
     pub message: message::MessagePage,
     pub message_scroller: message_scroller::MessageScrollerPage,
@@ -160,6 +161,7 @@ impl Panes {
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
+            alert: alert::AlertPage::new(),
             bubble: bubble::BubblePage::new(),
             message: message::MessagePage::new(),
             message_scroller: message_scroller::MessageScrollerPage::new(),

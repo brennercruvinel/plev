@@ -309,6 +309,20 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
         );
         let h = thread.height(content.w, theme);
         thread.render(&mut c, Rect::new(content.x, 3400.0, content.w, h), theme);
+        use crate::widgets::buttons::ButtonVariant;
+        use crate::widgets::feedback::alert::Alert;
+        Alert::new(Intent::Constructive, "3D object is generated", "a scene")
+            .time("4h ago")
+            .avatar("Hoff")
+            .content("a content long enough to wrap on a phone, and cut at two lines")
+            .unread(true)
+            .action("Decline", ButtonVariant::Primary)
+            .action("Accept", ButtonVariant::Secondary)
+            .render(
+                &mut c,
+                Rect::new(content.x, 3400.0 + h, content.w, 0.0),
+                theme,
+            );
     }
 
     // task-104 front B: the popover's trigger, open, and its panel, placed
@@ -682,6 +696,23 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 vec![
                     (id("m.thread"), Role::List, Probe::Bound),
                     (id("m.thread[0]"), Role::ListItem, Probe::Hit),
+                ],
+            ));
+            let alert = crate::widgets::feedback::alert::Alert::new(
+                Intent::Constructive,
+                "Invite",
+                "a scene",
+            )
+            .action("Accept", crate::widgets::buttons::ButtonVariant::Secondary)
+            .sem(id("m.alert"));
+            let (mut c, _) = frame(false);
+            alert.render(&mut c, block(26.0), &theme);
+            alert.project(&mut b, &id("m.alert"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.alert"), Role::Status, Probe::Bound),
+                    (id("m.alert.action[0]"), Role::Button, Probe::Hit),
                 ],
             ));
 

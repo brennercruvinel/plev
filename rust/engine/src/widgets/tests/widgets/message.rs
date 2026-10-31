@@ -752,3 +752,299 @@ fn the_scroller_s_border_closes_the_last_message_without_its_hairline() {
         .collect();
     assert_eq!(laid, [true, true, false]);
 }
+
+// alert
+
+use crate::widgets::buttons::ButtonVariant;
+use crate::widgets::feedback::alert::{Alert, AlertLayout};
+
+/// The kit's invite: an avatar, unread, its two answers.
+fn invite() -> Alert {
+    Alert::new(
+        Intent::Constructive,
+        "3D object is generated",
+        "Minimalist Architecture Scene",
+    )
+    .time("4h ago")
+    .avatar("Hoff")
+    .unread(true)
+    .action("Decline", ButtonVariant::Primary)
+    .action("Accept", ButtonVariant::Secondary)
+}
+
+/// The kit's comment: the content clamped under the detail.
+fn comment(content: &str) -> Alert {
+    Alert::new(
+        Intent::Neutral,
+        "Randomdash",
+        "Commented on Classic Car in Studio",
+    )
+    .time("1h ago")
+    .avatar("Randomdash")
+    .content(content)
+}
+
+fn alert_parts(l: &AlertLayout) -> Vec<(&'static str, Rect)> {
+    let mut out = vec![("lead", l.lead)];
+    out.extend(l.badge.map(|r| ("badge", r)));
+    out.extend(l.divider.map(|r| ("divider", r)));
+    out.extend(l.dot.map(|r| ("dot", r)));
+    for (name, p) in [
+        ("title", &l.title),
+        ("time", &l.time),
+        ("detail", &l.detail),
+        ("content", &l.content),
+    ] {
+        if let Some(p) = p {
+            out.push((name, p.rect));
+        }
+    }
+    out.extend(l.actions.iter().map(|r| ("action", *r)));
+    out
+}
+
+fn alert_nodes(a: &Alert, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    a.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_alert_carries_the_kit_in_core_and_derives_the_palette_elsewhere() {
+    let kit = MessageTokens::hoff_core().alert;
+    assert_eq!(
+        (kit.pad, kit.pad_end, kit.lead, kit.gap),
+        (20.0, 16.0, 48.0, 16.0)
+    );
+    assert_eq!(
+        (kit.badge, kit.badge_ring, kit.badge_icon),
+        (22.0, 2.0, 12.0)
+    );
+    assert_eq!(kit.content_lines, 2);
+    assert_eq!(core().message.alert, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).alert;
+    let c = &hoff.colors;
+    assert_eq!(derived.title.color, c.text);
+    assert_eq!(derived.time.color, c.text_mid);
+    assert_eq!(derived.unread, c.info);
+    assert_eq!(derived.intents.of(Intent::Destructive), c.danger);
+    assert_eq!(derived.ring.0[3], 1.0, "the ring is opaque");
+    assert_eq!(derived.lead, kit.lead, "the geometry is the kit's");
+}
+
+#[test]
+fn a_short_alert_is_as_tall_as_its_lead_with_the_text_centered_against_it() {
+    let theme = core();
+    let t = &theme.message.alert;
+    let a = Alert::new(Intent::Informational, "Saved", "Your scene is in the cloud");
+    let l = a.layout(at(386.0), &theme);
+    assert_eq!(l.row.h, t.pad * 2.0 + t.lead, "the lead sets the height");
+    let title = l.title.as_ref().unwrap().rect;
+    let detail = l.detail.as_ref().unwrap().rect;
+    let mid = (title.y + t.title_lift + detail.bottom()) / 2.0;
+    assert!((mid - l.lead.center().1).abs() < 0.5, "centered: {mid}");
+    assert!(l.badge.is_none(), "without an avatar the lead is the mark");
+    assert!(l.dot.is_none() && l.actions.is_empty());
+}
+
+#[test]
+fn the_content_is_clamped_to_two_lines_and_the_answers_add_their_row() {
+    let theme = core();
+    let t = &theme.message.alert;
+    let long = comment(LONG).layout(at(386.0), &theme);
+    let content = long.content.as_ref().unwrap();
+    let line = t.content.style(&theme.typography).line_height;
+    assert!(content.rect.h <= line * 2.0 + 0.5, "{:?}", content.rect);
+    assert!(content.text.len() < LONG.len(), "cut");
+    assert!(long.row.h > t.pad * 2.0 + t.lead);
+
+    let l = invite().layout(at(386.0), &theme);
+    assert_eq!(l.actions.len(), 2);
+    assert_eq!(l.actions[0].y, l.actions[1].y, "side by side");
+    let detail = l.detail.as_ref().unwrap().rect;
+    assert!((l.actions[0].y - detail.bottom() - t.actions_gap).abs() < 0.5);
+    assert!((l.row.bottom() - l.actions[0].bottom() - t.pad).abs() < 0.5);
+    assert_eq!(l.badge.unwrap().right(), l.lead.right() + t.badge_out);
+    let dot = l.dot.unwrap();
+    assert!((dot.right() - (l.row.right() - t.pad_end)).abs() < 0.5);
+}
+
+#[test]
+fn a_long_title_is_ellipsized_the_time_kept_and_the_detail_is_one_line() {
+    let theme = core();
+    let a = Alert::new(Intent::Destructive, LONG, LONG).time("12 min ago");
+    let l = a.layout(at(320.0), &theme);
+    let title = l.title.as_ref().unwrap();
+    assert!(title.text.ends_with('\u{2026}'), "{}", title.text);
+    assert_eq!(l.time.as_ref().unwrap().text, "12 min ago");
+    let detail = l.detail.as_ref().unwrap();
+    assert!(detail.text.ends_with('\u{2026}'));
+    let line = theme
+        .message
+        .alert
+        .detail
+        .style(&theme.typography)
+        .line_height;
+    assert_eq!(detail.rect.h, line);
+}
+
+#[test]
+fn every_part_of_an_alert_stays_in_its_row_over_the_whole_range_and_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        for a in [invite(), comment(SCRIPTS), comment(LONG).divider(true)] {
+            for w in (160..=1600).step_by(8) {
+                let bounds = at(w as f32);
+                let l = a.layout(bounds, &theme);
+                assert_eq!(l.row.w, bounds.w);
+                for (part, r) in alert_parts(&l) {
+                    assert!(finite(r), "{name}@{w}: {part}");
+                    if w as f32 >= a.min_width(&theme) {
+                        assert!(
+                            within(r, l.row),
+                            "{name}@{w}: {part} {r:?} out of {:?}",
+                            l.row
+                        );
+                    }
+                }
+                if let Some(t) = &l.title {
+                    let time = l.time.as_ref().map_or(t.rect.right(), |p| p.rect.right());
+                    assert!(time <= l.dot.map_or(f32::MAX, |d| d.x) + 0.5, "{name}@{w}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn the_answers_wrap_when_the_column_is_narrow() {
+    let theme = core();
+    let a = invite();
+    let narrow = a.layout(at(a.min_width(&theme)), &theme);
+    assert!(narrow.actions[1].y > narrow.actions[0].y, "wrapped");
+    let wide = a.layout(at(600.0), &theme);
+    assert!(narrow.row.h > wide.row.h);
+}
+
+#[test]
+fn a_click_on_an_answer_chooses_it_and_a_click_on_the_row_reads_the_alert() {
+    let theme = core();
+    let bounds = at(386.0);
+    let mut a = invite();
+    let accept = a.layout(bounds, &theme).actions[1];
+    let (x, y) = accept.center();
+    assert!(a.handle_event(&move_to(x, y), bounds, &theme).changed);
+    a.handle_event(&down(x, y), bounds, &theme);
+    assert!(a.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert_eq!(a.chosen(), Some(1));
+    assert!(!a.is_unread(), "an answer reads it");
+
+    let mut b = invite();
+    let (lx, ly) = b.layout(bounds, &theme).lead.center();
+    b.handle_event(&down(lx, ly), bounds, &theme);
+    assert!(b.handle_event(&up(lx, ly), bounds, &theme).clicked);
+    assert!(!b.is_unread());
+    assert_eq!(b.chosen(), None, "the row answers nothing");
+
+    // pressed on an answer, released on the row: nothing is chosen or read
+    let mut c = invite();
+    c.handle_event(&down(x, y), bounds, &theme);
+    c.handle_event(&up(lx, ly), bounds, &theme);
+    assert!(c.is_unread() && c.chosen().is_none());
+    assert!(!c.choose(2), "no third answer");
+    assert!(c.open() && !c.open(), "read once");
+}
+
+#[test]
+fn the_alert_draws_its_runs_binds_its_parts_and_rings_only_while_focused() {
+    let theme = core();
+    let bounds = at(386.0);
+    let mut a = invite().sem(id("note"));
+    let (c, drawn) = alert_nodes(&a, bounds, &theme);
+    let words = texts(&drawn);
+    for want in [
+        "3D object is generated",
+        "4h ago",
+        "Minimalist Architecture Scene",
+        "Accept",
+    ] {
+        assert!(words.iter().any(|t| t == want), "{want} in {words:?}");
+    }
+    let l = a.layout(bounds, &theme);
+    assert_eq!(
+        c.binding(&id("note")).unwrap().rect,
+        [l.row.x, l.row.y, l.row.w, l.row.h]
+    );
+    let r = l.actions[0];
+    assert_eq!(
+        c.binding(&id("note.action[0]")).unwrap().rect,
+        [r.x, r.y, r.w, r.h]
+    );
+    let before = drawn.len();
+    a.set_focused(true);
+    assert_eq!(
+        alert_nodes(&a, bounds, &theme).1.len(),
+        before + 1,
+        "one ring"
+    );
+    a.set_focused(false);
+    a.open();
+    assert_eq!(
+        alert_nodes(&a, bounds, &theme).1.len(),
+        before - 1,
+        "the dot goes"
+    );
+}
+
+#[test]
+fn an_alert_projects_its_intent_its_words_whole_and_its_answers() {
+    let row = id("note");
+    let mut a = comment(LONG)
+        .action("Reply", ButtonVariant::Secondary)
+        .sem(row.clone())
+        .unread(true);
+    let s = snap(|b| {
+        a.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::Status, "Randomdash, 1h ago")
+    );
+    let description = node.description.as_deref().unwrap();
+    assert!(description.ends_with(LONG), "read whole: {description}");
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.focusable && node.actions.iter().any(|x| x.name.as_str() == "activate"));
+    let reply = s.get(&id("note.action[0]")).unwrap();
+    assert_eq!(
+        (reply.role, reply.parent.as_ref()),
+        (Role::Button, Some(&row))
+    );
+
+    assert!(a.choose(0));
+    let s = snap(|b| {
+        a.project(b, &row, None);
+    });
+    let reply = s.get(&id("note.action[0]")).unwrap();
+    assert_eq!(
+        reply.state.get("selected"),
+        Some(&accord::Value::Bool(true))
+    );
+    assert_eq!(
+        s.get(&row).unwrap().state.get("unread"),
+        Some(&accord::Value::Bool(false))
+    );
+
+    let danger = Alert::new(Intent::Destructive, "Export failed", "").sem(row.clone());
+    let s = snap(|b| {
+        danger.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.role, node.description.as_deref()),
+        (Role::Alert, None)
+    );
+}

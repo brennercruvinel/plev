@@ -131,6 +131,7 @@ components! {
     // task-104 front B, overlays (#155)
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)
+    Alert => alert,
     Bubble => bubble,
     Message => message,
     MessageScroller => message_scroller,

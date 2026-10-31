@@ -67,6 +67,7 @@ impl ShowcaseView {
                 // task-104 front B, overlays (#155)
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.content_height(content, t),
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
@@ -174,6 +175,7 @@ impl ShowcaseView {
                     self.panes.popover.handle_event(event, content, bounds, t)
                 }
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.handle_event(event, content, t),
                 Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
                 Pane::MessageScroller => {
@@ -366,6 +368,7 @@ impl ShowcaseView {
                     popover.render(c, layers.overlay, content, bounds, theme);
                 }
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.render(c, content, theme),
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
