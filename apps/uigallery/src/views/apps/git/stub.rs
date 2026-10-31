@@ -1,11 +1,12 @@
-//! The git section where no git worker can run (web, mobile): one line
-//! saying so, same contract as the desktop section.
+//! The git section where no git worker can run (web, mobile): the empty
+//! state saying so, centered in the app's rect, same contract as the
+//! desktop section.
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::EmptyState;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::super::text;
 use super::{GitWake, NavKey};
 use crate::views::text_input::clipboard::Keys;
 
@@ -66,14 +67,15 @@ impl GitPage {
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        text(
-            c,
-            "The git workspace needs the git CLI and a worker thread: run the showcase on desktop.",
-            14.0,
-            400,
-            (content.x, content.y + theme.spacing.md),
-            theme.glass.text_placeholder.0,
-            theme,
-        );
+        Self::empty().render(c, content, theme);
+    }
+
+    /// What the page says where it cannot run.
+    fn empty() -> EmptyState {
+        EmptyState::new(
+            "The git workspace runs on desktop",
+            "It needs the git CLI and a worker thread, which this target has not: open the showcase on desktop.",
+        )
+        .icon("git-branch")
     }
 }
