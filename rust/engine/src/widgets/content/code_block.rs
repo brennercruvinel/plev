@@ -295,6 +295,11 @@ impl CodeBlock {
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let scroll = self.scroll.clamp(0.0, self.max_scroll(bounds, theme));
         let marker_w = LineKind::marker_w(&style);
+        // Only a diff's rows have markers: code with an indent is no diff.
+        let diff = self
+            .rows
+            .iter()
+            .any(|r| matches!(r.kind, LineKind::Added | LineKind::Removed));
         c.push_to_layer(
             layer,
             SceneNode::PushClip {
@@ -326,35 +331,24 @@ impl CodeBlock {
                     },
                 );
             }
-            let ink = row.kind.ink(theme);
-            let mut x = bounds.x + pad;
-            let mut room = inner;
-            let mut text = row.text.as_str();
-            // A diff's marker sits in a column of its own, as wide as its
-            // widest sign: the face is proportional (no mono is embedded),
-            // so a `+`, a `-` and a space would start the code at three x.
-            if let Some((marker, rest)) = row.kind.marker(text) {
-                c.push_to_layer(
-                    layer,
-                    SceneNode::Text {
-                        key: TextNodeKey::from_style(marker, &style, None),
-                        x,
-                        y,
-                        color: ink,
-                    },
-                );
-                x += marker_w;
-                room = (room - marker_w).max(0.0);
-                text = rest;
-            }
-            let shown = TextMeasurer::truncate_to_width(text, &style, room);
+            // A diff's marker ends in a column as wide as the widest sign,
+            // the code after it at one x on every row: the face is
+            // proportional (no mono is embedded), so a `+`, a `-` and a
+            // space would start the code at three x. The row stays one
+            // text, shifted by what its sign is narrower than the column.
+            let lead = match row.kind.marker(&row.text).filter(|_| diff) {
+                Some((sign, _)) => marker_w - TextMeasurer::measure_styled(sign, &style, None).0,
+                None => 0.0,
+            };
+            let room = (inner - lead).max(0.0);
+            let shown = TextMeasurer::truncate_to_width(&row.text, &style, room);
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
                     key: TextNodeKey::from_style(&shown, &style, None),
-                    x,
+                    x: bounds.x + pad + lead,
                     y,
-                    color: ink,
+                    color: row.kind.ink(theme),
                 },
             );
         }
@@ -636,40 +630,48 @@ mod tests {
                 let bounds = Rect::new(0.0, 0.0, width, block.height_for(width, &theme));
                 let inner = width - theme.navigation.code.pad * 2.0;
                 let style = CodeBlock::text_style(&theme);
-                // the marker in its column, then the code cut after it
-                let drawn = texts(&nodes(&block, bounds, &theme));
-                let line: String = drawn.iter().map(|(t, _, _)| t.as_str()).collect();
-                let code = &drawn.last().expect("the code is drawn").0;
-                let (w, _) = TextMeasurer::measure_styled(code, &style, None);
-                let marker = LineKind::marker_w(&style);
-                assert!(marker + w <= inner + 0.5, "{width}: {w} > {inner}");
-                assert!(line.ends_with('\u{2026}') || line == long);
-                assert!(line.starts_with('+'));
+                for (text, _, _) in texts(&nodes(&block, bounds, &theme)) {
+                    let (w, _) = TextMeasurer::measure_styled(&text, &style, None);
+                    let lead = LineKind::marker_w(&style)
+                        - TextMeasurer::measure_styled("+", &style, None).0;
+                    assert!(lead + w <= inner + 0.5, "{width}: {w} > {inner}");
+                    assert!(text.ends_with('\u{2026}') || text == long);
+                }
             }
         }
     }
 
     /// The code after a diff's marker starts at one x on every row, the
-    /// face being proportional: the marker has a column of its own.
+    /// face being proportional: each row shifts by what its sign is
+    /// narrower than the marker column. Code with no diff row stays put.
     #[test]
     fn a_diff_s_code_starts_at_one_x_after_its_marker() {
         let theme = Theme::hoff_core();
+        let style = CodeBlock::text_style(&theme);
         let block = CodeBlock::lines(diff());
         let bounds = Rect::new(0.0, 0.0, 420.0, block.height_for(420.0, &theme));
         let drawn = nodes(&block, bounds, &theme);
         let starts: Vec<f32> = drawn
             .iter()
             .filter_map(|n| match n {
-                SceneNode::Text { key, x, .. }
-                    if key.text.trim_start().starts_with(['f', 'o', 'n']) =>
-                {
-                    Some(*x)
+                SceneNode::Text { key, x, .. } => {
+                    let (sign, _) = LineKind::ALL.iter().find_map(|k| {
+                        k.marker(&key.text)
+                            .filter(|_| *k != LineKind::Context || key.text.starts_with(' '))
+                    })?;
+                    Some(x + TextMeasurer::measure_styled(sign, &style, None).0)
                 }
                 _ => None,
             })
             .collect();
         assert_eq!(starts.len(), 3, "{starts:?}");
-        assert!(starts.windows(2).all(|w| w[0] == w[1]), "{starts:?}");
+        assert!(
+            starts.windows(2).all(|w| (w[0] - w[1]).abs() < 0.01),
+            "{starts:?}"
+        );
+        let code = CodeBlock::lines(vec![CodeLine::new("    indented()", LineKind::Context)]);
+        let at = texts(&nodes(&code, bounds, &theme))[0].0.clone();
+        assert_eq!(at, "    indented()", "no diff, no marker");
         assert_eq!(LineKind::Header.marker("src/lib.rs"), None);
         assert_eq!(LineKind::Added.marker("+x"), Some(("+", "x")));
         assert_eq!(LineKind::Added.marker("x"), None);
