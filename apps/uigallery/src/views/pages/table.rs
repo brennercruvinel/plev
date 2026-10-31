@@ -486,7 +486,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Tabs",
         "layers",
-        "Segmented strip sized from its measured labels.",
+        "The kit's tab strip, three tabs and two, long and translated labels.",
         Pane::Tabs,
     ),
     placeholder("Textarea"),
