@@ -115,6 +115,7 @@ pub enum Pane {
     Pagination,
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
+    Calendar,
     RadioGroup,
     Toggle,
     ToggleGroup,
