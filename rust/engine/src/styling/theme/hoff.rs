@@ -249,7 +249,7 @@ impl Theme {
     /// one notch below the raised sidebar surface, like in dark mode.
     pub fn hoff_light() -> Self {
         let dark = Self::hoff();
-        Self {
+        let mut theme = Self {
             colors: ColorTokens {
                 bg: Color::hex(0xCECECE),
                 surface: Color::hex(0xD1D1D1),
@@ -294,6 +294,8 @@ impl Theme {
             },
             shadows: ShadowTokens::hoff(),
             ..dark
-        }
+        };
+        theme.derive_front_slots();
+        theme
     }
 }
