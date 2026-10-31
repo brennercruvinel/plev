@@ -7,9 +7,10 @@
 //! (`engine::drawing::path::PathBuilder`). Everything is static, so an idle
 //! page settles (render-on-demand contract).
 
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::path::PathBuilder;
-use engine::styling::theme::{Elevation, ShadowSpec, Theme};
+use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::{ShadowSpec, Theme};
 use engine::widgets::prelude::{
     EventResult, Rect, WidgetEvent, gradient_fill, rounded_rect, rounded_rect_stroke, shadow_drops,
     shadow_insets,
@@ -25,27 +26,71 @@ const SURFACE_SHARE: f32 = 0.5;
 /// The compositor samples, one card each.
 const SAMPLES: [&str; 4] = ["Gradient", "Backdrop blur", "Clip", "Paths"];
 
-/// The depths, from the theme: a name and the css box-shadow list (first
-/// layer on top; the theme lists its stacks bottom first).
-fn depths(theme: &Theme) -> Vec<(&'static str, Vec<ShadowSpec>)> {
+/// One card of the depths: the DepthsPage's name for it and the css
+/// box-shadow list the theme gives it (first layer on top; the theme lists
+/// its stacks bottom first), or `None` where the theme has no such depth.
+struct Depth {
+    name: &'static str,
+    stack: Option<Vec<ShadowSpec>>,
+}
+
+/// The DepthsPage's eight cards in its order (`templates/DepthsPage`), each
+/// from the theme's token for it: Surface is flat, Toolbar the floating
+/// stack, Slight hover the raised one, Button the primary button's, Modal
+/// the overlay, Large card hover the card; "Subtle" and "Prompt Input" have
+/// no elevation in the theme, and show as the gap. Then what the theme
+/// adds: the tooltip's hint and, in the glass themes, the key-light.
+fn depths(theme: &Theme) -> Vec<Depth> {
     let s = &theme.shadows;
-    let css = |layers: &[ShadowSpec]| layers.iter().rev().copied().collect::<Vec<_>>();
-    let stack = |e: Elevation| css(s.stack(e));
+    let css = |layers: &[ShadowSpec]| Some(layers.iter().rev().copied().collect::<Vec<_>>());
+    let depth = |name, stack| Depth { name, stack };
     let mut out = vec![
-        ("Surface", Vec::new()),
-        ("Raised", stack(Elevation::Raised)),
-        ("Floating", stack(Elevation::Floating)),
-        ("Overlay", stack(Elevation::Overlay)),
-        ("Hint", stack(Elevation::Hint)),
-        ("Card", css(&s.card)),
-        ("Button", theme.button.primary.rest.shadow.clone()),
+        depth("Surface", Some(Vec::new())),
+        depth("Toolbar", css(&s.floating)),
+        depth("Subtle", None),
+        depth("Slight hover", css(&s.raised)),
+        depth("Button", Some(theme.button.primary.rest.shadow.clone())),
+        depth("Prompt Input", None),
+        depth("Modal", css(&s.overlay)),
+        depth("Large card hover", css(&s.card)),
+        depth("Tooltip", css(&s.hint)),
     ];
-    // The glass themes light their surfaces from inside; the core kit
-    // does not, and shows no card for it.
     if let Some(light) = theme.glass.keylight {
-        out.push(("Key-light", vec![light]));
+        out.push(depth("Key-light", Some(vec![light])));
     }
     out
+}
+
+/// A stack as one readout under its sample, the top layer as css
+/// (`0 25 50 -12 · 25%`) and how many more lie under it; the readout tells
+/// the depths apart where a dark surface hides the shadows.
+fn spec_line(stack: &[ShadowSpec]) -> String {
+    let Some(top) = stack.iter().max_by(|a, b| a.blur.total_cmp(&b.blur)) else {
+        return "flat".into();
+    };
+    let n = |v: f32| {
+        let r = (v * 10.0).round() / 10.0;
+        if r.fract() == 0.0 {
+            format!("{r:.0}")
+        } else {
+            format!("{r}")
+        }
+    };
+    let alpha = (top.color.0[3] * 100.0).round();
+    let mut line = format!(
+        "{} {} {} {} · {alpha}%",
+        n(top.offset[0]),
+        n(top.offset[1]),
+        n(top.blur),
+        n(top.spread)
+    );
+    if top.inset {
+        line.push_str(" inset");
+    }
+    if stack.len() > 1 {
+        line.push_str(&format!(" +{}", stack.len() - 1));
+    }
+    line
 }
 
 pub struct EffectsPage;
@@ -85,9 +130,19 @@ impl EffectsPage {
         let layout = Self::layout(content, theme);
         if let [depth, samples] = layout.as_slice() {
             showcase::title(c, "Depths", content, depth.title_y, theme);
-            for ((name, stack), card) in depths(theme).iter().zip(&depth.cards) {
-                showcase::card(c, *card, name, theme);
-                lifted(c, *card, stack, theme);
+            for (d, card) in depths(theme).iter().zip(&depth.cards) {
+                match &d.stack {
+                    Some(stack) => {
+                        showcase::card(c, *card, d.name, theme);
+                        lifted(c, *card, stack, theme);
+                        caption(c, *card, &spec_line(stack), theme);
+                    }
+                    None => {
+                        let chip = format!("{} · kit only", d.name);
+                        showcase::card(c, *card, &chip, theme);
+                        caption(c, *card, "not in the theme", theme);
+                    }
+                }
             }
             showcase::rule(c, content, depth.rule_y, theme);
             showcase::title(c, "Compositor", content, samples.title_y, theme);
@@ -110,6 +165,21 @@ fn stage(card: Rect, theme: &Theme) -> Rect {
     let side = (card.w.min(card.h) * SURFACE_SHARE).round();
     let at = showcase::centered((side, side), card);
     Rect::new(at.x, at.y + theme.spacing.sm, side, side)
+}
+
+/// `text` centered under the card's sample, in the caption style.
+fn caption(c: &mut Compositor, card: Rect, text: &str, theme: &Theme) {
+    let s = stage(card, theme);
+    let style = theme.typography.caption_r();
+    let room = card.w - theme.spacing.sm * 2.0;
+    let text = TextMeasurer::truncate_to_width(text, &style, room);
+    let (w, _) = TextMeasurer::measure_styled(&text, &style, None);
+    c.push(SceneNode::Text {
+        key: TextNodeKey::from_style(&text, &style, None),
+        x: card.x + (card.w - w) / 2.0,
+        y: s.bottom() + theme.spacing.md,
+        color: theme.colors.text_mid.0,
+    });
 }
 
 /// A paper surface with a hairline (`bg-[#FCFCFC] border border-[#ECECEC]`)
@@ -320,10 +390,11 @@ mod tests {
             let layers: usize = depths(&theme)
                 .iter()
                 .zip(cards)
-                .map(|((_, stack), card)| {
+                .map(|(d, card)| {
                     let s = stage(*card, &theme);
-                    stack
+                    d.stack
                         .iter()
+                        .flatten()
                         .filter(|spec| shadow_node(s, theme.shape.card, spec).is_some())
                         .count()
                 })
@@ -331,6 +402,51 @@ mod tests {
             assert_eq!(drawn, layers);
             assert!(layers > 0);
         }
+    }
+
+    /// The cards are the DepthsPage's, in its order and by its names, the
+    /// two the theme has no elevation for marked; each readout tells its
+    /// stack apart from the others under every theme.
+    #[test]
+    fn the_depths_are_the_kit_cards_and_read_apart() {
+        for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
+            let all = depths(&theme);
+            let names: Vec<&str> = all.iter().take(8).map(|d| d.name).collect();
+            assert_eq!(
+                names,
+                [
+                    "Surface",
+                    "Toolbar",
+                    "Subtle",
+                    "Slight hover",
+                    "Button",
+                    "Prompt Input",
+                    "Modal",
+                    "Large card hover"
+                ]
+            );
+            let gaps: Vec<&str> = all
+                .iter()
+                .filter(|d| d.stack.is_none())
+                .map(|d| d.name)
+                .collect();
+            assert_eq!(gaps, ["Subtle", "Prompt Input"]);
+            let lines: Vec<String> = all
+                .iter()
+                .filter_map(|d| d.stack.as_deref())
+                .map(spec_line)
+                .collect();
+            for (i, a) in lines.iter().enumerate() {
+                for b in &lines[i + 1..] {
+                    assert_ne!(a, b, "two depths read alike");
+                }
+            }
+        }
+        let core = Theme::hoff_core();
+        assert_eq!(
+            spec_line(core.shadows.overlay.as_slice()),
+            "0 25 50 -12 · 25%"
+        );
     }
 
     #[test]
