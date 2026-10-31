@@ -263,7 +263,7 @@ impl Theme {
                 keylight: None,
             },
             button: ButtonTokens::hoff_core(),
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
             message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),

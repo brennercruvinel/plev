@@ -38,7 +38,7 @@ pub use tokens::{
     PagerRecipe, PanelRecipe, RowRecipe, TableRecipe, TreeRecipe, TreeTile,
 };
 
-pub use avatar::{Avatar, AvatarSize};
+pub use avatar::{Avatar, AvatarSize, AvatarStack, StackLayout};
 pub use card::{Card, CardListRow, CardVariant};
 pub use code_block::{CodeBlock, CodeLine, LineKind};
 pub use empty_state::EmptyState;

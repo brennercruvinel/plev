@@ -63,8 +63,9 @@ pub struct Theme {
     // other theme derives it from the finished theme (`derive_front_slots`),
     // since the hoff glass is written by hand.
     /// Front A: field, label, input group, input OTP, textarea, combobox,
-    /// command.
-    pub form: FormTokens,
+    /// command. Boxed, as the navigation: a theme travels by value, and its
+    /// size is every test's stack.
+    pub form: Box<FormTokens>,
     /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
     /// sheet, drawer.
     pub overlay: OverlayTokens,
@@ -127,7 +128,7 @@ impl Theme {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
             // placeholders: derived from the finished theme below
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
             message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
@@ -377,7 +378,7 @@ impl Theme {
     /// (palette, glass, shapes), the last step of every constructor but
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
-        self.form = FormTokens::derive(self);
+        *self.form = FormTokens::derive(self);
         self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);

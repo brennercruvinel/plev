@@ -138,6 +138,10 @@ components! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
+    Textarea => textarea,
+    Combobox => combobox,
+    Command => command,
     // task-104 front B, overlays (#155)
     AlertDialog => alert_dialog,
     ContextMenu => context_menu,
@@ -149,12 +153,15 @@ components! {
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
+    Avatar => avatar,
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
+    Progress => progress,
+    Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,
@@ -169,6 +176,7 @@ components! {
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     Calendar => calendar,
+    DatePicker => date_picker,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,

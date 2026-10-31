@@ -32,7 +32,10 @@ mod kit;
 /// The status pieces: the badge, the avatar's online dot.
 mod status;
 
-pub use status::{AvatarTokens, BadgePalette, BadgeTokens, TagTokens};
+pub use status::{
+    AvatarTokens, BadgePalette, BadgeTokens, ProgressTokens, SkeletonTokens, SpinnerTokens,
+    TagTokens,
+};
 
 /// One text run of a message: size, line height and weight in px, and
 /// its color.
@@ -114,6 +117,9 @@ pub struct ScrollerTokens {
     pub shadow: Vec<ShadowSpec>,
     /// The tallest the scroller grows before its messages scroll.
     pub max_h: f32,
+    /// How deep the paper fades over a cut edge, the sign that more of
+    /// the thread lies past it.
+    pub edge: f32,
     /// What an empty scroller says, in the muted body tone.
     pub empty: MessageText,
 }
@@ -319,6 +325,9 @@ pub struct MessageTokens {
     pub toast: ToastTokens,
     pub badge: BadgeTokens,
     pub avatar: AvatarTokens,
+    pub skeleton: SkeletonTokens,
+    pub progress: ProgressTokens,
+    pub spinner: SpinnerTokens,
 }
 
 impl MessageTokens {
@@ -472,14 +481,73 @@ impl MessageTokens {
                     },
                 )
             },
-            // the online dot in the success green, ringed by the paper
-            avatar: AvatarTokens::new(
-                kit.avatar.online,
-                kit.avatar.online_ring,
-                colors.success,
-                Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
-                colors.text,
-            ),
+            // the kit's ladder; without a photo the disc in the panel's
+            // well with a divider hairline and the initial in the text
+            // tone; the online dot in the success green, ringed by the
+            // paper
+            avatar: AvatarTokens {
+                fill: colors.bg_panel,
+                edge: colors.divider,
+                initial: colors.text,
+                online_fill: colors.success,
+                ring: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                ..kit.avatar
+            }
+            .legible(),
+            // the blocks in the panel's well breathing toward the hover
+            // wash, the lines in that wash breathing toward the divider,
+            // the card on the paper with a divider hairline
+            skeleton: SkeletonTokens {
+                block: colors.bg_panel,
+                block_pulse: colors.bg_hover,
+                line_fill: colors.bg_hover,
+                line_pulse: colors.divider,
+                card_fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                card_border: colors.divider,
+                ..kit.skeleton
+            },
+            // the rail's track and fill in the muted tone at the kit's
+            // alphas, tinted by the intents; the heads in the text tone and
+            // the intents' colors, made to read; the spinner its ring
+            progress: {
+                let k = kit.progress;
+                let paper = Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]);
+                let tint = |c: Color, of: Color| Color([c.0[0], c.0[1], c.0[2], of.0[3]]);
+                let fill = k.fill.neutral;
+                ProgressTokens::new(
+                    k.height,
+                    tint(colors.text_mid, k.track),
+                    IntentColors {
+                        neutral: tint(colors.text_mid, fill),
+                        informational: tint(colors.info, fill),
+                        constructive: tint(colors.success, fill),
+                        destructive: tint(colors.danger, fill),
+                    },
+                    k.head_w,
+                    IntentColors {
+                        neutral: colors.text,
+                        informational: colors.info,
+                        constructive: colors.success,
+                        destructive: colors.danger,
+                    },
+                    k.min_w,
+                    paper,
+                    colors.text,
+                )
+            },
+            spinner: SpinnerTokens {
+                track: Color([
+                    colors.text_mid.0[0],
+                    colors.text_mid.0[1],
+                    colors.text_mid.0[2],
+                    kit.spinner.track.0[3],
+                ]),
+                arc: solid(
+                    colors.text,
+                    Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                ),
+                ..kit.spinner
+            },
         }
     }
 }

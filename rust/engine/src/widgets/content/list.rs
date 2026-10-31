@@ -199,6 +199,20 @@ impl VirtualList {
         self.scroll.set_content(count as f32 * self.item_height);
     }
 
+    /// A row's height, kept in step with the theme the list draws in
+    /// (a list built under one theme and drawn under another rows at the
+    /// other's height); the scroll keeps the same row at the top.
+    pub fn set_item_height(&mut self, height: f32) {
+        let height = height.max(1.0);
+        if height == self.item_height {
+            return;
+        }
+        let top = self.scroll.offset() / self.item_height;
+        self.item_height = height;
+        self.scroll.set_content(self.item_count as f32 * height);
+        self.scroll.scroll_to(top * height);
+    }
+
     pub fn hovered(&self) -> Option<usize> {
         self.hovered
     }

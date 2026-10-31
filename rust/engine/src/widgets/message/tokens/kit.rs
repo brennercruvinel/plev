@@ -4,7 +4,7 @@
 use super::{
     AlertTokens, AttachmentTokens, AvatarTokens, BadgePalette, BadgeTokens, BubbleTokens,
     CursorShape, IntentColors, KindColors, MarkerTokens, MessageStyle, MessageText, MessageTokens,
-    ScrollerTokens, TagTokens, ToastTokens,
+    ProgressTokens, ScrollerTokens, SkeletonTokens, SpinnerTokens, TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
@@ -155,6 +155,12 @@ impl MessageTokens {
                 // (`size.dropdown_max_h`), the tallest a panel grows
                 // before it scrolls
                 max_h: 320.0,
+                // the kit hides its scrollbars (Notifications:46
+                // `scrollbar-none`) and draws no sign that a list goes on;
+                // the paper fades over a cut edge two body lines deep
+                // (Comment/Message:30 `leading-[1.22rem]`), so the last
+                // words before it fade out
+                edge: 2.0 * 19.52,
                 // the quick comment's muted body (QuickComment/Comment:49)
                 empty: MessageText {
                     size: 13.0,
@@ -442,12 +448,112 @@ impl MessageTokens {
                     ink,
                 },
             ),
-            // components/Notification/index.tsx:72 `size-2 rounded-full
-            // bg-[#55b93e]`, the green mark; :31 `border-2
-            // border-[#FCFCFC]`, the paper ring a mark on an avatar
-            // takes. #55B93E is 2.4:1 on the paper; it moves toward the
-            // ink until it reads (`AvatarTokens::new`)
-            avatar: AvatarTokens::new(8.0, 2.0, Color::hex(0x55B93E), paper, ink),
+            avatar: AvatarTokens {
+                // the kit's avatars: CommentPin:20 `size-6`,
+                // Comment/Message:16 `size-8`, HeaderSimple:94 `size-10`
+                // (the control `Md` step, the basis), UploadAvatar:8
+                // `size-12`, ShareProfile:44 `size-20`
+                ladder: [24.0, 32.0, 40.0, 48.0, 80.0],
+                basis: 40.0,
+                // UploadAvatar:8 `bg-[#F8F7F7]`, the disc a photo would
+                // fill; without one the initial stands on it in the ink,
+                // and the hairline of Comment/Message:13
+                // `border-[#ECECEC]` closes it on the paper
+                fill: shade2,
+                edge: shade4,
+                edge_width: 1.0,
+                initial: ink,
+                // DesignAndAnimationSidebar/Head:11 `-ml-2 size-8 border-2
+                // border-[#fcfcfc]`: a 2 px paper ring, 8 of 32 under the
+                // one before
+                stack_ring: 2.0,
+                stack_overlap: 8.0 / 32.0,
+                // components/Notification/index.tsx:72 `size-2
+                // rounded-full bg-[#55b93e]`, the green mark; :31
+                // `border-2 border-[#FCFCFC]`, the paper ring a mark on an
+                // avatar takes. #55B93E is 2.4:1 on the paper; it moves
+                // toward the ink until it reads (`AvatarTokens::legible`)
+                online: 8.0,
+                online_ring: 2.0,
+                online_fill: Color::hex(0x55B93E),
+                ring: paper,
+            }
+            .legible(),
+            // components/SceneCardSkeleton/index.tsx
+            skeleton: SkeletonTokens {
+                // :3 `mb-2 aspect-[1.309] bg-[#F8F7F7] rounded-2xl`; it
+                // breathes toward the lines' #F1F1F1
+                block: shade2,
+                block_pulse: shade3,
+                block_radius: 16.0,
+                // :6 `h-2 bg-[#F1F1F1] rounded-[2px]`, breathing toward
+                // the hairline's #ECECEC; :5 `mb-1 p-1` around each bar;
+                // :9 `w-18` after :6 `w-32`, the last line 72 of 128
+                line: 8.0,
+                line_radius: 2.0,
+                line_fill: shade3,
+                line_pulse: shade4,
+                line_pad: 4.0,
+                line_gap: 4.0,
+                last_line: 72.0 / 128.0,
+                // :2 `w-65 p-2 border border-[#ECECEC] bg-[#FCFCFC]
+                // rounded-3xl`
+                card_w: 260.0,
+                card_fill: paper,
+                card_border: shade4,
+                card_border_width: 1.0,
+                card_radius: 24.0,
+                card_pad: 8.0,
+                image_aspect: 1.309,
+                image_gap: 8.0,
+                // :4 `p-3`
+                text_pad: 12.0,
+                // :6 `w-32`, :9 `w-18` in a column of 260 - 2 (border) -
+                // 16 (`p-2`) - 24 (`p-3`) - 8 (`p-1`) = 210
+                card_lines: [128.0 / 210.0, 72.0 / 210.0],
+            },
+            // components/VideoPlayer/index.tsx:48-53, the rail on paper:
+            // :49 `min-w-45 h-0.75 rounded-full bg-[#7B7B7B]/20`, :53
+            // `bg-[#7B7B7B]/30`, its head `after:w-1.25
+            // after:rounded-full after:bg-[#121212]`. The kit's one rail
+            // is neutral; the intents tint it with the core's accents (as
+            // the badge) and their heads move toward the ink until they
+            // read (`ProgressTokens::new`)
+            progress: ProgressTokens::new(
+                3.0,
+                alpha(shade6, 0.2),
+                IntentColors {
+                    neutral: alpha(shade6, 0.3),
+                    informational: alpha(BLUE, 0.3),
+                    constructive: alpha(GREEN, 0.3),
+                    destructive: alpha(RED, 0.3),
+                },
+                5.0,
+                IntentColors {
+                    neutral: ink,
+                    informational: BLUE,
+                    constructive: GREEN,
+                    destructive: RED,
+                },
+                180.0,
+                paper,
+                ink,
+            ),
+            // the kit draws no spinner: the rail of VideoPlayer:49 wound
+            // into a ring, its 3 px and its #7B7B7B/20 track, the arc in
+            // the rail's head #121212; a quarter of the ring, so the track
+            // still shows around it
+            spinner: SpinnerTokens {
+                stroke: 3.0,
+                track: alpha(shade6, 0.2),
+                arc: ink,
+                sweep: 0.25,
+            },
         }
     }
+}
+
+/// `c` at the css alpha `a` (`bg-[#7B7B7B]/20`).
+fn alpha(c: Color, a: f32) -> Color {
+    Color([c.0[0], c.0[1], c.0[2], a])
 }

@@ -146,7 +146,7 @@ impl Theme {
         let dark = Self::dark().colors;
         let mut theme = Self {
             button: ButtonTokens::derive(&dark),
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
             message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
