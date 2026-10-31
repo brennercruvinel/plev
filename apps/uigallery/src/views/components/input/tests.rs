@@ -232,8 +232,8 @@ fn focused_field_asks_for_the_next_flip() {
 use accord::Role;
 use engine::widgets::form::color_picker::{ColorPart, ColorPicker};
 
-/// The picker's card, `input_page.group[0].card[0]`.
-const PICKER: (usize, usize) = (0, 0);
+/// The picker's card, `input_page.group[1].card[0]`.
+const PICKER: (usize, usize) = (1, 0);
 
 fn picker(p: &InputPage) -> &ColorPicker {
     p.kit
@@ -262,7 +262,7 @@ fn the_kit_s_groups_come_under_the_input_group() {
     let theme = Theme::hoff_core();
     let p = InputPage::new();
     let titles: Vec<&str> = p.kit.groups.iter().map(|g| g.title).collect();
-    assert_eq!(titles, ["Color picker"]);
+    assert_eq!(titles, ["Replace avatar", "Color picker"]);
     let drawn = texts(&p);
     for title in titles.iter().chain([&TITLE]) {
         assert!(drawn.iter().any(|t| t == title), "{title}");
@@ -328,10 +328,10 @@ fn the_color_picker_projects_and_takes_a_request() {
     let mut p = InputPage::new();
     let snap = snapshot(&p);
     let group = snap
-        .get(&SemId::parse("input_page.group[0]").unwrap())
+        .get(&SemId::parse("input_page.group[1]").unwrap())
         .unwrap();
     assert_eq!(group.label, "Color picker");
-    let at = accord::StateRef::parse("input_page.group[0].card[0]:value").unwrap();
+    let at = accord::StateRef::parse("input_page.group[1].card[0]:value").unwrap();
     assert_eq!(snap.value(&at), Some(&Value::from("#F4F4F4FF")));
     let hex = picker_id(&p, ColorPart::Hex);
     let ask = |p: &InputPage, v: &str| {

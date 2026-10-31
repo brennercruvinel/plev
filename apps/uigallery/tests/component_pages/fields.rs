@@ -325,9 +325,10 @@ fn a_new_field_saves_the_same_value_from_the_three() {
     );
 }
 
-const PICKER: &str = "input_page.group[0].card[0]";
-const HEX: &str = "input_page.group[0].card[0].hex";
-const ALPHA: &str = "input_page.group[0].card[0].alpha";
+const PICKER: &str = "input_page.group[1].card[0]";
+const HEX: &str = "input_page.group[1].card[0].hex";
+const ALPHA: &str = "input_page.group[1].card[0].alpha";
+const NO_AVATAR: &str = "input_page.group[0].card[1]";
 
 /// The person scrolls the page until `id` is on screen.
 fn scroll_to(g: &mut Gallery, id: &str) {
@@ -411,5 +412,23 @@ fn a_color_picker_takes_the_same_color_from_the_three() {
     assert_eq!(
         person.value(&format!("{PICKER}:value")),
         Some(Value::from("#33669980"))
+    );
+}
+
+/// The avatar upload without a photo: a person's press, a reader's press
+/// and an agent's `activate` ask for a file, and the gallery's answer
+/// puts the same photo in.
+#[test]
+fn an_avatar_upload_takes_the_same_photo_from_the_three() {
+    let mut person = gallery("Input");
+    scroll_to(&mut person, NO_AVATAR);
+    person.click(NO_AVATAR);
+    let mut reader = gallery("Input");
+    reader.press(NO_AVATAR);
+    let agent = by_agent("Input", "avatar", vec![ask(NO_AVATAR, "activate")]);
+    same("Input", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{NO_AVATAR}:photo")),
+        Some(Value::Bool(true))
     );
 }
