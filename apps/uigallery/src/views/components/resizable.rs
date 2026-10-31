@@ -58,18 +58,18 @@ impl ResizablePage {
             &format!("first pane: {:.0}px (35% desired)", first.w),
             style.font_size,
             style.font_weight,
-            first.x + pad,
-            first.y + pad,
+            (first.x + pad, first.y + pad),
             theme.colors.text_mid.0,
+            theme,
         );
         text(
             c,
             "second pane",
             style.font_size,
             style.font_weight,
-            second.x + pad,
-            second.y + pad,
+            (second.x + pad, second.y + pad),
             theme.colors.text_mid.0,
+            theme,
         );
         self.split.render(c, rect, theme);
     }

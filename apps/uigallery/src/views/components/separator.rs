@@ -40,9 +40,9 @@ impl SeparatorPage {
             "above the rule",
             style.font_size,
             style.font_weight,
-            content.x,
-            y,
+            (content.x, y),
             color,
+            theme,
         );
         y += line + theme.spacing.lg;
         Separator::Horizontal.render(c, Rect::new(content.x, y, w, theme.spacing.xs), theme);
@@ -52,9 +52,9 @@ impl SeparatorPage {
             "left column",
             style.font_size,
             style.font_weight,
-            content.x,
-            y,
+            (content.x, y),
             color,
+            theme,
         );
         let mid = content.x + w / 2.0;
         Separator::Vertical.render(c, Rect::new(mid, y, theme.spacing.xs, line * 2.0), theme);
@@ -63,9 +63,9 @@ impl SeparatorPage {
             "right column",
             style.font_size,
             style.font_weight,
-            mid + theme.spacing.lg,
-            y,
+            (mid + theme.spacing.lg, y),
             color,
+            theme,
         );
     }
 }

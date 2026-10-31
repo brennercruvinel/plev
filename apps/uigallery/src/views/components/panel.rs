@@ -45,9 +45,9 @@ impl PanelPage {
             "glass surface, soft edge, top-lit rim",
             style.font_size,
             style.font_weight,
-            rect.x + theme.spacing.lg,
-            rect.y + theme.spacing.lg,
+            (rect.x + theme.spacing.lg, rect.y + theme.spacing.lg),
             theme.colors.text_mid.0,
+            theme,
         );
     }
 }
