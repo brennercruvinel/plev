@@ -19,6 +19,10 @@ const fn page(
     }
 }
 
+#[allow(
+    dead_code,
+    reason = "every alias has its own page since task-104; Body::Alias stays for the closing to retire"
+)]
 const fn alias(
     title: &'static str,
     icon: &'static str,
@@ -211,14 +215,20 @@ pub const PAGES: &[Page] = &[
         "A trigger that reveals a list under a rail, from the kit's home sidebar.",
         Pane::Collapsible,
     ),
-    alias(
+    page(
+        C,
         "Combobox",
         "search",
-        "The select, until typing filters it.",
-        Pane::Select,
-        "typing and filtering",
+        "A select that filters as you type: Up and Down highlight, Enter picks, Escape closes.",
+        Pane::Combobox,
     ),
-    placeholder("Command"),
+    page(
+        C,
+        "Command",
+        "terminal",
+        "A command palette inline: type to filter, Up and Down highlight, Enter runs.",
+        Pane::Command,
+    ),
     page(
         C,
         "Context Menu",
@@ -304,7 +314,13 @@ pub const PAGES: &[Page] = &[
         "A text field with addons: an icon button, a shortcut hint, a prefix or a suffix.",
         Pane::InputGroup,
     ),
-    placeholder("Input OTP"),
+    page(
+        C,
+        "Input OTP",
+        "square",
+        "A one-time code, a cell per digit: type, paste, Backspace; the arrows move between cells.",
+        Pane::InputOtp,
+    ),
     page(
         C,
         "Item",
@@ -489,7 +505,13 @@ pub const PAGES: &[Page] = &[
         "The kit's tab strip, three tabs and two, long and translated labels.",
         Pane::Tabs,
     ),
-    placeholder("Textarea"),
+    page(
+        C,
+        "Textarea",
+        "file",
+        "Text over several lines: Enter breaks the line, Up and Down move one; one box grows with its text.",
+        Pane::Textarea,
+    ),
     page(
         C,
         "Toast",

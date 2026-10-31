@@ -11,8 +11,16 @@
 //! icon, as the kit's `group-hover` does. The editing is the inner
 //! [`TextField`]'s (`group.input`).
 //!
+//! A select can take the end of the box (the kit's Invite,
+//! `components/Invite/index.tsx`: who to invite, and what they can do),
+//! the select's inline look, as wide as its options measure (never less
+//! than `theme.form.group.select_w`); its open list floats on the
+//! owner's overlay layer ([`InputGroup::render_dropdown`]) and has the
+//! pointer while open.
+//!
 //! Projected ([`InputGroup::project`]): the text field, described by its
-//! hint; beside it the icon button (`<id>.action`, `activate`).
+//! hint; beside it the icon button (`<id>.action`, `activate`) and the
+//! select (`<id>.choice`, as a select projects).
 
 use accord::{Role, SemId, SnapshotBuilder};
 
@@ -20,8 +28,9 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::widgets::form::select::Select;
 use crate::widgets::form::text_field::TextField;
-use crate::widgets::form::tokens::{Look, Slot};
+use crate::widgets::form::tokens::{Look, SelectLook, Slot};
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring_inside, rounded_rect, shadow_drops, shadow_insets};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -44,6 +53,8 @@ pub struct GroupLayout {
     /// The start and end addons' boxes.
     pub start: Option<Rect>,
     pub end: Option<Rect>,
+    /// The select at the end.
+    pub choice: Option<Rect>,
 }
 
 /// A text field with addons.
@@ -54,6 +65,8 @@ pub struct InputGroup {
     end: Option<Addon>,
     /// The keyboard focus on the icon button (a reader's, or Tab).
     action_focus: bool,
+    /// A select at the end of the box.
+    pub choice: Option<Select>,
     sem: Option<SemId>,
 }
 
@@ -64,8 +77,19 @@ impl InputGroup {
             start: None,
             end: None,
             action_focus: false,
+            choice: None,
             sem: None,
         }
+    }
+
+    /// A select at the end of the box, in its inline look.
+    pub fn end_select(mut self, select: Select) -> Self {
+        let select = select.look(SelectLook::Inline);
+        self.choice = Some(match self.choice_id() {
+            Some(id) => select.sem(id),
+            None => select,
+        });
+        self
     }
 
     pub fn start(mut self, addon: Addon) -> Self {
@@ -91,6 +115,9 @@ impl InputGroup {
 
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.input.disabled = disabled;
+        if let Some(choice) = &mut self.choice {
+            choice.disabled = disabled;
+        }
         self
     }
 
@@ -99,7 +126,15 @@ impl InputGroup {
     pub fn sem(mut self, id: SemId) -> Self {
         self.input = self.input.sem(id.clone());
         self.sem = Some(id);
+        if let (Some(choice), Some(id)) = (self.choice.take(), self.choice_id()) {
+            self.choice = Some(choice.sem(id));
+        }
         self
+    }
+
+    /// The end select's id, `<id>.choice`.
+    pub fn choice_id(&self) -> Option<SemId> {
+        self.sem.as_ref()?.child("choice").ok()
     }
 
     pub fn sem_id(&self) -> Option<&SemId> {
@@ -170,10 +205,22 @@ impl InputGroup {
             };
             Some(Rect::new(x, input.y + (h - ah) / 2.0, w, ah))
         };
+        let choice = self.choice.as_ref().map(|c| {
+            let g = &theme.form.group;
+            let h = c.height_in(theme).min(input.h - g.icon_edge * 2.0);
+            let w = c.width_in(theme).max(g.select_w);
+            Rect::new(
+                input.right() - g.icon_edge - w,
+                input.y + (input.h - h) / 2.0,
+                w,
+                h,
+            )
+        });
         GroupLayout {
             input,
             start: place(&self.start, true),
             end: place(&self.end, false),
+            choice,
         }
     }
 
@@ -200,10 +247,29 @@ impl InputGroup {
 
     /// The text's insets for `l`, as the addons measure in `theme`.
     fn slots(&self, l: &GroupLayout, theme: &Theme) -> [Slot; 2] {
-        [
-            self.inset(&self.start, l.start, theme),
-            self.inset(&self.end, l.end, theme),
-        ]
+        let end = match l.choice {
+            // Invite :22 `!pr-28`: the select, its edge and a gap.
+            Some(r) => {
+                let pad = theme.form.recipe(self.look_of()).pad_x;
+                let clear = l.input.right() - r.x + theme.form.select.gap;
+                Slot::Width(pad.max(clear))
+            }
+            None => self.inset(&self.end, l.end, theme),
+        };
+        [self.inset(&self.start, l.start, theme), end]
+    }
+
+    /// The end select's open list, when it is open.
+    pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Option<Rect> {
+        let c = self.choice.as_ref().filter(|c| c.is_open())?;
+        Some(c.dropdown_rect(self.layout(bounds, theme).choice?, theme))
+    }
+
+    /// Draws the end select's open list on `layer` (an overlay).
+    pub fn render_dropdown(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        if let (Some(choice), Some(r)) = (&self.choice, self.layout(bounds, theme).choice) {
+            choice.render_dropdown(c, layer, r, theme);
+        }
     }
 
     /// Where the input method's candidate window goes: the caret.
@@ -242,6 +308,19 @@ impl InputGroup {
         {
             return EventResult::clicked();
         }
+        // The end select: open, it has every event; closed, a press on it.
+        if let (Some(choice), Some(r)) = (&mut self.choice, l.choice) {
+            let (x, y) = event.pos();
+            let pressed = matches!(event, WidgetEvent::MouseDown { .. }) && r.contains(x, y);
+            if choice.is_open() || pressed {
+                return choice.handle_event(event, r, theme);
+            }
+            if matches!(event, WidgetEvent::MouseMove { .. }) {
+                let hover = choice.handle_event(event, r, theme);
+                let slots = self.slots(&l, theme);
+                return hover.merge(self.input.handle_event_in(event, l.input, theme, slots));
+            }
+        }
         let slots = self.slots(&l, theme);
         self.input.handle_event_in(event, l.input, theme, slots)
     }
@@ -255,6 +334,9 @@ impl InputGroup {
         let l = self.layout(bounds, theme);
         let slots = self.slots(&l, theme);
         self.input.render_in(c, layer, l.input, theme, slots);
+        if let (Some(choice), Some(r)) = (&self.choice, l.choice) {
+            choice.render(c, r, theme);
+        }
         let g = &theme.form.group;
         let alpha = if self.input.disabled {
             theme.form.recipe(self.look_of()).disabled_alpha
@@ -336,6 +418,9 @@ impl InputGroup {
         });
         if let Some(hint) = hint {
             node.description(hint);
+        }
+        if let (Some(choice), Some(cid)) = (&self.choice, self.choice_id()) {
+            choice.project(b, &cid, "access", Some(parent.unwrap_or(id)));
         }
         if let (Some(action), Some(name)) = (self.action_id(), self.action()) {
             let mut node = b.node(&action, Role::Button, name);

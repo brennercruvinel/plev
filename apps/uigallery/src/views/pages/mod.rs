@@ -94,6 +94,10 @@ pub enum Pane {
     Field,
     Label,
     InputGroup,
+    InputOtp,
+    Textarea,
+    Combobox,
+    Command,
     // task-104 front B, overlays (#155)
     AlertDialog,
     Drawer,

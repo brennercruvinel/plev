@@ -45,9 +45,13 @@ pub mod tree;
 // task-104: each front adds its page modules under its anchor, a group of
 // its own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
+pub mod combobox;
+pub mod command;
 pub mod field;
 pub mod input_group;
+pub mod input_otp;
 pub mod label;
+pub mod textarea;
 
 // task-104 front B, overlays (#155)
 pub mod alert_dialog;

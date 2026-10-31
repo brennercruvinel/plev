@@ -138,6 +138,10 @@ components! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
+    Textarea => textarea,
+    Combobox => combobox,
+    Command => command,
     // task-104 front B, overlays (#155)
     AlertDialog => alert_dialog,
     ContextMenu => context_menu,

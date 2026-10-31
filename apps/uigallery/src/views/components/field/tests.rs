@@ -55,10 +55,7 @@ fn input_center(p: &FormPage, at: (usize, usize), theme: &Theme) -> (f32, f32) {
 fn every_field_has_its_id() {
     let p = page();
     assert!(p.root.is_some());
-    assert!(
-        p.specs()
-            .all(|s| s.field().is_some_and(|f| f.sem_id().is_some()))
-    );
+    assert!(p.specs().all(|s| s.part_id(Part::Box).is_some()));
 }
 
 /// The width sweep: from 280 to 1600 px every 8 px, in the core and the
@@ -93,10 +90,23 @@ fn every_card_and_field_stays_in_place_from_280_to_1600() {
                     let chip = showcase::chip_rect(card.x + inset, card.y + inset, &text, &theme);
                     assert!(chip.right() <= card.right(), "{what}: chip");
                     assert!(chip.bottom() <= rect.y, "{what}: chip over the field");
-                    let l = spec.spec.field().expect("a field").layout(*rect, &theme);
-                    assert!((l.bottom() - rect.bottom()).abs() < 0.5, "{what}: height");
-                    let parts = [l.label, l.link, l.message, l.icon, l.check, l.reveal];
-                    for r in parts.into_iter().flatten().chain([l.input]) {
+                    let parts: Vec<Rect> = match (spec.spec.field(), spec.spec.get::<NewField>()) {
+                        (Some(f), _) => {
+                            let l = f.layout(*rect, &theme);
+                            assert!((l.bottom() - rect.bottom()).abs() < 0.5, "{what}: height");
+                            [l.label, l.link, l.message, l.icon, l.check, l.reveal]
+                                .into_iter()
+                                .flatten()
+                                .chain([l.input])
+                                .collect()
+                        }
+                        (None, Some(n)) => {
+                            let l = n.layout(*rect, &theme);
+                            vec![l.whole, l.text, l.icon]
+                        }
+                        _ => panic!("{what}: a field or a new field"),
+                    };
+                    for r in parts {
                         assert!(
                             r.x >= rect.x - 0.5 && r.right() <= rect.right() + 0.5,
                             "{what}: {r:?} leaves the field"
@@ -157,10 +167,10 @@ fn a_click_focuses_a_field_the_keys_edit_it_and_escape_blurs() {
 fn a_disabled_field_takes_no_caret() {
     let theme = Theme::hoff_core();
     let mut p = page();
-    let (x, y) = input_center(&p, (2, 0), &theme);
+    let (x, y) = input_center(&p, (3, 0), &theme);
     p.handle_event(&WidgetEvent::MouseDown { x, y }, content(), &theme);
     assert_eq!(p.focused(), None);
-    p.set_focused(Some((2, 0)));
+    p.set_focused(Some((3, 0)));
     assert_eq!(p.focused(), None);
 }
 
@@ -226,7 +236,7 @@ fn the_page_projects_its_fields_and_the_focus() {
     );
     assert!(
         !snap
-            .get(&field(&p, (2, 0)).sem_id().cloned().unwrap())
+            .get(&field(&p, (3, 0)).sem_id().cloned().unwrap())
             .unwrap()
             .enabled
     );
