@@ -11,7 +11,7 @@ topics: [agents, process, git, workspace]
 relations: [learning-general, adr-index, operations-autonomy, operations-generative-runtime-guidelines, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-60, task-62, task-84]
 source: docs/ref/orchestrate-coding-agents-on-this-repo.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-10-31
 review: reviewed
 ---
 
@@ -70,9 +70,13 @@ guidelines win and this file gets fixed.
 
 ## parallel work
 
-- one agent at a time since 2026-09-25 (Brenner's rule, with the token
-  cost of each agent written in the journal). the rest of this section
-  holds if parallel work comes back.
+- parallel agents are allowed again since 2026-10-31 (Brenner, task-104).
+  this replaces "one agent at a time", the first half of the rule of
+  2026-09-25; the rules below are what keeps parallel work safe.
+- the token cost of each agent is written in the
+  [journal](../../research/autonomous-cycle-journal.md) at each
+  integration, one line per agent when several ran. this is the second
+  half of the rule of 2026-09-25 and it still holds.
 - parallel only inside a wave and only when the file surfaces are
   disjoint and written into each briefing (allowed and forbidden paths).
 - a file two tasks of the same wave must touch is sequenced or split into

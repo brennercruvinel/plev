@@ -11,7 +11,7 @@ topics: [agents, process, git]
 relations: [learning-general, research-autonomous-cycle-journal, operations-generative-runtime-guidelines, operations-orchestrate-coding-agents-on-this-repo, generative-runtime-program, task-75, task-96, task-97, generative-runtime-thesis]
 source: docs/ref/autonomy.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-10-31
 review: reviewed
 ---
 
@@ -163,8 +163,14 @@ de 500 a 660 mil tokens. as regras:
 5. **tudo esperando o brenner, o ciclo para.** se o que resta aberto depende
    de decisão, instalação ou teste manual dele, o orquestrador pergunta uma
    vez, com as decisões juntas, e espera. não inventa trabalho para seguir.
-6. **um agente por vez, e o custo no journal.** a entrada de cada
-   integração diz quantos tokens o agente gastou.
+6. **agentes em paralelo quando as superfícies forem disjuntas.** desde
+   2026-10-31 (brenner, task-104), no lugar de "um agente por vez", a
+   primeira metade da regra de 2026-09-25. as condições estão em
+   [orchestrate-coding-agents-on-this-repo](orchestrate-coding-agents-on-this-repo.md), "parallel work".
+7. **o custo no journal.** a entrada de cada integração no
+   [journal](../../research/autonomous-cycle-journal.md) diz quantos tokens
+   o agente gastou; com agentes em paralelo, uma linha por agente. é a
+   segunda metade da regra de 2026-09-25, que continua valendo.
 
 ## regra contra deriva
 
