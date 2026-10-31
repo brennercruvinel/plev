@@ -132,6 +132,11 @@ pub struct CalendarTokens {
     pub weekday_line: f32,
     pub weekday_weight: u16,
     pub weekday: Color,
+    /// Today's ring and its width. The outline button's ring
+    /// (`#E2E2E2`) is 1.3:1 on paper, too faint to mark a day; the kit's
+    /// secondary gray passes 1.4.11.
+    pub today: Color,
+    pub today_w: f32,
     /// A day's number (the segment's 13px, medium).
     pub day_size: f32,
     pub day_line: f32,
@@ -167,6 +172,10 @@ const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 /// that passes (`theme/tests/contrast.rs` measures the pairs).
 pub const TEXT_CONTRAST: f32 = 7.0;
 
+/// WCAG 2.2 AA for the parts of a control a person must see (1.4.11):
+/// today's ring.
+pub const MARK_CONTRAST: f32 = 3.0;
+
 /// `fg` composed over the opaque linear `under`, in linear light.
 fn over(fg: Color, under: [f32; 3]) -> [f32; 3] {
     let [r, g, b, a] = fg.to_linear_array();
@@ -185,8 +194,13 @@ fn ratio(a: [f32; 3], b: [f32; 3]) -> f32 {
 /// `page`, else `fallback`: the kit's or the theme's quiet text where it
 /// is legible, the stronger one where it is not.
 pub fn legible(preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
+    legible_at(TEXT_CONTRAST, preferred, fallback, fill, page)
+}
+
+/// [`legible`] at the contrast `need`.
+pub fn legible_at(need: f32, preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
     let under = over(fill, over(page, [0.0; 3]));
-    if ratio(over(preferred, under), under) >= TEXT_CONTRAST {
+    if ratio(over(preferred, under), under) >= need {
         preferred
     } else {
         fallback
@@ -326,6 +340,8 @@ impl SelectionTokens {
             // the kit's secondary #7B7B7B reads 4.1:1 on its paper; shade 7
             // passes AAA, as front C's quiet text (message/tokens.rs)
             weekday: legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]),
+            today: legible_at(MARK_CONTRAST, SHADES[5], SHADES[8], SHADES[0], SHADES[0]),
+            today_w: 1.0,
             day_size: 13.0,
             day_line: 16.0,
             day_weight: 500,
@@ -415,6 +431,8 @@ impl SelectionTokens {
             radio,
             calendar: CalendarTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),
+                today: legible_at(MARK_CONTRAST, c.border_active, c.text, c.surface, c.bg),
+                today_w: theme.control.edge_width,
                 ..kit.calendar
             },
         }

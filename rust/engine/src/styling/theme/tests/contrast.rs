@@ -282,7 +282,8 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     // task-104 front E: the segment labels on the well and on the thumb,
     // the radio's label on the page and under the pointer, and the
     // calendar's weekdays on a card, at AAA (a color of the kit or the
-    // theme that falls under it gives way, `selection::tokens::legible`).
+    // theme that falls under it gives way, `selection::tokens::legible`),
+    // and today's ring, a mark a person must see (1.4.11).
     let aaa = f64::from(crate::widgets::selection::tokens::TEXT_CONTRAST);
     let sel = &t.selection;
     let well = over(sel.segmented.track.fill[0], page_bg.1);
@@ -328,6 +329,14 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, aaa, over(color, under), under);
     }
+    let today = over(sel.calendar.today, card);
+    add(
+        "selection.calendar.today",
+        "colors.surface",
+        LARGE,
+        today,
+        card,
+    );
     out
 }
 
@@ -611,7 +620,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 393,
+        count, 397,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

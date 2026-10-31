@@ -413,8 +413,9 @@ impl Calendar {
     /// text `selected` is the chosen day's key (empty for none) and
     /// `month` the month shown (`yyyy-mm`); its two arrows as buttons;
     /// and each day of the month shown a `Role::Radio` `<id>[<key>]`,
-    /// named as a person reads it, with its `checked`, enabled when it can
-    /// be chosen, and a `select` that reads the calendar's `selected`.
+    /// named as a person reads it, with its `checked` (and `today` on
+    /// today), enabled when it can be chosen, and a `select` that reads
+    /// the calendar's `selected`.
     #[track_caller]
     pub fn project<'b>(
         &self,
@@ -434,6 +435,9 @@ impl Calendar {
             node.parent(id);
             node.state("checked", self.selected == Some(date))
                 .enabled(self.allows(date));
+            if self.today == Some(date) {
+                node.state("today", true);
+            }
             node.action("select").reads(reads.as_str());
         }
         let mut node = b.node(id, Role::Group, label);
@@ -482,9 +486,6 @@ impl Calendar {
             text(c, name, &wd, *r, true, t.weekday, fade);
         }
         let day = Self::style(theme, t.day_size, t.day_line, t.day_weight);
-        // Today's ring: the outline button's, with no fill of its own.
-        let mut ring = b.outline.rest.clone();
-        ring.fill = [Color::rgba(0.0, 0.0, 0.0, 0.0); 2];
         for (i, (date, r)) in grid.iter().zip(&l.days).enumerate() {
             if date.month != self.shown.1 {
                 continue;
@@ -510,7 +511,20 @@ impl Calendar {
                 theme,
             );
             if self.today == Some(*date) && !chosen {
-                paint_surface(c, LayerId::DEFAULT, *r, radius, &ring, alpha, false, theme);
+                // a stroke inside the cell, never a fill: the day's own
+                // press shows through it
+                let [cr, cg, cb, ca] = t.today.0;
+                let inset = t.today_w / 2.0;
+                c.push(SceneNode::RoundedRect {
+                    x: r.x + inset,
+                    y: r.y + inset,
+                    w: r.w - t.today_w,
+                    h: r.h - t.today_w,
+                    color: [0.0; 4],
+                    corner_radius: (radius - inset).max(0.0),
+                    border_width: t.today_w,
+                    border_color: [cr, cg, cb, ca * alpha],
+                });
             }
             text(
                 c,
