@@ -1,0 +1,287 @@
+//! The list a Dropdown reveals (the kit's HomeSidebar): links one under
+//! the other, a rail down their left, a rounded branch from the rail to
+//! each link, the current link inked and marked by a chevron. It is the
+//! content a [`Collapsible`] draws in its closure, so it is drawn and hit
+//! in the rect the collapsible gives it, clipped to what is revealed.
+//!
+//! Each link is projected as a `Role::Link` `<id>[<i>]` with its `active`
+//! state and an `activate` that reads it, as a nav link is; the app runs
+//! the action ([`DisclosureList::activate`]).
+//!
+//! [`Collapsible`]: super::Collapsible
+
+use accord::{Role, SemId, SnapshotBuilder};
+
+use super::super::tokens::DisclosureRail;
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::color::Color;
+use crate::styling::theme::Theme;
+use crate::widgets::icons;
+use crate::widgets::recipe::{focus_ring_inside, rounded_rect_stroke};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+
+/// Links under a rail.
+#[derive(Clone, Debug, Default)]
+pub struct DisclosureList {
+    links: Vec<String>,
+    current: Option<usize>,
+    hovered: Option<usize>,
+    pressed: Option<usize>,
+    focused: Option<usize>,
+    disabled: bool,
+    sem: Option<SemId>,
+}
+
+impl DisclosureList {
+    pub fn new<S: Into<String>>(links: impl IntoIterator<Item = S>) -> Self {
+        Self {
+            links: links.into_iter().map(Into::into).collect(),
+            ..Self::default()
+        }
+    }
+
+    /// Link `i` is the current one.
+    pub fn current(mut self, i: usize) -> Self {
+        if i < self.links.len() {
+            self.current = Some(i);
+        }
+        self
+    }
+
+    pub fn disabled(mut self, on: bool) -> Self {
+        self.disabled = on;
+        self.hovered = None;
+        self.pressed = None;
+        self
+    }
+
+    /// The stem of the links' ids: link `i` is `<id>[<i>]`.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn len(&self) -> usize {
+        self.links.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.links.is_empty()
+    }
+
+    pub fn current_link(&self) -> Option<usize> {
+        self.current
+    }
+
+    pub fn is_disabled(&self) -> bool {
+        self.disabled
+    }
+
+    /// `<id>[<i>]`, the id of link `i`.
+    pub fn link_id(&self, i: usize) -> Option<SemId> {
+        (i < self.links.len())
+            .then(|| self.sem.as_ref().map(|id| id.key(i.to_string())))
+            .flatten()
+    }
+
+    /// The link whose id is `id`.
+    pub fn position(&self, id: &SemId) -> Option<usize> {
+        (0..self.links.len()).find(|i| self.link_id(*i).as_ref() == Some(id))
+    }
+
+    /// Makes link `i` the current one; `false` when disabled or not there.
+    pub fn activate(&mut self, i: usize) -> bool {
+        if self.disabled || i >= self.links.len() {
+            return false;
+        }
+        self.current = Some(i);
+        true
+    }
+
+    /// The keyboard focus on link `i`, or on none.
+    pub fn set_focused(&mut self, i: Option<usize>) {
+        self.focused = i.filter(|i| *i < self.links.len());
+    }
+
+    fn rail(theme: &Theme) -> Option<&DisclosureRail> {
+        theme.disclosure.collapsible.rail.as_ref()
+    }
+
+    fn style(theme: &Theme) -> TextStyle {
+        let r = &theme.disclosure.collapsible;
+        theme
+            .typography
+            .exact(r.body_size, r.body_line_height, r.body_weight)
+    }
+
+    /// The width a label wraps at, in a list `w` wide.
+    fn label_w(rail: &DisclosureRail, w: f32) -> f32 {
+        let [left, right] = rail.link_pad;
+        (w - left - right - rail.link_chevron).max(0.0)
+    }
+
+    /// Each link's rect in `bounds`: at least the kit's height, taller
+    /// when its label wraps.
+    pub fn link_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let Some(rail) = Self::rail(theme) else {
+            return Vec::new();
+        };
+        let style = Self::style(theme);
+        let label_w = Self::label_w(rail, bounds.w);
+        let mut y = bounds.y;
+        self.links
+            .iter()
+            .map(|label| {
+                let (_, text_h) = TextMeasurer::measure_styled(label, &style, Some(label_w));
+                let h = rail.link_h.max(text_h);
+                let r = Rect::new(bounds.x, y, bounds.w, h);
+                y += h;
+                r
+            })
+            .collect()
+    }
+
+    /// The list's height at width `w`.
+    pub fn height(&self, w: f32, theme: &Theme) -> f32 {
+        self.link_rects(Rect::new(0.0, 0.0, w, 0.0), theme)
+            .last()
+            .map_or(0.0, |r| r.bottom())
+    }
+
+    /// Hover and press on the links; a release on the link pressed makes
+    /// it current (`clicked`). A disabled list reacts to nothing.
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        bounds: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        if self.disabled {
+            return EventResult::IGNORED;
+        }
+        let rects = self.link_rects(bounds, theme);
+        let (x, y) = event.pos();
+        let at = rects.iter().position(|r| r.contains(x, y));
+        match *event {
+            WidgetEvent::MouseMove { .. } if at != self.hovered => {
+                self.hovered = at;
+                EventResult::changed()
+            }
+            WidgetEvent::MouseDown { .. } if at.is_some() => {
+                self.pressed = at;
+                EventResult::changed()
+            }
+            WidgetEvent::MouseUp { .. } if self.pressed.is_some() => {
+                let pressed = self.pressed.take();
+                if at.is_some() && at == pressed {
+                    self.current = at;
+                    EventResult::clicked()
+                } else {
+                    EventResult::changed()
+                }
+            }
+            _ => EventResult::IGNORED,
+        }
+    }
+
+    /// The rail, the branches, the labels and the current link's chevron
+    /// in `bounds`; each link binds where it draws.
+    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let Some(rail) = Self::rail(theme) else {
+            return;
+        };
+        let alpha = if self.disabled {
+            theme.glass.disabled_alpha
+        } else {
+            1.0
+        };
+        let rects = self.link_rects(bounds, theme);
+        let total = rects.last().map_or(0.0, |r| r.bottom() - bounds.y);
+        let rail_x = bounds.x + rail.x;
+        let rail_h = (total - rail.end).max(0.0);
+        if rail_h > 0.0 {
+            c.push(SceneNode::Rect {
+                x: rail_x,
+                y: bounds.y,
+                w: rail.width,
+                h: rail_h,
+                color: faded(rail.color, alpha),
+            });
+        }
+        let style = Self::style(theme);
+        let label_w = Self::label_w(rail, bounds.w);
+        let [pad_left, pad_right] = rail.link_pad;
+        for (i, (label, at)) in self.links.iter().zip(&rects).enumerate() {
+            if let Some(id) = self.link_id(i) {
+                c.bind(&id, [at.x, at.y, at.w, at.h]);
+            }
+            // The branch: a rounded box whose top and right edges fall
+            // outside the clip, leaving its left edge, its bottom edge and
+            // the bottom-left curve.
+            let r = rail.branch_radius;
+            c.push_clip(rail_x, at.y, rail.branch_w, rail.branch_h);
+            c.push(rounded_rect_stroke(
+                rail_x,
+                at.y - r * 2.0,
+                rail.branch_w + r * 2.0,
+                rail.branch_h + r * 2.0,
+                r,
+                faded(rail.color, alpha),
+                rail.width,
+            ));
+            c.pop_clip();
+
+            let lit = self.current == Some(i) || self.hovered == Some(i);
+            let color = if lit {
+                rail.link_active
+            } else {
+                rail.link_rest
+            };
+            let (_, text_h) = TextMeasurer::measure_styled(label, &style, Some(label_w));
+            c.push(SceneNode::Text {
+                key: TextNodeKey::from_style(label, &style, Some(label_w)),
+                x: at.x + pad_left,
+                y: at.y + (at.h - text_h) / 2.0,
+                color: faded(color, alpha),
+            });
+            if self.current == Some(i)
+                && let Some(node) = icons::icon_at(
+                    "chevron-right",
+                    rail.link_chevron,
+                    faded(theme.disclosure.collapsible.chevron_color, alpha),
+                    at.right() - pad_right - rail.link_chevron,
+                    at.y + (at.h - rail.link_chevron) / 2.0,
+                )
+            {
+                c.push(node);
+            }
+            if self.focused == Some(i) && !self.disabled {
+                c.push(focus_ring_inside(*at, theme.shape.nav, theme));
+            }
+        }
+    }
+
+    /// Declares each link, `<id>[<i>]`, a `Role::Link` named by its label
+    /// under `parent`, enabled unless the list is disabled, with `active`
+    /// and an `activate` that reads it.
+    #[track_caller]
+    pub fn project(&self, b: &mut SnapshotBuilder, parent: Option<&SemId>) {
+        for (i, label) in self.links.iter().enumerate() {
+            let Some(id) = self.link_id(i) else {
+                continue;
+            };
+            let mut node = b.node(&id, Role::Link, label.as_str());
+            if let Some(parent) = parent {
+                node.parent(parent);
+            }
+            node.enabled(!self.disabled)
+                .state("active", self.current == Some(i));
+            node.action("activate").reads(format!("{id}:active"));
+        }
+    }
+}
+
+fn faded(c: Color, alpha: f32) -> [f32; 4] {
+    [c.0[0], c.0[1], c.0[2], c.0[3] * alpha]
+}

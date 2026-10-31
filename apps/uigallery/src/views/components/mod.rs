@@ -57,6 +57,10 @@ pub mod message;
 
 // task-104 front D, disclosure and display (#157)
 pub mod accordion;
+pub mod aspect_ratio;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
 
 // task-104 front E, selection and dates (#158)
 pub mod toggle;

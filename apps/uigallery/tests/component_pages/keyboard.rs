@@ -18,12 +18,14 @@ use super::harness::{Gallery, gallery, sid};
 /// Every component page (the 19 panes of `dispatch/component.rs`, under
 /// the 30 titles the gallery gives them).
 const PAGES: &[&str] = &[
+    "Accordion",
     "Alert Dialog",
     "Breadcrumb",
     "Button",
     "Button Group",
     "Checkbox",
     "Chip",
+    "Collapsible",
     "Combobox",
     "Data Table",
     "Dialog",
@@ -58,7 +60,7 @@ const UNREACHABLE: &[(&str, &str)] = &[("Resizable", "the split has no splitter 
 /// The pages with a widget that is one stop of Tab (task-75 phase 2d): a
 /// list or a table. A tab list and a tree stay a stop per item, a screen
 /// reader's focus being tied to the Tab sequence.
-const COMPOSITE: &[&str] = &["Data Table", "Item", "Scroll Area", "Table"];
+const COMPOSITE: &[&str] = &["Data Table", "Scroll Area", "Table"];
 
 /// Whether `id` is `widget` or under it.
 fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
@@ -329,7 +331,6 @@ fn the_arrows_walk_the_tree_open_and_close_its_branches() {
 fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
     for (page, list, key, count) in [
         ("Scroll Area", "scroll_area_page.list", "selected", 10_000),
-        ("Item", "scroll_area_page.list", "selected", 10_000),
         ("Data Table", "table_page.table", "selected_row", 2_000),
         ("Table", "table_page.table", "selected_row", 2_000),
     ] {

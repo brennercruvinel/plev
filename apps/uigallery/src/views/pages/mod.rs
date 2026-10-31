@@ -100,6 +100,10 @@ pub enum Pane {
     Message,
     // task-104 front D, disclosure and display (#157)
     Accordion,
+    AspectRatio,
+    Collapsible,
+    Item,
+    Kbd,
     // task-104 front E, selection and dates (#158)
     Toggle,
     // apps demo

@@ -93,7 +93,13 @@ pub const PAGES: &[Page] = &[
         Pane::Dialog,
         "its own page, apart from the plain dialog",
     ),
-    placeholder("Aspect Ratio"),
+    page(
+        C,
+        "Aspect Ratio",
+        "square",
+        "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
+        Pane::AspectRatio,
+    ),
     placeholder("Attachment"),
     page(
         C,
@@ -174,7 +180,13 @@ pub const PAGES: &[Page] = &[
         "Mono block with a caption.",
         Pane::CodeBlock,
     ),
-    placeholder("Collapsible"),
+    page(
+        C,
+        "Collapsible",
+        "chevron-right",
+        "A trigger that reveals a list under a rail, from the kit's home sidebar.",
+        Pane::Collapsible,
+    ),
     alias(
         "Combobox",
         "search",
@@ -269,19 +281,19 @@ pub const PAGES: &[Page] = &[
         Pane::InputGroup,
     ),
     placeholder("Input OTP"),
-    alias(
+    page(
+        C,
         "Item",
         "file",
-        "The virtualized list's rows.",
-        Pane::ScrollArea,
-        "an item row widget of its own",
+        "The kit's folder row and asset tile, chosen one at a time.",
+        Pane::Item,
     ),
-    alias(
+    page(
+        C,
         "Kbd",
         "terminal",
-        "The shortcut hints on the nav links.",
-        Pane::NavigationMenu,
-        "a key cap widget",
+        "The kit's key cap, alone and on the nav links that carry a shortcut.",
+        Pane::Kbd,
     ),
     page(
         C,

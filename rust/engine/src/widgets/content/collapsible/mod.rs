@@ -24,21 +24,22 @@
 //!
 //! [`Accordion`]: super::accordion::Accordion
 
-use std::hash::{DefaultHasher, Hash, Hasher};
-
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use super::tokens::{DisclosureMotion, DisclosureRecipe, DisclosureSurface};
+use super::tokens::{DisclosureMotion, DisclosureRecipe};
 use crate::compose::animation::{Tween, reduced_motion};
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+
+mod links;
+mod paint;
+#[cfg(test)]
+mod tests;
+
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
-use crate::widgets::icons;
-use crate::widgets::recipe::{focus_ring_inside, rounded_rect, rounded_rect_stroke, shadow_node};
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+pub use links::DisclosureList;
 
 /// Which recipe of `theme.disclosure` the trigger reads.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -55,6 +56,8 @@ pub enum DisclosureLook {
 pub struct Collapsible {
     title: String,
     icon: Option<&'static str>,
+    /// A count beside the label, for a look that draws one.
+    counter: Option<String>,
     look: DisclosureLook,
     open: bool,
     disabled: bool,
@@ -88,6 +91,7 @@ impl Collapsible {
         Self {
             title: title.into(),
             icon: None,
+            counter: None,
             look: DisclosureLook::default(),
             open: false,
             disabled: false,
@@ -109,6 +113,13 @@ impl Collapsible {
     /// A leading icon, in the tile of a look that has one.
     pub fn icon(mut self, name: &'static str) -> Self {
         self.icon = Some(name);
+        self
+    }
+
+    /// A count beside the label (the Dropdown's `counter`), in a look
+    /// that draws one.
+    pub fn counter(mut self, text: impl Into<String>) -> Self {
+        self.counter = Some(text.into());
         self
     }
 
@@ -252,7 +263,27 @@ impl Collapsible {
         self.icon.map(|_| (tile.size, tile.gap))
     }
 
-    /// The label wraps in what the tile and the chevron leave.
+    fn counter_style(r: &DisclosureRecipe, theme: &Theme) -> Option<TextStyle> {
+        let counter = r.counter.as_ref()?;
+        Some(
+            theme
+                .typography
+                .exact(counter.font_size, counter.line_height, counter.font_weight),
+        )
+    }
+
+    /// The counter's pill, `(w, h)`, when there is one to draw.
+    fn counter_span(&self, r: &DisclosureRecipe, theme: &Theme) -> Option<(f32, f32)> {
+        let text = self.counter.as_deref()?;
+        let counter = r.counter.as_ref()?;
+        let style = Self::counter_style(r, theme)?;
+        let (w, _) = TextMeasurer::measure_styled(text, &style, None);
+        let [pad_x, pad_y] = counter.pad;
+        Some((w + pad_x * 2.0, style.line_height + pad_y * 2.0))
+    }
+
+    /// The label wraps in what the tile, the counter and the chevron
+    /// leave.
     fn inner(&self, trigger: Rect, theme: &Theme) -> Inner {
         let r = self.recipe(theme);
         let [top, right, _, left] = r.pad;
@@ -260,15 +291,20 @@ impl Collapsible {
         let x = trigger.x + bw + left;
         let w = (trigger.w - bw * 2.0 - left - right).max(0.0);
         let tile = self.tile_span(r);
-        let label_w =
-            (w - tile.map_or(0.0, |(size, gap)| size + gap) - r.chevron_gap - r.chevron_box)
-                .max(0.0);
+        let counter = self.counter_span(r, theme);
+        let label_w = (w
+            - tile.map_or(0.0, |(size, gap)| size + gap)
+            - counter.map_or(0.0, |(cw, _)| cw)
+            - r.chevron_gap
+            - r.chevron_box)
+            .max(0.0);
         let style = Self::label_style(r, theme);
         let (_, text_h) = TextMeasurer::measure_styled(&self.title, &style, Some(label_w));
         let label_h = text_h.max(style.line_height);
         let h = label_h
             .max(r.chevron_box)
-            .max(tile.map_or(0.0, |(size, _)| size));
+            .max(tile.map_or(0.0, |(size, _)| size))
+            .max(counter.map_or(0.0, |(_, ch)| ch));
         Inner {
             x,
             y: trigger.y + bw + top,
@@ -349,164 +385,6 @@ impl Collapsible {
         r
     }
 
-    fn surface<'r>(&self, r: &'r DisclosureRecipe) -> &'r DisclosureSurface {
-        if self.current {
-            &r.current
-        } else if self.open {
-            &r.open
-        } else if self.press.hovered {
-            &r.hover
-        } else {
-            &r.rest
-        }
-    }
-
-    /// Draws the divider, the trigger and, clipped to what is revealed,
-    /// the content through `content` at its full-size rect (`content_h`
-    /// tall, the height given to [`Collapsible::height`]).
-    pub fn render(
-        &self,
-        c: &mut Compositor,
-        bounds: Rect,
-        content_h: f32,
-        theme: &Theme,
-        content: impl FnOnce(&mut Compositor, Rect),
-    ) {
-        let r = self.recipe(theme);
-        let alpha = if self.disabled {
-            theme.glass.disabled_alpha
-        } else {
-            1.0
-        };
-        let divider = self.divider_h(r);
-        if divider > 0.0 && r.divider.0[3] > 0.0 {
-            c.push(SceneNode::Rect {
-                x: bounds.x,
-                y: bounds.y,
-                w: bounds.w,
-                h: divider,
-                color: faded(r.divider, alpha),
-            });
-        }
-        let trigger = self.trigger_rect(bounds, theme);
-        if let Some(id) = &self.sem {
-            c.bind(id, [trigger.x, trigger.y, trigger.w, trigger.h]);
-        }
-        self.paint_trigger(c, trigger, r, alpha, theme);
-
-        let shown = self.shown_rect(bounds, theme);
-        if shown.h > 0.0 {
-            let full = self.content_rect(bounds, content_h, theme);
-            c.push_clip(shown.x, shown.y, shown.w, shown.h);
-            if self.open
-                && let Some(panel) = self.sem.as_ref().and_then(|id| id.child("panel").ok())
-            {
-                c.bind(&panel, [full.x, full.y, full.w, full.h]);
-            }
-            content(c, full);
-            c.pop_clip();
-        }
-    }
-
-    fn paint_trigger(
-        &self,
-        c: &mut Compositor,
-        trigger: Rect,
-        r: &DisclosureRecipe,
-        alpha: f32,
-        theme: &Theme,
-    ) {
-        let radius = r.radius.min(trigger.h / 2.0);
-        let surface = self.surface(r);
-        if surface.fill.0[3] > 0.0 {
-            c.push(rounded_rect(
-                trigger.x,
-                trigger.y,
-                trigger.w,
-                trigger.h,
-                radius,
-                faded(surface.fill, alpha),
-            ));
-        }
-        if r.border_width > 0.0 && surface.border.0[3] > 0.0 {
-            c.push(rounded_rect_stroke(
-                trigger.x,
-                trigger.y,
-                trigger.w,
-                trigger.h,
-                radius,
-                faded(surface.border, alpha),
-                r.border_width,
-            ));
-        }
-        if self.press.focused && !self.disabled {
-            c.push(focus_ring_inside(trigger, radius, theme));
-        }
-
-        let inner = self.inner(trigger, theme);
-        let mut x = inner.x;
-        if let (Some(tile), Some(name)) = (r.tile.as_ref(), self.icon) {
-            let at = Rect::new(
-                x,
-                inner.y + (inner.h - tile.size) / 2.0,
-                tile.size,
-                tile.size,
-            );
-            let color = if self.current {
-                if let Some(node) = shadow_node(at, tile.radius, &tile.shadow_current) {
-                    c.push(node);
-                }
-                c.push(rounded_rect(
-                    at.x,
-                    at.y,
-                    at.w,
-                    at.h,
-                    tile.radius,
-                    faded(tile.fill_current, alpha),
-                ));
-                tile.icon_current
-            } else {
-                tile.icon_rest
-            };
-            let inset = (tile.size - tile.icon) / 2.0;
-            if let Some(node) = icons::icon_at(
-                name,
-                tile.icon,
-                faded(color, alpha),
-                at.x + inset,
-                at.y + inset,
-            ) {
-                c.push(node);
-            }
-            x += tile.size + tile.gap;
-        }
-
-        let style = Self::label_style(r, theme);
-        let label_y = inner.y + (inner.h - inner.label_h) / 2.0;
-        c.push_clip(x, label_y, inner.label_w, inner.label_h);
-        c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&self.title, &style, Some(inner.label_w)),
-            x,
-            y: label_y,
-            color: faded(r.label, alpha),
-        });
-        c.pop_clip();
-
-        let box_x = inner.x + inner.w - r.chevron_box;
-        let box_y = inner.y + (inner.h - r.chevron_box) / 2.0;
-        let inset = (r.chevron_box - r.chevron) / 2.0;
-        if let Some(node) = turned(
-            "chevron-down",
-            r.chevron,
-            faded(r.chevron_color, alpha),
-            box_x + inset,
-            box_y + inset,
-            self.turn.get() * std::f32::consts::PI,
-        ) {
-            c.push(node);
-        }
-    }
-
     /// Declares the trigger as `id`: a `Role::Button` named by the title,
     /// enabled unless disabled, with `expanded` and a `toggle_expanded`
     /// that reads it. Hover is never projected. It only reads the widget;
@@ -550,27 +428,4 @@ impl Collapsible {
         }
         Some(node)
     }
-}
-
-fn faded(c: Color, alpha: f32) -> [f32; 4] {
-    [c.0[0], c.0[1], c.0[2], c.0[3] * alpha]
-}
-
-/// An icon turned by `angle` radians about its center, its hash moved
-/// with the angle so the compositor's diff sees the turn.
-fn turned(name: &str, size: f32, color: [f32; 4], x: f32, y: f32, angle: f32) -> Option<SceneNode> {
-    let mut data = icons::icon_path(name, size, color, x, y)?;
-    if angle != 0.0 {
-        let (cx, cy) = (x + size / 2.0, y + size / 2.0);
-        let (sin, cos) = angle.sin_cos();
-        for v in &mut data.vertices {
-            let (dx, dy) = (v.position[0] - cx, v.position[1] - cy);
-            v.position = [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
-        }
-        let mut h = DefaultHasher::new();
-        data.hash.hash(&mut h);
-        angle.to_bits().hash(&mut h);
-        data.hash = h.finish();
-    }
-    Some(SceneNode::Path { data })
 }
