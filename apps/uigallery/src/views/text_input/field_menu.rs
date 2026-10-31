@@ -17,7 +17,7 @@
 use engine::widgets::form::ClipKey;
 use engine::widgets::prelude::{ContextMenu, MenuEntry};
 
-use super::super::{Pane, ShowcaseView};
+use super::super::ShowcaseView;
 use super::clipboard::Keys;
 
 /// The items' ids, apart from the Context Menu page's demo items.
@@ -72,11 +72,11 @@ impl ShowcaseView {
         }
         let content = self.page_rect();
         let pane = self.pane();
-        let took = match pane {
-            Some(Pane::Input) => self.panes.input.right_click(x, y, content, &self.theme),
-            Some(Pane::Field) => self.panes.field.right_click(x, y, content, &self.theme),
-            _ => false,
-        };
+        let theme = &self.theme;
+        let took = self
+            .panes
+            .text_host_mut(pane)
+            .is_some_and(|host| host.right_click(x, y, content, theme));
         if !took {
             return false;
         }

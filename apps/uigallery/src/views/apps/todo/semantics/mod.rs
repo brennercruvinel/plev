@@ -230,6 +230,9 @@ impl Operable for TodoPage {
             Op::Select(filter) => {
                 if self.model.set_filter(filter) {
                     self.scroll.scroll_to(0.0);
+                    if let Some(i) = Filter::ALL.iter().position(|f| *f == filter) {
+                        self.filters.select(i);
+                    }
                 }
             }
             Op::Toggle(id) => {

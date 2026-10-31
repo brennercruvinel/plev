@@ -345,7 +345,8 @@ impl MessageTokens {
             },
             // titles and details in the text tone, the time and the
             // content in the muted one, the badges in the intents' colors
-            // (the toast's), the dot in the info accent
+            // (the toast's), the dot in the info accent where it reads on
+            // the paper (`unread_mark`)
             alert: AlertTokens {
                 ring: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
                 intents: IntentColors {
@@ -358,7 +359,7 @@ impl MessageTokens {
                 time: kit.alert.time.recolor(colors.text_mid),
                 detail: kit.alert.detail.recolor(colors.text),
                 content: kit.alert.content.recolor(colors.text_mid),
-                unread: colors.info,
+                unread: unread_mark(theme),
                 ..kit.alert
             },
             // the wash and the border in the hover and the divider tones,
@@ -387,7 +388,7 @@ impl MessageTokens {
                 MarkerTokens {
                     pin_fill: paper,
                     pin_read: solid(colors.divider),
-                    pin_unread: info,
+                    pin_unread: unread_mark(theme),
                     point: CursorShape {
                         fill: [paper, paper],
                         ink: colors.text_mid,
@@ -422,4 +423,36 @@ fn solid(c: Color, under: Color) -> Color {
     let a = c.0[3];
     let mix = |i: usize| c.0[i] * a + under.0[i] * (1.0 - a);
     Color([mix(0), mix(1), mix(2), 1.0])
+}
+
+/// What a state mark needs against what it sits on (WCAG 1.4.11).
+const MARK_CONTRAST: f32 = 3.0;
+
+/// The unread mark of a theme: the info accent, or, where it does not
+/// reach [`MARK_CONTRAST`] on the theme's paper, the first of the accent
+/// and the text tone that does; opaque, composed over the paper.
+fn unread_mark(theme: &Theme) -> Color {
+    let colors = &theme.colors;
+    let paper = Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]);
+    let candidates = [colors.info, colors.accent, colors.text].map(|c| solid(c, paper));
+    candidates
+        .into_iter()
+        .find(|c| contrast(*c, paper) >= MARK_CONTRAST)
+        .unwrap_or(candidates[2])
+}
+
+/// WCAG's contrast ratio of two opaque colors.
+fn contrast(a: Color, b: Color) -> f32 {
+    let lum = |c: Color| {
+        let lin = |v: f32| {
+            if v <= 0.040_45 {
+                v / 12.92
+            } else {
+                ((v + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        0.2126 * lin(c.0[0]) + 0.7152 * lin(c.0[1]) + 0.0722 * lin(c.0[2])
+    };
+    let (la, lb) = (lum(a), lum(b));
+    (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
 }

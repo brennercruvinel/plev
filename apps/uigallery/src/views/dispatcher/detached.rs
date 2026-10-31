@@ -114,6 +114,7 @@ impl ShowcaseView {
         let layers = *detached.layers.get_or_insert_with(|| Layers {
             list: c.create_layer(10),
             overlay: c.create_layer(OverlayManager::BASE_Z),
+            anchored: c.create_layer(OverlayManager::BASE_Z + 100),
             toast: c.create_layer(OverlayManager::BASE_Z + 200),
         });
         // the virtualized list clips to its panel, as in the main window

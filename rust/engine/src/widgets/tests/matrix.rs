@@ -10,7 +10,9 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::widgets::form::field::Field;
 use crate::widgets::overlay::popover::{Popover, PopoverTrigger, render_panel};
 use crate::widgets::prelude::*;
-use crate::widgets::selection::Toggle;
+use crate::widgets::selection::{
+    ButtonGroup, Calendar, Date, GroupItem, RadioGroup, Toggle, ToggleGroup,
+};
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -103,6 +105,42 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     Toggle::icon_only("eye", "Preview")
         .disabled(true)
         .render(&mut c, row(7.0), theme);
+    let mut group = ToggleGroup::new(["Day", "Week", "Month"]).selected(2);
+    group.set_focused(Some(0));
+    group.render(&mut c, row(10.0), theme);
+    let tools = ButtonGroup::new([
+        GroupItem::Toggle(Toggle::icon_only("eye", "Preview").on(true)),
+        GroupItem::Separator,
+        GroupItem::Action {
+            button: IconButton::new("x").variant(IconButtonVariant::Toolbar),
+            label: "Close".into(),
+        },
+    ]);
+    let mut plan = RadioGroup::new(["Free", "Pro"]).selected(1);
+    plan.set_focused(Some(0));
+    let (plan_w, plan_h) = plan.size_within(content.w, theme);
+    plan.render(
+        &mut c,
+        Rect::new(content.x, row(12.0).y, plan_w, plan_h),
+        theme,
+    );
+    let mut when = Calendar::new(2026, 10);
+    if let Some(day) = Date::new(2026, 10, 31) {
+        when = when.selected(day).today(day);
+        when.set_focused(Some(day));
+    }
+    let (when_w, when_h) = when.size_within(content.w, theme);
+    when.render(
+        &mut c,
+        Rect::new(content.x, row(13.0).y, when_w, when_h),
+        theme,
+    );
+    let (_, tools_h) = tools.size_within(content.w, theme);
+    tools.render(
+        &mut c,
+        Rect::new(content.x, row(11.0).y, content.w, tools_h),
+        theme,
+    );
     Slider::new(0.0, 100.0, 40.0).render(&mut c, row(8.0), theme);
     let mut s = Select::new(["a", "b", "c"], 1);
     s.render(&mut c, row(9.0), theme);
@@ -522,6 +560,54 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             toggle.render(&mut c, row(3.0), &theme);
             toggle.project(&mut b, &id("m.toggle"), None);
             frames.push((c, vec![(id("m.toggle"), Role::Toggle, Probe::Hit)]));
+
+            let tools = ButtonGroup::new([
+                GroupItem::Toggle(Toggle::icon_only("eye", "Preview").sem(id("m.tools.item[0]"))),
+                GroupItem::Separator,
+                GroupItem::Action {
+                    button: IconButton::new("x").sem(id("m.tools.item[2]")),
+                    label: "Close".into(),
+                },
+            ])
+            .sem(id("m.tools"));
+            let (tw, th) = tools.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            tools.render(&mut c, Rect::new(gutter, row(7.0).y, tw, th), &theme);
+            tools.project(&mut b, &id("m.tools"), "tools", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.tools"), Role::Toolbar, Probe::Bound),
+                    (id("m.tools.item[0]"), Role::Toggle, Probe::Hit),
+                    (id("m.tools.item[2]"), Role::Button, Probe::Hit),
+                ],
+            ));
+
+            let plan = RadioGroup::new(["Free", "Pro"]).sem(id("m.plan"));
+            let (pw, ph) = plan.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            plan.render(&mut c, Rect::new(gutter, row(8.0).y, pw, ph), &theme);
+            plan.project(&mut b, &id("m.plan"), "plan", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.plan"), Role::Group, Probe::Bound),
+                    (id("m.plan[1]"), Role::Radio, Probe::Hit),
+                ],
+            ));
+
+            let group = ToggleGroup::new(["Day", "Week", "Month"]).sem(id("m.view"));
+            let (mut c, _) = frame(false);
+            group.render(&mut c, row(6.0), &theme);
+            group.project(&mut b, &id("m.view"), "view", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.view"), Role::Group, Probe::Bound),
+                    (id("m.view[0]"), Role::Radio, Probe::Hit),
+                    (id("m.view[2]"), Role::Radio, Probe::Hit),
+                ],
+            ));
 
             let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
             let (mut c, _) = frame(false);

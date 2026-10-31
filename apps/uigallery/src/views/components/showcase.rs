@@ -58,12 +58,22 @@ pub(crate) fn chip_style(theme: &Theme) -> TextStyle {
 }
 
 /// Columns a row actually gets at this width: the group's span until the
-/// cards would get narrower than `CARD_MIN_W`.
-pub(crate) fn columns(span: usize, w: f32, gap: f32) -> usize {
+/// cards would get narrower than `min_w` (`CARD_MIN_W` for the
+/// ButtonsPage's cards).
+pub(crate) fn columns_at(span: usize, min_w: f32, w: f32, gap: f32) -> usize {
     (1..=span)
         .rev()
-        .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= CARD_MIN_W)
+        .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= min_w)
         .unwrap_or(1)
+}
+
+/// One group of cards: how many to a row at full width (`span`), the
+/// narrowest a card may get before the row drops a column (`min_w`), and
+/// each card's height; a row is as tall as its tallest card.
+pub(crate) struct Grid {
+    pub span: usize,
+    pub min_w: f32,
+    pub heights: Vec<f32>,
 }
 
 /// The groups down `content`, each given as `(span, cards)`: the cards
@@ -83,8 +93,14 @@ pub(crate) fn layout(
 /// width: what a page lays a widget out in before it knows how tall the
 /// card must be.
 pub(crate) fn card_width(span: usize, content: Rect, theme: &Theme) -> f32 {
+    card_width_at(span, CARD_MIN_W, content, theme)
+}
+
+/// [`card_width`] for a group whose cards may get as narrow as `min_w`:
+/// what a square card is tall.
+pub(crate) fn card_width_at(span: usize, min_w: f32, content: Rect, theme: &Theme) -> f32 {
     let gap = theme.spacing.sm;
-    let cols = columns(span, content.w, gap);
+    let cols = columns_at(span, min_w, content.w, gap);
     (content.w - gap * (cols as f32 - 1.0)) / cols as f32
 }
 
@@ -107,14 +123,35 @@ pub(crate) fn layout_sized(
     content: Rect,
     theme: &Theme,
 ) -> Vec<GroupLayout> {
+    let grids = groups.into_iter().map(|(span, heights)| Grid {
+        span,
+        min_w: CARD_MIN_W,
+        heights: heights.into_iter().map(|h| h.max(CARD_H)).collect(),
+    });
+    layout_grids(grids, content, theme)
+}
+
+/// The groups down `content`, each a [`Grid`]: its cards as narrow as its
+/// `min_w` and as tall as its heights say, with no `h-50` floor (a square
+/// card is as tall as it is wide).
+pub(crate) fn layout_grids(
+    groups: impl IntoIterator<Item = Grid>,
+    content: Rect,
+    theme: &Theme,
+) -> Vec<GroupLayout> {
     let pad = pad(theme);
     let gap = theme.spacing.sm;
     let title_h = title_style(theme).line_height;
     let mut y = content.y;
     let mut out = Vec::new();
-    for (span, heights) in groups {
+    for Grid {
+        span,
+        min_w,
+        heights,
+    } in groups
+    {
         let title_y = y + pad;
-        let cols = columns(span, content.w, gap);
+        let cols = columns_at(span, min_w, content.w, gap);
         let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
         let first_row = title_y + title_h + title_gap(theme);
         let mut cards = Vec::with_capacity(heights.len());
@@ -124,7 +161,7 @@ pub(crate) fn layout_sized(
         let mut above = 0.0;
         let mut rows = 0;
         for row in heights.chunks(cols) {
-            let h = row.iter().copied().fold(CARD_H, f32::max);
+            let h = row.iter().copied().fold(0.0, f32::max);
             let top = first_row + (above + rows as f32 * gap);
             for col in 0..row.len() {
                 cards.push(Rect::new(
@@ -151,6 +188,20 @@ pub(crate) fn layout_sized(
 /// The height the groups take from `content`'s top.
 pub(crate) fn content_height(layout: &[GroupLayout], content: Rect) -> f32 {
     layout.last().map_or(0.0, |g| g.rule_y - content.y)
+}
+
+/// A card's body: the card less its chip band at the top and an `md`
+/// margin on the other sides, where a card that holds more than one
+/// centered widget (a trigger and its open panel) lays it out.
+pub(crate) fn body(card: Rect, theme: &Theme) -> Rect {
+    let band = chip_band(theme);
+    let pad = theme.spacing.md;
+    Rect::new(
+        card.x + pad,
+        card.y + band,
+        (card.w - pad * 2.0).max(0.0),
+        (card.h - band - pad).max(0.0),
+    )
 }
 
 /// A widget of `size` centered in its card, on whole pixels.

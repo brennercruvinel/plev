@@ -285,3 +285,25 @@ fn hoff_light_inverts_the_ink_and_keeps_every_scale() {
         light.colors.bg.0
     );
 }
+
+#[test]
+fn core_controls_are_the_kit_measures() {
+    let c = Theme::hoff_core().control;
+    assert_eq!(c.heights, [28.0, 36.0, 40.0, 44.0, 48.0]);
+    assert_eq!(c.pad_x, [8.0, 20.0, 24.0, 14.0, 22.0]);
+    assert_eq!(c.switch_size, [40.0, 22.0]);
+    assert_eq!(c.switch_knob, 18.0);
+    // The knob pad is the switch's `p-0.5`.
+    assert_eq!(c.switch_knob_pad(), 2.0);
+    assert_eq!(c.tabs_pad, 3.0);
+    assert_eq!((c.edge_width, c.edge_width_strong), (1.0, 1.5));
+    assert_eq!((c.progress_track, c.progress_fill), (3.0, 3.0));
+    // The button ladder is the control ladder, the field on top.
+    let b = ButtonTokens::hoff_core();
+    for (m, h) in b.sizes.iter().zip(c.heights) {
+        assert_eq!(m.height, h);
+    }
+    // The other themes keep the HOFF ladder.
+    assert_eq!(Theme::hoff().control, ControlTokens::hoff());
+    assert_eq!(Theme::dark().control, ControlTokens::hoff());
+}

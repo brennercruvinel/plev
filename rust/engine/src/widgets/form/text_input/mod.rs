@@ -6,6 +6,7 @@
 
 mod buffer;
 mod component;
+pub(crate) mod keys;
 pub(crate) mod view;
 pub(crate) mod visual;
 

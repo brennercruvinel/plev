@@ -3,5 +3,6 @@
 
 pub(super) mod clipboard;
 pub(super) mod field_menu;
+pub(super) mod host;
 pub(super) mod ime;
 pub(super) mod input;

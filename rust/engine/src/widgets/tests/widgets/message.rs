@@ -829,7 +829,7 @@ fn the_alert_carries_the_kit_in_core_and_derives_the_palette_elsewhere() {
     let c = &hoff.colors;
     assert_eq!(derived.title.color, c.text);
     assert_eq!(derived.time.color, c.text_mid);
-    assert_eq!(derived.unread, c.info);
+    assert_eq!(derived.unread.0[3], 1.0, "the dot is opaque");
     assert_eq!(derived.intents.of(Intent::Destructive), c.danger);
     assert_eq!(derived.ring.0[3], 1.0, "the ring is opaque");
     assert_eq!(derived.lead, kit.lead, "the geometry is the kit's");
@@ -1319,12 +1319,12 @@ fn the_marker_carries_the_kit_in_core_and_derives_elsewhere() {
         (derived.pin_unread.0[1] - want).abs() < 1e-5,
         "the info accent over paper"
     );
-    let light = MessageTokens::derive(&Theme::light()).marker;
-    assert_eq!(
-        light.pin_unread,
-        Theme::light().colors.info,
-        "an opaque color stays"
-    );
+    // the light theme's info accent is under 3:1 on its paper: the unread
+    // mark takes its accent, a blue that reads
+    let light = Theme::light();
+    let lit = MessageTokens::derive(&light);
+    assert_eq!(lit.marker.pin_unread, light.colors.accent);
+    assert_eq!(lit.alert.unread, light.colors.accent);
     assert_eq!(derived.avatar, kit.avatar);
 }
 

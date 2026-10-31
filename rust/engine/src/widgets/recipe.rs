@@ -1,6 +1,8 @@
-//! The HOFF dark-glass drawing recipes every widget shares: edge-lit
-//! pills and surfaces, inset key-light, shadow stacks by elevation, the
-//! focus ring, and the rounded-rect shorthands. Every dimension and color
+//! The drawing recipes every widget shares: rimmed pills and surfaces,
+//! the inset key-light, shadow stacks by elevation, the focus ring, and
+//! the rounded-rect shorthands. How a rim runs and whether a surface is
+//! lit are theme tokens (`glass.rim_fade`, `glass.keylight`): the HOFF
+//! dark glass and the core kit draw through the same recipes. Every dimension and color
 //! comes from the [`Theme`]; a recipe never restates a number the tokens
 //! own.
 //!
@@ -61,13 +63,16 @@ pub fn rounded_rect_stroke(
 // Glass
 // ---------------------------------------------------------------------------
 
-/// HOFF edge-light pill: a border that only exists at the top, fading
-/// out downward (the CSS original is a masked 165 to 178 degree border).
+/// Rimmed pill: a `width` rim of `edge` around a `fill`. How the rim
+/// runs down the sides is the theme's `glass.rim_fade`: the HOFF glass
+/// (0) keeps it only at the top, fading out downward (the CSS original is
+/// a masked 165 to 178 degree border); the core kit (1) keeps it whole,
+/// a plain `border`.
 ///
-/// Emitted as two SDF nodes: an `edge` to transparent vertical
+/// Emitted as two SDF nodes: an `edge` to faded vertical
 /// [`GradientRect`] underlay the size of `rect`, then the surface fill
-/// inset by `width`. The translucent fill lets the underlay shine
-/// through, which doubles as the HOFF inset key-light.
+/// inset by `width`. A translucent fill lets the underlay shine through,
+/// which doubles as the HOFF inset key-light.
 ///
 /// [`GradientRect`]: SceneNode::GradientRect
 pub fn glass_pill(
@@ -76,7 +81,9 @@ pub fn glass_pill(
     edge: [f32; 4],
     width: f32,
     fill: [f32; 4],
+    theme: &Theme,
 ) -> [SceneNode; 2] {
+    let fade = theme.glass.rim_fade.clamp(0.0, 1.0);
     [
         SceneNode::GradientRect {
             x: rect.x,
@@ -84,7 +91,7 @@ pub fn glass_pill(
             w: rect.w,
             h: rect.h,
             color: edge,
-            color2: [edge[0], edge[1], edge[2], 0.0],
+            color2: [edge[0], edge[1], edge[2], edge[3] * fade],
             // CSS 180deg: first stop (the lit edge) at the top.
             angle_deg: 180.0,
             corner_radius: radius,
@@ -148,29 +155,24 @@ pub fn edge_light(
     c.push_to_layer(layer, SceneNode::PopClip);
 }
 
-/// HOFF inset key-light: `inset 2px 4px 16px rgba(248,248,248,.06)`, a
-/// soft highlight bleeding in from the top-left, the glint that makes a
-/// glass surface read as lit rather than painted.
+/// The theme's inset key-light (`glass.keylight`) over `rect`: in the
+/// HOFF glass `inset 2px 4px 16px rgba(248,248,248,.06)`, a soft
+/// highlight bleeding in from the top-left, the glint that makes a glass
+/// surface read as lit rather than painted. A theme without one (the core
+/// kit) draws nothing.
 pub fn inset_keylight(c: &mut Compositor, layer: LayerId, rect: Rect, radius: f32, theme: &Theme) {
-    let g = &theme.glass;
-    c.push_to_layer(
-        layer,
-        SceneNode::Shadow {
-            x: rect.x,
-            y: rect.y,
-            w: rect.w,
-            h: rect.h,
-            corner_radius: radius,
-            blur_radius: theme.spacing.lg,
-            offset: [theme.spacing.xs / 2.0, theme.spacing.xs],
-            color: g.inset_highlight.0,
-            inset: true,
-        },
-    );
+    let Some(spec) = theme.glass.keylight.as_ref() else {
+        return;
+    };
+    if let Some(node) = shadow_node(rect, radius, spec) {
+        c.push_to_layer(layer, node);
+    }
 }
 
-/// Glass surface pushed to `layer`: translucent fill with the top-lit rim
-/// and the inset key-light, the HOFF card / panel / sheet shell.
+/// Surface pushed to `layer`: the fill inside the theme's rim
+/// ([`glass_pill`]) under its key-light ([`inset_keylight`]). The HOFF
+/// card / panel / sheet shell is a translucent fill with a top-lit rim;
+/// the core kit's, a plain fill inside a 1px `border` (Card :36).
 /// `fill` is usually `theme.glass.surface` (rest) or `surface_hover`.
 pub fn glass_surface(
     c: &mut Compositor,
@@ -181,7 +183,7 @@ pub fn glass_surface(
     theme: &Theme,
 ) {
     let edge = theme.glass.edge_soft.0;
-    for node in glass_pill(rect, radius, edge, theme.control.edge_width, fill) {
+    for node in glass_pill(rect, radius, edge, theme.control.edge_width, fill, theme) {
         c.push_to_layer(layer, node);
     }
     inset_keylight(c, layer, rect, radius, theme);
