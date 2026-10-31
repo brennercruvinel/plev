@@ -234,55 +234,50 @@ impl FieldPage {
     }
 
     /// Per group: the title's y, the cards with their fields, the rule's
-    /// y, on the showcase's grid (`showcase::layout`: columns, title,
-    /// padding), but a row is as tall as its tallest field needs (at least
-    /// `h-50`), and a field is centered in its card, clear of the chip.
+    /// y, on the showcase's grid, a card as tall as its field needs (at
+    /// least `h-50`) and the field centered in it, clear of the chip.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Laid> {
-        let gap = theme.spacing.sm;
-        let band = vitrine::chip_band(theme);
         let side = theme.spacing.lg;
-        let mut y = content.y;
-        let mut out = Vec::with_capacity(self.groups.len());
-        for group in &self.groups {
-            let frame = Rect::new(content.x, y, content.w, content.h);
-            let spans = [(group.columns, group.cards.len())];
-            let Some(grid) = showcase::layout(spans, frame, theme).pop() else {
-                continue;
-            };
-            let first = grid.cards.first().map_or(grid.title_y, |r| r.y);
-            let cols = grid
-                .cards
-                .iter()
-                .take_while(|r| r.y == first)
-                .count()
-                .max(1);
-            // The showcase's padding under the last row.
-            let pad = grid.rule_y - grid.cards.last().map_or(first, |r| r.bottom());
-            let mut row_y = first;
-            let mut cards = Vec::with_capacity(group.cards.len());
-            for (row, frames) in group.cards.chunks(cols).zip(grid.cards.chunks(cols)) {
-                let field_w = FIELD_W.min(frames[0].w - side * 2.0).max(0.0);
-                let heights: Vec<f32> = row
+        let widths: Vec<f32> = self
+            .groups
+            .iter()
+            .map(|g| {
+                let card_w = showcase::card_width(g.columns, content, theme);
+                FIELD_W.min(card_w - side * 2.0).max(0.0)
+            })
+            .collect();
+        let heights: Vec<Vec<f32>> = self
+            .groups
+            .iter()
+            .zip(&widths)
+            .map(|(g, w)| {
+                g.cards
                     .iter()
-                    .map(|card| card.field.height_for(field_w, theme))
-                    .collect();
-                let tallest = heights.iter().copied().fold(0.0, f32::max);
-                let card_h = showcase::CARD_H.max(band * 2.0 + tallest);
-                for (h, frame) in heights.into_iter().zip(frames) {
-                    let card = Rect::new(frame.x, row_y, frame.w, card_h);
-                    cards.push((card, showcase::centered((field_w, h), card)));
-                }
-                row_y += card_h + gap;
-            }
-            let rule_y = row_y - gap + pad;
-            out.push(Laid {
+                    .map(|c| c.field.height_for(*w, theme))
+                    .collect()
+            })
+            .collect();
+        let sized = self.groups.iter().zip(&heights).map(|(g, hs)| {
+            let cards = hs
+                .iter()
+                .map(|h| showcase::card_height(*h, theme))
+                .collect();
+            (g.columns, cards)
+        });
+        showcase::layout_sized(sized, content, theme)
+            .into_iter()
+            .zip(widths.iter().zip(&heights))
+            .map(|(grid, (w, hs))| Laid {
                 title_y: grid.title_y,
-                cards,
-                rule_y,
-            });
-            y = rule_y;
-        }
-        out
+                cards: grid
+                    .cards
+                    .iter()
+                    .zip(hs)
+                    .map(|(card, h)| (*card, showcase::centered((*w, *h), *card)))
+                    .collect(),
+                rule_y: grid.rule_y,
+            })
+            .collect()
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
@@ -334,8 +329,7 @@ impl FieldPage {
         for (i, (group, laid)) in self.groups.iter().zip(&layout).enumerate() {
             showcase::title(c, group.title, content, laid.title_y, theme);
             for (card, (rect, field)) in group.cards.iter().zip(&laid.cards) {
-                let (_, chip) = vitrine::chip(*rect, card.title, theme);
-                showcase::card(c, *rect, &chip, theme);
+                showcase::card(c, *rect, card.title, theme);
                 card.field.render(c, *field, theme);
             }
             // The rule under the group (`border-b`, none on the last).
@@ -512,43 +506,6 @@ impl Component for FieldPage {
 
     fn blur(&mut self) -> bool {
         self.handle_escape()
-    }
-}
-
-/// What the showcase does not give yet, kept to the minimum until it
-/// does: a chip cut with an ellipsis to its card, and the band the chip
-/// takes, which a card taller than `h-50` keeps clear. The geometry is the
-/// showcase's chip (`showcase::card`).
-mod vitrine {
-    use engine::drawing::text::{TextMeasurer, TextStyle};
-    use engine::styling::theme::Theme;
-    use engine::widgets::prelude::Rect;
-
-    fn chip_style(theme: &Theme) -> TextStyle {
-        theme.typography.exact(theme.typography.caption, 16.0, 500)
-    }
-
-    /// The chip naming a card's states, in its top-left corner, and its
-    /// text: cut with an ellipsis where the card is too narrow for it.
-    pub(super) fn chip(card: Rect, title: &str, theme: &Theme) -> (Rect, String) {
-        let style = chip_style(theme);
-        let (inset, pad) = (theme.spacing.sm, theme.spacing.md);
-        let text = TextMeasurer::truncate_to_width(title, &style, card.w - (inset + pad) * 2.0);
-        let (tw, _) = TextMeasurer::measure_styled(&text, &style, None);
-        let rect = Rect::new(
-            card.x + inset,
-            card.y + inset,
-            tw + pad * 2.0,
-            style.line_height + theme.spacing.xs * 2.0,
-        );
-        (rect, text)
-    }
-
-    /// The band the chip takes at the top of a card, and keeps free at
-    /// its bottom so a centered field clears it.
-    pub(super) fn chip_band(theme: &Theme) -> f32 {
-        let style = chip_style(theme);
-        theme.spacing.sm * 2.0 + style.line_height + theme.spacing.xs * 2.0
     }
 }
 
