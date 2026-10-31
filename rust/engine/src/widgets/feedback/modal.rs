@@ -276,6 +276,7 @@ impl Modal {
             glass.edge_soft.0,
             theme.control.edge_width_strong,
             glass.popover.0,
+            theme,
         ) {
             compositor.push_to_layer(layer, node);
         }

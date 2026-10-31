@@ -227,6 +227,7 @@ impl Theme {
                 disabled_alpha: 0.5,
                 wash_alpha: 0.14,
                 wash_hover_alpha: 0.22,
+                rim_fade: 0.0,
             },
             shape: ShapeTokens::hoff(),
             control: ControlTokens::hoff(),
@@ -291,6 +292,7 @@ impl Theme {
                 disabled_alpha: dark.glass.disabled_alpha,
                 wash_alpha: dark.glass.wash_alpha,
                 wash_hover_alpha: dark.glass.wash_hover_alpha,
+                rim_fade: dark.glass.rim_fade,
             },
             shadows: ShadowTokens::hoff(),
             ..dark

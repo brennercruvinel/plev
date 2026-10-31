@@ -213,7 +213,7 @@ impl DockPage {
             radius,
             theme.effects.blur_sigma,
         );
-        for node in glass_pill(dock, radius, glass.edge.0, 1.5, glass.button.0) {
+        for node in glass_pill(dock, radius, glass.edge.0, 1.5, glass.button.0, theme) {
             c.push(node);
         }
         self.render_roster(c, stage, theme);

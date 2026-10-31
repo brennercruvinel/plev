@@ -180,7 +180,7 @@ impl TodoPage {
                 g.button
             };
             let edge = if active { g.edge } else { g.edge_soft };
-            for node in glass_pill(pr, PILL_H / 2.0, edge.0, 1.0, fill.0) {
+            for node in glass_pill(pr, PILL_H / 2.0, edge.0, 1.0, fill.0, theme) {
                 c.push(node);
             }
             let tw = TextMeasurer::measure_styled(f.label(), &pstyle, None).0;

@@ -398,7 +398,7 @@ impl Card {
         } else {
             (glass.surface.0, glass.edge_soft.0)
         };
-        for node in glass_pill(b, radius, edge, theme.control.edge_width, fill) {
+        for node in glass_pill(b, radius, edge, theme.control.edge_width, fill, theme) {
             c.push_to_layer(layer, node);
         }
         inset_keylight(c, layer, b, radius, theme);
@@ -688,6 +688,7 @@ impl Card {
                 glass.edge.0,
                 theme.control.edge_width_strong,
                 glass.surface_active.0,
+                theme,
             ) {
                 c.push_to_layer(layer, node);
             }
@@ -744,6 +745,7 @@ impl Card {
             glass.edge.0,
             theme.control.edge_width_strong,
             glass.button.0,
+            theme,
         ) {
             c.push_to_layer(layer, node);
         }
@@ -835,6 +837,7 @@ impl Card {
                 glass.edge.0,
                 theme.control.edge_width_strong,
                 glass.surface.0,
+                theme,
             ) {
                 c.push_to_layer(layer, node);
             }
@@ -867,6 +870,7 @@ impl Card {
                 glass.edge.0,
                 theme.control.edge_width_strong,
                 glass.surface_hover.0,
+                theme,
             ) {
                 c.push_to_layer(layer, node);
             }
@@ -1309,6 +1313,7 @@ impl Card {
             ring,
             theme.control.edge_width,
             glass.button.0,
+            theme,
         ) {
             c.push_to_layer(layer, node);
         }

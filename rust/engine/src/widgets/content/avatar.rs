@@ -133,6 +133,7 @@ impl Avatar {
                     glass.edge.0,
                     theme.control.edge_width_strong,
                     glass.surface_active.0,
+                    theme,
                 ) {
                     c.push_to_layer(layer, node);
                 }
