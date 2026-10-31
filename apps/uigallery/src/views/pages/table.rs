@@ -122,12 +122,12 @@ pub const PAGES: &[Page] = &[
         "A trail that collapses when narrow. Click a crumb.",
         Pane::Breadcrumb,
     ),
-    alias(
+    page(
+        C,
         "Bubble",
         "send",
-        "The message dock's bubbles.",
-        Pane::Dock,
-        "a bubble widget of its own, apart from the dock",
+        "Chat bubbles read and unread, from either side, growing with their words.",
+        Pane::Bubble,
     ),
     page(
         C,
@@ -311,12 +311,12 @@ pub const PAGES: &[Page] = &[
         "Comment rows of a thread and the quick comment, with the like chip.",
         Pane::Message,
     ),
-    alias(
+    page(
+        C,
         "Message Scroller",
         "send",
-        "The message dock's scrolling band.",
-        Pane::Dock,
-        "a scroller apart from the dock",
+        "A comment thread that scrolls past its height, by wheel, touch and keyboard.",
+        Pane::MessageScroller,
     ),
     page(
         C,

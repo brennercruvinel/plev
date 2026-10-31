@@ -133,7 +133,9 @@ components! {
     // task-104 front B, overlays (#155)
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)
+    Bubble => bubble,
     Message => message,
+    MessageScroller => message_scroller,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,

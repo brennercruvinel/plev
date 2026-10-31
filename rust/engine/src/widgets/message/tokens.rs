@@ -21,9 +21,9 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::Theme;
 use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::tokens::TypographyScale;
+use crate::styling::theme::{ShadowSpec, Theme};
 
 /// One text run of a message: size, line height and weight in px, and
 /// its color.
@@ -59,6 +59,9 @@ pub struct MessageStyle {
     pub time: MessageText,
     /// Between the end of the name and the time.
     pub time_gap: f32,
+    /// Between the name and its seal (the kit's `✪`, drawn as an icon one
+    /// name line tall).
+    pub seal_gap: f32,
     pub body: MessageText,
     /// Between the name line and the body.
     pub body_gap: f32,
@@ -67,6 +70,43 @@ pub struct MessageStyle {
     pub body_lines: Option<usize>,
     /// Between the body and the like chip.
     pub reaction_gap: f32,
+}
+
+/// The chat bubble: the kit's comment pin (`components/CommentPin`), a
+/// pill with its bottom-start corner square, holding text instead of
+/// avatars.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BubbleTokens {
+    /// Inside the border, around the text.
+    pub pad_x: f32,
+    pub pad_y: f32,
+    pub border_width: f32,
+    /// Opaque, so the square tail corner composes without a seam.
+    pub fill: Color,
+    /// The border of a read bubble.
+    pub border: Color,
+    /// The border of an unread one (the kit's accent).
+    pub unread: Color,
+    pub shadow: ShadowSpec,
+    pub text: MessageText,
+    /// The widest a bubble grows, as a fraction of the width it is given.
+    pub max_fraction: f32,
+}
+
+/// The message scroller: the kit's comment popup (`components/Comment`),
+/// its messages in a rounded surface that scrolls past a height.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ScrollerTokens {
+    pub fill: Color,
+    pub border: Color,
+    pub border_width: f32,
+    pub radius: f32,
+    /// The css `box-shadow` list, first on top (drops and the key-light).
+    pub shadow: Vec<ShadowSpec>,
+    /// The tallest the scroller grows before its messages scroll.
+    pub max_h: f32,
+    /// What an empty scroller says, in the muted body tone.
+    pub empty: MessageText,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -81,6 +121,8 @@ pub struct MessageTokens {
     /// A mention in the body (`[&_span]:text-[#3582FF]`). Read once the
     /// text engine draws a color per run; until then the body is one run.
     pub mention: Color,
+    pub bubble: BubbleTokens,
+    pub scroller: ScrollerTokens,
 }
 
 impl MessageTokens {
@@ -113,6 +155,9 @@ impl MessageTokens {
                     color: shade6,
                 },
                 time_gap: 8.0,
+                // :66 of templates/CommentPage `Luna Starfield ✪`: one
+                // space at the name's 12 px, as `ml-1`
+                seal_gap: 4.0,
                 // :30 `mt-1 text-[0.8125rem] leading-[1.22rem]`, in ink
                 body: MessageText {
                     size: 13.0,
@@ -151,6 +196,8 @@ impl MessageTokens {
                     color: shade6,
                 },
                 time_gap: 4.0,
+                // QuickComment/Comment/index.tsx:74 `Tran Mau Tri Tam ✪`
+                seal_gap: 4.0,
                 // :49 `mt-1 line-clamp-3 text-[0.8125rem]
                 // leading-[1.25rem] text-[#7B7B7B]`
                 body: MessageText {
@@ -170,6 +217,57 @@ impl MessageTokens {
             divider_width: 1.0,
             // components/Comment/Message/index.tsx:30
             mention: BLUE,
+            // components/CommentPin/index.tsx
+            bubble: BubbleTokens {
+                // the pin pads avatars by `p-0.25`; around text the
+                // bubble takes the quick comment's `p-3`
+                // (QuickComment/Comment/index.tsx:29) across and half
+                // of it down
+                pad_x: 12.0,
+                pad_y: 6.0,
+                // :10 `bg-[#FCFCFC] border-[1.5px]`
+                border_width: 1.5,
+                fill: SHADES[0],
+                // :11 read `border-[#ECECEC]`, unread `border-[#3582FF]`
+                border: shade4,
+                unread: BLUE,
+                // :10 `shadow-[0px_2px_2px_0px_rgba(0,0,0,0.15)]`
+                shadow: ShadowSpec::new([0.0, 2.0], 2.0, 0.0, Color::rgba(0.0, 0.0, 0.0, 0.15)),
+                // the thread's body run (Comment/Message/index.tsx:30)
+                text: MessageText {
+                    size: 13.0,
+                    line_height: 19.52,
+                    weight: 400,
+                    color: ink,
+                },
+                // the kit draws no text bubble; four fifths of the row
+                // leaves the other side's bubbles their lane
+                max_fraction: 0.8,
+            },
+            // components/Comment/index.tsx:21 `bg-[#FCFCFC] border
+            // border-[#ECECEC] rounded-2xl` and its shadow list
+            scroller: ScrollerTokens {
+                fill: SHADES[0],
+                border: shade4,
+                border_width: 1.0,
+                radius: 16.0,
+                shadow: vec![
+                    ShadowSpec::new([0.0, 18.0], 24.0, -20.0, Color::rgba(0.0, 0.0, 0.0, 0.13)),
+                    ShadowSpec::inset([0.0, 2.0], 0.0, 0.0, Color::rgba(1.0, 1.0, 1.0, 1.0)),
+                    ShadowSpec::new([0.0, 8.0], 16.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.08)),
+                ],
+                // the kit's popup has no cap; this is the select panel's
+                // (`size.dropdown_max_h`), the tallest a panel grows
+                // before it scrolls
+                max_h: 320.0,
+                // the quick comment's muted body (QuickComment/Comment:49)
+                empty: MessageText {
+                    size: 13.0,
+                    line_height: 20.0,
+                    weight: 400,
+                    color: shade6,
+                },
+            },
         }
     }
 
@@ -192,6 +290,28 @@ impl MessageTokens {
             divider: colors.divider,
             divider_width: kit.divider_width,
             mention: colors.info,
+            bubble: BubbleTokens {
+                fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                border: colors.divider,
+                unread: colors.info,
+                text: kit.bubble.text.recolor(colors.text),
+                ..kit.bubble
+            },
+            scroller: ScrollerTokens {
+                fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                border: colors.divider,
+                // the key-light is the kit's paper; elsewhere the drops
+                shadow: kit
+                    .scroller
+                    .shadow
+                    .iter()
+                    .filter(|s| !s.inset)
+                    .cloned()
+                    .collect(),
+                max_h: theme.size.dropdown_max_h,
+                empty: kit.scroller.empty.recolor(colors.text_mid),
+                ..kit.scroller
+            },
         }
     }
 }

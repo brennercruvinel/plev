@@ -23,7 +23,7 @@ use super::super::components::label;
 use super::super::components::popover;
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::message;
+use super::super::components::{bubble, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{accordion, aspect_ratio, collapsible, item, kbd};
@@ -80,7 +80,9 @@ pub struct Panes {
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
+    pub bubble: bubble::BubblePage,
     pub message: message::MessagePage,
+    pub message_scroller: message_scroller::MessageScrollerPage,
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
     pub aspect_ratio: aspect_ratio::AspectRatioPage,
@@ -168,7 +170,9 @@ impl Panes {
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
+            bubble: bubble::BubblePage::new(),
             message: message::MessagePage::new(),
+            message_scroller: message_scroller::MessageScrollerPage::new(),
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
             aspect_ratio: aspect_ratio::AspectRatioPage::new(),

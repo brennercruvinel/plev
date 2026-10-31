@@ -42,6 +42,7 @@ const PROJECTING: &[&str] = &[
     "Alert Dialog",
     "Aspect Ratio",
     "Breadcrumb",
+    "Bubble",
     "Button",
     "Button Group",
     "Checkbox",
@@ -59,6 +60,7 @@ const PROJECTING: &[&str] = &[
     "Kbd",
     "Label",
     "Message",
+    "Message Scroller",
     "Navigation Menu",
     "Popover",
     "Resizable",
@@ -113,10 +115,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Avatar: an image named by the person, online or not"),
     ),
     ("Badge", Unprojected("Badge: a label with its count or tag")),
-    (
-        "Bubble",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
     ("Calendar", PLACEHOLDER),
     (
         "Card",
@@ -156,10 +154,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
     ("Menubar", PLACEHOLDER),
-    (
-        "Message Scroller",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
     ("Pagination", PLACEHOLDER),
     ("Panel", Nothing("the glass surface alone")),
     (
@@ -192,7 +186,7 @@ const SILENT: &[(&str, Why)] = &[
     ("Textarea", PLACEHOLDER),
     (
         "Dock",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+        Unprojected("the dock is drawn by hand: its contacts and a field, over a stage of bubbles"),
     ),
     (
         "Editor",

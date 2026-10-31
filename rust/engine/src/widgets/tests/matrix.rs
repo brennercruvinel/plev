@@ -292,6 +292,23 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             .kind(MessageKind::Quick)
             .reaction("2")
             .render(&mut c, row(26.0), theme);
+        use crate::widgets::message::bubble::{Bubble, BubbleSide};
+        Bubble::new("a bubble long enough to wrap on a phone, at least once")
+            .unread(true)
+            .render(&mut c, row(29.0), theme);
+        Bubble::new("mine")
+            .side(BubbleSide::End)
+            .render(&mut c, row(31.0), theme);
+        use crate::widgets::message::scroller::MessageScroller;
+        let thread = MessageScroller::new(
+            "comments",
+            "none",
+            (0..8)
+                .map(|i| Message::new("Sam", "1m", format!("message {i}")))
+                .collect(),
+        );
+        let h = thread.height(content.w, theme);
+        thread.render(&mut c, Rect::new(content.x, 3400.0, content.w, h), theme);
     }
 
     // task-104 front B: the popover's trigger, open, and its panel, placed
@@ -637,6 +654,34 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 vec![
                     (id("m.message"), Role::ListItem, Probe::Bound),
                     (id("m.message.reaction"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let bubble = crate::widgets::message::bubble::Bubble::new("hi").sem(id("m.bubble"));
+            let (mut c, _) = frame(false);
+            bubble.render(&mut c, row(24.0), &theme);
+            bubble.project(&mut b, &id("m.bubble"), None);
+            frames.push((c, vec![(id("m.bubble"), Role::ListItem, Probe::Hit)]));
+            let thread = crate::widgets::message::scroller::MessageScroller::new(
+                "comments",
+                "none",
+                vec![crate::widgets::message::message::Message::new(
+                    "Sam", "1m", "hi",
+                )],
+            )
+            .sem(id("m.thread"));
+            let (mut c, _) = frame(false);
+            let h = thread.height(vw - gutter * 2.0, &theme);
+            thread.render(
+                &mut c,
+                Rect::new(gutter, gutter, vw - gutter * 2.0, h),
+                &theme,
+            );
+            thread.project(&mut b, &id("m.thread"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.thread"), Role::List, Probe::Bound),
+                    (id("m.thread[0]"), Role::ListItem, Probe::Hit),
                 ],
             ));
 
