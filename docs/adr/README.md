@@ -253,6 +253,7 @@ the person at the interface: input, text, keyboard, accessibility, platform capa
 - [0075](interface/0075-text-moves-by-screen-order-and-shapes-by-line.md) text moves by screen order and shapes by line
 - [0076](interface/0076-the-keyboard-walks-the-projection.md) the keyboard walks the projection
 - [0077](interface/0077-the-persons-text-and-clipboard-stay-the-persons.md) the person's composition and clipboard stay the person's
+- [0086](interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md) the adaptive foundation reads preferences once into the theme
 
 ### recording
 
