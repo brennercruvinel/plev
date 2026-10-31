@@ -25,19 +25,18 @@ pub(crate) mod list;
 mod panel;
 
 use crate::control::input::scroll::ScrollState;
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::color::Color;
+use crate::styling::theme::ShadowSpec;
 use crate::styling::theme::Theme;
+use crate::widgets::form::tokens::SelectLook;
 use crate::widgets::icons;
+use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets};
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
-
-/// The text style of the control and its options: the recipe's.
-fn label_style(theme: &Theme) -> TextStyle {
-    theme.form.select.text.clone()
-}
 
 /// Dropdown select. The closed control renders in normal flow; while
 /// open, render the dropdown via [`render_dropdown`](Select::render_dropdown)
@@ -61,6 +60,12 @@ pub struct Select {
     /// panel has not been laid out since: the highlighted option is
     /// scrolled into view the first time the geometry is read.
     reveal_highlight: bool,
+    /// Which control it draws, and whether small (`isSmall`).
+    look: SelectLook,
+    small: bool,
+    /// A label before the value (`X Post`), and a Lucide icon before both.
+    label: Option<String>,
+    icon: Option<&'static str>,
     sem: Option<SemId>,
 }
 
@@ -79,7 +84,82 @@ impl Select {
             scroll: ScrollState::new(),
             reveal: false,
             reveal_highlight: false,
+            look: SelectLook::Filled,
+            small: false,
+            label: None,
+            icon: None,
             sem: None,
+        }
+    }
+
+    /// Draw `look`'s control; the inline one is small.
+    pub fn look(mut self, look: SelectLook) -> Self {
+        self.look = look;
+        self
+    }
+
+    /// The small control, 12px text in it and in its options.
+    pub fn small(mut self, small: bool) -> Self {
+        self.small = small;
+        self
+    }
+
+    /// A label before the value, which then reads as its property.
+    pub fn label(mut self, label: impl Into<String>) -> Self {
+        self.label = Some(label.into());
+        self
+    }
+
+    /// A Lucide icon at the start.
+    pub fn icon(mut self, icon: &'static str) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    fn is_small(&self) -> bool {
+        self.small || self.look == SelectLook::Inline
+    }
+
+    /// The text of the control and its options in `theme`.
+    pub(super) fn text_style(&self, theme: &Theme) -> TextStyle {
+        let r = &theme.form.select;
+        if self.is_small() {
+            r.small_text.clone()
+        } else {
+            r.text.clone()
+        }
+    }
+
+    /// The control's height in `theme`, small or not.
+    pub fn height_in(&self, theme: &Theme) -> f32 {
+        let r = &theme.form.select;
+        if self.is_small() {
+            r.small_height
+        } else {
+            r.height
+        }
+    }
+
+    /// The control's width that shows its widest option whole: the
+    /// padding, the icon and the label when it has them, the option and
+    /// the chevron, with their gaps.
+    pub fn width_in(&self, theme: &Theme) -> f32 {
+        let r = &theme.form.select;
+        let style = self.text_style(theme);
+        let measure = |t: &str| TextMeasurer::measure_styled(t, &style, None).0.ceil();
+        let widest = self.options.iter().map(|o| measure(o)).fold(0.0, f32::max);
+        let icon = self.icon.map_or(0.0, |_| r.icon + r.gap);
+        let label = self.label.as_deref().map_or(0.0, |l| measure(l) + r.gap);
+        r.pad_start + icon + label + widest + r.gap + r.chevron + r.pad_end
+    }
+
+    /// Between the control and its open panel.
+    pub(super) fn panel_gap(&self, theme: &Theme) -> f32 {
+        let p = &theme.form.select.panel;
+        if self.look == SelectLook::Inline {
+            p.inline_gap
+        } else {
+            p.gap
         }
     }
 
@@ -298,72 +378,99 @@ impl Select {
         }
     }
 
-    /// The control's height in `theme`: the recipe's.
+    /// The default control's height in `theme`: the recipe's.
     pub fn height(theme: &Theme) -> f32 {
         theme.form.select.height
     }
 
-    /// Render the closed control (selected value + chevron).
+    /// Render the closed control: an icon, a label and the value, cut with
+    /// an ellipsis before the chevron.
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
         let r = &theme.form.select;
         let alpha = if self.disabled { r.disabled_alpha } else { 1.0 };
-        let fade = |color: crate::styling::color::Color| with_alpha(color, color.0[3] * alpha);
-        let radius = r.radius.min(bounds.h / 2.0);
+        let fade = |color: Color| with_alpha(color, color.0[3] * alpha);
+        let radius = if self.look == SelectLook::Inline {
+            r.inline_radius
+        } else {
+            r.radius
+        }
+        .min(bounds.h / 2.0);
         if self.focused {
             compositor.push(focus_ring(bounds, radius, theme));
         }
+        let looks = r.surfaces(self.look);
         let surface = if self.open {
-            &r.open
+            &looks.open
         } else if self.hovered {
-            &r.hover
+            &looks.hover
         } else if self.focused {
-            &r.focus
+            &looks.focus
         } else {
-            &r.rest
+            &looks.rest
         };
         let shadows: Vec<_> = surface
             .shadow
             .iter()
-            .map(|s| crate::styling::theme::ShadowSpec {
-                color: crate::styling::color::Color(fade(s.color)),
+            .map(|s| ShadowSpec {
+                color: Color(fade(s.color)),
                 ..*s
             })
             .collect();
-        let layer = crate::drawing::compositor::LayerId::DEFAULT;
-        crate::widgets::recipe::shadow_drops(compositor, layer, bounds, radius, &shadows);
-        compositor.push(crate::widgets::recipe::rounded_rect(
-            bounds.x,
-            bounds.y,
-            bounds.w,
-            bounds.h,
-            radius,
-            fade(surface.fill),
-        ));
-        compositor.push(crate::widgets::recipe::rounded_rect_stroke(
-            bounds.x,
-            bounds.y,
-            bounds.w,
-            bounds.h,
+        let layer = LayerId::DEFAULT;
+        shadow_drops(compositor, layer, bounds, radius, &shadows);
+        let Rect { x, y, w, h } = bounds;
+        compositor.push(rounded_rect(x, y, w, h, radius, fade(surface.fill)));
+        compositor.push(rounded_rect_stroke(
+            x,
+            y,
+            w,
+            h,
             radius,
             fade(surface.border),
             r.border_width,
         ));
-        crate::widgets::recipe::shadow_insets(compositor, layer, bounds, radius, &shadows);
+        shadow_insets(compositor, layer, bounds, radius, &shadows);
 
-        // The value, cut with an ellipsis before the chevron.
-        if let Some(label) = self.selected_label() {
-            let style = label_style(theme);
-            let room = (bounds.w - r.pad_start - r.gap - r.chevron - r.pad_end).max(0.0);
-            let shown = TextMeasurer::truncate_to_width(label, &style, room);
+        let style = self.text_style(theme);
+        let text_y = y + TextMeasurer::vertical_center(&style, h);
+        let end = x + w - r.pad_end - r.chevron - r.gap;
+        let mut at = x + r.pad_start;
+        if let Some(name) = self.icon
+            && let Some(node) =
+                icons::icon_at(name, r.icon, fade(r.icon_color), at, y + (h - r.icon) / 2.0)
+        {
+            compositor.push(node);
+            at += r.icon + r.gap;
+        }
+        if let Some(label) = &self.label {
+            let shown = TextMeasurer::truncate_to_width(label, &style, (end - at).max(0.0));
+            let (lw, _) = TextMeasurer::measure_styled(&shown, &style, None);
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&shown, &style, None),
-                x: bounds.x + r.pad_start,
-                y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                color: fade(r.value_color),
+                x: at,
+                y: text_y,
+                color: fade(r.label_color),
             });
+            at += lw.ceil() + r.gap;
+        }
+        if let Some(value) = self.selected_label() {
+            let shown = TextMeasurer::truncate_to_width(value, &style, (end - at).max(0.0));
+            let color = if self.label.is_some() {
+                r.labelled_color
+            } else {
+                r.value_color
+            };
+            if !shown.is_empty() {
+                compositor.push(SceneNode::Text {
+                    key: TextNodeKey::from_style(&shown, &style, None),
+                    x: at,
+                    y: text_y,
+                    color: fade(color),
+                });
+            }
         }
 
         let chevron = if self.open {
@@ -375,8 +482,8 @@ impl Select {
             chevron,
             r.chevron,
             fade(r.chevron_color),
-            bounds.x + bounds.w - r.pad_end - r.chevron,
-            bounds.y + (bounds.h - r.chevron) / 2.0,
+            x + w - r.pad_end - r.chevron,
+            y + (h - r.chevron) / 2.0,
         ) {
             compositor.push(node);
         }

@@ -14,7 +14,7 @@ use accord::SemId;
 
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::TextMeasurer;
+use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::form::tokens::PanelBody;
@@ -31,12 +31,12 @@ pub(crate) fn view_h(n: usize, theme: &Theme) -> f32 {
     (n as f32 * p.row_h).min(fit)
 }
 
-/// The panel of `n` rows below the control `bounds`, as wide.
-pub(crate) fn panel(bounds: Rect, n: usize, theme: &Theme) -> Rect {
+/// The panel of `n` rows `gap` below the control `bounds`, as wide.
+pub(crate) fn panel(bounds: Rect, n: usize, gap: f32, theme: &Theme) -> Rect {
     let p = &theme.form.select.panel;
     Rect::new(
         bounds.x,
-        bounds.y + bounds.h + p.gap,
+        bounds.y + bounds.h + gap,
         bounds.w,
         view_h(n, theme) + p.pad * 2.0,
     )
@@ -168,18 +168,18 @@ pub(crate) fn draw_body(c: &mut Compositor, layer: LayerId, dd: Rect, theme: &Th
     }
 }
 
-/// Draws the rows `window` shows, each from `row(i)`, under a clip of the
-/// strip, each bound to its id with the rect it is drawn at.
+/// Draws the rows `window` shows, each from `row(i)` in `style`, under a
+/// clip of the strip, each bound to its id with the rect it is drawn at.
 pub(crate) fn draw_rows<'a>(
     c: &mut Compositor,
     layer: LayerId,
     dd: Rect,
     window: &Window,
     row: impl Fn(usize) -> Row<'a>,
+    style: &TextStyle,
     theme: &Theme,
 ) {
     let p = &theme.form.select.panel;
-    let style = &p.text;
     let view = window.view;
     c.push_to_layer(
         layer,

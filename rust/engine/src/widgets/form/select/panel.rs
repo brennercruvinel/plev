@@ -21,7 +21,7 @@ const CONSUMED: EventResult = EventResult {
 impl Select {
     /// Dropdown rect below the control.
     pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
-        list::panel(bounds, self.options.len(), theme)
+        list::panel(bounds, self.options.len(), self.panel_gap(theme), theme)
     }
 
     /// The scroll as the panel shows it: synced to the options and the
@@ -56,7 +56,7 @@ impl Select {
     /// the hit test read this and nothing else.
     fn window(&self, bounds: Rect, theme: &Theme) -> Window {
         let n = self.options.len();
-        let dd = list::panel(bounds, n, theme);
+        let dd = self.dropdown_rect(bounds, theme);
         Window::new(dd, n, self.scroll_for(theme).offset(), theme)
     }
 
@@ -177,6 +177,7 @@ impl Select {
                 selected: i == self.selected,
                 highlighted: self.highlighted == Some(i),
             },
+            &self.text_style(theme),
             theme,
         );
     }

@@ -13,7 +13,7 @@
 
 mod select;
 
-pub use select::{PanelBody, SelectPanel, SelectRecipe};
+pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
@@ -166,6 +166,8 @@ pub struct GroupAddons {
     /// from the text typed beside it.
     pub text_color: Color,
     pub text_edge: f32,
+    /// The least width of a select at the end (Invite :26 `w-25.5`).
+    pub select_w: f32,
 }
 
 /// A one-time code (`super::otp`): its cells are the Field's input box,
@@ -397,6 +399,7 @@ impl FormTokens {
             // far from the edge as its icon button's text is (48 - 36).
             text_color: gray,
             text_edge: 12.0,
+            select_w: 102.0,
         };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
@@ -510,6 +513,8 @@ impl FormTokens {
             hint_edge: theme.spacing.sm,
             text_color: c.text_mid,
             text_edge: theme.spacing.md,
+            // As wide as its options measure.
+            select_w: 0.0,
         };
         let label = LabelRecipe {
             text: t.caption_sm(),
