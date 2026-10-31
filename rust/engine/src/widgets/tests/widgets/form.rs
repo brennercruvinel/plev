@@ -1038,3 +1038,111 @@ fn a_press_places_the_caret_and_the_area_projects_multiline() {
     assert_eq!(node.state.get("multiline"), Some(&Value::Bool(true)));
     assert_eq!(node.state.get("text"), Some(&Value::from("ab\ncd\nef")));
 }
+
+// Select recipe and Combobox
+
+/// The core select is the kit's (`h-9`, a flat panel, rows `p-2`, no
+/// dot); every other theme keeps the glass select it drew: one `Md`
+/// control tall, the glass popover, a dot on the chosen row.
+#[test]
+fn the_core_select_is_the_kit_and_the_others_keep_their_glass() {
+    use crate::styling::theme::ControlSize;
+    use crate::widgets::form::tokens::PanelBody;
+    let core = Theme::hoff_core();
+    let s = &core.form.select;
+    assert_eq!(
+        (s.height, s.radius, s.panel.row_h, s.panel.pad),
+        (36.0, 10.0, 32.0, 4.0)
+    );
+    assert!(matches!(s.panel.body, PanelBody::Flat(_)));
+    assert_eq!(s.panel.marker, None);
+    assert_eq!(
+        core.form.combo.height, 36.0,
+        "the combobox's box is the control"
+    );
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        let s = &theme.form.select;
+        assert_eq!(s.height, theme.control.height(ControlSize::Md));
+        assert_eq!(s.panel.body, PanelBody::Glass);
+        assert_eq!(s.panel.marker, Some(theme.spacing.sm));
+        assert_eq!(s.panel.max_h, theme.size.dropdown_max_h);
+    }
+}
+
+fn frameworks() -> crate::widgets::form::combobox::Combobox {
+    crate::widgets::form::combobox::Combobox::new(
+        ["Next.js", "SvelteKit", "Nuxt", "Remix", "Astro"],
+        "Select framework...",
+    )
+    .sem(SemId::parse("s.combo").unwrap())
+}
+
+/// Focused, the list opens with every option and the text selected
+/// whole; typing filters (any case), Down and Up move over the matches,
+/// Enter picks and closes; blurred, the box shows the chosen option.
+#[test]
+fn a_combobox_filters_highlights_and_picks() {
+    let mut c = frameworks();
+    assert!(!c.is_open());
+    c.set_focused(true);
+    assert!(c.is_open());
+    assert_eq!(c.matches().len(), 5);
+    assert!(c.input.insert("X"));
+    assert_eq!(c.matches(), [0, 2, 3], "Next.js, Nuxt, Remix");
+    assert_eq!(c.highlighted(), Some(0));
+    assert!(c.nav(true) && c.nav(true) && c.nav(true));
+    assert_eq!(c.highlighted(), Some(3), "stops at the last match");
+    assert!(c.nav(false));
+    assert!(c.enter());
+    assert_eq!((c.selected_label(), c.is_open()), (Some("Nuxt"), false));
+    assert_eq!(c.input.text(), "Nuxt");
+    c.set_focused(true);
+    assert_eq!(c.matches().len(), 5, "the chosen label filters nothing");
+    c.input.insert("qq");
+    assert!(c.matches().is_empty());
+    assert!(c.enter() && c.is_open(), "nothing to pick: it stays open");
+    c.set_focused(false);
+    assert_eq!(c.input.text(), "Nuxt", "back to the chosen");
+    let mut off = frameworks().disabled(true);
+    off.set_focused(true);
+    assert!(!off.is_open() && !off.pick(1));
+}
+
+/// The open list sits under the control, a row per match, and a press on
+/// a row picks it; the projection is a select with its query and, open,
+/// its matches as options out of the Tab order.
+#[test]
+fn a_combobox_list_picks_on_a_press_and_projects_its_matches() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 176.0, 36.0);
+    let mut c = frameworks();
+    let (x, y) = bounds.center();
+    assert!(
+        c.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    c.input.insert("r");
+    let dd = c.dropdown_rect(bounds, &theme).expect("open");
+    assert!(dd.y >= bounds.bottom());
+    let p = &theme.form.select.panel;
+    assert_eq!(dd.h, p.pad * 2.0 + p.row_h * 2.0, "Remix, Astro");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    c.project(&mut b, c.sem_id().unwrap(), "Framework", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(c.sem_id().unwrap()).unwrap();
+    assert_eq!(node.role, Role::Select);
+    assert_eq!(node.state.get("query"), Some(&Value::from("r")));
+    assert_eq!(node.state.get("expanded"), Some(&Value::Bool(true)));
+    let astro = snap.get(&SemId::parse("s.combo[4]").unwrap()).unwrap();
+    assert!(!astro.focusable && astro.role == Role::Option);
+    assert!(
+        snap.get(&SemId::parse("s.combo[0]").unwrap()).is_none(),
+        "not a match"
+    );
+    let (rx, ry) = (dd.x + 10.0, dd.y + p.pad + p.row_h * 1.5);
+    let r = c.handle_event(&WidgetEvent::MouseDown { x: rx, y: ry }, bounds, &theme);
+    assert!(r.clicked);
+    assert_eq!(c.selected_label(), Some("Astro"));
+}
