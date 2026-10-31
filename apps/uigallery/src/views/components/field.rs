@@ -11,7 +11,7 @@
 //! and requests are the form pages', its ids under `field_page`.
 
 mod form;
-mod spec;
+pub(crate) mod spec;
 
 pub use form::FormPage;
 pub(crate) use form::{Group, card};

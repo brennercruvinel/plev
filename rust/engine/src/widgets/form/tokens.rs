@@ -108,7 +108,7 @@ pub struct FieldChrome {
 
 /// What takes one end of the input box, which sets the text's inset on
 /// that end.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum Slot {
     /// Nothing: the recipe's padding.
     #[default]
@@ -119,6 +119,47 @@ pub enum Slot {
     Check,
     /// The button that reveals a password.
     Reveal,
+    /// An addon of an input group, as wide as it measures.
+    Width(f32),
+}
+
+/// Which input box a text field draws: the Field's, the search box of an
+/// input group, or the inset box an input group with a select draws.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Look {
+    #[default]
+    Field,
+    Search,
+    Inset,
+}
+
+/// What an input group puts at the ends of its box
+/// (`components/Search/index.tsx`): an icon button, a shortcut hint and
+/// a text addon (a prefix or a suffix).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GroupAddons {
+    /// The icon button's inset from the box on its three sides
+    /// (`top-1 left-1 bottom-1`), its width (`w-8`) and icon (`size-4`).
+    pub icon_edge: f32,
+    pub icon_slot: f32,
+    pub icon: f32,
+    /// The icon at rest and with the group hovered (`fill-[#7B7B7B]
+    /// group-hover:fill-[#000]`).
+    pub icon_color: Color,
+    pub icon_hover: Color,
+    /// The shortcut hint (`⌘ K`): its surface, padding, text and inset
+    /// from the box's end.
+    pub hint_fill: Color,
+    pub hint_radius: f32,
+    pub hint_pad: [f32; 2],
+    pub hint_text: TextStyle,
+    pub hint_color: Color,
+    pub hint_shadow: Vec<ShadowSpec>,
+    pub hint_edge: f32,
+    /// A text addon's color and its clearance from the box's edge and
+    /// from the text typed beside it.
+    pub text_color: Color,
+    pub text_edge: f32,
 }
 
 /// The form slot of the theme.
@@ -126,7 +167,12 @@ pub enum Slot {
 pub struct FormTokens {
     pub label: LabelRecipe,
     pub input: InputRecipe,
+    /// The search box of an input group.
+    pub search: InputRecipe,
+    /// The inset box of an input group with a select at its end.
+    pub inset: InputRecipe,
     pub adorn: Adornments,
+    pub group: GroupAddons,
     pub field: FieldChrome,
 }
 
@@ -136,6 +182,11 @@ fn hex(v: u32) -> Color {
 
 fn black(a: f32) -> Color {
     Color::rgba(0.0, 0.0, 0.0, a)
+}
+
+/// The kit's ink, `rgba(18,18,18,a)`.
+fn ink_a(a: f32) -> Color {
+    Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a)
 }
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
@@ -158,6 +209,16 @@ impl FormTokens {
             Slot::Icon => self.adorn.lead_slot,
             Slot::Check => self.adorn.check_slot,
             Slot::Reveal => self.adorn.reveal_slot,
+            Slot::Width(w) => w,
+        }
+    }
+
+    /// The input box of `look`.
+    pub fn recipe(&self, look: Look) -> &InputRecipe {
+        match look {
+            Look::Field => &self.input,
+            Look::Search => &self.search,
+            Look::Inset => &self.inset,
         }
     }
 
@@ -225,6 +286,83 @@ impl FormTokens {
         // font-medium`; :41 the link, `text-[#7b7b7b] opacity-70
         // hover:opacity-100`; :114 the error `mt-2 text-[0.6875rem]
         // leading-[1rem] font-medium text-[#FE5938]`.
+        // Search :32, the search box: `h-10 px-12 border border-transparent
+        // bg-[#FCFCFC] rounded-xl text-[0.75rem] leading-[1rem]
+        // font-medium`; `hover:border-[#ECECEC]`; `focus:border-[#F1F1F1]
+        // focus:bg-[#F1F1F1] focus:shadow-[0px_1px_3px_0px_rgba(18,18,
+        // 18,0.10)_inset]`.
+        let well = || vec![ShadowSpec::inset([0.0, 1.0], 3.0, 0.0, ink_a(0.10))];
+        let search = InputRecipe {
+            rest: InputSurface {
+                fill: hex(0xFCFCFC),
+                border: NONE,
+                shadow: Vec::new(),
+            },
+            hover: InputSurface {
+                fill: hex(0xFCFCFC),
+                border: hex(0xECECEC),
+                shadow: Vec::new(),
+            },
+            focus: InputSurface {
+                fill: hex(0xF1F1F1),
+                border: hex(0xF1F1F1),
+                shadow: well(),
+            },
+            height: 40.0,
+            pad_x: 48.0,
+            border_width: 1.0,
+            text: ramp.exact(12.0, 16.0, 500),
+            ..input.clone()
+        };
+        // Invite :22, the Field with `!h-10 !pl-4 !bg-[#F8F7F7]
+        // shadow-[0_1px_3px_0_rgba(18,18,18,0.10)_inset]
+        // placeholder:opacity-50`; the Field's hover and focus lift stays.
+        let inset = InputRecipe {
+            rest: InputSurface {
+                fill: hex(0xF8F7F7),
+                border,
+                shadow: well(),
+            },
+            hover: InputSurface {
+                fill: hex(0xF8F7F7),
+                ..input.hover.clone()
+            },
+            focus: InputSurface {
+                fill: hex(0xF8F7F7),
+                ..input.focus.clone()
+            },
+            height: 40.0,
+            pad_x: 16.0,
+            placeholder: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.50),
+            ..input.clone()
+        };
+        // Search :21 the icon button, :41 the `⌘ K` hint: `px-1.5 py-0.5
+        // bg-[#F1F1F1] rounded-md` under a ring and two key-lights,
+        // `text-[0.75rem] leading-[1rem] font-medium text-[#7B7B7B]`,
+        // `right-2.5`.
+        let group = GroupAddons {
+            icon_edge: 4.0,
+            icon_slot: 32.0,
+            icon: 16.0,
+            icon_color: gray,
+            icon_hover: hex(0x000000),
+            hint_fill: hex(0xF1F1F1),
+            hint_radius: 6.0,
+            hint_pad: [6.0, 2.0],
+            hint_text: ramp.exact(12.0, 16.0, 500),
+            hint_color: gray,
+            hint_shadow: vec![
+                ShadowSpec::new([0.0, 0.0], 0.0, 1.0, black(0.11)),
+                ShadowSpec::inset([0.0, 2.0], 0.8, 0.0, Color::rgba(1.0, 1.0, 1.0, 0.27)),
+                ShadowSpec::inset([0.0, -1.0], 0.6, 0.0, black(0.20)),
+                ShadowSpec::new([0.0, 1.0], 4.2, -1.0, black(0.25)),
+            ],
+            hint_edge: 10.0,
+            // Not in the kit (no text addon): the gray of its icons, as
+            // far from the edge as its icon button's text is (48 - 36).
+            text_color: gray,
+            text_edge: 12.0,
+        };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
             color: ink,
@@ -251,7 +389,10 @@ impl FormTokens {
         Self {
             label,
             input,
+            search,
+            inset,
             adorn,
+            group,
             field,
         }
     }
@@ -301,6 +442,22 @@ impl FormTokens {
             reveal_icon: icon,
             icon_color: c.text_mid,
         };
+        let group = GroupAddons {
+            icon_edge: theme.spacing.xs,
+            icon_slot: theme.control.icon_for(ControlSize::Sm) * 2.0,
+            icon: theme.control.icon_for(ControlSize::Sm),
+            icon_color: c.text_mid,
+            icon_hover: c.text,
+            hint_fill: c.bg_hover,
+            hint_radius: theme.shape.micro,
+            hint_pad: [theme.spacing.xs * 1.5, theme.spacing.xs * 0.5],
+            hint_text: t.caption_r(),
+            hint_color: c.text_mid,
+            hint_shadow: vec![ShadowSpec::new([0.0, 0.0], 0.0, 1.0, c.divider)],
+            hint_edge: theme.spacing.sm,
+            text_color: c.text_mid,
+            text_edge: theme.spacing.md,
+        };
         let label = LabelRecipe {
             text: t.caption_sm(),
             color: c.text,
@@ -321,8 +478,11 @@ impl FormTokens {
         };
         Self {
             label,
+            search: input.clone(),
+            inset: input.clone(),
             input,
             adorn,
+            group,
             field,
         }
     }

@@ -13,15 +13,15 @@
 //! hides a password, and a link's `activate` does nothing more than a
 //! click.
 
-use accord::{Request, Role, SemId, SnapshotBuilder, Value};
+use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use engine::widgets::form::field::{Field, FieldPart};
+use engine::widgets::form::TextField;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::super::showcase;
 use super::super::{After, Component, EditKey, child_id, root_id, under};
-use super::spec::Spec;
+use super::spec::{Part, Spec};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
@@ -87,28 +87,34 @@ impl FormPage {
         Self { root, groups }
     }
 
-    pub(crate) fn fields(&self) -> impl Iterator<Item = &Field> {
+    pub(crate) fn specs(&self) -> impl Iterator<Item = &Spec> {
         self.groups
             .iter()
-            .flat_map(|g| g.cards.iter().filter_map(|c| c.spec.field()))
+            .flat_map(|g| g.cards.iter().map(|c| &c.spec))
     }
 
-    fn fields_mut(&mut self) -> impl Iterator<Item = &mut Field> {
+    fn specs_mut(&mut self) -> impl Iterator<Item = &mut Spec> {
         self.groups
             .iter_mut()
-            .flat_map(|g| g.cards.iter_mut().filter_map(|c| c.spec.field_mut()))
+            .flat_map(|g| g.cards.iter_mut().map(|c| &mut c.spec))
     }
 
-    pub(crate) fn field(&self, (g, c): (usize, usize)) -> Option<&Field> {
-        self.groups.get(g)?.cards.get(c)?.spec.field()
+    pub(crate) fn spec(&self, (g, c): (usize, usize)) -> Option<&Spec> {
+        Some(&self.groups.get(g)?.cards.get(c)?.spec)
     }
 
-    fn field_mut(&mut self, (g, c): (usize, usize)) -> Option<&mut Field> {
-        self.groups.get_mut(g)?.cards.get_mut(c)?.spec.field_mut()
+    fn spec_mut(&mut self, (g, c): (usize, usize)) -> Option<&mut Spec> {
+        Some(&mut self.groups.get_mut(g)?.cards.get_mut(c)?.spec)
     }
 
-    /// The card whose widget, or the eye or link of whose field, is `id`.
-    fn at(&self, id: &SemId) -> Option<((usize, usize), FieldPart)> {
+    /// The field of `at`, when its card shows one.
+    #[cfg(test)]
+    pub(crate) fn field(&self, at: (usize, usize)) -> Option<&engine::widgets::form::field::Field> {
+        self.spec(at)?.field()
+    }
+
+    /// The card whose widget, or a part of it, is `id`.
+    fn at(&self, id: &SemId) -> Option<((usize, usize), Part)> {
         self.groups.iter().enumerate().find_map(|(g, group)| {
             group
                 .cards
@@ -118,30 +124,41 @@ impl FormPage {
         })
     }
 
-    /// The card whose field has the caret.
+    /// The card whose text box has the caret.
     pub fn focused(&self) -> Option<(usize, usize)> {
         self.groups.iter().enumerate().find_map(|(g, group)| {
             let c = group
                 .cards
                 .iter()
-                .position(|c| c.spec.field().is_some_and(|f| f.input.is_focused()))?;
+                .position(|c| c.spec.text().is_some_and(|t| t.is_focused()))?;
             Some((g, c))
         })
     }
 
-    fn focused_field(&mut self) -> Option<&mut Field> {
+    fn focused_text(&mut self) -> Option<&mut TextField> {
         let at = self.focused()?;
-        self.field_mut(at)
+        self.spec_mut(at)?.text_mut()
     }
 
-    /// The caret goes to the field of `at` (one not disabled), or to none.
+    /// The caret goes to the box of `at` (one not disabled), or to none.
     pub fn set_focused(&mut self, at: Option<(usize, usize)>) {
         for (g, group) in self.groups.iter_mut().enumerate() {
             for (c, card) in group.cards.iter_mut().enumerate() {
-                if let Some(f) = card.spec.field_mut() {
-                    f.input.set_focused(at == Some((g, c)));
+                if let Some(t) = card.spec.text_mut() {
+                    t.set_focused(at == Some((g, c)));
                 }
             }
+        }
+    }
+
+    /// Whether a reader's focus is on a part other than a box.
+    fn part_focused(&self) -> bool {
+        self.specs().any(|s| s.part_focus().is_some())
+    }
+
+    fn clear_part_focus(&mut self) {
+        for spec in self.specs_mut() {
+            spec.set_part_focus(None);
         }
     }
 
@@ -206,12 +223,8 @@ impl FormPage {
         theme: &Theme,
     ) -> EventResult {
         let mut result = EventResult::IGNORED;
-        if matches!(event, WidgetEvent::MouseDown { .. })
-            && self.fields().any(|f| f.part_focus().is_some())
-        {
-            for field in self.fields_mut() {
-                field.set_part_focus(None);
-            }
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.part_focused() {
+            self.clear_part_focus();
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
@@ -225,8 +238,7 @@ impl FormPage {
 
     /// The caret blink of the focused field; nothing while none is.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.focused_field()
-            .map_or(Wake::idle(), |f| f.input.wake(dt))
+        self.focused_text().map_or(Wake::idle(), |t| t.wake(dt))
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
@@ -248,31 +260,30 @@ impl FormPage {
 
 impl TextHost for FormPage {
     fn handle_text(&mut self, s: &str) -> bool {
-        self.focused_field().is_some_and(|f| f.input.insert(s))
+        self.focused_text().is_some_and(|t| t.insert(s))
     }
 
     fn handle_edit_key(&mut self, key: EditKey) -> bool {
         if key == EditKey::Tab {
             return false;
         }
-        self.focused_field()
-            .is_some_and(|f| f.input.edit(key.into()))
+        self.focused_text().is_some_and(|t| t.edit(key.into()))
     }
 
     fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         let (committed, preedit, cursor) = match ime {
             ImeEvent::Disabled => {
                 let mut dropped = false;
-                for field in self.fields_mut() {
-                    dropped |= field.input.end_compose();
+                for spec in self.specs_mut() {
+                    dropped |= spec.text_mut().is_some_and(|t| t.end_compose());
                 }
                 return dropped;
             }
             ImeEvent::Preedit(text, cursor) => ("", text, cursor),
             ImeEvent::Commit(text) => (text, "", None),
         };
-        self.focused_field()
-            .is_some_and(|f| f.input.compose(committed, preedit, cursor))
+        self.focused_text()
+            .is_some_and(|t| t.compose(committed, preedit, cursor))
     }
 
     /// A right-click on a field's box: it takes the keys for its menu,
@@ -281,27 +292,30 @@ impl TextHost for FormPage {
         let layout = self.layout(content, theme);
         let hit = layout.iter().enumerate().find_map(|(g, laid)| {
             laid.cards.iter().enumerate().find_map(|(c, (_, rect))| {
-                let field = self.field((g, c))?;
-                (field.part_at(x, y, *rect, theme) == Some(FieldPart::Input))
-                    .then_some(((g, c), *rect))
+                let spec = self.spec((g, c))?;
+                spec.on_box(x, y, *rect, theme).then_some(((g, c), *rect))
             })
         });
         let Some((at, rect)) = hit else {
             return false;
         };
-        if self.focused() == Some(at) && self.field(at).is_some_and(|f| f.input.has_selection()) {
+        let selected = self
+            .spec(at)
+            .and_then(Spec::text)
+            .is_some_and(|t| t.has_selection());
+        if self.focused() == Some(at) && selected {
             return true;
         }
         self.set_focused(Some(at));
-        if let Some(field) = self.field_mut(at) {
-            field.handle_event(&WidgetEvent::MouseDown { x, y }, rect, theme);
+        if let Some(spec) = self.spec_mut(at) {
+            spec.handle_event(&WidgetEvent::MouseDown { x, y }, rect, theme);
         }
         true
     }
 
     fn keys(&mut self) -> Keys<'_> {
-        match self.focused_field() {
-            Some(f) => Keys::Field(&mut f.input),
+        match self.focused_text() {
+            Some(t) => Keys::Field(t),
             None => Keys::Nobody,
         }
     }
@@ -309,18 +323,15 @@ impl TextHost for FormPage {
     fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
         let at = self.focused()?;
         let rect = self.widget_rect(at, content, theme)?;
-        let field = self.field(at)?;
-        Some(field.input.ime_area(field.layout(rect, theme).input, theme))
+        self.spec(at)?.ime_area(rect, theme)
     }
 
     /// Escape blurs the focused field, or lets go of the eye or the link
     /// a reader focused. `false` when nothing was.
     fn handle_escape(&mut self) -> bool {
-        let had = self.focused().is_some() || self.fields().any(|f| f.part_focus().is_some());
+        let had = self.focused().is_some() || self.part_focused();
         self.set_focused(None);
-        for field in self.fields_mut() {
-            field.set_part_focus(None);
-        }
+        self.clear_part_focus();
         had
     }
 }
@@ -340,40 +351,30 @@ impl Component for FormPage {
                 card.spec.project(b, &at);
             }
         }
-        for field in self.fields() {
-            let id = match field.part_focus() {
-                Some(FieldPart::Reveal) => field.reveal_id(),
-                Some(FieldPart::Link) => field.link_id(),
-                _ if field.input.is_focused() => field.sem_id().cloned(),
-                _ => None,
+        for spec in self.specs() {
+            let part = match spec.part_focus() {
+                Some(part) => Some(part),
+                None if spec.text().is_some_and(|t| t.is_focused()) => Some(Part::Box),
+                None => None,
             };
-            if let Some(id) = id {
+            if let Some(id) = part.and_then(|p| spec.part_id(p)) {
                 b.focus(&id);
             }
         }
     }
 
-    /// A field's `set_value` puts its text, as typing it would; the eye's
-    /// `toggle` reveals or hides the password, as a click on it does; the
-    /// link's `activate` does nothing more than a click.
+    /// A box's `set_value` puts its text, as typing it would; the eye's
+    /// `toggle` reveals or hides the password, as a click on it does; a
+    /// link's or an icon button's `activate` does nothing more than a
+    /// click.
     fn run(&mut self, req: &Request) -> Result<After, String> {
         let refused = || format!("the page has no {} on {}", req.action, req.target);
         let (at, part) = self.at(&req.target).ok_or_else(refused)?;
-        let field = self.field_mut(at).ok_or_else(refused)?;
-        match (part, req.action.as_str(), &req.param) {
-            (FieldPart::Input, "set_value", Some(Value::Text(text))) => {
-                field.input.set_text(text);
-                Ok(After::Nothing)
-            }
-            (FieldPart::Reveal, "toggle", None) => {
-                if field.toggle_reveal() {
-                    Ok(After::Nothing)
-                } else {
-                    Err(refused())
-                }
-            }
-            (FieldPart::Link, "activate", None) => Ok(After::Nothing),
-            _ => Err(refused()),
+        let spec = self.spec_mut(at).ok_or_else(refused)?;
+        if spec.run(part, req.action.as_str(), req.param.as_ref()) {
+            Ok(After::Nothing)
+        } else {
+            Err(refused())
         }
     }
 
@@ -386,10 +387,10 @@ impl Component for FormPage {
         let hit = self.at(id);
         self.handle_escape();
         match hit {
-            Some((at, FieldPart::Input)) => self.set_focused(Some(at)),
+            Some((at, Part::Box)) => self.set_focused(Some(at)),
             Some((at, part)) => {
-                if let Some(field) = self.field_mut(at) {
-                    field.set_part_focus(Some(part));
+                if let Some(spec) = self.spec_mut(at) {
+                    spec.set_part_focus(Some(part));
                 }
             }
             None => {}

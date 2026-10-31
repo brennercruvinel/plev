@@ -129,6 +129,7 @@ components! {
     // task-104 front A, fields (#154)
     Field => field,
     Label => label,
+    InputGroup => input_group,
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)

@@ -47,6 +47,7 @@ pub mod tree;
 // task-104 front A, fields (#154)
 pub mod field;
 pub mod label;
+pub mod input_group;
 
 // task-104 front B, overlays (#155)
 

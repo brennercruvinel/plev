@@ -618,3 +618,94 @@ fn a_press_on_the_label_focuses_the_box() {
     off.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
     assert!(!off.input.is_focused());
 }
+
+// Input group
+
+fn search_group() -> crate::widgets::form::input_group::InputGroup {
+    use crate::widgets::form::input_group::{Addon, InputGroup};
+    InputGroup::new("Search...")
+        .start(Addon::Icon("search"))
+        .end(Addon::Hint("⌘ K".into()))
+}
+
+/// The kit's Search: a 40px box, the icon button 4px in and 32 wide, the
+/// hint 10px from the end, and the typed text between them, never under
+/// them, from narrow to wide and with a long value.
+#[test]
+fn a_search_keeps_its_text_between_its_addons() {
+    let theme = Theme::hoff_core();
+    let style = theme.form.search.text.clone();
+    for w in (120..=600).step_by(8).map(|w| w as f32) {
+        let mut g = search_group().with_text(&LONG.repeat(3));
+        g.input.focus();
+        let bounds = Rect::new(10.0, 10.0, w, 0.0);
+        let l = g.layout(bounds, &theme);
+        assert_eq!(l.input.h, 40.0);
+        let (icon, hint) = (l.start.unwrap(), l.end.unwrap());
+        assert_eq!((icon.x - l.input.x, icon.w), (4.0, 32.0));
+        assert!((l.input.right() - hint.right() - 10.0).abs() < 0.01);
+        let nodes = nodes_of(|c| g.render(c, bounds, &theme));
+        let clip = nodes.iter().find_map(|n| match *n {
+            SceneNode::PushClip { x, w, .. } => Some((x, w)),
+            _ => None,
+        });
+        let (x, cw) = clip.expect("a long value is clipped to its box");
+        assert!(
+            x >= icon.right() && x + cw <= hint.x + 0.5,
+            "{w}: under an addon"
+        );
+        for (text, _, width) in texts(&nodes) {
+            let (_, h) = TextMeasurer::measure_styled(&text, &style, width);
+            assert!(h <= style.line_height + 0.5, "{text:?} wraps");
+        }
+    }
+}
+
+/// A press on the icon button is a click that leaves the box's focus; a
+/// hovered group darkens its icon.
+#[test]
+fn the_icon_button_presses_and_darkens_with_the_group() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 216.0, 0.0);
+    let mut g = search_group();
+    let icon = g.layout(bounds, &theme).start.unwrap();
+    let (x, y) = icon.center();
+    assert!(
+        g.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(!g.input.is_focused(), "the button, not the box");
+    let tint = |g: &crate::widgets::form::input_group::InputGroup| {
+        let nodes = nodes_of(|c| g.render(c, bounds, &theme));
+        nodes.iter().find_map(|n| match n {
+            SceneNode::Path { data } => Some(data.vertices[0].color),
+            _ => None,
+        })
+    };
+    let drawn = |color: Color| match crate::widgets::icons::icon("search", 16.0, color.0) {
+        Some(SceneNode::Path { data }) => Some(data.vertices[0].color),
+        _ => None,
+    };
+    assert_eq!(tint(&g), drawn(theme.form.group.icon_color));
+    g.handle_event(&WidgetEvent::MouseMove { x: 100.0, y }, bounds, &theme);
+    assert_eq!(tint(&g), drawn(theme.form.group.icon_hover));
+}
+
+/// The group projects as its text field described by its hint, with its
+/// icon button beside it.
+#[test]
+fn a_search_projects_its_hint_and_its_button() {
+    let g = search_group().sem(SemId::parse("s.search").unwrap());
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    g.project(&mut b, g.sem_id().unwrap(), "Search", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let field = snap.get(g.sem_id().unwrap()).unwrap();
+    assert_eq!(field.description.as_deref(), Some("⌘ K"));
+    let action = snap.get(&g.action_id().unwrap()).unwrap();
+    assert_eq!(
+        (action.role, action.label.as_str()),
+        (Role::Button, "search")
+    );
+}

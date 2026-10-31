@@ -17,6 +17,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104 front A, fields (#154)
 use super::super::components::field;
 use super::super::components::label;
+use super::super::components::input_group;
 
 // task-104 front B, overlays (#155)
 
@@ -72,6 +73,7 @@ pub struct Panes {
     // task-104 front A, fields (#154)
     pub field: field::FormPage,
     pub label: field::FormPage,
+    pub input_group: field::FormPage,
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
@@ -152,6 +154,7 @@ impl Panes {
             // task-104 front A, fields (#154)
             field: field::page(),
             label: label::page(),
+            input_group: input_group::page(),
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)

@@ -84,4 +84,5 @@ text_hosts! {
     // task-104 front A, fields (#154)
     Field => field,
     Label => label,
+    InputGroup => input_group,
 }

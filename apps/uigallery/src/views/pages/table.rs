@@ -255,7 +255,13 @@ pub const PAGES: &[Page] = &[
         "Single-line text fields. Click to place the caret, Tab cycles, Escape blurs.",
         Pane::Input,
     ),
-    placeholder("Input Group"),
+    page(
+        C,
+        "Input Group",
+        "search",
+        "A text field with addons: an icon button, a shortcut hint, a prefix or a suffix.",
+        Pane::InputGroup,
+    ),
     placeholder("Input OTP"),
     alias(
         "Item",
