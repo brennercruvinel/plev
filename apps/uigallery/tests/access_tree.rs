@@ -66,6 +66,7 @@ const PROJECTING: &[&str] = &[
     "Dropdown Menu",
     "Field",
     "Graph",
+    "Home",
     "Hover Card",
     "Icon Button",
     "Input",

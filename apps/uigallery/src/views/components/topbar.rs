@@ -260,8 +260,8 @@ impl Component for TopbarPage {
     }
 
     fn blur(&mut self) -> bool {
-        let had = self.focused_text().is_some()
-            || self.cards.iter().any(|c| c.header.focus().is_some());
+        let had =
+            self.focused_text().is_some() || self.cards.iter().any(|c| c.header.focus().is_some());
         for card in &mut self.cards {
             card.header.set_focus(None);
         }

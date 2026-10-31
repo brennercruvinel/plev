@@ -294,6 +294,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Home",
+        "house",
+        "The kit's home, its branding: the logo's symbol, its wordmark and both.",
+        Pane::Home,
+    ),
+    page(
+        C,
         "Hover Card",
         "eye",
         "Rest the pointer on the handle; the card follows.",

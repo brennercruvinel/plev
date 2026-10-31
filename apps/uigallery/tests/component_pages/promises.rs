@@ -37,8 +37,8 @@ const PROJECTING: usize = 31
     + 7
     // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat
     + 4
-    // task-104 front F, kit foundation: Topbar
-    + 1;
+    // task-104 front F, kit foundation: Topbar, Home
+    + 2;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

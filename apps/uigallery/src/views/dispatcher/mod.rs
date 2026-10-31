@@ -103,6 +103,7 @@ impl ShowcaseView {
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
                 // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.content_height(content, t),
                 Pane::Topbar => self.panes.topbar.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
@@ -273,6 +274,7 @@ impl ShowcaseView {
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
                 // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.handle_event(event, content, t),
                 Pane::Topbar => self.panes.topbar.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
@@ -572,6 +574,7 @@ impl ShowcaseView {
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
                 // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.render(c, content, theme),
                 Pane::Topbar => self.panes.topbar.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();

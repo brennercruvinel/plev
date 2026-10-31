@@ -42,7 +42,7 @@ use super::super::components::{
 };
 
 // task-104 front F, kit foundation
-use super::super::components::topbar;
+use super::super::components::{home, topbar};
 
 pub struct Panes {
     // -- foundations
@@ -127,6 +127,7 @@ pub struct Panes {
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
     // task-104 front F, kit foundation
+    pub home: home::HomePage,
     pub topbar: topbar::TopbarPage,
     // -- apps demo
     pub todo: todo::TodoPage,
@@ -241,6 +242,7 @@ impl Panes {
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
             // task-104 front F, kit foundation
+            home: home::HomePage::new(),
             topbar: topbar::TopbarPage::new(),
             todo,
             surface,

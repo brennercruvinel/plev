@@ -182,6 +182,7 @@ components! {
     Toggle => toggle,
     ToggleGroup => toggle_group,
     // task-104 front F, kit foundation
+    Home => home,
     Topbar => topbar,
     // task-104 front G, navigation and data
     Chart => chart,

@@ -132,6 +132,7 @@ pub enum Pane {
     Toggle,
     ToggleGroup,
     // task-104 front F, kit foundation
+    Home,
     Topbar,
     // apps demo
     Todo,
