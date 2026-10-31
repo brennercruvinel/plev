@@ -19,7 +19,7 @@ impl GitPage {
 
     pub fn connect(&mut self, _wake: GitWake) {}
 
-    pub fn set_theme(&mut self, _name: &str) {}
+    pub fn set_theme(&mut self, _theme: &Theme) {}
 
     pub fn content_height(&self, content: Rect) -> f32 {
         content.h

@@ -224,7 +224,11 @@ impl Panes {
             capture: capture::CapturePage::new(theme),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
-            git: git::GitPage::new(),
+            git: {
+                let mut git = git::GitPage::new();
+                git.set_theme(theme);
+                git
+            },
             builder: builder::BuilderPage::new(),
             detached: None,
             shell: super::super::dispatcher::Shell::new(),
