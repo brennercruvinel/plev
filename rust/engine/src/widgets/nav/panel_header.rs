@@ -1,11 +1,13 @@
 //! Panel header: the column head of a screen or a pane. Title in the
 //! title ramp (text-default tone), an optional blurb under it, an
-//! optional count badge and trailing actions on the right. One `Xl`
-//! control tall plus the blurb line when there is one.
+//! optional count badge and trailing actions on the right. Its measures
+//! and tones are the theme's (`theme.disclosure.header`): the kit's
+//! Notifications head in the core theme, one `Xl` control tall plus the
+//! blurb line elsewhere.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{ControlSize, Theme};
+use crate::styling::theme::Theme;
 
 use crate::widgets::buttons::Badge;
 use crate::widgets::widget::Rect;
@@ -37,42 +39,49 @@ impl PanelHeader {
     }
 
     pub fn title_style(theme: &Theme) -> TextStyle {
-        theme.typography.title()
+        let r = &theme.disclosure.header;
+        theme
+            .typography
+            .exact(r.title_size, r.title_line_height, r.title_weight)
     }
 
     fn blurb_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        let r = &theme.disclosure.header;
+        theme
+            .typography
+            .exact(r.blurb_size, r.blurb_line_height, r.blurb_weight)
     }
 
-    /// Side padding: the `md` step.
+    /// Side padding (`theme.disclosure.header`).
     pub fn pad(theme: &Theme) -> f32 {
-        theme.spacing.md
+        theme.disclosure.header.pad_x
     }
 
-    /// Header height: the `Xl` control for the title row, plus the blurb
-    /// line and the `xs` gap when there is a blurb.
+    /// Header height: the title row, plus the blurb line, the gap above
+    /// it and the space below it when there is a blurb, plus the rule.
     pub fn height(&self, theme: &Theme) -> f32 {
-        let row = theme.control.height(ControlSize::Xl);
-        match self.blurb {
-            Some(_) => row + Self::blurb_style(theme).line_height + theme.spacing.xs,
-            None => row,
-        }
+        let r = &theme.disclosure.header;
+        let head = match self.blurb {
+            Some(_) => r.row + Self::blurb_style(theme).line_height + r.blurb_gap + r.blurb_bottom,
+            None => r.row,
+        };
+        head + r.rule
     }
 
     /// The rect trailing actions (buttons the owner draws) may use, at
     /// the right of the title row.
     pub fn trailing_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
-        let row = theme.control.height(ControlSize::Xl);
+        let r = &theme.disclosure.header;
         let pad = Self::pad(theme);
         let mut right = bounds.x + bounds.w - pad;
         if let Some(badge) = &self.badge {
-            right -= badge.preferred_size(theme).0 + theme.spacing.sm;
+            right -= badge.preferred_size(theme).0 + r.badge_gap;
         }
         Rect::new(
             bounds.x + pad,
             bounds.y,
             (right - bounds.x - pad).max(0.0),
-            row,
+            r.row,
         )
     }
 
@@ -81,8 +90,9 @@ impl PanelHeader {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let r = &theme.disclosure.header;
         let pad = Self::pad(theme);
-        let row = theme.control.height(ControlSize::Xl);
+        let row = r.row;
         let title = Self::title_style(theme);
         let mut right = bounds.x + bounds.w - pad;
         if let Some(badge) = &self.badge {
@@ -94,7 +104,7 @@ impl PanelHeader {
                 Rect::new(right, bounds.y + (row - bh) / 2.0, bw, bh),
                 theme,
             );
-            right -= theme.spacing.sm;
+            right -= r.badge_gap;
         }
         let avail = (right - bounds.x - pad).max(0.0);
         let shown = TextMeasurer::truncate_to_width(&self.title, &title, avail);
@@ -104,7 +114,7 @@ impl PanelHeader {
                 key: TextNodeKey::from_style(&shown, &title, None),
                 x: bounds.x + pad,
                 y: bounds.y + TextMeasurer::vertical_center(&title, row),
-                color: theme.glass.text_default.0,
+                color: r.title.0,
             },
         );
         if let Some(blurb) = &self.blurb {
@@ -114,8 +124,21 @@ impl PanelHeader {
                 SceneNode::Text {
                     key: TextNodeKey::from_style(blurb, &style, Some(bounds.w - pad * 2.0)),
                     x: bounds.x + pad,
-                    y: bounds.y + row + theme.spacing.xs,
-                    color: theme.colors.text_dim.0,
+                    y: bounds.y + row + r.blurb_gap,
+                    color: r.blurb.0,
+                },
+            );
+        }
+        if r.rule > 0.0 {
+            let h = self.height(theme);
+            c.push_to_layer(
+                layer,
+                SceneNode::Rect {
+                    x: bounds.x,
+                    y: bounds.y + h - r.rule,
+                    w: bounds.w,
+                    h: r.rule,
+                    color: r.rule_color.0,
                 },
             );
         }

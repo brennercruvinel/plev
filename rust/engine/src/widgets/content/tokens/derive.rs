@@ -138,6 +138,7 @@ impl DisclosureTokens {
         };
         let (list, table) = Self::rows(theme);
         let tree = Self::tree(theme);
+        let (panel, header) = Self::panels(theme);
         Self {
             accordion,
             collapsible,
@@ -150,7 +151,46 @@ impl DisclosureTokens {
             list,
             table,
             tree,
+            panel,
+            header,
         }
+    }
+
+    /// The panel and its head every theme drew before the kit: the card
+    /// radius, `lg` padding, a caption label in the faint glass text; the
+    /// head one `Xl` control tall with the title centered in it, `md`
+    /// padding left and right, the blurb `xs` under that row with nothing
+    /// below it, the glass default title, the dim blurb, `sm` before the
+    /// badge, no rule.
+    fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
+        let type_ = &theme.typography;
+        let (caption, title, blurb) = (type_.caption_sm(), type_.title(), type_.base_2r());
+        let panel = PanelRecipe {
+            radius: theme.shape.card,
+            pad: theme.spacing.lg,
+            label_size: caption.font_size,
+            label_line_height: caption.line_height,
+            label_weight: caption.font_weight,
+            label: theme.glass.text_faint,
+        };
+        let header = HeaderRecipe {
+            pad_x: theme.spacing.md,
+            row: theme.control.height(crate::styling::theme::ControlSize::Xl),
+            blurb_gap: theme.spacing.xs,
+            blurb_bottom: 0.0,
+            title_size: title.font_size,
+            title_line_height: title.line_height,
+            title_weight: title.font_weight,
+            title: theme.glass.text_default,
+            blurb_size: blurb.font_size,
+            blurb_line_height: blurb.line_height,
+            blurb_weight: blurb.font_weight,
+            blurb: theme.colors.text_dim,
+            badge_gap: theme.spacing.sm,
+            rule: 0.0,
+            rule_color: NONE,
+        };
+        (panel, header)
     }
 
     /// The tree every theme drew before the kit, value for value: body

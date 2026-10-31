@@ -437,6 +437,44 @@ impl DisclosureTokens {
             icon_selected: ink,
         };
 
+        // The kit's panel, the inspector's (DesignAndAnimationSidebar/
+        // index.tsx:23, `border border-[#ECECEC] rounded-[1.25rem]`), its
+        // sections `px-4` (:25); a group's label `text-[0.75rem]
+        // leading-[1rem] font-medium text-[#7b7b7b]/70` (GuidelineSidebar/
+        // index.tsx:59), whose gray fails AAA and takes shade 7.
+        let panel = PanelRecipe {
+            radius: 20.0,
+            pad: 16.0,
+            label_size: 12.0,
+            label_line_height: 16.0,
+            label_weight: 500,
+            label: passing,
+        };
+        // The Notifications head (Notifications/index.tsx:26-28): `px-5 py-4
+        // border-b border-[#ECECEC]`, the title `text-[0.875rem]
+        // leading-[1.25rem] font-semibold`; a second line in the
+        // notification's `text-[0.75rem] leading-[1rem] font-medium
+        // text-[#7B7B7B]/50` (Notification/index.tsx:68), in shade 7 for
+        // AAA, right under the title's row, whose `py-4` parts them, and
+        // `py-4` below it; the tabs `gap-1` (:30) before the badge.
+        let header = HeaderRecipe {
+            pad_x: 20.0,
+            row: 16.0 + 20.0 + 16.0,
+            blurb_gap: 0.0,
+            blurb_bottom: 16.0,
+            title_size: 14.0,
+            title_line_height: 20.0,
+            title_weight: 600,
+            title: ink,
+            blurb_size: 12.0,
+            blurb_line_height: 16.0,
+            blurb_weight: 500,
+            blurb: passing,
+            badge_gap: 4.0,
+            rule: 1.0,
+            rule_color: line,
+        };
+
         Self {
             accordion,
             collapsible,
@@ -449,6 +487,8 @@ impl DisclosureTokens {
             list,
             table,
             tree,
+            panel,
+            header,
         }
     }
 }
