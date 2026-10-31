@@ -79,6 +79,7 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   the task page as the control panel of the definition of done.
 
 - [task-104: the 35 empty or borrowed gallery tabs become kit components](tasks/task-104-gallery-components-from-the-kit/README.md)
+- ADR 0086 (proposed): [the adaptive foundation reads preferences once into the theme](adr/interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
 
 - plev is MIT (2026-10-31, task-41): the license is decided as MIT alone,
   not the MIT OR Apache-2.0 task-41 planned. the root `LICENSE` holds the
