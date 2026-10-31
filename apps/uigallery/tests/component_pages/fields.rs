@@ -246,3 +246,38 @@ fn the_invite_s_select_picks_the_same_access_from_the_three() {
         Some(Value::from("can edit"))
     );
 }
+
+const PALETTE: &str = "command_page.group[0].card[0]";
+
+/// The command palette: a person's filter and Enter, a reader's value
+/// and press on the command, an agent's `set_value` and `select` run the
+/// same command with the same filter.
+#[test]
+fn a_command_runs_the_same_from_the_three() {
+    let settings = "command_page.group[0].card[0].list[4]";
+    let mut person = gallery("Command");
+    person.click(PALETTE);
+    person.type_in("set");
+    person.view.handle_enter();
+    person.frame();
+    let mut reader = gallery("Command");
+    reader.reader(
+        PALETTE,
+        Action::SetValue,
+        Some(ActionData::Value("set".into())),
+    );
+    reader.press(settings);
+    let agent = by_agent(
+        "Command",
+        "palette",
+        vec![
+            ask_with(PALETTE, "set_value", Value::from("set")),
+            ask(settings, "select"),
+        ],
+    );
+    same("Command", &person, &reader, &agent);
+    assert_eq!(
+        person.value("command_page.group[0].card[0].list:ran"),
+        Some(Value::from("Settings"))
+    );
+}

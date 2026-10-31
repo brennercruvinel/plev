@@ -1077,14 +1077,18 @@ fn frameworks() -> crate::widgets::form::combobox::Combobox {
     .sem(SemId::parse("s.combo").unwrap())
 }
 
-/// Focused, the list opens with every option and the text selected
-/// whole; typing filters (any case), Down and Up move over the matches,
-/// Enter picks and closes; blurred, the box shows the chosen option.
+/// Focused, the text is selected whole and the list opens on `open` or
+/// a key with every option; typing opens it and filters (any case), Down
+/// and Up move over the matches, Enter picks and closes; blurred, the
+/// box shows the chosen option.
 #[test]
 fn a_combobox_filters_highlights_and_picks() {
     let mut c = frameworks();
-    assert!(!c.is_open());
     c.set_focused(true);
+    assert!(!c.is_open(), "focus alone does not open it");
+    assert!(c.nav(true) && c.is_open(), "Down opens it");
+    c.set_focused(false);
+    c.open();
     assert!(c.is_open());
     assert_eq!(c.matches().len(), 5);
     assert!(c.input.insert("X"));
@@ -1096,7 +1100,7 @@ fn a_combobox_filters_highlights_and_picks() {
     assert!(c.enter());
     assert_eq!((c.selected_label(), c.is_open()), (Some("Nuxt"), false));
     assert_eq!(c.input.text(), "Nuxt");
-    c.set_focused(true);
+    c.open();
     assert_eq!(c.matches().len(), 5, "the chosen label filters nothing");
     c.input.insert("qq");
     assert!(c.matches().is_empty());
@@ -1136,7 +1140,7 @@ fn a_combobox_list_picks_on_a_press_and_projects_its_matches() {
     assert_eq!(node.state.get("query"), Some(&Value::from("r")));
     assert_eq!(node.state.get("expanded"), Some(&Value::Bool(true)));
     let astro = snap.get(&SemId::parse("s.combo[4]").unwrap()).unwrap();
-    assert!(!astro.focusable && astro.role == Role::Option);
+    assert!(astro.focusable && astro.role == Role::Option);
     assert!(
         snap.get(&SemId::parse("s.combo[0]").unwrap()).is_none(),
         "not a match"
@@ -1145,4 +1149,48 @@ fn a_combobox_list_picks_on_a_press_and_projects_its_matches() {
     let r = c.handle_event(&WidgetEvent::MouseDown { x: rx, y: ry }, bounds, &theme);
     assert!(r.clicked);
     assert_eq!(c.selected_label(), Some("Astro"));
+}
+
+/// A palette's rows never draw out of its list: every row the draw binds
+/// is inside the list's strip, in every theme, as the list scrolls.
+#[test]
+fn a_palette_s_rows_stay_in_its_list() {
+    use crate::widgets::form::command::Command;
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let cmd = Command::new("Type a command...")
+            .group(
+                "File",
+                [
+                    ("New file", Some("file"), Some("⌘ N")),
+                    ("Open folder", None, None),
+                    ("Save", None, None),
+                ],
+            )
+            .group(
+                "Go to",
+                [
+                    ("Home", None, None),
+                    ("Settings", None, None),
+                    ("Terminal", None, None),
+                ],
+            )
+            .sem(SemId::parse("s.cmd").unwrap());
+        let bounds = Rect::new(0.0, 0.0, 288.0, 0.0);
+        let l = cmd.layout(bounds, &theme);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        cmd.render(&mut c, bounds, &theme);
+        let p = &theme.form.select.panel;
+        let strip = Rect::new(l.list.x, l.list.y + p.pad, l.list.w, l.list.h - p.pad * 2.0);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let clip = nodes.iter().find_map(|n| match *n {
+            SceneNode::PushClip { x, y, w, h } => Some(Rect::new(x, y, w, h)),
+            _ => None,
+        });
+        assert_eq!(
+            clip,
+            Some(strip),
+            "the rows are clipped to the list's strip"
+        );
+    }
 }

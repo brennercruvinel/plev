@@ -46,6 +46,7 @@ const PROJECTING: &[&str] = &[
     "Checkbox",
     "Chip",
     "Combobox",
+    "Command",
     "Data Table",
     "Dialog",
     "Field",
@@ -133,7 +134,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("CodeBlock: a label with the code, named by its caption"),
     ),
     ("Collapsible", PLACEHOLDER),
-    ("Command", PLACEHOLDER),
     (
         "Context Menu",
         Unprojected("the area a right click opens the menu in: a trigger with an open action"),

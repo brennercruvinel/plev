@@ -16,6 +16,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
 use super::super::components::combobox;
+use super::super::components::command;
 use super::super::components::field;
 use super::super::components::input_group;
 use super::super::components::input_otp;
@@ -83,6 +84,7 @@ pub struct Panes {
     pub input_otp: field::FormPage,
     pub textarea: field::FormPage,
     pub combobox: field::FormPage,
+    pub command: field::FormPage,
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
@@ -170,6 +172,7 @@ impl Panes {
             input_otp: input_otp::page(),
             textarea: textarea::page(),
             combobox: combobox::page(),
+            command: command::page(),
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)

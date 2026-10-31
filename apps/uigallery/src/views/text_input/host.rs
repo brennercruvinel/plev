@@ -102,4 +102,5 @@ text_hosts! {
     InputOtp => input_otp,
     Textarea => textarea,
     Combobox => combobox,
+    Command => command,
 }

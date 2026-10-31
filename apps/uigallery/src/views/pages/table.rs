@@ -182,7 +182,13 @@ pub const PAGES: &[Page] = &[
         "A select that filters as you type: Up and Down highlight, Enter picks, Escape closes.",
         Pane::Combobox,
     ),
-    placeholder("Command"),
+    page(
+        C,
+        "Command",
+        "terminal",
+        "A command palette inline: type to filter, Up and Down highlight, Enter runs.",
+        Pane::Command,
+    ),
     page(
         C,
         "Context Menu",

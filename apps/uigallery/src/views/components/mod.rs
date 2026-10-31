@@ -46,6 +46,7 @@ pub mod tree;
 // its own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
 pub mod combobox;
+pub mod command;
 pub mod field;
 pub mod input_group;
 pub mod input_otp;

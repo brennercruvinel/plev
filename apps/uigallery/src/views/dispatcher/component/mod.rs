@@ -133,6 +133,7 @@ components! {
     InputOtp => input_otp,
     Textarea => textarea,
     Combobox => combobox,
+    Command => command,
     // task-104 front B, overlays (#155)
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)

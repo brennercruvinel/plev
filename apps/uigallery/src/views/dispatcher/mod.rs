@@ -69,6 +69,7 @@ impl ShowcaseView {
                 Pane::InputOtp => self.panes.input_otp.content_height(content, t),
                 Pane::Textarea => self.panes.textarea.content_height(content, t),
                 Pane::Combobox => self.panes.combobox.content_height(content, t),
+                Pane::Command => self.panes.command.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
@@ -176,6 +177,7 @@ impl ShowcaseView {
                 Pane::InputOtp => self.panes.input_otp.handle_event(event, content, t),
                 Pane::Textarea => self.panes.textarea.handle_event(event, content, t),
                 Pane::Combobox => self.panes.combobox.handle_event(event, content, t),
+                Pane::Command => self.panes.command.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => {
                     let bounds = self.popover_bounds(content);
@@ -277,6 +279,7 @@ impl ShowcaseView {
             Some(Pane::InputOtp) => self.panes.input_otp.wake(dt),
             Some(Pane::Textarea) => self.panes.textarea.wake(dt),
             Some(Pane::Combobox) => self.panes.combobox.wake(dt),
+            Some(Pane::Command) => self.panes.command.wake(dt),
             // task-104 front B, overlays (#155)
             Some(Pane::Popover) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
@@ -385,6 +388,7 @@ impl ShowcaseView {
                     .panes
                     .combobox
                     .render(c, layers.overlay, content, theme),
+                Pane::Command => self.panes.command.render(c, layers.overlay, content, theme),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => {
                     let bounds = self.popover_bounds(content);
