@@ -276,6 +276,11 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         ("informational", a.intents.informational),
         ("constructive", a.intents.constructive),
         ("destructive", a.intents.destructive),
+        ("kinds.comment", a.kinds.comment),
+        ("kinds.video", a.kinds.video),
+        ("kinds.invite", a.kinds.invite),
+        ("kinds.like", a.kinds.like),
+        ("kinds.image", a.kinds.image),
     ] {
         let under = over(fill, card);
         let icon = Color(crate::widgets::widget::contrast_text(fill.0));
@@ -752,7 +757,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 545,
+        count, 565,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
