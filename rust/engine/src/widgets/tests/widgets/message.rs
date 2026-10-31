@@ -77,6 +77,7 @@ fn parts(l: &MessageLayout) -> Vec<(&'static str, Rect)> {
             out.push((name, p.rect));
         }
     }
+    out.extend(l.seal.map(|r| ("seal", r)));
     out.extend(l.reaction.map(|r| ("reaction", r)));
     out.extend(l.divider.map(|r| ("divider", r)));
     out
@@ -169,8 +170,8 @@ fn a_narrower_row_wraps_into_more_lines_never_fewer() {
 fn every_part_stays_in_the_row_over_the_whole_width_range() {
     let theme = core();
     let messages = [
-        thread(LUNA).divider(true),
-        thread(LONG),
+        thread(LUNA).divider(true).verified(true),
+        thread(LONG).verified(true),
         thread(SCRIPTS),
         Message::new("سارة الأحمد", "3m", SCRIPTS),
         Message::new(
@@ -199,6 +200,20 @@ fn every_part_stays_in_the_row_over_the_whole_width_range() {
                     "{}@{w}: name over time",
                     m.author()
                 );
+            }
+            if let (Some(n), Some(seal)) = (&l.name, l.seal) {
+                assert!(
+                    n.rect.right() <= seal.x,
+                    "{}@{w}: name over seal",
+                    m.author()
+                );
+                if let Some(t) = &l.time {
+                    assert!(
+                        seal.right() <= t.rect.x,
+                        "{}@{w}: seal over time",
+                        m.author()
+                    );
+                }
             }
         }
     }
@@ -526,6 +541,200 @@ fn every_theme_draws_a_bubble_with_an_opaque_fill() {
         for w in [280.0, 390.0, 1440.0] {
             let r = Bubble::new(LONG).rect(row(w), &theme);
             assert!(finite(r), "{name}@{w}");
+        }
+    }
+}
+
+#[test]
+fn a_verified_author_s_seal_follows_the_name_and_keeps_its_place_on_a_narrow_row() {
+    let theme = core();
+    let s = theme.message.thread;
+    let m = Message::new("Luna Starfield", "2s", LUNA).verified(true);
+    let l = m.layout(at(320.0), &theme);
+    let (name, seal, time) = (l.name.unwrap(), l.seal.unwrap(), l.time.unwrap());
+    assert_eq!(seal.x, name.rect.right() + s.seal_gap);
+    assert_eq!(seal.h, s.name.line_height, "one name line tall");
+    assert_eq!(time.rect.x, seal.right() + s.time_gap);
+    let (_, drawn) = nodes(&m, at(320.0), &theme);
+    assert!(
+        drawn.iter().any(|n| matches!(n, SceneNode::Path { .. })),
+        "the icon is drawn"
+    );
+
+    let long = Message::new(
+        "Maria Eduarda Albuquerque de Souza Vasconcelos",
+        "12 min ago",
+        LUNA,
+    )
+    .verified(true);
+    let l = long.layout(at(280.0), &theme);
+    assert!(
+        l.name.unwrap().text.ends_with('\u{2026}'),
+        "the name gives way first"
+    );
+    assert!(l.seal.is_some() && l.time.unwrap().text == "12 min ago");
+
+    let row = id("msg");
+    let snap = snap(|b| {
+        m.project(b, &row, None);
+    });
+    assert_eq!(
+        snap.get(&row).unwrap().state.get("verified"),
+        Some(&accord::Value::Bool(true))
+    );
+}
+
+// scroller
+
+use crate::widgets::message::scroller::MessageScroller;
+
+fn thread_of(n: usize) -> MessageScroller {
+    let messages = (0..n)
+        .map(|i| Message::new(format!("Person {i}"), format!("{i}m"), LUNA).divider(true))
+        .collect();
+    MessageScroller::new("Comments", "No comments yet", messages).sem(id("thread"))
+}
+
+fn surface(w: f32, h: f32) -> Rect {
+    Rect::new(10.0, 20.0, w, h)
+}
+
+#[test]
+fn a_scroller_is_as_tall_as_its_messages_up_to_its_cap() {
+    let theme = core();
+    let cap = theme.message.scroller.max_h;
+    let two = thread_of(2);
+    let h = two.height(320.0, &theme);
+    assert!(h < cap, "two messages fit: {h}");
+    let b = theme.message.scroller.border_width;
+    assert!((h - (two.content_h(320.0, &theme) + b * 2.0)).abs() < 1e-3);
+    assert_eq!(
+        thread_of(40).height(320.0, &theme),
+        cap,
+        "a long thread stops at the cap"
+    );
+    let empty = thread_of(0);
+    assert!(
+        empty.height(320.0, &theme) > b * 2.0,
+        "an empty thread keeps its line"
+    );
+}
+
+#[test]
+fn the_wheel_scrolls_the_thread_until_its_end_then_leaves_it_to_the_page() {
+    let theme = core();
+    let mut s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let (x, y) = bounds.center();
+    let r = s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    assert!(r.handled && r.changed && s.offset() > 0.0);
+    for _ in 0..200 {
+        s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    }
+    let end = s.offset();
+    let r = s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    assert!(!r.handled, "at the end the page takes the wheel");
+    assert_eq!(s.offset(), end);
+    let r = s.handle_event(&wheel(x, bounds.bottom() + 50.0, -120.0), bounds, &theme);
+    assert!(
+        !r.handled,
+        "a wheel outside the surface is not the thread's"
+    );
+    let rows = s.rows(bounds, &theme);
+    let last = rows.last().unwrap();
+    let inner = bounds.inset(theme.message.scroller.border_width);
+    assert!(
+        (last.bottom() - inner.bottom()).abs() < 0.5,
+        "the end shows the last message"
+    );
+}
+
+#[test]
+fn reveal_scrolls_the_least_that_shows_a_message_whole() {
+    let theme = core();
+    let mut s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let inner = bounds.inset(theme.message.scroller.border_width);
+    assert!(!s.reveal(0, bounds, &theme), "the first is shown");
+    assert!(s.reveal(7, bounds, &theme));
+    let r = s.rows(bounds, &theme)[7];
+    assert!(
+        r.y >= inner.y - 0.5 && r.bottom() <= inner.bottom() + 0.5,
+        "{r:?} in {inner:?}"
+    );
+    assert!(
+        (r.bottom() - inner.bottom()).abs() < 0.5,
+        "the least: it lands at the bottom"
+    );
+    assert!(s.reveal(0, bounds, &theme));
+    assert_eq!(s.offset(), 0.0);
+    assert!(!s.reveal(99, bounds, &theme), "no such message");
+}
+
+#[test]
+fn a_scroller_draws_only_what_it_shows_clipped_and_projects_every_message() {
+    let theme = core();
+    let s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let (c, drawn) = {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        s.render(&mut c, bounds, &theme);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        (c, nodes)
+    };
+    assert!(
+        drawn
+            .iter()
+            .any(|n| matches!(n, SceneNode::PushClip { .. }))
+    );
+    let shown = texts(&drawn)
+        .iter()
+        .filter(|t| t.starts_with("Person "))
+        .count();
+    assert!(
+        shown > 0 && shown < 12,
+        "only the messages in view: {shown}"
+    );
+    assert!(c.binding(&id("thread[0]")).is_some());
+    assert!(
+        c.binding(&id("thread[11]")).is_none(),
+        "a message far below is not drawn"
+    );
+
+    let snap = snap(|b| {
+        s.project(b, &id("thread"), None);
+    });
+    let list = snap.get(&id("thread")).unwrap();
+    assert_eq!((list.role, list.label.as_str()), (Role::List, "Comments"));
+    assert_eq!(list.state.get("count"), Some(&accord::Value::Int(12)));
+    assert_eq!(
+        snap.children(&id("thread")).count(),
+        12,
+        "every message, shown or not"
+    );
+
+    let empty = thread_of(0);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    empty.render(&mut c, surface(320.0, empty.height(320.0, &theme)), &theme);
+    let words = texts(c.layer(LayerId::DEFAULT).unwrap().nodes());
+    assert_eq!(words, ["No comments yet"]);
+}
+
+#[test]
+fn a_scroller_stays_whole_over_the_width_range_under_every_theme() {
+    for name in ["core", "hoff", "plev", "nord"] {
+        let theme = Theme::named(name).unwrap();
+        for n in [0, 1, 12] {
+            let s = thread_of(n);
+            for w in (120..=1600).step_by(8) {
+                let h = s.height(w as f32, &theme);
+                assert!(
+                    h.is_finite() && h > 0.0 && h <= theme.message.scroller.max_h + 0.5,
+                    "{name} {n}@{w}: {h}"
+                );
+            }
         }
     }
 }
