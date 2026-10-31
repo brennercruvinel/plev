@@ -38,7 +38,8 @@ were gathered into `import`; the names of crates and modules are in
 ## Result and limits
 
 The [delivery report](change-record.md) records 1,861 R100
-renames, the API comparisons and the tests of the round. These are historical
+renames (the map's 1,870 moves less the nine files that kept their path,
+counted in `migration.toml` at `3161bb89`), the API comparisons and the tests of the round. These are historical
 results, not a new run of the suite. The report also records that Android and
 the `.urna` explorer leg were not verified on that machine. Task 99 covers later
 work on this integration; it does not retroactively prove the Android build.

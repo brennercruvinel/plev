@@ -19,6 +19,7 @@
    ],
    "relations": [],
    "evidence": [
+    "176dd691",
     "704412f1",
     "b1e820ba"
    ],
@@ -44,13 +45,18 @@
     },
     {
      "level": 3,
-     "title": "Dates revised later",
-     "anchor": "dates-revised-later"
+     "title": "The history before June 2026",
+     "anchor": "the-history-before-june-2026"
     },
     {
      "level": 3,
-     "title": "What a date in this file means",
-     "anchor": "what-a-date-in-this-file-means"
+     "title": "The reconstruction kept in step",
+     "anchor": "the-reconstruction-kept-in-step"
+    },
+    {
+     "level": 3,
+     "title": "Remapped commits",
+     "anchor": "remapped-commits"
     },
     {
      "level": 3,
@@ -494,6 +500,26 @@
     },
     {
      "level": 2,
+     "title": "2023-07-11",
+     "anchor": "2023-07-11"
+    },
+    {
+     "level": 2,
+     "title": "2023-07-05",
+     "anchor": "2023-07-05"
+    },
+    {
+     "level": 2,
+     "title": "2023-06-25",
+     "anchor": "2023-06-25"
+    },
+    {
+     "level": 2,
+     "title": "2023-06-20",
+     "anchor": "2023-06-20"
+    },
+    {
+     "level": 2,
      "title": "2023-06-12",
      "anchor": "2023-06-12"
     },
@@ -501,6 +527,16 @@
      "level": 2,
      "title": "2023-05-02",
      "anchor": "2023-05-02"
+    },
+    {
+     "level": 2,
+     "title": "2023-04-12",
+     "anchor": "2023-04-12"
+    },
+    {
+     "level": 2,
+     "title": "2023-04-06",
+     "anchor": "2023-04-06"
     },
     {
      "level": 2,
@@ -539,36 +575,6 @@
     },
     {
      "level": 2,
-     "title": "2022-09-14",
-     "anchor": "2022-09-14"
-    },
-    {
-     "level": 2,
-     "title": "2022-09-08",
-     "anchor": "2022-09-08"
-    },
-    {
-     "level": 2,
-     "title": "2022-08-16",
-     "anchor": "2022-08-16"
-    },
-    {
-     "level": 2,
-     "title": "2022-08-11",
-     "anchor": "2022-08-11"
-    },
-    {
-     "level": 2,
-     "title": "2022-07-12",
-     "anchor": "2022-07-12"
-    },
-    {
-     "level": 2,
-     "title": "2022-07-06",
-     "anchor": "2022-07-06"
-    },
-    {
-     "level": 2,
      "title": "2022-06-15",
      "anchor": "2022-06-15"
     },
@@ -576,11 +582,6 @@
      "level": 2,
      "title": "2022-05-03",
      "anchor": "2022-05-03"
-    },
-    {
-     "level": 2,
-     "title": "2022-04-26",
-     "anchor": "2022-04-26"
     },
     {
      "level": 2,

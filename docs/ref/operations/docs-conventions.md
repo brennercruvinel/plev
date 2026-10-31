@@ -65,7 +65,8 @@ quotes, `null`, or an inline list (`[a, "b c"]`).
 | `parent` | only on a `section`: the `id` of the page it belongs to |
 | `status` | task: `pending`, `in-progress`, `done`, `superseded`; ADR: `proposed`, `accepted`, `superseded`; the others: `reference`, `active`, `draft` |
 | `date` | when what the page records happened, as precise as known: `2021`, `2021-03` or `2021-03-06`; `null` when unknown |
-| `date_basis` | where the date came from: `header` (the source header), `text` (a date written in the body), `git` (a commit), `reconstructed` (inferred from several sources), `editorial`, `undated` |
+| `date_basis` | where the date came from: `header` (the source header), `text` (a date written in the body), `git` (a commit), `reconstructed` (the reconstruction of the history lost before June 2026, or a date inferred from several sources), `editorial`, `undated` |
+| `recorded` | the day the page's text was first written: before the date for a plan, after it for a record written later |
 | `topics` | subjects in kebab-case, few and shared between pages |
 | `relations` | `id`s of linked pages: dependencies, the ADR a task took, the research behind it |
 | `evidence` | commits (short sha) that back what the page states |
@@ -74,10 +75,12 @@ quotes, `null`, or an inline list (`[a, "b c"]`).
 | `revised` | the date of the last editorial revision |
 | `review` | `pending` (migrated, not yet read whole), `reviewed` (read whole and checked), `generated` (an index) |
 
-A source header whose date was revised after the fact (commit `704412f1` rewrote
-dates from 2026 back to 2021) keeps that date with `date_basis: header`;
-[reading the dates](../../CHANGELOG.md#reading-the-dates) explains the case. A date only
-changes when another source contradicts it, and then `date_basis` says which.
+The history before June 2026 was lost with an old Forgejo instance and written
+down again between March and June 2026; commit `704412f1` gave those records the
+dates of the work itself. They keep that date with `date_basis: reconstructed`,
+and `recorded` keeps the day they were written; [reading the dates](../../CHANGELOG.md#reading-the-dates)
+explains it and lists where the reconstruction was brought in step. A date only
+changes when another record contradicts it, and then `date_basis` says why.
 
 ## The body
 
