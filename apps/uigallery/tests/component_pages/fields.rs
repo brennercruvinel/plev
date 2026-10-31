@@ -1,5 +1,5 @@
 //! Front A, fields (task-104, #154): field, label, input group, input OTP,
-//! textarea, combobox and command, the same request from the person, the
+//! textarea, combobox, command and the color picker, the same request from the person, the
 //! reader and an agent.
 
 use accord::Value;
@@ -322,5 +322,94 @@ fn a_new_field_saves_the_same_value_from_the_three() {
     assert_eq!(
         person.value(&format!("{USERNAME}:editing")),
         Some(Value::Bool(false))
+    );
+}
+
+const PICKER: &str = "input_page.group[0].card[0]";
+const HEX: &str = "input_page.group[0].card[0].hex";
+const ALPHA: &str = "input_page.group[0].card[0].alpha";
+
+/// The person scrolls the page until `id` is on screen.
+fn scroll_to(g: &mut Gallery, id: &str) {
+    for _ in 0..20 {
+        let Some([_, y, _, h]) = g.c.binding(&sid(id)).map(|b| b.rect) else {
+            panic!("{id} is not bound");
+        };
+        if y >= 0.0 && y + h <= 760.0 {
+            return;
+        }
+        g.view
+            .handle_event(&engine::widgets::prelude::WidgetEvent::Scroll {
+                x: 760.0,
+                y: 400.0,
+                delta: y - 400.0,
+            });
+        g.frame();
+    }
+    panic!("{id} never came on screen");
+}
+
+fn focused(g: &Gallery) -> Option<String> {
+    g.view
+        .semantics()
+        .and_then(|s| s.focused().map(ToString::to_string))
+}
+
+/// The color picker on the Input tab: a person's press, keys and typing,
+/// a reader's value and an agent's `set_value` set the same hex and the
+/// same opacity.
+#[test]
+fn a_color_picker_takes_the_same_color_from_the_three() {
+    use uigallery::views::EditKey;
+    let mut person = gallery("Input");
+    scroll_to(&mut person, HEX);
+    person.click(HEX);
+    assert_eq!(focused(&person).as_deref(), Some(HEX));
+    person.view.handle_edit_key(EditKey::End);
+    for _ in 0..6 {
+        person.view.handle_edit_key(EditKey::Backspace);
+    }
+    person.type_in("336699");
+    assert!(
+        person.view.handle_edit_key(EditKey::Tab),
+        "Tab to the opacity"
+    );
+    person.frame();
+    assert_eq!(focused(&person).as_deref(), Some(ALPHA));
+    for _ in 0..3 {
+        person.view.handle_edit_key(EditKey::Backspace);
+    }
+    person.type_in("50");
+    assert!(person.view.close_top_overlay(), "Escape lets the caret go");
+    person.frame();
+    assert_eq!(focused(&person), None);
+    // Escape put back the opacity the caret came in to: the person sets
+    // it again and leaves it with Tab, which keeps it.
+    person.click(ALPHA);
+    assert_eq!(focused(&person).as_deref(), Some(ALPHA));
+    person.view.handle_edit_key(EditKey::End);
+    for _ in 0..3 {
+        person.view.handle_edit_key(EditKey::Backspace);
+    }
+    person.type_in("50");
+    person.view.handle_edit_key(EditKey::Tab);
+    person.frame();
+    assert_ne!(focused(&person).as_deref(), Some(ALPHA));
+    let mut reader = gallery("Input");
+    for (id, v) in [(HEX, "336699"), (ALPHA, "50")] {
+        reader.reader(id, Action::SetValue, Some(ActionData::Value(v.into())));
+    }
+    let agent = by_agent(
+        "Input",
+        "color",
+        vec![
+            ask_with(HEX, "set_value", Value::from("336699")),
+            ask_with(ALPHA, "set_value", Value::from("50")),
+        ],
+    );
+    same("Input", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{PICKER}:value")),
+        Some(Value::from("#33669980"))
     );
 }
