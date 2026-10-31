@@ -13,7 +13,7 @@ pub(crate) mod visual;
 
 pub use accept::{Accept, Chars};
 pub use buffer::TextBuffer;
-pub use component::{CURSOR_BLINK_INTERVAL, TextInput, single_line};
+pub use component::{CURSOR_BLINK_INTERVAL, TextInput, multi_line, single_line};
 pub use view::MASK;
 
 #[cfg(test)]

@@ -435,7 +435,13 @@ pub const PAGES: &[Page] = &[
         "Segmented strip sized from its measured labels.",
         Pane::Tabs,
     ),
-    placeholder("Textarea"),
+    page(
+        C,
+        "Textarea",
+        "file",
+        "Text over several lines: Enter breaks the line, Up and Down move one; one box grows with its text.",
+        Pane::Textarea,
+    ),
     page(
         C,
         "Toast",

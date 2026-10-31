@@ -12,10 +12,10 @@ use std::any::Any;
 use accord::{SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use engine::widgets::form::TextField;
 use engine::widgets::form::field::{Field, FieldPart};
 use engine::widgets::form::input_group::InputGroup;
 use engine::widgets::form::label::Label;
+use engine::widgets::form::{EditKey, TextField};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 /// A field is the kit page's `w-60` wide, narrower when the card is.
@@ -62,6 +62,24 @@ pub(crate) trait CardWidget: 'static {
 
     fn text_mut(&mut self) -> Option<&mut TextField> {
         None
+    }
+
+    /// An editing key for the widget's focused text: the text field's
+    /// own by default.
+    fn edit(&mut self, key: EditKey) -> bool {
+        self.text_mut().is_some_and(|t| t.edit(key))
+    }
+
+    /// Enter on the focused widget. `false`, the default: the page's
+    /// focus walk presses.
+    fn enter(&mut self) -> bool {
+        false
+    }
+
+    /// Up or Down on the focused widget. `false`, the default: the
+    /// page's focus walk moves.
+    fn nav(&mut self, _down: bool) -> bool {
+        false
     }
 
     /// The id of `part` of the widget.

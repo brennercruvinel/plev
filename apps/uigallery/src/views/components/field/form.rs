@@ -136,8 +136,13 @@ impl FormPage {
     }
 
     fn focused_text(&mut self) -> Option<&mut TextField> {
+        self.focused_spec()?.text_mut()
+    }
+
+    /// The widget whose text box has the caret.
+    fn focused_spec(&mut self) -> Option<&mut Spec> {
         let at = self.focused()?;
-        self.spec_mut(at)?.text_mut()
+        self.spec_mut(at)
     }
 
     /// The caret goes to the box of `at` (one not disabled), or to none.
@@ -267,7 +272,15 @@ impl TextHost for FormPage {
         if key == EditKey::Tab {
             return false;
         }
-        self.focused_text().is_some_and(|t| t.edit(key.into()))
+        self.focused_spec().is_some_and(|s| s.edit(key.into()))
+    }
+
+    fn handle_enter(&mut self) -> bool {
+        self.focused_spec().is_some_and(|s| s.enter())
+    }
+
+    fn handle_nav(&mut self, down: bool) -> bool {
+        self.focused_spec().is_some_and(|s| s.nav(down))
     }
 
     fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {

@@ -67,6 +67,7 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.content_height(content, t),
                 Pane::InputGroup => self.panes.input_group.content_height(content, t),
                 Pane::InputOtp => self.panes.input_otp.content_height(content, t),
+                Pane::Textarea => self.panes.textarea.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
@@ -172,6 +173,7 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.handle_event(event, content, t),
                 Pane::InputGroup => self.panes.input_group.handle_event(event, content, t),
                 Pane::InputOtp => self.panes.input_otp.handle_event(event, content, t),
+                Pane::Textarea => self.panes.textarea.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => {
                     let bounds = self.popover_bounds(content);
@@ -271,6 +273,7 @@ impl ShowcaseView {
             Some(Pane::Label) => self.panes.label.wake(dt),
             Some(Pane::InputGroup) => self.panes.input_group.wake(dt),
             Some(Pane::InputOtp) => self.panes.input_otp.wake(dt),
+            Some(Pane::Textarea) => self.panes.textarea.wake(dt),
             // task-104 front B, overlays (#155)
             Some(Pane::Popover) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
@@ -364,6 +367,7 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.render(c, content, theme),
                 Pane::InputGroup => self.panes.input_group.render(c, content, theme),
                 Pane::InputOtp => self.panes.input_otp.render(c, content, theme),
+                Pane::Textarea => self.panes.textarea.render(c, content, theme),
                 // task-104 front B, overlays (#155)
                 Pane::Popover => {
                     let bounds = self.popover_bounds(content);

@@ -19,6 +19,7 @@ use super::super::components::field;
 use super::super::components::input_group;
 use super::super::components::input_otp;
 use super::super::components::label;
+use super::super::components::textarea;
 
 // task-104 front B, overlays (#155)
 use super::super::components::popover;
@@ -79,6 +80,7 @@ pub struct Panes {
     pub label: field::FormPage,
     pub input_group: field::FormPage,
     pub input_otp: field::FormPage,
+    pub textarea: field::FormPage,
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
@@ -164,6 +166,7 @@ impl Panes {
             label: label::page(),
             input_group: input_group::page(),
             input_otp: input_otp::page(),
+            textarea: textarea::page(),
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)

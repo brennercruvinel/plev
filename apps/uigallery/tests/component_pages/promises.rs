@@ -16,8 +16,9 @@ use super::harness::gallery;
 /// front's own, on a line of its own so the fronts merge without a
 /// conflict.
 const PROJECTING: usize = 30
-    // task-104 front A, fields (#154): Field, Label, Input Group, Input OTP
-    + 4;
+    // task-104 front A, fields (#154): Field, Label, Input Group, Input
+    // OTP, Textarea
+    + 5;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

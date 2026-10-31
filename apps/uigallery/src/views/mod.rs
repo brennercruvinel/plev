@@ -195,6 +195,15 @@ impl ShowcaseView {
     /// over the modal or the menu, the widget the focus is in
     /// (`dispatcher::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        // A focused text that runs over lines, or a list under a filter,
+        // takes the arrows first (`TextHost::handle_nav`).
+        let pane = self.pane();
+        if !self.overlay_holds_pointer()
+            && let Some(host) = self.panes.text_host_mut(pane)
+            && host.handle_nav(matches!(key, NavKey::Down))
+        {
+            return true;
+        }
         if self.walks() {
             let walk = match key {
                 NavKey::Up => Walk::Up,

@@ -248,6 +248,15 @@ impl ShowcaseView {
     /// from their intent field; the Files page presses its focused button;
     /// the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
+        // A focused text that takes Enter (a line break, a pick from a
+        // filtered list) has it before the focus walk.
+        let pane = self.pane();
+        if !self.overlay_holds_pointer()
+            && let Some(host) = self.panes.text_host_mut(pane)
+            && host.handle_enter()
+        {
+            return true;
+        }
         if self.walks() {
             return self.walk(Walk::Press);
         }

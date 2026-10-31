@@ -161,3 +161,32 @@ pub(super) fn a_code_takes_the_same_digits_from_the_three_and_shows_its_length_o
         assert!(!format!("{:?}", g.state()).contains("482913"));
     }
 }
+
+const AREA: &str = "textarea_page.group[0].card[0]";
+
+/// The text area: a person's typing with Enter between the lines, a
+/// reader's value and an agent's `set_value` put the same two lines.
+#[test]
+fn a_text_area_takes_the_same_lines_from_the_three() {
+    let mut person = gallery("Textarea");
+    person.click(AREA);
+    person.type_in("first");
+    person.view.handle_enter();
+    person.type_in("second");
+    let mut reader = gallery("Textarea");
+    reader.reader(
+        AREA,
+        Action::SetValue,
+        Some(ActionData::Value("first\nsecond".into())),
+    );
+    let agent = by_agent(
+        "Textarea",
+        "area",
+        vec![ask_with(AREA, "set_value", Value::from("first\nsecond"))],
+    );
+    same("Textarea", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{AREA}:text")),
+        Some(Value::from("first\nsecond"))
+    );
+}

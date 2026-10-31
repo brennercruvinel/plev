@@ -172,6 +172,17 @@ pub struct OtpTokens {
     pub separator: f32,
 }
 
+/// A text area (`super::textarea`): the Field's box, taller, its text
+/// inset from the top and the bottom as well.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AreaTokens {
+    /// Between the text and the box's top and bottom (`py-4`).
+    pub pad_y: f32,
+    /// The lines the box shows at rest (`h-20`: 80 less the padding is
+    /// three 16px lines).
+    pub rows: usize,
+}
+
 /// The form slot of the theme.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FormTokens {
@@ -185,6 +196,7 @@ pub struct FormTokens {
     pub group: GroupAddons,
     pub field: FieldChrome,
     pub otp: OtpTokens,
+    pub area: AreaTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -404,6 +416,11 @@ impl FormTokens {
             gap: field.label_gap,
             separator: adorn.lead_icon,
         };
+        // :55, the textarea: the input's classes with `h-20 py-4`.
+        let area = AreaTokens {
+            pad_y: 16.0,
+            rows: 3,
+        };
         Self {
             label,
             input,
@@ -413,6 +430,7 @@ impl FormTokens {
             group,
             field,
             otp,
+            area,
         }
     }
 
@@ -499,6 +517,12 @@ impl FormTokens {
             gap: field.label_gap,
             separator: adorn.lead_icon,
         };
+        // The text centered in one box's height, as the field draws it,
+        // and three lines at rest, as the kit's.
+        let area = AreaTokens {
+            pad_y: ((input.height - input.text.line_height) / 2.0).max(0.0),
+            rows: 3,
+        };
         Self {
             label,
             search: input.clone(),
@@ -508,6 +532,7 @@ impl FormTokens {
             group,
             field,
             otp,
+            area,
         }
     }
 }

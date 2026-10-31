@@ -49,6 +49,7 @@ pub mod field;
 pub mod input_group;
 pub mod input_otp;
 pub mod label;
+pub mod textarea;
 
 // task-104 front B, overlays (#155)
 pub mod popover;

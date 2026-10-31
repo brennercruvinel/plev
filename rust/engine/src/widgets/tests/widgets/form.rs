@@ -881,3 +881,160 @@ fn the_active_cell_has_the_ring_and_the_caret() {
         .any(|n| matches!(*n, SceneNode::Rect { x, w, .. } if x > cell.x && x + w < cell.right()));
     assert!(caret, "the caret in the third cell");
 }
+
+// Textarea
+
+fn area() -> crate::widgets::form::textarea::TextArea {
+    crate::widgets::form::textarea::TextArea::new("Write a message")
+        .sem(SemId::parse("s.area").unwrap())
+}
+
+/// The kit's box is three lines tall at rest (`h-20`, 80 in the core);
+/// one that grows takes its lines up to its most and no more.
+#[test]
+fn a_text_area_is_the_kits_box_and_grows_to_its_most_lines() {
+    let theme = Theme::hoff_core();
+    let w = 300.0;
+    let rest = area().layout(Rect::new(0.0, 0.0, w, 0.0), &theme).input.h;
+    assert_eq!(rest, 80.0);
+    let full = area().with_text("1\n2\n3\n4\n5\n6\n7\n8");
+    assert_eq!(
+        full.layout(Rect::new(0.0, 0.0, w, 0.0), &theme).input.h,
+        80.0
+    );
+    let lh = theme.form.input.text.line_height;
+    let grown = |n: usize| {
+        let text = vec!["line"; n].join("\n");
+        area()
+            .grows(5)
+            .with_text(&text)
+            .layout(Rect::new(0.0, 0.0, w, 0.0), &theme)
+            .input
+            .h
+    };
+    assert_eq!(grown(1), rest, "never under the box at rest");
+    assert_eq!(grown(4), rest + lh);
+    assert_eq!(grown(5), rest + 2.0 * lh);
+    assert_eq!(grown(9), rest + 2.0 * lh, "five lines at most");
+}
+
+/// Enter breaks the line; Up and Down move a line keeping the column,
+/// past the ends to the text's ends; Home and End go to the line's ends;
+/// Left at a line's start goes to the end of the one before.
+#[test]
+fn the_keys_move_over_the_lines() {
+    use crate::widgets::form::EditKey;
+    let theme = Theme::hoff_core();
+    let w = 400.0;
+    let mut a = area().with_text("first line\nfirst more");
+    a.input.focus();
+    nodes_of(|c| a.render(c, Rect::new(0.0, 0.0, w, 0.0), &theme));
+    let cursor = |a: &crate::widgets::form::textarea::TextArea| a.input.input.buffer.cursor();
+    assert_eq!(cursor(&a), 21);
+    assert!(a.edit(EditKey::Home));
+    assert_eq!(cursor(&a), 11);
+    assert!(a.edit(EditKey::Left));
+    assert_eq!(cursor(&a), 10, "the end of the first line");
+    a.edit(EditKey::Home);
+    for _ in 0..3 {
+        a.edit(EditKey::Right);
+    }
+    assert!(a.vertical(true, false));
+    assert_eq!(cursor(&a), 14, "the same column a line down");
+    assert!(a.vertical(true, false));
+    assert_eq!(cursor(&a), 21, "past the last line, the end");
+    a.vertical(false, false);
+    a.vertical(false, false);
+    assert_eq!(cursor(&a), 0, "past the first, the start");
+    a.edit(EditKey::End);
+    assert!(a.newline());
+    assert_eq!(a.input.text(), "first line\n\nfirst more");
+    assert!(a.vertical(true, true), "Shift+Down");
+    assert!(a.input.has_selection());
+}
+
+/// A paste into a text area keeps its line breaks; into a field it joins
+/// them.
+#[test]
+fn a_paste_keeps_its_lines_in_a_text_area_only() {
+    use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+    let mut board = LocalClipboard::new();
+    board.set_text("one\r\ntwo\tthree\n");
+    let mut a = area();
+    a.input.focus();
+    assert!(a.input.paste(&mut board));
+    assert_eq!(a.input.text(), "one\ntwo three\n");
+    let mut f = TextField::new("x");
+    f.focus();
+    f.paste(&mut board);
+    assert_eq!(f.text(), "one two three");
+}
+
+/// A focused area longer than its box scrolls its lines so the caret
+/// stays in the text box, and a long word wraps inside it, from narrow
+/// to wide.
+#[test]
+fn the_caret_stays_in_the_box_from_narrow_to_wide() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        for w in (120..=600).step_by(8).map(|w| w as f32) {
+            let text = format!("{LONG}\n{LONG}\n{LONG}");
+            let mut a = area()
+                .label("Message")
+                .helper("Markdown is fine.")
+                .with_text(&text);
+            a.input.focus();
+            let bounds = Rect::new(10.0, 10.0, w, 0.0);
+            let l = a.layout(bounds, &theme);
+            assert!(l.input.right() <= bounds.right() + 0.01 && l.text.right() <= l.input.right());
+            assert!(
+                l.message.unwrap().y >= l.input.bottom(),
+                "{w}: the message under"
+            );
+            let nodes = nodes_of(|c| a.render(c, bounds, &theme));
+            let ime = a.ime_area(bounds, &theme);
+            assert!(
+                ime.y >= l.text.y - 0.01 && ime.bottom() <= l.text.bottom() + 0.01,
+                "{w}: the caret out of the box"
+            );
+            assert!(
+                ime.x <= l.text.right() + 0.5,
+                "{w}: past the box, {ime:?} in {:?}",
+                l.text
+            );
+            let clipped = nodes
+                .iter()
+                .any(|n| matches!(n, SceneNode::PushClip { .. }));
+            assert!(clipped);
+        }
+    }
+}
+
+/// A press puts the caret on the line pressed; a text area projects as
+/// a multiline text field named by its label.
+#[test]
+fn a_press_places_the_caret_and_the_area_projects_multiline() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let mut a = area().label("Notes").with_text("ab\ncd\nef");
+    let l = a.layout(bounds, &theme);
+    let lh = theme.form.input.text.line_height;
+    let (x, y) = (l.text.x + 200.0, l.text.y + lh * 1.5);
+    assert!(
+        a.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert_eq!(
+        a.input.input.buffer.cursor(),
+        5,
+        "the end of the second line"
+    );
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    a.project(&mut b, a.sem_id().unwrap(), Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(a.sem_id().unwrap()).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::TextInput, "Notes"));
+    assert_eq!(node.state.get("multiline"), Some(&Value::Bool(true)));
+    assert_eq!(node.state.get("text"), Some(&Value::from("ab\ncd\nef")));
+}

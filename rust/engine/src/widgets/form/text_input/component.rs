@@ -47,6 +47,9 @@ pub struct TextInput {
     pub masked: bool,
     /// The characters it takes and how many (anything, by default).
     pub accept: Accept,
+    /// Its text runs over several lines (a text area): a paste keeps its
+    /// line breaks ([`multi_line`]) instead of joining them.
+    pub multiline: bool,
     blink: Blink,
     preedit: Option<Preedit>,
 }
@@ -73,6 +76,7 @@ impl TextInput {
             placeholder: String::new(),
             masked: false,
             accept: Accept::ANY,
+            multiline: false,
             blink: Blink::new(),
             preedit: None,
         }
@@ -391,12 +395,19 @@ impl TextInput {
     }
 
     /// Type what `clipboard` holds, over the selection, on one line (see
-    /// [`single_line`]). `false` with an empty clipboard or unfocused.
+    /// [`single_line`]), or with its line breaks when multiline
+    /// ([`multi_line`]). `false` with an empty clipboard or unfocused.
     pub fn handle_paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
         if !self.focused {
             return false;
         }
-        let text = self.admitted(&single_line(&clipboard.get_text().unwrap_or_default()));
+        let raw = clipboard.get_text().unwrap_or_default();
+        let lines = if self.multiline {
+            multi_line(&raw)
+        } else {
+            single_line(&raw)
+        };
+        let text = self.admitted(&lines);
         if text.is_empty() {
             return false;
         }
@@ -431,6 +442,21 @@ pub fn single_line(text: &str) -> String {
     text.chars()
         .filter_map(|c| match c {
             '\n' | '\r' | '\t' => Some(' '),
+            c if c.is_control() => None,
+            c => Some(c),
+        })
+        .collect()
+}
+
+/// Text pasted into a text area: every line break (`\r\n`, `\r`) becomes
+/// one `\n`, each tab a space, and any other control character is
+/// dropped.
+pub fn multi_line(text: &str) -> String {
+    let text = text.replace("\r\n", "\n");
+    text.chars()
+        .filter_map(|c| match c {
+            '\n' | '\r' => Some('\n'),
+            '\t' => Some(' '),
             c if c.is_control() => None,
             c => Some(c),
         })

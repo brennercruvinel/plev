@@ -68,6 +68,7 @@ const PROJECTING: &[&str] = &[
     "Switch",
     "Table",
     "Tabs",
+    "Textarea",
     "Toast",
     "Toggle",
     "Toggle Group",
@@ -189,7 +190,6 @@ const SILENT: &[(&str, Why)] = &[
         "Stat",
         Unprojected("Stat: a label with its value, unit and delta"),
     ),
-    ("Textarea", PLACEHOLDER),
     (
         "Dock",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
