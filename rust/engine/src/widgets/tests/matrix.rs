@@ -291,6 +291,13 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             .kind(MessageKind::Quick)
             .reaction("2")
             .render(&mut c, row(26.0), theme);
+        use crate::widgets::message::bubble::{Bubble, BubbleSide};
+        Bubble::new("a bubble long enough to wrap on a phone, at least once")
+            .unread(true)
+            .render(&mut c, row(29.0), theme);
+        Bubble::new("mine")
+            .side(BubbleSide::End)
+            .render(&mut c, row(31.0), theme);
     }
 
     let mut shell = AppShell::new(
@@ -630,6 +637,11 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                     (id("m.message.reaction"), Role::Button, Probe::Hit),
                 ],
             ));
+            let bubble = crate::widgets::message::bubble::Bubble::new("hi").sem(id("m.bubble"));
+            let (mut c, _) = frame(false);
+            bubble.render(&mut c, row(24.0), &theme);
+            bubble.project(&mut b, &id("m.bubble"), None);
+            frames.push((c, vec![(id("m.bubble"), Role::ListItem, Probe::Hit)]));
 
             let snap = b
                 .finish()

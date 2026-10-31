@@ -396,3 +396,136 @@ fn a_message_projects_a_focusable_item_read_whole_and_its_chip() {
     );
     assert_eq!(s.children(&row).count(), 0, "no chip, no child");
 }
+
+// bubble
+
+use crate::widgets::message::bubble::{Bubble, BubbleSide};
+
+fn row(w: f32) -> Rect {
+    Rect::new(10.0, 20.0, w, 0.0)
+}
+
+#[test]
+fn a_bubble_grows_with_its_text_up_to_its_share_of_the_row_then_wraps() {
+    let theme = core();
+    let t = &theme.message.bubble;
+    let short = Bubble::new("ok").size(600.0, &theme);
+    let line = t.text.line_height + (t.pad_y + t.border_width) * 2.0;
+    assert_eq!(short.1, line, "one line");
+    let long = Bubble::new(LONG).size(600.0, &theme);
+    assert!(long.0 <= 600.0 * t.max_fraction + 0.5, "{long:?}");
+    assert!(long.1 > line * 2.0, "it wraps: {long:?}");
+    let empty = Bubble::new("").size(600.0, &theme);
+    assert_eq!(empty.1, line, "an empty bubble keeps one line");
+}
+
+#[test]
+fn a_bubble_sits_at_its_side_and_stays_in_its_row_over_the_whole_range() {
+    let theme = core();
+    for side in [BubbleSide::Start, BubbleSide::End, BubbleSide::Center] {
+        for text in ["ok", LUNA, LONG, SCRIPTS] {
+            let b = Bubble::new(text).side(side);
+            for w in (40..=1600).step_by(8) {
+                let r = b.rect(row(w as f32), &theme);
+                assert!(finite(r), "{side:?}@{w}");
+                assert!(
+                    r.x >= 10.0 - 0.5 && r.right() <= 10.0 + w as f32 + 0.5,
+                    "{side:?}@{w}: {r:?}"
+                );
+            }
+            let r = b.rect(row(600.0), &theme);
+            match side {
+                BubbleSide::Start => assert_eq!(r.x, 10.0),
+                BubbleSide::End => assert!((r.right() - 610.0).abs() < 1e-3),
+                BubbleSide::Center => assert!((r.center().0 - 310.0).abs() < 1e-3),
+            }
+        }
+    }
+}
+
+#[test]
+fn the_tail_corner_is_square_on_the_speaker_s_side_and_the_border_tells_unread() {
+    let theme = core();
+    let t = theme.message.bubble.clone();
+    let patches = |b: &Bubble| {
+        nodes_of(b, &theme)
+            .into_iter()
+            .filter_map(|n| match n {
+                SceneNode::Rect { x, color, .. } => Some((x, color)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let start = Bubble::new("hi");
+    let r = start.rect(row(600.0), &theme);
+    let p = patches(&start);
+    assert_eq!(p.len(), 2, "border and fill patches");
+    assert!(
+        p.iter().all(|(x, _)| *x < r.center().0),
+        "tail at the start"
+    );
+    assert_eq!(p[0].1, t.border.0, "read: the hairline");
+    let end = Bubble::new("hi").side(BubbleSide::End).unread(true);
+    let r = end.rect(row(600.0), &theme);
+    let p = patches(&end);
+    assert!(p.iter().all(|(x, _)| *x > r.center().0), "tail at the end");
+    assert_eq!(p[0].1, t.unread.0, "unread: the accent");
+    let hue = crate::styling::color::Color::hex(0x5C8C80);
+    assert_eq!(patches(&Bubble::new("hi").accent(hue))[0].1, hue.0);
+    assert!(
+        patches(&Bubble::new("hi").side(BubbleSide::Center)).is_empty(),
+        "a note has no tail"
+    );
+}
+
+fn nodes_of(b: &Bubble, theme: &Theme) -> Vec<SceneNode> {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    b.render(&mut c, row(600.0), theme);
+    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+}
+
+#[test]
+fn a_bubble_draws_its_text_inside_and_binds_and_projects_itself() {
+    let theme = core();
+    let id = id("bubble");
+    let b = Bubble::new(SCRIPTS).unread(true).sem(id.clone());
+    let mut c = Compositor::new();
+    c.begin_frame();
+    b.render(&mut c, row(400.0), &theme);
+    let r = b.rect(row(400.0), &theme);
+    assert_eq!(c.binding(&id).unwrap().rect, [r.x, r.y, r.w, r.h]);
+    let drawn = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let text = drawn.iter().find_map(|n| match n {
+        SceneNode::Text { key, x, y, .. } => Some((key.clone(), *x, *y)),
+        _ => None,
+    });
+    let (key, x, y) = text.expect("the text is drawn");
+    assert_eq!(key.text, SCRIPTS);
+    assert!(x > r.x && y > r.y);
+    let wrap = f32::from_bits(key.max_width_bits.unwrap());
+    assert!(
+        x + wrap <= r.right() + 1.0,
+        "the wrap box stays in the bubble"
+    );
+
+    let s = snap(|sb| {
+        b.project(sb, &id, None);
+    });
+    let node = s.get(&id).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::ListItem, SCRIPTS));
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.focusable);
+}
+
+#[test]
+fn every_theme_draws_a_bubble_with_an_opaque_fill() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        assert_eq!(theme.message.bubble.fill.0[3], 1.0, "{name}");
+        for w in [280.0, 390.0, 1440.0] {
+            let r = Bubble::new(LONG).rect(row(w), &theme);
+            assert!(finite(r), "{name}@{w}");
+        }
+    }
+}

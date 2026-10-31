@@ -21,9 +21,9 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::Theme;
 use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::tokens::TypographyScale;
+use crate::styling::theme::{ShadowSpec, Theme};
 
 /// One text run of a message: size, line height and weight in px, and
 /// its color.
@@ -69,6 +69,27 @@ pub struct MessageStyle {
     pub reaction_gap: f32,
 }
 
+/// The chat bubble: the kit's comment pin (`components/CommentPin`), a
+/// pill with its bottom-start corner square, holding text instead of
+/// avatars.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BubbleTokens {
+    /// Inside the border, around the text.
+    pub pad_x: f32,
+    pub pad_y: f32,
+    pub border_width: f32,
+    /// Opaque, so the square tail corner composes without a seam.
+    pub fill: Color,
+    /// The border of a read bubble.
+    pub border: Color,
+    /// The border of an unread one (the kit's accent).
+    pub unread: Color,
+    pub shadow: ShadowSpec,
+    pub text: MessageText,
+    /// The widest a bubble grows, as a fraction of the width it is given.
+    pub max_fraction: f32,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MessageTokens {
     /// The row of a comment thread.
@@ -81,6 +102,7 @@ pub struct MessageTokens {
     /// A mention in the body (`[&_span]:text-[#3582FF]`). Read once the
     /// text engine draws a color per run; until then the body is one run.
     pub mention: Color,
+    pub bubble: BubbleTokens,
 }
 
 impl MessageTokens {
@@ -170,6 +192,33 @@ impl MessageTokens {
             divider_width: 1.0,
             // components/Comment/Message/index.tsx:30
             mention: BLUE,
+            // components/CommentPin/index.tsx
+            bubble: BubbleTokens {
+                // the pin pads avatars by `p-0.25`; around text the
+                // bubble takes the quick comment's `p-3`
+                // (QuickComment/Comment/index.tsx:29) across and half
+                // of it down
+                pad_x: 12.0,
+                pad_y: 6.0,
+                // :10 `bg-[#FCFCFC] border-[1.5px]`
+                border_width: 1.5,
+                fill: SHADES[0],
+                // :11 read `border-[#ECECEC]`, unread `border-[#3582FF]`
+                border: shade4,
+                unread: BLUE,
+                // :10 `shadow-[0px_2px_2px_0px_rgba(0,0,0,0.15)]`
+                shadow: ShadowSpec::new([0.0, 2.0], 2.0, 0.0, Color::rgba(0.0, 0.0, 0.0, 0.15)),
+                // the thread's body run (Comment/Message/index.tsx:30)
+                text: MessageText {
+                    size: 13.0,
+                    line_height: 19.52,
+                    weight: 400,
+                    color: ink,
+                },
+                // the kit draws no text bubble; four fifths of the row
+                // leaves the other side's bubbles their lane
+                max_fraction: 0.8,
+            },
         }
     }
 
@@ -192,6 +241,13 @@ impl MessageTokens {
             divider: colors.divider,
             divider_width: kit.divider_width,
             mention: colors.info,
+            bubble: BubbleTokens {
+                fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                border: colors.divider,
+                unread: colors.info,
+                text: kit.bubble.text.recolor(colors.text),
+                ..kit.bubble
+            },
         }
     }
 }
