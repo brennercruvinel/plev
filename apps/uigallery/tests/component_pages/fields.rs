@@ -5,7 +5,7 @@
 use accord::Value;
 use engine::control::accessibility::accesskit::{Action, ActionData};
 
-use super::harness::{ask, ask_with, by_agent, gallery, same};
+use super::harness::{Gallery, ask, ask_with, by_agent, gallery, same, sid};
 
 const EMAIL: &str = "field_page.group[0].card[0]";
 const PASSWORD: &str = "field_page.group[1].card[0]";
@@ -78,4 +78,35 @@ fn the_eye_reveals_the_password_the_same_from_the_three() {
         person.value("field_page.group[1].card[0].reveal:on"),
         Some(Value::Bool(true))
     );
+}
+
+const CUT: &str = "context_menu[101]";
+const COPY: &str = "context_menu[102]";
+const SELECT_ALL: &str = "context_menu[104]";
+
+fn enabled(g: &Gallery, id: &str) -> Option<bool> {
+    g.view.semantics()?.get(&sid(id)).map(|n| n.enabled)
+}
+
+fn right_click(g: &mut Gallery, id: &str) -> bool {
+    let (x, y) = g.middle(id);
+    let opened = g.view.handle_right_click(x, y);
+    g.frame();
+    opened
+}
+
+/// A password's menu offers neither Cut nor Copy, even over a selection;
+/// the email's offers both.
+#[test]
+fn a_password_menu_offers_no_cut_and_no_copy() {
+    for (id, offers) in [(EMAIL, true), (PASSWORD, false)] {
+        let mut g = gallery("Field");
+        g.click(id);
+        g.type_in("hunter2");
+        assert!(right_click(&mut g, id), "{id}: the menu opens");
+        g.click(SELECT_ALL);
+        assert!(right_click(&mut g, id), "{id}: again, over the selection");
+        assert_eq!(enabled(&g, COPY), Some(offers), "{id}: Copy");
+        assert_eq!(enabled(&g, CUT), Some(offers), "{id}: Cut");
+    }
 }

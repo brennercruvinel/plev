@@ -4,7 +4,8 @@
 //! comps menu, the same overlay and projection (`context_menu`), so its
 //! keyboard is that menu's (the arrows, Enter, Escape). Its items are
 //! Cut, Copy, Paste and Select all; Cut and Copy are disabled with nothing
-//! selected, Select all with no text. Paste is always enabled: whether
+//! selected or on a masked field (a password never leaves by the
+//! clipboard), Select all with no text. Paste is always enabled: whether
 //! the clipboard holds anything is the person's, and the projection an
 //! agent reads would tell it (a paste of nothing does nothing).
 //!
@@ -80,7 +81,10 @@ impl ShowcaseView {
             return false;
         }
         let widget = match self.panes.keys(pane) {
-            Keys::Field(field) => menu(field.has_selection(), !field.is_empty()),
+            Keys::Field(field) => menu(
+                field.has_selection() && !field.is_masked(),
+                !field.is_empty(),
+            ),
             _ => return false,
         };
         self.show_menu(widget, x, y);
