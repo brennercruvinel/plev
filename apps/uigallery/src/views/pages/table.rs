@@ -432,12 +432,12 @@ pub const PAGES: &[Page] = &[
         "The hoff core toolbar action as a toggle: icon, label, icon and label; one card per state.",
         Pane::Toggle,
     ),
-    alias(
+    page(
+        C,
         "Toggle Group",
         "layout-grid",
-        "The todo app's filter pills.",
-        Pane::Todo,
-        "a toggle group widget, extracted from the todo app",
+        "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
+        Pane::ToggleGroup,
     ),
     page(
         C,

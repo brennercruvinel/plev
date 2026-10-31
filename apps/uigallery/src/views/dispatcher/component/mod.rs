@@ -132,6 +132,7 @@ components! {
     // task-104 front D, disclosure and display (#157)
     // task-104 front E, selection and dates (#158)
     Toggle => toggle,
+    ToggleGroup => toggle_group,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

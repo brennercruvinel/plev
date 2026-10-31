@@ -8,7 +8,7 @@ use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::widgets::prelude::*;
-use crate::widgets::selection::Toggle;
+use crate::widgets::selection::{Toggle, ToggleGroup};
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -91,6 +91,9 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     Toggle::icon_only("eye", "Preview")
         .disabled(true)
         .render(&mut c, row(7.0), theme);
+    let mut group = ToggleGroup::new(["Day", "Week", "Month"]).selected(2);
+    group.set_focused(Some(0));
+    group.render(&mut c, row(10.0), theme);
     Slider::new(0.0, 100.0, 40.0).render(&mut c, row(8.0), theme);
     let mut s = Select::new(["a", "b", "c"], 1);
     s.render(&mut c, row(9.0), theme);
@@ -413,6 +416,19 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             toggle.render(&mut c, row(3.0), &theme);
             toggle.project(&mut b, &id("m.toggle"), None);
             frames.push((c, vec![(id("m.toggle"), Role::Toggle, Probe::Hit)]));
+
+            let group = ToggleGroup::new(["Day", "Week", "Month"]).sem(id("m.view"));
+            let (mut c, _) = frame(false);
+            group.render(&mut c, row(6.0), &theme);
+            group.project(&mut b, &id("m.view"), "view", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.view"), Role::Group, Probe::Bound),
+                    (id("m.view[0]"), Role::Radio, Probe::Hit),
+                    (id("m.view[2]"), Role::Radio, Probe::Hit),
+                ],
+            ));
 
             let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
             let (mut c, _) = frame(false);

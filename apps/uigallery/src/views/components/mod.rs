@@ -54,6 +54,7 @@ pub mod tree;
 
 // task-104 front E, selection and dates (#158)
 pub mod toggle;
+pub mod toggle_group;
 
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};

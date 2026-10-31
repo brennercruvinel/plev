@@ -92,3 +92,40 @@ fn space_and_enter_flip_the_focused_toggle_as_its_click_does() {
         .and_then(|s| s.focused().map(ToString::to_string));
     assert_eq!(focused.as_deref(), Some(id));
 }
+
+/// Toggle Group segments: one in the regular group, one in the small.
+const SEGMENTS: [&str; 2] = [
+    "toggle_group_page.group[0].card[0][2]",
+    "toggle_group_page.group[1].card[0][0]",
+];
+
+/// A segment is chosen the same from the person's click, the reader's
+/// press and the agent's `select`.
+#[test]
+fn a_segment_is_chosen_the_same_from_the_three() {
+    for id in SEGMENTS {
+        let mut person = gallery("Toggle Group");
+        person.click(id);
+        let mut reader = gallery("Toggle Group");
+        reader.press(id);
+        let agent = by_agent("Toggle Group", "segment", vec![ask(id, "select")]);
+        same("Toggle Group", &person, &reader, &agent);
+        let checked = person.view.semantics().and_then(|s| {
+            s.get(&sid(id))
+                .and_then(|n| n.state.get("checked").cloned())
+        });
+        assert_eq!(checked, Some(Value::Bool(true)), "{id}");
+    }
+}
+
+/// A segment of the disabled group: the click changes nothing and the
+/// reader is not offered a press.
+#[test]
+fn a_disabled_toggle_group_moves_for_no_one() {
+    let id = "toggle_group_page.group[0].card[1][0]";
+    let before = gallery("Toggle Group").state();
+    let mut person = gallery("Toggle Group");
+    person.click(id);
+    assert_eq!(person.state(), before);
+    assert!(!gallery("Toggle Group").offers(id, Action::Click));
+}
