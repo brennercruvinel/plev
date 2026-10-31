@@ -1746,3 +1746,49 @@ mod avatar;
 
 /// The loading pieces: the skeleton, the progress rail, the spinner.
 mod loading;
+
+/// At rest the paper fades over the edge the thread runs past: below at
+/// the start, above at the end, both between; none on a thread that fits.
+#[test]
+fn the_paper_fades_over_the_edge_the_thread_runs_past() {
+    let theme = core();
+    let fades = |s: &MessageScroller, b: Rect| {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        s.render(&mut c, b, &theme);
+        let paper = theme.message.scroller.fill.0;
+        c.layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::GradientRect { y, h, color, .. } if color[..3] == paper[..3] => {
+                    Some((*y, *h, color[3]))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let fits = thread_of(2);
+    let b = surface(320.0, fits.height(320.0, &theme));
+    assert_eq!(fits.cut_edges(b, &theme), (false, false));
+    assert!(fades(&fits, b).is_empty());
+    let mut s = thread_of(12);
+    let b = surface(320.0, s.height(320.0, &theme));
+    assert_eq!(s.cut_edges(b, &theme), (false, true), "at the first frame");
+    let below = fades(&s, b);
+    assert_eq!(below.len(), 1);
+    assert_eq!(
+        below[0].1, theme.message.scroller.edge,
+        "two body lines deep"
+    );
+    let (x, y) = b.center();
+    s.handle_event(&wheel(x, y, 120.0), b, &theme);
+    assert_eq!(s.cut_edges(b, &theme), (true, true));
+    for _ in 0..200 {
+        s.handle_event(&wheel(x, y, 120.0), b, &theme);
+    }
+    assert_eq!(s.cut_edges(b, &theme), (true, false));
+    let above = fades(&s, b);
+    assert_eq!((above.len(), above[0].2), (1, 1.0), "opaque at the top");
+}

@@ -155,6 +155,12 @@ impl MessageTokens {
                 // (`size.dropdown_max_h`), the tallest a panel grows
                 // before it scrolls
                 max_h: 320.0,
+                // the kit hides its scrollbars (Notifications:46
+                // `scrollbar-none`) and draws no sign that a list goes on;
+                // the paper fades over a cut edge two body lines deep
+                // (Comment/Message:30 `leading-[1.22rem]`), so the last
+                // words before it fade out
+                edge: 2.0 * 19.52,
                 // the quick comment's muted body (QuickComment/Comment:49)
                 empty: MessageText {
                     size: 13.0,
