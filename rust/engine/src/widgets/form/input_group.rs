@@ -225,15 +225,17 @@ impl InputGroup {
     }
 
     /// The text's inset on an end: the recipe's padding or what the
-    /// addon takes there (its edge, its width and, for a text, the same
-    /// clearance again before the typed text), whichever is wider.
+    /// addon takes there (its edge, its width and the room before the
+    /// typed text: `addon_gap`, or for a text the same clearance again),
+    /// whichever is wider.
     fn inset(&self, addon: &Option<Addon>, rect: Option<Rect>, theme: &Theme) -> Slot {
         let pad = theme.form.recipe(self.look_of()).pad_x;
+        let g = &theme.form.group;
         match (addon, rect) {
             (Some(a), Some(r)) => {
                 let gap = match a {
-                    Addon::Text(_) => theme.form.group.text_edge,
-                    _ => 0.0,
+                    Addon::Text(_) => g.text_edge,
+                    _ => g.addon_gap,
                 };
                 Slot::Width(pad.max(Self::edge(a, theme) + r.w + gap))
             }

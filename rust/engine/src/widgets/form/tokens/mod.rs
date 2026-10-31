@@ -166,6 +166,10 @@ pub struct GroupAddons {
     pub hint_color: Color,
     pub hint_shadow: Vec<ShadowSpec>,
     pub hint_edge: f32,
+    /// The least room between an icon or a hint and the text typed
+    /// beside it, so a right-to-left text that hangs from the end never
+    /// touches the `⌘ K`.
+    pub addon_gap: f32,
     /// A text addon's color and its clearance from the box's edge and
     /// from the text typed beside it.
     pub text_color: Color,
@@ -403,6 +407,9 @@ impl FormTokens {
                 ShadowSpec::new([0.0, 1.0], 4.2, -1.0, black(0.25)),
             ],
             hint_edge: 10.0,
+            // What Search :34 `px-12` (48) leaves past the hint's
+            // `right-2.5` (10) and its `px-1.5` around `⌘ K` (about 34).
+            addon_gap: 4.0,
             // Not in the kit (no text addon): the gray of its icons, as
             // far from the edge as its icon button's text is (48 - 36).
             text_color: gray,
@@ -523,6 +530,7 @@ impl FormTokens {
             hint_color: c.text_mid,
             hint_shadow: vec![ShadowSpec::new([0.0, 0.0], 0.0, 1.0, c.divider)],
             hint_edge: theme.spacing.sm,
+            addon_gap: theme.spacing.xs,
             text_color: c.text_mid,
             text_edge: theme.spacing.md,
             // As wide as its options measure.

@@ -91,7 +91,8 @@ pub struct Table {
 }
 
 impl Table {
-    /// Rows are one `Lg` control tall.
+    /// Rows are one `Lg` control tall, in the theme the table is drawn
+    /// in: a table built under one theme follows the next.
     pub fn new(columns: Vec<Column>, theme: &Theme) -> Self {
         Self {
             columns,
@@ -297,6 +298,7 @@ impl Table {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        self.rows.set_item_height(Self::row_h(theme));
         self.rows
             .handle_event(event, Self::rows_rect(bounds, theme), theme)
     }
@@ -322,6 +324,7 @@ impl Table {
         theme: &Theme,
         mut cell_fn: impl FnMut(&mut Compositor, usize, Rect, usize),
     ) {
+        self.rows.set_item_height(Self::row_h(theme));
         let layout = self.column_layout(bounds.w, theme);
         let look = &theme.disclosure.table;
         if let Some(id) = &self.sem {

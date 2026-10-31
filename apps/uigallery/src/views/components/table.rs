@@ -379,4 +379,54 @@ mod tests {
             }
         }
     }
+
+    /// The gallery builds its pages under the core theme and draws them
+    /// under whichever is chosen: a list or a table built under core and
+    /// drawn under hoff draws as one built under hoff (rows at hoff's
+    /// height), and so does every page whose rows they are.
+    #[test]
+    fn rows_follow_the_theme_they_are_drawn_in() {
+        use super::super::{
+            item::ItemPage, scroll_area::ScrollAreaPage, table_static::TableStaticPage,
+        };
+        let (core, hoff) = (Theme::hoff_core(), Theme::hoff());
+        assert_ne!(
+            Table::row_h(&core),
+            Table::row_h(&hoff),
+            "the ladders differ"
+        );
+        let content = Rect::new(0.0, 0.0, 1200.0, 800.0);
+        let scene = |draw: &mut dyn FnMut(&mut Compositor, LayerId)| {
+            let mut c = Compositor::new();
+            c.begin_frame();
+            let list = c.create_layer(10);
+            draw(&mut c, list);
+            [LayerId::DEFAULT, list].map(|l| c.layer(l).unwrap().nodes().to_vec())
+        };
+        let (mut a, mut b) = (TablePage::new(&core), TablePage::new(&hoff));
+        assert_eq!(
+            scene(&mut |c, _| a.render(c, content, &hoff)),
+            scene(&mut |c, _| b.render(c, content, &hoff)),
+            "Data Table"
+        );
+        let (mut a, mut b) = (TableStaticPage::new(&core), TableStaticPage::new(&hoff));
+        assert_eq!(
+            scene(&mut |c, _| a.render(c, content, &hoff)),
+            scene(&mut |c, _| b.render(c, content, &hoff)),
+            "Table"
+        );
+        let (mut a, mut b) = (ScrollAreaPage::new(&core), ScrollAreaPage::new(&hoff));
+        assert_eq!(
+            scene(&mut |c, l| a.render(c, l, content, &hoff)),
+            scene(&mut |c, l| b.render(c, l, content, &hoff)),
+            "Scroll Area"
+        );
+        let item = ItemPage::new();
+        let one = scene(&mut |c, _| item.render(c, content, &hoff));
+        assert_eq!(
+            one,
+            scene(&mut |c, _| ItemPage::new().render(c, content, &hoff)),
+            "Item"
+        );
+    }
 }
