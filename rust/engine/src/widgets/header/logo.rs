@@ -1,8 +1,10 @@
 //! The logo of the kit (`components/Logo`): the symbol, the wordmark, or
-//! both side by side, inside the link home. The symbol is a Lucide icon
-//! and the wordmark the product's name in the logo's face, both
-//! `theme.header.logo`; the kit draws its own vectors, which stay in the
-//! kit.
+//! both side by side, inside the link home. The symbol is an icon of the
+//! set and the wordmark the product's name in the logo's face, both
+//! `theme.header.logo`; the kit's own vectors are a third party's brand
+//! and stay in the kit. A product puts its own mark in two places: the
+//! name ([`Logo::new`]) and the symbol, the theme's
+//! (`theme.header.logo.symbol`) or this logo's ([`Logo::symbol`]).
 //!
 //! With a [`SemId`] ([`Logo::sem`]) the render binds its bounds;
 //! [`Logo::project`] declares the link, named by the product.
@@ -31,6 +33,8 @@ pub struct Logo {
     /// The product the wordmark spells and the link is named by.
     pub name: String,
     pub kind: LogoKind,
+    /// The icon drawn as the symbol, over the theme's.
+    pub symbol: Option<&'static str>,
     press: Press,
     sem: Option<SemId>,
 }
@@ -40,6 +44,7 @@ impl Logo {
         Self {
             name: name.into(),
             kind: LogoKind::Full,
+            symbol: None,
             press: Press::default(),
             sem: None,
         }
@@ -47,6 +52,12 @@ impl Logo {
 
     pub fn kind(mut self, kind: LogoKind) -> Self {
         self.kind = kind;
+        self
+    }
+
+    /// Draws `icon` as the symbol instead of the theme's.
+    pub fn symbol(mut self, icon: &'static str) -> Self {
+        self.symbol = Some(icon);
         self
     }
 
@@ -128,7 +139,7 @@ impl Logo {
         if self.kind != LogoKind::Wordmark {
             let s = l.symbol_size;
             let y = inner.y + (inner.h - s) / 2.0;
-            if let Some(node) = icons::icon_at(l.symbol, s, l.ink.0, x, y) {
+            if let Some(node) = icons::icon_at(self.symbol.unwrap_or(l.symbol), s, l.ink.0, x, y) {
                 c.push_to_layer(layer, node);
             }
             x += s + l.gap;
