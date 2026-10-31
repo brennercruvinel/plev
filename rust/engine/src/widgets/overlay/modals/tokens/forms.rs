@@ -231,6 +231,12 @@ pub struct OptionTokens {
     pub value: TextStyle,
     /// The selects' least width (`min-w-32`).
     pub select_w: f32,
+    /// The avatar's upload (`UploadAvatar`: `size-12 rounded-full`, while
+    /// hovered `bg-black/40` and a `size-5 fill-[#FCFCFC]` add over it).
+    pub upload: f32,
+    pub upload_scrim: Color,
+    pub upload_icon: f32,
+    pub upload_ink: Color,
 }
 
 /// The subscription's plan (`Settings/Subscription`: `p-3 border-t`; the
@@ -317,6 +323,10 @@ impl SettingsTokens {
                 description_gap: 8.0,
                 value: type_.exact(12.0, 16.0, 500),
                 select_w: 128.0,
+                upload: 48.0,
+                upload_scrim: rgba(0, 0, 0, 0.40),
+                upload_icon: 20.0,
+                upload_ink: hex(0xFCFCFC),
             },
             plan: PlanTokens {
                 pad: 12.0,

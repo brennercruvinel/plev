@@ -25,6 +25,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::overlay::modals::export::Export;
+use engine::widgets::overlay::modals::settings::Settings;
 use engine::widgets::overlay::modals::share::{SharePost, ShareProfile};
 use engine::widgets::overlay::modals::share_file::{Person, ShareFile};
 use engine::widgets::overlay::modals::variations::Variations;
@@ -146,6 +147,15 @@ impl ModalsPage {
                     "Export images, Export video, Export 3D",
                     true,
                     Export::new("Robot 2.0", id(4, 0).as_ref()),
+                )],
+            },
+            Group {
+                title: "Settings",
+                span: 1,
+                cards: vec![shown(
+                    "General, Profile, Security, Notifications, Subscription",
+                    true,
+                    Settings::new(id(5, 0).as_ref()),
                 )],
             },
         ];
