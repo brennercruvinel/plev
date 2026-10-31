@@ -347,6 +347,21 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     // raised paper, an intent's disc on the chip, the dot on the card, and
     // a count's numeral on its fill.
     let bd = &t.message.badge;
+    let well = over(c.bg_panel, card);
+    for (name, border) in [
+        ("border", bd.tag.border),
+        ("raised_border", bd.tag.raised_border),
+    ] {
+        for (bg, under) in [("colors.surface", card), ("colors.bg_panel", well)] {
+            add(
+                &format!("message.badge.tag.{name}"),
+                bg,
+                LARGE,
+                over(border, under),
+                under,
+            );
+        }
+    }
     let chip = over(bd.tag.fill, card);
     let raised = over(bd.tag.raised_fill, card);
     add(
@@ -730,7 +745,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 525,
+        count, 541,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

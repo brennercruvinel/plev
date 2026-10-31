@@ -29,6 +29,8 @@ pub struct TagTokens {
     /// The label's run, in the ink.
     pub text: MessageText,
     pub fill: Color,
+    /// The outline, 3:1 on the surface and on the well (`BadgeTokens::new`
+    /// walks the given tone toward the ink until it is).
     pub border: Color,
     /// The chip on a tinted surface (the kit's `isGray` card): paper with
     /// a hairline, so it still stands out.
@@ -60,11 +62,13 @@ pub struct BadgeTokens {
 }
 
 /// What the palette gives a badge: the intents' base colors, the surface
-/// the badge sits on, and the two tones a numeral may take.
+/// the badge sits on and the tinted well it may sit in, and the two tones
+/// a numeral may take.
 #[derive(Clone, Copy, Debug)]
 pub struct BadgePalette {
     pub intents: IntentColors,
     pub surface: Color,
+    pub well: Color,
     pub paper: Color,
     pub ink: Color,
 }
@@ -104,6 +108,15 @@ impl BadgeTokens {
             destructive: deepen(over(base.destructive, surface), count_ink.destructive),
         };
         let ink = over(palette.ink, surface);
+        // the chip's outline holds 3:1 on the surface and on the well, so
+        // the chip shows wherever it sits, not only its label
+        let grounds = [surface, over(palette.well, surface)];
+        let outline = |c: Color| toward_all(over(c, surface), ink, &grounds, MARK_CONTRAST);
+        let tag = TagTokens {
+            border: outline(tag.border),
+            raised_border: outline(tag.raised_border),
+            ..tag
+        };
         Self {
             tag,
             count_pad_x,
@@ -136,6 +149,14 @@ pub(super) fn toward(c: Color, to: Color, under: Color, need: f32) -> Color {
         .unwrap_or(to)
 }
 
+/// [`toward`] until `c` reaches `need` on every one of `unders`.
+fn toward_all(c: Color, to: Color, unders: &[Color], need: f32) -> Color {
+    (0..=STEPS)
+        .map(|i| mix(c, to, f32::from(i) / f32::from(STEPS)))
+        .find(|m| unders.iter().all(|u| contrast(*m, *u) >= need))
+        .unwrap_or(to)
+}
+
 fn mix(a: Color, b: Color, t: f32) -> Color {
     let at = |i: usize| a.0[i] + (b.0[i] - a.0[i]) * t;
     Color([at(0), at(1), at(2), 1.0])
@@ -162,4 +183,28 @@ pub(super) fn over(c: Color, under: Color) -> Color {
     let a = c.0[3];
     let at = |i: usize| gamma(lin(c.0[i]) * a + lin(under.0[i]) * (1.0 - a));
     Color([at(0), at(1), at(2), 1.0])
+}
+
+/// The avatar's online dot: a disc on the avatar's bottom end rim, cut
+/// from it by a ring in the paper, in a green that reads on the paper.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AvatarTokens {
+    pub online: f32,
+    pub online_ring: f32,
+    pub online_fill: Color,
+    pub ring: Color,
+}
+
+impl AvatarTokens {
+    /// The geometry, the dot's `green` moved toward `ink` until it reads
+    /// on `paper` at 3:1.
+    pub fn new(online: f32, online_ring: f32, green: Color, paper: Color, ink: Color) -> Self {
+        let paper = over(paper, Color::BLACK);
+        Self {
+            online,
+            online_ring,
+            online_fill: toward(over(green, paper), over(ink, paper), paper, MARK_CONTRAST),
+            ring: paper,
+        }
+    }
 }

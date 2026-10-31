@@ -2,9 +2,9 @@
 //! private typescript design system), the file:line of each beside it.
 
 use super::{
-    AlertTokens, AttachmentTokens, BadgePalette, BadgeTokens, BubbleTokens, CursorShape,
-    IntentColors, MarkerTokens, MessageStyle, MessageText, MessageTokens, ScrollerTokens,
-    TagTokens, ToastTokens,
+    AlertTokens, AttachmentTokens, AvatarTokens, BadgePalette, BadgeTokens, BubbleTokens,
+    CursorShape, IntentColors, MarkerTokens, MessageStyle, MessageText, MessageTokens,
+    ScrollerTokens, TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
@@ -14,7 +14,17 @@ impl MessageTokens {
     /// The kit as written (the private typescript design system). The
     /// file:line of each value is in the comment beside it.
     pub fn hoff_core() -> Self {
-        let [paper, _, shade3, shade4, shade5, shade6, shade7, _, ink] = SHADES;
+        let [
+            paper,
+            shade2,
+            shade3,
+            shade4,
+            shade5,
+            shade6,
+            shade7,
+            _,
+            ink,
+        ] = SHADES;
         Self {
             // components/Comment/Message/index.tsx
             thread: MessageStyle {
@@ -385,7 +395,10 @@ impl MessageTokens {
                         color: ink,
                     },
                     fill: shade3,
-                    border: Color([0.0; 4]),
+                    // the kit's hairline is transparent on a white card;
+                    // the chip takes its gray-card #ECECEC, walked to 3:1
+                    // on the paper and on the well (`BadgeTokens::new`)
+                    border: shade4,
                     raised_fill: paper,
                     raised_border: shade4,
                     // components/Notification/index.tsx:72 `size-2
@@ -413,10 +426,19 @@ impl MessageTokens {
                         destructive: RED,
                     },
                     surface: paper,
+                    // components/Card/index.tsx:52 `bg-[#F8F7F7]`, the
+                    // gray card a chip sits in
+                    well: shade2,
                     paper,
                     ink,
                 },
             ),
+            // components/Notification/index.tsx:72 `size-2 rounded-full
+            // bg-[#55b93e]`, the green mark; :31 `border-2
+            // border-[#FCFCFC]`, the paper ring a mark on an avatar
+            // takes. #55B93E is 2.4:1 on the paper; it moves toward the
+            // ink until it reads (`AvatarTokens::new`)
+            avatar: AvatarTokens::new(8.0, 2.0, Color::hex(0x55B93E), paper, ink),
         }
     }
 }

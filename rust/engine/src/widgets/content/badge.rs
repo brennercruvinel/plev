@@ -10,7 +10,8 @@
 //! Static: a badge is read, never pressed (for a pressable pill see
 //! [`Chip`](crate::action::Chip)). It measures its text, takes the width
 //! it is given and ellipsizes a label that does not fit; a reader can land
-//! on it (`project`), and it says its label and intent.
+//! on it (`project`), and it says its label and intent. With a [`SemId`]
+//! ([`Badge::sem`]) the render binds the badge's rect.
 
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
@@ -188,6 +189,9 @@ impl Badge {
             BadgeKind::Count => b.count_fill.of(self.intent),
             BadgeKind::Dot => b.dots.of(self.intent),
         };
+        if let Some(id) = &self.sem {
+            c.bind(id, [r.x, r.y, r.w, r.h]);
+        }
         c.push_to_layer(layer, rounded_rect(r.x, r.y, r.w, r.h, radius, fill.0));
         if self.kind == BadgeKind::Tag {
             let border = if self.raised {
@@ -245,15 +249,16 @@ impl Badge {
         );
     }
 
-    /// A reader's view: a status named by its label, with its intent, and
-    /// focusable so a reader can land on it. It declares no action.
+    /// A reader's view: a label named by its words, with its intent, and
+    /// focusable so a reader can land on it. Not a live region: a badge
+    /// is read where it sits, not announced. It declares no action.
     pub fn project<'b>(
         &self,
         b: &'b mut SnapshotBuilder,
         id: &SemId,
         parent: Option<&SemId>,
     ) -> NodeBuilder<'b> {
-        let mut node = b.node(id, Role::Status, self.label.as_str());
+        let mut node = b.node(id, Role::Label, self.label.as_str());
         if let Some(parent) = parent {
             node.parent(parent);
         }

@@ -1524,16 +1524,19 @@ const INTENTS: [Intent; 4] = [
 #[test]
 fn the_badge_carries_the_kit_in_core() {
     let b = core().message.badge;
-    let [paper, _, shade3, shade4, ..] = SHADES;
+    let [paper, well, shade3, ..] = SHADES;
     assert_eq!((b.tag.pad_x, b.tag.pad_y, b.tag.radius), (12.0, 4.0, 12.0));
     assert_eq!(
         (b.tag.text.size, b.tag.text.line_height, b.tag.text.weight),
         (11.0, 16.0, 500)
     );
-    assert_eq!(
-        (b.tag.fill, b.tag.raised_fill, b.tag.raised_border),
-        (shade3, paper, shade4)
-    );
+    assert_eq!((b.tag.fill, b.tag.raised_fill), (shade3, paper));
+    // the outline shows on the paper and in the gray card's well, so the
+    // chip does not vanish where its fill nearly matches what is under it
+    for border in [b.tag.border, b.tag.raised_border] {
+        assert!(ratio(border, paper) >= 3.0, "{border:?} on the paper");
+        assert!(ratio(border, well) >= 3.0, "{border:?} in the well");
+    }
     assert_eq!((b.dot, b.dot_inset), (4.0, 4.0));
     let near = |a: Color, b: Color| (0..4).all(|i| (a.0[i] - b.0[i]).abs() < 1e-4);
     assert!(
@@ -1657,10 +1660,10 @@ fn the_dot_sits_on_its_host_s_top_end_corner() {
     assert_eq!(Badge::dot("New").kind, BadgeKind::Dot);
 }
 
-/// A reader hears a status with its label and intent, can land on it,
+/// A reader hears a label with its words and intent, can land on it,
 /// and finds no action.
 #[test]
-fn a_badge_projects_a_status_with_its_intent() {
+fn a_badge_projects_a_label_with_its_intent() {
     let root = SemId::parse("page").unwrap();
     let id = root.child("badge").unwrap();
     let mut b = SnapshotBuilder::new();
@@ -1668,7 +1671,43 @@ fn a_badge_projects_a_status_with_its_intent() {
     Badge::count("3").project(&mut b, &id, Some(&root));
     let seen: Snapshot = b.finish().expect("the projection validates");
     let n = seen.get(&id).expect("the badge");
-    assert_eq!((n.role, n.label.as_str()), (Role::Status, "3"));
+    assert_eq!((n.role, n.label.as_str()), (Role::Label, "3"));
     assert!(n.actions.is_empty());
     assert!(format!("{:?}", n.state).contains("destructive"));
+}
+
+// ---------------------------------------------------------------------------
+// Avatar: the online dot
+// ---------------------------------------------------------------------------
+
+use crate::widgets::content::{Avatar, AvatarSize};
+
+/// The dot sits on the disc's bottom end rim, its center on the circle,
+/// and reads at 3:1 on the paper under every theme.
+#[test]
+fn the_online_dot_sits_on_the_bottom_end_rim_and_reads() {
+    for t in [core(), Theme::hoff(), Theme::dark(), Theme::light()] {
+        let disc = Rect::new(0.0, 0.0, 48.0, 48.0);
+        let d = Avatar::online_rect(disc, &t);
+        let (cx, cy) = d.center();
+        let r = ((cx - 24.0).powi(2) + (cy - 24.0).powi(2)).sqrt();
+        assert!((r - 24.0).abs() < 0.01, "on the rim: {r}");
+        assert!(cx > 24.0 && cy > 24.0, "bottom end");
+        let a = &t.message.avatar;
+        assert!(ratio(a.online_fill, a.ring) >= 3.0);
+    }
+    assert_eq!(core().message.avatar.online, 8.0, "Notification:72 size-2");
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let t = core();
+    let avatar = Avatar::new("Ann").size(AvatarSize::Md).online(true);
+    avatar.render(&mut c, Rect::new(0.0, 0.0, 44.0, 44.0), &t);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let fill = t.message.avatar.online_fill.0;
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == fill)),
+        "the dot is drawn in its green"
+    );
 }

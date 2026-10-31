@@ -185,12 +185,13 @@ fn stat_with_unit_and_delta_draws_every_part() {
     let n = nodes(|c| s.render(c, Rect::new(0.0, 0.0, 200.0, 60.0), &t));
     let tx = texts(&n);
     assert_eq!(tx, vec!["1.3", "GB", "+12%", "on disk"]);
-    // The delta badge is the only box: its chip and its intent's disc.
+    // The delta badge is the only box: its chip, its outline and its
+    // intent's disc.
     assert_eq!(
         n.iter()
             .filter(|n| matches!(n, SceneNode::RoundedRect { .. }))
             .count(),
-        2
+        3
     );
 }
 

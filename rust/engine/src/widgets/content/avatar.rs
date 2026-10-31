@@ -1,14 +1,15 @@
 //! HOFF avatar: a circle one `Md` control wide (or any size the owner
 //! picks), showing a photo or, without one, the chip-glass disc with the
-//! initial letter in the active text tone. An optional online dot in the
-//! knob gradient sits on the top-left rim.
+//! initial letter in the active text tone. An optional online dot, the
+//! kit's green mark ringed by the paper (`theme.message.avatar`), sits on
+//! the bottom end rim.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, Theme};
 
-use crate::widgets::recipe::glass_pill;
+use crate::widgets::recipe::{glass_pill, rounded_rect};
 use crate::widgets::widget::Rect;
 
 /// Avatar sizes on the control ladder.
@@ -154,23 +155,28 @@ impl Avatar {
             }
         }
         if self.online {
-            let d = theme.spacing.md;
-            let off = theme.control.edge_width * 2.0;
+            let r = Self::online_rect(disc, theme);
+            let t = &theme.message.avatar;
+            let ring = r.w / 2.0 + t.online_ring;
+            let (cx, cy) = r.center();
             c.push_to_layer(
                 layer,
-                SceneNode::GradientRect {
-                    x: disc.x - off,
-                    y: disc.y - off,
-                    w: d,
-                    h: d,
-                    color: glass.knob_gradient[0].0,
-                    color2: glass.knob_gradient[1].0,
-                    angle_deg: 180.0,
-                    corner_radius: d / 2.0,
-                    border_width: 0.0,
-                    border_color: [0.0; 4],
-                },
+                rounded_rect(cx - ring, cy - ring, ring * 2.0, ring * 2.0, ring, t.ring.0),
+            );
+            c.push_to_layer(
+                layer,
+                rounded_rect(r.x, r.y, r.w, r.h, r.w / 2.0, t.online_fill.0),
             );
         }
+    }
+
+    /// The online dot on `disc`: centered on the rim at the bottom end, at
+    /// 45 degrees, as the kit's marks sit on an avatar
+    /// (`Notification:31`, `-right-1 -bottom-1`).
+    pub fn online_rect(disc: Rect, theme: &Theme) -> Rect {
+        let d = theme.message.avatar.online;
+        let (cx, cy) = disc.center();
+        let reach = disc.w / 2.0 * std::f32::consts::FRAC_1_SQRT_2;
+        Rect::new(cx + reach - d / 2.0, cy + reach - d / 2.0, d, d)
     }
 }

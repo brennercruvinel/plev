@@ -23,6 +23,10 @@ const ADD: &str = "attachment_page.group[1].card[0].add";
 /// The Marker page's unread single-comment pin.
 const PIN: &str = "marker_page.group[1].card[1].marker[0]";
 
+/// The Badge page's chip at rest, and its destructive count.
+const BADGE: &str = "badge_page.group[0].card[0].badge[0]";
+const COUNT: &str = "badge_page.group[1].card[2].badge[3]";
+
 /// The gallery on `page`, scrolled so a person sees `id`.
 fn seen(page: &str, id: &str) -> Gallery {
     let mut g = gallery(page);
@@ -78,6 +82,7 @@ fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
         ("Alert", ACCEPT),
         ("Attachment", TILE),
         ("Marker", PIN),
+        ("Badge", BADGE),
     ] {
         let focused = |g: &Gallery| {
             g.view
@@ -228,4 +233,22 @@ fn opening_a_pin_reads_it_the_same_from_the_three() {
     assert_ne!(person.state(), before, "the pin was read");
     assert_eq!(reader.state(), person.state(), "the reader");
     assert_eq!(agent.state(), person.state(), "the agent");
+}
+
+/// A badge is a status a reader lands on: its label, its intent, and no
+/// action for the reader nor for an agent.
+#[test]
+fn a_badge_is_read_with_its_intent_and_offers_nothing() {
+    let g = gallery("Badge");
+    let s = g.view.semantics().expect("the page projects");
+    for id in [BADGE, COUNT] {
+        let n = s
+            .get(&sid(id))
+            .unwrap_or_else(|| panic!("{id} is projected"));
+        assert!(n.actions.is_empty(), "{id}: {:?}", n.actions);
+        assert!(n.focusable, "{id}");
+    }
+    let count = s.get(&sid(COUNT)).unwrap();
+    assert_eq!(count.label, "4");
+    assert!(format!("{:?}", count.state).contains("destructive"));
 }
