@@ -29,11 +29,7 @@ pub struct ScrollAreaPage {
 
 impl ScrollAreaPage {
     pub fn new(theme: &Theme) -> Self {
-        let mut list = VirtualList::new(
-            theme
-                .control
-                .height(engine::styling::theme::ControlSize::Xs),
-        );
+        let mut list = VirtualList::new(Self::row_h(theme));
         list.set_item_count(10_000);
         let root = root_id("scroll_area_page");
         let list = match child_id(root.as_ref(), "list") {
@@ -41,6 +37,13 @@ impl ScrollAreaPage {
             None => list,
         };
         Self { root, list }
+    }
+
+    /// A row: one `Xs` control, in the theme the page draws in.
+    fn row_h(theme: &Theme) -> f32 {
+        theme
+            .control
+            .height(engine::styling::theme::ControlSize::Xs)
     }
 
     /// The row behind `id`, `scroll_area_page.list[<index>]`, while the
@@ -78,6 +81,7 @@ impl ScrollAreaPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
+        self.list.set_item_height(Self::row_h(theme));
         let blurred = matches!(event, WidgetEvent::MouseDown { .. }) && self.blur();
         let r = self
             .list
@@ -100,6 +104,7 @@ impl ScrollAreaPage {
         content: Rect,
         theme: &Theme,
     ) {
+        self.list.set_item_height(Self::row_h(theme));
         let bounds = Self::bounds(content, theme);
         panel(c, bounds.outset(1.0), theme);
         let dim = theme.colors.text_dim.0;

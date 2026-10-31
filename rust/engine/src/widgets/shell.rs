@@ -1,6 +1,7 @@
 //! App shell: the chrome every app rebuilds. A [`Sidebar`] that follows
 //! the breakpoint (full, rail, or a drawer behind a menu button), a
-//! [`PanelHeader`] for the current screen, and the content rect the
+//! [`PanelHeader`] for the current screen, as tall as its blurb wraps in
+//! the width it gets, and the content rect the
 //! screen lays out in, with the page gutter and the platform safe area
 //! applied. The shell owns nothing about what a screen shows: it hands
 //! the screen its rect and routes the events the chrome did not take.
@@ -32,6 +33,8 @@ pub struct ShellLayout {
     /// The menu button that opens the drawer (compact only).
     pub menu_button: Option<Rect>,
     pub header: Rect,
+    /// The header's padding left and right.
+    pub header_pads: [f32; 2],
     /// Where the screen lays out: under the header, past the sidebar,
     /// inside the gutter and the safe area.
     pub content: Rect,
@@ -82,26 +85,48 @@ impl AppShell {
         let page_x = sa.left + sidebar_w;
         let page_w = (self.width - page_x - sa.right).max(0.0);
 
-        let header_h = self.header.height(theme);
-        let (menu_button, header_x) = if mode == SidebarMode::Drawer {
-            let (bw, bh) = self.menu_button.preferred_size(theme);
-            let r = Rect::new(
-                page_x + gutter,
-                sa.top + gutter + (header_h - bh) / 2.0,
-                bw,
-                bh,
-            );
-            (Some(r), r.x + r.w)
+        let drawer = mode == SidebarMode::Drawer;
+        let (bw, bh) = self.menu_button.preferred_size(theme);
+        let top = sa.top + gutter;
+        // A head that bleeds (the kit's Layout title) spans the page column
+        // from the top, its title on the gutter or past the menu button;
+        // any other sits inside the gutter, its padding outside the page's
+        // edge. Either way its blurb wraps in the width it gets, and the
+        // page starts under its last line.
+        let (header, pads) = if self.header.bleeds(theme) {
+            let left = if drawer {
+                gutter + bw + theme.spacing.md
+            } else {
+                gutter
+            };
+            let pads = [left, gutter];
+            let h = self.header.height_in(page_w, pads, theme);
+            let header = Rect::new(page_x, sa.top, page_w, h);
+            (header, pads)
         } else {
-            (None, page_x + gutter - PanelHeader::pad(theme))
+            let header_x = if drawer {
+                page_x + gutter + bw
+            } else {
+                page_x + gutter - PanelHeader::pad(theme)
+            };
+            let w = (page_x + page_w - gutter - header_x).max(0.0);
+            let pads = self.header.pads(w, theme);
+            let h = self.header.height_in(w, pads, theme);
+            let header = Rect::new(header_x, top, w, h);
+            (header, pads)
         };
-        let header = Rect::new(
-            header_x,
-            sa.top + gutter,
-            (page_x + page_w - gutter - header_x).max(0.0),
-            header_h,
-        );
+        // The page starts `lg` under the head, whichever it is.
         let content_y = header.y + header.h + theme.spacing.lg;
+        // The menu button centers on the title's band in a head that
+        // bleeds; elsewhere on the one-line head, as it always did.
+        let menu_button = drawer.then(|| {
+            let (y, h) = if self.header.bleeds(theme) {
+                (header.y, self.header.band(header.w, theme))
+            } else {
+                (top, self.header.height(theme))
+            };
+            Rect::new(page_x + gutter, y + (h - bh) / 2.0, bw, bh)
+        });
         let content = Rect::new(
             page_x + gutter,
             content_y,
@@ -114,6 +139,7 @@ impl AppShell {
             sidebar,
             menu_button,
             header,
+            header_pads: pads,
             content,
         }
     }
@@ -165,7 +191,8 @@ impl AppShell {
         theme: &Theme,
     ) {
         let layout = self.layout(theme);
-        self.header.render_to_layer(c, layer, layout.header, theme);
+        self.header
+            .render_in(c, layer, layout.header, layout.header_pads, theme);
         if let Some(mb) = layout.menu_button {
             self.menu_button.render(c, mb, theme);
         }

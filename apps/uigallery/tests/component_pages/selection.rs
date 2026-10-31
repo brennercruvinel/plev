@@ -285,3 +285,87 @@ fn a_tab_is_chosen_the_same_from_the_three() {
         assert_eq!(selected, Some(Value::Text(key.into())), "{id}");
     }
 }
+
+/// The Date Picker page's live picker, and the open one held by its card.
+const PICKER: &str = "date_picker_page.group[0].card[0]";
+const OPEN: &str = "date_picker_page.group[1].card[0]";
+
+fn state_on(g: &Gallery, id: &str, key: &str) -> Option<Value> {
+    let seen = g.view.semantics()?;
+    seen.get(&sid(id))?.state.get(key).cloned()
+}
+
+/// The box opens its panel the same from the person's click, the
+/// reader's press and the agent's `activate`, and the calendar shows in
+/// it.
+#[test]
+fn a_date_picker_opens_the_same_from_the_three() {
+    let mut person = gallery("Date Picker");
+    person.click(PICKER);
+    let mut reader = gallery("Date Picker");
+    reader.press(PICKER);
+    let agent = by_agent(
+        "Date Picker",
+        "selection_picker",
+        vec![ask(PICKER, "activate")],
+    );
+    same("Date Picker", &person, &reader, &agent);
+    assert_eq!(
+        state_on(&person, PICKER, "expanded"),
+        Some(Value::Bool(true))
+    );
+    let cal = format!("{PICKER}.calendar");
+    assert!(person.view.semantics().unwrap().get(&sid(&cal)).is_some());
+}
+
+/// A day of the open picker, and its arrow to the next month.
+const OPEN_DAY: &str = "date_picker_page.group[1].card[0].calendar[2026-10-21]";
+const OPEN_NEXT: &str = "date_picker_page.group[1].card[0].calendar.next";
+
+/// A day of the open picker is chosen the same from the three, and the
+/// box shows it; an arrow turns its month the same.
+#[test]
+fn a_picked_day_and_a_turned_month_are_the_same_from_the_three() {
+    for (id, action) in [(OPEN_DAY, "select"), (OPEN_NEXT, "activate")] {
+        let mut person = seeing_on("Date Picker", id);
+        person.click(id);
+        let mut reader = gallery("Date Picker");
+        reader.press(id);
+        let agent = by_agent("Date Picker", "sel_pday", vec![ask(id, action)]);
+        same("Date Picker", &person, &reader, &agent);
+    }
+    let mut person = seeing_on("Date Picker", OPEN_DAY);
+    person.click(OPEN_DAY);
+    assert_eq!(
+        state_on(&person, OPEN, "value"),
+        Some(Value::Text("2026-10-21".into()))
+    );
+}
+
+/// The Menus page: an item of the filter menu, one of the file menu and
+/// a folder.
+const MENU_ROWS: [&str; 3] = [
+    "menus_page.group[0].card[5][3]",
+    "menus_page.group[0].card[1][2]",
+    "menus_page.group[0].card[2][1]",
+];
+
+/// A menu row is picked the same from the person's click, the reader's
+/// press and the agent's `activate`, and its menu says it.
+#[test]
+fn a_menu_row_is_picked_the_same_from_the_three() {
+    for id in MENU_ROWS {
+        let mut person = seeing_on("Menus", id);
+        person.click(id);
+        let mut reader = gallery("Menus");
+        reader.press(id);
+        let agent = by_agent("Menus", "sel_menu", vec![ask(id, "activate")]);
+        same("Menus", &person, &reader, &agent);
+        let menu = &id[..id.rfind('[').unwrap()];
+        let picked = state_on(&person, menu, "picked");
+        assert!(
+            matches!(&picked, Some(Value::Text(t)) if !t.is_empty()),
+            "{id}: {picked:?}"
+        );
+    }
+}

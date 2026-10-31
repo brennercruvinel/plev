@@ -92,7 +92,12 @@ fn a_link_to_the_camera_is_refused_and_its_line_is_on_screen() {
         .visible_rects(&view.theme, MAIN.0 as f32, MAIN.1 as f32);
     assert_eq!(rects.len(), 1);
     let toast = rects[0];
+    // The toast is the kit's paper card on the page's paper: its fill may
+    // change no pixel, so what proves it drawn where it stands is its
+    // hairline closing the whole rect (the changed pixels span it) and
+    // more drawn in it than that outline (its mark and its line).
     let (mut inside, mut around) = (0usize, 0usize);
+    let (mut x0, mut y0, mut x1, mut y1) = (f32::MAX, f32::MAX, f32::MIN, f32::MIN);
     for y in 0..MAIN.1 {
         for x in 0..MAIN.0 {
             if before.pixel(x, y) == after.pixel(x, y) {
@@ -101,6 +106,7 @@ fn a_link_to_the_camera_is_refused_and_its_line_is_on_screen() {
             let (px, py) = (x as f32, y as f32);
             if px >= toast.x && px < toast.x + toast.w && py >= toast.y && py < toast.y + toast.h {
                 inside += 1;
+                (x0, y0, x1, y1) = (x0.min(px), y0.min(py), x1.max(px), y1.max(py));
             } else if px < toast.x - HALO
                 || px >= toast.x + toast.w + HALO
                 || py < toast.y - HALO
@@ -110,10 +116,16 @@ fn a_link_to_the_camera_is_refused_and_its_line_is_on_screen() {
             }
         }
     }
-    let area = (toast.w * toast.h) as usize;
+    let spans = |lo: f32, hi: f32, from: f32, len: f32| lo <= from + 1.0 && hi >= from + len - 2.0;
     assert!(
-        inside > area / 2,
-        "the toast is drawn where it stands: {inside} of {area}"
+        spans(x0, x1, toast.x, toast.w) && spans(y0, y1, toast.y, toast.h),
+        "the toast is drawn where it stands, whole: changes in x {x0}..{x1}, y {y0}..{y1} \
+         for {toast:?}"
+    );
+    let outline = (2.0 * (toast.w + toast.h)) as usize;
+    assert!(
+        inside > outline * 2,
+        "the toast draws its mark and its line, not an outline alone: {inside} px"
     );
     assert_eq!(around, 0, "the page is as it was around it");
     assert_eq!(camera(&view), Some(Value::from("off")), "nothing ran");

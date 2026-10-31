@@ -98,14 +98,17 @@ impl TodoPage {
             let (lx, lw) = label_span(row);
             let base = theme.colors.text_mid.0;
             let color = with_alpha(base, base[3] * enter * (1.0 - 0.45 * strike));
+            // One line to a row: a label wider than its span is cut with
+            // an ellipsis (`label_shown`), never wrapped past the row.
+            let shown = label_shown(item.text(), lw);
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(item.text(), &style, Some(lw)),
+                key: TextNodeKey::from_style(&shown, &style, None),
                 x: lx,
                 y: row.y + TextMeasurer::vertical_center(&style, ROW_H),
                 color,
             });
             if strike > 0.0 {
-                let tw = TextMeasurer::measure_styled(item.text(), &style, Some(lw)).0;
+                let tw = TextMeasurer::measure_styled(&shown, &style, None).0;
                 c.push(SceneNode::Rect {
                     x: lx,
                     y: row.y + (ROW_H - STRIKE_H) / 2.0,

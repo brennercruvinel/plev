@@ -390,6 +390,8 @@ fn code_recipe_is_the_kit_well_in_core_and_the_glass_field_elsewhere() {
         (SHADES[1], SHADES[3], 12.0)
     );
     assert_eq!(CodeBlock::row_h(&core()), 20.0);
+    let mono = Some(crate::styling::theme::MONO_FAMILY);
+    assert_eq!(CodeBlock::text_style(&core()).font_family.as_deref(), mono);
     let t = hoff();
     let old = t.navigation.code;
     assert_eq!((old.fill, old.border), (t.glass.field, t.glass.edge_soft));

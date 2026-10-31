@@ -126,6 +126,8 @@ pub enum Pane {
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
     Calendar,
+    DatePicker,
+    Menus,
     RadioGroup,
     Toggle,
     ToggleGroup,

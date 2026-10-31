@@ -23,14 +23,18 @@ mod plot;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
 
-/// A text run: size, line height and weight in px, in the theme's family;
-/// tracked as the theme tracks unless the run names its own (in em).
+/// A text run: size, line height and weight in px, in the theme's family
+/// (its mono family for a code run); tracked as the theme tracks unless
+/// the run names its own (in em).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NavText {
     pub size: f32,
     pub line_height: f32,
     pub weight: u16,
     pub tracking_em: Option<f32>,
+    /// A code run: the theme's mono family, untracked
+    /// ([`TypographyScale::exact_mono`]).
+    pub mono: bool,
 }
 
 impl NavText {
@@ -40,6 +44,7 @@ impl NavText {
             line_height,
             weight,
             tracking_em: None,
+            mono: false,
         }
     }
 
@@ -51,9 +56,18 @@ impl NavText {
         }
     }
 
+    /// The run in the theme's mono family.
+    pub const fn in_mono(self) -> Self {
+        Self { mono: true, ..self }
+    }
+
     /// The one style the run is measured and drawn with.
     pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        let style = typography.exact(self.size, self.line_height, self.weight);
+        let style = if self.mono {
+            typography.exact_mono(self.size, self.line_height, self.weight)
+        } else {
+            typography.exact(self.size, self.line_height, self.weight)
+        };
         match self.tracking_em {
             Some(em) => style.with_letter_spacing(em * self.size),
             None => style,
@@ -209,7 +223,8 @@ impl NavigationTokens {
         // inside a 1 px rim: 40. Derived where the kit link has nothing:
         // the trailing pad is the dropdown's `pr-3` (`Dropdown:25`), the
         // hint the group title's text (`text-[0.75rem] leading-[1rem]
-        // font-medium text-[#7b7b7b]/70`, `GuidelineSidebar:59`), a press
+        // font-medium`, `GuidelineSidebar:59`) in the kit's gray at full
+        // strength (the title's 70% read too faint for a value), a press
         // the active rim's tone as a fill.
         let surface = |fill, border, icon| LinkSurface {
             fill,
@@ -243,7 +258,7 @@ impl NavigationTokens {
             icon_gap: 12.0,
             label: NavText::new(12.0, 16.0, 600),
             hint: NavText::new(12.0, 16.0, 500),
-            hint_color: tint(gray, 0.7),
+            hint_color: gray,
             trailing_gap: 8.0,
             trailing_room: 20.0,
             label_min: 32.0,

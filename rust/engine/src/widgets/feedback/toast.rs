@@ -51,6 +51,11 @@ impl Metrics {
             Breakpoint::Compact => (vw - margin * 2.0).max(0.0),
             _ => theme.size.toast_w.min((vw - margin * 2.0).max(0.0)),
         };
+        Self::at(theme, width, margin)
+    }
+
+    /// The row in a toast `width` wide, `margin` from the viewport's edge.
+    fn at(theme: &Theme, width: f32, margin: f32) -> Self {
         let a = &theme.message.alert;
         Self {
             width,
@@ -90,12 +95,90 @@ impl Toast {
         self.id
     }
 
-    fn icon_name(&self) -> &'static str {
-        match self.intent {
+    /// The glyph on the lead disc of a toast of `intent`.
+    pub fn icon_name(intent: Intent) -> &'static str {
+        match intent {
             Intent::Neutral | Intent::Informational => "info",
             Intent::Constructive => "check",
             Intent::Destructive => "alert-triangle",
         }
+    }
+
+    /// How tall a toast `width` wide is with `message`: as the message
+    /// wraps, never under the lead disc. The queue's toasts and a page's
+    /// drawn one measure the same.
+    pub fn height(message: &str, width: f32, theme: &Theme) -> f32 {
+        ToastManager::toast_height(message, theme, &Metrics::at(theme, width, 0.0))
+    }
+
+    /// One toast drawn in `rect` at `alpha` (its entry and exit fade): the
+    /// kit's drop, paper and hairline, the intent's mark in the lead disc,
+    /// the message beside it. What a toast looks like apart from the
+    /// queue that shows it, so a page can show one at rest.
+    pub fn draw(
+        c: &mut Compositor,
+        layer: LayerId,
+        rect: Rect,
+        message: &str,
+        intent: Intent,
+        alpha: f32,
+        theme: &Theme,
+    ) {
+        let m = Metrics::at(theme, rect.w, 0.0);
+        let t = &theme.message.toast;
+        let a = &theme.message.alert;
+        let style = ToastManager::text_style(theme);
+        let fade = |c: [f32; 4]| [c[0], c[1], c[2], c[3] * alpha];
+        // The surface: the drop, then the paper with its hairline; the
+        // row pushed later stays on top (push order is kept).
+        let mut drop = t.shadow;
+        drop.color = Color(fade(drop.color.0));
+        shadow_drops(c, layer, rect, t.radius, std::slice::from_ref(&drop));
+        c.push_to_layer(
+            layer,
+            SceneNode::RoundedRect {
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                color: fade(t.fill.0),
+                corner_radius: t.radius,
+                border_width: t.border_width,
+                border_color: fade(t.border.0),
+            },
+        );
+        // The lead: the intent's mark, as the alert without an avatar.
+        let fill = a.intents.of(intent).0;
+        let lead = Rect::new(
+            rect.x + m.pad,
+            rect.y + (rect.h - m.lead) / 2.0,
+            m.lead,
+            m.lead,
+        );
+        c.push_to_layer(
+            layer,
+            rounded_rect(lead.x, lead.y, lead.w, lead.h, lead.w / 2.0, fade(fill)),
+        );
+        let (cx, cy) = lead.center();
+        if let Some(node) = icons::icon_at(
+            Self::icon_name(intent),
+            m.icon,
+            fade(contrast_text(fill)),
+            cx - m.icon / 2.0,
+            cy - m.icon / 2.0,
+        ) {
+            c.push_to_layer(layer, node);
+        }
+        let (_, th) = TextMeasurer::measure_styled(message, &style, Some(m.text_w()));
+        c.push_to_layer(
+            layer,
+            SceneNode::Text {
+                key: TextNodeKey::from_style(message, &style, Some(m.text_w())),
+                x: lead.right() + m.gap,
+                y: rect.y + (rect.h - th.max(style.line_height)) / 2.0,
+                color: fade(a.detail.color.0),
+            },
+        );
     }
 
     pub fn progress(&self) -> f32 {
@@ -352,12 +435,7 @@ impl ToastManager {
         vw: f32,
         vh: f32,
     ) {
-        let m = Metrics::of(theme, vw);
         let rects = self.visible_rects(theme, vw, vh);
-        let t = &theme.message.toast;
-        let a = &theme.message.alert;
-        let style = Self::text_style(theme);
-        let fade = |c: [f32; 4], alpha: f32| [c[0], c[1], c[2], c[3] * alpha];
         for (toast, rect) in self.visible().zip(rects) {
             let alpha = toast.progress();
             if alpha <= 0.01 {
@@ -374,68 +452,14 @@ impl ToastManager {
                     [rect.x, rect.y, rect.w, rect.h],
                 );
             }
-            // The surface: the drop, then the paper with its hairline; the
-            // row pushed later stays on top (push order is kept).
-            let mut drop = t.shadow;
-            drop.color = Color(fade(drop.color.0, alpha));
-            shadow_drops(
+            Toast::draw(
                 compositor,
                 layer,
                 rect,
-                t.radius,
-                std::slice::from_ref(&drop),
-            );
-            compositor.push_to_layer(
-                layer,
-                SceneNode::RoundedRect {
-                    x: rect.x,
-                    y: rect.y,
-                    w: rect.w,
-                    h: rect.h,
-                    color: fade(t.fill.0, alpha),
-                    corner_radius: t.radius,
-                    border_width: t.border_width,
-                    border_color: fade(t.border.0, alpha),
-                },
-            );
-            // The lead: the intent's mark, as the alert without an avatar.
-            let fill = a.intents.of(toast.intent).0;
-            let lead = Rect::new(
-                rect.x + m.pad,
-                rect.y + (rect.h - m.lead) / 2.0,
-                m.lead,
-                m.lead,
-            );
-            compositor.push_to_layer(
-                layer,
-                rounded_rect(
-                    lead.x,
-                    lead.y,
-                    lead.w,
-                    lead.h,
-                    lead.w / 2.0,
-                    fade(fill, alpha),
-                ),
-            );
-            let (cx, cy) = lead.center();
-            if let Some(node) = icons::icon_at(
-                toast.icon_name(),
-                m.icon,
-                fade(contrast_text(fill), alpha),
-                cx - m.icon / 2.0,
-                cy - m.icon / 2.0,
-            ) {
-                compositor.push_to_layer(layer, node);
-            }
-            let (_, th) = TextMeasurer::measure_styled(&toast.message, &style, Some(m.text_w()));
-            compositor.push_to_layer(
-                layer,
-                SceneNode::Text {
-                    key: TextNodeKey::from_style(&toast.message, &style, Some(m.text_w())),
-                    x: lead.right() + m.gap,
-                    y: rect.y + (rect.h - th.max(style.line_height)) / 2.0,
-                    color: fade(a.detail.color.0, alpha),
-                },
+                &toast.message,
+                toast.intent,
+                alpha,
+                theme,
             );
         }
     }

@@ -30,7 +30,7 @@ use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, TypographyScale,
 };
 use super::{
     DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
@@ -133,6 +133,7 @@ impl TypographyScale {
             display: 36.0,
             line_height_ratio: 1.4,
             family: None,
+            mono_family: MONO_FAMILY,
             tracking_em: 0.0,
         }
     }
@@ -312,6 +313,9 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
             ..dark
         };
+        // Its own buttons, from its own palette: the dark theme's would
+        // put a pale call to action on the pale page.
+        theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }

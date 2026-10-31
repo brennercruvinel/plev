@@ -51,6 +51,28 @@ impl LineKind {
         }
     }
 
+    /// The sign a diff's row opens with and the code after it: `+` on a
+    /// line added, `-` on one removed, a space on context; none on a
+    /// header, or where the row opens with anything else.
+    pub fn marker(self, text: &str) -> Option<(&str, &str)> {
+        let sign = match self {
+            LineKind::Added => '+',
+            LineKind::Removed => '-',
+            LineKind::Context => ' ',
+            LineKind::Header => return None,
+        };
+        text.strip_prefix(sign)
+            .map(|rest| (&text[..sign.len_utf8()], rest))
+    }
+
+    /// The marker column's width: the widest of the three signs.
+    pub fn marker_w(style: &TextStyle) -> f32 {
+        ["+", "-", " "]
+            .iter()
+            .map(|s| TextMeasurer::measure_styled(s, style, None).0)
+            .fold(0.0, f32::max)
+    }
+
     /// The ink of a row's text: one tone for every kind, the one that
     /// reads at WCAG AA over every wash on the block (the code's own tone
     /// may not over a wash).
@@ -272,6 +294,12 @@ impl CodeBlock {
         let edge = theme.navigation.code.border_width;
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let scroll = self.scroll.clamp(0.0, self.max_scroll(bounds, theme));
+        let marker_w = LineKind::marker_w(&style);
+        // Only a diff's rows have markers: code with an indent is no diff.
+        let diff = self
+            .rows
+            .iter()
+            .any(|r| matches!(r.kind, LineKind::Added | LineKind::Removed));
         c.push_to_layer(
             layer,
             SceneNode::PushClip {
@@ -303,12 +331,23 @@ impl CodeBlock {
                     },
                 );
             }
-            let shown = TextMeasurer::truncate_to_width(&row.text, &style, inner);
+            // A diff's marker ends in a column as wide as the widest sign,
+            // the code after it at one x on every row: in a proportional
+            // face (a theme may name one as its mono family) a `+`, a `-`
+            // and a space would start the code at three x. The row stays
+            // one text, shifted by what its sign is narrower than the
+            // column; in the embedded mono face the shift is zero.
+            let lead = match row.kind.marker(&row.text).filter(|_| diff) {
+                Some((sign, _)) => marker_w - TextMeasurer::measure_styled(sign, &style, None).0,
+                None => 0.0,
+            };
+            let room = (inner - lead).max(0.0);
+            let shown = TextMeasurer::truncate_to_width(&row.text, &style, room);
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
                     key: TextNodeKey::from_style(&shown, &style, None),
-                    x: bounds.x + pad,
+                    x: bounds.x + pad + lead,
                     y,
                     color: row.kind.ink(theme),
                 },
@@ -432,7 +471,14 @@ mod tests {
             let drawn = nodes(&block, bounds, &theme);
             let r = &theme.navigation.code;
             let (added, removed) = (r.added.0, r.removed.0);
-            let rows: Vec<(String, f32, [f32; 4])> = texts(&drawn).into_iter().skip(1).collect();
+            // a row's runs (its marker, its code) joined by line
+            let mut rows: Vec<(String, f32, [f32; 4])> = Vec::new();
+            for (text, y, ink) in texts(&drawn).into_iter().skip(1) {
+                match rows.last_mut() {
+                    Some(last) if last.1 == y => last.0.push_str(&text),
+                    _ => rows.push((text, y, ink)),
+                }
+            }
             assert_eq!(rows.len(), 4, "{name}: every row shows");
             for (row, (text, _, ink)) in diff().iter().zip(&rows) {
                 assert_eq!(*text, row.text, "{name}");
@@ -583,14 +629,52 @@ mod tests {
             for width in [390.0, 1440.0] {
                 let block = CodeBlock::lines(vec![CodeLine::new(&long, LineKind::Added)]);
                 let bounds = Rect::new(0.0, 0.0, width, block.height_for(width, &theme));
-                let inner = width - theme.spacing.md * 2.0;
+                let inner = width - theme.navigation.code.pad * 2.0;
+                let style = CodeBlock::text_style(&theme);
                 for (text, _, _) in texts(&nodes(&block, bounds, &theme)) {
-                    let style = CodeBlock::text_style(&theme);
                     let (w, _) = TextMeasurer::measure_styled(&text, &style, None);
-                    assert!(w <= inner + 0.5, "{width}: {w} > {inner}");
+                    let lead = LineKind::marker_w(&style)
+                        - TextMeasurer::measure_styled("+", &style, None).0;
+                    assert!(lead + w <= inner + 0.5, "{width}: {w} > {inner}");
                     assert!(text.ends_with('\u{2026}') || text == long);
                 }
             }
         }
+    }
+
+    /// The code after a diff's marker starts at one x on every row, the
+    /// face being proportional: each row shifts by what its sign is
+    /// narrower than the marker column. Code with no diff row stays put.
+    #[test]
+    fn a_diff_s_code_starts_at_one_x_after_its_marker() {
+        let theme = Theme::hoff_core();
+        let style = CodeBlock::text_style(&theme);
+        let block = CodeBlock::lines(diff());
+        let bounds = Rect::new(0.0, 0.0, 420.0, block.height_for(420.0, &theme));
+        let drawn = nodes(&block, bounds, &theme);
+        let starts: Vec<f32> = drawn
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { key, x, .. } => {
+                    let (sign, _) = LineKind::ALL.iter().find_map(|k| {
+                        k.marker(&key.text)
+                            .filter(|_| *k != LineKind::Context || key.text.starts_with(' '))
+                    })?;
+                    Some(x + TextMeasurer::measure_styled(sign, &style, None).0)
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(starts.len(), 3, "{starts:?}");
+        assert!(
+            starts.windows(2).all(|w| (w[0] - w[1]).abs() < 0.01),
+            "{starts:?}"
+        );
+        let code = CodeBlock::lines(vec![CodeLine::new("    indented()", LineKind::Context)]);
+        let at = texts(&nodes(&code, bounds, &theme))[0].0.clone();
+        assert_eq!(at, "    indented()", "no diff, no marker");
+        assert_eq!(LineKind::Header.marker("src/lib.rs"), None);
+        assert_eq!(LineKind::Added.marker("+x"), Some(("+", "x")));
+        assert_eq!(LineKind::Added.marker("x"), None);
     }
 }

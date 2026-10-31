@@ -97,6 +97,8 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
                 Pane::Calendar => self.panes.calendar.content_height(content, t),
+                Pane::DatePicker => self.panes.date_picker.content_height(content, t),
+                Pane::Menus => self.panes.menus.content_height(content, t),
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
@@ -263,6 +265,8 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
                 Pane::Calendar => self.panes.calendar.handle_event(event, content, t),
+                Pane::DatePicker => self.panes.date_picker.handle_event(event, content, t),
+                Pane::Menus => self.panes.menus.handle_event(event, content, t),
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
@@ -556,6 +560,8 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
                 Pane::Calendar => self.panes.calendar.render(c, content, theme),
+                Pane::DatePicker => self.panes.date_picker.render(c, content, theme),
+                Pane::Menus => self.panes.menus.render(c, content, theme),
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),

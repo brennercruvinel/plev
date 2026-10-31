@@ -8,7 +8,7 @@ use super::super::backend::TextStyle;
 use super::super::fonts::{matched_weight, register_embedded_fonts};
 use super::super::measure::TextMeasurer;
 use super::super::probe::{Faces, shape_report};
-use crate::styling::theme::TypographyScale;
+use crate::styling::theme::{MONO_FAMILY, TypographyScale};
 
 const TEXT: &str = "Sphinx of black quartz";
 
@@ -40,6 +40,24 @@ fn a_bold_core_style_is_inter_semibold() {
     all_inter(&bold);
     // `=base-2b`, the ramp's bold, too.
     all_inter(&t.base_2b());
+}
+
+/// The code style draws in the embedded mono face on both face sets, one
+/// advance per character, its one weight standing in for every other.
+#[test]
+fn the_mono_style_is_jetbrains_mono_on_a_grid() {
+    let t = TypographyScale::hoff_core();
+    let mono = t.mono();
+    for faces in [Faces::Embedded, Faces::Desktop] {
+        let report = shape_report(TEXT, &mono, None, faces);
+        assert_eq!(report.families(), [MONO_FAMILY], "{faces:?}");
+        assert_eq!(report.notdef(), 0);
+    }
+    let w = |text: &str, style: &TextStyle| TextMeasurer::measure_styled(text, style, None).0;
+    assert!((w("iiii", &mono) - w("MMMM", &mono)).abs() < 0.01);
+    let bold = t.exact_mono(t.body_sm, mono.line_height, 700);
+    assert_eq!(w(TEXT, &bold), w(TEXT, &mono));
+    assert_eq!(matched_weight(&embedded(), Some(MONO_FAMILY), 700), 400);
 }
 
 #[test]

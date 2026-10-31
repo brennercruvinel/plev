@@ -121,7 +121,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Avatar",
         "circle",
-        "Initials in three sizes, with the online dot.",
+        "The kit's ladder, the online dot and the stack that counts the rest.",
         Pane::Avatar,
     ),
     page(
@@ -149,7 +149,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
     page(
@@ -205,7 +205,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Code Block",
         "code",
-        "Mono block with a caption.",
+        "Code on a well: wrapped, captioned, and a diff with its marker column.",
         Pane::CodeBlock,
     ),
     page(
@@ -243,7 +243,13 @@ pub const PAGES: &[Page] = &[
         "Virtualized rows; columns drop by priority when narrow.",
         Pane::Table,
     ),
-    placeholder("Date Picker"),
+    page(
+        C,
+        "Date Picker",
+        "calendar",
+        "A field that opens the calendar in a popover: the day chosen fills it, a range refuses the rest.",
+        Pane::DatePicker,
+    ),
     page(
         C,
         "Dialog",
@@ -358,6 +364,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Menus",
+        "folder",
+        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        Pane::Menus,
+    ),
+    page(
+        C,
         "Message",
         "send",
         "Comment rows of a thread and the quick comment, with the like chip.",
@@ -405,7 +418,13 @@ pub const PAGES: &[Page] = &[
         "Click the value; the panel answers its container.",
         Pane::Popover,
     ),
-    page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
+    page(
+        C,
+        "Progress",
+        "arrow-up",
+        "The kit's rail: its value, its intents, its narrowest.",
+        Pane::Progress,
+    ),
     placeholder("Questionnaire"),
     page(
         C,
@@ -460,7 +479,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Skeleton",
         "square",
-        "Disc, lines, block. Click to make them breathe.",
+        "The kit's scene card and the shapes it is made of. Click to make them breathe.",
         Pane::Skeleton,
     ),
     page(
@@ -516,7 +535,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Toast",
         "send",
-        "One button per intent; click to queue.",
+        "A toast at rest per intent; the buttons queue a live one.",
         Pane::Toast,
     ),
     page(

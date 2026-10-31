@@ -313,3 +313,28 @@ fn list_scrolls_inside_and_footer_stays_pinned() {
     assert!(!r.handled);
     assert!(l.filters.bottom() <= l.panel.y + l.panel.h);
 }
+
+/// From the narrow 360 window (its 328 content) to the wide one, every
+/// label of the seed shows on one line in its row, whole or cut with an
+/// ellipsis, never wrapped into the next row; the narrow one cuts.
+#[test]
+fn every_label_is_one_line_whole_or_cut() {
+    let s = TodoPage::new();
+    let style = item_style();
+    let mut cut = 0;
+    for w in [328.0, 600.0, 1272.0] {
+        let l = lay(&s, Rect::new(16.0, 118.0, w, 682.0));
+        for (i, item) in s.model.visible_items().iter().enumerate() {
+            let (_, lw) = label_span(row_rect(l.list, i, 0.0));
+            let shown = label_shown(item.text(), lw);
+            let (tw, th) = TextMeasurer::measure_styled(&shown, &style, None);
+            assert!(th <= style.line_height + 0.5, "{w}: {shown} wraps");
+            assert!(tw <= lw + 0.5, "{w}: {shown} overflows");
+            if shown != item.text() {
+                assert!(shown.ends_with('\u{2026}'), "{w}: {shown}");
+                cut += usize::from(w == 328.0);
+            }
+        }
+    }
+    assert!(cut > 0, "the narrow window cuts a long label");
+}
