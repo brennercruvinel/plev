@@ -283,7 +283,9 @@ impl Collapsible {
     }
 
     /// The label wraps in what the tile, the counter and the chevron
-    /// leave.
+    /// leave; a counter stands as far from the label as the chevron from
+    /// the counter (the kit's `ml-3`, Dropdown :59), so a long label
+    /// never runs into it.
     fn inner(&self, trigger: Rect, theme: &Theme) -> Inner {
         let r = self.recipe(theme);
         let [top, right, _, left] = r.pad;
@@ -294,7 +296,7 @@ impl Collapsible {
         let counter = self.counter_span(r, theme);
         let label_w = (w
             - tile.map_or(0.0, |(size, gap)| size + gap)
-            - counter.map_or(0.0, |(cw, _)| cw)
+            - counter.map_or(0.0, |(cw, _)| cw + r.chevron_gap)
             - r.chevron_gap
             - r.chevron_box)
             .max(0.0);
