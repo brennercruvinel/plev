@@ -187,6 +187,7 @@ components! {
     Graph => graph,
     Stat => stat,
     Toolbar => toolbar,
+    Sidebar => sidebar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

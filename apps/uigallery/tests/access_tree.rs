@@ -90,6 +90,7 @@ const PROJECTING: &[&str] = &[
     "Scroll Area",
     "Select",
     "Sheet",
+    "Sidebar",
     "Skeleton",
     "Slider",
     "Spinner",
@@ -149,10 +150,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
-    (
-        "Sidebar",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
     (
         "Dock",
         Unprojected("the dock is drawn by hand: its contacts and a field, over a stage of bubbles"),

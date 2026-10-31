@@ -20,9 +20,11 @@ use crate::widgets::content::DisclosureTile;
 
 mod data;
 mod plot;
+mod sidebars;
 mod tool;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
+pub use sidebars::SidebarsRecipe;
 pub use tool::{
     PlayerRecipe, PlayerTones, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
 };
@@ -181,6 +183,8 @@ pub struct NavigationTokens {
     /// The ToolbarPage's parts: toolbar, zoom panel, player, view
     /// controller.
     pub tool: ToolTokens,
+    /// The SidebarPage's four sidebars: their shell and parts.
+    pub sidebars: SidebarsRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -288,6 +292,7 @@ impl NavigationTokens {
             chart: ChartRecipe::hoff_core(),
             graph: GraphRecipe::hoff_core(),
             tool: ToolTokens::hoff_core(),
+            sidebars: SidebarsRecipe::hoff_core(),
         }
     }
 
@@ -323,6 +328,7 @@ impl NavigationTokens {
             chart: ChartRecipe::derive(theme),
             graph: GraphRecipe::derive(theme),
             tool: ToolTokens::derive(theme),
+            sidebars: SidebarsRecipe::derive(theme),
         }
     }
 

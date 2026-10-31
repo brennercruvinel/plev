@@ -472,7 +472,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Sidebar",
         "layout-grid",
-        "The sidebar widget embedded in the page: brand, grouped links, footer.",
+        "The kit's sidebar page: the home sidebar with its dropdowns and folders, the guideline sidebar.",
         Pane::Sidebar,
     ),
     page(

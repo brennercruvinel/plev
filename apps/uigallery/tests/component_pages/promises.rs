@@ -36,8 +36,8 @@ const PROJECTING: usize = 31
     // Header
     + 7
     // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat,
-    // and in wave 3 Toolbar
-    + 5;
+    // and in wave 3 Toolbar and Sidebar
+    + 6;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its
