@@ -256,3 +256,32 @@ fn a_day_out_of_reach_moves_for_no_one() {
         assert!(!gallery("Calendar").offers(id, Action::Click), "{id}");
     }
 }
+
+/// The Tabs page's strips, beyond the first (`keyboard.rs` walks it): a
+/// tab of each, the window scrolled to it.
+const TABS: [&str; 3] = [
+    "tabs_page.strip[0-1][0]",
+    "tabs_page.strip[1-0][2]",
+    "tabs_page.strip[1-1][2]",
+];
+
+/// A tab is chosen the same from the person's click, the reader's press
+/// and the agent's `select`, and its strip names it.
+#[test]
+fn a_tab_is_chosen_the_same_from_the_three() {
+    for id in TABS {
+        let mut person = seeing_on("Tabs", id);
+        person.click(id);
+        let mut reader = gallery("Tabs");
+        reader.press(id);
+        let agent = by_agent("Tabs", "selection_tab", vec![ask(id, "select")]);
+        same("Tabs", &person, &reader, &agent);
+        let strip = &id[..id.rfind('[').unwrap()];
+        let key = &id[id.rfind('[').unwrap() + 1..id.len() - 1];
+        let selected = person
+            .view
+            .semantics()
+            .and_then(|s| s.get(&sid(strip))?.state.get("selected").cloned());
+        assert_eq!(selected, Some(Value::Text(key.into())), "{id}");
+    }
+}

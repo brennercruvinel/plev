@@ -141,6 +141,23 @@ impl Tabs {
         g
     }
 
+    /// The strip's own size: the segmented control's, every label whole
+    /// in an equal segment with its padding.
+    pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        self.segmented().preferred_size(theme)
+    }
+
+    /// The narrowest strip that still shows every label as an ellipsis.
+    pub fn min_width(&self, theme: &Theme) -> f32 {
+        self.segmented().min_width(theme)
+    }
+
+    /// The label of tab `index` as its segment `segment` shows it: whole,
+    /// or cut with an ellipsis.
+    pub fn shown_label(&self, index: usize, segment: Rect, theme: &Theme) -> String {
+        self.segmented().shown_label(index, segment, theme)
+    }
+
     /// Hit rects for each tab within `bounds`: the segmented control's
     /// equal segments inside its well.
     pub fn item_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
