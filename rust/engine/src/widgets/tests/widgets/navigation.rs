@@ -308,3 +308,71 @@ fn breadcrumb_at_its_preferred_width_draws_every_crumb_whole() {
         }
     }
 }
+
+// Stat
+
+/// The kit's derivation is the pricing card's price for the large stat;
+/// derived, the ramp of before.
+#[test]
+fn stat_recipe_is_the_price_in_core_and_the_old_ramp_elsewhere() {
+    let kit = core().navigation.stat;
+    assert_eq!(
+        (
+            kit.lg.value.size,
+            kit.lg.value.line_height,
+            kit.lg.value.weight
+        ),
+        (40.0, 48.0, 400)
+    );
+    assert_eq!(kit.lg.value.tracking_em, Some(-0.03));
+    let t = hoff();
+    let s = Stat::new("1.3", "GB").size(StatSize::Lg);
+    assert_eq!(s.value_style(&t), t.typography.headline());
+    assert_eq!(s.label_style(&t), t.typography.base_2r());
+    let tracked = Stat::new("1.3", "GB")
+        .size(StatSize::Lg)
+        .value_style(&core());
+    assert_eq!(tracked.letter_spacing, -0.03 * 40.0);
+}
+
+/// Narrower than its value row and delta, the delta wraps under the
+/// value and the stat grows by a row; a long label truncates to the
+/// bounds.
+#[test]
+fn stat_delta_wraps_and_label_truncates_when_narrow() {
+    let t = core();
+    let s = Stat::new("1,3", "armazenamento usado no disco do servidor")
+        .unit("TB")
+        .size(StatSize::Lg)
+        .delta("+12% desde ontem", Intent::Constructive);
+    let (w, h) = s.preferred_size(&t);
+    assert!(!s.delta_wraps(w, &t));
+    let narrow = s.min_width(&t);
+    assert!(narrow < w);
+    assert!(s.delta_wraps(narrow, &t));
+    assert!(s.height_at(narrow, &t) > h);
+    let drawn = texts(&nodes(|c| {
+        s.render(c, Rect::new(0.0, 0.0, narrow, 200.0), &t)
+    }));
+    let label = &drawn.last().expect("the label is drawn").0;
+    assert!(label.ends_with('\u{2026}'), "{label}");
+}
+
+/// The readout projects as a label: its value with the unit as the
+/// value, its delta as the description, no action.
+#[test]
+fn stat_projects_a_label_with_its_value() {
+    use accord::{SemId, SnapshotBuilder, Value};
+    let id = SemId::parse("disk").unwrap();
+    let s = Stat::new("1.3", "on disk")
+        .unit("GB")
+        .delta("+12%", Intent::Constructive);
+    let mut b = SnapshotBuilder::new();
+    s.project(&mut b, &id, None);
+    let snap = b.finish().unwrap();
+    let node = snap.get(&id).unwrap();
+    assert_eq!(node.label, "on disk");
+    assert_eq!(node.state.get("value"), Some(&Value::Text("1.3 GB".into())));
+    assert_eq!(node.description.as_deref(), Some("+12%"));
+    assert!(node.actions.is_empty());
+}

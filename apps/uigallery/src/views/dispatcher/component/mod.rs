@@ -136,6 +136,8 @@ components! {
     Accordion => accordion,
     // task-104 front E, selection and dates (#158)
     Toggle => toggle,
+    // task-104 front G, navigation and data
+    Stat => stat,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

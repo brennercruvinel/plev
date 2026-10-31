@@ -63,6 +63,7 @@ const PROJECTING: &[&str] = &[
     "Select",
     "Slider",
     "Spinner",
+    "Stat",
     "Switch",
     "Table",
     "Tabs",
@@ -184,10 +185,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Skeleton",
         Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
-    ),
-    (
-        "Stat",
-        Unprojected("Stat: a label with its value, unit and delta"),
     ),
     ("Textarea", PLACEHOLDER),
     (

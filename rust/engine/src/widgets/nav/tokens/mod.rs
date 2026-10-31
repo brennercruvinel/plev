@@ -18,13 +18,17 @@ use crate::styling::theme::tokens::TypographyScale;
 use crate::styling::theme::{ControlSize, IconSize, Theme};
 use crate::widgets::content::DisclosureTile;
 
-/// A text run: size, line height and weight in px, in the theme's family
-/// and tracking.
+mod data;
+pub use data::{StatLevel, StatRecipe};
+
+/// A text run: size, line height and weight in px, in the theme's family;
+/// tracked as the theme tracks unless the run names its own (in em).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NavText {
     pub size: f32,
     pub line_height: f32,
     pub weight: u16,
+    pub tracking_em: Option<f32>,
 }
 
 impl NavText {
@@ -33,16 +37,29 @@ impl NavText {
             size,
             line_height,
             weight,
+            tracking_em: None,
+        }
+    }
+
+    /// The run with its own tracking (the kit's `tracking-[-0.03em]`).
+    pub const fn tracked(self, em: f32) -> Self {
+        Self {
+            tracking_em: Some(em),
+            ..self
         }
     }
 
     /// The one style the run is measured and drawn with.
     pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        typography.exact(self.size, self.line_height, self.weight)
+        let style = typography.exact(self.size, self.line_height, self.weight);
+        match self.tracking_em {
+            Some(em) => style.with_letter_spacing(em * self.size),
+            None => style,
+        }
     }
 
     /// The run of a style the theme already names (what a derived theme
-    /// drew with before).
+    /// drew with before), at the theme's tracking.
     pub fn of(style: &TextStyle) -> Self {
         Self::new(style.font_size, style.line_height, style.font_weight)
     }
@@ -137,6 +154,7 @@ pub struct NavigationTokens {
     /// The link as the sidebar draws it: the look of before in every
     /// theme until the sidebar moves to the kit.
     pub sidebar_link: NavLinkRecipe,
+    pub stat: StatRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -238,6 +256,7 @@ impl NavigationTokens {
             breadcrumb,
             link,
             sidebar_link: link,
+            stat: StatRecipe::hoff_core(),
         }
     }
 
@@ -268,6 +287,7 @@ impl NavigationTokens {
             breadcrumb,
             link,
             sidebar_link: link,
+            stat: StatRecipe::derive(theme),
         }
     }
 
