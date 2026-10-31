@@ -24,7 +24,9 @@ fn with_alpha(c: [f32; 4], a: f32) -> [f32; 4] {
     [c[0], c[1], c[2], c[3] * a]
 }
 
-/// A label centered on `at` (screen px), measured with the style it is drawn with.
+/// A label centered on `at` (screen px), in the theme's family and
+/// tracking at the engine's default line height for `size`, measured with
+/// the style it is drawn with.
 fn centered_text(
     c: &mut Compositor,
     layer: LayerId,
@@ -32,11 +34,13 @@ fn centered_text(
     size: f32,
     at: (f32, f32),
     color: [f32; 4],
+    theme: &Theme,
 ) {
     if text.is_empty() || size < 1.0 {
         return;
     }
-    let style = TextStyle::new(size);
+    let line = TextStyle::new(size).line_height;
+    let style = theme.typography.exact(size, line, 400);
     let (w, h) = TextMeasurer::measure_styled(text, &style, None);
     let key = TextNodeKey::from_style(text, &style, None);
     c.push_to_layer(
@@ -139,6 +143,7 @@ impl LiveGraph {
                 self.look.group_font * s,
                 at,
                 Tone::TextMid.color(theme),
+                theme,
             );
             if rebuild {
                 self.grid.push_box([x, y, w, h], Hit::Group(g));
@@ -202,6 +207,7 @@ impl LiveGraph {
                 self.look.node_font * s,
                 at,
                 Tone::Text.color(theme),
+                theme,
             );
         }
         c.push_to_layer(base, SceneNode::PopClip);
