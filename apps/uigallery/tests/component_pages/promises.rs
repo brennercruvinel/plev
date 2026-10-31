@@ -28,7 +28,9 @@ const PROJECTING: usize = 30
     // task-104 front D, disclosure and display (#157): Accordion,
     // Collapsible, Aspect Ratio, Carousel, Pagination (Item, Kbd and Table
     // projected before, through the pages they borrowed)
-    + 5;
+    + 5
+    // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat
+    + 4;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

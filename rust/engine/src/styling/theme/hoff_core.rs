@@ -11,7 +11,10 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
+};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -186,7 +189,7 @@ impl Theme {
             full: 9999.0,
         };
         let control = ControlTokens::hoff_core();
-        Self {
+        let mut theme = Self {
             glass: GlassTokens {
                 surface: paper,
                 surface_hover: shade2,
@@ -222,6 +225,7 @@ impl Theme {
             message: MessageTokens::hoff_core(),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {
@@ -262,6 +266,10 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff_core(),
-        }
+        };
+        // The sidebar keeps its look of before until it moves to the kit
+        // (task-104 front G, step 4); that look reads the finished theme.
+        theme.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(&theme);
+        theme
     }
 }

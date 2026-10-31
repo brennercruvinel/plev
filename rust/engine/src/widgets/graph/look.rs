@@ -2,7 +2,8 @@
 //! edge, in the [`Graph`]'s order, and the label sizes. A look is computed
 //! from the data once ([`Look::of`]): a palette by a node's `kind`, a width
 //! by an edge's `weight`, a head on a directed edge. Colors are theme roles
-//! ([`Tone`]), resolved when the graph draws, so a graph follows the theme.
+//! ([`Tone`]), resolved when the graph draws from the theme's graph
+//! recipe (`navigation.graph`), so a graph follows the theme.
 
 use super::model::{Edge, Graph, Node};
 use crate::styling::theme::Theme;
@@ -22,17 +23,18 @@ pub enum Tone {
 }
 
 impl Tone {
+    /// The tone in `theme`, from its graph recipe (`navigation.graph`).
     pub fn color(self, theme: &Theme) -> [f32; 4] {
-        let c = &theme.colors;
+        let g = &theme.navigation.graph;
         match self {
-            Tone::Accent => c.accent.0,
-            Tone::Text => c.text.0,
-            Tone::TextMid => c.text_mid.0,
-            Tone::TextDim => c.text_dim.0,
-            Tone::BorderActive => c.border_active.0,
-            Tone::Divider => c.divider.0,
-            Tone::Fill => c.bg_hover.0,
-            Tone::Panel => c.bg_panel.0,
+            Tone::Accent => g.accent.0,
+            Tone::Text => g.text.0,
+            Tone::TextMid => g.text_mid.0,
+            Tone::TextDim => g.text_dim.0,
+            Tone::BorderActive => g.border_active.0,
+            Tone::Divider => g.divider.0,
+            Tone::Fill => g.fill.0,
+            Tone::Panel => g.panel.0,
         }
     }
 }
