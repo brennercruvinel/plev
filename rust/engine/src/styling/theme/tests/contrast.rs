@@ -423,6 +423,25 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             fill,
         );
     }
+    // the avatar on a card: the initial on the disc that stands in for a
+    // photo, and the online dot on its paper ring.
+    let av = &t.message.avatar;
+    let disc = over(av.fill, card);
+    add(
+        "message.avatar.initial",
+        "message.avatar.fill",
+        TEXT,
+        over(av.initial, disc),
+        disc,
+    );
+    let ring = over(av.ring, card);
+    add(
+        "message.avatar.online_fill",
+        "message.avatar.ring",
+        LARGE,
+        over(av.online_fill, ring),
+        ring,
+    );
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
     // core the kit's #7B7B7B hint and group label fail AA; they take
@@ -893,7 +912,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 645,
+        count, 653,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

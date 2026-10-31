@@ -117,7 +117,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Avatar",
         "circle",
-        "Initials in three sizes, with the online dot.",
+        "The kit's ladder, the online dot and the stack that counts the rest.",
         Pane::Avatar,
     ),
     page(

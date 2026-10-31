@@ -1,5 +1,7 @@
-//! Indeterminate spinner: a 270° arc rotating at a fixed angular speed,
-//! sized by the theme's small icon scale. The owner drives it with
+//! Indeterminate spinner. The hoff core kit draws none; it is derived
+//! from the kit's progress rail (`theme.message.spinner`): the rail wound
+//! into a ring, its track all around and an arc in the rail's head color
+//! turning over it at a fixed pace, sized by the theme's icon scale. The owner drives it with
 //! `tick(dt)` and only while it is visible — under render-on-demand a
 //! spinner that ticks off-screen would busy-loop every frame (the same
 //! rule the dock caret follows in the showcase).
@@ -15,12 +17,11 @@ use crate::drawing::compositor::Compositor;
 use crate::drawing::path::PathBuilder;
 use crate::styling::theme::{IconSize, Theme};
 
+use crate::widgets::recipe::rounded_rect_stroke;
 use crate::widgets::widget::Rect;
 
-/// Full turns per second.
+/// Full turns per second: the pace, behavior apart from the look.
 const SPEED: f32 = 0.9;
-/// Arc sweep (270°).
-const SWEEP: f32 = TAU * 0.75;
 /// Arc segments (smooth enough at the largest size).
 const SEGMENTS: usize = 24;
 
@@ -87,21 +88,29 @@ impl Spinner {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let t = &theme.message.spinner;
         let px = self.size.px(theme).min(bounds.w).min(bounds.h);
-        let stroke = theme.control.spinner_stroke;
+        let stroke = t.stroke;
         if px < stroke * 2.0 {
             return;
         }
         let (cx, cy) = bounds.center();
         let r = (px - stroke) / 2.0;
-
-        // Arc polyline from `angle` over SWEEP; round caps read as a
-        // rotating comma. Color: the quiet text token (spinners are
-        // chrome, not data).
-        let color = theme.colors.text_mid.0;
+        // the track: the whole ring
+        compositor.push(rounded_rect_stroke(
+            cx - px / 2.0,
+            cy - px / 2.0,
+            px,
+            px,
+            px / 2.0,
+            t.track.0,
+            stroke,
+        ));
+        // the arc from `angle` over its share; round caps
+        let sweep = TAU * t.sweep;
         let mut b = PathBuilder::new();
         for i in 0..=SEGMENTS {
-            let a = self.angle + SWEEP * (i as f32 / SEGMENTS as f32);
+            let a = self.angle + sweep * (i as f32 / SEGMENTS as f32);
             let (x, y) = (cx + r * a.cos(), cy + r * a.sin());
             b = if i == 0 {
                 b.move_to(x, y)
@@ -109,7 +118,7 @@ impl Spinner {
                 b.line_to(x, y)
             };
         }
-        compositor.draw_path(b.end_open().stroke_round(color, stroke));
+        compositor.draw_path(b.end_open().stroke_round(t.arc.0, stroke));
     }
 }
 

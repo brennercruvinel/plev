@@ -43,6 +43,7 @@ const PROJECTING: &[&str] = &[
     "Alert Dialog",
     "Aspect Ratio",
     "Attachment",
+    "Avatar",
     "Badge",
     "Breadcrumb",
     "Bubble",
@@ -129,10 +130,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
-    ),
-    (
-        "Avatar",
-        Unprojected("Avatar: an image named by the person, online or not"),
     ),
     (
         "Card",

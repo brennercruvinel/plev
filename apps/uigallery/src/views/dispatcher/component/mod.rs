@@ -149,6 +149,7 @@ components! {
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
+    Avatar => avatar,
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,

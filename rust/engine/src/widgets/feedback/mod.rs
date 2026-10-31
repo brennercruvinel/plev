@@ -13,7 +13,7 @@ pub mod alert;
 
 pub use context_menu::{ContextMenu, MenuEntry};
 pub use modal::{Modal, ModalAction};
-pub use progress::ProgressBar;
+pub use progress::{ProgressBar, ProgressLayout};
 pub use scrollbar::Scrollbar;
 pub use spinner::{Spinner, SpinnerSize};
 pub use toast::{Toast, ToastManager};

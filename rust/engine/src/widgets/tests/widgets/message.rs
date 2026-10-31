@@ -1740,3 +1740,9 @@ fn a_like_is_red_with_a_heart_and_informs() {
     let seen = b.finish().expect("the projection validates");
     assert_eq!(seen.get(&id).unwrap().role, Role::Status, "not an alert");
 }
+
+/// The avatar's ladder, its disc without a photo and the kit's stack.
+mod avatar;
+
+/// The loading pieces: the skeleton, the progress rail, the spinner.
+mod loading;
