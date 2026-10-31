@@ -425,12 +425,12 @@ pub const PAGES: &[Page] = &[
         "One button per intent; click to queue.",
         Pane::Toast,
     ),
-    alias(
+    page(
+        C,
         "Toggle",
         "check",
-        "The interactive chip toggles on click.",
-        Pane::Chip,
-        "a toggle widget of its own",
+        "The hoff core toolbar action as a toggle: icon, label, icon and label; one card per state.",
+        Pane::Toggle,
     ),
     alias(
         "Toggle Group",
