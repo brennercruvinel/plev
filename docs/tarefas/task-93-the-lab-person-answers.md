@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [experiment]
-relations: [task-88, task-92]
+topics: [agentes, gravacao, pesquisa]
+relations: [task-62, task-88, task-92]
+evidence: [654d740, 2059ec3, f529f4d, 6bb75f2, 7dcf925, 363d6dd]
 source: docs/log/steps/task-93-the-lab-person-answers.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-93: a pessoa do laboratório responde
+
+Dá ao laboratório (`ide-lab`) uma pessoa roteirizada que responde a toda confirmação que um agente pede: permite, recusa ou não responde, depois de um atraso medido. Assim o experimento com LLM pode medir se o agente pergunta antes de passar por cima ou de parar. A sonda mostrou que o `LabHost` enxerga o request esperando sem mudar o `workbench`; nas corridas, `allow` commita os três arquivos, `decline` não commita, e sem resposta o agente espera o timeout. Integrada na `main` em `654d740`, com o gate verde (2411 testes passando).
 
 ## por que
 

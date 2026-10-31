@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-57, task-58, task-59]
+topics: [acessibilidade, semantica]
+relations: [task-57, task-58, task-59, task-61, task-62, task-66, task-73, task-74, task-75, tese-runtime, adr-0026, adr-0038]
 evidence: [3ba5b04]
 source: docs/log/steps/task-60-accessibility-projection.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-60: accessibility como projeção do contrato
+
+Tira a árvore de accessibility da geometria dos hit regions e a deriva do mesmo `Snapshot` que agente e teste usam, com os bounds das ligações da task-59. A ação do leitor de tela entra no `Dispatcher` como `Actor::Assistive`, o foco segue a ordem semântica, e o caminho antigo, derivado de hit region, sai por inteiro. Integrada em `3ba5b04` (oito commits), com gate verde num diretório isolado (1834 testes) e o todo do showcase como primeira página com árvore; o teste com VoiceOver segue pendente com o Brenner, porque a máquina estava na tela de login. Importa porque a estrutura que explica a interface a um agente passa a explicá-la também a uma tecnologia assistiva, e ide e urnaui ainda não expõem árvore.
 
 ## objetivo
 

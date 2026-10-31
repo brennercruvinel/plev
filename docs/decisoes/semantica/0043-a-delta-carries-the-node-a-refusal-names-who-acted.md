@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [sem, wire, rec, ide, protocol, delta, stale, receipts, dispatcher, agents, generative-runtime]
-relations: []
+topics: [semantica, agentes, gravacao]
+relations: [adr-0040, task-57b, task-62, task-83, task-86, task-89, task-90, task-91]
 source: docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a delta carries the node it adds, and a stale refusal names who acted
+
+Decide que um `node_added` em um delta carrega o nó inteiro, e que uma recusa `stale` diz, em `acted`, quem executou ações sobre o estado que o agente viu. A origem está no checkpoint a da task-62, em que dois agentes operaram a ide só pelo contrato e apontaram três lacunas. A revisão continua sem decidir nada: `check` compara as leituras, e `acted` só lê revisões para nomear quem esteve lá. O protocolo segue na versão 1.
 
 ## context
 

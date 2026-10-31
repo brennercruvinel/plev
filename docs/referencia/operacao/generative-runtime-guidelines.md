@@ -6,12 +6,12 @@ type: manual
 status: ativo
 date: 2026-09-29
 date_basis: cabecalho
-topics: [orchestration, agents, contracts, ownership, commits, handoff, validation]
-relations: []
+topics: [agentes, processo, git, workspace]
+relations: [indice-historico, manual-autonomy, manual-build-and-serve-the-web-target, manual-code-against-the-plev-engine, manual-orchestrate-coding-agents-on-this-repo, manual-validate-visuals-by-pixel, programa-runtime, task-57]
 source: docs/ref/generative-runtime-guidelines.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # diretrizes do orquestrador e dos agentes
@@ -443,7 +443,7 @@ dois pontos foram resolvidos na onda 0 (2026-09-23):
 2. mensagem de commit. as convenções proíbem prefixo estilo
    conventional-commits. o identificador do goal não é esse prefixo:
    `task-57: SemId com forma canônica e parse` está certo;
-   `feat(sem): ...` está errado. o corpo explica o porquê.
+   `feat(accord): ...` está errado. o corpo explica o porquê.
 
 ## os manuais
 
@@ -469,14 +469,12 @@ close-out.
 - o agente nunca faz merge, rebase de outra branch sobre a dele fora do
   combinado, push, nem mexe em outro worktree.
 
-## arquivo da task
+## página da task
 
-- a task existe em `docs/log/steps/` antes de qualquer código.
-- quando o agente começa, o orquestrador move o arquivo para `ongoing/`.
-- ao integrar, o orquestrador move para `checked/` como `task-NN-done.md`,
-  com o estado final escrito (o que foi feito, o que ficou de fora, links
-  para ADR e commits).
-- decisão técnica relevante vira ADR em `docs/adr/` (índice em
+- a task tem página em `docs/tarefas/` antes de qualquer código.
+- ao integrar, a página da task recebe o estado final escrito (o que foi
+  feito, o que ficou de fora, links para ADR e commits).
+- decisão técnica relevante vira ADR em `docs/decisoes/<tema>/` (índice em
   [`indice-historico.md`](../../historia/indice-historico.md)) no mesmo change set da integração.
 - estrutura, crate ou contrato novo atualiza `docs/ATLAS.toml` e o
   `README.md`; o `tool/tests/test_repoaudit.rs` falha o build se um

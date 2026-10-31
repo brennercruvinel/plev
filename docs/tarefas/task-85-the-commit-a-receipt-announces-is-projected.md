@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [ide]
-relations: [task-84]
+topics: [git, semantica, desempenho]
+relations: [task-62, task-83, task-84, adr-0036]
 evidence: [476bbb4]
 source: docs/log/steps/task-85-the-commit-a-receipt-announces-is-projected.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-85: o commit que o receipt anuncia já está na projeção, com os arquivos
+
+Faz o nó `stacks.commit[<sha>]` expor os arquivos que o commit muda, e faz a view mostrar o commit no mesmo passo em que o receipt do `submit` conclui, para que a observação seguinte não contradiga o receipt. Os arquivos de um commit passam a ter uma definição só (o diff de árvores contra o primeiro pai), e `files` vai só nos dez commits mais recentes do stack e no último que o ide fez, porque com `files` em todo commit a observação inteira deste repositório saía três vezes maior. Integrada na `main` em `476bbb4`, com o gate verde (2096 testes) e o laboratório roteirizado confirmando o próprio commit pelo `files` do nó.
 
 ## por que
 

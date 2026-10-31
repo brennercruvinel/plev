@@ -6,12 +6,12 @@ type: manual
 status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [orchestration, autonomy, loop, status]
-relations: []
+topics: [agentes, processo, git]
+relations: [aprendizado-general, diario, estado-codigo-2026-09, manual-generative-runtime-guidelines, manual-orchestrate-coding-agents-on-this-repo, programa-runtime, task-75, task-96, task-97, tese-runtime]
 source: docs/ref/autonomy.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # modo de operação: orquestrador autônomo
@@ -40,7 +40,7 @@ o agente sondar primeiro, parando se o resultado for outro.
    de planejar com ela.
 2. **choose.** fechar antes de abrir (regra de 2026-09-25, abaixo em
    "contra gasto de tokens"): o próximo trabalho sai da lista de tasks
-   abertas (`status: in-progress` em `docs/log/steps/`), a mais perto do próprio critério de
+   abertas (`status: pendente` ou `em-andamento` em `docs/tarefas/`), a mais perto do próprio critério de
    aceite, nunca a fase seguinte da task que acabou de integrar só porque
    ela está à mão. dentro disso, maior ganho para a missão, respeitando
    dependências, nesta ordem: invariantes quebradas; bugs achados por validação real; contratos
@@ -151,7 +151,7 @@ de 500 a 660 mil tokens. as regras:
 
 1. **uma task fecha pelo critério de aceite do arquivo dela.** antes de
    cada briefing o orquestrador confere a seção "critérios de aceitação"
-   item por item. bateu, a task passa a `status: done` e não abre fase.
+   item por item. bateu, a task passa a `status: concluido` e não abre fase.
 2. **todo briefing diz qual critério de aceite ele fecha.** fase que não
    fecha nenhum item do critério não tem briefing.
 3. **o que sobra de uma entrega vira pendência, não fase.** vai para a

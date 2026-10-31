@@ -3,19 +3,21 @@ id: task-67
 title: "task-67: regressão estrutural antes de pixel"
 project: plev
 type: tarefa
-status: em-andamento
+status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-59, task-66]
-evidence: [49e2822]
+topics: [semantica, determinismo, renderizacao, desempenho]
+relations: [adr-0045, manual-validate-visuals-by-pixel, task-57, task-59, task-64, task-66, task-77, task-82, task-85, task-86, task-87]
+evidence: [49e2822, 9862f55, 8a5c89f, f824a95, 89e10c0, 92297e6, 7a75708, fc4d637, d3f146e, ca41424, a595c7f]
 source: docs/log/steps/task-67-structural-regression.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-67: regressão estrutural antes de pixel
+
+Registra a regressão estrutural que pergunta primeiro se o significado de uma página mudou, depois se o desenho mudou (hash estável por layer), e só então compara pixels, dentro da região da layer alterada. Com 157 baselines commitadas, `regress check` sem mudança termina sem abrir GPU, e uma mudança de label ou de token sai nomeada por controle, com a região. A task foi integrada na `main` em `49e2822`, com o gate verde (2160 testes passados), e o ADR 0045 passou de proposto a aceito.
 
 ## objetivo
 

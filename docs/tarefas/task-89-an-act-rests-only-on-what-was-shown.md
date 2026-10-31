@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [agent-surface]
-relations: [task-61, task-87]
+topics: [agentes, semantica]
+relations: [adr-0039, adr-0047, task-61, task-86, task-87, task-90, task-91]
+evidence: [4d94364, 69b3191, 114151d, ea6176d, a125a06, 79b8c93]
 source: docs/log/steps/task-89-an-act-rests-only-on-what-was-shown.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-89: um ato se apoia só no que foi mostrado ao agente
+
+Faz um ato com `from_revision` se apoiar só no que foi mostrado ao ator que o pediu, e não no snapshot inteiro da revisão. Um inspector de sessão achou o furo na sessão do A2 da primeira rodada: o `submit` se apoiou numa observação com escopo, e o `changes:staged` que o agente "observou" nunca tinha sido servido. A regra nova lê cada `read` na última observação do ator que o mostrou e recusa com `not_observed`, antes do dispatch, o que ele nunca viu; é a garantia que o ADR 0039 já escrevia e o código não cumpria, agora no ADR 0047. Integrada na `main` em `79b8c93`; o laboratório roteirizado saiu com exit 0 e MATCH nas dez corridas, com e sem a pessoa.
 
 ## por que
 
@@ -228,7 +231,7 @@ são as mensagens da task-87 (12 e 17).
 - o custo por ato (voltar no histórico por `read`) não foi medido; é
   limitado por `cap` revisões por `read`.
 
-### linha de ADR proposta (docs/adr/README.md)
+### linha de ADR proposta ([índice histórico](../historia/indice-historico.md))
 
 ```text
 | 2026-09-23 | [an-act-rests-on-what-its-actor-was-shown](an-act-rests-on-what-its-actor-was-shown.md) | accepted | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão: dois processos com o mesmo nome são um ator): a revisão tem que ter sido dada a ele, a ação vem dela, e o valor de cada `read` vem da última observação até ela que o mostrou (escopo e `keys`; um delta mostra só o que traz; a revisão de um estágio não mostra estado); um `read` nunca mostrado é recusado antes do dispatch com `not_observed {reads}` (aditivo no v1, `plev` sai 3); `observed` explícito continua sendo a afirmação do agente; limitado como o anel (16 revisões por ator, 16 atores); corrige a promessa do anel no ADR do agent port, furo achado pelo inspector na sessão do A2 (task-89) |

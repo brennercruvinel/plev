@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [ide]
-relations: [task-62]
+topics: [git, semantica]
+relations: [task-62, task-83, task-85, adr-0036, estado-codigo-2026-09]
 evidence: [4896451]
 source: docs/log/steps/task-84-ide-refresh-never-goes-back.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-84: um refresh velho não desfaz o que o ide já aceitou
+
+Impede que um `Refresh` que responde a uma mutação anterior devolva um status mais velho que o que o ide já aceitou. A sessão do `GitSession` conta as leituras devidas e descarta a resposta de uma leitura pedida antes de uma mutação que a view já mostra. Quatro testes em repositório real reproduziam a corrida e falhavam na base; com a correção, os catorze testes de `human_agent` passam em 20 rodadas seguidas. Integrada na `main` em `4896451`; o receipt do commit, que conclui antes de a projeção mostrar o commit, ficou para a task-85.
 
 ## por que
 

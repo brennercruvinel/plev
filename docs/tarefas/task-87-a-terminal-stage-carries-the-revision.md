@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [agent-surface]
-relations: [task-61, task-83]
-evidence: [365d8fd]
+topics: [agentes, semantica, desempenho]
+relations: [adr-0039, adr-0044, task-61, task-83, task-84, task-85, task-88]
+evidence: [1cfb982, 06b35ed, 0c01560, 5fc730b, 365d8fd]
 source: docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-87: um estágio terminal traz a revisão em que o app ficou
+
+Faz o estágio terminal de um ato (`completed`, `rejected` ou `failed`) trazer `revision`, a revisão em que o app ficou quando o estágio saiu, para que o agente encadeie o ato seguinte sem uma observação só para saber a revisão. O campo é aditivo no protocolo v1 e fica no mesmo anel que o `observe` serve. No laboratório roteirizado, o cliente passou de 16 para 12 mensagens sem intervenção e de 24 para 17 quando a pessoa agiu; a projeção custa mediana de 158 µs no cenário none (172 µs no unstage), em debug. Integrada na `main` em `365d8fd`.
 
 ## por que
 

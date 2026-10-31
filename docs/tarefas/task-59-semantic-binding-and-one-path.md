@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-57, task-58]
-evidence: [f71dc20]
+topics: [semantica, renderizacao, design-system]
+relations: [task-57, task-58, adr-0035, tese-runtime, programa-runtime, manual-code-against-the-plev-engine, task-60, task-61, task-62, task-63, task-65, task-66, task-68, task-81]
+evidence: [f71dc20, f5b7cee]
 source: docs/log/steps/task-59-semantic-binding-and-one-path.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-59: ligação semântica com o render e um caminho operacional
+
+Liga, a cada frame, a identidade lógica `SemId` ao `ViewId` de render, quando existe, e à posição atual na cena (rect, layer e clip), sem levar semântica para as primitivas de GPU; e faz o clique humano chegar à capacidade pelo mesmo `Dispatcher` que agente, accessibility e teste usam. A fase a, integrada em `f71dc20`, põe a tabela de ligação no compositor e o todo do showcase no dispatcher; a fase b, em `f5b7cee`, leva `SemId` e projeção aos 16 widgets interativos do comps, cobertos por uma matriz em 13 temas, em phone e desktop. A tabela fica fora do hash de layer, a ligação custa de 50 a 60 ns e a projeção do todo com 103 itens cerca de 50 µs; importa porque um controle passa a ser operado pelo mesmo caminho que um agente usa, não por uma lógica paralela no clique.
 
 ## objetivo
 

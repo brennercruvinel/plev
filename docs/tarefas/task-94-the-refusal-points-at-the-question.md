@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [agent-port]
-relations: [task-92, task-93]
+topics: [agentes, semantica]
+relations: [task-62, task-92, task-93]
+evidence: [2a6ec95, ef4f5e9]
 source: docs/log/steps/task-94-the-refusal-points-at-the-question.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-94: a recusa que nomeia uma pessoa aponta para a pergunta
+
+Faz o `plev act` escrever no stderr uma linha que aponta para o `--ask` quando uma recusa stale nomeia uma pessoa e o ato não perguntava antes. Na quarta rodada da task-62, nenhum dos seis agentes abriu o `plev act --help`; os dois que receberam a frase sobre o `--ask` perguntaram na primeira recusa, e a resposta da pessoa decidiu. A linha não sai depois de um `declined` nem quando só agentes agiram, e o stdout (o JSON) e o protocolo v1 não mudam. O handoff deixou o gate verde na branch; a integração consta do histórico em `37c5e0c`.
 
 ## por que
 

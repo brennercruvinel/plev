@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [headless, svg, text, shaping, showcase, cli, semantics, generative-runtime]
-relations: []
+topics: [renderizacao, formatos, texto]
+relations: [adr-0040, task-63, task-66, task-67]
 source: docs/adr/rendering/0041-svg-export-reads-the-scene.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the svg export reads the scene, not the pixels
+
+Decide que a exportação SVG lê a cena, e não os pixels: `engine::headless::svg::export` percorre as camadas visíveis do compositor e escreve um elemento por nó, com o texto como contornos dos glifos já moldados. O que não tem equivalente exato é aproximado ou deixado de fora, e cada caso entra num relatório por nó, para que nada caia em silêncio. Medido em páginas como Todo, Button, Effects e Card, o SVG rasterizado difere do png do engine entre 0,13% e 1,07% dos pixels, e a soma dos avanços dos glifos bate com a largura medida pelo sistema de texto dentro de 0,01 px; importa porque a regressão estrutural (task-67) passa a saber o que pode e o que não pode confiar no SVG.
 
 ## context
 

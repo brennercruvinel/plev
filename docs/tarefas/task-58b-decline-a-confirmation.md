@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-58]
+topics: [semantica, agentes]
+relations: [task-58, task-60, task-62, task-63]
 evidence: [dc6fde2]
 source: docs/log/steps/task-58b-decline-a-confirmation.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-58b: recusar uma confirmação
+
+Acrescenta ao contrato a recusa de uma confirmação pendente, `Rejection::Declined { by }` e `Dispatcher::decline`, com as mesmas guardas de `confirm`: uma pessoa, na tela ou por tecnologia assistiva, recusa, e agente ou teste não. Fechar o modal sem confirmar deixava o receipt aguardando para sempre; com a recusa ele termina rejeitado com o motivo. Integrada em `dc6fde2`, rebaseada sobre a task-60, com gate verde num diretório isolado (1842 testes); a expiração de uma confirmação continua indefinida.
 
 ## fechamento (2026-09-23)
 

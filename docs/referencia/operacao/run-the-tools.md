@@ -6,15 +6,17 @@ type: manual
 status: ativo
 date: 2026-10-27
 date_basis: cabecalho
-topics: [run, tools, render, regress, measure, agent, mirror, record, inspect, import, llm, web, mobile]
+topics: [processo, agentes, gravacao, desempenho, importacao]
 relations: []
 source: docs/ref/run-the-tools.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # how to run the tools
+
+Comandos das ferramentas do repositório que o README não cobre, um por linha e a partir da raiz: página sem janela, regressão e medição, alvo web, agente sobre o app, espelho, sessão gravada, importadores, intenção pelo Claude e modelo de linguagem em processo. Os nomes de pacote e de binário foram conferidos com o código nesta revisão; os comandos não foram executados.
 
 the README runs the apps, the demos and the checks. this page has the rest,
 one command a line, from the repository root. a word in `<angle brackets>`

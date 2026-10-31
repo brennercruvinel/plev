@@ -3,25 +3,21 @@ id: programa-runtime
 title: "programa: de GPU UI engine a generative interaction runtime"
 project: plev
 type: programa
-status: em-andamento
+status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [program, goals, dependencies, contracts, ownership, waves]
-relations: []
+topics: [processo, agentes, semantica, ir, superficies-geradas]
+relations: [adr-0023, adr-0024, adr-0035, adr-0037, adr-0040, adr-0041, adr-0043, adr-0044, adr-0045, adr-0047, adr-0048, adr-0049, adr-0050, adr-0072, arquitetura-monster-format-v0, estado-codigo-2026-09, indice-historico, manual-autonomy, manual-generative-runtime-guidelines, mapa-das-fases, tese-runtime, task-18, task-19, task-20, task-39, task-41, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
+evidence: [b8ba096, 1d384d4, 860b029, 20c601e, f71dc20, f5b7cee, c6738be, ed814da, 91fdb33, 8978602, d26c9b1, c62a05d, 8e6e814, 0ec72f9, 3ba5b04, dc6fde2, 7b3e48f, a7a6735, d97a375, a6fec8d, efc87b6, 78f463c, 4896451, 476bbb4, 365d8fd, e6560a2, d611fa4, 7f866e8, d02b4d1, 871f0dd, 22d59fb, 4593a4c, 4573c81, 460c854, 29373d4, 79b8c93, 042d34e, 96c20a0, 49e2822, 7621403, f101359, 654d740, 37c5e0c]
 source: docs/log/generative-runtime-program.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # programa: de GPU UI engine a generative interaction runtime
 
-a tese está em [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md). as regras de
-trabalho estão em [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e são obrigatórias para o
-orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
-o estado real do código, o grafo de dependências, a ordem de integração,
-os contratos entre tasks, o ownership das superfícies compartilhadas e os
-pontos de decisão.
+Registra o programa que transforma o plev de GPU UI engine em generative interaction runtime: o goal, o diagnóstico do código em 2026-09-23, o grafo e as ondas das tasks 57 a 97, os contratos entre elas, o ownership das superfícies compartilhadas e os pontos de decisão. O estado de cada task (seção 12) vai até 2026-09-26, quando o brenner decidiu manter candle e burn na task-78. É o mapa executável para o orquestrador e para os agentes: as regras de trabalho estão em [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e são obrigatórias para todos, e a tese em [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md).
 
 ## 1. goal
 
@@ -102,7 +98,7 @@ o que a tese precisa e o que existe hoje:
 | pixel para código | hot reload de literal: skeleton + lista de literais por arquivo via proc-macro2 | `rust/engine/src/runtime/hot_reload/literals/mod.rs`, `rust/engine/Cargo.toml:84` | sem posição (proc-macro2 sem `span-locations`); só no sentido código para pixel |
 | headless | `text_probe`: wgpu offscreen para png | `rust/engine/src/drawing/text/probe.rs`, `rust/engine/src/bin` | só texto; não generalizado para página, tema, viewport ou frame de monster |
 | testes estruturais | hash por layer para dirty tracking | `rust/engine/src/drawing/compositor/layer/mod.rs:43` | hash não é exportado nem nomeado para regressão |
-| incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | `docs/ATLAS.toml` (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
+| incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | [`ATLAS.toml`](../ATLAS.toml) (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
 | texto | cosmic-text 0.18, fontes embutidas só Inclusive Sans, Inter e codicons; rope com transações, multi-cursor e history; editor em comps; `ImeState` básico | `rust/engine/src/drawing/text/fonts.rs:38-52`, `rust/editor/src/document`, `rust/engine/src/widgets/editor`, `rust/engine/src/runtime/platform/ime.rs` | árabe, CJK e emoji caem em fallback não embutido; IME e bidi sem cobertura de teste |
 | integração de plataforma | clipboard (arboard no desktop, local no mobile e wasm), diálogos nativos e drop de arquivo no urnaui, lifecycle, safe areas | `rust/engine/src/runtime/platform/clipboard.rs`, `apps/urnadbapp/src/app.rs`, `rust/engine/src/runtime/platform` | sem menus, tray, notificações, múltiplas janelas, device loss, deep links, câmera, microfone, impressão |
 | determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | [`mapa-das-fases.md`](mapa-das-fases.md) (contracts), [`0024-glyph-raster-identity-and-atlas-isolation.md`](../decisoes/renderizacao/0024-glyph-raster-identity-and-atlas-isolation.md), tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
@@ -263,7 +259,7 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | `rust/engine/src/styling/theme` | ninguém sem aprovação | tocado por 65 (leitura de token) só depois de proposta aprovada |
 | `rust/engine/src/drawing/text` | 74 | 66 toca só `probe.rs` e o novo módulo headless |
 | `rust/import` | 71 | |
-| `Cargo.toml` (members e workspace deps), `docs/ATLAS.toml`, [`mapa-das-fases.md`](mapa-das-fases.md) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
+| `Cargo.toml` (members e workspace deps), [`ATLAS.toml`](../ATLAS.toml), [`mapa-das-fases.md`](mapa-das-fases.md) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
 | `.contracts/`, [`indice-historico.md`](indice-historico.md), `docs/log/` | orquestrador | agente propõe no handoff |
 
 ## 9. checkpoints e critérios de parada

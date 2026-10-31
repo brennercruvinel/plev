@@ -6,15 +6,17 @@ type: manual
 status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [plev, engine, widgets, layout, text, color, semantics, contract, checklist]
-relations: []
+topics: [design-system, renderizacao, layout, texto, semantica]
+relations: [adr-0001, adr-0006, adr-0023, adr-0026, adr-0032, adr-0033, adr-0034, adr-0035, adr-0038, adr-0039, adr-0073, arquitetura-component-catalog, manual-validate-visuals-by-pixel, programa-runtime, task-57, task-57b, task-58, task-59, task-60, task-61, task-62, task-63, task-66, task-66b, task-69, task-73, task-74, task-82, task-83, task-90, task-91]
 source: docs/ref/code-against-the-plev-engine.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # how to code against the plev engine
+
+Manual operacional para quem escreve código de interface ou de renderização no plev, humano ou agente: as regras do motor para widgets, texto, cor, layout, eventos, plataforma e semântica, e a definição de pronto para trabalho de interface. Cada regra das seções do motor foi violada ao menos uma vez neste repositório, gerou um defeito visível e teve a causa encontrada; por isso uma violação conta como defeito mesmo quando a tela parece certa. A seção de contrato semântico diz o que já existe e qual tarefa traz o resto, e o manual é atualizado no fechamento de cada uma dessas tarefas.
 
 the operating manual for anyone (human or agent) writing ui or rendering
 code on plev. every rule in the engine sections was violated at least once
@@ -22,7 +24,7 @@ in this repository, shipped a visible defect, and was root-caused; treat a
 violation as a defect even when the screen looks right.
 
 plev is moving from a GPU UI engine to a generative interaction runtime
-(docs/log/generative-runtime-program.md). the direction
+([the generative runtime program](../../historia/programa-runtime-generativo.md)). the direction
 adds one layer on top of everything below: every control keeps a
 persistent identity and meaning while its pixels are born, disappear or
 transform. the section "the semantic contract" says which parts of that
@@ -45,7 +47,7 @@ design system, `engine::widgets::prelude::*`), and every visible mutation
 invalidates (`EventResult::changed` / request redraw). the uigallery is the
 template app. the declarative builder (`engine::compose::builder`) is supported for
 prototypes and demos; `view`, `component`, `signal` and `markup` are
-experimental: do not start app code on them (docs/adr/structure/0023-official-app-pattern.md).
+experimental: do not start app code on them ([adr-0023](../../decisoes/estrutura/0023-official-app-pattern.md)).
 
 task-69 adds a second supported pattern (surfaces materialized from
 verified plev IR); until its ADR lands, the pattern above is the only one.
@@ -101,7 +103,7 @@ what exists (updated at each task close-out):
   this shape.
 - the second app on the one path is the git client (task-62):
   `idestudio::capability::Workbench` owns the view, the git session and the
-  dispatcher, for the ide binary and the uigallery Git page alike. it shows
+  dispatcher, for the idestudio binary and the uigallery Git page alike. it shows
   the asynchronous shape: `execute` sends the command to the worker and
   returns `Execution::Started`, and the worker's answer ends the receipt
   (`complete`, `fail`, `reject_at_truth`). a precondition whose truth
@@ -180,7 +182,7 @@ as the tasks land, these rules become binding (each line names its task):
   task-59 lands (task-59). typing is not a capability: a keystroke in a
   field changes the projected text (`todo.input:text`,
   `commit.message:text`) with no request, as
-  docs/adr/semantics/0035-semantic-binding-beside-the-scene.md exempts it, so it leaves
+  [adr-0035](../../decisoes/semantica/0035-semantic-binding-beside-the-scene.md) exempts it, so it leaves
   no receipt and names no author; an actor with no keyboard sets the text
   with `set_value`, which does go through the dispatcher.
 - when the truth lives outside the ui process (the git index, a server),
@@ -214,7 +216,7 @@ stacks from `theme.shadows` (by `Elevation`), and text styles from the
 on `handle_event` too, so the hit test and the pixels come from one
 geometry. a number a screen needs that is not a token yet becomes one in
 `rust/engine/src/styling/theme/scales.rs`, with its spec value in
-`tests_scales.rs`; it never lands in the screen.
+`rust/engine/src/styling/theme/tests/scales.rs`; it never lands in the screen.
 
 an app frames its screens with `engine::widgets::shell::AppShell` (full sidebar,
 rail, or a drawer behind a menu button on a phone; header; content rect;
@@ -231,7 +233,7 @@ check whether the engine or its widgets already provide the capability. the
 most expensive failure pattern in this project was app-layer
 reimplementation of an existing feature (a second theme, five copied
 widgets, per-app ellipsis helpers). grep `rust/engine/src` and
-`rust/engine/src/widgets` first, read docs/ref/component-catalog.md, and find one screen that
+`rust/engine/src/widgets` first, read [component-catalog](../arquitetura/component-catalog.md), and find one screen that
 already does it right (the uigallery pages).
 
 the same rule holds for the new layer: one `accord` crate, one dispatcher,
@@ -285,7 +287,7 @@ one binding table, one accessibility projection. never a local copy.
   2026-09-21 came from that).
 - a shadow with blur 0 is still anti-aliased: `shadow_sigma` floors at
   `MIN_SHADOW_SIGMA`.
-- validate color by sampling pixels (docs/ref/validate-visuals-by-pixel.md);
+- validate color by sampling pixels ([validate-visuals-by-pixel](validate-visuals-by-pixel.md));
   the dark background measures 48,48,48 on desktop and web.
 
 ## design for ranges, not screens

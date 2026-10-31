@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [semantic-contract]
-relations: [task-89, task-90]
+topics: [semantica, agentes]
+relations: [adr-0043, adr-0046, adr-0047, manual-code-against-the-plev-engine, task-83, task-89, task-90]
+evidence: [4d6eba3, 1f9deb3, cea6d81, ac89f01, 3886402, 63cd763, 29373d4]
 source: docs/log/steps/task-91-the-dispatcher-knows-when-the-agent-looked.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-91: o dispatcher sabe quando o agente olhou
+
+Faz o dispatcher saber quando o agente olhou: o port marca cada olhar na ordem dos requests, e o `acted` de uma recusa stale passa a nomear as ações de qualquer ator tomadas depois do olhar em que o ato se apoiou, a do próprio autor incluída. Com isso, a cena da janela, em que a pessoa seleciona uma linha (uma mudança que não passa pelo dispatcher) e depois tira o arquivo do index, passa a nomear o `show_diff` e o `unstage` dela, que antes saíam com `acted` vazio. A regra da task-90 fica como reserva para quem observa sem o port; nenhum veredito muda, porque a checagem continua pelas reads. Integrada na `main` em `29373d4`, com severidade P2 e um P1 no relatório do laboratório (gate verde, 2277 testes passaram).
 
 ## por que
 

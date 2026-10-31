@@ -6,15 +6,18 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [accessibility, accesskit, sem, snapshot, binding, dispatcher, one-path, focus, showcase, generative-runtime]
-relations: []
+topics: [acessibilidade, semantica, input]
+relations: [adr-0032, adr-0033, adr-0035, task-59, task-61, task-62, task-75]
+evidence: [263c00c]
 source: docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # accessibility projects the semantic snapshot
+
+Decide que a árvore de acessibilidade é projeção do snapshot semântico, e não mais uma estimativa feita pela geometria: `rust/engine/src/control/accessibility` monta a árvore do AccessKit a partir do snapshot semântico do crate `rust/accord`, da tabela de ligações do frame e da janela. O caminho antigo, baseado em regiões de clique e em `ViewId`, foi removido, e uma ação do leitor de tela passa a ser um ator `Assistive` no mesmo `Dispatcher`. Nenhum app enviado expunha uma árvore antes; a showcase já liga a ponte no desktop, e a ide e a urnaui são os próximos.
 
 ## context
 

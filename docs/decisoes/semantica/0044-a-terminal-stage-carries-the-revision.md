@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [wire, agents, protocol, revision, ring, receipts, stages, generative-runtime]
-relations: []
+topics: [agentes, semantica]
+relations: [adr-0033, task-62, task-87]
 source: docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a terminal stage carries the revision the app is at
+
+Decide que o estágio terminal de um ato (`completed`, `rejected` ou `failed`) traz `revision`, a revisão em que o app está naquele instante, para que o agente encadeie o ato seguinte sem observar de novo só para descobri-la. O campo é aditivo no protocolo v1 e não conta como observação: o agente recebe o nome de um estado, não o estado. No laboratório, o custo medido foi de uma mediana de 158 µs por estágio terminal, em build de depuração, contra o alvo de 2 ms.
 
 ## context
 

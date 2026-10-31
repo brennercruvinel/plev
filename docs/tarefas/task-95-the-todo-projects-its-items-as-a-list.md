@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [generative-surfaces]
-relations: [task-68, task-69]
+topics: [superficies-geradas, ir, semantica]
+relations: [task-68, task-69, adr-0049, adr-0051, adr-0052]
+evidence: [4308753, 9ca72aa, 3d8192d, fa1b4ad, 626576d]
 source: docs/log/steps/task-95-the-todo-projects-its-items-as-a-list.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-95: o todo projeta os itens como lista
+
+Faz o todo projetar os itens como um estado `List` (`todo:items`) e o texto de cada item como estado, para que uma superfície gerada repita sobre eles pelo `repeat` do IR. A sonda mostrou que o IR sobre `todo:items` era recusado pela regra 4, enquanto o workbench do ide já tinha a forma que faltava ao todo (`changes:files`). A página Surface passa a mostrar e marcar os itens pelo dispatcher do todo, e o proponente por regras gera a lista pela estrutura do registro; remover ficou fora da superfície, porque o `remove` do todo não pede confirmação. O gate ficou verde em `626576d` (2383 testes no workspace), e a integração consta do histórico em `460c854`.
 
 ## por que
 
@@ -474,7 +477,7 @@ aqui):
   [`changelog.md`](../historia/changelog.md) (a página Surface mostra e marca os itens; as regras
   propõem a lista); a consequência do ADR [`0049-plev-ir-typed-and-verified.md`](../decisoes/geracao/0049-plev-ir-typed-and-verified.md)
   que diz que o todo não projeta lista (fora da lista de arquivos);
-  `docs/ATLAS.toml`, se quiser citar `todo:items` na entrada do
+  [`docs/ATLAS.toml`](../ATLAS.toml), se quiser citar `todo:items` na entrada do
   showcase.
 - a fixture de duas colunas mudou de forma (`todo_panel.main` voltou, agora
   num grid): quem a lê por índice de filho precisa conferir; os testes do

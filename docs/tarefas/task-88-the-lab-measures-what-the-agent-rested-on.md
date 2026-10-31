@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [experiment]
-relations: [task-87, task-89]
+topics: [agentes, semantica, pesquisa]
+relations: [task-62, task-63, task-87, task-89, task-90]
+evidence: [39f4e4b, fc05db7, d16a69d, fe23fbc, b8a54d2, d99ee64, a65ee7e, 96c20a0]
 source: docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-88: o laboratório mede no que o agente se apoiou
+
+Corrige a medição de checagem de stale do laboratório `ide-lab` (task-62), que dava falso válido. A sonda parou o trabalho antes de qualquer correção: as duas premissas da medição envelheceram com a task-87 e a task-89, e a pessoa roteirizada só age depois de uma observação, o que um agente que encadeia nunca dispara. A decisão foi um cenário novo, `unstage-before-submit:<path>`, em que a pessoa age logo antes de o `submit` chegar ao dispatcher, com a medição pelo valor visto pelo agente e pelo valor vivo do app. Nas 22 corridas do handoff o laboratório saiu com exit 0 e MATCH; integrada na `main` em `96c20a0`, com severidade P1.
 
 ## por que
 

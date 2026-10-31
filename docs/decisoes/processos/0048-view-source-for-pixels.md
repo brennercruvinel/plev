@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [hot-reload, view-source, sem, compositor, showcase, dev-loop, generative-runtime]
-relations: []
+topics: [hot-reload, semantica, processo]
+relations: [adr-0031, adr-0032, adr-0035, task-63, task-65]
 source: docs/adr/workflows/0048-view-source-for-pixels.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # view source for pixels: a control leads to its projection, a text to its literal
+
+Decide que um ponto da janela de desenvolvimento leva ao código que o produziu, apenas num build de depuração de desktop: o engine resolve o ponto em `hot_reload::view_source::origin_at` e o shell só o abre. Um controle leva à linha da projeção que o declarou, e um texto leva ao literal do `.rs` que o escreveu; quando há mais de um candidato, todos são listados e nenhum é escolhido por adivinhação. A fase c, de 2026-09-25, grava de volta o literal editado como um `git diff` de uma string só, e recusa a escrita quando o código no disco mudou; importa porque a edição visual vira mudança de código rastreável, feita só pela pessoa.
 
 ## context
 
@@ -22,14 +24,14 @@ task-65 (phases a and b) asks that a pixel of the window lead to the code
 that made it, in a desktop debug build only. what existed:
 
 - `Compositor::hit(x, y)` names the topmost bound `SemId` at a point of
-  the frame on screen (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md).
+  the frame on screen ([adr-0035](../semantica/0035-semantic-binding-beside-the-scene.md)).
 - `Node.source` is the file, line and column of the call that projected
   the node, captured by `#[track_caller]`
-  (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md). the comps helpers
+  ([adr-0032](../semantica/0032-semantic-contract-as-pure-projection.md)). the comps helpers
   that project a widget (`TextField::project`, `Button::sem`, ...) are
   `#[track_caller]` too.
 - the literal hot reload keeps, per source file, a skeleton hash and its
-  literals in order (docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md),
+  literals in order ([adr-0031](0031-hot-reload-on-by-default-in-gpu-context.md)),
   but no position: `proc-macro2` was built without `span-locations`.
 - `hot_reload` exists only where the engine's build.rs sets the cfg:
   the `hot-reload` feature (on by default), a debug profile and a desktop

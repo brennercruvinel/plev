@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [semantic-contract]
-relations: [task-57b, task-61, task-62]
+topics: [semantica, agentes, gravacao]
+relations: [task-57b, task-61, task-62, task-84, task-85, adr-0037, adr-0040, adr-0043, manual-code-against-the-plev-engine, indice-historico]
 evidence: [78f463c]
 source: docs/log/steps/task-83-delta-carries-node-refusal-names-actor.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-83: o delta traz o nó que nasceu, e a recusa diz quem agiu
+
+Faz o `node_added` do delta carregar o nó inteiro, como o snapshot `after` o tem, e faz a recusa por estado velho (`Rejection::Stale`) nomear quem agiu sobre o estado que o agente viu. No laboratório, o commit que nasce em `stacks` passou a caber numa ida só: 427 B no delta, em vez de 172 B mais uma observação de 402 B. Integrada na `main` em `78f463c`, com o gate verde (2084 testes); as sessões gravadas antes continuam abrindo, porque o leitor converte a forma antiga do `node_added`.
 
 ## por que
 

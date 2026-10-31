@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [regression, headless, semantics, binding, layer-hash, pixels, ci, showcase, generative-runtime]
-relations: []
+topics: [determinismo, semantica, renderizacao]
+relations: [task-57, task-59, task-66, task-77]
 source: docs/adr/workflows/0045-regression-by-meaning-before-pixels.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # regression by meaning before pixels
+
+Decide que a regressão visual pergunta primeiro pelo significado e só depois pelos pixels: a checagem responde, nesta ordem, se a projeção semântica mudou (pela `Revision`), se alguma camada ou ligação mudou (pelo hash de conteúdo com nome estável) e só então quais pixels mudaram, dentro das regiões das camadas que se moveram. O veredito são as duas primeiras respostas, então uma máquina sem adaptador de GPU chega ao mesmo resultado que outra com GPU. Medida nas 157 baselines commitadas, a checagem termina em cerca de 0,61 s sem abrir GPU; importa porque a falha passa a dizer qual controle mudou, e não só quantos pixels diferem.
 
 ## context
 

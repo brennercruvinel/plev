@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [rec, inspect, ide, session, regression, harness, fixture, export, generative-runtime]
-relations: []
+topics: [gravacao, processo, semantica]
+relations: [adr-0037, adr-0046, task-63, task-64, tese-runtime]
 source: docs/adr/recording/0050-sessions-become-regression-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # sessions become regression tests
+
+Decide que uma sessão gravada vira teste de regressão por re-execução controlada, e só nos testes: o harness reexecuta um trecho contra um fixture que o app fornece, num ambiente isolado (diretório temporário, relógio injetado, sem rede), e compara os veredictos e os valores marcados. O harness fica em `apps/idestudio/tests/rerun/`, fora de `rec` e de `inspect`, para que a leitura continue sem executar nada. Medido na sessão `a2ppa` (184 KB, 65 eventos, 12 quadros), as seis marcas passam em verde em 0,4 s, e tirar à mão, sem commit, `changes:staged` dos `reads` do submit faz o teste falhar; importa porque transforma um relato de bug em teste sem tornar a leitura uma execução.
 
 ## context
 

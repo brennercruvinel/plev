@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [rec, recorder, session, replay, monster, sem, receipts, file-format, generative-runtime]
-relations: []
+topics: [gravacao, formatos, semantica, renderizacao]
+relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, adr-0043, tese-runtime]
 source: docs/adr/recording/0037-session-recording-replay-not-reexecution.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # session recording: replay, not re-execution
+
+Registra a decisão de que a gravação de sessão do plev é um replay: reconstrói o que foi apresentado e o que aconteceu, e nunca reexecuta o app. A sessão fica guardada como dados (snapshots, recibos e quadros) numa janela limitada por tempo e bytes, no crate `rust/record`, com um trilho semântico e um visual. O formato `.monster` usa a magic `MONS`, separada da `MON0` das animações, para que o contêiner de animação e seus fixtures não mudem; importa porque um relato de bug vira um trecho inspecionável, e assistir a um commit sendo feito não pode fazer outro commit.
 
 ## context
 

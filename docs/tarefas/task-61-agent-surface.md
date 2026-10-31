@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-57, task-58, task-59]
+topics: [agentes, semantica]
+relations: [task-57, task-57b, task-58, task-59, task-60, task-62, task-63, task-79, adr-0026, adr-0039, tese-runtime]
 evidence: [0ec72f9]
 source: docs/log/steps/task-61-agent-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-61: superfície do agente (socket local, observe, act)
+
+Abre ao agente um canal de fora para dentro de um app plev: um socket local, crate `wire` (hoje `socket`), expõe `observe` e `act` sobre o contrato semântico, sem screenshot nem coordenada, e cada ação passa pelo mesmo `Dispatcher` da interação humana. A observação sai por escopo e por delta, e um `act` feito sobre uma revisão antiga volta rejeitado com o delta. Integrada em `0ec72f9` (doze commits), com gate verde (1920 testes), servidor desligado por padrão (`PLEV_AGENT=1` em debug) e o todo do showcase exposto pelo socket. A forma JSON verbosa que ela devolveu foi enxugada na task-57b.
 
 ## objetivo
 

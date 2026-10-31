@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [wire, agents, protocol, socket, sem, dispatcher, one-path, security, cli, showcase, generative-runtime]
-relations: []
+topics: [agentes, semantica, formatos]
+relations: [adr-0026, adr-0032, adr-0033, adr-0035, adr-0038, adr-0040, adr-0043, adr-0044, adr-0047, task-57b, task-62, task-64, task-79, task-83, task-86, task-87, task-89, task-92]
 source: docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # agents act through the semantic contract
+
+Decide que agentes operam um app plev por um canal local, o crate `rust/socket` com o protocolo v1 em linhas JSON, e que cada ação passa pelo mesmo `Dispatcher` de um clique da pessoa, sem caminho próprio. O agente observa identidade, estado e ações declaradas em vez de capturar a tela, e age sobre a revisão que observou. O socket é Unix local e, por padrão, só abre com `PLEV_AGENT=1` em build de depuração; nenhuma mensagem executa código, lê arquivo ou chama um backend.
 
 ## context
 

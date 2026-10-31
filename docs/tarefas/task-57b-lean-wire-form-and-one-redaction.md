@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-61, task-63]
+topics: [semantica, agentes, formatos]
+relations: [task-61, task-62, task-63, task-65, adr-0039, adr-0040, changelog]
 evidence: [a7a6735]
 source: docs/log/steps/task-57b-lean-wire-form-and-one-redaction.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-57b: forma JSON enxuta e uma redação só
+
+Enxuga a forma JSON do `Snapshot` do crate `sem` (hoje `accord`) e reúne numa função só, `sem::redact`, a regra de redação de segredo que estava copiada em `wire` (hoje `socket`) e `rec` (hoje `record`). Uma observação completa do todo com 3 itens caiu de 6419 para 2039 bytes, e o `source` passou a sair da resposta do agent port, a não ser que o agente peça, sem deixar de ser gravado na sessão para a task-65. Foi integrada em `a7a6735` com o aceite de menos de 3 KB atendido e a regra de redação encontrada só em `rust/accord/src/redactor.rs`; importa porque uma regra de segurança em duas cópias já tinha divergido, e bytes sem significado custam tokens ao agente.
 
 ## objetivo
 

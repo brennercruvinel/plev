@@ -6,20 +6,22 @@ type: manual
 status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [validation, screenshots, pixels, semantics, regression, macos, headless, playwright, qa]
-relations: []
+topics: [determinismo, renderizacao, semantica, plataforma]
+relations: [adr-0024, adr-0045, adr-0074, manual-generative-runtime-guidelines, task-57, task-66, task-77]
 source: docs/ref/validate-visuals-by-pixel.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # how to validate visuals by pixel
 
+Protocolo para dar por verificada uma afirmação visual: primeiro compara-se o significado projetado (a partir da task-57), depois amostram-se pixels e declara-se o delta contra o token. O texto registra que "parece igual" aprovou duas falhas de cor antes de a validação numérica ser adotada, e por isso o orquestrador aplica o protocolo a cada entrega. Os caminhos citados existem no código; o protocolo e as medições não foram refeitos nesta revisão.
+
 "looks the same" approved two broken color systems in this project before
 numeric validation was adopted. the protocol below is how a visual claim
 is settled. the orchestrator applies it to every delivery itself; there is
-no separate verifier agent (docs/ref/generative-runtime-guidelines.md).
+no separate verifier agent ([generative-runtime-guidelines.md](generative-runtime-guidelines.md)).
 
 ## principle
 
@@ -39,7 +41,7 @@ sampled. the regression harness below asks in that order.
 viewport under `tool/bench/regress/baselines` (the projection, every
 layer under a stable name with a stable content hash, every bound
 control) and checks the tree against it
-(docs/adr/workflows/0045-regression-by-meaning-before-pixels.md):
+([adr-0045](../../decisoes/processos/0045-regression-by-meaning-before-pixels.md)):
 
 ```
 cargo run -p regress -- check [--page Todo] [--json report.json]
@@ -72,7 +74,7 @@ cargo run -p regress -- bless [--page Todo | --all] [--theme hoff] [--png | --no
   `regress -- capture --out target/determinism/<base>` on the old code,
   then `regress -- capture --out target/determinism/<new> --against
   target/determinism/<base> --no-png` on the new. every frame must be
-  `equal` (docs/adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md);
+  `equal` ([adr-0074](../../decisoes/renderizacao/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md));
   for a narrower change, the sampling below.
 
 ## headless first
@@ -89,7 +91,7 @@ PROBE_FILL=1 cargo run -p engine --bin text_probe -- out.png 2.0
 `PROBE_FILL=1` pushes enough distinct glyph, size and weight combinations
 through the atlas that it has to grow partway through the frame, the
 state the atlas lifecycle defects only show under
-(docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md). a probe that
+([adr-0024](../../decisoes/renderizacao/0024-glyph-raster-identity-and-atlas-isolation.md)). a probe that
 cannot reach the failing state proves nothing.
 
 the renderer behind it is `engine::drawing::text::probe` (offscreen texture, real
@@ -101,7 +103,7 @@ failing.
 since task-66 the probe renders through `engine::drawing::headless`, which draws
 with the window's own frame path (`window::draw_frame`) into an
 offscreen texture: same pipelines, same srgb view, no second renderer.
-any showcase page and any `.monster` frame go to png the same way:
+any uigallery page and any `.monster` frame go to png the same way:
 
 ```
 cargo run -p uigallery -- --render Todo --theme hoff --width 1280 --height 800 --out todo.png

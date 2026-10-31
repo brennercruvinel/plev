@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-57]
+topics: [semantica, agentes]
+relations: [task-57, adr-0033, tese-runtime, task-59, task-60, task-61, task-62, task-63, task-69, task-70]
 evidence: [20c601e]
 source: docs/log/steps/task-58-actions-preconditions-receipts.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-58: ação com precondição, dispatch e receipts
+
+Registra a task que fez cada ação carregar o estado que o ator observou e validá-la contra o estado atual no momento da execução, com um receipt de ciclo explícito e um único `Dispatcher` para humano, agente, accessibility e teste. A ordem de validação (`NotFound`, `UnknownAction`, `NotAuthorized`, `Stale`, `Inert`, `Disabled`, `InvalidParam`, `NeedsConfirmation`, `Accepted`) é contrato testado, e o delta de `Stale` sai do `Change` da task-57. Integrada em `20c601e` (dez commits) com `fullcheck.sh` verde e 1608 testes no workspace; a entrega voltou uma vez ao agente para duas correções de contrato, a de confirmação (humano e assistive confirmam, agente e teste não) e a assinatura de `Operable::execute`. Importa porque o ponto de verdade fora do processo, como o index do git na task-62, confere a precondição de novo antes do efeito.
 
 ## fechamento (2026-09-23)
 

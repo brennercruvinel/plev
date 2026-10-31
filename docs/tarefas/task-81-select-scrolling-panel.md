@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [comps]
+topics: [design-system, input]
 relations: [task-59]
 evidence: [7b3e48f]
 source: docs/log/steps/task-81-select-scrolling-panel.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-81: painel do `Select` com rolagem
+
+Dá rolagem ao painel do `Select`, para que as opções que não cabem em `size.dropdown_max_h` possam ser alcançadas pelo ponteiro e pelo teclado. Desenho, hit test e ligação passam a ler a mesma janela de linhas, e a opção selecionada aparece ao abrir. Foi integrada em `7b3e48f` com o gate verde (1930 testes); a barra de rolagem ficou de fora de propósito, para não criar um segundo dono na borda do painel.
 
 ## fechamento (2026-09-23)
 

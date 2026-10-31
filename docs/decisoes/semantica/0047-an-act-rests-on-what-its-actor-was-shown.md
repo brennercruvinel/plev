@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [wire, agents, protocol, revision, ring, stale, cli, security, generative-runtime]
-relations: []
+topics: [agentes, semantica]
+relations: [adr-0039, adr-0043, adr-0044, task-64, task-83, task-87, task-91]
 source: docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # an act rests on what its actor was shown
+
+Decide que um ato sobre `from_revision r` repousa só no que o seu ator foi mostrado: a porta do agente guarda, por ator, as revisões que lhe deu e o que cada uma mostrou, e recusa como `not_observed` a leitura que o ator nunca viu. O código anterior montava os valores observados a partir do snapshot inteiro da revisão, o que deixava um ator afirmar que tinha visto um estado que nunca lhe foi mostrado. O caso que motivou a decisão é um `submit` apoiado só numa observação de `commit.form`, achado pelo inspetor de sessões (task-64, fase a); a correção é da task-89.
 
 ## context
 

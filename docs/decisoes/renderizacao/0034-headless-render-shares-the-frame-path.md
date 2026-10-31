@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [headless, rendering, frame-path, wgpu, srgb, png, ci, agents, generative-runtime]
-relations: []
+topics: [renderizacao, gpu, determinismo]
+relations: [task-77, tese-runtime]
 source: docs/adr/rendering/0034-headless-render-shares-the-frame-path.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # headless render shares the frame path
+
+Decide que o render headless usa o mesmo caminho de quadro da janela: `window::draw_frame` faz a parte que desenha, e `present_frame` só adquire a superfície, chama `draw_frame` e apresenta. Com isso, `engine::headless::Renderer` produz os pixels da janela, e o pipeline próprio do `text::probe`, que nenhuma janela executava, sai. Medido no macOS, a página `hoff` lê 48,48,48 em headless, valor que uma captura de janela também lê depois da conversão para sRGB, e duas execuções dão os mesmos bytes de png nos 312 quadros; importa porque CI, relatórios, o inspetor e os agentes passam a comparar pixels de um caminho só.
 
 ## context
 

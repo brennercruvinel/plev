@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [agent-surface]
-relations: [task-61, task-62, task-82]
+topics: [agentes, plataforma, desempenho]
+relations: [task-61, task-62, task-64, task-67, task-75, task-82, task-88, task-89, task-90, adr-0039]
+evidence: [7f866e8]
 source: docs/log/steps/task-86-the-ide-opens-the-agent-port.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-86: o ide que alguém usa abre a porta do agente
+
+Abre a porta do agente na janela do `ide`, o binário que uma pessoa abre de verdade, para que a pessoa e o agente operem o mesmo `Workbench` pelo contrato do `plev`. A porta é opt-in por `PLEV_AGENT=1`, e só em debug, como no showcase. Uma prova numa janela real no macOS mostrou um agente observando, fazendo stage e commitando, e uma recusa por estado velho que nomeia, nos dois lados, a pessoa que tirou um arquivo do index. Integrada na `main` em `7f866e8`, com o gate verde (2202 testes); a contagem de frames parados não pôde ser repetida na integração.
 
 ## por que
 

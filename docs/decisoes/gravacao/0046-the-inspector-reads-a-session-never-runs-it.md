@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [inspect, rec, sem, session, inspector, receipts, correlation, cli, generative-runtime]
-relations: []
+topics: [gravacao, semantica, agentes]
+relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, programa-runtime, estado-codigo-2026-09, manual-code-against-the-plev-engine]
 source: docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the inspector reads a session, it never runs it
+
+Registra a decisão de que o inspetor de sessões lê uma `rec::Session` e nunca a executa: o crate `rust/replay` oferece o modelo (linha do tempo, `why`, `control` e `summary`) e o binário `plev-inspect`, sem dispatcher, app ou gravador por perto. O resultado foi medido nas nove sessões de checkpoint da task-62, que abrem com saída 0 e mantêm o mesmo sha256 depois da leitura, e a janela de `apps/inspector` mostra o mesmo modelo sem recalcular respostas. Importa porque quem abre o primeiro `.monster` de uma delegação consegue ver o que precisa para confiar nele, e quem mexeu num valor aparece como correlação no tempo, nunca como escrita declarada.
 
 ## context
 
@@ -207,7 +209,7 @@ outside the workspace.
   the pick) go to the view's handlers, never through a dispatcher: the
   inspector must never create a request, so they stand outside the rule
   that a click goes through the dispatcher
-  (docs/ref/code-against-the-plev-engine.md, definition of done, 6),
+  ([code-against-the-plev-engine](../../referencia/operacao/code-against-the-plev-engine.md), definition of done, 6),
   and they project nothing for accessibility yet.
 - the proof is in tests: the sources name nothing that runs, records or
   builds a request, and no socket, process, port or accessibility bridge;

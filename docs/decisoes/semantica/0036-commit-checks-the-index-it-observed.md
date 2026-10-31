@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [ide, git, sem, dispatcher, point-of-truth, receipts, handoff, agents, generative-runtime]
-relations: []
+topics: [semantica, git, agentes]
+relations: [adr-0033, adr-0035, task-58, task-58b, task-59, task-60, task-61, task-69, task-84, task-85]
 source: docs/adr/semantics/0036-commit-checks-the-index-it-observed.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a commit checks the index it observed
+
+Decide que um commit da ide confere o índice que a pessoa ou um agente observou antes de rodar `git commit`: o pedido carrega o conjunto de arquivos em stage visto (`expect_staged`), e o worker do git compara esse conjunto com o `status` real, recusando com `CommitRejected` quando eles diferem. Um `Workbench` único reúne as views, a sessão git e o `Dispatcher`, e cada capacidade tem um handler só. O recibo termina no ponto da verdade; a janela que sobra entre a leitura do índice e o `git commit` fica fora do contrato, como a própria decisão registra.
 
 ## context
 
@@ -27,12 +29,12 @@ later), so for a moment the screen and the index could disagree, and a
 terminal, an editor, the file watcher, the person and an agent all move
 the index.
 
-task-58 gave the rule (docs/adr/semantics/0033-actions-carry-observed-state.md): a
+task-58 gave the rule ([`0033-actions-carry-observed-state.md`](0033-actions-carry-observed-state.md)): a
 request carries the values its actor observed for the state the action
 reads, the dispatcher checks them against the live projection, and when
 the truth lives outside the ui process the point of truth checks them
 again right before the effect. task-59 gave the binding table and the
-click as a request (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md). this
+click as a request ([`0035-semantic-binding-beside-the-scene.md`](0035-semantic-binding-beside-the-scene.md)). this
 record applies both to the git client.
 
 ## decision
@@ -182,5 +184,5 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   reaches the projection, and since task-84 a status read before a
   mutation the view shows is dropped. typing changes `commit.message:text`
   (`apps/idestudio/src/main.rs`), editing that
-  docs/adr/semantics/0035-semantic-binding-beside-the-scene.md exempts. navigation moves
+  [`0035-semantic-binding-beside-the-scene.md`](0035-semantic-binding-beside-the-scene.md) exempts. navigation moves
   `changes:selected`, accepted under "one workbench" above.

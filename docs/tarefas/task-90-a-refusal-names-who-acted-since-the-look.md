@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [semantic-contract]
-relations: [task-83, task-86]
+topics: [semantica, agentes]
+relations: [adr-0043, adr-0046, manual-code-against-the-plev-engine, task-83, task-86, task-89, task-91]
+evidence: [168c897, 8b1ffa6, 128ca11, f0de28a, d02b4d1]
 source: docs/log/steps/task-90-a-refusal-names-who-acted-since-the-look.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-90: a recusa nomeia quem agiu desde que o agente olhou
+
+Faz a recusa `stale` nomear, em `acted`, as ações de outros atores que rodaram desde o estado que o autor viu, e não só as validadas exatamente nessa revisão. A prova da task-86 na janela real mostrou a regra da task-83 falhando no uso normal: a pessoa selecionou uma linha e depois tirou o arquivo do index, e a recusa do agente nomeava a seleção e não o unstage que a causou. A sonda do clique real mostrou que a seleção muda a view sem passar pelo dispatcher, então essa cena não entra na regra por revisão; a decisão foi a cadeia dentro do processo, com a âncora no olhar na task-91. Integrada na `main` em `d02b4d1`, com o gate verde (2225 testes passaram).
 
 ## por que
 
@@ -136,7 +139,7 @@ Arquivos principais:
   apps/idestudio/tests/human_agent.rs
 - rust/replay/src/prose/chain.rs (só o texto)
 - docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md, este
-  arquivo (movido para ongoing no primeiro commit)
+  arquivo
 
 Interfaces adicionadas/alteradas:
 - nenhuma assinatura. a semântica de Rejection::Stale::acted muda (nomeia

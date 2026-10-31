@@ -6,18 +6,20 @@ type: manual
 status: ativo
 date: 2026-09-26
 date_basis: cabecalho
-topics: [agents, orchestration, worktrees, briefing, validation, commits, process]
-relations: []
+topics: [agentes, processo, git, workspace]
+relations: [aprendizado-general, estado-codigo-2026-09, indice-historico, manual-autonomy, manual-generative-runtime-guidelines, manual-validate-visuals-by-pixel, programa-runtime, task-57, task-60, task-62, task-84]
 source: docs/ref/orchestrate-coding-agents-on-this-repo.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # how to orchestrate coding agents on this repo
 
+Versão curta e operacional das diretrizes de orquestração: como o orquestrador abre, briefa, valida e integra o trabalho de um agente de programação neste repositório, com um agente por task, cada um no seu worktree e na sua branch. Reúne as lições que produziram as regras, como diagnosticar com arquivo:linha antes de escrever o briefing, não paralelizar superfícies que se sobrepõem e separar o diretório de build de cada agente.
+
 the binding rules are in
-docs/ref/generative-runtime-guidelines.md (the
+[generative-runtime-guidelines](generative-runtime-guidelines.md) (the
 orchestrator and agent guidelines, their adaptation to this repo, the
 briefing and handoff templates). this how-to is the short operating
 version plus the lessons that produced it. when the two disagree, the
@@ -26,12 +28,12 @@ guidelines win and this file gets fixed.
 ## the cycle
 
 1. no agent without a plan and a written briefing that names the item of
-   the task's acceptance criterion it closes (docs/ref/autonomy.md,
+   the task's acceptance criterion it closes ([autonomy](autonomy.md),
    "contra gasto de tokens"). the task file sits in
-   docs/log/steps/ while the task is open.
+   docs/tarefas/ while the task is open.
 2. the orchestrator checks that the task's dependencies are merged into
    `main` and that its code surface is free (ownership table in
-   docs/log/generative-runtime-program.md, section 8).
+   [the generative runtime program](../../historia/programa-runtime-generativo.md), section 8).
 3. the orchestrator diagnoses first: reads the code the task touches and
    writes the mechanism into the briefing with file:line. prompts that
    carry the mechanism produce root fixes; prompts that carry symptoms
@@ -54,7 +56,7 @@ guidelines win and this file gets fixed.
    cost tokens and the orchestrator is the one accountable.
 9. accepted: a pull request merged with a merge commit (never squash, never
    rebase merge), the gate green locally and said so in the PR while CI
-   billing is off, then close-out (task file to checked/, ADR, arc.toml, README, changelog,
+   billing is off, then close-out (the task page with its final state, ADR, ATLAS.toml, README, changelog,
    this manual and the engine manual when a rule changed). the close-out
    also searches `docs/` and `README.md` for the names of every contract
    the task changed and fixes what became false: close-outs that only
@@ -75,7 +77,7 @@ guidelines win and this file gets fixed.
 - a file two tasks of the same wave must touch is sequenced or split into
   named blocks by the orchestrator before the briefings go out.
 - shared surfaces (`Cargo.toml`, `docs/ATLAS.toml`, `README.md`,
-  `.contracts/`, [`indice-historico.md`](../../historia/indice-historico.md), `docs/log/`) belong to the
+  [`indice-historico.md`](../../historia/indice-historico.md), `docs/historia/` and `docs/tarefas/`) belong to the
   orchestrator; an agent that creates a crate adds only its own entry,
   because `tool/tests/test_repoaudit.rs` fails the build without
   it.
@@ -97,8 +99,8 @@ guidelines win and this file gets fixed.
   were past it when the guard came are frozen at their size then.
 - a harness or scripted agent that waits for the app to "settle" before
   acting is a symptom: the wait becomes a bug of the app, filed, never a
-  silent workaround (the ide laboratory's wait hid a real race, task-84).
-- visual claims need pixel numbers (docs/ref/validate-visuals-by-pixel.md).
+  silent workaround (the agenteval laboratory's wait hid a real race, task-84).
+- visual claims need pixel numbers ([validate-visuals-by-pixel](validate-visuals-by-pixel.md)).
   a measured check once rejected a branch an approving eyeball would have
   merged (#121212 against a measured #303030).
 - kill tests settle disputed root causes.

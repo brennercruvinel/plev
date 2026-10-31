@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [sem, wire, rec, serde, protocol, security, redaction, agents, generative-runtime]
-relations: []
+topics: [semantica, agentes, formatos]
+relations: [adr-0039, task-61, task-65, task-83]
 source: docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the semantic form is lean, and one rule redacts a secret
+
+Decide que a forma serde do crate `rust/accord` (então `sem`) não escreve campo com valor padrão e que a regra que mantém um segredo dentro do processo passa a existir uma única vez, no módulo `redactor` desse crate. Medida no todo da showcase, uma observação completa caiu de 6419 para 2039 bytes com três itens, e de 87417 para 26237 com 103, sem que nenhuma revisão mude. `source` continua na forma quando o nó tem origem, mas só sai na resposta do agente quando ele pede.
 
 ## context
 

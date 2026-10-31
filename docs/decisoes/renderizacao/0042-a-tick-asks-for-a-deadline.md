@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [comps, engine, animation, render-on-demand, caret, showcase, winit]
-relations: []
+topics: [animacao, renderizacao, desempenho]
+relations: [task-62, task-73, task-82]
 source: docs/adr/rendering/0042-a-tick-asks-for-a-deadline.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a tick asks for a deadline, not for every frame
+
+Decide que um tick pede ao loop um prazo, e não um frame a cada vez: `comps::Wake` diz se o tick mudou algo visível (`now`) e quando o próximo tick é devido (`next`). Antes, `tick -> bool` mantinha sessenta quadros por segundo para um campo com foco cujo cursor muda duas vezes por segundo. Medido no cenário g do `measure` do showcase, o número de turnos desenhados caiu de 120 de 120 para 4 de 120, e na janela real um campo parado com foco desenha 11 quadros em 6 s, um por troca, em vez de 360; importa porque o loop dorme entre os eventos sem perder um pedido de frame, e uma página ociosa não desenha nada.
 
 ## context
 

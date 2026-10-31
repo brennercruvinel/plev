@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: []
+topics: [semantica, agentes, determinismo]
+relations: [adr-0032, tese-runtime, task-58, task-59, task-60, task-61, task-63, task-65, task-68, task-73]
 evidence: [860b029]
 source: docs/log/steps/task-57-semantic-contract.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-57: contrato semântico (crate `sem`)
+
+Registra a task que criou o contrato semântico do plev no crate `sem` (hoje `accord`, em `rust/accord`): puro, sem dependência de GPU, com `SemId`, `Value`, `Constraints`, `ActionDecl`, `Node`, `Snapshot`, `Revision` estável e `diff`. A semântica nasce como projeção do estado do app, sob demanda, e não como árvore acumulada por frame. Foi integrada na `main` em `860b029`, com `fullcheck.sh` verde e a contagem do workspace de 1467 para 1545 testes; as tasks 58 a 61 e 63 consomem esse contrato para que agentes operem sobre identidade e significado, não sobre posição visual.
 
 ## fechamento (2026-09-23)
 

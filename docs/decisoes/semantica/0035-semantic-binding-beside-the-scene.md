@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [sem, binding, compositor, hit-test, dispatcher, one-path, showcase, generative-runtime]
-relations: []
+topics: [semantica, renderizacao, input]
+relations: [adr-0032, adr-0033, task-57, task-58, task-59, task-60, task-62, task-65, task-73]
 source: docs/adr/semantics/0035-semantic-binding-beside-the-scene.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # semantic binding beside the scene, and the click as a request
+
+Decide onde cada capacidade aparece na tela e como um clique chega a ela: o `Compositor` guarda, a cada frame, a tabela `SemId → Binding` (retângulo, camada, recorte e ordem), ao lado das camadas e nunca dentro delas, e um clique vira um `Request` do ator `Human`, observado no instante do toque. Cada widget liga o mesmo retângulo que desenha e usa no hit test, o que impede um clique de acertar uma linha que o painel não mostrava. O addendum da task-59 (fase b) registra 19 widgets ligados e sete que tratam eventos e seguem sem identidade.
 
 ## addendum (2026-09-23, task-59 phase b)
 

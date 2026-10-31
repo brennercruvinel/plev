@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-23
 date_basis: cabecalho
-topics: [sem, actions, preconditions, receipts, dispatcher, agents, generative-runtime]
-relations: []
+topics: [semantica, agentes, gravacao]
+relations: [adr-0032, task-57, task-58b, task-60, task-61, task-62, task-63, task-69, task-92]
 source: docs/adr/semantics/0033-actions-carry-observed-state.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # actions carry the state their actor observed
+
+Decide que toda ação leva o estado que o seu ator observou: um `Request` guarda o valor visto para cada estado que a ação lê, junto com a revisão do snapshot, e um único `Dispatcher` confere esses valores contra a projeção viva antes de executar. A ide confirmava commits sem nenhuma checagem, e um agente podia decidir sobre um índice que a pessoa já tinha alterado; a regra fecha essa janela. No ponto da verdade, como o índice do git, a checagem se repete logo antes do efeito, e uma recusa devolve o delta do que mudou. Uma atualização de 24/09 (task-92) permite que o agente pergunte à pessoa antes de agir.
 
 ## context
 

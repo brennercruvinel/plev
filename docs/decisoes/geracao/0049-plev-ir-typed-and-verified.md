@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [uir, plev-ir, verifier, capabilities, sem, comps, theme, schema, generative-runtime]
-relations: []
+topics: [ir, superficies-geradas, semantica, design-system]
+relations: [adr-0032, adr-0033, programa-runtime, task-59, task-68, task-69, task-71, task-80, task-95, task-96, task-97, tese-runtime]
 source: docs/adr/generated/0049-plev-ir-typed-and-verified.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the plev IR is typed, references only declared capabilities, and runs only once verified
+
+Decide que a IR do plev é tipada, só referencia capacidades declaradas e só é executada depois de verificada: um `VerifiedIr` é a única passagem para a materialização, e o verificador reúne todos os erros de uma vez, cada um com seu ponteiro JSON. O registro de capacidades vem da projeção do app, e não de uma declaração à parte, e o vocabulário v1 é o conjunto de widgets que o comps e o engine já têm. O addendum de 2026-09-25 acrescenta o componente `code` (task-97, rotulado como proposto no próprio texto); importa porque um modelo pode compor uma superfície, mas não pode conceder a si mesmo uma capacidade, enviar um valor do tipo errado nem pôr uma ação destrutiva a um clique.
 
 ## context
 
@@ -26,8 +28,8 @@ and 15). what existed:
 
 - `rust/accord`: the semantic contract. every control has a `SemId`, a
   closed `Role`, state as `Value`s, and `ActionDecl`s with their
-  `ParamSpec` and `Policy` (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md,
-  docs/adr/semantics/0033-actions-carry-observed-state.md). an app's `Snapshot` already
+  `ParamSpec` and `Policy` ([adr-0032](../semantica/0032-semantic-contract-as-pure-projection.md),
+  [adr-0033](../semantica/0033-actions-carry-observed-state.md)). an app's `Snapshot` already
   declares everything it can show and run.
 - `rust/engine/src/widgets`: the widgets, each with a `project` that declares its
   role, state and actions (task-59), and `engine::theme`: every visual

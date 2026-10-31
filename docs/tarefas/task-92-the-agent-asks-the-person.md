@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-24
 date_basis: cabecalho
-topics: [agent-surface]
-relations: [task-58b, task-89, task-91]
+topics: [agentes, semantica, gravacao]
+relations: [task-58, task-58b, task-80, task-89, task-91, adr-0033, adr-0039]
+evidence: [f101359, 2f61463, 7623b7f, e3cf244, 01b9b2a, ae544b7, d56ef44, 64011de, 9792058, 82202ab, d293046]
 source: docs/log/steps/task-92-the-agent-asks-the-person.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-92: o agente pergunta à pessoa
+
+Permite que um agente peça, no próprio request, que uma pessoa confirme a ação antes de ela rodar, e que a recusa dela chegue ao agente. Na terceira rodada do checkpoint a, um agente recolocou um arquivo que a pessoa tinha tirado do index, e o outro parou sem como perguntar; a sonda mostrou que a recusa não chegava ao agente, e a correção no porto (P0) veio antes. Integrada na `main` em `f101359`, a pergunta fica gravada, aparece no `why` do inspector e não entra na projeção.
 
 ## por que
 
@@ -400,7 +403,7 @@ de um request seu (P0 da task-92)".
   esperam a próxima mensagem se o shell não drenar depois do worker. com
   o P0 isso deixou de valer.
 - [`0039-agents-act-through-the-semantic-contract.md`](../decisoes/semantica/0039-agents-act-through-the-semantic-contract.md), o `README.md`,
-  o `docs/ATLAS.toml` e o [`changelog.md`](../historia/changelog.md) não mudaram. o ADR do
+  o [`docs/ATLAS.toml`](../ATLAS.toml) e o [`changelog.md`](../historia/changelog.md) não mudaram. o ADR do
   porto não cita o `ask` nem o wake do sink; a seção do ADR da 58b cobre
   os dois.
 - o `rec` estima o peso de um request sem o texto da pergunta

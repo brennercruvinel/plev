@@ -6,16 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-57]
+topics: [renderizacao, gpu, determinismo]
+relations: [adr-0006, adr-0034, manual-orchestrate-coding-agents-on-this-repo, task-57, task-59, task-60, task-64, task-66b, task-67, task-77, tese-runtime]
 evidence: [c6738be]
 source: docs/log/steps/task-66-headless-first-class.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-66: headless como primeira classe
+
+Torna o render offscreen uma saída do mesmo caminho de desenho da janela: `GpuContext::new_headless` e `window::draw_frame` desenham qualquer frame numa textura, e a CLI do showcase e o `monster_player` geram png sem janela. A integração em `c6738be` fechou a task com a matriz inteira de páginas renderizada duas vezes com diferença zero de pixel; a exportação SVG saiu para a task-66b, porque depende do shaping de texto do `TextSystem`. O resultado sustenta CI, og-image e regressão estrutural sem exigir uma janela.
 
 ## fechamento (2026-09-23)
 
