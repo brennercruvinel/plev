@@ -149,6 +149,24 @@ pub fn paint_scrim(
     );
 }
 
+/// The rounded rect a panel at `panel` held to `edge` is drawn as, and
+/// its radius: it runs past the held edge, and past the two sides along
+/// it by twice the rule's width (the rule, and the pixel a clip rounded
+/// out to the device grid may still show).
+fn shape(panel: Rect, edge: Edge, t: &EdgePanelTokens) -> (Rect, f32) {
+    let r = t.radius.min(panel.w / 2.0).min(panel.h / 2.0);
+    let side = t.rule_w * 2.0;
+    let past = r + side;
+    let p = panel;
+    let ext = match edge {
+        Edge::Left => Rect::new(p.x - past, p.y - side, p.w + past, p.h + side * 2.0),
+        Edge::Right => Rect::new(p.x, p.y - side, p.w + past, p.h + side * 2.0),
+        Edge::Top => Rect::new(p.x - side, p.y - past, p.w + side * 2.0, p.h + past),
+        Edge::Bottom => Rect::new(p.x - side, p.y, p.w + side * 2.0, p.h + past),
+    };
+    (ext, r)
+}
+
 /// The surface of a panel at `panel` held to `edge`, inside `clip` (the
 /// container): its shadows, its fill, and the rule of its free edge,
 /// rounded at the two corners away from the edge. The rect drawn runs
@@ -162,15 +180,7 @@ pub fn paint_panel(
     edge: Edge,
     t: &EdgePanelTokens,
 ) {
-    let r = t.radius.min(panel.w / 2.0).min(panel.h / 2.0);
-    let (past, side) = (r + t.rule_w, t.rule_w);
-    let p = panel;
-    let ext = match edge {
-        Edge::Left => Rect::new(p.x - past, p.y - side, p.w + past, p.h + side * 2.0),
-        Edge::Right => Rect::new(p.x, p.y - side, p.w + past, p.h + side * 2.0),
-        Edge::Top => Rect::new(p.x - side, p.y - past, p.w + side * 2.0, p.h + past),
-        Edge::Bottom => Rect::new(p.x - side, p.y, p.w + side * 2.0, p.h + past),
-    };
+    let (ext, r) = shape(panel, edge, t);
     push_clip(c, layer, clip);
     for spec in &t.shadow {
         if let Some(node) = shadow_node(ext, r, spec) {
@@ -534,7 +544,8 @@ impl Sheet {
         }
         c.push_to_layer(layer, SceneNode::PopClip);
 
-        // The dialog's footer: its band and rule when the theme has one.
+        // The dialog's footer, when the theme has one: its band in the
+        // panel's shape (its free corners), its rule on top.
         if m.footer.0[3] > 0.0 {
             let band = Rect::new(
                 panel.x,
@@ -542,14 +553,10 @@ impl Sheet {
                 panel.w,
                 panel.bottom() - parts.footer_y,
             );
-            let fill = SceneNode::Rect {
-                x: band.x,
-                y: band.y,
-                w: band.w,
-                h: band.h,
-                color: m.footer.0,
-            };
-            c.push_to_layer(layer, fill);
+            let (e, r) = shape(panel, self.edge, &t.panel);
+            push_clip(c, layer, intersect(band, clip));
+            c.push_to_layer(layer, rounded_rect(e.x, e.y, e.w, e.h, r, m.footer.0));
+            c.push_to_layer(layer, SceneNode::PopClip);
             let rule = SceneNode::Rect {
                 x: band.x,
                 y: band.y,

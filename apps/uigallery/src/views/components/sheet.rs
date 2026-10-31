@@ -115,7 +115,7 @@ impl SheetPage {
         let button_h = self.buttons.iter().map(|b| b.preferred_size(theme).1);
         let live = showcase::card_height(button_h.fold(0.0, f32::max), theme);
         let groups = [
-            (1, vec![live; self.buttons.len()]),
+            (2, vec![live; self.buttons.len()]),
             (2, vec![CARD_H.max(frame + tallest); self.shown.len()]),
         ];
         showcase::layout_sized(groups, content, theme)
