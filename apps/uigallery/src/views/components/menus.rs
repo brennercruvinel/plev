@@ -19,7 +19,7 @@
 //! an `activate` that picks it as a press does, the menu's `picked` the
 //! last pick.
 
-use accord::{Request, Role, SemId, SnapshotBuilder};
+use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
 use engine::widgets::overlay::tokens::MenuStyle;
@@ -29,7 +29,10 @@ use engine::widgets::selection::{FolderRow, Folders};
 
 use super::context_menu::{file_menu, filter_menu, profile_menu};
 use super::showcase::{self, GroupLayout};
-use super::{After, Component, child_id, key_under, root_id, under};
+use super::{After, Component, EditKey, child_id, key_under, root_id, under};
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
 
 /// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20).
 const CARD_MIN_H: f32 = 486.0;
@@ -60,7 +63,7 @@ enum Body {
     /// Another front's component, named until it arrives.
     Pending(&'static str),
     Menu(ContextMenu),
-    Folders(Folders),
+    Folders(Box<Folders>),
 }
 
 struct Card {
@@ -145,7 +148,7 @@ impl MenusPage {
         let mut cards = vec![
             card("Zoom view options", Body::Pending("Zoom, from front G")),
             card("File menu", menu(file_menu(), MenuStyle::File)),
-            card("File menu", Body::Folders(Folders::new(FOLDERS))),
+            card("File menu", Body::Folders(Box::new(Folders::new(FOLDERS)))),
             card("Select AI model", Body::Pending("SelectAI, from front C")),
             card("Upload", menu(upload_menu(), MenuStyle::Upload)),
             card("Filter menu", menu(filter_menu(), MenuStyle::Filter)),
@@ -159,7 +162,7 @@ impl MenusPage {
                 };
                 card.body = match std::mem::replace(&mut card.body, Body::Pending("")) {
                     Body::Menu(m) => Body::Menu(m.sem(id)),
-                    Body::Folders(f) => Body::Folders(f.sem(id)),
+                    Body::Folders(f) => Body::Folders(Box::new((*f).sem(id))),
                     pending => pending,
                 };
             }
@@ -212,8 +215,9 @@ impl MenusPage {
                 check(m, id);
                 label(m, id)
             }
-            (Body::Folders(f), Spot::Row(FolderRow::New)) if f.sem_id().is_some() => {
-                Some("New Folder".to_owned())
+            (Body::Folders(f), Spot::Row(FolderRow::New)) => {
+                f.toggle_naming();
+                return true;
             }
             (Body::Folders(f), Spot::Row(FolderRow::Folder(i))) => f.folders.get(i).cloned(),
             _ => None,
@@ -259,10 +263,61 @@ impl MenusPage {
             })
     }
 
+    /// The folder picker, where it is.
+    fn folders(&self) -> Option<&Folders> {
+        self.cards.iter().find_map(|c| match &c.body {
+            Body::Folders(f) => Some(f.as_ref()),
+            _ => None,
+        })
+    }
+
+    fn folders_card(&self) -> Option<usize> {
+        self.cards
+            .iter()
+            .position(|c| matches!(c.body, Body::Folders(_)))
+    }
+
+    fn folders_mut(&mut self) -> Option<&mut Folders> {
+        self.cards.iter_mut().find_map(|c| match &mut c.body {
+            Body::Folders(f) => Some(f.as_mut()),
+            _ => None,
+        })
+    }
+
+    /// The new folder's name added (Enter, the name's `submit`): the
+    /// card says it.
+    fn commit_name(&mut self) -> bool {
+        let Some(c) = self.folders_card() else {
+            return false;
+        };
+        let name = self.folders_mut().and_then(Folders::commit_name);
+        let made = name.is_some();
+        if made {
+            self.cards[c].picked = name;
+        }
+        made
+    }
+
+    /// The search box's and the name's rects in `content`.
+    fn field_rects(&self, content: Rect, theme: &Theme) -> (Option<Rect>, Option<Rect>) {
+        let (Some(c), Some(f)) = (self.folders_card(), self.folders()) else {
+            return (None, None);
+        };
+        let card = self.layout(content, theme)[0].cards[c];
+        let l = f.layout(Self::widget_rect(&self.cards[c].body, card, theme), theme);
+        (Some(l.search), l.name)
+    }
+
+    /// Escape: an open name's box closes, then the field or the row that
+    /// has the focus lets it go.
     pub fn handle_escape(&mut self) -> bool {
+        if self.folders_mut().is_some_and(Folders::cancel_naming) {
+            return true;
+        }
+        let field = self.folders_mut().is_some_and(Folders::blur_fields);
         let had = self.focus.is_some();
         self.set_focus(None);
-        had
+        field || had
     }
 
     pub fn handle_event(
@@ -272,7 +327,8 @@ impl MenusPage {
         theme: &Theme,
     ) -> EventResult {
         let mut result = EventResult::IGNORED;
-        if matches!(event, WidgetEvent::MouseDown { .. }) && self.handle_escape() {
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.focus.is_some() {
+            self.set_focus(None);
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
@@ -405,22 +461,56 @@ impl Component for MenusPage {
                 (Body::Folders(f), Spot::Row(r)) => f.row_id(r),
                 _ => None,
             });
-        if let Some(id) = focused {
+        let field = self.folders().and_then(|f| f.field()?.sem_id().cloned());
+        if let Some(id) = focused.or(field) {
             b.focus(&id);
         }
     }
 
-    /// An item's or a folder's `activate` picks it, as its press does.
+    /// An item's or a folder's `activate` picks it, as its press does; a
+    /// box's `set_value` puts its text; the name's `submit` adds the
+    /// folder, as Enter does.
     fn run(&mut self, req: &Request) -> Result<After, String> {
-        match (self.at(&req.target), req.action.as_str()) {
-            (Some((c, spot)), "activate") if self.pick(c, spot) => Ok(After::Nothing),
-            _ => Err(format!("the page has no {} on {}", req.action, req.target)),
+        let refuse = || format!("the page has no {} on {}", req.action, req.target);
+        let f = self.folders();
+        let search = f.and_then(|f| f.search.sem_id().cloned());
+        let name = f.and_then(|f| f.naming()?.sem_id().cloned());
+        let target = Some(&req.target);
+        match (req.action.as_str(), &req.param) {
+            ("set_value", Some(Value::Text(text))) if target == search.as_ref() => {
+                let f = self.folders_mut().ok_or_else(refuse)?;
+                f.search.set_text(text);
+                Ok(After::Nothing)
+            }
+            ("set_value", Some(Value::Text(text))) if target == name.as_ref() => {
+                let f = self.folders_mut().and_then(Folders::naming_mut);
+                f.ok_or_else(refuse)?.set_text(text);
+                Ok(After::Nothing)
+            }
+            ("submit", _) if target == name.as_ref() && self.commit_name() => Ok(After::Nothing),
+            ("activate", _) => match self.at(&req.target) {
+                Some((c, spot)) if self.pick(c, spot) => Ok(After::Nothing),
+                _ => Err(refuse()),
+            },
+            _ => Err(refuse()),
         }
     }
 
+    /// A row, an item or a box takes the focus (its ring, or the box's
+    /// caret); another node of the page takes it from them.
     fn focus(&mut self, id: &SemId) -> bool {
         if !self.root.as_ref().is_some_and(|root| under(root, id)) {
             return false;
+        }
+        let f = self.folders();
+        let search = f.and_then(|f| f.search.sem_id()) == Some(id);
+        let name = f.and_then(|f| f.naming()?.sem_id().cloned()).as_ref() == Some(id);
+        if let Some(f) = self.folders_mut() {
+            if search || name {
+                f.focus_field(name);
+            } else {
+                f.blur_fields();
+            }
         }
         self.set_focus(self.at(id));
         true
@@ -428,6 +518,92 @@ impl Component for MenusPage {
 
     fn blur(&mut self) -> bool {
         self.handle_escape()
+    }
+}
+
+impl TextHost for MenusPage {
+    /// Type `s` into the focused box. `false` when none is focused.
+    fn handle_text(&mut self, s: &str) -> bool {
+        self.folders_mut()
+            .and_then(Folders::field_mut)
+            .is_some_and(|f| f.insert(s))
+    }
+
+    /// The editing keys edit the focused box; Tab is the view's.
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if key == EditKey::Tab {
+            return false;
+        }
+        self.folders_mut()
+            .and_then(Folders::field_mut)
+            .is_some_and(|f| f.edit(key.into()))
+    }
+
+    /// The input method composes in the focused box; `Disabled` drops a
+    /// composition wherever one is.
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let Some(folders) = self.folders_mut() else {
+            return false;
+        };
+        let (committed, preedit, cursor) = match ime {
+            ImeEvent::Disabled => {
+                let mut dropped = folders.search.end_compose();
+                if let Some(f) = folders.naming_mut() {
+                    dropped |= f.end_compose();
+                }
+                return dropped;
+            }
+            ImeEvent::Preedit(text, cursor) => ("", text, cursor),
+            ImeEvent::Commit(text) => (text, "", None),
+        };
+        folders
+            .field_mut()
+            .is_some_and(|f| f.compose(committed, preedit, cursor))
+    }
+
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        let f = self.folders()?;
+        let field = f.field()?;
+        let (search, name) = self.field_rects(content, theme);
+        let at = if field.is_focused() && f.search.is_focused() {
+            search?
+        } else {
+            name?
+        };
+        Some(field.ime_area_in(at, theme, Folders::slots(theme)))
+    }
+
+    /// A right-click on a box gives it the keys, for its menu.
+    fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+        let (search, name) = self.field_rects(content, theme);
+        let on_name = name.is_some_and(|r| r.contains(x, y));
+        if !on_name && !search.is_some_and(|r| r.contains(x, y)) {
+            return false;
+        }
+        if let Some(f) = self.folders_mut() {
+            f.focus_field(on_name);
+        }
+        true
+    }
+
+    fn keys(&mut self) -> Keys<'_> {
+        match self.folders_mut().and_then(Folders::field_mut) {
+            Some(f) => Keys::Field(f),
+            None => Keys::Nobody,
+        }
+    }
+
+    fn handle_escape(&mut self) -> bool {
+        MenusPage::handle_escape(self)
+    }
+
+    /// Enter in the name's box adds the folder.
+    fn handle_enter(&mut self) -> bool {
+        let naming = self
+            .folders()
+            .and_then(Folders::naming)
+            .is_some_and(|f| f.is_focused());
+        naming && self.commit_name()
     }
 }
 
@@ -514,5 +690,27 @@ mod tests {
         assert_eq!(page.focus, Some((1, Spot::Item(2))));
         assert!(page.handle_escape());
         assert_eq!(page.focus, None);
+    }
+
+    /// New Folder opens the name's box with the keys in it; typing goes
+    /// there, Enter adds the folder, and Escape closes an open box with
+    /// nothing added.
+    #[test]
+    fn the_name_box_takes_typing_enter_adds_and_escape_cancels() {
+        let mut page = MenusPage::new();
+        let c = page.folders_card().unwrap();
+        assert!(page.pick(c, Spot::Row(FolderRow::New)));
+        assert!(page.handle_text("Moodboard"));
+        assert!(TextHost::handle_enter(&mut page));
+        let f = page.folders().unwrap();
+        assert_eq!(f.folders.last().map(String::as_str), Some("Moodboard"));
+        assert!(f.naming().is_none());
+
+        page.pick(c, Spot::Row(FolderRow::New));
+        assert!(page.handle_text("draft"));
+        assert!(MenusPage::handle_escape(&mut page), "Escape cancels");
+        let f = page.folders().unwrap();
+        assert_eq!((f.folders.len(), f.naming().is_none()), (5, true));
+        assert!(!page.handle_text("x"), "no box has the keys");
     }
 }

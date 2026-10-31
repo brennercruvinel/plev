@@ -578,9 +578,20 @@ impl SelectionTokens {
             search_slot: 32.0,
             search_icon: 16.0,
             search_text_x: 48.0,
+            text_end: 12.0,
             search_gap: 8.0,
-            // the kit's #7B7B7B reads 3.9:1 on the box; shade 7 passes AAA
-            placeholder: legible(hex(0x7B7B7B), SHADES[6], search_fill, SHADES[0]),
+            // NewFolder/index.tsx:40 `relative mt-0.5`, :45 the box `h-10
+            // pl-12 rounded-xl bg-[#f1f1f1] border border-[#ececec]`, :32
+            // its icon at `left-2.5`, filled `#7240F1`
+            naming: ButtonSurface {
+                fill: [row_hover; 2],
+                overlay: NONE,
+                shadow: vec![border(hex(0xECECEC))],
+                text: ink,
+            },
+            naming_gap: 2.0,
+            naming_icon_x: 10.0,
+            naming_icon: hex(0x7240F1),
             row_h: 40.0,
             row_radius: 12.0,
             row_hover,

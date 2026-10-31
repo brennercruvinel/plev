@@ -103,4 +103,6 @@ text_hosts! {
     Textarea => textarea,
     Combobox => combobox,
     Command => command,
+    // task-104 front E, selection (#158)
+    Menus => menus,
 }
