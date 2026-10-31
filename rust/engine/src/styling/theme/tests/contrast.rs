@@ -651,6 +651,59 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         over(sel.calendar.today, panel),
         panel,
     );
+    // the folder picker: its labels and placeholder at AAA, its marks
+    // (the search and new-folder icons) at 3:1, on the panel, a row's
+    // hover and the search box
+    let fo = &sel.folders;
+    let fpanel = over(fo.panel.fill[0], page_bg.1);
+    let fhover = over(fo.row_hover, fpanel);
+    let fsearch = over(fo.search.fill[0], fpanel);
+    for (fg, bg, need, color, under) in [
+        (
+            "selection.folders.label",
+            "selection.folders.panel",
+            aaa,
+            fo.label,
+            fpanel,
+        ),
+        (
+            "selection.folders.label",
+            "selection.folders.row_hover",
+            aaa,
+            fo.label,
+            fhover,
+        ),
+        (
+            "selection.folders.placeholder",
+            "selection.folders.search",
+            aaa,
+            fo.placeholder,
+            fsearch,
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.panel",
+            LARGE,
+            fo.mark,
+            fpanel,
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.row_hover",
+            LARGE,
+            fo.mark,
+            fhover,
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.search",
+            LARGE,
+            fo.mark,
+            fsearch,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -938,7 +991,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 665,
+        count, 689,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
