@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-21
 date_basis: cabecalho
-topics: [design-system]
-relations: []
+topics: [design-system, gpu]
+relations: [adr-0028]
 source: docs/log/steps/task-54-core-theme-buttons-poc.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-54: core theme, buttons poc
+
+Registra a PoC do tema core: o kit TypeScript privado reescrito sobre o plev, com `ButtonTokens` por variante, `comps::action` reescrito e a aba Buttons do showcase como ButtonsPage. O resultado é o botão no tema core com gate verde e dois defeitos globais corrigidos no caminho (mistura em premultiplicado linear e piso de sigma de 0,5 px); o HOFF dark glass permanece até todas as páginas migrarem.
 
 ## objetivo
 o tema principal do plev (HOFF dark glass) não bate com o design system

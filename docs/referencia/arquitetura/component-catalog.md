@@ -6,20 +6,24 @@ type: referencia
 status: ativo
 date: 2026-09-18
 date_basis: cabecalho
-topics: [ui, components, design-system, comps, tokens, inventory]
-relations: []
+topics: [design-system, plataforma]
+relations: [adr-0023, adr-0027, adr-0035, manual-code-against-the-plev-engine, task-59]
 source: docs/ref/component-catalog.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # catálogo de componentes de ui
+
+Registra o inventário de tudo que desenhava UI no repositório antes do crate `comps`, o destino de cada item e o que a migração fez. O estado atual põe os widgets em `rust/engine/src/widgets` e os tokens em `rust/engine/src/styling/theme`, e cada widget interativo tem semântica ligada (task-59). Serve como plano e como registro: a seção 3 lista cada literal fora dos tokens, com o token que falta.
 
 inventário de tudo que desenhava ui no repositório antes do crate `comps`
 (seções 1 a 4, mantidas como registro do ponto de partida), o destino de
 cada item (seção 5) e o que a migração fez (seção 7). a decisão está em
 docs/adr/structure/0027-comps-one-design-system-crate.md.
+
+As seções 1 a 4 são o registro do ponto de partida; a seção 5 traz o destino de cada item, e a seção 7, o que a migração fez. A decisão está em [docs/decisoes/estrutura/0027-comps-one-design-system-crate.md](../../decisoes/estrutura/0027-comps-one-design-system-crate.md).
 
 ## 0. estado atual (depois da migração)
 

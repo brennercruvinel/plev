@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-21
 date_basis: cabecalho
-topics: [showcase]
-relations: []
+topics: [git, plataforma]
+relations: [adr-0029, task-48]
 source: docs/log/steps/task-53-editor-and-git-in-the-showcase.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-53: editor e git no showcase
+
+Registra a task que deu ao showcase duas abas de app, Editor e Git, ocupando a área sob o header, com o workspace do ide embutido por `set_frame` e o rail com origem própria. O resultado depende de o `ide` ter virado lib e bin, com `GitSession` como ponte entre a UI e o `GitClient`. Ficam de fora o git no web e no mobile, que precisa de thread e do git CLI, e o header do ide, que ainda centra na janela.
 
 ## resultado
 o showcase ganhou duas abas de app: Editor (o `comps::editor::EditorView`

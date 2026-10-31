@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-18
 date_basis: cabecalho
-topics: [urnaui, media, ffmpeg, av1, blobs, worker]
-relations: []
+topics: [urna, formatos, desempenho]
+relations: [adr-0026]
 source: docs/adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # urnaui: decode media frames in place with ffmpeg's subfile protocol
+
+Decide decodificar os quadros de mídia do corpus `.urna` no lugar, com o protocolo `subfile` do ffmpeg: o worker recebe só o intervalo do blob dentro do próprio arquivo, sem copiá-lo. O motivo era o custo de exportar um blob de cerca de 500 MB ou de decodificar AV1 em processo, com dependência nova e sem história para wasm. O resultado é um cartão renderizado em cerca de 60 ms sem bytes copiados, e a web lista a mídia sem mostrar quadros, porque o ffmpeg não roda no navegador.
 
 ## context
 

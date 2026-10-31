@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-08-18
 date_basis: cabecalho
-topics: [workspace, cargo, organization, structure]
-relations: []
+topics: [workspace, plataforma]
+relations: [adr-0022]
 evidence: [c2a90f1]
 source: docs/adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # engine at root, libraries and apps in crates, demos in examples
+
+Decide três níveis de workspace, com uma regra para cada: o engine na raiz (hoje em `rust/engine`, por atualização de 2026-07-13), bibliotecas e apps em `crates/` e demos em `examples/`. O motivo foi a mistura de nomes, demos que eram crates e versões de dependências repetidas em cada crate. O resultado é uma árvore que mostra de relance o que é produto e o que é demo, com `[workspace.dependencies]` como única fonte de versão. A lição registrada: `cargo build --workspace` não compila exemplos; só `cargo test` os compila.
 
 update (2026-07-13): the engine later moved from the root crate to
 rust/engine and the root became a virtual workspace; the three tiers

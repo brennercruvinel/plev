@@ -17,7 +17,14 @@ review: revisado
 
 # programa: de GPU UI engine a generative interaction runtime
 
-Registra o programa que transforma o plev de GPU UI engine em generative interaction runtime: o goal, o diagnóstico do código em 2026-09-23, o grafo e as ondas das tasks 57 a 97, os contratos entre elas, o ownership das superfícies compartilhadas e os pontos de decisão. O estado de cada task (seção 12) vai até 2026-09-26, quando o brenner decidiu manter candle e burn na task-78. É o mapa executável para o orquestrador e para os agentes: as regras de trabalho estão em [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e são obrigatórias para todos, e a tese em [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md).
+Registra o programa que transforma o plev de GPU UI engine em generative interaction runtime: o goal, o diagnóstico do código em 2026-09-23, o grafo e as ondas das tasks 57 a 97, os contratos entre elas, o ownership das superfícies compartilhadas e os pontos de decisão. O estado de cada task (seção 12) vai até 2026-09-26, quando o brenner decidiu manter candle e burn na task-78.
+
+a tese está em [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md). as regras de
+trabalho estão em [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e são obrigatórias para o
+orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
+o estado real do código, o grafo de dependências, a ordem de integração,
+os contratos entre tasks, o ownership das superfícies compartilhadas e os
+pontos de decisão.
 
 ## 1. goal
 

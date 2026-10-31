@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-10-29
 date_basis: cabecalho
-topics: [text, layout, cosmic-text, measurement, typography]
+topics: [texto, layout]
 relations: []
 evidence: [f15198a]
 source: docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # one TextStyle per text run, shared by measurement and drawing
+
+Decide que um run de texto tem exatamente um `TextStyle`, usado pela medição e pelo desenho. O motivo é que o defeito "rótulo maior que a forma" tinha um mecanismo único: a forma era dimensionada com um modelo de texto e o texto era desenhado com outro, e o heurístico errava de -10% a +21%. O resultado é que a largura da forma vira texto medido mais padding, com `TextMeasurer` como única fonte de largura, sem GPU e com cache.
 
 ## context
 

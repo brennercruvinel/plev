@@ -6,16 +6,18 @@ type: registro
 status: referencia
 date: 2025-02-19
 date_basis: cabecalho
-topics: [session, responsiveness, wasm, webgpu, touch, text-measurement, gamma, rust, wgpu, taffy, cosmic-text]
-relations: []
-evidence: [bb34a1c]
+topics: [layout, texto, renderizacao, web-wasm, input]
+relations: [adr-0001, adr-0002, adr-0006, adr-0007, adr-0009, apps-contornam-engine, dois-bugs-gamma, manual-build-and-serve-the-web-target, manual-orchestrate-coding-agents-on-this-repo, manual-validate-visuals-by-pixel]
+evidence: [bb34a1c, f15198a, 5854941, 15f096f, 30337de, 55c8aa7, 69013d1, 2a33933]
 source: docs/log/responsiveness-multiplatform-and-fidelity.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # session record: responsiveness, real measurement, web target, touch
+
+Registro da sessão que tratou responsividade, medição real de texto, alvo web e toque: para cada episódio, o caminho que falhou, o que funcionou e o commit que o fechou. O resultado é a troca de layout com constantes por layout guiado pelo conteúdo, de medição por heurística por um único TextStyle, e de gama errada na web por visualização sRGB, verificada por pixel nos dois alvos. Importa porque preserva as lições de processo que o projeto guardou.
 
 cross-referenced from the session transcript, `git log` (95 commits at
 time of writing) and the system docs (docs/plano-tecnico.md as the stable

@@ -6,16 +6,17 @@ type: referencia
 status: referencia
 date: 2024-07-09
 date_basis: cabecalho
-topics: [lint]
+topics: [processo, plataforma]
 relations: []
-evidence: [2d95911]
 source: docs/ref/clippy-zero-warnings.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # resolucao de 107 clippy warnings para zero
+
+Registra como 107 avisos do clippy foram zerados sob `-D warnings`, distribuídos em 12 categorias, e as duas armadilhas da correção: reduzir visibilidade pode quebrar exemplos, e agentes paralelos no mesmo working tree sobrescrevem um ao outro. O resultado é zero aviso, com a regra de rodar `cargo check --examples` depois de mudar visibilidade pública e de usar um único agente para arquivos que se sobrepõem.
 
 ## contexto
 

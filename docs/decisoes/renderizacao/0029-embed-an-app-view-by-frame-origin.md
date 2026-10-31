@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-21
 date_basis: cabecalho
-topics: [showcase, ide, comps, layout]
-relations: []
+topics: [layout, plataforma]
+relations: [adr-0026]
 source: docs/adr/rendering/0029-embed-an-app-view-by-frame-origin.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # embed an app view by giving it a frame origin
+
+Decide que uma view embutida recebe um frame com origem (`set_frame`), e não um `begin_frame` próprio: a view que possui a janela mantém `vw` e `vh`, e o host passa o retângulo. O motivo: o showcase precisava hospedar o editor e o cliente git, e o workspace do ide desenhava a partir de (0, 0). O resultado é que editor e git viram seções de app, e as limitações ficam explícitas: o cabeçalho do ide, o diálogo modal e os toasts ainda centram na janela.
 
 ## context
 

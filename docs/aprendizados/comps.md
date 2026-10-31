@@ -6,15 +6,17 @@ type: aprendizado
 status: referencia
 date: 2026-09-19
 date_basis: cabecalho
-topics: [learnings, comps, design-system, tokens, refactor, session]
-relations: []
+topics: [design-system, processo, workspace]
+relations: [adr-0027, arquitetura-component-catalog, manual-validate-visuals-by-pixel]
 source: docs/log/learnings/comps.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # sessão comps: o que funcionou e o que mordeu
+
+Registra a sessão que criou o crate `comps` e tirou os literais dos widgets, com a decisão de fronteira ([adr-0027](../decisoes/estrutura/0027-comps-one-design-system-crate.md)) e o inventário de componentes ([`docs/referencia/arquitetura/component-catalog.md`](../referencia/arquitetura/component-catalog.md)). O resultado é o caminho que funcionou e as armadilhas da migração, escritos para quem fizer outra migração desse tamanho, humano ou agente. O catálogo foi o plano: cada linha virou um move, um merge ou um delete.
 
 registro da sessão que criou o crate `comps` e tirou os literais dos
 widgets (adr comps-one-design-system-crate, inventário em
@@ -24,7 +26,7 @@ tamanho, humano ou agente.
 ## o caminho que funcionou
 
 1. **catálogo antes de código.** meia hora de grep produziu a tabela do
-   docs/ref/component-catalog.md: onde cada componente vivia, quem duplicava quem, quais
+   [`docs/referencia/arquitetura/component-catalog.md`](../referencia/arquitetura/component-catalog.md): onde cada componente vivia, quem duplicava quem, quais
    números estavam soltos. a tabela virou o plano; cada linha virou um
    move, um merge ou um delete. sem ela o refactor teria virado uma
    sequência de descobertas no meio do caminho.
@@ -87,7 +89,7 @@ tamanho, humano ou agente.
   segmentos.
 - **screencapture no macOS capturou o wallpaper**, não a janela (permissão
   de captura). a validação de pixel fica pelos testes headless ou pelo
-  `text_probe` (docs/ref/validate-visuals-by-pixel.md).
+  `text_probe` ([`docs/referencia/operacao/validate-visuals-by-pixel.md`](../referencia/operacao/validate-visuals-by-pixel.md)).
 
 ## números pra calibrar a próxima
 

@@ -6,16 +6,18 @@ type: registro
 status: referencia
 date: 2026-06-10
 date_basis: cabecalho
-topics: [design-tokens, hoff, theme, colors, typography, measured]
-relations: []
+topics: [design-system, texto, renderizacao]
+relations: [adr-0005]
 evidence: [9c5fbd3]
 source: kdb/reference/hoff-visual-tokens.md
 source_revision: d0958da0
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # hoff visual tokens (measured)
+
+Tabela canônica dos tokens visuais da linguagem hoff, medidos no render vivo da referência (hoff-research-social) e não copiados de folhas de estilo. O código que a implementa estava em `src/theme/hoff.rs` na árvore de 2026-06 e hoje está em `rust/engine/src/styling/theme/hoff.rs`, segundo docs/ATLAS.toml. O registro traz valores de cor, tipografia e efeitos com âncoras de verificação, e uma decisão de produto ainda em aberto sobre o fundo da página.
 
 canonical token table for the hoff design language as implemented in
 src/theme/hoff.rs. all values were measured from the live rendered

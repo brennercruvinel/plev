@@ -3,18 +3,20 @@ id: adr-0015
 title: "modularizacao por single responsibility principle"
 project: plev
 type: decisao
-status: referencia
+status: aceito
 date: 2024-05-21
 date_basis: cabecalho
-topics: [modularization]
+topics: [workspace, processo]
 relations: []
 source: docs/adr/structure/0015-srp-modularization.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # modularizacao por single responsibility principle
+
+Decide um limite de 300 linhas por arquivo `.rs` e a divisão de módulos monolíticos em submódulos por responsabilidade única. O motivo eram 27 arquivos acima desse limite, com o maior em 1219 linhas e responsabilidades misturadas. O resultado foi zero arquivo acima do limite, API pública inalterada e os 470 testes passando sem modificação.
 
 ## status
 

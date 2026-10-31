@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2025-10-01
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [renderizacao, animacao]
+relations: [adr-0014, task-27, task-31]
+evidence: [c749d12, d2f1060]
 source: [docs/log/steps/task-49-prime-creatures.md, docs/log/changes/task-49.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-49: prime number creatures, port do entropic life
+
+Registra a task que portou o Entropic Life XVI para o crate `prime`, com sim core puro e testado e render pela engine, em desktop e web. O resultado é a prova de que a engine aguenta um enxame emergente de partículas, não só widgets; os trails são por histórico de posições. O trail é mais curto e grosseiro que o da fonte e não é pixel-idêntico, como registra o ADR 0014.
 
 ## objetivo
 portar o canvas demo Entropic Life XVI para um crate plev nativo (desktop e web), com sim core puro e testado, e render fiel pela engine. e a prova de que a engine aguenta um swarm de particulas emergente, nao so ui de widgets.

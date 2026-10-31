@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-08-31
 date_basis: cabecalho
-topics: [text, fonts, cosmic-text, glyph-atlas, rasterization, hidpi]
+topics: [texto, renderizacao, gpu]
 relations: []
 source: docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # glyph raster identity and atlas isolation
+
+Decide que a identidade do glyph no atlas é a `CacheKey` inteira do cosmic-text, sem redução, e que o atlas cresce antes de despejar, com gutter transparente e invalidação explícita dos quadros. O motivo: estados acumulados (atlas crescido, despejos, camadas retidas e vários tamanhos de uma face) produziam glyphs desenhados como pedaços de outros, sintomas que probes de um quadro não alcançam. O resultado é texto com pixel exato e idêntico com ou sem crescimento do atlas, pinado por testes sem GPU e por testes de pixel que pulam sem adaptador de GPU.
 
 ## context
 

@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-04-01
 date_basis: cabecalho
-topics: [git, backend, gix, threading, apps]
+topics: [git, desempenho, plataforma]
 relations: []
 source: docs/adr/structure/0020-git-backend-gix-reads-cli-mutations.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # git backend: gix for reads, git CLI for mutations, a worker thread for the UI
+
+Decide separar o trabalho de git por aquilo que cada ferramenta faz bem: gix para leitura (repositório, histórico, refs) e a CLI do git para status, diffs e toda mutação, atrás de um worker thread que a UI nunca bloqueia. O motivo é impedir que o loop de quadros trave em operações git e não manter sozinho toda a superfície de porcelain. O resultado é um crate sem tipos de UI, testado contra repositórios temporários reais, e um `GitClient` cujas respostas voltam por callback.
 
 ## context
 

@@ -3,18 +3,20 @@ id: adr-0018
 title: "adotamos runtime parser + override map para hot reload de plev_narrate! DSL"
 project: plev
 type: decisao
-status: referencia
+status: aceito
 date: 2024-02-18
 date_basis: cabecalho
-topics: [hot-reload]
+topics: [hot-reload, dsl]
 relations: []
 source: docs/adr/workflows/0018-narrate-hot-reload.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # adotamos runtime parser + override map para hot reload de plev_narrate! DSL
+
+Decide o hot reload do `plev_narrate!` com um parser de runtime escrito à mão e um mapa de sobrescritas: o bloco DSL é reparseado ao ser acessado, sem recompilar. Entre três abordagens (literal pool, reparse completo e checagem manual), escolheu-se o reparse completo, porque o literal pool era complexo e a checagem manual era limitada. O resultado é que cores, tamanhos, layout e texto estático mudam em cerca de 500 ms, enquanto os blocos `on`, `when`, `each` e `bind` não são interpretados.
 
 brenner@plev.engineer
 

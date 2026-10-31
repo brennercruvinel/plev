@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-06-10
 date_basis: cabecalho
-topics: [lottie, lot, monster, import, architecture]
+topics: [importacao, formatos, animacao]
 relations: []
 evidence: [a044613]
 source: docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # import foreign formats by conversion, never by embedding a foreign runtime
+
+Decide importar formatos estrangeiros por conversão única, nunca por incorporação de um runtime estrangeiro: o `lot` lê o JSON do Lottie uma vez, offline, e grava `.monster`. O motivo é que um player embutido traz o próprio motor e paga o custo de parse a cada quadro. O resultado é que a reprodução roda no `monster::Player` sem nenhum código Lottie, e o importador registra o que não converte em vez de fingir.
 
 ## context
 

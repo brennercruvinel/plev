@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2025-05-21
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [formatos, animacao]
+relations: [adr-0010, arquitetura-monster-format-v0, task-27, task-31]
+evidence: [a4ad0c0, aa802ff]
 source: [docs/log/steps/task-43-monster-codec.md, docs/log/changes/task-43.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-43: monster, codec binario de animacao v0
+
+Registra a task que entregou o crate `monster`: o codec binário v0 `MON0`, congelado, com container com sha256 por seção, dois encoders, optimizer, decoder estrito e player determinístico. No corpus de cinco arquivos, o resultado é 0,36× e 0,74× do JSON do Lottie em movimento discreto, e 6,5×, 42× e 53× em movimento de corpo inteiro, onde a v1 deve usar trilhas de morph.
 
 ## objetivo
 formato binario proprio para animacao vetorial que seja pequeno, seekable, e toque na mesma engine que desenha a ui. nem json parseado a cada frame (lottie), nem replay O(n) no rewind (swf), nem video que joga fora a natureza vetorial.

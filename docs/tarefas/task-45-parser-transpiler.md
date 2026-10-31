@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2025-07-16
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [importacao, formatos]
+relations: [adr-0012]
+evidence: [5eecb0a, f93a57e, aafc091]
 source: [docs/log/steps/task-45-parser-transpiler.md, docs/log/changes/task-45.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-45: parser, transpiler poc (react/gpui para builder)
+
+Registra a task do transpiler POC: lê TSX com SASS e um widget do gpui, emite código de builder do plev e reporta, com arquivo e linha, tudo o que não consegue representar. No corpus do dono (40 componentes em dois apps) o resultado foi 402 propriedades mapeadas e 709 entradas de droplist, sem crash. A pergunta de estudo segue aberta: a cobertura de um `index.tsx` real, que diz se o parser é ferramenta ou demonstração.
 
 ## objetivo
 ler ui de outro framework e cuspir codigo builder do plev, mapeando cor para token de tema e reportando, com arquivo e linha, tudo que nao consegue representar. nada sai em silencio. e a materializacao parcial do grafo de equivalencias do experimento mon.

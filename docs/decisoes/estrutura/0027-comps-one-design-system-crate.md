@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-18
 date_basis: cabecalho
-topics: [ui, widgets, design-system, theme, tokens, responsive, comps]
-relations: []
+topics: [design-system, layout, mobile]
+relations: [arquitetura-component-catalog]
 source: docs/adr/structure/0027-comps-one-design-system-crate.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # comps: one design system crate, every value a token
+
+Decide que o design system vive num único crate, `rust/engine/src/widgets`, e que todo valor visual é token do tema. O motivo era a UI espalhada em quatro lugares, com literais nos widgets e nenhum breakpoint: um celular recebia o layout de desktop em um terço da largura. O resultado é um tema com escalas, widgets no lugar do que os apps desenhavam à mão, e uma matriz tema × viewport que cobre cada widget novo.
 
 ## context
 
@@ -35,7 +37,7 @@ modal width, 248 sidebar width, `TextStyle::new(32.0).with_line_height(40.0)`
 in the card, `blur_radius: 16.0, offset: [2.0, 4.0]` in three places for
 the same key-light. nothing knew a viewport width: no breakpoint, no
 gutter, no sidebar mode; a phone got the desktop layout at a third of the
-width. docs/ref/component-catalog.md holds the full inventory that opened this change.
+width. [docs/referencia/arquitetura/component-catalog.md](../../referencia/arquitetura/component-catalog.md) holds the full inventory that opened this change.
 
 ## decision
 

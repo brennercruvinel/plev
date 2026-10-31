@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-10-07
 date_basis: cabecalho
-topics: [rendering, events, invalidation, render-on-demand, reactivity]
+topics: [renderizacao, input, sinais]
 relations: []
 evidence: [83720e3]
 source: docs/adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # render on demand makes invalidation a correctness contract
+
+Fixa o contrato que vale quando o engine só renderiza sob pedido: um handler que muda algo visível precisa retornar `true` ou invalidar e pedir o redesenho. O caso que motivou a decisão foi um evento de scroll consumido, com estado alterado, handler retornando `false` e nada invalidado, o que deixou o showcase inteiro sem resposta. Com isso, a invalidação passa a ser tratada como corretude, e os testes de regressão verificam a invalidação, não só o estado mutado.
 
 ## context
 

@@ -6,15 +6,17 @@ type: aprendizado
 status: referencia
 date: 2026-09-21
 date_basis: cabecalho
-topics: [learnings, comps, design-system, theme, shaders, showcase, session]
-relations: []
+topics: [design-system, renderizacao, gpu]
+relations: [adr-0028, adr-0029]
 source: docs/log/learnings/core-buttons.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # sessão core buttons: o que funcionou e o que mordeu
+
+Registra a sessão em que o showcase passou a embutir o editor e o git, trouxe o tema core (o kit TypeScript) e reescreveu os botões sobre ele ([adr-0028](../decisoes/renderizacao/0028-core-theme-tailwind-classes-as-recipes.md) e [adr-0029](../decisoes/renderizacao/0029-embed-an-app-view-by-frame-origin.md)). O resultado é um molde para as próximas páginas do kit: class list vira struct de tokens, depois receita e widget fino. Foi escrito para quem migrar a próxima página, humano ou agente, e separa o que funcionou, o que mordeu e o que ficou para depois.
 
 registro da sessão que embutiu editor e git no showcase, trouxe o tema
 core (o kit typescript) e reescreveu os botões sobre ele (adr

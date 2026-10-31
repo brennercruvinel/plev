@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-09-18
 date_basis: cabecalho
-topics: [layout, taffy, flex, responsiveness, resize]
+topics: [layout, renderizacao]
 relations: []
 evidence: [15f096f]
 source: docs/adr/rendering/0002-content-driven-layout-not-fixed-constants.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # container geometry derives from available space, never from constants
+
+Decide que toda dimensão de contêiner deriva do espaço disponível medido ou do motor de flex, e que constantes só valem como mínimo, máximo ou espaçamento. O motivo é que a engine já tinha layout flex completo, mas as apps posicionavam retângulos com constantes fixas, e a janela não reflowava ao encolher nem aproveitava espaço ao crescer. O resultado é uma geometria testada sem GPU em larguras explícitas, como 600 px empilhando e 1272 px espalhando, e um clamp que guarda a intenção, não o valor clampado.
 
 ## context
 

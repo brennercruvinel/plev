@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-11-20
 date_basis: cabecalho
-topics: [gamma, srgb, color, wgpu, shaders, rendering]
+topics: [renderizacao, gpu]
 relations: []
 evidence: [69013d1]
 source: docs/adr/rendering/0004-linearize-colors-before-the-gpu.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # linearize colors before they reach the GPU
+
+Decide converter sRGB para linear uma única vez, no ponto em que a cor entra na memória da GPU. O motivo é que a engine entregava valores sRGB como se fossem lineares, e a GPU recodificava: o fundo do token 48 era medido em 118 na tela. O resultado é o fundo medido em 50 depois da correção, com `to_linear_array()` como caminho único para cores de limpeza e o teste `to_linear_array_darkens_srgb_midtones` fixando a curva.
 
 ## context
 

@@ -6,15 +6,17 @@ type: aprendizado
 status: referencia
 date: 2026-09-21
 date_basis: cabecalho
-topics: [learnings, showcase, comps, sidebar, refactor, session]
-relations: []
+topics: [design-system, processo, workspace]
+relations: [adr-0030, task-55, arquitetura-component-catalog]
 source: docs/log/learnings/showcase-pages.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # sessão showcase pages: o que funcionou e o que mordeu
+
+Registra a sessão que transformou o showcase em uma página por componente ([adr-0030](../decisoes/estrutura/0030-showcase-one-page-per-component.md) e [task-55](../tarefas/task-55-showcase-one-page-per-component.md)). O resultado foi tratar a página como dado e não como enum, com testes da tabela que pegam erro de dado sem rodar o app, e aliases com dívida declarada em vez de páginas duplicadas. Foi escrito para quem for fazer a próxima reorganização grande, humano ou agente.
 
 registro da sessão que virou o showcase em uma página por componente
 (adr showcase-one-page-per-component, task-55). escrito pra quem for

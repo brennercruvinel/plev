@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-18
 date_basis: cabecalho
-topics: [urnaui, worker, winit, render-on-demand, subprocess]
+topics: [urna, desempenho, renderizacao]
 relations: []
 source: docs/adr/rendering/0026-worker-results-wake-the-event-loop.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # background results wake the event loop; child pipes drain from the start
+
+Decide que o worker acorda o event loop por um callback de wake que envia um evento de usuário, e que todo processo filho drena stdout e stderr desde o spawn, pelo helper único de subprocesso. O motivo: um resultado que chega segundos após a última entrada ficava parado no canal até o próximo movimento do mouse, e um filho que escreve mais que o buffer do pipe bloqueia no write até o timeout. O resultado é que o resultado aparece no momento em que existe, e um filho travado custa só o timeout e um erro tipado.
 
 ## context
 

@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-02-16
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [workspace, processo]
+relations: [adr-0013, task-52]
+evidence: [a4ad0c0, b08bce8, 99929b9, c2a90f1, 8aa4a8f, e6f7091, 92c3aaa]
 source: [docs/log/steps/task-51-workspace-restructure.md, docs/log/changes/task-51.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-51: reestruturacao do workspace e rebrand de naming
+
+Registra a task que levou o repositório de crates soltos a três tiers, engine na raiz, libs e apps em `crates/` e demos em `examples/`, com o rebrand de nomes: phi e boitata viram plev, anm vira monster e prs vira parser. O resultado são 12 crates como membros e cerca de 17 examples, sem mudança de API pública. A modularização SRP vem depois, na task-52.
 
 ## objetivo
 levar o repo de crates soltos com naming inconsistente para uma estrutura de tres tiers profissional, e fechar o rebrand: phi (φ) e boitata viram plev, anm vira monster, prs vira parser.

@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-21
 date_basis: cabecalho
-topics: [design-system, theme, tokens, comps, buttons, shaders]
+topics: [design-system, gpu]
 relations: []
 source: docs/adr/rendering/0028-core-theme-tailwind-classes-as-recipes.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # core theme: the tailwind class lists as button recipes
+
+Decide que as classes do tailwind do kit TypeScript viram receitas de botão em tokens (um `ButtonRecipe` por variante, com repouso, hover e ativo), e que nenhum literal visual entra num widget. O motivo: o tema HOFF escuro não batia com o kit, com raios diferentes e bordas com franja escura. O resultado são duas correções globais: a mistura de borda e preenchimento passa a ocorrer em linear premultiplicado, e sombras de blur zero ganham anti-aliasing com sigma mínimo de 0,5 px.
 
 ## context
 

@@ -18,6 +18,12 @@ review: revisado
 
 Registra a sessão que levou o programa do runtime de interação generativa do começo das ondas até a [task-78](../tarefas/task-78-ai-native-apps.md), fase 2: contrato semântico, porta do agente, gravação e inspector, IR e superfícies geradas, texto, teclado, wgpu 29 e inferência em processo. O que funcionou e o que mordeu fica aqui, escrito para quem vier depois, humano ou agente; as decisões estão nos ADRs, e esta página guarda o caminho até elas.
 
+registro da sessão que tocou o programa do runtime de interação generativa
+do começo das ondas até a task-78 fase 2: contrato semântico, porta do
+agente, gravação e inspector, IR e superfícies geradas, texto, teclado,
+wgpu 29 e inferência em processo. escrito pra quem vier depois, humano ou
+agente. as decisões estão nos ADRs; aqui fica o caminho.
+
 ## orquestração: o caminho que funcionou
 
 1. **fechar antes de abrir.** o brenner parou o ciclo automático porque o

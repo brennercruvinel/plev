@@ -3,18 +3,21 @@ id: experimento-mon
 title: "experimento mon"
 project: plev
 type: experimento
-status: em-andamento
+status: ativo
 date: 2026-06-12
 date_basis: cabecalho
-topics: [mon, ui-superset, design-tokens, aria-apg, lottie, monster, swf]
-relations: []
+topics: [design-system, formatos, acessibilidade]
+relations: [adr-0007, adr-0010, adr-0011, adr-0012]
+evidence: [5eecb0a, a4ad0c0, a044613, 2a33933]
 source: docs/ref/mon-experiment-notes.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # experimento mon
+
+A nota de trabalho do Brenner sobre o mon, o experimento de um superset de UI sobre a interseção das plataformas: um declarativo único com dois modos de saída, desenhar na GPU ou mapear para o componente nativo. Registra o que já existe fora (React Native, MAUI, Flutter), os buracos que a ideia ainda não fecha e os números do parser e do formato `.monster` medidos no corpus citado; a comparação com o swf não foi medida e está marcada como tal.
 
 nota de trabalho, nao conclusao. o mon e a parte viva do projeto, as ~30
 paginas que o livro deixou abertas de proposito. registro aqui a tese, o que

@@ -18,6 +18,8 @@ review: revisado
 
 Índice dos architecture decision records (ADRs) do plev, de 2021 a 2026, que retrata o estado de 2026-09. Cada linha aponta para a página da decisão e traz o status e a data do cabeçalho dela. A ordem é cronológica de propósito: o git só preservou o histórico a partir de 2026-06-10, por causa do expurgo feito antes do primeiro push, e este índice foi a fonte da linha do tempo que o git perdeu. A navegação atual é a [linha do tempo](linha-do-tempo.md); esta página fica como registro do que o índice dizia naquele momento.
 
+indice dos architecture decision records do plev. cada linha aponta para o arquivo, com status e data reais do frontmatter. a ordem e cronologica de proposito: o git so preservou de 2026-06-10 em diante (expurgo de historico antes do primeiro push), entao este indice e a fonte da linha do tempo que o git perdeu. fundacao em 2021, ondas seguintes ano a ano ate 2026.
+
 status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a decisão ainda espera quem decide), `accepted` (decisao em vigor), `draft-v0` (spec em rascunho), `living` (atualizado continuamente), `active` (este indice).
 
 ## fundacao, fase 0 (2021)

@@ -6,16 +6,18 @@ type: aprendizado
 status: referencia
 date: 2026-06-10
 date_basis: cabecalho
-topics: [gamma, srgb, color-theory, wgpu, webgpu, rendering]
+topics: [renderizacao, gpu, web-wasm]
 relations: []
 evidence: [2a33933]
 source: kdb/explanation/the-two-gamma-bugs.md
 source_revision: d0958da0
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the two gamma bugs: one assumption, two opposite failures
+
+Registra dois defeitos de gama com a mesma causa raiz e sintomas opostos: o desktop ficou claro demais e a web ficou escura demais. O resultado é um invariante de contagem: no caminho do hex até o pixel, exatamente uma decodificação de sRGB para linear e exatamente uma codificação de linear para sRGB. Os dois passaram na revisão porque as imagens eram consistentes por dentro, e só medir o pixel contra o valor previsto expôs o erro.
 
 this project shipped the same root defect twice, with opposite symptoms.
 understanding the pair as one system prevents a third occurrence.

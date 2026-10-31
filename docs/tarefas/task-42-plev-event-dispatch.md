@@ -6,15 +6,17 @@ type: tarefa
 status: substituido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [input, plataforma]
+relations: [task-58, task-62, task-75]
 source: [docs/log/steps/task-42-plev-event-dispatch.md, docs/log/changes/task-42.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-42: plev event dispatch + gitbutler UI port
+
+Registra a task que tentou portar o frontend do gitbutler para plev nativo, com dispatch e overlays no core. A task está substituída, não terminada: parou na fase 4, e o que ela queria provar foi feito pelo ide por outro caminho, com o despacho tipado no `sem` (task-58), os overlays no `OverlayManager` e nos widgets de modal e menu do comps (task-75), e dados reais do crate `git` (task-62). As fases 5 e 6 não viraram trabalho novo.
 
 ## objetivo
 port do frontend tauri/svelte do gitbutler para plev nativo (100% rust, sem webview). demonstrar que plev e capaz de apps reais de producao. implementar infra de dispatch e overlays no core plev.

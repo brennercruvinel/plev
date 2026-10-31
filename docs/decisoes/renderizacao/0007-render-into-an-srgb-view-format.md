@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-12-04
 date_basis: cabecalho
-topics: [webgpu, srgb, gamma, wasm, surface, wgpu]
-relations: []
+topics: [web-wasm, gpu, renderizacao]
+relations: [adr-0004]
 evidence: [2a33933]
 source: docs/adr/rendering/0007-render-into-an-srgb-view-format.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # render into an sRGB view when the surface format cannot be sRGB
+
+Decide configurar a superfície com o formato base e a variante sRGB em `view_formats`, e alvejar toda passagem de render por uma view sRGB criada por `surface_render_view`. O motivo é que a superfície do WebGPU só aceita formatos não-sRGB, e a codificação na escrita, que o pipeline assumia, era pulada na web, medindo (8,8,8) em vez de (48,48,48). O resultado é o mesmo fundo nas duas plataformas, medido por pixel, e `create_view(&Default::default())` sobre textura de superfície não deve ser usado em código novo.
 
 ## context
 

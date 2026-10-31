@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-05-14
 date_basis: cabecalho
-topics: [animation, monster, codec, format, delta, keyframes]
+topics: [animacao, formatos]
 relations: []
 evidence: [a4ad0c0]
 source: docs/adr/importing/0010-binary-animation-format-with-discovered-deltas.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the monster animation format: keyframes plus discovered deltas
+
+Decide um formato binário, `.monster` (magic `MON0`), com keyframes e deltas descobertos, para animação vetorial pequena, buscável e renderizada pela mesma engine da UI. O motivo: Lottie é JSON parseado a cada quadro, SWF paga replay O(n) a cada retrocesso e vídeo cru perde a natureza vetorial. O resultado é seek O(1) entre keyframes e custo zero para nó que não muda; o custo de morph de corpo inteiro a 60 fps fica para a v1, com trilhas de morph.
 
 ## context
 

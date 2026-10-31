@@ -6,16 +6,18 @@ type: aprendizado
 status: referencia
 date: 2026-06-10
 date_basis: cabecalho
-topics: [architecture, layering, engine, apps, anti-patterns, process]
+topics: [plataforma, processo, agentes]
 relations: []
 evidence: [bb34a1c]
 source: kdb/explanation/why-the-apps-bypassed-the-engine.md
 source_revision: d0958da0
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # why the apps bypassed the engine, and what that costs
+
+Registra por que os apps do plev contornaram a engine e o que isso custou: layout com constantes à mão, medição de texto por heurística de largura por caractere (com erro de até 21%) e toques que os widgets nunca recebiam. O resultado é um padrão para reconhecer cedo: a capacidade existia no repositório e faltou adoção. Uma capacidade que a camada de produto não consome não é infraestrutura, é inventário não verificado. O módulo de layout que o corpo cita como `src/layout/engine.rs` (árvore de 2026-06) está hoje em `rust/engine/src/compose/layout`, segundo docs/ATLAS.toml.
 
 the most expensive defect cluster in this project (text overflowing
 shapes, no responsive reflow, dead touch input) shared one architectural

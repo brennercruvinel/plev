@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-01-08
 date_basis: cabecalho
-topics: [fonts, cosmic-text, typography, fontdb, rubik]
+topics: [texto, fontes]
 relations: []
 evidence: [21fdc8c]
 source: docs/adr/rendering/0003-embed-every-font-weight-in-use.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # embed every font weight the UI uses, and pin the default families
+
+Decide embutir todo peso de fonte que a UI pode pedir e fixar as famílias padrão, para que a resolução não dependa das fontes do sistema. O motivo: pedir pesos não embutidos fazia o cosmic-text cair em fontes do sistema, até 35% mais largas, e os títulos saíam com espaçamento visível. O resultado é uma renderização determinística entre máquina, CI e wasm, com testes que fixam a face de cada peso. A família mudou em 2026-08-30, mas a decisão de embutir os pesos permanece.
 
 > updated 2026-08-30: rubik was replaced by inclusive sans (SIL OFL, five
 > upright weights 300–700 embedded; italics upstream but unused), and inter

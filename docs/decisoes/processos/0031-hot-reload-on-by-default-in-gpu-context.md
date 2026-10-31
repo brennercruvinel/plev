@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-22
 date_basis: cabecalho
-topics: [hot-reload, shaders, gpu, dev-loop, showcase]
-relations: []
+topics: [hot-reload, gpu, processo]
+relations: [adr-0007, adr-0018, adr-0019]
 source: docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # hot reload on by default: shaders and literals in place, code by rebuild
+
+Decide que o hot reload fica ligado por padrão no contexto GPU: shaders e literais são trocados no lugar, e código é recompilado com reinício do processo. A auditoria que motivou a decisão mostrou que os três ADRs de 2024 nunca tinham chegado a um app em execução: a feature estava desligada, o watcher morava num `App` que nenhum app usa, e o diretório de shaders apontava para um caminho inexistente. O resultado, verificado na vitrine por captura de janela com o mesmo pid, é uma edição de shader aplicada em cerca de meio segundo, sem entrada do usuário.
 
 ## context
 

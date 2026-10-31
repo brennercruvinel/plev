@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2022-02-24
 date_basis: cabecalho
-topics: [animation]
-relations: []
+topics: [animacao, renderizacao, texto]
+relations: [task-27]
 source: docs/ref/animation-pattern-lerp.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # animation pattern, frame-based exponential lerp
+
+Registra a técnica de animação por quadro com lerp exponencial, usada no message dock antes do sistema formal de animação. O resultado é um easing exponencial sem infraestrutura de tempo, com snap de pixel obrigatório para evitar tremor de subpixel e fonte de tamanho fixo durante a animação, para não re-shapear a cada quadro. A limitação é a dependência da taxa de quadros, que a task-27 deve resolver com delta-time e curvas de easing.
 
 ## contexto
 antes de task-27 (animation system formal), o messagedock example (`examples/message_dock.rs`) usa animações por frame com lerp exponencial. padrão simples que funciona sem infraestrutura de tempo.

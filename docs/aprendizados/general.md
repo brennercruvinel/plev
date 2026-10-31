@@ -19,6 +19,9 @@ review: revisado
 
 Registra o que experimentos e implementações ensinaram e o que mudou no programa por causa disso, com a fonte de cada aprendizado. Entram só aprendizados concretos, em ordem cronológica inversa, o mais novo em cima; muitas entradas trazem a regra que delas saiu.
 
+o que experimentos e implementações ensinaram, e o que mudou no programa por
+causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
+
 ## produto e tese
 
 ### 2026-09-25, task-97

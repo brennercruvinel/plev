@@ -6,16 +6,17 @@ type: referencia
 status: referencia
 date: 2024-05-23
 date_basis: cabecalho
-topics: [modularization]
-relations: []
-evidence: [2d95911]
+topics: [workspace, processo]
+relations: [adr-0015]
 source: docs/ref/srp-modularization.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # modularizacao SRP com limite de 300 linhas
+
+Registra a modularização que dividiu os arquivos `.rs` acima de 300 linhas em submódulos, com `mod.rs` e `pub use` para manter a API pública, e as armadilhas do processo: worktree sem arquivos não rastreados, visibilidade reduzida que quebrou exemplos e agentes paralelos sobre o mesmo working tree. O resultado é zero arquivo acima do limite, 470 testes passando e 15 exemplos compiláveis, segundo as métricas da própria página.
 
 ## contexto
 

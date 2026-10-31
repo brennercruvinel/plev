@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-03-04
 date_basis: cabecalho
-topics: [text-editing, rope, helix, transactions, undo]
+topics: [edicao-de-texto, texto]
 relations: []
 source: docs/adr/interface/0021-text-editing-core-follows-helix.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the text editing core follows helix: document is rope plus selections plus history
+
+Decide que o núcleo de edição segue o modelo do Helix: um documento é uma rope, mais seleções, mais histórico, num crate `rope` sem dependência de UI nem de GPU. O motivo é que uma string plana custa O(n) por edição e perde as posições do cursor a cada mudança. O resultado é que toda edição passa por uma `Transaction`, com undo exato e seleções que se mapeiam sem caso especial por cursor, e o núcleo é testável sem janela.
 
 ## context
 

@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2025-09-24
 date_basis: cabecalho
-topics: [rendering, particles, trails, render-on-demand]
+topics: [renderizacao, animacao, efeitos]
 relations: []
 source: docs/adr/rendering/0014-motion-trails-by-position-history.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # motion trails come from position history, not framebuffer accumulation
+
+Decide que os rastros de movimento vêm de um histórico de posições por partícula, e não de acumulação no framebuffer: cada camada é limpa a cada quadro e o swapchain é multibuffer, então um rastro acumulado piscaria. O resultado é um rastro mais curto e grosseiro que o da demo original, que lê como movimento mas não é pixel-idêntico. A acumulação fiel fica adiada, porque exige uma textura de feedback e um passe de blit, trabalho novo de GPU.
 
 ## context
 

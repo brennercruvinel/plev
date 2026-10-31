@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-21
 date_basis: cabecalho
-topics: [showcase, comps, design-system, navigation, gallery]
-relations: []
+topics: [design-system, plataforma]
+relations: [arquitetura-component-catalog]
 source: docs/adr/structure/0030-showcase-one-page-per-component.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # showcase: one page per component, the sidebar as a folding tree
+
+Decide que o showcase tem uma página por componente, com as páginas como dado (uma tabela `PAGES`) e a barra lateral como árvore dobrável. O motivo era a galeria antiga, com uma seção por categoria e uma lista plana de 17 links que, com cerca de 80, não caberia numa janela curta. O resultado é que cada página mostra um widget em todos os estados, e as lacunas do comps aparecem como placeholders na ordem da migração.
 
 ## context
 

@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-05-11
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [git, edicao-de-texto, plataforma]
+relations: [adr-0020, adr-0021, task-42, task-46, task-47]
+evidence: [f15198a]
 source: [docs/log/steps/task-48-ide-git-client.md, docs/log/changes/task-48.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-48: ide, git client nativo em plev
+
+Registra a task do ide, o git client nativo desenhado pela engine como prova de app real, e não de demo. Consome o `GitClient` da task-47 e o `rope` da task-46, e amadurece o port da task-42. O resultado são 33 arquivos e 55 testes, com a UI que nunca bloqueia em git; não é paridade com o gitbutler, e o texto é medido, não heurístico, desde o commit f15198a.
 
 ## objetivo
 um git client de verdade, todo desenhado na gpu pela engine, como prova de app real e nao de demo. e a maturacao do port iniciado em task-42 (dispatch + overlay + chrome), agora um crate proprio que consome o backend git e o nucleo de edicao.

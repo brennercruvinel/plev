@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-04-08
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [git, plataforma]
+relations: [adr-0020, task-48]
 source: [docs/log/steps/task-47-git-backend.md, docs/log/changes/task-47.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-47: git, backend para apps plev
+
+Registra a task do crate `git`, o backend para os apps: histórico, status, diff e toda mutação, com `GitRepo` síncrono e `GitClient` numa worker thread, para que a UI nunca bloqueie em git. O resultado são 25 testes contra repositórios temporários reais. O `git` precisa estar no PATH, e o build pure-gix fica adiado até o gix ter porcelain estável.
 
 ## objetivo
 backend git completo (history, status, diff, stage/unstage/discard/commit) para apps plev, sem nunca travar a ui no frame loop e sem ter que montar a superficie de porcelain do git na mao.

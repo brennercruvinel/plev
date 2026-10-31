@@ -1,25 +1,27 @@
 ---
 id: task-56
-title: "task-56 (gap-1): hot reload"
+title: "task-56: hot reload"
 project: plev
 type: tarefa
 status: concluido
 date: 2026-09-22
 date_basis: cabecalho
-topics: [hot-reload]
-relations: []
+topics: [hot-reload, gpu, dsl]
+relations: [adr-0031, arquitetura-hot-reload-design]
 source: [docs/log/steps/task-56-hot-reload.md, docs/log/changes/gap-1.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# task-56 (gap-1): hot reload
+# task-56: hot reload
+
+Registra a task que fechou o gap-1 de hot reload: os três tiers de 2024 foram reduzidos ao que um motor autoral pode manter, com recarga de shader e de literal no lugar e mudança de código por rebuild. O resultado, desde 2026-09-22, é que o watcher vive no `GpuContext` e cada app ganha a recarga sem código próprio, verificado por captura de janela com o mesmo pid. O subsecond ficou sem adoção, e a DSL continua experimental e sem uso de app.
 
 opened 2024-01-25 as gap-1 with three tiers (shader, narrate DSL,
 subsecond). closed 2026-09-22 with what an authorial engine can own:
 shader and literal reload in place, code by rebuild. adr:
-docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md.
+[docs/decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md](../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md).
 
 ## what was there in the morning
 

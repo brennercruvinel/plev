@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-07-08
 date_basis: cabecalho
-topics: [parser, transpiler, droplist, honesty, diagnostics]
+topics: [importacao, formatos]
 relations: []
 evidence: [5eecb0a]
 source: docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the transpiler reports every unmapped construct, never drops silently
+
+Decide que o parser emite o código convertido junto com um droplist: cada construção que não representou, com arquivo, linha e motivo. O motivo: parar com erro é inútil num arquivo real, e descartar em silêncio é a forma como um transpiler mente. O resultado, num corpus real de 40 componentes em dois apps, foram 402 propriedades mapeadas e 709 entradas de droplist, sem crash, com as contagens congeladas em teste.
 
 ## context
 

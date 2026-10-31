@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2024-12-19
 date_basis: cabecalho
-topics: [design-tokens, fidelity, measurement, reference, theming]
+topics: [design-system, renderizacao]
 relations: []
 evidence: [9c5fbd3]
 source: docs/adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # design tokens come from measurement of the live reference, not from eyes or static CSS
+
+Decide que um token entra no tema só com a medição da referência viva por trás dele: estilos calculados e pixels amostrados em vários pontos, e não literais de folha de estilo nem percepção humana. O motivo é que três valores circulavam para o fundo da página, e as telas foram reprovadas contra os dois primeiros antes da medição. O resultado é o fundo medido em #303030, com a disputa de fidelidade reduzida a comparação numérica. Os valores estão hoje em `rust/engine/src/styling/theme/hoff.rs`, onde os testes os fixam, segundo docs/ATLAS.toml.
 
 ## context
 

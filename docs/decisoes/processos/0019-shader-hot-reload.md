@@ -3,19 +3,20 @@ id: adr-0019
 title: "adotamos shader hot reload via notify file watcher sobre dylib reloading"
 project: plev
 type: decisao
-status: referencia
+status: aceito
 date: 2024-02-06
 date_basis: cabecalho
-topics: [hot-reload]
-relations: []
-evidence: [3a53399]
+topics: [hot-reload, gpu]
+relations: [adr-0031, arquitetura-hot-reload-design, task-56]
 source: docs/adr/workflows/0019-shader-hot-reload.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # adotamos shader hot reload via notify file watcher sobre dylib reloading
+
+Decide o hot reload de shaders por um file watcher com recriação de pipeline, no padrão do vello, e não por dylib reloading, que quebra com `Box<dyn Any + Send>` no action queue porque o typeid muda entre cargas, o que é UB silencioso. O resultado é a iteração em shaders WGSL em cerca de 500 ms, e um WGSL inválido preserva o pipeline antigo. Uma nota de 2026-09-22 reverte o polling em `about_to_wait`, que a decisão de 2024 tinha escolhido.
 
 > 2026-09-22: adr-3 (channel polling in about_to_wait) is reversed: the watcher now wakes the loop with `Window::request_redraw` and the poll sits in `present_frame`, and the watcher moved from `window::App` (which no app uses) into `GpuContext`. see [hot-reload-on-by-default-in-gpu-context](0031-hot-reload-on-by-default-in-gpu-context.md).
 

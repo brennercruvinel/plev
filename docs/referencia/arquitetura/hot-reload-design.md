@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2024-01-22
 date_basis: cabecalho
-topics: [hot-reload]
-relations: []
+topics: [hot-reload, dsl, gpu]
+relations: [adr-0031, task-56]
 source: docs/ref/hot-reload-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # hot reload design - plev
+
+Registra o desenho do hot reload de 2024: a pesquisa de sete implementações, a fronteira do que cruza o reload (`SceneNode` e primitivos cruzam; `GpuContext`, `Compositor` e `TextSystem` ficam no engine) e os três tiers, de shader, de DSL e de código. O resultado é o tier 1 em uso e o tier 2 substituído pela troca de literais; o tier 3 não foi adotado, como registra a nota de 2026-09-22 abaixo, e a decisão atual está em 0031.
 
 > 2026-09-22: what shipped, and why tier 3 (subsecond) was not adopted, is in [hot-reload-on-by-default-in-gpu-context](../../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md). tier 1 is live; the literal reload took the place tier 2 was meant for; tier 3 is a no-go for an authorial engine (third-party linker and cli in the loop).
 

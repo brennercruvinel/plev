@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-03-10
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [edicao-de-texto, texto]
+relations: [adr-0021, task-28, task-48]
+evidence: [e0d6e3c]
 source: [docs/log/steps/task-46-rope-editing-core.md, docs/log/changes/task-46.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-46: rope, nucleo de edicao de texto
+
+Registra a task do crate `rope`, o núcleo de edição de texto puro, sem UI nem GPU e testável sem janela: buffer rope, multi-cursor, transações atômicas e undo e redo por replay. O resultado são 77 testes, incluindo proptest, e a base que o ide e os widgets de texto editável consomem.
 
 ## objetivo
 nucleo de edicao de texto puro, sem ui nem gpu, testavel headless: buffer rope, multi-cursor, transacoes atomicas e historico de undo/redo. base para o ide e para os widgets de texto editavel.

@@ -3,19 +3,20 @@ id: adr-0016
 title: "adotamos projecao ortografica em logical pixels para apps hidpi"
 project: plev
 type: decisao
-status: referencia
+status: aceito
 date: 2024-06-17
 date_basis: cabecalho
-topics: [rendering]
+topics: [renderizacao, texto]
 relations: []
-evidence: [73c46ff]
 source: docs/adr/rendering/0016-hidpi-projection.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # adotamos projecao ortografica em logical pixels para apps hidpi
+
+Decide que apps hidpi projetam em logical pixels, com a surface em physical pixels, pelo `GpuContext::set_projection`. O motivo: a projeção do engine era configurada em physical pixels, e o gitbutler-plev usava constantes em logical pixels que ficavam minúsculas em telas retina. O resultado é o padrão surface em physical e projeção em logical; a atualização de 2026-08-30 corrige o texto, que era rasterizado em logical e ficava borrado, e passa a rasterizar em `font_size * raster_scale`.
 
 ## contexto
 

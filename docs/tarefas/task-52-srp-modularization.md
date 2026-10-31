@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2024-05-29
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [workspace, processo]
+relations: [adr-0015, arquitetura-clippy-zero-warnings, arquitetura-srp-modularization, task-51]
+evidence: [b9d9ee7]
 source: [docs/log/steps/task-52-srp-modularization.md, docs/log/changes/task-52.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-52: modularizacao por single responsibility principle
+
+Registra a task que dividiu os monolitos `.rs` acima de 300 linhas em submódulos por responsabilidade, sem mudar a API pública: 44 deles foram convertidos. O resultado é de ~60 para 271 arquivos, com o maior em 300 linhas e 470 testes passando sem modificação. A divisão é só estrutural; as métricas antes e depois e as armadilhas da sessão estão na referência de arquitetura.
 
 ## objetivo
 nenhum arquivo .rs acima de 300 linhas. quebrar os monolitos em submodulos por responsabilidade unica, sem mudar a API publica.

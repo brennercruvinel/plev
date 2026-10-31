@@ -6,16 +6,18 @@ type: decisao
 status: aceito
 date: 2025-01-27
 date_basis: cabecalho
-topics: [input, touch, mobile, gestures, events]
+topics: [input, mobile]
 relations: []
 evidence: [5854941]
 source: docs/adr/interface/0009-touch-as-synthesized-pointer-events.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # touch input synthesizes pointer events into the existing mouse path
+
+Decide que o toque vira eventos de ponteiro sintetizados sobre o caminho de mouse que já existe: uma máquina de estados pura traduz o primeiro dedo em posição e botão, sem tocar nos widgets. O motivo era a pilha de toque da engine, que terminava num log de depuração, e apps em iOS ou Android que ignorariam todo toque. O resultado é que tap, arraste e foco passaram a funcionar em todos os widgets sem alteração neles.
 
 ## context
 

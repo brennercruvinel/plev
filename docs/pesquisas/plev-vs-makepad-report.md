@@ -18,6 +18,9 @@ review: revisado
 
 Compara a arquitetura do plev, um motor de composição GPU-first com dirty tracking por hash, com a do makepad, um framework de UI com IDE integrada e layout por turtle. O relatório aponta os padrões do makepad que o plev precisaria para chegar a um nível de interface parecido (dock, virtual scrolling, actions tipadas, tema, árvore de arquivos e editor de código) e estima cerca de 2.930 LOC incrementais sobre os 12 mil existentes. A conclusão é que o plev não precisa virar makepad: a separação entre renderização e widgets permite construir a infraestrutura de widgets sobre a camada existente, sem perder testabilidade. Os números são os de 2022-12-10 e não foram conferidos com o código atual.
 
+analise comparativa de arquitetura, padroes de design, e licoes para construir
+uma interface de nivel profissional.
+
 data: 2022-12-10
 
 ---

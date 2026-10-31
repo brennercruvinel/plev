@@ -6,19 +6,21 @@ type: decisao
 status: aceito
 date: 2026-07-13
 date_basis: cabecalho
-topics: [workspace, docs, organization, structure]
-relations: []
+topics: [editorial, workspace]
+relations: [adr-0013, changelog, experimento-mon, manual-build-and-serve-the-web-target]
 source: docs/adr/structure/0022-one-knowledge-tree-and-a-minimal-root.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # one knowledge tree, and a minimal root
 
+Decide uma única árvore de conhecimento em `docs/` e uma raiz que guarda só o que as ferramentas resolvem ali. Antes, o conhecimento vivia em três lugares ao mesmo tempo (`kdb/`, `doc/arc/` e a raiz), com um changelog duplicado. O resultado é que o leitor começa em dois pontos: o README para a superfície e `docs/` para a profundidade. Os caminhos do corpo são os da época da decisão, e a correção de nomes de 2026-09-21 está no próprio texto.
+
 correction (2026-09-21): the decisions directory is docs/adr/ (upper
 case, the acronym), its index is docs/adr/README.md so github renders it
-on the directory page, and the changelog is docs/log/changelog.md at the
+on the directory page, and the changelog is [docs/historia/changelog.md](../../historia/changelog.md) at the
 knowledge tree's root. the paths below are as written when the decision
 was taken.
 
@@ -47,7 +49,7 @@ only what tools resolve there.
   retired; the changelog copy it held was the stale one, docs/adr/
   changelog.md is the living one. the mon working note left the root and
   lives as study notes in
-  docs/ref/mon-experiment-notes.md (moved there from steps/ongoing/ on
+  [docs/experimentos/mon-notas.md](../../experimentos/mon-notas.md) (moved there from steps/ongoing/ on
   2026-09-25, with the program, the thesis and the guidelines moving up to
   docs/log/); a loose notes.md is
   not a place.
@@ -88,4 +90,4 @@ every crate docstring that cited kdb/adr/ now cites docs/adr/.
   typos config, crate docstrings) moved, and the arc sync guard fails the
   build if the trio drifts from Cargo.toml again.
 - the web target relocates its build output to web/dist/; anything serving
-  the old root dist/ path follows docs/ref/build-and-serve-the-web-target.md.
+  the old root dist/ path follows [docs/referencia/operacao/build-and-serve-the-web-target.md](../../referencia/operacao/build-and-serve-the-web-target.md).

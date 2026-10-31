@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2025-11-14
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [plataforma, mobile]
+relations: [task-06, task-11, task-12, task-18, task-19]
+evidence: [cb6643d, a2c846d, 75861fe, 7428245, 33ef42c]
 source: [docs/log/steps/task-50-showcase-multiplatform.md, docs/log/changes/task-50.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-50: showcase multiplataforma como lib (desktop/web/android/ios)
+
+Registra a task que levou o showcase a rodar como lib nos quatro alvos, desktop, web, Android e iOS, com a mesma cena e um entry por plataforma. O resultado é um APK compilando e a cena rodando no simulador iOS e no emulador Android, sem Kotlin ou Swift de UI. A validação em device físico não foi feita, e o iOS é o elo mais imaturo da stack.
 
 ## objetivo
 rodar o showcase (a galeria do design system) nativamente em desktop, web, android e ios a partir do mesmo codigo rust, empacotado como lib, sem nenhuma ui de kotlin ou swift. cada pixel desenhado na gpu pela engine.

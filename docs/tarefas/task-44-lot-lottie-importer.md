@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2025-06-17
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [formatos, animacao]
+relations: [adr-0011, task-31, task-43]
+evidence: [a044613, c5535c8]
 source: [docs/log/steps/task-44-lot-lottie-importer.md, docs/log/changes/task-44.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-44: lot, importer lottie e ponte para .monster
+
+Registra a task do `lot`, o importador de Lottie que lê o JSON uma vez, offline, e converte para `.monster`, sem embarcar runtime estrangeiro. O resultado é um subset declarado (shapes, transforms, precomps, fills e strokes), em que masks, mattes, texto e expressões são pulados com log e nunca causam panic. Foi validado pelos examples `lot2monsters` e `monster_player`, que toca o `.monster` sem Lottie linkado.
 
 ## objetivo
 importar animacao lottie (bodymovin) sem embarcar o runtime estrangeiro. ler o json uma vez, offline, e converter para .monster, de modo que o playback rode so na engine do plev e nenhum codigo lottie execute em runtime.

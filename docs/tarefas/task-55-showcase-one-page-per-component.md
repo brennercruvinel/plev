@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-21
 date_basis: cabecalho
-topics: [design-system]
-relations: []
+topics: [design-system, workspace]
+relations: [adr-0030, changelog]
 source: docs/log/steps/task-55-showcase-one-page-per-component.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-55: showcase, uma página por componente
+
+Registra a task que reorganizou o showcase em uma página por componente: a tabela `PAGES` com 79 páginas em três grupos, um módulo por widget e a sidebar com grupos dobráveis. O resultado é uma reorganização sem widget novo nem exemplo novo, com foco de teclado por página e um launch argument que é o título da página. Algumas páginas são só alias ou placeholder, e a nota de cada alias diz o que falta.
 
 ## objetivo
 o showcase tinha uma seção por categoria (Forms, Chrome, Extras,

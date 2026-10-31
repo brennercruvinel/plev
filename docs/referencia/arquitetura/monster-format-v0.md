@@ -3,18 +3,20 @@ id: arquitetura-monster-format-v0
 title: "monster format v0 specification"
 project: plev
 type: referencia
-status: rascunho
+status: referencia
 date: 2025-03-26
 date_basis: cabecalho
-topics: [monster, animation, format, codec, spec, delta, keyframes]
+topics: [animacao, formatos]
 relations: []
 source: docs/ref/monster-format-v0.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # monster format v0 specification
+
+Registra a especificação v0 do formato `.monster` (magic `MON0`), sintetizada de quatro estudos, com as metas de tamanho medidas, as decisões de keyframe e delta, o layout do contêiner e o contrato do player. O resultado é um formato em que keyframes dão acesso aleatório e deltas carregam curvas em vez de amostras, sem script no formato de reprodução e sem relógio próprio no player. Em movimento discreto o ganho medido vai de 0,36× a 0,74× do JSON do Lottie; o morph de corpo inteiro a 60 fps é a limitação, que a v1 deve tratar com trilhas de morph.
 
 synthesis of four guided studies (swf/ruffle, lottie/thorvg, editors,
 rhai/engine-fit; full reports in session transcripts, distilled findings

@@ -6,20 +6,22 @@ type: decisao
 status: aceito
 date: 2026-08-30
 date_basis: cabecalho
-topics: [ui, patterns, apps, widgets, builder, experimental, surface, plev-ir]
-relations: []
+topics: [plataforma, superficies-geradas, ir]
+relations: [adr-0008, adr-0051, task-69]
 source: docs/adr/structure/0023-official-app-pattern.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # official app pattern: state in structs, retained widgets, explicit invalidation
 
+Decide o padrão oficial de app, com estado em structs, widgets retidos e invalidação explícita, tendo o showcase como molde. Um adendo de 2026-09-24, da task-69, admite uma segunda forma: uma superfície materializada a partir de IR verificado, que compõe o vocabulário existente sem substituir o primeiro padrão. Os módulos `view`, `component`, `signal` e `narrate` ficam como experimentais, e nenhum código de app novo entra neles sem um ADR.
+
 ## addendum (2026-09-24, task-69): the second pattern, a surface materialized from verified IR
 
 a screen can also be a surface materialized from verified plev IR
-(docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md): the `surface` crate
+([docs/decisoes/geracao/0051-materialized-surfaces-from-verified-ir.md](../geracao/0051-materialized-surfaces-from-verified-ir.md)): the `surface` crate
 lays a `uir::VerifiedIr` out by the engine, draws it by the comps widgets
 with the theme's tokens, projects it from the IR and turns every event
 into a request through the app's dispatcher. it is the second supported

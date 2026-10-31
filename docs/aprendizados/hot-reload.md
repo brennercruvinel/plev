@@ -6,15 +6,17 @@ type: aprendizado
 status: referencia
 date: 2026-09-22
 date_basis: cabecalho
-topics: [learnings, hot-reload, engine, dev-loop, session]
-relations: []
+topics: [hot-reload, processo, renderizacao]
+relations: [adr-0031, task-56]
 source: docs/log/learnings/hot-reload.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # sessão hot reload: o que funcionou e o que mordeu
+
+Registra a sessão que ligou o hot reload de verdade no plev ([adr-0031](../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md) e [task-56](../tarefas/task-56-hot-reload.md)). A auditoria dos três ADRs de 2024 achou seis defeitos antes de qualquer mecanismo novo, e a integração ficou no `GpuContext` e no `present_frame`, sem linha nos apps. Foi escrito para quem for mexer no dev loop, humano ou agente, para não repetir a manhã.
 
 registro da sessão que ligou o hot reload de verdade no plev (adr
 hot-reload-on-by-default-in-gpu-context, task-56). escrito pra quem for
@@ -103,5 +105,3 @@ mexer no dev loop, humano ou agente, e pra não repetir a manhã.
   (rust-conventions.md, crate boundary).
 - o chokepoint de um override de dev mantém o `cfg` numa linha só; o
   caminho de produção lê sem ele.
-- `docs/log/steps/gap-1-hot-reload.md` virou
-  `checked/task-56-hot-reload-done.md`.
