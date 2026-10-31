@@ -129,6 +129,7 @@ components! {
     // task-104 front A, fields (#154)
     Field => field,
     // task-104 front B, overlays (#155)
+    Popover => popover,
     // task-104 front C, conversation and feedback (#156)
     Message => message,
     // task-104 front D, disclosure and display (#157)

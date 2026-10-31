@@ -8,6 +8,7 @@ use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::widgets::form::field::Field;
+use crate::widgets::overlay::popover::{Popover, PopoverTrigger, render_panel};
 use crate::widgets::prelude::*;
 use crate::widgets::selection::Toggle;
 use crate::widgets::widget::Rect;
@@ -292,6 +293,14 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             .reaction("2")
             .render(&mut c, row(26.0), theme);
     }
+
+    // task-104 front B: the popover's trigger, open, and its panel, placed
+    // inside the content.
+    let trigger = PopoverTrigger::new("100%");
+    let anchor = Rect::new(content.right() - 88.0, row(23.0).y, 88.0, 40.0);
+    trigger.render(&mut c, LayerId::DEFAULT, anchor, true, theme);
+    let placed = Popover::new().placement(anchor, (204.0, 160.0), content, theme);
+    render_panel(&mut c, LayerId::DEFAULT, placed.rect, theme);
 
     let mut shell = AppShell::new(
         Sidebar::new(vec![

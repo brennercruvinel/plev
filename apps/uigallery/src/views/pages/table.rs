@@ -322,12 +322,12 @@ pub const PAGES: &[Page] = &[
         "The column head every panel starts with, badge included.",
         Pane::PanelHeader,
     ),
-    alias(
+    page(
+        C,
         "Popover",
         "copy",
-        "The tooltip, until it opens on click.",
-        Pane::Tooltip,
-        "click to open, arbitrary content",
+        "Click the value; the panel answers its container.",
+        Pane::Popover,
     ),
     page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
     placeholder("Questionnaire"),
