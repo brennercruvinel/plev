@@ -5,7 +5,7 @@
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::{SidebarMode, Theme};
 use engine::widgets::nav::{NavGroup, NavLink, Sidebar};
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect_stroke};
 
 use super::panel;
 
@@ -32,17 +32,15 @@ impl SidebarPage {
         Self { sidebar }
     }
 
-    fn rect(content: Rect, theme: &Theme) -> Rect {
-        Rect::new(
-            content.x,
-            content.y,
-            theme.size.sidebar_w,
-            theme.size.card_min_w * 1.5,
-        )
+    /// The sidebar's rect: its own width, as tall as its rows (folding a
+    /// group shortens it), so nothing scrolls under a fade.
+    fn rect(&self, content: Rect, theme: &Theme) -> Rect {
+        let h = self.sidebar.natural_h(theme, content.w);
+        Rect::new(content.x, content.y, theme.size.sidebar_w, h)
     }
 
-    pub fn content_height(&self, _content: Rect, theme: &Theme) -> f32 {
-        theme.size.card_min_w * 1.5
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        self.rect(content, theme).h
     }
 
     pub fn handle_event(
@@ -51,16 +49,28 @@ impl SidebarPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let rect = Self::rect(content, theme);
+        let rect = self.rect(content, theme);
         self.sidebar.origin = (rect.x, rect.y);
         self.sidebar.handle_event(event, theme, rect.w, rect.h).0
     }
 
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let rect = Self::rect(content, theme);
+        let rect = self.rect(content, theme);
         self.sidebar.origin = (rect.x, rect.y);
-        panel(c, rect.outset(1.0), theme);
+        let frame = rect.outset(theme.control.edge_width);
+        panel(c, frame, theme);
         self.sidebar
             .render(c, LayerId::DEFAULT, theme, rect.w, rect.h);
+        // The sidebar's surface is a square: the frame's rim goes over it,
+        // or its corners cover the rounded rim's arcs.
+        c.push(rounded_rect_stroke(
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h,
+            theme.radius.lg,
+            theme.glass.edge_soft.0,
+            theme.control.edge_width,
+        ));
     }
 }
