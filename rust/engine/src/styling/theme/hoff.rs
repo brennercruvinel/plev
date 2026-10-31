@@ -173,6 +173,7 @@ impl Theme {
                 info: GREEN_LIGHT,
                 divider: Color::rgba(1.0, 1.0, 1.0, 0.05),
                 border_active: Color::rgba(1.0, 1.0, 1.0, 0.10),
+                swatches: &[],
             },
             typography: TypographyScale::hoff(),
             spacing: SpacingScale {
@@ -274,6 +275,7 @@ impl Theme {
                 info: Color::rgba(43.0 / 255.0, 177.0 / 255.0, 99.0 / 255.0, 0.7),
                 divider: Color::rgba(0.0, 0.0, 0.0, 0.05),
                 border_active: Color::rgba(0.0, 0.0, 0.0, 0.10),
+                swatches: &[],
             },
             glass: GlassTokens {
                 surface: ink(0.02),
