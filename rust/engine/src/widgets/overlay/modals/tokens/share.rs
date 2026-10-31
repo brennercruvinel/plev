@@ -5,6 +5,7 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::{Theme, TypographyScale};
+use crate::widgets::selection::tokens::{MARK_CONTRAST, legible_at};
 
 use super::{PanelTokens, hex, restyle, rgba};
 
@@ -340,11 +341,13 @@ impl ShareFileTokens {
                 line: restyle(&a.line, t),
                 ..a.clone()
             },
+            // The owner's mark and the remove's glyph in the theme's own
+            // colors where they read at 3:1, else in its text.
             person: PersonTokens {
-                owner: c.success,
+                owner: legible_at(MARK_CONTRAST, c.success, c.text, theme.glass.popover, c.bg),
                 remove_radius: theme.shape.tooltip,
                 remove_fill: c.danger,
-                remove_ink: c.surface,
+                remove_ink: legible_at(MARK_CONTRAST, c.surface, c.text, c.danger, c.bg),
                 ..self.person.clone()
             },
             link: restyle(&self.link, t),

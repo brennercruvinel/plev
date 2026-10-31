@@ -488,6 +488,57 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         let fg = format!("overlay.modal.{fg}");
         add(&fg, "overlay.modal.fill", TEXT, over(color, sheet), sheet);
     }
+    // task-104 front B, onda 3: the kit's modals' text on their paper, on
+    // a sunk band and under the pointer; their resting icons and the
+    // owner's mark on the paper; the remove's glyph on its fill. On core
+    // the kit's #7B7B7B text and #49BA61 mark fail; they give way
+    // (`overlay/modals/tokens`).
+    let k = &o.modals.ink;
+    let paper = over(k.paper, page);
+    let unders = [
+        ("overlay.modals.ink.paper", paper),
+        ("overlay.modals.ink.well", over(k.well, paper)),
+        ("overlay.modals.ink.hover", over(k.hover, paper)),
+    ];
+    for (bg, under) in unders {
+        for (fg, color) in [("ink", k.ink), ("muted", k.muted)] {
+            add(
+                &format!("overlay.modals.ink.{fg}"),
+                bg,
+                TEXT,
+                over(color, under),
+                under,
+            );
+        }
+    }
+    for (bg, under) in [unders[0], unders[2]] {
+        add(
+            "overlay.modals.ink.icon",
+            bg,
+            LARGE,
+            over(k.icon, under),
+            under,
+        );
+    }
+    let person = &o.modals.share_file.person;
+    let owner = over(person.owner, paper);
+    add(
+        "overlay.modals.share_file.person.owner",
+        unders[0].0,
+        LARGE,
+        owner,
+        paper,
+    );
+    let remove = over(person.remove_fill, paper);
+    let glyph = over(person.remove_ink, remove);
+    let fill = "overlay.modals.share_file.person.remove_fill";
+    add(
+        "overlay.modals.share_file.person.remove_ink",
+        fill,
+        LARGE,
+        glyph,
+        remove,
+    );
     let d = &o.drawer;
     let lit = over(d.item_fill, over(d.panel.fill, page));
     for (fg, need, color) in [
@@ -949,7 +1000,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 689,
+        count, 729,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -990,6 +1041,33 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
 
 /// WCAG 2.2 AAA: text (1.4.6).
 const AAA: f64 = 7.0;
+
+/// task-104 front B, onda 3: the core modals' text meets AAA on every
+/// surface under it (the paper, a sunk band, the hover), and their marks
+/// 3:1. The kit's #7B7B7B text takes shade 7, its owner's green a darker
+/// one.
+#[test]
+fn the_core_modals_text_meets_aaa_and_their_marks_three_to_one() {
+    let t = Theme::hoff_core();
+    let k = &t.overlay.modals.ink;
+    let paper = over(k.paper, over(t.colors.bg, [0.0; 3]));
+    for under in [paper, over(k.well, paper), over(k.hover, paper)] {
+        for fg in [k.ink, k.muted] {
+            let r = ratio(over(fg, under), under);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+    let person = &t.overlay.modals.share_file.person;
+    let remove = over(person.remove_fill, paper);
+    for (fg, under) in [
+        (over(k.icon, paper), paper),
+        (over(person.owner, paper), paper),
+        (over(person.remove_ink, remove), remove),
+    ] {
+        let r = ratio(fg, under);
+        assert!(r >= LARGE, "a mark at {r:.2}");
+    }
+}
 
 /// task-104 front D: the core table's and tree's text meets AAA on every
 /// surface under it (the card, a hovered and a selected row). The kit's
