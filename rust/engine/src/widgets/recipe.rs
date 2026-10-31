@@ -291,11 +291,16 @@ pub fn shadow_stack(
     }
 }
 
-/// Floating-menu drop shadow as a single node (dropdowns, selects,
-/// context menus): `theme.shadows.floating`.
-pub fn menu_shadow(rect: Rect, radius: f32, theme: &Theme) -> SceneNode {
-    shadow_node(rect, radius, &theme.shadows.floating)
-        .unwrap_or_else(|| rounded_rect(rect.x, rect.y, 0.0, 0.0, 0.0, [0.0; 4]))
+/// The floating-menu shadow (dropdowns, selects, context menus):
+/// `theme.shadows.floating`, every layer, in the order to push them
+/// before the surface.
+pub fn menu_shadow(rect: Rect, radius: f32, theme: &Theme) -> Vec<SceneNode> {
+    theme
+        .shadows
+        .floating
+        .iter()
+        .filter_map(|spec| shadow_node(rect, radius, spec))
+        .collect()
 }
 
 // ---------------------------------------------------------------------------
