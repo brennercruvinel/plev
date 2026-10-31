@@ -168,6 +168,7 @@ components! {
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     Calendar => calendar,
+    DatePicker => date_picker,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,

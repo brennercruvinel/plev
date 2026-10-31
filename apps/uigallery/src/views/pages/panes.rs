@@ -33,7 +33,9 @@ use super::super::components::{
 };
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::{button_group, calendar, radio_group, toggle, toggle_group};
+use super::super::components::{
+    button_group, calendar, date_picker, radio_group, toggle, toggle_group,
+};
 
 pub struct Panes {
     // -- foundations
@@ -108,6 +110,7 @@ pub struct Panes {
     // task-104 front E, selection and dates (#158)
     pub button_group: button_group::ButtonGroupPage,
     pub calendar: calendar::CalendarPage,
+    pub date_picker: date_picker::DatePickerPage,
     pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
@@ -214,6 +217,7 @@ impl Panes {
             // task-104 front E, selection and dates (#158)
             button_group: button_group::ButtonGroupPage::new(),
             calendar: calendar::CalendarPage::new(),
+            date_picker: date_picker::DatePickerPage::new(),
             radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),

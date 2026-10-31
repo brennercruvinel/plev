@@ -57,6 +57,7 @@ const PROJECTING: &[&str] = &[
     "Combobox",
     "Context Menu",
     "Data Table",
+    "Date Picker",
     "Dialog",
     "Drawer",
     "Dropdown Menu",
@@ -139,7 +140,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
     ("Command", PLACEHOLDER),
-    ("Date Picker", PLACEHOLDER),
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
