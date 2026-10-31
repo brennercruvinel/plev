@@ -157,14 +157,8 @@ pub struct GroupAddons {
     /// group-hover:fill-[#000]`).
     pub icon_color: Color,
     pub icon_hover: Color,
-    /// The shortcut hint (`⌘ K`): its surface, padding, text and inset
-    /// from the box's end.
-    pub hint_fill: Color,
-    pub hint_radius: f32,
-    pub hint_pad: [f32; 2],
-    pub hint_text: TextStyle,
-    pub hint_color: Color,
-    pub hint_shadow: Vec<ShadowSpec>,
+    /// The shortcut hint's inset from the box's end; the hint itself is
+    /// the search's key cap, `theme.disclosure.kbd` (`Kbd`, `Md`).
     pub hint_edge: f32,
     /// The least room between an icon or a hint and the text typed
     /// beside it, so a right-to-left text that hangs from the end never
@@ -385,27 +379,14 @@ impl FormTokens {
             placeholder: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.50),
             ..input.clone()
         };
-        // Search :21 the icon button, :41 the `⌘ K` hint: `px-1.5 py-0.5
-        // bg-[#F1F1F1] rounded-md` under a ring and two key-lights,
-        // `text-[0.75rem] leading-[1rem] font-medium text-[#7B7B7B]`,
-        // `right-2.5`.
+        // Search :21 the icon button, :41 the `⌘ K` hint (the key cap,
+        // `theme.disclosure.kbd`) at `right-2.5`.
         let group = GroupAddons {
             icon_edge: 4.0,
             icon_slot: 32.0,
             icon: 16.0,
             icon_color: gray,
             icon_hover: hex(0x000000),
-            hint_fill: hex(0xF1F1F1),
-            hint_radius: 6.0,
-            hint_pad: [6.0, 2.0],
-            hint_text: ramp.exact(12.0, 16.0, 500),
-            hint_color: gray,
-            hint_shadow: vec![
-                ShadowSpec::new([0.0, 0.0], 0.0, 1.0, black(0.11)),
-                ShadowSpec::inset([0.0, 2.0], 0.8, 0.0, Color::rgba(1.0, 1.0, 1.0, 0.27)),
-                ShadowSpec::inset([0.0, -1.0], 0.6, 0.0, black(0.20)),
-                ShadowSpec::new([0.0, 1.0], 4.2, -1.0, black(0.25)),
-            ],
             hint_edge: 10.0,
             // What Search :34 `px-12` (48) leaves past the hint's
             // `right-2.5` (10) and its `px-1.5` around `⌘ K` (about 34).
@@ -523,12 +504,6 @@ impl FormTokens {
             icon: theme.control.icon_for(ControlSize::Sm),
             icon_color: c.text_mid,
             icon_hover: c.text,
-            hint_fill: c.bg_hover,
-            hint_radius: theme.shape.micro,
-            hint_pad: [theme.spacing.xs * 1.5, theme.spacing.xs * 0.5],
-            hint_text: t.caption_r(),
-            hint_color: c.text_mid,
-            hint_shadow: vec![ShadowSpec::new([0.0, 0.0], 0.0, 1.0, c.divider)],
             hint_edge: theme.spacing.sm,
             addon_gap: theme.spacing.xs,
             text_color: c.text_mid,
