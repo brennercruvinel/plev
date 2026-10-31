@@ -1,5 +1,5 @@
 //! the flight recorder of a plev session (task-63,
-//! docs/decisoes/gravacao/0037-session-recording-replay-not-reexecution.md).
+//! docs/adr/recording/0037-session-recording-replay-not-reexecution.md).
 //!
 //! a bug report should be an inspectable excerpt, not a video. the
 //! recorder keeps a session as data that explains what happened: who

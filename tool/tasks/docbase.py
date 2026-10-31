@@ -7,7 +7,7 @@
 A header is YAML restricted to one `key: value` per line, where a value is
 a bare word, a JSON string, `null` or an inline list `[a, "b c"]`, so the
 standard library reads it and any YAML reader agrees. The fields and their
-vocabularies are docs/referencia/editorial/convencoes.md.
+vocabularies are docs/ref/operations/docs-conventions.md.
 """
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -22,20 +22,26 @@ REPO = Path(__file__).resolve().parents[2]
 REQUIRED = ['id', 'title', 'project', 'type', 'status', 'date', 'date_basis', 'topics',
             'relations', 'source', 'source_revision', 'revised', 'review']
 OPTIONAL = ['parent', 'evidence']
-KINDS = {'indice', 'registro', 'modelo', 'decisao', 'tarefa', 'aprendizado', 'programa',
-         'tese', 'experimento', 'rascunho', 'manual', 'referencia', 'pesquisa', 'secao'}
-STATES = {'ativo', 'referencia', 'proposto', 'aceito', 'substituido', 'pendente',
-          'em-andamento', 'concluido', 'rascunho'}
-BASES = {'cabecalho', 'texto', 'git', 'reconstruida', 'registro-editorial', 'sem-data', 'gerado'}
-REVIEWS = {'pendente', 'revisado', 'gerado'}
+KINDS = {'index', 'record', 'template', 'adr', 'task', 'learning', 'program', 'thesis',
+         'experiment', 'draft', 'manual', 'reference', 'research', 'section'}
+STATES = {'active', 'reference', 'proposed', 'accepted', 'superseded', 'pending',
+          'in-progress', 'done', 'draft'}
+BASES = {'header', 'text', 'git', 'reconstructed', 'editorial', 'undated', 'generated'}
+REVIEWS = {'pending', 'reviewed', 'generated'}
+THEMES = {'generated', 'importing', 'interface', 'recording', 'rendering', 'semantics',
+          'structure', 'workflows'}
+SKIP = {'docs/adr/TEMPLATE.md'}
 HOMES = {
-    'historia': ('História', 'A trajetória, os programas e os registros de cada período.'),
-    'tarefas': ('Tarefas', 'Cada trabalho com objetivo, execução, entrega e o que ficou pendente.'),
-    'decisoes': ('Decisões', 'Os ADRs: contexto, decisão, consequências e alternativas, numerados numa sequência só.'),
-    'pesquisas': ('Pesquisas', 'Referências estudadas, comparações, a tese e os rascunhos do artigo.'),
-    'experimentos': ('Experimentos', 'Método, medições e resultados, com os limites de cada um.'),
-    'aprendizados': ('Aprendizados', 'O que os problemas e as implementações ensinaram.'),
-    'referencia': ('Referência', 'Arquitetura de cada subsistema, operação do repositório e convenções.'),
+    'tasks': ('Tasks', 'One folder per task: the plan, the execution, the delivery and what stayed open. '
+              'A long task keeps its phases as pages beside its README.'),
+    'experiments': ('Experiments', 'What was measured or tested: the question, the setup, the results '
+                    'and their limits, with the task pages that hold the full record.'),
+    'research': ('Research', 'The references studied, the comparisons, the thesis and the paper drafts.'),
+    'learnings': ('Learnings', 'What the problems and the implementations taught.'),
+    'ref': ('Reference', 'How each subsystem is built, how to operate the repository, the platforms, '
+            'and the conventions of this archive.'),
+    'log': ('Log', 'What happened, in order: the timeline, the journal, the changelog, the programs '
+            'and the snapshots of the project state.'),
 }
 
 
@@ -120,6 +126,8 @@ def load(root):
     pages = {}
     for p in sorted(root.rglob('*.md')):
         where = 'docs/' + p.relative_to(root).as_posix()
+        if where in SKIP:
+            continue
         pages[where] = parse(p.read_text(), where)
     return pages
 
@@ -129,46 +137,47 @@ def link(target, current):
 
 
 def table(rows, current):
-    out = ['| Data | Documento | Estado |', '|---|---|---|']
+    out = ['| Date | Document | Status |', '|---|---|---|']
     for path, m in sorted(rows, key=lambda r: (str(r[1]['date'] or '9999'), r[1]['id'])):
         title = str(m['title']).replace('|', '/')
-        out.append(f'| {m["date"] or "sem data"} | [{title}]({link(path, current)}) | {m["status"]} |')
+        out.append(f'| {m["date"] or "undated"} | [{title}]({link(path, current)}) | {m["status"]} |')
     return '\n'.join(out)
 
 
 def write(root, path, ident, title, body):
-    meta = {'id': ident, 'title': title, 'project': 'plev', 'type': 'indice', 'status': 'ativo',
-            'date': None, 'date_basis': 'gerado', 'topics': ['navegacao'], 'relations': [],
-            'source': 'tool/tasks/docbase.py', 'source_revision': 'gerado', 'revised': 'gerado',
-            'review': 'gerado'}
+    meta = {'id': ident, 'title': title, 'project': 'plev', 'type': 'index', 'status': 'active',
+            'date': None, 'date_basis': 'generated', 'topics': ['navigation'], 'relations': [],
+            'source': 'tool/tasks/docbase.py', 'source_revision': 'generated', 'revised': 'generated',
+            'review': 'generated'}
     (root / path[5:]).write_text(emit(meta, f'# {title}\n\n{body}'))
 
 
 def index(root):
-    pages = {p: m for p, (m, _) in load(root).items() if m['type'] != 'indice'}
+    pages = {p: m for p, (m, _) in load(root).items() if m['type'] != 'index'}
     for home, (title, intro) in HOMES.items():
         path = f'docs/{home}/README.md'
         rows = [(p, m) for p, m in pages.items() if p.startswith(f'docs/{home}/') and not m.get('parent')]
         groups = defaultdict(list)
         for p, m in rows:
             parts = Path(p).parts
-            groups[parts[2] if len(parts) > 3 else ''].append((p, m))
+            own = parts[-1] == 'README.md'  # a page that is its own folder: a task, an experiment
+            groups[parts[2] if len(parts) > 3 and not own else ''].append((p, m))
         body = intro + '\n'
         for group in sorted(groups):
             if group:
                 body += f'\n## {group}\n'
             body += '\n' + table(groups[group], path) + '\n'
-        write(root, path, f'indice-{home}', title, body + '\n[Acervo plev](../README.md)')
+        write(root, path, f'index-{home}', title, body + '\n[plev docs](../README.md)')
     years = defaultdict(list)
     for p, m in pages.items():
-        if not m.get('parent') and m['type'] not in ('modelo', 'manual'):
-            years[str(m['date'])[:4] if m['date'] else 'sem data'].append((p, m))
-    body = ('Os documentos pela data do que registram. A data vem do cabeçalho de cada página, '
-            'com a base em `date_basis`; [cronologia e fontes](cronologia-e-fontes.md) explica '
-            'onde uma data foi revista depois do fato.\n')
+        if not m.get('parent') and m['type'] not in ('template', 'manual'):
+            years[str(m['date'])[:4] if m['date'] else 'undated'].append((p, m))
+    body = ('Every document by the date of what it records. The date comes from the header of each '
+            'page, with its basis in `date_basis`; [dates and sources](dates-and-sources.md) explains '
+            'where a date was revised after the fact.\n')
     for year in sorted(years):
-        body += f'\n## {year}\n\n' + table(years[year], 'docs/historia/linha-do-tempo.md') + '\n'
-    write(root, 'docs/historia/linha-do-tempo.md', 'linha-do-tempo', 'Linha do tempo', body)
+        body += f'\n## {year}\n\n' + table(years[year], 'docs/log/timeline.md') + '\n'
+    write(root, 'docs/log/timeline.md', 'timeline', 'Timeline', body)
     catalog = {'project': 'plev', 'documents': []}
     for p, (m, body) in load(root).items():
         catalog['documents'].append({'path': p, **m, 'headings': headings(body)})
@@ -219,14 +228,27 @@ def check(root):
             elif frag and dest in anchors and frag not in anchors[dest]:
                 errors.append(f'{path}: dead anchor {target}')
     numbers = defaultdict(list)
-    for path in pages:
-        m = re.match(r'docs/decisoes/[a-z]+/(\d{4})-[a-z0-9-]+\.md$', path)
-        if path.startswith('docs/decisoes/') and not path.endswith('README.md'):
-            if not m:
-                errors.append(f'{path}: a decision is decisoes/<tema>/NNNN-kebab.md')
-            else:
-                numbers[m[1]].append(path)
-    errors += [f'decision {n} used by {p}' for n, p in numbers.items() if len(p) > 1]
+    adr_index = pages.get('docs/adr/README.md', ({}, ''))[1]
+    for path, (m, body) in pages.items():
+        parts = path.split('/')
+        if parts[1] == 'adr' and path != 'docs/adr/README.md':
+            n = re.match(r'docs/adr/([a-z]+)/(\d{4})-[a-z0-9-]+\.md$', path)
+            if not n or n[1] not in THEMES:
+                errors.append(f'{path}: an ADR is adr/<theme>/NNNN-kebab.md, theme one of {sorted(THEMES)}')
+                continue
+            numbers[n[2]].append(path)
+            if m.get('id') != f'adr-{n[2]}':
+                errors.append(f'{path}: the id of ADR {n[2]} is adr-{n[2]}')
+            if f'{n[1]}/{Path(path).name})' not in adr_index:
+                errors.append(f'{path}: not listed in docs/adr/README.md')
+        if parts[1] in ('tasks', 'experiments') and path != f'docs/{parts[1]}/README.md':
+            if len(parts) != 4:
+                errors.append(f'{path}: each one lives in its own folder, {parts[1]}/<name>/README.md')
+            elif parts[3] != 'README.md':
+                owner = pages.get('/'.join(parts[:3]) + '/README.md', ({}, ''))[0].get('id')
+                if m.get('parent') != owner:
+                    errors.append(f'{path}: a page in {"/".join(parts[:3])}/ has parent {owner}')
+    errors += [f'ADR {n} used by {p}' for n, p in numbers.items() if len(p) > 1]
     catalog = root / 'CATALOG.json'
     listed = {d['path'] for d in json.loads(catalog.read_text())['documents']} if catalog.exists() else set()
     if listed != set(pages):

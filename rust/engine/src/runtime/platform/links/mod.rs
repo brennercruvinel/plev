@@ -27,7 +27,7 @@
 //! [`default_links`] choosing. Windows and linux start a new process
 //! with the link as its argument; macOS delivers a registered scheme to
 //! a bundled app as an Apple event, which is the platform bring-up's
-//! (docs/decisoes/interface/0063-a-link-is-not-a-person.md says how, and why not by an
+//! (docs/adr/interface/0063-a-link-is-not-a-person.md says how, and why not by an
 //! application delegate).
 
 use std::fmt;

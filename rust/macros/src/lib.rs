@@ -1,6 +1,6 @@
 //! Proc-macros for plev: the `#[component]` attribute (`view`) and the
 //! backend of the experimental markup UI dsl (`markup`). **The dsl is not
-//! the official app pattern** (docs/decisoes/estrutura/0023-official-app-pattern.md) -- do not
+//! the official app pattern** (docs/adr/structure/0023-official-app-pattern.md) -- do not
 //! build new app code on it without an ADR.
 //!
 //! A proc-macro crate exports its macros from the root only; the bodies

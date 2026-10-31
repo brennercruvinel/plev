@@ -50,7 +50,7 @@ enum Line {
 }
 
 /// The HOFF ramp, one entry per mixin of `TypographyScale` (the measured
-/// tokens — docs/decisoes/renderizacao/0005-measured-design-tokens-over-eyeballed-values.md).
+/// tokens — docs/adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md).
 fn ramp() -> [(&'static str, TextStyle, &'static str); 12] {
     let t = TypographyScale::hoff();
     [
@@ -158,7 +158,7 @@ impl TypographyPage {
             });
         }
         right.push(Line::Group("SCRIPTS — NOTO SANS"));
-        // The embedded Noto faces (docs/decisoes/renderizacao/0071), on every target
+        // The embedded Noto faces (docs/adr/rendering/0071), on every target
         // (adr 0079: a desktop names them before its system's faces); the
         // web build fetches each script's the first time this page shows it
         // (engine drawing/text/on_demand.rs).

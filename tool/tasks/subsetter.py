@@ -6,7 +6,7 @@ Reads the Noto sources from a directory outside the repo, checks each one's
 sha256, subsets it and writes the result to rust/engine/assets/fonts/,
 next to the license (LICENSE-Noto-OFL.txt). Stdlib plus fontTools (tested
 with 4.64.0), never the network. The sources stay out of the repo; only the
-subsets are committed. docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md has the why.
+subsets are committed. docs/adr/rendering/0071-embedded-fonts-by-script.md has the why.
 
     tool/tasks/subsetter.py [--src DIR] [--out DIR] [--check]
 
@@ -301,7 +301,7 @@ def license_text(src_dir):
     note = (
         "The files NotoSans*-Regular and NotoSans*-Bold in this directory are "
         "subsets of the\nNoto fonts above, made by tool/tasks/subsetter.py "
-        "(docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md).\n"
+        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / LICENSE_SOURCE[0]).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"
@@ -393,7 +393,7 @@ def emoji_license_text(src_dir):
     note = (
         f"The file {EMOJI[0]} in this directory is a subset of Noto Color Emoji "
         "v2.051\n(CBDT build), made by tool/tasks/subsetter.py "
-        "(docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md).\n"
+        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / EMOJI_LICENSE_SOURCE).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"

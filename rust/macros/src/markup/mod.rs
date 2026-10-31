@@ -1,5 +1,5 @@
 //! Backend of the experimental markup UI dsl (`plev_narrate!`). **Not the
-//! official app pattern** (docs/decisoes/estrutura/0023-official-app-pattern.md) -- do not
+//! official app pattern** (docs/adr/structure/0023-official-app-pattern.md) -- do not
 //! build new app code on this crate without an ADR.
 
 mod codegen;

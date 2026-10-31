@@ -1,5 +1,5 @@
 # replay: the session inspector (task-64 phase a,
-# docs/decisoes/gravacao/0046-the-inspector-reads-a-session-never-runs-it.md). it reads a
+# docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md). it reads a
 # recorded session (record::Session) and answers the thesis questions about
 # any request or control: what it was, the state, who observed what and
 # when, the request, the verdict with its delta, what happened between the

@@ -1,5 +1,5 @@
 # socket: the agent surface (task-61,
-# docs/decisoes/semantica/0039-agents-act-through-the-semantic-contract.md). an agent outside
+# docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md). an agent outside
 # the process observes and operates a plev app through the semantic
 # contract only: protocol v1 as json lines, the pure part (messages, codec,
 # the ring of served revisions, the server core) compiles everywhere,

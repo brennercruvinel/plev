@@ -3,7 +3,7 @@
 //! The root holds the workspace's few files and nine directories; every
 //! crate sits under a home (rust/, apps/, demo/, tool/) with its manifest
 //! and its source; the docs keep their parts by kind; a decision record is
-//! `docs/decisoes/<tema>/NNNN-<title>.md` with one number per record across
+//! `docs/adr/<theme>/NNNN-<title>.md` with one number per record across
 //! every theme. A file that lands somewhere else fails here, by name.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -158,14 +158,14 @@ fn the_docs_keep_their_parts_by_kind() {
         "CATALOG.json",
         "README.md",
         "TERMS.toml",
-        "aprendizados",
-        "decisoes",
-        "experimentos",
-        "historia",
-        "imagens",
-        "pesquisas",
-        "referencia",
-        "tarefas",
+        "adr",
+        "experiments",
+        "img",
+        "learnings",
+        "log",
+        "ref",
+        "research",
+        "tasks",
     ];
     let got = tracked("docs");
     assert_eq!(got, want, "docs/ holds exactly these");
@@ -173,7 +173,7 @@ fn the_docs_keep_their_parts_by_kind() {
 
 #[test]
 fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
-    let adr = root().join("docs/decisoes");
+    let adr = root().join("docs/adr");
     let mut numbers: BTreeMap<u32, Vec<String>> = BTreeMap::new();
     let mut bad = Vec::new();
     for theme in entries(&adr) {
@@ -182,8 +182,8 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
         }
         let dir = adr.join(&theme);
         if !dir.is_dir() {
-            if theme != "README.md" {
-                bad.push(format!("docs/decisoes/{theme}: a file outside a theme"));
+            if !matches!(theme.as_str(), "README.md" | "TEMPLATE.md") {
+                bad.push(format!("docs/adr/{theme}: a file outside a theme"));
             }
             continue;
         }
@@ -200,9 +200,7 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
                     .bytes()
                     .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-');
             if !well_named {
-                bad.push(format!(
-                    "docs/decisoes/{theme}/{file}: not NNNN-kebab-title.md"
-                ));
+                bad.push(format!("docs/adr/{theme}/{file}: not NNNN-kebab-title.md"));
                 continue;
             }
             let n: u32 = num[..4].parse().expect("four digits");

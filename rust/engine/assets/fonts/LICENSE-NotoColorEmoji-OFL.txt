@@ -2,7 +2,7 @@ Copyright 2022 Google Inc.
 Noto is a trademark of Google Inc.
 
 The file NotoColorEmoji-CBDT.ttf in this directory is a subset of Noto Color Emoji v2.051
-(CBDT build), made by tool/tasks/subsetter.py (docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md).
+(CBDT build), made by tool/tasks/subsetter.py (docs/adr/rendering/0071-embedded-fonts-by-script.md).
 
 Copyright 2021 Google Inc. All Rights Reserved.
 

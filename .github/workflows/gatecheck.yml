@@ -57,7 +57,7 @@ jobs:
       - run: cargo test --workspace
 
   regress:
-    # structural regression (task-67, docs/decisoes/processos/0045-regression-by-meaning-before-pixels.md):
+    # structural regression (task-67, docs/adr/workflows/0045-regression-by-meaning-before-pixels.md):
     # every baseline under tool/bench/regress/baselines is staged and
     # compared by meaning, then by layer hash and binding. when nothing
     # moved no frame is drawn, so the job needs no GPU. a layer that moved

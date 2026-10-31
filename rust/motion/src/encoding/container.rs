@@ -1,4 +1,4 @@
-//! monster v0 container layout (docs/referencia/arquitetura/monster-format-v0.md "container layout"):
+//! monster v0 container layout (docs/ref/architecture/monster-format-v0.md "container layout"):
 //! little-endian, byte-aligned, values quantized per `crate::quant`.
 //! no zstd in v0; header bit 0 of `flags` is reserved for the envelope.
 //!

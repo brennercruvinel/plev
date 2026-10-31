@@ -11,7 +11,7 @@
 //! between two frames it answers for the frame on screen, which is what a
 //! person clicking saw.
 //!
-//! See docs/decisoes/semantica/0035-semantic-binding-beside-the-scene.md.
+//! See docs/adr/semantics/0035-semantic-binding-beside-the-scene.md.
 
 use accord::SemId;
 use indexmap::IndexMap;

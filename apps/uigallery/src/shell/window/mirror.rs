@@ -1,5 +1,5 @@
 //! The windows' scenes over the agent port (task-79,
-//! docs/decisoes/gravacao/0065-scene-travels-as-data.md), desktop only, like the port.
+//! docs/adr/recording/0065-scene-travels-as-data.md), desktop only, like the port.
 //!
 //! The app's side: when a connection watches a window (`main`, or `page`
 //! for the page's own window), the shell writes that window's frame

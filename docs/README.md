@@ -1,54 +1,54 @@
 ---
-id: acervo
-title: plev — acervo técnico
+id: docs
+title: "plev docs"
 project: plev
-type: indice
-status: ativo
+type: index
+status: active
 date: null
-date_basis: gerado
-topics: [navegacao]
-relations: [convencoes, linha-do-tempo, cronologia-fontes]
+date_basis: generated
+topics: [navigation]
+relations: [docs-conventions, timeline, dates-and-sources]
 source: docs/README.md
 source_revision: ec0a224c
-revised: 2026-10-30
-review: revisado
+revised: 2026-10-31
+review: reviewed
 ---
 
-# plev — acervo técnico
+# plev docs
 
-O plev começou em 2021 como um jeito de aprender Rust desenhando na GPU e virou
-uma engine de composição com um contrato semântico que pessoas, leitores de tela
-e agentes operam pelo mesmo caminho. Este acervo guarda essa trajetória: as
-tasks, as decisões, as pesquisas, as medições e o que cada erro ensinou, com o
-código que sustenta cada afirmação.
+plev began in 2021 as a way to learn Rust by drawing on the GPU and became a
+compositing engine with a semantic contract that people, screen readers and agents
+operate through the same path. These docs keep that path: the tasks, the decisions,
+the research, the measurements and what each mistake taught, with the code that
+backs each claim.
 
-## Por onde entrar
+## Where to start
 
-| Para | Comece em |
+| To | Start at |
 |---|---|
-| seguir a história no tempo | [linha do tempo](historia/linha-do-tempo.md), e [cronologia e fontes](historia/cronologia-e-fontes.md) para ler as datas |
-| ver o que foi feito, task a task | [tarefas](tarefas/README.md) |
-| entender por que o código é assim | [decisões](decisoes/README.md) |
-| o que foi estudado antes de construir | [pesquisas](pesquisas/README.md), com a [tese do runtime generativo](pesquisas/tese-runtime-generativo.md) |
-| números, método e limites | [experimentos](experimentos/README.md) |
-| o que deu errado e o que ficou | [aprendizados](aprendizados/README.md) |
-| trabalhar no código hoje | [referência](referencia/README.md), a começar pelo [manual da engine](referencia/operacao/code-against-the-plev-engine.md) |
-| a arquitetura numa página | [ATLAS.toml](ATLAS.toml); os nomes antigos e os de hoje em [TERMS.toml](TERMS.toml) |
+| follow the story in time | the [timeline](log/timeline.md), and [dates and sources](log/dates-and-sources.md) to read the dates |
+| see what was done, task by task | [tasks](tasks/README.md), one folder per task |
+| understand why the code is the way it is | the [ADRs](adr/README.md); [adr/TEMPLATE.md](adr/TEMPLATE.md) for a new one |
+| what was measured, how, and its limits | [experiments](experiments/README.md) |
+| what was studied before building | [research](research/README.md), with the [generative runtime thesis](research/generative-runtime-thesis.md) |
+| what went wrong and what stayed | [learnings](learnings/README.md) |
+| work on the code today | [reference](ref/README.md), starting with the [engine manual](ref/operations/code-against-the-plev-engine.md) |
+| what happened, in order | the [log](log/README.md): journal, changelog, programs, project state |
+| the architecture on one page | [ATLAS.toml](ATLAS.toml); the old names and today's in [TERMS.toml](TERMS.toml) |
 
-## Como as peças se ligam
+## How the pieces connect
 
-Uma pesquisa levanta uma hipótese; uma task a implementa; um ADR fixa a decisão
-que ficou; um experimento mede; um aprendizado diz o que mudou no entendimento.
-Cada página aponta para as outras no campo `relations` do cabeçalho, e o
-[CATALOG.json](CATALOG.json) reúne todas, com os títulos internos, para quem
-quer consultar o acervo como dado. A forma de cada página está nas
-[convenções](referencia/editorial/convencoes.md).
+A research note raises a hypothesis; a task implements it; an ADR fixes the decision
+that stayed; an experiment measures it; a learning says what changed in the
+understanding. Each page points to the others in the `relations` field of its header,
+and [CATALOG.json](CATALOG.json) gathers all of them, with their headings, for
+whoever wants to query the archive as data. The shape of every page is in the
+[conventions](ref/operations/docs-conventions.md).
 
-## Lendo um registro antigo
+## Reading an old record
 
-Uma página histórica fala com os nomes e os caminhos da sua época (`sem`,
-`comps`, `showcase`, `crates/`…); o TERMS.toml leva cada um ao nome de hoje.
-Um comando ou um número de uma task vale para a revisão em que foi escrito.
-O git só guarda o histórico a partir de junho de 2026; antes disso, a data de
-uma página vem do seu cabeçalho, e a [cronologia](historia/cronologia-e-fontes.md)
-diz onde ela foi revista depois do fato.
+A historical page speaks with the names and paths of its time (`sem`, `comps`,
+`showcase`, `crates/`…); TERMS.toml leads each one to today's name. A command or a
+number in a task holds for the revision it was written at. git only keeps the history
+from June 2026; before that, the date of a page comes from its header, and
+[dates and sources](log/dates-and-sources.md) says where it was revised after the fact.

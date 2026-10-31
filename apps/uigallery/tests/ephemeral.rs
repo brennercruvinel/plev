@@ -1,6 +1,6 @@
 //! The ephemeral interface (task-80 demo 4; the method, written before
 //! this ran, is in
-//! docs/tarefas/task-80-proof-qualitatively-different-software.md):
+//! docs/tasks/task-80-proof-qualitatively-different-software/README.md):
 //! the review of the silences born from an intent beside the fixed
 //! screen, a person deciding a cut on it with a click, "I can't compare
 //! these" refused by the rules, the review turned into the comparison in

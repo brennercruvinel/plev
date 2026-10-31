@@ -35,7 +35,7 @@ apps = "apps (agenteval, idestudio, inspector, mirroring, uigallery, urnadbapp)"
 demos = "demo (one crate per demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker)"
 tooling = "tool (bench/measure and bench/regress: the measurement and the structural regression; tasks: the scripts; tests: the architecture tests)"
 data = "data (media/lottie: the lottie references the importer and the gates read; graphs/<format>: the graph inputs a demo draws, d3 and cytoscape, from the gramorph corpus)"
-knowledge = "docs (historia, tarefas, decisoes by theme, pesquisas, experimentos, aprendizados, referencia, imagens; the conventions in docs/referencia/editorial/convencoes.md, checked by tool/tasks/docbase.py; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
+knowledge = "docs (historia, tarefas, decisoes by theme, pesquisas, experimentos, aprendizados, referencia, imagens; the conventions in docs/ref/operations/docs-conventions.md, checked by tool/tasks/docbase.py; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
 web = "tool/tasks/webtarget.sh <target> [serve|build]: uigallery (apps/uigallery/web, from :8080, the default), urnadbapp (apps/urnadbapp/web, from :8081), graphs (demo/graphs, from :8082), primes (demo/primes, from :8083); serve takes the next free port when the first is taken; each a Trunk.toml + index.html + dist output, each wasm bin named apart from its lib (uigallery-web, urnadbapp-web, graphs-web, primes)"
 scripts = "tool/tasks (fullcheck.sh = the gate: test, clippy, fmt, wasm check, docs links, urnadbapp leg; webtarget.sh = trunk dev loop; screencap.sh web|ios|android = one gallery page or all of them on a target, classified against the desktop frame; mobileapp.sh android|ios|ios-run = the mobile builds; figmapull.py = a .fig screen to the importer's Figma fixture; subsetter.py = the embedded Noto subsets, reproducible, --check compares byte for byte; depscheck.sh, namecheck.sh = the architecture tests; precommit = the git hook)"
 contracts = ".devops/check (lychee, nextest and typos configs); .github/workflows/gatecheck.yml is the CI"
@@ -80,7 +80,7 @@ role = "Tween, Spring, FrameClock, easing (dt-based; web_time); set_reduced_moti
 
 [modules.perf]
 path = "rust/engine/src/runtime/perf"
-role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None). perf::stages (task-73 phase 1): per-frame, per-thread cost by stage (projection, scene build, measure hit/miss, shaping, bind, hit test, layer hash, geometry, text resolve, upload bytes, encode, gpu wait), off by default and one relaxed load when off; tool/bench/measure/src drives nine interactions through the frame path and prints the tables (docs/experimentos/task-73-medicoes.md); RenderConfig::gpu_timestamps (off by default, no device feature when off) adds timestamp queries around the layer and composite passes of draw_frame, read a frame late, as the GpuSpan/GpuLayers/GpuComposite stages and PerfMonitor::record_gpu_micros (task-73 phase 1b)"
+role = "PerfMonitor: rolling windows over AnimationTick + RenderStats (fps, dt p50/p95/p99, cpu micros, memory incl. native rss); PerfHud overlay layer; opt-in via RenderConfig (perf_log, perf_hud); gpu timestamp queries pending (gpu_micros stays None). perf::stages (task-73 phase 1): per-frame, per-thread cost by stage (projection, scene build, measure hit/miss, shaping, bind, hit test, layer hash, geometry, text resolve, upload bytes, encode, gpu wait), off by default and one relaxed load when off; tool/bench/measure/src drives nine interactions through the frame path and prints the tables (docs/tasks/task-73-incremental-dependency-system/phase-1-measurements.md); RenderConfig::gpu_timestamps (off by default, no device feature when off) adds timestamp queries around the layer and composite passes of draw_frame, read a frame late, as the GpuSpan/GpuLayers/GpuComposite stages and PerfMonitor::record_gpu_micros (task-73 phase 1b)"
 depends = ["animation", "compositor", "text"]
 contracts = ["pure-no-gpu", "hud-implies-continuous-frames"]
 
@@ -149,7 +149,7 @@ role = "safe areas (mod), ime, app lifecycle"
 
 [modules.widgets]
 path = "rust/engine/src/widgets"
-role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, a module of the engine, every visual value read from engine::styling::theme::Theme (docs/referencia/arquitetura/component-catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), wake (Wake: what a tick asks of the loop, a frame now and the deadline of the next, merged by earliest; Blink: the caret clock the text widgets share; task-82, adr a-tick-asks-for-a-deadline), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core: bidi caret and selection by screen order, an input method's composition drawn inline and kept out of the buffer and the projection, copy, cut, paste and select all through a ClipboardProvider the owner hands in (ClipKey); checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (Graph, Look and Layout, and two components: GraphView and LiveGraph; see [modules.graph]), editor (rope-backed multi-cursor editor view: only the visible lines are shaped and drawn, row positions in f64, a million lines open in about 20 ms in release; ime composition inline), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (rust/engine/src/widgets/tests/matrix.rs)"
+role = "the plev design system: every widget, recipe, icon, chart, overlay and the editor, a module of the engine, every visual value read from engine::styling::theme::Theme (docs/ref/architecture/component-catalog.md is the inventory). categories: core (Rect/WidgetEvent/EventResult, color helpers), wake (Wake: what a tick asks of the loop, a frame now and the deadline of the next, merged by earliest; Blink: the caret clock the text widgets share; task-82, adr a-tick-asks-for-a-deadline), recipe (glass pill/surface, edge light, inset key-light, shadow stacks, focus ring), icons (lucide set), action (button, icon button, chip, badge), form (text field over the text_input core: bidi caret and selection by screen order, an input method's composition drawn inline and kept out of the buffer and the projection, copy, cut, paste and select all through a ClipboardProvider the owner hands in (ClipKey); checkbox, switch, slider, select), nav (tabs, nav link, sidebar by breakpoint, panel header, breadcrumb, split pane), content (card, avatar, panel, stat, code block, skeleton, table, empty state, virtual list, tree, separator), feedback (modal, context menu, toast, tooltip, progress, spinner, scrollbar), overlay (the overlay stack with spring motion), charts (geometry + draw), graph (Graph, Look and Layout, and two components: GraphView and LiveGraph; see [modules.graph]), editor (rope-backed multi-cursor editor view: only the visible lines are shaped and drawn, row positions in f64, a million lines open in about 20 ms in release; ime composition inline), shell (AppShell: sidebar + header + content rect + safe area). tests: every widget under every theme at phone and desktop widths (rust/engine/src/widgets/tests/matrix.rs)"
 depends = ["engine", "editor", "accord"]
 
 
@@ -378,7 +378,7 @@ cli = ["commit", "intent"]
 # .monster) and transpiler, the engine's headless text probe.
 bins = ["import/convert", "import/transpile", "engine/text_probe"]
 notes = [
-  "text_probe is headless through engine::drawing::headless (the window's own frame path into a texture, no second pipeline); with uigallery --render and player --frame it is the tool behind docs/referencia/operacao/validate-visuals-by-pixel.md",
+  "text_probe is headless through engine::drawing::headless (the window's own frame path into a texture, no second pipeline); with uigallery --render and player --frame it is the tool behind docs/ref/operations/validate-visuals-by-pixel.md",
   "the builder, charts, text and visual examples and the widgets' editor example had no place in the 2026-10 tree; they are in the history",
   "the remaining demo palettes (inputs, layers, mobile, camera) are views over Theme::default(), not their own color systems",
 ]
@@ -395,14 +395,14 @@ import = "benches/lottie.rs (lottie json -> .monster) and benches/gpui.rs (gpui 
 # measures inference.
 
 [knowledge]
-operating-manual = "docs/referencia/operacao/code-against-the-plev-engine.md"
-pixel-validation = "docs/referencia/operacao/validate-visuals-by-pixel.md"
+operating-manual = "docs/ref/operations/code-against-the-plev-engine.md"
+pixel-validation = "docs/ref/operations/validate-visuals-by-pixel.md"
 visual-tokens = "rust/engine/src/styling/theme/hoff.rs (colors + glass) and rust/engine/src/styling/theme/scales.rs (shape, control, size, duration, layout, shadows)"
-component-catalog = "docs/referencia/arquitetura/component-catalog.md"
-decisions = "docs/decisoes/"
-web-target = "docs/referencia/operacao/build-and-serve-the-web-target.md"
-agent-orchestration = "docs/referencia/operacao/orchestrate-coding-agents-on-this-repo.md"
-program = "docs/historia/programa-runtime-generativo.md (goal, task graph, ownership; thesis and guidelines beside it)"
+component-catalog = "docs/ref/architecture/component-catalog.md"
+decisions = "docs/adr/"
+web-target = "docs/ref/operations/build-and-serve-the-web-target.md"
+agent-orchestration = "docs/ref/operations/orchestrate-coding-agents-on-this-repo.md"
+program = "docs/log/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
 
 # binding contracts. violations are defects even if the pixels look right.
 [contracts]
@@ -519,7 +519,7 @@ errors-and-versioning = '''
 pre-1.0: no api stability promised. library code must not panic on user
 input paths; tessellation and parsers degrade gracefully (log + empty
 output). binary/format versioning follows the anim-format rules
-implemented in rust/motion (docs/referencia/arquitetura/monster-format-v0.md): explicit
+implemented in rust/motion (docs/ref/architecture/monster-format-v0.md): explicit
 version, frozen golden fixtures, per-section checksums. the full delta op
 set is decodable: modify becomes tracks, place/replace/remove become
 timeline op lists that act inside their keyframe segment. both encoder

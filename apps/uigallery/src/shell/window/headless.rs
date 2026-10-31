@@ -162,7 +162,7 @@ impl StagedPage {
     }
 }
 
-/// The lean serde form of `sem` (docs/decisoes/semantica/0040-lean-semantic-form-and-one-redaction.md):
+/// The lean serde form of `sem` (docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md):
 /// the nodes in projection order, and the focus when there is one.
 #[derive(serde::Serialize)]
 struct SnapshotJson<'a> {
