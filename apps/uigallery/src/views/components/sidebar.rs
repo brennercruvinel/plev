@@ -74,3 +74,25 @@ impl SidebarPage {
         ));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The page shows every row: the last link ends inside the band, so
+    /// nothing scrolls under the fade.
+    #[test]
+    fn every_row_shows_unscrolled() {
+        for theme in [Theme::hoff_core(), Theme::hoff()] {
+            let page = SidebarPage::new();
+            let rect = page.rect(Rect::new(0.0, 0.0, 1200.0, 800.0), &theme);
+            let band = page.sidebar.band(rect, &theme, SidebarMode::Full);
+            let links = page.sidebar.link_rects(rect, &theme, SidebarMode::Full);
+            let last = links.last().unwrap();
+            assert!(
+                last.y + last.h <= band.y + band.h + 0.01,
+                "{last:?} past {band:?}"
+            );
+        }
+    }
+}
