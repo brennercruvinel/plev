@@ -147,7 +147,7 @@ impl MenusPage {
             card("File menu", menu(file_menu(), MenuStyle::File)),
             card("File menu", Body::Folders(Folders::new(FOLDERS))),
             card("Select AI model", Body::Pending("SelectAI, from front C")),
-            card("Upload", menu(upload_menu(), MenuStyle::Profile)),
+            card("Upload", menu(upload_menu(), MenuStyle::Upload)),
             card("Filter menu", menu(filter_menu(), MenuStyle::Filter)),
             card("Profile menu", menu(profile_menu(), MenuStyle::Profile)),
         ];
