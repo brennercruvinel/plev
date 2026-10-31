@@ -3,7 +3,7 @@
 
 use super::{
     AlertTokens, AttachmentTokens, BubbleTokens, CursorShape, IntentColors, MarkerTokens,
-    MessageStyle, MessageText, MessageTokens, ScrollerTokens,
+    MessageStyle, MessageText, MessageTokens, ScrollerTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
@@ -355,6 +355,16 @@ impl MessageTokens {
                 dot_gap: 2.0,
                 // :36, the plus path: bars 1.5 wide on an 8 box
                 mark_bar: 1.5 / 8.0,
+            },
+            // templates/NotificationsPage/index.tsx:115 `bg-[#FCFCFC]
+            // border border-[#ECECEC] rounded-[1.25rem] shadow-2xl`
+            // (tailwind: 0 25px 50px -12px black/25)
+            toast: ToastTokens {
+                radius: 20.0,
+                fill: paper,
+                border: shade4,
+                border_width: 1.0,
+                shadow: ShadowSpec::new([0.0, 25.0], 50.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.25)),
             },
         }
     }

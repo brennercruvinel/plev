@@ -269,6 +269,18 @@ pub struct MarkerTokens {
     pub mark_bar: f32,
 }
 
+/// The toast's surface: the kit's notifications dropdown
+/// (`templates/NotificationsPage`), a paper card with a hairline and a
+/// deep drop; inside, the alert's row (`MessageTokens::alert`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ToastTokens {
+    pub radius: f32,
+    pub fill: Color,
+    pub border: Color,
+    pub border_width: f32,
+    pub shadow: ShadowSpec,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MessageTokens {
     /// The row of a comment thread.
@@ -286,6 +298,7 @@ pub struct MessageTokens {
     pub alert: AlertTokens,
     pub attachment: AttachmentTokens,
     pub marker: MarkerTokens,
+    pub toast: ToastTokens,
 }
 
 impl MessageTokens {
@@ -393,6 +406,12 @@ impl MessageTokens {
                     },
                     ..k
                 }
+            },
+            // the page's paper and its divider around the alert's row
+            toast: ToastTokens {
+                fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                border: colors.divider,
+                ..kit.toast
             },
         }
     }
