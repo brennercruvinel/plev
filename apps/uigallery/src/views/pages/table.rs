@@ -136,12 +136,12 @@ pub const PAGES: &[Page] = &[
         "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
         Pane::Button,
     ),
-    alias(
+    page(
+        C,
         "Button Group",
         "layout-grid",
-        "The toolbar group of the buttons page.",
-        Pane::Button,
-        "a segmented group widget",
+        "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
+        Pane::ButtonGroup,
     ),
     placeholder("Calendar"),
     page(
@@ -349,7 +349,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
     placeholder("Questionnaire"),
-    placeholder("Radio Group"),
+    page(
+        C,
+        "Radio Group",
+        "circle",
+        "One choice of a list: the kit's list line with its switch as the disc, stacked or in a line.",
+        Pane::RadioGroup,
+    ),
     page(
         C,
         "Resizable",
@@ -456,12 +462,12 @@ pub const PAGES: &[Page] = &[
         "The hoff core toolbar action as a toggle: icon, label, icon and label; one card per state.",
         Pane::Toggle,
     ),
-    alias(
+    page(
+        C,
         "Toggle Group",
         "layout-grid",
-        "The todo app's filter pills.",
-        Pane::Todo,
-        "a toggle group widget, extracted from the todo app",
+        "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
+        Pane::ToggleGroup,
     ),
     page(
         C,

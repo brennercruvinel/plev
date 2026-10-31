@@ -268,6 +268,7 @@ impl ShowcaseView {
             Role::Slider => return self.slide(seen, &id, node, key),
             // task-104 front D: up and down along an accordion's triggers
             Role::Button if accordion_trigger(seen, node) => (down(key), false),
+            Role::Radio => return self.radio_key(seen, &id, node, key),
             Role::Select if matches!(key, Walk::Up | Walk::Down) => {
                 let open = node.state.get("expanded") == Some(&Value::Bool(true));
                 return if open {
@@ -289,6 +290,36 @@ impl ShowcaseView {
         });
         let to = step(&siblings, &id, mv, wrap).cloned();
         to.is_some_and(|to| self.assist_focus(&to))
+    }
+
+    /// A radio (task-104 front E): any arrow, Home and End move along the
+    /// enabled radios of its group, wrapping at the ends, and choose the
+    /// one they land on through the dispatcher, as the person's `select`
+    /// (the WAI-ARIA radio group).
+    fn radio_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
+        let mv = match key {
+            Walk::Left | Walk::Up => Move::Prev,
+            Walk::Right | Walk::Down => Move::Next,
+            Walk::Home => Move::First,
+            Walk::End => Move::Last,
+            Walk::Tab | Walk::Press => return false,
+        };
+        let Some(group) = node.parent.as_ref() else {
+            return false;
+        };
+        let radios = items(seen, group, |n| {
+            n.role == Role::Radio && n.parent.as_ref() == Some(group)
+        });
+        let Some(to) = step(&radios, id, mv, true).cloned() else {
+            return false;
+        };
+        if !self.assist_focus(&to) {
+            return false;
+        }
+        let Some(now) = self.semantics() else {
+            return false;
+        };
+        self.ask(&now, &to, "select", None)
     }
 
     /// A list or a table: up and down along its rows, Home and End to its

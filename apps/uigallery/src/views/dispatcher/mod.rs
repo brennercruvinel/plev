@@ -79,7 +79,10 @@ impl ShowcaseView {
                 Pane::Item => self.panes.item.content_height(content, t),
                 Pane::Kbd => self.panes.kbd.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
+                Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
+                Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -194,7 +197,10 @@ impl ShowcaseView {
                 Pane::Item => self.panes.item.handle_event(event, content, t),
                 Pane::Kbd => self.panes.kbd.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
+                Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
+                Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -294,6 +300,7 @@ impl ShowcaseView {
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
             // task-104 front E, selection and dates (#158)
+            Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -393,7 +400,10 @@ impl ShowcaseView {
                 Pane::Item => self.panes.item.render(c, content, theme),
                 Pane::Kbd => self.panes.kbd.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
+                Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
+                Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

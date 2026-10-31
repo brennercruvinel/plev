@@ -143,7 +143,10 @@ components! {
     Item => item,
     Kbd => kbd,
     // task-104 front E, selection and dates (#158)
+    ButtonGroup => button_group,
+    RadioGroup => radio_group,
     Toggle => toggle,
+    ToggleGroup => toggle_group,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

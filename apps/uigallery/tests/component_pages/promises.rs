@@ -17,7 +17,9 @@ use super::harness::gallery;
 /// conflict.
 const PROJECTING: usize = 30
     // task-104 front A, fields (#154): Field, Label, Input Group
-    + 3;
+    + 3
+    // task-104 front E, selection (#158): Toggle Group, Radio Group
+    + 2;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

@@ -65,7 +65,10 @@ pub mod item;
 pub mod kbd;
 
 // task-104 front E, selection and dates (#158)
+pub mod button_group;
+pub mod radio_group;
 pub mod toggle;
+pub mod toggle_group;
 
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};

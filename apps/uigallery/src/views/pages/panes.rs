@@ -29,7 +29,7 @@ use super::super::components::{bubble, message, message_scroller};
 use super::super::components::{accordion, aspect_ratio, collapsible, item, kbd};
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::toggle;
+use super::super::components::{button_group, radio_group, toggle, toggle_group};
 
 pub struct Panes {
     // -- foundations
@@ -90,7 +90,10 @@ pub struct Panes {
     pub item: item::ItemPage,
     pub kbd: kbd::KbdPage,
     // task-104 front E, selection and dates (#158)
+    pub button_group: button_group::ButtonGroupPage,
+    pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
+    pub toggle_group: toggle_group::ToggleGroupPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -180,7 +183,10 @@ impl Panes {
             item: item::ItemPage::new(),
             kbd: kbd::KbdPage::new(),
             // task-104 front E, selection and dates (#158)
+            button_group: button_group::ButtonGroupPage::new(),
+            radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
+            toggle_group: toggle_group::ToggleGroupPage::new(theme),
             todo,
             surface,
             silences: silences::SilencesPage::new(),

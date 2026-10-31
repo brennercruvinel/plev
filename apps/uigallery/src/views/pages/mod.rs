@@ -107,7 +107,10 @@ pub enum Pane {
     Item,
     Kbd,
     // task-104 front E, selection and dates (#158)
+    ButtonGroup,
+    RadioGroup,
     Toggle,
+    ToggleGroup,
     // apps demo
     Todo,
     Surface,
