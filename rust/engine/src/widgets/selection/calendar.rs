@@ -2,12 +2,12 @@
 //! the month before and after, weeks from Monday (ISO 8601). The kit has
 //! no calendar, so it is derived from it: a day presses like the
 //! toolbar actions (`theme.button.toolbar`, through the buttons' own
-//! [`Press`] and `paint_surface`), the chosen day is the dark call to
-//! action (`theme.button.secondary`), today is ringed as the outline
-//! button, and the arrows are ghost [`IconButton`]s. The weeks keep their
-//! six rows, and a day of another month is a blank cell: neither drawn
-//! nor pressed, as the projection holds only the month shown. Its own values (cell
-//! range, gap, text) are `theme.selection.calendar`.
+//! [`Press`] and `paint_surface`), the chosen day is the kit's dark call
+//! to action (`theme.selection.calendar.chosen`), today is ringed, and
+//! the arrows are ghost [`IconButton`]s. The weeks keep their six rows,
+//! and a day of another month is a blank cell: neither drawn nor
+//! pressed, as the projection holds only the month shown. Its own values
+//! (cell range, gap, text) are `theme.selection.calendar`.
 //!
 //! The grid fits the `Rect` it gets: a day is a seventh of the width,
 //! clamped between the token's minimum and maximum, never a fixed size.
@@ -491,7 +491,7 @@ impl Calendar {
                 continue;
             }
             let chosen = self.selected == Some(*date);
-            let recipe = if chosen { &b.secondary } else { &b.toolbar };
+            let recipe = if chosen { &t.chosen } else { &b.toolbar };
             let alpha = if self.allows(*date) {
                 1.0
             } else {

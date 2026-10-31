@@ -16,7 +16,8 @@
 use crate::styling::color::Color;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ButtonSurface, Theme};
+use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
+use crate::widgets::buttons::tokens::ButtonTokens;
 
 /// The kit's segmented control (`components/Tabs/index.tsx`): a well
 /// with a raised thumb that slides under the chosen segment. The toggle
@@ -137,6 +138,9 @@ pub struct CalendarTokens {
     /// secondary gray passes 1.4.11.
     pub today: Color,
     pub today_w: f32,
+    /// The chosen day: the kit's dark call to action; in a derived theme
+    /// the page's text and background turned over.
+    pub chosen: ButtonRecipe,
     /// A day's number (the segment's 13px, medium).
     pub day_size: f32,
     pub day_line: f32,
@@ -342,6 +346,7 @@ impl SelectionTokens {
             weekday: legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]),
             today: legible_at(MARK_CONTRAST, SHADES[5], SHADES[8], SHADES[0], SHADES[0]),
             today_w: 1.0,
+            chosen: ButtonTokens::hoff_core().secondary,
             day_size: 13.0,
             day_line: 16.0,
             day_weight: 500,
@@ -396,6 +401,14 @@ impl SelectionTokens {
             separator: c.divider,
             ..kit.button_group
         };
+        // the kit's call to action is ink on paper, the page's colors
+        // turned over: so is a derived theme's
+        let chosen = ButtonSurface {
+            fill: [c.text; 2],
+            overlay: NONE,
+            shadow: Vec::new(),
+            text: c.bg,
+        };
         let radio = RadioTokens {
             off: ButtonSurface {
                 fill: [c.bg_hover; 2],
@@ -433,6 +446,12 @@ impl SelectionTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),
                 today: legible_at(MARK_CONTRAST, c.border_active, c.text, c.surface, c.bg),
                 today_w: theme.control.edge_width,
+                chosen: ButtonRecipe {
+                    rest: chosen.clone(),
+                    hover: chosen.clone(),
+                    active: chosen,
+                    ..kit.calendar.chosen
+                },
                 ..kit.calendar
             },
         }

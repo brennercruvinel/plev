@@ -329,6 +329,15 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, aaa, over(color, under), under);
     }
+    let chosen = over(sel.calendar.chosen.rest.fill[0], card);
+    let day = over(sel.calendar.chosen.rest.text, chosen);
+    add(
+        "selection.calendar.chosen.text",
+        "selection.calendar.chosen",
+        aaa,
+        day,
+        chosen,
+    );
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -620,7 +629,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 397,
+        count, 401,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
