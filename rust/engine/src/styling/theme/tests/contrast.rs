@@ -279,10 +279,41 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // the attachment's file tile (its name, detail and icon on its fill)
+    // and the remove button's cross on both ends of its gradient.
+    let at = &t.message.attachment;
+    let tile = over(at.file_fill, card);
+    for (fg, need, color) in [
+        ("message.attachment.name", TEXT, at.name.color),
+        ("message.attachment.detail", TEXT, at.detail.color),
+        (
+            "message.attachment.file_icon_color",
+            LARGE,
+            at.file_icon_color,
+        ),
+    ] {
+        add(
+            fg,
+            "message.attachment.file_fill",
+            need,
+            over(color, tile),
+            tile,
+        );
+    }
+    for (i, fill) in at.remove_fill.iter().enumerate() {
+        let under = over(*fill, card);
+        add(
+            "message.attachment.remove_ink",
+            &format!("message.attachment.remove_fill[{i}]"),
+            LARGE,
+            over(at.remove_ink, under),
+            under,
+        );
+    }
     out
 }
 
-/// The pairs that fail today, 116 of the 369 (core 41, hoff 18, dark 13,
+/// The pairs that fail today, 116 of the 389 (core 41, hoff 18, dark 13,
 /// light 44), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
@@ -562,7 +593,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 369,
+        count, 389,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

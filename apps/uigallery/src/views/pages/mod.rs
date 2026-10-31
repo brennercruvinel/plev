@@ -96,6 +96,7 @@ pub enum Pane {
     Popover,
     // task-104 front C, conversation and feedback (#156)
     Alert,
+    Attachment,
     Bubble,
     Message,
     MessageScroller,

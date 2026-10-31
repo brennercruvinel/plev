@@ -323,6 +323,18 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
                 Rect::new(content.x, 3400.0 + h, content.w, 0.0),
                 theme,
             );
+        use crate::widgets::message::attachment::{AttachmentKind, AttachmentTray};
+        AttachmentTray::new()
+            .with("a.png", "PNG", AttachmentKind::Image(None))
+            .with(
+                "a file name long enough to be cut on a phone.pdf",
+                "PDF",
+                AttachmentKind::File,
+            )
+            .with("car.glb", "3D", AttachmentKind::Object)
+            .with_add()
+            .show_removes(true)
+            .render(&mut c, Rect::new(content.x, 3200.0, content.w, 0.0), theme);
     }
 
     // task-104 front B: the popover's trigger, open, and its panel, placed
@@ -713,6 +725,26 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 vec![
                     (id("m.alert"), Role::Status, Probe::Bound),
                     (id("m.alert.action[0]"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let tray = crate::widgets::message::attachment::AttachmentTray::new()
+                .with(
+                    "notes.txt",
+                    "TXT",
+                    crate::widgets::message::attachment::AttachmentKind::File,
+                )
+                .with_add()
+                .sem(id("m.files"));
+            let (mut c, _) = frame(false);
+            tray.render(&mut c, block(28.0), &theme);
+            tray.project(&mut b, &id("m.files"), "attachments", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.files"), Role::List, Probe::Node),
+                    (id("m.files[0]"), Role::ListItem, Probe::Hit),
+                    (id("m.files[0].remove"), Role::Button, Probe::Hit),
+                    (id("m.files.add"), Role::Button, Probe::Hit),
                 ],
             ));
 

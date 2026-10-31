@@ -8,6 +8,9 @@
 //!   quick-comment popup (avatar 36, a semibold name, the body in the
 //!   muted tone clamped to three lines, the like chip under it).
 //!
+//! Beside them the front's other pieces: the bubble (`CommentPin`), the
+//! scroller (`Comment`), the inline alert (`Notification`, by intent).
+//!
 //! Text runs are written as the kit writes them, a size, a line height
 //! and a weight in px, and become a style through
 //! [`TypographyScale::exact`], so the family and the tracking stay the
@@ -178,6 +181,43 @@ pub struct AlertTokens {
     pub unread: Color,
 }
 
+/// The attachments of a message: the kit's image preview
+/// (`NewComment/ImagePreview`), square tiles with a remove button on their
+/// top end corner, and, for what is not a picture, a file tile in the
+/// language of its add-files menu (`PromptInput/AddFiles`). The add button
+/// is the bordered icon button at its 40 step.
+#[derive(Clone, Debug, PartialEq)]
+pub struct AttachmentTokens {
+    /// A picture tile's edge, and every tile's height.
+    pub tile: f32,
+    pub radius: f32,
+    /// Between two tiles, across and down.
+    pub gap: f32,
+    /// A picture still loading, or none: the tile's wash.
+    pub placeholder: Color,
+    /// The remove button: its edge, how far it passes the tile's top end
+    /// corner, its icon, its fill top to bottom and its icon's color.
+    pub remove: f32,
+    pub remove_out: f32,
+    pub remove_icon: f32,
+    pub remove_fill: [Color; 2],
+    pub remove_ink: Color,
+    /// A file tile: its padding across, its icon and the box it sits in,
+    /// the gap to the text, its border and fill.
+    pub file_pad: f32,
+    pub file_icon: f32,
+    pub file_icon_box: f32,
+    pub file_gap: f32,
+    pub file_icon_color: Color,
+    pub file_border: Color,
+    pub file_border_width: f32,
+    pub file_fill: Color,
+    pub name: MessageText,
+    pub detail: MessageText,
+    /// The widest a file tile grows, as a fraction of the tray.
+    pub file_max_fraction: f32,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MessageTokens {
     /// The row of a comment thread.
@@ -193,13 +233,14 @@ pub struct MessageTokens {
     pub bubble: BubbleTokens,
     pub scroller: ScrollerTokens,
     pub alert: AlertTokens,
+    pub attachment: AttachmentTokens,
 }
 
 impl MessageTokens {
     /// The kit as written (the private typescript design system). The
     /// file:line of each value is in the comment beside it.
     pub fn hoff_core() -> Self {
-        let [paper, _, _, shade4, _, shade6, shade7, _, ink] = SHADES;
+        let [paper, _, shade3, shade4, shade5, shade6, shade7, _, ink] = SHADES;
         Self {
             // components/Comment/Message/index.tsx
             thread: MessageStyle {
@@ -416,6 +457,55 @@ impl MessageTokens {
                 dot_room: 16.0,
                 unread: BLUE,
             },
+            // components/NewComment/ImagePreview/index.tsx
+            attachment: AttachmentTokens {
+                // :13 `size-15 rounded-xl`, :9 `gap-2`
+                tile: 60.0,
+                radius: 12.0,
+                gap: 8.0,
+                // the add-files row's hover wash
+                // (PromptInput/AddFiles/index.tsx:53 `hover:bg-[#f1f1f1]`)
+                placeholder: shade3,
+                // :20 `-top-1.5 -right-1.5 size-5 bg-gradient-to-b
+                // from-[#323232] to-[#121212]`, :22 `size-4 fill-white`
+                remove: 20.0,
+                remove_out: 6.0,
+                remove_icon: 16.0,
+                remove_fill: [shade7, ink],
+                remove_ink: Color::WHITE,
+                // PromptInput/AddFiles/index.tsx:53 `gap-2.5 px-2`,
+                // :58 `size-6`, :60 `size-5 fill-[#7b7b7b]`; the tile
+                // pads by the image preview's `p-3` cousin, `px-3`
+                file_pad: 12.0,
+                file_icon: 20.0,
+                file_icon_box: 24.0,
+                file_gap: 10.0,
+                file_icon_color: shade6,
+                // Upload/index.tsx:21 `bg-[#FCFCFC] border
+                // border-[#E2E2E2]`
+                file_border: shade5,
+                file_border_width: 1.0,
+                file_fill: paper,
+                // :53 `text-[0.8125rem] font-medium text-[#121212]`, at
+                // the kit's 16 line
+                name: MessageText {
+                    size: 13.0,
+                    line_height: 16.0,
+                    weight: 500,
+                    color: ink,
+                },
+                // the notification's time run (Notification:68), in
+                // shade 7 for AAA as there
+                detail: MessageText {
+                    size: 12.0,
+                    line_height: 16.0,
+                    weight: 500,
+                    color: shade7,
+                },
+                // the kit draws no file tile: it grows with its name up
+                // to the tray's width, where the name is ellipsized
+                file_max_fraction: 1.0,
+            },
         }
     }
 
@@ -477,6 +567,19 @@ impl MessageTokens {
                 content: kit.alert.content.recolor(colors.text_mid),
                 unread: colors.info,
                 ..kit.alert
+            },
+            // the wash and the border in the hover and the divider tones,
+            // the remove button in the text tone over the page
+            attachment: AttachmentTokens {
+                placeholder: colors.bg_hover,
+                remove_fill: [colors.text, colors.text],
+                remove_ink: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                file_icon_color: colors.text_mid,
+                file_border: colors.divider,
+                file_fill: Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                name: kit.attachment.name.recolor(colors.text),
+                detail: kit.attachment.detail.recolor(colors.text_mid),
+                ..kit.attachment
             },
         }
     }

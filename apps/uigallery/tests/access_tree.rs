@@ -41,6 +41,7 @@ const PROJECTING: &[&str] = &[
     "Accordion",
     "Alert",
     "Alert Dialog",
+    "Attachment",
     "Breadcrumb",
     "Bubble",
     "Button",
@@ -107,7 +108,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Icons", Nothing("a grid of icons, hover only")),
     ("Effects", Nothing("samples of shadow, blur and gradient")),
     ("Aspect Ratio", PLACEHOLDER),
-    ("Attachment", PLACEHOLDER),
     (
         "Avatar",
         Unprojected("Avatar: an image named by the person, online or not"),

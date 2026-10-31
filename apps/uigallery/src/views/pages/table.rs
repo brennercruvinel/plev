@@ -100,7 +100,13 @@ pub const PAGES: &[Page] = &[
         "its own page, apart from the plain dialog",
     ),
     placeholder("Aspect Ratio"),
-    placeholder("Attachment"),
+    page(
+        C,
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
     page(
         C,
         "Avatar",

@@ -132,6 +132,7 @@ components! {
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
+    Attachment => attachment,
     Bubble => bubble,
     Message => message,
     MessageScroller => message_scroller,

@@ -1048,3 +1048,223 @@ fn an_alert_projects_its_intent_its_words_whole_and_its_answers() {
         (Role::Alert, None)
     );
 }
+
+// attachment
+
+use crate::widgets::message::attachment::{AttachmentKind, AttachmentTray, TrayFocus, TrayLayout};
+
+const PDF: &str = "Minimalist Architecture Scene, final review.pdf";
+
+fn tray() -> AttachmentTray {
+    AttachmentTray::new()
+        .with("Uploaded 1", "PNG, 1.2 MB", AttachmentKind::Image(None))
+        .with("Uploaded 2", "PNG, 840 KB", AttachmentKind::Image(None))
+        .with(PDF, "PDF, 3.4 MB", AttachmentKind::File)
+        .with(
+            "Classic Car.glb",
+            "3D object, 12 MB",
+            AttachmentKind::Object,
+        )
+        .with_add()
+}
+
+fn tray_parts(l: &TrayLayout) -> Vec<(&'static str, Rect)> {
+    let mut out: Vec<_> = l.add.map(|r| ("add", r)).into_iter().collect();
+    for t in &l.tiles {
+        out.push(("tile", t.rect));
+        out.push(("remove", t.remove));
+        out.extend(t.icon.map(|r| ("icon", r)));
+        for (name, p) in [("name", &t.name), ("detail", &t.detail)] {
+            if let Some(p) = p {
+                out.push((name, p.rect));
+            }
+        }
+    }
+    out
+}
+
+fn tray_nodes(t: &AttachmentTray, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    t.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_attachment_carries_the_kit_in_core_and_derives_elsewhere() {
+    let kit = MessageTokens::hoff_core().attachment;
+    assert_eq!((kit.tile, kit.radius, kit.gap), (60.0, 12.0, 8.0));
+    assert_eq!(
+        (kit.remove, kit.remove_out, kit.remove_icon),
+        (20.0, 6.0, 16.0)
+    );
+    assert_eq!(core().message.attachment, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).attachment;
+    assert_eq!(derived.file_border, hoff.colors.divider);
+    assert_eq!(derived.name.color, hoff.colors.text);
+    assert_eq!(derived.file_fill.0[3], 1.0);
+    assert_eq!(derived.tile, kit.tile);
+}
+
+#[test]
+fn a_picture_is_one_tile_square_and_a_file_tile_grows_with_its_name() {
+    let theme = core();
+    let t = &theme.message.attachment;
+    let short = AttachmentTray::new()
+        .with("a", "", AttachmentKind::Image(None))
+        .with("notes.txt", "TXT, 2 KB", AttachmentKind::File)
+        .with(PDF, "PDF", AttachmentKind::File);
+    let l = short.layout(at(1200.0), &theme);
+    assert_eq!((l.tiles[0].rect.w, l.tiles[0].rect.h), (t.tile, t.tile));
+    assert!(
+        l.tiles[2].rect.w > l.tiles[1].rect.w,
+        "a longer name, a wider tile"
+    );
+    assert!(l.tiles.iter().all(|x| x.rect.h == t.tile));
+    // a tile as wide as its words keeps them whole wherever it lands
+    let off = short.layout(Rect::new(296.3, 20.0, 1200.0, 0.0), &theme);
+    for tile in &off.tiles[1..] {
+        for p in [&tile.name, &tile.detail] {
+            let p = p.as_ref().unwrap();
+            assert!(!p.text.ends_with('\u{2026}'), "{} cut", p.text);
+        }
+    }
+    // on a narrow tray the long name is cut inside its tile
+    let narrow = short.layout(at(220.0), &theme);
+    let name = narrow.tiles[2].name.as_ref().unwrap();
+    assert!(name.text.ends_with('\u{2026}'), "{}", name.text);
+    assert!(within(name.rect, narrow.tiles[2].rect));
+}
+
+#[test]
+fn the_tray_wraps_and_holds_every_part_over_the_whole_range_and_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        let t = tray().show_removes(true);
+        let mut lines = 0;
+        for w in (80..=1600).step_by(8) {
+            let bounds = at(w as f32);
+            let l = t.layout(bounds, &theme);
+            for (part, r) in tray_parts(&l) {
+                assert!(finite(r), "{name}@{w}: {part}");
+                if w as f32 >= t.min_width(&theme) {
+                    assert!(
+                        within(r, l.rect),
+                        "{name}@{w}: {part} {r:?} out of {:?}",
+                        l.rect
+                    );
+                }
+            }
+            let n = 1 + l
+                .tiles
+                .windows(2)
+                .filter(|p| p[1].rect.y > p[0].rect.y)
+                .count();
+            if w == 80 {
+                lines = n;
+            }
+            assert!(n <= lines, "{name}@{w}: wider, never more lines");
+            assert_eq!(l.rect.h, t.height(w as f32, &theme));
+        }
+    }
+}
+
+#[test]
+fn the_remove_button_shows_on_hover_focus_or_touch_and_takes_the_click_hidden() {
+    let theme = core();
+    let bounds = at(600.0);
+    let mut t = tray();
+    let first = t.items()[0].key();
+    assert!(!t.remove_shown(first));
+    let l = t.layout(bounds, &theme);
+    let (tx, ty) = l.tiles[0].rect.center();
+    assert!(t.handle_event(&move_to(tx, ty), bounds, &theme).changed);
+    assert!(t.remove_shown(first), "hover shows it");
+    t.handle_event(&move_to(-50.0, -50.0), bounds, &theme);
+    assert!(!t.remove_shown(first));
+    t.set_focus(Some(TrayFocus::Tile(first)));
+    assert!(t.remove_shown(first), "a reader's focus shows it");
+    t.set_focus(None);
+    assert!(
+        tray().show_removes(true).remove_shown(first),
+        "touch shows it"
+    );
+
+    // a click on the hidden button removes the tile; the others keep
+    // their keys
+    let (rx, ry) = l.tiles[0].remove.center();
+    t.handle_event(&down(rx, ry), bounds, &theme);
+    assert!(t.handle_event(&up(rx, ry), bounds, &theme).clicked);
+    assert_eq!(t.items().len(), 3);
+    assert_eq!(t.items()[0].key(), first + 1);
+    // pressed on a remove button, released elsewhere: nothing goes
+    let l = t.layout(bounds, &theme);
+    let (rx, ry) = l.tiles[0].remove.center();
+    t.handle_event(&down(rx, ry), bounds, &theme);
+    t.handle_event(&up(-50.0, -50.0), bounds, &theme);
+    assert_eq!(t.items().len(), 3);
+    assert!(!t.remove(99));
+}
+
+#[test]
+fn the_add_button_asks_the_owner_once_per_click() {
+    let theme = core();
+    let bounds = at(600.0);
+    let mut t = tray();
+    let (x, y) = t.layout(bounds, &theme).add.unwrap().center();
+    t.handle_event(&down(x, y), bounds, &theme);
+    assert!(t.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(t.take_add_request());
+    assert!(!t.take_add_request(), "taken once");
+    let key = t.push("Uploaded 3", "PNG", AttachmentKind::Image(None));
+    assert_eq!(key, 4, "a new key, never a reused one");
+    let mut bare = AttachmentTray::new();
+    assert!(
+        !bare.request_add() && !bare.take_add_request(),
+        "no add button"
+    );
+    assert!(bare.layout(bounds, &theme).add.is_none());
+}
+
+#[test]
+fn the_tray_binds_projects_and_maps_its_ids() {
+    let theme = core();
+    let bounds = at(600.0);
+    let root = id("files");
+    let t = tray().sem(root.clone());
+    let (c, drawn) = tray_nodes(&t, bounds, &theme);
+    let l = t.layout(bounds, &theme);
+    let r = l.tiles[2].rect;
+    assert_eq!(
+        c.binding(&id("files[2]")).unwrap().rect,
+        [r.x, r.y, r.w, r.h]
+    );
+    let rm = l.tiles[0].remove;
+    assert_eq!(
+        c.hit(rm.x + rm.w / 2.0, rm.y + rm.h / 2.0),
+        Some(&id("files[0].remove"))
+    );
+    assert!(c.binding(&id("files.add")).is_some());
+    assert!(texts(&drawn).iter().any(|w| w == "PDF, 3.4 MB"));
+
+    let s = snap(|b| {
+        t.project(b, &root, "attachments", None);
+    });
+    assert_eq!(s.get(&root).unwrap().role, Role::List);
+    let tile = s.get(&id("files[2]")).unwrap();
+    assert_eq!((tile.role, tile.label.as_str()), (Role::ListItem, PDF));
+    assert_eq!(tile.description.as_deref(), Some("PDF, 3.4 MB"));
+    let rm = s.get(&id("files[2].remove")).unwrap();
+    assert_eq!(
+        (rm.role, rm.label.as_str()),
+        (Role::Button, format!("Remove {PDF}").as_str())
+    );
+    assert!(s.get(&id("files.add")).is_some());
+
+    assert_eq!(t.target(&id("files.add")), Some(TrayFocus::Add));
+    assert_eq!(t.target(&id("files[1]")), Some(TrayFocus::Tile(1)));
+    assert_eq!(t.target(&id("files[3].remove")), Some(TrayFocus::Remove(3)));
+    assert_eq!(t.target(&id("files[9]")), None);
+}
