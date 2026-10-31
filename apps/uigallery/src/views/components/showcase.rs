@@ -34,12 +34,12 @@ pub(crate) struct GroupLayout {
 
 /// Group padding: the kit page's `p-12`, vertical only (the content rect
 /// already carries the horizontal gutter).
-fn pad(theme: &Theme) -> f32 {
+pub(crate) fn pad(theme: &Theme) -> f32 {
     theme.spacing.xxl
 }
 
 /// Space between the group title and its cards (`mb-5`).
-fn title_gap(theme: &Theme) -> f32 {
+pub(crate) fn title_gap(theme: &Theme) -> f32 {
     theme.spacing.lg
 }
 
@@ -59,7 +59,7 @@ pub(crate) fn chip_style(theme: &Theme) -> TextStyle {
 
 /// Columns a row actually gets at this width: the group's span until the
 /// cards would get narrower than `CARD_MIN_W`.
-fn columns(span: usize, w: f32, gap: f32) -> usize {
+pub(crate) fn columns(span: usize, w: f32, gap: f32) -> usize {
     (1..=span)
         .rev()
         .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= CARD_MIN_W)
