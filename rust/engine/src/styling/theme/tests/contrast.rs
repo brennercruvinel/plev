@@ -750,3 +750,19 @@ fn the_core_table_and_tree_text_meets_aaa() {
         }
     }
 }
+
+/// task-104 front D: the core page head (the kit's Layout title) reads at
+/// AAA on the page, narrow and wide: the title in the ink, the blurb in
+/// shade 7 (the kit's #7B7B7B fails it).
+#[test]
+fn the_core_page_head_meets_aaa() {
+    let t = Theme::hoff_core();
+    let page = over(t.colors.bg, [0.0; 3]);
+    let p = t.disclosure.page;
+    for head in [p.narrow, p.wide] {
+        for fg in [head.title, head.blurb] {
+            let r = ratio(over(fg, page), page);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+}

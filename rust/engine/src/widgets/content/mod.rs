@@ -35,7 +35,7 @@ pub use pagination::{PageSlot, Pagination};
 pub use tokens::{
     AspectRecipe, CapRecipe, CarouselRecipe, DisclosureMotion, DisclosureRail, DisclosureRecipe,
     DisclosureSurface, DisclosureTile, DisclosureTokens, GridRecipe, HeaderRecipe, ItemRecipe,
-    PagerRecipe, PanelRecipe, RowRecipe, TableRecipe, TreeRecipe, TreeTile,
+    PageHeadRecipe, PagerRecipe, PanelRecipe, RowRecipe, TableRecipe, TreeRecipe, TreeTile,
 };
 
 pub use avatar::{Avatar, AvatarSize};

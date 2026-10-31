@@ -371,16 +371,17 @@ pub struct PanelRecipe {
     pub label: Color,
 }
 
-/// A panel's head: padding left and right, the title row's height (the
-/// title centered in it), the space between that row and the blurb and
-/// below the blurb; the title's and the blurb's text; the gap before the
-/// badge; the rule under the head (width 0 is none).
+/// A head: padding left and right and above and below, the title row's
+/// height (the title, the badge and the trailing actions centered in it
+/// and its padding), the space between that row and the blurb; the
+/// title's and the blurb's text; the gap before the badge; the rule under
+/// the head (width 0 is none).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct HeaderRecipe {
     pub pad_x: f32,
+    pub pad_y: f32,
     pub row: f32,
     pub blurb_gap: f32,
-    pub blurb_bottom: f32,
     pub title_size: f32,
     pub title_line_height: f32,
     pub title_weight: u16,
@@ -392,6 +393,29 @@ pub struct HeaderRecipe {
     pub badge_gap: f32,
     pub rule: f32,
     pub rule_color: Color,
+}
+
+/// A page's head, the one the shell draws: its look narrow and wide, the
+/// head width from which the wide one shows, and whether it spans the
+/// page column (its rule edge to edge, its title on the page's gutter)
+/// rather than sitting inside the gutter.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PageHeadRecipe {
+    pub narrow: HeaderRecipe,
+    pub wide: HeaderRecipe,
+    pub wide_from: f32,
+    pub bleed: bool,
+}
+
+impl PageHeadRecipe {
+    /// The look of a head `width` wide.
+    pub fn at(&self, width: f32) -> HeaderRecipe {
+        if width >= self.wide_from {
+            self.wide
+        } else {
+            self.narrow
+        }
+    }
 }
 
 /// A split's divider: its color at rest and while hovered or dragged.
@@ -459,6 +483,8 @@ pub struct DisclosureTokens {
     pub panel: PanelRecipe,
     /// A panel's head.
     pub header: HeaderRecipe,
+    /// A page's head.
+    pub page: PageHeadRecipe,
     /// A split's divider.
     pub split: SplitRecipe,
 }
