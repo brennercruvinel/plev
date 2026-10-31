@@ -475,6 +475,16 @@ impl DisclosureTokens {
             rule_color: line,
         };
 
+        // The kit has no split: its divider is the kit's line (`border-b
+        // border-[#ECECEC]`, Notifications/index.tsx:26) at rest and, to
+        // say "grab me", its gray (the chevrons' `fill-[#7B7B7B]`), which
+        // a control's part must show at 3:1 (WCAG 1.4.11); the hover
+        // border of an AssetItem (#C4C4C4) is too faint for it.
+        let split = SplitRecipe {
+            rest: line,
+            active: gray,
+        };
+
         Self {
             accordion,
             collapsible,
@@ -489,6 +499,7 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
+            split,
         }
     }
 }

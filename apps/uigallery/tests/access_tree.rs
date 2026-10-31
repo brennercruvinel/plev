@@ -475,9 +475,11 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// adds the Resizable page's split: a group whose `set_ratio` no action of
 /// the tree reaches (a value is set through `set_value` or a select's
 /// `select`, and the contract has no splitter role, AccessKit's
-/// `Splitter`); an agent asks it, and a person drags.
+/// `Splitter`); an agent asks it, and a person drags. Task-104 put a
+/// stacked split beside it, the same.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
+    "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
 
