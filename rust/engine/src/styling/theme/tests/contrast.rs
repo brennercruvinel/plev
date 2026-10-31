@@ -318,6 +318,13 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             );
         }
     }
+    // The modal's sheet: its title and its body on its fill.
+    let m = &o.modal;
+    let sheet = over(m.fill, page);
+    for (fg, color) in [("title_color", m.title_color), ("body_color", m.body_color)] {
+        let fg = format!("overlay.modal.{fg}");
+        add(&fg, "overlay.modal.fill", TEXT, over(color, sheet), sheet);
+    }
     let d = &o.drawer;
     let lit = over(d.item_fill, over(d.panel.fill, page));
     for (fg, need, color) in [
@@ -610,7 +617,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 413,
+        count, 421,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
