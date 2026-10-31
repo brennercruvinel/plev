@@ -1,0 +1,457 @@
+---
+id: programa-runtime
+title: "programa: de GPU UI engine a generative interaction runtime"
+project: plev
+type: programa
+status: em-andamento
+date: 2026-09-23
+date_basis: cabecalho
+topics: [program, goals, dependencies, contracts, ownership, waves]
+relations: []
+source: docs/log/generative-runtime-program.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: pendente
+---
+
+# programa: de GPU UI engine a generative interaction runtime
+
+a tese está em [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md). as regras de
+trabalho estão em [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e são obrigatórias para o
+orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
+o estado real do código, o grafo de dependências, a ordem de integração,
+os contratos entre tasks, o ownership das superfícies compartilhadas e os
+pontos de decisão.
+
+## 1. goal
+
+transformar o plev de GPU UI engine em generative interaction runtime.
+
+1. a interface deixa de ser uma coleção fixa de telas e passa a ser
+   materializada a partir de intenção, estado, capacidades e restrições.
+2. a interface permanece semanticamente compreensível durante todo o
+   runtime. todo controle possui identidade persistente, significado,
+   estado, ações e constraints, independentemente de como esteja sendo
+   renderizado.
+3. existe uma representação intermediária própria e verificável, o plev
+   IR. humanos, LLMs, importers e ferramentas produzem IR; o plev valida e
+   materializa. o modelo não ganha acesso arbitrário ao runtime.
+4. humanos, agentes, accessibility e testes operam o mesmo contrato de
+   aplicação. não existem quatro interfaces paralelas para a mesma coisa.
+5. a colaboração humano-agente é segura em presença de estado concorrente.
+   observações podem envelhecer; ações carregam precondições, são validadas
+   contra o estado atual e produzem resultados verificáveis.
+6. toda interação é inspecionável e causalmente rastreável: quem observou,
+   quem agiu, sobre qual estado, com quais condições e qual foi o
+   resultado. o monster como flight recorder entra aqui.
+7. o runtime nativo é realmente adequado a interfaces dinâmicas:
+   GPU-first, incremental, headless, multiplataforma, com texto,
+   accessibility e integrações de sistema sólidas o suficiente para
+   aplicações reais.
+8. interfaces são construídas, transformadas e recompostas em runtime. o
+   sistema gera uma superfície nova para uma intenção específica ou
+   modifica uma existente sem perder identidade semântica.
+9. o plev é compiler target para interfaces. LLM, Figma, React, outras DSLs
+   ou ferramentas convergem para plev IR sem obrigar o runtime a carregar
+   os modelos de execução de origem.
+10. provar que esse modelo produz software qualitativamente diferente. não
+    apenas benchmarks: demonstrar interfaces efêmeras, human-agent handoff,
+    stale-state rejection, inspectability e UI generativa em aplicações
+    reais.
+
+## 2. mantra para todos os agentes
+
+> o plev deve permitir que uma capacidade mantenha identidade e semântica
+> enquanto sua representação visual pode nascer, desaparecer ou se
+> transformar em tempo real.
+
+> criar um sistema de dependências incremental independente da
+> representação visual, capaz de propagar invalidação mínima entre estado,
+> semântica, layout, scene construction, hit testing e rendering.
+
+todo briefing começa com essas duas frases. toda entrega é julgada contra
+elas.
+
+## 3. estado real do código (diagnóstico, 2026-09-23)
+
+> esta seção é o diagnóstico de antes da onda 1 e ficou velha. o retrato
+> do código agora é [`estado-do-codigo-2026-09.md`](estado-do-codigo-2026-09.md) (truth), que vence esta
+> seção quando os dois divergem. o modo de operação é
+> [`autonomy.md`](../referencia/operacao/autonomy.md).
+
+base: branch `plevrev` em `b8ba096`, dois commits à frente de `main`
+(`c89d11e`), com o hot reload. gate completo verde nesta base (test,
+clippy -D warnings, fmt, wasm check, perna urnaui).
+
+o que a tese precisa e o que existe hoje:
+
+| tese | o que existe | onde | lacuna |
+|---|---|---|---|
+| identidade lógica persistente | `ViewId(pub u64)` gerado por contador que volta a zero a cada frame, na ordem de emissão | `rust/engine/src/control/input/mod.rs:50-61`, `rust/engine/src/control/input/events.rs:134` | identidade é posicional; não existe identidade lógica em lugar nenhum |
+| identidade temporária de render e posição | `HitRegion { view_id, x, y, w, h, focusable, layer_visible, layer_opacity }` | `rust/engine/src/control/input/events.rs:137-146` | sem ligação com significado; comps e apps fazem hit test próprio por `Rect::contains` (ex.: `apps/idestudio/src/interfaces/panels/commit_form.rs`), então `InputState` nem é o ponto de verdade do hit test |
+| significado, papel, estado | nada no engine; cada widget guarda estado privado | `rust/engine/src/widgets/*` | nenhum widget declara o que é |
+| accessibility do mesmo contrato | árvore AccessKit derivada de hit regions: role chutada por `focusable`, label sempre `None` | `rust/engine/src/runtime/window/render.rs:99-125` | geometria no lugar de significado |
+| ação vinda da accessibility | `PlevActionHandler::do_action` só faz log | `rust/engine/src/runtime/window/mod.rs:221` | nenhuma ação chega ao app |
+| accessibility nos apps que shipam | o caminho acima vive em `engine::window::App`; showcase, ide e urnaui usam o próprio `App` e o `present_frame` compartilhado | `apps/uigallery/src/shell/mod.rs:367`, `apps/idestudio/src/main.rs:466`, `apps/urnadbapp/src/app.rs:432` | nenhum app que shipa expõe árvore de accessibility |
+| ações nomeadas | registry estilo Zed, `"namespace::Name"`, keymap em JSON | `rust/engine/src/control/keymap/mod.rs`, `apps/idestudio/src/interfaces/window/keymap.rs` (`commit::Submit`) | ligadas a tecla, não a capacidade com estado e precondição |
+| ação com precondição | o commit do ide vai do clique ao git sem conferir nada | `apps/idestudio/src/interfaces/panels/layout/input.rs:47` e `:259-267` (`submit_commit`), `apps/idestudio/src/interfaces/panels/layout/mod.rs:115-123` (`UiRequest`), `apps/idestudio/src/repository/git.rs:76` (`GitCommand::Commit`), `rust/gitdrv/src/repo.rs:187` (`git commit --message`) | o cenário da tese acontece hoje: o index é commitado como estiver no instante em que o worker executa |
+| estado semântico versus visual no ide | `FileEntry.staged` (vai no commit) e `UnassignedView.selected_idx` (linha em destaque, não vai) | `apps/idestudio/src/interfaces/panels/unassigned.rs:51-61` | os dois são campos soltos; nada diz que o primeiro invalida um commit e o segundo não |
+| reconciliação otimista | o ide atualiza a view e recarrega tudo depois de cada mutação | `apps/idestudio/src/repository/git.rs:118-138` | a view pode divergir do index por um instante; a precondição precisa ser checada também no ponto de verdade (o worker) |
+| flight recorder | monster: codec com IR próprio desacoplado de `SceneNode`, container v1 congelado com sha256 por seção, discover (modo B), player determinístico | `rust/motion/src/lib.rs`, [`monster-format-v0.md`](../referencia/arquitetura/monster-format-v0.md) | grava animação, não sessão: faltam eventos, semântica, recursos, ações, origem e resultados |
+| compiler target | parser parse-resolve-emit com IR próprio (`ParserNode`) que emite código builder e droplist com arquivo:linha | `rust/import/src/tree.rs`, `rust/import/src/lib.rs` | emite código Rust, não IR de runtime; sem semântica; marcado experimental |
+| pixel para código | hot reload de literal: skeleton + lista de literais por arquivo via proc-macro2 | `rust/engine/src/runtime/hot_reload/literals/mod.rs`, `rust/engine/Cargo.toml:84` | sem posição (proc-macro2 sem `span-locations`); só no sentido código para pixel |
+| headless | `text_probe`: wgpu offscreen para png | `rust/engine/src/drawing/text/probe.rs`, `rust/engine/src/bin` | só texto; não generalizado para página, tema, viewport ou frame de monster |
+| testes estruturais | hash por layer para dirty tracking | `rust/engine/src/drawing/compositor/layer/mod.rs:43` | hash não é exportado nem nomeado para regressão |
+| incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | `docs/ATLAS.toml` (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
+| texto | cosmic-text 0.18, fontes embutidas só Inclusive Sans, Inter e codicons; rope com transações, multi-cursor e history; editor em comps; `ImeState` básico | `rust/engine/src/drawing/text/fonts.rs:38-52`, `rust/editor/src/document`, `rust/engine/src/widgets/editor`, `rust/engine/src/runtime/platform/ime.rs` | árabe, CJK e emoji caem em fallback não embutido; IME e bidi sem cobertura de teste |
+| integração de plataforma | clipboard (arboard no desktop, local no mobile e wasm), diálogos nativos e drop de arquivo no urnaui, lifecycle, safe areas | `rust/engine/src/runtime/platform/clipboard.rs`, `apps/urnadbapp/src/app.rs`, `rust/engine/src/runtime/platform` | sem menus, tray, notificações, múltiplas janelas, device loss, deep links, câmera, microfone, impressão |
+| determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | [`mapa-das-fases.md`](mapa-das-fases.md) (contracts), [`0024-glyph-raster-identity-and-atlas-isolation.md`](../decisoes/renderizacao/0024-glyph-raster-identity-and-atlas-isolation.md), tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
+| padrão de app | estado em structs, widgets retained, invalidação explícita; builder suportado para protótipo; view, component, signal e narrate experimentais | [`0023-official-app-pattern.md`](../decisoes/estrutura/0023-official-app-pattern.md) | superfície materializada a partir de IR não é nenhum dos padrões atuais: precisa de ADR |
+
+## 4. tasks
+
+| task | nome | onda | depende de |
+|---|---|---|---|
+| task-57 | contrato semântico (crate `sem`) | 1 | nenhuma |
+| task-58 | ação com precondição, dispatch e receipts | 2 | 57 |
+| task-59 | ligação semântica com o render e um caminho operacional | 3 | 57, 58 |
+| task-60 | accessibility como projeção do contrato | 4 | 57, 58, 59 |
+| task-61 | superfície do agente (socket local, observe, act) | 4 | 57, 58, 59 |
+| task-62 | prova no ide: stale-state rejection e handoff | 4 | 57, 58, 59 (fase c: 61, 63) |
+| task-63 | flight recorder de sessão | 4 | 57, 58 |
+| task-64 | inspector de sessão, bug report e sessão para teste | 5 | 63, 66 (link de código: 65) |
+| task-65 | pixel para código e inspector de desenvolvimento | 5 | 57, 59 |
+| task-66 | headless como primeira classe | 3 | nenhuma (saída semântica: 57) |
+| task-67 | regressão estrutural antes de pixel | 5 | 59, 66 |
+| task-68 | plev IR e verifier | 6 | 57, 58 |
+| task-69 | superfícies efêmeras e geradas | 6 | 68, 59 (fase 0 em refs/ sem dependência) |
+| task-70 | transformações adaptativas | 7 | 68, 69, 63 |
+| task-71 | plev como compiler target (importers para IR) | 7 | 68 |
+| task-72 | UI asset compiler | trilha | monster (existente); espera 63 liberar o container |
+| task-73 | sistema de dependências incremental | trilha (medição na onda 3) | medição: nenhuma; desenho: 57, 59 |
+| task-74 | texto e edição | trilha | independente; accessibility de texto: 60 |
+| task-75 | accessibility de plataforma production-ready | trilha | 60 |
+| task-76 | integração de plataforma | trilha | independente; itens como capability: 58 |
+| task-77 | determinismo visual | trilha | 66 |
+| task-78 | aplicações AI-native | trilha | 73 (streaming), 66 |
+| task-79 | cena por socket | trilha | 61 (transporte), 66 |
+| task-80 | prova de software qualitativamente diferente | 8 | 62, 64, 69, 70 |
+| task-96 | uma superfície gerada no ide (a demo 5 da task-80) | 8 | 68, 69, 70, 63, 64 |
+| task-97 | código e diff no vocabulário do IR (o que a demo 5 mostrou que falta) | 8 | 68, 69, 96 |
+
+## 5. grafo de dependências
+
+```text
+57 contrato semântico
+ └─ 58 precondição + dispatch + receipts
+     ├─ 59 ligação com render + caminho operacional único
+     │   ├─ 60 accessibility ──────────────── 75 a11y de plataforma
+     │   ├─ 61 superfície do agente ────────── 79 cena por socket
+     │   ├─ 62 prova no ide ◄── 61, 63 (fase c)
+     │   ├─ 65 pixel para código
+     │   └─ 67 regressão estrutural ◄── 66
+     ├─ 63 flight recorder
+     │   └─ 64 inspector + sessão para teste ◄── 66, 65
+     └─ 68 plev IR + verifier
+         ├─ 69 superfícies efêmeras e geradas
+         │   └─ 70 transformações adaptativas ◄── 63
+         └─ 71 compiler target
+
+66 headless (independente) ── 67, 64, 77, 78, 79
+73 incrementalidade (medição independente; desenho depois de 57 e 59)
+72 asset compiler (espera o container do monster ficar livre de 63)
+74 texto, 76 plataforma (trilhas longas, independentes)
+80 prova final ◄── 62, 64, 69, 70
+```
+
+## 6. ondas de integração
+
+uma onda só começa quando a anterior está integrada na `main` e o gate
+está verde depois do merge. dentro de uma onda, tasks em paralelo só
+quando as superfícies (seção 8) são disjuntas.
+
+- onda 0, orquestrador, sem agente: integrar `plevrev` na `main`;
+  reconstruir os `docs/ref/` a partir da nova missão; aplicar em
+  `.contracts/.agents/AGENTS.md` e no rust-conventions a regra de commit
+  por branch de task; registrar estes documentos.
+- onda 1: task-57, sozinha. é o contrato de que tudo depende.
+- onda 2: task-58, sozinha. estende o mesmo crate.
+- onda 3: task-59 (fase a) em paralelo com task-66 (superfícies
+  disjuntas: tabela de ligação no compositor + três widgets do comps + o
+  todo do showcase; construtor headless do `GpuContext` + `window/frame.rs`
+  + módulo headless + probe + exemplos + CLI do showcase). a fase de
+  medição da task-73 roda logo depois das duas, porque a instrumentação
+  toca os arquivos que elas possuem nesta onda (decisão do orquestrador,
+  2026-09-23). a fase b da 59 roda depois da validação da fase a.
+- onda 4: task-62 (fases a e b), task-60, task-61 e task-63 em paralelo,
+  com as superfícies da seção 8. task-60 liga a accessibility primeiro no
+  showcase; o ide entra depois da integração da 62.
+- checkpoint a (seção 9) depois da fase c da task-62.
+- onda 5: task-64, task-65, task-67. critérios essenciais para abrir a
+  onda 6 (fixados em 2026-09-23, regra de severidade de
+  [`autonomy.md`](../referencia/operacao/autonomy.md)):
+  - [x] regressão por significado antes de pixel (task-67);
+  - [x] uma sessão gravada responde "por que" sobre qualquer request
+    (task-64 fase a);
+  - [x] uma sessão real do `ide` com pessoa e agente, gravada pelo próprio
+    ide e lida pelo inspector (task-63 fase d);
+  - [x] do pixel à capacidade e ao código num controle (task-65 fase a);
+  - [x] P1: o laboratório mede pelo valor visto e pelo valor vivo (task-88);
+  - [x] P1: a conclusão do checkpoint a revista sob a regra da task-89. o
+    inspector mostrou que o acerto do A2 da primeira rodada dependeu da
+    ordem dos eventos; uma rodada curta com agentes LLM no cenário
+    `unstage-before-submit` confirma que H1 se sustenta e que agentes se
+    recuperam de `not_observed` e de escrever e encadear.
+
+  (terceira rodada, 2026-09-24: sustentada; uma corrida parou para não
+  passar por cima da pessoa, [`task-62-ide-human-agent-proof.md`](../tarefas/task-62-ide-human-agent-proof.md).)
+  não bloqueiam a onda 6 (P2, seguem quando couber): um canal para o
+  agente perguntar à pessoa (handoff, achado da terceira rodada); o todo
+  projetar os itens como lista (a superfície gerada repete sobre eles,
+  achado da task-69); task-64 fases b
+  (interface) e c (sessão para teste), task-65 fases b a d, task-91 (a
+  âncora do `acted` no olhar), estado projetado fora do dispatcher no ide
+  (seleção, digitação) (a ADR semantic-binding-beside-the-scene decidiu que
+  digitar é editar, não request; nomear quem editou pede desenho, uma
+  nota de edição com ator no dispatcher, sem check nem estágio; sem ela
+  a linha da task-94 não sai quando a pessoa digitou na mensagem), cobertura semântica além do Todo e do ide. P3 no
+  backlog: dívidas da task-82 (`EditorView` sem foco, caret do dock,
+  frames da ponte de acessibilidade, mola do toast), o exemplo `measure`
+  desatualizado.
+- onda 6: task-68, depois task-69. a fase 0 da task-69 (spike descartável
+  em `refs/`) pode rodar a partir da onda 4, porque não integra nada.
+- checkpoint b depois da task-69.
+- onda 7: task-70, task-71.
+- onda 8: task-80; a task-96 (superfície gerada no ide) antes da demo 5; a task-97 (código e diff no IR) depois dela, pelo resultado.
+- trilhas (72, 74, 75, 76, 77, 78, 79): liberadas pelo orquestrador quando
+  a dependência está integrada e a superfície está livre. são longas e não
+  bloqueiam o núcleo.
+
+## 7. contratos entre tasks
+
+cada linha é uma interface que um goal expõe para outro. o consumidor
+depende do contrato escrito na task produtora, nunca da implementação
+interna. mudança em qualquer um deles passa pelo orquestrador.
+
+| contrato | produtor | consumidores | onde fica |
+|---|---|---|---|
+| `SemId`, `Role`, `Value`, `StateRef`, `Node`, `ActionDecl`, `Policy`, `Constraints`, `Snapshot`, `Revision`, `SnapshotBuilder`, `Semantics`, `Change` (diff) | 57 | 58 a 71, 73 | `rust/accord` |
+| `Actor`, `Request`, `Observation`, `Verdict`, `Rejection` (com `acted` desde a 83), `Acted`, `Receipt`, `Stage`, `Outcome`, `check`, `Operable`, `Dispatcher` | 58, 83 | 59, 60, 61, 62, 63, 68, 69, 70 | `rust/accord` |
+| ligação por frame `SemId -> Binding { rect, layer, clip, order, view }` (`view` ainda sempre `None`) e o caminho único de dispatch em comps e apps | 59 | 60, 61, 62, 65, 67, 69 | `rust/engine/src/drawing/compositor/binding.rs`, `rust/engine/src/widgets` |
+| projeção AccessKit a partir de `Snapshot` + ligação | 60 | 75, 74 | `rust/engine/src/control/accessibility` |
+| protocolo de observação e ação (v1) | 61, 57b, 83 | 62, 79, 80 | `rust/socket` (`proto.rs`, `server.rs`, binário `plev`) |
+| formato de sessão e API de gravação | 63 | 64, 70, 80 | `rust/record` (arquivo `MONS`, `Recorder`, `Session`; adr session-recording-replay-not-reexecution) |
+| API de render headless | 66 | 64, 67, 77, 78, 79 | `rust/engine` |
+| plev IR + `VerifiedIr` + registro de capabilities | 68 | 69, 70, 71 | crate novo (nome na task) |
+| host de superfícies materializadas | 69 | 70, 80 | `rust/engine/src/widgets` ou crate novo, decidido em ADR |
+
+## 8. superfícies compartilhadas e ownership
+
+| superfície | dono enquanto a task roda | regra |
+|---|---|---|
+| `rust/accord` | 57, depois 58 | depois da onda 2, só com aprovação do orquestrador |
+| `rust/engine/src/control/input`, `rust/engine/src/drawing/compositor` (tabela de ligação) | 59 | ninguém mais toca na onda 3 |
+| `rust/engine/src/widgets` (declaração semântica dos widgets) | 59 | 69 consome, não altera sem aprovação |
+| `rust/engine/src/control/accessibility`, `rust/engine/src/runtime/window/{mod,render,lifecycle}.rs` | 60 | o caminho antigo derivado de hit region é substituído, não mantido em paralelo |
+| `apps/idestudio`, `rust/gitdrv` | 62 | 60 só liga o ide depois da integração da 62 |
+| `rust/motion/src/encoding/container.rs` e formato | livre (a 63 escolheu o formato irmão em `rust/record` e nunca tocou este arquivo) | 72 pode abrir; o golden (`fixtures/golden_v0_minimal.monster`, versão 0 do container) não muda |
+| `rust/socket` | orquestrador (83 agora) | protocolo v1; mudança de forma passa pelo orquestrador e vai para ADR. `src/bin/plev.rs` está em 638 das 639 linhas (os testes dentro de `mod cli` contam como produção): a próxima task que mexer nele começa por um commit só de movimento que leve os testes para o nível do arquivo (task-94) |
+| `rust/record` | 63 fase d, depois 64 | uma task por vez; o formato `MONS` só muda com ADR |
+| `apps/uigallery/src/shell/mod.rs` (o shell) | uma task por vez (63 fase d, 65, 75 disputam) | o orquestrador sequencia; já foi tocado por 60, 61, 66b, 82 |
+| `apps/idestudio/src/main.rs`, `apps/idestudio/src/interfaces/panels/**` | uma task por vez (82 fase b, porta do agente no ide, 75) | o orquestrador sequencia |
+| `rust/engine/src/runtime/hot_reload` | 65 | só `#[cfg(hot_reload)]` |
+| `rust/engine/src/styling/theme` | ninguém sem aprovação | tocado por 65 (leitura de token) só depois de proposta aprovada |
+| `rust/engine/src/drawing/text` | 74 | 66 toca só `probe.rs` e o novo módulo headless |
+| `rust/import` | 71 | |
+| `Cargo.toml` (members e workspace deps), `docs/ATLAS.toml`, [`mapa-das-fases.md`](mapa-das-fases.md) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
+| `.contracts/`, [`indice-historico.md`](indice-historico.md), `docs/log/` | orquestrador | agente propõe no handoff |
+
+## 9. checkpoints e critérios de parada
+
+o plano é desenhado para falhar barato. cada checkpoint é uma decisão
+explícita do brenner com o orquestrador, registrada neste arquivo.
+
+- checkpoint a, depois da task-62 fase c: um agente de verdade opera o ide
+  pela superfície da task-61 (sem screenshot, sem git direto) enquanto o
+  brenner usa o app ao mesmo tempo. pergunta: isso é qualitativamente
+  diferente de agente clicando em pixel ou lendo um snapshot de
+  accessibility de terceiros? se não for, parar e repensar antes de
+  investir no IR.
+- checkpoint b, depois da task-69: uma superfície gerada (revisão de
+  silêncios) contra uma tela fixa bem desenhada para a mesma tarefa. se a
+  gerada for pior para quem usa, a geração volta a ser hipótese e o
+  investimento vai para transformação adaptativa (70) sobre telas fixas.
+  **resultado (2026-09-24, orquestrador, duas rodadas):** na primeira a
+  gerada saiu pior por três defeitos do núcleo, corrigidos no PR #92; na
+  segunda deixou de ser pior (a do Claude põe a tarefa à vista sem rolar;
+  a fixa mostra mais de cada corte). a geração segue; 70, 71 e 80
+  destravadas. detalhe na task-69, seções "checkpoint b".
+- checkpoint c, task-80: a pergunta do núcleo. quando o brenner abrir o
+  primeiro `.monster` de uma delegação real, ele consegue descobrir o que
+  precisa para confiar nela?
+
+## 10. métricas que o programa carrega
+
+nenhum número de orçamento é inventado antes da medição. cada task que
+mede registra a baseline no próprio arquivo e no ADR.
+
+- experimento do ide (62, 80): sucesso, tempo, volume de dados e tokens
+  enviados ao agente, recuperação de erro, custo da gravação na engine.
+  comparação contra screenshot e contra uma alternativa estruturada
+  existente (snapshot de acessibilidade no estilo do Playwright MCP); se
+  não houver comparação justa, a limitação é registrada, não disfarçada.
+- recorder (63): custo por frame com gravação ligada, memória do ring
+  buffer por segundo gravado, tamanho do trecho exportado.
+- incrementalidade (73): trabalho por estágio para "mudei 1 caractere".
+- AI-native (78): memória, startup, latência de token até pixel, tempo de
+  frame sob streaming, do app de referência (sem comparação com Electron,
+  decisão 15).
+
+## 11. decisões
+
+cada uma é do brenner; o orquestrador traz recomendação.
+
+decididas em 2026-09-23:
+
+1. `plevrev` integrada na `main` antes da onda 1: sim.
+2. os `docs/ref/*.md` desatualizados foram reconstruídos a partir da
+   nova missão (manual do engine com a camada do contrato semântico,
+   validação por pixel, alvo web, orquestração de agentes), e as
+   referências voltaram a apontar para arquivo que existe.
+3. regra de commit: a regra "agente não commita" saiu do AGENTS.md e do
+   rust-conventions. o agente commita só na branch da própria task; o
+   orquestrador integra na `main`.
+4. modo de execução: o brenner autorizou o ciclo contínuo até terminar
+   todas as tasks. o orquestrador integra cada task que ele validou sem
+   pedir ok a cada uma, e para só nas decisões reservadas ao brenner
+   (itens abertos abaixo, checkpoints da seção 9, escolhas de provedor,
+   de fonte e de biblioteca de inferência, e testes manuais que só ele
+   pode fazer). nada é enviado para o remoto sem pedido dele.
+
+8. checkpoint a (2026-09-23): a hipótese central sobreviveu ao experimento
+   da task-62 fase c. o brenner escolheu **correções primeiro**: as três
+   lacunas de contrato que os agentes acharam (task-83) e a corrida do
+   `Refresh` (task-84) antes da onda 5; a onda 5 espera o experimento
+   rodar de novo com as correções.
+9. modo de operação (2026-09-23): orquestrador autônomo
+   ([`autonomy.md`](../referencia/operacao/autonomy.md)). o item 4 continua valendo com duas
+   mudanças: o orquestrador publica cada integração no GitHub (PR com
+   merge commit), e os checkpoints da seção 9 param só quando o resultado
+   cai numa das condições de parada de [`autonomy.md`](../referencia/operacao/autonomy.md).
+
+10. checkpoint a, segunda rodada (2026-09-23, decisão autônoma dentro do
+    item 9): o experimento rodou de novo com as tasks 83, 84 e 85, o mesmo
+    briefing e o mesmo modelo. R1 a R3 se sustentaram; R4 veio misto
+    (controle mais barato, intervenção 14 a 16% mais cara em bytes, menos
+    tokens nas três). nenhuma condição de parada: a onda 5 abre. antes,
+    duas correções pequenas que a rodada achou: o aviso sem segunda pessoa
+    (feito) e a revisão no `completed` (task-87). resultado em
+    [`task-62-ide-human-agent-proof.md`](../tarefas/task-62-ide-human-agent-proof.md), "resultado da segunda rodada".
+
+11. regra de severidade (2026-09-23, intervenção do brenner): toda
+    descoberta recebe P0 a P3 antes de virar task
+    ([`autonomy.md`](../referencia/operacao/autonomy.md)); só P0 e P1 bloqueiam; próxima task
+    disputando superfície em uso dá lugar a trabalho independente da onda;
+    a onda seguinte espera só os critérios essenciais da atual (seção 6),
+    sem perfeição local.
+
+12. onda 5 fechada, onda 6 aberta (2026-09-24, decisão autônoma pela
+    regra de severidade): os seis critérios essenciais da seção 6 estão
+    satisfeitos. o que sobrou da onda 5 é P2 e P3 (64 fases b e c, 65 fases
+    c e d, task-91 em andamento). a task-68 abre com as decisões escritas
+    no arquivo dela: crate `uir`, vocabulário v1 do que existe no comps e no
+    engine, fixtures no domínio do ide e do todo, registro de capacidades
+    derivado do `Snapshot`.
+
+abertas:
+
+5. task-39 (memoização, pendente desde 2023) é absorvida pela task-73.
+   recomendação: mover a task-39 para `checked/` como superseded quando a
+   73 abrir.
+6. nome dos crates novos: `sem` fechado na task-57; protocolo do agente e
+   IR fechados pelo orquestrador antes do briefing da task.
+7. provedor do proponente LLM (task-69): local ou API. decidir na task-69,
+   com o proponente atrás de um trait e um proponente determinístico para
+   os testes.
+
+13. o provedor do LLM (2026-09-24, brenner: "usa você mesmo por enquanto,
+    eu não tenho outro LLM"): o Claude, pelo `claude -p` do Claude Code que
+    já roda nesta máquina, atrás de `propose::Model`. sem API paga nova.
+    a fase 3b da task-69 se divide: 3b-i, o provedor num crate próprio
+    (`propose` continua puro), agora; 3b-ii, a página Surface usando o
+    provedor, depois da task-95 (a mesma superfície).
+14. o modelo dos agentes (2026-09-24, brenner: "precisamos terminar todas,
+    com maestria, usando o modelo opus, não fable"): todo agente de
+    implementação roda no Opus, pedido explicitamente no disparo
+    (`model: opus`). o escopo é o programa inteiro, onda por onda; o que
+    depende do brenner (checkpoint b, fontes, licença, provas em tela
+    real) é preparado para ele decidir rápido, nunca decidido por ele.
+15. a inferência da task-78 (2026-09-25, brenner: "78 -> candle/tokio e
+    burn"): as candidatas são o candle (com o tokio para o streaming) e o
+    burn; o llama.cpp sai da comparação. a medição das duas decide a
+    biblioteca, por ADR. baixar os crates é do orquestrador, num
+    workspace à parte como o do urnaui, para o `Cargo.lock` da raiz não
+    mudar. sem comparação com Electron (brenner, 2026-09-25: "tira
+    eletron"): a task mede o app de referência sozinho. o modelo: o
+    TinyLlama 1.1B Chat, fora do repositório (2026-09-26).
+16. candle e burn, os dois (2026-09-26, brenner, depois da medição da
+    task-78 fase 1: "vamos manter o burn e candle"; sobre o burn pedir o
+    wgpu 29: "implementa"): `rust/llmrun` fica com as duas implementações
+    atrás da mesma interface, e o plev sobe do wgpu 28 para o 29, para o
+    burn rodar no device do renderer (item 4 da task-78). a subida vem
+    antes do app de referência e não pode mudar pixel. ADR
+    `ai-native-single-process` aceito.
+
+## 12. estado
+
+atualizado em cada integração.
+
+| task | estado | na `main` | notas |
+|---|---|---|---|
+| onda 0 | integrada | `1d384d4` | how-to reconstruído, regra de commit, docs do programa |
+| task-57 | integrada | `860b029` | crate `sem`; `Change` ficou na 57 com doze variantes; detalhes em `checked/task-57-semantic-contract-done.md` |
+| task-58 | integrada | `20c601e` | dispatcher, receipts, check; devolvida uma vez (confirmação por tecnologia assistiva, id no `execute`); detalhes em `checked/task-58-actions-preconditions-receipts-done.md` |
+| task-59 | integrada | `f71dc20`, `f5b7cee` | ligação no compositor e todo pelo dispatcher (fase a); os 16 widgets restantes com `SemId` e projeção, regra "toda ação lê o que muda", defeito do `Select` corrigido (fase b); rolagem do `Select` virou a task-81 |
+| task-66 | integrada | `c6738be` | headless pelo caminho da janela; SVG e `--semantics` foram para a task-66b (integrada, linha abaixo) |
+| task-73 | fases 1 e 1b integradas; fase 2 (ADR de desenho) espera decisão do brenner | `ed814da`, `91fdb33` | limitado pela GPU mesmo sem a latência de envio (4 a 12 vezes a CPU); pass de layer segue os pixels; composite em todo frame; o caret a 60 fps é a task-82; a task-39 (memoização) foi para `checked/` como absorvida por esta |
+| task-62 | concluída (em `checked/`): fase c em cinco rodadas; checkpoint a decidido (decisões 8 e 10); a quarta (o handoff, 2026-09-24): a segurança se sustentou nas seis, sem dica ninguém perguntou, com a frase os dois perguntaram e a resposta da pessoa decidiu; a quinta (depois da task-94, sem a frase): os dois perguntaram pela linha do stderr e a resposta decidiu; a pergunta do handoff fechou | `8978602`, `d26c9b1` | experimento completo: H1, H2, H3 e H5 sustentadas, H4 diz onde o plev ganha (recusa antes do efeito, com o delta; receipt e sessão) e onde não (bytes e idas e voltas contra o `git`); resultado e decisão pedida no arquivo da task |
+| task-63 | concluída (em `checked/`): fases a a d integradas; o tamanho da janela e a escala na sessão vão com a fase b da task-64 | `c62a05d`, `8e6e814` | arquivo `.monster` de sessão (magic `MONS`); fase d re-escopada: o `ide` grava a própria sessão (`PLEV_RECORD=1`, debug; salva por atalho, ao fechar e no panic) e cada frame leva as ligações visíveis (seção B, versão 1); `PLEV_BACKGROUND=1` abre a janela sem tomar o foco; retenção de pixels e o shell do showcase ficam sem task (P2) |
+| task-60 | integrada | `3ba5b04` | árvore AccessKit do snapshot, leitor de tela pelo dispatcher, caminho antigo removido; VoiceOver manual pendente com o brenner (roteiro no arquivo da task) |
+| task-61 | integrada | `0ec72f9` | crate `wire`, `plev observe`/`act`, porta no showcase; um defeito real de fechamento de conexão corrigido no caminho; forma enxuta e redação única viraram a task-57b |
+| task-58b | integrada | `dc6fde2` | recusa de confirmação no `sem` e no ide |
+| task-81 | integrada | `7b3e48f` | painel do `Select` rola; um `Window` para desenho, ligação e clique |
+| task-57b | integrada | `a7a6735` | forma serde enxuta (todo com 3 itens: 6419 para 2039 B; 103 itens: 87 para 26 KB), `source` opt-in no wire (`plev observe --source`), redação de segredo uma vez só em `sem::redact`; ADR lean-semantic-form-and-one-redaction |
+| task-82 | integrada (fases a e b) | `d97a375`, `a6fec8d` | `comps::Wake` em todo shell (showcase, ide, urnaui), tick de alcance ao acordar; ide com campo focado de 720 para 11 frames em 6 s; o laço do `index.lock` fechado (ide parado: 0 frames, 0 processos git); dívidas no arquivo da task |
+| task-66b | integrada | `efc87b6` | `engine::headless::svg` com relatório de aproximação por nó, `TextSystem::shaped_glyphs` (um shaping só), `showcase --render --svg/--svg-report/--semantics/--source`; imagens ficam para depois da retenção de pixels (63d); ADR svg-export-reads-the-scene |
+| task-83 | integrada | `78f463c` | `Change::NodeAdded` carrega o nó (o commit nascendo em `stacks`: 427 B numa ida, antes 172 B mais 402 B); `Rejection::Stale.acted` nomeia as ações de outros atores sobre o estado que o autor viu; regra de stale no `plev --help`; sessões antigas continuam abrindo; adr a-delta-carries-the-node-a-refusal-names-who-acted |
+| task-84 | integrada | `4896451` | a sessão do ide descarta leitura do git feita antes de uma mutação que a view já mostra; teste que falhava 10 de 10 na base; o roteirizado não espera mais o index parar (sem essa espera, na base, as dez corridas com intervenção davam errado) |
+| task-85 | integrada | `476bbb4` | o commit aparece na projeção no passo em que o receipt conclui; `files` (uma definição: contra o primeiro pai, renomeação nos dois caminhos) nos 10 commits mais recentes e no último que o ide fez; devolvida uma vez (definição única, limite na projeção) |
+| task-87 | integrada | `365d8fd` | um estágio terminal traz `revision` (aditivo no v1); o roteirizado com intervenção foi de 24 para 17 mensagens e de 91,5 para 45,9 KB; adr a-terminal-stage-carries-the-revision |
+| task-64 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase b integrada, a janela `plev-inspector` (crate `inspector`) abre a sessão, com timeline e scrub, o frame gravado com os contornos e o painel do controle; nenhum caminho dela cria request; fases a e c integradas | `e6560a2`, `d611fa4`, merge da `task/64b-inspector-ui` | crate `inspect`, CLI `plev-inspect` (com `--export`); uma sessão gravada vira teste de regressão (`apps/idestudio/tests/rerun`, fixture do app, veredito e marcas), o primeiro é a sessão a2ppa da terceira rodada; adr sessions-become-regression-tests |
+| task-86 | integrada | `7f866e8` | o binário `ide` abre a porta do agente (`PLEV_AGENT=1`, debug) por `ide::agent`; prova numa janela real com cliques de uma pessoa e um agente ao mesmo tempo: recusa stale nomeando a pessoa, o mesmo texto na tela e no nó que o agente lê; `Binding::visible_rect` no engine |
+| task-90 | integrada | `d02b4d1` | o `acted` nomeia a cadeia de ações de outros atores desde a primeira que rodou na revisão que o autor viu; o toast em uma frase por ator; a cena do clique na janela continua sem âncora (a seleção muda a revisão fora do dispatcher), teste escreve o limite |
+| task-68 | integrada | `871f0dd` | crate `uir`: IR em JSON (vocabulário fechado, props por token, ligação a capacidades declaradas, repetição mínima), registro de capacidades do `Snapshot`, `verify` com oito regras e erros por JSON pointer como único caminho a `VerifiedIr`, schema gerado; adr plev-ir-typed-and-verified |
+| task-70 | concluída (2026-09-25; arquivo em `checked/`): fases 1 a 4 integradas; fase 4: as preferências de accessibility da pessoa (texto maior, mais contraste, densidade) são operações da fase 1 por token, a última camada do host, desligar deixa o que outros pediram, só a pessoa liga e o valor não sai para agente nem prompt, mais contraste medido par a par (texto secundário de 4,13 para mais de 18), o `promote` de template no `uir`; fases 1, 2 e 3 integradas (onda 7); fase 3: o detector acha a sequência que a pessoa repete nos estágios do dispatcher (ao vivo e gravado), a pessoa aceita (só ela), a composta vira ação do app com a política mais estreita dos passos e roda como requests encadeados, o primeiro recusado para com o passo e o motivo; falta só accessibility como transformação (depois da 75) e a prova com o Claude de verdade da fase 2; fase 2: com uma superfície aberta, o mesmo `propose` da linha lê a intenção como mudança ("too much", "can't compare", "bigger", "undo", en e pt), pelas regras na hora ou pelo Claude fora da thread, operações verificadas aplicadas pelo dispatcher como quem pediu, o host com a política de cada superfície e um pedido inteiro ou nada; a revisão pelas regras mostra o frame de cada corte, números com rótulo e a decisão como selo; fase 1: nove operações pequenas sobre um `VerifiedIr` (`uir::transform`), cada uma verificada de novo e com a inversa exata, identidade preservada (só o hide tira um id da árvore), `SurfaceHost::apply` e `undo` com histórico e ator; a demo na Silences põe os cortes primeiro e esconde a detecção repetida; telas fixas: exprimir em IR (o todo cabe, a Silences não, pela linha do tempo); falta a prova com o Claude de verdade (orquestrador), a accessibility como transformação (depois da task-75) e a fase 3 (compostas) | merge da `task/70a-transforms` | o gráfico das durações exige o app declarar uma lista de durações; Emphasize não aparece em stat nem badge; sem refazer |
+| task-69 | concluída (todas as fases e o checkpoint b, em `checked/`); fases 1, 2, 3a, 3b-i e 3b-ii integradas (com a task-95): a pessoa ou um agente escreve a intenção na página Surface e o Claude devolve a tela verificada, fora da thread do app, com espera, custo e cancelar; todas as fases integradas (1, 2, 3a, 3b-i, 3b-ii, 4a, 4b, 4c): a demo do editor de vídeo gravada em `.monster` pelas regras e pelo Claude; checkpoint b, primeira rodada feita pelo orquestrador a pedido do brenner ("testa você mesmo"): a gerada saiu pior (a linha do corte quebrada pelas regras; pelo Claude a tarefa por último, sliders sem rótulo, números crus); as correções integradas (texto nunca mais estreito que a palavra, linha que quebra, slider com rótulo e valor, número com duas casas, prompt com a tarefa primeiro, 6 baselines da revisão aberta); segunda rodada (a tarefa primeiro, tudo à vista na janela padrão, 126 s, 1 tentativa, 0,159 USD): a gerada deixou de ser pior, empate com vantagens diferentes (a do Claude mais direta para decidir; a fixa mostra o frame e a duração de cada corte); a geração segue como linha principal e as tasks 70, 71 e 80 estão destravadas; para a 70: o prompt fez o Claude tirar o frame de cada corte, os números da linha das regras sem rótulo, o estado como selo | `22d59fb`, `4593a4c`, merge da 69c, `460c854`, `4573c81` | crate `surface` (materializar, transformar por `SemId`); crate `propose` (`Rules` sem modelo, `Llm` atrás de `Model`, `propose_verified` só deixa sair `VerifiedIr`; a lista por estrutura, task-95); crate `claude-model` (o Claude pelo `claude -p`, decisão 13: 4 intenções reais verificadas de primeira, 4,5 s a 89 s, 0,03 a 0,11 USD cada); a página Surface propõe pelas regras e mostra os itens; intenção até `VerifiedIr` em 0,16 ms pelas regras |
+| task-91 | integrada (P2, com um P1 dentro) | `29373d4` | o `acted` ancora no olhar que o port conhece (`sem::Mark` pelo sink do port) e nomeia o que foi tomado depois, o do próprio agente incluído; sem olhar, a regra da 90; o laboratório conta a forma dos atos pelo `Traffic` |
+| task-89 | integrada | `79b8c93` | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão): o valor de cada `read` vem da última observação que o mostrou; nunca mostrado dá `not_observed` (aditivo no v1, `plev` sai 3); reproduzido no laboratório: o submit depois de olhar só o formulário é recusado stale; adr an-act-rests-on-what-its-actor-was-shown |
+| task-65 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase c integrada, cmd+shift+clique edita um literal na janela e o Enter grava no `.rs` (só a pessoa, só com o código do baseline); fases a e b integradas; o color picker e a fase d ficam como pendência | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |
+| task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
+| task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
+| auditoria de verdade | integrada | `7621403` | [`estado-do-codigo-2026-09.md`](estado-do-codigo-2026-09.md): contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
+| task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
+| task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
+| task-94 | integrada (P2) | `37c5e0c` | um `plev act` sem `--ask` recusado stale com uma pessoa no `acted` escreve no stderr uma linha que nomeia o request dela e aponta para o `--ask`; nenhuma depois de um `declined`, com só agentes, ou quando o ato perguntava; o stdout igual byte a byte; o cenário da quarta rodada pela porta real com o binário `plev` como agente |
+| task-95 | integrada (onda 6, parte da 69) | `460c854` | o todo projeta os itens como lista; a superfície gerada repete sobre eles; `Rules` gera o `repeat` pela estrutura do registro; origem: handoffs das fases 1 e 3a da task-69 |
+| task-74 | fases 1, 2, 3, 5 e 7 integradas (trilha): a auditoria de cobertura por escrita; Noto Sans embutida para árabe, hebraico, devanágari, SC, JP e KR (decisão do brenner, 2026-09-25), sem tofu no caminho embutido, de 1,7 MB para 6,9 MB de fontes; setas e seleção certas em texto misto (bidi); emoji colorido (Noto Color Emoji em bitmap, 640 glifos); um milhão de linhas no editor (abrir 21 ms, rolar 0,36 ms, editar 0,27 ms); IME (4): o roteiro do brenner passou no editor (japonês e chinês); o campo compõe e a galeria liga o IME com um campo focado; aberto: o roteiro num campo da página Input (o brenner); a pedido dele, copiar, recortar, colar e selecionar tudo nos campos da galeria e do ide, e o menu do botão direito no campo | merge da `task/74a-text-audit` | com as 9 faces embutidas (1,7 MB), toda escrita não latina é tofu (árabe 24 de 27 glifos, hebraico 8 de 9, devanágari 12 de 13, CJK todos); o tofu erra a largura nos dois sentidos; marcas combinantes compõem; bidi resolve certo sem fonte; nenhuma face tem `liga`; emoji de cor tem largura sem tinta mesmo com fonte de sistema (falta o caminho de cor no atlas); estimativa Noto por escrita no relatório; golden `rust/engine/tests/fixtures/text_audit.txt` |
+| task-76 | concluída (2026-09-24; arquivo em `checked/`): os dez itens integrados. perda de device recupera no lugar; diálogos de arquivo e drop; várias janelas; menus; alertas; tray e notificação; coberto ou dormindo não desenha; impressão; câmera e microfone; deep links como ator de fora com lista aberta. fica para o bring-up de plataforma: o bundle do macOS (destrava notificação, esquema de URL e a permissão de câmera no `Info.plist`), os backends do linux (rfd, muda, tray-icon), compilar e provar o windows (menu, tray, dshow), e as provas em tela real, que são do brenner (roteiros no fim do arquivo da task) | merges de `task/76a` a `task/76j` | avisos: `showcase/src/app.rs` voltou a 567 linhas (as entradas foram para `app/entry.rs` no item 9); o alerta da Files abre sem janela-mãe (`alert(&alert, None)`), solto na tela em vez de preso à janela (P3); o `Background` é thread-local até virar trait nos donos dos jobs; adiar um job novo do ffmpeg dormindo não entrou (`semantics.rs::execute` fora da lista); merges da `task/76a-device-loss`, `task/76b-file-dialogs`, `task/76c-windows`; P3 do item 2: o nó `window` reconstrói o snapshot pelo `SnapshotBuilder` e perde o `source` dos nós enquanto a segunda janela existe (o cmd+clique aponta para a view); a correção é um `SnapshotBuilder::extend` no `sem`; `shell.detach` como capacidade projetada precisa de um `Operable` do shell, a mesma forma do item 4; merge da `task/76a-device-loss`; achado: o wgpu engole `DeviceLost` e o compositor marcava layers limpas sobre nada; wasm só sinaliza (request de device é promise) |
+| task-77 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): as 82 páginas capturadas na web (79 iguais em todo byte) e no simulador do iOS (78 só com a barra de status), cada calada com causa, o id da tabela corrigido para 32 bits; fase 1 integrada: o `regress` compara e classifica frames (`equal`, `requested`, `silent`, `resized`) e captura o desktop contra ele mesmo; o desktop é determinístico (1312 de 1312 frames iguais em bit, 82 páginas, 4 temas, escalas 1, 1.25, 1.5 e 2, dois contextos e dois processos); fase 1b integrada: o blur segue a escala (a escala 1 igual byte a byte; as outras põem o kernel de 1x sobre os texels físicos; a 2x uma página com vidro custa 1,55x); a fase 2 (web, iOS, android) espera o brenner instalar as ferramentas, comandos no handoff | merge da `task/77a-determinism` | a tabela das diferenças pedidas é JSON (TOML seria dependência nova); o limite entre GPUs (2 por canal) é proposta sem medida; o `colorspace` da layer Metal não é definido pelo wgpu nem pelo winit |
+| task-79 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fases 1 e 2 integradas: a cena de uma janela viaja pelo port do agente como pedido novo da v1, por layer suja (codec próprio em `rec::scene`, o monster não carrega clip, vidro nem sombra), e o `mirror` desenha em outro processo com hash de frame igual e as ligações por cima; só com `PLEV_MIRROR=1` da pessoa, imagem de fluxo nunca cruza, quem assiste é logado; devolvida uma vez por privacidade (a câmera cruzava); fase 2: um clique no espelho volta como `act` pelo contrato (o controle sob o ponto pelas ligações em ordem de empilhamento, a primária do leitor, apoiado no último olhar da mão do espelho; o app o toma como o agente "mirror"), e o que o port conta como segredo (falha fechada) sai do frame antes do codec, com uma caixa no lugar | merge da `task/79a-scene-socket`, merge da `task/79b-mirror-input` | a página Git mascarada no espelho até projetar; widget de senha no comps; digitar, arrastar e rolar pelo espelho; a revisão no próprio frame (muda o `wire`); sair do localhost com pareamento; o gravador guardar os pixels das imagens fixas; o custo de imagem fixa grande no fio |
+| task-72 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase 1 integrada: o inventário medido (primeiro frame headless 79 ms em debug: device 26, fontes ~23 pela varredura das 805 do sistema duas vezes, shaders 2,7, ícones 0,17, imagens 0); nenhum asset saiu do runtime pelo número; WGSL validado no gate com arquivo, linha e coluna | merge da `task/72a-asset-compiler` | fase 2: interação gravada como asset e container do monster depois da task-63; ícones medidos em release; a varredura de fontes vai para a task-74; o teste antigo de WGSL em `gpu/tests.rs` ficou redundante e o `3Dscene.wgsl` é órfão (P3) |
+| task-75 | fases 1, 2a a 2d integradas (trilha): o teclado em 29 das 30 páginas de componente (Tab na ordem da projeção, setas WAI-ARIA, listas e tabelas uma linha por vez, o modal prende e devolve o foco); a Resizable e a parada única por widget composto pedem mudança no contrato do `sem`; a matriz do AccessKit por plataforma lida no lock (macOS roda; windows e linux esperam o alvo; iOS e web sem adapter; android fora do lock; nenhum adapter com custom actions); a árvore das 82 páginas testada; status polida e alerta assertivo sem mover o foco; 301 pares de contraste, 102 falham, listados sem mudar cor; reduced motion no `engine::animation`, lido do macOS pela ponte; fase 2a: nas páginas que projetam, as ações de um item viram controles que a árvore apresenta dentro dele (a projeção da página não muda), o select abre e se escolhe pelo valor, o foco tomado é projetado, a status diz a mensagem no nome, toast, modal e menu na projeção da view pelo dispatcher, spinner e skeleton parados com reduced motion, a preferência de accessibility ouvida só pelo leitor; as listas da fase 1 de 22, 13 e 4 para 1 (o arraste de arquivo), 0 e 0; fase 2b: 30 páginas de componente projetam por um trait e uma tabela, a pessoa, o leitor e um agente no mesmo estado, a barra de menu as deixa de fora; 36 páginas projetam, 46 ficam com motivo | merge da `task/75a-a11y`, merge da `task/75b-a11y-pages`, merge da `task/75c-a11y-component-pages` | próxima: o teclado completo (Tab na ordem da projeção, setas, trap de foco no modal, anel nas pílulas), retângulo para os controles apresentados (muda `scene.json` de baselines); as 24 páginas do grupo 2 pedem projeção nova no comps; o que a árvore não diz (`active`, `busy`, o split como valor); o ide não liga a ponte; do brenner: o web (espelho DOM ou nada), as cores que falham, o roteiro do VoiceOver (fases 1, 2a e 2b); o `defaults` no lugar da API do AppKit (sandbox) |
+| task-71 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase 2 integrada, HTML/CSS (subset) e Figma (a tela settings do `.fig` do brenner, por `tool/tasks/figmapull.py`) com fixture, goldens e relatório; fase 1 integrada (onda 7): o parser escreve plev IR ao lado do código builder (que não mudou um byte), relatório em quatro categorias com arquivo:linha provado por um censo do parse, tolerância de token medida no tema, `binding required` para botão, `onClick` e campo de texto, comparação de pixels com cada diferença explicada | merge da `task/71a-compiler-target` | fase 2: a fonte nova (HTML/CSS pede grammar nova; Figma pede export real), do brenner |
+| task-80 | fase 1 integrada (onda 8): o método das cinco demos escrito antes de rodar; a 1 pela task-62 (cinco rodadas), a 4 pela 69 e o checkpoint b no que cobrem; demo 3: a corrida da task-84 gravada com o bug de volta numa branch descartável, lida no instante pelo `plev-inspect` (oito perguntas da tese respondidas pelo arquivo; os lapsos de 29 e 24 ms escapam a um vídeo de 30 fps), virando teste no gate que falha com o bug e passa sem, dez de dez; demo 4: a revisão nasce da intenção, vira comparação e fecha, gravada sem janela, nada dela depois do close | merge da `task/80a-proof` | a demo 2 e a pergunta do núcleo com o brenner; a demo 5 pede a task-96 (superfície gerada no ide); os braços de controle da demo 1 (agente por screenshot, por snapshot de accessibility de terceiros) e o Claude de verdade com o orquestrador; a lista de durações na Silences (P3) |
+| task-96 | concluída (2026-09-25; arquivo em `checked/`): uma superfície gerada no ide, numa coluna ao lado das vistas fixas; "review these three commits" pelas regras; cada ato pelo dispatcher do workbench (pessoa, agente pelo port, stale recusado); nada depois de fechar; o Claude pelo caminho do showcase, vendo só os commits pedidos; a demo 5 da task-80 gravada sem janela e medida: melhor nos arquivos (3 commits de uma vez contra 1), pior no diff (5 linhas sem cor contra o diff inteiro) | merge da `task/96a-ide-surface` | um componente de diff no vocabulário do IR (task nova); a linha de intenção comum ao ide e ao showcase (P3); a prova com o Claude de verdade e a demo 5 com janela |
+| task-97 | concluída (2026-09-25; arquivo em `checked/`): o componente `code` no vocabulário do IR, desenhado pelo `CodeBlock` com o tipo de cada linha pelos tokens do tema (AA nos quatro temas) e rolagem; o ide projeta `diff:kinds`; a revisão das regras mostra o diff nele; a demo 5 medida de novo pelo mesmo critério: 14, 7 e 14 linhas coloridas à vista contra 5, 5 e 5 sem cor, e o painel fixo ainda ganha em 4 linhas de um commit e no número de linha | merge da `task/97a-code-in-ir` | um token de altura para bloco de leitura ou um nó que ocupa o que sobra (decisão do brenner); número de linha na projeção; os dois defeitos visuais corrigidos pela task-96 fase b; três temas nomeados (tokyo-night, gruvbox, one-dark) abaixo de AA na linha adicionada (P3) |
+| task-96 fase b | integrada (2026-09-25): o cartão do diff diz "diff", nunca o id do commit; a linha de intenção numa faixa embaixo das vistas fixas, a coluna só com superfície aberta, então sem superfície o workspace tem a largura inteira (perde 60 px de altura); a demo 5 medida de novo: nenhum número do critério mudou de lado, e o painel fixo deixou de cortar as mensagens dos commits | merge da `task/96b-ide-surface-polish` | a mensagem do commit no título pede um estado novo por região; um `Select` do comps que abre para cima sozinho (P3) |
+| task-78 | fase 1 integrada (2026-09-26): inferência em processo, candle e burn atrás de uma interface de streaming no workspace próprio `rust/llmrun`, medidos com o TinyLlama 1.1B no M4 (Metal f16: 37,1 contra 26,2 tok/s; primeiro token de um processo novo 90 ms contra 0,9 s; binário 6,8 contra 33 MB; pico 5,2 contra 4,3 GB); o brenner decidiu manter os dois (decisão 16); fase 2 integrada: o plev no wgpu 29 sem pixel mudado (os 1312 frames da galeria iguais aos do 28), e o burn rodando no device do renderer (`RenderConfig::compute`, `GpuContext::instance` e `adapter`, a feature `plev` do `rust/llmrun`); próxima: o app de referência | merge da `task/78a-inference`, merge da `task/78b-wgpu29` | o código do modelo no burn vem do burn-lm (arquivado), adaptado do código de referência da Meta: licença a olhar antes de publicar (task-41); o tokenizer não compila para wasm (falta o `fancy-regex` 0.14 no cache) |
