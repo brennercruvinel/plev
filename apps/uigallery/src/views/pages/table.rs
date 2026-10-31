@@ -201,7 +201,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Code Block",
         "code",
-        "Mono block with a caption.",
+        "Code on a well: wrapped, captioned, and a diff with its marker column.",
         Pane::CodeBlock,
     ),
     page(

@@ -9,7 +9,7 @@ use editor::Document;
 use engine::compose::layout::ComputedBounds;
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
-use engine::widgets::editor::{EditorTheme, EditorView, MouseEvent};
+use engine::widgets::editor::{EditorConfig, EditorTheme, EditorView, MouseEvent};
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use winit::event::Ime;
 use winit::keyboard::{Key, ModifiersState};
@@ -29,15 +29,19 @@ pub struct EditorPage {
 impl EditorPage {
     pub fn new(theme: &Theme) -> Self {
         Self {
-            editor: EditorView::new(Document::load(&demo_text())),
+            editor: EditorView::new(Document::load(&demo_text()))
+                .with_config(EditorConfig::from_theme(theme)),
             theme: EditorTheme::from_theme(theme),
             mouse_down: false,
             modifiers: ModifiersState::empty(),
         }
     }
 
+    /// The gallery's theme: its colors, and its face and line (core's
+    /// Inter, not the engine default the editor fell back to).
     pub fn set_theme(&mut self, theme: &Theme) {
         self.theme = EditorTheme::from_theme(theme);
+        self.editor.set_config(EditorConfig::from_theme(theme));
     }
 
     pub fn set_modifiers(&mut self, modifiers: ModifiersState) {
@@ -141,4 +145,28 @@ fn demo_text() -> String {
         s.push_str("}\n");
     }
     s
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The editor writes in the gallery's face: core's Inter from the
+    /// first frame and after a switch, hoff's after it.
+    #[test]
+    fn the_editor_writes_in_the_theme_s_face() {
+        let core = Theme::hoff_core();
+        let mut page = EditorPage::new(&core);
+        let mono = core.typography.mono();
+        assert_eq!(page.editor.config().font_family, mono.font_family);
+        assert_eq!(page.editor.config().line_height, mono.line_height);
+        let hoff = Theme::hoff();
+        page.set_theme(&hoff);
+        assert_eq!(
+            page.editor.config().font_family,
+            hoff.typography.mono().font_family
+        );
+        page.set_theme(&core);
+        assert_eq!(page.editor.config().font_family.as_deref(), Some("Inter"));
+    }
 }

@@ -193,6 +193,8 @@ pub struct GraphRecipe {
     pub edge_danger: Color,
     pub edge_cool_alpha: f32,
     pub edge_hot_alpha: f32,
+    /// The thinnest an edge draws, however far the view zooms out.
+    pub edge_min_w: f32,
     pub node_rest_alpha: f32,
     pub ring: Color,
     pub frame: Color,
@@ -222,8 +224,11 @@ impl GraphRecipe {
             edge_info: ORANGE,
             edge_success: GREEN,
             edge_danger: RED,
-            edge_cool_alpha: 0.35,
+            // On the paper a 35% gray hairline all but vanished: the
+            // edges at 60% and never under 1.5 px.
+            edge_cool_alpha: 0.6,
             edge_hot_alpha: 0.9,
+            edge_min_w: 1.5,
             node_rest_alpha: 0.65,
             ring: ink,
             frame: line,
@@ -251,6 +256,7 @@ impl GraphRecipe {
             edge_danger: c.danger,
             edge_cool_alpha: 0.35,
             edge_hot_alpha: 0.9,
+            edge_min_w: 0.5,
             node_rest_alpha: 0.65,
             ring: c.text,
             frame: theme.glass.edge,

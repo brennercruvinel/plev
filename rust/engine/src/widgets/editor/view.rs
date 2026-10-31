@@ -81,6 +81,18 @@ impl EditorView {
         self
     }
 
+    /// The configuration the view measures and draws with.
+    pub fn config(&self) -> &EditorConfig {
+        &self.config
+    }
+
+    /// Replace the configuration in place (a host whose theme changed):
+    /// every measure reads it live, and the next `set_bounds` (each
+    /// render calls it) sizes the scroll to it.
+    pub fn set_config(&mut self, config: EditorConfig) {
+        self.config = config;
+    }
+
     /// Replace the clipboard backend (tests inject a [`LocalClipboard`](crate::runtime::platform::clipboard::LocalClipboard)
     /// (engine::runtime::platform::clipboard::LocalClipboard) so they never touch the OS clipboard).
     pub fn with_clipboard(mut self, clipboard: Box<dyn ClipboardProvider>) -> Self {
