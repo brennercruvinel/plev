@@ -22,6 +22,7 @@ use super::super::components::field;
 // task-104 front C, conversation and feedback (#156)
 
 // task-104 front D, disclosure and display (#157)
+use super::super::components::accordion;
 
 // task-104 front E, selection and dates (#158)
 use super::super::components::toggle;
@@ -73,6 +74,7 @@ pub struct Panes {
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
+    pub accordion: accordion::AccordionPage,
     // task-104 front E, selection and dates (#158)
     pub toggle: toggle::TogglePage,
     // -- apps demo
@@ -152,6 +154,7 @@ impl Panes {
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
+            accordion: accordion::AccordionPage::new(theme),
             // task-104 front E, selection and dates (#158)
             toggle: toggle::TogglePage::new(),
             todo,

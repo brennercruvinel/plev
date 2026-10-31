@@ -52,6 +52,7 @@ pub mod field;
 // task-104 front C, conversation and feedback (#156)
 
 // task-104 front D, disclosure and display (#157)
+pub mod accordion;
 
 // task-104 front E, selection and dates (#158)
 pub mod toggle;

@@ -67,6 +67,7 @@ impl ShowcaseView {
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
+                Pane::Accordion => self.panes.accordion.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
@@ -166,6 +167,7 @@ impl ShowcaseView {
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
+                Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::Todo => {
@@ -256,6 +258,7 @@ impl ShowcaseView {
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
+            Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             // task-104 front E, selection and dates (#158)
             _ => Wake::idle(),
         };
@@ -340,6 +343,7 @@ impl ShowcaseView {
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
+                Pane::Accordion => self.panes.accordion.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::Todo => {
