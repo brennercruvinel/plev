@@ -1,6 +1,6 @@
 //! The kit's SidebarPage (`templates/SidebarPage`): its four sidebars.
 //! [`HomeSidebar`] and [`GuidelineSidebar`] are the app's rails, a rim at
-//! their right; the canvas sidebars (`SceneSidebar`, the scene and its
+//! their right; the canvas sidebars ([`SceneSidebar`], the scene and its
 //! assets, and `DesignSidebar`, design and animation) are rounded
 //! panels with a rim all round.
 //!
@@ -16,9 +16,11 @@
 
 mod guideline;
 mod home;
+mod scene;
 
 pub use guideline::{GuideGroup, GuidelineSidebar};
 pub use home::{HomeLayout, HomeRow, HomeSidebar};
+pub use scene::{SceneItem, SceneLayout, ScenePart, SceneSidebar, SceneTab, Section};
 
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;

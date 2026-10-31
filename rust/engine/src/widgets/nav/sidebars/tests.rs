@@ -127,3 +127,53 @@ fn the_guideline_links_follow_their_captions() {
         assert!(captions[1] < links[2].y);
     }
 }
+
+fn scene() -> SceneSidebar {
+    SceneSidebar::new("Robot 2.0", "3D Design Project")
+        .items(
+            vec![
+                SceneItem::new("Camera 1", "focus"),
+                SceneItem::new("Dome Light", "sun"),
+                SceneItem::new("Robot", "box"),
+            ],
+            Some(2),
+        )
+        .section("3D Objects", 4, true)
+        .section("Materials", 6, false)
+        .sem(SemId::name("scene").unwrap())
+}
+
+/// The head, the tabs, the rows and the search stack down the panel,
+/// the search at its foot; the toggles sit inside their row.
+#[test]
+fn the_scene_parts_stack_down_the_panel() {
+    for theme in themes() {
+        for s in [scene(), scene().tab(SceneTab::Assets)] {
+            let (w, h) = s.size(&theme);
+            let frame = Rect::new(0.0, 0.0, w, h);
+            let l = s.layout(frame, &theme);
+            assert!(l.project.bottom() <= l.head_rule && l.head_rule < l.tabs.y);
+            assert!(l.tabs.bottom() <= l.tabs_rule && l.tabs_rule < l.body.y);
+            let last = match s.current_tab() {
+                SceneTab::Scene => *l.items.last().unwrap(),
+                SceneTab::Assets => *l.sections.last().unwrap(),
+            };
+            assert!(last.bottom() <= l.search_rule + 0.01, "{last:?} {l:?}");
+            assert!((l.search.bottom() - frame.bottom()).abs() <= 16.0 + 0.01);
+            for r in s.toggle_rects(l.items[0], &theme) {
+                assert!(r.x > l.items[0].x && r.right() < l.items[0].right());
+            }
+        }
+    }
+}
+
+/// A press on a row selects it, on a toggle flips it; the ids name them.
+#[test]
+fn a_scene_row_selects_and_its_toggles_flip() {
+    let mut s = scene();
+    let lock = s.part_id(ScenePart::Toggle(0, 0)).unwrap();
+    assert_eq!(s.part_at_id(&lock), Some(ScenePart::Toggle(0, 0)));
+    assert!(s.activate(ScenePart::Toggle(0, 0)) && s.items[0].on[0]);
+    assert!(s.activate(ScenePart::Item(1)));
+    assert_eq!(s.selected, Some(1));
+}

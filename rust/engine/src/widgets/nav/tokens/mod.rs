@@ -24,7 +24,7 @@ mod sidebars;
 mod tool;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
-pub use sidebars::SidebarsRecipe;
+pub use sidebars::{CanvasRecipe, SidebarsRecipe};
 pub use tool::{
     PlayerRecipe, PlayerTones, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
 };

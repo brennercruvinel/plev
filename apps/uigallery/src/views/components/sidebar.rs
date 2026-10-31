@@ -1,11 +1,13 @@
 //! Sidebar page: the kit's SidebarPage (`templates/SidebarPage`) on the
 //! showcase mold, its two groups as the kit lays them, each sidebar in a
-//! gray card (`isGray`), centered: the home sidebar (its dropdowns,
+//! gray card (`isGray`), centered: the scene and assets sidebar (its
+//! rows and their toggles, or its asset sections), the home sidebar (its dropdowns,
 //! links and folders) and the guideline sidebar (the kit's own pages,
 //! this one current).
 //!
 //! Projected: a group per title, `sidebar_page.group[<g>]`; in it each
-//! sidebar a region, `sidebar_page.home` and `sidebar_page.guideline`,
+//! sidebar a region, `sidebar_page.scene`, `sidebar_page.home` and
+//! `sidebar_page.guideline`,
 //! with the parts each declares. A reader's `activate` (and
 //! `toggle_expanded` on a dropdown) runs the part as a press does.
 
@@ -13,7 +15,9 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::content::{Collapsible, DisclosureList};
-use engine::widgets::nav::{GuidelineSidebar, HomeRow, HomeSidebar, NavLink};
+use engine::widgets::nav::{
+    GuidelineSidebar, HomeRow, HomeSidebar, NavLink, SceneItem, SceneSidebar,
+};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect};
 use engine::widgets::wake::Wake;
 
@@ -23,6 +27,7 @@ use super::{After, Component, child_id, root_id, under};
 /// What a card shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Shows {
+    Scene,
     Home,
     Guideline,
 }
@@ -37,6 +42,7 @@ pub struct SidebarPage {
     groups: Vec<Group>,
     home: HomeSidebar,
     guideline: GuidelineSidebar,
+    scene: SceneSidebar,
     focus: Option<SemId>,
 }
 
@@ -99,6 +105,29 @@ fn kit_guideline() -> GuidelineSidebar {
         .current(13)
 }
 
+/// SceneAndAssetsSidebar: its head, the scene's eight rows (Object 2
+/// selected, each kind's icon the Lucide one nearest the kit's), the
+/// assets' two sections.
+fn kit_scene() -> SceneSidebar {
+    let item = SceneItem::new;
+    SceneSidebar::new("Robot 2.0", "3D Design Project")
+        .items(
+            vec![
+                item("Camera 1", "focus"),
+                item("Dome Light", "sun"),
+                item("Key Light", "lightbulb"),
+                item("Area Light", "lamp-ceiling"),
+                item("Object 2", "box"),
+                item("Background 2", "box"),
+                item("Robot", "box"),
+                item("Background 1", "box"),
+            ],
+            Some(4),
+        )
+        .section("3D Objects", 4, true)
+        .section("Materials", 6, false)
+}
+
 impl SidebarPage {
     pub fn new() -> Self {
         let root = root_id("sidebar_page");
@@ -111,15 +140,26 @@ impl SidebarPage {
         if let Some(id) = child_id(r, "guideline") {
             guideline = guideline.sem(id);
         }
-        let groups = vec![Group {
-            title: "Home Sidebar",
-            cards: vec![("Home", Shows::Home), ("Guideline", Shows::Guideline)],
-        }];
+        let mut scene = kit_scene();
+        if let Some(id) = child_id(r, "scene") {
+            scene = scene.sem(id);
+        }
+        let groups = vec![
+            Group {
+                title: "Canvas Sidebar",
+                cards: vec![("Scene, Assets", Shows::Scene)],
+            },
+            Group {
+                title: "Home Sidebar",
+                cards: vec![("Home", Shows::Home), ("Guideline", Shows::Guideline)],
+            },
+        ];
         Self {
             root,
             groups,
             home,
             guideline,
+            scene,
             focus: None,
         }
     }
@@ -128,6 +168,7 @@ impl SidebarPage {
         match shows {
             Shows::Home => self.home.size(theme),
             Shows::Guideline => self.guideline.size(theme),
+            Shows::Scene => self.scene.size(theme),
         }
     }
 
@@ -166,7 +207,7 @@ impl SidebarPage {
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.home.wake(dt)
+        self.home.wake(dt).merge(self.scene.wake(dt))
     }
 
     pub fn handle_event(
@@ -180,6 +221,7 @@ impl SidebarPage {
             let r = match shows {
                 Shows::Home => self.home.handle_event(event, at, theme),
                 Shows::Guideline => self.guideline.handle_event(event, at, theme),
+                Shows::Scene => self.scene.handle_event(event, at, theme),
             };
             out = out.merge(r);
         }
@@ -209,6 +251,7 @@ impl SidebarPage {
             match shows {
                 Shows::Home => self.home.render(c, at, theme),
                 Shows::Guideline => self.guideline.render(c, at, theme),
+                Shows::Scene => self.scene.render(c, at, theme),
             }
             c.pop_clip();
             let inset = theme.spacing.sm;
@@ -220,6 +263,8 @@ impl SidebarPage {
         self.home.focus_id(id);
         let at = id.and_then(|i| self.guideline.position(i));
         self.guideline.set_focused(at);
+        let part = id.and_then(|i| self.scene.part_at_id(i));
+        self.scene.set_focused(part);
         self.focus = id.cloned();
     }
 }
@@ -247,6 +292,11 @@ impl Component for SidebarPage {
                             self.guideline.project(b, id, title, Some(&at));
                         }
                     }
+                    Shows::Scene => {
+                        if let Some(id) = self.scene.sem_id() {
+                            self.scene.project(b, id, title, Some(&at));
+                        }
+                    }
                 }
             }
         }
@@ -259,11 +309,35 @@ impl Component for SidebarPage {
     /// closes, a link becomes current, the new folder opens its field.
     fn run(&mut self, req: &Request) -> Result<After, String> {
         let miss = || format!("the sidebar page has no {} on {}", req.action, req.target);
-        if !matches!(req.action.as_str(), "activate" | "toggle_expanded") {
+        if !matches!(
+            req.action.as_str(),
+            "activate" | "toggle_expanded" | "toggle" | "select"
+        ) {
             return Err(miss());
         }
         if self.home.activate(&req.target) {
             return Ok(After::Nothing);
+        }
+        if let Some(part) = self.scene.part_at_id(&req.target)
+            && self.scene.activate(part)
+        {
+            return Ok(After::Nothing);
+        }
+        if let Some(i) = self.scene.tabs.sem_id().and_then(|t| {
+            let rest = req.target.as_str().strip_prefix(t.as_str())?;
+            rest.strip_prefix('[')?
+                .strip_suffix(']')?
+                .parse::<usize>()
+                .ok()
+        }) {
+            self.scene.tabs.active = i;
+            return Ok(After::Nothing);
+        }
+        for s in &mut self.scene.sections {
+            if s.head.sem_id() == Some(&req.target) {
+                s.head.toggle();
+                return Ok(After::Nothing);
+            }
         }
         if let Some(n) = self.guideline.position(&req.target) {
             self.guideline.set_current(n);
