@@ -48,6 +48,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             ),
         ],
     ),
+    (
+        "calendar",
+        &[
+            Path("M8 2v4"),
+            Path("M16 2v4"),
+            SvgRect(3.0, 4.0, 18.0, 18.0, 2.0),
+            Path("M3 10h18"),
+        ],
+    ),
     ("check", &[Path("M20 6 9 17l-5-5")]),
     ("chevron-down", &[Path("m6 9 6 6 6-6")]),
     ("chevron-left", &[Path("m15 18-6-6 6-6")]),
