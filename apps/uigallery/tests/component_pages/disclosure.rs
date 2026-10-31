@@ -4,7 +4,7 @@
 
 use accord::Value;
 use engine::control::accessibility::focus;
-use uigallery::views::EditKey;
+use uigallery::views::{EditKey, NavKey};
 
 use super::harness::{Gallery, ask, by_agent, gallery, same, sid};
 
@@ -82,4 +82,41 @@ fn tab_reaches_the_triggers_enter_and_space_flip_and_escape_blurs() {
     assert!(g.view.close_top_overlay(), "Escape blurs");
     g.frame();
     assert_eq!(focused(&g), None);
+}
+
+/// The arrows walk an accordion's triggers (WAI-ARIA's accordion): down
+/// and up to the next and the previous, Home and End to the ends, no
+/// wrap, the disabled one skipped; the rows of another accordion are not
+/// reached.
+#[test]
+fn the_arrows_walk_the_triggers_of_one_accordion() {
+    let mut g = gallery("Accordion");
+    let disabled_card = "accordion_page.group[1].card[0]";
+    let first = format!("{disabled_card}.item[0]");
+    let last = format!("{disabled_card}.item[2]");
+    while focused(&g).as_deref() != Some(first.as_str()) {
+        assert!(g.view.handle_edit_key(EditKey::Tab), "Tab is taken");
+        g.frame();
+    }
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(
+        focused(&g).as_deref(),
+        Some(last.as_str()),
+        "past the disabled one"
+    );
+    assert!(
+        !g.view.handle_nav(NavKey::Down),
+        "an accordion does not wrap"
+    );
+    assert!(g.view.handle_edit_key(EditKey::Home));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(first.as_str()));
+    assert!(g.view.handle_edit_key(EditKey::End));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(last.as_str()));
+    assert!(g.view.handle_nav(NavKey::Up));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(first.as_str()));
+    assert!(!g.view.handle_nav(NavKey::Up), "nor wraps up");
 }

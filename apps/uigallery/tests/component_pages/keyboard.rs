@@ -18,6 +18,7 @@ use super::harness::{Gallery, gallery, sid};
 /// Every component page (the 19 panes of `dispatch/component.rs`, under
 /// the 30 titles the gallery gives them).
 const PAGES: &[&str] = &[
+    "Accordion",
     "Alert Dialog",
     "Breadcrumb",
     "Button",

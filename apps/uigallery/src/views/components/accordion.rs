@@ -158,19 +158,19 @@ impl AccordionPage {
     /// Every group placed in `content`: cards as tall as their chip and
     /// their accordion now, a row as tall as its tallest card.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Placed> {
-        let pad = theme.spacing.xxl;
+        let pad = showcase::pad(theme);
         let gap = theme.spacing.sm;
         let inset = theme.spacing.sm;
-        let title_h = mold::title_h(theme);
-        let chip_h = mold::chip_h(theme);
+        let title_h = showcase::title_style(theme).line_height;
+        let chip_h = showcase::chip_rect(0.0, 0.0, "", theme).h;
         let mut y = content.y;
         let mut out = Vec::with_capacity(self.groups.len());
         for group in &self.groups {
             let title_y = y + pad;
-            let cols = mold::columns(group.columns, content.w, gap);
+            let cols = showcase::columns(group.columns, content.w, gap);
             let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
             let widget_w = (card_w - inset * 2.0).max(0.0);
-            let mut row_y = title_y + title_h + theme.spacing.lg;
+            let mut row_y = title_y + title_h + showcase::title_gap(theme);
             let mut cards = Vec::with_capacity(group.cards.len());
             for row in group.cards.chunks(cols) {
                 let heights: Vec<f32> = row
@@ -329,42 +329,6 @@ impl Component for AccordionPage {
         let had = self.focus.is_some();
         self.set_focus(None);
         had
-    }
-}
-
-/// What the page needs of the showcase mold that `showcase` keeps
-/// private: the row's columns, the title's line and the chip's band. The
-/// cards here are as tall as their accordion, so the page lays its rows
-/// out itself and leaves the drawing (title, card, chip, rule) to
-/// `showcase`; these three go when it makes them public.
-mod mold {
-    use super::showcase::CARD_MIN_W;
-    use engine::styling::theme::Theme;
-
-    /// The line of `showcase::title`.
-    pub(super) fn title_h(theme: &Theme) -> f32 {
-        theme
-            .typography
-            .exact(theme.typography.title_sm, 28.0, 500)
-            .line_height
-    }
-
-    /// The height of `showcase::card`'s chip.
-    pub(super) fn chip_h(theme: &Theme) -> f32 {
-        let line = theme
-            .typography
-            .exact(theme.typography.caption, 16.0, 500)
-            .line_height;
-        line + theme.spacing.xs * 2.0
-    }
-
-    /// The columns of `showcase::layout`: the span until a card would get
-    /// narrower than `CARD_MIN_W`.
-    pub(super) fn columns(span: usize, w: f32, gap: f32) -> usize {
-        (1..=span)
-            .rev()
-            .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= CARD_MIN_W)
-            .unwrap_or(1)
     }
 }
 
