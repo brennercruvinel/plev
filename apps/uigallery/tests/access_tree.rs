@@ -42,6 +42,7 @@ const PROJECTING: &[&str] = &[
     "Alert",
     "Alert Dialog",
     "Aspect Ratio",
+    "Attachment",
     "Breadcrumb",
     "Bubble",
     "Button",
@@ -66,6 +67,7 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Marker",
     "Menubar",
     "Message",
     "Message Scroller",
@@ -125,7 +127,6 @@ const SILENT: &[(&str, Why)] = &[
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
     ),
-    ("Attachment", PLACEHOLDER),
     (
         "Avatar",
         Unprojected("Avatar: an image named by the person, online or not"),
@@ -147,7 +148,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
     ("Input OTP", PLACEHOLDER),
-    ("Marker", PLACEHOLDER),
     (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),

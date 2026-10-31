@@ -169,21 +169,7 @@ impl Bubble {
 
     /// The pill `r` at `radius`, its tail corner square.
     fn shape(&self, c: &mut Compositor, r: Rect, radius: f32, color: [f32; 4]) {
-        c.push(rounded_rect(r.x, r.y, r.w, r.h, radius, color));
-        let tail_x = match self.side {
-            BubbleSide::Start => Some(r.x),
-            BubbleSide::End => Some(r.right() - radius),
-            BubbleSide::Center => None,
-        };
-        if let Some(x) = tail_x {
-            c.push(SceneNode::Rect {
-                x,
-                y: r.bottom() - radius,
-                w: radius,
-                h: radius,
-                color,
-            });
-        }
+        tailed_pill(c, r, radius, color, self.side);
     }
 
     /// Draws the bubble at its side of `row`.
@@ -245,5 +231,32 @@ impl Bubble {
         node.state("unread", self.unread);
         node.focusable(true);
         node
+    }
+}
+
+/// The rounded rect `r` at `radius` with the bottom corner of `side`
+/// square (none for a centered one): the bubble's and the comment pin's
+/// tail, a square patch over that corner in the same color.
+pub(crate) fn tailed_pill(
+    c: &mut Compositor,
+    r: Rect,
+    radius: f32,
+    color: [f32; 4],
+    side: BubbleSide,
+) {
+    c.push(rounded_rect(r.x, r.y, r.w, r.h, radius, color));
+    let tail_x = match side {
+        BubbleSide::Start => Some(r.x),
+        BubbleSide::End => Some(r.right() - radius),
+        BubbleSide::Center => None,
+    };
+    if let Some(x) = tail_x {
+        c.push(SceneNode::Rect {
+            x,
+            y: r.bottom() - radius,
+            w: radius,
+            h: radius,
+            color,
+        });
     }
 }

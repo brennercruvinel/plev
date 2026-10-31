@@ -25,7 +25,7 @@ use super::super::components::{
 };
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::{alert, bubble, message, message_scroller};
+use super::super::components::{alert, attachment, bubble, marker, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{
@@ -91,7 +91,9 @@ pub struct Panes {
     pub sheet: sheet::SheetPage,
     // task-104 front C, conversation and feedback (#156)
     pub alert: alert::AlertPage,
+    pub attachment: attachment::AttachmentPage,
     pub bubble: bubble::BubblePage,
+    pub marker: marker::MarkerPage,
     pub message: message::MessagePage,
     pub message_scroller: message_scroller::MessageScrollerPage,
     // task-104 front D, disclosure and display (#157)
@@ -194,7 +196,9 @@ impl Panes {
             sheet: sheet::SheetPage::new(),
             // task-104 front C, conversation and feedback (#156)
             alert: alert::AlertPage::new(),
+            attachment: attachment::AttachmentPage::new(),
             bubble: bubble::BubblePage::new(),
+            marker: marker::MarkerPage::new(),
             message: message::MessagePage::new(),
             message_scroller: message_scroller::MessageScrollerPage::new(),
             // task-104 front D, disclosure and display (#157)

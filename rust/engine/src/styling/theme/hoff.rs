@@ -147,7 +147,7 @@ impl Theme {
             button: ButtonTokens::derive(&dark),
             form: FormTokens::hoff_core(),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
             navigation: Box::new(NavigationTokens::hoff_core()),

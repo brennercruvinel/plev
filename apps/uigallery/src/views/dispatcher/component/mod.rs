@@ -146,7 +146,9 @@ components! {
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
+    Attachment => attachment,
     Bubble => bubble,
+    Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
     // task-104 front D, disclosure and display (#157)

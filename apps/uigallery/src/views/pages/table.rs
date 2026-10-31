@@ -106,7 +106,13 @@ pub const PAGES: &[Page] = &[
         "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
         Pane::AspectRatio,
     ),
-    placeholder("Attachment"),
+    page(
+        C,
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
     page(
         C,
         "Avatar",
@@ -314,7 +320,13 @@ pub const PAGES: &[Page] = &[
         "The text that names a control, and a section's caption.",
         Pane::Label,
     ),
-    placeholder("Marker"),
+    page(
+        C,
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
     page(
         C,
         "Menubar",

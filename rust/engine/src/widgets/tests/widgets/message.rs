@@ -88,7 +88,7 @@ fn parts(l: &MessageLayout) -> Vec<(&'static str, Rect)> {
 #[test]
 fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
     let kit = MessageTokens::hoff_core();
-    assert_eq!(core().message, kit);
+    assert_eq!(*core().message, kit);
     let t = &kit.thread;
     assert_eq!((t.pad, t.gap, t.avatar), (16.0, 16.0, 32.0));
     assert_eq!(
@@ -110,7 +110,7 @@ fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
 
     let hoff = Theme::hoff();
     let derived = MessageTokens::derive(&hoff);
-    assert_eq!(hoff.message, derived);
+    assert_eq!(*hoff.message, derived);
     assert_eq!(derived.thread.name.color, hoff.colors.text);
     assert_eq!(derived.thread.time.color, hoff.colors.text_mid);
     assert_eq!(derived.quick.body.color, hoff.colors.text_mid);
@@ -829,7 +829,7 @@ fn the_alert_carries_the_kit_in_core_and_derives_the_palette_elsewhere() {
     let c = &hoff.colors;
     assert_eq!(derived.title.color, c.text);
     assert_eq!(derived.time.color, c.text_mid);
-    assert_eq!(derived.unread, c.info);
+    assert_eq!(derived.unread.0[3], 1.0, "the dot is opaque");
     assert_eq!(derived.intents.of(Intent::Destructive), c.danger);
     assert_eq!(derived.ring.0[3], 1.0, "the ring is opaque");
     assert_eq!(derived.lead, kit.lead, "the geometry is the kit's");
@@ -1047,4 +1047,413 @@ fn an_alert_projects_its_intent_its_words_whole_and_its_answers() {
         (node.role, node.description.as_deref()),
         (Role::Alert, None)
     );
+}
+
+// attachment
+
+use crate::widgets::message::attachment::{AttachmentKind, AttachmentTray, TrayFocus, TrayLayout};
+
+const PDF: &str = "Minimalist Architecture Scene, final review.pdf";
+
+fn tray() -> AttachmentTray {
+    AttachmentTray::new()
+        .with("Uploaded 1", "PNG, 1.2 MB", AttachmentKind::Image(None))
+        .with("Uploaded 2", "PNG, 840 KB", AttachmentKind::Image(None))
+        .with(PDF, "PDF, 3.4 MB", AttachmentKind::File)
+        .with(
+            "Classic Car.glb",
+            "3D object, 12 MB",
+            AttachmentKind::Object,
+        )
+        .with_add()
+}
+
+fn tray_parts(l: &TrayLayout) -> Vec<(&'static str, Rect)> {
+    let mut out: Vec<_> = l.add.map(|r| ("add", r)).into_iter().collect();
+    for t in &l.tiles {
+        out.push(("tile", t.rect));
+        out.push(("remove", t.remove));
+        out.extend(t.icon.map(|r| ("icon", r)));
+        for (name, p) in [("name", &t.name), ("detail", &t.detail)] {
+            if let Some(p) = p {
+                out.push((name, p.rect));
+            }
+        }
+    }
+    out
+}
+
+fn tray_nodes(t: &AttachmentTray, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    t.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_attachment_carries_the_kit_in_core_and_derives_elsewhere() {
+    let kit = MessageTokens::hoff_core().attachment;
+    assert_eq!((kit.tile, kit.radius, kit.gap), (60.0, 12.0, 8.0));
+    assert_eq!(
+        (kit.remove, kit.remove_out, kit.remove_icon),
+        (20.0, 6.0, 16.0)
+    );
+    assert_eq!(core().message.attachment, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).attachment;
+    assert_eq!(derived.file_border, hoff.colors.divider);
+    assert_eq!(derived.name.color, hoff.colors.text);
+    assert_eq!(derived.file_fill.0[3], 1.0);
+    assert_eq!(derived.tile, kit.tile);
+}
+
+#[test]
+fn a_picture_is_one_tile_square_and_a_file_tile_grows_with_its_name() {
+    let theme = core();
+    let t = &theme.message.attachment;
+    let short = AttachmentTray::new()
+        .with("a", "", AttachmentKind::Image(None))
+        .with("notes.txt", "TXT, 2 KB", AttachmentKind::File)
+        .with(PDF, "PDF", AttachmentKind::File);
+    let l = short.layout(at(1200.0), &theme);
+    assert_eq!((l.tiles[0].rect.w, l.tiles[0].rect.h), (t.tile, t.tile));
+    assert!(
+        l.tiles[2].rect.w > l.tiles[1].rect.w,
+        "a longer name, a wider tile"
+    );
+    assert!(l.tiles.iter().all(|x| x.rect.h == t.tile));
+    // a tile as wide as its words keeps them whole wherever it lands
+    let off = short.layout(Rect::new(296.3, 20.0, 1200.0, 0.0), &theme);
+    for tile in &off.tiles[1..] {
+        for p in [&tile.name, &tile.detail] {
+            let p = p.as_ref().unwrap();
+            assert!(!p.text.ends_with('\u{2026}'), "{} cut", p.text);
+        }
+    }
+    // on a narrow tray the long name is cut inside its tile
+    let narrow = short.layout(at(220.0), &theme);
+    let name = narrow.tiles[2].name.as_ref().unwrap();
+    assert!(name.text.ends_with('\u{2026}'), "{}", name.text);
+    assert!(within(name.rect, narrow.tiles[2].rect));
+}
+
+#[test]
+fn the_tray_wraps_and_holds_every_part_over_the_whole_range_and_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        let t = tray().show_removes(true);
+        let mut lines = 0;
+        for w in (80..=1600).step_by(8) {
+            let bounds = at(w as f32);
+            let l = t.layout(bounds, &theme);
+            for (part, r) in tray_parts(&l) {
+                assert!(finite(r), "{name}@{w}: {part}");
+                if w as f32 >= t.min_width(&theme) {
+                    assert!(
+                        within(r, l.rect),
+                        "{name}@{w}: {part} {r:?} out of {:?}",
+                        l.rect
+                    );
+                }
+            }
+            let n = 1 + l
+                .tiles
+                .windows(2)
+                .filter(|p| p[1].rect.y > p[0].rect.y)
+                .count();
+            if w == 80 {
+                lines = n;
+            }
+            assert!(n <= lines, "{name}@{w}: wider, never more lines");
+            assert_eq!(l.rect.h, t.height(w as f32, &theme));
+        }
+    }
+}
+
+#[test]
+fn the_remove_button_shows_on_hover_focus_or_touch_and_takes_the_click_hidden() {
+    let theme = core();
+    let bounds = at(600.0);
+    let mut t = tray();
+    let first = t.items()[0].key();
+    assert!(!t.remove_shown(first));
+    let l = t.layout(bounds, &theme);
+    let (tx, ty) = l.tiles[0].rect.center();
+    assert!(t.handle_event(&move_to(tx, ty), bounds, &theme).changed);
+    assert!(t.remove_shown(first), "hover shows it");
+    t.handle_event(&move_to(-50.0, -50.0), bounds, &theme);
+    assert!(!t.remove_shown(first));
+    t.set_focus(Some(TrayFocus::Tile(first)));
+    assert!(t.remove_shown(first), "a reader's focus shows it");
+    t.set_focus(None);
+    assert!(
+        tray().show_removes(true).remove_shown(first),
+        "touch shows it"
+    );
+
+    // a click on the hidden button removes the tile; the others keep
+    // their keys
+    let (rx, ry) = l.tiles[0].remove.center();
+    t.handle_event(&down(rx, ry), bounds, &theme);
+    assert!(t.handle_event(&up(rx, ry), bounds, &theme).clicked);
+    assert_eq!(t.items().len(), 3);
+    assert_eq!(t.items()[0].key(), first + 1);
+    // pressed on a remove button, released elsewhere: nothing goes
+    let l = t.layout(bounds, &theme);
+    let (rx, ry) = l.tiles[0].remove.center();
+    t.handle_event(&down(rx, ry), bounds, &theme);
+    t.handle_event(&up(-50.0, -50.0), bounds, &theme);
+    assert_eq!(t.items().len(), 3);
+    assert!(!t.remove(99));
+}
+
+#[test]
+fn the_add_button_asks_the_owner_once_per_click() {
+    let theme = core();
+    let bounds = at(600.0);
+    let mut t = tray();
+    let (x, y) = t.layout(bounds, &theme).add.unwrap().center();
+    t.handle_event(&down(x, y), bounds, &theme);
+    assert!(t.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(t.take_add_request());
+    assert!(!t.take_add_request(), "taken once");
+    let key = t.push("Uploaded 3", "PNG", AttachmentKind::Image(None));
+    assert_eq!(key, 4, "a new key, never a reused one");
+    let mut bare = AttachmentTray::new();
+    assert!(
+        !bare.request_add() && !bare.take_add_request(),
+        "no add button"
+    );
+    assert!(bare.layout(bounds, &theme).add.is_none());
+}
+
+#[test]
+fn the_tray_binds_projects_and_maps_its_ids() {
+    let theme = core();
+    let bounds = at(600.0);
+    let root = id("files");
+    let t = tray().sem(root.clone());
+    let (c, drawn) = tray_nodes(&t, bounds, &theme);
+    let l = t.layout(bounds, &theme);
+    let r = l.tiles[2].rect;
+    assert_eq!(
+        c.binding(&id("files[2]")).unwrap().rect,
+        [r.x, r.y, r.w, r.h]
+    );
+    let rm = l.tiles[0].remove;
+    assert_eq!(
+        c.hit(rm.x + rm.w / 2.0, rm.y + rm.h / 2.0),
+        Some(&id("files[0].remove"))
+    );
+    assert!(c.binding(&id("files.add")).is_some());
+    assert!(texts(&drawn).iter().any(|w| w == "PDF, 3.4 MB"));
+
+    let s = snap(|b| {
+        t.project(b, &root, "attachments", None);
+    });
+    assert_eq!(s.get(&root).unwrap().role, Role::List);
+    let tile = s.get(&id("files[2]")).unwrap();
+    assert_eq!((tile.role, tile.label.as_str()), (Role::ListItem, PDF));
+    assert_eq!(tile.description.as_deref(), Some("PDF, 3.4 MB"));
+    let rm = s.get(&id("files[2].remove")).unwrap();
+    assert_eq!(
+        (rm.role, rm.label.as_str()),
+        (Role::Button, format!("Remove {PDF}").as_str())
+    );
+    assert!(s.get(&id("files.add")).is_some());
+
+    assert_eq!(t.target(&id("files.add")), Some(TrayFocus::Add));
+    assert_eq!(t.target(&id("files[1]")), Some(TrayFocus::Tile(1)));
+    assert_eq!(t.target(&id("files[3].remove")), Some(TrayFocus::Remove(3)));
+    assert_eq!(t.target(&id("files[9]")), None);
+}
+
+// marker
+
+use crate::widgets::message::marker::{CursorState, Marker};
+
+const STATES: [CursorState; 4] = [
+    CursorState::Point,
+    CursorState::Pinned,
+    CursorState::Uploading,
+    CursorState::Typing,
+];
+
+fn marker_nodes(m: &Marker, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    m.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_marker_carries_the_kit_in_core_and_derives_elsewhere() {
+    let kit = MessageTokens::hoff_core().marker;
+    assert_eq!(
+        (kit.avatar, kit.avatar_ring, kit.avatar_overlap),
+        (24.0, 1.5, 10.0)
+    );
+    assert_eq!((kit.point.w, kit.point.h), (20.0, 18.0));
+    assert_eq!(
+        (kit.pinned.w, kit.pinned.h, kit.pinned.tail_radius),
+        (30.0, 28.0, 2.0)
+    );
+    assert_eq!(core().message.marker, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).marker;
+    // the theme's colors composed over its paper: opaque, so a shape and
+    // the patch over its tail corner do not show their overlap
+    for c in [derived.pin_unread, derived.point_border, derived.pin_fill]
+        .into_iter()
+        .chain(derived.active.fill)
+        .chain(derived.pinned.fill)
+    {
+        assert_eq!(c.0[3], 1.0, "{c:?}");
+    }
+    let info = hoff.colors.info.0;
+    let paper = hoff.colors.bg.0;
+    let want = info[1] * info[3] + paper[1] * (1.0 - info[3]);
+    assert!(
+        (derived.pin_unread.0[1] - want).abs() < 1e-5,
+        "the info accent over paper"
+    );
+    // the light theme's info accent is under 3:1 on its paper: the unread
+    // mark takes its accent, a blue that reads
+    let light = Theme::light();
+    let lit = MessageTokens::derive(&light);
+    assert_eq!(lit.marker.pin_unread, light.colors.accent);
+    assert_eq!(lit.alert.unread, light.colors.accent);
+    assert_eq!(derived.avatar, kit.avatar);
+}
+
+#[test]
+fn a_pin_is_as_wide_as_its_avatars_overlap_and_holds_them() {
+    let theme = core();
+    let t = &theme.message.marker;
+    let one = Marker::pin(["Luna"]);
+    let two = Marker::pin(["Luna", "Sam"]);
+    let (w1, h1) = one.size(&theme);
+    let (w2, h2) = two.size(&theme);
+    assert_eq!(h1, h2);
+    let slot = t.avatar + t.avatar_ring * 2.0;
+    assert!((w2 - w1 - (slot - t.avatar_overlap)).abs() < 1e-3);
+    assert!((h1 - ((t.pin_pad + t.pin_border_width) * 2.0 + slot)).abs() < 1e-3);
+    let l = two.layout(at(0.0), &theme);
+    assert!(l.avatars[1].x > l.avatars[0].x && l.avatars[1].x < l.avatars[0].right());
+    for a in &l.avatars {
+        assert!(within(
+            a.outset(t.avatar_ring),
+            l.rect.inset(t.pin_pad + t.pin_border_width)
+        ));
+    }
+    assert_eq!(
+        Marker::pin(Vec::<String>::new()).size(&theme),
+        one.size(&theme)
+    );
+}
+
+#[test]
+fn every_cursor_state_is_the_kit_s_box_and_draws_finite_under_every_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        for s in STATES {
+            let m = Marker::cursor(s);
+            let (w, h) = m.size(&theme);
+            assert!(w > 0.0 && h > 0.0, "{name}: {s:?}");
+            let (_, nodes) = marker_nodes(&m, at(0.0), &theme);
+            assert!(nodes.len() >= 3, "{name}: {s:?} draws its box and mark");
+        }
+        let (_, nodes) = marker_nodes(&Marker::pin(["Luna", "Sam"]).unread(true), at(0.0), &theme);
+        assert!(!nodes.is_empty());
+    }
+    let theme = core();
+    assert_eq!(
+        Marker::cursor(CursorState::Point).size(&theme),
+        (20.0, 18.0)
+    );
+    assert_eq!(
+        Marker::cursor(CursorState::Typing).size(&theme),
+        (30.0, 28.0)
+    );
+}
+
+#[test]
+fn a_click_on_a_pin_opens_and_reads_it_and_a_cursor_takes_nothing() {
+    let theme = core();
+    let bounds = at(0.0);
+    let mut pin = Marker::pin(["Luna"]).unread(true);
+    let (x, y) = pin.layout(bounds, &theme).rect.center();
+    assert!(pin.handle_event(&move_to(x, y), bounds, &theme).changed);
+    assert!(pin.is_hovered());
+    pin.handle_event(&down(x, y), bounds, &theme);
+    assert!(pin.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(!pin.is_unread());
+    assert!(!pin.open(), "read already");
+
+    let mut cursor = Marker::cursor(CursorState::Pinned);
+    assert_eq!(
+        cursor.handle_event(&down(x, y), bounds, &theme),
+        EventResult::IGNORED
+    );
+    cursor.set_focused(true);
+    assert!(!cursor.is_focused(), "a cursor takes no focus");
+    assert!(!cursor.open());
+}
+
+#[test]
+fn a_pin_tells_unread_by_its_border_and_rings_while_focused() {
+    let theme = core();
+    let t = &theme.message.marker;
+    let border = |m: &Marker| {
+        marker_nodes(m, at(0.0), &theme)
+            .1
+            .iter()
+            .find_map(|n| match n {
+                SceneNode::RoundedRect { color, .. } => Some(*color),
+                _ => None,
+            })
+            .unwrap()
+    };
+    assert_eq!(border(&Marker::pin(["Luna"])), t.pin_read.0);
+    assert_eq!(border(&Marker::pin(["Luna"]).unread(true)), t.pin_unread.0);
+    let mut pin = Marker::pin(["Luna"]);
+    let before = marker_nodes(&pin, at(0.0), &theme).1.len();
+    pin.set_focused(true);
+    assert_eq!(marker_nodes(&pin, at(0.0), &theme).1.len(), before + 1);
+}
+
+#[test]
+fn a_marker_binds_and_projects_a_pin_as_a_button_and_a_cursor_as_an_image() {
+    let theme = core();
+    let pin_id = id("pin");
+    let pin = Marker::pin(["Luna", "Sam"])
+        .unread(true)
+        .sem(pin_id.clone());
+    let (c, _) = marker_nodes(&pin, at(0.0), &theme);
+    let r = pin.layout(at(0.0), &theme).rect;
+    assert_eq!(c.binding(&pin_id).unwrap().rect, [r.x, r.y, r.w, r.h]);
+    let s = snap(|b| {
+        pin.project(b, &pin_id, None);
+    });
+    let node = s.get(&pin_id).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::Button, "Comment by Luna, Sam")
+    );
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.actions.iter().any(|a| a.name.as_str() == "activate"));
+
+    let cur_id = id("cursor");
+    let cursor = Marker::cursor(CursorState::Typing).sem(cur_id.clone());
+    let s = snap(|b| {
+        cursor.project(b, &cur_id, None);
+    });
+    let node = s.get(&cur_id).unwrap();
+    assert_eq!(
+        (node.role, node.description.as_deref()),
+        (Role::Image, Some("typing"))
+    );
+    assert!(node.actions.is_empty() && !node.focusable);
 }
