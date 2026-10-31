@@ -1,7 +1,9 @@
 //! Theme page, the hoff core kit's ColorsPage: groups with a title and a
 //! bottom rule, one swatch card per color, its name and its hex under the
-//! swatch. The colors are the active theme's tokens (its neutrals, then
-//! its intents), so the page reads the same under every theme; the last
+//! swatch. The colors are the active theme's: its own named palette
+//! where it has one (`colors.swatches`: the core kit's Shades and
+//! Colors), its role tokens otherwise (its neutrals, then its intents),
+//! so the page reads the same under every theme; the last
 //! group is every built-in palette, painted in its own colors: a click
 //! applies it (the shell's `shell.theme`, the same capability as the T
 //! key and the menu).
@@ -85,6 +87,30 @@ fn intents(theme: &Theme) -> Vec<Swatch> {
     ])
 }
 
+/// The color groups of the page: the theme's own palette, named, where it
+/// has one (the core kit's Shades and Colors, as its ColorsPage); its
+/// roles otherwise, the neutrals then the intents.
+fn color_groups(theme: &Theme) -> Vec<(&'static str, Vec<Swatch>)> {
+    let palette = theme.colors.swatches;
+    if palette.is_empty() {
+        return vec![("Neutrals", neutrals(theme)), ("Colors", intents(theme))];
+    }
+    palette
+        .iter()
+        .map(|g| {
+            let colors = g
+                .colors
+                .iter()
+                .map(|(name, color)| Swatch {
+                    name: (*name).to_string(),
+                    color: *color,
+                })
+                .collect();
+            (g.title, colors)
+        })
+        .collect()
+}
+
 /// `roles` with the ones of the same color folded into one swatch.
 fn merged(roles: &[(&str, Color)]) -> Vec<Swatch> {
     let mut out: Vec<Swatch> = Vec::new();
@@ -158,11 +184,15 @@ impl ThemePage {
         theme.size.card_min_w / 2.0
     }
 
-    /// The three groups: neutrals, intents, palettes.
+    /// The color groups, then the palettes.
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let h = Metrics::of(theme).card_h();
-        let counts = [neutrals(theme).len(), intents(theme).len(), THEMES.len()];
-        let grids = counts.map(|n| Grid {
+        let counts = color_groups(theme)
+            .iter()
+            .map(|(_, colors)| colors.len())
+            .chain([THEMES.len()])
+            .collect::<Vec<_>>();
+        let grids = counts.into_iter().map(|n| Grid {
             span: SPAN,
             min_w: Self::min_w(theme),
             heights: vec![h; n],
@@ -207,23 +237,19 @@ impl ThemePage {
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme, current: &str) {
         let layout = Self::layout(content, theme);
         let m = Metrics::of(theme);
-        let titles = ["Neutrals", "Colors", "Palettes"];
+        let colors = color_groups(theme);
         let last = layout.len().saturating_sub(1);
-        for (g, (group, title)) in layout.iter().zip(titles).enumerate() {
-            showcase::title(c, title, content, group.title_y, theme);
-            match g {
-                0 | 1 => {
-                    let swatches = if g == 0 {
-                        neutrals(theme)
-                    } else {
-                        intents(theme)
-                    };
+        for (g, group) in layout.iter().enumerate() {
+            match colors.get(g) {
+                Some((title, swatches)) => {
+                    showcase::title(c, title, content, group.title_y, theme);
                     for (s, rect) in swatches.iter().zip(&group.cards) {
                         let caption = hex(s.color);
                         swatch_card(c, *rect, &[s.color], &s.name, &caption, false, &m, theme);
                     }
                 }
-                _ => {
+                None => {
+                    showcase::title(c, "Palettes", content, group.title_y, theme);
                     for (i, (name, rect)) in THEMES.iter().zip(&group.cards).enumerate() {
                         let Some(t) = resolve(name) else { continue };
                         let colors = [
@@ -346,19 +372,39 @@ fn swatch_strip(c: &mut Compositor, well: Rect, radius: f32, colors: &[Color]) {
 mod tests {
     use super::*;
 
+    /// The core page is the ColorsPage: its nine shades and six colors,
+    /// under the kit's names, Shade 8, Yellow and Purple included.
     #[test]
-    fn the_core_neutrals_are_the_kit_shades_but_shade_8() {
+    fn the_core_colors_are_the_colors_page() {
         let theme = Theme::hoff_core();
-        let hexes: Vec<String> = neutrals(&theme).iter().map(|s| hex(s.color)).collect();
-        // Shade 1..9 of the ColorsPage, less shade 8 (222222), which no
-        // token holds.
+        let groups = color_groups(&theme);
+        let titles: Vec<&str> = groups.iter().map(|(t, _)| *t).collect();
+        assert_eq!(titles, ["Shades", "Colors"]);
+        let hexes =
+            |g: usize| -> Vec<String> { groups[g].1.iter().map(|s| hex(s.color)).collect() };
         assert_eq!(
-            hexes,
+            hexes(0),
             [
-                "FCFCFC", "F8F7F7", "F1F1F1", "ECECEC", "E2E2E2", "7B7B7B", "323232", "121212"
+                "FCFCFC", "F8F7F7", "F1F1F1", "ECECEC", "E2E2E2", "7B7B7B", "323232", "222222",
+                "121212"
             ]
         );
-        assert!(neutrals(&theme)[0].name.contains("surface"));
+        assert_eq!(
+            hexes(1),
+            ["49BA61", "3582FF", "E36323", "FFB73A", "FE5938", "8755E9"]
+        );
+        assert_eq!(groups[0].1[7].name, "Shade 8");
+        assert_eq!(groups[1].1[5].name, "Purple");
+    }
+
+    /// A theme with no palette of its own shows its roles, each color once.
+    #[test]
+    fn a_theme_without_a_palette_shows_its_roles() {
+        let theme = Theme::hoff();
+        let groups = color_groups(&theme);
+        assert_eq!(groups[0].0, "Neutrals");
+        assert_eq!(groups[1].0, "Colors");
+        assert!(groups[0].1[0].name.contains("bg"));
     }
 
     #[test]

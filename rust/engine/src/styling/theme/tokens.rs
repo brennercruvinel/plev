@@ -198,6 +198,14 @@ pub struct RadiusScale {
 // ColorTokens -- semantic color palette
 // ============================================================================
 
+/// A group of a design system's named colors, as its colors page lists
+/// them (`Shades`, `Colors`), each with the name the system gives it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SwatchGroup {
+    pub title: &'static str,
+    pub colors: &'static [(&'static str, Color)],
+}
+
 #[derive(Clone, Debug)]
 pub struct ColorTokens {
     pub bg: Color,
@@ -215,6 +223,10 @@ pub struct ColorTokens {
     pub info: Color,
     pub divider: Color,
     pub border_active: Color,
+    /// The design system's own palette, named, beyond the roles above (a
+    /// shade or an accent no role holds); empty for a theme that is only
+    /// its roles.
+    pub swatches: &'static [SwatchGroup],
 }
 
 // ============================================================================
