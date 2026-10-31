@@ -184,7 +184,13 @@ impl Checkbox {
         if self.checked {
             // The check glyph sits centered in the box at the small icon
             // size, so it keeps its margin at every box size.
-            let mark = with_alpha(t.mark, t.mark.0[3] * alpha);
+            // disabled, the box fades and the check takes a gray that
+            // still reads on it, drawn whole
+            let mark = if self.disabled {
+                t.mark_disabled.0
+            } else {
+                t.mark.0
+            };
             let glyph = theme.control.icon(IconSize::Sm).min(box_size);
             let inset = (box_size - glyph) / 2.0;
             if let Some(node) = icons::icon_at("check", glyph, mark, r.x + inset, r.y + inset) {

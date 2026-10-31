@@ -69,9 +69,9 @@ fn action(label: &str, icon: &'static str) -> GroupItem {
 /// and redo.
 fn toolbar(disabled: bool) -> ButtonGroup {
     let mut items = vec![
-        tool("Select", "square"),
+        tool("Select", "mouse-pointer-2"),
         tool("Search", "search"),
-        tool("Comment", "send"),
+        tool("Comment", "message-square"),
         GroupItem::Separator,
         GroupItem::Action {
             button: IconButton::new("undo")
@@ -106,6 +106,11 @@ impl ButtonGroupPage {
                     .collect::<Vec<_>>(),
             )
         };
+        // each toggle on its own, one of them on (Snap)
+        let mut view = free(&["Grid", "Snap", "Rulers"]);
+        if let Some(GroupItem::Toggle(t)) = view.items.get_mut(1) {
+            t.on = true;
+        }
         let mut groups = vec![
             Group {
                 title: "Toolbar",
@@ -128,9 +133,9 @@ impl ButtonGroupPage {
                 span: 2,
                 cards: vec![
                     Card {
-                        title: "Each on its own",
+                        title: "Each on its own, one on",
                         name: "view",
-                        group: free(&["Grid", "Snap", "Rulers"]),
+                        group: view,
                     },
                     Card {
                         title: "Long labels, wrapping",
@@ -368,7 +373,7 @@ mod tests {
     }
 
     /// A click on a tool turns it on and the others off; a click in the
-    /// disabled toolbar changes nothing.
+    /// disabled toolbar changes nothing; a free toggle flips alone.
     #[test]
     fn a_click_picks_the_tool() {
         let theme = Theme::hoff_core();
@@ -386,8 +391,10 @@ mod tests {
         assert_eq!(on(&page, 0, 0), [false, false, true]);
         press(&mut page, 0, 1, 1);
         assert_eq!(on(&page, 0, 1), [true, false, false], "disabled");
+        assert_eq!(on(&page, 1, 0), [false, true, false], "Snap shows on");
         press(&mut page, 1, 0, 1);
-        assert_eq!(on(&page, 1, 0), [false, true, false], "free toggles");
+        press(&mut page, 1, 0, 2);
+        assert_eq!(on(&page, 1, 0), [false, false, true], "free toggles");
     }
 
     /// The width sweep of the epic, 280 to 1600 every 8 px, under the
