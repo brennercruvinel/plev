@@ -2,7 +2,7 @@
 //! collapsible, item, kbd, aspect ratio, carousel, pagination and table,
 //! the same request from the person, the reader and an agent.
 
-use accord::Value;
+use accord::{Role, Value};
 use engine::control::accessibility::focus;
 use engine::widgets::prelude::WidgetEvent;
 use uigallery::views::{EditKey, NavKey};
@@ -295,4 +295,27 @@ fn a_deep_leaf_is_chosen_the_same_from_the_three() {
     reader.press(id);
     let agent = by_agent(page, "choose", vec![ask(id, "select")]);
     same(page, &person, &reader, &agent);
+}
+
+/// A panel and a panel head take no action: what the three meet is the
+/// tree, a group per panel named by its label, a label per head with its
+/// blurb and its badge.
+#[test]
+fn a_panel_and_a_head_read_as_a_group_and_a_label() {
+    let g = gallery("Panel");
+    let panel = sid("panel_page.group[0].card[1]");
+    let node = g.state().into_iter().find(|n| n.id == panel).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::Group, "Camera"));
+    let g = gallery("Panel Header");
+    let head = sid("panel_header_page.group[0].card[2]");
+    let node = g.state().into_iter().find(|n| n.id == head).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::Label, "Comments"));
+    assert_eq!(
+        node.description.as_deref(),
+        Some("Three unread since yesterday")
+    );
+    assert_eq!(
+        g.value("panel_header_page.group[0].card[2]:badge"),
+        Some(Value::Text("3".into()))
+    );
 }

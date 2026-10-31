@@ -359,6 +359,41 @@ pub struct TreeRecipe {
     pub icon_selected: Color,
 }
 
+/// A panel: its radius, the padding around its content, and its group
+/// label (size, line height, weight, color).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PanelRecipe {
+    pub radius: f32,
+    pub pad: f32,
+    pub label_size: f32,
+    pub label_line_height: f32,
+    pub label_weight: u16,
+    pub label: Color,
+}
+
+/// A panel's head: padding left and right, the title row's height (the
+/// title centered in it), the space between that row and the blurb and
+/// below the blurb; the title's and the blurb's text; the gap before the
+/// badge; the rule under the head (width 0 is none).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct HeaderRecipe {
+    pub pad_x: f32,
+    pub row: f32,
+    pub blurb_gap: f32,
+    pub blurb_bottom: f32,
+    pub title_size: f32,
+    pub title_line_height: f32,
+    pub title_weight: u16,
+    pub title: Color,
+    pub blurb_size: f32,
+    pub blurb_line_height: f32,
+    pub blurb_weight: u16,
+    pub blurb: Color,
+    pub badge_gap: f32,
+    pub rule: f32,
+    pub rule_color: Color,
+}
+
 /// How a disclosure moves: the revealed height and the chevron's half
 /// turn, each a duration in seconds and an easing.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -413,6 +448,10 @@ pub struct DisclosureTokens {
     pub table: TableRecipe,
     /// A tree's rows.
     pub tree: TreeRecipe,
+    /// A panel.
+    pub panel: PanelRecipe,
+    /// A panel's head.
+    pub header: HeaderRecipe,
 }
 
 fn hex(v: u32) -> Color {
