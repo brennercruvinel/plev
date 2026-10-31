@@ -3,7 +3,7 @@
 
 use super::{
     AlertTokens, AttachmentTokens, AvatarTokens, BadgePalette, BadgeTokens, BubbleTokens,
-    CursorShape, IntentColors, MarkerTokens, MessageStyle, MessageText, MessageTokens,
+    CursorShape, IntentColors, KindColors, MarkerTokens, MessageStyle, MessageText, MessageTokens,
     ScrollerTokens, TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
@@ -189,6 +189,15 @@ impl MessageTokens {
                     informational: Color::hex(0x1BA4F3),
                     constructive: Color::hex(0x55B93E),
                     destructive: RED,
+                },
+                // :33-41 per kind: image `#AD9000`, invite `#55b93e`, like
+                // `#fe5938`, video `#1BA4F3`, comment `#8651F8`
+                kinds: KindColors {
+                    comment: Color::hex(0x8651F8),
+                    video: Color::hex(0x1BA4F3),
+                    invite: Color::hex(0x55B93E),
+                    like: RED,
+                    image: Color::hex(0xAD9000),
                 },
                 // :65 `text-[0.8125rem] leading-[1rem] font-semibold`
                 title: MessageText {

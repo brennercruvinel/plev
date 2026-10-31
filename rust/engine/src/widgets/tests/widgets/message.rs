@@ -756,7 +756,7 @@ fn the_scroller_s_border_closes_the_last_message_without_its_hairline() {
 // alert
 
 use crate::widgets::buttons::ButtonVariant;
-use crate::widgets::feedback::alert::{Alert, AlertLayout};
+use crate::widgets::feedback::alert::{Alert, AlertLayout, NotificationKind};
 
 /// The kit's invite: an avatar, unread, its two answers.
 fn invite() -> Alert {
@@ -1710,4 +1710,33 @@ fn the_online_dot_sits_on_the_bottom_end_rim_and_reads() {
             .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == fill)),
         "the dot is drawn in its green"
     );
+}
+
+/// A like draws the kit's heart on its red, and only informs: the tone
+/// and the glyph come from its kind, the role from its intent.
+#[test]
+fn a_like_is_red_with_a_heart_and_informs() {
+    let t = core();
+    let like = Alert::new(Intent::Informational, "Marina", "Liked Classic Car")
+        .avatar("Marina")
+        .kind(NotificationKind::Like);
+    assert_eq!(NotificationKind::Like.glyph(), "heart");
+    assert_eq!(NotificationKind::Like.tone(&t.message.alert.kinds), RED);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    like.render(&mut c, Rect::new(0.0, 0.0, 480.0, 120.0), &t);
+    let drawn = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(
+        drawn
+            .iter()
+            .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == RED.0)),
+        "the badge on the kit's red"
+    );
+    let root = SemId::parse("page").unwrap();
+    let id = root.child("like").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(&root, Role::Region, "Alert");
+    like.project(&mut b, &id, Some(&root));
+    let seen = b.finish().expect("the projection validates");
+    assert_eq!(seen.get(&id).unwrap().role, Role::Status, "not an alert");
 }
