@@ -90,6 +90,25 @@ pub struct SwitchTokens {
     pub disabled_alpha: f32,
 }
 
+/// The kit's range (`app/globals.css:22-55`, the `.range-slider` thumb;
+/// `components/Export/Images/Compression/index.tsx:24` the track and its
+/// fill): a tall well that fills to the value, and a raised block thumb.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SliderTokens {
+    /// The well (`h-9 bg-[#f1f1f1] rounded-lg`); `text` is unused.
+    pub track: ButtonSurface,
+    /// The part up to the value (`rgba(123,123,123,0.3)`).
+    pub fill: Color,
+    /// The thumb (`#f8f7f7`, its three shadows).
+    pub thumb: ButtonSurface,
+    /// The well's height and radius, the thumb's width and radius.
+    pub height: f32,
+    pub radius: f32,
+    pub thumb_w: f32,
+    pub thumb_radius: f32,
+    pub disabled_alpha: f32,
+}
+
 /// The checkbox. The kit has none: its box is the switch's well, off
 /// and on, ringed where it is off by an edge that reads (1.4.11), its
 /// mark the knob's paper, its label the radio's list line color. The box
@@ -178,6 +197,7 @@ pub struct SelectionTokens {
     pub segmented: SegmentedTokens,
     pub switch: SwitchTokens,
     pub checkbox: CheckboxTokens,
+    pub slider: SliderTokens,
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
@@ -355,6 +375,35 @@ impl SelectionTokens {
             },
             disabled_alpha: 0.30,
         };
+        // app/globals.css:22 the thumb `height: 36px; width: 24px;
+        // border-radius: 6px; background: #f8f7f7; box-shadow: 0 -1px 4px
+        // -2px rgba(0,0,0,.2) inset, 0 0 2.6px -1px rgba(0,0,0,.17), 0 1px
+        // 4px 0 rgba(0,0,0,.14)`; Compression :24 `h-9 bg-[#f1f1f1]
+        // rounded-lg` and the fill `rgba(123,123,123,0.3)` to the value.
+        let slider = SliderTokens {
+            track: ButtonSurface {
+                fill: [hex(0xF1F1F1); 2],
+                overlay: NONE,
+                shadow: Vec::new(),
+                text: ink,
+            },
+            fill: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.3),
+            thumb: ButtonSurface {
+                fill: [hex(0xF8F7F7); 2],
+                overlay: NONE,
+                shadow: vec![
+                    ShadowSpec::new([0.0, 0.0], 2.6, -1.0, black(0.17)),
+                    ShadowSpec::new([0.0, 1.0], 4.0, 0.0, black(0.14)),
+                    ShadowSpec::inset([0.0, -1.0], 4.0, -2.0, black(0.2)),
+                ],
+                text: ink,
+            },
+            height: 36.0,
+            radius: 8.0,
+            thumb_w: 24.0,
+            thumb_radius: 6.0,
+            disabled_alpha: switch.disabled_alpha,
+        };
         let edge = legible_at(
             MARK_CONTRAST,
             SHADES[4],
@@ -421,6 +470,7 @@ impl SelectionTokens {
             button_group,
             switch,
             checkbox,
+            slider,
             radio,
             calendar,
             segmented: SegmentedTokens {
@@ -508,6 +558,20 @@ impl SelectionTokens {
             },
             ..kit.switch
         };
+        // the well a step off the page, filled with the quiet text at the
+        // kit's strength; the thumb is the page, ringed as the knob
+        let part = kit.slider.fill.0[3];
+        let slider = SliderTokens {
+            track: ButtonSurface {
+                fill: [c.bg_hover; 2],
+                overlay: NONE,
+                shadow: Vec::new(),
+                text: c.text,
+            },
+            fill: Color::rgba(c.text_mid.0[0], c.text_mid.0[1], c.text_mid.0[2], part),
+            thumb: switch.knob.clone(),
+            ..kit.slider
+        };
         let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
         let checkbox = CheckboxTokens {
             off: ButtonSurface {
@@ -540,6 +604,7 @@ impl SelectionTokens {
             button_group,
             switch,
             checkbox,
+            slider,
             radio,
             calendar: CalendarTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),

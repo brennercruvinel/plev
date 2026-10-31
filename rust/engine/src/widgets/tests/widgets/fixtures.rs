@@ -135,6 +135,52 @@ fn the_checkbox_is_the_switch_well_off_and_the_ink_on() {
     }
 }
 
+/// The kit's range: a 36 tall `#f1f1f1` well at radius 8 filled to the
+/// value, and a 24 wide block thumb at radius 6 travelling inside it.
+#[test]
+fn core_slider_is_the_kits_range() {
+    let theme = Theme::hoff_core();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let slider = Slider::new(0.0, 100.0, 50.0);
+    slider.render(&mut c, Rect::new(0.0, 0.0, 224.0, 40.0), &theme);
+    let rects: Vec<(Rect, f32)> = c
+        .layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|n| match *n {
+            SceneNode::GradientRect {
+                x,
+                y,
+                w,
+                h,
+                corner_radius,
+                ..
+            }
+            | SceneNode::RoundedRect {
+                x,
+                y,
+                w,
+                h,
+                corner_radius,
+                ..
+            } => Some((Rect::new(x, y, w, h), corner_radius)),
+            _ => None,
+        })
+        .collect();
+    let well = Rect::new(0.0, 2.0, 224.0, 36.0);
+    assert!(rects.contains(&(well, 8.0)), "{rects:?}");
+    assert!(
+        rects.contains(&(Rect::new(0.0, 2.0, 112.0, 36.0), 8.0)),
+        "half"
+    );
+    assert!(
+        rects.contains(&(Rect::new(100.0, 2.0, 24.0, 36.0), 6.0)),
+        "thumb"
+    );
+}
+
 #[test]
 fn hoff_tooltip_is_solid_262626() {
     let theme = Theme::hoff();
