@@ -78,7 +78,13 @@ pub const PAGES: &[Page] = &[
         Pane::Effects,
     ),
     // -- Components ---------------------------------------------------------
-    placeholder("Accordion"),
+    page(
+        C,
+        "Accordion",
+        "chevron-down",
+        "Sections that open and close, one at a time or several, from the kit's assets sidebar.",
+        Pane::Accordion,
+    ),
     placeholder("Alert"),
     alias(
         "Alert Dialog",

@@ -130,6 +130,7 @@ components! {
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
+    Accordion => accordion,
     // task-104 front E, selection and dates (#158)
 }
 
