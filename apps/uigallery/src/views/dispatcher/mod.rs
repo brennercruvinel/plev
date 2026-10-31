@@ -64,6 +64,7 @@ impl ShowcaseView {
                 Pane::Tree => self.panes.tree.content_height(content, t),
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
+                Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
@@ -161,6 +162,10 @@ impl ShowcaseView {
                 Pane::Tree => self.panes.tree.handle_event(event, content, t),
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
+                Pane::Popover => {
+                    let bounds = self.popover_bounds(content);
+                    self.panes.popover.handle_event(event, content, bounds, t)
+                }
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
@@ -249,6 +254,11 @@ impl ShowcaseView {
             Some(Pane::Editor) => self.panes.editor.wake(dt),
             // task-104 front A, fields (#154)
             // task-104 front B, overlays (#155)
+            Some(Pane::Popover) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let popover = &mut self.panes.popover;
+                Wake::moving(popover.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
             // task-104 front E, selection and dates (#158)
@@ -332,6 +342,11 @@ impl ShowcaseView {
                 Pane::Tree => self.panes.tree.render(c, content, theme),
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
+                Pane::Popover => {
+                    let bounds = self.popover_bounds(content);
+                    let popover = &mut self.panes.popover;
+                    popover.render(c, layers.overlay, content, bounds, theme);
+                }
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)

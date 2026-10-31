@@ -47,6 +47,7 @@ pub mod tree;
 // task-104 front A, fields (#154)
 
 // task-104 front B, overlays (#155)
+pub mod popover;
 
 // task-104 front C, conversation and feedback (#156)
 
