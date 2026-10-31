@@ -6,7 +6,7 @@
 //! row per line, cut at the card's width. Named builder_tour to not
 //! collide with the engine's engine::compose::builder.
 
-use engine::compose::builder::{Element, button, div, text as btext};
+use engine::compose::builder::{Element, div, text as btext};
 use engine::compose::view::ViewContext;
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::text::TextMeasurer;
@@ -67,17 +67,20 @@ const ACTIONS: [(&str, CounterMsg); 3] = [
 
 /// Source shown in the panel; mirrors `demo_tree` below.
 const CODE: &[&str] = &[
+    "fn action(label: &str) -> Element {",
+    "    div().px(14).py(8).rounded(8).child(text(label))",
+    "}",
     "fn counter(n: i64) -> Element {",
     "    div().col().gap(10).p(24)",
     "        .bg(glass.surface).rounded(20)",
     "        .child(text(\"Counter\")",
     "            .font_size(16).font_weight(600))",
     "        .child(div().row().wrap().gap(12)",
-    "            .child(button(\"-1\").on_click(|_| send(Dec)))",
+    "            .child(action(\"-1\").on_click(|_| send(Dec)))",
     "            .child(div().px(18).py(6)",
     "                .child(text(&n.to_string())))",
-    "            .child(button(\"+1\").on_click(|_| send(Inc)))",
-    "            .child(button(\"Reset\").on_click(|_| send(Reset))))",
+    "            .child(action(\"+1\").on_click(|_| send(Inc)))",
+    "            .child(action(\"Reset\").on_click(|_| send(Reset))))",
     "}",
 ];
 
@@ -153,7 +156,12 @@ impl BuilderPage {
             let bg = if hov { g.button_hover } else { g.button };
             // on_click makes render_interactive emit the hit region; the engine
             // has no handler dispatch yet, so handle_event routes zone i.
-            row = row.child(button(label).bg(bg).rounded(r).px(14.0).on_click(|_| {}));
+            // The builder's `button` writes its label in a fixed light
+            // ink, unreadable on a light theme's button: the same box, its
+            // label in the theme's text.
+            let label = t(label, 14.0, 500, tc.text);
+            let action = div().bg(bg).rounded(r).px(14.0).py(8.0).child(label);
+            row = row.child(action.on_click(|_| {}));
             if i == 0 {
                 let pill = div().px(18.0).py(6.0).bg(g.surface_active).rounded(r);
                 row = row.child(pill.child(t(&self.state.count.to_string(), 18.0, 700, tc.text)));
@@ -409,6 +417,25 @@ mod tests {
                 for z in s.demo_geometry(demo.x, demo.y, demo.w).1 {
                     assert!(z.right() <= demo.right() + 0.5, "{w}: zone out");
                 }
+            }
+        }
+    }
+
+    /// Every action's label is written in the theme's text over its
+    /// button, in a light theme as in a dark one: readable.
+    #[test]
+    fn the_actions_read_in_every_theme() {
+        for theme in [Theme::hoff_core(), Theme::hoff(), Theme::light()] {
+            let s = BuilderPage::new();
+            let mut c = Compositor::new();
+            s.render(&mut c, content(1132.0), &theme);
+            let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
+            for (label, _) in ACTIONS {
+                let ink = nodes.iter().find_map(|n| match n {
+                    SceneNode::Text { key, color, .. } if key.text == label => Some(*color),
+                    _ => None,
+                });
+                assert_eq!(ink, Some(theme.colors.text.0), "{label}");
             }
         }
     }
