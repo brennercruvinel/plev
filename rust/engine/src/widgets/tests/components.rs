@@ -92,7 +92,9 @@ fn badge_tag_fits_the_measured_label_plus_padding() {
     let b = Badge::tag("MODIFIED");
     let (w, _) = b.preferred_size(&t);
     let (tw, _) = TextMeasurer::measure_styled("MODIFIED", &b.text_style(&t), None);
-    assert!((w - (tw + t.spacing.sm * 2.0).ceil()).abs() < 1e-3);
+    let tag = &t.message.badge.tag;
+    let frame = (tag.pad_x + tag.border_width) * 2.0;
+    assert!((w - (tw + frame).ceil()).abs() < 1e-3);
     let n = nodes(|c| b.render(c, Rect::new(0.0, 0.0, 0.0, 0.0), &t));
     assert!(matches!(n[0], SceneNode::RoundedRect { w: rw, .. } if rw == w));
 }
@@ -100,14 +102,15 @@ fn badge_tag_fits_the_measured_label_plus_padding() {
 #[test]
 fn badge_count_takes_the_intent_color() {
     let t = hoff();
+    let fills = &t.message.badge.count_fill;
     let n = nodes(|c| Badge::count("9").render(c, Rect::default(), &t));
-    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == t.colors.danger.0));
+    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == fills.destructive.0));
     let n = nodes(|c| {
         Badge::count("9")
             .intent(Intent::Constructive)
             .render(c, Rect::default(), &t)
     });
-    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == t.colors.success.0));
+    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == fills.constructive.0));
 }
 
 // ---------------------------------------------------------------------------
@@ -182,12 +185,12 @@ fn stat_with_unit_and_delta_draws_every_part() {
     let n = nodes(|c| s.render(c, Rect::new(0.0, 0.0, 200.0, 60.0), &t));
     let tx = texts(&n);
     assert_eq!(tx, vec!["1.3", "GB", "+12%", "on disk"]);
-    // The delta badge is the only rounded rect.
+    // The delta badge is the only box: its chip and its intent's disc.
     assert_eq!(
         n.iter()
             .filter(|n| matches!(n, SceneNode::RoundedRect { .. }))
             .count(),
-        1
+        2
     );
 }
 

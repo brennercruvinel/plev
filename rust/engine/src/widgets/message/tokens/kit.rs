@@ -2,12 +2,13 @@
 //! private typescript design system), the file:line of each beside it.
 
 use super::{
-    AlertTokens, AttachmentTokens, BubbleTokens, CursorShape, IntentColors, MarkerTokens,
-    MessageStyle, MessageText, MessageTokens, ScrollerTokens, ToastTokens,
+    AlertTokens, AttachmentTokens, BadgePalette, BadgeTokens, BubbleTokens, CursorShape,
+    IntentColors, MarkerTokens, MessageStyle, MessageText, MessageTokens, ScrollerTokens,
+    TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
-use crate::styling::theme::hoff_core::{BLUE, RED, SHADES};
+use crate::styling::theme::hoff_core::{BLUE, GREEN, RED, SHADES};
 
 impl MessageTokens {
     /// The kit as written (the private typescript design system). The
@@ -366,6 +367,56 @@ impl MessageTokens {
                 border_width: 1.0,
                 shadow: ShadowSpec::new([0.0, 25.0], 50.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.25)),
             },
+            badge: BadgeTokens::new(
+                // components/Card/index.tsx:56 `px-3 py-1 border
+                // rounded-xl text-[0.6875rem] leading-[1rem] font-medium`,
+                // :58 `bg-[#F1F1F1] border-transparent`, on a gray card :57
+                // `bg-[#FCFCFC] border-[#ECECEC]`; the ink of
+                // app/layout.tsx:108
+                TagTokens {
+                    pad_x: 12.0,
+                    pad_y: 4.0,
+                    radius: 12.0,
+                    border_width: 1.0,
+                    text: MessageText {
+                        size: 11.0,
+                        line_height: 16.0,
+                        weight: 500,
+                        color: ink,
+                    },
+                    fill: shade3,
+                    border: Color([0.0; 4]),
+                    raised_fill: paper,
+                    raised_border: shade4,
+                    // components/Notification/index.tsx:72 `size-2
+                    // rounded-full`, the new-item disc; :68 `ml-1`
+                    mark: 8.0,
+                    mark_gap: 4.0,
+                },
+                // the kit draws no count: two of the chip's `py-1` across,
+                // so one digit sits in a disc
+                8.0,
+                // components/HeaderSimple/index.tsx:80 `after:top-1
+                // after:right-1 after:size-1 after:bg-[#fe5938]
+                // after:rounded-full`
+                4.0,
+                4.0,
+                // the intents in the core's accents (the dot's red, the
+                // mention blue of Comment/Message:30, its green), the
+                // neutral in the kit's muted gray; each moves toward the
+                // ink until it reads (`BadgeTokens::new`)
+                BadgePalette {
+                    intents: IntentColors {
+                        neutral: shade6,
+                        informational: BLUE,
+                        constructive: GREEN,
+                        destructive: RED,
+                    },
+                    surface: paper,
+                    paper,
+                    ink,
+                },
+            ),
         }
     }
 }

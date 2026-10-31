@@ -1457,3 +1457,218 @@ fn a_marker_binds_and_projects_a_pin_as_a_button_and_a_cursor_as_an_image() {
     );
     assert!(node.actions.is_empty() && !node.focusable);
 }
+
+// ---------------------------------------------------------------------------
+// Badge: the kit's chip, the count pill on its run, the notification dot
+// ---------------------------------------------------------------------------
+
+use crate::drawing::text::TextMeasurer;
+use crate::styling::color::Color;
+use crate::styling::theme::hoff_core::{RED, SHADES};
+use crate::widgets::buttons::{Badge, BadgeKind};
+
+/// WCAG's ratio of two colors, each composed over black when translucent.
+fn ratio(a: Color, b: Color) -> f32 {
+    let lum = |c: Color| {
+        let lin = |v: f32| {
+            let v = v * c.0[3];
+            if v <= 0.040_45 {
+                v / 12.92
+            } else {
+                ((v + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        0.2126 * lin(c.0[0]) + 0.7152 * lin(c.0[1]) + 0.0722 * lin(c.0[2])
+    };
+    let (la, lb) = (lum(a), lum(b));
+    (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
+}
+
+/// `c` composed over the opaque `under`, in linear light as the
+/// renderer blends.
+fn on(c: Color, under: Color) -> Color {
+    let lin = |v: f32| {
+        if v <= 0.040_45 {
+            v / 12.92
+        } else {
+            ((v + 0.055) / 1.055).powf(2.4)
+        }
+    };
+    let gamma = |v: f32| {
+        if v <= 0.003_130_8 {
+            v * 12.92
+        } else {
+            1.055 * v.powf(1.0 / 2.4) - 0.055
+        }
+    };
+    let a = c.0[3];
+    let at = |i: usize| gamma(lin(c.0[i]) * a + lin(under.0[i]) * (1.0 - a));
+    Color([at(0), at(1), at(2), 1.0])
+}
+
+/// What a badge draws in `bounds`.
+fn drawn(b: &Badge, bounds: Rect, t: &Theme) -> Vec<SceneNode> {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    b.render(&mut c, bounds, t);
+    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+}
+
+const INTENTS: [Intent; 4] = [
+    Intent::Neutral,
+    Intent::Informational,
+    Intent::Constructive,
+    Intent::Destructive,
+];
+
+#[test]
+fn the_badge_carries_the_kit_in_core() {
+    let b = core().message.badge;
+    let [paper, _, shade3, shade4, ..] = SHADES;
+    assert_eq!((b.tag.pad_x, b.tag.pad_y, b.tag.radius), (12.0, 4.0, 12.0));
+    assert_eq!(
+        (b.tag.text.size, b.tag.text.line_height, b.tag.text.weight),
+        (11.0, 16.0, 500)
+    );
+    assert_eq!(
+        (b.tag.fill, b.tag.raised_fill, b.tag.raised_border),
+        (shade3, paper, shade4)
+    );
+    assert_eq!((b.dot, b.dot_inset), (4.0, 4.0));
+    let near = |a: Color, b: Color| (0..4).all(|i| (a.0[i] - b.0[i]).abs() < 1e-4);
+    assert!(
+        near(b.dots.destructive, RED),
+        "the kit's red reads on its paper"
+    );
+    let (w, h) = Badge::tag("Card").preferred_size(&core());
+    assert_eq!(
+        h,
+        16.0 + (4.0 + 1.0) * 2.0,
+        "py-1, a border and the 16 px line"
+    );
+    assert!(w > h);
+}
+
+/// Every theme: the chip's label at 7:1 on core and AA elsewhere, the
+/// intents' discs and the dots at 3:1, a count's numeral at 7:1.
+#[test]
+fn every_badge_reads_on_what_it_sits() {
+    let named = ["hoff", "hoff-light", "plev", "dracula", "nord", "gruvbox"];
+    let themes = named
+        .iter()
+        .map(|n| (*n, Theme::named(n).expect("a theme")))
+        .chain([
+            ("core", core()),
+            ("dark", Theme::dark()),
+            ("light", Theme::light()),
+        ]);
+    for (name, t) in themes {
+        let b = &t.message.badge;
+        let paper = Color([t.colors.bg.0[0], t.colors.bg.0[1], t.colors.bg.0[2], 1.0]);
+        let card = on(t.colors.surface, paper);
+        let chip = on(b.tag.fill, card);
+        let text = if name == "core" { 7.0 } else { 4.5 };
+        assert!(
+            ratio(b.tag.text.color, chip) >= text,
+            "{name}: the chip's label"
+        );
+        for i in INTENTS {
+            if i != Intent::Neutral {
+                assert!(ratio(b.marks.of(i), chip) >= 3.0, "{name}: {i:?} disc");
+            }
+            assert!(ratio(b.dots.of(i), card) >= 3.0, "{name}: {i:?} dot");
+            let fill = b.count_fill.of(i);
+            assert!(ratio(b.count_ink.of(i), fill) >= 7.0, "{name}: {i:?} count");
+        }
+    }
+}
+
+#[test]
+fn a_count_is_a_disc_for_one_digit_and_a_pill_for_more() {
+    let t = core();
+    let (w1, h1) = Badge::count("3").preferred_size(&t);
+    let (w2, h2) = Badge::count("1200").preferred_size(&t);
+    assert_eq!(w1, h1);
+    assert_eq!(h1, h2);
+    assert!(w2 > w1);
+}
+
+/// An intent puts its disc before the label: the chip widens by the disc
+/// and its gap, and draws it; a neutral chip draws none.
+#[test]
+fn an_intent_adds_its_disc_before_the_label() {
+    let t = core();
+    let tag = &t.message.badge.tag;
+    let plain = Badge::tag("staged");
+    let lit = Badge::tag("staged").intent(Intent::Constructive);
+    let (w0, _) = plain.preferred_size(&t);
+    let (w1, _) = lit.preferred_size(&t);
+    assert!((w1 - w0 - (tag.mark + tag.mark_gap)).abs() <= 1.0);
+    let discs = |b: &Badge| {
+        drawn(b, Rect::new(0.0, 0.0, 400.0, 40.0), &t)
+            .iter()
+            .filter(|n| matches!(n, SceneNode::RoundedRect { w, .. } if *w == tag.mark))
+            .count()
+    };
+    assert_eq!((discs(&plain), discs(&lit)), (0, 1));
+}
+
+/// A label wider than its room is ellipsized inside it; the box never
+/// leaves the bounds, and is never narrower than tall.
+#[test]
+fn a_long_label_ellipsizes_inside_its_bounds() {
+    let t = core();
+    let b = Badge::tag(LONG).intent(Intent::Destructive);
+    for w in [40.0, 120.0, 280.0] {
+        let bounds = Rect::new(0.0, 0.0, w, 40.0);
+        let r = b.rect(bounds, &t);
+        assert!(r.w <= w + 0.5, "{w}: {}", r.w);
+        let shown = drawn(&b, bounds, &t)
+            .into_iter()
+            .find_map(|n| match n {
+                SceneNode::Text { key, x, .. } => Some((key.text, x)),
+                _ => None,
+            })
+            .expect("a label");
+        assert!(shown.0.len() < LONG.len(), "{w}: ellipsized");
+        let style = b.text_style(&t);
+        let (tw, _) = TextMeasurer::measure_styled(&shown.0, &style, None);
+        assert!(
+            shown.1 + tw <= r.right() + 0.5,
+            "{w}: the label stays in its box"
+        );
+    }
+    let unbounded = b.rect(Rect::new(0.0, 0.0, 0.0, 0.0), &t);
+    assert_eq!(
+        unbounded.w,
+        b.preferred_size(&t).0,
+        "no width: the preferred size"
+    );
+}
+
+#[test]
+fn the_dot_sits_on_its_host_s_top_end_corner() {
+    let t = core();
+    let host = Rect::new(10.0, 20.0, 40.0, 40.0);
+    let d = Badge::dot_on(host, &t);
+    assert_eq!((d.right(), d.y, d.w), (46.0, 24.0, 4.0));
+    let n = drawn(&Badge::dot("New"), d, &t);
+    assert_eq!(n.len(), 1, "a disc, no text");
+    assert_eq!(Badge::dot("New").kind, BadgeKind::Dot);
+}
+
+/// A reader hears a status with its label and intent, can land on it,
+/// and finds no action.
+#[test]
+fn a_badge_projects_a_status_with_its_intent() {
+    let root = SemId::parse("page").unwrap();
+    let id = root.child("badge").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(&root, Role::Region, "Badge");
+    Badge::count("3").project(&mut b, &id, Some(&root));
+    let seen: Snapshot = b.finish().expect("the projection validates");
+    let n = seen.get(&id).expect("the badge");
+    assert_eq!((n.role, n.label.as_str()), (Role::Status, "3"));
+    assert!(n.actions.is_empty());
+    assert!(format!("{:?}", n.state).contains("destructive"));
+}
