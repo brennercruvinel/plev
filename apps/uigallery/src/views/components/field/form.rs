@@ -14,7 +14,7 @@
 //! click.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::Compositor;
+use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
@@ -149,8 +149,9 @@ impl FormPage {
     pub fn set_focused(&mut self, at: Option<(usize, usize)>) {
         for (g, group) in self.groups.iter_mut().enumerate() {
             for (c, card) in group.cards.iter_mut().enumerate() {
-                if let Some(t) = card.spec.text_mut() {
-                    t.set_focused(at == Some((g, c)));
+                let on = at == Some((g, c));
+                if card.spec.text().is_some_and(|t| t.is_focused() != on) {
+                    card.spec.set_focused(on);
                 }
             }
         }
@@ -233,6 +234,16 @@ impl FormPage {
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
+        // What floats over the page (an open list) has the pointer first,
+        // and alone where it is.
+        let (x, y) = event.pos();
+        for (group, laid) in self.groups.iter_mut().zip(&layout) {
+            for (card, (_, rect)) in group.cards.iter_mut().zip(&laid.cards) {
+                if card.spec.over_overlay(x, y, *rect, theme) {
+                    return result.merge(card.spec.handle_event(event, *rect, theme));
+                }
+            }
+        }
         for (group, laid) in self.groups.iter_mut().zip(&layout) {
             for (card, (_, rect)) in group.cards.iter_mut().zip(&laid.cards) {
                 result = result.merge(card.spec.handle_event(event, *rect, theme));
@@ -246,8 +257,14 @@ impl FormPage {
         self.focused_text().map_or(Wake::idle(), |t| t.wake(dt))
     }
 
-    pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+    /// Draws the page; what floats over it (an open list) on `overlay`.
+    pub fn render(&self, c: &mut Compositor, overlay: LayerId, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
+        for (group, laid) in self.groups.iter().zip(&layout) {
+            for (card, (_, widget)) in group.cards.iter().zip(&laid.cards) {
+                card.spec.render_overlay(c, overlay, *widget, theme);
+            }
+        }
         let last = self.groups.len().saturating_sub(1);
         for (i, (group, laid)) in self.groups.iter().zip(&layout).enumerate() {
             showcase::title(c, group.title, content, laid.title_y, theme);

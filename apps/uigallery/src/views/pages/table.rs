@@ -175,12 +175,12 @@ pub const PAGES: &[Page] = &[
         Pane::CodeBlock,
     ),
     placeholder("Collapsible"),
-    alias(
+    page(
+        C,
         "Combobox",
         "search",
-        "The select, until typing filters it.",
-        Pane::Select,
-        "typing and filtering",
+        "A select that filters as you type: Up and Down highlight, Enter picks, Escape closes.",
+        Pane::Combobox,
     ),
     placeholder("Command"),
     page(

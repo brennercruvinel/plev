@@ -96,6 +96,7 @@ pub enum Pane {
     InputGroup,
     InputOtp,
     Textarea,
+    Combobox,
     // task-104 front B, overlays (#155)
     Popover,
     // task-104 front C, conversation and feedback (#156)

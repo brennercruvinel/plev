@@ -227,7 +227,12 @@ mod tests {
         assert_eq!(area(&p, (0, 0)).input.text(), "first\nsecond");
         let mut c = Compositor::new();
         c.begin_frame();
-        p.render(&mut c, content(), &theme);
+        p.render(
+            &mut c,
+            engine::drawing::compositor::LayerId::DEFAULT,
+            content(),
+            &theme,
+        );
         assert!(p.handle_nav(false));
         assert!(area(&p, (0, 0)).input.input.buffer.cursor() <= "first".len());
         assert!(p.ime_area(content(), &theme).is_some());

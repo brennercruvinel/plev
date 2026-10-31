@@ -10,7 +10,7 @@
 use std::any::Any;
 
 use accord::{SemId, SnapshotBuilder, Value};
-use engine::drawing::compositor::Compositor;
+use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::form::field::{Field, FieldPart};
 use engine::widgets::form::input_group::InputGroup;
@@ -22,6 +22,8 @@ use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 pub(crate) const FIELD_W: f32 = 240.0;
 /// An input group is the kit's Search, `w-54`.
 pub(crate) const GROUP_W: f32 = 216.0;
+/// A select is the kit's DropdownPage's, `w-44`.
+pub(crate) const SELECT_W: f32 = 176.0;
 
 /// A part of a widget a request or a reader's focus names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -34,6 +36,8 @@ pub(crate) enum Part {
     Link,
     /// An input group's icon button.
     Action,
+    /// An open list's option, by its index in the options.
+    Option(usize),
 }
 
 /// A widget of a form page's card. Only the size, the draw and the
@@ -50,6 +54,31 @@ pub(crate) trait CardWidget: 'static {
 
     /// Declares the widget under `parent`, as the comps projects it.
     fn project(&self, b: &mut SnapshotBuilder, parent: &SemId);
+
+    /// Draws what floats over the page (an open list) on `layer`.
+    fn render_overlay(&self, _c: &mut Compositor, _layer: LayerId, _rect: Rect, _theme: &Theme) {}
+
+    /// Whether `(x, y)` is on what floats over the page: the pointer
+    /// there is the widget's alone.
+    fn over_overlay(&self, _x: f32, _y: f32, _rect: Rect, _theme: &Theme) -> bool {
+        false
+    }
+
+    /// The caret to the widget's box, or off it: the text field's by
+    /// default.
+    fn set_focused(&mut self, focused: bool) {
+        if let Some(t) = self.text_mut() {
+            t.set_focused(focused);
+        }
+    }
+
+    /// The part `id` names: the box, the eye, the link or the icon button
+    /// by default.
+    fn part(&self, id: &SemId) -> Option<Part> {
+        [Part::Box, Part::Reveal, Part::Link, Part::Action]
+            .into_iter()
+            .find(|p| self.part_id(*p).as_ref() == Some(id))
+    }
 
     fn handle_event(&mut self, _event: &WidgetEvent, _rect: Rect, _theme: &Theme) -> EventResult {
         EventResult::IGNORED
@@ -168,13 +197,6 @@ impl Spec {
     pub(crate) fn size_in(&self, card_w: f32, side: f32, theme: &Theme) -> (f32, f32) {
         self.0.size((card_w - side * 2.0).max(0.0), theme)
     }
-
-    /// The part of the widget `id` names.
-    pub(crate) fn part(&self, id: &SemId) -> Option<Part> {
-        [Part::Box, Part::Reveal, Part::Link, Part::Action]
-            .into_iter()
-            .find(|p| self.part_id(*p).as_ref() == Some(id))
-    }
 }
 
 impl CardWidget for Field {
@@ -214,7 +236,7 @@ impl CardWidget for Field {
             Part::Box => self.sem_id().cloned(),
             Part::Reveal => self.reveal_id(),
             Part::Link => self.link_id(),
-            Part::Action => None,
+            Part::Action | Part::Option(_) => None,
         }
     }
 

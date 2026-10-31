@@ -190,3 +190,34 @@ fn a_text_area_takes_the_same_lines_from_the_three() {
         Some(Value::from("first\nsecond"))
     );
 }
+
+const COMBO: &str = "combobox_page.group[0].card[0]";
+
+/// The combobox: a person's filter and Enter, a reader's press on the
+/// box then on the option, and an agent's `select` choose the same
+/// option, the list shut and the box showing it.
+#[test]
+fn a_combobox_picks_the_same_option_from_the_three() {
+    let mut person = gallery("Combobox");
+    person.click(COMBO);
+    person.type_in("rem");
+    person.view.handle_enter();
+    person.frame();
+    let mut reader = gallery("Combobox");
+    reader.press(COMBO);
+    reader.press("combobox_page.group[0].card[0][3]");
+    let agent = by_agent(
+        "Combobox",
+        "combobox",
+        vec![ask_with(COMBO, "select", Value::from("Remix"))],
+    );
+    same("Combobox", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{COMBO}:selected")),
+        Some(Value::from("Remix"))
+    );
+    assert_eq!(
+        person.value(&format!("{COMBO}:query")),
+        Some(Value::from("Remix"))
+    );
+}
