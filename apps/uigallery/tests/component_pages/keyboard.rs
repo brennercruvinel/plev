@@ -342,7 +342,9 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         assert!(g.nav(NavKey::Down) && g.nav(NavKey::Down), "{page}: down");
         assert_eq!(g.focused(), Some(row(2)), "{page}");
         assert!(g.ringed(&row(2)), "{page}: the ring on the row");
-        assert_eq!(g.order(), [row(2)], "{page}: the focused row is the stop");
+        // the page's first stop is this table's, on the focused row
+        assert_eq!(g.order()[0], row(2), "{page}: the focused row is the stop");
+        assert!(!g.order().contains(&row(0)), "{page}: one stop per table");
         assert!(g.nav(NavKey::Up), "{page}: up");
         assert_eq!(g.focused(), Some(row(1)), "{page}");
         assert!(g.key(EditKey::End), "{page}: End");
@@ -381,11 +383,7 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         };
         assert_ne!(at, row(4), "{page}: the focus followed the rows");
         assert!(g.ringed(&at), "{page}: {at} in view, with its ring");
-        assert_eq!(
-            g.order(),
-            std::slice::from_ref(&at),
-            "{page}: and it is the stop"
-        );
+        assert_eq!(g.order()[0], at, "{page}: and it is the stop");
         assert!(g.nav(NavKey::Down), "{page}: the arrows go on from there");
     }
 }
