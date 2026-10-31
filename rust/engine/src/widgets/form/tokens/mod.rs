@@ -61,6 +61,24 @@ pub struct InputRecipe {
     pub disabled_alpha: f32,
 }
 
+impl InputRecipe {
+    /// This recipe with `fill` and `border` in every state, its shadows
+    /// kept (a css `!bg` and `!border` over the box's classes).
+    pub fn pinned(&self, fill: Color, border: Color) -> Self {
+        let pin = |s: &InputSurface| InputSurface {
+            fill,
+            border,
+            shadow: s.shadow.clone(),
+        };
+        Self {
+            rest: pin(&self.rest),
+            hover: pin(&self.hover),
+            focus: pin(&self.focus),
+            ..self.clone()
+        }
+    }
+}
+
 /// The icon slots at the ends of the input box: a leading icon, the
 /// check of a validated value and the eye that reveals a password.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -142,6 +160,9 @@ pub enum Look {
     Inset,
     /// A combobox's filter: the select's control as a text box.
     Combo,
+    /// The search of a top bar: the search box on the panel's tone,
+    /// edged, whatever the pointer does.
+    Header,
     /// An inline edit's box: the text alone ([`EditTokens::bare`]).
     Bare,
 }
@@ -211,6 +232,8 @@ pub struct FormTokens {
     pub search: InputRecipe,
     /// The inset box of an input group with a select at its end.
     pub inset: InputRecipe,
+    /// The search box of a top bar ([`Look::Header`]).
+    pub header: InputRecipe,
     pub adorn: Adornments,
     pub group: GroupAddons,
     pub field: FieldChrome,
@@ -269,6 +292,7 @@ impl FormTokens {
             Look::Field => &self.input,
             Look::Search => &self.search,
             Look::Inset => &self.inset,
+            Look::Header => &self.header,
             Look::Combo => &self.combo,
             Look::Bare => &self.bare,
         }
@@ -450,6 +474,9 @@ impl FormTokens {
             pad_y: 16.0,
             rows: 3,
         };
+        // HeaderSimple :59, the Search with `!bg-[#F8F7F7]
+        // !border-[#E2E2E2]`: both kept in every state, the focus well too.
+        let header = search.pinned(hex(0xF8F7F7), border);
         let select = SelectRecipe::hoff_core();
         let combo = select.as_input(&input);
         let edit = EditTokens::hoff_core();
@@ -459,6 +486,7 @@ impl FormTokens {
             input,
             search,
             inset,
+            header,
             adorn,
             group,
             field,
@@ -571,6 +599,8 @@ impl FormTokens {
             label,
             search: input.clone(),
             inset: input.clone(),
+            // the panel's tone, edged in the active border, as the kit's
+            header: input.pinned(c.bg_panel, c.border_active),
             input,
             adorn,
             group,

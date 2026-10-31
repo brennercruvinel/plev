@@ -104,7 +104,7 @@ pub struct Header {
 
 fn search() -> InputGroup {
     InputGroup::new("Search...")
-        .look(Look::Inset)
+        .look(Look::Header)
         .start(Addon::Icon("search"))
         .end(Addon::Hint("⌘ K".into()))
 }

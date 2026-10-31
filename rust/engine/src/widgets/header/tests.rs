@@ -216,3 +216,29 @@ fn the_focus_goes_to_the_part_it_names() {
     let mut c = Compositor::new();
     h.render(&mut c, bar(1100.0, &t), &t);
 }
+
+/// The headers' search is the form's `Look::Header`: the search box with
+/// `!bg-[#F8F7F7] !border-[#E2E2E2]`, the same at rest, hovered and
+/// focused, the focus well kept; every other theme pins its panel tone
+/// and its active border.
+#[test]
+fn the_header_search_is_the_pinned_search_box() {
+    use crate::styling::color::Color;
+    use crate::widgets::form::tokens::Look;
+    let t = Theme::hoff_core();
+    let (search, header) = (t.form.recipe(Look::Search), t.form.recipe(Look::Header));
+    for s in [&header.rest, &header.hover, &header.focus] {
+        assert_eq!(
+            (s.fill, s.border),
+            (Color::hex(0xF8F7F7), Color::hex(0xE2E2E2))
+        );
+    }
+    assert_eq!(header.focus.shadow, search.focus.shadow);
+    assert!(!header.focus.shadow.is_empty(), "the focus well");
+    assert_eq!((header.height, header.pad_x), (search.height, search.pad_x));
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        let h = theme.form.recipe(Look::Header);
+        assert_eq!(h.rest.fill, theme.colors.bg_panel);
+        assert_eq!(h.focus.border, theme.colors.border_active);
+    }
+}
