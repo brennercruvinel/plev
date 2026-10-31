@@ -1,34 +1,37 @@
 ---
 id: task-98
-title: "Task 98 — Reorganização do workspace"
+title: "task-98: reorganização do workspace"
 project: plev
 type: tarefa
 status: concluido
 date: 2026-10-09
 date_basis: git
-topics: [tarefa]
+topics: [workspace, git]
 relations: [adr-0080, task-51, task-52]
-evidence: [3161bb89, d3e65544, 6c4d6ff3]
-source: reconstrucao
+evidence: [3161bb89, d3e65544, 9e31564e, 6c4d6ff3]
+source: ["reconstrucao", "docs/historia/reorganizacao-2026-10.md"]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # Task 98 — Reorganização do workspace
 
 A reorganização de outubro reuniu bibliotecas em `rust/`, aplicações em
 `apps/`, demonstrações em `demo/` e ferramentas em `tool/`. A sequência
-preservou movimentos e alterações de conteúdo em commits separados.
+preservou movimentos e alterações de conteúdo em commits separados: o commit
+`d3e65544` contém só renomes R100, 1.861 arquivos.
 
 ## Problema e execução
 
-A estrutura anterior misturava bibliotecas e aplicações em `crates/`,
-com exemplos e ferramentas dependentes de caminhos antigos. O mapa de
-migração definiu o destino dos arquivos antes dos movimentos. Depois
-vieram manifests, declarações de módulos, imports, strings, testes e docs.
-Os widgets de `comps` passaram ao engine; os importadores foram reunidos
-em `import`; os nomes de crates e módulos estão em [TERMS](../TERMS.toml).
+A estrutura anterior reunia bibliotecas e aplicações em `crates/`: `crates/engine`
+e `crates/comps` viraram `rust/engine`, `crates/showcase` virou `apps/uigallery` e
+`crates/urnaui` virou `apps/urnadbapp` ([relatório](../historia/reorganizacao-2026-10.md),
+linhas 80 a 98). O mapa de migração definiu o destino dos arquivos antes dos
+movimentos (`3161bb89`). Depois vieram manifests (`9e31564e`), declarações de
+módulos, caminhos, literais, testes e docs. Os widgets de `comps` passaram ao
+engine (`engine::widgets`); os importadores foram reunidos em `import`; os nomes
+de crates e módulos estão em [TERMS](../TERMS.toml).
 
 ## Resultado e limites
 
@@ -43,12 +46,15 @@ nessa integração; ela não prova retrospectivamente o build Android.
 
 Preservar comportamento não torna uma reorganização compatível com todos
 os consumidores: mudar o caminho público de um tipo pode quebrar imports.
-A comparação de API precisa distinguir identidade do item, caminho público
-e expansão de reexports. O [ADR 80](../decisoes/estrutura/0080-workspace-por-responsabilidade.md)
+A comparação de API do relatório separou três casos: falso positivo do
+normalizador, em funções com o nome de um módulo renomeado; módulos-grupo
+novos, só adição; e `comps` dentro do engine (linhas 61 a 69). O
+[ADR 80](../decisoes/estrutura/0080-workspace-por-responsabilidade.md)
 registra a estrutura adotada.
 
 ## Evidências
 
 - [`3161bb89`](https://github.com/brennercruvinel/plev/commit/3161bb89b0bb6b490b83d10b72c3f2e50d85fd72)
 - [`d3e65544`](https://github.com/brennercruvinel/plev/commit/d3e6554467ad0a84ab9b6eaba01a996c17527354)
+- [`9e31564e`](https://github.com/brennercruvinel/plev/commit/9e31564eb75aa261d87f2a9f734a7ebdac97193c)
 - [`6c4d6ff3`](https://github.com/brennercruvinel/plev/commit/6c4d6ff3cf292b9d9e815394843933de03c26918)

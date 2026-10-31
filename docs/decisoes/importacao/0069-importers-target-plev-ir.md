@@ -6,29 +6,31 @@ type: decisao
 status: aceito
 date: 2026-09-25
 date_basis: cabecalho
-topics: [parser, importer, compiler-target, plev-ir, uir, report, droplist, tokens, tolerance, binding, surface, headless, generative-runtime, html, css, figma]
-relations: []
+topics: [importacao, ir, formatos]
+relations: [adr-0011, adr-0012, adr-0049, adr-0051, adr-0064, task-68, task-69, task-71]
 source: docs/adr/importing/0069-importers-target-plev-ir.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # importers target plev IR, with a report in four categories
+
+Decide que os importadores emitem a IR do plev por um segundo emissor sobre o mesmo `ParserNode`, e que o relatório classifica cada construção de origem como suportada, transformada, aproximada ou impossível, com o `at` (arquivo:linha). As tolerâncias de valor para tokens são medidas, não escolhidas a olho, e cada controle precisa de um binding nomeado que o importador não declara. O resultado é que nenhuma equivalência fica afirmada em silêncio: o relatório lista cada entrada, e um teste de censo prova que nenhuma construção ficou de fora.
 
 ## context
 
 `rust/import` turns a React component (tsx and sass) and a gpui widget
 into rust code against `engine::builder`, and reports what it drops on a
-droplist with file:line (docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md).
+droplist with file:line ([adr-0012](0012-transpiler-reports-every-unmapped-construct.md)).
 the thesis (sections 3 and 14) asks more of an importer: sources of UI
 converge on plev IR, and every construct is supported, transformed,
 approximated or impossible, never an equivalence claimed in silence. the
-IR exists (task-68, `rust/plevir`, docs/adr/generated/0049-plev-ir-typed-and-verified.md)
+IR exists (task-68, `rust/plevir`, [adr-0049](../geracao/0049-plev-ir-typed-and-verified.md))
 and so does its materialization (task-69, `rust/screen`,
-docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md). the runtime never
+[adr-0051](../geracao/0051-materialized-surfaces-from-verified-ir.md)). the runtime never
 carries the source's execution model
-(docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md).
+([adr-0011](0011-import-foreign-formats-by-conversion-not-embedding.md)).
 
 the probe of task-71 phase 1 (in
 [`task-71-compiler-target.md`](../../tarefas/task-71-compiler-target.md)) found that the
@@ -97,7 +99,7 @@ distance; past it `impossible`, and the IR leaves the field to the
 component's default.
 
 - color: the largest of the four channel differences, 8-bit units, alpha
-  included (the measure of docs/adr/workflows/0064-what-identical-means.md).
+  included (the measure of [adr-0064](../processos/0064-what-identical-means.md)).
 - spacing, radius, width, height: pixels. typography: the larger of the
   size and line height differences, among the roles of the same weight.
 
@@ -140,7 +142,7 @@ the builder code and the materialized IR are drawn by the same
 `engine::headless::Renderer`, same size, scale 1, `Theme::hoff()`, the
 theme's background, the builder's root in a host column as wide as the
 area (as the surface lays its root). the IR carries no pixel, so the
-verdict is a difference, measured as docs/adr/workflows/0064-what-identical-means.md
+verdict is a difference, measured as [adr-0064](../processos/0064-what-identical-means.md)
 measures one and explained by the report (apple M4, metal):
 
 - separator: 1266 pixels differ, delta max 164. the IR's row is 36 px (the
@@ -182,6 +184,14 @@ the bounds), not the counts, so another GPU passes them.
   justification, shrink, element slots, prop-driven variants, media
   queries, hover states, animations. each needs the `uir` vocabulary to
   grow, which is its own decision (a component needs comps first).
+
+## alternatives
+
+- tolerância escolhida a olho: rejeitada. A medida é a própria tabela de tokens (`## avoid`).
+- importador que declara a capacidade para o IR verificar sem registro: rejeitado. Com nada declarado, o IR é recusado uma vez por binding, com o nome do que falta (`### binding required`, `## avoid`).
+- controle sem binding emitido como outro componente, para o IR verificar sem nada declarado: rejeitado, porque afirmaria uma equivalência que não existe (`### binding required`).
+- layout lido de posições sem a regra, ou sem a diferença registrada no relatório: rejeitado (`## avoid`).
+- override, variável ou imagem descartada pela exportação sem marca: rejeitado (`## avoid`).
 
 ## what stays for phase 2
 

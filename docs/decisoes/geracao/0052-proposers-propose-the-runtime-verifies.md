@@ -6,22 +6,24 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [propose, uir, plev-ir, verifier, surface, llm, dispatcher, generative-runtime]
-relations: []
+topics: [superficies-geradas, ir, llm, agentes, semantica]
+relations: [adr-0049, adr-0051, task-68, task-69, task-95]
 source: docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # proposers propose, the runtime verifies
 
+Define que um proponente, as regras determinísticas ou um modelo de linguagem, só entrega IR por `propose_verified`, a única saída, que verifica a proposta contra o mesmo registro e a mesma política antes de qualquer runtime consumi-la. Os addenda registram a lista de itens, a mídia lida por estrutura e a ligação do Claude como modelo, chamado por `claude -p` fora da thread do app, com prazo e cancelamento. Importa porque o modelo recebe exatamente o que o verificador checa, e o crate `offers` não tem rede, credencial nem provedor.
+
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 phases 1 and 2 turned
+([`0049-plev-ir-typed-and-verified.md`](0049-plev-ir-typed-and-verified.md)). task-69 phases 1 and 2 turned
 a `VerifiedIr` into a live surface and let it change form in place,
-reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md
+reconciled by `SemId` ([`0051-materialized-surfaces-from-verified-ir.md`](0051-materialized-surfaces-from-verified-ir.md)
 and its addendum). what was missing is the step before: an intent in text
 becoming an IR. the thesis puts it as "the model proposes, the runtime
 verifies, plev executes" (sections 2, 5 and 15). phase 3a builds every
@@ -180,6 +182,15 @@ what phase 3b adds, orders of magnitude above it.
   proposal it still names the last hand-written form, and a click on it
   goes back to that form.
 
+## alternatives
+
+- proponente dentro de `uir`: descartado. A IR continua uma linguagem com seu verificador, e o provedor de modelo não chega a `uir`, que compila para wasm e não tem I/O.
+- devolver uma `Ir` ao runtime sem verificação: descartado. Só `propose_verified` entrega `VerifiedIr`, qualquer que seja o proponente.
+- dicionário de tradução entre idiomas nas regras: descartado. Traduzir a palavra da pessoa para a do app é trabalho do modelo; as regras não têm léxico entre idiomas.
+- API paga com chave no código, na fase 3b-i: descartado. O Claude entra pelo `claude -p` já logado nesta máquina, sem API paga nova e sem chave no código.
+- chamar o modelo na thread do app, na fase 3b-ii: descartado. A chamada síncrona segurava a thread por 5 a 90 s; a página passou a usar o contrato do próprio despachante (`Execution::Started`, depois `complete` ou `fail`).
+- segundo despachante para as capacidades da página: descartado. A numeração dos pedidos e o lugar dos recibos ficam em um só.
+
 ## avoid
 
 - returning an `Ir` from anything a runtime consumes: only
@@ -246,6 +257,7 @@ had no part that repeats.
   items" gives the whole list with the Active chip and count.
 - a list the filter empties has no list to find; a surface that already
   shows it keeps its list node, with no instance.
+
 ## addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i, accepted)
 
 ### context

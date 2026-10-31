@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, deep-links, url-scheme, semantic-contract, dispatcher, agents, policy, security, showcase, macos, bring-up]
-relations: []
+topics: [plataforma, semantica, agentes]
+relations: [adr-0057, adr-0059, task-76]
 source: docs/adr/interface/0063-a-link-is-not-a-person.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a link is not a person
+
+Decide que um link do esquema do app chega ao dispatcher como `Actor::Agent` de nome `link`, nunca como pessoa, e que só executa o que está numa lista aberta escrita no próprio app. Uma recusa aparece na tela em uma linha e também fica no log. Registra a sonda das três plataformas: no macOS o link entra pelo argumento de lançamento até o app ter um bundle, e um delegate próprio fica fora porque quebraria o winit 0.30. Importa porque qualquer página web, correio ou outro app pode abrir um link sem que ninguém na tela tenha escolhido.
 
 ## context
 
@@ -28,7 +30,7 @@ person: any web page, mail or other app can open one, with no one at the
 screen having chosen it.
 
 the probe (the handoff of item 6 in
-docs/log/steps/task-76-platform-integration.md) found:
+[task-76-platform-integration.md](../../tarefas/task-76-platform-integration.md)) found:
 
 - windows (a registry key with `URL Protocol` and `"<exe>" "%1"`) and
   linux (a `.desktop` with `x-scheme-handler/<scheme>` and `%u`) start a
@@ -163,6 +165,14 @@ docs/log/steps/task-76-platform-integration.md) found:
 - `showcase::app::links` is public (`SCHEME`, `OPEN`, `follow`,
   `Followed`), so an integration test drives a link on a headless frame
   as the shell does.
+
+## alternatives
+
+- um link como `Actor::Human`: qualquer página poderia apertar qualquer botão que uma pessoa pode apertar, câmera e impressora inclusive (ver `reason`).
+- um ator próprio para links em `sem`: a coluna de agente é o contrato, e `sem` não muda (ver `decision` e `avoid`).
+- um delegate de aplicação próprio no macOS: o winit 0.30 depende do seu, e `ApplicationDelegate::get` entra em pânico com outro (ver `context`).
+- universal links (`https`): ficam fora; só o esquema do app (ver `bring-up`).
+- entregar o link à instância que já roda, agora: a segunda instância abre outra janela por enquanto; esse canal é do bring-up (ver `bring-up`).
 
 ## bring-up
 

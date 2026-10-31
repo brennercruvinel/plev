@@ -1,20 +1,21 @@
 ---
 id: reorganizacao-2026-10
-title: "the tree reorganization (issue #130, PR #131)"
+title: "Reorganização da árvore do repositório (issue #130, PR #131)"
 project: plev
 type: registro
 status: concluido
 date: 2026-10-09
 date_basis: cabecalho
-topics: [changelog]
-relations: []
+topics: [workspace, git, processo]
+relations: [adr-0006, arquitetura-component-catalog]
+evidence: [68521101, 3161bb89, d3e65544, 52df2254, 63cdad9d, 4039b6af]
 source: docs/log/changes/tree-reorganization.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# the tree reorganization (issue #130, PR #131)
+# Reorganização da árvore do repositório (issue #130, PR #131)
 
 O repositório saiu de `crates/` para quatro casas (`rust/` bibliotecas,
 `apps/`, `demo/`, `tool/`), com docs, dados e devops nos lugares da
@@ -239,4 +240,4 @@ lychee --config .devops/check/lychee.toml --offline .
 | `cf5c9c44` | uigallery: sem aviso no iOS e no Android |
 | `6ee6d4c5` | engine: o doctest do `actions!` chama o macro pelo nome |
 | `e35e2ce6` | testes: o guarda de ADR ignora arquivos do sistema (`.DS_Store`) |
-| (este) | docs: este relatório |
+| `4039b6af` | docs: este relatório |

@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, dialogs, alerts, confirmation, rfd, semantic-contract, dispatcher, agents, ide, showcase]
-relations: []
+topics: [plataforma, semantica, agentes]
+relations: [adr-0055, adr-0059, task-58, task-76, task-92]
 source: docs/adr/interface/0058-native-dialogs-answer-the-same-contract.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline
+
+Registra que o alerta e a confirmação nativos respondem ao mesmo contrato dos diálogos de arquivo: o alerta é capacidade de uma pessoa somente, e a confirmação nativa é uma opção do app que passa pelo mesmo `confirmed_by_person` ou `declined_by_person`. O resultado é que a pessoa responde pelo modal desenhado, pelo diálogo do sistema ou por leitor de tela, com os mesmos estágios no recibo, e nenhum agente abre ou responde um painel. Vem do item 8 da task-76, com a confirmação humana da task-58.
 
 ## context
 
@@ -33,7 +35,7 @@ confirmation of task-58 to be offerable in the system's dialog, as an
 option of the app, without touching the contract.
 
 the probe (the handoff of item 8 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76](../../tarefas/task-76-platform-integration.md)) measured:
 
 - `rfd::MessageDialog::show` is synchronous and modal: on macOS it runs
   `NSAlert::runModal()` on the main thread, a nested modal loop, so the
@@ -150,6 +152,13 @@ docs/log/steps/task-76-platform-integration.md) measured:
   person-only policy. an `AsyncAlerts` over `rfd::AsyncMessageDialog`
   would keep the loop alive during a confirmation and is the change that
   would make the native dialog a candidate for the default.
+
+## alternatives
+
+- Diálogo nativo assíncrono (`AsyncMessageDialog`): seria outro contrato e fica nomeado. Um `AsyncAlerts` é a mudança que tornaria o diálogo nativo candidato ao padrão (*decision*, *consequences*).
+- Caminho próprio para a confirmação nativa, com regra própria de quem confirma: seria uma segunda regra. A resposta passa por `confirmed_by_person` ou `declined_by_person` (*reason*).
+- Alerta como segunda fonte de verdade: o que o painel disse é estado projetado, e o toast ou o status continuam dizendo (*avoid*).
+- Painel aberto por pedido de agente: o pedido segue esperando uma pessoa, como antes (*decision*, *consequences*).
 
 ## avoid
 

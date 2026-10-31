@@ -6,15 +6,17 @@ type: decisao
 status: proposto
 date: 2026-09-25
 date_basis: cabecalho
-topics: [accessibility, accesskit, platforms, voiceover, live-regions, contrast, wcag, reduced-motion, web, showcase, generative-runtime]
-relations: []
+topics: [acessibilidade, plataforma, semantica, web-wasm]
+relations: [adr-0038, task-60, task-75]
 source: docs/adr/interface/0068-accessibility-is-production-ready-per-platform.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # accessibility is production-ready per platform
+
+Diz o que um leitor de tela recebe em cada plataforma e o que já está provado: a árvore de acessibilidade de cada página da galeria é testada, as mensagens de status são regiões vivas que não movem o foco, o contraste dos temas é medido com as falhas listadas, e no macOS a preferência de movimento reduzido do sistema é respeitada. A web fica em aberto, porque a escolha entre um espelho DOM com ARIA e nada por enquanto é do Brenner. Importa porque estar presente no código e estar pronto para produção são coisas diferentes, e quem adota o plev precisa saber, plataforma a plataforma, o que chega ao leitor de tela.
 
 ## context
 
@@ -159,6 +161,12 @@ two options, the decision is brenner's:
   preference, and the full keyboard.
 - a status is announced on macOS when its node appears: moving to a page
   announces its status lines once.
+
+## alternatives
+
+- para a web: o espelho DOM oculto com ARIA (opção 1 de `the web: open`) ou nada por enquanto (opção 2). As duas seguem abertas; a escolha é do Brenner.
+- uma segunda árvore só para os anúncios: rejeitada. As regiões vivas são nós da própria árvore, e elas não movem o foco (ver `avoid`).
+- mudar uma cor do tema para passar no teste de contraste: rejeitado. A cor é decisão de design e moveria todas as linhas de base (ver `contrast`).
 
 ## avoid
 

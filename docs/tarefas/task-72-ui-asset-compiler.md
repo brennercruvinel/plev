@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-63]
+topics: [formatos, importacao, desempenho, fontes, gpu]
+relations: [adr-0066, task-63, task-74, task-77]
+evidence: [74d68143, deee5143]
 source: docs/log/steps/task-72-ui-asset-compiler.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-72: UI asset compiler
+
+A task-72 leva para os outros assets de UI (SVG, fontes, ícones, animações, imagens e shaders) a ideia do monster: compilar uma vez no build e rodar um runtime pequeno. A fase 1, medida no perfil debug, fixou o limite para mover um item para o build: 5% do primeiro frame do showcase ou um frame a 60 Hz somado na sessão. Nenhum asset saiu do runtime, porque os ícones (0,17 ms) e o naga (0,7 ms) ficaram abaixo do limite; o WGSL passou a ser validado no gate, com arquivo, linha e coluna no erro. A gravação de interação como asset `.monster` e as fontes ficaram para a task-63 e a task-74, e a task está fechada pelo critério de aceite desde 2026-09-25.
 
 ## objetivo
 

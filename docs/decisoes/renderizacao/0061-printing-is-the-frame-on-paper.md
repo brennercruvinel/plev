@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, printing, cups, headless, frame-path, semantic-contract, background, showcase]
-relations: []
+topics: [plataforma, renderizacao, agentes]
+relations: [adr-0060, task-66, task-66b, task-76]
 source: docs/adr/rendering/0061-printing-is-the-frame-on-paper.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # printing is the frame on paper
+
+Decide que a impressão é o mesmo quadro da janela, renderizado pelo caminho headless numa escala de papel (`paper_scale`: dpi sobre pontos por polegada) e enviado ao CUPS pelo processo filho `lp`, sem biblioteca de impressão. Imprimir é ação da pessoa: um agente é recusado, como é recusado abrir uma janela, e o trabalho roda ao lado do laço, respondendo por canal. A medição mostrou que a mesma página sai com o mesmo layout e glifos nítidos em duas escalas; nenhuma impressão real foi feita nesta máquina, que não tem destino de impressão.
 
 ## context
 
@@ -27,7 +29,7 @@ approximation reported (task-66b). nothing reached the system's printing
 queue, and no app offered "print this page" as a capability.
 
 the probe (the handoff of item 9 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76-platform-integration.md](../../tarefas/task-76-platform-integration.md)) measured:
 
 - this machine has no destination: `lpstat -p -d` says "No destinations
   added." (exit 1, 0.14 s), `lp <file>` says "No default destination.",
@@ -52,7 +54,7 @@ docs/log/steps/task-76-platform-integration.md) measured:
 
 ## decision
 
-- **the document is the frame.** `engine::platform::print::PrintDocument`
+- **the document is the frame.** `engine::platform::print::PrintDocument` (`rust/engine/src/runtime/platform/print/mod.rs:147`)
   is the same scene the window draws, rendered through the headless
   frame path at a paper scale (`paper_scale(dpi)`: dots per inch over
   points per inch, since a logical pixel is a point on paper) and
@@ -90,7 +92,7 @@ docs/log/steps/task-76-platform-integration.md) measured:
   draws, reads back, encodes, hands the document to the printer and
   asks the job's place once; `settle_print` on the loop's catch-up
   completes or fails the request with the job, the destination, the
-  status and the document's measures. under `Background` (item 7) a
+  status and the document's measures. under [`Background`](0060-a-covered-window-does-not-draw-and-wakes-new.md) (item 7) a
   print asked asleep waits for the wake and is built from the state
   then; an answer that lands asleep waits on the channel. the
   destinations are looked for once, off the loop, when the printer is
@@ -151,6 +153,10 @@ docs/log/steps/task-76-platform-integration.md) measured:
   capability, with the parent window of item 2.
 - pagination of scrolling content; a follow-up poll of the queue for the
   projection.
+
+## alternatives
+
+As alternativas recusadas estão em `reason` e em `avoid`. Em `reason`: uma segunda rota de raster para o papel, que derivaria da janela como a sonda de texto antiga derivou, e uma biblioteca de impressão, que acrescentaria dependência para um job que termina num processo filho de qualquer forma. Em `avoid`: um segundo renderizador offscreen para o papel, e uma chamada a `Printer` dentro de `execute` ou na thread do laço, que bloquearia enquanto o filho roda.
 
 ## avoid
 

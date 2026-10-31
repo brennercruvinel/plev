@@ -1,26 +1,22 @@
 ---
 id: aprendizado-generative-runtime
-title: "sessão do runtime generativo: o que funcionou e o que mordeu"
+title: "Sessão do runtime generativo: o que funcionou e o que mordeu"
 project: plev
 type: aprendizado
 status: referencia
 date: 2026-09-26
 date_basis: cabecalho
-topics: [learnings, session, orchestration, agents, devops, secops, text, accessibility, wgpu, llm, privacy]
-relations: []
+topics: [agentes, processo, llm]
+relations: [adr-0072, adr-0074, adr-0075, adr-0076, adr-0077, manual-autonomy, task-75, task-78]
 source: docs/log/learnings/generative-runtime.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# sessão do runtime generativo: o que funcionou e o que mordeu
+# Sessão do runtime generativo: o que funcionou e o que mordeu
 
-registro da sessão que tocou o programa do runtime de interação generativa
-do começo das ondas até a task-78 fase 2: contrato semântico, porta do
-agente, gravação e inspector, IR e superfícies geradas, texto, teclado,
-wgpu 29 e inferência em processo. escrito pra quem vier depois, humano ou
-agente. as decisões estão nos ADRs; aqui fica o caminho.
+Registra a sessão que levou o programa do runtime de interação generativa do começo das ondas até a [task-78](../tarefas/task-78-ai-native-apps.md), fase 2: contrato semântico, porta do agente, gravação e inspector, IR e superfícies geradas, texto, teclado, wgpu 29 e inferência em processo. O que funcionou e o que mordeu fica aqui, escrito para quem vier depois, humano ou agente; as decisões estão nos ADRs, e esta página guarda o caminho até elas.
 
 ## orquestração: o caminho que funcionou
 
@@ -96,8 +92,7 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
 - o que é da pessoa não vira estado do app: a composição do IME só se
   desenha, a área de transferência só a pessoa alcança. e o que a
   interface mostra também vaza: um Paste desligado contava ao agente se a
-  área de transferência estava vazia (adr
-  the-persons-text-and-clipboard-stay-the-persons).
+  área de transferência estava vazia ([adr 0077](../decisoes/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md)).
 - promessa de privacidade se testa no conjunto inteiro: o teste lê os
   bytes do arquivo de gravação e não acha a composição nele.
 - nenhum agente chama o `claude -p` (`PLEV_CLAUDE` aponta para um stub em
@@ -107,17 +102,15 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
 ## arquitetura: padrões que ficam
 
 - **o contrato é o mapa.** o teclado anda na ordem da projeção, a mesma do
-  leitor de tela, e age pelo dispatcher como um clique (adr
-  the-keyboard-walks-the-projection). um segundo mapa da página seria
+  leitor de tela, e age pelo dispatcher como um clique ([adr 0076](../decisoes/interface/0076-the-keyboard-walks-the-projection.md)). um segundo mapa da página seria
   outra fonte de verdade.
 - **quando o widget não tem política por item, a recusa vem no executor.**
   funciona, mas a projeção mente um pouco (o agente vê o item como
   acionável); a dívida fica escrita.
 - **subir o renderer prova pixel por captura completa**, não pelo `regress
-  check`, que não desenha frame (adr a-renderer-upgrade-is-proven-by-a-full-capture).
+  check`, que não desenha frame ([adr 0074](../decisoes/renderizacao/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)).
 - **texto: visual na linha, lógico entre linhas; posição em f64 e shaping
-  por linha num cache com orçamento** (adr
-  text-moves-by-screen-order-and-shapes-by-line).
+  por linha num cache com orçamento** ([adr 0075](../decisoes/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md)).
 - **fontes e formatos se escolhem pelo que a versão travada desenha e
   lê.** o emoji é CBDT porque o swash 0.2.8 não desenha COLRv1; o `.fig`
   é um zip com fig-kiwi (esquema em deflate, mensagem em zstd, instâncias
@@ -125,8 +118,7 @@ agente. as decisões estão nos ADRs; aqui fica o caminho.
 - **inferência: uma interface, duas bibliotecas, o mesmo modelo.**
   decodificação gulosa e os 32 primeiros tokens lado a lado dizem se a
   comparação é justa; o burn não tem llama e o código trazido do burn-lm
-  carrega uma cadeia de licença a olhar antes de publicar (adr
-  ai-native-single-process).
+  carrega uma cadeia de licença a olhar antes de publicar ([adr 0072](../decisoes/estrutura/0072-ai-native-single-process.md)).
 - **dividir o device da GPU pede o mesmo wgpu dos dois lados**, o
   `instance` e o `adapter` expostos, e limites de computação pedidos só
   por quem computa (`RenderConfig::compute`, desligado por padrão).

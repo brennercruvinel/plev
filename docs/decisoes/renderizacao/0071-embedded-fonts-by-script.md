@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-25
 date_basis: cabecalho
-topics: [fonts, text, noto, cosmic-text, fontdb, fallback, subset, wasm, mobile, determinism, cjk, arabic, hebrew, devanagari, emoji, cbdt, glyph-atlas, generative-runtime]
-relations: []
+topics: [fontes, texto, web-wasm, mobile, determinismo]
+relations: [adr-0079, task-74]
 source: docs/adr/rendering/0071-embedded-fonts-by-script.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # embed Noto Sans subsets for the non-Latin scripts
+
+Embute no motor as faces Noto Sans em subconjuntos para seis escritas não latinas (árabe, hebraico, devanagari, chinês simplificado, japonês e coreano), Regular e Bold, e a Noto Color Emoji, para que wasm, android e iOS desenhem essas escritas. Antes, esses alvos as mostravam como tofu, e a largura medida no layout já saía errada antes de qualquer pixel. As faces entram na última etapa do fallback, onde a face Noto que cobre a escrita responde primeiro em todos os alvos. Os subconjuntos são gerados por script, com hash verificado, e somam cerca de 5,2 MB; a Noto Color Emoji acrescenta 1,4 MB.
 
 ## context
 
@@ -134,7 +136,7 @@ faces still win the last step because they load first. the faces the
 desktop picked for the eight audit lines at 400, 500, 600 and 700 were the
 same before and after this change on the probe's machine. the desktop and
 the embedded path therefore still draw these scripts with different faces;
-making the desktop prefer Noto is a separate decision (system fonts as an
+making the desktop prefer Noto is a [separate decision](0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) (system fonts as an
 option by setting was out of scope here).
 
 the text probe gained what measuring the embedded path in pixels on a

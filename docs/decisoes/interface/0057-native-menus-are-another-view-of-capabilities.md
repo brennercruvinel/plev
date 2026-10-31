@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, menus, muda, semantic-contract, dispatcher, agents, showcase, winit]
-relations: []
+topics: [plataforma, semantica, agentes, input]
+relations: [adr-0055, adr-0056, adr-0058, adr-0059, task-76]
 source: docs/adr/interface/0057-native-menus-are-another-view-of-capabilities.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a native menu is another view of the app's capabilities
+
+Registra que um menu nativo é outra representação das capacidades do app: cada item é uma capacidade projetada, e o clique entra pelo mesmo dispatcher que o botão, como `Actor::Human`. O resultado é um modelo de menu puro, testável em todo alvo e montado a partir da projeção, e uma barra do showcase cujas ações (`shell.page`, `shell.theme`, `shell.detach`, `shell.save_session`) deixam de ser só teclas. Importa porque o item de menu, a tecla, o botão, o leitor de tela e o agente passam a chegar à mesma capacidade pela mesma regra de política. Vem do item 4 da task-76.
 
 ## context
 
@@ -34,7 +36,7 @@ recording. none of them was projected, so no menu, no screen reader and
 no agent could ask for them.
 
 the probe (the handoff of item 4 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76](../../tarefas/task-76-platform-integration.md)) measured:
 
 - `muda` 0.20 with its default features off resolves offline into the
   root lock as `muda` and `keyboard-types` alone; the features only pick
@@ -178,6 +180,14 @@ docs/log/steps/task-76-platform-integration.md) measured:
   and the same dispatch; the native dialogs (item 8) reuse the
   person-only policy and the trait-with-a-fake shape, with the parent
   window from item 2.
+
+## alternatives
+
+- Item de menu que chama a página, a view ou o shell diretamente: o manipulador é o dispatcher (*avoid*).
+- Menu como segundo manipulador de teclas: a tecla `D` e o item "destacar" são o mesmo `shell.detach` (*reason*).
+- Shell dentro da projeção da página: moveria as 161 baselines por um nó que não está no quadro. A projeção da galeria é o escopo do shell (*reason*, *consequences*).
+- Atalho com letra solta: tiraria a letra de todo campo de texto (*decision*, *avoid*).
+- `muda` com as features padrão: só escolheriam o backend de linux, que é decisão do bring-up (*context*).
 
 ## avoid
 

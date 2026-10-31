@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, capture, camera, microphone, ffmpeg, image-atlas, semantic-contract, background, privacy, showcase]
-relations: []
+topics: [plataforma, renderizacao, semantica, agentes]
+relations: [adr-0060, task-76]
 source: docs/adr/interface/0062-capture-is-a-job-the-person-turns-on.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # capture is a job the person turns on
+
+Registra que câmera e microfone são capturas que a pessoa liga, feitas por um processo `ffmpeg` filho sem dependência nova, com a permissão e o estado do dispositivo projetados como estado, não como falha. O resultado é um slot de imagem de fluxo que reescreve o próprio quadro, a liberação do dispositivo quando a página não pode ser vista, e testes que nunca abrem um dispositivo. Importa porque a câmera é o recurso mais privado que um app pode ligar, e a decisão mantém essa escolha com a pessoa, inclusive frente a agentes. Vem do item 10 da task-76.
 
 ## context
 
@@ -28,7 +30,7 @@ desktop machines the showcase already runs it on (the Silences page),
 with an input device per platform.
 
 the probe (the handoff of item 10 in
-docs/log/steps/task-76-platform-integration.md) opened no
+[task-76](../../tarefas/task-76-platform-integration.md)) opened no
 device, ever: ffmpeg read `-f lavfi` sources only, paced by `-re` as a
 device paces itself, and the rest was read from `ffmpeg-devices(1)` and
 the strings of libavdevice.
@@ -158,6 +160,14 @@ the strings of libavdevice.
   other image.
 - ffmpeg must be installed for the camera to come on; without it the
   page says "failed: capture: could not start ffmpeg: ...".
+
+## alternatives
+
+- Dependência nova para captura (`objc2-av-foundation`, `cpal`, `coreaudio`): o lock não tem essas crates e nenhuma dependência pode ser acrescentada. O ffmpeg como processo filho já é a forma que o engine usa (*context*, *reason*).
+- Pausar o dispositivo em vez de liberá-lo: a câmera ficaria aberta para ninguém (*reason*).
+- Quadro da câmera como imagem fixa: enche o atlas em segundos. Um slot de fluxo ocupa a memória de um quadro (*context*, *reason*).
+- Permissão negada como falha: `Denied` é um fato que a pessoa e o agente leem (*reason*).
+- Captura ligada pelo agente: a pessoa liga, e o agente só lê o estado (*decision*, *avoid*).
 
 ## bring-up
 

@@ -6,15 +6,18 @@ type: tarefa
 status: em-andamento
 date: 2026-09-23
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-39, task-57, task-59]
+topics: [desempenho, layout, renderizacao, semantica]
+relations: [task-39, task-57, task-59, task-66, task-69, task-73-medicoes, task-82]
+evidence: [91fdb33, ed814da]
 source: docs/log/steps/task-73-incremental-dependency-system.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-73: sistema de dependências incremental
+
+Esta página acompanha a task-73, o sistema de dependências incremental que propaga invalidação mínima entre estado, semântica, layout, cena, hit test e renderização. As fases 1 e 1b, de medição e de tempo da GPU por timestamp query, estão fechadas e integradas na `main` (`ed814da` e `91fdb33`). A medição mostrou que o gargalo do frame é a GPU, e a decisão do orquestrador levou a fase 2 até a GPU; a fase 2 ainda depende do ADR de desenho e da decisão do brenner, e a fase 3 implementa por estágio.
 
 ## fase 1b fechada (2026-09-23)
 
@@ -168,8 +171,8 @@ fase 1: nenhuma. fase 2: 57 e 59. fase 3: a decisão da fase 2.
 fase 1: `rust/engine/src/runtime/perf`, `rust/engine/benches`, um exemplo de
 cenário. fases 2 e 3: definidas no ADR e aprovadas antes do briefing
 (provavelmente `layout`, `compositor`, `text/measure`). proposta de ADR
-`docs/adr/incremental-invalidation-by-dependency.md`. a task-39 foi para
-`checked/` como superseded (2026-09-25).
+`docs/adr/incremental-invalidation-by-dependency.md`. a task-39 está substituída
+por esta task desde 2026-09-25 (status `substituido`).
 
 ## interfaces que consome
 

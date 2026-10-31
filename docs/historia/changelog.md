@@ -1,20 +1,22 @@
 ---
 id: changelog
-title: changelog
+title: "Changelog do plev"
 project: plev
 type: registro
 status: ativo
 date: 2026-06-20
 date_basis: cabecalho
-topics: [changelog, versions]
-relations: []
+topics: [agentes, plataforma, renderizacao, superficies-geradas, texto]
+relations: [adr-0003, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0016, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, task-18, task-19, task-20, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-73-medicoes, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
 source: docs/log/changelog.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# changelog
+# Changelog do plev
+
+Registra o que mudou no plev, em ordem aproximadamente inversa de data: a seção `unreleased` começa nas entradas de 2026-10-27 e chega até agosto de 2026, seguida de entradas sem data, que vêm depois no arquivo; a seção `earlier` resume o período anterior ao changelog. Muitas entradas nomeiam a task ou a ADR que as sustentam e a medição ou o teste que as verificou, o que permite ir da mudança à decisão. Por isso o arquivo é o ponto de partida para descobrir quando um comportamento surgiu e por que ele existe.
 
 ## unreleased
 
@@ -858,7 +860,7 @@ review: pendente
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead (docs/log/steps/task-73-measurements.md).
+  ahead ([docs/log/steps/task-73-measurements.md](../experimentos/task-73-medicoes.md)).
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
@@ -937,7 +939,7 @@ review: pendente
   Overlays and Lists split into one module per widget; `comps::nav::
   Sidebar` gains `NavGroup`; the launch argument is the page title.
   docs/adr/ became docs/adr/ with README.md as its index, the changelog
-  moved to docs/log/changelog.md.
+  moved to [docs/log/changelog.md](changelog.md).
 - core theme and the buttons poc (2026-09-21, adr
   core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
   typescript kit (nine shades, six accents, depths as shadow stacks,
@@ -982,7 +984,7 @@ review: pendente
   `TextMeasurer::elide_path` came from the ide (and now drops several
   middle segments, the old helper dropped one). matrix test: every widget
   under 13 themes at phone and desktop widths. inventory and migration
-  record: docs/ref/component-catalog.md. workspace tests 855 -> 1414.
+  record: [docs/ref/component-catalog.md](../referencia/arquitetura/component-catalog.md). workspace tests 855 -> 1414.
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
   end (crate, modules, types, apps/urnadbapp/web, tool/tasks/webtarget.sh urnadbapp, gate, ci)
   against hoffresearch/urna v0.4.0; the portable reader accepts both
@@ -1018,7 +1020,7 @@ review: pendente
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md
+  [docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md](../decisoes/renderizacao/0024-glyph-raster-identity-and-atlas-isolation.md)
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
@@ -1052,7 +1054,7 @@ review: pendente
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for docs/ref/mon-experiment-notes.md. web/ owns
+  root for [docs/ref/mon-experiment-notes.md](../experimentos/mon-notas.md). web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only

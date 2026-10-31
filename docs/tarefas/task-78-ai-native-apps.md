@@ -6,15 +6,18 @@ type: tarefa
 status: em-andamento
 date: 2026-09-26
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-66, task-73]
+topics: [llm, gpu, desempenho, pesquisa]
+relations: [adr-0025, adr-0026, adr-0072, task-66, task-73, task-76]
+evidence: [6e2fce00, d095aeb5, a60b00c4, 2f91d01b, 094d53da, 94109cd3, f6ff13fb, 0dec09a9, a33b74a7, ddd0928c, 71993e9c, ca7cb9eb, 4a04d454, 8839f3c8, bcf0a205, 06df04c8, 496c6ffa, 002debd4, 9e46ce7a]
 source: docs/log/steps/task-78-ai-native-apps.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-78: aplicações AI-native
+
+Registra o programa que mede se um app com modelo local, embeddings, áudio, vídeo, canvas, streaming de tokens, visualizações e GPU compute roda melhor como processo Rust único do que na pilha Chromium, JS, DOM, IPC e backend nativo. A fase 1 comparou candle e burn com o TinyLlama 1.1B no Metal f16 e na CPU f32 (decode de 37,1 e 26,2 tok/s no Metal; 6,7 e 1,9 na CPU); o brenner manteve as duas implementações, e a ADR 0072 foi aceita. A fase 2 levou o plev ao wgpu 29 com 1312 de 1312 frames iguais à base de pixel do wgpu 28 e passou o burn ao device do engine, sem a metade que mostra o resultado na tela; o app de referência e a medição final ainda não existem.
 
 ## objetivo
 

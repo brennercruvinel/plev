@@ -6,15 +6,18 @@ type: experimento
 status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [task-73, perf, stages, measurement, gpu-timestamps, render-on-demand, incremental, generative-runtime]
-relations: []
+topics: [desempenho, renderizacao, gpu]
+relations: [task-73]
+evidence: ["4698224", "9522ee5"]
 source: docs/log/steps/task-73-measurements.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-73 phase 1: what each stage of a frame costs
+
+Registra a medição da fase 1 da task-73: quanto custa cada estágio de um frame em nove cenários (digitação, clique, hover, modal, frames sem interação), medida sem mudar o comportamento, e a fase 1b, que repete os cenários com timestamp queries da GPU. O resultado é que, neste M4, o frame é limitado pela GPU e não pela CPU: a espera da GPU fica entre 450 e 2200 µs por frame, de 4 a 15 vezes a CPU do mesmo frame. Por isso a decisão do orquestrador levou a fase 2 da task-73 até a GPU, e não só ao grafo de CPU.
 
 phase 1 of task-73 measures, without changing any behavior, the work each
 stage of a frame does for a small set of real interactions, so the

@@ -6,13 +6,13 @@ type: registro
 status: referencia
 date: 2026-10-30
 date_basis: git
-topics: [registro]
-relations: []
-evidence: [704412f1, b1e820ba, 95d53881, 1a776d04, ec0a224c]
+topics: [editorial, git]
+relations: [adr-0001, adr-0002, apps-contornam-engine, dois-bugs-gamma, estado-codigo-2026-09, task-26, task-40, tokens-hoff]
+evidence: [176dd691, 704412f1, b1e820ba, 95d53881, 1a776d04, ec0a224c]
 source: reconstrucao
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # Como ler as datas da trajetória
@@ -24,13 +24,13 @@ representam fontes diferentes e não devem ser fundidas automaticamente.
 ## Datas revistas posteriormente
 
 O commit `704412f1` alterou o cabeçalho da nota sobre `View` de
-2026-03-08 para 2021-03-06 e o ADR de layout de 2026-06-10 para
+2026-03-08 para 2021-03-06 e o [ADR de layout](../decisoes/renderizacao/0002-content-driven-layout-not-fixed-constants.md) de 2026-06-10 para
 2024-09-18. A mudança documenta uma revisão retrospectiva da data;
 não prova, sozinha, quando o trabalho técnico ocorreu.
 
 O commit `b1e820ba` remapeou referências de hashes após o expurgo de
-histórico. Por exemplo, `34a9893` foi substituído por `55c8aa7` no ADR de
-inicialização assíncrona da GPU. Uma referência antiga pode ter uma
+histórico. Por exemplo, `34a9893` foi substituído por `55c8aa7` no [ADR de
+inicialização assíncrona da GPU](../decisoes/renderizacao/0001-async-gpu-init-and-single-wasm-entry.md). Uma referência antiga pode ter uma
 correspondência recuperável sem que todo o histórico anterior exista.
 
 ## Leitura da linha do tempo
@@ -43,12 +43,12 @@ representada como ausência, nunca preenchida por conveniência editorial.
 
 ## Material recuperado
 
-A task 40 foi encontrada antes da exclusão em `95d53881`: seu objetivo
+A [task 40](../tarefas/task-40-paper-arxiv-full-text.md) foi encontrada antes da exclusão em `95d53881`: seu objetivo
 era escrever o artigo completo, com checklist pendente. O outline da
-task 26 concluído não demonstra que a task 40 também foi concluída.
+[task 26](../tarefas/task-26-arxiv-paper.md) concluído não demonstra que a task 40 também foi concluída.
 
 O rascunho, o outline, os benchmarks e os diferenciais do artigo saíram
-em `1a776d04`; `truth.md`, em `ec0a224c`. Suas versões recuperadas são
+em `1a776d04`; [`truth.md`](estado-do-codigo-2026-09.md), em `ec0a224c`. Suas versões recuperadas são
 fontes históricas. Os textos sobre gamma, apps contornando a engine e
 tokens HOFF também foram recuperados. Os caminhos e revisões exatos
 constam em `source` e no catálogo.

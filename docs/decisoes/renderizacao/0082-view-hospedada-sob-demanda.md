@@ -6,13 +6,13 @@ type: decisao
 status: aceito
 date: 2026-10-27
 date_basis: git
-topics: [decisao]
+topics: [grafos, plataforma]
 relations: [task-100]
 evidence: [da4be63a, 4aa9706b]
 source: reconstrucao
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # Uma view hospedada usa a janela e o relógio da engine
@@ -24,17 +24,20 @@ mas não de uma implementação própria de toda a janela.
 
 ## Decisão
 
-`App::with_view` recebe um `Box<dyn HostedView>`. A trait separa
-`handle_event`, `tick` e `render`. A engine entrega eventos em pixels
-lógicos, hospeda a view no frame e pede frames enquanto há movimento.
-O relógio da view trata o repouso para que a retomada não avance a
-simulação pelo tempo inteiro em que a janela ficou sem desenhar.
+`App::with_view` recebe um `Box<dyn HostedView>` (`rust/engine/src/runtime/window/mod.rs:117`).
+A trait separa `handle_event`, `tick` e `render` (`runtime/window/view.rs:15` a `:24`).
+A engine entrega eventos em pixels lógicos, hospeda a view no frame e pede frames
+enquanto há movimento (`runtime/window/lifecycle.rs:183` a `:190`). O relógio da
+view trata o repouso: ao parar de se mover, o relógio para, e a retomada não avança
+a simulação pelo tempo inteiro em que a janela ficou sem desenhar (`lifecycle.rs:184`
+a `:186`; `4aa9706b`).
 
 ## Consequências
 
-O demo compartilha o caminho de composição e inicialização da engine.
-As shells de uigallery e idestudio continuam próprias. A trait de canvas
-não representa automaticamente todo o contrato semântico de um app.
+O demo compartilha o caminho de composição e inicialização da engine. A
+documentação da trait diz que uigallery e idestudio mantêm as próprias shells
+(`runtime/window/view.rs:6` e `:7`). A trait de canvas não representa
+automaticamente todo o contrato semântico de um app.
 
 ## Alternativas
 

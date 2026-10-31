@@ -1,23 +1,23 @@
 ---
 id: aprendizado-general
-title: learnings
+title: "Aprendizados gerais"
 project: plev
 type: aprendizado
 status: referencia
 date: null
 date_basis: sem-data
-topics: [learnings, hypotheses, process]
-relations: []
+topics: [agentes, semantica, processo]
+relations: [adr-0036, estado-codigo-2026-09, manual-autonomy, manual-orchestrate-coding-agents-on-this-repo, task-57b, task-59, task-62, task-64, task-67, task-68, task-69, task-70, task-71, task-74, task-75, task-76, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-96, task-97]
+evidence: [c07a7f0, 1bf6606]
 source: docs/log/learnings/general.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# learnings
+# Aprendizados gerais
 
-o que experimentos e implementações ensinaram, e o que mudou no programa por
-causa disso. só aprendizado concreto, com a fonte. o mais novo em cima.
+Registra o que experimentos e implementações ensinaram e o que mudou no programa por causa disso, com a fonte de cada aprendizado. Entram só aprendizados concretos, em ordem cronológica inversa, o mais novo em cima; muitas entradas trazem a regra que delas saiu.
 
 ## produto e tese
 
@@ -888,7 +888,7 @@ c"; saídas em `target/agents/exp/`.
   da task-84).
 - **32 divergências doc x código acumuladas:** os fechamentos escreviam
   o doc novo e não corrigiam os docs que a mudança contradizia (a 58b
-  trouxe `decline` e o ADR commit-checks continuou dizendo que não
+  trouxe `decline` e o [ADR commit-checks](../decisoes/semantica/0036-commit-checks-the-index-it-observed.md) continuou dizendo que não
   existia). regra nova do fechamento: procurar em `docs/` e no README os
   nomes do contrato que mudou e corrigir o que ficou falso
   ([`orchestrate-coding-agents-on-this-repo.md`](../referencia/operacao/orchestrate-coding-agents-on-this-repo.md)).

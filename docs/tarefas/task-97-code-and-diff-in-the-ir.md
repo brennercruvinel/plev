@@ -6,15 +6,18 @@ type: tarefa
 status: concluido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [generative-runtime]
-relations: [task-68, task-69, task-96]
+topics: [ir, superficies-geradas, texto, acessibilidade]
+relations: [adr-0049, adr-0051, task-68, task-69, task-75, task-80, task-96]
+evidence: [a82087d8, 38960bf8, 82658d2a, 2b4fe23c, 593ff9bf, 10f66729, 9c96bde4, 19ea59bd]
 source: docs/log/steps/task-97-code-and-diff-in-the-ir.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-97: código e diff no vocabulário do IR
+
+Registra a task que pôs um componente `code` no vocabulário fechado do IR (`uir::Component`), para a superfície gerada mostrar um diff com a cor e o tipo de cada linha, em vez da tabela de cinco linhas por vez que ela usava. O componente é verificado pelas regras de sempre, materializado pelo `CodeBlock` do comps estendido de forma aditiva e rola quando o diff passa da área. Medida de novo pelo critério escrito antes, a demo 5 mostra 14 de 14, 7 de 7 e 14 de 18 linhas à vista na superfície (eram 5, 5 e 5), e continua caindo no diff pelo terceiro commit e pelo número de linha; a task está integrada na main.
 
 ## objetivo
 

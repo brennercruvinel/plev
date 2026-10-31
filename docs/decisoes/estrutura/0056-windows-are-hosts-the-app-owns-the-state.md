@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [engine, window, multi-window, render-on-demand, semantic-contract, platform-integration, winit]
-relations: []
+topics: [renderizacao, gpu, plataforma]
+relations: [task-76]
 source: docs/adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a window is a host of what dies with it; the app owns the state
+
+Decide que cada janela é um hospedeiro (`WindowHost`) do que morre com ela, e que o app guarda o estado que as janelas compartilham: o tema, o estado, o despachante único e o port do agente. A motivação é a sonda da task-76: dois contextos GPU não compartilham atlas nem camadas, e a casca de uma janela só descartava a primeira ao criar a segunda. O resultado é um quadro sob demanda por janela, em que fechar uma não fecha a outra, e, com uma janela, a projeção continua byte a byte igual.
 
 ## context
 
@@ -31,7 +33,7 @@ panel, an inspector, a dialog of its own) and closes one without closing
 the app.
 
 the probe (task-76 item 2, the handoff in
-docs/log/steps/task-76-platform-integration.md) measured
+[task-76-platform-integration.md](../../tarefas/task-76-platform-integration.md)) measured
 what a second window would share with the first: two `GpuContext`s with
 two compositors drew two scenes in one loop and each frame showed only
 what was pushed into it (the glyph atlas, the layer textures, the
@@ -153,6 +155,15 @@ routes the second's events as if they were the first's.
   deadline, the recovery already per context); a dialog with a parent
   (item 8) is a window opened through `Windows::open` with the parent's
   id kept by the shell.
+
+## alternatives
+
+- campo `window: Option<Arc<Window>>` ao lado do estado do app: rejeitado. Um segundo `create_window` descarta a primeira janela e roteia os eventos dela para a cena errada (`## context`, `## avoid`).
+- uma `wgpu::Instance` para todas as janelas: adiado. Exigiria um construtor em `gpu/**`, fora desta tarefa; cada contexto mantém a própria instância, e o custo de enumerar adaptadores é o que os construtores já pagavam (`## consequences`).
+- rotear o ponteiro do showcase por `Windows::route`: não feito. A casca entrega os `WidgetEvent` direto à view, como antes; o engine `App` e os exemplos roteiam tudo (`## consequences`).
+- pedir um quadro a todas as janelas a cada mudança: rejeitado. Uma janela em repouso só desenha pelos próprios motivos (`## avoid`).
+- acrescentar a janela da página à projeção de uma janela: rejeitado. Goldens e baselines são o contrato com todo agente que lê uma janela (`## avoid`).
+- um `SnapshotBuilder::extend` que preserve as fontes: não feito. Sem ele, o nó `window` é reconstruído e perde o `source` de cada nó; o `sem` precisaria dessa mudança (`## consequences`).
 
 ## avoid
 

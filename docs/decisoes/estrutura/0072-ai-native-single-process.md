@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-26
 date_basis: cabecalho
-topics: [ai-native, llm, inference, candle, burn, tokio, streaming, metal, wgpu, wasm, single-process, generative-runtime]
-relations: []
+topics: [llm, gpu, web-wasm]
+relations: [task-41, task-78]
 source: docs/adr/structure/0072-ai-native-single-process.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # local llm inference in process: candle or burn
+
+Escolhe a biblioteca de inferência local do app de IA nativo da task-78 e mede candle e burn com o mesmo modelo, o mesmo laço de decodificação e o mesmo canal de streaming. A decisão de Brenner, de 2026-09-26, mantém as duas implementações atrás do trait `Model` e leva o plev ao wgpu 29, para que o burn rode no dispositivo do renderizador. O resultado é um processo, um dispositivo wgpu e uma fila: o candle decodifica mais rápido, e o burn é o único com caminho GPU no navegador.
 
 ## context
 
@@ -174,6 +176,8 @@ renderer's device:
   handles in a `WgpuSetup`, and `llm::plev::load` loads the model on that
   device through burn's wgsl path.
 
+## consequences
+
 what it shows. one process, one wgpu device, one queue. in
 `rust/llmrun/tests/engine.rs` the headless renderer's device goes to burn,
 a matmul on it reads back equal to the cpu's, and the same renderer then
@@ -201,3 +205,11 @@ what it does not show:
 - only the headless path ran. a window's device comes from the same
   descriptor, but no windowed app has burn on it.
 - candle still makes its own Metal device.
+
+## alternatives
+
+- candle sozinho, como recomendava `## recommendation`: não foi a decisão. Brenner escolheu manter as duas implementações atrás do mesmo trait `Model`.
+- burn sozinho: teria menos memória e o único caminho GPU no navegador, mas perderia em todas as linhas de velocidade e teria um binário cinco vezes maior, com código de modelo próprio a manter (`## options`, item 2).
+- compartilhar buffers do renderizador com o candle por wgpu-hal: rejeitado como interop insegura entre filas separadas no mesmo GPU (`## the renderer's gpu (scope item 4)`).
+- dispositivo do renderizador para o candle: indisponível, porque o candle não tem construtor que receba um device existente (`## the renderer's gpu (scope item 4)`).
+- burn com a feature `metal` no dispositivo compartilhado: recusado pela função `device` de `rust/llmrun/src/engine.rs:42` (o corpo a chama de `llm::plev::device`), porque depende de passthrough shaders que o device do engine não habilita (`## the shared device (task-78 phase 2)`).

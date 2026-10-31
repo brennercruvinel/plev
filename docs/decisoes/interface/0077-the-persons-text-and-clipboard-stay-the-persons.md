@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-26
 date_basis: cabecalho
-topics: [text, ime, clipboard, privacy, agents, comps, showcase, ide]
-relations: []
+topics: [input, edicao-de-texto, agentes]
+relations: [task-74]
 source: docs/adr/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the person's composition and clipboard stay the person's
+
+Fixa que a composição de texto (IME) e a área de transferência pertencem à pessoa: o campo guarda a pré-edição separada do buffer e só grava o que foi confirmado, a gravação registra o commit de texto como `InputKind::Text` sem o conteúdo, e a área de transferência só é alcançada pelas teclas da pessoa e pelo menu do campo, onde a escolha de um item por agente falha. Importa porque, antes da task-74, o campo descartava a composição e, na galeria, cmd+v digitava a letra v.
 
 ## context
 
@@ -90,3 +92,8 @@ the clipboard:
 - the IME script on macOS passed in the editor (Brenner, 2026-09-25,
   Japanese and Chinese). the same script in a field of the Input page
   closes the item in task-74.
+
+## alternatives
+
+- colar com a área de transferência vazia desabilitado: rejeitado. A projeção diria se a área de transferência da pessoa tem algo, e isso chegaria a um agente e à gravação; colar sem nada não faz nada (ver `decision`, the clipboard).
+- IME ligado o tempo todo na galeria: não adotado. Com nenhum campo focado, as letras são atalhos, e uma fonte de entrada japonesa as comporia (ver `decision`, the composition).

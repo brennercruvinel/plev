@@ -6,25 +6,28 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [uir, surface, plev-ir, transform, verifier, identity, history, generative-runtime]
-relations: []
+topics: [ir, superficies-geradas, semantica, agentes]
+relations: [adr-0049, adr-0051, task-63, task-64, task-68, task-69, task-70, task-75, task-83, task-90, task-91]
+evidence: [ab3fedf7, 99d45162, 7e9a7176, 873a737f]
 source: docs/adr/generated/0067-adaptive-transforms-preserve-identity.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # adaptive transformations are small verified operations that preserve identity
 
+Registra a decisão de tratar uma mudança de forma de superfície gerada como operações pequenas sobre o IR, e não como um IR inteiro novo. São nove operações (`hide`, `show`, `group`, `reorder`, `emphasize`, `density`, `restyle`, `swap_view` e `promote`), cada uma verificada, com inversa exata e registro no histórico do host. O resultado é que os nós que permanecem mantêm seu estado, porque a identidade dos ids é preservada; as fases 2 a 4 acrescentam pedidos em palavras, a composição de sequências repetidas em uma ação e as preferências de acessibilidade, sempre por pedido de uma pessoa. Importa porque a superfície se adapta sem ser reconstruída, e cada passo pode ser desfeito.
+
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 gave the host that
+([adr-0049](0049-plev-ir-typed-and-verified.md)). task-69 gave the host that
 materializes it and changes a surface's form by a whole new `VerifiedIr`,
-reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md,
+reconciled by `SemId` ([adr-0051](0051-materialized-surfaces-from-verified-ir.md),
 the addendum of phase 2). the checkpoint b ended with the generated
 surface no longer worse than the fixed one, and the generation stays the
-main line (docs/log/steps/task-69-ephemeral-generative-surfaces.md).
+main line ([task-69](../../tarefas/task-69-ephemeral-generative-surfaces.md)).
 
 task-70 is the next step of the thesis (sections 4 and 16): the interface
 changes without being built again. the only change of form was the whole
@@ -146,7 +149,9 @@ last inverse, verified again, the same way, and returns the change.
 `changes` lists them, `adapted` gives what is aside. a refused operation
 leaves the surface and the history as they were; a whole new form
 (`transform`) and `close` end the history. `apply` takes the policy
-because a `VerifiedIr` does not keep the one it was verified under.
+because a `VerifiedIr` does not keep the one it was verified under. (a fase 2
+tirou o `policy` de `apply` e de `undo`; ver "the host keeps the policy and the
+asks", na adição da fase 2.)
 
 ### what an agent may not do, it still may not
 
@@ -249,6 +254,23 @@ its one list is the cuts' ids, and the durations are one number per cut.
 - a promotion for an actor the app keeps the action from, or of a
   destructive action without the app's confirmation.
 - transforming a fixed screen at the projection only.
+
+## alternatives
+
+O que foi pesado na fase 1 e por que perdeu. Cada item aponta para o trecho
+que já registra a razão.
+
+- ocultar por um campo `hidden` no `IrNode`, ou por um token: recusado; o
+  vocabulário e o verificador ficam como estão, e a parte oculta sai da
+  árvore e fica ao lado (ver "hidden is aside, not a field").
+- transformar a tela fixa só na projeção: recusado; o que a pessoa vê e o
+  que o agente lê se separariam, e não haveria verificador nem inversa. a
+  tela que cabe no vocabulário entra como IR (ver "fixed screens").
+- um IR inteiro novo a cada ajuste, o caminho da task-69: recusado para
+  ajustes pequenos, porque é opaco e custa uma chamada de modelo (ver
+  "reason").
+- uma operação que devolve IR sem verificar, ou um desfazer que pula o
+  verificador: recusado (ver "avoid").
 
 ## integração
 

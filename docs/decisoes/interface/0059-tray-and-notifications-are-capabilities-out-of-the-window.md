@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, tray, notifications, tray-icon, muda, semantic-contract, dispatcher, agents, showcase, macos]
-relations: []
+topics: [plataforma, semantica, agentes]
+relations: [adr-0057, adr-0058, task-76]
 source: docs/adr/interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the tray and the notifications are capabilities out of the window
+
+Registra que a bandeja e as notificações do sistema são capacidades fora da janela: o ícone e a notificação reaproveitam o modelo de menu e voltam ao dispatcher como `Actor::Human`, e nenhum agente notifica nem mostra a bandeja. O resultado é uma fila de cliques com dois donos, um notificador que responde `NeedsBundle` fora do bundle em vez de mostrar uma notificação sem volta, e textos projetados que valem mesmo quando a plataforma não mostra nada. Vem do item 5 da task-76.
 
 ## context
 
@@ -26,7 +28,7 @@ projection already has, and that a click on either come back through the
 app's one dispatcher as `Actor::Human`, as the bar's items do since item 4.
 
 the probe (the handoff of item 5 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76](../../tarefas/task-76-platform-integration.md)) measured:
 
 - `tray-icon` 0.25.1 with its default features off resolves offline into
   the root lock as itself alone: every dependency (`muda`, `objc2` and the
@@ -154,6 +156,13 @@ docs/log/steps/task-76-platform-integration.md) measured:
   UserNotifications path (`objc2-user-notifications` with the classes it
   uses, `objc2` and `objc2-foundation` directly, a delegate for the
   response, a category for the button); a linux tray backend.
+
+## alternatives
+
+- `osascript display notification` como processo filho: aparece com o nome de outro app e não devolve o clique, então não atende ao contrato (*decision*).
+- Notificação real no macOS antes do bundle: `NeedsBundle` é a resposta honesta; uma notificação com o nome de outro app não tem volta (*decision*, *reason*).
+- Menu próprio para a bandeja: o mesmo `MenuModel` e o mesmo código `muda` evitam uma segunda lista de itens (*reason*).
+- Segunda fila de cliques para a bandeja: os dois donos dividem o manipulador (*avoid*).
 
 ## avoid
 

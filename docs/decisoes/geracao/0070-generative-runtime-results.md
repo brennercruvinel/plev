@@ -1,20 +1,23 @@
 ---
 id: adr-0070
-title: "generative runtime results"
+title: "each demo's method is written before it runs, and the result keeps its negatives"
 project: plev
 type: decisao
 status: proposto
 date: 2026-09-25
 date_basis: cabecalho
-topics: [generative-runtime, proof, method, demos, inspect, rerun, surface, stale, handoff, task-80]
-relations: []
+topics: [agentes, superficies-geradas, semantica, gravacao, pesquisa]
+relations: [adr-0051, task-62, task-63, task-64, task-69, task-70, task-80, task-84, task-96]
+evidence: [c8a6c3a9, 6500f2dc]
 source: docs/adr/generated/0070-generative-runtime-results.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# generative runtime results
+# each demo's method is written before it runs, and the result keeps its negatives
+
+Registra o método das cinco demos de prova do programa, escrito e commitado antes de qualquer demo nova rodar, e o resultado das demos 1, 3 e 4: rejeição de estado obsoleto, inspeção de uma corrida real e interface efêmera. A demo 2 tem prova só com uma pessoa roteirizada, dois braços de controle da demo 1 não rodaram, e a demo 5 foi encaminhada para a task-96 na data deste registro. Importa porque a direção do programa só pode ser revista com os dados se os critérios e a regra de parada foram escritos antes.
 
 ## context
 
@@ -117,6 +120,13 @@ marks are unchanged; the fixture is test code beside the ide's.
   a person types there reaches the recording through the state, not the
   input: by design of the recording, noted for whoever decides whether an
   intent field should be secret.
+
+## alternatives
+
+- git na linha de comando, como braço de controle da demo 1: a mesma intervenção produziu um commit errado sem aviso. Em bytes, git ficou com 1.459 B em 20 chamadas, contra 22.040 B em 30 mensagens, na primeira rodada.
+- captura de tela, como braço de controle da demo 1: só o volume foi medido (uma observação é 9,9 vezes menor que o PNG do quadro), não a capacidade. Esse braço ainda não rodou.
+- tela fixa ao lado, como controle da demo 4: a tela fixa ao lado não mostra nenhum dos cinco pedaços de cada corte, e a tela fixa sozinha mostra um corte de dois. A superfície gerada mostra os cinco pedaços de cada corte.
+- superfície fixa nas mesmas tarefas, critério da regra de parada: se a superfície gerada for pior, a direção volta a ser revista. O checkpoint b da task-69 já tinha achado a revisão gerada não pior que a fixa.
 
 ## what remains, with its owner
 

@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-29
 date_basis: cabecalho
-topics: [ui, responsiveness, layout, tokens, fluid-scale, accessibility, input, process, agents]
-relations: []
+topics: [layout, design-system, acessibilidade, mobile]
+relations: [adr-0002, adr-0027]
 source: docs/adr/rendering/0073-design-for-ranges-not-screens-and-devices.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # design for ranges, not screens and devices
+
+Registra cinco regras de design que valem para toda mudança visível, em todas as plataformas: escala fluida a partir de tokens, resposta do componente ao espaço e ao conteúdo, layout intrínseco, valores relativos e semânticos, e adaptação progressiva testada em faixas contínuas. A decisão é projetar para conteúdo, restrições, capacidades e faixas, e não para telas e dispositivos. Antes, cada tarefa decidia isso sozinha, e as regras, escritas para aplicações web, passaram a ser lidas com o equivalente de cada plataforma.
 
 ## context
 
@@ -56,7 +58,7 @@ platform:
 the principle behind the five: design for content, constraints,
 capabilities and ranges, not screens and devices. the text lives in
 AGENTS.md, section "design for ranges, not screens", and is repeated in
-the engine manual. the other documents carry the short form and point
+the engine manual. hoje o `AGENTS.md` não está mais na árvore (foi removido em 704412f1); a seção está em [how to code against the plev engine](../../referencia/operacao/code-against-the-plev-engine.md). the other documents carry the short form and point
 there.
 
 ## consequences
@@ -64,13 +66,17 @@ there.
 - the rules are read at task start and are part of a task's acceptance;
   the definition of done for ui work has an item for them
 - the pull request template has one checkbox per rule, and the
-  orchestrator's diff review has a line for them
-- arc.toml `[contracts]` and the README's contracts list name the
+  orchestrator's diff review has a line for them. o template `.github/pull_request_template.md` saiu da árvore em 2026-10-07 (commit `9c4bca2d`); a seção `design for ranges` estava nele desde o commit `5662b37e`
+- arc.toml `[contracts]` (hoje `docs/ATLAS.toml`) and the README's contracts list name the
   principle
 - two documents hold the same text. an edit to one lands in the other and
   in the checklist in the same change; nothing checks that yet
 - the code that existed before this record was not audited against the
   five rules in this change
+
+## alternatives
+
+O texto não registra alternativas pesadas. O que a decisão recusa está em `avoid`: um número solto dentro do componente, um breakpoint para ajustar poucos pixels, uma regra escrita para um dispositivo e uma tela verificada só em predefinições de dispositivo.
 
 ## avoid
 

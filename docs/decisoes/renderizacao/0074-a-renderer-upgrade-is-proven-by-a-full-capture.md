@@ -6,21 +6,23 @@ type: decisao
 status: aceito
 date: 2026-09-26
 date_basis: cabecalho
-topics: [wgpu, upgrade, determinism, pixels, regress, capture, dependencies, rust-version]
-relations: []
+topics: [gpu, determinismo, processo]
+relations: [adr-0072, task-78]
 source: docs/adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # a renderer upgrade is proven by a full capture
+
+Fixa a ordem para mover a dependência de renderização de wgpu 28 para 29, feita na fase 2 da task-78: resolver offline em todos os alvos, capturar a base na versão antiga, mover só o crate pedido, corrigir a API e provar com uma captura completa em que cada quadro é igual ao da base. O resultado foi 1312 de 1312 quadros iguais, verificados pelo agente e de novo pelo orquestrador. Importa porque o `regress check` compara significado e hashes de camadas e não desenha quando nada mudou, então sozinho não prova que os pixels continuam iguais.
 
 ## context
 
 task-78 phase 2 moved plev from wgpu 28 to 29, so that burn (on wgpu 29)
 can compute on the renderer's own device (decision 16 of the program,
-adr ai-native-single-process). a graphics dependency can change pixels
+[adr ai-native-single-process](../estrutura/0072-ai-native-single-process.md)). a graphics dependency can change pixels
 without failing a test. the structural regression (`regress check`)
 compares meaning and layer hashes and draws no frame when nothing moved,
 so it cannot prove that the frames are the same after a renderer upgrade.
@@ -86,3 +88,7 @@ by default, which asks the adapter's limits (a model outgrows the default
   29, so `rust/llmrun` refuses it on the engine's device. after a device
   loss the handles burn holds are dead: whoever uses burn on the renderer
   registers the new device (no test covers it yet).
+
+## alternatives
+
+O texto não registra alternativas pesadas. Ele recusa dois caminhos: aceitar uma diferença de quadro no ato, que o passo 5 proíbe (cada diferença para o trabalho e é relatada com a contagem, as páginas, o maior delta e dois pares antes e depois), e tomar o `regress check` como prova de pixels, já que ele compara significado e hashes de camadas e não desenha quando nada mudou (context).

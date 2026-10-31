@@ -6,13 +6,13 @@ type: aprendizado
 status: referencia
 date: 2026-10-27
 date_basis: git
-topics: [aprendizado]
+topics: [grafos, layout, importacao]
 relations: [task-100, adr-0081]
 evidence: [db4b3299, b8bc7639]
 source: reconstrucao
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # Separar dados, aparência e algoritmo em Rust
@@ -35,7 +35,7 @@ O contrato de importação termina no modelo; o contrato de layout começa
 nele. Importar JSON ELK não implementa um layout ELK. Essa fronteira é
 o que permite registrar uma limitação sem acoplar a engine ao formato.
 
-Fonte: [rust/engine/src/widgets/graph/model.rs](https://github.com/brennercruvinel/plev/blob/ec0a224c2d6c5a446e70cf4ca9ee92fd66eef713/rust/engine/src/widgets/graph/model.rs) e task 100.
+Fonte: [rust/engine/src/widgets/graph/model.rs](https://github.com/brennercruvinel/plev/blob/ec0a224c2d6c5a446e70cf4ca9ee92fd66eef713/rust/engine/src/widgets/graph/model.rs) e [task 100](../tarefas/task-100-grafos-interativos.md).
 
 ## Evidências
 

@@ -3,22 +3,25 @@ id: adr-0078
 title: "the web build fetches the Noto faces when a text first needs them"
 project: plev
 type: decisao
-status: proposto
+status: aceito
 date: 2026-10-27
 date_basis: cabecalho
-topics: [fonts, text, noto, wasm, web, size, fetch, cosmic-text, fontdb, issue-137]
-relations: []
+topics: [fontes, texto, web-wasm]
+relations: [adr-0071, adr-0079]
+evidence: [f79400d1, 71ee6291]
 source: docs/adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the web build fetches the Noto faces when a text first needs them
 
+Decide que a versão web busca do servidor as faces Noto (seis escritas e o emoji) quando um texto delas precisa, em vez de embuti-las no wasm. O wasm da uigallery caiu de 13.606.811 para 7.060.619 bytes (2.849.177 com gzip -9), cerca de 65% menos para baixar, e cada arquivo só entra em uso inteiro e com o sha256 conferido. O custo é um texto em escrita ainda não baixada aparecer como tofu por alguns quadros até a face chegar; desktop, android e iOS continuam embutindo as faces.
+
 ## context
 
-adr embedded-fonts-by-script (0071) embedded the Noto Sans subsets for
+[adr embedded-fonts-by-script (0071)](0071-embedded-fonts-by-script.md) embedded the Noto Sans subsets for
 arabic, hebrew, devanagari, SC, JP and KR, and the Noto Color Emoji, on
 every target. on the web that put 6.97 MB of fonts into the wasm every
 page downloads, whether or not it ever shows those scripts: the
@@ -70,7 +73,7 @@ at 71ee6291). issue #137 asked to fetch them instead.
 - the Typography page gained a SCRIPTS section, one line per pack. a
   desktop still draws those lines with the system's faces, as adr 0071
   keeps it, so the web and the desktop measure them differently; making
-  the desktop prefer the embedded faces is that separate decision.
+  the desktop prefer the embedded faces is that [separate decision](0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md).
 
 ## alternatives
 

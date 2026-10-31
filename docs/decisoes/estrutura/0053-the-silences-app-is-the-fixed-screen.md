@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [showcase, silences, ffmpeg, worker, dispatcher, fixed-screen, checkpoint-b, generative-runtime]
-relations: []
+topics: [superficies-geradas, semantica, agentes]
+relations: [adr-0025, task-69]
 source: docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the silences app is the fixed screen the generated one is compared against
+
+Registra que o app de silêncios é a tela fixa contra a qual a superfície gerada será comparada no checkpoint b do programa. A decisão separa um modelo puro, um estado semeado com a detecção gravada da sonda e um worker que executa o ffmpeg como processo filho, e só depois que um ator pede. O resultado é uma projeção semântica estável, com o mesmo golden e o mesmo quadro em qualquer máquina, sem nenhum processo externo ao abrir a página.
 
 ## context
 
@@ -32,7 +34,7 @@ page of the showcase's Apps Demo group.
 the constraints it had to meet: the official app pattern (state in
 structs, retained widgets, one dispatcher, the model changed only in
 `execute`, every action reading the state it changes); ffmpeg as a child
-process (docs/adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md),
+process ([adr-0025](../importacao/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)),
 never a library; no test of the gate depending on ffmpeg; the showcase
 still compiling to wasm; render on demand; and a projection, a headless
 frame and a regression baseline that are the same on every machine.
@@ -165,6 +167,15 @@ gallery scrolls it.
 - the port and the screen reader operate the page through the gallery's
   dispatcher; the receipts of silences requests are in the todo page's
   dispatcher, numbered with the gallery's.
+
+## alternatives
+
+- gerar o vídeo ao abrir a página, como pedia o briefing: perdeu. Um processo filho iniciado na abertura deixaria o quadro staged à mercê do tempo dele e escreveria em `/tmp` num render (`## decision`, “ffmpeg only after an actor asks”).
+- ffmpeg como biblioteca: perdeu desde o contexto. A restrição era processo filho, e nenhum teste do gate pode depender de ffmpeg.
+- despachante próprio da página: perdeu. O port soma um sink ao despachante da galeria e casa atos por `RequestId`; um despachante próprio ficaria sem ouvinte e colidiria nos ids (`## decision`, “the gallery's one dispatcher”).
+- segundo bind para os botões de cada linha: perdeu. A linha é o nó, e os botões são a affordance dela (`### the projection`).
+- reaproveitar o id de um corte entre detecções: rejeitado. Um pedido dirigido a um corte de detecção substituída atingiria outro silêncio com o mesmo número (`### the model, pure`, `## avoid`).
+- exportar o vídeo cortado nesta fase: adiado. Aplicar é uma decisão no modelo; a exportação real, com ffmpeg, fica para o checkpoint, se ele pedir (`## what phase 4b needs`).
 
 ## what phase 4b needs
 

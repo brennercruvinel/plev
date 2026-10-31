@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-25
 date_basis: cabecalho
-topics: [accessibility, keyboard, focus, wai-aria, showcase, comps, sem]
-relations: []
+topics: [acessibilidade, input, semantica]
+relations: [adr-0068, task-75]
 source: docs/adr/interface/0076-the-keyboard-walks-the-projection.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # the keyboard walks the projection
+
+Registra como o teclado percorre a projeção das páginas de componente da galeria: Tab e Shift-Tab seguem a ordem de foco que um leitor de tela também segue, as setas seguem o WAI-ARIA dentro de cada widget, e Enter e Espaço agem pelo dispatcher como `Actor::Human`, o mesmo pedido de um clique. A task-75 pediu teclado completo nessas páginas, com teste; 29 das 30 páginas percorrem com o teclado, e um teste as percorre todas com Tab. Importa porque uma segunda ordem de foco, separada da projeção, criaria um mapa da página que podia divergir do que o leitor de tela e os agentes veem.
 
 ## context
 
@@ -45,7 +47,7 @@ through the same dispatcher, not a second map of the page.
   `Select` key that no field takes moves as the key without shift, so
   shift changes nothing outside a field.
 
-## rejected
+## alternatives
 
 one Tab stop per composite widget (tabs and tree as a single stop, the
 roving tabindex WAI-ARIA recommends). the engine offers a screen reader's

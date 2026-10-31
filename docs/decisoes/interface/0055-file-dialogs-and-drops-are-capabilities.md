@@ -6,15 +6,17 @@ type: decisao
 status: aceito
 date: 2026-09-24
 date_basis: cabecalho
-topics: [platform-integration, file-dialog, drag-and-drop, input, semantic-contract, agents, rfd, winit]
-relations: []
+topics: [plataforma, input, semantica, agentes]
+relations: [adr-0057, adr-0058, task-76]
 source: docs/adr/interface/0055-file-dialogs-and-drops-are-capabilities.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person
+
+Registra a decisão de que diálogos de arquivo e o drop de arquivos são capacidades do engine: uma só implementação de diálogos, um único ponto que traduz os eventos da janela, e um diálogo nativo que só uma pessoa abre. O resultado é que a urnaui deixa de usar `rfd` e o evento de drop do winit diretamente, e nenhum teste abre um diálogo de verdade. Importa porque pedir para abrir um arquivo, pelo menu, pelo botão ou pelo drop, passa a ser uma só capacidade do contrato. Vem do item 3 da task-76.
 
 ## context
 
@@ -30,7 +32,7 @@ integration that is an action to be a capability of the contract: the
 several representations.
 
 the probe (the handoff of item 3 in
-docs/log/steps/task-76-platform-integration.md) measured:
+[task-76](../../tarefas/task-76-platform-integration.md)) measured:
 
 - `rfd` 0.15 has a backend for macos, windows, linux and wasm, none for
   android or ios; on wasm it is asynchronous only and answers bytes (a
@@ -123,6 +125,13 @@ docs/log/steps/task-76-platform-integration.md) measured:
   file dispatches `open_file` by the person, as the button does. item 8
   (native alerts and confirmations) reuses the trait-with-a-fake shape
   and `rfd::MessageDialog`, already in the engine's dependency.
+
+## alternatives
+
+- `rfd` com as features padrão: o lock da raiz ganharia `ashpd` e a árvore de zbus e wayland como entradas só de linux. Ficou com `default-features = false`, e o backend de linux fica para o bring-up (*context*, *decision*).
+- Diálogo assíncrono que só devolve bytes, como o seletor do navegador: seria um segundo contrato. Fica nomeado, sem meia implementação (*reason*).
+- Posição fixa para o drop, a do último cursor: mentiria, porque o ponteiro não se move enquanto o arquivo é arrastado (*reason*).
+- Checar quem pode abrir o diálogo dentro de `execute`: seria uma segunda regra escondida. A política fica declarada no nó (*reason*).
 
 ## avoid
 
