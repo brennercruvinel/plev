@@ -332,10 +332,11 @@ impl CodeBlock {
                 );
             }
             // A diff's marker ends in a column as wide as the widest sign,
-            // the code after it at one x on every row: the face is
-            // proportional (no mono is embedded), so a `+`, a `-` and a
-            // space would start the code at three x. The row stays one
-            // text, shifted by what its sign is narrower than the column.
+            // the code after it at one x on every row: in a proportional
+            // face (a theme may name one as its mono family) a `+`, a `-`
+            // and a space would start the code at three x. The row stays
+            // one text, shifted by what its sign is narrower than the
+            // column; in the embedded mono face the shift is zero.
             let lead = match row.kind.marker(&row.text).filter(|_| diff) {
                 Some((sign, _)) => marker_w - TextMeasurer::measure_styled(sign, &style, None).0,
                 None => 0.0,

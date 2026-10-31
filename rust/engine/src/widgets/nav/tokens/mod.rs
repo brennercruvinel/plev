@@ -23,14 +23,18 @@ mod plot;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
 
-/// A text run: size, line height and weight in px, in the theme's family;
-/// tracked as the theme tracks unless the run names its own (in em).
+/// A text run: size, line height and weight in px, in the theme's family
+/// (its mono family for a code run); tracked as the theme tracks unless
+/// the run names its own (in em).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NavText {
     pub size: f32,
     pub line_height: f32,
     pub weight: u16,
     pub tracking_em: Option<f32>,
+    /// A code run: the theme's mono family, untracked
+    /// ([`TypographyScale::exact_mono`]).
+    pub mono: bool,
 }
 
 impl NavText {
@@ -40,6 +44,7 @@ impl NavText {
             line_height,
             weight,
             tracking_em: None,
+            mono: false,
         }
     }
 
@@ -51,9 +56,18 @@ impl NavText {
         }
     }
 
+    /// The run in the theme's mono family.
+    pub const fn in_mono(self) -> Self {
+        Self { mono: true, ..self }
+    }
+
     /// The one style the run is measured and drawn with.
     pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        let style = typography.exact(self.size, self.line_height, self.weight);
+        let style = if self.mono {
+            typography.exact_mono(self.size, self.line_height, self.weight)
+        } else {
+            typography.exact(self.size, self.line_height, self.weight)
+        };
         match self.tracking_em {
             Some(em) => style.with_letter_spacing(em * self.size),
             None => style,
