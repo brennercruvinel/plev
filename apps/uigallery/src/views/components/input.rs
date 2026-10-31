@@ -442,6 +442,53 @@ mod tests {
         assert_eq!(rings(&p), vec![(f.x - 4.0, f.y - 4.0)]);
     }
 
+    /// A value wider than its field stays on one line inside it, focused
+    /// (clipped to the text's box, slid to the caret) or blurred (cut
+    /// with an ellipsis). It used to be laid out in the box's width and
+    /// wrap, a second line drawn under the field.
+    #[test]
+    fn a_long_value_stays_on_one_line_inside_its_field() {
+        let long = "a value far wider than the field it was typed into, ".repeat(4);
+        for theme in [Theme::hoff_core(), Theme::hoff()] {
+            let style = TextField::text_style(&theme);
+            let field = InputPage::rects(content(), &theme)[0];
+            for focused in [true, false] {
+                let mut p = InputPage::new();
+                p.set_focused(Some(0));
+                assert!(p.handle_text(&long));
+                if !focused {
+                    p.set_focused(None);
+                }
+                let mut c = Compositor::new();
+                c.begin_frame();
+                p.render(&mut c, content(), &theme);
+                let nodes = c
+                    .layer(engine::drawing::compositor::LayerId::DEFAULT)
+                    .unwrap()
+                    .nodes()
+                    .to_vec();
+                let mut clip: Option<(f32, f32)> = None;
+                let mut seen = 0;
+                for n in &nodes {
+                    match n {
+                        SceneNode::PushClip { x, w, .. } => clip = Some((*x, *w)),
+                        SceneNode::PopClip => clip = None,
+                        SceneNode::Text { key, x, .. } if key.text.starts_with("a value") => {
+                            seen += 1;
+                            let width = key.max_width_bits.map(f32::from_bits);
+                            let (w, h) = TextMeasurer::measure_styled(&key.text, &style, width);
+                            assert!(h <= style.line_height + 0.5, "wrapped: {h}");
+                            let (left, right) = clip.map_or((*x, *x + w), |(cx, cw)| (cx, cx + cw));
+                            assert!(left >= field.x && right <= field.x + field.w, "outside");
+                        }
+                        _ => {}
+                    }
+                }
+                assert_eq!(seen, 1, "the value draws once");
+            }
+        }
+    }
+
     /// While a field is focused the page asks for the caret's next flip,
     /// not for a frame every tick; idle it asks for nothing.
     #[test]
