@@ -11,7 +11,10 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
+};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -156,6 +159,7 @@ impl Theme {
             message: MessageTokens::hoff_core(),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
+            navigation: NavigationTokens::hoff_core(),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {

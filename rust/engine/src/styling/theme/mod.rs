@@ -19,10 +19,12 @@ pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
 };
 // task-104: one token slot per front (A fields, B overlays, C conversation,
-// D disclosure, E selection), each in its front's `tokens.rs`.
+// D disclosure, E selection, G navigation and data), each in its front's
+// `tokens.rs`.
 pub use crate::widgets::content::tokens::DisclosureTokens;
 pub use crate::widgets::form::tokens::FormTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
+pub use crate::widgets::nav::tokens::NavigationTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
 pub use crate::widgets::selection::tokens::SelectionTokens;
 
@@ -74,6 +76,9 @@ pub struct Theme {
     /// Front E: toggle, toggle group, button group, radio group, calendar,
     /// date picker.
     pub selection: SelectionTokens,
+    /// Front G: breadcrumb, navigation menu, the sidebar's links, stat,
+    /// code block, chart, graph.
+    pub navigation: NavigationTokens,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -122,6 +127,7 @@ impl Theme {
             message: MessageTokens::hoff_core(),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
+            navigation: NavigationTokens::hoff_core(),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -369,6 +375,7 @@ impl Theme {
         self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);
         self.selection = SelectionTokens::derive(self);
+        self.navigation = NavigationTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.
