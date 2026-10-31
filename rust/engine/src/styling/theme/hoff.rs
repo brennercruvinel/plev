@@ -312,6 +312,9 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
             ..dark
         };
+        // Its own buttons, from its own palette: the dark theme's would
+        // put a pale call to action on the pale page.
+        theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }
