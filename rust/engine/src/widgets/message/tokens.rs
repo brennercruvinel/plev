@@ -117,6 +117,9 @@ pub struct ScrollerTokens {
     pub shadow: Vec<ShadowSpec>,
     /// The tallest the scroller grows before its messages scroll.
     pub max_h: f32,
+    /// How deep the paper fades over a cut edge, the sign that more of
+    /// the thread lies past it.
+    pub edge: f32,
     /// What an empty scroller says, in the muted body tone.
     pub empty: MessageText,
 }
