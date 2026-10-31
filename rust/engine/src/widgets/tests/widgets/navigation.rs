@@ -416,3 +416,76 @@ fn code_block_projects_its_code() {
     assert_eq!(node.state.get("value"), Some(&Value::Text("-a\n+b".into())));
     assert!(node.actions.is_empty());
 }
+
+// Charts
+
+/// In core the series are the kit's blue then orange, the grid its rule;
+/// derived, the accent and the success hue of before.
+#[test]
+fn chart_recipe_is_the_kit_palette_in_core_and_the_old_tones_elsewhere() {
+    use crate::styling::theme::hoff_core::{BLUE, ORANGE, SHADES};
+    let kit = core().navigation.chart;
+    assert_eq!(kit.series, [BLUE, ORANGE]);
+    assert_eq!((kit.grid, kit.line_w), (SHADES[3], 2.0));
+    let t = hoff();
+    let old = t.navigation.chart;
+    assert_eq!(old.series, [t.colors.accent, t.colors.success]);
+    assert_eq!(old.label.style(&t.typography), t.typography.small_sm());
+    assert_eq!(old.meter_track, t.glass.surface_active);
+}
+
+/// The line draws its series in the recipe's first color, the meter its
+/// track and fill, in each theme.
+#[test]
+fn charts_draw_with_the_recipe() {
+    use crate::widgets::charts::draw;
+    for t in [core(), hoff()] {
+        let k = t.navigation.chart;
+        let drawn = nodes(|c| draw::meter(c, 0.5, Rect::new(0.0, 0.0, 100.0, 8.0), &t));
+        assert_eq!(rounded_fills(&drawn), vec![k.meter_track.0, k.meter_fill.0]);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        draw::line(
+            &mut c,
+            &[0.2, 0.8, 0.5],
+            Rect::new(0.0, 0.0, 300.0, 150.0),
+            &t,
+            1.0,
+        );
+        let paths = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .filter(|n| matches!(n, SceneNode::Path { .. }))
+            .count();
+        assert!(paths >= 4, "the wash, the line and its dots");
+    }
+}
+
+/// A chart projects as an image named by its title, described by its
+/// summary, over a table of its rows.
+#[test]
+fn a_chart_projects_an_image_over_its_data() {
+    use crate::widgets::charts::semantics;
+    use accord::{Role, SemId, SnapshotBuilder};
+    let id = SemId::parse("sessions").unwrap();
+    let rows = vec![
+        ("mon".to_string(), "3".to_string()),
+        ("tue".into(), "5".into()),
+    ];
+    let mut b = SnapshotBuilder::new();
+    semantics::project(&mut b, &id, None, "Sessions", "line chart, 2 values", &rows);
+    let snap = b.finish().unwrap();
+    let image = snap.get(&id).unwrap();
+    assert_eq!(
+        (image.role, image.label.as_str()),
+        (Role::Image, "Sessions")
+    );
+    let table = id.child("data").unwrap();
+    assert_eq!(snap.get(&table).map(|n| n.role), Some(Role::Table));
+    assert_eq!(
+        snap.get(&table.key("1")).map(|n| n.label.as_str()),
+        Some("tue: 5")
+    );
+}

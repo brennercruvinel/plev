@@ -78,3 +78,28 @@ fn a_code_block_says_its_code_to_the_reader_and_the_agent() {
     assert!(shown.ids.node(&sid(id)).is_some(), "in the reader's tree");
     let _ = g.middle(id);
 }
+
+/// A chart is read: the agent's projection and the reader's tree hold the
+/// same image and the same table of its data, bound where the person
+/// sees the plot.
+#[test]
+fn a_chart_says_its_data_to_the_reader_and_the_agent() {
+    let id = "chart_page.group[0].card[1]";
+    let g = gallery("Chart");
+    let agent = g.view.semantics().expect("the page projects");
+    let read = agent.get(&sid(id)).expect("the agent observes it");
+    assert_eq!(read.label, "Deploys per day");
+    let data = sid(&format!("{id}.data"));
+    assert_eq!(agent.children(&data).count(), 8, "a row per bar");
+    let (_, shown) = g.shown();
+    assert_eq!(
+        shown.snapshot.get(&sid(id)),
+        Some(read),
+        "the reader hears the same"
+    );
+    assert!(
+        shown.ids.node(&data).is_some(),
+        "the table is in the reader's tree"
+    );
+    let _ = g.middle(id);
+}

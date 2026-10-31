@@ -43,6 +43,7 @@ const PROJECTING: &[&str] = &[
     "Breadcrumb",
     "Button",
     "Button Group",
+    "Chart",
     "Checkbox",
     "Chip",
     "Code Block",
@@ -123,10 +124,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
     ("Carousel", PLACEHOLDER),
-    (
-        "Chart",
-        Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
     ("Collapsible", PLACEHOLDER),
     ("Command", PLACEHOLDER),
     (
