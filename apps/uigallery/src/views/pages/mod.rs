@@ -104,7 +104,9 @@ pub enum Pane {
     Sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert,
+    Attachment,
     Bubble,
+    Marker,
     Message,
     MessageScroller,
     // task-104 front D, disclosure and display (#157)

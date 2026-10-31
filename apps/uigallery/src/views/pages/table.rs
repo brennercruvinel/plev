@@ -60,7 +60,7 @@ pub const PAGES: &[Page] = &[
         F,
         "Typography",
         "info",
-        "The theme's type styles in its own face, tabled as the kit's typography page.",
+        "The kit's type styles set in the theme's face; a value the theme does not hold reads as the kit's.",
         Pane::Typography,
     ),
     page(
@@ -106,7 +106,13 @@ pub const PAGES: &[Page] = &[
         "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
         Pane::AspectRatio,
     ),
-    placeholder("Attachment"),
+    page(
+        C,
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
     page(
         C,
         "Avatar",
@@ -211,7 +217,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
     page(
@@ -275,7 +281,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
     page(
@@ -314,7 +320,13 @@ pub const PAGES: &[Page] = &[
         "The text that names a control, and a section's caption.",
         Pane::Label,
     ),
-    placeholder("Marker"),
+    page(
+        C,
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
     page(
         C,
         "Menubar",

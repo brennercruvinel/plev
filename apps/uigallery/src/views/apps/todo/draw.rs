@@ -55,9 +55,9 @@ impl TodoPage {
                 msg,
                 13.0,
                 400,
-                l.list.x + 2.0,
-                l.list.y + 10.0,
+                (l.list.x + 2.0, l.list.y + 10.0),
                 g.text_placeholder.0,
+                theme,
             );
             return;
         }

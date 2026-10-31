@@ -42,6 +42,7 @@ const PROJECTING: &[&str] = &[
     "Alert",
     "Alert Dialog",
     "Aspect Ratio",
+    "Attachment",
     "Breadcrumb",
     "Bubble",
     "Button",
@@ -53,6 +54,7 @@ const PROJECTING: &[&str] = &[
     "Code Block",
     "Collapsible",
     "Combobox",
+    "Context Menu",
     "Data Table",
     "Dialog",
     "Drawer",
@@ -66,11 +68,14 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Marker",
     "Menubar",
     "Message",
     "Message Scroller",
     "Navigation Menu",
     "Pagination",
+    "Panel",
+    "Panel Header",
     "Popover",
     "Radio Group",
     "Resizable",
@@ -123,7 +128,6 @@ const SILENT: &[(&str, Why)] = &[
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
     ),
-    ("Attachment", PLACEHOLDER),
     (
         "Avatar",
         Unprojected("Avatar: an image named by the person, online or not"),
@@ -135,22 +139,12 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
     ("Command", PLACEHOLDER),
-    (
-        "Context Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
     ("Date Picker", PLACEHOLDER),
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
     ("Input OTP", PLACEHOLDER),
-    ("Marker", PLACEHOLDER),
-    ("Panel", Nothing("the glass surface alone")),
-    (
-        "Panel Header",
-        Unprojected("PanelHeader: a heading with its blurb and badge"),
-    ),
     (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
@@ -478,9 +472,11 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// adds the Resizable page's split: a group whose `set_ratio` no action of
 /// the tree reaches (a value is set through `set_value` or a select's
 /// `select`, and the contract has no splitter role, AccessKit's
-/// `Splitter`); an agent asks it, and a person drags.
+/// `Splitter`); an agent asks it, and a person drags. Task-104 put a
+/// stacked split beside it, the same.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
+    "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
 

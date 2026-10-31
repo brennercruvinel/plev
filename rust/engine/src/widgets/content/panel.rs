@@ -1,12 +1,15 @@
-//! Panel: the raised glass surface a screen groups content on. The same
-//! shell the deck cards use (surface wash, soft top-lit rim, inset
-//! key-light) at the card radius, with an optional group label in the
-//! caption ramp and the panel padding as the content inset. Static: a
-//! panel frames, the widgets inside it react.
+//! Panel: the raised surface a screen groups content on. The same shell
+//! the deck cards use (`glass_surface`: the kit's plain bordered surface
+//! in the core theme, the glass wash, top-lit rim and key-light
+//! elsewhere), with an optional group label and the panel padding as the
+//! content inset; radius, padding and label are the theme's
+//! (`theme.disclosure.panel`). Static: a panel frames, the widgets inside
+//! it react.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 use crate::styling::theme::{Elevation, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::recipe::{glass_surface, shadow_stack};
 use crate::widgets::widget::Rect;
@@ -35,14 +38,18 @@ impl Panel {
         self
     }
 
-    /// Padding between the panel edge and its content: the `lg` step.
+    /// Padding between the panel edge and its content
+    /// (`theme.disclosure.panel`).
     pub fn pad(theme: &Theme) -> f32 {
-        theme.spacing.lg
+        theme.disclosure.panel.pad
     }
 
-    /// Group label style: caption-sm, uppercase by convention.
+    /// Group label style (`theme.disclosure.panel`).
     pub fn label_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        let r = &theme.disclosure.panel;
+        theme
+            .typography
+            .exact(r.label_size, r.label_line_height, r.label_weight)
     }
 
     /// The rect content lays out in: the bounds inset by the padding,
@@ -58,12 +65,32 @@ impl Panel {
         r
     }
 
+    /// Declares this panel as `id` in a projection: a `Role::Group` named
+    /// by its label, or by `name` when it has none. A panel frames and
+    /// takes no action; what it holds the app adds under the returned
+    /// node.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        name: &str,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let label = self.label.as_deref().unwrap_or(name);
+        let mut node = b.node(id, Role::Group, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node
+    }
+
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         self.render_to_layer(c, LayerId::DEFAULT, bounds, theme);
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        let radius = theme.shape.card;
+        let radius = theme.disclosure.panel.radius;
         shadow_stack(c, layer, bounds, radius, self.elevation, theme);
         glass_surface(c, layer, bounds, radius, theme.glass.surface.0, theme);
         if let Some(label) = &self.label {
@@ -75,7 +102,7 @@ impl Panel {
                     key: TextNodeKey::from_style(label, &style, Some(bounds.w - pad * 2.0)),
                     x: bounds.x + pad,
                     y: bounds.y + pad,
-                    color: theme.glass.text_faint.0,
+                    color: theme.disclosure.panel.label.0,
                 },
             );
         }

@@ -138,6 +138,13 @@ impl DisclosureTokens {
         };
         let (list, table) = Self::rows(theme);
         let tree = Self::tree(theme);
+        let (panel, header) = Self::panels(theme);
+        // The split as before the kit: the soft glass edge at rest, the
+        // active surface while hovered or dragged.
+        let split = SplitRecipe {
+            rest: theme.glass.edge_soft,
+            active: theme.glass.surface_active,
+        };
         Self {
             accordion,
             collapsible,
@@ -150,7 +157,30 @@ impl DisclosureTokens {
             list,
             table,
             tree,
+            panel,
+            header,
+            split,
         }
+    }
+
+    /// The panel and its head every theme drew before the kit: the card
+    /// radius, `lg` padding, a caption label in the faint glass text; the
+    /// head one `Xl` control tall with the title centered in it, `md`
+    /// padding left and right, the blurb `xs` under that row with nothing
+    /// below it, the glass default title, the dim blurb, `sm` before the
+    /// badge, no rule.
+    fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
+        let type_ = &theme.typography;
+        let caption = type_.caption_sm();
+        let panel = PanelRecipe {
+            radius: theme.shape.card,
+            pad: theme.spacing.lg,
+            label_size: caption.font_size,
+            label_line_height: caption.line_height,
+            label_weight: caption.font_weight,
+            label: theme.glass.text_faint,
+        };
+        (panel, HeaderRecipe::page_head(theme))
     }
 
     /// The tree every theme drew before the kit, value for value: body
@@ -241,5 +271,32 @@ impl DisclosureTokens {
             rows: list,
         };
         (list, table)
+    }
+}
+
+impl HeaderRecipe {
+    /// The head every theme drew before the kit, from `theme`: the page
+    /// head of the shell in every theme, and the panel head outside the
+    /// core.
+    pub fn page_head(theme: &Theme) -> Self {
+        let title = theme.typography.title();
+        let blurb = theme.typography.base_2r();
+        HeaderRecipe {
+            pad_x: theme.spacing.md,
+            row: theme.control.height(crate::styling::theme::ControlSize::Xl),
+            blurb_gap: theme.spacing.xs,
+            blurb_bottom: 0.0,
+            title_size: title.font_size,
+            title_line_height: title.line_height,
+            title_weight: title.font_weight,
+            title: theme.glass.text_default,
+            blurb_size: blurb.font_size,
+            blurb_line_height: blurb.line_height,
+            blurb_weight: blurb.font_weight,
+            blurb: theme.colors.text_dim,
+            badge_gap: theme.spacing.sm,
+            rule: 0.0,
+            rule_color: NONE,
+        }
     }
 }

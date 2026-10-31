@@ -666,3 +666,5 @@ fn edge_panel_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
     assert_eq!(d.sheet.panel.scrim, hoff.glass.scrim);
     assert_eq!(d.drawer.panel.extent, 260.0, "the kit's extent");
 }
+
+mod menu;

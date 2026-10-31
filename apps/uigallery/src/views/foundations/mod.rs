@@ -6,4 +6,5 @@
 pub mod effects;
 pub mod icons;
 pub mod theme;
+mod type_engine;
 pub mod typography;
