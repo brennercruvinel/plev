@@ -23,7 +23,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104 front D, disclosure and display (#157)
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::{toggle, toggle_group};
+use super::super::components::{button_group, toggle, toggle_group};
 
 pub struct Panes {
     // -- foundations
@@ -72,6 +72,7 @@ pub struct Panes {
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
     // task-104 front E, selection and dates (#158)
+    pub button_group: button_group::ButtonGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
     // -- apps demo
@@ -151,6 +152,7 @@ impl Panes {
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
             // task-104 front E, selection and dates (#158)
+            button_group: button_group::ButtonGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
             todo,

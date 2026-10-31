@@ -55,9 +55,27 @@ pub struct SegmentMetrics {
     pub font_weight: u16,
 }
 
+/// The kit's toolbar shell (`components/Toolbar/index.tsx:72-73`): a
+/// raised capsule that holds actions and toggles in a row, sections
+/// split by a hairline. The button group draws it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ButtonGroupTokens {
+    /// The shell: fill, the two soft drops and the border ring (`:72`).
+    pub shell: ButtonSurface,
+    /// `rounded-[1.25rem]`.
+    pub radius: f32,
+    /// `p-2` around the items and `gap-2` between them (`:73`).
+    pub pad: f32,
+    pub gap: f32,
+    /// The section hairline (`w-0.25 bg-[#ECECEC]`, `:97`).
+    pub separator: Color,
+    pub separator_w: f32,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SelectionTokens {
     pub segmented: SegmentedTokens,
+    pub button_group: ButtonGroupTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -125,7 +143,30 @@ impl SelectionTokens {
             ],
             text: ink,
         };
+        // components/Toolbar/index.tsx:72 `shadow-[0px_1px_4px_-4px_
+        // rgba(0,0,0,0.08),0px_8px_16px_-12px_rgba(0,0,0,0.13)] border
+        // border-[#ececec] bg-[#fcfcfc] rounded-[1.25rem]`, :73 `gap-2
+        // p-2`, :97 the separator `w-0.25 bg-[#ECECEC]`.
+        let black = |a: f32| Color::rgba(0.0, 0.0, 0.0, a);
+        let button_group = ButtonGroupTokens {
+            shell: ButtonSurface {
+                fill: [hex(0xFCFCFC); 2],
+                overlay: NONE,
+                shadow: vec![
+                    ShadowSpec::new([0.0, 1.0], 4.0, -4.0, black(0.08)),
+                    ShadowSpec::new([0.0, 8.0], 16.0, -12.0, black(0.13)),
+                    ring(hex(0xECECEC)),
+                ],
+                text: ink,
+            },
+            radius: 20.0,
+            pad: 8.0,
+            gap: 8.0,
+            separator: hex(0xECECEC),
+            separator_w: 1.0,
+        };
         Self {
+            button_group,
             segmented: SegmentedTokens {
                 track,
                 thumb,
@@ -161,6 +202,16 @@ impl SelectionTokens {
             shadow: vec![ring(c.border_active)],
             text: c.text,
         };
+        let button_group = ButtonGroupTokens {
+            shell: ButtonSurface {
+                fill: [c.surface; 2],
+                overlay: NONE,
+                shadow: vec![ring(c.divider)],
+                text: c.text,
+            },
+            separator: c.divider,
+            ..kit.button_group
+        };
         Self {
             segmented: SegmentedTokens {
                 track,
@@ -169,6 +220,7 @@ impl SelectionTokens {
                 text_hover: c.text,
                 ..kit.segmented
             },
+            button_group,
         }
     }
 }

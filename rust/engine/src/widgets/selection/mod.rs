@@ -10,5 +10,6 @@ pub mod toggle;
 pub mod toggle_group;
 pub mod tokens;
 
+pub use button_group::{ButtonGroup, GroupItem};
 pub use toggle::Toggle;
 pub use toggle_group::{SegmentSize, ToggleGroup};

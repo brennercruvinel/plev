@@ -124,12 +124,12 @@ pub const PAGES: &[Page] = &[
         "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
         Pane::Button,
     ),
-    alias(
+    page(
+        C,
         "Button Group",
         "layout-grid",
-        "The toolbar group of the buttons page.",
-        Pane::Button,
-        "a segmented group widget",
+        "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
+        Pane::ButtonGroup,
     ),
     placeholder("Calendar"),
     page(

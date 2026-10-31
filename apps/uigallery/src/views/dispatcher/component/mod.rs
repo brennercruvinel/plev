@@ -131,6 +131,7 @@ components! {
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
     // task-104 front E, selection and dates (#158)
+    ButtonGroup => button_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,
 }

@@ -129,3 +129,34 @@ fn a_disabled_toggle_group_moves_for_no_one() {
     assert_eq!(person.state(), before);
     assert!(!gallery("Toggle Group").offers(id, Action::Click));
 }
+
+/// A tool of the button group's picker: the person's click, the reader's
+/// press and the agent's `toggle` turn it on and the first tool off.
+#[test]
+fn a_tool_is_picked_the_same_from_the_three() {
+    let id = "button_group_page.group[0].card[0].item[2]";
+    let first = "button_group_page.group[0].card[0].item[0]";
+    let mut person = gallery("Button Group");
+    person.click(id);
+    let mut reader = gallery("Button Group");
+    reader.press(id);
+    let agent = by_agent("Button Group", "tool", vec![ask(id, "toggle")]);
+    same("Button Group", &person, &reader, &agent);
+    assert_eq!(on(&person, id), Some(Value::Bool(true)));
+    assert_eq!(on(&person, first), Some(Value::Bool(false)));
+}
+
+/// An action of the group presses from the three and changes nothing.
+#[test]
+fn a_group_action_presses_and_changes_nothing() {
+    let id = "button_group_page.group[0].card[0].item[5]";
+    let before = gallery("Button Group").state();
+    let mut person = gallery("Button Group");
+    person.click(id);
+    let mut reader = gallery("Button Group");
+    reader.press(id);
+    let agent = by_agent("Button Group", "action", vec![ask(id, "activate")]);
+    assert_eq!(person.state(), before);
+    assert_eq!(reader.state(), before);
+    assert_eq!(agent.state(), before);
+}
