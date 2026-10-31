@@ -64,6 +64,9 @@ pub struct Alert {
     detail: String,
     content: String,
     avatar: Option<Avatar>,
+    /// The badge's glyph, when it says more than the intent (the kit's
+    /// notification kinds: a heart for a like, a bubble for a comment).
+    icon: Option<&'static str>,
     unread: bool,
     divider: bool,
     actions: Vec<Button>,
@@ -81,6 +84,7 @@ impl Alert {
             detail: detail.into(),
             content: String::new(),
             avatar: None,
+            icon: None,
             unread: false,
             divider: false,
             actions: Vec::new(),
@@ -88,6 +92,15 @@ impl Alert {
             press: Press::default(),
             sem: None,
         }
+    }
+
+    /// The badge's glyph, a Lucide name, in place of the intent's (the
+    /// kit's `public/images/notifications`: `heart` for a like,
+    /// `message-square` for a comment, `zap` for a video, `image` for an
+    /// image, `plus` for an invite).
+    pub fn icon(mut self, name: &'static str) -> Self {
+        self.icon = Some(name);
+        self
     }
 
     /// When it happened, after the title (`1h ago`).
@@ -442,14 +455,15 @@ impl Alert {
         }
     }
 
-    /// The intent's icon centered in `disc`, in whichever of ink and paper
+    /// The badge's glyph (its own, or the intent's) centered in `disc`, in
+    /// whichever of ink and paper
     /// reads on `fill`.
     fn mark(&self, c: &mut Compositor, disc: Rect, size: f32, fill: [f32; 4]) {
-        let name = match self.intent {
+        let name = self.icon.unwrap_or(match self.intent {
             Intent::Neutral | Intent::Informational => "info",
             Intent::Constructive => "check",
             Intent::Destructive => "alert-triangle",
-        };
+        });
         let (cx, cy) = disc.center();
         let at = (cx - size / 2.0, cy - size / 2.0);
         if let Some(node) = icons::icon_at(name, size, contrast_text(fill), at.0, at.1) {

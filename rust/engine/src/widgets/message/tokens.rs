@@ -29,6 +29,10 @@ use crate::styling::theme::{Intent, ShadowSpec, Theme};
 
 /// `MessageTokens::hoff_core`, the kit's values with their file:line.
 mod kit;
+/// The status pieces: the badge, the avatar's online dot.
+mod status;
+
+pub use status::{AvatarTokens, BadgePalette, BadgeTokens, TagTokens};
 
 /// One text run of a message: size, line height and weight in px, and
 /// its color.
@@ -299,6 +303,8 @@ pub struct MessageTokens {
     pub attachment: AttachmentTokens,
     pub marker: MarkerTokens,
     pub toast: ToastTokens,
+    pub badge: BadgeTokens,
+    pub avatar: AvatarTokens,
 }
 
 impl MessageTokens {
@@ -414,6 +420,45 @@ impl MessageTokens {
                 border: colors.divider,
                 ..kit.toast
             },
+            // the chip on the hover glass with a hairline in the divider,
+            // the ink in the text tone; the intents' colors from the palette
+            badge: {
+                let k = kit.badge;
+                let paper = Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]);
+                BadgeTokens::new(
+                    TagTokens {
+                        text: k.tag.text.recolor(colors.text),
+                        fill: theme.glass.surface_hover,
+                        border: colors.divider,
+                        raised_fill: paper,
+                        raised_border: colors.divider,
+                        ..k.tag
+                    },
+                    k.count_pad_x,
+                    k.dot,
+                    k.dot_inset,
+                    BadgePalette {
+                        intents: IntentColors {
+                            neutral: colors.text_mid,
+                            informational: colors.info,
+                            constructive: colors.success,
+                            destructive: colors.danger,
+                        },
+                        surface: status::over(colors.surface, paper),
+                        well: colors.bg_panel,
+                        paper,
+                        ink: colors.text,
+                    },
+                )
+            },
+            // the online dot in the success green, ringed by the paper
+            avatar: AvatarTokens::new(
+                kit.avatar.online,
+                kit.avatar.online_ring,
+                colors.success,
+                Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                colors.text,
+            ),
         }
     }
 }

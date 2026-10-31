@@ -98,6 +98,7 @@ fn comment() -> Alert {
         "Randomdash",
         "Commented on Classic Car in Studio",
     )
+    .icon("message-square")
     .time("1h ago")
     .avatar("Randomdash")
     .content(DRAGGABLE)
@@ -111,6 +112,7 @@ fn invite() -> Alert {
         "3D object is generated",
         "Invited you to edit Minimalist Architecture Scene",
     )
+    .icon("plus")
     .time("4h ago")
     .avatar("Hoff")
     .unread(true)
@@ -120,6 +122,7 @@ fn invite() -> Alert {
 
 fn like() -> Alert {
     Alert::new(Intent::Destructive, "Marina", "Liked Classic Car in Studio")
+        .icon("heart")
         .time("10h ago")
         .avatar("Marina")
 }
@@ -130,6 +133,7 @@ fn video() -> Alert {
         "Animation is generated",
         "12s – 720p",
     )
+    .icon("zap")
     .time("1d ago")
     .avatar("Hoff")
     .content("Prompt: Create 3D character dancing")

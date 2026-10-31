@@ -150,6 +150,7 @@ components! {
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
     Attachment => attachment,
+    Badge => badge,
     Bubble => bubble,
     Marker => marker,
     Message => message,

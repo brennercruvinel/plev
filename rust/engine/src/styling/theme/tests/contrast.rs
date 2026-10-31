@@ -23,7 +23,7 @@
 //! failing.
 
 use crate::styling::color::Color;
-use crate::styling::theme::{ButtonRecipe, Theme};
+use crate::styling::theme::{ButtonRecipe, Intent, Theme};
 
 /// WCAG 2.2 AA: text (1.4.3).
 const TEXT: f64 = 4.5;
@@ -350,6 +350,73 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
                 under,
             );
         }
+    }
+    // the badge on the card: the chip's label on its fill and on its
+    // raised paper, an intent's disc on the chip, the dot on the card, and
+    // a count's numeral on its fill.
+    let bd = &t.message.badge;
+    let well = over(c.bg_panel, card);
+    for (name, border) in [
+        ("border", bd.tag.border),
+        ("raised_border", bd.tag.raised_border),
+    ] {
+        for (bg, under) in [("colors.surface", card), ("colors.bg_panel", well)] {
+            add(
+                &format!("message.badge.tag.{name}"),
+                bg,
+                LARGE,
+                over(border, under),
+                under,
+            );
+        }
+    }
+    let chip = over(bd.tag.fill, card);
+    let raised = over(bd.tag.raised_fill, card);
+    add(
+        "message.badge.tag.text",
+        "message.badge.tag.fill",
+        TEXT,
+        over(bd.tag.text.color, chip),
+        chip,
+    );
+    add(
+        "message.badge.tag.text",
+        "message.badge.tag.raised_fill",
+        TEXT,
+        over(bd.tag.text.color, raised),
+        raised,
+    );
+    for (name, intent) in [
+        ("neutral", Intent::Neutral),
+        ("informational", Intent::Informational),
+        ("constructive", Intent::Constructive),
+        ("destructive", Intent::Destructive),
+    ] {
+        if intent != Intent::Neutral {
+            let mark = over(bd.marks.of(intent), chip);
+            add(
+                &format!("message.badge.marks.{name}"),
+                "message.badge.tag.fill",
+                LARGE,
+                mark,
+                chip,
+            );
+        }
+        add(
+            &format!("message.badge.dots.{name}"),
+            "colors.surface",
+            LARGE,
+            over(bd.dots.of(intent), card),
+            card,
+        );
+        let fill = over(bd.count_fill.of(intent), card);
+        add(
+            &format!("message.badge.count_ink.{name}"),
+            &format!("message.badge.count_fill.{name}"),
+            TEXT,
+            over(bd.count_ink.of(intent), fill),
+            fill,
+        );
     }
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
@@ -821,7 +888,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 557,
+        count, 625,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
