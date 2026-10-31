@@ -121,7 +121,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Avatar",
         "circle",
-        "Initials in three sizes, with the online dot.",
+        "The kit's ladder, the online dot and the stack that counts the rest.",
         Pane::Avatar,
     ),
     page(
@@ -405,7 +405,13 @@ pub const PAGES: &[Page] = &[
         "Click the value; the panel answers its container.",
         Pane::Popover,
     ),
-    page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
+    page(
+        C,
+        "Progress",
+        "arrow-up",
+        "The kit's rail: its value, its intents, its narrowest.",
+        Pane::Progress,
+    ),
     placeholder("Questionnaire"),
     page(
         C,
@@ -460,7 +466,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Skeleton",
         "square",
-        "Disc, lines, block. Click to make them breathe.",
+        "The kit's scene card and the shapes it is made of. Click to make them breathe.",
         Pane::Skeleton,
     ),
     page(

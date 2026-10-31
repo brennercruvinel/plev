@@ -43,6 +43,7 @@ const PROJECTING: &[&str] = &[
     "Alert Dialog",
     "Aspect Ratio",
     "Attachment",
+    "Avatar",
     "Badge",
     "Breadcrumb",
     "Bubble",
@@ -81,11 +82,13 @@ const PROJECTING: &[&str] = &[
     "Panel",
     "Panel Header",
     "Popover",
+    "Progress",
     "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
     "Sheet",
+    "Skeleton",
     "Slider",
     "Spinner",
     "Stat",
@@ -134,10 +137,6 @@ const SILENT: &[(&str, Why)] = &[
         Nothing("samples of the shadow stacks, blur and gradient"),
     ),
     (
-        "Avatar",
-        Unprojected("Avatar: an image named by the person, online or not"),
-    ),
-    (
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
@@ -146,19 +145,11 @@ const SILENT: &[(&str, Why)] = &[
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
-    (
-        "Progress",
-        Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
-    ),
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
     (
         "Sidebar",
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Skeleton",
-        Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
     ),
     (
         "Dock",

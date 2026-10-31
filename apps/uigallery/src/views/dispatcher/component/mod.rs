@@ -153,12 +153,15 @@ components! {
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
+    Avatar => avatar,
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
+    Progress => progress,
+    Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,

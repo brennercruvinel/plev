@@ -200,26 +200,166 @@ pub(super) fn over(c: Color, under: Color) -> Color {
     Color([at(0), at(1), at(2), 1.0])
 }
 
-/// The avatar's online dot: a disc on the avatar's bottom end rim, cut
-/// from it by a ring in the paper, in a green that reads on the paper.
+/// The avatar: the kit's ladder of discs, the disc that stands in for a
+/// photo, the paper ring a stacked avatar wears, and the online dot on
+/// its bottom end rim, cut from it by a ring in the paper.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct AvatarTokens {
+    /// The kit's edges, `AvatarSize::Xs` to `Xl`, at the kit's control
+    /// `Md` step (`basis`): a theme draws each as the same share of its
+    /// own control `Md`, so a denser theme keeps the ladder's proportions.
+    pub ladder: [f32; 5],
+    pub basis: f32,
+    /// Without a photo: the disc's fill, its hairline, the initial's ink
+    /// (7:1 on the fill).
+    pub fill: Color,
+    pub edge: Color,
+    pub edge_width: f32,
+    pub initial: Color,
+    /// In a stack: the ring each avatar wears, inside its edge, and the
+    /// share of an avatar's edge the next one slides under.
+    pub stack_ring: f32,
+    pub stack_overlap: f32,
     pub online: f32,
     pub online_ring: f32,
+    /// The dot, 3:1 on the paper ring.
     pub online_fill: Color,
     pub ring: Color,
 }
 
 impl AvatarTokens {
-    /// The geometry, the dot's `green` moved toward `ink` until it reads
-    /// on `paper` at 3:1.
-    pub fn new(online: f32, online_ring: f32, green: Color, paper: Color, ink: Color) -> Self {
-        let paper = over(paper, Color::BLACK);
+    /// These tokens with their colors made legible: the paper opaque, the
+    /// initial moved toward the paper's opposite until it reads at 7:1 on
+    /// the fill, the dot toward the initial until it reads at 3:1 on the
+    /// paper.
+    pub fn legible(self) -> Self {
+        let ring = over(self.ring, Color::BLACK);
+        let fill = over(self.fill, ring);
+        let far = if contrast(Color::BLACK, fill) >= contrast(Color::WHITE, fill) {
+            Color::BLACK
+        } else {
+            Color::WHITE
+        };
+        let initial = toward(over(self.initial, fill), far, fill, TEXT_AAA);
         Self {
-            online,
-            online_ring,
-            online_fill: toward(over(green, paper), over(ink, paper), paper, MARK_CONTRAST),
-            ring: paper,
+            ring,
+            fill,
+            initial,
+            online_fill: toward(over(self.online_fill, ring), initial, ring, MARK_CONTRAST),
+            ..self
         }
     }
+}
+
+/// The loading placeholder: the kit's scene card skeleton
+/// (`components/SceneCardSkeleton`), an image block and text lines in
+/// two grays a step apart, each breathing toward the next step. A
+/// placeholder carries no information a reader needs from its color (the
+/// widget declares the page busy), so its fills are not held to 3:1.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SkeletonTokens {
+    /// A block (an image, a disc) and the color it breathes toward.
+    pub block: Color,
+    pub block_pulse: Color,
+    pub block_radius: f32,
+    /// A text line: its bar, corner, fill and pulse; the padding around
+    /// the bar and the gap to the next line's; the last line of a
+    /// paragraph as a share of the others.
+    pub line: f32,
+    pub line_radius: f32,
+    pub line_fill: Color,
+    pub line_pulse: Color,
+    pub line_pad: f32,
+    pub line_gap: f32,
+    pub last_line: f32,
+    /// The scene card: its width, its paper, hairline and corner, its padding, the
+    /// image's aspect and the gap under it, the text's padding, and its
+    /// two lines as shares of the text column.
+    pub card_w: f32,
+    pub card_fill: Color,
+    pub card_border: Color,
+    pub card_border_width: f32,
+    pub card_radius: f32,
+    pub card_pad: f32,
+    pub image_aspect: f32,
+    pub image_gap: f32,
+    pub text_pad: f32,
+    pub card_lines: [f32; 2],
+}
+
+impl SkeletonTokens {
+    /// From one bar's top to the next's.
+    pub fn pitch(&self) -> f32 {
+        self.line + self.line_pad * 2.0 + self.line_gap
+    }
+
+    /// How tall `n` lines are: their boxes, the gaps between them.
+    pub fn lines_h(&self, n: usize) -> f32 {
+        if n == 0 {
+            0.0
+        } else {
+            n as f32 * self.pitch() - self.line_gap
+        }
+    }
+}
+
+/// The progress rail: the kit's video player track
+/// (`components/VideoPlayer`), a pill as thin as the theme's progress
+/// track, its filled part a shade deeper, ending in a head that marks the
+/// value. The head is the mark a reader needs, 3:1 on the paper and on
+/// the track; the track and the fill are its setting.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ProgressTokens {
+    pub track: Color,
+    /// The filled part per intent, over the track.
+    pub fill: IntentColors,
+    /// The head at the fill's end: its width, and its color per intent.
+    pub head_w: f32,
+    pub head: IntentColors,
+    /// The narrowest the rail is laid out.
+    pub min_w: f32,
+}
+
+impl ProgressTokens {
+    /// The rail over `paper`, each head moved toward `ink` until it reads
+    /// at 3:1 on the paper and on the track over it.
+    pub fn new(
+        track: Color,
+        fill: IntentColors,
+        head_w: f32,
+        head: IntentColors,
+        min_w: f32,
+        paper: Color,
+        ink: Color,
+    ) -> Self {
+        let paper = over(paper, Color::BLACK);
+        let ink = over(ink, paper);
+        let rail = over(track, paper);
+        let legible = |c: Color| toward_all(over(c, paper), ink, &[paper, rail], MARK_CONTRAST);
+        Self {
+            track,
+            fill,
+            head_w,
+            head: IntentColors {
+                neutral: legible(head.neutral),
+                informational: legible(head.informational),
+                constructive: legible(head.constructive),
+                destructive: legible(head.destructive),
+            },
+            min_w,
+        }
+    }
+}
+
+/// The spinner: the kit draws none; it is the progress rail wound into a
+/// ring, the track all around and an arc in the rail's neutral head
+/// turning over it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SpinnerTokens {
+    /// The ring's stroke, the rail's thickness.
+    pub stroke: f32,
+    pub track: Color,
+    pub arc: Color,
+    /// The arc's share of the ring.
+    pub sweep: f32,
 }
