@@ -149,7 +149,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
     page(

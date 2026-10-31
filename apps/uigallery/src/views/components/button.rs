@@ -1,22 +1,24 @@
 //! Buttons page, the hoff core kit's ButtonsPage: groups with a title and
 //! a bottom rule, cards in rows, one state per card behind a chip that
 //! names it. The widgets are `engine::widgets::buttons` (labeled, icon-only,
-//! submit); every visual value comes from the theme.
+//! submit) and, last, the page's Tooltip bubble at rest; every visual value
+//! comes from the theme.
 //!
 //! Projected (task-75 phase 2b): a group per title,
 //! `button_page.group[<g>]`, and in it each card's widget,
 //! `button_page.group[<g>].card[<c>]`, as the comps projects it, described
 //! by the card's chip (the states it shows); an icon-only button is named
-//! by its icon, the submit button "submit". A button here does nothing but
-//! press, so its `activate` changes nothing. The Icon Button page is this
+//! by its icon, the submit button "submit", the tooltip a label named by
+//! its text. A button here does nothing but press, so its `activate`
+//! changes nothing. The Icon Button page is this
 //! page with the icon-only groups alone ([`ButtonPage::icons`]).
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::Compositor;
+use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::{Theme, hoff_core};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
-    Rect, SubmitButton, WidgetEvent,
+    Rect, SubmitButton, Tooltip, WidgetEvent,
 };
 
 use super::showcase::{self, GroupLayout};
@@ -26,6 +28,9 @@ enum Spec {
     Button(Button),
     Icon(IconButton),
     Submit(SubmitButton),
+    /// The bubble alone, shown as the kit's card shows it: no anchor, no
+    /// delay. It binds its id itself (the widget has none).
+    Tooltip(Tooltip, Option<SemId>),
 }
 
 impl Spec {
@@ -34,6 +39,7 @@ impl Spec {
             Spec::Button(b) => b.preferred_size(theme),
             Spec::Icon(b) => b.preferred_size(theme),
             Spec::Submit(b) => b.preferred_size(theme),
+            Spec::Tooltip(t, _) => t.size(theme),
         }
     }
 
@@ -42,6 +48,7 @@ impl Spec {
             Spec::Button(b) => b.handle_event(event, bounds),
             Spec::Icon(b) => b.handle_event(event, bounds),
             Spec::Submit(b) => b.handle_event(event, bounds),
+            Spec::Tooltip(..) => EventResult::IGNORED,
         }
     }
 
@@ -50,6 +57,16 @@ impl Spec {
             Spec::Button(b) => b.render(c, bounds, theme),
             Spec::Icon(b) => b.render(c, bounds, theme),
             Spec::Submit(b) => b.render(c, bounds, theme),
+            Spec::Tooltip(t, id) => {
+                if let Some(id) = id {
+                    c.bind_to_layer(
+                        LayerId::DEFAULT,
+                        id,
+                        [bounds.x, bounds.y, bounds.w, bounds.h],
+                    );
+                }
+                t.render_at(c, LayerId::DEFAULT, theme, bounds);
+            }
         }
     }
 
@@ -59,6 +76,7 @@ impl Spec {
             Spec::Button(b) => Spec::Button(b.sem(id)),
             Spec::Icon(b) => Spec::Icon(b.sem(id)),
             Spec::Submit(b) => Spec::Submit(b.sem(id)),
+            Spec::Tooltip(t, _) => Spec::Tooltip(t, Some(id)),
         }
     }
 
@@ -67,6 +85,7 @@ impl Spec {
             Spec::Button(b) => b.sem_id(),
             Spec::Icon(b) => b.sem_id(),
             Spec::Submit(b) => b.sem_id(),
+            Spec::Tooltip(_, id) => id.as_ref(),
         }
     }
 
@@ -75,17 +94,25 @@ impl Spec {
             Spec::Button(b) => b.set_focused(on),
             Spec::Icon(b) => b.set_focused(on),
             Spec::Submit(b) => b.set_focused(on),
+            // A label: the reader's focus reads it, nothing rings.
+            Spec::Tooltip(..) => {}
         }
     }
 
     /// The widget as the comps projects it, under `parent`, described by
     /// `states`: a labeled button by its label, an icon-only one by its
-    /// icon, the submit button as "submit".
+    /// icon, the submit button as "submit", the tooltip as a label named
+    /// by its text.
     fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: &SemId, states: &str) {
         let mut node = match self {
             Spec::Button(w) => w.project(b, id, Some(parent)),
             Spec::Icon(w) => w.project(b, id, w.icon, Some(parent)),
             Spec::Submit(w) => w.project(b, id, "submit", Some(parent)),
+            Spec::Tooltip(t, _) => {
+                let mut node = b.node(id, Role::Label, t.text.as_str());
+                node.parent(parent);
+                node
+            }
         };
         node.description(states);
     }
@@ -296,6 +323,15 @@ impl ButtonPage {
                 },
             ],
         });
+        // `<Tooltip>Copy prompt</Tooltip>`, one card the row's width.
+        groups.push(Group {
+            title: "Tooltip",
+            columns: 1,
+            cards: vec![Card {
+                title: "Text",
+                spec: Spec::Tooltip(Tooltip::new("Copy prompt"), None),
+            }],
+        });
         groups
     }
 
@@ -433,8 +469,10 @@ impl Component for ButtonPage {
     /// A button's `activate`: it presses, and nothing else happens, as
     /// for a click.
     fn run(&mut self, req: &Request) -> Result<After, String> {
+        let pressable =
+            |(g, c): (usize, usize)| !matches!(self.groups[g].cards[c].spec, Spec::Tooltip(..));
         match (self.at(&req.target), req.action.as_str()) {
-            (Some(_), "activate") => Ok(After::Nothing),
+            (Some(at), "activate") if pressable(at) => Ok(After::Nothing),
             _ => Err(format!(
                 "the button page has no {} on {}",
                 req.action, req.target
@@ -548,5 +586,47 @@ mod tests {
         }
         let root = page.root.as_ref().map(|r| r.as_str().to_string());
         assert_eq!(root.as_deref(), Some("icon_button_page"));
+    }
+
+    /// The ButtonsPage ends with its Tooltip: one card, "Text", the
+    /// bubble "Copy prompt" at its own size, projected as a label (not a
+    /// button: it has no `activate`).
+    #[test]
+    fn the_page_ends_with_the_kit_s_tooltip() {
+        let mut page = ButtonPage::new();
+        let theme = Theme::hoff_core();
+        let last = page.groups.last().expect("groups");
+        assert_eq!(last.title, "Tooltip");
+        let card = &last.cards[0];
+        assert_eq!(card.title, "Text");
+        let Spec::Tooltip(tip, Some(id)) = &card.spec else {
+            panic!("the tooltip card holds the bubble with its id");
+        };
+        assert_eq!(card.spec.preferred_size(&theme), tip.size(&theme));
+        let id = id.clone();
+        let root = page.root.clone().expect("the root parses");
+        let mut b = SnapshotBuilder::new();
+        b.node(&root, Role::Region, "Button");
+        page.project(&mut b, &root);
+        let snap = b.finish().expect("a valid tree");
+        let node = snap.get(&id).expect("the bubble is projected");
+        assert_eq!(
+            (node.role, node.label.as_str()),
+            (Role::Label, "Copy prompt")
+        );
+        let req = Request {
+            actor: accord::Actor::Test {
+                name: "button".into(),
+            },
+            target: id,
+            action: accord::ActionName::parse("activate").expect("an action name"),
+            param: None,
+            observed: accord::Observation {
+                revision: snap.revision(),
+                values: Vec::new(),
+            },
+            ask: None,
+        };
+        assert!(page.run(&req).is_err(), "a tooltip does not press");
     }
 }

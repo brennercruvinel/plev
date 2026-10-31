@@ -65,6 +65,24 @@ pub struct IconButtonMetrics {
     pub icon: f32,
 }
 
+/// The submit button (`SubmitButton`): two stacked surfaces, the pale
+/// one at rest and the dark one that fades in over it hovered, pressed
+/// or while a request is in flight.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubmitRecipe {
+    /// Idle, the pointer away: the pale surface (`before:`).
+    pub rest: ButtonSurface,
+    /// Hovered, pressed or busy: the dark surface (`after:` at 100%).
+    pub lit: ButtonSurface,
+    /// Busy and hovered: the dark surface eased back over the pale one
+    /// (`hover:after:!opacity-90`).
+    pub busy_hover: ButtonSurface,
+    /// Opacity of the whole button when disabled (`opacity-40`).
+    pub disabled_alpha: f32,
+    /// Md 32 (`isMedium`) / Lg 40 (the default), square.
+    pub sizes: [IconButtonMetrics; 2],
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ButtonTokens {
     /// The pale raised button (`isPrimary`).
@@ -81,6 +99,8 @@ pub struct ButtonTokens {
     pub toolbar: ButtonRecipe,
     /// Toolbar item when its tool is selected: bordered, filled, pressed in.
     pub toolbar_active: ButtonRecipe,
+    /// The submit arrow: pale at rest, dark when lit.
+    pub submit: SubmitRecipe,
     /// Labeled ladder: Xs 28 / Sm 36 / Md 40 / Lg 44.
     pub sizes: [ButtonMetrics; 4],
     /// Icon-only ladder: Sm 24 / Md 36 / Lg 40.
@@ -109,6 +129,38 @@ fn flat(color: Color) -> [Color; 2] {
 }
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
+
+/// `top` at `alpha` over the opaque `under`, per gradient stop.
+fn over(top: [Color; 2], alpha: f32, under: [Color; 2]) -> [Color; 2] {
+    let mix = |t: Color, u: Color| {
+        let a = t.0[3] * alpha;
+        Color([0, 1, 2, 3].map(|i| {
+            if i == 3 {
+                a + u.0[3] * (1.0 - a)
+            } else {
+                t.0[i] * a + u.0[i] * (1.0 - a)
+            }
+        }))
+    };
+    [mix(top[0], under[0]), mix(top[1], under[1])]
+}
+
+/// The submit button's ladder: `isMedium` (size-8 rounded-[0.625rem])
+/// and the default (size-10 rounded-xl), both with the size-4 arrow.
+fn submit_sizes() -> [IconButtonMetrics; 2] {
+    [
+        IconButtonMetrics {
+            size: 32.0,
+            radius: 10.0,
+            icon: 16.0,
+        },
+        IconButtonMetrics {
+            size: 40.0,
+            radius: 12.0,
+            icon: 16.0,
+        },
+    ]
+}
 
 impl ButtonTokens {
     /// The hoff core kit, values as written in the tailwind classes.
@@ -311,6 +363,20 @@ impl ButtonTokens {
             disabled_alpha: 0.40,
         };
 
+        // SubmitButton: the isPrimary surface under the isSecondary one,
+        // which shows on hover and while active, at 90% hovered while
+        // active; the arrow goes paper on the dark one; opacity-40 off.
+        let submit = SubmitRecipe {
+            rest: primary.rest.clone(),
+            lit: secondary.rest.clone(),
+            busy_hover: ButtonSurface {
+                fill: over(secondary.rest.fill, 0.90, primary.rest.fill),
+                ..secondary.rest.clone()
+            },
+            disabled_alpha: 0.40,
+            sizes: submit_sizes(),
+        };
+
         Self {
             primary,
             secondary,
@@ -319,6 +385,7 @@ impl ButtonTokens {
             ghost,
             toolbar,
             toolbar_active,
+            submit,
             sizes: [
                 // Xs: the like-comment chip, h-7 px-2 rounded-lg 13/16.
                 ButtonMetrics {
@@ -460,13 +527,22 @@ impl ButtonTokens {
             shadow: vec![ring(colors.border_active)],
             text: colors.text,
         };
+        // The kit's order of strength, whatever the palette: the pale
+        // `isPrimary` is a step off the page, the dark `isSecondary` (the
+        // call to action: a modal's confirm) the most contrasted fill the
+        // theme has. The submit arrow lights from the one to the other.
+        let primary = solid(colors.bg_panel, colors.bg_hover, 0.30);
+        let secondary = solid(colors.accent, tint(colors.accent, 0.85), 0.30);
+        let submit = SubmitRecipe {
+            rest: primary.rest.clone(),
+            lit: secondary.rest.clone(),
+            busy_hover: secondary.hover.clone(),
+            disabled_alpha: kit.submit.disabled_alpha,
+            sizes: kit.submit.sizes,
+        };
         Self {
-            // The kit's order of strength, whatever the palette: the pale
-            // `isPrimary` is a step off the page, the dark `isSecondary`
-            // (the call to action: a modal's confirm) the most contrasted
-            // fill the theme has.
-            primary: solid(colors.bg_panel, colors.bg_hover, 0.30),
-            secondary: solid(colors.accent, tint(colors.accent, 0.85), 0.30),
+            primary,
+            secondary,
             warning: solid(colors.warning, tint(colors.warning, 0.85), 0.30),
             outline: quiet(colors.divider, colors.text, 0.50),
             ghost: quiet(NONE, colors.text_mid, 0.50),
@@ -477,6 +553,7 @@ impl ButtonTokens {
                 active: toolbar_active_surface,
                 disabled_alpha: 0.40,
             },
+            submit,
             sizes: kit.sizes,
             icon_sizes: kit.icon_sizes,
         }

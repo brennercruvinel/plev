@@ -16,7 +16,7 @@ pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
-    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
+    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics, SubmitRecipe,
 };
 // task-104: one token slot per front (A fields, B overlays, C conversation,
 // D disclosure, E selection, G navigation and data), each in its front's
