@@ -65,6 +65,7 @@ impl ShowcaseView {
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::Todo => self.panes.todo.content_height(content),
@@ -162,6 +163,7 @@ impl ShowcaseView {
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.handle_event(event, content, t),
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::Todo => {
@@ -333,6 +335,7 @@ impl ShowcaseView {
                 // task-104 front A, fields (#154)
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.render(c, content, theme),
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::Todo => {

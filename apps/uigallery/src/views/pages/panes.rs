@@ -19,6 +19,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104 front B, overlays (#155)
 
 // task-104 front C, conversation and feedback (#156)
+use super::super::components::message;
 
 // task-104 front D, disclosure and display (#157)
 
@@ -69,6 +70,7 @@ pub struct Panes {
     // task-104 front A, fields (#154)
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
+    pub message: message::MessagePage,
     // task-104 front D, disclosure and display (#157)
     // task-104 front E, selection and dates (#158)
     // -- apps demo
@@ -146,6 +148,7 @@ impl Panes {
             // task-104 front A, fields (#154)
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
+            message: message::MessagePage::new(),
             // task-104 front D, disclosure and display (#157)
             // task-104 front E, selection and dates (#158)
             todo,

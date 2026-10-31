@@ -54,6 +54,7 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Message",
     "Navigation Menu",
     "Popover",
     "Resizable",
@@ -155,10 +156,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
     ("Menubar", PLACEHOLDER),
-    (
-        "Message",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
     (
         "Message Scroller",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
