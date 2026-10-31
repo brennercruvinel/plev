@@ -6,3 +6,5 @@ pub(super) mod measure;
 pub(super) mod on_demand;
 #[cfg(test)]
 pub(super) mod raster;
+#[cfg(test)]
+pub(super) mod weights;

@@ -2,7 +2,7 @@
 //! tailwind classes on its anchored overlays, as recipes the widgets
 //! read. One field per overlay; the popover is the first. The two edge
 //! panels' (the sheet and the drawer) live beside their widget,
-//! `sheet/tokens.rs`.
+//! `sheet/tokens.rs`; the menus' in `menu.rs`.
 //!
 //! `OverlayTokens::hoff_core` is the kit as written (its Toolbar
 //! `ZoomControl` and `ExportFiles` popovers and the header's
@@ -18,13 +18,20 @@ use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 
 pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
 
+mod menu;
+pub use menu::{MenuStyle, MenuTokens};
+
 /// The tokens of front B's overlays.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OverlayTokens {
     pub popover: PopoverTokens,
     pub tooltip: TooltipTokens,
     pub hover_card: HoverCardTokens,
+    /// The kit's three menus: the profile menu, the default, then the
+    /// file and the filter menus ([`OverlayTokens::menu_for`]).
     pub menu: MenuTokens,
+    pub file_menu: MenuTokens,
+    pub filter_menu: MenuTokens,
     pub modal: ModalTokens,
     pub sheet: SheetTokens,
     pub drawer: DrawerTokens,
@@ -38,6 +45,8 @@ impl OverlayTokens {
             tooltip: TooltipTokens::hoff_core(),
             hover_card: HoverCardTokens::hoff_core(),
             menu: MenuTokens::hoff_core(),
+            file_menu: MenuTokens::hoff_core_file(),
+            filter_menu: MenuTokens::hoff_core_filter(),
             modal: ModalTokens::hoff_core(),
             sheet: SheetTokens::hoff_core(),
             drawer: DrawerTokens::hoff_core(),
@@ -52,9 +61,20 @@ impl OverlayTokens {
             tooltip: TooltipTokens::derive(theme),
             hover_card: HoverCardTokens::hoff_core(),
             menu: MenuTokens::derive(theme),
+            file_menu: MenuTokens::derive(theme),
+            filter_menu: MenuTokens::derive(theme),
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
             drawer: DrawerTokens::derive(theme),
+        }
+    }
+
+    /// The recipe of a menu drawn as `style`.
+    pub fn menu_for(&self, style: MenuStyle) -> &MenuTokens {
+        match style {
+            MenuStyle::Profile => &self.menu,
+            MenuStyle::File => &self.file_menu,
+            MenuStyle::Filter => &self.filter_menu,
         }
     }
 }
@@ -274,6 +294,26 @@ pub struct TooltipTokens {
     pub clearance: Clearance,
     /// The widest it gets before its text wraps.
     pub max_w: f32,
+    /// A tooltip that names its shortcut: the key beside the text.
+    pub key: TooltipKeyTokens,
+}
+
+/// The key a tooltip names beside its text (the toolbar's `Action`): a
+/// small square with the key in the tooltip's text, and the tooltip's
+/// own padding around both.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TooltipKeyTokens {
+    /// The square's edge and corner radius.
+    pub size: f32,
+    pub radius: f32,
+    pub fill: Color,
+    /// Its border; alpha 0 is none.
+    pub border: Color,
+    pub border_w: f32,
+    /// The tooltip's padding with a key: top, end, bottom, start.
+    pub pad: [f32; 4],
+    /// Between the text and the key.
+    pub gap: f32,
 }
 
 impl TooltipTokens {
@@ -302,6 +342,18 @@ impl TooltipTokens {
                 edge: 4.0,
             },
             max_w: 240.0,
+            // `Toolbar/Action/index.tsx:35`: `gap-2 !p-0.5 !pl-2`, the
+            // key `[&_span]:size-5 rounded-sm bg-[#303030] border
+            // border-[#fcfcfc]/5`.
+            key: TooltipKeyTokens {
+                size: 20.0,
+                radius: 4.0,
+                fill: hex(0x303030),
+                border: Color::rgba(252.0 / 255.0, 252.0 / 255.0, 252.0 / 255.0, 0.05),
+                border_w: 1.0,
+                pad: [2.0, 2.0, 2.0, 8.0],
+                gap: 8.0,
+            },
         }
     }
 
@@ -324,6 +376,19 @@ impl TooltipTokens {
                 edge: xs,
             },
             max_w: theme.size.tooltip_max_w,
+            // The key: one text line and an `xs` tall, outlined by the
+            // theme's soft edge on the tooltip's own fill (a lit surface
+            // under the text fails AA on dark, `theme/tests/contrast.rs`);
+            // half an `xs` around it, `md` before the text, `sm` between.
+            key: TooltipKeyTokens {
+                size: theme.typography.caption_r().line_height + xs,
+                radius: theme.shape.item.min(xs),
+                fill: theme.glass.tooltip,
+                border: theme.glass.edge_soft,
+                border_w: theme.control.edge_width,
+                pad: [xs / 2.0, xs / 2.0, xs / 2.0, theme.spacing.md],
+                gap: theme.spacing.sm,
+            },
         }
     }
 }
@@ -350,122 +415,6 @@ impl HoverCardTokens {
             open_delay: 0.45,
             close_delay: 0.3,
             width: 384.0,
-        }
-    }
-}
-
-/// A menu (the context menu, the dropdown menu's panel): its surface, its
-/// rows and its separators.
-#[derive(Clone, Debug, PartialEq)]
-pub struct MenuTokens {
-    pub fill: Color,
-    /// Drop shadows under the surface, first on top.
-    pub shadow: Vec<ShadowSpec>,
-    /// The border, its color and width; alpha 0 is none.
-    pub border: Color,
-    pub border_w: f32,
-    /// The hoff glass's inset key-light on the surface.
-    pub keylight: bool,
-    pub radius: f32,
-    /// Between the surface's edge and its rows.
-    pub pad: f32,
-    /// The narrowest it gets; it grows to its widest row.
-    pub min_w: f32,
-    pub item_h: f32,
-    /// Between a row's highlight edge and its icon or label.
-    pub item_pad_x: f32,
-    pub item_radius: f32,
-    pub icon: f32,
-    /// Between the icon and the label.
-    pub gap: f32,
-    pub label: TextStyle,
-    pub text: Color,
-    pub text_hover: Color,
-    pub icon_color: Color,
-    pub icon_hover: Color,
-    pub hover_fill: Color,
-    /// A separator row: its height, its line, and whether the line runs
-    /// the surface's whole width (the kit's `-left-2 -right-2`).
-    pub sep_h: f32,
-    pub sep_color: Color,
-    pub sep_full: bool,
-    pub disabled_alpha: f32,
-}
-
-impl MenuTokens {
-    /// The kit's profile menu (`ProfileMenu`, `Layout/Header/UserDropdown`):
-    /// `w-55 p-2 rounded-[1.25rem] border border-[#E5E5E5] bg-[#FCFCFC]
-    /// shadow-2xl`, rows `h-10 px-2.5 rounded-xl gap-3.5 text-[0.75rem]
-    /// font-semibold fill-[#7B7B7B] hover:bg-[#F1F1F1] hover:fill-[#000]`,
-    /// icons `size-5`, a separator `mb-4` with a full-width `h-0.25
-    /// bg-[#F4F4F4]` line in its middle. Disabled rows fade as the kit's
-    /// disabled controls (`opacity-30`).
-    pub fn hoff_core() -> Self {
-        let ink = hex(0x121212);
-        Self {
-            fill: hex(0xFCFCFC),
-            shadow: vec![ShadowSpec::new(
-                [0.0, 25.0],
-                50.0,
-                -12.0,
-                Color::rgba(0.0, 0.0, 0.0, 0.25),
-            )],
-            border: hex(0xE5E5E5),
-            border_w: 1.0,
-            keylight: false,
-            radius: 20.0,
-            pad: 8.0,
-            min_w: 220.0,
-            item_h: 40.0,
-            item_pad_x: 10.0,
-            item_radius: 12.0,
-            icon: 20.0,
-            gap: 14.0,
-            // No leading: the preflight's 1.5.
-            label: TypographyScale::hoff_core().exact(12.0, 18.0, 600),
-            text: ink,
-            text_hover: ink,
-            icon_color: hex(0x7B7B7B),
-            icon_hover: hex(0x000000),
-            hover_fill: hex(0xF1F1F1),
-            sep_h: 16.0,
-            sep_color: hex(0xF4F4F4),
-            sep_full: true,
-            disabled_alpha: 0.30,
-        }
-    }
-
-    /// Every other theme keeps the menu it had: the popover glass with its
-    /// soft edge, the floating shadow and the key-light, `Md` rows at the
-    /// item radius, base-2sm labels, text-default at rest and text-active
-    /// on hover, the icon in the label's color.
-    pub fn derive(theme: &Theme) -> Self {
-        let glass = &theme.glass;
-        let control = &theme.control;
-        Self {
-            fill: glass.popover,
-            shadow: theme.shadows.floating.clone(),
-            border: glass.edge_soft,
-            border_w: control.edge_width,
-            keylight: true,
-            radius: theme.shape.pill,
-            pad: control.menu_pad,
-            min_w: theme.size.menu_w,
-            item_h: control.height(crate::styling::theme::ControlSize::Md),
-            item_pad_x: control.menu_pad,
-            item_radius: theme.shape.item,
-            icon: control.icon(crate::styling::theme::IconSize::Sm),
-            gap: control.inline_gap,
-            label: theme.typography.base_2sm(),
-            text: glass.text_default,
-            text_hover: glass.text_active,
-            icon_color: glass.text_default,
-            icon_hover: glass.text_active,
-            hover_fill: glass.surface_active,
-            sep_h: theme.spacing.xs * 2.0 + control.edge_width,
-            sep_color: glass.surface_active,
-            sep_full: false,
-            disabled_alpha: glass.disabled_alpha,
         }
     }
 }

@@ -106,7 +106,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
-                Pane::Builder => self.panes.builder.content_height(content),
+                Pane::Builder => self.panes.builder.content_height(content, t),
             },
         }
     }
@@ -292,7 +292,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
-                Pane::Builder => self.panes.builder.handle_event(event, content),
+                Pane::Builder => self.panes.builder.handle_event(event, content, t),
             },
         }
     }

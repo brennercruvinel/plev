@@ -12,23 +12,27 @@ use uigallery::views::PAGES;
 use super::fields;
 use super::harness::gallery;
 
-/// The component pages that project: the 30 before task-104, and each
+/// The component pages that project: the 31 before task-104, and each
 /// front's own, on a line of its own so the fronts merge without a
 /// conflict.
-const PROJECTING: usize = 30
-    // task-104 front A, fields (#154): Field, Label, Input Group
-    + 3
-    // task-104 front E, selection (#158): Toggle Group, Radio Group
-    + 2
-    // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer
-    + 4
+const PROJECTING: usize = 31
+    // task-104 front A, fields (#154): Input Group (Field and Label projected
+    // before, through the pages they borrowed)
+    + 1
+    // task-104 front E, selection (#158): Radio Group (Toggle Group projected
+    // before, through the Todo it borrowed)
+    + 1
+    // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer,
+    // Context Menu
+    + 5
     // task-104 front C, conversation (#156): Message, Bubble, Message
     // Scroller, Alert, Attachment, Marker, Badge
     + 7
     // task-104 front D, disclosure and display (#157): Accordion,
     // Collapsible, Aspect Ratio, Carousel, Pagination (Item, Kbd and Table
-    // projected before, through the pages they borrowed)
-    + 5
+    // projected before, through the pages they borrowed), Panel, Panel
+    // Header
+    + 7
     // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat
     + 4;
 

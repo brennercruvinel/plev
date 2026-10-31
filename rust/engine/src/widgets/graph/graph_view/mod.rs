@@ -77,7 +77,8 @@ pub struct GraphView {
     scene: Option<GraphScene>,
     transform: ViewTransform,
     /// Fit the world into the viewport on the next render (after
-    /// `set_graph`/`set_scene` or [`fit_view`](Self::fit_view)).
+    /// `set_graph`/`set_scene` or [`fit_view`](Self::fit_view)): the box of
+    /// its nodes, not the world it was laid out in.
     needs_fit: bool,
     hovered: Option<usize>,
     selected: Option<usize>,
@@ -357,7 +358,9 @@ impl GraphView {
         };
         self.origin = (bounds.x, bounds.y);
         if self.needs_fit {
-            self.transform = ViewTransform::fit(WORLD, WORLD, bounds.w, bounds.h, theme.spacing.xl);
+            let margin = theme.spacing.xl;
+            self.transform =
+                ViewTransform::fit_points(&scene.positions, bounds.w, bounds.h, margin);
             self.needs_fit = false;
         }
 

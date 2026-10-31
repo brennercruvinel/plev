@@ -117,9 +117,12 @@ impl SliderPage {
                 &caption,
                 style.font_size,
                 style.font_weight,
-                rect.right() + theme.spacing.md,
-                rect.y + (rect.h - style.line_height) / 2.0,
+                (
+                    rect.right() + theme.spacing.md,
+                    rect.y + (rect.h - style.line_height) / 2.0,
+                ),
                 theme.colors.text_mid.0,
+                theme,
             );
         }
     }

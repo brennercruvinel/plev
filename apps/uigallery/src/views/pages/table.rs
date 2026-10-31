@@ -60,7 +60,7 @@ pub const PAGES: &[Page] = &[
         F,
         "Typography",
         "info",
-        "The theme's type styles in its own face, tabled as the kit's typography page.",
+        "The kit's type styles set in the theme's face; a value the theme does not hold reads as the kit's.",
         Pane::Typography,
     ),
     page(
@@ -217,7 +217,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
     page(
@@ -281,7 +281,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
     page(
@@ -509,7 +509,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Tooltip",
         "info",
-        "Hover the button: 450 ms, then above the anchor, or below when there is no room.",
+        "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
     ),
     page(

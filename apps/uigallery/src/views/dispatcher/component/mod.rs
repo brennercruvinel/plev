@@ -50,6 +50,8 @@ pub(in crate::views) enum After {
     Sheet(Edge),
     /// The Drawer page's drawer.
     Drawer,
+    /// The Context Menu page's menu, at the middle of its area.
+    ContextMenu,
 }
 
 /// A component page as the view's projection and the gallery's
@@ -138,6 +140,7 @@ components! {
     InputGroup => input_group,
     // task-104 front B, overlays (#155)
     AlertDialog => alert_dialog,
+    ContextMenu => context_menu,
     Drawer => drawer,
     DropdownMenu => dropdown_menu,
     HoverCard => hover_card,
@@ -161,6 +164,8 @@ components! {
     Kbd => kbd,
     Pagination => pagination,
     StaticTable => table_static,
+    Panel => panel,
+    PanelHeader => panel_header,
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     RadioGroup => radio_group,
@@ -270,6 +275,7 @@ impl ShowcaseView {
             // task-104 front B, overlays (#155)
             After::Sheet(edge) => self.open_sheet(edge),
             After::Drawer => self.open_drawer(),
+            After::ContextMenu => self.open_page_menu(),
         }
     }
 

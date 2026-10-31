@@ -239,9 +239,9 @@ impl GitPage {
                 error,
                 14.0,
                 400,
-                content.x,
-                content.y + theme.spacing.md,
+                (content.x, content.y + theme.spacing.md),
                 theme.glass.text_placeholder.0,
+                theme,
             );
             return;
         }

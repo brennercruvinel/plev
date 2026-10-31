@@ -208,15 +208,16 @@ fn a_persons_click_on_the_modal_is_a_request_too() {
     assert!(!view.overlay_holds_pointer(), "the modal leaves");
 }
 
-/// The Context Menu page's menu: a menu of items, the disabled one off,
+/// The Context Menu page's menu, the kit's file menu: a menu of items,
+/// each described by its keys, the destructive one's pick so declared,
 /// the focus on the first; a reader moves to an item and picks it.
 #[test]
 fn the_context_menu_is_a_menu_a_reader_picks_from() {
     let mut view = view_on("context menu");
     let ear = ear(&mut view);
     let _ = seen(&mut view);
-    let area = view.page_rect();
-    assert!(view.handle_right_click(area.x + 20.0, area.y + 20.0));
+    let area = view.panes.context_menu.area(view.page_rect(), &view.theme);
+    assert!(view.handle_right_click(area.x + area.w / 2.0, area.y + area.h / 2.0));
     let (u, shown) = seen(&mut view);
     let menu = node(&u, &shown, "context_menu");
     assert_eq!(
@@ -225,11 +226,15 @@ fn the_context_menu_is_a_menu_a_reader_picks_from() {
     );
     assert_eq!(
         node(&u, &shown, "context_menu[2]").label(),
-        Some("Copy path")
+        Some("Create new scene...")
     );
     assert_eq!(node(&u, &shown, "context_menu[2]").role(), AkRole::MenuItem);
-    assert!(node(&u, &shown, "context_menu[4]").is_disabled());
-    assert!(!node(&u, &shown, "context_menu[4]").supports_action(Action::Click));
+    assert_eq!(
+        node(&u, &shown, "context_menu[2]").description(),
+        Some("⌘N")
+    );
+    assert!(!node(&u, &shown, "context_menu[6]").is_disabled());
+    assert!(node(&u, &shown, "context_menu[6]").supports_action(Action::Click));
     assert_eq!(Some(u.focus), shown.ids.node(&sid("context_menu[1]")));
 
     assert!(view.assist_focus(&sid("context_menu[2]")));
@@ -245,7 +250,7 @@ fn the_context_menu_is_a_menu_a_reader_picks_from() {
     );
     assert_eq!(
         node(&u, &shown, "toasts[0]").value(),
-        Some("Context menu: Copy path")
+        Some("Context menu: Create new scene...")
     );
     assert_eq!(
         heard(&ear),

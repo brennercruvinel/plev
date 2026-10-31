@@ -256,15 +256,19 @@ fn the_claudes_review_fixture_is_the_first_rounds_structure() {
         Some(("label", "duration (s)"))
     );
     // the observation's rects of the round, above the sliders (the
-    // sliders are taller now: their label and value)
+    // sliders are taller now: their label and value), as the gallery
+    // draws them today: the page's header 4 px shorter since the fronts
+    // of task-104 merged, and the duration the core kit's stat (task-104g,
+    // the medium readout, 32 + 4 + 16 px tall, where the round saw 58 by
+    // 43), which grows its card by 9
     for (id, [x, y, w, h]) in [
-        ("review.root", [740.0, 238.2, 420.0, f32::NAN]),
-        ("review.title", [740.0, 238.2, 420.0, 23.0]),
-        ("review.video_card", [740.0, 273.2, 420.0, 369.0]),
-        ("review.video_file", [740.0, 273.2, 420.0, 22.0]),
-        ("review.video_duration", [740.0, 304.2, 58.0, 43.0]),
-        ("review.video_original", [740.0, 354.2, 420.0, 140.0]),
-        ("review.video_result", [740.0, 502.2, 420.0, 140.0]),
+        ("review.root", [740.0, 234.2, 420.0, f32::NAN]),
+        ("review.title", [740.0, 234.2, 420.0, 23.0]),
+        ("review.video_card", [740.0, 269.2, 420.0, 378.0]),
+        ("review.video_file", [740.0, 269.2, 420.0, 22.0]),
+        ("review.video_duration", [740.0, 300.2, 63.0, 52.0]),
+        ("review.video_original", [740.0, 360.2, 420.0, 140.0]),
+        ("review.video_result", [740.0, 508.2, 420.0, 140.0]),
     ] {
         let r = rect(&c, id);
         let near = |a: f32, b: f32| b.is_nan() || (a - b).abs() < 0.5;
