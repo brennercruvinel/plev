@@ -83,32 +83,18 @@ pub fn sheet(
 }
 
 /// `text` broken into the lines it draws in `width`, each with its
-/// measured width: words packed while they fit, a hard break kept, a word
-/// wider than `width` alone on its line. A centered sheet draws it line by
-/// line, each line centered on its own (the kit's `text-center`), so its
-/// height is the lines' count.
+/// measured width: the shaper's own breaks (`TextMeasurer::lines`, so a
+/// CJK or Thai body wraps too), a hard break kept, and an empty text one
+/// empty line that still holds its place. A centered sheet draws it line
+/// by line, each line centered on its own (the kit's `text-center`), so
+/// its height is the lines' count.
 fn wrap(text: &str, style: &TextStyle, width: f32) -> Vec<(String, f32)> {
-    let measure = |s: &str| TextMeasurer::measure_styled(s, style, None).0;
-    let mut out = Vec::new();
-    for paragraph in text.split('\n') {
-        let mut line = String::new();
-        for word in paragraph.split_whitespace() {
-            if line.is_empty() {
-                line.push_str(word);
-                continue;
-            }
-            let next = format!("{line} {word}");
-            if measure(&next) <= width {
-                line = next;
-            } else {
-                let w = measure(&line);
-                out.push((std::mem::replace(&mut line, word.to_owned()), w));
-            }
-        }
-        let w = measure(&line);
-        out.push((line, w));
+    let lines = TextMeasurer::lines(text, style, width);
+    if lines.is_empty() {
+        vec![(String::new(), 0.0)]
+    } else {
+        lines
     }
-    out
 }
 
 /// What the user decided.
