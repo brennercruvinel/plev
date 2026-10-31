@@ -6,6 +6,7 @@
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 
+use cosmic_text::fontdb::Database;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use lru::LruCache;
 
@@ -133,8 +134,9 @@ impl MeasureContext {
         self.scratch
             .set_metrics(fs, Metrics::new(style.font_size, style.line_height));
         self.scratch.set_size(fs, max_width, None);
+        let attrs = attrs_for(style, fs.db());
         self.scratch
-            .set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
+            .set_text(fs, text, &attrs, Shaping::Advanced, None);
         self.scratch.shape_until_scroll(fs, false);
     }
 }
@@ -151,8 +153,12 @@ fn new_font_system() -> FontSystem {
     super::fonts::font_system(super::fonts::FaceSet::Target).0
 }
 
-pub(super) fn attrs_for(style: &TextStyle) -> Attrs<'_> {
-    let mut attrs = Attrs::new().weight(Weight(style.font_weight));
+/// The attributes `style` shapes with in `db`: its family at the weight
+/// that family has nearest to the one asked ([`super::fonts::matched_weight`]).
+pub(super) fn attrs_for<'a>(style: &'a TextStyle, db: &Database) -> Attrs<'a> {
+    let family = style.font_family.as_deref();
+    let weight = super::fonts::matched_weight(db, family, style.font_weight);
+    let mut attrs = Attrs::new().weight(Weight(weight));
     if style.letter_spacing != 0.0 && style.font_size > 0.0 {
         // cosmic-text tracking is in EM; the engine API is px.
         attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
