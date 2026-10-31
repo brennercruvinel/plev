@@ -3,7 +3,9 @@
 //! person, the reader and an agent.
 
 use accord::{Actor, Request, Value};
-use uigallery::views::EditKey;
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::widgets::prelude::WidgetEvent;
+use uigallery::views::{EditKey, ShowcaseView};
 
 use super::harness::{Gallery, ask, by_agent, gallery, same, sid};
 
@@ -140,4 +142,40 @@ fn a_closed_panel_and_a_forced_card_refuse_what_they_cannot_do() {
     assert_eq!(node.state.get("expanded"), Some(&Value::Bool(true)));
     let req = Request::observe(&seen, actor, &forced, "close", None);
     assert!(req.is_err(), "a forced card has nothing to close");
+}
+
+/// The page in a window of its own: the live popover opens there, inside
+/// that window's page, on a layer above it; a frame later it has faded in.
+#[test]
+fn the_popover_opens_inside_a_detached_window() {
+    let (w, h) = (700.0, 600.0);
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    view.jump_to_page(PAGE);
+    assert!(view.detach(w, h, 1.0));
+    let mut c = Compositor::new();
+    view.render_detached(&mut c);
+    let [x, y, bw, bh] = c
+        .binding(&sid(LIVE))
+        .expect("bound in the page window")
+        .rect;
+    let (x, y) = (x + bw / 2.0, y + bh / 2.0);
+    assert!(view.detached_event(&WidgetEvent::MouseDown { x, y }));
+    view.detached_event(&WidgetEvent::MouseUp { x, y });
+    for _ in 0..120 {
+        if !view.tick(1.0 / 60.0) {
+            break;
+        }
+    }
+    view.render_detached(&mut c);
+    for i in 0..5 {
+        let preset = sid(&format!("{PANEL}[{i}]"));
+        let bound = c.binding(&preset).expect("the panel in the page window");
+        let [px, py, pw, ph] = bound.rect;
+        assert!(
+            px >= 0.0 && py >= 0.0 && px + pw <= w && py + ph <= h,
+            "{preset}: {:?}",
+            bound.rect
+        );
+        assert_ne!(bound.layer, LayerId::DEFAULT, "above the page");
+    }
 }

@@ -356,7 +356,14 @@ impl ShowcaseView {
                 Pane::Popover => {
                     let bounds = self.popover_bounds(content);
                     let popover = &mut self.panes.popover;
-                    popover.render(c, layers.overlay, content, bounds, theme);
+                    popover.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
                 }
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Message => self.panes.message.render(c, content, theme),

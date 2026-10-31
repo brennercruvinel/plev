@@ -67,9 +67,23 @@ pub(crate) fn columns(span: usize, w: f32, gap: f32) -> usize {
 }
 
 /// The groups down `content`, each given as `(span, cards)`: the cards
-/// per row at full width and how many cards it has.
+/// per row at full width and how many cards it has, `CARD_H` tall.
 pub(crate) fn layout(
     groups: impl IntoIterator<Item = (usize, usize)>,
+    content: Rect,
+    theme: &Theme,
+) -> Vec<GroupLayout> {
+    let groups = groups
+        .into_iter()
+        .map(|(span, count)| (span, count, CARD_H));
+    layout_with_heights(groups, content, theme)
+}
+
+/// [`layout`] with each group's own card height, `(span, cards,
+/// height)`: a card that holds more than a widget (an open panel, a
+/// sheet) is as tall as what it holds.
+pub(crate) fn layout_with_heights(
+    groups: impl IntoIterator<Item = (usize, usize, f32)>,
     content: Rect,
     theme: &Theme,
 ) -> Vec<GroupLayout> {
@@ -78,7 +92,7 @@ pub(crate) fn layout(
     let title_h = title_style(theme).line_height;
     let mut y = content.y;
     let mut out = Vec::new();
-    for (span, count) in groups {
+    for (span, count, card_h) in groups {
         let title_y = y + pad;
         let cols = columns(span, content.w, gap);
         let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
@@ -88,14 +102,14 @@ pub(crate) fn layout(
                 let (col, row) = (i % cols, i / cols);
                 Rect::new(
                     content.x + col as f32 * (card_w + gap),
-                    first_row + row as f32 * (CARD_H + gap),
+                    first_row + row as f32 * (card_h + gap),
                     card_w,
-                    CARD_H,
+                    card_h,
                 )
             })
             .collect();
         let rows = count.div_ceil(cols);
-        let rule_y = first_row + rows as f32 * CARD_H + (rows as f32 - 1.0) * gap + pad;
+        let rule_y = first_row + rows as f32 * card_h + (rows as f32 - 1.0) * gap + pad;
         out.push(GroupLayout {
             title_y,
             cards,

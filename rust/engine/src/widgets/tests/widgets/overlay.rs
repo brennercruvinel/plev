@@ -165,6 +165,20 @@ fn popover_on_the_logical_sides_opens_beside_the_anchor() {
 
 // The stack
 
+fn motion() -> crate::styling::theme::MotionPhysics {
+    Theme::hoff_core().intent_motion(Intent::Neutral)
+}
+
+/// Ticks the stack until nothing moves.
+fn settle(mgr: &mut OverlayManager) {
+    for _ in 0..600 {
+        if !mgr.tick(1.0 / 60.0) {
+            return;
+        }
+    }
+    panic!("the stack never settled");
+}
+
 #[test]
 fn popover_takes_an_entry_on_the_stack_while_open_and_leaves_others_alone() {
     let mut mgr = OverlayManager::new();
@@ -177,14 +191,21 @@ fn popover_takes_an_entry_on_the_stack_while_open_and_leaves_others_alone() {
     );
     let mut pop = Popover::new();
     let panel = Rect::new(10.0, 10.0, 200.0, 100.0);
-    assert!(!pop.sync(&mut mgr, panel), "closed: nothing to do");
+    assert!(
+        !pop.sync(&mut mgr, panel, &motion()),
+        "closed: nothing to do"
+    );
     assert!(pop.open());
-    assert!(pop.sync(&mut mgr, panel));
+    assert!(pop.sync(&mut mgr, panel, &motion()));
     assert_eq!(mgr.len(), 2);
-    assert!(!pop.sync(&mut mgr, panel), "in line already");
+    assert!(!pop.sync(&mut mgr, panel, &motion()), "in line already");
     assert!(pop.close());
-    assert!(pop.sync(&mut mgr, panel));
+    assert!(pop.sync(&mut mgr, panel, &motion()));
+    assert_eq!(mgr.len(), 2, "it fades out on the stack");
+    settle(&mut mgr);
     assert_eq!(mgr.stack.iter().map(|o| o.id).collect::<Vec<_>>(), [other]);
+    assert!(pop.sync(&mut mgr, panel, &motion()), "its entry is gone");
+    assert!(!pop.sync(&mut mgr, panel, &motion()));
 }
 
 #[test]
@@ -192,12 +213,52 @@ fn popover_whose_entry_another_hand_popped_reads_closed() {
     let mut mgr = OverlayManager::new();
     let mut pop = Popover::new();
     pop.open();
-    pop.sync(&mut mgr, Rect::new(0.0, 0.0, 100.0, 60.0));
-    // Escape on the stack, from outside the popover.
+    pop.sync(&mut mgr, Rect::new(0.0, 0.0, 100.0, 60.0), &motion());
+    // Escape on the stack, from outside the popover: popped at once, or
+    // its exit begun.
     assert!(mgr.pop().is_some());
-    assert!(pop.sync(&mut mgr, Rect::default()));
+    assert!(pop.sync(&mut mgr, Rect::default(), &motion()));
     assert!(!pop.is_open());
     assert!(mgr.is_empty());
+    pop.open();
+    pop.sync(&mut mgr, Rect::default(), &motion());
+    assert!(mgr.pop_animated().is_some());
+    assert!(pop.sync(&mut mgr, Rect::default(), &motion()));
+    assert!(!pop.is_open());
+}
+
+/// The panel fades in and out with its entry (the kit's opacity
+/// transition); with reduced motion, it is in on the first frame.
+#[test]
+fn popover_fades_in_and_out_and_cuts_with_reduced_motion() {
+    let mut mgr = OverlayManager::new();
+    let mut pop = Popover::new();
+    let panel = Rect::new(0.0, 0.0, 100.0, 60.0);
+    assert_eq!(pop.shown(&mgr), None);
+    pop.open();
+    assert_eq!(pop.shown(&mgr), Some(0.0), "asked, not yet on the stack");
+    pop.sync(&mut mgr, panel, &motion());
+    mgr.tick(1.0 / 60.0);
+    let first = pop.shown(&mgr).unwrap();
+    assert!(first > 0.0 && first < 1.0, "mid fade: {first}");
+    settle(&mut mgr);
+    assert_eq!(pop.shown(&mgr), Some(1.0));
+    pop.close();
+    pop.sync(&mut mgr, panel, &motion());
+    mgr.tick(1.0 / 60.0);
+    let leaving = pop.shown(&mgr).unwrap();
+    assert!(leaving < 1.0, "fading out: {leaving}");
+    settle(&mut mgr);
+    pop.sync(&mut mgr, panel, &motion());
+    assert_eq!(pop.shown(&mgr), None);
+
+    crate::compose::animation::set_reduced_motion(true);
+    pop.open();
+    pop.sync(&mut mgr, panel, &motion());
+    mgr.tick(1.0 / 60.0);
+    let reduced = pop.shown(&mgr);
+    crate::compose::animation::set_reduced_motion(false);
+    assert_eq!(reduced, Some(1.0), "a cut");
 }
 
 #[test]
