@@ -16,6 +16,8 @@ use super::super::foundations::{effects, icons, theme, typography};
 // own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
 use super::super::components::field;
+use super::super::components::input_group;
+use super::super::components::label;
 
 // task-104 front B, overlays (#155)
 use super::super::components::popover;
@@ -72,7 +74,9 @@ pub struct Panes {
     pub tree: tree::TreePage,
     // -- task-104: each front's pages under its anchor
     // task-104 front A, fields (#154)
-    pub field: field::FieldPage,
+    pub field: field::FormPage,
+    pub label: field::FormPage,
+    pub input_group: field::FormPage,
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
@@ -154,7 +158,9 @@ impl Panes {
             tooltip: tooltip::TooltipPage::new(),
             tree: tree::TreePage::new(),
             // task-104 front A, fields (#154)
-            field: field::FieldPage::new(),
+            field: field::page(),
+            label: label::page(),
+            input_group: input_group::page(),
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)

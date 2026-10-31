@@ -128,6 +128,8 @@ components! {
     // task-104: each front's component pages under its anchor
     // task-104 front A, fields (#154)
     Field => field,
+    Label => label,
+    InputGroup => input_group,
     // task-104 front B, overlays (#155)
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)

@@ -304,49 +304,53 @@ fn every_page_renders_a_scene() {
     }
 }
 
+/// Every text a page draws on the default layer.
+fn page_texts(view: &mut ShowcaseView, title: &str) -> Vec<String> {
+    view.jump_to_page(title);
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    c.layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|n| match n {
+            SceneNode::Text { key, .. } => Some(key.text.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Every alias left in the table says whose example it shares and draws
+/// that example; every placeholder left names its slot. The pages come
+/// from the table, so a page that becomes its own drops out of the check
+/// and the check holds with none left.
 #[test]
 fn alias_pages_show_the_note_and_placeholders_name_their_slot() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    view.jump_to_page("field");
-    let mut c = Compositor::new();
-    view.render(&mut c);
-    let texts: Vec<String> = c
-        .layer(LayerId::DEFAULT)
-        .unwrap()
-        .nodes()
-        .iter()
-        .filter_map(|n| match n {
-            SceneNode::Text { key, .. } => Some(key.text.clone()),
-            _ => None,
-        })
-        .collect();
-    assert!(
-        texts
-            .iter()
-            .any(|t| t.starts_with("shares the Input example"))
-    );
-    assert!(
-        texts.iter().any(|t| t == "Full name"),
-        "the shared example draws"
-    );
-
-    view.jump_to_page("calendar");
-    let mut c = Compositor::new();
-    view.render(&mut c);
-    let texts: Vec<String> = c
-        .layer(LayerId::DEFAULT)
-        .unwrap()
-        .nodes()
-        .iter()
-        .filter_map(|n| match n {
-            SceneNode::Text { key, .. } => Some(key.text.clone()),
-            _ => None,
-        })
-        .collect();
-    assert!(
-        texts.iter().filter(|t| *t == "Calendar").count() >= 2,
-        "header and slot"
-    );
+    for page in PAGES {
+        match page.body {
+            Body::Alias { pane, .. } => {
+                let owner = PAGES[pages::index_of(pane)].title;
+                let texts = page_texts(&mut view, page.title);
+                let note = format!("shares the {owner} example");
+                assert!(
+                    texts.iter().any(|t| t.starts_with(&note)),
+                    "{}: {note}",
+                    page.title
+                );
+                assert!(texts.len() > 2, "{}: the shared example draws", page.title);
+            }
+            Body::Placeholder => {
+                let texts = page_texts(&mut view, page.title);
+                assert!(
+                    texts.iter().filter(|t| *t == page.title).count() >= 2,
+                    "{}: header and slot",
+                    page.title
+                );
+            }
+            Body::Pane(_) => {}
+        }
+    }
 }
 
 // -- Reactivity regression probes (event chain must report changes) ----

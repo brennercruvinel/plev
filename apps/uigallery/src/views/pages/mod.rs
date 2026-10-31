@@ -92,6 +92,8 @@ pub enum Pane {
     // task-104: each front adds its variants under its anchor, with the page
     // task-104 front A, fields (#154)
     Field,
+    Label,
+    InputGroup,
     // task-104 front B, overlays (#155)
     Popover,
     // task-104 front C, conversation and feedback (#156)

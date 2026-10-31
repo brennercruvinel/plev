@@ -226,10 +226,10 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             card,
         ),
         (
-            "form.field.label_color",
+            "form.label.color",
             "colors.surface",
             TEXT,
-            f.field.label_color,
+            f.label.color,
             card,
         ),
         ("form.field.link_color", "colors.surface", TEXT, link, card),

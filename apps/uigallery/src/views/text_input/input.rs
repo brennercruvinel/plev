@@ -77,15 +77,22 @@ impl ShowcaseView {
         // not switch the theme. Not beneath an overlay that holds the
         // pointer: the keyboard is the overlay's then.
         let held = self.overlay_holds_pointer();
+        let pane = self.pane();
         let typed = !held
-            && match self.pane() {
-                Some(Pane::Input) => self.panes.input.handle_text(key),
-                Some(Pane::Field) => self.panes.field.handle_text(key),
-                Some(Pane::Todo) => self.panes.todo.handle_text(key),
-                Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
-                Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
-                Some(Pane::Git) => self.panes.git.handle_text(key),
-                _ => false,
+            && if let Some(host) = self.panes.text_host_mut(pane) {
+                host.handle_text(key)
+            } else {
+                match pane {
+                    Some(Pane::Todo) => self.panes.todo.handle_text(key),
+                    Some(Pane::Surface) => {
+                        self.panes.surface.handle_text(key, &mut self.panes.todo)
+                    }
+                    Some(Pane::Silences) => {
+                        self.panes.silences.handle_text(key, &mut self.panes.todo)
+                    }
+                    Some(Pane::Git) => self.panes.git.handle_text(key),
+                    _ => false,
+                }
             };
         if typed {
             return true;
@@ -150,9 +157,14 @@ impl ShowcaseView {
         if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
             return true;
         }
-        let blurred = match self.pane() {
-            Some(Pane::Input) => self.panes.input.handle_escape(),
-            Some(Pane::Field) => self.panes.field.handle_escape(),
+        let pane = self.pane();
+        if let Some(host) = self.panes.text_host_mut(pane) {
+            if host.handle_escape() {
+                return true;
+            }
+            return self.overlay_mgr.pop_animated().is_some();
+        }
+        let blurred = match pane {
             Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
             Some(Pane::Switch) => self.panes.switch.handle_escape(),
             Some(Pane::Slider) => self.panes.slider.handle_escape(),
@@ -209,9 +221,11 @@ impl ShowcaseView {
         if self.overlay_holds_pointer() {
             return false;
         }
-        match self.pane() {
-            Some(Pane::Input) => self.panes.input.handle_edit_key(key),
-            Some(Pane::Field) => self.panes.field.handle_edit_key(key),
+        let pane = self.pane();
+        if let Some(host) = self.panes.text_host_mut(pane) {
+            return host.handle_edit_key(key);
+        }
+        match pane {
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
             Some(Pane::Surface) => self
                 .panes
@@ -267,6 +281,10 @@ impl ShowcaseView {
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
+        // A text field's own menu (`field_menu.rs`).
+        if self.panes.text_host(self.pane()).is_some() {
+            return self.open_field_menu(x, y);
+        }
         match self.pane() {
             Some(Pane::Git) => {
                 let content = self.page_rect();
@@ -280,9 +298,6 @@ impl ShowcaseView {
                 self.open_menu(x, y);
                 true
             }
-            // A text field's own menu (`field_menu.rs`).
-            Some(Pane::Input) => self.open_field_menu(x, y),
-            Some(Pane::Field) => self.open_field_menu(x, y),
             _ => false,
         }
     }

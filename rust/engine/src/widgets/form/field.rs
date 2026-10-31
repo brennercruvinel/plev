@@ -27,6 +27,7 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::widgets::form::label::Label;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::Slot;
 use crate::widgets::icons;
@@ -59,6 +60,8 @@ pub enum FieldPart {
     Reveal,
     /// The link at the end of the label row.
     Link,
+    /// The label: a press on it focuses the box.
+    Label,
 }
 
 /// Where each part of a field goes in its bounds. The text rects are
@@ -88,7 +91,7 @@ impl FieldLayout {
 #[derive(Clone, Debug)]
 pub struct Field {
     pub input: TextField,
-    label: Option<String>,
+    label: Option<Label>,
     link: Option<String>,
     message: Option<Message>,
     icon: Option<&'static str>,
@@ -120,7 +123,7 @@ impl Field {
     }
 
     pub fn label(mut self, label: impl Into<String>) -> Self {
-        self.label = Some(label.into());
+        self.label = Some(Label::new(label).disabled(self.input.disabled));
         self
     }
 
@@ -180,6 +183,9 @@ impl Field {
 
     pub fn disabled(mut self, disabled: bool) -> Self {
         self.input.disabled = disabled;
+        if let Some(label) = &mut self.label {
+            label.set_disabled(disabled);
+        }
         self
     }
 
@@ -204,7 +210,7 @@ impl Field {
     }
 
     pub fn label_text(&self) -> Option<&str> {
-        self.label.as_deref()
+        self.label.as_ref().map(Label::text)
     }
 
     pub fn message(&self) -> Option<&Message> {
@@ -222,7 +228,7 @@ impl Field {
     /// The keyboard focus on the eye or the link, or off both (the box's
     /// focus is the inner field's).
     pub fn set_part_focus(&mut self, part: Option<FieldPart>) {
-        self.part_focus = part.filter(|p| *p != FieldPart::Input);
+        self.part_focus = part.filter(|p| matches!(p, FieldPart::Reveal | FieldPart::Link));
     }
 
     pub fn part_focus(&self) -> Option<FieldPart> {
@@ -289,17 +295,20 @@ impl Field {
         let one_line = |text: &str, style: &TextStyle| {
             TextMeasurer::measure_styled(text, style, None).0.ceil()
         };
-        let label = self.label.as_deref();
+        let label = self.label.as_ref();
         let link = self.link.as_deref();
         let side_by_side = match (label, link) {
-            (Some(label), Some(link)) => one_line(label, &f.label) + one_line(link, &f.link) <= w,
+            (Some(label), Some(link)) => label.size(None, theme).0 + one_line(link, &f.link) <= w,
             _ => true,
         };
         let link_w = match link {
             Some(link) if side_by_side => one_line(link, &f.link).min(w),
             _ => 0.0,
         };
-        let label = label.map(|t| Self::text_rect(t, &f.label, x, y, w - link_w));
+        let label = label.map(|l| {
+            let (lw, lh) = l.size(Some(w - link_w), theme);
+            Rect::new(x, y, lw, lh)
+        });
         let below = if side_by_side {
             y
         } else {
@@ -388,6 +397,8 @@ impl Field {
             Some(FieldPart::Reveal)
         } else if l.link.is_some_and(|r| r.contains(x, y)) {
             Some(FieldPart::Link)
+        } else if l.label.is_some_and(|r| r.contains(x, y)) {
+            Some(FieldPart::Label)
         } else if l.input.contains(x, y) {
             Some(FieldPart::Input)
         } else {
@@ -435,6 +446,10 @@ impl Field {
                     let r = self.input.handle_event(event, l.input, theme);
                     r.merge(EventResult::clicked())
                 }
+                Some(FieldPart::Label) => {
+                    self.input.focus();
+                    EventResult::clicked()
+                }
                 _ => self.input.handle_event(event, l.input, theme),
             },
             _ => self.input.handle_event(event, l.input, theme),
@@ -454,6 +469,9 @@ impl Field {
         } else {
             1.0
         };
+        if let (Some(label), Some(r)) = (&self.label, l.label) {
+            label.draw(c, layer, r.x, r.y, Some(r.w), theme);
+        }
         let fade = |color: Color, a: f32| with_alpha(color, color.0[3] * a * alpha);
         let mut text = |s: &str, style: &TextStyle, r: Rect, color: [f32; 4]| {
             c.push_to_layer(
@@ -466,9 +484,6 @@ impl Field {
                 },
             );
         };
-        if let (Some(label), Some(r)) = (&self.label, l.label) {
-            text(label, &f.label, r, fade(f.label_color, 1.0));
-        }
         if let (Some(link), Some(r)) = (&self.link, l.link) {
             let a = if self.link_hovered {
                 f.link_hover_alpha
@@ -541,10 +556,10 @@ impl Field {
     /// the link.
     #[track_caller]
     pub fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: Option<&SemId>) {
-        let name = self
-            .label
-            .clone()
-            .unwrap_or_else(|| self.input.input.placeholder.clone());
+        let name = self.label.as_ref().map_or_else(
+            || self.input.input.placeholder.clone(),
+            |l| l.text().to_owned(),
+        );
         let mut node = self.input.project(b, id, name, parent);
         node.state("invalid", matches!(self.message, Some(Message::Error(_))))
             .state("valid", self.validated);
