@@ -91,6 +91,21 @@ impl SelectionTokens {
             thumb: switch.knob.clone(),
             ..kit.slider
         };
+        // the tag on the page ringed by the divider, its quiet text where
+        // it reads; chosen, the hover tone
+        let tag = |fill: Color, edge: Color, text: Color| ButtonSurface {
+            fill: [fill; 2],
+            overlay: NONE,
+            shadow: vec![border(edge)],
+            text,
+        };
+        let chip = ChipTokens {
+            rest: tag(c.bg, c.divider, legible(c.text_mid, c.text, c.bg, c.bg)),
+            rest_hover: tag(c.bg, c.divider, c.text),
+            on: tag(c.bg_hover, NONE, c.text),
+            on_hover: tag(c.divider, NONE, c.text),
+            ..kit.chip
+        };
         let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
         let checkbox = CheckboxTokens {
             off: ButtonSurface {
@@ -124,6 +139,7 @@ impl SelectionTokens {
             switch,
             checkbox,
             slider,
+            chip,
             radio,
             calendar: CalendarTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),

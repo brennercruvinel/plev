@@ -112,6 +112,28 @@ pub struct SliderTokens {
     pub disabled_alpha: f32,
 }
 
+/// The kit's chip: the card's state tag (`components/Card/index.tsx:56`,
+/// `px-3 py-1 border rounded-xl`, 11/16 medium; `bg-[#F1F1F1]`, or
+/// `bg-[#FCFCFC] border-[#ECECEC]` on gray) and the notifications'
+/// filter pill (`components/Notifications/index.tsx:33`, chosen
+/// `bg-[#F1F1F1] text-[#000]`, else `text-[#7B7B7B]`, `hover:text-
+/// [#000]`). A quiet chip is the bordered tag, a selected one the filled.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChipTokens {
+    pub rest: ButtonSurface,
+    pub rest_hover: ButtonSurface,
+    pub on: ButtonSurface,
+    pub on_hover: ButtonSurface,
+    /// `px-3`, `py-1`, `rounded-xl`, the `border`.
+    pub pad_x: f32,
+    pub pad_y: f32,
+    pub radius: f32,
+    pub edge: f32,
+    pub font_size: f32,
+    pub line_height: f32,
+    pub font_weight: u16,
+}
+
 /// The checkbox. The kit has none: its box is the switch's well, off
 /// and on, ringed where it is off by an edge that reads (1.4.11), its
 /// mark the knob's paper, its label the radio's list line color. The box
@@ -201,6 +223,7 @@ pub struct SelectionTokens {
     pub switch: SwitchTokens,
     pub checkbox: CheckboxTokens,
     pub slider: SliderTokens,
+    pub chip: ChipTokens,
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
@@ -213,6 +236,11 @@ fn hex(v: u32) -> Color {
 /// `rgba(50,50,50,a)`, the kit's shade for wells and thumbs.
 fn shade(a: f32) -> Color {
     Color::rgba(50.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, a)
+}
+
+/// A 1px border inside the surface (`border`, which the box holds).
+pub(super) fn border(color: Color) -> ShadowSpec {
+    ShadowSpec::inset([0.0, 0.0], 0.0, 1.0, color)
 }
 
 /// A 1px ring around the surface (`0 0 0 1px color`, the css border).
@@ -356,6 +384,27 @@ impl SelectionTokens {
             thumb_radius: 6.0,
             disabled_alpha: switch.disabled_alpha,
         };
+        let quiet = legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]);
+        let tag = |fill: Color, edge: Color, text: Color| ButtonSurface {
+            fill: [fill; 2],
+            overlay: NONE,
+            shadow: vec![border(edge)],
+            text,
+        };
+        let chip = ChipTokens {
+            rest: tag(SHADES[0], SHADES[3], quiet),
+            rest_hover: tag(SHADES[0], SHADES[3], hex(0x000000)),
+            on: tag(SHADES[2], NONE, hex(0x000000)),
+            // a shade deeper under the pointer, as the toolbar's hover
+            on_hover: tag(SHADES[3], NONE, hex(0x000000)),
+            pad_x: 12.0,
+            pad_y: 4.0,
+            radius: 12.0,
+            edge: 1.0,
+            font_size: 11.0,
+            line_height: 16.0,
+            font_weight: 500,
+        };
         let edge = legible_at(
             MARK_CONTRAST,
             SHADES[4],
@@ -423,6 +472,7 @@ impl SelectionTokens {
             switch,
             checkbox,
             slider,
+            chip,
             radio,
             calendar,
             segmented: SegmentedTokens {

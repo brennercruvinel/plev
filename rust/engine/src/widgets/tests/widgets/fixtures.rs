@@ -181,6 +181,38 @@ fn core_slider_is_the_kits_range() {
     );
 }
 
+/// The kit's state tag: 11/16 medium in `px-3 py-1` and a border, 26
+/// tall at `rounded-xl`; the quiet tag on paper ringed `#ECECEC`, the
+/// chosen one `#F1F1F1` with the black text.
+#[test]
+fn core_chip_is_the_kits_tag() {
+    let theme = Theme::hoff_core();
+    let t = &theme.selection.chip;
+    assert_eq!(Chip::height(&theme), 26.0);
+    assert_eq!((t.radius, t.pad_x), (12.0, 12.0));
+    let fill = |chip: Chip| {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        chip.render(&mut c, Rect::new(0.0, 0.0, 60.0, 26.0), &theme);
+        c.layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .find_map(|n| match *n {
+                SceneNode::GradientRect {
+                    color,
+                    corner_radius,
+                    ..
+                } => Some((color, corner_radius)),
+                _ => None,
+            })
+            .unwrap()
+    };
+    let hex = |v| crate::styling::color::Color::hex(v).0;
+    assert_eq!(fill(Chip::new("tag")), (hex(0xFCFCFC), 12.0));
+    assert_eq!(fill(Chip::new("tag").selected(true)), (hex(0xF1F1F1), 12.0));
+}
+
 #[test]
 fn hoff_tooltip_is_solid_262626() {
     let theme = Theme::hoff();
