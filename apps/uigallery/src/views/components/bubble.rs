@@ -2,7 +2,7 @@
 //! kit (its comment pin, holding text) read and unread, from the other
 //! person, from oneself and as a note, a conversation, then the content a
 //! bubble meets: long text, six scripts with emoji. A card is as tall as
-//! its bubbles measure (`message::fit`), never less than the kit's
+//! its bubbles measure (`showcase::layout_sized`), never less than the kit's
 //! `h-50`; a bubble grows up to its share of the card's width.
 //!
 //! Projected: a group per title, `bubble_page.group[<g>]`; in it each
@@ -16,7 +16,6 @@ use engine::styling::theme::Theme;
 use engine::widgets::message::bubble::{Bubble, BubbleSide};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-use super::message::fit;
 use super::{After, Component, child_id, root_id, showcase, under};
 
 const LONG: &str = "These draggable sliders look really cool. Maybe these could be displayed \
@@ -151,7 +150,9 @@ impl BubblePage {
     /// The width a card's bubbles share: its inside, up to a readable
     /// column.
     fn lane_w(card_w: f32, theme: &Theme) -> f32 {
-        fit::inner_w(card_w, theme).min(theme.size.readable_max_w)
+        (card_w - theme.spacing.sm * 2.0)
+            .max(0.0)
+            .min(theme.size.readable_max_w)
     }
 
     /// Each bubble's row height in a lane `w` wide: the bubble and the gap
@@ -165,16 +166,19 @@ impl BubblePage {
             .collect()
     }
 
-    /// Per group: its layout, and per card the rows of its bubbles.
+    /// Per group: its layout (`showcase::layout_sized`, each card as tall
+    /// as its bubbles), and per card the rows of its bubbles, stacked as
+    /// one block centered in the card.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Vec<Rect>>)> {
-        let spans = self.groups.iter().map(|g| (g.columns, g.cards.len()));
-        let need = |g: usize, c: usize, card_w: f32| {
-            let card = &self.groups[g].cards[c];
-            Self::rows(card, Self::lane_w(card_w, theme), theme)
+        let sized = self.groups.iter().map(|g| {
+            let w = Self::lane_w(showcase::card_width(g.columns, content, theme), theme);
+            let cards = g
+                .cards
                 .iter()
-                .sum::<f32>()
-        };
-        fit::layout(spans, content, theme, need)
+                .map(|card| showcase::card_height(Self::rows(card, w, theme).iter().sum(), theme));
+            (g.columns, cards.collect())
+        });
+        showcase::layout_sized(sized, content, theme)
             .into_iter()
             .zip(&self.groups)
             .map(|(placed, group)| {
@@ -184,7 +188,17 @@ impl BubblePage {
                     .zip(&group.cards)
                     .map(|(rect, card)| {
                         let w = Self::lane_w(rect.w, theme);
-                        fit::stack(*rect, w, Self::rows(card, w, theme).into_iter(), theme)
+                        let heights = Self::rows(card, w, theme);
+                        let block = showcase::centered((w, heights.iter().sum()), *rect);
+                        let mut y = block.y;
+                        heights
+                            .iter()
+                            .map(|h| {
+                                let r = Rect::new(block.x, y, w, *h);
+                                y += h;
+                                r
+                            })
+                            .collect()
                     })
                     .collect();
                 (placed, rows)

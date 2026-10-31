@@ -69,6 +69,7 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
+                Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
@@ -175,6 +176,9 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
+                Pane::MessageScroller => {
+                    self.panes.message_scroller.handle_event(event, content, t)
+                }
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
@@ -271,6 +275,7 @@ impl ShowcaseView {
                 Wake::moving(popover.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
             }
             // task-104 front C, conversation and feedback (#156)
+            Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             // task-104 front E, selection and dates (#158)
@@ -363,6 +368,7 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
+                Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)

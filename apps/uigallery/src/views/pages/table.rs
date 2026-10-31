@@ -293,12 +293,12 @@ pub const PAGES: &[Page] = &[
         "Comment rows of a thread and the quick comment, with the like chip.",
         Pane::Message,
     ),
-    alias(
+    page(
+        C,
         "Message Scroller",
         "send",
-        "The message dock's scrolling band.",
-        Pane::Dock,
-        "a scroller apart from the dock",
+        "A comment thread that scrolls past its height, by wheel, touch and keyboard.",
+        Pane::MessageScroller,
     ),
     page(
         C,

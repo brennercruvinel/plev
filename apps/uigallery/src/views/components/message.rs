@@ -107,7 +107,7 @@ fn quick(disabled: bool) -> Message {
 
 impl MessagePage {
     pub fn new() -> Self {
-        let luna = || thread("Luna Starfield ✪", "2s", LUNA);
+        let luna = || thread("Luna Starfield", "2s", LUNA).verified(true);
         let sam = || thread("Sam", "1s", "@Luna Thank, I’m working on it");
         let mut groups = vec![
             Group {
@@ -133,7 +133,7 @@ impl MessagePage {
                 cards: vec![
                     card(
                         "Long text",
-                        vec![thread("Luna Starfield ✪", "4m", DRAGGABLE)],
+                        vec![thread("Luna Starfield", "4m", DRAGGABLE).verified(true)],
                     ),
                     card("Mixed scripts", vec![thread("سارة الأحمد", "3m", SCRIPTS)]),
                     card(
@@ -233,18 +233,28 @@ impl MessagePage {
     /// The width a card's messages take: the card's inside, up to a
     /// readable column.
     fn message_w(card_w: f32, theme: &Theme) -> f32 {
-        fit::inner_w(card_w, theme).min(theme.size.readable_max_w)
+        (card_w - theme.spacing.sm * 2.0)
+            .max(0.0)
+            .min(theme.size.readable_max_w)
     }
 
+    fn heights(card: &Card, w: f32, theme: &Theme) -> Vec<f32> {
+        card.messages.iter().map(|m| m.height(w, theme)).collect()
+    }
+
+    /// The showcase's groups with each card as tall as its messages
+    /// (`showcase::layout_sized`), the messages stacked as one block
+    /// centered in the card.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Placed> {
-        let spans = self.groups.iter().map(|g| (g.columns, g.cards.len()));
-        let need = |g: usize, c: usize, card_w: f32| {
-            let w = Self::message_w(card_w, theme);
-            let messages = &self.groups[g].cards[c].messages;
-            messages.iter().map(|m| m.height(w, theme)).sum::<f32>()
-        };
-        let groups = fit::layout(spans, content, theme, need);
-        groups
+        let sized = self.groups.iter().map(|g| {
+            let w = Self::message_w(showcase::card_width(g.columns, content, theme), theme);
+            let cards = g.cards.iter().map(|card| {
+                let stack: f32 = Self::heights(card, w, theme).iter().sum();
+                showcase::card_height(stack, theme)
+            });
+            (g.columns, cards.collect())
+        });
+        showcase::layout_sized(sized, content, theme)
             .into_iter()
             .zip(&self.groups)
             .map(|(placed, group)| Placed {
@@ -255,8 +265,18 @@ impl MessagePage {
                     .zip(&group.cards)
                     .map(|(rect, card)| {
                         let w = Self::message_w(rect.w, theme);
-                        let heights = card.messages.iter().map(|m| m.height(w, theme));
-                        (*rect, fit::stack(*rect, w, heights, theme))
+                        let heights = Self::heights(card, w, theme);
+                        let block = showcase::centered((w, heights.iter().sum()), *rect);
+                        let mut y = block.y;
+                        let rows = heights
+                            .iter()
+                            .map(|h| {
+                                let r = Rect::new(block.x, y, w, *h);
+                                y += h;
+                                r
+                            })
+                            .collect();
+                        (*rect, rows)
                     })
                     .collect(),
                 rule_y: placed.rule_y,
@@ -307,96 +327,6 @@ impl MessagePage {
                 showcase::rule(c, content, placed.rule_y, theme);
             }
         }
-    }
-}
-
-/// Showcase groups whose cards grow with what they hold, for the pages of
-/// front C (message, bubble, scroller): the showcase's mold, each row as
-/// tall as its tallest card needs and never under `CARD_H`. A candidate
-/// for `showcase` itself.
-pub(crate) mod fit {
-    use engine::styling::theme::Theme;
-    use engine::widgets::prelude::Rect;
-
-    use super::showcase::{self, GroupLayout};
-
-    /// Between a card's edge, its chip and what it holds.
-    fn inset(theme: &Theme) -> f32 {
-        theme.spacing.sm
-    }
-
-    /// The width a card gives what it holds.
-    pub(crate) fn inner_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - inset(theme) * 2.0).max(0.0)
-    }
-
-    /// What sits above a card's content: inset, chip, inset.
-    fn head(theme: &Theme) -> f32 {
-        inset(theme) * 2.0 + showcase::chip_rect(0.0, 0.0, "", theme).h
-    }
-
-    /// The groups down `content`, each `(span, cards)`; `need(g, c,
-    /// card_w)` is the height card `c` of group `g` needs for its content
-    /// at that card width.
-    pub(crate) fn layout(
-        groups: impl IntoIterator<Item = (usize, usize)>,
-        content: Rect,
-        theme: &Theme,
-        need: impl Fn(usize, usize, f32) -> f32,
-    ) -> Vec<GroupLayout> {
-        let pad = showcase::pad(theme);
-        let gap = theme.spacing.sm;
-        let title_h = showcase::title_style(theme).line_height;
-        let mut y = content.y;
-        let mut out = Vec::new();
-        for (g, (span, count)) in groups.into_iter().enumerate() {
-            let title_y = y + pad;
-            let cols = showcase::columns(span, content.w, gap);
-            let card_w = ((content.w - gap * (cols as f32 - 1.0)) / cols as f32).max(0.0);
-            let mut row_y = title_y + title_h + showcase::title_gap(theme);
-            let mut cards = Vec::with_capacity(count);
-            for first in (0..count).step_by(cols.max(1)) {
-                let row = first..(first + cols).min(count);
-                let row_h = row
-                    .clone()
-                    .map(|c| head(theme) + need(g, c, card_w) + inset(theme))
-                    .fold(showcase::CARD_H, f32::max);
-                for (col, _) in row.enumerate() {
-                    let x = content.x + col as f32 * (card_w + gap);
-                    cards.push(Rect::new(x, row_y, card_w, row_h));
-                }
-                row_y += row_h + gap;
-            }
-            let rule_y = row_y - gap + pad;
-            out.push(GroupLayout {
-                title_y,
-                cards,
-                rule_y,
-            });
-            y = rule_y;
-        }
-        out
-    }
-
-    /// `heights` stacked under the chip of `card`, `w` wide and centered
-    /// across it, the stack centered in what the card has left.
-    pub(crate) fn stack(
-        card: Rect,
-        w: f32,
-        heights: impl Iterator<Item = f32> + Clone,
-        theme: &Theme,
-    ) -> Vec<Rect> {
-        let top = card.y + head(theme);
-        let total: f32 = heights.clone().sum();
-        let mut y = top + ((card.bottom() - inset(theme) - top - total) / 2.0).max(0.0);
-        let x = card.x + (card.w - w) / 2.0;
-        heights
-            .map(|h| {
-                let r = Rect::new(x, y, w, h);
-                y += h;
-                r
-            })
-            .collect()
     }
 }
 

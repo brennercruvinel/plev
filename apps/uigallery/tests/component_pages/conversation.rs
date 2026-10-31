@@ -84,3 +84,42 @@ fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
         assert_eq!(focused(&g), None, "{id}: a click elsewhere lets it go");
     }
 }
+
+/// The scroller's like chip, in the long thread, presses and nothing else
+/// happens, from the three.
+#[test]
+fn a_like_chip_in_the_scroller_presses_as_it_was_from_the_three() {
+    const IN_THREAD: &str = "message_scroller_page.group[0].card[1][2].reaction";
+    let page = "Message Scroller";
+    let before = gallery(page).state();
+    let mut person = seen(page, IN_THREAD);
+    person.click(IN_THREAD);
+    let mut reader = gallery(page);
+    reader.press(IN_THREAD);
+    let agent = by_agent(page, "thread", vec![ask(IN_THREAD, "activate")]);
+    assert_eq!(person.state(), before, "the person");
+    assert_eq!(reader.state(), before, "the reader");
+    assert_eq!(agent.state(), before, "the agent");
+}
+
+/// A reader landing on a message scrolled away brings it into view: the
+/// thread scrolls, the page does not, and the person sees it where it is
+/// bound.
+#[test]
+fn a_reader_s_focus_scrolls_a_hidden_message_into_view() {
+    const HIDDEN: &str = "message_scroller_page.group[0].card[1][10]";
+    let mut g = gallery("Message Scroller");
+    assert!(
+        g.c.binding(&sid(HIDDEN)).is_none(),
+        "scrolled away at first"
+    );
+    assert!(g.view.assist_focus(&sid(HIDDEN)));
+    g.frame();
+    g.frame();
+    let _ = g.middle(HIDDEN);
+    assert_eq!(
+        g.view.page_offset(),
+        0.0,
+        "the thread scrolled, not the page"
+    );
+}
