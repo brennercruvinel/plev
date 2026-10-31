@@ -54,6 +54,7 @@ const PROJECTING: &[&str] = &[
     "Code Block",
     "Collapsible",
     "Combobox",
+    "Context Menu",
     "Data Table",
     "Dialog",
     "Drawer",
@@ -138,10 +139,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
     ("Command", PLACEHOLDER),
-    (
-        "Context Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
     ("Date Picker", PLACEHOLDER),
     (
         "Empty",

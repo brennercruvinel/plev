@@ -217,7 +217,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
     page(
