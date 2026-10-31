@@ -225,7 +225,7 @@ impl PopoverTokens {
         let panel = ButtonSurface {
             fill: flat(glass.popover),
             overlay: NONE,
-            shadow: vec![theme.shadows.floating, ring(glass.edge_soft)],
+            shadow: [theme.shadows.floating.as_slice(), &[ring(glass.edge_soft)]].concat(),
             text: colors.text,
         };
         let rest = ButtonSurface {
@@ -263,7 +263,8 @@ impl PopoverTokens {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TooltipTokens {
     pub fill: Color,
-    pub shadow: ShadowSpec,
+    /// Its shadow stack, bottom layer first.
+    pub shadow: Vec<ShadowSpec>,
     pub radius: f32,
     pub pad_x: f32,
     pub pad_y: f32,
@@ -284,7 +285,12 @@ impl TooltipTokens {
     pub fn hoff_core() -> Self {
         Self {
             fill: hex(0x121212),
-            shadow: ShadowSpec::new([0.0, 4.0], 4.0, -2.0, Color::rgba(0.0, 0.0, 0.0, 0.40)),
+            shadow: vec![ShadowSpec::new(
+                [0.0, 4.0],
+                4.0,
+                -2.0,
+                Color::rgba(0.0, 0.0, 0.0, 0.40),
+            )],
             radius: 6.0,
             pad_x: 6.0,
             pad_y: 4.0,
@@ -306,7 +312,7 @@ impl TooltipTokens {
         let xs = theme.spacing.xs;
         Self {
             fill: theme.glass.tooltip,
-            shadow: theme.shadows.hint,
+            shadow: theme.shadows.hint.clone(),
             radius: theme.shape.tooltip,
             pad_x: theme.spacing.md,
             pad_y: xs,
@@ -438,7 +444,7 @@ impl MenuTokens {
         let control = &theme.control;
         Self {
             fill: glass.popover,
-            shadow: vec![theme.shadows.floating],
+            shadow: theme.shadows.floating.clone(),
             border: glass.edge_soft,
             border_w: control.edge_width,
             keylight: true,
