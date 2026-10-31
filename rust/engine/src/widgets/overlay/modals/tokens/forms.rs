@@ -114,6 +114,8 @@ pub struct ExportTokens {
     /// The small notes: the dimensions, the estimate.
     pub note: TextStyle,
     pub note_gap: f32,
+    /// The dimensions under the resolution (`mt-0.5`).
+    pub note_top: f32,
     pub line: LineTokens,
 }
 
@@ -173,6 +175,7 @@ impl ExportTokens {
             // text-[0.625rem], the preflight's 1.5.
             note: type_.exact(10.0, 15.0, 500),
             note_gap: 8.0,
+            note_top: 2.0,
             line: LineTokens {
                 title: type_.exact(12.0, 18.0, 600),
                 title_top: 10.0,

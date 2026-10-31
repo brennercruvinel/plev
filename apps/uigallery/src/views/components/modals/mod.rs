@@ -24,6 +24,7 @@ mod tests;
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
+use engine::widgets::overlay::modals::export::Export;
 use engine::widgets::overlay::modals::share::{SharePost, ShareProfile};
 use engine::widgets::overlay::modals::share_file::{Person, ShareFile};
 use engine::widgets::overlay::modals::variations::Variations;
@@ -137,6 +138,15 @@ impl ModalsPage {
                     ),
                     shown("Confirm", true, Confirm::new(id(3, 1).as_ref())),
                 ],
+            },
+            Group {
+                title: "Export",
+                span: 1,
+                cards: vec![shown(
+                    "Export images, Export video, Export 3D",
+                    true,
+                    Export::new("Robot 2.0", id(4, 0).as_ref()),
+                )],
             },
         ];
         Self {
