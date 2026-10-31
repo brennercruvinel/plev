@@ -13,12 +13,14 @@
 //! The toggle reads the buttons' own `toolbar` recipes and has nothing
 //! here.
 
-pub use super::legible::{MARK_CONTRAST, TEXT_CONTRAST, legible, legible_at, legible_on};
+pub use super::legible::{
+    MARK_CONTRAST, TEXT_CONTRAST, hue_sextant, legible, legible_at, legible_on,
+};
 use super::legible::{full, reads_on};
 use crate::styling::color::Color;
 use crate::styling::theme::ButtonRecipe;
 use crate::styling::theme::ButtonSurface;
-use crate::styling::theme::hoff_core::SHADES;
+use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -127,6 +129,10 @@ pub struct ChipTokens {
     pub rest_hover: ButtonSurface,
     pub on: ButtonSurface,
     pub on_hover: ButtonSurface,
+    /// The hue of an informational chip: the theme's info, where it
+    /// stands apart from its success (a constructive chip) on the color
+    /// wheel.
+    pub info: Color,
     /// `px-3`, `py-1`, `rounded-xl`, the `border`.
     pub pad_x: f32,
     pub pad_y: f32,
@@ -149,6 +155,11 @@ pub struct CheckboxTokens {
     pub on: ButtonSurface,
     /// The check on a box that is on.
     pub mark: Color,
+    /// The check on a disabled box that is on, drawn whole: the box fades
+    /// to `disabled_alpha`, and the knob's paper would vanish on it, so
+    /// the check takes the first gray that still reads at
+    /// [`MARK_CONTRAST`] there.
+    pub mark_disabled: Color,
     pub label: Color,
     pub disabled_alpha: f32,
 }
@@ -253,14 +264,20 @@ pub(super) fn ring(color: Color) -> ShadowSpec {
 
 /// The first of `steps` that reads at [`MARK_CONTRAST`] on every one of
 /// `grounds` (each its layers from the bottom up), else the last: the
-/// edge a control a person must see keeps (1.4.11).
-pub(super) fn edge_on(steps: &[Color], grounds: &[&[Color]]) -> Color {
+/// ring or the mark a person must see keeps (1.4.11).
+pub(super) fn mark_on(steps: &[Color], grounds: &[&[Color]]) -> Color {
     let last = steps.last().copied().unwrap_or(NONE);
     steps
         .iter()
         .copied()
         .find(|&c| reads_on(MARK_CONTRAST, c, grounds))
         .unwrap_or(last)
+}
+
+/// `c` at `alpha` of its own strength: a surface a disabled control
+/// fades.
+pub(super) fn faded(c: Color, alpha: f32) -> Color {
+    Color::rgba(c.0[0], c.0[1], c.0[2], c.0[3] * alpha)
 }
 
 pub(super) const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
@@ -354,7 +371,7 @@ impl SelectionTokens {
         // components/Zoom/index.tsx:15 `hover:bg-[#F1F1F1]`, the row the
         // radio's disc sits on
         let row_hover = hex(0xF1F1F1);
-        let well_edge = edge_on(
+        let well_edge = mark_on(
             &edges,
             &[
                 &[SHADES[0]],
@@ -397,7 +414,7 @@ impl SelectionTokens {
         // rounded-lg` and the fill `rgba(123,123,123,0.3)` to the value.
         let range_well = hex(0xF1F1F1);
         let range_fill = Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.3);
-        let thumb_edge = edge_on(
+        let thumb_edge = mark_on(
             &edges,
             &[
                 &[SHADES[0], range_well],
@@ -442,6 +459,8 @@ impl SelectionTokens {
             on: tag(SHADES[2], NONE, hex(0x000000)),
             // a shade deeper under the pointer, as the toolbar's hover
             on_hover: tag(SHADES[3], NONE, hex(0x000000)),
+            // the kit theme's info (styling/theme/hoff_core.rs:188)
+            info: BLUE,
             pad_x: 12.0,
             pad_y: 4.0,
             radius: 12.0,
@@ -469,6 +488,13 @@ impl SelectionTokens {
             },
             on: full(&switch.on),
             mark: switch.knob.fill[0],
+            mark_disabled: mark_on(
+                &[switch.knob.fill[0], SHADES[5], SHADES[6]],
+                &[&[
+                    SHADES[0],
+                    faded(full(&switch.on).fill[0], switch.disabled_alpha),
+                ]],
+            ),
             // the list line's `text-[#000]` (components/Zoom/index.tsx:32),
             // as the radio's label
             label: hex(0x000000),

@@ -182,7 +182,10 @@ impl Chip {
             return base.clone();
         }
         let c = &theme.colors;
-        let hue = Color(intent_fill(theme, self.intent));
+        let hue = match self.intent {
+            Intent::Informational => t.info,
+            intent => Color(intent_fill(theme, intent)),
+        };
         if self.selected {
             ButtonSurface {
                 fill: [hue; 2],

@@ -5,7 +5,7 @@
 use crate::styling::color::Color;
 use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
-use super::legible::{MARK_CONTRAST, full, legible, legible_at};
+use super::legible::{MARK_CONTRAST, full, hue_sextant, legible, legible_at};
 use super::tokens::*;
 
 impl SelectionTokens {
@@ -60,7 +60,7 @@ impl SelectionTokens {
         // at 3:1 on all they border (1.4.11), else the mid tone, else the
         // text
         let edges = [c.divider, c.text_mid, c.text];
-        let well_edge = edge_on(&edges, &[&[c.bg], &[c.bg, c.bg_hover]]);
+        let well_edge = mark_on(&edges, &[&[c.bg], &[c.bg, c.bg_hover]]);
         let switch = SwitchTokens {
             off: ButtonSurface {
                 fill: [c.bg_hover; 2],
@@ -92,7 +92,7 @@ impl SelectionTokens {
             c.text_mid.0[2],
             c.text_mid.0[3] * part,
         );
-        let thumb_edge = edge_on(&edges, &[&[c.bg, c.bg_hover], &[c.bg, c.bg_hover, fill]]);
+        let thumb_edge = mark_on(&edges, &[&[c.bg, c.bg_hover], &[c.bg, c.bg_hover, fill]]);
         let slider = SliderTokens {
             track: ButtonSurface {
                 fill: [c.bg_hover; 2],
@@ -120,6 +120,12 @@ impl SelectionTokens {
             rest_hover: tag(c.bg, c.divider, c.text),
             on: tag(c.bg_hover, NONE, c.text),
             on_hover: tag(c.divider, NONE, c.text),
+            // the theme's info, else the kit's, else the accent: the first
+            // that stands apart from the success on the color wheel
+            info: [c.info, kit.chip.info]
+                .into_iter()
+                .find(|h| hue_sextant(*h) != hue_sextant(c.success))
+                .unwrap_or(c.accent),
             ..kit.chip
         };
         let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
@@ -135,6 +141,13 @@ impl SelectionTokens {
             },
             on: full(&switch.on),
             mark: switch.knob.fill[0],
+            mark_disabled: mark_on(
+                &[switch.knob.fill[0], c.text_mid, c.text],
+                &[&[
+                    c.bg,
+                    faded(full(&switch.on).fill[0], kit.checkbox.disabled_alpha),
+                ]],
+            ),
             label: c.text,
             ..kit.checkbox
         };

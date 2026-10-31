@@ -73,3 +73,25 @@ pub fn legible_on(need: f32, preferred: Color, fallback: Color, grounds: &[&[Col
 pub(super) fn reads_on(need: f32, fg: Color, grounds: &[&[Color]]) -> bool {
     grounds.iter().all(|layers| reads(need, fg, layers))
 }
+
+/// Which sixth of the color wheel `c` falls in (red, yellow, green, cyan,
+/// blue, magenta: the hue's sextant, as HSV cuts it), or `None` for a
+/// gray. Two intents a person must tell apart by color stand in
+/// different sextants.
+pub fn hue_sextant(c: Color) -> Option<u8> {
+    let [r, g, b] = [c.0[0], c.0[1], c.0[2]];
+    let (max, min) = (r.max(g).max(b), r.min(g).min(b));
+    let span = max - min;
+    if span <= f32::EPSILON {
+        return None;
+    }
+    // the hue in sixths of a turn, 0 to 6
+    let sixths = if max == r {
+        ((g - b) / span).rem_euclid(6.0)
+    } else if max == g {
+        (b - r) / span + 2.0
+    } else {
+        (r - g) / span + 4.0
+    };
+    Some(sixths.floor() as u8 % 6)
+}

@@ -780,3 +780,61 @@ fn calendar_projects_the_month_with_today_and_the_range() {
     assert!(!day("2026-10-09").enabled && day("2026-10-10").enabled);
     assert!(s.get(&cid.key("2026-09-30")).is_none(), "another month");
 }
+
+/// An informational chip and a constructive one stand apart on the color
+/// wheel under every theme: the hoff's info is a green, as its success,
+/// so its chip takes the kit's blue.
+#[test]
+fn an_informational_chip_is_not_a_constructive_one() {
+    use crate::widgets::selection::tokens::hue_sextant;
+    for name in ["core", "hoff", "hoff-light", "plev", "catppuccin"] {
+        let theme = Theme::named(name).unwrap();
+        let info = theme.selection.chip.info;
+        assert!(hue_sextant(info).is_some(), "{name}: a hue");
+        assert_ne!(
+            hue_sextant(info),
+            hue_sextant(theme.colors.success),
+            "{name}"
+        );
+    }
+    assert_eq!(
+        Theme::hoff_core().selection.chip.info,
+        Theme::hoff_core().colors.info
+    );
+    assert_eq!(
+        hue_sextant(crate::styling::color::Color::hex(0x808080)),
+        None
+    );
+}
+
+/// A disabled box that is on keeps its check: the check is the token's
+/// color that reads on the faded box (`theme/tests/contrast.rs`), drawn
+/// whole, never the knob's paper faded with the box. Under the core kit
+/// that is a gray, the paper vanishing there.
+#[test]
+fn a_disabled_checked_box_keeps_its_check() {
+    use crate::widgets::form::Checkbox;
+    let core = Theme::hoff_core();
+    assert_ne!(
+        core.selection.checkbox.mark_disabled,
+        core.selection.checkbox.mark
+    );
+    for theme in [core.clone(), Theme::hoff()] {
+        let t = &theme.selection.checkbox;
+        let mut c = Compositor::new();
+        c.begin_frame();
+        Checkbox::new(true)
+            .disabled(true)
+            .render(&mut c, Rect::new(0.0, 0.0, 18.0, 18.0), &theme);
+        let check = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .find_map(|n| match n {
+                SceneNode::Path { data } => data.vertices.first().map(|v| v.color),
+                _ => None,
+            });
+        assert_eq!(check, Some(t.mark_disabled.0));
+    }
+}
