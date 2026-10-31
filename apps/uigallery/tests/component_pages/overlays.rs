@@ -546,3 +546,26 @@ fn space_opens_the_context_menu_and_escape_gives_the_focus_back() {
     g.frame();
     assert_eq!(focused(&g), None);
 }
+
+// Tooltip
+
+/// The button is named by its tooltip and described by its key, for the
+/// reader and the agent alike; the kit's bubbles are labels with their
+/// text and key.
+#[test]
+fn the_tooltip_names_its_button_and_the_kit_s_bubbles() {
+    let g = gallery("Tooltip");
+    let node = |id: &str| {
+        g.state()
+            .into_iter()
+            .find(|n| n.id == sid(id))
+            .unwrap_or_else(|| panic!("{id}"))
+    };
+    let button = node("tooltip_page.button");
+    assert_eq!(button.label, "Undo");
+    assert_eq!(button.description.as_deref(), Some("U"));
+    let redo = node("tooltip_page.group[1].card[1]");
+    assert_eq!(redo.label, "Redo");
+    assert_eq!(redo.description.as_deref(), Some("R"));
+    assert_eq!(node("tooltip_page.group[1].card[0]").label, "Copy prompt");
+}
