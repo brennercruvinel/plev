@@ -471,6 +471,12 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     assert_ne!((derived.panel, derived.header), (kit.panel, kit.header));
     derived.panel = kit.panel;
     derived.header = kit.header;
+    // The page head: the kit's Layout title in the core, which bleeds.
+    assert!(kit.page.bleed && !derived.page.bleed);
+    derived.page = kit.page;
+    // The card's marks: the kit's ink and gray in the core only.
+    assert_ne!(derived.card, kit.card);
+    derived.card = kit.card;
     assert_ne!(derived.split, kit.split);
     derived.split = kit.split;
     assert_eq!(derived, kit);
@@ -542,6 +548,12 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
         assert_eq!(head.title_style(&theme), theme.typography.title());
         assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
+        let page = theme.disclosure.page;
+        assert_eq!(
+            (page.narrow, page.wide),
+            (theme.disclosure.header, theme.disclosure.header)
+        );
+        assert!(!page.bleed && !head.bleeds(&theme));
         assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
         let h = theme.disclosure.header;
         assert_eq!((h.title, h.blurb), (g.text_default, theme.colors.text_dim));
@@ -821,4 +833,105 @@ fn a_click_in_a_single_accordion_closes_the_open_section() {
     assert!(a.handle_event(&up(x, y), bounds, &theme).clicked);
     assert!(a.is_open(1) && !a.is_open(0));
     assert_eq!(a.wake(1.0 / 60.0), Wake::continuous());
+}
+
+/// A head's blurb wraps in the width it gets, and the head is as tall as
+/// its lines: from 280 to 1600 the shell's page starts under the blurb's
+/// last line, in the core and outside it.
+#[test]
+fn the_page_starts_under_the_blurb_at_every_width() {
+    use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
+    use crate::widgets::shell::AppShell;
+    let blurb = "Every asset of the scene and its animation timeline, grouped by \
+                 the folder it was imported into, newest first, with its size";
+    for theme in [core(), hoff()] {
+        let sidebar = Sidebar::new(vec![NavLink::new("Cards"), NavLink::new("Panel")]);
+        let head = PanelHeader::new("Cards").blurb(blurb);
+        let mut shell = AppShell::new(sidebar, head, 280.0, 900.0);
+        let mut lines = std::collections::BTreeSet::new();
+        for w in (280..=1600).step_by(4) {
+            shell.resize(w as f32, 900.0);
+            let l = shell.layout(&theme);
+            let b = shell
+                .header
+                .blurb_rect(l.header, l.header_pads, &theme)
+                .unwrap();
+            let line = theme.disclosure.page.at(l.header.w).blurb_line_height;
+            lines.insert((b.h / line).round() as u32);
+            assert!(
+                b.w <= l.header.w && b.x >= l.header.x,
+                "{w}: inside the head"
+            );
+            assert!(
+                b.y + b.h <= l.header.y + l.header.h,
+                "{w}: the head holds the blurb"
+            );
+            assert!(
+                l.content.y >= b.y + b.h + theme.spacing.lg,
+                "{w}: page under the blurb"
+            );
+            if let Some(m) = l.menu_button {
+                assert!(m.x + m.w <= b.x, "{w}: the menu button clears the blurb");
+            }
+        }
+        assert!(
+            lines.len() >= 3,
+            "the blurb wraps to 1, 2, 3 lines: {lines:?}"
+        );
+    }
+}
+
+/// The core's page head is the kit's Layout title (Layout/index.tsx:35):
+/// across the page column, `px-12 py-8` 32/40 from a 1200 px head, `p-5`
+/// 24/32 below it, the rule at its foot; the title on the page's gutter.
+#[test]
+fn the_core_page_head_is_the_kit_s_layout_title() {
+    use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
+    use crate::widgets::shell::AppShell;
+    let theme = core();
+    let page = theme.disclosure.page;
+    assert_eq!((page.wide.pad_x, page.wide.pad_y), (48.0, 32.0));
+    assert_eq!(
+        (page.wide.title_size, page.wide.title_line_height),
+        (32.0, 40.0)
+    );
+    assert_eq!((page.narrow.pad_x, page.narrow.pad_y), (20.0, 20.0));
+    assert_eq!(
+        (page.narrow.title_size, page.narrow.title_line_height),
+        (24.0, 32.0)
+    );
+    assert_eq!(page.wide_from, 1200.0);
+    assert_eq!(page.at(1200.0), page.wide);
+    assert_eq!(page.at(1199.0), page.narrow);
+    let head = PanelHeader::new("Cards");
+    assert_eq!(head.height_for(1400.0, &theme), 32.0 + 40.0 + 32.0 + 1.0);
+    assert_eq!(head.height_for(800.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
+    for w in [360.0, 800.0, 1280.0, 1600.0] {
+        let sidebar = Sidebar::new(vec![NavLink::new("Cards")]);
+        let shell = AppShell::new(sidebar, head.clone(), w, 900.0);
+        let l = shell.layout(&theme);
+        let page_x = l.sidebar.map_or(0.0, |s| s.x + s.w);
+        assert_eq!(
+            (l.header.x, l.header.x + l.header.w),
+            (page_x, w),
+            "{w}: it bleeds"
+        );
+        let gutter = theme.layout.gutter(l.breakpoint);
+        if l.menu_button.is_none() {
+            assert_eq!(l.header_pads[0], gutter, "{w}: the title on the gutter");
+        }
+        assert_eq!(l.content.y, l.header.y + l.header.h + theme.spacing.lg);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        shell
+            .header
+            .render_in(&mut c, LayerId::DEFAULT, l.header, l.header_pads, &theme);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let rule = nodes.iter().any(|n| {
+            matches!(n, SceneNode::Rect { y, h, w: rw, color, .. }
+            if *y + *h == l.header.y + l.header.h && *rw == l.header.w
+                && *color == page.narrow.rule_color.0)
+        });
+        assert!(rule, "{w}: the rule spans the head at its foot");
+    }
 }
