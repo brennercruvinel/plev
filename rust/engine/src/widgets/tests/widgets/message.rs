@@ -1,2 +1,1050 @@
-//! Conversation and feedback (task-104 front C, #156): message, bubble,
-//! message scroller, alert, attachment, marker and questionnaire.
+//! conversation widgets (front C of task-104): the message, its tokens
+//! and its layout over the content it is given.
+
+use super::*;
+use crate::widgets::message::message::{Message, MessageKind, MessageLayout};
+use crate::widgets::message::tokens::MessageTokens;
+use accord::{Role, SemId, Snapshot, SnapshotBuilder};
+
+fn core() -> Theme {
+    Theme::hoff_core()
+}
+
+const LUNA: &str = "I love this bag, it looks great. Could you make it with leather material? 🤔";
+
+const LONG: &str = "These draggable sliders look really cool. Maybe these could be displayed \
+     when you hold shift, to rotate exactly on the X or Y. But by default I don't think we \
+     need these controllers, you could just rotate the object by clicking and dragging \
+     anywhere as expected on any 3D tool (theoretically).";
+
+/// Six scripts and emoji in one body (adr-0071).
+const SCRIPTS: &str =
+    "Olá! مرحبا بالعالم · שלום עולם · नमस्ते दुनिया · 你好世界 · こんにちは · 안녕하세요 🎉👍🏽";
+
+fn thread(body: &str) -> Message {
+    Message::new("Luna Starfield", "2s", body)
+}
+
+fn quick(body: &str) -> Message {
+    Message::new("Randomdash", "1h", body)
+        .kind(MessageKind::Quick)
+        .reaction("2")
+}
+
+fn id(text: &str) -> SemId {
+    SemId::parse(text).unwrap()
+}
+
+fn at(w: f32) -> Rect {
+    Rect::new(10.0, 20.0, w, 0.0)
+}
+
+fn nodes(m: &Message, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    m.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+fn texts(nodes: &[SceneNode]) -> Vec<String> {
+    nodes
+        .iter()
+        .filter_map(|n| match n {
+            SceneNode::Text { key, .. } => Some(key.text.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+fn finite(r: Rect) -> bool {
+    [r.x, r.y, r.w, r.h].iter().all(|v| v.is_finite()) && r.w >= 0.0 && r.h >= 0.0
+}
+
+fn within(inner: Rect, outer: Rect) -> bool {
+    const EPS: f32 = 0.5;
+    inner.x >= outer.x - EPS
+        && inner.y >= outer.y - EPS
+        && inner.right() <= outer.right() + EPS
+        && inner.bottom() <= outer.bottom() + EPS
+}
+
+/// Every placed part of `l`, by name.
+fn parts(l: &MessageLayout) -> Vec<(&'static str, Rect)> {
+    let mut out = vec![("avatar", l.avatar)];
+    for (name, p) in [("name", &l.name), ("time", &l.time), ("body", &l.body)] {
+        if let Some(p) = p {
+            out.push((name, p.rect));
+        }
+    }
+    out.extend(l.seal.map(|r| ("seal", r)));
+    out.extend(l.reaction.map(|r| ("reaction", r)));
+    out.extend(l.divider.map(|r| ("divider", r)));
+    out
+}
+
+// tokens
+
+#[test]
+fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
+    let kit = MessageTokens::hoff_core();
+    assert_eq!(core().message, kit);
+    let t = &kit.thread;
+    assert_eq!((t.pad, t.gap, t.avatar), (16.0, 16.0, 32.0));
+    assert_eq!(
+        (t.name.size, t.name.line_height, t.name.weight),
+        (12.0, 16.0, 500)
+    );
+    assert_eq!((t.time.size, t.time_gap), (11.0, 8.0));
+    assert_eq!(
+        (t.body.size, t.body.line_height, t.body_lines),
+        (13.0, 19.52, None)
+    );
+    let q = &kit.quick;
+    assert_eq!((q.pad, q.gap, q.avatar), (12.0, 12.0, 36.0));
+    assert_eq!(
+        (q.name.weight, q.body.line_height, q.body_lines),
+        (600, 20.0, Some(3))
+    );
+    assert_eq!(kit.divider_width, 1.0);
+
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff);
+    assert_eq!(hoff.message, derived);
+    assert_eq!(derived.thread.name.color, hoff.colors.text);
+    assert_eq!(derived.thread.time.color, hoff.colors.text_mid);
+    assert_eq!(derived.quick.body.color, hoff.colors.text_mid);
+    assert_eq!(derived.divider, hoff.colors.divider);
+    assert_eq!(derived.mention, hoff.colors.info);
+    // The geometry is the kit's under every palette.
+    assert_eq!(derived.thread.pad, kit.thread.pad);
+    assert_eq!(derived.quick.body_lines, kit.quick.body_lines);
+}
+
+// layout
+
+#[test]
+fn the_row_is_as_tall_as_its_content() {
+    let theme = core();
+    let s = theme.message.thread;
+    let empty = Message::new("", "", "");
+    let l = empty.layout(at(320.0), &theme);
+    assert_eq!(
+        (l.name.clone(), l.time.clone(), l.body.clone()),
+        (None, None, None)
+    );
+    assert_eq!(
+        l.row.h,
+        s.pad * 2.0 + s.avatar,
+        "an empty message is its avatar"
+    );
+
+    let one = thread("ok").layout(at(320.0), &theme);
+    let body = one.body.clone().unwrap();
+    assert_eq!(
+        body.rect.y,
+        one.name.clone().unwrap().rect.bottom() + s.body_gap
+    );
+    let content_bottom = body.rect.bottom().max(one.avatar.bottom());
+    assert!((one.row.bottom() - (content_bottom + s.pad)).abs() < 1e-3);
+
+    let long = thread(LONG).layout(at(320.0), &theme);
+    assert!(long.row.h > one.row.h, "a longer body grows the row");
+    assert_eq!(long.row.w, 320.0, "the row takes the width it is given");
+}
+
+#[test]
+fn a_narrower_row_wraps_into_more_lines_never_fewer() {
+    let theme = core();
+    for m in [thread(LONG), thread(SCRIPTS), quick(LONG)] {
+        let mut prev = 0.0;
+        for w in (200..=1600).rev().step_by(8) {
+            let h = m.height(w as f32, &theme);
+            assert!(h.is_finite() && h >= prev, "{w}: {h} after {prev}");
+            prev = h;
+        }
+    }
+}
+
+#[test]
+fn every_part_stays_in_the_row_over_the_whole_width_range() {
+    let theme = core();
+    let messages = [
+        thread(LUNA).divider(true).verified(true),
+        thread(LONG).verified(true),
+        thread(SCRIPTS),
+        Message::new("سارة الأحمد", "3m", SCRIPTS),
+        Message::new(
+            "Maria Eduarda Albuquerque de Souza Vasconcelos",
+            "12 min",
+            LUNA,
+        ),
+        quick(LONG),
+        quick(SCRIPTS).reaction_disabled(true),
+    ];
+    for m in &messages {
+        for w in (m.min_width(&theme) as usize..=1600).step_by(8) {
+            let l = m.layout(at(w as f32), &theme);
+            for (part, r) in parts(&l) {
+                assert!(finite(r), "{}@{w}: {part} {r:?}", m.author());
+                assert!(
+                    within(r, l.row),
+                    "{}@{w}: {part} {r:?} out of {:?}",
+                    m.author(),
+                    l.row
+                );
+            }
+            if let (Some(n), Some(t)) = (&l.name, &l.time) {
+                assert!(
+                    n.rect.right() <= t.rect.x,
+                    "{}@{w}: name over time",
+                    m.author()
+                );
+            }
+            if let (Some(n), Some(seal)) = (&l.name, l.seal) {
+                assert!(
+                    n.rect.right() <= seal.x,
+                    "{}@{w}: name over seal",
+                    m.author()
+                );
+                if let Some(t) = &l.time {
+                    assert!(
+                        seal.right() <= t.rect.x,
+                        "{}@{w}: seal over time",
+                        m.author()
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn a_long_name_is_ellipsized_and_the_time_stays_whole() {
+    let theme = core();
+    let m = Message::new(
+        "Maria Eduarda Albuquerque de Souza Vasconcelos Starfield",
+        "12 min ago",
+        LUNA,
+    );
+    let l = m.layout(at(300.0), &theme);
+    let (name, time) = (l.name.unwrap(), l.time.unwrap());
+    assert!(name.text.ends_with('\u{2026}'), "{:?}", name.text);
+    assert_eq!(time.text, "12 min ago");
+    let col_right = l.row.right() - theme.message.thread.pad;
+    assert!(
+        time.rect.right() <= col_right + 0.5,
+        "the time fits the column"
+    );
+    assert_eq!(
+        time.rect.x,
+        name.rect.right() + theme.message.thread.time_gap
+    );
+}
+
+#[test]
+fn a_row_too_narrow_for_its_column_draws_no_text_and_stays_finite() {
+    let theme = core();
+    for w in [0.0, 1.0, 40.0, 80.0] {
+        let l = thread(LONG).layout(at(w), &theme);
+        assert_eq!((l.name.is_none(), l.body.is_none()), (true, true), "{w}");
+        for (part, r) in parts(&l) {
+            assert!(finite(r), "{w}: {part} {r:?}");
+        }
+    }
+}
+
+#[test]
+fn the_quick_body_is_clamped_to_three_lines_and_the_thread_body_is_not() {
+    let theme = core();
+    let q = quick(LONG).layout(at(320.0), &theme);
+    let body = q.body.unwrap();
+    let lh = theme.message.quick.body.line_height;
+    assert!(body.text.ends_with('\u{2026}'), "{:?}", body.text);
+    assert_eq!((body.rect.h / lh).round(), 3.0);
+    let chip = q.reaction.unwrap();
+    assert_eq!(
+        chip.y,
+        body.rect.bottom() + theme.message.quick.reaction_gap
+    );
+
+    let t = thread(LONG).layout(at(320.0), &theme).body.unwrap();
+    assert_eq!(t.text, LONG);
+    assert!(t.rect.h / theme.message.thread.body.line_height > 3.5);
+}
+
+#[test]
+fn the_hairline_closes_the_row_only_when_asked() {
+    let theme = core();
+    let l = thread(LUNA).divider(true).layout(at(320.0), &theme);
+    let d = l.divider.unwrap();
+    assert_eq!(
+        (d.x, d.w, d.h),
+        (l.row.x, l.row.w, theme.message.divider_width)
+    );
+    assert!(
+        (d.bottom() - l.row.bottom()).abs() < 1e-3,
+        "the hairline closes the row"
+    );
+    assert!(thread(LUNA).layout(at(320.0), &theme).divider.is_none());
+}
+
+// events
+
+#[test]
+fn the_like_chip_takes_hover_and_click_at_its_rect_only() {
+    let theme = core();
+    let bounds = at(320.0);
+    let mut m = quick(LUNA);
+    let chip = m.layout(bounds, &theme).reaction.unwrap();
+    let (x, y) = chip.center();
+    assert!(m.handle_event(&move_to(x, y), bounds, &theme).changed);
+    assert!(m.handle_event(&down(x, y), bounds, &theme).changed);
+    assert!(m.handle_event(&up(x, y), bounds, &theme).clicked);
+    let (ax, ay) = m.layout(bounds, &theme).avatar.center();
+    assert!(!m.handle_event(&down(ax, ay), bounds, &theme).clicked);
+
+    let mut off = quick(LUNA).reaction_disabled(true);
+    off.handle_event(&down(x, y), bounds, &theme);
+    assert!(
+        !off.handle_event(&up(x, y), bounds, &theme).clicked,
+        "disabled"
+    );
+
+    let mut plain = thread(LUNA);
+    assert_eq!(
+        plain.handle_event(&down(x, y), bounds, &theme),
+        EventResult::IGNORED
+    );
+}
+
+// render
+
+#[test]
+fn the_render_draws_each_run_with_its_text_and_binds_the_row_and_the_chip() {
+    let theme = core();
+    let bounds = at(320.0);
+    let row = id("msg");
+    let m = quick(LUNA).sem(row.clone());
+    let (c, drawn) = nodes(&m, bounds, &theme);
+    let words = texts(&drawn);
+    for want in ["Randomdash", "1h", LUNA, "2"] {
+        assert!(words.iter().any(|t| t == want), "{want} in {words:?}");
+    }
+    let l = m.layout(bounds, &theme);
+    let bound = c.binding(&row).unwrap();
+    assert_eq!(bound.rect, [l.row.x, l.row.y, l.row.w, l.row.h]);
+    let chip = c.binding(&id("msg.reaction")).unwrap();
+    let r = l.reaction.unwrap();
+    assert_eq!(chip.rect, [r.x, r.y, r.w, r.h]);
+}
+
+#[test]
+fn the_focus_ring_shows_only_while_focused() {
+    let theme = core();
+    let mut m = thread(LUNA);
+    let before = nodes(&m, at(320.0), &theme).1.len();
+    m.set_focused(true);
+    assert!(m.is_focused());
+    let after = nodes(&m, at(320.0), &theme).1.len();
+    assert_eq!(after, before + 1, "one ring");
+}
+
+#[test]
+fn every_theme_renders_a_message_without_a_non_finite_node() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        for m in [thread(SCRIPTS).divider(true), quick(LONG)] {
+            for w in [280.0, 390.0, 1440.0] {
+                let l = m.layout(at(w), &theme);
+                for (part, r) in parts(&l) {
+                    assert!(finite(r), "{name}@{w}: {part}");
+                }
+                assert!(!nodes(&m, at(w), &theme).1.is_empty());
+            }
+        }
+    }
+}
+
+// projection
+
+fn snap(project: impl FnOnce(&mut SnapshotBuilder)) -> Snapshot {
+    let mut b = SnapshotBuilder::new();
+    project(&mut b);
+    b.finish().unwrap()
+}
+
+#[test]
+fn a_message_projects_a_focusable_item_read_whole_and_its_chip() {
+    let row = id("msg");
+    let m = quick(LONG).sem(row.clone());
+    let s = snap(|b| {
+        m.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::ListItem, "Randomdash, 1h")
+    );
+    assert_eq!(
+        node.description.as_deref(),
+        Some(LONG),
+        "the clamped body is read whole"
+    );
+    assert!(node.focusable);
+    let chip = s.get(&id("msg.reaction")).unwrap();
+    assert_eq!(
+        (chip.role, chip.parent.as_ref()),
+        (Role::Button, Some(&row))
+    );
+    assert_eq!(chip.description.as_deref(), Some("like"));
+    assert!(chip.actions.iter().any(|a| a.name.as_str() == "activate"));
+
+    let bare = Message::new("Sam", "", "");
+    let s = snap(|b| {
+        bare.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.label.as_str(), node.description.as_deref()),
+        ("Sam", None)
+    );
+    assert_eq!(s.children(&row).count(), 0, "no chip, no child");
+}
+
+// bubble
+
+use crate::widgets::message::bubble::{Bubble, BubbleSide};
+
+fn row(w: f32) -> Rect {
+    Rect::new(10.0, 20.0, w, 0.0)
+}
+
+#[test]
+fn a_bubble_grows_with_its_text_up_to_its_share_of_the_row_then_wraps() {
+    let theme = core();
+    let t = &theme.message.bubble;
+    let short = Bubble::new("ok").size(600.0, &theme);
+    let line = t.text.line_height + (t.pad_y + t.border_width) * 2.0;
+    assert_eq!(short.1, line, "one line");
+    let long = Bubble::new(LONG).size(600.0, &theme);
+    assert!(long.0 <= 600.0 * t.max_fraction + 0.5, "{long:?}");
+    assert!(long.1 > line * 2.0, "it wraps: {long:?}");
+    let empty = Bubble::new("").size(600.0, &theme);
+    assert_eq!(empty.1, line, "an empty bubble keeps one line");
+}
+
+#[test]
+fn a_bubble_sits_at_its_side_and_stays_in_its_row_over_the_whole_range() {
+    let theme = core();
+    for side in [BubbleSide::Start, BubbleSide::End, BubbleSide::Center] {
+        for text in ["ok", LUNA, LONG, SCRIPTS] {
+            let b = Bubble::new(text).side(side);
+            for w in (40..=1600).step_by(8) {
+                let r = b.rect(row(w as f32), &theme);
+                assert!(finite(r), "{side:?}@{w}");
+                assert!(
+                    r.x >= 10.0 - 0.5 && r.right() <= 10.0 + w as f32 + 0.5,
+                    "{side:?}@{w}: {r:?}"
+                );
+            }
+            let r = b.rect(row(600.0), &theme);
+            match side {
+                BubbleSide::Start => assert_eq!(r.x, 10.0),
+                BubbleSide::End => assert!((r.right() - 610.0).abs() < 1e-3),
+                BubbleSide::Center => assert!((r.center().0 - 310.0).abs() < 1e-3),
+            }
+        }
+    }
+}
+
+#[test]
+fn the_tail_corner_is_square_on_the_speaker_s_side_and_the_border_tells_unread() {
+    let theme = core();
+    let t = theme.message.bubble.clone();
+    let patches = |b: &Bubble| {
+        nodes_of(b, &theme)
+            .into_iter()
+            .filter_map(|n| match n {
+                SceneNode::Rect { x, color, .. } => Some((x, color)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
+    let start = Bubble::new("hi");
+    let r = start.rect(row(600.0), &theme);
+    let p = patches(&start);
+    assert_eq!(p.len(), 2, "border and fill patches");
+    assert!(
+        p.iter().all(|(x, _)| *x < r.center().0),
+        "tail at the start"
+    );
+    assert_eq!(p[0].1, t.border.0, "read: the hairline");
+    let end = Bubble::new("hi").side(BubbleSide::End).unread(true);
+    let r = end.rect(row(600.0), &theme);
+    let p = patches(&end);
+    assert!(p.iter().all(|(x, _)| *x > r.center().0), "tail at the end");
+    assert_eq!(p[0].1, t.unread.0, "unread: the accent");
+    let hue = crate::styling::color::Color::hex(0x5C8C80);
+    assert_eq!(patches(&Bubble::new("hi").accent(hue))[0].1, hue.0);
+    assert!(
+        patches(&Bubble::new("hi").side(BubbleSide::Center)).is_empty(),
+        "a note has no tail"
+    );
+}
+
+fn nodes_of(b: &Bubble, theme: &Theme) -> Vec<SceneNode> {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    b.render(&mut c, row(600.0), theme);
+    c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+}
+
+#[test]
+fn a_bubble_draws_its_text_inside_and_binds_and_projects_itself() {
+    let theme = core();
+    let id = id("bubble");
+    let b = Bubble::new(SCRIPTS).unread(true).sem(id.clone());
+    let mut c = Compositor::new();
+    c.begin_frame();
+    b.render(&mut c, row(400.0), &theme);
+    let r = b.rect(row(400.0), &theme);
+    assert_eq!(c.binding(&id).unwrap().rect, [r.x, r.y, r.w, r.h]);
+    let drawn = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let text = drawn.iter().find_map(|n| match n {
+        SceneNode::Text { key, x, y, .. } => Some((key.clone(), *x, *y)),
+        _ => None,
+    });
+    let (key, x, y) = text.expect("the text is drawn");
+    assert_eq!(key.text, SCRIPTS);
+    assert!(x > r.x && y > r.y);
+    let wrap = f32::from_bits(key.max_width_bits.unwrap());
+    assert!(
+        x + wrap <= r.right() + 1.0,
+        "the wrap box stays in the bubble"
+    );
+
+    let s = snap(|sb| {
+        b.project(sb, &id, None);
+    });
+    let node = s.get(&id).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::ListItem, SCRIPTS));
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.focusable);
+}
+
+#[test]
+fn every_theme_draws_a_bubble_with_an_opaque_fill() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        assert_eq!(theme.message.bubble.fill.0[3], 1.0, "{name}");
+        for w in [280.0, 390.0, 1440.0] {
+            let r = Bubble::new(LONG).rect(row(w), &theme);
+            assert!(finite(r), "{name}@{w}");
+        }
+    }
+}
+
+#[test]
+fn a_verified_author_s_seal_follows_the_name_and_keeps_its_place_on_a_narrow_row() {
+    let theme = core();
+    let s = theme.message.thread;
+    let m = Message::new("Luna Starfield", "2s", LUNA).verified(true);
+    let l = m.layout(at(320.0), &theme);
+    let (name, seal, time) = (l.name.unwrap(), l.seal.unwrap(), l.time.unwrap());
+    assert_eq!(seal.x, name.rect.right() + s.seal_gap);
+    assert_eq!(seal.h, s.name.line_height, "one name line tall");
+    assert_eq!(time.rect.x, seal.right() + s.time_gap);
+    let (_, drawn) = nodes(&m, at(320.0), &theme);
+    assert!(
+        drawn.iter().any(|n| matches!(n, SceneNode::Path { .. })),
+        "the icon is drawn"
+    );
+
+    let long = Message::new(
+        "Maria Eduarda Albuquerque de Souza Vasconcelos",
+        "12 min ago",
+        LUNA,
+    )
+    .verified(true);
+    let l = long.layout(at(280.0), &theme);
+    assert!(
+        l.name.unwrap().text.ends_with('\u{2026}'),
+        "the name gives way first"
+    );
+    assert!(l.seal.is_some() && l.time.unwrap().text == "12 min ago");
+
+    let row = id("msg");
+    let snap = snap(|b| {
+        m.project(b, &row, None);
+    });
+    assert_eq!(
+        snap.get(&row).unwrap().state.get("verified"),
+        Some(&accord::Value::Bool(true))
+    );
+}
+
+// scroller
+
+use crate::widgets::message::scroller::MessageScroller;
+
+fn thread_of(n: usize) -> MessageScroller {
+    let messages = (0..n)
+        .map(|i| Message::new(format!("Person {i}"), format!("{i}m"), LUNA).divider(true))
+        .collect();
+    MessageScroller::new("Comments", "No comments yet", messages).sem(id("thread"))
+}
+
+fn surface(w: f32, h: f32) -> Rect {
+    Rect::new(10.0, 20.0, w, h)
+}
+
+#[test]
+fn a_scroller_is_as_tall_as_its_messages_up_to_its_cap() {
+    let theme = core();
+    let cap = theme.message.scroller.max_h;
+    let two = thread_of(2);
+    let h = two.height(320.0, &theme);
+    assert!(h < cap, "two messages fit: {h}");
+    let b = theme.message.scroller.border_width;
+    assert!((h - (two.content_h(320.0, &theme) + b * 2.0)).abs() < 1e-3);
+    assert_eq!(
+        thread_of(40).height(320.0, &theme),
+        cap,
+        "a long thread stops at the cap"
+    );
+    let empty = thread_of(0);
+    assert!(
+        empty.height(320.0, &theme) > b * 2.0,
+        "an empty thread keeps its line"
+    );
+}
+
+#[test]
+fn the_wheel_scrolls_the_thread_until_its_end_then_leaves_it_to_the_page() {
+    let theme = core();
+    let mut s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let (x, y) = bounds.center();
+    let r = s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    assert!(r.handled && r.changed && s.offset() > 0.0);
+    for _ in 0..200 {
+        s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    }
+    let end = s.offset();
+    let r = s.handle_event(&wheel(x, y, 120.0), bounds, &theme);
+    assert!(!r.handled, "at the end the page takes the wheel");
+    assert_eq!(s.offset(), end);
+    let r = s.handle_event(&wheel(x, bounds.bottom() + 50.0, -120.0), bounds, &theme);
+    assert!(
+        !r.handled,
+        "a wheel outside the surface is not the thread's"
+    );
+    let rows = s.rows(bounds, &theme);
+    let last = rows.last().unwrap();
+    let inner = bounds.inset(theme.message.scroller.border_width);
+    assert!(
+        (last.bottom() - inner.bottom()).abs() < 0.5,
+        "the end shows the last message"
+    );
+}
+
+#[test]
+fn reveal_scrolls_the_least_that_shows_a_message_whole() {
+    let theme = core();
+    let mut s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let inner = bounds.inset(theme.message.scroller.border_width);
+    assert!(!s.reveal(0, bounds, &theme), "the first is shown");
+    assert!(s.reveal(7, bounds, &theme));
+    let r = s.rows(bounds, &theme)[7];
+    assert!(
+        r.y >= inner.y - 0.5 && r.bottom() <= inner.bottom() + 0.5,
+        "{r:?} in {inner:?}"
+    );
+    assert!(
+        (r.bottom() - inner.bottom()).abs() < 0.5,
+        "the least: it lands at the bottom"
+    );
+    assert!(s.reveal(0, bounds, &theme));
+    assert_eq!(s.offset(), 0.0);
+    assert!(!s.reveal(99, bounds, &theme), "no such message");
+}
+
+#[test]
+fn a_scroller_draws_only_what_it_shows_clipped_and_projects_every_message() {
+    let theme = core();
+    let s = thread_of(12);
+    let bounds = surface(320.0, s.height(320.0, &theme));
+    let (c, drawn) = {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        s.render(&mut c, bounds, &theme);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        (c, nodes)
+    };
+    assert!(
+        drawn
+            .iter()
+            .any(|n| matches!(n, SceneNode::PushClip { .. }))
+    );
+    let shown = texts(&drawn)
+        .iter()
+        .filter(|t| t.starts_with("Person "))
+        .count();
+    assert!(
+        shown > 0 && shown < 12,
+        "only the messages in view: {shown}"
+    );
+    assert!(c.binding(&id("thread[0]")).is_some());
+    assert!(
+        c.binding(&id("thread[11]")).is_none(),
+        "a message far below is not drawn"
+    );
+
+    let snap = snap(|b| {
+        s.project(b, &id("thread"), None);
+    });
+    let list = snap.get(&id("thread")).unwrap();
+    assert_eq!((list.role, list.label.as_str()), (Role::List, "Comments"));
+    assert_eq!(list.state.get("count"), Some(&accord::Value::Int(12)));
+    assert_eq!(
+        snap.children(&id("thread")).count(),
+        12,
+        "every message, shown or not"
+    );
+
+    let empty = thread_of(0);
+    let mut c = Compositor::new();
+    c.begin_frame();
+    empty.render(&mut c, surface(320.0, empty.height(320.0, &theme)), &theme);
+    let words = texts(c.layer(LayerId::DEFAULT).unwrap().nodes());
+    assert_eq!(words, ["No comments yet"]);
+}
+
+#[test]
+fn a_scroller_stays_whole_over_the_width_range_under_every_theme() {
+    for name in ["core", "hoff", "plev", "nord"] {
+        let theme = Theme::named(name).unwrap();
+        for n in [0, 1, 12] {
+            let s = thread_of(n);
+            for w in (120..=1600).step_by(8) {
+                let h = s.height(w as f32, &theme);
+                assert!(
+                    h.is_finite() && h > 0.0 && h <= theme.message.scroller.max_h + 0.5,
+                    "{name} {n}@{w}: {h}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn the_scroller_s_border_closes_the_last_message_without_its_hairline() {
+    let theme = core();
+    let s = thread_of(3);
+    let rows = s.rows(surface(320.0, 400.0), &theme);
+    let laid: Vec<_> = s
+        .messages()
+        .iter()
+        .zip(&rows)
+        .map(|(m, r)| m.layout(*r, &theme).divider.is_some())
+        .collect();
+    assert_eq!(laid, [true, true, false]);
+}
+
+// alert
+
+use crate::widgets::buttons::ButtonVariant;
+use crate::widgets::feedback::alert::{Alert, AlertLayout};
+
+/// The kit's invite: an avatar, unread, its two answers.
+fn invite() -> Alert {
+    Alert::new(
+        Intent::Constructive,
+        "3D object is generated",
+        "Minimalist Architecture Scene",
+    )
+    .time("4h ago")
+    .avatar("Hoff")
+    .unread(true)
+    .action("Decline", ButtonVariant::Primary)
+    .action("Accept", ButtonVariant::Secondary)
+}
+
+/// The kit's comment: the content clamped under the detail.
+fn comment(content: &str) -> Alert {
+    Alert::new(
+        Intent::Neutral,
+        "Randomdash",
+        "Commented on Classic Car in Studio",
+    )
+    .time("1h ago")
+    .avatar("Randomdash")
+    .content(content)
+}
+
+fn alert_parts(l: &AlertLayout) -> Vec<(&'static str, Rect)> {
+    let mut out = vec![("lead", l.lead)];
+    out.extend(l.badge.map(|r| ("badge", r)));
+    out.extend(l.divider.map(|r| ("divider", r)));
+    out.extend(l.dot.map(|r| ("dot", r)));
+    for (name, p) in [
+        ("title", &l.title),
+        ("time", &l.time),
+        ("detail", &l.detail),
+        ("content", &l.content),
+    ] {
+        if let Some(p) = p {
+            out.push((name, p.rect));
+        }
+    }
+    out.extend(l.actions.iter().map(|r| ("action", *r)));
+    out
+}
+
+fn alert_nodes(a: &Alert, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    a.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_alert_carries_the_kit_in_core_and_derives_the_palette_elsewhere() {
+    let kit = MessageTokens::hoff_core().alert;
+    assert_eq!(
+        (kit.pad, kit.pad_end, kit.lead, kit.gap),
+        (20.0, 16.0, 48.0, 16.0)
+    );
+    assert_eq!(
+        (kit.badge, kit.badge_ring, kit.badge_icon),
+        (22.0, 2.0, 12.0)
+    );
+    assert_eq!(kit.content_lines, 2);
+    assert_eq!(core().message.alert, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).alert;
+    let c = &hoff.colors;
+    assert_eq!(derived.title.color, c.text);
+    assert_eq!(derived.time.color, c.text_mid);
+    assert_eq!(derived.unread, c.info);
+    assert_eq!(derived.intents.of(Intent::Destructive), c.danger);
+    assert_eq!(derived.ring.0[3], 1.0, "the ring is opaque");
+    assert_eq!(derived.lead, kit.lead, "the geometry is the kit's");
+}
+
+#[test]
+fn a_short_alert_is_as_tall_as_its_lead_with_the_text_centered_against_it() {
+    let theme = core();
+    let t = &theme.message.alert;
+    let a = Alert::new(Intent::Informational, "Saved", "Your scene is in the cloud");
+    let l = a.layout(at(386.0), &theme);
+    assert_eq!(l.row.h, t.pad * 2.0 + t.lead, "the lead sets the height");
+    let title = l.title.as_ref().unwrap().rect;
+    let detail = l.detail.as_ref().unwrap().rect;
+    let mid = (title.y + t.title_lift + detail.bottom()) / 2.0;
+    assert!((mid - l.lead.center().1).abs() < 0.5, "centered: {mid}");
+    assert!(l.badge.is_none(), "without an avatar the lead is the mark");
+    assert!(l.dot.is_none() && l.actions.is_empty());
+}
+
+#[test]
+fn the_content_is_clamped_to_two_lines_and_the_answers_add_their_row() {
+    let theme = core();
+    let t = &theme.message.alert;
+    let long = comment(LONG).layout(at(386.0), &theme);
+    let content = long.content.as_ref().unwrap();
+    let line = t.content.style(&theme.typography).line_height;
+    assert!(content.rect.h <= line * 2.0 + 0.5, "{:?}", content.rect);
+    assert!(content.text.len() < LONG.len(), "cut");
+    assert!(long.row.h > t.pad * 2.0 + t.lead);
+
+    let l = invite().layout(at(386.0), &theme);
+    assert_eq!(l.actions.len(), 2);
+    assert_eq!(l.actions[0].y, l.actions[1].y, "side by side");
+    let detail = l.detail.as_ref().unwrap().rect;
+    assert!((l.actions[0].y - detail.bottom() - t.actions_gap).abs() < 0.5);
+    assert!((l.row.bottom() - l.actions[0].bottom() - t.pad).abs() < 0.5);
+    assert_eq!(l.badge.unwrap().right(), l.lead.right() + t.badge_out);
+    let dot = l.dot.unwrap();
+    assert!((dot.right() - (l.row.right() - t.pad_end)).abs() < 0.5);
+}
+
+#[test]
+fn a_long_title_is_ellipsized_the_time_kept_and_the_detail_is_one_line() {
+    let theme = core();
+    let a = Alert::new(Intent::Destructive, LONG, LONG).time("12 min ago");
+    let l = a.layout(at(320.0), &theme);
+    let title = l.title.as_ref().unwrap();
+    assert!(title.text.ends_with('\u{2026}'), "{}", title.text);
+    assert_eq!(l.time.as_ref().unwrap().text, "12 min ago");
+    let detail = l.detail.as_ref().unwrap();
+    assert!(detail.text.ends_with('\u{2026}'));
+    let line = theme
+        .message
+        .alert
+        .detail
+        .style(&theme.typography)
+        .line_height;
+    assert_eq!(detail.rect.h, line);
+}
+
+#[test]
+fn every_part_of_an_alert_stays_in_its_row_over_the_whole_range_and_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        for a in [invite(), comment(SCRIPTS), comment(LONG).divider(true)] {
+            for w in (160..=1600).step_by(8) {
+                let bounds = at(w as f32);
+                let l = a.layout(bounds, &theme);
+                assert_eq!(l.row.w, bounds.w);
+                for (part, r) in alert_parts(&l) {
+                    assert!(finite(r), "{name}@{w}: {part}");
+                    if w as f32 >= a.min_width(&theme) {
+                        assert!(
+                            within(r, l.row),
+                            "{name}@{w}: {part} {r:?} out of {:?}",
+                            l.row
+                        );
+                    }
+                }
+                if let Some(t) = &l.title {
+                    let time = l.time.as_ref().map_or(t.rect.right(), |p| p.rect.right());
+                    assert!(time <= l.dot.map_or(f32::MAX, |d| d.x) + 0.5, "{name}@{w}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn the_answers_wrap_when_the_column_is_narrow() {
+    let theme = core();
+    let a = invite();
+    let narrow = a.layout(at(a.min_width(&theme)), &theme);
+    assert!(narrow.actions[1].y > narrow.actions[0].y, "wrapped");
+    let wide = a.layout(at(600.0), &theme);
+    assert!(narrow.row.h > wide.row.h);
+}
+
+#[test]
+fn a_click_on_an_answer_chooses_it_and_a_click_on_the_row_reads_the_alert() {
+    let theme = core();
+    let bounds = at(386.0);
+    let mut a = invite();
+    let accept = a.layout(bounds, &theme).actions[1];
+    let (x, y) = accept.center();
+    assert!(a.handle_event(&move_to(x, y), bounds, &theme).changed);
+    a.handle_event(&down(x, y), bounds, &theme);
+    assert!(a.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert_eq!(a.chosen(), Some(1));
+    assert!(!a.is_unread(), "an answer reads it");
+
+    let mut b = invite();
+    let (lx, ly) = b.layout(bounds, &theme).lead.center();
+    b.handle_event(&down(lx, ly), bounds, &theme);
+    assert!(b.handle_event(&up(lx, ly), bounds, &theme).clicked);
+    assert!(!b.is_unread());
+    assert_eq!(b.chosen(), None, "the row answers nothing");
+
+    // pressed on an answer, released on the row: nothing is chosen or read
+    let mut c = invite();
+    c.handle_event(&down(x, y), bounds, &theme);
+    c.handle_event(&up(lx, ly), bounds, &theme);
+    assert!(c.is_unread() && c.chosen().is_none());
+    assert!(!c.choose(2), "no third answer");
+    assert!(c.open() && !c.open(), "read once");
+}
+
+#[test]
+fn the_alert_draws_its_runs_binds_its_parts_and_rings_only_while_focused() {
+    let theme = core();
+    let bounds = at(386.0);
+    let mut a = invite().sem(id("note"));
+    let (c, drawn) = alert_nodes(&a, bounds, &theme);
+    let words = texts(&drawn);
+    for want in [
+        "3D object is generated",
+        "4h ago",
+        "Minimalist Architecture Scene",
+        "Accept",
+    ] {
+        assert!(words.iter().any(|t| t == want), "{want} in {words:?}");
+    }
+    let l = a.layout(bounds, &theme);
+    assert_eq!(
+        c.binding(&id("note")).unwrap().rect,
+        [l.row.x, l.row.y, l.row.w, l.row.h]
+    );
+    let r = l.actions[0];
+    assert_eq!(
+        c.binding(&id("note.action[0]")).unwrap().rect,
+        [r.x, r.y, r.w, r.h]
+    );
+    let before = drawn.len();
+    a.set_focused(true);
+    assert_eq!(
+        alert_nodes(&a, bounds, &theme).1.len(),
+        before + 1,
+        "one ring"
+    );
+    a.set_focused(false);
+    a.open();
+    assert_eq!(
+        alert_nodes(&a, bounds, &theme).1.len(),
+        before - 1,
+        "the dot goes"
+    );
+}
+
+#[test]
+fn an_alert_projects_its_intent_its_words_whole_and_its_answers() {
+    let row = id("note");
+    let mut a = comment(LONG)
+        .action("Reply", ButtonVariant::Secondary)
+        .sem(row.clone())
+        .unread(true);
+    let s = snap(|b| {
+        a.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::Status, "Randomdash, 1h ago")
+    );
+    let description = node.description.as_deref().unwrap();
+    assert!(description.ends_with(LONG), "read whole: {description}");
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.focusable && node.actions.iter().any(|x| x.name.as_str() == "activate"));
+    let reply = s.get(&id("note.action[0]")).unwrap();
+    assert_eq!(
+        (reply.role, reply.parent.as_ref()),
+        (Role::Button, Some(&row))
+    );
+
+    assert!(a.choose(0));
+    let s = snap(|b| {
+        a.project(b, &row, None);
+    });
+    let reply = s.get(&id("note.action[0]")).unwrap();
+    assert_eq!(
+        reply.state.get("selected"),
+        Some(&accord::Value::Bool(true))
+    );
+    assert_eq!(
+        s.get(&row).unwrap().state.get("unread"),
+        Some(&accord::Value::Bool(false))
+    );
+
+    let danger = Alert::new(Intent::Destructive, "Export failed", "").sem(row.clone());
+    let s = snap(|b| {
+        danger.project(b, &row, None);
+    });
+    let node = s.get(&row).unwrap();
+    assert_eq!(
+        (node.role, node.description.as_deref()),
+        (Role::Alert, None)
+    );
+}

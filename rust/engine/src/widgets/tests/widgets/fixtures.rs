@@ -118,3 +118,43 @@ fn hoff_tooltip_is_solid_262626() {
         if (color[0] - 0x26 as f32 / 255.0).abs() < 1e-5 && corner_radius == 8.0)
     );
 }
+
+/// The rim's bottom stop: whole under the core kit (a plain border), gone
+/// under the HOFF glass (the top-lit edge), from the same call.
+#[test]
+fn a_rim_is_a_plain_border_in_core_and_top_lit_in_hoff() {
+    let rect = Rect::new(0.0, 0.0, 100.0, 40.0);
+    let edge = [0.5, 0.5, 0.5, 0.8];
+    let bottom = |theme: &Theme| match glass_pill(rect, 12.0, edge, 1.0, [1.0; 4], theme)[0] {
+        SceneNode::GradientRect { color2, .. } => color2[3],
+        ref other => panic!("expected the rim underlay, got {other:?}"),
+    };
+    assert_eq!(bottom(&Theme::hoff_core()), 0.8);
+    assert_eq!(bottom(&Theme::hoff()), 0.0);
+    assert_eq!(bottom(&Theme::dark()), 0.0);
+}
+
+/// The core kit lights no surface; the HOFF glass keeps its
+/// `inset 2px 4px 16px` glint.
+#[test]
+fn only_the_glass_themes_light_a_surface() {
+    let count = |theme: &Theme| {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        inset_keylight(
+            &mut c,
+            LayerId::DEFAULT,
+            Rect::new(0.0, 0.0, 80.0, 40.0),
+            8.0,
+            theme,
+        );
+        c.layer(LayerId::DEFAULT).map_or(0, |l| l.nodes().len())
+    };
+    assert_eq!(count(&Theme::hoff_core()), 0);
+    assert_eq!(count(&Theme::hoff()), 1);
+    let spec = Theme::hoff().glass.keylight.expect("hoff key-light");
+    assert_eq!(
+        (spec.offset, spec.blur, spec.inset),
+        ([2.0, 4.0], 16.0, true)
+    );
+}

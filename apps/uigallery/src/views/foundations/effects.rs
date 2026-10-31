@@ -1,153 +1,77 @@
-//! Effects section: the compositor's visual primitives as design-system
-//! tokens — analytic shadows (CSS-like blur radii, incl. the theme's own
-//! `effects.shadow_sigma`), linear gradients, backdrop blur, the clip stack
-//! and tessellated vector shapes (`engine::drawing::path::PathBuilder`). Absorbs the
-//! `visual` and `sdf_shapes` engine examples; everything is static, so an
-//! idle section settles (render-on-demand contract).
+//! Effects page, the hoff core kit's DepthsPage: square cards, each a
+//! surface lifted by one of the theme's shadow stacks (`theme.shadows`,
+//! one card per elevation, and the button's own stack), named in its chip.
+//! A second group keeps the compositor's other primitives, each in a card
+//! of the same mold: linear gradients, backdrop blur (the theme's
+//! `effects.blur_sigma`), the clip stack and tessellated vector shapes
+//! (`engine::drawing::path::PathBuilder`). Everything is static, so an idle
+//! page settles (render-on-demand contract).
 
-use engine::drawing::compositor::{
-    Compositor, GradientRectParams, RoundedRectParams, SceneNode, ShadowParams, TextNodeKey,
-};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::drawing::path::PathBuilder;
-use engine::drawing::text::TextStyle;
-use engine::styling::theme::Theme;
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::styling::theme::{Elevation, ShadowSpec, Theme};
+use engine::widgets::prelude::{
+    EventResult, Rect, WidgetEvent, gradient_fill, rounded_rect, rounded_rect_stroke, shadow_drops,
+    shadow_insets,
+};
 
-use super::{group_label, panel, text};
+use super::super::components::showcase::{self, Grid, GroupLayout};
 
-const GAP: f32 = 12.0;
-const LABEL_H: f32 = 30.0;
-const ROW_GAP: f32 = 28.0;
-const SHADOW_CARD_W: f32 = 150.0;
-const SHADOW_CARD_H: f32 = 90.0;
-/// Extra horizontal room so wide shadows are not clipped by the next card.
-const SHADOW_STRIDE: f32 = 190.0;
-const GRADIENT_W: f32 = 150.0;
-const GRADIENT_H: f32 = 70.0;
-const BLUR_PANEL_H: f32 = 120.0;
-const CLIP_PANEL_H: f32 = 140.0;
-const SHAPE_BOX: f32 = 90.0;
+/// Cards to a row at full width (the kit's `span={4}`).
+const SPAN: usize = 4;
+/// The lifted surface takes this share of its card's side (the kit's
+/// `size-32` in a card of about 240).
+const SURFACE_SHARE: f32 = 0.5;
+/// The compositor samples, one card each.
+const SAMPLES: [&str; 4] = ["Gradient", "Backdrop blur", "Clip", "Paths"];
+
+/// The depths, from the theme: a name and the css box-shadow list.
+fn depths(theme: &Theme) -> Vec<(&'static str, Vec<ShadowSpec>)> {
+    let s = &theme.shadows;
+    let stack = |e: Elevation| s.stack(e).to_vec();
+    let mut out = vec![
+        ("Surface", Vec::new()),
+        ("Raised", stack(Elevation::Raised)),
+        ("Floating", stack(Elevation::Floating)),
+        ("Overlay", stack(Elevation::Overlay)),
+        ("Hint", stack(Elevation::Hint)),
+        ("Card", vec![s.card]),
+        ("Button", theme.button.primary.rest.shadow.clone()),
+    ];
+    // The glass themes light their surfaces from inside; the core kit
+    // does not, and shows no card for it.
+    if let Some(light) = theme.glass.keylight {
+        out.push(("Key-light", vec![light]));
+    }
+    out
+}
 
 pub struct EffectsPage;
-
-/// Rects for everything the section draws, top to bottom.
-struct Layout {
-    labels: Vec<(&'static str, f32)>,
-    /// (rect, blur radius, inset, caption).
-    shadows: Vec<(Rect, f32, bool, String)>,
-    /// (rect, angle).
-    gradients: Vec<(Rect, f32)>,
-    blur_panel: Rect,
-    clip_panel: Rect,
-    shapes: Vec<(Rect, &'static str)>,
-    total_h: f32,
-}
-
-fn code(text: &str, size: f32) -> (TextStyle, String) {
-    (
-        TextStyle::new(size)
-            .with_line_height(size * 1.4)
-            .with_family("Inclusive Sans"),
-        text.to_string(),
-    )
-}
 
 impl EffectsPage {
     pub fn new() -> Self {
         Self
     }
 
-    fn layout(content: Rect, theme: &Theme) -> Layout {
-        let mut labels = Vec::new();
-        let mut y = content.y;
+    /// The narrowest a card gets: half the theme's narrowest card.
+    fn min_w(theme: &Theme) -> f32 {
+        theme.size.card_min_w / 2.0
+    }
 
-        // Shadow cards flow left to right and wrap on narrow widths.
-        labels.push(("ANALYTIC SHADOWS — NO BLUR PASS", y));
-        let mut shadows = Vec::new();
-        let mut x = content.x;
-        let mut sy = y + LABEL_H + 24.0; // headroom so the blur is not cut above
-        let mut shadow_specs: Vec<(f32, bool, String)> = [4.0f32, 12.0, 24.0, 48.0]
-            .into_iter()
-            .map(|blur| (blur, false, format!("blur {blur}")))
-            .collect();
-        shadow_specs.push((
-            theme.effects.shadow_sigma * 2.0,
-            false,
-            format!("theme sigma {:.0}", theme.effects.shadow_sigma),
-        ));
-        shadow_specs.push((16.0, true, "inset".to_string()));
-        for (blur, inset, caption) in shadow_specs {
-            if x > content.x && x + SHADOW_CARD_W > content.x + content.w {
-                x = content.x;
-                sy += SHADOW_CARD_H + 48.0;
-            }
-            shadows.push((
-                Rect::new(x, sy, SHADOW_CARD_W, SHADOW_CARD_H),
-                blur,
-                inset,
-                caption,
-            ));
-            x += SHADOW_STRIDE;
-        }
-        y = sy + SHADOW_CARD_H + 40.0 + ROW_GAP;
-
-        labels.push(("LINEAR GRADIENTS — CSS ANGLES", y));
-        let gradients = [0.0f32, 45.0, 90.0, 135.0]
-            .into_iter()
-            .enumerate()
-            .map(|(i, angle)| {
-                (
-                    Rect::new(
-                        content.x + i as f32 * (GRADIENT_W + GAP),
-                        y + LABEL_H,
-                        GRADIENT_W,
-                        GRADIENT_H,
-                    ),
-                    angle,
-                )
-            })
-            .collect();
-        y += LABEL_H + GRADIENT_H + 24.0 + ROW_GAP;
-
-        labels.push(("BACKDROP BLUR — FROSTED GLASS", y));
-        let blur_panel = Rect::new(content.x, y + LABEL_H, content.w, BLUR_PANEL_H);
-        y += LABEL_H + BLUR_PANEL_H + ROW_GAP;
-
-        labels.push(("CLIP STACK — CONTENT LARGER THAN THE PANEL", y));
-        let clip_panel = Rect::new(content.x, y + LABEL_H, content.w, CLIP_PANEL_H);
-        y += LABEL_H + CLIP_PANEL_H + ROW_GAP;
-
-        labels.push(("VECTOR SHAPES — PATHBUILDER TESSELLATION", y));
-        let shapes = ["circle", "ring", "star", "polygon"]
-            .into_iter()
-            .enumerate()
-            .map(|(i, name)| {
-                (
-                    Rect::new(
-                        content.x + i as f32 * (SHAPE_BOX + GAP),
-                        y + LABEL_H,
-                        SHAPE_BOX,
-                        SHAPE_BOX,
-                    ),
-                    name,
-                )
-            })
-            .collect();
-        y += LABEL_H + SHAPE_BOX + 24.0;
-
-        Layout {
-            labels,
-            shadows,
-            gradients,
-            blur_panel,
-            clip_panel,
-            shapes,
-            total_h: y - content.y,
-        }
+    /// Depths, then the compositor samples, in square cards.
+    fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let side = showcase::card_width_at(SPAN, Self::min_w(theme), content, theme);
+        let counts = [depths(theme).len(), SAMPLES.len()];
+        let grids = counts.map(|n| Grid {
+            span: SPAN,
+            min_w: Self::min_w(theme),
+            heights: vec![side; n],
+        });
+        showcase::layout_grids(grids, content, theme)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        Self::layout(content, theme).total_h + GAP
+        showcase::content_height(&Self::layout(content, theme), content)
     }
 
     /// Static gallery page: no widgets, nothing to hit-test.
@@ -156,235 +80,187 @@ impl EffectsPage {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let l = Self::layout(content, theme);
-        for (label, y) in &l.labels {
-            group_label(c, label, content.x, *y, theme);
-        }
-
-        // Analytic shadows (Evan Wallace approximation) under a glass card.
-        for (rect, blur, inset, caption) in &l.shadows {
-            c.draw_shadow(ShadowParams {
-                x: rect.x,
-                y: rect.y,
-                w: rect.w,
-                h: rect.h,
-                corner_radius: theme.radius.md,
-                blur_radius: *blur,
-                offset: [0.0, 6.0],
-                color: theme.effects.shadow_color.0,
-                inset: *inset,
-            });
-            c.draw_rounded_rect(RoundedRectParams {
-                x: rect.x,
-                y: rect.y,
-                w: rect.w,
-                h: rect.h,
-                color: theme.colors.bg_panel.0,
-                corner_radius: theme.radius.md,
-                border_width: 1.0,
-                border_color: theme.glass.edge_soft.0,
-            });
-            let (style, caption) = code(caption, 12.0);
-            c.draw_text(
-                TextNodeKey::from_style(&caption, &style, None),
-                rect.x + 14.0,
-                rect.y + rect.h / 2.0 - 8.0,
-                theme.colors.text.0,
-            );
-        }
-
-        // Two-stop linear gradients at CSS angles (accent pairs per theme).
-        let pairs = [
-            (theme.colors.accent.0, theme.colors.info.0),
-            (theme.colors.success.0, theme.colors.accent.0),
-            (theme.colors.warning.0, theme.colors.danger.0),
-            (theme.colors.info.0, theme.colors.success.0),
-        ];
-        for ((rect, angle), (from, to)) in l.gradients.iter().zip(pairs) {
-            c.draw_gradient_rect(GradientRectParams {
-                x: rect.x,
-                y: rect.y,
-                w: rect.w,
-                h: rect.h,
-                color: from,
-                color2: to,
-                angle_deg: *angle,
-                corner_radius: theme.radius.sm,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
-            text(
-                c,
-                &format!("{angle:.0} deg"),
-                12.0,
-                400,
-                rect.x,
-                rect.y + rect.h + 6.0,
-                theme.glass.text_faint.0,
-            );
-        }
-
-        // Backdrop blur: a busy strip of gradient chips, then a frosted
-        // panel over the middle. What is below the region blurs; what is
-        // pushed after stays sharp.
-        panel(c, l.blur_panel, theme);
-        c.push(SceneNode::PushClip {
-            x: l.blur_panel.x,
-            y: l.blur_panel.y,
-            w: l.blur_panel.w,
-            h: l.blur_panel.h,
-        });
-        let chip_w = 64.0;
-        let mut cx = l.blur_panel.x + 10.0;
-        let mut i = 0;
-        while cx + chip_w < l.blur_panel.x + l.blur_panel.w - 10.0 {
-            let (from, to) = pairs[i % pairs.len()];
-            c.draw_gradient_rect(GradientRectParams {
-                x: cx,
-                y: l.blur_panel.y + 18.0,
-                w: chip_w,
-                h: BLUR_PANEL_H - 36.0,
-                color: from,
-                color2: to,
-                angle_deg: 90.0 + i as f32 * 30.0,
-                corner_radius: theme.radius.sm,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
-            cx += chip_w + 10.0;
-            i += 1;
-        }
-        let frost = Rect::new(
-            l.blur_panel.x + l.blur_panel.w * 0.3,
-            l.blur_panel.y + 14.0,
-            l.blur_panel.w * 0.4,
-            BLUR_PANEL_H - 28.0,
-        );
-        c.push(SceneNode::BackdropBlur {
-            x: frost.x,
-            y: frost.y,
-            w: frost.w,
-            h: frost.h,
-            corner_radius: theme.radius.md,
-            sigma: theme.effects.blur_sigma,
-        });
-        c.push(engine::widgets::prelude::rounded_rect_stroke(
-            frost.x,
-            frost.y,
-            frost.w,
-            frost.h,
-            theme.radius.md,
-            theme.glass.edge.0,
-            1.0,
-        ));
-        text(
-            c,
-            &format!("backdrop blur — sigma {:.0}", theme.effects.blur_sigma),
-            13.0,
-            500,
-            frost.x + 16.0,
-            frost.y + frost.h / 2.0 - 9.0,
-            theme.colors.text.0,
-        );
-        c.push(SceneNode::PopClip);
-
-        // Clip stack: oversized rows scissored to the panel bounds.
-        panel(c, l.clip_panel, theme);
-        c.push(SceneNode::PushClip {
-            x: l.clip_panel.x,
-            y: l.clip_panel.y,
-            w: l.clip_panel.w,
-            h: l.clip_panel.h,
-        });
-        let offset = 40.0; // static scroll offset: edges cut on both sides
-        for row in 0..8 {
-            let ry = l.clip_panel.y + 8.0 + row as f32 * 28.0 - offset;
-            c.push(engine::widgets::prelude::rounded_rect(
-                l.clip_panel.x + 8.0,
-                ry,
-                l.clip_panel.w + 60.0, // wider than the panel on purpose
-                22.0,
-                theme.radius.sm,
-                if row % 2 == 0 {
-                    theme.glass.surface_active.0
-                } else {
-                    theme.glass.surface.0
-                },
-            ));
-            text(
-                c,
-                &format!("row {row} — clipped to the panel bounds"),
-                12.0,
-                400,
-                l.clip_panel.x + 16.0,
-                ry + 4.0,
-                theme.colors.text_dim.0,
-            );
-        }
-        c.push(SceneNode::PopClip);
-
-        // Vector shapes tessellated by lyon (engine::drawing::path::PathBuilder).
-        let shape_colors = [
-            theme.colors.accent.0,
-            theme.colors.success.0,
-            theme.colors.warning.0,
-            theme.colors.info.0,
-        ];
-        for ((rect, name), color) in l.shapes.iter().zip(shape_colors) {
-            let cx = rect.x + rect.w / 2.0;
-            let cy = rect.y + rect.h / 2.0;
-            let r = rect.w / 2.0 - 12.0;
-            match *name {
-                "circle" => c.draw_path(PathBuilder::circle(cx, cy, r).fill(color)),
-                "ring" => draw_ring(c, cx, cy, r, r * 0.55, color),
-                "star" => draw_star(c, cx, cy, r, r * 0.45, 5, color),
-                _ => draw_polygon(c, cx, cy, r, 6, color),
+        let layout = Self::layout(content, theme);
+        if let [depth, samples] = layout.as_slice() {
+            showcase::title(c, "Depths", content, depth.title_y, theme);
+            for ((name, stack), card) in depths(theme).iter().zip(&depth.cards) {
+                showcase::card(c, *card, name, theme);
+                lifted(c, *card, stack, theme);
             }
-            text(
-                c,
-                name,
-                12.0,
-                400,
-                rect.x + 12.0,
-                rect.y + rect.h + 6.0,
-                theme.glass.text_faint.0,
-            );
+            showcase::rule(c, content, depth.rule_y, theme);
+            showcase::title(c, "Compositor", content, samples.title_y, theme);
+            for (name, card) in SAMPLES.iter().zip(&samples.cards) {
+                showcase::card(c, *card, name, theme);
+                let stage = stage(*card, theme);
+                match *name {
+                    "Gradient" => gradients(c, stage, theme),
+                    "Backdrop blur" => frosted(c, stage, theme),
+                    "Clip" => clipped(c, stage, theme),
+                    _ => shapes(c, stage, theme),
+                }
+            }
         }
     }
 }
 
-/// Filled ring: outer circle one way, inner circle back (even-odd fill).
-fn draw_ring(c: &mut Compositor, cx: f32, cy: f32, r_out: f32, r_in: f32, color: [f32; 4]) {
-    let n = 64;
-    let mut b = PathBuilder::new();
-    for i in 0..=n {
-        let a = std::f32::consts::TAU * (i as f32 / n as f32);
-        b = if i == 0 {
-            b.move_to(cx + r_out * a.cos(), cy + r_out * a.sin())
-        } else {
-            b.line_to(cx + r_out * a.cos(), cy + r_out * a.sin())
-        };
-    }
-    for i in (0..=n).rev() {
-        let a = std::f32::consts::TAU * (i as f32 / n as f32);
-        b = b.line_to(cx + r_in * a.cos(), cy + r_in * a.sin());
-    }
-    c.draw_path(b.close().fill(color));
+/// The square the sample draws in: centered under the chip band.
+fn stage(card: Rect, theme: &Theme) -> Rect {
+    let side = (card.w.min(card.h) * SURFACE_SHARE).round();
+    let at = showcase::centered((side, side), card);
+    Rect::new(at.x, at.y + theme.spacing.sm, side, side)
 }
 
-fn draw_star(
-    c: &mut Compositor,
-    cx: f32,
-    cy: f32,
-    r_out: f32,
-    r_in: f32,
-    points: u32,
-    color: [f32; 4],
-) {
+/// A paper surface with a hairline (`bg-[#FCFCFC] border border-[#ECECEC]`)
+/// lifted by `stack`, drops under it and insets over it.
+fn lifted(c: &mut Compositor, card: Rect, stack: &[ShadowSpec], theme: &Theme) {
+    let s = stage(card, theme);
+    let radius = theme.shape.card;
+    shadow_drops(c, LayerId::DEFAULT, s, radius, stack);
+    c.push(rounded_rect(
+        s.x,
+        s.y,
+        s.w,
+        s.h,
+        radius,
+        theme.colors.surface.0,
+    ));
+    shadow_insets(c, LayerId::DEFAULT, s, radius, stack);
+    c.push(rounded_rect_stroke(
+        s.x,
+        s.y,
+        s.w,
+        s.h,
+        radius,
+        theme.colors.divider.0,
+        theme.control.edge_width,
+    ));
+}
+
+/// Two-stop linear gradients at four css angles, a quarter each.
+fn gradients(c: &mut Compositor, s: Rect, theme: &Theme) {
+    let k = &theme.colors;
+    let pairs = [
+        (k.accent, k.info, 0.0),
+        (k.success, k.accent, 45.0),
+        (k.warning, k.danger, 90.0),
+        (k.info, k.success, 135.0),
+    ];
+    let gap = theme.spacing.xs;
+    let half = (s.w - gap) / 2.0;
+    for (i, (from, to, angle)) in pairs.into_iter().enumerate() {
+        let x = s.x + (i % 2) as f32 * (half + gap);
+        let y = s.y + (i / 2) as f32 * (half + gap);
+        let mut node = gradient_fill(Rect::new(x, y, half, half), theme.radius.sm, from.0, to.0);
+        if let SceneNode::GradientRect { angle_deg, .. } = &mut node {
+            *angle_deg = angle;
+        }
+        c.push(node);
+    }
+}
+
+/// Bands of color with a frosted pane over their middle: what is under the
+/// pane blurs by the theme's `effects.blur_sigma`.
+fn frosted(c: &mut Compositor, s: Rect, theme: &Theme) {
+    let k = &theme.colors;
+    let colors = [k.accent, k.success, k.warning, k.danger, k.info];
+    let band = s.w / colors.len() as f32;
+    for (i, color) in colors.iter().enumerate() {
+        c.push(rounded_rect(
+            s.x + i as f32 * band,
+            s.y,
+            band,
+            s.h,
+            0.0,
+            color.0,
+        ));
+    }
+    let pane = s.inset(s.w / 4.0);
+    c.push(SceneNode::BackdropBlur {
+        x: pane.x,
+        y: pane.y,
+        w: pane.w,
+        h: pane.h,
+        corner_radius: theme.radius.md,
+        sigma: theme.effects.blur_sigma,
+    });
+    c.push(rounded_rect_stroke(
+        pane.x,
+        pane.y,
+        pane.w,
+        pane.h,
+        theme.radius.md,
+        theme.glass.edge.0,
+        theme.control.edge_width,
+    ));
+}
+
+/// Rows wider and taller than the frame, cut to it by the clip stack.
+fn clipped(c: &mut Compositor, s: Rect, theme: &Theme) {
+    c.push(SceneNode::PushClip {
+        x: s.x,
+        y: s.y,
+        w: s.w,
+        h: s.h,
+    });
+    let row = theme.spacing.lg;
+    let gap = theme.spacing.xs;
+    // Half a row above the frame and past its far edge: both cut.
+    let mut y = s.y - row / 2.0;
+    let mut i = 0;
+    while y < s.bottom() {
+        let fill = if i % 2 == 0 {
+            theme.colors.bg_hover
+        } else {
+            theme.colors.border_active
+        };
+        c.push(rounded_rect(
+            s.x + gap,
+            y,
+            s.w,
+            row,
+            theme.radius.sm,
+            fill.0,
+        ));
+        y += row + gap;
+        i += 1;
+    }
+    c.push(SceneNode::PopClip);
+    c.push(rounded_rect_stroke(
+        s.x,
+        s.y,
+        s.w,
+        s.h,
+        0.0,
+        theme.colors.divider.0,
+        theme.control.edge_width,
+    ));
+}
+
+/// A circle, a star, a hexagon and a ring, tessellated, a quarter each.
+fn shapes(c: &mut Compositor, s: Rect, theme: &Theme) {
+    let k = &theme.colors;
+    let colors = [k.accent, k.success, k.warning, k.info];
+    let q = s.w / 2.0;
+    for (i, color) in colors.iter().enumerate() {
+        let cx = s.x + (i % 2) as f32 * q + q / 2.0;
+        let cy = s.y + (i / 2) as f32 * q + q / 2.0;
+        let r = q * 0.4;
+        let path = match i {
+            0 => PathBuilder::circle(cx, cy, r),
+            1 => polygon(cx, cy, r, r * 0.45, 10),
+            2 => polygon(cx, cy, r, r, 6),
+            _ => ring(cx, cy, r, r * 0.55),
+        };
+        c.draw_path(path.fill(color.0));
+    }
+}
+
+/// A closed polygon of `n` vertices alternating between the two radii
+/// (equal radii: a regular polygon; unequal: a star), point up.
+fn polygon(cx: f32, cy: f32, r_out: f32, r_in: f32, n: u32) -> PathBuilder {
     let mut b = PathBuilder::new();
-    let total = points * 2;
-    for i in 0..total {
-        let a = std::f32::consts::TAU * (i as f32 / total as f32) - std::f32::consts::FRAC_PI_2;
+    for i in 0..n {
+        let a = std::f32::consts::TAU * (i as f32 / n as f32) - std::f32::consts::FRAC_PI_2;
         let r = if i % 2 == 0 { r_out } else { r_in };
         let (px, py) = (cx + r * a.cos(), cy + r * a.sin());
         b = if i == 0 {
@@ -393,76 +269,79 @@ fn draw_star(
             b.line_to(px, py)
         };
     }
-    c.draw_path(b.close().fill(color));
+    b.close()
 }
 
-fn draw_polygon(c: &mut Compositor, cx: f32, cy: f32, r: f32, sides: u32, color: [f32; 4]) {
-    let mut b = PathBuilder::new();
-    for i in 0..sides {
-        let a = std::f32::consts::TAU * (i as f32 / sides as f32) - std::f32::consts::FRAC_PI_2;
-        let (px, py) = (cx + r * a.cos(), cy + r * a.sin());
-        b = if i == 0 {
-            b.move_to(px, py)
-        } else {
-            b.line_to(px, py)
-        };
+/// Filled ring: outer circle one way, inner circle back (even-odd fill).
+fn ring(cx: f32, cy: f32, r_out: f32, r_in: f32) -> PathBuilder {
+    let n = 64;
+    let point = |r: f32, i: u32| {
+        let a = std::f32::consts::TAU * (i as f32 / n as f32);
+        (cx + r * a.cos(), cy + r * a.sin())
+    };
+    let (x, y) = point(r_out, 0);
+    let mut b = PathBuilder::new().move_to(x, y);
+    for i in 1..=n {
+        let (x, y) = point(r_out, i);
+        b = b.line_to(x, y);
     }
-    c.draw_path(b.close().fill(color));
+    for i in (0..=n).rev() {
+        let (x, y) = point(r_in, i);
+        b = b.line_to(x, y);
+    }
+    b.close()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use engine::drawing::compositor::LayerId;
 
-    fn narrow() -> Rect {
-        Rect::new(288.0, 80.0, 472.0, 440.0)
+    fn nodes(theme: &Theme, w: f32) -> Vec<SceneNode> {
+        let mut c = Compositor::new();
+        EffectsPage::new().render(&mut c, Rect::new(0.0, 0.0, w, 800.0), theme);
+        c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
     }
 
-    fn wide() -> Rect {
-        Rect::new(288.0, 80.0, 1272.0, 840.0)
-    }
-
+    /// The shadows drawn are the theme's stacks, layer for layer: no blur
+    /// the page made up.
     #[test]
-    fn renders_at_narrow_and_wide_without_overflow() {
-        let theme = Theme::hoff();
-        let section = EffectsPage::new();
-        for content in [narrow(), wide()] {
-            let l = EffectsPage::layout(content, &theme);
-            for (rect, ..) in &l.shadows {
-                assert!(rect.x + rect.w <= content.x + content.w + 0.5);
-            }
-            let mut c = Compositor::new();
-            section.render(&mut c, content, &theme);
-            let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
-            assert!(nodes.len() > 30, "thin scene: {} nodes", nodes.len());
-            assert!(section.content_height(content, &theme) > content.h);
+    fn every_shadow_is_a_theme_stack() {
+        for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
+            let drawn = nodes(&theme, 1000.0)
+                .iter()
+                .filter(|n| matches!(n, SceneNode::Shadow { .. }))
+                .count();
+            let layers: usize = depths(&theme).iter().map(|(_, s)| s.len()).sum();
+            assert_eq!(drawn, layers);
         }
     }
 
     #[test]
-    fn scene_contains_every_effect_primitive() {
-        let theme = Theme::hoff();
-        let section = EffectsPage::new();
-        let mut c = Compositor::new();
-        section.render(&mut c, wide(), &theme);
-        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
-        let count = |m: fn(&SceneNode) -> bool| nodes.iter().filter(|n| m(n)).count();
-        assert!(count(|n| matches!(n, SceneNode::Shadow { .. })) >= 6);
-        assert!(count(|n| matches!(n, SceneNode::GradientRect { .. })) >= 8);
-        assert!(count(|n| matches!(n, SceneNode::BackdropBlur { .. })) == 1);
-        assert!(count(|n| matches!(n, SceneNode::PushClip { .. })) >= 2);
-        assert!(count(|n| matches!(n, SceneNode::Path { .. })) == 4);
+    fn the_compositor_samples_keep_every_primitive() {
+        let theme = Theme::hoff_core();
+        let all = nodes(&theme, 1000.0);
+        let count = |m: fn(&SceneNode) -> bool| all.iter().filter(|n| m(n)).count();
+        assert_eq!(count(|n| matches!(n, SceneNode::GradientRect { .. })), 4);
+        assert_eq!(count(|n| matches!(n, SceneNode::BackdropBlur { .. })), 1);
+        assert_eq!(count(|n| matches!(n, SceneNode::PushClip { .. })), 1);
+        assert_eq!(count(|n| matches!(n, SceneNode::Path { .. })), 4);
     }
 
+    /// Square cards inside the content from 280 to 1600 wide, and every
+    /// sample inside its card.
     #[test]
-    fn shadow_sigma_card_tracks_the_theme_token() {
-        // Swapping themes must move the token card's blur (measured token,
-        // not a constant): hoff and dark do not share shadow_sigma.
-        let dark = Theme::dark();
-        let l = EffectsPage::layout(wide(), &dark);
-        let (_, blur, _, caption) = &l.shadows[4];
-        assert_eq!(*blur, dark.effects.shadow_sigma * 2.0);
-        assert!(caption.contains(&format!("{:.0}", dark.effects.shadow_sigma)));
+    fn cards_fit_from_narrow_to_wide() {
+        let theme = Theme::hoff_core();
+        for w in (280..=1600).step_by(8) {
+            let content = Rect::new(0.0, 0.0, w as f32, 800.0);
+            for group in EffectsPage::layout(content, &theme) {
+                for card in &group.cards {
+                    assert!(card.right() <= content.right() + 0.5, "{w}: {card:?}");
+                    assert!((card.w - card.h).abs() < 0.5);
+                    let s = stage(*card, &theme);
+                    assert!(s.bottom() <= card.bottom() && s.x >= card.x, "{w}: {s:?}");
+                }
+            }
+        }
     }
 }

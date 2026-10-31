@@ -7,6 +7,8 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
+use crate::widgets::form::field::Field;
+use crate::widgets::overlay::popover::{Popover, PopoverTrigger, render_panel};
 use crate::widgets::prelude::*;
 use crate::widgets::selection::{
     ButtonGroup, Calendar, Date, GroupItem, RadioGroup, Toggle, ToggleGroup,
@@ -83,6 +85,16 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut f = TextField::new("name").with_text("brenner");
     f.focus();
     f.render(&mut c, row(5.0), theme);
+    // The kit's field, every part on: label and link, icon, eye, error.
+    let mut field = Field::new("email")
+        .label("Email")
+        .link("Forgot password?")
+        .icon("scan")
+        .password(true)
+        .with_text("brenner")
+        .error("This email is already taken.");
+    field.input.focus();
+    field.render(&mut c, Rect::new(content.x, 4300.0, content.w, 0.0), theme);
     Checkbox::new(true)
         .label("on")
         .render(&mut c, row(6.0), theme);
@@ -257,6 +269,20 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
         Rect::new(content.x, 3700.0, content.w, 200.0),
         theme,
     );
+    let accordion = Accordion::new(AccordionMode::Single)
+        .item("3D Objects", "Meshes and primitives on the canvas.")
+        .item("Materials", "Surfaces and the maps that drive them.")
+        .opened(0)
+        .disabled_item(1);
+    let h = accordion.height(content.w, theme);
+    accordion.render(&mut c, Rect::new(content.x, 4300.0, content.w, h), theme);
+    let mut collapsible = Collapsible::new("Explore").icon("house").current(true);
+    collapsible.set_focused(true);
+    collapsible.toggle();
+    collapsible.wake(0.1);
+    let h = collapsible.height(content.w, 80.0, theme);
+    let at = Rect::new(content.x, 4700.0, content.w, h);
+    collapsible.render(&mut c, at, 80.0, theme, |_, _| {});
     let mut table = Table::new(
         vec![Column::new("a", theme), Column::new("b", theme).priority(0)],
         theme,
@@ -290,6 +316,60 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     tip.render(&mut c, LayerId::DEFAULT, theme, vw, vh);
     ProgressBar::new(0.5).render(&mut c, row(21.0), theme);
     Spinner::new().render(&mut c, row(22.0), theme);
+    // task-104 front C (#156): a thread row and a quick comment
+    {
+        use crate::widgets::message::message::{Message, MessageKind};
+        Message::new(
+            "Luna Starfield",
+            "2s",
+            "a body long enough to wrap on a phone, at least once",
+        )
+        .divider(true)
+        .render(&mut c, row(23.0), theme);
+        Message::new("Randomdash", "1h", "clamped to three lines")
+            .kind(MessageKind::Quick)
+            .reaction("2")
+            .render(&mut c, row(26.0), theme);
+        use crate::widgets::message::bubble::{Bubble, BubbleSide};
+        Bubble::new("a bubble long enough to wrap on a phone, at least once")
+            .unread(true)
+            .render(&mut c, row(29.0), theme);
+        Bubble::new("mine")
+            .side(BubbleSide::End)
+            .render(&mut c, row(31.0), theme);
+        use crate::widgets::message::scroller::MessageScroller;
+        let thread = MessageScroller::new(
+            "comments",
+            "none",
+            (0..8)
+                .map(|i| Message::new("Sam", "1m", format!("message {i}")))
+                .collect(),
+        );
+        let h = thread.height(content.w, theme);
+        thread.render(&mut c, Rect::new(content.x, 3400.0, content.w, h), theme);
+        use crate::widgets::buttons::ButtonVariant;
+        use crate::widgets::feedback::alert::Alert;
+        Alert::new(Intent::Constructive, "3D object is generated", "a scene")
+            .time("4h ago")
+            .avatar("Hoff")
+            .content("a content long enough to wrap on a phone, and cut at two lines")
+            .unread(true)
+            .action("Decline", ButtonVariant::Primary)
+            .action("Accept", ButtonVariant::Secondary)
+            .render(
+                &mut c,
+                Rect::new(content.x, 3400.0 + h, content.w, 0.0),
+                theme,
+            );
+    }
+
+    // task-104 front B: the popover's trigger, open, and its panel, placed
+    // inside the content.
+    let trigger = PopoverTrigger::new("100%");
+    let anchor = Rect::new(content.right() - 88.0, row(23.0).y, 88.0, 40.0);
+    trigger.render(&mut c, LayerId::DEFAULT, anchor, true, theme);
+    let placed = Popover::new().placement(anchor, (204.0, 160.0), content, theme);
+    render_panel(&mut c, LayerId::DEFAULT, placed.rect, theme);
 
     let mut shell = AppShell::new(
         Sidebar::new(vec![
@@ -658,6 +738,67 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 vec![
                     (id("m.toasts"), Role::Region, Probe::Node),
                     (id("m.toasts[0]"), Role::Status, Probe::Hit),
+                ],
+            ));
+
+            // task-104 front C (#156): a message row and its like chip
+            let message = crate::widgets::message::message::Message::new("Luna", "2s", "body")
+                .kind(crate::widgets::message::message::MessageKind::Quick)
+                .reaction("2")
+                .sem(id("m.message"));
+            let (mut c, _) = frame(false);
+            message.render(&mut c, block(22.0), &theme);
+            message.project(&mut b, &id("m.message"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.message"), Role::ListItem, Probe::Bound),
+                    (id("m.message.reaction"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let bubble = crate::widgets::message::bubble::Bubble::new("hi").sem(id("m.bubble"));
+            let (mut c, _) = frame(false);
+            bubble.render(&mut c, row(24.0), &theme);
+            bubble.project(&mut b, &id("m.bubble"), None);
+            frames.push((c, vec![(id("m.bubble"), Role::ListItem, Probe::Hit)]));
+            let thread = crate::widgets::message::scroller::MessageScroller::new(
+                "comments",
+                "none",
+                vec![crate::widgets::message::message::Message::new(
+                    "Sam", "1m", "hi",
+                )],
+            )
+            .sem(id("m.thread"));
+            let (mut c, _) = frame(false);
+            let h = thread.height(vw - gutter * 2.0, &theme);
+            thread.render(
+                &mut c,
+                Rect::new(gutter, gutter, vw - gutter * 2.0, h),
+                &theme,
+            );
+            thread.project(&mut b, &id("m.thread"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.thread"), Role::List, Probe::Bound),
+                    (id("m.thread[0]"), Role::ListItem, Probe::Hit),
+                ],
+            ));
+            let alert = crate::widgets::feedback::alert::Alert::new(
+                Intent::Constructive,
+                "Invite",
+                "a scene",
+            )
+            .action("Accept", crate::widgets::buttons::ButtonVariant::Secondary)
+            .sem(id("m.alert"));
+            let (mut c, _) = frame(false);
+            alert.render(&mut c, block(26.0), &theme);
+            alert.project(&mut b, &id("m.alert"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.alert"), Role::Status, Probe::Bound),
+                    (id("m.alert.action[0]"), Role::Button, Probe::Hit),
                 ],
             ));
 

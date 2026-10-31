@@ -45,12 +45,31 @@ pub mod tree;
 // task-104: each front adds its page modules under its anchor, a group of
 // its own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
+pub mod field;
+pub mod input_group;
+pub mod label;
 
 // task-104 front B, overlays (#155)
+pub mod alert_dialog;
+pub mod dropdown_menu;
+pub mod hover_card;
+pub mod menubar;
+pub mod popover;
 
 // task-104 front C, conversation and feedback (#156)
+pub mod alert;
+pub mod bubble;
+pub mod message;
+pub mod message_scroller;
 
 // task-104 front D, disclosure and display (#157)
+pub mod accordion;
+pub mod aspect_ratio;
+pub mod carousel;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
+pub mod pagination;
 
 // task-104 front E, selection and dates (#158)
 pub mod button_group;

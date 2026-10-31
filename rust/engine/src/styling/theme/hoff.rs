@@ -27,7 +27,7 @@
 
 use super::intent::MotionPhysics;
 use super::scales::{
-    ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
+    ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
@@ -227,6 +227,10 @@ impl Theme {
                 disabled_alpha: 0.5,
                 wash_alpha: 0.14,
                 wash_hover_alpha: 0.22,
+                rim_fade: 0.0,
+                // `inset 2px 4px 16px rgba(248,248,248,.06)`: `xs / 2, xs`
+                // off, blurred by `lg`.
+                keylight: Some(ShadowSpec::inset([2.0, 4.0], 16.0, 0.0, n2(0.06))),
             },
             shape: ShapeTokens::hoff(),
             control: ControlTokens::hoff(),
@@ -249,7 +253,7 @@ impl Theme {
     /// one notch below the raised sidebar surface, like in dark mode.
     pub fn hoff_light() -> Self {
         let dark = Self::hoff();
-        Self {
+        let mut theme = Self {
             colors: ColorTokens {
                 bg: Color::hex(0xCECECE),
                 surface: Color::hex(0xD1D1D1),
@@ -291,9 +295,18 @@ impl Theme {
                 disabled_alpha: dark.glass.disabled_alpha,
                 wash_alpha: dark.glass.wash_alpha,
                 wash_hover_alpha: dark.glass.wash_hover_alpha,
+                rim_fade: dark.glass.rim_fade,
+                keylight: Some(ShadowSpec::inset(
+                    [2.0, 4.0],
+                    16.0,
+                    0.0,
+                    Color::rgba(1.0, 1.0, 1.0, 0.35),
+                )),
             },
             shadows: ShadowTokens::hoff(),
             ..dark
-        }
+        };
+        theme.derive_front_slots();
+        theme
     }
 }

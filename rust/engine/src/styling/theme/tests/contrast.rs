@@ -184,11 +184,106 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             }
         }
     }
+    // task-104 front A: the field on a card, its box at rest (the
+    // text, the placeholder and the icons inside, the border around)
+    // and the label row and the message line around it.
+    let f = &t.form;
+    let card = surfaces[1].1;
+    let field = over(f.input.rest.fill, card);
+    let link = Color([
+        f.field.link_color.0[0],
+        f.field.link_color.0[1],
+        f.field.link_color.0[2],
+        f.field.link_color.0[3] * f.field.link_alpha,
+    ]);
+    for (fg, bg, need, color, under) in [
+        (
+            "form.input.text_color",
+            "form.input.rest.fill",
+            TEXT,
+            f.input.text_color,
+            field,
+        ),
+        (
+            "form.input.placeholder",
+            "form.input.rest.fill",
+            TEXT,
+            f.input.placeholder,
+            field,
+        ),
+        (
+            "form.adorn.icon_color",
+            "form.input.rest.fill",
+            LARGE,
+            f.adorn.icon_color,
+            field,
+        ),
+        (
+            "form.input.rest.border",
+            "colors.surface",
+            LARGE,
+            f.input.rest.border,
+            card,
+        ),
+        (
+            "form.label.color",
+            "colors.surface",
+            TEXT,
+            f.label.color,
+            card,
+        ),
+        ("form.field.link_color", "colors.surface", TEXT, link, card),
+        (
+            "form.field.error_color",
+            "colors.surface",
+            TEXT,
+            f.field.error_color,
+            card,
+        ),
+        (
+            "form.field.helper_color",
+            "colors.surface",
+            TEXT,
+            f.field.helper_color,
+            card,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
+    // task-104 front C: the inline alert on a card, its runs and its
+    // unread dot, and the intent's icon on its badge (ink or paper,
+    // whichever reads on the fill, `contrast_text`).
+    let a = &t.message.alert;
+    for (fg, need, color) in [
+        ("message.alert.title", TEXT, a.title.color),
+        ("message.alert.time", TEXT, a.time.color),
+        ("message.alert.detail", TEXT, a.detail.color),
+        ("message.alert.content", TEXT, a.content.color),
+        ("message.alert.unread", LARGE, a.unread),
+    ] {
+        add(fg, "colors.surface", need, over(color, card), card);
+    }
+    for (name, fill) in [
+        ("neutral", a.intents.neutral),
+        ("informational", a.intents.informational),
+        ("constructive", a.intents.constructive),
+        ("destructive", a.intents.destructive),
+    ] {
+        let under = over(fill, card);
+        let icon = Color(crate::widgets::widget::contrast_text(fill.0));
+        add(
+            "message.alert.icon",
+            &format!("message.alert.intents.{name}"),
+            LARGE,
+            over(icon, under),
+            under,
+        );
+    }
     out
 }
 
-/// The pairs that fail today, 102 of the 301 (core 36, hoff 15, dark 11,
-/// light 40), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 116 of the 369 (core 41, hoff 18, dark 13,
+/// light 44), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -386,6 +481,47 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
         "button.warning.active.fill",
         2.15,
     ),
+    // task-104 front A: the field. The core pairs are the kit's Field as
+    // written (`components/Field/index.tsx`: the #E2E2E2 border, the
+    // #7B7B7B placeholder, the #FE5938 error, the link at opacity-70) and
+    // the helper in the kit's secondary gray; the others are the glass
+    // field every theme drew before the kit.
+    (
+        "core",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        4.13,
+    ),
+    ("core", "form.input.rest.border", "colors.surface", 1.26),
+    ("core", "form.field.link_color", "colors.surface", 2.13),
+    ("core", "form.field.error_color", "colors.surface", 3.05),
+    ("core", "form.field.helper_color", "colors.surface", 4.13),
+    (
+        "hoff",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        2.76,
+    ),
+    ("hoff", "form.input.rest.border", "colors.surface", 1.63),
+    ("hoff", "form.field.error_color", "colors.surface", 2.34),
+    (
+        "dark",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        2.96,
+    ),
+    ("dark", "form.input.rest.border", "colors.surface", 1.70),
+    (
+        "light",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        1.31,
+    ),
+    ("light", "form.input.rest.border", "colors.surface", 1.05),
+    ("light", "form.field.error_color", "colors.surface", 4.24),
+    // task-104 front C: the alert's unread dot takes the info accent,
+    // which the light theme already draws under 3:1.
+    ("light", "message.alert.unread", "colors.surface", 2.87),
 ];
 
 #[test]
@@ -426,7 +562,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 301,
+        count, 369,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
