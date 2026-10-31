@@ -185,6 +185,7 @@ components! {
     CodeBlock => code_block,
     Graph => graph,
     Stat => stat,
+    Toolbar => toolbar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

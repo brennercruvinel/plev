@@ -29,6 +29,9 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path("M12 17h.01"),
         ],
     ),
+    ("arrow-down", &[Path("M12 5v14"), Path("m19 12-7 7-7-7")]),
+    ("arrow-left", &[Path("m12 19-7-7 7-7"), Path("M19 12H5")]),
+    ("arrow-right", &[Path("M5 12h14"), Path("m12 5 7 7-7 7")]),
     ("arrow-up", &[Path("m5 12 7-7 7 7"), Path("M12 19V5")]),
     (
         "badge-check",
@@ -83,6 +86,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             SvgRect(8.0, 8.0, 14.0, 14.0, 2.0),
             Path("M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"),
+        ],
+    ),
+    (
+        "crop",
+        &[
+            Path("M6 2v14a2 2 0 0 0 2 2h14"),
+            Path("M18 22V8a2 2 0 0 0-2-2H2"),
         ],
     ),
     (
@@ -149,6 +159,17 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Circle(12.0, 12.0, 10.0),
             Path("M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"),
             Path("M2 12h20"),
+        ],
+    ),
+    (
+        "hand",
+        &[
+            Path("M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2"),
+            Path("M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2"),
+            Path("M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8"),
+            Path(
+                "M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15",
+            ),
         ],
     ),
     (
@@ -231,6 +252,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         )],
     ),
     (
+        "pause",
+        &[
+            SvgRect(14.0, 4.0, 4.0, 16.0, 1.0),
+            SvgRect(6.0, 4.0, 4.0, 16.0, 1.0),
+        ],
+    ),
+    (
         "pencil",
         &[
             Path(
@@ -246,6 +274,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             Path("M21 7v6h-6"),
             Path("M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"),
+        ],
+    ),
+    (
+        "repeat",
+        &[
+            Path("m17 2 4 4-4 4"),
+            Path("M3 11v-1a4 4 0 0 1 4-4h14"),
+            Path("m7 22-4-4 4-4"),
+            Path("M21 13v1a4 4 0 0 1-4 4H3"),
         ],
     ),
     (
@@ -327,6 +364,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             Path("M3 7v6h6"),
             Path("M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"),
+        ],
+    ),
+    (
+        "undo-2",
+        &[
+            Path("M9 14 4 9l5-5"),
+            Path("M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"),
         ],
     ),
     ("x", &[Path("M18 6 6 18"), Path("m6 6 12 12")]),

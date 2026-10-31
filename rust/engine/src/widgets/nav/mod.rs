@@ -6,6 +6,7 @@ mod panel_header;
 mod sidebar;
 mod split_pane;
 mod tabs;
+mod toolbar;
 
 // task-104 front G, navigation and data: the front's token slot
 // (`Theme::navigation`).
@@ -19,5 +20,9 @@ pub use split_pane::{SplitDirection, SplitPane};
 pub use tabs::Tabs;
 pub use tokens::{
     BreadcrumbRecipe, ChartRecipe, CodeRecipe, GraphRecipe, LinkSurface, NavLinkRecipe, NavText,
-    NavigationTokens, StatLevel, StatRecipe,
+    NavigationTokens, PlayerRecipe, PlayerTones, StatLevel, StatRecipe, ToolRecipe, ToolTokens,
+    ToolbarRecipe, ViewRecipe, ZoomRecipe,
+};
+pub use toolbar::{
+    PlayerLayout, Tool, Toolbar, ToolbarLayout, VideoPlayer, ViewController, Zoom, ZoomLine,
 };

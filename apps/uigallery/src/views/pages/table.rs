@@ -547,6 +547,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Toolbar",
+        "mouse-pointer-2",
+        "The kit's toolbar page: the toolbar and its zoom panel, play mode, the video player, the view controller.",
+        Pane::Toolbar,
+    ),
+    page(
+        C,
         "Tooltip",
         "info",
         "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",

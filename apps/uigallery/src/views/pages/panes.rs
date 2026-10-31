@@ -8,7 +8,7 @@ use super::super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
     resizable, scroll_area, select, separator, sidebar, skeleton, slider, spinner, stat, switch,
-    table, tabs, toast, tooltip, tree,
+    table, tabs, toast, toolbar, tooltip, tree,
 };
 use super::super::foundations::{effects, icons, theme, typography};
 
@@ -76,6 +76,7 @@ pub struct Panes {
     pub slider: slider::SliderPage,
     pub spinner: spinner::SpinnerPage,
     pub stat: stat::StatPage,
+    pub toolbar: toolbar::ToolbarPage,
     pub switch: switch::SwitchPage,
     pub table: table::TablePage,
     pub tabs: tabs::TabsPage,
@@ -188,6 +189,7 @@ impl Panes {
             slider: slider::SliderPage::new(),
             spinner: spinner::SpinnerPage::new(),
             stat: stat::StatPage::new(),
+            toolbar: toolbar::ToolbarPage::new(),
             switch: switch::SwitchPage::new(theme),
             table: table::TablePage::new(theme),
             tabs: tabs::TabsPage::new(),

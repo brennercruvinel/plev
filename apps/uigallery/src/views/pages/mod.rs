@@ -87,6 +87,7 @@ pub enum Pane {
     Table,
     Tabs,
     Toast,
+    Toolbar,
     Tooltip,
     Tree,
     // task-104: each front adds its variants under its anchor, with the page

@@ -20,8 +20,12 @@ use crate::widgets::content::DisclosureTile;
 
 mod data;
 mod plot;
+mod tool;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
+pub use tool::{
+    PlayerRecipe, PlayerTones, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
+};
 
 /// A text run: size, line height and weight in px, in the theme's family
 /// (its mono family for a code run); tracked as the theme tracks unless
@@ -174,6 +178,9 @@ pub struct NavigationTokens {
     pub code: CodeRecipe,
     pub chart: ChartRecipe,
     pub graph: GraphRecipe,
+    /// The ToolbarPage's parts: toolbar, zoom panel, player, view
+    /// controller.
+    pub tool: ToolTokens,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -280,6 +287,7 @@ impl NavigationTokens {
             code: CodeRecipe::hoff_core(),
             chart: ChartRecipe::hoff_core(),
             graph: GraphRecipe::hoff_core(),
+            tool: ToolTokens::hoff_core(),
         }
     }
 
@@ -314,6 +322,7 @@ impl NavigationTokens {
             code: CodeRecipe::derive(theme),
             chart: ChartRecipe::derive(theme),
             graph: GraphRecipe::derive(theme),
+            tool: ToolTokens::derive(theme),
         }
     }
 
