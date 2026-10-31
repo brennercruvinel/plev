@@ -293,7 +293,12 @@ impl ShowcaseView {
             }
             Some(Pane::ContextMenu) if self.active_overlay.is_none() => {
                 let content = self.page_rect();
-                if !context_menu::ContextMenuPage::area(content, &self.theme).contains(x, y) {
+                if !self
+                    .panes
+                    .context_menu
+                    .area(content, &self.theme)
+                    .contains(x, y)
+                {
                     return false;
                 }
                 self.open_menu(x, y);
@@ -305,6 +310,16 @@ impl ShowcaseView {
 
     fn open_menu(&mut self, x: f32, y: f32) {
         self.show_menu(context_menu::demo_menu(), x, y);
+    }
+
+    /// The Context Menu page's menu at the middle of its area: a reader's
+    /// press or an agent's `open` there, as a right click.
+    pub(crate) fn open_page_menu(&mut self) {
+        if self.active_overlay.is_some() {
+            return;
+        }
+        let area = self.panes.context_menu.area(self.page_rect(), &self.theme);
+        self.open_menu(area.x + area.w / 2.0, area.y + area.h / 2.0);
     }
 
     /// `widget` opens as the context menu at `(x, y)`, kept inside the

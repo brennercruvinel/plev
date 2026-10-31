@@ -1,6 +1,6 @@
 //! Front B, overlays (task-104, #155): popover, hover card, dropdown menu,
-//! alert dialog, menubar, sheet and drawer, the same request from the
-//! person, the reader and an agent.
+//! alert dialog, menubar, sheet, drawer and context menu, the same request
+//! from the person, the reader and an agent.
 
 use accord::{Actor, Request, Value};
 use engine::drawing::compositor::{Compositor, LayerId};
@@ -475,4 +475,74 @@ fn the_drawer_closes_on_the_scrim_and_by_its_close() {
         settle(g);
         assert_eq!(g.state(), before, "{who}");
     }
+}
+
+// Context Menu
+
+const CONTEXT: &str = "Context Menu";
+const AREA: &str = "context_menu_page.group[0].card[0]";
+const CONTEXT_MENU: &str = "context_menu";
+const CREATE: &str = "context_menu[2]";
+
+impl Gallery {
+    /// The person's right click in the middle of `id`.
+    fn right_click_on(&mut self, id: &str) {
+        let (x, y) = self.middle(id);
+        assert!(self.view.handle_right_click(x, y), "{id} takes it");
+        self.frame();
+    }
+}
+
+/// The kit's file menu opens from the three: a right click in the area,
+/// a reader's press on it, an agent's `open`; an item picked from the
+/// three closes it and says what was picked in a toast.
+#[test]
+fn the_context_menu_opens_and_picks_the_same_from_the_three() {
+    let mut person = gallery(CONTEXT);
+    person.right_click_on(AREA);
+    let mut reader = gallery(CONTEXT);
+    reader.press(AREA);
+    let agent = by_agent(CONTEXT, "context-open", vec![ask(AREA, "open")]);
+    same(CONTEXT, &person, &reader, &agent);
+    assert_eq!(label(&agent, CONTEXT_MENU).as_deref(), Some("context menu"));
+    assert_eq!(
+        label(&agent, CREATE).as_deref(),
+        Some("Create new scene...")
+    );
+
+    person.click(CREATE);
+    reader.press(CREATE);
+    let asks = vec![ask(AREA, "open"), ask(CREATE, "activate")];
+    let agent = by_agent(CONTEXT, "context-pick", asks);
+    same(CONTEXT, &person, &reader, &agent);
+    assert_eq!(label(&agent, CONTEXT_MENU), None, "the menu closed");
+    let said = agent
+        .state()
+        .iter()
+        .any(|n| n.label == "Context menu: Create new scene...");
+    assert!(said, "the pick's toast");
+}
+
+/// The keyboard: the area focused, Space opens the menu with the focus on
+/// its first item; Escape closes it and the area has the focus again; a
+/// second Escape lets it go.
+#[test]
+fn space_opens_the_context_menu_and_escape_gives_the_focus_back() {
+    let mut g = gallery(CONTEXT);
+    assert!(
+        g.view.assist_focus(&sid(AREA)),
+        "a reader moves the focus there"
+    );
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(AREA));
+    assert!(g.view.handle_key(" "));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some("context_menu[1]"));
+    assert!(g.view.close_top_overlay(), "Escape closes the menu");
+    g.frame();
+    assert_eq!(label(&g, CONTEXT_MENU), None);
+    assert_eq!(focused(&g).as_deref(), Some(AREA), "back on the area");
+    assert!(g.view.close_top_overlay(), "a second Escape");
+    g.frame();
+    assert_eq!(focused(&g), None);
 }

@@ -20,8 +20,9 @@ const PROJECTING: usize = 30
     + 3
     // task-104 front E, selection (#158): Toggle Group, Radio Group
     + 2
-    // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer
-    + 4
+    // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer,
+    // Context Menu
+    + 5
     // task-104 front C, conversation (#156): its share of the joint integration;
     // the front moves it to its own named line on its next merge
     + 2
