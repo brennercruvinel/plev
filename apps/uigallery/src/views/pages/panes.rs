@@ -18,6 +18,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 use super::super::components::field;
 
 // task-104 front B, overlays (#155)
+use super::super::components::popover;
 
 // task-104 front C, conversation and feedback (#156)
 use super::super::components::{bubble, message};
@@ -73,6 +74,7 @@ pub struct Panes {
     // task-104 front A, fields (#154)
     pub field: field::FieldPage,
     // task-104 front B, overlays (#155)
+    pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
     pub bubble: bubble::BubblePage,
     pub message: message::MessagePage,
@@ -155,6 +157,7 @@ impl Panes {
             // task-104 front A, fields (#154)
             field: field::FieldPage::new(),
             // task-104 front B, overlays (#155)
+            popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
             bubble: bubble::BubblePage::new(),
             message: message::MessagePage::new(),
