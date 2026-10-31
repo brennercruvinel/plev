@@ -5,6 +5,7 @@ name = "tests"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Architecture tests of the plev repository: the tree, the names, the file paths, the dependency graph and the docs that describe them"
 

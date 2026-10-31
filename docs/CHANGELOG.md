@@ -72,6 +72,11 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
 
 ## 2026-10-31
 
+- plev is MIT (2026-10-31, task-41): the license is decided as MIT alone,
+  not the MIT OR Apache-2.0 task-41 planned. the root `LICENSE` holds the
+  text and every crate declares `license = "MIT"`, inherited from
+  `[workspace.package]`.
+
 - the graphs read ELK too (2026-10-31, PR #146, task-100, adr
   a-graph-separates-data-appearance-and-layout): the ELK reader and the
   `elk` and `elk-groups` pages of the graphs demo reach main, which closes

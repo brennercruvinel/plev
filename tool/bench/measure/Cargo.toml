@@ -3,6 +3,7 @@ name = "measure"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "What each stage of a frame costs for a few real interactions of the"
 

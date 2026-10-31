@@ -57,6 +57,7 @@ exclude = ["apps/urnadbapp", "rust/llmrun"]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.87"
+license = "MIT"
 authors = ["Brenner Cruvinel <brennertalks@gmail.com>"]
 repository = "https://github.com/brennercruvinel/plev"
 

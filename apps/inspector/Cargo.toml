@@ -11,6 +11,7 @@ name = "inspector"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Session inspector window of plev: timeline and scrub, the recorded frame with its controls, and the thesis answers about a control, read from a session without running anything; the plev-inspector binary"
 

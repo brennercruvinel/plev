@@ -10,6 +10,7 @@ name = "socket"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Agent surface of plev: observe and act over the semantic contract through a local unix socket, json lines, and the plev cli"
 

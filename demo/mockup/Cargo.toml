@@ -3,6 +3,7 @@ name = "mockup"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Live preview: point at any react component (tsx + sass + vars) and a"
 
