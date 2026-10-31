@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The docs/ tree as data: every page's header, its links and its relations.
 
-    tool/tasks/docbase.py index   rewrite the indexes, the timeline and docs/CATALOG.json
+    tool/tasks/docbase.py index   rewrite the folder indexes and docs/CATALOG.json; check that CHANGELOG.md lists every record
     tool/tasks/docbase.py check   fail on a bad header, a dead link or anchor, a stale catalog
 
 A header is YAML restricted to one `key: value` per line, where a value is
@@ -40,8 +40,6 @@ HOMES = {
     'learnings': ('Learnings', 'What the problems and the implementations taught.'),
     'ref': ('Reference', 'How each subsystem is built, how to operate the repository, the platforms, '
             'and the conventions of this archive.'),
-    'log': ('Log', 'What happened, in order: the timeline, the journal, the changelog, the programs '
-            'and the snapshots of the project state.'),
 }
 
 
@@ -168,16 +166,6 @@ def index(root):
                 body += f'\n## {group}\n'
             body += '\n' + table(groups[group], path) + '\n'
         write(root, path, f'index-{home}', title, body + '\n[plev docs](../README.md)')
-    years = defaultdict(list)
-    for p, m in pages.items():
-        if not m.get('parent') and m['type'] not in ('template', 'manual'):
-            years[str(m['date'])[:4] if m['date'] else 'undated'].append((p, m))
-    body = ('Every document by the date of what it records. The date comes from the header of each '
-            'page, with its basis in `date_basis`; [dates and sources](dates-and-sources.md) explains '
-            'where a date was revised after the fact.\n')
-    for year in sorted(years):
-        body += f'\n## {year}\n\n' + table(years[year], 'docs/log/timeline.md') + '\n'
-    write(root, 'docs/log/timeline.md', 'timeline', 'Timeline', body)
     catalog = {'project': 'plev', 'documents': []}
     for p, (m, body) in load(root).items():
         catalog['documents'].append({'path': p, **m, 'headings': headings(body)})
@@ -227,6 +215,11 @@ def check(root):
                 errors.append(f'{path}: dead link {target}')
             elif frag and dest in anchors and frag not in anchors[dest]:
                 errors.append(f'{path}: dead anchor {target}')
+    changelog = pages.get('docs/CHANGELOG.md', ({}, ''))[1]
+    for path, (m, body) in pages.items():
+        if m.get('type') not in ('index', 'section', 'manual', 'template') and path != 'docs/CHANGELOG.md' \
+                and f']({path[5:]})' not in changelog:
+            errors.append(f'{path}: not listed under its date in docs/CHANGELOG.md')
     numbers = defaultdict(list)
     adr_index = pages.get('docs/adr/README.md', ({}, ''))[1]
     for path, (m, body) in pages.items():

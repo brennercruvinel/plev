@@ -4,21 +4,51 @@ title: "plev changelog"
 project: plev
 type: record
 status: active
-date: 2026-06-20
-date_basis: header
-topics: [agents, platform, rendering, generated-surfaces, text]
-relations: [adr-0003, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0016, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, task-18, task-19, task-20, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-73/phase-1-measurements, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, task-98, task-99, task-100, task-102, task-103, adr-0080, adr-0081, adr-0083, adr-0084]
-source: docs/log/changelog.md
+date: null
+date_basis: undated
+topics: [process, workspace, rendering, agents]
+relations: []
+source: [docs/log/changelog.md, docs/log/README.md, docs/log/responsiveness-multiplatform-and-fidelity.md, reconstruction]
 source_revision: ec0a224c
 revised: 2026-10-31
 review: reviewed
+evidence: [704412f1, b1e820ba]
 ---
 
 # plev changelog
 
-Records what changed in plev, in roughly reverse date order: the `unreleased` section starts with the entries of 2026-10-27 and goes back to August 2026 (the October 2026 entries of tasks 98, 99, 100, 102 and 103 were written later, from those task pages and their commits), followed by undated entries, which come later in the file; the `earlier` section summarizes the period before the changelog. Many entries name the task or ADR that supports them and the measurement or test that verified them, which makes it possible to go from the change to the decision. That is why the file is the starting point for finding out when a behavior appeared and why it exists.
+What changed in plev since 2021, newest first, one section per date. A date gathers the entries written when the change landed, in the words of their time, and the records of that day: the tasks, the ADRs, the experiments, the research and the learnings, each linked. The project state and task map of 2026-09-26 and the responsiveness session of 2025-02-19 sit under their dates. How far each date can be trusted is the next section.
 
-## unreleased
+## Reading the dates
+
+The archive contains dates declared since 2021. The available Git history has a
+root commit on 10 June 2026. These two timelines represent different sources
+and should not be merged automatically.
+
+### Dates revised later
+
+Commit `704412f1` changed the header of the note on `View` from 2026-03-08 to
+2021-03-06, and the [layout ADR](adr/rendering/0002-content-driven-layout-not-fixed-constants.md) from 2026-06-10 to 2024-09-18. The change documents a
+retrospective revision of the date; it does not, by itself, prove when the
+technical work took place.
+
+Commit `b1e820ba` remapped hash references after the history purge. For example,
+`34a9893` was replaced by `55c8aa7` in the [ADR on asynchronous GPU initialization](adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md). An old reference may have a recoverable match even if
+the whole earlier history no longer exists.
+
+### What a date in this file means
+
+The pages keep the declared date and its basis in the YAML. This changelog orders
+these declarations; it does not certify each date as contemporary with the event.
+When the text and the header cover distinct periods, the internal entries may
+have their own dates. A missing date is represented as missing, never filled in
+for editorial convenience.
+
+### Recovered material
+
+The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
+
+## 2026-10-27
 
 - a desktop draws the scripts with the embedded faces (2026-10-27, adr
   a-desktop-draws-the-scripts-with-the-embedded-faces): the engine's own
@@ -60,6 +90,20 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   and the web. the ELK reader and its pages wait on
   `feat/elk-ir-from-gramorph`.
 
+- [task-100: interactive graphs and corpus import](tasks/task-100-interactive-graphs/README.md)
+- [task-101: on-demand fonts and deterministic fallback](tasks/task-101-fonts-by-script/README.md)
+- [task-102: reusable builds and web commands](tasks/task-102-builds-and-web-commands/README.md)
+- [task-103: runcheck, every executable in the repository runs](tasks/task-103-runcheck-every-executable-runs/README.md)
+- ADR 0078: [the web build fetches the Noto faces when a text first needs them](adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md)
+- ADR 0079: [a desktop draws the scripts with the embedded faces, not the system's](adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
+- ADR 0082: [a hosted view uses the engine's window and clock](adr/rendering/0082-a-hosted-view-renders-on-demand.md)
+- ADR 0081: [a graph separates data, appearance and layout](adr/structure/0081-a-graph-separates-data-appearance-and-layout.md)
+- ADR 0083: [feature unification reduces duplicate compilations](adr/workflows/0083-feature-unification.md)
+- ADR 0084: [each web target has one command and a port range](adr/workflows/0084-web-targets-and-ports.md)
+- learning: [Separate data, appearance and algorithm in Rust](learnings/data-appearance-and-algorithm.md)
+
+## 2026-10-16
+
 - the explorer follows urna's new layout, and the platforms catch up
   (2026-10-16, task-99): the query embedder finds urna's scripts in the
   repository or where `urna setup` installs them, the shared executor
@@ -68,12 +112,26 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   macOS-only, and a reduced-motion preference macOS cannot find reads as
   never set.
 
+- [task-99: explorer integration and platform fixes](tasks/task-99-integration-and-portability/README.md)
+- learning: [Why waiting for a process can block reading its output](learnings/subprocesses-and-pipes.md)
+
+## 2026-10-09
+
 - the repository in four homes (2026-10-09, task-98, issue #130, PR #131,
   adr workspace-by-responsibility): libraries in `rust/`, apps in `apps/`,
   demos in `demo/`, tools in `tool/`. the 1,861 moves sit alone in one
   commit (`d3e65544`, every one R100), and the manifests, paths, tests and
   docs follow in their own commits. the names old and new are in
   `docs/TERMS.toml`.
+
+- [task-98: workspace reorganization](tasks/task-98-workspace-reorganization/README.md)
+- ADR 0080: [the workspace separates libraries, apps, demos and tools](adr/structure/0080-workspace-by-responsibility.md)
+
+## 2026-09-29
+
+- ADR 0073: [design for ranges, not screens and devices](adr/rendering/0073-design-for-ranges-not-screens-and-devices.md)
+
+## 2026-09-26
 
 - the repository catches up with itself (2026-09-26): four decision
   records for what the last rounds settled (the person's composition and
@@ -101,6 +159,156 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   candle does 37 tokens a second and burn 26, and both give the same
   answer. both stay; plev moves to wgpu 29 next so burn can share the
   renderer's gpu.
+
+### plev, project state and task map (2026-09-26)
+
+o plev é uma engine de composição GPU-first em rust que está virando um
+runtime de interação generativa: cada controle é também dado (um contrato
+semântico), que a pessoa, o leitor de tela e um agente operam pelo mesmo
+dispatcher. o que é, para onde vai e o estado de cada task ficam no
+programa ([`generative-runtime-program.md`](research/generative-runtime-program.md), seção 12); a tese está em
+[`generative-runtime-thesis.md`](research/generative-runtime-thesis.md), as regras dos agentes em
+[`generative-runtime-guidelines.md`](ref/operations/generative-runtime-guidelines.md) e o modo de operação do
+orquestrador em [`autonomy.md`](ref/operations/autonomy.md). na época, cada task tinha o seu arquivo em
+`steps/`, e o estado dela ficava no `status:` do cabeçalho (`in-progress`,
+`pending`, `done`); as pastas `ongoing/`, `pending/` e `checked/` citadas
+no estado abaixo e nos registros antigos marcavam esse mesmo estado.
+
+#### estado atual (2026-09-26)
+
+- workspace de 23 crates membros, mais dois workspaces próprios
+  (`apps/urnadbapp`, o explorador de `.urna`, e `rust/llmrun`, a inferência
+  em processo); wgpu 29, rust 1.87.
+- alvos: macOS e web entregues; android e iOS rodam a galeria (tasks 18,
+  19 e 20 fechadas em 2026-09-25); linux e windows pendentes.
+- abertas em `steps/ongoing/`: task-73 (dependências incrementais, o ADR
+  de desenho espera a escolha do brenner), task-74 (texto: falta o roteiro
+  de IME num campo), task-75 (accessibility: o roteiro do VoiceOver, as
+  cores que falham no contraste e o web), task-78 (AI-native: o app de
+  referência) e task-80 (a prova: a demo 2 e o checkpoint c).
+- pendente em `steps/pending/`: task-41 (licença e release pública).
+- o repositório no GitHub é privado; a licença MIT está em
+  `LICENSE`.
+
+#### mapa de tasks
+
+##### fase 0, fundamental (p0), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-01 | view trait + viewcontext | done |
+| task-02 | component state + lifecycle | done |
+| task-03 | layout engine (taffy 0.9) | done |
+| task-04 | signal system (reactive) | done |
+| task-05 | declarative builder API + #[component] | done |
+| task-06 | WASM/webgpu validation | done |
+| task-07 | layer system + composite pass | done |
+| task-08 | effects (blur, shadow) | done |
+| task-09 | input (keyboard, mouse, scroll) | done |
+| task-10 | touch + gesture recognition | done |
+| task-11 | android build + lifecycle | done |
+| task-12 | ios build + lifecycle | done |
+| task-13 | mobile specifics (safe areas, IME) | done |
+| task-14 | plev_narrate! DSL verbal | done |
+
+##### fase 1, integracao end-to-end (p0), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-15 | pipeline DSL -> builder -> compositor | done |
+| task-16 | effects <-> layer integration | done |
+| task-17 | input <-> layer hit-testing | done |
+
+##### fase 2, mobile/WASM testing (p1), parcial
+| task | descricao | status |
+|------|-----------|--------|
+| task-18 | android build & device test | concluída (2026-09-25): APK no emulador, toque e lifecycle testados; arquivo em `checked/` |
+| task-19 | ios simulator test | concluída (2026-09-25): o frame do simulador igual ao desktop fora da barra de status; arquivo em `checked/` |
+| task-20 | WASM visual validation | concluída (2026-09-25): 12 capturas web iguais ao desktop em todo byte; arquivo em `checked/` |
+
+##### fase 3, polish (p2), parcial
+| task | descricao | status |
+|------|-----------|--------|
+| task-21 | documentacao DSL narrate | done (falta JSX comparison) |
+| task-22 | error messages & DX | parcial (did you mean feito) |
+| task-23 | CI/CD (github actions) | done (nao testado remotamente) |
+| task-24 | cleanup & readme | parcial (readme feito, license TBD) |
+| task-30 | accessibility (accesskit) | done (feature-gated, lazy activation, focusgraph, 8 testes) |
+
+##### fase 4, proof of life (p2), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-27 | animation system (easing, tweens, springs) | done (35 testes, ~500 LOC) |
+| task-28 | editable text (cursor, input, IME) | done (44 testes, ~800 LOC) |
+| task-29 | todo app demo (proof of life) | done (~530 LOC, funcional) |
+| task-31 | vector paths (lyon tessellation) | done (~250 LOC, reusa quad pipeline, 11 testes) |
+| task-32 | text upgrade assessment (parley vs cosmic-text) | done (research: wait, nao migrar agora) |
+
+##### fase 4b, quick wins & bug fixes (p0/p1), completa (derivada de task-34)
+| task | descricao | status |
+|------|-----------|--------|
+| task-35 | fix spring<t>, analytical solver (bug frame-rate) | done, solver analitico 3 regimes, frame-rate independent |
+| task-36 | signal hardening (RAII guard, fxindexset, peek) | done, fxindexset o(1), observerguard panic-safe, peek() (f3 sentinel skipped) |
+| task-37 | animation enhancements (keyframeseq, repeat, step/hold) | done, keyframesequence, repeat/reverse/delay, step/hold, const-generic |
+| task-38 | event batching | done, bufferedevent enum, batch-drain before render |
+
+
+##### fase 6, extensibilidade (p4), parcial
+| task | descricao | status |
+|------|-----------|--------|
+| task-33 | WASM plugin architecture | done (fase 1 research: wait, extism quando API estavel) |
+| task-34 | exploracao/extracao de ideias (56 repos) | done, 38 patterns de 17 repos, top 10 priorizado |
+
+##### fase 7, release publica (p0), pendente
+| task | descricao | status |
+|------|-----------|--------|
+| task-39 | scene cache memoization (b7 + b8) | pendente |
+| task-41 | license + cargo.toml + release prep | pendente |
+
+##### experiment, gitbutler port (proof of real app)
+| task | descricao | status |
+|------|-----------|--------|
+| task-42 | gitbutler plev port (tauri/svelte -> rust GPU-native) | dispatch tipado + overlay foram para a engine; o app evoluiu para o crate `apps/idestudio` (ver task-48). resta polir context menu/modal render |
+
+##### research
+| task | descricao | status |
+|------|-----------|--------|
+| task-ref | research briefing (50+ repos) | done, 12 docs em refs/, technology radar |
+
+##### fase 8, formatos e interop (2025), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-43 | monster, codec binario de animacao v0 | done, MON0, seek O(1), delta descoberto, 124 testes |
+| task-44 | lot, importer lottie + ponte para .monster | done, conversao offline, subset honesto, zero embedding |
+| task-45 | parser, transpiler poc (react/gpui -> builder) | done, droplist file:line, contagens congeladas |
+
+##### fase 9, edicao e apps reais (2026), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-46 | rope, nucleo de edicao (document/transaction/history) | done, estilo helix, 77 testes, headless |
+| task-47 | git, backend (gix reads + cli mutations + client threaded) | done, ui nunca bloqueia, 25 testes |
+| task-48 | ide, git client nativo em plev | done, workspace/diff/commit, 55 testes (evolui de task-42) |
+
+##### fase 10, demos e plataforma (2025), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-49 | prime number creatures (port entropic life) | done, sim core puro, render fiel, desktop + web |
+| task-50 | showcase multiplataforma como lib | done, entries desktop/web/android/ios, apk + simulador |
+
+##### fase 11, organizacao profissional (2024/2026), completa
+| task | descricao | status |
+|------|-----------|--------|
+| task-51 | workspace restructure + rebrand phi->plev | done, 3 tiers, renames, cargo workspace |
+| task-52 | modularizacao SRP (limite 300 linhas) | done, 44 monolitos divididos, API inalterada, 470 testes |
+
+---
+
+- [task-78: AI-native applications](tasks/task-78-ai-native-apps/README.md)
+- ADR 0077: [the person's composition and clipboard stay the person's](adr/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md)
+- ADR 0074: [a renderer upgrade is proven by a full capture](adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)
+- ADR 0072: [local llm inference in process: candle or burn](adr/structure/0072-ai-native-single-process.md)
+- experiment: [candle against burn for local LLM inference in process, TinyLlama 1.1B](experiments/local-inference-candle-vs-burn/README.md)
+- learning: [Generative runtime session: what worked and what bit us](learnings/generative-runtime.md)
+
+## 2026-09-25
 
 - copy, cut, paste and select all in text fields (2026-09-25, task-74):
   cmd+c, x, v and a (ctrl elsewhere) work in the gallery's fields and in
@@ -304,6 +512,33 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   listed, no color changed yet. what AccessKit gives each platform is
   written down from the locked source: macOS today; Windows and Linux
   when their target runs; no adapter yet on iOS and the web.
+
+- [task-18: android build & device test](tasks/task-18-android-device-test/README.md)
+- [task-19: ios simulator test](tasks/task-19-ios-simulator-test/README.md)
+- [task-20: WASM visual validation](tasks/task-20-wasm-visual-validation/README.md)
+- [task-39: scene cache, memoization + dirty flag bubbling](tasks/task-39-scene-cache-memoization/README.md)
+- [task-42: plev event dispatch + gitbutler UI port](tasks/task-42-plev-event-dispatch/README.md)
+- [task-64: session inspector, bug report and session for testing](tasks/task-64-session-inspector-and-tests/README.md)
+- [task-65: pixel to code and development inspector](tasks/task-65-pixel-to-source/README.md)
+- [task-70: adaptive transformations](tasks/task-70-adaptive-transformations/README.md)
+- [task-71: plev as compiler target (importers to IR)](tasks/task-71-compiler-target/README.md)
+- [task-72: UI asset compiler](tasks/task-72-ui-asset-compiler/README.md)
+- [task-74: text and editing](tasks/task-74-text-and-editing/README.md)
+- [task-75: production-ready platform accessibility](tasks/task-75-platform-accessibility/README.md)
+- [task-77: visual determinism](tasks/task-77-visual-determinism/README.md)
+- [task-79: scene over socket](tasks/task-79-scene-over-socket/README.md)
+- [task-80: proof of qualitatively different software](tasks/task-80-proof-qualitatively-different-software/README.md)
+- [task-96: a generated surface in the ide](tasks/task-96-ide-generated-surface/README.md)
+- [task-97: code and diff in the IR vocabulary](tasks/task-97-code-and-diff-in-the-ir/README.md)
+- ADR 0070: [generative runtime results](adr/generated/0070-generative-runtime-results.md)
+- ADR 0069: [importers target plev IR, with a report in four categories](adr/importing/0069-importers-target-plev-ir.md)
+- ADR 0068: [accessibility is production-ready per platform](adr/interface/0068-accessibility-is-production-ready-per-platform.md)
+- ADR 0075: [text moves by screen order and shapes by line](adr/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md)
+- ADR 0076: [the keyboard walks the projection](adr/interface/0076-the-keyboard-walks-the-projection.md)
+- ADR 0071: [embed Noto Sans subsets for the non-Latin scripts](adr/rendering/0071-embedded-fonts-by-script.md)
+- experiment: [five demos of qualitatively different software, each with its method written before it ran](experiments/five-demos/README.md)
+
+## 2026-09-24
 
 - a sequence you repeat becomes one action (2026-09-24, task-70 phase
   3): the Silences page notices when a person does the same actions in
@@ -688,6 +923,41 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   stage revisions without observing; the report counts the protocol's
   refusals (`not_observed`, `unknown_revision`).
 
+- [task-63: session flight recorder](tasks/task-63-flight-recorder/README.md)
+- [task-69: ephemeral and generated surfaces](tasks/task-69-ephemeral-generative-surfaces/README.md)
+- [task-76: platform integration](tasks/task-76-platform-integration/README.md)
+- [task-88: the lab measures what the agent rested on](tasks/task-88-the-lab-measures-what-the-agent-rested-on/README.md)
+- [task-91: the dispatcher knows when the agent looked](tasks/task-91-the-dispatcher-knows-when-the-agent-looked/README.md)
+- [task-92: the agent asks the person](tasks/task-92-the-agent-asks-the-person/README.md)
+- [task-93: the person in the lab answers](tasks/task-93-the-lab-person-answers/README.md)
+- [task-94: the refusal that names a person points to the question](tasks/task-94-the-refusal-points-at-the-question/README.md)
+- [task-95: the todo projects its items as a list](tasks/task-95-the-todo-projects-its-items-as-a-list/README.md)
+- ADR 0049: [the plev IR is typed, references only declared capabilities, and runs only once verified](adr/generated/0049-plev-ir-typed-and-verified.md)
+- ADR 0051: [a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](adr/generated/0051-materialized-surfaces-from-verified-ir.md)
+- ADR 0052: [proposers propose, the runtime verifies](adr/generated/0052-proposers-propose-the-runtime-verifies.md)
+- ADR 0067: [adaptive transformations are small verified operations that preserve identity](adr/generated/0067-adaptive-transforms-preserve-identity.md)
+- ADR 0066: [ui asset compiler: an asset leaves the runtime on a measured number](adr/importing/0066-ui-asset-compiler.md)
+- ADR 0055: [file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](adr/interface/0055-file-dialogs-and-drops-are-capabilities.md)
+- ADR 0057: [a native menu is another view of the app's capabilities](adr/interface/0057-native-menus-are-another-view-of-capabilities.md)
+- ADR 0058: [a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](adr/interface/0058-native-dialogs-answer-the-same-contract.md)
+- ADR 0059: [the tray and the notifications are capabilities out of the window](adr/interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- ADR 0062: [capture is a job the person turns on](adr/interface/0062-capture-is-a-job-the-person-turns-on.md)
+- ADR 0063: [a link is not a person](adr/interface/0063-a-link-is-not-a-person.md)
+- ADR 0050: [sessions become regression tests](adr/recording/0050-sessions-become-regression-tests.md)
+- ADR 0065: [the scene travels as data](adr/recording/0065-scene-travels-as-data.md)
+- ADR 0054: [a lost GPU device is recovered in place, and the next frame draws the same](adr/rendering/0054-gpu-device-loss-recovers-in-place.md)
+- ADR 0060: [a covered window does not draw, and wakes with a new frame](adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- ADR 0061: [printing is the frame on paper](adr/rendering/0061-printing-is-the-frame-on-paper.md)
+- ADR 0053: [the silences app is the fixed screen the generated one is compared against](adr/structure/0053-the-silences-app-is-the-fixed-screen.md)
+- ADR 0056: [a window is a host of what dies with it; the app owns the state](adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md)
+- ADR 0048: [view source for pixels: a control leads to its projection, a text to its literal](adr/workflows/0048-view-source-for-pixels.md)
+- ADR 0064: [what identical means](adr/workflows/0064-what-identical-means.md)
+- experiment: [generated silences screen against the fixed screen, checkpoint b of task-69](experiments/generated-surface-checkpoint-b/README.md)
+- experiment: [text coverage per writing system, and the cost of large documents in the editor](experiments/text-coverage-and-large-documents/README.md)
+- experiment: [desktop gallery pages: same pixels across scales, themes and runs](experiments/visual-determinism-captures/README.md)
+
+## 2026-09-23
+
 - the ide records its own session, and a frame says where each control
   shows (2026-09-23, task-63 phase d): with `PLEV_RECORD=1` in a debug
   build the ide keeps a flight recorder on the workbench's clock (every
@@ -794,6 +1064,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   the first parent, a rename at both paths), read in process with gix
   and cached by sha: `log(100)` went from about 3 to 23 ms cold and stays
   about 3 ms warm; a whole ide observation of this repository grew 3.8%.
+
 - a delta says what was born, and a refusal says who acted (2026-09-23,
   task-83, adr a-delta-carries-the-node-a-refusal-names-who-acted): a
   `node_added` carries the whole node, served by the agent port as a
@@ -805,6 +1076,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   stale rule is in `plev act --help`. sessions recorded before still
   open: the reader puts the node the event's own snapshot holds in place
   of the bare id.
+
 - the ide never shows a status older than what it already did
   (2026-09-23, task-84): a refresh read before a stage, an unstage, a
   discard or an ignore used to land over it, and for a moment
@@ -814,6 +1086,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   it. the scripted agent of the ide laboratory no longer waits for the
   index to hold still: without that wait, on the old code, all ten runs
   with a person's intervention went wrong.
+
 - a caret at rest costs two frames a second, not sixty (2026-09-23,
   task-82, adr a-tick-asks-for-a-deadline): text widgets answer their tick
   with a `Wake` (a frame now, and when the next is due) instead of "keep
@@ -821,6 +1094,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   last tick beside the clamped one, and the showcase shell sleeps until
   the caret's next flip. a focused, untouched field went from 120 of 120
   measured turns drawn to 4. the ide adopts it in a second phase.
+
 - a frame as svg, and a page's meaning as json (2026-09-23, task-66b, adr
   svg-export-reads-the-scene): `showcase --render <page> --svg f.svg`
   writes the same frame the png shows as vectors, text as glyph outlines
@@ -829,6 +1103,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   to `--svg-report`; `--semantics f.json` writes the page's semantic
   projection in the lean form `plev observe` serves, `--source` keeping
   each node's source. `--out` is no longer required; one output is.
+
 - what an agent receives is lean (2026-09-23, task-57b, adr
   lean-semantic-form-and-one-redaction): the sem serde form leaves a field
   at its default out and reads it back when absent, so a whole
@@ -838,6 +1113,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   recording keeps it as before. the rule that keeps a secret inside the
   process lives once, in `sem::redact`, for the port and the recorder
   alike.
+
 - an agent operates a plev app from outside (2026-09-23, task-61, adr
   agents-act-through-the-semantic-contract): the new `wire` crate speaks a
   small json-lines protocol over a local socket, and `plev observe` /
@@ -846,9 +1122,11 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   moved, the action comes back refused with the delta. it goes through the
   same dispatcher as a click, never touches the backend, and the port is
   off unless `PLEV_AGENT=1` in a debug build.
+
 - the Select panel scrolls (2026-09-23, task-81): a long list is reachable
   by wheel and by keyboard methods, and drawing, clicking and binding read
   one window of rows.
+
 - the GPU's own time per frame (2026-09-23, task-73 phase 1b):
   `RenderConfig::gpu_timestamps` turns on timestamp queries around the
   layer and composite passes when measuring, and the measure example
@@ -856,6 +1134,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   0.2 to 1.2 ms, still 4 to 12 times its CPU; a dirty layer's pass costs
   the same with 3 draws or 22, and the composite runs on every drawn
   frame. off by default, the device asks for no feature.
+
 - a session saves to a `.monster` file (2026-09-23, task-63 phase c, adr
   session-recording-replay-not-reexecution): `Recorder::persist` and
   `export` write a session file (magic `MONS`, next to the `MON0`
@@ -863,9 +1142,11 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   monster chunks byte for byte; `Session::open` reads it back strictly; a
   panic hook can save the last window. a 20 s window of the showcase todo
   is 76 KB. `monster_player` refuses a session with a clear message.
+
 - a person can decline a confirmation (2026-09-23, task-58b): closing the
   confirmation modal in the ide now ends the agent's request as declined
   instead of leaving it waiting.
+
 - accessibility is a projection of the contract (2026-09-23, task-60, adr
   accessibility-projects-the-semantic-snapshot): the screen reader tree is
   built from the same semantic snapshot agents and tests read, with stable
@@ -873,6 +1154,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   dispatcher like any other actor. the showcase attaches the bridge and
   its todo page is the first with a tree. the old tree, guessed from hit
   regions without labels, is gone.
+
 - the git client proves the thesis (2026-09-23, task-62 phases a and b,
   adr commit-checks-the-index-it-observed): a person and an agent use the
   ide at the same time. an agent's commit decided on a staged set that
@@ -882,6 +1164,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   menu entry goes through one dispatcher; refusals show as toasts; an
   agent's discard waits for a person to confirm. tested in real
   repositories against the real git worker.
+
 - a session records itself, in memory (2026-09-23, task-63 phases a and
   b): the new `rec` crate keeps a bounded ring of what happened, as data:
   who observed what, the semantic state (whole or as a diff), every stage
@@ -891,6 +1174,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   closed. recording costs about 12 us a frame on the showcase todo.
   `monster::raise` is the mirror of `lower`. persisting to a `.monster`
   session file is the next step.
+
 - the frame measures itself (2026-09-23, task-73 phase 1): `engine::perf::stages`
   counts and times each stage of a frame (semantic projection, scene
   build, text measure hits and misses, shaping, binds, hit tests, layer
@@ -900,7 +1184,8 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead ([docs/log/steps/task-73-measurements.md](../tasks/task-73-incremental-dependency-system/phase-1-measurements.md)).
+  ahead ([docs/log/steps/task-73-measurements.md](tasks/task-73-incremental-dependency-system/phase-1-measurements.md)).
+
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
   select, tabs, nav link, breadcrumb, split pane, virtual list, table,
@@ -910,6 +1195,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   changes, so an actor never overwrites a value it did not see. fixed on
   the way: a full `Select` panel picked an invisible option from a 4px
   band at its foot.
+
 - headless is first class (2026-09-23, task-66, adr
   headless-render-shares-the-frame-path): any frame renders without a
   window through the window's own path. `GpuContext::new_headless` builds
@@ -920,6 +1206,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   --out f.png` and `monster_player <file> --frame <t> --out f.png` use it;
   the text probe's private offscreen pipeline is gone. 78 pages, two
   themes, two viewports: byte-identical across runs.
+
 - the showcase todo runs on the semantic contract (2026-09-23, task-59
   phase a, adr semantic-binding-beside-the-scene): the compositor keeps a
   per-frame table of which capability sits where (`bind`, `hit`), beside
@@ -929,6 +1216,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   key and the filters reach the model only through it, as `Actor::Human`
   requests. a test drives the same page by clicks and by test requests
   and gets the same state; an open modal makes the page inert.
+
 - actions carry the state their actor observed (2026-09-23, task-58, adr
   actions-carry-observed-state): `sem` gains `Request::observe`, a pure
   `check` with a fixed order (not found, unknown action, not authorized,
@@ -941,6 +1229,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   at the point of truth. every step lands in a `Receipt` that sinks see as
   it happens. `cargo run -p commit` plays the thesis
   scenario.
+
 - the semantic contract, crate `sem` (2026-09-23, task-57, adr
   semantic-contract-as-pure-projection): every control can now be
   described as data independent of its pixels: a persistent `SemId`
@@ -954,6 +1243,55 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   length. pure: no gpu, no window, compiles for wasm. nothing in the
   engine or the apps uses it yet; task-58 adds preconditions and the
   dispatcher on top.
+
+- [task-57: semantic contract (crate `sem`)](tasks/task-57-semantic-contract/README.md)
+- [task-57b: lean JSON wire form and a single redaction](tasks/task-57b-lean-wire-form-and-one-redaction/README.md)
+- [task-58: action with precondition, dispatch and receipts](tasks/task-58-actions-preconditions-receipts/README.md)
+- [task-58b: declining a confirmation](tasks/task-58b-decline-a-confirmation/README.md)
+- [task-59: semantic binding with the render and one operational path](tasks/task-59-semantic-binding-and-one-path/README.md)
+- [task-60: accessibility as a projection of the contract](tasks/task-60-accessibility-projection/README.md)
+- [task-61: agent surface (local socket, observe, act)](tasks/task-61-agent-surface/README.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](tasks/task-62-ide-human-agent-proof/README.md)
+- [task-66: headless as a first-class citizen](tasks/task-66-headless-first-class/README.md)
+- [task-66b: SVG export and `--semantics` in headless mode](tasks/task-66b-svg-export/README.md)
+- [task-67: structural regression before pixels](tasks/task-67-structural-regression/README.md)
+- [task-68: plev IR and verifier](tasks/task-68-plev-ir-and-verifier/README.md)
+- [task-73: incremental dependency system](tasks/task-73-incremental-dependency-system/README.md)
+- [task-81: scrolling panel for `Select`](tasks/task-81-select-scrolling-panel/README.md)
+- [task-82: the caret cannot request 60 frames per second](tasks/task-82-caret-blink-render-on-demand/README.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](tasks/task-83-delta-carries-node-refusal-names-actor/README.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](tasks/task-84-ide-refresh-never-goes-back/README.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](tasks/task-85-the-commit-a-receipt-announces-is-projected/README.md)
+- [task-86: the ide people use opens the agent port](tasks/task-86-the-ide-opens-the-agent-port/README.md)
+- [task-87: a terminal stage carries the revision the app was left in](tasks/task-87-a-terminal-stage-carries-the-revision/README.md)
+- [task-89: an act relies only on what was shown to the agent](tasks/task-89-an-act-rests-only-on-what-was-shown/README.md)
+- [task-90: a refusal names who acted since the agent looked](tasks/task-90-a-refusal-names-who-acted-since-the-look/README.md)
+- ADR 0038: [accessibility projects the semantic snapshot](adr/interface/0038-accessibility-projects-the-semantic-snapshot.md)
+- ADR 0037: [session recording: replay, not re-execution](adr/recording/0037-session-recording-replay-not-reexecution.md)
+- ADR 0046: [the inspector reads a session, it never runs it](adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md)
+- ADR 0034: [headless render shares the frame path](adr/rendering/0034-headless-render-shares-the-frame-path.md)
+- ADR 0041: [the svg export reads the scene, not the pixels](adr/rendering/0041-svg-export-reads-the-scene.md)
+- ADR 0042: [a tick asks for a deadline, not for every frame](adr/rendering/0042-a-tick-asks-for-a-deadline.md)
+- ADR 0032: [semantic contract as a pure projection of app state](adr/semantics/0032-semantic-contract-as-pure-projection.md)
+- ADR 0033: [actions carry the state their actor observed](adr/semantics/0033-actions-carry-observed-state.md)
+- ADR 0035: [semantic binding beside the scene, and the click as a request](adr/semantics/0035-semantic-binding-beside-the-scene.md)
+- ADR 0036: [a commit checks the index it observed](adr/semantics/0036-commit-checks-the-index-it-observed.md)
+- ADR 0039: [agents act through the semantic contract](adr/semantics/0039-agents-act-through-the-semantic-contract.md)
+- ADR 0040: [the semantic form is lean, and one rule redacts a secret](adr/semantics/0040-lean-semantic-form-and-one-redaction.md)
+- ADR 0043: [a delta carries the node it adds, and a stale refusal names who acted](adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- ADR 0044: [a terminal stage carries the revision the app is at](adr/semantics/0044-a-terminal-stage-carries-the-revision.md)
+- ADR 0047: [an act rests on what its actor was shown](adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md)
+- ADR 0045: [regression by meaning before pixels](adr/workflows/0045-regression-by-meaning-before-pixels.md)
+- ADR 0085: [integration into main is a pull request merged by merge commit](adr/workflows/0085-integration-by-merge-commit.md)
+- experiment: [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](experiments/agent-proof-checkpoint-a/README.md)
+- experiment: [caret blink as a deadline: frames drawn with a focused, idle field](experiments/caret-render-on-demand/README.md)
+- experiment: [what each stage of a frame costs in nine scenarios](experiments/frame-cost-by-stage/README.md)
+- program: [program: from GPU UI engine to generative interaction runtime](research/generative-runtime-program.md)
+- record: [autonomous cycle journal](research/autonomous-cycle-journal.md)
+- thesis: [plev: thesis of the generative interaction runtime](research/generative-runtime-thesis.md)
+
+## 2026-09-22
+
 - hot reload on by default (2026-09-22, adr
   hot-reload-on-by-default-in-gpu-context): the shader watcher moved from
   the engine's `window::App` into `GpuContext`, wakes the loop with
@@ -970,6 +1308,13 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   `push_to_layer` and the clear color; a code change rebuilds
   (`cargo build -p $CARGO_PKG_NAME --bin`) and re-execs the running
   binary. `cargo run -p uigallery` alone is the dev loop.
+
+- [task-56: hot reload](tasks/task-56-hot-reload/README.md)
+- ADR 0031: [hot reload on by default: shaders and literals in place, code by rebuild](adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md)
+- learning: [hot reload session: what worked and what bit us](learnings/hot-reload.md)
+
+## 2026-09-21
+
 - showcase, one page per component (2026-09-21, adr
   showcase-one-page-per-component): the sidebar is a folding tree of
   three groups (Foundations, Components alphabetical, Apps Demo) over
@@ -979,7 +1324,8 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   Overlays and Lists split into one module per widget; `comps::nav::
   Sidebar` gains `NavGroup`; the launch argument is the page title.
   docs/adr/ became docs/adr/ with README.md as its index, the changelog
-  moved to [docs/log/changelog.md](changelog.md).
+  moved to [docs/log/changelog.md](CHANGELOG.md).
+
 - core theme and the buttons poc (2026-09-21, adr
   core-theme-tailwind-classes-as-recipes): `Theme::hoff_core` is the
   typescript kit (nine shades, six accents, depths as shadow stacks,
@@ -990,12 +1336,28 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   the kit's ButtonsPage. two global fixes: `rect_sdf.wgsl` mixes in
   premultiplied linear (the dark fringe on every rounded corner is
   gone) and blur-0 shadows are anti-aliased.
+
 - editor and git in the showcase (2026-09-21, adr
   embed-an-app-view-by-frame-origin): two app sections filling the area
   under the header; the ide is a lib + bin with `GitSession`;
   `WorkspaceView::set_frame`, `Sidebar.origin`; editor wheel snaps to
   lines; nav link hover is text-only; the sidebar band fades where it
   still has links.
+
+- [task-53: editor and git in the showcase](tasks/task-53-editor-and-git-in-the-showcase/README.md)
+- [task-54: core theme, buttons poc](tasks/task-54-core-theme-buttons-poc/README.md)
+- [task-55: showcase, one page per component](tasks/task-55-showcase-one-page-per-component/README.md)
+- ADR 0028: [core theme: the tailwind class lists as button recipes](adr/rendering/0028-core-theme-tailwind-classes-as-recipes.md)
+- ADR 0029: [embed an app view by giving it a frame origin](adr/rendering/0029-embed-an-app-view-by-frame-origin.md)
+- ADR 0030: [showcase: one page per component, the sidebar as a folding tree](adr/structure/0030-showcase-one-page-per-component.md)
+- learning: [core buttons session: what worked and what bit us](learnings/core-buttons.md)
+- learning: [showcase pages session: what worked and what bit us](learnings/showcase-pages.md)
+
+## 2026-09-19
+
+- learning: [comps session: what worked and what bit us](learnings/comps.md)
+
+## 2026-09-18
 
 - comps, the design system crate (2026-09-18, adr
   comps-one-design-system-crate): `engine::ui`, `text_input`, `overlay`,
@@ -1024,7 +1386,8 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   `TextMeasurer::elide_path` came from the ide (and now drops several
   middle segments, the old helper dropped one). matrix test: every widget
   under 13 themes at phone and desktop widths. inventory and migration
-  record: [docs/ref/component-catalog.md](../ref/architecture/component-catalog.md). workspace tests 855 -> 1414.
+  record: [docs/ref/component-catalog.md](ref/architecture/component-catalog.md). workspace tests 855 -> 1414.
+
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
   end (crate, modules, types, apps/urnadbapp/web, tool/tasks/webtarget.sh urnadbapp, gate, ci)
   against hoffresearch/urna v0.4.0; the portable reader accepts both
@@ -1045,12 +1408,21 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   subfile (adr urnaui-media-frames-in-place-via-ffmpeg-subfile), Browse…
   native dialog (rfd). tests 57 -> 80 incl. a media corpus built with the
   urna writer (blob + overlay + space); wasm check green.
+
 - arc unified (2026-09-18): docs/{arc.yaml, arc.md, arc.mmd} became one
   file, docs/ATLAS.toml: the machine map as tables, the human reference
   under [prose], the frame-flow mermaid as a literal string under
   [diagram]. the sync guard, AGENTS.md, the conventions, the pr template
   and the README point at it. content unchanged except nest/nestui ->
   urna/urnaui, which is the rename in flight on this branch.
+
+- ADR 0025: [urnaui: decode media frames in place with ffmpeg's subfile protocol](adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)
+- ADR 0026: [background results wake the event loop; child pipes drain from the start](adr/rendering/0026-worker-results-wake-the-event-loop.md)
+- ADR 0027: [comps: one design system crate, every value a token](adr/structure/0027-comps-one-design-system-crate.md)
+- reference: [ui component catalog](ref/architecture/component-catalog.md)
+
+## 2026-08-31
+
 - glyph raster hardened (2026-08-31): atlas cache key is cosmic-text's
   CacheKey verbatim; fresh swash context per rasterization; one-texel
   zeroed gutter on all four sides of every slot; quad UVs in texels,
@@ -1060,10 +1432,19 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  [docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
+  [docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md](adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
+
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
+
+- ADR 0024: [glyph raster identity and atlas isolation](adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
+
+## 2026-08-30
+
+- ADR 0023: [official app pattern: state in structs, retained widgets, explicit invalidation](adr/structure/0023-official-app-pattern.md)
+
+## 2026-08
 
 - engine wave (2026-08): inclusive sans replaces rubik+inter as the one
   embedded family (SIL OFL, five upright weights 300-700, sans family
@@ -1076,6 +1457,23 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   actually shaped (caught a CJK/math demo string and a text "play"
   glyph, both fixed). ADR updates: embed-every-font-weight-in-use,
   adr-004-hidpi-projection.
+
+## 2026-07-13
+
+- ADR 0022: [one knowledge tree, and a minimal root](adr/structure/0022-one-knowledge-tree-and-a-minimal-root.md)
+
+## 2026-06-12
+
+- research: [mon experiment](research/mon-experiment-notes.md)
+
+## 2026-06-10
+
+- learning: [why the apps bypassed the engine, and what that costs](learnings/apps-bypass-the-engine.md)
+- learning: [the two gamma bugs: one assumption, two opposite failures](learnings/the-two-gamma-bugs.md)
+- reference: [hoff visual tokens (measured)](ref/architecture/hoff-visual-tokens.md)
+
+## 2026-06 to 2026-08, entries without a day
+
 - widgets for real apps: chip, empty state, indeterminate spinner,
   split pane, icon button; engine::charts promoted from the showcase
   (model + draw + meter/hbars) and engine::graph + GraphView (force
@@ -1083,18 +1481,21 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   as every widget. TextMeasurer::truncate_to_width (grapheme-aware),
   engine::clipboard re-export, actions::ShortcutMap for the simple
   keymap case. ADR: official-app-pattern.
+
 - nestui (crates/nestui): .nest vector-db explorer on plev, 6 tabs
   (open/overview/search/chunks/graph/stats), native backend via
   nest-format/nest-runtime path deps + worker thread, portable wasm
   reader (nestread) for the web target.
+
 - showcase 12 -> 14 tabs (typography, effects), scrollable sidebar.
   ci matrix: macos + ubuntu + wasm (.github/workflows/ci.yml);
   tool/tasks/fullcheck.sh skips the wasm leg with a warning when the rust-std wasm
   target is absent (Homebrew rust), CI stays the full verification.
+
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for [docs/ref/mon-experiment-notes.md](../research/mon-experiment-notes.md). web/ owns
+  root for [docs/ref/mon-experiment-notes.md](research/mon-experiment-notes.md). web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only
@@ -1106,6 +1507,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   gate; the other targets were one cargo call each). study-clone
   references in docs now name the repository and the inner path, never
   a machine path. ADR: one-knowledge-tree-and-a-minimal-root.
+
 - prime number creatures (crates/prime_creatures): the Entropic Life XVI canvas
   demo ported to a native plev crate, desktop and wasm. pure, tested sim core
   (seeded rng, prime coherence matrix 250x250 in four modes, grid-local steering
@@ -1113,6 +1515,7 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   trails by position history, cyan bond links via paths, glow halos, breathing
   cores, logical-pixel world, fixed-timestep loop, left-mouse brush. ADR:
   motion-trails-by-position-history. study clone under refs/prime-number-creatures.
+
 - workspace organized to tiers: engine at root, libraries and apps in
   crates (git, ide, lot, monster, narrate, narrate-macro, parser, rope,
   showcase), demos in examples. crate renames (editor_core to rope,
@@ -1120,14 +1523,17 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   narrate_macro to narrate-macro). shaders moved into src/gpu/shaders.
   cargo to workspace.package + workspace.dependencies + workspace.lints +
   tuned profiles; every crate publish = false with a description.
+
 - kdb consolidated to adr + how-to. the brain .lua graph and the framework
   catalogs were retired (drifted, parallel source of truth); the monster
   spec moved to kdb/adr/monster-format-v0.md; conventions moved to
   doc/.conventions/conventions.lua; AGENTS.md points to both. four new ADRs
   (monster format, import-by-conversion, transpiler droplist, workspace).
+
 - qa pass: clippy --all-targets -D warnings clean (uninlined format args
   made idiomatic), naming residue fixed (basicIDE to plev ide), README in
   english added, arc trio refreshed. 1274 tests green.
+
 - monster bridge: lottie retired at the door. lot::cnv samples a lottie once,
   dedups tessellated payloads into the asset table (exact quantized bytes:
   a static shape is one asset and zero delta bytes) and encodes .monster;
@@ -1139,27 +1545,517 @@ Records what changed in plev, in roughly reverse date order: the `unreleased` se
   json (format wins on discrete motion); girl 6.5x, snake 42x, money 53x
   (60fps full-body morphs pay v0's sampled-geometry cost; v1 lever:
   morph tracks, the swf DefineMorphShape lesson)
+
 - monster: encoder mode B (discover) + optimizer passes + full delta ops
   decodable; bench vs json/gzip/webm on 4 fixtures; mode B e2e gate
   (max deviation 0.0375 px / 0.0035 per channel); 124 crate tests
+
 - parser transpiler poc: react tsx+sass card and gpui separator emitted as
   plev builder source; goldens byte-identical to the corpus copies;
   honest droplist (38 entries with file:line and reason, count frozen in
   test); emitted code compiles and renders (examples/parser_card; known
   defect: body text run does not wrap yet)
+
 - workspace clippy clean again (7 parser lints); fmt clean
 
 - brain knowledge base: kdb/brain-Mythos-e-bre/ (vision, anim format poc,
   transpiler poc, semantics/a11y, research notes, org plan)
+
 - agents.md as the single agent instruction source; doc/arc trio (md,
   yaml, mmd); doc/.conventions
+
 - path: open sub-paths auto-finished before tessellation (lyon abort
   fixed at the root); 2 regression tests
+
 - 11 plev-era demos ported as official examples (crate rename, msaa field,
   srgb view, linear clears); makepad_charts verified alive
+
 - test surface: 1022 passing, 0 failed
 
-## earlier (pre-changelog, summarized)
+## 2026-05-11
+
+- [task-48: ide, native git client in plev](tasks/task-48-ide-git-client/README.md)
+
+## 2026-04-08
+
+- [task-47: git, backend for plev apps](tasks/task-47-git-backend/README.md)
+
+## 2026-04-01
+
+- ADR 0020: [git backend: gix for reads, git CLI for mutations, a worker thread for the UI](adr/structure/0020-git-backend-gix-reads-cli-mutations.md)
+
+## 2026-03-11
+
+- research: [reference analysis: accessibility (accesskit)](research/accessibility.md)
+- research: [reference analysis: animation and motion](research/animation-motion.md)
+- research: [reference analysis: charts and visualization](research/charts-visualization.md)
+- research: [competitive positioning, plev](research/competitive-positioning.md)
+- research: [competitor analysis, gui/rendering frameworks](research/competitors.md)
+- research: [reference analysis: emulators and WASM runtimes](research/emulators-wasm-runtimes.md)
+- research: [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](research/extraction-fase-ef.md)
+- research: [integration candidates, ranking](research/integration-candidates.md)
+- research: [linebender ecosystem, analysis for plev](research/linebender-ecosystem.md)
+- research: [reference analysis: math, physics and geometry](research/math-physics-geometry.md)
+- research: [pattern extraction: parley, lyon, glam-rs](research/pattern-extraction-parley-lyon-glam.md)
+- research: [pattern extraction: tui apps (yazi, television, bottom)](research/pattern-extraction-tui-apps.md)
+- research: [technology radar, plev](research/technology-radar.md)
+- research: [reference analysis: tui patterns](research/tui-patterns.md)
+- research: [reference analysis: WASM tooling ecosystem](research/wasm-tooling.md)
+
+## 2026-03-10
+
+- [task-46: rope, text editing core](tasks/task-46-rope-editing-core/README.md)
+
+## 2026-03-04
+
+- ADR 0021: [the text editing core follows helix: document is rope plus selections plus history](adr/interface/0021-text-editing-core-follows-helix.md)
+
+## 2026-02-16
+
+- [task-51: workspace restructure and naming rebrand](tasks/task-51-workspace-restructure/README.md)
+
+## 2025-11-14
+
+- [task-50: multiplatform showcase as a lib (desktop/web/android/ios)](tasks/task-50-showcase-multiplatform/README.md)
+
+## 2025-10-01
+
+- [task-49: prime number creatures, port of entropic life](tasks/task-49-prime-creatures/README.md)
+
+## 2025-09-24
+
+- ADR 0014: [motion trails come from position history, not framebuffer accumulation](adr/rendering/0014-motion-trails-by-position-history.md)
+
+## 2025-08-18
+
+- ADR 0013: [engine at root, libraries and apps in crates, demos in examples](adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
+
+## 2025-07-16
+
+- [task-45: parser, transpiler poc (react/gpui to builder)](tasks/task-45-parser-transpiler/README.md)
+
+## 2025-07-08
+
+- ADR 0012: [the transpiler reports every unmapped construct, never drops silently](adr/importing/0012-transpiler-reports-every-unmapped-construct.md)
+
+## 2025-06-17
+
+- [task-44: lot, lottie importer and bridge to .monster](tasks/task-44-lot-lottie-importer/README.md)
+
+## 2025-06-10
+
+- ADR 0011: [import foreign formats by conversion, never by embedding a foreign runtime](adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md)
+
+## 2025-05-21
+
+- [task-43: monster, binary animation codec v0](tasks/task-43-monster-codec/README.md)
+
+## 2025-05-14
+
+- ADR 0010: [the monster animation format: keyframes plus discovered deltas](adr/importing/0010-binary-animation-format-with-discovered-deltas.md)
+
+## 2025-03-26
+
+- reference: [monster format v0 specification](ref/architecture/monster-format-v0.md)
+
+## 2025-02-19
+
+### session record: responsiveness, real measurement, web target, touch
+
+cross-referenced from the session transcript, `git log` (95 commits at
+time of writing) and the system docs (docs/plano-tecnico.md as the stable
+architecture contract, docs/status.md as living state). format: what was
+tried and failed, then the path that worked, with the commit that fixed
+it. why-level rationale lives in kdb/adr/; operational detail in
+kdb/how-to/.
+
+#### trigger
+
+user report: layout quality far from the reference. labels larger than
+their shapes with text spilling out, elements not distributing across the
+window, and zero testing on browser, iOS and android.
+
+#### episode: text spilling out of shapes
+
+- failed path: shapes sized by a per-character heuristic
+  (chars * size * 0.58) while the rasterizer shaped with rubik 600.
+  earlier in the project the same class shipped as chars * 0.6 and as
+  letter-spacing drawn but not measured. repeated band-aid attempts
+  (padding tweaks per widget) changed symptoms, not the class
+- working path: one TextStyle per run, shared by measurement and drawing;
+  heuristic deleted at its single definition point, fixing twelve call
+  sites at once; latent builder divergence closed in the same change.
+  commits f15198a, 5854941. ADR: one-text-style-for-measurement-and-drawing
+
+#### episode: no responsive distribution
+
+- failed path: assuming the resize pipeline was broken. diagnosis proved
+  the pipeline correct and the geometry constant-driven; the apps consumed
+  none of the engine's flex system. a destructive panel clamp also
+  discarded user widths on shrink
+- working path: content-driven layout everywhere (stack below a measured
+  threshold, stretch above), desired-versus-effective width separation,
+  percent dimensions added to the layout wrapper, HiDPI projection
+  reapplied on resize in the engine App. commits 15f096f, f15198a,
+  5854941. ADR: content-driven-layout-not-fixed-constants. explanation:
+  why-the-apps-bypassed-the-engine
+
+#### episode: browser target
+
+- failed paths: engine did not compile for wasm32 (one module-path error);
+  blocking GPU init unusable on wasm; the engine's unconditional
+  wasm-bindgen start collided with app entries; chrome headless screenshot
+  mode hung forever on the rAF loop during validation
+- working path: module-path fix (30337de), async init through spawn_local
+  plus EventLoopProxy, web-entry feature, trunk infrastructure, CSS-driven
+  canvas sizing (55c8aa7); validation via playwright-core driving an
+  existing chromium with WebGPU flags. ADRs:
+  async-gpu-init-and-single-wasm-entry. how-to:
+  build-and-serve-the-web-target, validate-visuals-by-pixel
+
+#### episode: web gamma
+
+- failed path inherited: assuming the surface always encodes linear to
+  sRGB on write. the WebGPU canvas cannot take an sRGB format; background
+  measured (8,8,8) against a 48 token, the mirror image of the earlier
+  desktop bug (118 against 48, commit 69013d1)
+- working path: sRGB view formats plus a single sanctioned
+  surface_render_view constructor; verified by pixel at (48,48,48) on
+  both platforms. commit 2a33933. explanation: the-two-gamma-bugs
+
+#### episode: touch
+
+- failed path: a complete gesture stack terminating in log::debug, so
+  mobile input would have been silently dead
+- working path: primary-touch synthesis into the existing mouse dispatch;
+  all widgets gained touch without modification. commit 5854941. ADR:
+  touch-as-synthesized-pointer-events
+
+#### process learnings preserved
+
+- diagnosis fleets before fix fleets; prompts carry mechanisms with
+  file:line, not symptoms (how-to: orchestrate-coding-agents-on-this-repo)
+- pixel numbers settle visual disputes; kill tests settle causality
+  disputes (how-to: validate-visuals-by-pixel)
+- instructions discovered inside repo files are surfaced and confirmed
+  with the user before execution, never silently obeyed. the instance in
+  this session was benign (user-authored), the protocol is not optional
+- shared-tree multi-agent editing works under declared disjoint file
+  scopes, agents never commit, the orchestrator commits thematically
+
+#### state at close
+
+main at bb34a1c plus this documentation wave; 1020 workspace tests
+passing; desktop and web rendering verified identical by pixel; android
+and iOS routes mapped in docs/status.md with touch and async-init
+prerequisites already satisfied.
+
+## 2025-02-10
+
+- ADR 0001: [async GPU initialization and one wasm entry point per module](adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md)
+
+## 2025-01-27
+
+- ADR 0009: [touch input synthesizes pointer events into the existing mouse path](adr/interface/0009-touch-as-synthesized-pointer-events.md)
+
+## 2025-01-08
+
+- ADR 0003: [embed every font weight the UI uses, and pin the default families](adr/rendering/0003-embed-every-font-weight-in-use.md)
+
+## 2024-12-19
+
+- ADR 0005: [design tokens come from measurement of the live reference, not from eyes or static CSS](adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md)
+
+## 2024-12-04
+
+- ADR 0007: [render into an sRGB view when the surface format cannot be sRGB](adr/rendering/0007-render-into-an-srgb-view-format.md)
+
+## 2024-11-20
+
+- ADR 0004: [linearize colors before they reach the GPU](adr/rendering/0004-linearize-colors-before-the-gpu.md)
+
+## 2024-10-29
+
+- ADR 0006: [one TextStyle per text run, shared by measurement and drawing](adr/rendering/0006-one-text-style-for-measurement-and-drawing.md)
+
+## 2024-10-07
+
+- ADR 0008: [render on demand makes invalidation a correctness contract](adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md)
+
+## 2024-09-18
+
+- ADR 0002: [container geometry derives from available space, never from constants](adr/rendering/0002-content-driven-layout-not-fixed-constants.md)
+
+## 2024-07-09
+
+- reference: [resolving 107 clippy warnings to zero](ref/architecture/clippy-zero-warnings.md)
+
+## 2024-06-17
+
+- ADR 0016: [adr-004: adotamos projecao ortografica em logical pixels para apps hidpi](adr/rendering/0016-hidpi-projection.md)
+
+## 2024-05-29
+
+- [task-52: modularization by single responsibility principle](tasks/task-52-srp-modularization/README.md)
+
+## 2024-05-23
+
+- reference: [SRP modularization with a 300-line limit](ref/architecture/srp-modularization.md)
+
+## 2024-05-21
+
+- ADR 0015: [adr-003: modularizacao por single responsibility principle](adr/structure/0015-srp-modularization.md)
+
+## 2024-04-14
+
+- ADR 0017: [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](adr/workflows/0017-error-handling-lint-cleanup.md)
+
+## 2024-02-18
+
+- ADR 0018: [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](adr/workflows/0018-narrate-hot-reload.md)
+
+## 2024-02-06
+
+- ADR 0019: [adotamos shader hot reload via notify file watcher sobre dylib reloading](adr/workflows/0019-shader-hot-reload.md)
+
+## 2024-01-22
+
+- reference: [hot reload design - plev](ref/architecture/hot-reload-design.md)
+
+## 2023-12-14
+
+- [task-41: license + preparation for public release](tasks/task-41-license-and-public-release/README.md)
+
+## 2023-11-09
+
+- [task-38: event batching](tasks/task-38-event-batching/README.md)
+
+## 2023-10-02
+
+- [task-37: animation enhancements](tasks/task-37-animation-enhancements/README.md)
+
+## 2023-08-28
+
+- [task-36: signal system hardening](tasks/task-36-signal-hardening/README.md)
+
+## 2023-07-23
+
+- [task-35: fix spring<t>, analytical solver](tasks/task-35-spring-analytical-solver/README.md)
+
+## 2023-06-12
+
+- [task-31: vector path rendering (lyon integration)](tasks/task-31-vector-paths/README.md)
+
+## 2023-05-02
+
+- [task-30: accessibility (accesskit)](tasks/task-30-accessibility/README.md)
+
+## 2023-03-22
+
+- [task-29: app demo real (proof of life)](tasks/task-29-app-demo-real/README.md)
+
+## 2023-01-25
+
+- [task-28: editable text](tasks/task-28-editable-text/README.md)
+
+## 2022-12-21
+
+- [task-27: animation system](tasks/task-27-animation-system/README.md)
+
+## 2022-12-10
+
+- research: [technical report: plev vs makepad](research/plev-vs-makepad-report.md)
+
+## 2022-11-19
+
+- research: [makepad visual feature inventory vs plev gap analysis](research/makepad-gap-analysis.md)
+
+## 2022-10-27
+
+- reference: [touch & gesture recognition design](ref/architecture/touch-gesture-design.md)
+
+## 2022-10-21
+
+- research: [competitors by tier](research/competitors-by-tier.md)
+
+## 2022-09-14
+
+- [task-33: WASM plugin architecture](tasks/task-33-wasm-plugins/README.md)
+
+## 2022-09-08
+
+- research: [WASM plugin architecture - research doc](research/wasm-plugin-architecture.md)
+
+## 2022-08-16
+
+- [task-32: text system upgrade assessment](tasks/task-32-text-upgrade-assessment/README.md)
+
+## 2022-08-11
+
+- research: [parley vs cosmic-text - factual comparison for plev](research/parley-vs-cosmic-text.md)
+
+## 2022-07-12
+
+- [task-34: exploration and extraction of ideas from the reference repos](tasks/task-34-exploration-extraction/README.md)
+
+## 2022-07-06
+
+- research: [extracted patterns, 56 reference repos](research/extracted-patterns.md)
+
+## 2022-06-15
+
+- [task-ref: research briefing (50+ repos)](tasks/task-ref-research-briefing/README.md)
+
+## 2022-05-03
+
+- [task-25: benchmarks](tasks/task-25-benchmarks/README.md)
+
+## 2022-04-26
+
+- experiment: [benchmark results, plev v0.2](experiments/benchmarks-v02/README.md)
+
+## 2022-02-24
+
+- reference: [animation pattern, frame-based exponential lerp](ref/architecture/animation-pattern-lerp.md)
+
+## 2022-01-19
+
+- reference: [android emulator deploy](ref/platforms/android-emulator-deploy.md)
+
+## 2021-12-27
+
+- [task-24: cleanup & readme](tasks/task-24-cleanup-readme/README.md)
+
+## 2021-12-18
+
+- [task-23: CI/CD](tasks/task-23-ci-cd/README.md)
+
+## 2021-12-11
+
+- [task-22: error messages & DX](tasks/task-22-error-messages-dx/README.md)
+
+## 2021-12-04
+
+- [task-21: documentation of the narrate DSL](tasks/task-21-narrate-dsl-documentation/README.md)
+
+## 2021-11-08
+
+- [task-17: input <-> layer hit-testing](tasks/task-17-input-layer-hit-testing/README.md)
+
+## 2021-10-24
+
+- [task-16: effects <-> layer integration](tasks/task-16-effects-layer-integration/README.md)
+
+## 2021-10-10
+
+- [task-15: pipeline DSL -> builder -> compositor](tasks/task-15-pipeline-dsl-builder-compositor/README.md)
+
+## 2021-09-27
+
+- [task-14: plev_narrate!, verbal DSL](tasks/task-14-plev-narrate-dsl-verbal/README.md)
+
+## 2021-09-17
+
+- reference: [WASM/webgpu validation - knowledge](ref/platforms/wasm-webgpu-validation.md)
+
+## 2021-09-12
+
+- [task-13: mobile specifics, safe areas, IME, lifecycle](tasks/task-13-mobile-specifics-safe-areas-ime-lifecycle/README.md)
+
+## 2021-08-30
+
+- reference: [mobile specifics - safe areas, IME, lifecycle](ref/platforms/mobile-specifics.md)
+
+## 2021-08-29
+
+- [task-12: ios build + lifecycle](tasks/task-12-ios-build-lifecycle/README.md)
+
+## 2021-08-16
+
+- [task-11: android build + lifecycle](tasks/task-11-android-build-lifecycle/README.md)
+
+## 2021-08-15
+
+- reference: [ios build - decisions and knowledge](ref/platforms/ios-build.md)
+
+## 2021-08-02
+
+- [task-10: input system, touch + gestures](tasks/task-10-input-system-touch-gestures/README.md)
+
+## 2021-07-26
+
+- reference: [DSL narrate, design decisions](ref/architecture/dsl-narrate-design.md)
+
+## 2021-07-19
+
+- [task-09: input system, keyboard + mouse](tasks/task-09-input-system-keyboard-mouse/README.md)
+
+## 2021-07-06
+
+- [task-08: compositing effects (blur, shadow, opacity)](tasks/task-08-compositing-effects/README.md)
+
+## 2021-07-04
+
+- reference: [effects architecture (task-08)](ref/architecture/effects-architecture.md)
+
+## 2021-06-21
+
+- [task-07: independent layer system](tasks/task-07-independent-layer-system/README.md)
+
+## 2021-06-16
+
+- reference: [layer system - technical decisions](ref/architecture/layer-system.md)
+
+## 2021-06-08
+
+- [task-06: WASM/webgpu validation in the browser](tasks/task-06-wasm-webgpu-validation-in-the-browser/README.md)
+
+## 2021-05-27
+
+- reference: [input system design (task-09)](ref/architecture/input-system-design.md)
+
+## 2021-05-23
+
+- [task-05: declarative API + builder pattern](tasks/task-05-declarative-api-builder-pattern/README.md)
+
+## 2021-05-06
+
+- [task-04: signal system (reactivity)](tasks/task-04-signal-system/README.md)
+
+## 2021-05-02
+
+- reference: [signal system design](ref/architecture/signal-system-design.md)
+
+## 2021-04-20
+
+- [task-03: layout engine (flexbox-like)](tasks/task-03-layout-engine/README.md)
+
+## 2021-04-15
+
+- reference: [layout engine - decisions and knowledge](ref/architecture/layout-engine.md)
+
+## 2021-03-28
+
+- [task-02: component state management](tasks/task-02-component-state-management/README.md)
+
+## 2021-03-24
+
+- reference: [component state design (task-02)](ref/architecture/component-design.md)
+
+## 2021-03-10
+
+- [task-01: view trait + viewcontext](tasks/task-01-view-trait-viewcontext/README.md)
+
+## 2021-03-06
+
+- reference: [view trait - design decisions](ref/architecture/view-trait-design.md)
+
+## undated
+
+- learning: [General learnings](learnings/general.md)
+- program: [plev — Technical Implementation Plan](research/technical-plan.md)
+
+## summary written when the changelog began
 
 - responsiveness wave: content-driven layout in showcase, real text
   measurement in ide (heuristic deleted), percent dims, hidpi

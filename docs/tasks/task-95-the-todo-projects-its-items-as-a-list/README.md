@@ -474,7 +474,7 @@ aqui):
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: as linhas do índice de ADR (acima); o
-  [`changelog.md`](../../log/changelog.md) (a página Surface mostra e marca os itens; as regras
+  [`changelog.md`](../../CHANGELOG.md) (a página Surface mostra e marca os itens; as regras
   propõem a lista); a consequência do ADR [`0049-plev-ir-typed-and-verified.md`](../../adr/generated/0049-plev-ir-typed-and-verified.md)
   que diz que o todo não projeta lista (fora da lista de arquivos);
   [`docs/ATLAS.toml`](../../ATLAS.toml), se quiser citar `todo:items` na entrada do

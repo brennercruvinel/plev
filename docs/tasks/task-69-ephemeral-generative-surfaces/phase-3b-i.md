@@ -514,7 +514,7 @@ configurações, system prompt próprio, fora da sessão do Claude Code,
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  [`changelog.md`](../../log/changelog.md) (crate novo e o exemplo); no `docs/ATLAS.toml`,
+  [`changelog.md`](../../CHANGELOG.md) (crate novo e o exemplo); no `docs/ATLAS.toml`,
   a linha `claude-model = ["propose"]` em `[examples]` (só a entrada do
   crate era permitida; o exemplo está citado nela); no `AGENTS.md`,
   "## running", o comando do exemplo, se quiser;

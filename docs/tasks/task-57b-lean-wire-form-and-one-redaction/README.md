@@ -252,7 +252,7 @@ ambiguidades e dívidas, para o orquestrador:
 - docs fora do escopo que citam o usage antigo ou a cópia dupla:
   [`0039-agents-act-through-the-semantic-contract.md`](../../adr/semantics/0039-agents-act-through-the-semantic-contract.md) (linha 157, o
   usage sem `--source`; linhas 244 a 250, as duas consequências que esta
-  task fecha), [`changelog.md`](../../log/changelog.md) se a mudança for user-facing (o
+  task fecha), [`changelog.md`](../../CHANGELOG.md) se a mudança for user-facing (o
   `--source` é). o how-to de orquestração não cita o usage.
 - risco de integração: nenhum golden fora de sem, wire e rec pinava a
   forma antiga em bytes (grep em showcase, ide, engine, comps: só nomes

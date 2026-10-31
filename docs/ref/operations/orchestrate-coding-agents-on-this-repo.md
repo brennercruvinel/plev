@@ -7,7 +7,7 @@ status: active
 date: 2026-09-26
 date_basis: header
 topics: [agents, process, git, workspace]
-relations: [learning-general, truth-2026-09, adr-index, operations-autonomy, operations-generative-runtime-guidelines, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-60, task-62, task-84]
+relations: [learning-general, adr-index, operations-autonomy, operations-generative-runtime-guidelines, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-60, task-62, task-84]
 source: docs/ref/orchestrate-coding-agents-on-this-repo.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -33,7 +33,7 @@ guidelines win and this file gets fixed.
    docs/tasks/ while the task is open.
 2. the orchestrator checks that the task's dependencies are merged into
    `main` and that its code surface is free (ownership table in
-   [the generative runtime program](../../log/generative-runtime-program.md), section 8).
+   [the generative runtime program](../../research/generative-runtime-program.md), section 8).
 3. the orchestrator diagnoses first: reads the code the task touches and
    writes the mechanism into the briefing with file:line. prompts that
    carry the mechanism produce root fixes; prompts that carry symptoms
@@ -60,7 +60,7 @@ guidelines win and this file gets fixed.
    this manual and the engine manual when a rule changed). the close-out
    also searches `docs/` and `README.md` for the names of every contract
    the task changed and fixes what became false: close-outs that only
-   wrote new docs left 32 stale claims behind ([`truth.md`](../../log/truth.md),
+   wrote new docs left 32 stale claims behind (`truth.md`,
    section 5). rejected: back to the agent with file, line, what is wrong
    and what is expected.
 10. the next briefing is revised with what this task taught, and
@@ -77,7 +77,7 @@ guidelines win and this file gets fixed.
 - a file two tasks of the same wave must touch is sequenced or split into
   named blocks by the orchestrator before the briefings go out.
 - shared surfaces (`Cargo.toml`, `docs/ATLAS.toml`, `README.md`,
-  [`adr/`](../../adr/README.md), `docs/log/` and `docs/tasks/`) belong to the
+  [`adr/`](../../adr/README.md), `docs/CHANGELOG.md` and `docs/tasks/`) belong to the
   orchestrator; an agent that creates a crate adds only its own entry,
   because `tool/tests/test_repoaudit.rs` fails the build without
   it.

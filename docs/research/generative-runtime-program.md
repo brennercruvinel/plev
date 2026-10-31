@@ -7,7 +7,7 @@ status: active
 date: 2026-09-23
 date_basis: header
 topics: [process, agents, semantics, ir, generated-surfaces]
-relations: [adr-0023, adr-0024, adr-0035, adr-0037, adr-0040, adr-0041, adr-0043, adr-0044, adr-0045, adr-0047, adr-0048, adr-0049, adr-0050, adr-0072, architecture-monster-format-v0, truth-2026-09, adr-index, operations-autonomy, operations-generative-runtime-guidelines, project-state-2026-09, generative-runtime-thesis, task-18, task-19, task-20, task-39, task-41, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
+relations: [adr-0023, adr-0024, adr-0035, adr-0037, adr-0040, adr-0041, adr-0043, adr-0044, adr-0045, adr-0047, adr-0048, adr-0049, adr-0050, adr-0072, architecture-monster-format-v0, adr-index, operations-autonomy, operations-generative-runtime-guidelines, changelog, generative-runtime-thesis, task-18, task-19, task-20, task-39, task-41, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
 source: docs/log/generative-runtime-program.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -19,7 +19,7 @@ evidence: [b8ba096, 1d384d4, 860b029, 20c601e, f71dc20, f5b7cee, c6738be, ed814d
 
 Records the program that turns plev from a GPU UI engine into a generative interaction runtime: the goal, the code diagnosis of 2026-09-23, the graph and the waves of tasks 57 to 97, the contracts between them, the ownership of the shared surfaces, and the decision points. The status of each task (section 12) runs up to 2026-09-26, when brenner decided to keep candle and burn in task-78.
 
-a tese está em [`generative-runtime-thesis.md`](../research/generative-runtime-thesis.md). as regras de
+a tese está em [`generative-runtime-thesis.md`](generative-runtime-thesis.md). as regras de
 trabalho estão em [`generative-runtime-guidelines.md`](../ref/operations/generative-runtime-guidelines.md) e são obrigatórias para o
 orquestrador e para todo agente. este arquivo é o mapa executável: o goal,
 o estado real do código, o grafo de dependências, a ordem de integração,
@@ -78,7 +78,7 @@ elas.
 ## 3. estado real do código (diagnóstico, 2026-09-23)
 
 > esta seção é o diagnóstico de antes da onda 1 e ficou velha. o retrato
-> do código agora é [`truth.md`](truth.md) (truth), que vence esta
+> do código agora é `truth.md` (truth), que vence esta
 > seção quando os dois divergem. o modo de operação é
 > [`autonomy.md`](../ref/operations/autonomy.md).
 
@@ -108,7 +108,7 @@ o que a tese precisa e o que existe hoje:
 | incrementalidade | cena reconstruída por frame; layer limpa custa zero GPU; `TextMeasurer` com cache | [`ATLAS.toml`](../ATLAS.toml) (frame-flow), `rust/engine/src/drawing/compositor/layer/mod.rs` | layout, shaping, hit test, scene build e style resolution refeitos por frame; task-39 (memoização) parada desde 2023 |
 | texto | cosmic-text 0.18, fontes embutidas só Inclusive Sans, Inter e codicons; rope com transações, multi-cursor e history; editor em comps; `ImeState` básico | `rust/engine/src/drawing/text/fonts.rs:38-52`, `rust/editor/src/document`, `rust/engine/src/widgets/editor`, `rust/engine/src/runtime/platform/ime.rs` | árabe, CJK e emoji caem em fallback não embutido; IME e bidi sem cobertura de teste |
 | integração de plataforma | clipboard (arboard no desktop, local no mobile e wasm), diálogos nativos e drop de arquivo no urnaui, lifecycle, safe areas | `rust/engine/src/runtime/platform/clipboard.rs`, `apps/urnadbapp/src/app.rs`, `rust/engine/src/runtime/platform` | sem menus, tray, notificações, múltiplas janelas, device loss, deep links, câmera, microfone, impressão |
-| determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | [`project-state.md`](project-state.md) (contracts), [`0024-glyph-raster-identity-and-atlas-isolation.md`](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md), tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
+| determinismo | contratos srgb, raster de glifo determinístico, fontes embutidas, web igual ao desktop | [`project-state.md`](../CHANGELOG.md#2026-09-26) (contracts), [`0024-glyph-raster-identity-and-atlas-isolation.md`](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md), tasks 18, 19 e 20 em `ongoing/` | linux e windows pendentes; sem harness que classifique divergência |
 | padrão de app | estado em structs, widgets retained, invalidação explícita; builder suportado para protótipo; view, component, signal e narrate experimentais | [`0023-official-app-pattern.md`](../adr/structure/0023-official-app-pattern.md) | superfície materializada a partir de IR não é nenhum dos padrões atuais: precisa de ADR |
 
 ## 4. tasks
@@ -266,7 +266,7 @@ interna. mudança em qualquer um deles passa pelo orquestrador.
 | `rust/engine/src/styling/theme` | ninguém sem aprovação | tocado por 65 (leitura de token) só depois de proposta aprovada |
 | `rust/engine/src/drawing/text` | 74 | 66 toca só `probe.rs` e o novo módulo headless |
 | `rust/import` | 71 | |
-| `Cargo.toml` (members e workspace deps), [`ATLAS.toml`](../ATLAS.toml), [`project-state.md`](project-state.md) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
+| `Cargo.toml` (members e workspace deps), [`ATLAS.toml`](../ATLAS.toml), [`project-state.md`](../CHANGELOG.md#2026-09-26) | orquestrador | agente que cria crate adiciona a própria entrada (o `arc_sync_guard` exige) e o orquestrador revisa |
 | `.contracts/`, [`adr/`](../adr/README.md), `docs/log/` | orquestrador | agente propõe no handoff |
 
 ## 9. checkpoints e critérios de parada
@@ -441,7 +441,7 @@ atualizado em cada integração.
 | task-65 | concluída (2026-09-25; arquivo em `checked/`, pelo critério de aceite): fase c integrada, cmd+shift+clique edita um literal na janela e o Enter grava no `.rs` (só a pessoa, só com o código do baseline); fases a e b integradas; o color picker e a fase d ficam como pendência | `042d34e` | cmd+clique (debug desktop) no showcase: controle para o site de projeção (`Node.source`), texto para o literal (linha e coluna no baseline do hot reload); adr view-source-for-pixels |
 | task-88 | integrada (P1) | `96c20a0` | o laboratório mede pelo valor visto e pelo valor vivo, não pela revisão (hash de conteúdo colide); cenário `unstage-before-submit` (a pessoa entre a decisão e o submit) além do antigo; `--scripted chain`; recusas do protocolo no relatório; `lab.rs` dividido |
 | task-67 | integrada | `49e2822` | `regress check|bless`: significado, hash estável por layer e ligações, pixel só na região que mudou, nomeando o controle; 157 baselines em 0,6 s sem GPU; job de CI no macOS; adr regression-by-meaning-before-pixels |
-| auditoria de verdade | integrada | `7621403` | [`truth.md`](truth.md): contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
+| auditoria de verdade | integrada | `7621403` | `truth.md`: contratos com arquivo:linha, a tabela da tese refeita, defeitos conferidos, 32 divergências doc x código, testes, ownership |
 | task-92 | integrada (P0 dentro, e o P2) | `f101359` | P0: um estágio fora de um drain acorda o porto (a recusa da pessoa chegava só na próxima mensagem do agente); o agente pede à pessoa que confirme um ato (`Request::ask`, `plev act --ask`), o modal do ide pergunta, o `why` mostra |
 | task-93 | integrada | `654d740` | a pessoa do laboratório responde ao modal (`--answer allow|decline|none`, `--answer-after`), o relatório conta perguntas, respostas, tempo e o que o agente fez depois; `--scripted ask` |
 | task-94 | integrada (P2) | `37c5e0c` | um `plev act` sem `--ask` recusado stale com uma pessoa no `acted` escreve no stderr uma linha que nomeia o request dela e aponta para o `--ask`; nenhuma depois de um `declined`, com só agentes, ou quando o ato perguntava; o stdout igual byte a byte; o cenário da quarta rodada pela porta real com o binário `plev` como agente |

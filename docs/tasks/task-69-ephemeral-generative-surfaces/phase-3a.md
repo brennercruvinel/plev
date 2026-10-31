@@ -644,7 +644,7 @@ aqui):
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima), o
-  [`changelog.md`](../../log/changelog.md) (a página Surface propõe a partir de uma intenção),
+  [`changelog.md`](../../CHANGELOG.md) (a página Surface propõe a partir de uma intenção),
   e na entrada `[crates.showcase]` do `docs/ATLAS.toml` a linha de
   proposta da página e a dependência `propose` (só a entrada do crate
   novo era permitida);

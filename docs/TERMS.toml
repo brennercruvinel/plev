@@ -1,7 +1,7 @@
 # the names of the tree. the 2026-10 reorganization (migration.toml in the
 # history of the branch that made it) renamed crates and moved modules; this
 # glossary says, for every name that changed, what it is called now and
-# where it lives. older pages under docs/log and docs/tasks keep the names of their time.
+# where it lives. older pages under docs/tasks, docs/adr and docs/research keep the names of their time.
 
 [crates]
 # former name = { now = "<package>", at = "<directory>" }

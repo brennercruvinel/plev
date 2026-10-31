@@ -48,7 +48,6 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2022-09-14 | [task-33: WASM plugin architecture](task-33-wasm-plugins/README.md) | done |
 | 2022-12-21 | [task-27: animation system](task-27-animation-system/README.md) | done |
 | 2023-01-25 | [task-28: editable text](task-28-editable-text/README.md) | done |
-| 2023-02-13 | [task-26: arXiv paper](task-26-arxiv-paper/README.md) | done |
 | 2023-03-22 | [task-29: app demo real (proof of life)](task-29-app-demo-real/README.md) | done |
 | 2023-05-02 | [task-30: accessibility (accesskit)](task-30-accessibility/README.md) | done |
 | 2023-06-12 | [task-31: vector path rendering (lyon integration)](task-31-vector-paths/README.md) | done |
@@ -56,7 +55,6 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2023-08-28 | [task-36: signal system hardening](task-36-signal-hardening/README.md) | done |
 | 2023-10-02 | [task-37: animation enhancements](task-37-animation-enhancements/README.md) | done |
 | 2023-11-09 | [task-38: event batching](task-38-event-batching/README.md) | done |
-| 2023-12-06 | [task-40: paper arxiv, full text](task-40-paper-arxiv-full-text/README.md) | pending |
 | 2023-12-14 | [task-41: license + preparation for public release](task-41-license-and-public-release/README.md) | pending |
 | 2024-05-29 | [task-52: modularization by single responsibility principle](task-52-srp-modularization/README.md) | done |
 | 2025-05-21 | [task-43: monster, binary animation codec v0](task-43-monster-codec/README.md) | done |

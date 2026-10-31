@@ -20,7 +20,7 @@ Decides on a single knowledge tree in `docs/` and a root that keeps only what th
 
 correction (2026-09-21): the decisions directory is docs/adr/ (upper
 case, the acronym), its index is docs/adr/README.md so github renders it
-on the directory page, and the changelog is [docs/log/changelog.md](../../log/changelog.md) at the
+on the directory page, and the changelog is [docs/log/changelog.md](../../CHANGELOG.md) at the
 knowledge tree's root. the paths below are as written when the decision
 was taken.
 

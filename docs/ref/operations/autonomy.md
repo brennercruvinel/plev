@@ -7,7 +7,7 @@ status: active
 date: 2026-09-23
 date_basis: header
 topics: [agents, process, git]
-relations: [learning-general, journal, truth-2026-09, operations-generative-runtime-guidelines, operations-orchestrate-coding-agents-on-this-repo, generative-runtime-program, task-75, task-96, task-97, generative-runtime-thesis]
+relations: [learning-general, research-autonomous-cycle-journal, operations-generative-runtime-guidelines, operations-orchestrate-coding-agents-on-this-repo, generative-runtime-program, task-75, task-96, task-97, generative-runtime-thesis]
 source: docs/ref/autonomy.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -19,7 +19,7 @@ review: reviewed
 desde 2026-09-23 o brenner não supervisiona cada integração. o orquestrador
 segue sozinho dentro da missão ([`generative-runtime-thesis.md`](../../research/generative-runtime-thesis.md)),
 das regras ([`generative-runtime-guidelines.md`](generative-runtime-guidelines.md)) e do programa
-([`generative-runtime-program.md`](../../log/generative-runtime-program.md)). o objetivo não é executar a
+([`generative-runtime-program.md`](../../research/generative-runtime-program.md)). o objetivo não é executar a
 lista de tasks: é manter um ciclo contínuo de implementação, validação,
 aprendizado e reorganização do programa.
 
@@ -178,11 +178,11 @@ arquitetura pela arquitetura.
 
 | registro | arquivo | o que guarda |
 |---|---|---|
-| truth | [`truth.md`](../../log/truth.md) | o que o código faz agora, com arquivo:linha; reescrito quando uma integração muda um contrato |
-| program | [`generative-runtime-program.md`](../../log/generative-runtime-program.md) | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
+| truth | `truth.md` | o que o código faz agora, com arquivo:linha; reescrito quando uma integração muda um contrato |
+| program | [`generative-runtime-program.md`](../../research/generative-runtime-program.md) | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
 | learnings | [`general.md`](../../learnings/general.md) | o que experimentos e implementações ensinaram, e o que isso mudou no programa |
 
-mais um: [`journal.md`](../../log/journal.md), o diário do ciclo autônomo (integrações,
+mais um: [`journal.md`](../../research/autonomous-cycle-journal.md), o diário do ciclo autônomo (integrações,
 decisões autônomas, bugs, métricas, em ordem), que alimenta o `status`.
 nenhum substitui outro.
 

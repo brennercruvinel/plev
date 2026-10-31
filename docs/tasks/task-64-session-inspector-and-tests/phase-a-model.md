@@ -8,7 +8,7 @@ parent: task-64
 date: 2026-09-23
 date_basis: text
 topics: [recording, semantics, agents]
-relations: [adr-0046, truth-2026-09, task-67, task-87, task-89]
+relations: [adr-0046, task-67, task-87, task-89]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -453,7 +453,7 @@ verdade (o padrão de `rust/record/tests/session/`):
 ### o que a fase b (UI) vai precisar do `rec`
 
 - as ligações por frame (`Compositor::bindings`), que o `rec` não grava
-  ([`truth.md`](../../log/truth.md) 2.4): sem elas não se liga um ponto do frame
+  (`truth.md` 2.4): sem elas não se liga um ponto do frame
   reproduzido a um controle.
 - uma leitura do estado depois de um índice de evento em `Session` (e o
   índice de evento de cada estágio no `ReceiptAt`). o modelo reconstrói o

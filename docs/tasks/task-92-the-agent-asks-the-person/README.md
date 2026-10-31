@@ -403,7 +403,7 @@ de um request seu (P0 da task-92)".
   esperam a próxima mensagem se o shell não drenar depois do worker. com
   o P0 isso deixou de valer.
 - [`0039-agents-act-through-the-semantic-contract.md`](../../adr/semantics/0039-agents-act-through-the-semantic-contract.md), o `README.md`,
-  o [`docs/ATLAS.toml`](../../ATLAS.toml) e o [`changelog.md`](../../log/changelog.md) não mudaram. o ADR do
+  o [`docs/ATLAS.toml`](../../ATLAS.toml) e o [`changelog.md`](../../CHANGELOG.md) não mudaram. o ADR do
   porto não cita o `ask` nem o wake do sink; a seção do ADR da 58b cobre
   os dois.
 - o `rec` estima o peso de um request sem o texto da pergunta

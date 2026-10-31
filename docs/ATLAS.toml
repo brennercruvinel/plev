@@ -402,7 +402,7 @@ component-catalog = "docs/ref/architecture/component-catalog.md"
 decisions = "docs/adr/"
 web-target = "docs/ref/operations/build-and-serve-the-web-target.md"
 agent-orchestration = "docs/ref/operations/orchestrate-coding-agents-on-this-repo.md"
-program = "docs/log/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
+program = "docs/research/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
 
 # binding contracts. violations are defects even if the pixels look right.
 [contracts]

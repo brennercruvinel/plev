@@ -7,7 +7,7 @@ status: reference
 date: 2026-03-11
 date_basis: header
 topics: [competition, gpu]
-relations: [research-competitors, research-linebender-ecosystem, task-21, task-26, task-28, task-29, task-30, task-32]
+relations: [research-competitors, research-linebender-ecosystem, task-21, task-28, task-29, task-30, task-32]
 source: docs/ref/competitive-positioning.md
 source_revision: ec0a224c
 revised: 2026-10-30

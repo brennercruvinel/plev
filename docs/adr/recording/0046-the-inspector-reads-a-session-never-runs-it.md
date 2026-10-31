@@ -7,7 +7,7 @@ status: accepted
 date: 2026-09-23
 date_basis: header
 topics: [recording, semantics, agents]
-relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, truth-2026-09, operations-code-against-the-plev-engine]
+relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, operations-code-against-the-plev-engine]
 source: docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -168,7 +168,7 @@ carried was outside that scope.
 
 ## consequences
 
-- the ui of phase b reads this model. it needs from `rec` what [`truth.md`](../../log/truth.md)
+- the ui of phase b reads this model. it needs from `rec` what `truth.md`
   2.4 already names: the frame's bindings, not recorded yet, to map a point
   on a replayed frame to a control. a read of the state after an event index
   in `Session` would replace the stretch the inspector rebuilds for each

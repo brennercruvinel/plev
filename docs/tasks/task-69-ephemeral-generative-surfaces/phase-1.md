@@ -513,7 +513,7 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
 ### dependências pendentes e riscos de integração
 
 - fora da minha lista de arquivos, para o orquestrador: a linha do
-  índice de ADR (acima); o [`changelog.md`](../../log/changelog.md); o comentário de
+  índice de ADR (acima); o [`changelog.md`](../../CHANGELOG.md); o comentário de
   `apps/uigallery/src/shell/window/headless.rs` ("today only the todo page
   does"), que agora vale também para a página Surface; a entrada
   `[crates.showcase]` do `docs/ATLAS.toml`, que não cita a página

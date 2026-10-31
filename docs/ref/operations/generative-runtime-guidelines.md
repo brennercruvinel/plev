@@ -16,7 +16,7 @@ review: reviewed
 
 # orchestrator and agent guidelines
 
-obrigatórias para o programa em [`generative-runtime-program.md`](../../log/generative-runtime-program.md). servem
+obrigatórias para o programa em [`generative-runtime-program.md`](../../research/generative-runtime-program.md). servem
 para não desviar e não gerar AI slop. a parte 1 e a parte 2 são as
 diretrizes do CTO, completas. a parte 3 adapta essas regras a este
 repositório (regras do engine, gate, worktrees, formato dos arquivos de task). a

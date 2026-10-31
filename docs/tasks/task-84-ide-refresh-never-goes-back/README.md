@@ -7,7 +7,7 @@ status: done
 date: 2026-09-23
 date_basis: header
 topics: [git, semantics]
-relations: [task-62, task-83, task-85, adr-0036, truth-2026-09]
+relations: [task-62, task-83, task-85, adr-0036]
 source: docs/log/steps/task-84-ide-refresh-never-goes-back.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -288,5 +288,5 @@ wasm `c07a7f0`). validação do orquestrador:
 achados do agente que viraram trabalho: o receipt do commit conclui antes
 de a projeção mostrar o commit (entrou na task-85, junto com `files` no nó
 do commit); o diff mostrado nunca é relido depois de um commit ou de uma
-edição de fora (registrado em [`truth.md`](../../log/truth.md), limite, sem task: não é
+edição de fora (registrado em `truth.md`, limite, sem task: não é
 corrida de ordem e nenhum agente dependeu dele).
