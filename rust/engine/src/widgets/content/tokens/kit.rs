@@ -536,6 +536,7 @@ impl DisclosureTokens {
             panel,
             header,
             page,
+            card: CardRecipe::hoff_core(),
             split,
         }
     }

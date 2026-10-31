@@ -485,6 +485,8 @@ pub struct DisclosureTokens {
     pub header: HeaderRecipe,
     /// A page's head.
     pub page: PageHeadRecipe,
+    /// A card's chart and legend marks.
+    pub card: CardRecipe,
     /// A split's divider.
     pub split: SplitRecipe,
 }
@@ -512,5 +514,8 @@ const CLEAR: DisclosureSurface = DisclosureSurface {
     border: NONE,
 };
 
+mod card;
 mod derive;
 mod kit;
+
+pub use card::CardRecipe;

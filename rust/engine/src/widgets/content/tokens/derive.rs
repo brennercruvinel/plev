@@ -165,6 +165,7 @@ impl DisclosureTokens {
                 wide_from: 0.0,
                 bleed: false,
             },
+            card: CardRecipe::derive(theme),
             split,
         }
     }

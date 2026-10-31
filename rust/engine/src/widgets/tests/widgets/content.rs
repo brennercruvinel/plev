@@ -474,6 +474,9 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     // The page head: the kit's Layout title in the core, which bleeds.
     assert!(kit.page.bleed && !derived.page.bleed);
     derived.page = kit.page;
+    // The card's marks: the kit's ink and gray in the core only.
+    assert_ne!(derived.card, kit.card);
+    derived.card = kit.card;
     assert_ne!(derived.split, kit.split);
     derived.split = kit.split;
     assert_eq!(derived, kit);

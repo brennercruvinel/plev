@@ -766,3 +766,29 @@ fn the_core_page_head_meets_aaa() {
         }
     }
 }
+
+/// task-104 front D: the core card's chart and legend marks read at 3:1
+/// on the card (WCAG 1.4.11): both bars, both ends of the highlighted
+/// one, its cap, the solid dot, the hollow dot's ring and the ticks. The
+/// baseline is a rule, the kit's line, and is left out.
+#[test]
+fn the_core_card_marks_meet_three_to_one() {
+    let t = Theme::hoff_core();
+    let card = over(t.glass.surface, over(t.colors.bg, [0.0; 3]));
+    let m = t.disclosure.card;
+    let marks = [
+        m.series[0],
+        m.series[1],
+        m.highlight[0],
+        m.highlight[1],
+        m.cap,
+        m.dot_solid[0],
+        m.dot_solid[1],
+        m.dot_ring,
+        m.tick,
+    ];
+    for fg in marks {
+        let r = ratio(over(fg, card), card);
+        assert!(r >= LARGE, "{fg:?} at {r:.2}");
+    }
+}

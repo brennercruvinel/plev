@@ -5,7 +5,7 @@ use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
-use crate::widgets::widget::{Rect, with_alpha};
+use crate::widgets::widget::Rect;
 
 impl Card {
     #[allow(clippy::too_many_arguments)]
@@ -21,7 +21,7 @@ impl Card {
         highlight: usize,
     ) {
         let m = Metrics::of(theme);
-        let glass = &theme.glass;
+        let marks = &theme.disclosure.card;
         let text = theme.colors.text;
         let ty = &theme.typography;
 
@@ -81,8 +81,8 @@ impl Card {
                             y,
                             w: bar_w,
                             h,
-                            color: with_alpha(text, glass.wash_hover_alpha),
-                            color2: with_alpha(text, 0.0),
+                            color: marks.highlight[0].0,
+                            color2: marks.highlight[1].0,
                             angle_deg: 180.0,
                             corner_radius: bar_radius,
                             border_width: 0.0,
@@ -97,18 +97,14 @@ impl Card {
                             y: y - m.gap_sm,
                             w: bar_w,
                             h: cap_h,
-                            color: theme.colors.text_dim.0,
+                            color: marks.cap.0,
                             corner_radius: cap_h / 2.0,
                             border_width: 0.0,
                             border_color: [0.0; 4],
                         },
                     );
                 } else {
-                    let color = if j == 0 {
-                        glass.surface_hover.0
-                    } else {
-                        glass.surface_active.0
-                    };
+                    let color = marks.series[j].0;
                     c.push_to_layer(
                         layer,
                         SceneNode::RoundedRect {
@@ -135,7 +131,7 @@ impl Card {
                 y: base_y,
                 w: b.w - m.gap_sm * 2.0,
                 h: line,
-                color: glass.surface_active.0,
+                color: marks.axis.0,
             },
         );
         let ticks = ((chart.w / theme.spacing.xxl).floor() as usize).max(2);
@@ -148,7 +144,7 @@ impl Card {
                     y: base_y + line + m.gap_sm,
                     w: line,
                     h: m.gap_sm + m.gap_sm / 2.0,
-                    color: glass.text_placeholder.0,
+                    color: marks.tick.0,
                 },
             );
         }

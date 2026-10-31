@@ -56,8 +56,8 @@ impl Card {
         );
     }
 
-    /// Legend / online dot: the surface-hover disc with the field-focus
-    /// ring, or the solid knob gradient when `solid`.
+    /// Legend / online dot: the card's hollow dot (`theme.disclosure.
+    /// card`), or its solid one when `solid`.
     pub(super) fn dot(
         &self,
         c: &mut Compositor,
@@ -67,7 +67,7 @@ impl Card {
         solid: bool,
         theme: &Theme,
     ) {
-        let glass = &theme.glass;
+        let marks = &theme.disclosure.card;
         let d = Metrics::of(theme).dot;
         if solid {
             c.push_to_layer(
@@ -77,8 +77,8 @@ impl Card {
                     y,
                     w: d,
                     h: d,
-                    color: glass.knob_gradient[0].0,
-                    color2: glass.knob_gradient[1].0,
+                    color: marks.dot_solid[0].0,
+                    color2: marks.dot_solid[1].0,
                     angle_deg: 180.0,
                     corner_radius: d / 2.0,
                     border_width: 0.0,
@@ -93,10 +93,10 @@ impl Card {
                     y,
                     w: d,
                     h: d,
-                    color: glass.surface_hover.0,
+                    color: marks.dot_fill.0,
                     corner_radius: d / 2.0,
                     border_width: theme.control.edge_width,
-                    border_color: glass.field_focus_border.0,
+                    border_color: marks.dot_ring.0,
                 },
             );
         }

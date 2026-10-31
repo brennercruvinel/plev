@@ -33,9 +33,10 @@ pub use item::{Item, ItemShape};
 pub use kbd::{Kbd, KbdSize};
 pub use pagination::{PageSlot, Pagination};
 pub use tokens::{
-    AspectRecipe, CapRecipe, CarouselRecipe, DisclosureMotion, DisclosureRail, DisclosureRecipe,
-    DisclosureSurface, DisclosureTile, DisclosureTokens, GridRecipe, HeaderRecipe, ItemRecipe,
-    PageHeadRecipe, PagerRecipe, PanelRecipe, RowRecipe, TableRecipe, TreeRecipe, TreeTile,
+    AspectRecipe, CapRecipe, CardRecipe, CarouselRecipe, DisclosureMotion, DisclosureRail,
+    DisclosureRecipe, DisclosureSurface, DisclosureTile, DisclosureTokens, GridRecipe,
+    HeaderRecipe, ItemRecipe, PageHeadRecipe, PagerRecipe, PanelRecipe, RowRecipe, TableRecipe,
+    TreeRecipe, TreeTile,
 };
 
 pub use avatar::{Avatar, AvatarSize};
