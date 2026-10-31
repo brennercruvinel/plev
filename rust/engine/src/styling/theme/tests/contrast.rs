@@ -338,6 +338,30 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         day,
         chosen,
     );
+    let cb = &sel.checkbox;
+    let box_on = over(cb.on.fill[0], page_bg.1);
+    add(
+        "selection.checkbox.label",
+        "colors.bg",
+        aaa,
+        over(cb.label, page_bg.1),
+        page_bg.1,
+    );
+    add(
+        "selection.checkbox.mark",
+        "selection.checkbox.on",
+        LARGE,
+        over(cb.mark, box_on),
+        box_on,
+    );
+    let edge = cb.off.shadow.first().map_or(cb.off.fill[0], |s| s.color);
+    add(
+        "selection.checkbox.off.edge",
+        "colors.bg",
+        LARGE,
+        over(edge, page_bg.1),
+        page_bg.1,
+    );
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -629,7 +653,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 401,
+        count, 413,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

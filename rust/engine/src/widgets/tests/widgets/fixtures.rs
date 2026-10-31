@@ -107,6 +107,34 @@ fn a_derived_switch_takes_the_palette() {
     assert_eq!(&on[..3], &c.text.0[..3]);
 }
 
+/// The checkbox is the switch's well: off the kit's `#ECECEC` with an
+/// edge that reads, on the ink whole with the knob's paper as the check,
+/// under the core kit and a derived theme alike.
+#[test]
+fn the_checkbox_is_the_switch_well_off_and_the_ink_on() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let s = &theme.selection;
+        let fills = |checked: bool| {
+            let mut c = Compositor::new();
+            c.begin_frame();
+            Checkbox::new(checked).render(&mut c, Rect::new(0.0, 0.0, 18.0, 18.0), &theme);
+            c.layer(LayerId::DEFAULT)
+                .unwrap()
+                .nodes()
+                .iter()
+                .find_map(|n| match *n {
+                    SceneNode::GradientRect { color, .. } => Some(color),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        assert_eq!(fills(false), s.switch.off.fill[0].0);
+        let on = fills(true);
+        assert_eq!((&on[..3], on[3]), (&s.switch.on.fill[0].0[..3], 1.0));
+        assert_ne!(s.checkbox.off.shadow, s.switch.off.shadow, "the edge");
+    }
+}
+
 #[test]
 fn hoff_tooltip_is_solid_262626() {
     let theme = Theme::hoff();

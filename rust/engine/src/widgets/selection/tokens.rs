@@ -90,6 +90,22 @@ pub struct SwitchTokens {
     pub disabled_alpha: f32,
 }
 
+/// The checkbox. The kit has none: its box is the switch's well, off
+/// and on, ringed where it is off by an edge that reads (1.4.11), its
+/// mark the knob's paper, its label the radio's list line color. The box
+/// and the radius are the theme's (`control.box_size`, `shape.micro`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckboxTokens {
+    pub off: ButtonSurface,
+    /// Off under the pointer: the well a shade deeper.
+    pub off_hover: ButtonSurface,
+    pub on: ButtonSurface,
+    /// The check on a box that is on.
+    pub mark: Color,
+    pub label: Color,
+    pub disabled_alpha: f32,
+}
+
 /// The radio group. The kit has no radio: the row is its single-choice
 /// list line (`components/Zoom/index.tsx:15`, `:19`, `:32`) and the disc
 /// is its on/off control, the switch ([`SwitchTokens`]): the well off,
@@ -161,6 +177,7 @@ pub struct CalendarTokens {
 pub struct SelectionTokens {
     pub segmented: SegmentedTokens,
     pub switch: SwitchTokens,
+    pub checkbox: CheckboxTokens,
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
@@ -196,6 +213,17 @@ fn over(fg: Color, under: [f32; 3]) -> [f32; 3] {
     let [r, g, b, a] = fg.to_linear_array();
     let mix = |c: f32, u: f32| c * a + u * (1.0 - a);
     [mix(r, under[0]), mix(g, under[1]), mix(b, under[2])]
+}
+
+/// `surface` at its full strength: its fill opaque. The switch's well on
+/// is the ink at 70%, where the knob's paper reads 2.8:1; a check must
+/// read (1.4.11), so the box takes the ink whole.
+fn full(surface: &ButtonSurface) -> ButtonSurface {
+    let opaque = |c: Color| Color::rgba(c.0[0], c.0[1], c.0[2], 1.0);
+    ButtonSurface {
+        fill: surface.fill.map(opaque),
+        ..surface.clone()
+    }
 }
 
 /// WCAG contrast of two linear colors, lighter over darker.
@@ -327,6 +355,30 @@ impl SelectionTokens {
             },
             disabled_alpha: 0.30,
         };
+        let edge = legible_at(
+            MARK_CONTRAST,
+            SHADES[4],
+            SHADES[5],
+            switch.off.fill[0],
+            SHADES[0],
+        );
+        let checkbox = CheckboxTokens {
+            off: ButtonSurface {
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            off_hover: ButtonSurface {
+                fill: [SHADES[4]; 2],
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            on: full(&switch.on),
+            mark: switch.knob.fill[0],
+            // the list line's `text-[#000]` (components/Zoom/index.tsx:32),
+            // as the radio's label
+            label: hex(0x000000),
+            disabled_alpha: switch.disabled_alpha,
+        };
         let radio = RadioTokens {
             // The knob's size-4.5 as the disc; the dot is the knob drawn
             // at the switch's padding ratio (p-0.5 of h-5.5) inside it.
@@ -368,6 +420,7 @@ impl SelectionTokens {
         Self {
             button_group,
             switch,
+            checkbox,
             radio,
             calendar,
             segmented: SegmentedTokens {
@@ -455,6 +508,22 @@ impl SelectionTokens {
             },
             ..kit.switch
         };
+        let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
+        let checkbox = CheckboxTokens {
+            off: ButtonSurface {
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            off_hover: ButtonSurface {
+                overlay: c.bg_hover,
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            on: full(&switch.on),
+            mark: switch.knob.fill[0],
+            label: c.text,
+            ..kit.checkbox
+        };
         let radio = RadioTokens {
             row_hover: c.bg_hover,
             label: c.text,
@@ -470,6 +539,7 @@ impl SelectionTokens {
             },
             button_group,
             switch,
+            checkbox,
             radio,
             calendar: CalendarTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),
