@@ -319,8 +319,7 @@ mod tests {
 
     /// A component page projects its widgets (task-75 phase 2b), and the
     /// bar leaves them out: samples of the design system, not what the
-    /// page does. The Toggle Group page shows the todo page, and keeps its
-    /// bar.
+    /// page does. The todo page is an app, and keeps its bar.
     #[test]
     fn the_bar_leaves_the_component_pages_out() {
         for page in [
@@ -335,9 +334,9 @@ mod tests {
             );
             assert_eq!(labels(&shown(&fake)), ["plev", "view"], "{page}");
         }
-        let (_, fake) = app("Toggle Group");
+        let (_, fake) = app("Todo");
         let bar = shown(&fake);
-        assert_eq!(labels(&bar), ["plev", "view", "Toggle Group"]);
+        assert_eq!(labels(&bar), ["plev", "view", "Todo"]);
         assert!(
             bar.find(&sid("todo.filter[active]"), "select", None)
                 .is_some()
