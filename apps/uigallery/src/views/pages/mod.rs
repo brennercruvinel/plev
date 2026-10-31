@@ -132,6 +132,9 @@ pub enum Pane {
     RadioGroup,
     Toggle,
     ToggleGroup,
+    // task-104 front F, kit foundation
+    Home,
+    Topbar,
     // apps demo
     Todo,
     Surface,

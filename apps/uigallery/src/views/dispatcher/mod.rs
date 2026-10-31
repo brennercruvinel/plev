@@ -103,6 +103,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.content_height(content, t),
+                Pane::Topbar => self.panes.topbar.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -272,6 +275,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.handle_event(event, content, t),
+                Pane::Topbar => self.panes.topbar.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -392,6 +398,8 @@ impl ShowcaseView {
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
             // task-104 front E, selection and dates (#158)
             Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
+            // task-104 front F, kit foundation
+            Some(Pane::Topbar) => self.panes.topbar.wake(dt),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -568,6 +576,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.render(c, content, theme),
+                Pane::Topbar => self.panes.topbar.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

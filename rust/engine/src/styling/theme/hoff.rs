@@ -38,6 +38,7 @@ use super::{
 };
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::header::tokens::HeaderTokens;
 
 const N2_F: f32 = 248.0 / 255.0;
 
@@ -152,6 +153,7 @@ impl Theme {
             disclosure: DisclosureTokens::hoff_core(),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.

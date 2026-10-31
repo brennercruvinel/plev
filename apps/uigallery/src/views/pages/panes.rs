@@ -41,6 +41,9 @@ use super::super::components::{
     button_group, calendar, date_picker, menus, radio_group, toggle, toggle_group,
 };
 
+// task-104 front F, kit foundation
+use super::super::components::{home, topbar};
+
 pub struct Panes {
     // -- foundations
     pub themes: theme::ThemePage,
@@ -124,6 +127,9 @@ pub struct Panes {
     pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
+    // task-104 front F, kit foundation
+    pub home: home::HomePage,
+    pub topbar: topbar::TopbarPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -237,6 +243,9 @@ impl Panes {
             radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
+            // task-104 front F, kit foundation
+            home: home::HomePage::new(),
+            topbar: topbar::TopbarPage::new(),
             todo,
             surface,
             silences: silences::SilencesPage::new(),

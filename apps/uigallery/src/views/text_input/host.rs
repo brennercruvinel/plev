@@ -105,4 +105,6 @@ text_hosts! {
     Command => command,
     // task-104 front E, selection (#158)
     Menus => menus,
+    // task-104 front F, kit foundation
+    Topbar => topbar,
 }

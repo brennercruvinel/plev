@@ -294,6 +294,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Home",
+        "house",
+        "The kit's home, its branding: the logo's symbol, its wordmark and both.",
+        Pane::Home,
+    ),
+    page(
+        C,
         "Hover Card",
         "eye",
         "Rest the pointer on the handle; the card follows.",
@@ -565,6 +572,13 @@ pub const PAGES: &[Page] = &[
         "info",
         "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
+    ),
+    page(
+        C,
+        "Topbar",
+        "layout-grid",
+        "The kit's top bars: simple, with a filter or the search at the end, minimal, and the asset header with its thumbnails.",
+        Pane::Topbar,
     ),
     page(
         C,
