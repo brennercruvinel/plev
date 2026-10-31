@@ -84,6 +84,7 @@ pub mod table_static;
 pub mod button_group;
 pub mod calendar;
 pub mod date_picker;
+pub mod menus;
 pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;

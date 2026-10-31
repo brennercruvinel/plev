@@ -127,6 +127,7 @@ pub enum Pane {
     ButtonGroup,
     Calendar,
     DatePicker,
+    Menus,
     RadioGroup,
     Toggle,
     ToggleGroup,

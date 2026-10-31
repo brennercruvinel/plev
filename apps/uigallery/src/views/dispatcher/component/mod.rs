@@ -177,6 +177,7 @@ components! {
     ButtonGroup => button_group,
     Calendar => calendar,
     DatePicker => date_picker,
+    Menus => menus,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,

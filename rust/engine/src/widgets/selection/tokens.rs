@@ -20,9 +20,11 @@ use super::legible::{full, reads_on};
 use crate::styling::color::Color;
 use crate::styling::theme::ButtonRecipe;
 use crate::styling::theme::ButtonSurface;
-use crate::styling::theme::hoff_core::{BLUE, SHADES};
+use crate::styling::theme::hoff_core::{BLUE, GREEN, ORANGE, RED, SHADES};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::widgets::buttons::tokens::ButtonTokens;
+
+pub use super::folders::FoldersTokens;
 
 /// The kit's segmented control (`components/Tabs/index.tsx`): a well
 /// with a raised thumb that slides under the chosen segment. The toggle
@@ -241,6 +243,7 @@ pub struct SelectionTokens {
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
+    pub folders: FoldersTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -538,7 +541,68 @@ impl SelectionTokens {
             day_line: 16.0,
             day_weight: 500,
         };
+        // components/Folders/index.tsx:17 `w-58 p-2 rounded-[1.25rem]
+        // bg-[#FCFCFC] border border-[#ECECEC] shadow-2xl`; Search/index.tsx
+        // :10 the `w-8` slot at `top-1 left-1`, :27 `h-10 pl-12 border
+        // border-[#E2E2E2] bg-[#f8f7f7] rounded-xl shadow-[0px_1px_3px_0px_
+        // rgba(18,18,18,0.10)_inset] text-[0.75rem] font-medium
+        // placeholder:text-[#7B7B7B]`, :7 `mb-2`; NewFolder/index.tsx:16 the
+        // row `p-1 rounded-xl text-[0.75rem] leading-[1rem] font-semibold
+        // hover:bg-[#F1F1F1]`, :19 the `size-8 mr-3` slot, its icon 20 in
+        // `#7B7B7B`; Folders/folders.tsx the folders' colors.
+        let search_fill = hex(0xF8F7F7);
+        let folders = FoldersTokens {
+            panel: ButtonSurface {
+                fill: [SHADES[0]; 2],
+                overlay: NONE,
+                shadow: vec![
+                    ShadowSpec::new([0.0, 25.0], 50.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.25)),
+                    ring(hex(0xECECEC)),
+                ],
+                text: ink,
+            },
+            width: 232.0,
+            pad: 8.0,
+            radius: 20.0,
+            search: ButtonSurface {
+                fill: [search_fill; 2],
+                overlay: NONE,
+                shadow: vec![
+                    ShadowSpec::inset([0.0, 1.0], 3.0, 0.0, ink_a(0.10)),
+                    border(hex(0xE2E2E2)),
+                ],
+                text: ink,
+            },
+            search_h: 40.0,
+            search_radius: 12.0,
+            search_slot: 32.0,
+            search_icon: 16.0,
+            search_text_x: 48.0,
+            search_gap: 8.0,
+            // the kit's #7B7B7B reads 3.9:1 on the box; shade 7 passes AAA
+            placeholder: legible(hex(0x7B7B7B), SHADES[6], search_fill, SHADES[0]),
+            row_h: 40.0,
+            row_radius: 12.0,
+            row_hover,
+            slot: 32.0,
+            icon: 20.0,
+            gap: 12.0,
+            label: ink,
+            font_size: 12.0,
+            line_height: 16.0,
+            font_weight: 600,
+            mark: mark_on(
+                &[SHADES[5], SHADES[6]],
+                &[
+                    &[SHADES[0]],
+                    &[SHADES[0], row_hover],
+                    &[SHADES[0], search_fill],
+                ],
+            ),
+            hues: [ORANGE, GREEN, BLUE, RED],
+        };
         Self {
+            folders,
             button_group,
             switch,
             checkbox,

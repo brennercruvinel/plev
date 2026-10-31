@@ -364,6 +364,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Menus",
+        "folder",
+        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        Pane::Menus,
+    ),
+    page(
+        C,
         "Message",
         "send",
         "Comment rows of a thread and the quick comment, with the like chip.",
