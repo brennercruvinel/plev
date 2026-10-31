@@ -35,6 +35,9 @@ use super::super::components::context_menu;
 use super::super::text_input::field_menu;
 use super::super::{ActiveOverlay, ShowcaseView};
 
+// task-104 front B: the sheet and the drawer.
+mod edge;
+
 /// The ids the view gives its overlays.
 pub(in crate::views) const TOASTS: &str = "toasts";
 pub(in crate::views) const DIALOG: &str = "dialog";
@@ -128,6 +131,8 @@ fn project(
                 b.focus(at);
             }
         }
+        ActiveOverlay::Sheet { widget, .. } => edge::project_sheet(widget, focus, b),
+        ActiveOverlay::Drawer { widget, .. } => edge::project_drawer(widget, focus, b),
     }
 }
 
@@ -146,7 +151,7 @@ impl Overlays<'_> {
             return;
         }
         if intent == Intent::Destructive {
-            let text = "Repository deleted (not really).";
+            let text = "File deleted (not really).";
             self.toasts.push(text, Intent::Destructive, self.theme);
         } else {
             self.toasts
@@ -163,6 +168,10 @@ enum Asked {
     Close(OverlayId),
     /// An item of the menu, picked.
     Pick(OverlayId, u64),
+    /// The sheet answered: saved or not.
+    Sheet(OverlayId, bool),
+    /// A link of the drawer, picked.
+    Link(OverlayId, usize),
 }
 
 impl Overlays<'_> {
@@ -188,6 +197,8 @@ impl Overlays<'_> {
                 let item = key_under(&req.target, menu)?.parse::<u64>().ok()?;
                 (action == "activate").then_some(Asked::Pick(*id, item))
             }
+            ActiveOverlay::Sheet { id, widget } => edge::sheet_asked(widget, *id, req),
+            ActiveOverlay::Drawer { id, widget } => edge::drawer_asked(widget, *id, req),
         }
     }
 }
@@ -247,6 +258,32 @@ impl Operable for Overlays<'_> {
                     .result
                     .insert("item".to_owned(), Value::Text(label.to_owned()));
             }
+            Some(Asked::Sheet(overlay, confirm)) => {
+                self.mgr.pop_id_animated(overlay);
+                if confirm {
+                    self.toasts
+                        .push("Settings saved.", Intent::Constructive, self.theme);
+                }
+                outcome
+                    .result
+                    .insert("confirmed".to_owned(), Value::Bool(confirm));
+            }
+            Some(Asked::Link(overlay, link)) => {
+                let label = match self.active.as_ref() {
+                    Some(ActiveOverlay::Drawer { widget, .. }) => {
+                        widget.links().nth(link).map(|l| l.label.clone())
+                    }
+                    _ => None,
+                };
+                let label = label.unwrap_or_default();
+                self.mgr.pop_id_animated(overlay);
+                self.toasts.push(
+                    format!("Drawer: {label}"),
+                    Intent::Informational,
+                    self.theme,
+                );
+                outcome.result.insert("item".to_owned(), Value::Text(label));
+            }
             None => {
                 return Execution::Failed(format!("no overlay has {action} on {}", req.target));
             }
@@ -288,6 +325,8 @@ impl ShowcaseView {
         let modal = match &self.active_overlay {
             Some(ActiveOverlay::Modal { widget, .. }) => widget.sem_id(),
             Some(ActiveOverlay::Menu { widget, .. }) => widget.sem_id(),
+            Some(ActiveOverlay::Sheet { widget, .. }) => widget.sem_id(),
+            Some(ActiveOverlay::Drawer { widget, .. }) => widget.sem_id(),
             None => None,
         };
         [self.toasts.sem_id(), modal]
@@ -379,6 +418,7 @@ impl ShowcaseView {
                     .and_then(|key| key.parse::<u64>().ok());
                 widget.set_highlighted(item);
             }
+            Some(active) => edge::show_focus(active, id),
             None => {}
         }
     }

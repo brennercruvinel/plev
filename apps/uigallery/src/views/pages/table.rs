@@ -106,7 +106,13 @@ pub const PAGES: &[Page] = &[
         "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
         Pane::AspectRatio,
     ),
-    placeholder("Attachment"),
+    page(
+        C,
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
     page(
         C,
         "Avatar",
@@ -211,7 +217,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
     page(
@@ -229,12 +235,12 @@ pub const PAGES: &[Page] = &[
         "Modal dialogs with spring motion per intent.",
         Pane::Dialog,
     ),
-    alias(
+    page(
+        C,
         "Drawer",
         "chevron-left",
-        "The sidebar as a drawer: this gallery's own chrome on a phone.",
-        Pane::Sidebar,
-        "a drawer apart from the app shell",
+        "The kit's navigation, slid in from the edge over the page.",
+        Pane::Drawer,
     ),
     page(
         C,
@@ -275,7 +281,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
     page(
@@ -314,7 +320,13 @@ pub const PAGES: &[Page] = &[
         "The text that names a control, and a section's caption.",
         Pane::Label,
     ),
-    placeholder("Marker"),
+    page(
+        C,
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
     page(
         C,
         "Menubar",
@@ -408,12 +420,12 @@ pub const PAGES: &[Page] = &[
         "Horizontal and vertical rules.",
         Pane::Separator,
     ),
-    alias(
+    page(
+        C,
         "Sheet",
         "chevron-left",
-        "The sidebar as a drawer sheet.",
-        Pane::Sidebar,
-        "a sheet from any edge, apart from the app shell",
+        "A panel held to any edge, blocking the page until it is answered.",
+        Pane::Sheet,
     ),
     page(
         C,

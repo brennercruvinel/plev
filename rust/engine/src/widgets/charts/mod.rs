@@ -23,6 +23,7 @@ mod donut;
 mod line;
 
 pub mod draw;
+pub mod semantics;
 #[cfg(test)]
 mod tests;
 

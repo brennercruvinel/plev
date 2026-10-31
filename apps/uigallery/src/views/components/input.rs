@@ -155,9 +155,9 @@ impl InputPage {
             &self.preview(),
             style.font_size,
             style.font_weight,
-            last.x,
-            last.y + last.h + theme.spacing.sm,
+            (last.x, last.y + last.h + theme.spacing.sm),
             theme.colors.text_dim.0,
+            theme,
         );
     }
 }

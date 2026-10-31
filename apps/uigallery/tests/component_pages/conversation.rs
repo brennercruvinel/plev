@@ -14,6 +14,15 @@ const ROW: &str = "message_page.group[0].card[0].message[0]";
 const ALERT: &str = "alert_page.group[1].card[1].alert[0]";
 const ACCEPT: &str = "alert_page.group[1].card[1].alert[0].action[1]";
 
+/// The Attachment page's tray of pictures: its first tile, that tile's
+/// remove button, and the add button.
+const TILE: &str = "attachment_page.group[1].card[0][0]";
+const REMOVE: &str = "attachment_page.group[1].card[0][0].remove";
+const ADD: &str = "attachment_page.group[1].card[0].add";
+
+/// The Marker page's unread single-comment pin.
+const PIN: &str = "marker_page.group[1].card[1].marker[0]";
+
 /// The gallery on `page`, scrolled so a person sees `id`.
 fn seen(page: &str, id: &str) -> Gallery {
     let mut g = gallery(page);
@@ -67,6 +76,8 @@ fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
         ("Bubble", BUBBLE),
         ("Alert", ALERT),
         ("Alert", ACCEPT),
+        ("Attachment", TILE),
+        ("Marker", PIN),
     ] {
         let focused = |g: &Gallery| {
             g.view
@@ -168,6 +179,53 @@ fn reading_an_alert_is_the_same_from_the_three() {
     reader.press(COMMENT);
     let agent = by_agent("Alert", "read", vec![ask(COMMENT, "activate")]);
     assert_ne!(person.state(), before, "the dot went");
+    assert_eq!(reader.state(), person.state(), "the reader");
+    assert_eq!(agent.state(), person.state(), "the agent");
+}
+
+/// A remove button removes its tile, the same from the three: the
+/// person's click (the button takes it hidden, as the kit's), the
+/// reader's press, the agent's `activate`.
+#[test]
+fn removing_an_attachment_is_the_same_from_the_three() {
+    let before = gallery("Attachment").state();
+    let mut person = seen("Attachment", REMOVE);
+    person.click(REMOVE);
+    let mut reader = gallery("Attachment");
+    reader.press(REMOVE);
+    let agent = by_agent("Attachment", "remove", vec![ask(REMOVE, "activate")]);
+    assert_ne!(person.state(), before, "the tile went");
+    assert_eq!(reader.state(), person.state(), "the reader");
+    assert_eq!(agent.state(), person.state(), "the agent");
+    let s = person.view.semantics().expect("the page projects");
+    assert!(s.get(&sid(TILE)).is_none(), "its node went with it");
+}
+
+/// The add button adds a picture, the same from the three.
+#[test]
+fn adding_an_attachment_is_the_same_from_the_three() {
+    let before = gallery("Attachment").state();
+    let mut person = seen("Attachment", ADD);
+    person.click(ADD);
+    let mut reader = gallery("Attachment");
+    reader.press(ADD);
+    let agent = by_agent("Attachment", "add", vec![ask(ADD, "activate")]);
+    assert_ne!(person.state(), before, "a picture came");
+    assert_eq!(reader.state(), person.state(), "the reader");
+    assert_eq!(agent.state(), person.state(), "the agent");
+}
+
+/// A click on an unread pin opens its thread and reads it, as the reader's
+/// press and the agent's `activate` do.
+#[test]
+fn opening_a_pin_reads_it_the_same_from_the_three() {
+    let before = gallery("Marker").state();
+    let mut person = seen("Marker", PIN);
+    person.click(PIN);
+    let mut reader = gallery("Marker");
+    reader.press(PIN);
+    let agent = by_agent("Marker", "open", vec![ask(PIN, "activate")]);
+    assert_ne!(person.state(), before, "the pin was read");
     assert_eq!(reader.state(), person.state(), "the reader");
     assert_eq!(agent.state(), person.state(), "the agent");
 }

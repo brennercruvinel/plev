@@ -279,11 +279,130 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // the attachment's file tile (its name, detail and icon on its fill)
+    // and the remove button's cross on both ends of its gradient.
+    let at = &t.message.attachment;
+    let tile = over(at.file_fill, card);
+    for (fg, need, color) in [
+        ("message.attachment.name", TEXT, at.name.color),
+        ("message.attachment.detail", TEXT, at.detail.color),
+        (
+            "message.attachment.file_icon_color",
+            LARGE,
+            at.file_icon_color,
+        ),
+    ] {
+        add(
+            fg,
+            "message.attachment.file_fill",
+            need,
+            over(color, tile),
+            tile,
+        );
+    }
+    for (i, fill) in at.remove_fill.iter().enumerate() {
+        let under = over(*fill, card);
+        add(
+            "message.attachment.remove_ink",
+            &format!("message.attachment.remove_fill[{i}]"),
+            LARGE,
+            over(at.remove_ink, under),
+            under,
+        );
+    }
+    // the markers: the unread pin's border and the point cursor's on the
+    // card, and each cursor's mark on both ends of its fill.
+    let m = &t.message.marker;
+    add(
+        "message.marker.pin_unread",
+        "colors.surface",
+        LARGE,
+        over(m.pin_unread, card),
+        card,
+    );
+    add(
+        "message.marker.point_border",
+        "colors.surface",
+        LARGE,
+        over(m.point_border, card),
+        card,
+    );
+    for (name, shape) in [
+        ("point", &m.point),
+        ("pinned", &m.pinned),
+        ("active", &m.active),
+    ] {
+        for (i, fill) in shape.fill.iter().enumerate() {
+            let under = over(*fill, card);
+            add(
+                &format!("message.marker.{name}.ink"),
+                &format!("message.marker.{name}.fill[{i}]"),
+                LARGE,
+                over(shape.ink, under),
+                under,
+            );
+        }
+    }
+    // task-104 front B: the sheet's and the drawer's text and icons on
+    // their panel over the page, a drawer link's also on its lit fill. On
+    // core the kit's #7B7B7B hint and group label fail AA; they take
+    // shade 7 (`overlay/sheet/tokens.rs`), which these pairs hold.
+    let o = &t.overlay;
+    for (name, sheet_or_drawer, fill) in [
+        ("sheet", true, o.sheet.panel.fill),
+        ("drawer", false, o.drawer.panel.fill),
+    ] {
+        let under = over(fill, page);
+        let bg = format!("overlay.{name}.panel.fill");
+        let texts: Vec<(&str, f64, Color)> = if sheet_or_drawer {
+            let s = &o.sheet;
+            vec![
+                ("title_color", TEXT, s.title_color),
+                ("description_color", TEXT, s.description_color),
+                ("label_color", TEXT, s.label_color),
+                ("hint_color", TEXT, s.hint_color),
+                ("value_color", TEXT, s.value_color),
+            ]
+        } else {
+            let d = &o.drawer;
+            vec![
+                ("brand_color", TEXT, d.brand_color),
+                ("group_color", TEXT, d.group_color),
+                ("item_color", TEXT, d.item_color),
+                ("icon_color", LARGE, d.icon_color),
+            ]
+        };
+        for (fg, need, color) in texts {
+            add(
+                &format!("overlay.{name}.{fg}"),
+                &bg,
+                need,
+                over(color, under),
+                under,
+            );
+        }
+    }
+    // The modal's sheet: its title and its body on its fill.
+    let m = &o.modal;
+    let sheet = over(m.fill, page);
+    for (fg, color) in [("title_color", m.title_color), ("body_color", m.body_color)] {
+        let fg = format!("overlay.modal.{fg}");
+        add(&fg, "overlay.modal.fill", TEXT, over(color, sheet), sheet);
+    }
+    let d = &o.drawer;
+    let lit = over(d.item_fill, over(d.panel.fill, page));
+    for (fg, need, color) in [
+        ("item_color", TEXT, d.item_color),
+        ("icon_active", LARGE, d.icon_active),
+    ] {
+        let fg = format!("overlay.drawer.{fg}");
+        add(&fg, "overlay.drawer.item_fill", need, over(color, lit), lit);
+    }
     out
 }
 
-/// The pairs that fail today, 116 of the 369 (core 41, hoff 18, dark 13,
-/// light 44), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 115 of the 465 (core 41, hoff 18, dark 13,
+/// light 43), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -519,9 +638,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
-    // task-104 front C: the alert's unread dot takes the info accent,
-    // which the light theme already draws under 3:1.
-    ("light", "message.alert.unread", "colors.surface", 2.87),
 ];
 
 #[test]
@@ -562,7 +678,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 369,
+        count, 473,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

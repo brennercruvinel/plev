@@ -33,7 +33,7 @@ impl ShowcaseView {
                 Pane::Breadcrumb => self.panes.breadcrumb.content_height(content, t),
                 Pane::Button => self.panes.button.content_height(content, t),
                 Pane::Card => self.panes.card.content_height(content, t),
-                Pane::Chart => self.panes.chart.content_height(content),
+                Pane::Chart => self.panes.chart.content_height(content, t),
                 Pane::Checkbox => self.panes.checkbox.content_height(content, t),
                 Pane::Chip => self.panes.chip.content_height(content, t),
                 Pane::CodeBlock => self.panes.code_block.content_height(content, t),
@@ -68,13 +68,17 @@ impl ShowcaseView {
                 Pane::InputGroup => self.panes.input_group.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
+                Pane::Drawer => self.panes.drawer.content_height(content, t),
+                Pane::Sheet => self.panes.sheet.content_height(content, t),
                 Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
                 Pane::Menubar => self.panes.menubar.content_height(content, t),
                 Pane::HoverCard => self.panes.hover_card.content_height(content, t),
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Alert => self.panes.alert.content_height(content, t),
+                Pane::Attachment => self.panes.attachment.content_height(content, t),
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
+                Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
@@ -102,7 +106,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
-                Pane::Builder => self.panes.builder.content_height(content),
+                Pane::Builder => self.panes.builder.content_height(content, t),
             },
         }
     }
@@ -142,7 +146,7 @@ impl ShowcaseView {
                 Pane::Breadcrumb => self.panes.breadcrumb.handle_event(event, content, t),
                 Pane::Button => self.panes.button.handle_event(event, content, t),
                 Pane::Card => self.panes.card.handle_event(event, content, t),
-                Pane::Chart => self.panes.chart.handle_event(event, content),
+                Pane::Chart => self.panes.chart.handle_event(event, content, t),
                 Pane::Checkbox => self.panes.checkbox.handle_event(event, content, t),
                 Pane::Chip => self.panes.chip.handle_event(event, content, t),
                 Pane::CodeBlock => self.panes.code_block.handle_event(event, content, t),
@@ -195,6 +199,20 @@ impl ShowcaseView {
                     }
                     r
                 }
+                Pane::Drawer => {
+                    let (r, after) = self.panes.drawer.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::Sheet => {
+                    let (r, after) = self.panes.sheet.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
                 Pane::DropdownMenu => {
                     let bounds = self.anchored_bounds(content);
                     let page = &mut self.panes.dropdown_menu;
@@ -217,7 +235,9 @@ impl ShowcaseView {
                 }
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Alert => self.panes.alert.handle_event(event, content, t),
+                Pane::Attachment => self.panes.attachment.handle_event(event, content, t),
                 Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
+                Pane::Marker => self.panes.marker.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
                 Pane::MessageScroller => {
                     self.panes.message_scroller.handle_event(event, content, t)
@@ -272,7 +292,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
-                Pane::Builder => self.panes.builder.handle_event(event, content),
+                Pane::Builder => self.panes.builder.handle_event(event, content, t),
             },
         }
     }
@@ -436,6 +456,8 @@ impl ShowcaseView {
                 Pane::InputGroup => self.panes.input_group.render(c, content, theme),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
+                Pane::Drawer => self.panes.drawer.render(c, content, theme),
+                Pane::Sheet => self.panes.sheet.render(c, content, theme),
                 Pane::Menubar => {
                     let bounds = self.anchored_bounds(content);
                     let page = &mut self.panes.menubar;
@@ -486,7 +508,9 @@ impl ShowcaseView {
                 }
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Alert => self.panes.alert.render(c, content, theme),
+                Pane::Attachment => self.panes.attachment.render(c, content, theme),
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),
+                Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
                 // task-104 front D, disclosure and display (#157)

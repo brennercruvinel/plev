@@ -32,7 +32,10 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
+};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -144,9 +147,10 @@ impl Theme {
             button: ButtonTokens::derive(&dark),
             form: FormTokens::hoff_core(),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.

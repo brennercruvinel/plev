@@ -312,7 +312,12 @@ impl WorkspaceView {
                         style.line_height + pad_y * 2.0,
                     );
                     let radius = theme.shape.tooltip;
-                    if let Some(shadow) = shadow_node(rect, radius, &theme.shadows.hint) {
+                    for shadow in theme
+                        .shadows
+                        .hint
+                        .iter()
+                        .filter_map(|spec| shadow_node(rect, radius, spec))
+                    {
                         compositor.push_to_layer(layer_id, shadow);
                     }
                     compositor.push_to_layer(

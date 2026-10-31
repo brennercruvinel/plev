@@ -161,9 +161,9 @@ impl ScrollAreaPage {
                 &format!("selected: Item {i}"),
                 style.font_size,
                 style.font_weight,
-                bounds.x,
-                bounds.bottom() + theme.spacing.sm,
+                (bounds.x, bounds.bottom() + theme.spacing.sm),
                 dim,
+                theme,
             );
         }
     }

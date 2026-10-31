@@ -514,7 +514,8 @@ impl TextMeasurer {
             let fs = &mut ctx.font_system;
             let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
             buffer.set_size(fs, max_width, None);
-            buffer.set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
+            let attrs = attrs_for(style, fs.db());
+            buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);
             buffer.shape_until_scroll(fs, false);
             ShapedText {
                 buffer,

@@ -64,3 +64,6 @@ mod disclosure;
 
 /// Front E, selection and dates (#158).
 mod selection;
+
+/// Front G, navigation and data.
+mod navigation;

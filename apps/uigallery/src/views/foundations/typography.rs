@@ -5,7 +5,8 @@
 //! (`theme.typography`: its ramp and its named styles, in its family and
 //! tracking), so the page shows the face the theme draws with, whatever it
 //! is. Where the table is too narrow for five columns, each row stacks:
-//! the specimen, then its readout in one line.
+//! the specimen, then its readout in one line. A last group, "Engine",
+//! shows what the text engine does with that face (`type_engine`).
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
@@ -13,6 +14,7 @@ use engine::styling::theme::Theme;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect_stroke};
 
 use super::super::components::showcase::{self, Grid, GroupLayout};
+use super::type_engine;
 
 /// The face a style without a family resolves to: the engine's default
 /// sans (`drawing/text/fonts.rs`).
@@ -158,10 +160,11 @@ impl TypographyPage {
         Self
     }
 
-    /// One full-width card per group, as tall as its table.
+    /// One full-width card per group, as tall as its table, then the
+    /// engine's cards.
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let m = Metrics::of(theme);
-        let grids = groups(theme).into_iter().map(|(_, rows)| {
+        let tables = groups(theme).into_iter().map(|(_, rows)| {
             let stacked = m.stacked(content.w, &rows);
             let body: f32 = rows.iter().map(|(_, s)| m.row_h(s, stacked)).sum();
             let header = if stacked { 0.0 } else { m.header_h() };
@@ -171,6 +174,7 @@ impl TypographyPage {
                 heights: vec![header + body],
             }
         });
+        let grids = tables.chain([type_engine::grid(content, theme)]);
         showcase::layout_grids(grids, content, theme)
     }
 
@@ -189,10 +193,18 @@ impl TypographyPage {
         let layout = Self::layout(content, theme);
         let all = groups(theme);
         let last = layout.len().saturating_sub(1);
-        for (g, (group, (title, rows))) in layout.iter().zip(&all).enumerate() {
-            showcase::title(c, title, content, group.title_y, theme);
-            if let Some(table) = group.cards.first() {
-                draw_table(c, *table, rows, &m, theme);
+        for (g, group) in layout.iter().enumerate() {
+            match all.get(g) {
+                Some((title, rows)) => {
+                    showcase::title(c, title, content, group.title_y, theme);
+                    if let Some(table) = group.cards.first() {
+                        draw_table(c, *table, rows, &m, theme);
+                    }
+                }
+                None => {
+                    showcase::title(c, "Engine", content, group.title_y, theme);
+                    type_engine::draw(c, &group.cards, theme);
+                }
             }
             if g < last {
                 showcase::rule(c, content, group.rule_y, theme);
@@ -355,10 +367,16 @@ mod tests {
             for w in (280..=1600).step_by(8) {
                 let content = Rect::new(0.0, 0.0, w as f32, 800.0);
                 let layout = TypographyPage::layout(content, &theme);
-                for group in &layout {
+                // The tables; the engine's cards are the last group.
+                for group in &layout[..layout.len() - 1] {
                     let table = group.cards[0];
                     assert!(table.right() <= content.right() + 0.5, "{w}");
                     assert!(group.rule_y > table.bottom());
+                }
+                let engine = layout.last().expect("the engine group");
+                assert_eq!(engine.cards.len(), type_engine::CARDS.len());
+                for card in &engine.cards {
+                    assert!(card.right() <= content.right() + 0.5, "{w}: {card:?}");
                 }
                 let mut c = Compositor::new();
                 TypographyPage::new().render(&mut c, content, &theme);

@@ -420,7 +420,9 @@ pub fn shape_report(
 ) -> ShapeReport {
     with_fonts(faces, |fonts| {
         let fs = &mut fonts.system;
-        let mut attrs = Attrs::new().weight(Weight(style.font_weight));
+        let weight =
+            super::fonts::matched_weight(fs.db(), style.font_family.as_deref(), style.font_weight);
+        let mut attrs = Attrs::new().weight(Weight(weight));
         if style.letter_spacing != 0.0 && style.font_size > 0.0 {
             // cosmic-text tracking is in EM; the engine API is px.
             attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
