@@ -1,13 +1,23 @@
 ---
+id: adr-0017
+title: "adotamos pleverror como tipo de erro unificado e eliminamos debt de lint"
 project: plev
-audience: [ai-agents, contributors]
-status: reference
-last-updated: 2024-04-14
-domain: lint
-commit: 6b141ed..813a4e5
+type: adr
+status: accepted
+date: 2024-04-14
+date_basis: reconstructed
+recorded: 2026-03-30
+topics: [process, platform]
+relations: []
+source: docs/adr/workflows/0017-error-handling-lint-cleanup.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # adotamos pleverror como tipo de erro unificado e eliminamos debt de lint
+
+Decides on a dedicated error type for the engine, `PlevError`, hand-written and without `thiserror`, and eliminates the lint debt: 98 `#[allow(dead_code)]` and extensive `.unwrap()` on the WASM paths. The reason is that production code depended on concrete types from external dependencies, and the investigation reclassified three of the eight audit findings, all of them in test blocks. The result is error propagation with `?` in the engine, a WASM setup that logs an error instead of panicking, and no new dependency.
 
 ## contexto
 

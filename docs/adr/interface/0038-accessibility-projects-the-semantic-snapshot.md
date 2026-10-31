@@ -1,11 +1,24 @@
 ---
+id: adr-0038
+title: "accessibility projects the semantic snapshot"
+project: plev
 type: adr
 status: accepted
-tags: [accessibility, accesskit, sem, snapshot, binding, dispatcher, one-path, focus, showcase, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [accessibility, semantics, input]
+relations: [adr-0032, adr-0033, adr-0035, task-59, task-61, task-62, task-75]
+evidence: [263c00c]
+source: docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # accessibility projects the semantic snapshot
+
+Decides that the accessibility tree is a projection of the semantic snapshot, and no longer an estimate made from geometry: `rust/engine/src/control/accessibility` builds the AccessKit tree from the semantic snapshot of the `rust/accord` crate, from the frame's binding table and from the window. The old path, based on click regions and on `ViewId`, was removed, and a screen reader action becomes an `Assistive` actor on the same `Dispatcher`. No shipped app exposed a tree before; the showcase already wires the bridge on desktop, and ide and urnaui are next.
 
 ## context
 
@@ -21,10 +34,10 @@ them created an adapter. no app that ships exposed a tree.
 
 meanwhile the contract that explains an interface already existed: every
 control has a `SemId`, a role, a label, its state and the actions it
-accepts (`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`), every action
-goes through one `Dispatcher` (`docs/adr/semantics/0033-actions-carry-observed-state.md`),
+accepts ([`0032-semantic-contract-as-pure-projection.md`](../semantics/0032-semantic-contract-as-pure-projection.md)), every action
+goes through one `Dispatcher` ([`0033-actions-carry-observed-state.md`](../semantics/0033-actions-carry-observed-state.md)),
 and the compositor knows where each id sits in the frame
-(`docs/adr/semantics/0035-semantic-binding-beside-the-scene.md`). a structure good enough
+([`0035-semantic-binding-beside-the-scene.md`](../semantics/0035-semantic-binding-beside-the-scene.md)). a structure good enough
 for agents explains the interface to assistive technology too (thesis,
 section 21), and assistive technology is one more actor, not a fifth path.
 

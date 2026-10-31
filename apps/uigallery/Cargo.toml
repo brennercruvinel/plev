@@ -3,6 +3,7 @@ name = "uigallery"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 # two bins (the second is the web entry, see src/bin/web.rs): `cargo run -p
 # uigallery` keeps running the gallery.

@@ -1,34 +1,46 @@
 ---
+id: adr-0051
+title: "a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher"
+project: plev
 type: adr
 status: accepted
-tags: [surface, uir, plev-ir, materialization, layout, theme, comps, sem, dispatcher, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [generated-surfaces, ir, semantics, layout, agents]
+relations: [adr-0023, adr-0032, adr-0033, adr-0035, adr-0047, adr-0049, task-68, task-69, task-75, task-79, task-80, task-95, task-97]
+source: docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher
+
+Defines that a generated surface materializes only from verified IR: `rust/screen` projects the tree through the IR, draws with the `comps` widgets over the engine's layout and the `Theme` tokens, and asks the app's dispatcher for each event, without executing anything. The addenda record the change of shape without losing each widget's state, the item list, the image with the frame the app holds, and the rule that a text never gets narrower than its longest word; the `code` addendum is still proposed. It matters because the renderer gains no power of its own: every effect of a surface becomes a request with the registered actor, in the same place where the actions of the person and of the agent live.
 
 ## context
 
 task-68 gave the plev IR (`rust/plevir`): a surface described by meaning,
 a registry of what an app can do built from its own projection
 (`Capabilities::from_snapshot`), and `verify`, the only way to a
-`VerifiedIr` (docs/adr/generated/0049-plev-ir-typed-and-verified.md). the runtime could
+`VerifiedIr` ([`0049-plev-ir-typed-and-verified.md`](0049-plev-ir-typed-and-verified.md)). the runtime could
 refuse an IR, but it could not show one: nothing turned a `VerifiedIr`
 into something a person sees and operates, or an agent observes.
 
 what existed to build it from:
 
 - the official app pattern, state in structs with retained widgets
-  (docs/adr/structure/0023-official-app-pattern.md), and the comps widgets, 19 of them
+  ([`0023-official-app-pattern.md`](../structure/0023-official-app-pattern.md)), and the comps widgets, 19 of them
   with an optional `SemId` that binds the rect they draw and hit-test
-  with (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md);
+  with ([`0035-semantic-binding-beside-the-scene.md`](../semantics/0035-semantic-binding-beside-the-scene.md));
 - the engine's `LayoutEngine` (taffy behind `LayoutStyle`, flex only)
   and every visual value as a `Theme` token;
 - the semantic contract and its one `Dispatcher` for every actor
-  (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md,
-  docs/adr/semantics/0033-actions-carry-observed-state.md), and the rule that an act
+  ([`0032-semantic-contract-as-pure-projection.md`](../semantics/0032-semantic-contract-as-pure-projection.md),
+  [`0033-actions-carry-observed-state.md`](../semantics/0033-actions-carry-observed-state.md)), and the rule that an act
   rests on what its actor was shown
-  (docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md).
+  ([`0047-an-act-rests-on-what-its-actor-was-shown.md`](../semantics/0047-an-act-rests-on-what-its-actor-was-shown.md)).
 
 task-69 phase 1 asked for the materializer: layout by the engine, tokens
 by the theme, drawing by the comps widgets, semantics by construction,
@@ -233,6 +245,16 @@ set; these are the numbers of the proposer's latency (phase 3) to add to.
 - `view/dispatch.rs` of the showcase lost its agent module to a file of
   its own and left the frozen list of the file hygiene guard; the Surface
   page is one more arm per verb there.
+
+## alternatives
+
+- projetar a superfície a partir do `project` de cada widget: descartado, porque 9 dos 21 componentes do vocabulário não têm `project`. A projeção sai da IR.
+- um segundo motor de layout: descartado. Os containers (`stack`, `grid`, `split`, `overlay`) são mapeados sobre o `LayoutEngine` do engine.
+- materializador dentro de `comps` ou de `uir`: descartado. `comps` continua biblioteca de widgets e `uir` continua puro; o orquestrador fixou uma crate própria.
+- materializar uma `Ir` que não passou por `verify`: descartado. Nenhuma função da crate recebe `Ir`.
+- fechar a superfície para trocar de forma: descartado na fase 2, porque o foco, o caret e um arraste em curso se perdiam.
+- motor de animação próprio, ou duração e mola fora do tema: descartado. As transições usam a mola de `theme.motion` e o `Tween` sobre `theme.duration.slow`.
+- a superfície decodificar quadros: descartado. Ela nunca guarda bytes nem pede decodificação; desenha o que o app tem agora.
 
 ## avoid
 
@@ -516,7 +538,7 @@ surface open, so the defect passed every phase.
 
 ### context
 
-the IR gained `code` (docs/adr/generated/0049-plev-ir-typed-and-verified.md, addendum
+the IR gained `code` ([`0049-plev-ir-typed-and-verified.md`](0049-plev-ir-typed-and-verified.md), addendum
 of task-97), so the review of the ide shows its diff with the kind of
 each line instead of in a table. what it takes to draw it was open: the
 kinds' colors had to come from tokens the theme already has, readable at

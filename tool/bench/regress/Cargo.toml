@@ -4,6 +4,7 @@ name = "regress"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Structural regression for the showcase (task-67): a frame is compared"
 

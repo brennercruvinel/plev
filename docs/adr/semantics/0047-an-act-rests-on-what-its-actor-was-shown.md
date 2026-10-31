@@ -1,15 +1,27 @@
 ---
+id: adr-0047
+title: "an act rests on what its actor was shown"
+project: plev
 type: adr
 status: accepted
-tags: [wire, agents, protocol, revision, ring, stale, cli, security, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [agents, semantics]
+relations: [adr-0039, adr-0043, adr-0044, task-64, task-83, task-87, task-91]
+source: docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # an act rests on what its actor was shown
 
+Decides that an act on `from_revision r` rests only on what its actor was shown: the agent port keeps, per actor, the revisions it gave them and what each one showed, and refuses as `not_observed` a read the actor never saw. The earlier code assembled the observed values from the revision's whole snapshot, which let an actor claim to have seen a state that was never shown to it. The case that motivated the decision is a `submit` resting only on an observation of `commit.form`, found by the session inspector (task-64, phase a); the fix belongs to task-89.
+
 ## context
 
-`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md` promised that
+[`0039-agents-act-through-the-semantic-contract.md`](0039-agents-act-through-the-semantic-contract.md) promised that
 `from_revision` rebuilds the observed values of an act "so the stale check
 compares what the agent saw, not a later frame". the code did not keep it.
 the port held the whole snapshot of every revision it served and built the
@@ -89,7 +101,7 @@ default name of the command line is `plev`, so distinct agents pass
 the name is declared, not authenticated. the boundary stays the one the
 port already has: a local socket of the same user, off unless opted in,
 and opened by `from_env` only in a debug build
-(`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`, security
+([`0039-agents-act-through-the-semantic-contract.md`](0039-agents-act-through-the-semantic-contract.md), security
 posture).
 
 ## consequences
@@ -111,7 +123,7 @@ posture).
   last giving of its revision); `acted` names what ran after that look,
   the agent's own acts included, so the two consequences above about an
   `acted` that names nobody hold only when there is no look
-  (`docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`).
+  ([`0043-a-delta-carries-the-node-a-refusal-names-who-acted.md`](0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)).
 - the scripted agent of the laboratory needed no extra observation: it
   observes the whole workspace before each decision, and each act it
   chains reads the state of its own file, which no act of its own moved.
@@ -127,7 +139,7 @@ posture).
   cost at an act is one walk back over at most `cap` revisions per read,
   with a lookup in the ring and, for a scoped snapshot, a walk up the
   node's parents. it is not measured here.
-- `docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md` says the revision a
+- [`0044-a-terminal-stage-carries-the-revision.md`](0044-a-terminal-stage-carries-the-revision.md) says the revision a
   stage carries serves `from_revision`: it still does, and it shows no
   state, so an act on it reads what the agent was shown before it.
 

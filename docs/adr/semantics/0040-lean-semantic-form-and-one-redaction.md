@@ -1,11 +1,23 @@
 ---
+id: adr-0040
+title: "the semantic form is lean, and one rule redacts a secret"
+project: plev
 type: adr
 status: accepted
-tags: [sem, wire, rec, serde, protocol, security, redaction, agents, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [semantics, agents, formats]
+relations: [adr-0039, task-61, task-65, task-83]
+source: docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the semantic form is lean, and one rule redacts a secret
+
+Decides that the serde form of the `rust/accord` crate (then `sem`) writes no field with a default value, and that the rule keeping a secret inside the process exists only once, in the `redactor` module of that crate. Measured over the whole showcase, a full observation dropped from 6419 to 2039 bytes with three items, and from 87417 to 26237 with 103, without any revision changing. `source` stays in the form when the node has an origin, but it leaves the agent's response only when the agent asks for it.
 
 ## context
 
@@ -16,7 +28,7 @@ node, and about 40 percent more was fields written at their default
 (`"description": null`, `"enabled": true`, a `constraints` object with
 seven default fields, a `policy` naming four actors who may all ask).
 none of it carries meaning to an agent that acts by id; all of it costs
-tokens on every observation (`docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md`,
+tokens on every observation ([`0039-agents-act-through-the-semantic-contract.md`](0039-agents-act-through-the-semantic-contract.md),
 consequences).
 
 the same task left the rule that keeps a secret inside the process

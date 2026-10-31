@@ -126,7 +126,7 @@ fn parser_rejects_garbage() {
 
 /// What the icon set costs to tessellate today (task-72 phase 1, the
 /// probe behind the inventory in
-/// docs/log/steps/task-72-ui-asset-compiler.md): every icon at
+/// docs/tasks/task-72-ui-asset-compiler/README.md): every icon at
 /// every size the tokens name (`theme.control.icons`), the fastest of a
 /// few runs of `tessellate_icon` each, the geometry it leaves in the
 /// cache, and what a baked table of the same geometry would weigh in the

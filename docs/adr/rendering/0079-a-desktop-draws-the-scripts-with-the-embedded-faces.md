@@ -1,15 +1,28 @@
 ---
+id: adr-0079
+title: "a desktop draws the scripts with the embedded faces, not the system's"
+project: plev
 type: adr
-status: proposed
-tags: [fonts, text, noto, desktop, fallback, cosmic-text, determinism, issue-137]
+status: accepted
 date: 2026-10-27
+date_basis: header
+recorded: 2026-10-27
+topics: [fonts, text, determinism, platform]
+relations: [adr-0071, adr-0078]
+evidence: [bee96c97]
+source: docs/adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a desktop draws the scripts with the embedded faces, not the system's
 
+Decides that the engine builds each `FontSystem` with its own fallback, `EmbeddedFirst`, in which Arabic, Hebrew, Devanagari, Han, Kana and Hangul are answered only by the embedded Noto face, and that the desktop draws these scripts with it, instead of the system faces. Before, each machine drew these scripts with local fonts, and the web, with the embedded faces, measured them differently. The desktop keeps the locale and the system faces for the rest of the text, and `unicode-script` becomes a direct dependency of the engine. A test measures one line per script on the desktop path and requires the Noto face.
+
 ## context
 
-adr embedded-fonts-by-script (0071) embedded the Noto faces and kept the
+[adr embedded-fonts-by-script (0071)](0071-embedded-fonts-by-script.md) embedded the Noto faces and kept the
 desktop on the system's faces for those scripts, "a separate decision".
 measured on 2026-10-27 (macOS 27.0.1, M4), `TextMeasurer::resolved_faces`
 on the desktop path shaped arabic with Geeza Pro, hebrew with Arial,
@@ -17,7 +30,7 @@ devanagari with Devanagari Sangam MN, chinese with Arial Unicode MS,
 japanese with Hiragino Sans, korean with Apple SD Gothic Neo and emoji with
 Apple Color Emoji: cosmic-text's `PlatformFallback` names the platform's
 face per script, and a query reaches that list before the embedded faces.
-every machine drew those scripts with its own fonts, and since adr 0078 the
+every machine drew those scripts with its own fonts, and since [adr 0078](0078-the-web-fetches-the-noto-faces-on-demand.md) the
 web, with the embedded faces alone, measures them otherwise.
 
 ## decision

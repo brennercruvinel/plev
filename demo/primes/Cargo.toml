@@ -3,6 +3,7 @@ name = "primes"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "prime number creatures, an emergent particle swarm driven by prime coherence (port of the codepen demo) on the plev engine"
 

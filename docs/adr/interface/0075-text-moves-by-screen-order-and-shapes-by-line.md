@@ -1,11 +1,23 @@
 ---
+id: adr-0075
+title: "text moves by screen order and shapes by line"
+project: plev
 type: adr
 status: accepted
-tags: [text, bidi, caret, selection, editor, large-documents, cache, rope, comps, engine]
 date: 2026-09-25
+date_basis: header
+recorded: 2026-09-25
+topics: [text, text-editing, performance]
+relations: [task-74]
+source: docs/adr/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # text moves by screen order and shapes by line
+
+Records two decisions from task-74 about the editor: the caret and the selection follow the visual order of the screen, including in bidirectional text, and the large document keeps line positions in f64 and redoes shaping only for the edited lines. With one million lines, in release, opening takes 21 ms, a scroll frame takes 0.36 ms, and an edit in the middle of the text, up to the next frame, takes 0.27 ms, with no difference from ten thousand lines. It matters because the caret was placed by byte offset, which is wrong for right-to-left and mixed text, and every frame redid the shaping of all the lines drawn.
 
 ## context
 
@@ -55,3 +67,7 @@ lines and with a million. the benchmark is
 - open in bidi: alt+arrow and the vertical arrows stay logical; a cluster
   wider than one grapheme (a ligature such as lam-alef) puts the caret at
   a fraction of its width, with no pixel test yet.
+
+## alternatives
+
+- posições de linha em f32: rejeitadas. Com f32 as linhas se desalinhavam a partir da linha 100 000, e um clique perto do fim de um arquivo grande caía na linha errada (ver `decision`, large documents).

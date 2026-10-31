@@ -1,15 +1,28 @@
 ---
+id: adr-0078
+title: "the web build fetches the Noto faces when a text first needs them"
+project: plev
 type: adr
-status: proposed
-tags: [fonts, text, noto, wasm, web, size, fetch, cosmic-text, fontdb, issue-137]
+status: accepted
 date: 2026-10-27
+date_basis: header
+recorded: 2026-10-27
+topics: [fonts, text, web-wasm]
+relations: [adr-0071, adr-0079]
+evidence: [f79400d1, 71ee6291]
+source: docs/adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the web build fetches the Noto faces when a text first needs them
 
+Decides that the web version fetches the Noto faces (six scripts and the emoji) from the server when a text needs them, instead of embedding them in the wasm. The uigallery wasm dropped from 13.606.811 to 7.060.619 bytes (2.849.177 with gzip -9), about 65% less to download, and each file enters use only whole and with its sha256 verified. The cost is that text in a script not yet downloaded shows as tofu for a few frames until the face arrives; desktop, android and iOS keep embedding the faces.
+
 ## context
 
-adr embedded-fonts-by-script (0071) embedded the Noto Sans subsets for
+[adr embedded-fonts-by-script (0071)](0071-embedded-fonts-by-script.md) embedded the Noto Sans subsets for
 arabic, hebrew, devanagari, SC, JP and KR, and the Noto Color Emoji, on
 every target. on the web that put 6.97 MB of fonts into the wasm every
 page downloads, whether or not it ever shows those scripts: the
@@ -61,7 +74,7 @@ at 71ee6291). issue #137 asked to fetch them instead.
 - the Typography page gained a SCRIPTS section, one line per pack. a
   desktop still draws those lines with the system's faces, as adr 0071
   keeps it, so the web and the desktop measure them differently; making
-  the desktop prefer the embedded faces is that separate decision.
+  the desktop prefer the embedded faces is that [separate decision](0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md).
 
 ## alternatives
 

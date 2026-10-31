@@ -1,11 +1,23 @@
 ---
+id: adr-0044
+title: "a terminal stage carries the revision the app is at"
+project: plev
 type: adr
 status: accepted
-tags: [wire, agents, protocol, revision, ring, receipts, stages, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [agents, semantics]
+relations: [adr-0033, task-62, task-87]
+source: docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a terminal stage carries the revision the app is at
+
+Decides that the terminal stage of an act (`completed`, `rejected` or `failed`) carries `revision`, the revision the app is in at that instant, so that the agent can chain the next act without observing again just to find it out. The field is additive in protocol v1 and does not count as an observation: the agent receives the name of a state, not the state. In the lab, the measured cost was a median of 158 µs per terminal stage, in a debug build, against the 2 ms target.
 
 ## context
 
@@ -44,7 +56,7 @@ that path when it ended.
   the host they already had, the end of `Server::handle` and the end of
   `AgentPort::drain`; an app that drains the port changes nothing.
 - it decides nothing. an act resting on it is checked on its reads like
-  any act (`docs/adr/semantics/0033-actions-carry-observed-state.md`), and a stale
+  any act ([`0033-actions-carry-observed-state.md`](0033-actions-carry-observed-state.md)), and a stale
   refusal still says what moved and who acted.
 - it is not an observation. the agent is given the name of a state, not
   the state: `Traffic::observes_snapshot` and `observes_delta` do not
@@ -71,7 +83,7 @@ that path when it ended.
   instead of 54.5 KB; with the person of the script, 17 instead of 24 and
   45.9 KB instead of 91.5 KB; the stale refusal, the recovery and the
   commit are the same. the table is in
-  `docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md`.
+  [`task-87-a-terminal-stage-carries-the-revision.md`](../../tasks/task-87-a-terminal-stage-carries-the-revision/README.md).
 - the ring is shared by every connection of a port and bounded (16 by
   default). a revision served in a stage takes a place in it as an
   observation does, so a run of acts now pushes out old revisions that

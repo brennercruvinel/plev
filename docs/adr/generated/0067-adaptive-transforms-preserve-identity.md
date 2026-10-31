@@ -1,21 +1,34 @@
 ---
+id: adr-0067
+title: "adaptive transformations are small verified operations that preserve identity"
+project: plev
 type: adr
 status: accepted
-tags: [uir, surface, plev-ir, transform, verifier, identity, history, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [ir, generated-surfaces, semantics, agents]
+relations: [adr-0049, adr-0051, task-63, task-64, task-68, task-69, task-70, task-75, task-83, task-90, task-91]
+evidence: [ab3fedf7, 99d45162, 7e9a7176, 873a737f]
+source: docs/adr/generated/0067-adaptive-transforms-preserve-identity.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # adaptive transformations are small verified operations that preserve identity
 
+Records the decision to treat a change in the shape of a generated surface as small operations on the IR, and not as a whole new IR. There are nine operations (`hide`, `show`, `group`, `reorder`, `emphasize`, `density`, `restyle`, `swap_view` and `promote`), each one verified, with an exact inverse and an entry in the host's history. The result is that the nodes that remain keep their state, because the identity of the ids is preserved; phases 2 to 4 add requests made in words, the composition of repeated sequences into one action, and accessibility preferences, always at a person's request. It matters because the surface adapts without being rebuilt, and each step can be undone.
+
 ## context
 
 task-68 gave the plev IR and the verifier, the only way to a `VerifiedIr`
-(docs/adr/generated/0049-plev-ir-typed-and-verified.md). task-69 gave the host that
+([adr-0049](0049-plev-ir-typed-and-verified.md)). task-69 gave the host that
 materializes it and changes a surface's form by a whole new `VerifiedIr`,
-reconciled by `SemId` (docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md,
+reconciled by `SemId` ([adr-0051](0051-materialized-surfaces-from-verified-ir.md),
 the addendum of phase 2). the checkpoint b ended with the generated
 surface no longer worse than the fixed one, and the generation stays the
-main line (docs/log/steps/task-69-ephemeral-generative-surfaces.md).
+main line ([task-69](../../tasks/task-69-ephemeral-generative-surfaces/README.md)).
 
 task-70 is the next step of the thesis (sections 4 and 16): the interface
 changes without being built again. the only change of form was the whole
@@ -137,7 +150,9 @@ last inverse, verified again, the same way, and returns the change.
 `changes` lists them, `adapted` gives what is aside. a refused operation
 leaves the surface and the history as they were; a whole new form
 (`transform`) and `close` end the history. `apply` takes the policy
-because a `VerifiedIr` does not keep the one it was verified under.
+because a `VerifiedIr` does not keep the one it was verified under. (a fase 2
+tirou o `policy` de `apply` e de `undo`; ver "the host keeps the policy and the
+asks", na adição da fase 2.)
 
 ### what an agent may not do, it still may not
 
@@ -240,6 +255,23 @@ its one list is the cuts' ids, and the durations are one number per cut.
 - a promotion for an actor the app keeps the action from, or of a
   destructive action without the app's confirmation.
 - transforming a fixed screen at the projection only.
+
+## alternatives
+
+O que foi pesado na fase 1 e por que perdeu. Cada item aponta para o trecho
+que já registra a razão.
+
+- ocultar por um campo `hidden` no `IrNode`, ou por um token: recusado; o
+  vocabulário e o verificador ficam como estão, e a parte oculta sai da
+  árvore e fica ao lado (ver "hidden is aside, not a field").
+- transformar a tela fixa só na projeção: recusado; o que a pessoa vê e o
+  que o agente lê se separariam, e não haveria verificador nem inversa. a
+  tela que cabe no vocabulário entra como IR (ver "fixed screens").
+- um IR inteiro novo a cada ajuste, o caminho da task-69: recusado para
+  ajustes pequenos, porque é opaco e custa uma chamada de modelo (ver
+  "reason").
+- uma operação que devolve IR sem verificar, ou um desfazer que pula o
+  verificador: recusado (ver "avoid").
 
 ## integração
 

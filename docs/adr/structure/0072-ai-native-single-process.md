@@ -1,17 +1,29 @@
 ---
+id: adr-0072
+title: "local llm inference in process: candle or burn"
+project: plev
 type: adr
 status: accepted
-tags: [ai-native, llm, inference, candle, burn, tokio, streaming, metal, wgpu, wasm, single-process, generative-runtime]
 date: 2026-09-26
+date_basis: header
+recorded: 2026-09-26
+topics: [llm, gpu, web-wasm]
+relations: [task-41, task-78, experiment-local-inference-candle-vs-burn]
+source: docs/adr/structure/0072-ai-native-single-process.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # local llm inference in process: candle or burn
+
+Chooses the local inference library for the native AI app of task-78 and measures candle and burn with the same model, the same decoding loop and the same streaming channel. The decision by Brenner, dated 2026-09-26, keeps both implementations behind the `Model` trait and upgrades plev to wgpu 29, so that burn runs on the renderer's device. The result is one process, one wgpu device and one queue: candle decodes faster, and burn is the only one with a GPU path in the browser.
 
 ## context
 
 task-78 wants an app that answers from a local model in streaming, in the
 same rust process as the ui and the renderer, with no browser, no ipc and
-no backend (`docs/log/steps/task-78-ai-native-apps.md`). the
+no backend ([`task-78-ai-native-apps.md`](../../tasks/task-78-ai-native-apps/README.md)). the
 first step is the inference library. brenner picked the two candidates on
 2026-09-25: candle (with tokio for the streaming) and burn. the choice is
 his (decision 15 of the program); this adr measures and recommends.
@@ -165,6 +177,8 @@ renderer's device:
   handles in a `WgpuSetup`, and `llm::plev::load` loads the model on that
   device through burn's wgsl path.
 
+## consequences
+
 what it shows. one process, one wgpu device, one queue. in
 `rust/llmrun/tests/engine.rs` the headless renderer's device goes to burn,
 a matmul on it reads back equal to the cpu's, and the same renderer then
@@ -192,3 +206,11 @@ what it does not show:
 - only the headless path ran. a window's device comes from the same
   descriptor, but no windowed app has burn on it.
 - candle still makes its own Metal device.
+
+## alternatives
+
+- candle sozinho, como recomendava `## recommendation`: não foi a decisão. Brenner escolheu manter as duas implementações atrás do mesmo trait `Model`.
+- burn sozinho: teria menos memória e o único caminho GPU no navegador, mas perderia em todas as linhas de velocidade e teria um binário cinco vezes maior, com código de modelo próprio a manter (`## options`, item 2).
+- compartilhar buffers do renderizador com o candle por wgpu-hal: rejeitado como interop insegura entre filas separadas no mesmo GPU (`## the renderer's gpu (scope item 4)`).
+- dispositivo do renderizador para o candle: indisponível, porque o candle não tem construtor que receba um device existente (`## the renderer's gpu (scope item 4)`).
+- burn com a feature `metal` no dispositivo compartilhado: recusado pela função `device` de `rust/llmrun/src/engine.rs:42` (o corpo a chama de `llm::plev::device`), porque depende de passthrough shaders que o device do engine não habilita (`## the shared device (task-78 phase 2)`).

@@ -1,12 +1,24 @@
 ---
+id: adr-0006
+title: "one TextStyle per text run, shared by measurement and drawing"
+project: plev
 type: adr
 status: accepted
-tags: [text, layout, cosmic-text, measurement, typography]
 date: 2024-10-29
-commit: f15198a
+date_basis: reconstructed
+recorded: 2026-06-10
+topics: [text, layout]
+relations: []
+evidence: [f15198a]
+source: docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # one TextStyle per text run, shared by measurement and drawing
+
+Decides that a text run has exactly one `TextStyle`, used by both measurement and drawing. The reason is that the defect "label larger than the shape" had a single mechanism: the shape was sized with one text model and the text was drawn with another, and the heuristic was off by -10% to +21%. The result is that the shape's width becomes the measured text plus padding, with `TextMeasurer` as the only source of width, without a GPU and with a cache.
 
 ## context
 

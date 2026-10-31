@@ -3,6 +3,7 @@ name = "macros"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Proc-macros for plev: the #[component] attribute and the backend of the experimental markup UI dsl (not the official app pattern)"
 

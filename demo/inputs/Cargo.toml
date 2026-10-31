@@ -3,6 +3,7 @@ name = "inputs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Input system demo -- hit regions, hover states, event queue"
 

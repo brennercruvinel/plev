@@ -1,11 +1,23 @@
 ---
+id: adr-0060
+title: "a covered window does not draw, and wakes with a new frame"
+project: plev
 type: adr
 status: accepted
-tags: [engine, window, render-on-demand, sleep, wake, occlusion, background, platform-integration, winit]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [rendering, platform, performance]
+relations: [adr-0042, adr-0054, task-18, task-19, task-76]
+source: docs/adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a covered window does not draw, and wakes with a new frame
+
+Decides that a covered or minimized window neither draws nor requests frames, and that, when it shows again, it presents the current state in a single frame. It separates three states (awake, covered and asleep) and tells the work that sits alongside frames, such as the `claude -p` of the Surface page and the ffmpeg jobs of the Silences page, that the app is asleep. The animation clock does not pause: the elapsed time shows up all at once on waking, with the effect it would have had. Without this rule, a covered window kept drawing on a surface nobody saw.
 
 ## context
 
@@ -18,7 +30,7 @@ sleep had no hook, and the work that runs beside the frames (the `claude
 worker of the ide) did not know the app slept.
 
 the probe (task-76 item 7, the handoff in
-docs/log/steps/task-76-platform-integration.md) read winit
+[task-76-platform-integration.md](../../tasks/task-76-platform-integration/README.md)) read winit
 0.30.13 and measured the engine headless:
 
 - on macOS the window delegate's `windowDidChangeOcclusionState:` sends
@@ -78,7 +90,7 @@ three states, one rule for frames, one flag for the work beside them.
   and it would show a person coming back a flourish that belongs to the
   moment they left.
 - **the contract of the work beside the frames.**
-  `engine::window::Background` is the app's sleep as that work sees it:
+  `engine::window::Background` (hoje `engine::runtime::window::Background`, em `rust/engine/src/runtime/window/sleep.rs:50`) is the app's sleep as that work sees it:
   `Background::sleeping(bool)` is said by `Windows::sleep` and `wake`
   (and by `suspend` and `resume`), `Background::asleep()` is read by
   whoever starts a job or applies a result. one app runs per process
@@ -122,16 +134,16 @@ three states, one rule for frames, one flag for the work beside them.
   `apps/uigallery/src/shell/system/sleep.rs` (the shell over a bare window: a
   detection that ends asleep is applied, drawn and told only on the
   wake; a covered main window asks for no frame while a toast lives its
-  time, and for one as it shows), `surface_page/page.rs` (a propose
+  time, and for one as it shows), `surface_page/page.rs`, hoje em `views/apps/surface/page.rs` (a propose
   asked asleep is held and the fake claude runs only after the wake; an
-  answer that arrives asleep waits on the channel) and `silences/jobs.rs`
+  answer that arrives asleep waits on the channel) and `silences/jobs.rs`, hoje em `views/apps/silences/fixed_page/jobs.rs`
   (a detection's answer arriving asleep is applied on the first awake
   wake).
 - a window that animates while minimized or fully covered costs no GPU
   now; a person coming back sees the state as it is, on the first
   frame. the device may not survive a sleep either; that is the
   recovery before the acquire of that first frame, per context (the
-  device loss ADR), and needs nothing from here.
+  [device loss ADR](0054-gpu-device-loss-recovers-in-place.md)), and needs nothing from here.
 - the system's sleep on the desktop is not heard: it needs the
   `NSWorkspace` feature of `objc2-app-kit` (a change to the engine's
   manifest) and an observer on the shared workspace's notification
@@ -150,6 +162,10 @@ three states, one rule for frames, one flag for the work beside them.
   `execute`, both outside this item's files. with no desktop sleep
   today and no ffmpeg off the desktop, the gap has no observable effect.
 
+## alternatives
+
+As alternativas recusadas estão no próprio texto. Pausar os relógios enquanto a janela está coberta ou o app dorme faria a mudança feita durante o sono cair no tick do wake, e a animação mostraria a uma pessoa que volta um movimento que pertence ao momento em que ela saiu (decision e avoid). Desenhar a janela coberta porque a plataforma mandou `RedrawRequested` é recusado, já que o winit enfileira um para todo `request_redraw`, coberta ou não (avoid). Uma flag global do processo também é recusada, porque os testes compartilham o processo (avoid).
+
 ## avoid
 
 - drawing a covered window because the platform sent `RedrawRequested`:
@@ -159,7 +175,7 @@ three states, one rule for frames, one flag for the work beside them.
   flag off: the animation waits, it is not cancelled, and the uncover's
   invalidation is what makes the first frame new.
 - pausing the clocks: a change made asleep would take the whole gap on
-  the wake's tick, which is the catch-up ADR's own rule.
+  the wake's tick, which is the [catch-up ADR](0042-a-tick-asks-for-a-deadline.md)'s own rule.
 - settling a page's worker channel from anywhere while `Background`
   says asleep: the answer belongs to the wake's frame.
 - a process-global flag: tests share the process, and each test's app

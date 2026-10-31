@@ -3,6 +3,7 @@ name = "intent"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "an intent in text becomes a verified surface over a real projection,"
 

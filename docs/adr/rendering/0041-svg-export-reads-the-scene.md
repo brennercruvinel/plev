@@ -1,11 +1,23 @@
 ---
+id: adr-0041
+title: "the svg export reads the scene, not the pixels"
+project: plev
 type: adr
 status: accepted
-tags: [headless, svg, text, shaping, showcase, cli, semantics, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [rendering, formats, text]
+relations: [adr-0040, task-63, task-66, task-67]
+source: docs/adr/rendering/0041-svg-export-reads-the-scene.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the svg export reads the scene, not the pixels
+
+Decides that SVG export reads the scene, not the pixels: `engine::headless::svg::export` walks the visible layers of the compositor and writes one element per node, with text as outlines of the already shaped glyphs. What has no exact equivalent is approximated or left out, and each case goes into a per-node report, so nothing falls silently. Measured on pages such as Todo, Button, Effects and Card, the rasterized SVG differs from the engine's png between 0,13% and 1,07% of the pixels, and the sum of the glyph advances matches the width measured by the text system within 0,01 px; it matters because the structural regression (task-67) comes to know what it can and cannot trust in the SVG.
 
 ## context
 
@@ -15,7 +27,7 @@ frame path, and left two things out: a vector export of that frame, and
 projection did not exist. both exist now: every page of the showcase pushes
 `SceneNode`s the compositor keeps per layer, the todo page projects a
 `sem::Snapshot`, and the wire serves that snapshot in the lean serde form
-(`docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md`).
+([`0040-lean-semantic-form-and-one-redaction.md`](../semantics/0040-lean-semantic-form-and-one-redaction.md)).
 
 a vector export has one honest source: the scene. tracing pixels would be
 a second renderer; re-shaping text would be a second shaping path, which

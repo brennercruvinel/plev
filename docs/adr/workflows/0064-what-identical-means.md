@@ -1,11 +1,23 @@
 ---
+id: adr-0064
+title: "what identical means"
+project: plev
 type: adr
 status: accepted
-tags: [determinism, pixels, regression, headless, targets, color, scale, ci, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [determinism, rendering, platform]
+relations: [task-77]
+source: docs/adr/workflows/0064-what-identical-means.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # what identical means
+
+Defines what “identical” means in the frame comparisons of the `regress` harness: four classes (`equal`, `requested`, `silent` and `resized`) and a versioned table of product decisions, `tool/bench/regress/requested.json`. Two frames from the same target and the same GPU are identical byte for byte; across GPUs, the deviation is measured and bounded and never becomes `equal`, and across scales frames are not compared pixel by pixel. The result is the desktop equal to itself in 1312 of 1312 frames, and web, iOS and Android with the bands declared as `known` or `to_confirm`.
 
 ## context
 
@@ -125,6 +137,15 @@ what runs where:
   (the digits reach the first ten pages, T the four themes): a launch
   channel (a query in the URL, an intent extra) is needed to capture any
   page there.
+
+## alternatives
+
+- uma tolerância única para todas as diferenças: rejeitada. Cada origem de diferença pede resposta própria: a decisão de produto, o que o sistema operacional faz depois do present, e o que vem da GPU e do driver (`## context`).
+- tolerância que transforma um delta em `equal`: rejeitada. O delta é reportado, e o limite decide o job, não a classe (`## avoid`).
+- comparar duas escalas reamostrando um quadro sobre o outro: rejeitado (`## avoid`). A tabela marca essa comparação como `resized`.
+- banda na tabela sem motivo, ou com um palpite marcado `known`: rejeitado (`## avoid`).
+- medir a web em swiftshader e tratar o resultado como quadro da GPU: rejeitado; a captura registra o adaptador (`## avoid`).
+- tratar o limite de 2 por canal entre GPUs como regra já aceita: ficou como proposta até a primeira medida em outra GPU (`## integração`).
 
 ## avoid
 

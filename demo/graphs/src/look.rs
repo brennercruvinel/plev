@@ -63,3 +63,28 @@ pub fn cytoscape(graph: &Graph) -> Look {
         },
     )
 }
+
+/// The rosetta's ir: a 28 px node, a cylinder (kind 2) and a record (kind 3)
+/// told apart by tone until the widgets draw shapes, a dashed edge (kind 1)
+/// dimmer, a head on every directed edge.
+pub fn elk(graph: &Graph) -> Look {
+    Look::of(
+        graph,
+        |n| NodeLook {
+            radius: 28.0,
+            fill: match n.kind {
+                2 => Tone::Accent,
+                3 => Tone::TextMid,
+                _ => Tone::Fill,
+            },
+            stroke: Tone::BorderActive,
+            label_at: LabelAt::Center,
+        },
+        |e| EdgeLook {
+            width: 1.0,
+            alpha: if e.kind == 1 { 0.5 } else { 1.0 },
+            tone: Tone::TextDim,
+            arrow: e.directed,
+        },
+    )
+}

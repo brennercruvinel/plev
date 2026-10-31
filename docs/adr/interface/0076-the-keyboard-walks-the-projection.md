@@ -1,11 +1,23 @@
 ---
+id: adr-0076
+title: "the keyboard walks the projection"
+project: plev
 type: adr
 status: accepted
-tags: [accessibility, keyboard, focus, wai-aria, showcase, comps, sem]
 date: 2026-09-25
+date_basis: header
+recorded: 2026-09-25
+topics: [accessibility, input, semantics]
+relations: [adr-0068, task-75]
+source: docs/adr/interface/0076-the-keyboard-walks-the-projection.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the keyboard walks the projection
+
+Records how the keyboard walks the projection of the gallery's component pages: Tab and Shift-Tab follow the focus order that a screen reader also follows, the arrows follow WAI-ARIA inside each widget, and Enter and Space act through the dispatcher as `Actor::Human`, the same request as a click. Task-75 asked for full keyboard support on these pages, with a test; 29 of the 30 pages can be walked with the keyboard, and one test walks all of them with Tab. It matters because a second focus order, separate from the projection, would create a map of the page that could diverge from what the screen reader and the agents see.
 
 ## context
 
@@ -36,7 +48,7 @@ through the same dispatcher, not a second map of the page.
   `Select` key that no field takes moves as the key without shift, so
   shift changes nothing outside a field.
 
-## rejected
+## alternatives
 
 one Tab stop per composite widget (tabs and tree as a single stop, the
 roving tabindex WAI-ARIA recommends). the engine offers a screen reader's

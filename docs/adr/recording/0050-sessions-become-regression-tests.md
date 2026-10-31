@@ -1,11 +1,23 @@
 ---
+id: adr-0050
+title: "sessions become regression tests"
+project: plev
 type: adr
 status: accepted
-tags: [rec, inspect, ide, session, regression, harness, fixture, export, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [recording, process, semantics]
+relations: [adr-0037, adr-0046, task-63, task-64, generative-runtime-thesis]
+source: docs/adr/recording/0050-sessions-become-regression-tests.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # sessions become regression tests
+
+Decides that a recorded session becomes a regression test through controlled re-execution, and only in tests: the harness re-runs a segment against a fixture that the app provides, in an isolated environment (temporary directory, injected clock, no network), and compares the verdicts and the marked values. The harness lives in `apps/idestudio/tests/rerun/`, outside `rec` and `inspect`, so that reading still executes nothing. Measured on the `a2ppa` session (184 KB, 65 events, 12 frames), the six marks pass in green in 0.4 s, and removing `changes:staged` from the submit's `reads` by hand, without a commit, makes the test fail; it matters because it turns a bug report into a test without making reading an execution.
 
 ## context
 

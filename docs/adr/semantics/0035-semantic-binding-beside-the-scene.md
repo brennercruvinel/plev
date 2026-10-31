@@ -1,11 +1,23 @@
 ---
+id: adr-0035
+title: "semantic binding beside the scene, and the click as a request"
+project: plev
 type: adr
 status: accepted
-tags: [sem, binding, compositor, hit-test, dispatcher, one-path, showcase, generative-runtime]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [semantics, rendering, input]
+relations: [adr-0032, adr-0033, task-57, task-58, task-59, task-60, task-62, task-65, task-73]
+source: docs/adr/semantics/0035-semantic-binding-beside-the-scene.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # semantic binding beside the scene, and the click as a request
+
+Decides where each capability appears on screen and how a click reaches it: the `Compositor` keeps, every frame, the table `SemId → Binding` (rectangle, layer, clip and order), beside the layers and never inside them, and a click becomes a `Request` from the `Human` actor, observed at the instant of the touch. Each widget binds the same rectangle it draws and uses in the hit test, which prevents a click from hitting a row the panel did not show. The task-59 addendum (phase b) records 19 widgets bound and seven that handle events and remain without identity.
 
 ## addendum (2026-09-23, task-59 phase b)
 
@@ -26,9 +38,9 @@ not draw, which is the one-geometry rule this record exists for.
 ## context
 
 task-57 gave every control a logical identity and a projected meaning
-(`docs/adr/semantics/0032-semantic-contract-as-pure-projection.md`), task-58 the one
+([`0032-semantic-contract-as-pure-projection.md`](0032-semantic-contract-as-pure-projection.md)), task-58 the one
 dispatcher that checks a request against the live state
-(`docs/adr/semantics/0033-actions-carry-observed-state.md`). nothing tied either to the
+([`0033-actions-carry-observed-state.md`](0033-actions-carry-observed-state.md)). nothing tied either to the
 pixels. the only identity the engine has is `ViewId`, a per-frame counter
 (`rust/engine/src/control/input/mod.rs`); the comps widgets hit-test with
 `Rect::contains` on their own; and every click in the showcase todo page

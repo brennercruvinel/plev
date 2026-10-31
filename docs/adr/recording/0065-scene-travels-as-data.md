@@ -1,11 +1,24 @@
 ---
+id: adr-0065
+title: "the scene travels as data"
+project: plev
 type: adr
 status: accepted
-tags: [wire, scene, compositor, codec, rec, socket, mirror, images, security, showcase, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [agents, rendering, recording, semantics]
+relations: [adr-0062, task-59, task-61, task-76, task-79]
+evidence: [919655eb, dc9e146e, 7728da47]
+source: docs/adr/recording/0065-scene-travels-as-data.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the scene travels as data
+
+Records the decision that a window's scene leaves the process as data: the frame is encoded dirty layer by dirty layer and carried over the agent channel (protocol v1), and a viewer draws it back. The scene circulates only when the person sets `PLEV_MIRROR=1`; camera frames never cross the channel, which carries only the size and place of a stream image, and a field holding a secret travels masked. The decision exists because the mirror must reproduce the drawn frame bit for bit, and phase 2 returns clicks as `act` through the semantic contract, never as raw events. Measured in the gallery, the mirror's frame has the same hash as the app's frame, and offering a frame from the app's thread costs 0.1 ms to 10 ms.
 
 ## context
 
@@ -279,11 +292,33 @@ machine, comes with it.
   `PLEV_MIRROR=1`: the port is an agent's door, and the contract decides
   what an agent sees.
 
+## alternatives
+
+O que foi pesado, nas duas fases, e por que perdeu. Cada item aponta para o
+trecho que já registra a razão.
+
+- um segundo socket para o espelho: recusado; seria um segundo protocolo com
+  a sua própria regra de acesso, e a cena pega a conexão de agente que já
+  existe (ver "reason").
+- troca para binário depois do `hello`: recusada; exigiria um envelope em
+  toda resposta seguinte (versão 2) e tiraria o `socat` e o `plev` da leitura
+  do stream (ver "reason").
+- codec sobre o IR do monster: recusado; o IR é um formato de playback com
+  grade quantizada, e o espelho precisa de clipes, vidro e sombras (ver
+  "reason").
+- codec dentro de `wire`: recusado; `wire` não pode depender do engine sem
+  mudar o lockfile (ver "reason").
+- mascarar o segredo com pontos do seu tamanho: recusado; o caret e a
+  seleção seguiriam a largura de cada glifo, e o comprimento ficaria visível
+  (ver "reason (phase 2)").
+- clique como coordenada ou evento, ou ato sobre uma observação feita depois
+  do clique: recusado (ver "avoid" e "reason (phase 2)").
+
 ## integração (2026-09-24, orquestrador)
 
 aceito depois de uma devolução. a primeira entrega mandava os frames da
 câmera a quem assistisse, e todo cliente do port é agente: contra o ADR
-`capture-is-a-job-the-person-turns-on`. a correção entrou na mesma
+[`capture-is-a-job-the-person-turns-on`](../interface/0062-capture-is-a-job-the-person-turns-on.md). a correção entrou na mesma
 branch: o canal só existe com `PLEV_MIRROR=1` dado pela pessoa (recusa
 `scene_not_shared` sem ele), a imagem de fluxo viaja sem pixels nem id
 e o espelho desenha uma caixa no lugar, e quem assiste fica no log e na

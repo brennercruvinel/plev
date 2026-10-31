@@ -1,11 +1,24 @@
 ---
+id: adr-0070
+title: "generative runtime results"
+project: plev
 type: adr
 status: proposed
-tags: [generative-runtime, proof, method, demos, inspect, rerun, surface, stale, handoff, task-80]
 date: 2026-09-25
+date_basis: header
+recorded: 2026-09-25
+topics: [agents, generated-surfaces, semantics, recording, research]
+relations: [adr-0051, task-62, task-63, task-64, task-69, task-70, task-80, task-84, task-96, experiment-five-demos]
+evidence: [c8a6c3a9, 6500f2dc]
+source: docs/adr/generated/0070-generative-runtime-results.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # generative runtime results
+
+Records the method of the program's five proof demos, written and committed before any new demo ran, and the results of demos 1, 3 and 4: rejection of stale state, inspection of a real run and an ephemeral interface. Demo 2 has proof only with one scripted person, two control arms of demo 1 did not run, and demo 5 was referred to task-96 as of this record's date. It matters because the program's direction can only be revisited with the data if the criteria and the stopping rule were written beforehand.
 
 ## context
 
@@ -108,6 +121,13 @@ marks are unchanged; the fixture is test code beside the ide's.
   a person types there reaches the recording through the state, not the
   input: by design of the recording, noted for whoever decides whether an
   intent field should be secret.
+
+## alternatives
+
+- git na linha de comando, como braço de controle da demo 1: a mesma intervenção produziu um commit errado sem aviso. Em bytes, git ficou com 1.459 B em 20 chamadas, contra 22.040 B em 30 mensagens, na primeira rodada.
+- captura de tela, como braço de controle da demo 1: só o volume foi medido (uma observação é 9,9 vezes menor que o PNG do quadro), não a capacidade. Esse braço ainda não rodou.
+- tela fixa ao lado, como controle da demo 4: a tela fixa ao lado não mostra nenhum dos cinco pedaços de cada corte, e a tela fixa sozinha mostra um corte de dois. A superfície gerada mostra os cinco pedaços de cada corte.
+- superfície fixa nas mesmas tarefas, critério da regra de parada: se a superfície gerada for pior, a direção volta a ser revista. O checkpoint b da task-69 já tinha achado a revisão gerada não pior que a fixa.
 
 ## what remains, with its owner
 

@@ -1,13 +1,23 @@
 ---
+id: adr-0016
+title: "adr-004: adotamos projecao ortografica em logical pixels para apps hidpi"
 project: plev
-audience: [ai-agents, contributors]
-status: reference
-last-updated: 2024-06-17
-domain: rendering
-commit: 73c46ff
+type: adr
+status: accepted
+date: 2024-06-17
+date_basis: reconstructed
+recorded: 2026-04-05
+topics: [rendering, text]
+relations: []
+source: docs/adr/rendering/0016-hidpi-projection.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # adr-004: adotamos projecao ortografica em logical pixels para apps hidpi
+
+Decides that hidpi apps project in logical pixels, with the surface in physical pixels, through `GpuContext::set_projection`. The reason: the engine's projection was configured in physical pixels, and gitbutler-plev used constants in logical pixels that came out tiny on retina screens. The result is the pattern of surface in physical and projection in logical; the 2026-08-30 update corrects the text, which was rasterized in logical pixels and came out blurred, and now rasterizes at `font_size * raster_scale`.
 
 ## contexto
 

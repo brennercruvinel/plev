@@ -3,6 +3,7 @@ name = "mirroring"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "The mirror (task-79): watches the scene of a window of a plev app"
 

@@ -1,11 +1,23 @@
 ---
+id: adr-0049
+title: "the plev IR is typed, references only declared capabilities, and runs only once verified"
+project: plev
 type: adr
 status: accepted
-tags: [uir, plev-ir, verifier, capabilities, sem, comps, theme, schema, generative-runtime]
 date: 2026-09-24
+date_basis: header
+recorded: 2026-09-24
+topics: [ir, generated-surfaces, semantics, design-system]
+relations: [adr-0032, adr-0033, generative-runtime-program, task-59, task-68, task-69, task-71, task-80, task-95, task-96, task-97, generative-runtime-thesis]
+source: docs/adr/generated/0049-plev-ir-typed-and-verified.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # the plev IR is typed, references only declared capabilities, and runs only once verified
+
+Decides that the plev IR is typed, references only declared capabilities and is executed only after it is verified: a `VerifiedIr` is the only path to materialization, and the verifier collects all errors at once, each with its JSON pointer. The capability registry comes from the app's projection, not from a separate declaration, and the v1 vocabulary is the set of widgets that comps and the engine already have. The 2026-09-25 addendum adds the `code` component (task-97, labeled as proposed in the text itself); it matters because a model can compose a surface, but it cannot grant itself a capability, send a value of the wrong type or put a destructive action one click away.
 
 ## context
 
@@ -17,8 +29,8 @@ and 15). what existed:
 
 - `rust/accord`: the semantic contract. every control has a `SemId`, a
   closed `Role`, state as `Value`s, and `ActionDecl`s with their
-  `ParamSpec` and `Policy` (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md,
-  docs/adr/semantics/0033-actions-carry-observed-state.md). an app's `Snapshot` already
+  `ParamSpec` and `Policy` ([adr-0032](../semantics/0032-semantic-contract-as-pure-projection.md),
+  [adr-0033](../semantics/0033-actions-carry-observed-state.md)). an app's `Snapshot` already
   declares everything it can show and run.
 - `rust/engine/src/widgets`: the widgets, each with a `project` that declares its
   role, state and actions (task-59), and `engine::theme`: every visual

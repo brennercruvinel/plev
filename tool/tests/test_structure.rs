@@ -2,7 +2,7 @@
 //!
 //! The root holds the workspace's few files and nine directories; every
 //! crate sits under a home (rust/, apps/, demo/, tool/) with its manifest
-//! and its source; the docs keep their five parts; a decision record is
+//! and its source; the docs keep their parts by kind; a decision record is
 //! `docs/adr/<theme>/NNNN-<title>.md` with one number per record across
 //! every theme. A file that lands somewhere else fails here, by name.
 
@@ -152,16 +152,20 @@ fn every_crate_has_its_manifest_and_its_source() {
 }
 
 #[test]
-fn the_docs_keep_their_five_parts() {
+fn the_docs_keep_their_parts_by_kind() {
     let want = [
         "ATLAS.toml",
+        "CATALOG.json",
+        "CHANGELOG.md",
         "README.md",
         "TERMS.toml",
         "adr",
+        "experiments",
         "img",
-        "log",
-        "pub",
+        "learnings",
         "ref",
+        "research",
+        "tasks",
     ];
     let got = tracked("docs");
     assert_eq!(got, want, "docs/ holds exactly these");

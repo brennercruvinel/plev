@@ -8,6 +8,7 @@ name = "plevir"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "plev IR: an interface surface described by meaning (identity, a closed component vocabulary, props by token, state and actions bound to the capabilities an app declares) and the verifier that is the only way to a VerifiedIr"
 

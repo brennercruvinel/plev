@@ -1,11 +1,23 @@
 ---
+id: adr-0024
+title: "glyph raster identity and atlas isolation"
+project: plev
 type: adr
 status: accepted
-tags: [text, fonts, cosmic-text, glyph-atlas, rasterization, hidpi]
 date: 2026-08-31
+date_basis: header
+recorded: 2026-08-31
+topics: [text, rendering, gpu]
+relations: []
+source: docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # glyph raster identity and atlas isolation
+
+Decides that a glyph's identity in the atlas is the whole cosmic-text `CacheKey`, without reduction, and that the atlas grows before evicting, with a transparent gutter and explicit invalidation of frames. The reason: accumulated states (a grown atlas, evictions, retained layers and several sizes of one face) produced glyphs drawn as pieces of other glyphs, symptoms that single-frame probes do not reach. The result is text with exact, identical pixels with or without atlas growth, pinned by tests without a GPU and by pixel tests that skip when there is no GPU adapter.
 
 ## context
 

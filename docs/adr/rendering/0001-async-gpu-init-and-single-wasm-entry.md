@@ -1,12 +1,24 @@
 ---
+id: adr-0001
+title: "async GPU initialization and one wasm entry point per module"
+project: plev
 type: adr
 status: accepted
-tags: [wasm, webgpu, winit, async, entry-point, trunk]
 date: 2025-02-10
-commit: 55c8aa7
+date_basis: reconstructed
+recorded: 2026-06-10
+topics: [web-wasm, gpu]
+relations: []
+evidence: [55c8aa7]
+source: docs/adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # async GPU initialization and one wasm entry point per module
+
+Decides that GPU initialization on wasm is asynchronous, with the result returned to the event loop as a user event, and that the engine has an optional wasm entry point, behind the `web-entry` feature. The reason is that the browser cannot block, and a wasm module accepts a single `start`, which collided with the apps'. With this, a single app code serves both targets, with two cfg-gated sections, and the canvas is sized by CSS.
 
 ## context
 

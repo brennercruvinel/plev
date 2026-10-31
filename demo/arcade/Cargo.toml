@@ -3,6 +3,7 @@ name = "arcade"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Snake Game -- auto-playing AI snake built entirely on plev primitives"
 

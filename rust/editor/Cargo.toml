@@ -3,6 +3,7 @@ name = "editor"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Rope-based text editing core: document, transactions, multi-cursor, history (pure, no UI)"
 

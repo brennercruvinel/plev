@@ -25,8 +25,8 @@
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
 //! separator); task-71 phase 2 adds an HTML/CSS subset (one document, the
-//! body's element) and a Figma export (one screen). The emitted code obeys docs/ref/code-against-the-plev-
-//! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
+//! body's element) and a Figma export (one screen). The emitted code obeys
+//! docs/ref/operations/code-against-the-plev-engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 
 pub mod emit;

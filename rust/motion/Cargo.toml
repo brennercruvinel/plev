@@ -1,9 +1,10 @@
-# monster: binary animation codec for plev (docs/ref/monster-format-v0.md).
+# monster: binary animation codec for plev (docs/ref/architecture/monster-format-v0.md).
 [package]
 name = "motion"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Binary animation codec for plev (h264-for-vectors): keyframe snapshots plus discovered deltas"
 

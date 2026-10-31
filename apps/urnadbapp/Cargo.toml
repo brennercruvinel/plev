@@ -3,7 +3,9 @@ name = "urnadbapp"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.87"
+license = "MIT"
 publish = false
+default-run = "urnadbapp"
 description = "urnaui — desktop (and web) explorer for .urna vector databases: search, chunks, media frames, spaces, graph, built on plev"
 
 # urnadbapp is NOT a member of the root workspace (see the exclude + comment in

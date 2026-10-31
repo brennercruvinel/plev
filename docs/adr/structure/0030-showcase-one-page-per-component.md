@@ -1,11 +1,23 @@
 ---
+id: adr-0030
+title: "showcase: one page per component, the sidebar as a folding tree"
+project: plev
 type: adr
 status: accepted
-tags: [showcase, comps, design-system, navigation, gallery]
 date: 2026-09-21
+date_basis: header
+recorded: 2026-09-21
+topics: [design-system, platform]
+relations: [architecture-component-catalog]
+source: docs/adr/structure/0030-showcase-one-page-per-component.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # showcase: one page per component, the sidebar as a folding tree
+
+Decides that the showcase has one page per component, with the pages as data (a `PAGES` table) and the sidebar as a collapsible tree. The reason was the old gallery, with one section per category and a flat list of 17 links that, at around 80, would not fit in a short window. The result is that each page shows a widget in all its states, and the gaps in comps appear as placeholders in migration order.
 
 ## context
 
@@ -60,6 +72,6 @@ a short window and does not read as a system.
   taller than a screen even folded.
 - the launch argument is the page title as the sidebar shows it:
   `showcase "Data Table" core 1400`.
-- `docs/ref/component-catalog.md` stays the inventory of what comps has;
+- [`component-catalog.md`](../../ref/architecture/component-catalog.md) stays the inventory of what comps has;
   `view/pages/table.rs` is the inventory of what the gallery shows,
   including what is still missing.

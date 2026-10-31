@@ -1,12 +1,23 @@
 ---
+id: adr-index
+title: "knowledge base, plev"
 project: plev
-audience: [ai-agents, contributors]
+type: index
 status: active
-last-updated: 2026-09-29
-domain: index
+date: 2026-09-29
+date_basis: header
+recorded: 2026-06-16
+topics: [editorial, process]
+relations: [architecture-view-trait-design, architecture-component-design, architecture-layout-engine, architecture-signal-system-design, architecture-input-system-design, architecture-layer-system, architecture-effects-architecture, architecture-dsl-narrate-design, platform-ios-build, platform-mobile-specifics, platform-wasm-webgpu-validation, platform-android-emulator-deploy, architecture-animation-pattern-lerp, architecture-touch-gesture-design, architecture-hot-reload-design, architecture-srp-modularization, architecture-clippy-zero-warnings, architecture-monster-format-v0, architecture-component-catalog, experiment-benchmarks-v02, research-extracted-patterns, research-parley-vs-cosmic-text, research-wasm-plugin-architecture, research-makepad-gap-analysis, research-plev-vs-makepad-report, changelog, generative-runtime-program, learning-hot-reload, learning-showcase-pages, learning-core-buttons, learning-comps, adr-0001, adr-0002, adr-0003, adr-0004, adr-0005, adr-0006, adr-0007, adr-0008, adr-0009, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0015, adr-0016, adr-0017, adr-0018, adr-0019, adr-0020, adr-0021, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0052, adr-0053, adr-0054, adr-0055, adr-0056, adr-0057, adr-0058, adr-0059, adr-0060, adr-0061, adr-0062, adr-0063, adr-0064, adr-0065, adr-0066, adr-0067, adr-0068, adr-0069, adr-0070, adr-0071, adr-0072, adr-0073, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, adr-0080, adr-0081, adr-0082, adr-0083, adr-0084, adr-0085, task-30, task-31, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-87, task-89, task-90, task-91, task-92, task-95, task-96, task-97]
+source: docs/adr/README.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # knowledge base, plev
+
+The index of plev's architecture decision records. The chronological sections were written by hand up to 2026-09 and keep the order and the summaries of that time, including the design notes that served as decisions before the numbered records existed. The list by theme at the end holds every numbered ADR, the ones of October 2026 included, and `tool/tasks/docbase.py check` fails when an ADR is missing from it. A new ADR starts from [TEMPLATE.md](TEMPLATE.md).
 
 indice dos architecture decision records do plev. cada linha aponta para o arquivo, com status e data reais do frontmatter. a ordem e cronologica de proposito: o git so preservou de 2026-06-10 em diante (expurgo de historico antes do primeiro push), entao este indice e a fonte da linha do tempo que o git perdeu. fundacao em 2021, ondas seguintes ano a ano ate 2026.
 
@@ -16,48 +27,45 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
-| 2021-03-06 | [view-trait-design](../ref/view-trait-design.md) | reference | viewcontext sem ref ao compositor, views retornam vec<scenenode>, &mut para extensao futura |
-| 2021-03-24 | [component-design](../ref/component-design.md) | reference | lifecycle trait separada de view, component<l> com estado generico, campos disjuntos para o borrow checker |
-| 2021-04-15 | [layout-engine](../ref/layout-engine.md) | reference | taffy 0.9 wrappado, two-phase rendering, computedbounds absolutos, <1ms/1000 nodes em release |
-| 2021-05-02 | [signal-system-design](../ref/signal-system-design.md) | reference | push-pull hibrido, slotmap runtime, rc closures para borrow safety, comparefn type-erased para memos |
-| 2021-05-27 | [input-system-design](../ref/input-system-design.md) | reference | event queue (nao closures), hit-testing linear reverso, click-to-focus, modifierstate proprio |
-| 2021-06-16 | [layer-system](../ref/layer-system.md) | reference | premultiplied alpha, per-layer dirty tracking, offscreen textures, composite pass, gpuvec compartilhado |
-| 2021-07-04 | [effects-architecture](../ref/effects-architecture.md) | reference | blur/shadow/composite fragment-only, texturepool grow-only, 13-tap gaussian, premultiplied alpha |
-| 2021-07-26 | [dsl-narrate-design](../ref/dsl-narrate-design.md) | reference | gramatica hibrida verbal, disambiguacao no parser, modifier categories, format interpolation, builder stubs |
-| 2021-08-15 | [ios-build](../ref/ios-build.md) | reference | font loading embedded, metal via primary, lifecycle handlers, requisitos de info.plist, script de simulador |
-| 2021-08-30 | [mobile-specifics](../ref/mobile-specifics.md) | reference | safe area insets (#[cfg] android), IME state machine, lifecycle callbacks, heuristica de teclado, scale factor |
-| 2021-09-17 | [wasm-webgpu-validation](../ref/wasm-webgpu-validation.md) | reference | eventloopproxy para GPU init async, limits default vs webgl2, build guards |
+| 2021-03-06 | [view-trait-design](../ref/architecture/view-trait-design.md) | reference | viewcontext sem ref ao compositor, views retornam vec<scenenode>, &mut para extensao futura |
+| 2021-03-24 | [component-design](../ref/architecture/component-design.md) | reference | lifecycle trait separada de view, component<l> com estado generico, campos disjuntos para o borrow checker |
+| 2021-04-15 | [layout-engine](../ref/architecture/layout-engine.md) | reference | taffy 0.9 wrappado, two-phase rendering, computedbounds absolutos, <1ms/1000 nodes em release |
+| 2021-05-02 | [signal-system-design](../ref/architecture/signal-system-design.md) | reference | push-pull hibrido, slotmap runtime, rc closures para borrow safety, comparefn type-erased para memos |
+| 2021-05-27 | [input-system-design](../ref/architecture/input-system-design.md) | reference | event queue (nao closures), hit-testing linear reverso, click-to-focus, modifierstate proprio |
+| 2021-06-16 | [layer-system](../ref/architecture/layer-system.md) | reference | premultiplied alpha, per-layer dirty tracking, offscreen textures, composite pass, gpuvec compartilhado |
+| 2021-07-04 | [effects-architecture](../ref/architecture/effects-architecture.md) | reference | blur/shadow/composite fragment-only, texturepool grow-only, 13-tap gaussian, premultiplied alpha |
+| 2021-07-26 | [dsl-narrate-design](../ref/architecture/dsl-narrate-design.md) | reference | gramatica hibrida verbal, disambiguacao no parser, modifier categories, format interpolation, builder stubs |
+| 2021-08-15 | [ios-build](../ref/platforms/ios-build.md) | reference | font loading embedded, metal via primary, lifecycle handlers, requisitos de info.plist, script de simulador |
+| 2021-08-30 | [mobile-specifics](../ref/platforms/mobile-specifics.md) | reference | safe area insets (#[cfg] android), IME state machine, lifecycle callbacks, heuristica de teclado, scale factor |
+| 2021-09-17 | [wasm-webgpu-validation](../ref/platforms/wasm-webgpu-validation.md) | reference | eventloopproxy para GPU init async, limits default vs webgl2, build guards |
 
 ## mobile e animacao inicial (2022)
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
-| 2022-01-19 | [android-emulator-deploy](../ref/android-emulator-deploy.md) | reference | gradle + cargo-ndk, gameactivity 2.0.2, GPU host obrigatorio (swiftshader trava), showcase renderizando |
-| 2022-02-24 | [animation-pattern-lerp](../ref/animation-pattern-lerp.md) | reference | frame-based exponential lerp, pixel-snap com round(), font size fixo evita jitter de re-shaping |
+| 2022-01-19 | [android-emulator-deploy](../ref/platforms/android-emulator-deploy.md) | reference | gradle + cargo-ndk, gameactivity 2.0.2, GPU host obrigatorio (swiftshader trava), showcase renderizando |
+| 2022-02-24 | [animation-pattern-lerp](../ref/architecture/animation-pattern-lerp.md) | reference | frame-based exponential lerp, pixel-snap com round(), font size fixo evita jitter de re-shaping |
 
 ## pesquisa, benchmarks e competitivo (2022 a 2023)
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
-| 2022-04-26 | [benchmark-results](../pub/benchmark-results.md) | reference | criterion m4 mac: push_rects 159-222m/s, dirty tracking 3.3us/1000, tessellation 1.5-3.7us/shape, signals 67ns/cycle |
-| 2022-05-24 | [arxiv-paper-outline](../pub/arxiv-paper-outline.md) | reference | 11 secoes: architecture, cross-platform, DSL, accessibility, vector paths, evaluation |
-| 2022-07-06 | [extracted-patterns](../ref/extracted-patterns.md) | reference | 38 patterns de 17 repos em 6 fases, top 10 priorizado com LOC, blueprints para task-30/31 |
-| 2022-08-11 | [parley-vs-cosmic-text](../ref/parley-vs-cosmic-text.md) | reference | comparacao factual: cursor API, selection geometry, inlinebox, harfrust, WASM, custo. recomendacao: wait |
-| 2022-09-08 | [wasm-plugin-architecture](../ref/wasm-plugin-architecture.md) | reference | wasmtime vs wasmer vs extism, host function interface draft, 10-15ns/call. recomendacao: wait (p4) |
-| 2022-10-27 | [touch-gesture-design](../ref/touch-gesture-design.md) | reference | 6-state gesturerecognizer, touchtracker fxhashmap, explicit instant para testabilidade, separado do mouse |
-| 2022-11-19 | [makepad-gap-analysis](../ref/makepad-gap-analysis.md) | reference | inventario de features visuais do makepad vs plev, 9 categorias, gaps e prioridades |
-| 2022-12-10 | [plev-vs-makepad-report](../ref/plev-vs-makepad-report.md) | reference | relatorio detalhado plev vs makepad: core, learnings, philosophy, priority roadmap |
-| 2023-01-14 | [brief-strengths](../pub/brief-strengths.md) | reference | bullets dos diferenciais tecnicos: dirty tracking, text atlas, signal system, spring solver, SDF |
-| 2023-02-09 | [arxiv-paper-draft](../pub/arxiv-paper-draft.md) | reference | rascunho do paper: abstract + 2 secoes, motivacao, gap analysis |
+| 2026-03-11 | [benchmark-results](../experiments/benchmarks-v02/README.md) | reference | criterion m4 mac: push_rects 159-222m/s, dirty tracking 3.3us/1000, tessellation 1.5-3.7us/shape, signals 67ns/cycle |
+| 2023-04-06 | [extracted-patterns](../research/extracted-patterns.md) | reference | 38 patterns de 18 repos em 6 fases, top 10 priorizado com LOC, blueprints para task-30/31 |
+| 2023-06-20 | [parley-vs-cosmic-text](../research/parley-vs-cosmic-text.md) | reference | comparacao factual: cursor API, selection geometry, inlinebox, harfrust, WASM, custo. recomendacao: wait |
+| 2023-07-05 | [wasm-plugin-architecture](../research/wasm-plugin-architecture.md) | reference | wasmtime vs wasmer vs extism, host function interface draft, 10-15ns/call. recomendacao: wait (p4) |
+| 2022-10-27 | [touch-gesture-design](../ref/architecture/touch-gesture-design.md) | reference | 6-state gesturerecognizer, touchtracker fxhashmap, explicit instant para testabilidade, separado do mouse |
+| 2022-11-19 | [makepad-gap-analysis](../research/makepad-gap-analysis.md) | reference | inventario de features visuais do makepad vs plev, 9 categorias, gaps e prioridades |
+| 2022-12-10 | [plev-vs-makepad-report](../research/plev-vs-makepad-report.md) | reference | relatorio detalhado plev vs makepad: core, learnings, philosophy, priority roadmap |
 
 ## hot reload (2024)
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
-| 2024-01-22 | [hot-reload-design](../ref/hot-reload-design.md) | reference | 7 implementacoes estudadas, 3 tiers: shader (vello), DSL (makepad), rust (subsecond). dylib descartado (typeid UB) |
+| 2024-01-22 | [hot-reload-design](../ref/architecture/hot-reload-design.md) | reference | 7 implementacoes estudadas, 3 tiers: shader (vello), DSL (makepad), rust (subsecond). dylib descartado (typeid UB) |
 | 2024-02-06 | [shader-hot-reload-adr](workflows/0019-shader-hot-reload.md) | reference, adr-3 reversed | shader reload via notify watcher + pipeline recreation, errorscopeguard; channel polling in about_to_wait replaced by request_redraw (2026-09-22) |
 | 2024-02-18 | [narrate-hot-reload-adr](workflows/0018-narrate-hot-reload.md) | reference | narrate DSL reload via runtime parser + override map, re-parse on access |
-| 2026-09-22 | [hot-reload-on-by-default-in-gpu-context](workflows/0031-hot-reload-on-by-default-in-gpu-context.md) | accepted | hot reload on em todo debug build desktop: shader e literal (string, cor hex) trocam na janela aberta, estado intacto, sem macro; código rebuilda e re-exec. ideia do rsx-hotreload do dioxus, sem dioxus; aprendizados em docs/log/learnings/hot-reload.md |
+| 2026-09-22 | [hot-reload-on-by-default-in-gpu-context](workflows/0031-hot-reload-on-by-default-in-gpu-context.md) | accepted | hot reload on em todo debug build desktop: shader e literal (string, cor hex) trocam na janela aberta, estado intacto, sem macro; código rebuilda e re-exec. ideia do rsx-hotreload do dioxus, sem dioxus; aprendizados em [hot-reload](../learnings/hot-reload.md) |
 
 ## lint e modularizacao (2024)
 
@@ -65,9 +73,9 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 |------|-----|--------|--------|
 | 2024-04-14 | [error-handling-lint-cleanup](workflows/0017-error-handling-lint-cleanup.md) | reference | pleverror como tipo de erro unificado, setup_wasm_canvas(), consolidacao de #[allow(dead_code)] |
 | 2024-05-21 | [adr-003-srp-modularization](structure/0015-srp-modularization.md) | reference | limite de 300 linhas/arquivo, 44 monolitos em submodulos, API publica inalterada, 271 .rs total |
-| 2024-05-23 | [srp-modularization](../ref/srp-modularization.md) | reference | mesma decisao do adr-003 com detalhes de sessao: padrao de divisao, armadilhas, metricas antes/depois |
+| 2024-05-23 | [srp-modularization](../ref/architecture/srp-modularization.md) | reference | mesma decisao do adr-003 com detalhes de sessao: padrao de divisao, armadilhas, metricas antes/depois |
 | 2024-06-17 | [adr-004-hidpi-projection](rendering/0016-hidpi-projection.md) | reference | set_projection() para apps com layout em logical pixels em displays retina/hidpi |
-| 2024-07-09 | [clippy-zero-warnings](../ref/clippy-zero-warnings.md) | reference | 107 warnings resolvidos em 12 categorias: float precision, collapsible if, default impls, too many args |
+| 2024-07-09 | [clippy-zero-warnings](../ref/architecture/clippy-zero-warnings.md) | reference | 107 warnings resolvidos em 12 categorias: float precision, collapsible if, default impls, too many args |
 
 ## onda responsividade, web e fidelidade (2024 a 2025)
 
@@ -82,13 +90,13 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | 2025-01-08 | [embed-every-font-weight-in-use](rendering/0003-embed-every-font-weight-in-use.md) | accepted | familia unica embutida (inclusive sans 300-700, desde 2026-08; antes rubik 400-700), familias default pinadas, determinismo |
 | 2025-01-27 | [touch-as-synthesized-pointer-events](interface/0009-touch-as-synthesized-pointer-events.md) | accepted | touch sintetiza pointer events no caminho de mouse existente, sem vocabulario paralelo de evento |
 | 2025-02-10 | [async-gpu-init-and-single-wasm-entry](rendering/0001-async-gpu-init-and-single-wasm-entry.md) | accepted | spawn_local + eventloopproxy para GPU init async, feature web-entry, canvas 100vw/100vh |
-| 2025-02-19 | [responsiveness-multiplatform-and-fidelity](../log/responsiveness-multiplatform-and-fidelity.md) | reference | registro de sessao: text spill, distribuicao responsiva, gamma do browser, touch, licoes |
+| 2025-02-19 | [responsiveness-multiplatform-and-fidelity](../CHANGELOG.md#2025-02-19) | reference | registro de sessao: text spill, distribuicao responsiva, gamma do browser, touch, licoes |
 
 ## onda formatos: monster, lot, parser (2025)
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
-| 2025-03-26 | [monster-format-v0](../ref/monster-format-v0.md) | draft-v0 | spec do formato: i-frames (keyframes), delta ops (place/modify/replace/remove), tabela de easing, secoes com sha256 |
+| 2025-03-26 | [monster-format-v0](../ref/architecture/monster-format-v0.md) | draft-v0 | spec do formato: i-frames (keyframes), delta ops (place/modify/replace/remove), tabela de easing, secoes com sha256 |
 | 2025-05-14 | [binary-animation-format-with-discovered-deltas](importing/0010-binary-animation-format-with-discovered-deltas.md) | accepted | a decisao do .monster: h264 para vetores, seek O(1), delta descoberto, no que nao muda custa zero bytes |
 | 2025-06-10 | [import-foreign-formats-by-conversion-not-embedding](importing/0011-import-foreign-formats-by-conversion-not-embedding.md) | accepted | lot le o json do lottie uma vez offline e converte para .monster; nenhum runtime estrangeiro embarcado |
 | 2025-07-08 | [transpiler-reports-every-unmapped-construct](importing/0012-transpiler-reports-every-unmapped-construct.md) | accepted | o parser emite codigo + droplist com file:line, contagens congeladas em teste, nunca dropa em silencio |
@@ -118,15 +126,15 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2026-08-30 | [official-app-pattern](structure/0023-official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
-| 2026-09-21 | [core-theme-tailwind-classes-as-recipes](rendering/0028-core-theme-tailwind-classes-as-recipes.md) | accepted | Theme::hoff_core (o kit typescript: shades, accents, sombras, Inter, raios) e theme.button: cada class list de botao virou receita (fill, shadow list com ring e inset, overlay, texto) por estado; Button / IconButton / SubmitButton reescritos; showcase Buttons e a ButtonsPage; dois defeitos globais: mix em alpha reto no rect_sdf (franja escura em toda quina) e sombra blur 0 sem AA; aprendizados em docs/log/learnings/core-buttons.md |
+| 2026-09-21 | [core-theme-tailwind-classes-as-recipes](rendering/0028-core-theme-tailwind-classes-as-recipes.md) | accepted | Theme::hoff_core (o kit typescript: shades, accents, sombras, Inter, raios) e theme.button: cada class list de botao virou receita (fill, shadow list com ring e inset, overlay, texto) por estado; Button / IconButton / SubmitButton reescritos; showcase Buttons e a ButtonsPage; dois defeitos globais: mix em alpha reto no rect_sdf (franja escura em toda quina) e sombra blur 0 sem AA; aprendizados em [core-buttons](../learnings/core-buttons.md) |
 | 2026-09-21 | [embed-an-app-view-by-frame-origin](rendering/0029-embed-an-app-view-by-frame-origin.md) | accepted | view de app ganha origem de frame (WorkspaceView::set_frame, Sidebar.origin); begin_frame e do host; ide vira lib + bin com GitSession; showcase embute Editor e Git como app sections sem gutter |
-| 2026-09-21 | [showcase-one-page-per-component](structure/0030-showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em docs/log/learnings/showcase-pages.md |
-| 2026-09-18 | [comps-one-design-system-crate](structure/0027-comps-one-design-system-crate.md) | accepted | rust/engine/src/widgets e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/ref/component-catalog.md; aprendizados da sessao em docs/log/learnings/comps.md |
+| 2026-09-21 | [showcase-one-page-per-component](structure/0030-showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em [showcase-pages](../learnings/showcase-pages.md) |
+| 2026-09-18 | [comps-one-design-system-crate](structure/0027-comps-one-design-system-crate.md) | accepted | rust/engine/src/widgets e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em [component-catalog](../ref/architecture/component-catalog.md); aprendizados da sessao em [comps](../learnings/comps.md) |
 | 2026-09-29 | [design-for-ranges-not-screens-and-devices](rendering/0073-design-for-ranges-not-screens-and-devices.md) | accepted | cinco regras para toda mudança visível, em qualquer plataforma: fluid scale, component-driven responsiveness, intrinsic layout, relative and semantic values, progressive adaptation; o texto fica no AGENTS.md (seção design for ranges, not screens) e no manual do engine, com um checkbox por regra no template de PR |
 
 ## runtime de interação generativa (2026)
 
-o programa em docs/log/generative-runtime-program.md; uma linha por decisão das tasks 57 a 80.
+o programa em [programa do runtime generativo](../research/generative-runtime-program.md); uma linha por decisão das tasks 57 a 80.
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
@@ -142,7 +150,7 @@ o programa em docs/log/generative-runtime-program.md; uma linha por decisão das
 | 2026-09-23 | [svg-export-reads-the-scene](rendering/0041-svg-export-reads-the-scene.md) | accepted | `engine::headless::svg` escreve um elemento por nó da cena na ordem do composite, texto como contorno dos glifos que o mesmo shaping do frame produziu (um caminho só), e tudo que não é exato entra num relatório por nó; `showcase --render` ganha `--svg`, `--svg-report`, `--semantics` e `--source` (task-66b) |
 | 2026-09-23 | [agents-act-through-the-semantic-contract](semantics/0039-agents-act-through-the-semantic-contract.md) | accepted | um agente fora do processo observa e age só pelo contrato: socket unix local (0600, desligado por padrão), protocolo v1 em JSON lines, observação por escopo e por delta, `act` a partir de uma revisão vista, estágios do receipt de volta pela conexão; confirmar e recusar nunca por agente; tudo que toca o dispatcher roda na thread da UI; `plev observe` e `plev act` (task-61) |
 | 2026-09-23 | [a-delta-carries-the-node-a-refusal-names-who-acted](semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md) | accepted | `Change::NodeAdded` carrega o nó como o snapshot `after` o tem, e o agent port o serve com o mesmo filtro de `keys` e `source` do snapshot (o delta que mostra o commit nascendo em `stacks`: 172 B mais uma observação de 402 B viram 427 B numa ida só); `Rejection::Stale` ganha `acted`, as ações de outros atores checadas na revisão que o autor viu e que rodaram, preenchido só pelo dispatcher; a regra de stale fica no `plev --help` e no doc do `Act`; protocolo continua v1, e a sessão gravada antes continua abrindo: o leitor põe no lugar do id o nó que o snapshot do próprio evento tem, sem perda (task-83); atualizado pela task-90: o `acted` nomeia as ações de outros atores que rodaram desde o estado que o autor viu, a partir do primeiro request que rodou nele (uma mudança sem request não começa nada); atualizado pela task-91: com o olhar que o agent port conhece (a observação mais antiga de onde vêm as reads do ato, marcada na ordem do dispatcher, `sem::Mark`), o `acted` nomeia todo request tomado depois dele, o do próprio autor incluído; sem olhar, a regra da task-90 |
-| 2026-09-23 | [a-terminal-stage-carries-the-revision](semantics/0044-a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 160 us no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
+| 2026-09-23 | [a-terminal-stage-carries-the-revision](semantics/0044-a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 158 us sem ninguém intervindo e 172 us com a pessoa, no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
 | 2026-09-23 | [regression-by-meaning-before-pixels](workflows/0045-regression-by-meaning-before-pixels.md) | accepted | regressão pergunta na ordem: o significado mudou (revision, `Snapshot::diff`), o desenho mudou (hash estável por layer, FNV-1a 64 sobre codificação documentada, `f32` pelos bits; nome de layer pelas raízes dos `SemId` ligados, ou pelo z-order), e só então os pixels, só na região das layers que mudaram, cruzados com as ligações para nomear o controle; nada mudou, nenhuma GPU aberta; pixel explica e não decide o veredito; imagem só no baseline do todo; `regress check|bless` no showcase e job de CI no macOS (task-67) |
 | 2026-09-23 | [the-inspector-reads-a-session-never-runs-it](recording/0046-the-inspector-reads-a-session-never-runs-it.md) | accepted | o crate `inspect` lê uma sessão gravada e responde as perguntas da tese sobre qualquer request ou controle, sem executar nada (nenhum app, nada que despacha); `why` acha a observação do mesmo ator na revisão do request, lê o estado depois de cada evento e põe cada mudança no que o request lê nos receipts que rodaram entre o estado anterior e a mudança, por correlação no tempo e nunca por escrita declarada (nenhum: de fora do app; dois ou mais: ambíguo, todos mostrados); CLI `plev-inspect` com resumo, timeline, why, control e json (task-64 fase a); a janela `plev-inspector` (crate `inspector`) mostra esse modelo sem recalcular nada: timeline e scrub, o frame gravado com os contornos (uma imagem, nunca ligada no compositor dela), e o painel do controle no instante e depois dele; nenhum caminho dela cria request (task-64 fase b) |
 | 2026-09-23 | [an-act-rests-on-what-its-actor-was-shown](semantics/0047-an-act-rests-on-what-its-actor-was-shown.md) | accepted | um ato com `from_revision` se apoia só no que foi mostrado ao ator (o nome do `hello`, em qualquer conexão: dois processos com o mesmo nome são um ator): a revisão tem que ter sido dada a ele, a ação vem dela, e o valor de cada `read` vem da última observação até ela que o mostrou (escopo e `keys`; um delta mostra só o que traz; a revisão de um estágio não mostra estado); um `read` nunca mostrado é recusado antes do dispatch com `not_observed {reads}` (aditivo no v1, `plev` sai 3); `observed` explícito continua sendo a afirmação do agente; limitado como o anel (16 revisões por ator, 16 atores); corrige a promessa do anel no ADR do agent port, furo achado pelo inspector na sessão do A2 (task-89) |
@@ -195,17 +203,17 @@ o programa em docs/log/generative-runtime-program.md; uma linha por decisão das
 
 | arquivo | status | resumo |
 |---------|--------|--------|
-| [changelog](../log/changelog.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
+| [changelog](../CHANGELOG.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
 
 ## notas
 
-- duplicados conscientes: [adr-003-srp-modularization](structure/0015-srp-modularization.md) (decisao formal) e [srp-modularization](../ref/srp-modularization.md) (detalhes de sessao) cobrem o mesmo limite de 300 linhas por angulos diferentes. o trio de hot reload ([hot-reload-design](../ref/hot-reload-design.md) e a pesquisa, [shader-hot-reload-adr](workflows/0019-shader-hot-reload.md) e [narrate-hot-reload-adr](workflows/0018-narrate-hot-reload.md) sao as duas decisoes).
+- duplicados conscientes: [adr-003-srp-modularization](structure/0015-srp-modularization.md) (decisao formal) e [srp-modularization](../ref/architecture/srp-modularization.md) (detalhes de sessao) cobrem o mesmo limite de 300 linhas por angulos diferentes. o trio de hot reload ([hot-reload-design](../ref/architecture/hot-reload-design.md) e a pesquisa, [shader-hot-reload-adr](workflows/0019-shader-hot-reload.md) e [narrate-hot-reload-adr](workflows/0018-narrate-hot-reload.md) sao as duas decisoes).
 - idioma: ADRs ate meados de 2024 estao em portugues, do fim de 2024 em diante em ingles, casando com o idioma do codigo e dos commits da respectiva onda. mantido de proposito.
-- a spec do monster ([monster-format-v0](../ref/monster-format-v0.md)) e o registro tecnico do formato; a decisao por tras dela esta em [binary-animation-format-with-discovered-deltas](importing/0010-binary-animation-format-with-discovered-deltas.md).
+- a spec do monster ([monster-format-v0](../ref/architecture/monster-format-v0.md)) e o registro tecnico do formato; a decisao por tras dela esta em [binary-animation-format-with-discovered-deltas](importing/0010-binary-animation-format-with-discovered-deltas.md).
 
 ## por tema
 
-os registros de decisão numerados ficam em `docs/adr/<tema>/NNNN-<titulo>.md`, a numeração única para todos os temas (o modelo é [TEMPLATE.md](TEMPLATE.md)). os documentos de referência que esta tabela lista acima moraram aqui e hoje estão em `docs/ref/`, `docs/pub/` e `docs/log/`.
+em 2026-09 os registros de decisão numerados ficavam em `docs/adr/<tema>/NNNN-<titulo>.md`, a numeração única para todos os temas (o modelo é [TEMPLATE.md](TEMPLATE.md)). os documentos de referência que esta tabela lista acima ficavam em `docs/ref/`, `docs/pub/` e `docs/log/`.
 
 ### generated
 
@@ -284,6 +292,7 @@ rendering: gpu, color, text raster, layout, frames, devices.
 - [0074](rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md) a renderer upgrade is proven by a full capture
 - [0078](rendering/0078-the-web-fetches-the-noto-faces-on-demand.md) the web build fetches the Noto faces when a text first needs them
 - [0079](rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md) a desktop draws the scripts with the embedded faces, not the system's
+- [0082](rendering/0082-a-hosted-view-renders-on-demand.md) a hosted view uses the engine's window and clock
 
 ### semantics
 
@@ -313,6 +322,8 @@ the shape of the repository and of its apps.
 - [0053](structure/0053-the-silences-app-is-the-fixed-screen.md) the silences app is the fixed screen the generated one is compared against
 - [0056](structure/0056-windows-are-hosts-the-app-owns-the-state.md) a window is a host of what dies with it; the app owns the state
 - [0072](structure/0072-ai-native-single-process.md) local llm inference in process: candle or burn
+- [0080](structure/0080-workspace-by-responsibility.md) the workspace separates libraries, apps, demos and tools
+- [0081](structure/0081-a-graph-separates-data-appearance-and-layout.md) a graph separates data, appearance and layout
 
 ### workflows
 
@@ -325,3 +336,6 @@ how work is done: hot reload, regression, determinism, lint.
 - [0045](workflows/0045-regression-by-meaning-before-pixels.md) regression by meaning before pixels
 - [0048](workflows/0048-view-source-for-pixels.md) view source for pixels: a control leads to its projection, a text to its literal
 - [0064](workflows/0064-what-identical-means.md) what identical means
+- [0083](workflows/0083-feature-unification.md) feature unification reduces duplicate compilations
+- [0084](workflows/0084-web-targets-and-ports.md) each web target has one command and a port range
+- [0085](workflows/0085-integration-by-merge-commit.md) integration into main is a pull request merged by merge commit

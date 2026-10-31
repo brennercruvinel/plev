@@ -10,6 +10,7 @@ name = "replay"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Session inspector of plev: reads a recorded session and explains any request or control, by time, without running anything; the plev-inspect cli"
 

@@ -3,7 +3,9 @@ name = "graphs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
+default-run = "graphs"
 description = "Graphs drawn live by plev, from the gramorph corpus inputs: d3's Les Miserables with its force simulation and node drag, cytoscape's compound nodes, desktop and web"
 
 # the desktop window is the `graphs` bin (src/main.rs); the web build is the

@@ -1,11 +1,23 @@
 ---
+id: adr-0042
+title: "a tick asks for a deadline, not for every frame"
+project: plev
 type: adr
 status: accepted
-tags: [comps, engine, animation, render-on-demand, caret, showcase, winit]
 date: 2026-09-23
+date_basis: header
+recorded: 2026-09-23
+topics: [animation, rendering, performance]
+relations: [task-62, task-73, task-82]
+source: docs/adr/rendering/0042-a-tick-asks-for-a-deadline.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # a tick asks for a deadline, not for every frame
+
+Decides that a tick asks the loop for a deadline, and not for a frame each time: `comps::Wake` says whether the tick changed anything visible (`now`) and when the next tick is due (`next`). Before, `tick -> bool` kept sixty frames per second for a focused field whose cursor changes twice per second. Measured on scenario g of the showcase's `measure`, the number of drawn turns dropped from 120 of 120 to 4 of 120, and in the real window a focused field that is still draws 11 frames in 6 s, one per cursor change, instead of 360; it matters because the loop sleeps between events without losing a frame request, and an idle page draws nothing.
 
 ## context
 

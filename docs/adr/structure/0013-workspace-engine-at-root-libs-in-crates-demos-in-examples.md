@@ -1,12 +1,24 @@
 ---
+id: adr-0013
+title: "engine at root, libraries and apps in crates, demos in examples"
+project: plev
 type: adr
 status: accepted
-tags: [workspace, cargo, organization, structure]
 date: 2025-08-18
-commit: c2a90f1
+date_basis: reconstructed
+recorded: 2026-06-12
+topics: [workspace, platform]
+relations: [adr-0022]
+evidence: [c2a90f1]
+source: docs/adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
 ---
 
 # engine at root, libraries and apps in crates, demos in examples
+
+Decides three levels of workspace, with one rule for each: the engine at the root (today in `rust/engine`, per the 2026-07-13 update), libraries and apps in `crates/`, and demos in `examples/`. The reason was a mix of names, demos that were crates, and dependency versions repeated in each crate. The result is a tree that shows at a glance what is product and what is demo, with `[workspace.dependencies]` as the only source of versions. The lesson recorded: `cargo build --workspace` does not compile examples; only `cargo test` compiles them.
 
 update (2026-07-13): the engine later moved from the root crate to
 rust/engine and the root became a virtual workspace; the three tiers
