@@ -14,10 +14,12 @@
 mod color;
 mod edit;
 mod select;
+mod upload;
 
 pub use color::ColorTokens;
 pub use edit::EditTokens;
 pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
+pub use upload::UploadTokens;
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
@@ -228,6 +230,8 @@ pub struct FormTokens {
     pub bare: InputRecipe,
     /// The color picker (`color.rs`).
     pub color: ColorTokens,
+    /// The avatar upload (`upload.rs`).
+    pub upload: UploadTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -473,6 +477,7 @@ impl FormTokens {
             edit,
             bare,
             color: ColorTokens::hoff_core(),
+            upload: UploadTokens::hoff_core(),
         }
     }
 
@@ -587,6 +592,7 @@ impl FormTokens {
             edit,
             bare,
             color: ColorTokens::derive(theme),
+            upload: UploadTokens::derive(theme),
         }
     }
 }

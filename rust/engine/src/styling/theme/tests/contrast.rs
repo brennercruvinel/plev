@@ -273,6 +273,18 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // the avatar upload's plus, a mark (1.4.11), on its scrim over each
+    // end of the photo and of the stand-in without one
+    let u = &f.upload;
+    for (bg, ground) in [
+        ("form.upload.photo[0]", u.photo[0]),
+        ("form.upload.photo[1]", u.photo[1]),
+        ("form.upload.empty[0]", u.empty[0]),
+        ("form.upload.empty[1]", u.empty[1]),
+    ] {
+        let under = over(u.scrim, over(ground, card));
+        add("form.upload.icon_color", bg, LARGE, over(u.icon_color, under), under);
+    }
     // task-104 front C: the inline alert on a card, its runs and its
     // unread dot, and the intent's icon on its badge (ink or paper,
     // whichever reads on the fill, `contrast_text`).
@@ -924,6 +936,16 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
+    // the kit's plus (`#FCFCFC` on `black/40`) over its light no-avatar
+    // image (UploadAvatar :17-25 over `/images/no-avatar.png`)
+    ("core", "form.upload.icon_color", "form.upload.empty[0]", 1.95),
+    ("core", "form.upload.icon_color", "form.upload.empty[1]", 2.55),
+    // the same relation derived (the lighter of page and ink on the
+    // darker at the kit's 40 %): over a bright accent or a light stand-in
+    ("hoff", "form.upload.icon_color", "form.upload.photo[0]", 1.62),
+    ("dark", "form.upload.icon_color", "form.upload.photo[0]", 1.22),
+    ("light", "form.upload.icon_color", "form.upload.empty[0]", 1.69),
+    ("light", "form.upload.icon_color", "form.upload.empty[1]", 1.69),
 ];
 
 #[test]
@@ -964,7 +986,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 697,
+        count, 713,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

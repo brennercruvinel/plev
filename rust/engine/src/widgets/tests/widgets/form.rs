@@ -1618,3 +1618,104 @@ fn a_color_picker_projects_its_value_and_texts() {
         assert_eq!((node.role, node.label.as_str()), (Role::TextInput, name));
     }
 }
+
+// Upload avatar
+
+fn upload(photo: bool) -> crate::widgets::form::upload_avatar::UploadAvatar {
+    let a = crate::widgets::form::upload_avatar::UploadAvatar::new();
+    let a = if photo { a.with_photo(None) } else { a };
+    a.sem(SemId::parse("s.avatar").unwrap())
+}
+
+/// A press on the disc asks for a file, once for the owner to take; a
+/// press on a corner of its square is off the disc; the owner's answer
+/// puts a photo in.
+#[test]
+fn an_upload_avatar_asks_on_a_press_and_takes_the_choice() {
+    let theme = Theme::hoff_core();
+    let at = Rect::new(10.0, 10.0, 200.0, 0.0);
+    let mut a = upload(false);
+    let d = a.disc(at, &theme);
+    assert_eq!((d.w, d.h), (48.0, 48.0));
+    assert!(
+        !a.handle_event(&down(d.x + 1.0, d.y + 1.0), at, &theme)
+            .clicked,
+        "a corner"
+    );
+    let (x, y) = d.center();
+    assert!(a.handle_event(&down(x, y), at, &theme).clicked);
+    assert!(a.is_asking());
+    assert!(a.take_ask() && !a.take_ask(), "once");
+    assert!(!a.has_photo());
+    a.chosen(None);
+    assert!(a.has_photo());
+    let mut off = upload(true).disabled(true);
+    assert!(!off.activate());
+    assert!(!off.handle_event(&down(x, y), at, &theme).clicked);
+}
+
+/// Hovered or focused, the scrim and the plus show over the photo; the
+/// focus adds its ring; at rest neither.
+#[test]
+fn an_upload_avatar_shows_its_plus_hovered_or_focused() {
+    let theme = Theme::hoff_core();
+    let at = Rect::new(0.0, 0.0, 48.0, 48.0);
+    let scrim = theme.form.upload.scrim.0;
+    let shows = |a: &crate::widgets::form::upload_avatar::UploadAvatar| {
+        let nodes = nodes_of(|c| a.render(c, at, &theme));
+        let scrim = nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == scrim));
+        let plus = nodes.iter().any(|n| matches!(n, SceneNode::Path { .. }));
+        (scrim, plus)
+    };
+    let mut a = upload(true);
+    assert_eq!(shows(&a), (false, false));
+    a.handle_event(&WidgetEvent::MouseMove { x: 24.0, y: 24.0 }, at, &theme);
+    assert_eq!(shows(&a), (true, true));
+    a.handle_event(&WidgetEvent::MouseMove { x: 400.0, y: 24.0 }, at, &theme);
+    a.set_focused(true);
+    assert_eq!(shows(&a), (true, true));
+}
+
+/// A photo stands as the theme's gradient, none as the stand-in, in
+/// every theme; the disc keeps its side down to a narrow room.
+#[test]
+fn an_upload_avatar_paints_its_photo_or_the_stand_in() {
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        let t = &theme.form.upload;
+        for (photo, want) in [(true, t.photo), (false, t.empty)] {
+            let a = upload(photo);
+            let at = Rect::new(0.0, 0.0, 300.0, 0.0);
+            let nodes = nodes_of(|c| a.render(c, at, &theme));
+            assert!(nodes.iter().any(|n| matches!(n,
+                SceneNode::GradientRect { color, color2, .. }
+                    if *color == want[0].0 && *color2 == want[1].0)));
+        }
+        let a = upload(true);
+        assert_eq!(a.disc(Rect::new(0.0, 0.0, 20.0, 0.0), &theme).w, 20.0);
+    }
+}
+
+/// A reader finds a button named for what it does, its photo state and
+/// its `activate`.
+#[test]
+fn an_upload_avatar_projects_a_button() {
+    let parent = SemId::parse("s").unwrap();
+    for (photo, name) in [(true, "Replace avatar"), (false, "Upload avatar")] {
+        let a = upload(photo);
+        let mut b = SnapshotBuilder::new();
+        b.node(parent.clone(), Role::Group, "s");
+        a.project(&mut b, a.sem_id().unwrap(), Some(&parent));
+        let snap = b.finish().expect("a valid projection");
+        let node = snap.get(&SemId::parse("s.avatar").unwrap()).unwrap();
+        assert_eq!((node.role, node.label.as_str()), (Role::Button, name));
+        let at = accord::StateRef::parse("s.avatar:photo").unwrap();
+        assert_eq!(snap.value(&at), Some(&Value::Bool(photo)));
+    }
+}
