@@ -72,6 +72,14 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
 
 ## 2026-10-31
 
+- the gallery's 35 empty or borrowed tabs start becoming kit components
+  (2026-10-31, issue #153, task-104): five fronts, one agent each, build
+  their POC tab first (Field, Popover, Message, Accordion, Toggle) on the
+  Button's path, with builds and browser screenshots on the Linux host and
+  the task page as the control panel of the definition of done.
+
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](tasks/task-104-gallery-components-from-the-kit/README.md)
+
 - plev is MIT (2026-10-31, task-41): the license is decided as MIT alone,
   not the MIT OR Apache-2.0 task-41 planned. the root `LICENSE` holds the
   text and every crate declares `license = "MIT"`, inherited from

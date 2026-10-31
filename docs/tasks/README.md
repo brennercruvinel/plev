@@ -125,5 +125,6 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2026-10-27 | [task-101: on-demand fonts and deterministic fallback](task-101-fonts-by-script/README.md) | done |
 | 2026-10-27 | [task-102: reusable builds and web commands](task-102-builds-and-web-commands/README.md) | done |
 | 2026-10-27 | [task-103: runcheck, every executable in the repository runs](task-103-runcheck-every-executable-runs/README.md) | done |
+| 2026-10-31 | [task-104: the 35 empty or borrowed gallery tabs become kit components](task-104-gallery-components-from-the-kit/README.md) | in-progress |
 
 [plev docs](../README.md)
