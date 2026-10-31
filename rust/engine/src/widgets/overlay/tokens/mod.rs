@@ -511,6 +511,11 @@ pub struct ModalTokens {
     pub footer: Color,
     pub footer_rule: Color,
     pub button_gap: f32,
+    /// A dialog with an illustration (`DeleteFile`): the art's bottom,
+    /// from the sheet's top (it rises above the sheet by the rest of its
+    /// height), and the text's top padding under it.
+    pub art_bottom: f32,
+    pub art_pad_top: f32,
 }
 
 impl ModalTokens {
@@ -551,6 +556,10 @@ impl ModalTokens {
             footer: hex(0xF8F7F7),
             footer_rule: hex(0xE2E2E2),
             button_gap: 12.0,
+            // `DeleteFile/index.tsx:6`, `:15`: bottom-[calc(100%-11.25rem)],
+            // pt-39.
+            art_bottom: 180.0,
+            art_pad_top: 156.0,
         }
     }
 
@@ -560,6 +569,7 @@ impl ModalTokens {
     pub fn derive(theme: &Theme) -> Self {
         let glass = &theme.glass;
         let none = Color::rgba(0.0, 0.0, 0.0, 0.0);
+        let kit = Self::hoff_core();
         Self {
             scrim: glass.scrim,
             fill: glass.popover,
@@ -583,6 +593,9 @@ impl ModalTokens {
             footer: none,
             footer_rule: none,
             button_gap: theme.spacing.sm,
+            // The kit's art, as the kit places it.
+            art_bottom: kit.art_bottom,
+            art_pad_top: kit.art_pad_top,
         }
     }
 }

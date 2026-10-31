@@ -18,6 +18,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
+use engine::drawing::gpu::image::load_image_bytes;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Modal, Rect, WidgetEvent};
 
@@ -38,15 +39,28 @@ pub(crate) fn plain() -> Modal {
     .intent(Intent::Neutral)
 }
 
-/// The kit's destructive question (`components/DeleteFile`).
+/// The kit's DeleteFile illustration (`public/images/delete-pic.png`,
+/// 712 px square, drawn at the sheet's width), in the binary so every
+/// target has it.
+const DELETE_ART: &[u8] = include_bytes!("../../../assets/kit/delete-pic.png");
+
+/// The kit's destructive question (`components/DeleteFile`), with its
+/// illustration; without it, should the bytes not decode (logged).
 pub(crate) fn destructive() -> Modal {
-    Modal::new(
+    let modal = Modal::new(
         "Delete this file?",
         "This action cannot be undone. Blinky is a bit nervous about it too.",
         "Yes, delete it",
         "Cancel",
     )
-    .intent(Intent::Destructive)
+    .intent(Intent::Destructive);
+    match load_image_bytes(DELETE_ART) {
+        Ok(art) => modal.art(art),
+        Err(e) => {
+            log::warn!("dialog: the delete illustration: {e}");
+            modal
+        }
+    }
 }
 
 /// A dialog shown as a state: its chip, the widget, its two answers.
@@ -117,17 +131,19 @@ impl DialogPage {
         let card_w = showcase::card_width(2, content, theme);
         let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
         let probe = Rect::new(0.0, 0.0, body_w, f32::MAX / 4.0);
-        let tallest = self
+        // Each card as tall as its sheet and the art that rises above it;
+        // a row is as tall as its tallest card.
+        let heights: Vec<f32> = self
             .shown
             .iter()
-            .map(|s| s.modal.dialog_rect_in(theme, probe).h)
-            .fold(0.0, f32::max);
+            .map(|s| {
+                let d = s.modal.dialog_rect_in(theme, probe);
+                CARD_H.max(frame + d.h + s.modal.overhang(theme, d.w))
+            })
+            .collect();
         let button_h = self.open.preferred_size(theme).1;
         let live = showcase::card_height(button_h, theme);
-        let groups = [
-            (2, vec![live; 2]),
-            (2, vec![CARD_H.max(frame + tallest); self.shown.len()]),
-        ];
+        let groups = [(2, vec![live; 2]), (2, heights)];
         showcase::layout_sized(groups, content, theme)
     }
 
@@ -153,7 +169,7 @@ impl DialogPage {
             .map(|(s, card)| {
                 let body = showcase::body(*card, theme);
                 let mut d = s.modal.dialog_rect_in(theme, body);
-                d.y = body.y;
+                d.y = body.y + s.modal.overhang(theme, d.w);
                 d
             })
             .collect()
