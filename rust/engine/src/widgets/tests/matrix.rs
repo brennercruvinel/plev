@@ -7,6 +7,7 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
+use crate::widgets::form::field::Field;
 use crate::widgets::prelude::*;
 use crate::widgets::widget::Rect;
 
@@ -80,6 +81,16 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut f = TextField::new("name").with_text("brenner");
     f.focus();
     f.render(&mut c, row(5.0), theme);
+    // The kit's field, every part on: label and link, icon, eye, error.
+    let mut field = Field::new("email")
+        .label("Email")
+        .link("Forgot password?")
+        .icon("scan")
+        .password(true)
+        .with_text("brenner")
+        .error("This email is already taken.");
+    field.input.focus();
+    field.render(&mut c, Rect::new(content.x, 4300.0, content.w, 0.0), theme);
     Checkbox::new(true)
         .label("on")
         .render(&mut c, row(6.0), theme);
