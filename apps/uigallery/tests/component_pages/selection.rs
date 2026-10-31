@@ -24,7 +24,12 @@ const DISABLED: &str = "toggle_page.group[0].card[2]";
 /// the window (the projection has no geometry, so the three still
 /// compare node for node).
 fn seeing(id: &str) -> Gallery {
-    let mut g = gallery("Toggle");
+    seeing_on("Toggle", id)
+}
+
+/// The gallery on `page`, scrolled until `id` is in the window.
+fn seeing_on(page: &str, id: &str) -> Gallery {
+    let mut g = gallery(page);
     let Some(rect) = g.c.binding(&sid(id)).map(|b| b.rect) else {
         panic!("{id} is not bound");
     };
@@ -51,7 +56,7 @@ fn a_toggle_flips_the_same_from_the_three() {
         assert_ne!(on(&person, id), before, "{id}: the click flips it");
         let mut reader = gallery("Toggle");
         reader.press(id);
-        let agent = by_agent("Toggle", "toggle", vec![ask(id, "toggle")]);
+        let agent = by_agent("Toggle", "selection_toggle", vec![ask(id, "toggle")]);
         same("Toggle", &person, &reader, &agent);
     }
 }
@@ -108,7 +113,7 @@ fn a_segment_is_chosen_the_same_from_the_three() {
         person.click(id);
         let mut reader = gallery("Toggle Group");
         reader.press(id);
-        let agent = by_agent("Toggle Group", "segment", vec![ask(id, "select")]);
+        let agent = by_agent("Toggle Group", "selection_segment", vec![ask(id, "select")]);
         same("Toggle Group", &person, &reader, &agent);
         let checked = person.view.semantics().and_then(|s| {
             s.get(&sid(id))
@@ -140,7 +145,7 @@ fn a_tool_is_picked_the_same_from_the_three() {
     person.click(id);
     let mut reader = gallery("Button Group");
     reader.press(id);
-    let agent = by_agent("Button Group", "tool", vec![ask(id, "toggle")]);
+    let agent = by_agent("Button Group", "selection_tool", vec![ask(id, "toggle")]);
     same("Button Group", &person, &reader, &agent);
     assert_eq!(on(&person, id), Some(Value::Bool(true)));
     assert_eq!(on(&person, first), Some(Value::Bool(false)));
@@ -155,8 +160,29 @@ fn a_group_action_presses_and_changes_nothing() {
     person.click(id);
     let mut reader = gallery("Button Group");
     reader.press(id);
-    let agent = by_agent("Button Group", "action", vec![ask(id, "activate")]);
+    let agent = by_agent(
+        "Button Group",
+        "selection_action",
+        vec![ask(id, "activate")],
+    );
     assert_eq!(person.state(), before);
     assert_eq!(reader.state(), before);
     assert_eq!(agent.state(), before);
+}
+
+/// A radio row is chosen the same from the person's click, the reader's
+/// press and the agent's `select`.
+#[test]
+fn a_radio_is_chosen_the_same_from_the_three() {
+    for id in [
+        "radio_group_page.group[0].card[0][2]",
+        "radio_group_page.group[1].card[0][0]",
+    ] {
+        let mut person = seeing_on("Radio Group", id);
+        person.click(id);
+        let mut reader = gallery("Radio Group");
+        reader.press(id);
+        let agent = by_agent("Radio Group", "selection_radio", vec![ask(id, "select")]);
+        same("Radio Group", &person, &reader, &agent);
+    }
 }

@@ -54,6 +54,7 @@ pub mod tree;
 
 // task-104 front E, selection and dates (#158)
 pub mod button_group;
+pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;
 

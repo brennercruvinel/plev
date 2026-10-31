@@ -325,7 +325,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
     placeholder("Questionnaire"),
-    placeholder("Radio Group"),
+    page(
+        C,
+        "Radio Group",
+        "circle",
+        "One choice of a list: the kit's list line with its switch as the disc, stacked or in a line.",
+        Pane::RadioGroup,
+    ),
     page(
         C,
         "Resizable",

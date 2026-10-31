@@ -23,8 +23,9 @@ use crate::compose::animation::Spring;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{MotionPhysics, Theme};
-use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
+use accord::{NodeBuilder, SemId, SnapshotBuilder};
 
+use super::radio_group::project_choices;
 use super::tokens::{SegmentMetrics, SegmentedTokens};
 use crate::widgets::buttons::{Press, paint_surface};
 use crate::widgets::recipe::focus_ring_inside;
@@ -267,21 +268,15 @@ impl ToggleGroup {
         label: impl Into<String>,
         parent: Option<&SemId>,
     ) -> NodeBuilder<'b> {
-        let selected = format!("{id}:selected");
-        for (i, item) in self.items.iter().enumerate() {
-            let mut node = b.node(id.key(i.to_string()), Role::Radio, item.as_str());
-            node.parent(id);
-            node.state("checked", i == self.selected)
-                .enabled(!self.disabled);
-            node.action("select").reads(selected.as_str());
-        }
-        let mut node = b.node(id, Role::Group, label);
-        if let Some(parent) = parent {
-            node.parent(parent);
-        }
-        node.state("selected", self.selected.to_string())
-            .enabled(!self.disabled);
-        node
+        project_choices(
+            b,
+            id,
+            label.into(),
+            parent,
+            &self.items,
+            self.selected,
+            self.disabled,
+        )
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {

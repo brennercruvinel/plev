@@ -68,6 +68,7 @@ impl ShowcaseView {
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
+                Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
@@ -168,6 +169,7 @@ impl ShowcaseView {
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
+                Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
                 Pane::Todo => {
@@ -343,6 +345,7 @@ impl ShowcaseView {
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
+                Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
                 Pane::Todo => {

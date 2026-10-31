@@ -8,7 +8,9 @@ use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::widgets::prelude::*;
-use crate::widgets::selection::{ButtonGroup, GroupItem, Toggle, ToggleGroup};
+use crate::widgets::selection::{
+    ButtonGroup, Calendar, Date, GroupItem, RadioGroup, Toggle, ToggleGroup,
+};
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -102,6 +104,25 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             label: "Close".into(),
         },
     ]);
+    let mut plan = RadioGroup::new(["Free", "Pro"]).selected(1);
+    plan.set_focused(Some(0));
+    let (plan_w, plan_h) = plan.size_within(content.w, theme);
+    plan.render(
+        &mut c,
+        Rect::new(content.x, row(12.0).y, plan_w, plan_h),
+        theme,
+    );
+    let mut when = Calendar::new(2026, 10);
+    if let Some(day) = Date::new(2026, 10, 31) {
+        when = when.selected(day).today(day);
+        when.set_focused(Some(day));
+    }
+    let (when_w, when_h) = when.size_within(content.w, theme);
+    when.render(
+        &mut c,
+        Rect::new(content.x, row(13.0).y, when_w, when_h),
+        theme,
+    );
     let (_, tools_h) = tools.size_within(content.w, theme);
     tools.render(
         &mut c,
@@ -450,6 +471,19 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                     (id("m.tools"), Role::Toolbar, Probe::Bound),
                     (id("m.tools.item[0]"), Role::Toggle, Probe::Hit),
                     (id("m.tools.item[2]"), Role::Button, Probe::Hit),
+                ],
+            ));
+
+            let plan = RadioGroup::new(["Free", "Pro"]).sem(id("m.plan"));
+            let (pw, ph) = plan.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            plan.render(&mut c, Rect::new(gutter, row(8.0).y, pw, ph), &theme);
+            plan.project(&mut b, &id("m.plan"), "plan", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.plan"), Role::Group, Probe::Bound),
+                    (id("m.plan[1]"), Role::Radio, Probe::Hit),
                 ],
             ));
 

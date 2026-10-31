@@ -56,6 +56,7 @@ const PROJECTING: &[&str] = &[
     "Label",
     "Navigation Menu",
     "Popover",
+    "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
@@ -174,7 +175,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
     ),
     ("Questionnaire", PLACEHOLDER),
-    ("Radio Group", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
     (
         "Sheet",

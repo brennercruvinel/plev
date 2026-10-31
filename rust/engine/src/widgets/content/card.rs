@@ -23,6 +23,7 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, IconSize, Theme};
 
 use crate::widgets::recipe::{glass_pill, inset_keylight};
+use crate::widgets::selection::paint_radio;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// One row of a [`CardVariant::List`] (expense-tracker / download rows).
@@ -976,57 +977,15 @@ impl Card {
                 },
             );
 
-            // Radio: the checkbox box size as a disc; active = a dark
-            // glass disc with a white core.
+            // Radio: the selection radio's disc (`selection::paint_radio`)
+            // centered in the checkbox box's slot.
             let radio = Rect::new(
                 r.x + m.pad - theme.control.edge_width_strong,
                 r.y + (r.h - radio_d) / 2.0,
                 radio_d,
                 radio_d,
             );
-            if row.active {
-                c.push_to_layer(
-                    layer,
-                    SceneNode::RoundedRect {
-                        x: radio.x,
-                        y: radio.y,
-                        w: radio.w,
-                        h: radio.h,
-                        color: glass.tabs.0,
-                        corner_radius: radio_d / 2.0,
-                        border_width: theme.control.edge_width,
-                        border_color: theme.colors.border_active.0,
-                    },
-                );
-                let core = radio.inset(radio_d / 4.0);
-                c.push_to_layer(
-                    layer,
-                    SceneNode::RoundedRect {
-                        x: core.x,
-                        y: core.y,
-                        w: core.w,
-                        h: core.h,
-                        color: text.0,
-                        corner_radius: core.w / 2.0,
-                        border_width: 0.0,
-                        border_color: [0.0; 4],
-                    },
-                );
-            } else {
-                c.push_to_layer(
-                    layer,
-                    SceneNode::RoundedRect {
-                        x: radio.x,
-                        y: radio.y,
-                        w: radio.w,
-                        h: radio.h,
-                        color: [0.0; 4],
-                        corner_radius: radio_d / 2.0,
-                        border_width: theme.control.edge_width_strong,
-                        border_color: glass.field_focus_border.0,
-                    },
-                );
-            }
+            paint_radio(c, layer, radio, row.active, 1.0, theme);
 
             let content_x = radio.x + radio.w + m.gap + m.gap_sm;
             // Trailing value: caption-sm, primary, right aligned.
