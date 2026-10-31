@@ -7,7 +7,7 @@ use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
 use crate::widgets::recipe::{
-    focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets,
+    focus_ring, gradient_fill, rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets,
 };
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -95,7 +95,9 @@ pub fn paint_surface(
     focused: bool,
     theme: &Theme,
 ) -> [f32; 4] {
-    let shadows: Vec<_> = surface
+    let [top, bottom] = surface.fill;
+    let clear = top.0[3] <= 0.0 && bottom.0[3] <= 0.0;
+    let mut shadows: Vec<_> = surface
         .shadow
         .iter()
         .map(|s| {
@@ -104,9 +106,34 @@ pub fn paint_surface(
             s
         })
         .collect();
+    if clear {
+        // A css ring (`0 0 0 1px`) is a shadow, and a css shadow is never
+        // painted under its box. The analytic shadow is, which a fill
+        // hides; under a clear fill the ring would fill the whole button.
+        // Without a fill a ring is drawn as what it reads as: a band just
+        // outside the bounds.
+        shadows.retain(|s| {
+            let ring = !s.inset && s.blur == 0.0 && s.offset == [0.0, 0.0] && s.spread > 0.0;
+            if ring {
+                let w = s.spread;
+                c.push_to_layer(
+                    layer,
+                    rounded_rect_stroke(
+                        bounds.x - w,
+                        bounds.y - w,
+                        bounds.w + w * 2.0,
+                        bounds.h + w * 2.0,
+                        radius + w,
+                        s.color.0,
+                        w,
+                    ),
+                );
+            }
+            !ring
+        });
+    }
     shadow_drops(c, layer, bounds, radius, &shadows);
-    let [top, bottom] = surface.fill;
-    if top.0[3] > 0.0 || bottom.0[3] > 0.0 {
+    if !clear {
         c.push_to_layer(
             layer,
             gradient_fill(bounds, radius, faded(top.0, alpha), faded(bottom.0, alpha)),

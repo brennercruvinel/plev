@@ -158,3 +158,33 @@ fn only_the_glass_themes_light_a_surface() {
         ([2.0, 4.0], 16.0, true)
     );
 }
+
+/// A css ring is never painted under its box: on a clear surface (the
+/// derived themes' outline) it is a band just outside the bounds, not a
+/// shadow that would fill the button.
+#[test]
+fn a_ring_on_a_clear_surface_is_a_band_outside_it() {
+    let theme = Theme::hoff();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let b = IconButton::new("x").variant(IconButtonVariant::Outline);
+    let at = Rect::new(10.0, 10.0, 40.0, 40.0);
+    b.render(&mut c, at, &theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(
+        !nodes.iter().any(|n| matches!(n, SceneNode::Shadow { .. })),
+        "no shadow under a clear outline"
+    );
+    let band = nodes.iter().find_map(|n| match n {
+        SceneNode::RoundedRect {
+            x,
+            w,
+            border_width,
+            color,
+            ..
+        } if *border_width > 0.0 => Some((*x, *w, color[3])),
+        _ => None,
+    });
+    let (x, w, fill) = band.expect("the ring as a band");
+    assert_eq!((x, w, fill), (9.0, 42.0, 0.0));
+}
