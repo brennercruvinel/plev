@@ -336,6 +336,8 @@ impl WorkspaceView {
                         },
                     );
                 }
+                // The ide pushes no anchored panel; its owner would draw it.
+                OverlayKind::Anchored => {}
             }
         }
     }
