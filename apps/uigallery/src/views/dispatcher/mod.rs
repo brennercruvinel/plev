@@ -67,6 +67,10 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.content_height(content, t),
                 Pane::InputGroup => self.panes.input_group.content_height(content, t),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
+                Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
+                Pane::Menubar => self.panes.menubar.content_height(content, t),
+                Pane::HoverCard => self.panes.hover_card.content_height(content, t),
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
@@ -180,8 +184,31 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.handle_event(event, content, t),
                 Pane::InputGroup => self.panes.input_group.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => {
+                    let (r, after) = self.panes.alert_dialog.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::DropdownMenu => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.dropdown_menu;
+                    page.handle_event(event, content, bounds, t)
+                }
+                Pane::Menubar => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.menubar;
+                    page.handle_event(event, content, bounds, t)
+                }
+                Pane::HoverCard => {
+                    let bounds = self.anchored_bounds(content);
+                    self.panes
+                        .hover_card
+                        .handle_event(event, content, bounds, t)
+                }
                 Pane::Popover => {
-                    let bounds = self.popover_bounds(content);
+                    let bounds = self.anchored_bounds(content);
                     self.panes.popover.handle_event(event, content, bounds, t)
                 }
                 // task-104 front C, conversation and feedback (#156)
@@ -289,6 +316,22 @@ impl ShowcaseView {
             Some(Pane::Label) => self.panes.label.wake(dt),
             Some(Pane::InputGroup) => self.panes.input_group.wake(dt),
             // task-104 front B, overlays (#155)
+            Some(Pane::Menubar) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.menubar;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::DropdownMenu) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.dropdown_menu;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::HoverCard) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.hover_card;
+                let mgr = &mut self.overlay_mgr;
+                Wake::moving(page.wake(dt, mgr, content, viewport, &self.theme))
+            }
             Some(Pane::Popover) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
                 let popover = &mut self.panes.popover;
@@ -384,10 +427,54 @@ impl ShowcaseView {
                 Pane::Label => self.panes.label.render(c, content, theme),
                 Pane::InputGroup => self.panes.input_group.render(c, content, theme),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
+                Pane::Menubar => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.menubar;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
+                Pane::DropdownMenu => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.dropdown_menu;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
+                Pane::HoverCard => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &self.panes.hover_card;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
                 Pane::Popover => {
-                    let bounds = self.popover_bounds(content);
+                    let bounds = self.anchored_bounds(content);
                     let popover = &mut self.panes.popover;
-                    popover.render(c, layers.overlay, content, bounds, theme);
+                    popover.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
                 }
                 // task-104 front C, conversation and feedback (#156)
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),

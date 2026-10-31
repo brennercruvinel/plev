@@ -153,6 +153,20 @@ pub(crate) fn content_height(layout: &[GroupLayout], content: Rect) -> f32 {
     layout.last().map_or(0.0, |g| g.rule_y - content.y)
 }
 
+/// A card's body: the card less its chip band at the top and an `md`
+/// margin on the other sides, where a card that holds more than one
+/// centered widget (a trigger and its open panel) lays it out.
+pub(crate) fn body(card: Rect, theme: &Theme) -> Rect {
+    let band = chip_band(theme);
+    let pad = theme.spacing.md;
+    Rect::new(
+        card.x + pad,
+        card.y + band,
+        (card.w - pad * 2.0).max(0.0),
+        (card.h - band - pad).max(0.0),
+    )
+}
+
 /// A widget of `size` centered in its card, on whole pixels.
 pub(crate) fn centered((w, h): (f32, f32), card: Rect) -> Rect {
     Rect::new(

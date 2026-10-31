@@ -95,6 +95,10 @@ pub enum Pane {
     Label,
     InputGroup,
     // task-104 front B, overlays (#155)
+    AlertDialog,
+    DropdownMenu,
+    HoverCard,
+    Menubar,
     Popover,
     // task-104 front C, conversation and feedback (#156)
     Bubble,

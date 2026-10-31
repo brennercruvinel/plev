@@ -86,12 +86,12 @@ pub const PAGES: &[Page] = &[
         Pane::Accordion,
     ),
     placeholder("Alert"),
-    alias(
+    page(
+        C,
         "Alert Dialog",
         "alert-triangle",
-        "The destructive dialog: a warning button opens it, confirm is the dangerous action.",
-        Pane::Dialog,
-        "its own page, apart from the plain dialog",
+        "A question that blocks the page until it is answered.",
+        Pane::AlertDialog,
     ),
     page(
         C,
@@ -224,12 +224,12 @@ pub const PAGES: &[Page] = &[
         Pane::Sidebar,
         "a drawer apart from the app shell",
     ),
-    alias(
+    page(
+        C,
         "Dropdown Menu",
-        "chevron-down",
-        "The context menu, until it anchors to a button.",
-        Pane::ContextMenu,
-        "anchoring to a trigger button",
+        "layers",
+        "The kit's menus, open from a trigger or shown in their cards.",
+        Pane::DropdownMenu,
     ),
     page(
         C,
@@ -252,12 +252,12 @@ pub const PAGES: &[Page] = &[
         "Pan, wheel and click a node.",
         Pane::Graph,
     ),
-    alias(
+    page(
+        C,
         "Hover Card",
         "eye",
-        "The tooltip, until it holds rich content.",
-        Pane::Tooltip,
-        "rich content and a hover-in delay of its own",
+        "Rest the pointer on the handle; the card follows.",
+        Pane::HoverCard,
     ),
     page(
         C,
@@ -303,7 +303,13 @@ pub const PAGES: &[Page] = &[
         Pane::Label,
     ),
     placeholder("Marker"),
-    placeholder("Menubar"),
+    page(
+        C,
+        "Menubar",
+        "layout-grid",
+        "File, Edit and View: menus in a row, one open at a time.",
+        Pane::Menubar,
+    ),
     page(
         C,
         "Message",

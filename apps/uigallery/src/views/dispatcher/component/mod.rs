@@ -131,6 +131,10 @@ components! {
     Label => label,
     InputGroup => input_group,
     // task-104 front B, overlays (#155)
+    AlertDialog => alert_dialog,
+    DropdownMenu => dropdown_menu,
+    HoverCard => hover_card,
+    Menubar => menubar,
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)
     Bubble => bubble,

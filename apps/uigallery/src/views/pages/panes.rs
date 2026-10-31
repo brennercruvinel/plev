@@ -20,7 +20,7 @@ use super::super::components::input_group;
 use super::super::components::label;
 
 // task-104 front B, overlays (#155)
-use super::super::components::popover;
+use super::super::components::{alert_dialog, dropdown_menu, hover_card, menubar, popover};
 
 // task-104 front C, conversation and feedback (#156)
 use super::super::components::{bubble, message, message_scroller};
@@ -78,6 +78,10 @@ pub struct Panes {
     pub label: field::FormPage,
     pub input_group: field::FormPage,
     // task-104 front B, overlays (#155)
+    pub alert_dialog: alert_dialog::AlertDialogPage,
+    pub dropdown_menu: dropdown_menu::DropdownMenuPage,
+    pub hover_card: hover_card::HoverCardPage,
+    pub menubar: menubar::MenubarPage,
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
     pub bubble: bubble::BubblePage,
@@ -171,6 +175,10 @@ impl Panes {
             label: label::page(),
             input_group: input_group::page(),
             // task-104 front B, overlays (#155)
+            alert_dialog: alert_dialog::AlertDialogPage::new(),
+            dropdown_menu: dropdown_menu::DropdownMenuPage::new(),
+            hover_card: hover_card::HoverCardPage::new(),
+            menubar: menubar::MenubarPage::new(),
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
             bubble: bubble::BubblePage::new(),
