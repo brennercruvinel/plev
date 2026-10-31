@@ -110,3 +110,26 @@ fn a_password_menu_offers_no_cut_and_no_copy() {
         assert_eq!(enabled(&g, CUT), Some(offers), "{id}: Cut");
     }
 }
+
+const LABELLED: &str = "label_page.group[1].card[0]";
+
+/// The Label page's field, named by its label: the same text from the
+/// three.
+#[test]
+fn a_labelled_field_takes_the_same_text_from_the_three() {
+    let mut person = gallery("Label");
+    person.click(LABELLED);
+    person.type_in("ada@hoff.dev");
+    let mut reader = gallery("Label");
+    reader.reader(
+        LABELLED,
+        Action::SetValue,
+        Some(ActionData::Value("ada@hoff.dev".into())),
+    );
+    let agent = by_agent(
+        "Label",
+        "label",
+        vec![ask_with(LABELLED, "set_value", Value::from("ada@hoff.dev"))],
+    );
+    same("Label", &person, &reader, &agent);
+}

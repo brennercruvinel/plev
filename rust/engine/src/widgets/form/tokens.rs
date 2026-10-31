@@ -75,11 +75,21 @@ pub struct Adornments {
     pub icon_color: Color,
 }
 
+/// A label: the form label that names a control, and a section's
+/// caption (the uppercase group heading of the HOFF accordion).
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelRecipe {
+    pub text: TextStyle,
+    pub color: Color,
+    pub caption: TextStyle,
+    pub caption_color: Color,
+    /// Opacity of a disabled label (the control's).
+    pub disabled_alpha: f32,
+}
+
 /// The field around the box: the label row and the message line.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FieldChrome {
-    pub label: TextStyle,
-    pub label_color: Color,
     /// Between the label row and the box (`mb-2`).
     pub label_gap: f32,
     /// The link at the end of the label row ("Forgot password?").
@@ -114,6 +124,7 @@ pub enum Slot {
 /// The form slot of the theme.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FormTokens {
+    pub label: LabelRecipe,
     pub input: InputRecipe,
     pub adorn: Adornments,
     pub field: FieldChrome,
@@ -128,6 +139,16 @@ fn black(a: f32) -> Color {
 }
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
+
+/// A section's caption: 12px, weight 600, a line of 1.4 (the HOFF
+/// accordion head the gallery's groups were drawn with), in the engine's
+/// face, every theme alike.
+fn caption() -> TextStyle {
+    let size = 12.0;
+    TextStyle::new(size)
+        .with_line_height(size * 1.4)
+        .with_weight(600)
+}
 
 impl FormTokens {
     /// The text's inset from an end of the input box that `slot` takes.
@@ -204,9 +225,16 @@ impl FormTokens {
         // font-medium`; :41 the link, `text-[#7b7b7b] opacity-70
         // hover:opacity-100`; :114 the error `mt-2 text-[0.6875rem]
         // leading-[1rem] font-medium text-[#FE5938]`.
+        let label = LabelRecipe {
+            text: ramp.exact(12.0, 16.0, 500),
+            color: ink,
+            caption: caption(),
+            // Not in the kit: the core glass's placeholder tone, as the
+            // caption draws in every other theme.
+            caption_color: Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.40),
+            disabled_alpha: input.disabled_alpha,
+        };
         let field = FieldChrome {
-            label: ramp.exact(12.0, 16.0, 500),
-            label_color: ink,
             label_gap: 8.0,
             link: ramp.exact(12.0, 16.0, 500),
             link_color: gray,
@@ -221,6 +249,7 @@ impl FormTokens {
         };
 
         Self {
+            label,
             input,
             adorn,
             field,
@@ -272,9 +301,14 @@ impl FormTokens {
             reveal_icon: icon,
             icon_color: c.text_mid,
         };
+        let label = LabelRecipe {
+            text: t.caption_sm(),
+            color: c.text,
+            caption: caption(),
+            caption_color: g.text_placeholder,
+            disabled_alpha: g.disabled_alpha,
+        };
         let field = FieldChrome {
-            label: t.caption_sm(),
-            label_color: c.text,
             label_gap: theme.spacing.sm,
             link: t.caption_r(),
             link_color: c.text_mid,
@@ -286,6 +320,7 @@ impl FormTokens {
             helper_color: c.text_mid,
         };
         Self {
+            label,
             input,
             adorn,
             field,

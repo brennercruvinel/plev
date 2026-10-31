@@ -271,12 +271,12 @@ pub const PAGES: &[Page] = &[
         Pane::NavigationMenu,
         "a key cap widget",
     ),
-    alias(
+    page(
+        C,
         "Label",
         "info",
-        "The caption over a field.",
-        Pane::Input,
-        "a label widget in comps (the gallery draws its group labels by hand)",
+        "The text that names a control, and a section's caption.",
+        Pane::Label,
     ),
     placeholder("Marker"),
     placeholder("Menubar"),

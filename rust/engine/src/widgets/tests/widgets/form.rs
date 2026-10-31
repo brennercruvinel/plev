@@ -551,3 +551,70 @@ fn the_link_lifts_on_hover_and_a_press_on_it_blurs_the_box() {
     );
     assert!(!f.input.is_focused());
 }
+
+// Label
+
+/// A label wraps to its width and draws with the style it measures with;
+/// a disabled one fades by the control's alpha.
+#[test]
+fn a_label_wraps_to_its_width_and_fades_when_disabled() {
+    use crate::widgets::form::label::Label;
+    let theme = Theme::hoff_core();
+    let long = Label::new("A label far longer than the room it is given to stand in");
+    let line = theme.form.label.text.line_height;
+    let (w, h) = long.size(Some(120.0), &theme);
+    assert!(w <= 120.0 && h > line, "wrapped: {w}x{h}");
+    assert_eq!(long.style(&theme), theme.form.label.text);
+    let nodes = nodes_of(|c| long.render(c, Rect::new(0.0, 0.0, 120.0, h), &theme));
+    let [(_, _, width)] = texts(&nodes).try_into().expect("one text");
+    assert_eq!(width, Some(120.0));
+    let alpha = |l: &Label| {
+        let nodes = nodes_of(|c| l.render(c, Rect::new(0.0, 0.0, 200.0, 20.0), &theme));
+        nodes.iter().find_map(|n| match n {
+            SceneNode::Text { color, .. } => Some(color[3]),
+            _ => None,
+        })
+    };
+    let rest = alpha(&Label::new("Email")).unwrap();
+    let off = alpha(&Label::new("Email").disabled(true)).unwrap();
+    assert!((off - rest * theme.form.label.disabled_alpha).abs() < 1e-6);
+}
+
+/// The caption is the HOFF accordion head the gallery's groups were
+/// drawn with, in every theme: 12/600 on a line of 1.4, the engine's
+/// face, the glass's placeholder tone.
+#[test]
+fn a_caption_is_the_accordion_head_in_every_theme() {
+    use crate::drawing::text::TextStyle;
+    use crate::widgets::form::label::Label;
+    let head = TextStyle::new(12.0)
+        .with_line_height(12.0 * 1.4)
+        .with_weight(600);
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        assert_eq!(Label::new("A").caption().style(&theme), head);
+        assert_eq!(theme.form.label.caption_color, theme.glass.text_placeholder);
+    }
+}
+
+/// A press on a field's label focuses its box, not a disabled one.
+#[test]
+fn a_press_on_the_label_focuses_the_box() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 240.0, 0.0);
+    let mut f = Field::new("Enter email").label("Email");
+    let (x, y) = f.layout(bounds, &theme).label.unwrap().center();
+    assert_eq!(f.part_at(x, y, bounds, &theme), Some(FieldPart::Label));
+    assert!(
+        f.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(f.input.is_focused());
+    let mut off = Field::new("Enter email").label("Email").disabled(true);
+    off.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
+    assert!(!off.input.is_focused());
+}
