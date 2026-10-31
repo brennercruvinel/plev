@@ -91,7 +91,7 @@ pub mod toggle;
 pub mod toggle_group;
 
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
-pub(crate) use super::{EditKey, group_label, panel, text};
+pub(crate) use super::{EditKey, panel, text};
 
 use accord::SemId;
 

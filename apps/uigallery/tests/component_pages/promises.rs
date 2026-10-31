@@ -33,8 +33,8 @@ const PROJECTING: usize = 31
     // task-104 front D, disclosure and display (#157): Accordion,
     // Collapsible, Aspect Ratio, Carousel, Pagination (Item, Kbd and Table
     // projected before, through the pages they borrowed), Panel, Panel
-    // Header
-    + 7
+    // Header, Card
+    + 8
     // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat,
     // and in wave 3 Toolbar
     + 5;

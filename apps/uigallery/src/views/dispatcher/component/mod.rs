@@ -165,6 +165,7 @@ components! {
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,
+    Card => card,
     Carousel => carousel,
     Collapsible => collapsible,
     Item => item,

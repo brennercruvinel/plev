@@ -106,6 +106,14 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         ],
     ),
     (
+        "download",
+        &[
+            Path("M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"),
+            Polyline("7 10 12 15 17 10"),
+            Line(12.0, 15.0, 12.0, 3.0),
+        ],
+    ),
+    (
         "eye",
         &[
             Path(
@@ -163,6 +171,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path(
                 "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
             ),
+        ],
+    ),
+    (
+        "forward",
+        &[
+            Polyline("15 17 20 12 15 7"),
+            Path("M4 18v-2a4 4 0 0 1 4-4h12"),
         ],
     ),
     (
