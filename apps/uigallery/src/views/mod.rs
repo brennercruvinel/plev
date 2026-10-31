@@ -35,6 +35,8 @@ use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
 use engine::styling::theme::Theme;
 use engine::widgets::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
+use engine::widgets::overlay::drawer::Drawer;
+use engine::widgets::overlay::sheet::Sheet;
 use engine::widgets::overlay::{OverlayId, OverlayManager};
 use engine::widgets::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
 
@@ -60,13 +62,35 @@ enum ActiveOverlay {
         x: f32,
         y: f32,
     },
+    /// A sheet held to an edge of the window (the Sheet page's).
+    Sheet {
+        id: OverlayId,
+        widget: Box<Sheet>,
+    },
+    /// The navigation drawer (the Drawer page's).
+    Drawer {
+        id: OverlayId,
+        widget: Box<Drawer>,
+    },
 }
 
 impl ActiveOverlay {
     fn id(&self) -> OverlayId {
         match self {
-            ActiveOverlay::Modal { id, .. } | ActiveOverlay::Menu { id, .. } => *id,
+            ActiveOverlay::Modal { id, .. }
+            | ActiveOverlay::Menu { id, .. }
+            | ActiveOverlay::Sheet { id, .. }
+            | ActiveOverlay::Drawer { id, .. } => *id,
         }
+    }
+
+    /// Whether it slides from an edge (the sheet, the drawer) rather than
+    /// fades: its layer stays opaque and it draws its entry's progress.
+    fn slides(&self) -> bool {
+        matches!(
+            self,
+            ActiveOverlay::Sheet { .. } | ActiveOverlay::Drawer { .. }
+        )
     }
 }
 

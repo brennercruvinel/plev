@@ -20,9 +20,11 @@ const PROJECTING: usize = 30
     + 3
     // task-104 front E, selection (#158): Toggle Group, Radio Group
     + 2
-    // task-104 fronts B, C and D, integrated together; each front moves its
+    // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer
+    + 4
+    // task-104 fronts C and D, integrated together; each front moves its
     // share to a line of its own on its next merge
-    + 9;
+    + 7;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

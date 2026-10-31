@@ -53,6 +53,7 @@ const PROJECTING: &[&str] = &[
     "Combobox",
     "Data Table",
     "Dialog",
+    "Drawer",
     "Dropdown Menu",
     "Field",
     "Hover Card",
@@ -72,6 +73,7 @@ const PROJECTING: &[&str] = &[
     "Resizable",
     "Scroll Area",
     "Select",
+    "Sheet",
     "Slider",
     "Spinner",
     "Switch",
@@ -143,10 +145,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Date Picker", PLACEHOLDER),
     (
-        "Drawer",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
@@ -167,10 +165,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
-    (
-        "Sheet",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
     (
         "Sidebar",
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
