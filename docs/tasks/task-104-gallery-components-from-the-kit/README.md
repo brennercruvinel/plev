@@ -34,8 +34,8 @@ The plan, the evidence behind each base and the definition of done live in the e
 |---|---|---|
 | 0 | tools on the Linux host, the build wrapper, the browser capture proved on Buttons | in progress |
 | 0b | scaffold: anchors per front, token slots, empty modules, test files | in progress |
-| 1 | the five POCs: Field, Popover, Message, Accordion, Toggle | study and plan |
-| 1b | adaptive foundation: study, contracts in an ADR reviewed by Brenner, engine, evidence | not started |
+| 1 | the five POCs: Field, Popover, Message, Accordion, Toggle | plans reviewed, waiting on the scaffold |
+| 1b | adaptive foundation: study, contracts in an ADR reviewed by Brenner, engine, evidence | study in progress |
 | 2 | audit of the 47 existing pages | not started |
 | 3 | full wave of the five fronts | not started |
 | 4 | integration, final gate, closing records | not started |
@@ -44,11 +44,11 @@ The plan, the evidence behind each base and the definition of done live in the e
 
 | front | sub-issue | tabs | POC | state |
 |---|---|---|---|---|
-| A, fields | [#154](https://github.com/brennercruvinel/plev/issues/154) | Field, Label, Input Group, Input OTP, Textarea, Combobox, Command | Field | plan |
-| B, overlays | [#155](https://github.com/brennercruvinel/plev/issues/155) | Popover, Hover Card, Dropdown Menu, Alert Dialog, Menubar, Sheet, Drawer | Popover | plan |
-| C, conversation and feedback | [#156](https://github.com/brennercruvinel/plev/issues/156) | Message, Bubble, Message Scroller, Alert, Attachment, Marker, Questionnaire | Message | plan |
-| D, disclosure and display | [#157](https://github.com/brennercruvinel/plev/issues/157) | Accordion, Collapsible, Item, Kbd, Aspect Ratio, Carousel, Pagination, Table | Accordion | plan |
-| E, selection and dates | [#158](https://github.com/brennercruvinel/plev/issues/158) | Toggle, Toggle Group, Button Group, Radio Group, Calendar, Date Picker | Toggle | plan |
+| A, fields | [#154](https://github.com/brennercruvinel/plev/issues/154) | Field, Label, Input Group, Input OTP, Textarea, Combobox, Command | Field | plan approved |
+| B, overlays | [#155](https://github.com/brennercruvinel/plev/issues/155) | Popover, Hover Card, Dropdown Menu, Alert Dialog, Menubar, Sheet, Drawer | Popover | plan approved |
+| C, conversation and feedback | [#156](https://github.com/brennercruvinel/plev/issues/156) | Message, Bubble, Message Scroller, Alert, Attachment, Marker, Questionnaire | Message | plan approved |
+| D, disclosure and display | [#157](https://github.com/brennercruvinel/plev/issues/157) | Accordion, Collapsible, Item, Kbd, Aspect Ratio, Carousel, Pagination, Table | Accordion | plan approved |
+| E, selection and dates | [#158](https://github.com/brennercruvinel/plev/issues/158) | Toggle, Toggle Group, Button Group, Radio Group, Calendar, Date Picker | Toggle | plan approved |
 
 ## Quality control, tab by tab
 
@@ -101,6 +101,9 @@ The audit of the 47 existing pages gets its own table here when phase 2 starts.
 - **Adaptive foundation ADR.** The contracts go to Brenner before any engine code (phase 1b).
 - **Questionnaire.** No base in the kit or in plev; the tab stays blocked until Brenner settles what it is.
 - **Textarea.** The `TextInput` is single-line; front A reports the options for a multi-line base before building it.
+- **How a toggle is announced.** `Role::Toggle` reaches AccessKit as `Switch` (`rust/engine/src/control/accessibility/role.rs:24`), so a screen reader says "switch" where `aria-pressed` would say "toggle button". The Chip already behaves this way; changing it changes the `accord` contract. Raised by front E.
+- **Colour inside a paragraph.** The kit's mention is a blue run inside wrapped text; the engine draws one colour per text node (`TextNodeKey`, `run_style` taking the first run). The Message POC ships without it, its card marked pending. Raised by front C.
+- **Kit colours below WCAG.** The field border `#E2E2E2` (about 1.3:1 against 3:1 for UI components), the error `#FE5938` at 11 px (about 3.1:1), the placeholder and timestamp `#7B7B7B` (about 4.1:1 against 4.5:1) and the quick-comment timestamp at 50% (about 1.9:1). The POCs keep the kit and list the failures in `theme/tests/contrast.rs`, except the 50% timestamp, which uses `text_mid` until a decision. Raised by fronts A and C; figures are the agents' calculations, to be confirmed by the contrast test.
 
 ## Evidence
 
