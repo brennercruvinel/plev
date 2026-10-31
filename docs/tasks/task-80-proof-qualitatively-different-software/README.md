@@ -7,7 +7,7 @@ status: in-progress
 date: 2026-09-25
 date_basis: header
 topics: [generated-surfaces, agents, recording, research]
-relations: [adr-0050, adr-0070, task-60, task-62, task-63, task-64, task-68, task-69, task-70, task-84, task-86, task-87, task-89, task-92, task-93, task-94, task-96, task-97, generative-runtime-thesis]
+relations: [adr-0050, adr-0070, task-60, task-62, task-63, task-64, task-68, task-69, task-70, task-84, task-86, task-87, task-89, task-92, task-93, task-94, task-96, task-97, generative-runtime-thesis, experiment-five-demos]
 source: docs/log/steps/task-80-proof-qualitatively-different-software.md
 source_revision: ec0a224c
 revised: 2026-10-30

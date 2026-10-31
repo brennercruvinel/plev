@@ -32,7 +32,7 @@ measurer and the renderer load the faces in the same order as `PACKS`,
 regardless of the order in which the network delivers them (`on_demand.rs`,
 lines 9 to 13 and 254 to 271).
 
-The [ADR 78](../../adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md)
+The [ADR 0078](../../adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md)
 records the size measured at delivery (6,97 MB of fonts in the wasm, line 23) and
 the need to serve `fonts/` next to the build (line 39). A file that does not
 match the hash keeps the package out; the text continues with fallback or a
@@ -43,7 +43,7 @@ missing glyph.
 `EmbeddedFirst` chooses, for each script covered by the embedded faces, that
 script's Noto family ahead of the platform lists; the remaining scripts keep the
 system lists as fallback (`fonts.rs`, lines 160 to 199). The
-[ADR 79](../../adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
+[ADR 0079](../../adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
 records the comparison of the Typography page, byte-for-byte identical between the
 desktop headless render and the web build (lines 50 and 51).
 

@@ -1272,7 +1272,8 @@
     "task-70",
     "task-80",
     "task-84",
-    "task-96"
+    "task-96",
+    "experiment-five-demos"
    ],
    "source": "docs/adr/generated/0070-generative-runtime-results.md",
    "source_revision": "ec0a224c",
@@ -5510,7 +5511,8 @@
    ],
    "relations": [
     "task-41",
-    "task-78"
+    "task-78",
+    "experiment-local-inference-candle-vs-burn"
    ],
    "source": "docs/adr/structure/0072-ai-native-single-process.md",
    "source_revision": "ec0a224c",
@@ -6366,6 +6368,135 @@
    ]
   },
   {
+   "path": "docs/experiments/agent-proof-checkpoint-a/README.md",
+   "id": "experiment-agent-proof-checkpoint-a",
+   "title": "LLM agents commit through the IDE contract: stale refusal and handoff, five rounds",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-23",
+   "date_basis": "text",
+   "topics": [
+    "agents",
+    "semantics",
+    "recording",
+    "git"
+   ],
+   "relations": [
+    "task-62",
+    "task-62/phase-ab-closing",
+    "task-62/phase-c-round-1",
+    "task-62/phase-c-round-2",
+    "task-62/phase-c-round-3",
+    "task-62/phase-c-round-4",
+    "task-62/phase-c-round-5",
+    "task-88",
+    "task-93",
+    "adr-0036"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "LLM agents commit through the IDE contract: stale refusal and handoff, five rounds",
+     "anchor": "llm-agents-commit-through-the-ide-contract-stale-refusal-and-handoff-five-rounds"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 3,
+     "title": "Lab and repository",
+     "anchor": "lab-and-repository"
+    },
+    {
+     "level": 3,
+     "title": "Arms (round 1)",
+     "anchor": "arms-round-1"
+    },
+    {
+     "level": 3,
+     "title": "The person",
+     "anchor": "the-person"
+    },
+    {
+     "level": 3,
+     "title": "Stale measurement",
+     "anchor": "stale-measurement"
+    },
+    {
+     "level": 3,
+     "title": "Other conditions",
+     "anchor": "other-conditions"
+    },
+    {
+     "level": 3,
+     "title": "Rounds",
+     "anchor": "rounds"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "At a glance",
+     "anchor": "at-a-glance"
+    },
+    {
+     "level": 3,
+     "title": "Lab validation on scripted agents",
+     "anchor": "lab-validation-on-scripted-agents"
+    },
+    {
+     "level": 3,
+     "title": "Round 1 (2026-09-23, `d26c9b1`)",
+     "anchor": "round-1-2026-09-23-d26c9b1"
+    },
+    {
+     "level": 3,
+     "title": "Round 2 (2026-09-23, `476bbb4`)",
+     "anchor": "round-2-2026-09-23-476bbb4"
+    },
+    {
+     "level": 3,
+     "title": "Round 3 (2026-09-24, `96c20a0`)",
+     "anchor": "round-3-2026-09-24-96c20a0"
+    },
+    {
+     "level": 3,
+     "title": "Round 4 (2026-09-24, `7d9c569`)",
+     "anchor": "round-4-2026-09-24-7d9c569"
+    },
+    {
+     "level": 3,
+     "title": "Round 5 (2026-09-24, `35b145b`)",
+     "anchor": "round-5-2026-09-24-35b145b"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
    "path": "docs/experiments/benchmarks-v02/README.md",
    "id": "experiment-benchmarks-v02",
    "title": "benchmark results, plev v0.2",
@@ -6431,6 +6562,649 @@
      "level": 2,
      "title": "per-crate benches added since (junho 2026)",
      "anchor": "per-crate-benches-added-since-junho-2026"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/caret-render-on-demand/README.md",
+   "id": "experiment-caret-render-on-demand",
+   "title": "caret blink as a deadline: frames drawn with a focused, idle field",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-23",
+   "date_basis": "text",
+   "topics": [
+    "rendering",
+    "performance",
+    "input"
+   ],
+   "relations": [
+    "task-73/phase-1-measurements",
+    "task-82",
+    "task-82/phase-a",
+    "task-82/phase-b",
+    "adr-0042"
+   ],
+   "evidence": [
+    "d97a375",
+    "a6fec8d"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "caret blink as a deadline: frames drawn with a focused, idle field",
+     "anchor": "caret-blink-as-a-deadline-frames-drawn-with-a-focused-idle-field"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Scenario g in the measure harness",
+     "anchor": "scenario-g-in-the-measure-harness"
+    },
+    {
+     "level": 3,
+     "title": "CPU with the caret idle",
+     "anchor": "cpu-with-the-caret-idle"
+    },
+    {
+     "level": 3,
+     "title": "Real window: showcase Todo page",
+     "anchor": "real-window-showcase-todo-page"
+    },
+    {
+     "level": 3,
+     "title": "Real window: ide commit field and showcase Git page",
+     "anchor": "real-window-ide-commit-field-and-showcase-git-page"
+    },
+    {
+     "level": 3,
+     "title": "Tests and gate",
+     "anchor": "tests-and-gate"
+    },
+    {
+     "level": 3,
+     "title": "Outcome",
+     "anchor": "outcome"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/five-demos/README.md",
+   "id": "experiment-five-demos",
+   "title": "five demos of qualitatively different software, each with its method written before it ran",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-25",
+   "date_basis": "text",
+   "topics": [
+    "generated-surfaces",
+    "agents",
+    "recording",
+    "ir"
+   ],
+   "relations": [
+    "task-80",
+    "task-80/phase-1-probe-and-demos",
+    "task-80/demo-5-generative-ui",
+    "task-96",
+    "task-96/phase-a-surface",
+    "task-96/phase-b-title-and-column",
+    "task-97",
+    "adr-0070"
+   ],
+   "evidence": [
+    "c8a6c3a9",
+    "46f272d3",
+    "b26dc988",
+    "ae5be30e",
+    "677b1ad9",
+    "07650665",
+    "9c96bde4"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "five demos of qualitatively different software, each with its method written before it ran",
+     "anchor": "five-demos-of-qualitatively-different-software-each-with-its-method-written-before-it-ran"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Demo 1, stale-state rejection: proven by task-62, two control arms not run",
+     "anchor": "demo-1-stale-state-rejection-proven-by-task-62-two-control-arms-not-run"
+    },
+    {
+     "level": 3,
+     "title": "Demo 2, human-agent handoff: proven only with a scripted person",
+     "anchor": "demo-2-human-agent-handoff-proven-only-with-a-scripted-person"
+    },
+    {
+     "level": 3,
+     "title": "Demo 3, inspectability: the task-84 race read at the instant, and its test",
+     "anchor": "demo-3-inspectability-the-task-84-race-read-at-the-instant-and-its-test"
+    },
+    {
+     "level": 3,
+     "title": "Demo 4, ephemeral interface: the review born from an intent, and its comparison",
+     "anchor": "demo-4-ephemeral-interface-the-review-born-from-an-intent-and-its-comparison"
+    },
+    {
+     "level": 3,
+     "title": "Demo 5, generative UI in an application that exists: mixed, and it falls on the diff",
+     "anchor": "demo-5-generative-ui-in-an-application-that-exists-mixed-and-it-falls-on-the-diff"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/frame-cost-by-stage/README.md",
+   "id": "experiment-frame-cost-by-stage",
+   "title": "what each stage of a frame costs in nine scenarios",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-23",
+   "date_basis": "text",
+   "topics": [
+    "performance",
+    "gpu",
+    "rendering"
+   ],
+   "relations": [
+    "task-73",
+    "task-73/phase-1-measurements"
+   ],
+   "evidence": [
+    "ed814da",
+    "91fdb33"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "what each stage of a frame costs in nine scenarios",
+     "anchor": "what-each-stage-of-a-frame-costs-in-nine-scenarios"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Method checks",
+     "anchor": "method-checks"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1: cost per scenario, three runs",
+     "anchor": "phase-1-cost-per-scenario-three-runs"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1: second run, by stage",
+     "anchor": "phase-1-second-run-by-stage"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1: what the second run shows",
+     "anchor": "phase-1-what-the-second-run-shows"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1: stop and report",
+     "anchor": "phase-1-stop-and-report"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1: a conflict between two values in the same page",
+     "anchor": "phase-1-a-conflict-between-two-values-in-the-same-page"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1b: GPU timestamps, median of ten runs",
+     "anchor": "phase-1b-gpu-timestamps-median-of-ten-runs"
+    },
+    {
+     "level": 3,
+     "title": "Phase 1b: what the GPU spends",
+     "anchor": "phase-1b-what-the-gpu-spends"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/generated-surface-checkpoint-b/README.md",
+   "id": "experiment-generated-surface-checkpoint-b",
+   "title": "generated silences screen against the fixed screen, checkpoint b of task-69",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-24",
+   "date_basis": "text",
+   "topics": [
+    "generated-surfaces",
+    "layout",
+    "agents",
+    "ir"
+   ],
+   "relations": [
+    "task-69",
+    "task-69/checkpoint-b-round-1",
+    "task-69/checkpoint-b-round-2",
+    "task-69/checkpoint-b-fixes"
+   ],
+   "evidence": [
+    "253be85d",
+    "210564b8",
+    "039b5cf6",
+    "f4b46794",
+    "b8665828",
+    "25633cba"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "generated silences screen against the fixed screen, checkpoint b of task-69",
+     "anchor": "generated-silences-screen-against-the-fixed-screen-checkpoint-b-of-task-69"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Round 1: 2026-09-24, before the fixes",
+     "anchor": "round-1-2026-09-24-before-the-fixes"
+    },
+    {
+     "level": 3,
+     "title": "Fixes between the rounds",
+     "anchor": "fixes-between-the-rounds"
+    },
+    {
+     "level": 3,
+     "title": "Round 2: 2026-09-24, main after the fixes (PR #92)",
+     "anchor": "round-2-2026-09-24-main-after-the-fixes-pr-92"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/local-inference-candle-vs-burn/README.md",
+   "id": "experiment-local-inference-candle-vs-burn",
+   "title": "candle against burn for local LLM inference in process, TinyLlama 1.1B",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-26",
+   "date_basis": "text",
+   "topics": [
+    "llm",
+    "gpu",
+    "performance",
+    "web-wasm"
+   ],
+   "relations": [
+    "task-78",
+    "adr-0072"
+   ],
+   "evidence": [
+    "94109cd3",
+    "f6ff13fb",
+    "ddd0928c",
+    "496c6ffa",
+    "002debd4"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "candle against burn for local LLM inference in process, TinyLlama 1.1B",
+     "anchor": "candle-against-burn-for-local-llm-inference-in-process-tinyllama-11b"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Measurement",
+     "anchor": "measurement"
+    },
+    {
+     "level": 3,
+     "title": "Cold start and layout",
+     "anchor": "cold-start-and-layout"
+    },
+    {
+     "level": 3,
+     "title": "Wasm",
+     "anchor": "wasm"
+    },
+    {
+     "level": 3,
+     "title": "Recommendation and decision",
+     "anchor": "recommendation-and-decision"
+    },
+    {
+     "level": 3,
+     "title": "After the decision: burn on the renderer's device",
+     "anchor": "after-the-decision-burn-on-the-renderers-device"
+    },
+    {
+     "level": 3,
+     "title": "Negative and failed results",
+     "anchor": "negative-and-failed-results"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/text-coverage-and-large-documents/README.md",
+   "id": "experiment-text-coverage-and-large-documents",
+   "title": "text coverage per writing system, and the cost of large documents in the editor",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-24",
+   "date_basis": "text",
+   "topics": [
+    "text",
+    "fonts",
+    "text-editing",
+    "performance"
+   ],
+   "relations": [
+    "task-74",
+    "task-74/phase-1-audit",
+    "task-74/phase-7-large-documents"
+   ],
+   "evidence": [
+    "df270334",
+    "ad6d0d6a",
+    "36ac4257",
+    "e7427780",
+    "71e0a6f2",
+    "8b4c58e9",
+    "727c378e"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "text coverage per writing system, and the cost of large documents in the editor",
+     "anchor": "text-coverage-per-writing-system-and-the-cost-of-large-documents-in-the-editor"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 3,
+     "title": "Coverage audit (phase 1)",
+     "anchor": "coverage-audit-phase-1"
+    },
+    {
+     "level": 3,
+     "title": "Large documents (phase 7)",
+     "anchor": "large-documents-phase-7"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Coverage: what is missing and what comes out wrong, per writing system",
+     "anchor": "coverage-what-is-missing-and-what-comes-out-wrong-per-writing-system"
+    },
+    {
+     "level": 3,
+     "title": "Large documents: the cost before the three changes",
+     "anchor": "large-documents-the-cost-before-the-three-changes"
+    },
+    {
+     "level": 3,
+     "title": "Large documents: the cost after the three changes",
+     "anchor": "large-documents-the-cost-after-the-three-changes"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
+    }
+   ]
+  },
+  {
+   "path": "docs/experiments/visual-determinism-captures/README.md",
+   "id": "experiment-visual-determinism-captures",
+   "title": "desktop gallery pages: same pixels across scales, themes and runs",
+   "project": "plev",
+   "type": "experiment",
+   "status": "reference",
+   "date": "2026-09-24",
+   "date_basis": "text",
+   "topics": [
+    "determinism",
+    "rendering",
+    "effects",
+    "platform"
+   ],
+   "relations": [
+    "task-77",
+    "task-77/phase-1a-probe",
+    "task-77/phase-1b-blur",
+    "task-77/closing",
+    "adr-0064"
+   ],
+   "evidence": [
+    "8af26af5",
+    "35a47b26",
+    "7127f65a",
+    "f6c688b5",
+    "adbf948b"
+   ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "desktop gallery pages: same pixels across scales, themes and runs",
+     "anchor": "desktop-gallery-pages-same-pixels-across-scales-themes-and-runs"
+    },
+    {
+     "level": 2,
+     "title": "Question",
+     "anchor": "question"
+    },
+    {
+     "level": 2,
+     "title": "Setup",
+     "anchor": "setup"
+    },
+    {
+     "level": 2,
+     "title": "Results",
+     "anchor": "results"
+    },
+    {
+     "level": 3,
+     "title": "Same page, same scale and theme, drawn again",
+     "anchor": "same-page-same-scale-and-theme-drawn-again"
+    },
+    {
+     "level": 3,
+     "title": "Across themes",
+     "anchor": "across-themes"
+    },
+    {
+     "level": 3,
+     "title": "Across scales: the blur reaches the same distance",
+     "anchor": "across-scales-the-blur-reaches-the-same-distance"
+    },
+    {
+     "level": 3,
+     "title": "After the fix: the recapture",
+     "anchor": "after-the-fix-the-recapture"
+    },
+    {
+     "level": 3,
+     "title": "Across targets, in the same task",
+     "anchor": "across-targets-in-the-same-task"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Records",
+     "anchor": "records"
     }
    ]
   },
@@ -7272,7 +8046,7 @@
   {
    "path": "docs/log/changelog.md",
    "id": "changelog",
-   "title": "Changelog of plev",
+   "title": "plev changelog",
    "project": "plev",
    "type": "record",
    "status": "active",
@@ -7376,17 +8150,26 @@
     "task-94",
     "task-95",
     "task-96",
-    "task-97"
+    "task-97",
+    "task-98",
+    "task-99",
+    "task-100",
+    "task-102",
+    "task-103",
+    "adr-0080",
+    "adr-0081",
+    "adr-0083",
+    "adr-0084"
    ],
    "source": "docs/log/changelog.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
+   "revised": "2026-10-31",
    "review": "reviewed",
    "headings": [
     {
      "level": 1,
-     "title": "Changelog of plev",
-     "anchor": "changelog-of-plev"
+     "title": "plev changelog",
+     "anchor": "plev-changelog"
     },
     {
      "level": 2,
@@ -7403,7 +8186,7 @@
   {
    "path": "docs/log/dates-and-sources.md",
    "id": "dates-and-sources",
-   "title": "How to read the dates of the trajectory",
+   "title": "Dates and sources",
    "project": "plev",
    "type": "record",
    "status": "reference",
@@ -7438,8 +8221,8 @@
    "headings": [
     {
      "level": 1,
-     "title": "How to read the dates of the trajectory",
-     "anchor": "how-to-read-the-dates-of-the-trajectory"
+     "title": "Dates and sources",
+     "anchor": "dates-and-sources"
     },
     {
      "level": 2,
@@ -7675,8 +8458,8 @@
    "project": "plev",
    "type": "record",
    "status": "reference",
-   "date": null,
-   "date_basis": "undated",
+   "date": "2026-09-23",
+   "date_basis": "text",
    "topics": [
     "agents",
     "process",
@@ -8436,7 +9219,7 @@
   {
    "path": "docs/log/project-state.md",
    "id": "project-state-2026-09",
-   "title": "Map of phases and tasks, state as of 2026-09",
+   "title": "plev, project state and task map (2026-09-26)",
    "project": "plev",
    "type": "record",
    "status": "active",
@@ -8521,8 +9304,8 @@
    "headings": [
     {
      "level": 1,
-     "title": "Map of phases and tasks, state as of 2026-09",
-     "anchor": "map-of-phases-and-tasks-state-as-of-2026-09"
+     "title": "plev, project state and task map (2026-09-26)",
+     "anchor": "plev-project-state-and-task-map-2026-09-26"
     },
     {
      "level": 2,
@@ -9702,7 +10485,7 @@
    "id": "hoff-visual-tokens",
    "title": "hoff visual tokens (measured)",
    "project": "plev",
-   "type": "record",
+   "type": "reference",
    "status": "reference",
    "date": "2026-06-10",
    "date_basis": "header",
@@ -13344,7 +14127,7 @@
   {
    "path": "docs/research/paper/arxiv-paper-draft.md",
    "id": "paper-draft",
-   "title": "draft of the article about plev",
+   "title": "arxiv paper draft about plev",
    "project": "plev",
    "type": "draft",
    "status": "draft",
@@ -13362,8 +14145,8 @@
    "headings": [
     {
      "level": 1,
-     "title": "draft of the article about plev",
-     "anchor": "draft-of-the-article-about-plev"
+     "title": "arxiv paper draft about plev",
+     "anchor": "arxiv-paper-draft-about-plev"
     },
     {
      "level": 2,
@@ -20687,7 +21470,8 @@
     "task-70",
     "task-85",
     "adr-0035",
-    "adr-0036"
+    "adr-0036",
+    "experiment-agent-proof-checkpoint-a"
    ],
    "source": "docs/log/steps/task-62-ide-human-agent-proof.md",
    "source_revision": "ec0a224c",
@@ -22921,7 +23705,8 @@
     "task-63",
     "task-68",
     "task-70",
-    "task-71"
+    "task-71",
+    "experiment-generated-surface-checkpoint-b"
    ],
    "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
    "source_revision": "ec0a224c",
@@ -25678,7 +26463,8 @@
     "task-66",
     "task-69",
     "task-73/phase-1-measurements",
-    "task-82"
+    "task-82",
+    "experiment-frame-cost-by-stage"
    ],
    "source": "docs/log/steps/task-73-incremental-dependency-system.md",
    "source_revision": "ec0a224c",
@@ -25982,7 +26768,8 @@
     "research-parley-vs-cosmic-text",
     "task-60",
     "task-66",
-    "task-77"
+    "task-77",
+    "experiment-text-coverage-and-large-documents"
    ],
    "source": "docs/log/steps/task-74-text-and-editing.md",
    "source_revision": "ec0a224c",
@@ -28593,7 +29380,8 @@
     "task-19",
     "task-20",
     "task-66",
-    "task-74"
+    "task-74",
+    "experiment-visual-determinism-captures"
    ],
    "source": "docs/log/steps/task-77-visual-determinism.md",
    "source_revision": "ec0a224c",
@@ -28987,7 +29775,8 @@
     "adr-0072",
     "task-66",
     "task-73",
-    "task-76"
+    "task-76",
+    "experiment-local-inference-candle-vs-burn"
    ],
    "source": "docs/log/steps/task-78-ai-native-apps.md",
    "source_revision": "ec0a224c",
@@ -29562,7 +30351,8 @@
     "task-94",
     "task-96",
     "task-97",
-    "generative-runtime-thesis"
+    "generative-runtime-thesis",
+    "experiment-five-demos"
    ],
    "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
    "source_revision": "ec0a224c",
@@ -30077,7 +30867,8 @@
    ],
    "relations": [
     "task-62",
-    "task-73"
+    "task-73",
+    "experiment-caret-render-on-demand"
    ],
    "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
    "source_revision": "ec0a224c",
@@ -30729,7 +31520,8 @@
     "task-63",
     "task-87",
     "task-89",
-    "task-90"
+    "task-90",
+    "experiment-agent-proof-checkpoint-a"
    ],
    "source": "docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md",
    "source_revision": "ec0a224c",
@@ -31324,7 +32116,8 @@
    "relations": [
     "task-62",
     "task-88",
-    "task-92"
+    "task-92",
+    "experiment-agent-proof-checkpoint-a"
    ],
    "source": "docs/log/steps/task-93-the-lab-person-answers.md",
    "source_revision": "ec0a224c",
@@ -31699,7 +32492,8 @@
     "task-80",
     "task-85",
     "task-93",
-    "task-97"
+    "task-97",
+    "experiment-five-demos"
    ],
    "source": "docs/log/steps/task-96-ide-generated-surface.md",
    "source_revision": "ec0a224c",
@@ -32087,7 +32881,8 @@
     "task-69",
     "task-75",
     "task-80",
-    "task-96"
+    "task-96",
+    "experiment-five-demos"
    ],
    "source": "docs/log/steps/task-97-code-and-diff-in-the-ir.md",
    "source_revision": "ec0a224c",

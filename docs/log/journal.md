@@ -4,8 +4,8 @@ title: "autonomous cycle journal"
 project: plev
 type: record
 status: reference
-date: null
-date_basis: undated
+date: 2026-09-23
+date_basis: text
 topics: [agents, process, git, recording, platform]
 relations: [adr-0046, adr-0048, adr-0052, truth-2026-09, operations-autonomy, operations-generative-runtime-guidelines, generative-runtime-program, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, generative-runtime-thesis]
 source: docs/log/journal.md

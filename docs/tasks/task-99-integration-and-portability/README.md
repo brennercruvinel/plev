@@ -33,7 +33,7 @@ These changes address different causes and do not amount to certifying all platf
 
 ## Lesson in Rust
 
-A `cfg` has to keep up with both the implementation and the imports, as `ac2906a2` shows. A task moved to a worker can still block that worker: subprocesses require an output contract, concurrent draining and controlled termination. See [ADR 26](../../adr/rendering/0026-worker-results-wake-the-event-loop.md).
+A `cfg` has to keep up with both the implementation and the imports, as `ac2906a2` shows. A task moved to a worker can still block that worker: subprocesses require an output contract, concurrent draining and controlled termination. See [ADR 0026](../../adr/rendering/0026-worker-results-wake-the-event-loop.md).
 
 ## Evidence
 

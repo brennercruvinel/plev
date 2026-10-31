@@ -7,7 +7,7 @@ status: done
 date: 2026-09-24
 date_basis: header
 topics: [agents, recording, research]
-relations: [task-62, task-88, task-92]
+relations: [task-62, task-88, task-92, experiment-agent-proof-checkpoint-a]
 source: docs/log/steps/task-93-the-lab-person-answers.md
 source_revision: ec0a224c
 revised: 2026-10-30

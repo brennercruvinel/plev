@@ -83,7 +83,7 @@ Every document by the date of what it records. The date comes from the header of
 |---|---|---|
 | 2023-01-14 | [plev differentiators for the paper](../research/paper/brief-strengths.md) | draft |
 | 2023-01-25 | [task-28: editable text](../tasks/task-28-editable-text/README.md) | done |
-| 2023-02-09 | [draft of the article about plev](../research/paper/arxiv-paper-draft.md) | draft |
+| 2023-02-09 | [arxiv paper draft about plev](../research/paper/arxiv-paper-draft.md) | draft |
 | 2023-02-13 | [task-26: arXiv paper](../tasks/task-26-arxiv-paper/README.md) | done |
 | 2023-03-22 | [task-29: app demo real (proof of life)](../tasks/task-29-app-demo-real/README.md) | done |
 | 2023-05-02 | [task-30: accessibility (accesskit)](../tasks/task-30-accessibility/README.md) | done |
@@ -164,7 +164,7 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-06-10 | [why the apps bypassed the engine, and what that costs](../learnings/apps-bypass-the-engine.md) | reference |
 | 2026-06-10 | [the two gamma bugs: one assumption, two opposite failures](../learnings/the-two-gamma-bugs.md) | reference |
 | 2026-06-12 | [mon experiment](../research/mon-experiment-notes.md) | reference |
-| 2026-06-20 | [Changelog of plev](changelog.md) | active |
+| 2026-06-20 | [plev changelog](changelog.md) | active |
 | 2026-07-13 | [one knowledge tree, and a minimal root](../adr/structure/0022-one-knowledge-tree-and-a-minimal-root.md) | accepted |
 | 2026-08-30 | [official app pattern: state in structs, retained widgets, explicit invalidation](../adr/structure/0023-official-app-pattern.md) | accepted |
 | 2026-08-31 | [glyph raster identity and atlas isolation](../adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md) | accepted |
@@ -201,8 +201,12 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-09-23 | [the inspector reads a session, it never runs it](../adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md) | accepted |
 | 2026-09-23 | [an act rests on what its actor was shown](../adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md) | accepted |
 | 2026-09-23 | [integration into main is a pull request merged by merge commit](../adr/workflows/0085-integration-by-merge-commit.md) | accepted |
+| 2026-09-23 | [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../experiments/agent-proof-checkpoint-a/README.md) | reference |
+| 2026-09-23 | [caret blink as a deadline: frames drawn with a focused, idle field](../experiments/caret-render-on-demand/README.md) | reference |
+| 2026-09-23 | [what each stage of a frame costs in nine scenarios](../experiments/frame-cost-by-stage/README.md) | reference |
 | 2026-09-23 | [program: from GPU UI engine to generative interaction runtime](generative-runtime-program.md) | active |
 | 2026-09-23 | [plev: thesis of the generative interaction runtime](../research/generative-runtime-thesis.md) | active |
+| 2026-09-23 | [autonomous cycle journal](journal.md) | reference |
 | 2026-09-23 | [task-57: semantic contract (crate `sem`)](../tasks/task-57-semantic-contract/README.md) | done |
 | 2026-09-23 | [task-57b: lean JSON wire form and a single redaction](../tasks/task-57b-lean-wire-form-and-one-redaction/README.md) | done |
 | 2026-09-23 | [task-58: action with precondition, dispatch and receipts](../tasks/task-58-actions-preconditions-receipts/README.md) | done |
@@ -246,6 +250,9 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-09-24 | [the scene travels as data](../adr/recording/0065-scene-travels-as-data.md) | accepted |
 | 2026-09-24 | [ui asset compiler: an asset leaves the runtime on a measured number](../adr/importing/0066-ui-asset-compiler.md) | accepted |
 | 2026-09-24 | [adaptive transformations are small verified operations that preserve identity](../adr/generated/0067-adaptive-transforms-preserve-identity.md) | accepted |
+| 2026-09-24 | [generated silences screen against the fixed screen, checkpoint b of task-69](../experiments/generated-surface-checkpoint-b/README.md) | reference |
+| 2026-09-24 | [text coverage per writing system, and the cost of large documents in the editor](../experiments/text-coverage-and-large-documents/README.md) | reference |
+| 2026-09-24 | [desktop gallery pages: same pixels across scales, themes and runs](../experiments/visual-determinism-captures/README.md) | reference |
 | 2026-09-24 | [task-63: session flight recorder](../tasks/task-63-flight-recorder/README.md) | done |
 | 2026-09-24 | [task-69: ephemeral and generated surfaces](../tasks/task-69-ephemeral-generative-surfaces/README.md) | done |
 | 2026-09-24 | [task-76: platform integration](../tasks/task-76-platform-integration/README.md) | done |
@@ -261,6 +268,7 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-09-25 | [embed Noto Sans subsets for the non-Latin scripts](../adr/rendering/0071-embedded-fonts-by-script.md) | accepted |
 | 2026-09-25 | [text moves by screen order and shapes by line](../adr/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md) | accepted |
 | 2026-09-25 | [the keyboard walks the projection](../adr/interface/0076-the-keyboard-walks-the-projection.md) | accepted |
+| 2026-09-25 | [five demos of qualitatively different software, each with its method written before it ran](../experiments/five-demos/README.md) | reference |
 | 2026-09-25 | [task-18: android build & device test](../tasks/task-18-android-device-test/README.md) | done |
 | 2026-09-25 | [task-19: ios simulator test](../tasks/task-19-ios-simulator-test/README.md) | done |
 | 2026-09-25 | [task-20: WASM visual validation](../tasks/task-20-wasm-visual-validation/README.md) | done |
@@ -281,8 +289,9 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-09-26 | [local llm inference in process: candle or burn](../adr/structure/0072-ai-native-single-process.md) | accepted |
 | 2026-09-26 | [a renderer upgrade is proven by a full capture](../adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md) | accepted |
 | 2026-09-26 | [the person's composition and clipboard stay the person's](../adr/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md) | accepted |
+| 2026-09-26 | [candle against burn for local LLM inference in process, TinyLlama 1.1B](../experiments/local-inference-candle-vs-burn/README.md) | reference |
 | 2026-09-26 | [Generative runtime session: what worked and what bit us](../learnings/generative-runtime.md) | reference |
-| 2026-09-26 | [Map of phases and tasks, state as of 2026-09](project-state.md) | active |
+| 2026-09-26 | [plev, project state and task map (2026-09-26)](project-state.md) | active |
 | 2026-09-26 | [task-78: AI-native applications](../tasks/task-78-ai-native-apps/README.md) | in-progress |
 | 2026-09-29 | [design for ranges, not screens and devices](../adr/rendering/0073-design-for-ranges-not-screens-and-devices.md) | accepted |
 | 2026-10-09 | [the workspace separates libraries, apps, demos and tools](../adr/structure/0080-workspace-by-responsibility.md) | accepted |
@@ -300,12 +309,11 @@ Every document by the date of what it records. The date comes from the header of
 | 2026-10-27 | [task-101: on-demand fonts and deterministic fallback](../tasks/task-101-fonts-by-script/README.md) | done |
 | 2026-10-27 | [task-102: reusable builds and web commands](../tasks/task-102-builds-and-web-commands/README.md) | done |
 | 2026-10-27 | [task-103: runcheck, every executable in the repository runs](../tasks/task-103-runcheck-every-executable-runs/README.md) | done |
-| 2026-10-30 | [How to read the dates of the trajectory](dates-and-sources.md) | reference |
+| 2026-10-30 | [Dates and sources](dates-and-sources.md) | reference |
 
 ## undated
 
 | Date | Document | Status |
 |---|---|---|
-| undated | [autonomous cycle journal](journal.md) | reference |
 | undated | [General learnings](../learnings/general.md) | reference |
 | undated | [plev — Technical Implementation Plan](technical-plan.md) | reference |

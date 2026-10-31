@@ -1,6 +1,6 @@
 ---
 id: dates-and-sources
-title: "How to read the dates of the trajectory"
+title: "Dates and sources"
 project: plev
 type: record
 status: reference
@@ -15,7 +15,7 @@ review: reviewed
 evidence: [176dd691, 704412f1, b1e820ba, 95d53881, 1a776d04, ec0a224c]
 ---
 
-# How to read the dates of the trajectory
+# Dates and sources
 
 The archive contains dates declared since 2021. The available Git history has a
 root commit on 10 June 2026. These two timelines represent different sources

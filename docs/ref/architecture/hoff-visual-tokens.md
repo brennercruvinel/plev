@@ -2,7 +2,7 @@
 id: hoff-visual-tokens
 title: "hoff visual tokens (measured)"
 project: plev
-type: record
+type: reference
 status: reference
 date: 2026-06-10
 date_basis: header

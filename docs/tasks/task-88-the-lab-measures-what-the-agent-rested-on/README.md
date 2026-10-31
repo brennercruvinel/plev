@@ -7,7 +7,7 @@ status: done
 date: 2026-09-24
 date_basis: header
 topics: [agents, semantics, research]
-relations: [task-62, task-63, task-87, task-89, task-90]
+relations: [task-62, task-63, task-87, task-89, task-90, experiment-agent-proof-checkpoint-a]
 source: docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md
 source_revision: ec0a224c
 revised: 2026-10-30

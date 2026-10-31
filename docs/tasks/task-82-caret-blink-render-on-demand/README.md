@@ -7,7 +7,7 @@ status: done
 date: 2026-09-23
 date_basis: header
 topics: [rendering, performance, input]
-relations: [task-62, task-73]
+relations: [task-62, task-73, experiment-caret-render-on-demand]
 source: docs/log/steps/task-82-caret-blink-render-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30

@@ -7,7 +7,7 @@ status: done
 date: 2026-09-25
 date_basis: header
 topics: [generated-surfaces, ir, agents, llm]
-relations: [task-63, task-64, task-68, task-69, task-70, task-80, task-85, task-93, task-97]
+relations: [task-63, task-64, task-68, task-69, task-70, task-80, task-85, task-93, task-97, experiment-five-demos]
 source: docs/log/steps/task-96-ide-generated-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30

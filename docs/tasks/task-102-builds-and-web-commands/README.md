@@ -35,7 +35,7 @@ The development profile also limits debug information: line tables for local
 code and none for dependencies (`Cargo.toml`, lines 164 to 175). Measured at
 `706dfa82`, with `cargo test -p engine --no-run` on a clean target on an M-series
 Mac, the time went from 96 s and 3.8 GB to 85 s and 2.1 GB. See
-[ADR 26](../../adr/workflows/0083-feature-unification.md).
+[ADR 0083](../../adr/workflows/0083-feature-unification.md).
 
 ## Web execution
 

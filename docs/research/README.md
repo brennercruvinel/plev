@@ -50,6 +50,6 @@ The references studied, the comparisons, the thesis and the paper drafts.
 |---|---|---|
 | 2022-05-24 | [plev: a GPU-first compositing engine for cross-platform UI rendering](paper/arxiv-paper-outline.md) | draft |
 | 2023-01-14 | [plev differentiators for the paper](paper/brief-strengths.md) | draft |
-| 2023-02-09 | [draft of the article about plev](paper/arxiv-paper-draft.md) | draft |
+| 2023-02-09 | [arxiv paper draft about plev](paper/arxiv-paper-draft.md) | draft |
 
 [plev docs](../README.md)

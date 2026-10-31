@@ -1,6 +1,6 @@
 ---
 id: paper-draft
-title: "draft of the article about plev"
+title: "arxiv paper draft about plev"
 project: plev
 type: draft
 status: draft
@@ -14,7 +14,7 @@ revised: 2026-10-30
 review: reviewed
 ---
 
-# draft of the article about plev
+# arxiv paper draft about plev
 
 Draft in Portuguese of the abstract and the first two sections of the article about plev, a GPU compositing engine for native and web targets from a single Rust codebase. The text argues that the boundary between native and web rendering is a historical accident, describes the scene graph regenerated every frame, dirty tracking and the glyph atlas on the GPU, and states, as far as the authors know, that it is the first engine to combine these properties across the six targets.
 

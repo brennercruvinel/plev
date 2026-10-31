@@ -7,7 +7,7 @@ status: done
 date: 2026-09-25
 date_basis: header
 topics: [determinism, rendering, platform, mobile, web-wasm]
-relations: [adr-0024, adr-0064, task-18, task-19, task-20, task-66, task-74]
+relations: [adr-0024, adr-0064, task-18, task-19, task-20, task-66, task-74, experiment-visual-determinism-captures]
 source: docs/log/steps/task-77-visual-determinism.md
 source_revision: ec0a224c
 revised: 2026-10-30

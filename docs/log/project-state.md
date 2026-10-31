@@ -1,6 +1,6 @@
 ---
 id: project-state-2026-09
-title: "Map of phases and tasks, state as of 2026-09"
+title: "plev, project state and task map (2026-09-26)"
 project: plev
 type: record
 status: active
@@ -14,7 +14,7 @@ revised: 2026-10-30
 review: reviewed
 ---
 
-# Map of phases and tasks, state as of 2026-09
+# plev, project state and task map (2026-09-26)
 
 This record keeps the map of plev's phases and tasks from 2021 to 2026-06-29, the phase before the program, as it stood in 2026-09. Each phase lists its tasks with their state at that point, which makes it possible to find by number the tasks that the old records cite. To navigate today, use the [timeline](timeline.md); the current state, in summary, is in the section below, and the detail is the program's.
 

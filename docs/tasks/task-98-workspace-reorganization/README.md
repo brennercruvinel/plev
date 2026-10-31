@@ -48,8 +48,8 @@ Preserving behavior does not make a reorganization compatible with every
 consumer: changing the public path of a type can break imports. The report's API
 comparison separated three cases: a false positive from the normalizer, in
 functions named after a renamed module; new group modules, additions only; and
-`comps` inside the engine (lines 61 to 69). The
-[ADR 80](../../adr/structure/0080-workspace-by-responsibility.md) records the
+`comps` inside the engine ([proofs](change-record.md#provas)). The
+[ADR 0080](../../adr/structure/0080-workspace-by-responsibility.md) records the
 structure adopted.
 
 ## Evidence

@@ -7,7 +7,7 @@ status: done
 date: 2026-09-24
 date_basis: header
 topics: [generated-surfaces, ir, agents]
-relations: [adr-0023, adr-0051, task-58, task-59, task-63, task-68, task-70, task-71]
+relations: [adr-0023, adr-0051, task-58, task-59, task-63, task-68, task-70, task-71, experiment-generated-surface-checkpoint-b]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30

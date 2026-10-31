@@ -7,7 +7,7 @@ status: in-progress
 date: 2026-09-26
 date_basis: header
 topics: [llm, gpu, performance, research]
-relations: [adr-0025, adr-0026, adr-0072, task-66, task-73, task-76]
+relations: [adr-0025, adr-0026, adr-0072, task-66, task-73, task-76, experiment-local-inference-candle-vs-burn]
 source: docs/log/steps/task-78-ai-native-apps.md
 source_revision: ec0a224c
 revised: 2026-10-30

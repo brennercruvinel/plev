@@ -7,7 +7,7 @@ status: done
 date: 2026-09-23
 date_basis: header
 topics: [semantics, agents, recording, git]
-relations: [task-57, task-58, task-59, task-60, task-61, task-63, task-64, task-70, task-85, adr-0035, adr-0036]
+relations: [task-57, task-58, task-59, task-60, task-61, task-63, task-64, task-70, task-85, adr-0035, adr-0036, experiment-agent-proof-checkpoint-a]
 source: docs/log/steps/task-62-ide-human-agent-proof.md
 source_revision: ec0a224c
 revised: 2026-10-30
