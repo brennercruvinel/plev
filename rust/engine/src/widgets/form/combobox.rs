@@ -1,10 +1,11 @@
 //! Combobox: a select whose control is a text box that filters its
 //! options as one types, the kit's Select (`components/Select/
 //! index.tsx`) with a filter. Closed it shows the chosen option, as a
-//! select does; focused, its text is selected whole and the options list
-//! opens under it (the select's, `super::select::list`), every option
-//! while the text is the chosen one, else those whose label holds the
-//! text, any case; none says so in a row of its own.
+//! select does; focused, its text is selected whole, and the options
+//! list (the select's, `super::select::list`) opens under it on a press,
+//! on Up or Down, or as soon as the text is not the chosen option's:
+//! every option while it is, else those whose label holds the text, any
+//! case; none says so in a row of its own.
 //!
 //! The filter is a [`TextField`] (`combo.input`, the select's control as
 //! a text box, [`Look::Combo`]): typing, the editing keys, the clipboard
@@ -17,8 +18,7 @@
 //! named `label`, its `selected` option, `expanded` while open, the
 //! options as its accepted choices, with `select`, `open` and `close`,
 //! and the filter's text as `query`; while open, the matching options as
-//! `<id>[<index>]` with a `select` of their own, out of the Tab order
-//! (the box keeps the focus; the arrows move the highlight).
+//! `<id>[<index>]` with a `select` of their own, as an open select's.
 
 use accord::{Constraints, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
@@ -41,6 +41,11 @@ pub struct Combobox {
     /// The option the arrow keys or the pointer moved to.
     highlighted: Option<usize>,
     scroll: ScrollState,
+    /// The list was opened (a press, a key); it is open too while the
+    /// text is not the chosen option's.
+    open: bool,
+    /// A reader or Tab put the focus on the highlighted option.
+    option_focus: bool,
     /// The highlight moved by a key and the list has not been laid out
     /// since: it scrolls the least that shows it, the next time.
     reveal: bool,
@@ -58,6 +63,8 @@ impl Combobox {
             highlighted: None,
             scroll: ScrollState::new(),
             reveal: false,
+            open: false,
+            option_focus: false,
             empty: "No results.".into(),
             sem: None,
         }
@@ -103,9 +110,26 @@ impl Combobox {
         self.selected.map(|i| self.options[i].as_str())
     }
 
-    /// The list is open: the box is focused.
+    /// The list is open: the box is focused, and the list was opened or
+    /// the text typed.
     pub fn is_open(&self) -> bool {
-        self.input.is_focused() && !self.input.disabled
+        let typed = self.input.text() != self.selected_label().unwrap_or_default();
+        self.input.is_focused() && !self.input.disabled && (self.open || typed)
+    }
+
+    /// Focus the box and open the list (a press on it, `open`).
+    pub fn open(&mut self) {
+        if !self.input.is_focused() {
+            self.set_focused(true);
+        }
+        self.open = !self.input.disabled && self.input.is_focused();
+        self.reveal = true;
+    }
+
+    /// The option that has the focus (a reader's, or Tab), when one has.
+    pub fn focused_option(&self) -> Option<usize> {
+        self.highlighted()
+            .filter(|_| self.option_focus && self.is_open())
     }
 
     /// The options that match the box's text, in order: all of them while
@@ -140,6 +164,8 @@ impl Combobox {
         self.highlighted = None;
         self.scroll = ScrollState::new();
         self.reveal = focused;
+        self.open = false;
+        self.option_focus = false;
         self.input.set_focused(focused);
         if focused {
             self.input.select_all();
@@ -168,8 +194,14 @@ impl Combobox {
     /// Up (`down` false) or Down over the matches, the list scrolled to
     /// show the highlight when it is next laid out. `false` while closed.
     pub fn nav(&mut self, down: bool) -> bool {
-        if !self.is_open() {
+        if !self.input.is_focused() || self.input.disabled {
             return false;
+        }
+        self.option_focus = false;
+        if !self.is_open() {
+            self.open = true;
+            self.reveal = true;
+            return true;
         }
         let m = self.matches();
         let Some(last) = m.len().checked_sub(1) else {
@@ -192,12 +224,13 @@ impl Combobox {
     /// `false` when it is not a match.
     pub fn highlight(&mut self, index: usize) -> bool {
         if !self.is_open() {
-            self.set_focused(true);
+            self.open();
         }
-        if !self.matches().contains(&index) {
+        if !self.is_open() || !self.matches().contains(&index) {
             return false;
         }
         self.highlighted = Some(index);
+        self.option_focus = true;
         self.reveal = true;
         true
     }
@@ -308,8 +341,8 @@ impl Combobox {
                 {
                     return EventResult::changed();
                 }
-                if control.contains(x, y) && !self.input.is_focused() {
-                    self.set_focused(true);
+                if control.contains(x, y) && !self.is_open() {
+                    self.open();
                     return EventResult::clicked();
                 }
                 let was = self.input.is_focused();
@@ -476,9 +509,7 @@ impl Combobox {
                     Role::Option,
                     self.options[i].as_str(),
                 );
-                // The arrows move among the rows (the box keeps the
-                // focus, as a combobox's does); Tab goes past them.
-                row.parent(id).enabled(true).focusable(false);
+                row.parent(id).enabled(true);
                 row.action("select").reads(selected.as_str());
             }
         }

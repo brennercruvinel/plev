@@ -145,6 +145,10 @@ impl CardWidget for Combobox {
         }
     }
 
+    fn part_focus(&self) -> Option<Part> {
+        self.focused_option().map(Part::Option)
+    }
+
     fn part_id(&self, part: Part) -> Option<SemId> {
         let id = self.sem_id()?;
         match part {
@@ -180,8 +184,8 @@ impl CardWidget for Combobox {
         match (part, action, param) {
             (Part::Box, "select", Some(Value::Text(label))) => self.pick_label(label),
             (Part::Box, "open", None) => {
-                Combobox::set_focused(self, true);
-                true
+                Combobox::open(self);
+                self.is_open()
             }
             (Part::Box, "close", None) => {
                 Combobox::set_focused(self, false);
