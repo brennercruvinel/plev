@@ -93,6 +93,10 @@ pub enum Pane {
     // task-104 front A, fields (#154)
     Field,
     // task-104 front B, overlays (#155)
+    AlertDialog,
+    DropdownMenu,
+    HoverCard,
+    Menubar,
     Popover,
     // task-104 front C, conversation and feedback (#156)
     Message,

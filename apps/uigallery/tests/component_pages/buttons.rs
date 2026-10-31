@@ -10,7 +10,7 @@ fn a_button_s_press_is_the_same_from_the_person_the_reader_and_an_agent() {
     for (page, id) in [
         ("Toast", "toast_page.button[success]"),
         ("Dialog", "dialog_page.delete"),
-        ("Alert Dialog", "dialog_page.delete"),
+        ("Alert Dialog", "alert_dialog_page.group[0].card[0]"),
         ("Spinner", "spinner_page.toggle"),
     ] {
         let mut person = gallery(page);

@@ -188,13 +188,28 @@ impl Popover {
         title: &str,
         parent: Option<&SemId>,
     ) -> Option<NodeBuilder<'b>> {
+        self.project_as(b, trigger, Role::Dialog, title, parent)
+    }
+
+    /// [`Popover::project`] with the panel's role: a dialog for a panel
+    /// the person works in, a group for one that only shows (a hover
+    /// card's preview).
+    #[track_caller]
+    pub fn project_as<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        trigger: &SemId,
+        role: Role,
+        title: &str,
+        parent: Option<&SemId>,
+    ) -> Option<NodeBuilder<'b>> {
         let expanded = format!("{trigger}:expanded");
         b.reopen(trigger)?.state("expanded", self.open);
         if !self.open {
             return None;
         }
         let id = Self::panel_id(trigger)?;
-        let mut panel = b.node(&id, Role::Dialog, title);
+        let mut panel = b.node(&id, role, title);
         if let Some(parent) = parent {
             panel.parent(parent);
         }

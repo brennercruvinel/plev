@@ -407,3 +407,52 @@ fn popover_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
     assert_eq!(d.radius, hoff.shape.dropdown);
     assert_eq!(d.clearance, KIT, "the kit's geometry");
 }
+
+// Tooltip
+
+/// The tooltip is the kit's bubble on core, and keeps every other theme's
+/// own (its glass, hint shadow and caption) as it was.
+#[test]
+fn tooltip_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
+    let core = Theme::hoff_core().overlay.tooltip;
+    assert_eq!(core.fill, crate::styling::color::Color::hex(0x121212));
+    assert_eq!((core.pad_x, core.pad_y, core.radius), (6.0, 4.0, 6.0));
+    assert_eq!((core.text.font_size, core.text.line_height), (11.0, 16.0));
+    assert_eq!(core.clearance.gap, 18.0, "mb-4.5");
+    let hoff = Theme::hoff();
+    let t = &hoff.overlay.tooltip;
+    assert_eq!(t.fill, hoff.glass.tooltip);
+    assert_eq!(t.text, hoff.typography.caption_r());
+    assert_eq!(t.radius, hoff.shape.tooltip);
+}
+
+/// The tooltip answers the container it is given, never the window:
+/// above its anchor when there is room, below when not, inside the
+/// container at every anchor position across it.
+#[test]
+fn tooltip_stays_inside_its_container_across_it() {
+    let theme = Theme::hoff_core();
+    let mut x = BOX.x;
+    while x <= BOX.right() - 40.0 {
+        let mut y = BOX.y;
+        while y <= BOX.bottom() - 24.0 {
+            let anchor = Rect::new(x, y, 40.0, 24.0);
+            let mut t = Tooltip::new("Copy prompt");
+            t.set_hover(true, anchor);
+            let r = t.placement_in(&theme, BOX);
+            assert!(within(r, BOX), "at ({x}, {y}): {r:?}");
+            assert!(!overlaps(r, anchor), "at ({x}, {y}): covers its anchor");
+            y += 8.0;
+        }
+        x += 8.0;
+    }
+    let mut t = Tooltip::new("Copy prompt");
+    t.set_hover(true, Rect::new(200.0, 200.0, 40.0, 24.0));
+    let above = t.placement_in(&theme, BOX);
+    assert_eq!(above.bottom(), 200.0 - 18.0, "mb-4.5 above");
+    t.set_hover(true, Rect::new(200.0, BOX.y + 4.0, 40.0, 24.0));
+    assert!(
+        t.placement_in(&theme, BOX).y >= BOX.y + 28.0,
+        "flipped below"
+    );
+}

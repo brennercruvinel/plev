@@ -48,6 +48,10 @@ pub mod tree;
 pub mod field;
 
 // task-104 front B, overlays (#155)
+pub mod alert_dialog;
+pub mod dropdown_menu;
+pub mod hover_card;
+pub mod menubar;
 pub mod popover;
 
 // task-104 front C, conversation and feedback (#156)

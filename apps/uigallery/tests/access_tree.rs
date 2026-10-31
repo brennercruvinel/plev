@@ -48,6 +48,7 @@ const PROJECTING: &[&str] = &[
     "Combobox",
     "Data Table",
     "Dialog",
+    "Dropdown Menu",
     "Field",
     "Hover Card",
     "Icon Button",
@@ -55,6 +56,7 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Menubar",
     "Message",
     "Navigation Menu",
     "Popover",
@@ -141,10 +143,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
     ),
     (
-        "Dropdown Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
-    (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
@@ -155,7 +153,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Input Group", PLACEHOLDER),
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
-    ("Menubar", PLACEHOLDER),
     (
         "Message Scroller",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),

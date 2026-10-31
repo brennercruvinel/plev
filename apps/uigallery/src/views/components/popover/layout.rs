@@ -12,18 +12,6 @@ use super::super::showcase::{self, CARD_H, GroupLayout};
 use super::{Card, PRESETS, PopoverPage, Spot};
 
 impl PopoverPage {
-    /// Space inside a card's body around what it holds.
-    fn pad(theme: &Theme) -> f32 {
-        theme.spacing.md
-    }
-
-    /// The band at a card's top that its chip takes: the chip's inset,
-    /// its line and padding (`showcase::card`), and the inset again below.
-    fn chip_band(theme: &Theme) -> f32 {
-        let chip = showcase::chip_style(theme).line_height + theme.spacing.xs * 2.0;
-        theme.spacing.sm * 2.0 + chip
-    }
-
     /// The panel's size: the kit's small width, the presets stacked.
     fn panel_size(theme: &Theme) -> (f32, f32) {
         let t = &theme.overlay.popover;
@@ -31,17 +19,9 @@ impl PopoverPage {
         (t.widths[0], row * PRESETS.len() as f32 + t.pad * 2.0)
     }
 
-    /// A forced card's body: the card less its chip band and its padding,
-    /// the container its popover receives.
+    /// A forced card's body, the container its popover receives.
     pub(super) fn body(card: Rect, theme: &Theme) -> Rect {
-        let pad = Self::pad(theme);
-        let top = Self::chip_band(theme);
-        Rect::new(
-            card.x + pad,
-            card.y + top,
-            (card.w - pad * 2.0).max(0.0),
-            (card.h - top - pad).max(0.0),
-        )
+        showcase::body(card, theme)
     }
 
     /// How tall a group's cards are: the showcase's for the live card; a
@@ -59,14 +39,16 @@ impl PopoverPage {
             .fold(0.0, f32::max);
         let gap = theme.overlay.popover.clearance.gap;
         let body = trigger_h + gap + Self::panel_size(theme).1;
-        CARD_H.max(Self::chip_band(theme) + body + Self::pad(theme))
+        // The body's margins: what `showcase::body` takes off a card.
+        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        CARD_H.max(frame + body)
     }
 
     /// The groups in the showcase mold, each at its cards' height.
     pub(super) fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().enumerate();
         let spans = groups.map(|(g, gr)| (gr.columns, gr.cards.len(), self.card_h(g, theme)));
-        showcase::layout_with_heights(spans, content, theme)
+        showcase::layout_sized(spans.map(|(span, n, h)| (span, vec![h; n])), content, theme)
     }
 
     /// The trigger's rect in its card: centered in the live card, at its
