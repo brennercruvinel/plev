@@ -1795,3 +1795,6 @@ fn the_paper_fades_over_the_edge_the_thread_runs_past() {
 
 /// The empty state's body, centered line by line.
 mod empty;
+
+/// The prompt input, its model menu and its line (wave 3).
+mod prompt;

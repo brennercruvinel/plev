@@ -442,6 +442,104 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         over(av.online_fill, ring),
         ring,
     );
+    // wave 3: the prompt input on a card, its text and its hint on its
+    // paper, the model's trigger on its hover wash, a model's title and
+    // description on the chosen row, the add-files rows and their icons,
+    // a premade prompt on its wash, and the voice mark's dot.
+    let pr = &t.message.prompt;
+    let paper = over(pr.fill, card);
+    let wash = over(pr.trigger.hover, paper);
+    let chosen = over(pr.choice.selected, over(pr.panel.fill, card));
+    let lit = over(pr.files.hover, over(pr.panel.fill, card));
+    let row = over(pr.premade.row_hover, over(pr.premade.fill, card));
+    for (fg, bg, need, color, under) in [
+        (
+            "message.prompt.text",
+            "message.prompt.fill",
+            TEXT,
+            pr.text.color,
+            paper,
+        ),
+        (
+            "message.prompt.placeholder",
+            "message.prompt.fill",
+            TEXT,
+            pr.placeholder,
+            paper,
+        ),
+        (
+            "message.prompt.trigger.text",
+            "message.prompt.trigger.hover",
+            TEXT,
+            pr.trigger.text.color,
+            wash,
+        ),
+        (
+            "message.prompt.trigger.chevron_color",
+            "message.prompt.fill",
+            LARGE,
+            pr.trigger.chevron_color,
+            paper,
+        ),
+        (
+            "message.prompt.choice.title",
+            "message.prompt.choice.selected",
+            TEXT,
+            pr.choice.title.color,
+            chosen,
+        ),
+        (
+            "message.prompt.choice.description",
+            "message.prompt.choice.selected",
+            TEXT,
+            pr.choice.description.color,
+            chosen,
+        ),
+        (
+            "message.prompt.files.text",
+            "message.prompt.files.hover",
+            TEXT,
+            pr.files.text.color,
+            lit,
+        ),
+        (
+            "message.prompt.files.icon_color",
+            "message.prompt.panel.fill",
+            LARGE,
+            pr.files.icon_color,
+            over(pr.panel.fill, card),
+        ),
+        (
+            "message.prompt.files.icon_hover",
+            "message.prompt.files.hover",
+            LARGE,
+            pr.files.icon_hover,
+            lit,
+        ),
+        (
+            "message.prompt.premade.row",
+            "message.prompt.premade.row_hover",
+            TEXT,
+            pr.premade.row.color,
+            row,
+        ),
+        (
+            "message.prompt.voice.dot_fill[0]",
+            "message.prompt.fill",
+            LARGE,
+            pr.voice.dot_fill[0],
+            paper,
+        ),
+        (
+            "message.prompt.voice.dot_fill[1]",
+            "message.prompt.fill",
+            LARGE,
+            pr.voice.dot_fill[1],
+            paper,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
     // core the kit's #7B7B7B hint and group label fail AA; they take
@@ -898,6 +996,27 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
+    // task-104 front C, wave 3: the kit's prompt placeholder (a hint, as
+    // the field's), and the top of its voice dot, the kit's #FF732D (its
+    // bottom, #E24D03, reads)
+    (
+        "core",
+        "message.prompt.placeholder",
+        "message.prompt.fill",
+        4.13,
+    ),
+    (
+        "core",
+        "message.prompt.voice.dot_fill[0]",
+        "message.prompt.fill",
+        2.64,
+    ),
+    (
+        "light",
+        "message.prompt.voice.dot_fill[0]",
+        "message.prompt.fill",
+        2.60,
+    ),
 ];
 
 #[test]
@@ -938,7 +1057,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 665,
+        count, 713,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -1008,5 +1127,33 @@ fn the_core_table_and_tree_text_meets_aaa() {
             let r = ratio(over(fg, under), under);
             assert!(r >= AAA, "{fg:?} at {r:.2}");
         }
+    }
+}
+
+/// task-104 front C, wave 3: the core prompt input's text meets AAA on
+/// every surface under it (its paper, the trigger's and a row's wash, the
+/// chosen model). The kit's model description, `#7b7b7b/70`, fails it; it
+/// takes shade 7 (`message/tokens/prompt.rs`). The placeholder is a hint,
+/// kept as the kit's and known above.
+#[test]
+fn the_core_prompt_text_meets_aaa() {
+    let t = Theme::hoff_core();
+    let p = &t.message.prompt;
+    let card = over(t.colors.surface, [0.0; 3]);
+    let paper = over(p.fill, card);
+    let panel = over(p.panel.fill, card);
+    let pairs = [
+        (p.text.color, paper),
+        (p.trigger.text.color, over(p.trigger.hover, paper)),
+        (p.choice.title.color, over(p.choice.selected, panel)),
+        (p.choice.title.color, over(p.choice.hover, panel)),
+        (p.choice.description.color, over(p.choice.selected, panel)),
+        (p.choice.description.color, over(p.choice.hover, panel)),
+        (p.files.text.color, over(p.files.hover, panel)),
+        (p.premade.row.color, over(p.premade.row_hover, paper)),
+    ];
+    for (fg, under) in pairs {
+        let r = ratio(over(fg, under), under);
+        assert!(r >= AAA, "{fg:?} at {r:.2}");
     }
 }

@@ -103,4 +103,6 @@ text_hosts! {
     Textarea => textarea,
     Combobox => combobox,
     Command => command,
+    // task-104 front C, conversation and feedback (#156)
+    PromptInput => prompt_input,
 }

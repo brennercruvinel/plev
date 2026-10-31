@@ -31,6 +31,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
     ),
     ("arrow-up", &[Path("m5 12 7-7 7 7"), Path("M12 19V5")]),
     (
+        "at-sign",
+        &[
+            Circle(12.0, 12.0, 4.0),
+            Path("M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"),
+        ],
+    ),
+    (
         "badge-check",
         &[
             Path(
@@ -46,6 +53,16 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path(
                 "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
             ),
+        ],
+    ),
+    (
+        "box",
+        &[
+            Path(
+                "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z",
+            ),
+            Path("m3.3 7 8.7 5 8.7-5"),
+            Path("M12 22V12"),
         ],
     ),
     (
@@ -66,6 +83,10 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
     (
         "circle-check",
         &[Circle(12.0, 12.0, 10.0), Path("m9 12 2 2 4-4")],
+    ),
+    (
+        "circle-plus",
+        &[Circle(12.0, 12.0, 10.0), Path("M8 12h8"), Path("M12 8v8")],
     ),
     (
         "clipboard",
@@ -112,6 +133,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             Path("M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"),
             Path("M14 2v4a2 2 0 0 0 2 2h4"),
+        ],
+    ),
+    (
+        "file-plus",
+        &[
+            Path("M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"),
+            Path("M14 2v4a2 2 0 0 0 2 2h4"),
+            Path("M9 15h6"),
+            Path("M12 18v-6"),
         ],
     ),
     (
@@ -183,6 +213,16 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         ],
     ),
     (
+        "image-plus",
+        &[
+            Path("M16 5h6"),
+            Path("M19 2v6"),
+            Path("M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"),
+            Path("m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"),
+            Circle(9.0, 9.0, 2.0),
+        ],
+    ),
+    (
         "info",
         &[
             Circle(12.0, 12.0, 10.0),
@@ -222,6 +262,14 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z",
         )],
     ),
+    (
+        "mic",
+        &[
+            Path("M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"),
+            Path("M19 10v2a7 7 0 0 1-14 0v-2"),
+            Line(12.0, 19.0, 12.0, 22.0),
+        ],
+    ),
     ("minus", &[Path("M5 12h14")]),
     ("moon", &[Path("M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z")]),
     (
@@ -246,6 +294,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             Path("M21 7v6h-6"),
             Path("M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"),
+        ],
+    ),
+    (
+        "repeat",
+        &[
+            Path("m17 2 4 4-4 4"),
+            Path("M3 11v-1a4 4 0 0 1 4-4h14"),
+            Path("m7 22-4-4 4-4"),
+            Path("M21 13v1a4 4 0 0 1-4 4H3"),
         ],
     ),
     (
@@ -286,6 +343,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Circle(12.0, 12.0, 3.0),
         ],
     ),
+    (
+        "smile",
+        &[
+            Circle(12.0, 12.0, 10.0),
+            Path("M8 14s1.5 2 4 2 4-2 4-2"),
+            Line(9.0, 9.0, 9.01, 9.0),
+            Line(15.0, 9.0, 15.01, 9.0),
+        ],
+    ),
     ("square", &[SvgRect(3.0, 3.0, 18.0, 18.0, 2.0)]),
     (
         "sun",
@@ -304,6 +370,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
     (
         "terminal",
         &[Polyline("4 17 10 11 4 5"), Line(12.0, 19.0, 20.0, 19.0)],
+    ),
+    (
+        "thumbs-down",
+        &[
+            Path("M17 14V2"),
+            Path(
+                "M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z",
+            ),
+        ],
     ),
     (
         "thumbs-up",

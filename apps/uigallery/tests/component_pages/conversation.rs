@@ -6,7 +6,11 @@ use engine::widgets::prelude::WidgetEvent;
 
 use engine::control::accessibility::accesskit::Action;
 
-use super::harness::{Gallery, ask, by_agent, gallery, sid};
+use accord::Value;
+use engine::control::accessibility::accesskit::ActionData;
+use uigallery::views::{EditKey, NavKey};
+
+use super::harness::{Gallery, ask, ask_with, by_agent, gallery, same, sid};
 
 /// The Message page's like chip of the quick comment, and a thread row.
 const CHIP: &str = "message_page.group[1].card[0].message[0].reaction";
@@ -281,4 +285,123 @@ fn an_avatar_is_read_by_its_person_and_offers_nothing() {
     }
     assert_eq!(s.get(&sid(AVATAR)).unwrap().label, "Luna Starfield");
     assert!(format!("{:?}", s.get(&sid(STACKED)).unwrap().state).contains("online"));
+}
+
+// wave 3: the Prompt Input page's live box, its line, its model menu, its
+// voice toggle and its add-files menu.
+const PROMPT_TEXT: &str = "prompt_input_page.group[0].card[0].prompt.text";
+const PROMPT_MODEL: &str = "prompt_input_page.group[0].card[0].prompt.model";
+const PROMPT_KLING: &str = "prompt_input_page.group[0].card[0].prompt.model[2]";
+const PROMPT_VOICE: &str = "prompt_input_page.group[0].card[0].prompt.voice";
+const PROMPT_ADD: &str = "prompt_input_page.group[0].card[0].prompt.add";
+const PROMPT_FILE: &str = "prompt_input_page.group[0].card[0].prompt.files[1]";
+
+/// The prompt's line: a person's typing, a reader's value and an agent's
+/// `set_value` put the same text.
+#[test]
+fn the_prompt_takes_the_same_text_from_the_three() {
+    let page = "Prompt Input";
+    let mut person = gallery(page);
+    person.click(PROMPT_TEXT);
+    person.type_in("a low-poly fox");
+    let mut reader = gallery(page);
+    reader.reader(
+        PROMPT_TEXT,
+        Action::SetValue,
+        Some(ActionData::Value("a low-poly fox".into())),
+    );
+    let agent = by_agent(
+        page,
+        "prompt",
+        vec![ask_with(
+            PROMPT_TEXT,
+            "set_value",
+            Value::from("a low-poly fox"),
+        )],
+    );
+    same(page, &person, &reader, &agent);
+}
+
+/// The model menu: the person's two clicks, the reader's two presses and
+/// the agent's `open` and `select` choose the same model and close it.
+#[test]
+fn choosing_a_model_is_the_same_from_the_three() {
+    let page = "Prompt Input";
+    let mut person = gallery(page);
+    person.click(PROMPT_MODEL);
+    person.click(PROMPT_KLING);
+    let mut reader = gallery(page);
+    reader.press(PROMPT_MODEL);
+    reader.press(PROMPT_KLING);
+    let agent = by_agent(
+        page,
+        "model",
+        vec![ask(PROMPT_MODEL, "open"), ask(PROMPT_KLING, "select")],
+    );
+    same(page, &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{PROMPT_MODEL}:selected")),
+        Some(Value::from("Kling AI"))
+    );
+}
+
+/// Voice input, from the three: the line left out, the same state.
+#[test]
+fn voice_input_is_the_same_from_the_three() {
+    let page = "Prompt Input";
+    let mut person = gallery(page);
+    person.click(PROMPT_VOICE);
+    let mut reader = gallery(page);
+    reader.press(PROMPT_VOICE);
+    let agent = by_agent(page, "voice", vec![ask(PROMPT_VOICE, "toggle")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// The keyboard on the model menu: Tab reaches the trigger, Down opens it
+/// on the chosen model, Down walks, Enter picks and the focus is the
+/// trigger's again; on the add-files menu, Escape closes it and gives the
+/// focus back to its button, and a second Escape lets it go.
+#[test]
+fn the_keyboard_walks_the_prompt_s_menus_and_escape_closes_them() {
+    let mut g = gallery("Prompt Input");
+    let focused = |g: &Gallery| {
+        g.view
+            .semantics()
+            .and_then(|s| s.focused().map(ToString::to_string))
+    };
+    for _ in 0..40 {
+        if focused(&g).as_deref() == Some(PROMPT_MODEL) {
+            break;
+        }
+        g.view.handle_edit_key(EditKey::Tab);
+        g.frame();
+    }
+    assert_eq!(focused(&g).as_deref(), Some(PROMPT_MODEL), "Tab reaches it");
+    assert!(g.view.handle_nav(NavKey::Down), "opens");
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(&*format!("{PROMPT_MODEL}[0]")));
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(&*format!("{PROMPT_MODEL}[1]")));
+    assert!(g.view.handle_enter(), "picks");
+    g.frame();
+    assert_eq!(
+        g.value(&format!("{PROMPT_MODEL}:selected")),
+        Some(Value::from("Sora 4"))
+    );
+    assert_eq!(focused(&g).as_deref(), Some(PROMPT_MODEL));
+
+    g.press(PROMPT_ADD);
+    assert!(g.view.assist_focus(&sid(PROMPT_FILE)));
+    assert!(g.view.close_top_overlay(), "Escape closes the menu");
+    g.frame();
+    let s = g.view.semantics().expect("the page projects");
+    assert!(s.get(&sid(PROMPT_FILE)).is_none(), "its rows went");
+    assert_eq!(
+        focused(&g).as_deref(),
+        Some(PROMPT_ADD),
+        "back on its button"
+    );
+    assert!(g.view.close_top_overlay(), "then the focus goes");
+    assert_eq!(focused(&g), None);
 }

@@ -113,6 +113,7 @@ pub enum Pane {
     Marker,
     Message,
     MessageScroller,
+    PromptInput,
     // task-104 front D, disclosure and display (#157)
     Accordion,
     AspectRatio,
