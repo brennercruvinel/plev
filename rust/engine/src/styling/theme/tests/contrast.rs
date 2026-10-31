@@ -634,6 +634,23 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         let edge = over(ring_of(&sl.thumb), under);
         add("selection.slider.thumb.edge", bg, LARGE, edge, under);
     }
+    // the date picker's calendar on the popover's panel: its weekdays at
+    // AAA and today's ring
+    let panel = over(t.overlay.popover.panel.fill[0], page_bg.1);
+    add(
+        "selection.calendar.weekday",
+        "overlay.popover.panel",
+        aaa,
+        over(sel.calendar.weekday, panel),
+        panel,
+    );
+    add(
+        "selection.calendar.today",
+        "overlay.popover.panel",
+        LARGE,
+        over(sel.calendar.today, panel),
+        panel,
+    );
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -921,7 +938,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 657,
+        count, 665,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

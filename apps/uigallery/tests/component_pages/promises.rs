@@ -20,9 +20,9 @@ const PROJECTING: usize = 31
     // Command (Field, Label and Combobox projected before, through the pages
     // they borrowed)
     + 4
-    // task-104 front E, selection (#158): Radio Group, Calendar (Toggle
-    // Group projected before, through the Todo it borrowed)
-    + 2
+    // task-104 front E, selection (#158): Radio Group, Calendar, Date
+    // Picker (Toggle Group projected before, through the Todo it borrowed)
+    + 3
     // task-104 front B, overlays (#155): Dropdown Menu, Menubar, Sheet, Drawer,
     // Context Menu
     + 5

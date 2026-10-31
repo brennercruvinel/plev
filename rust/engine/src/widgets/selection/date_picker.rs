@@ -22,7 +22,9 @@
 //! declares the box as a button named by the label, described by the day
 //! chosen (or its message), with its `expanded` and an `activate` that
 //! opens and closes the panel; while open, the panel `<id>.panel`, a
-//! non-modal dialog with a `close`, holds the calendar.
+//! non-modal dialog with a `close`, holds the calendar. A pinned picker
+//! ([`DatePicker::pinned`], held open by its owner) has neither: its
+//! panel is a group.
 
 use accord::{Role, SemId, SnapshotBuilder};
 
@@ -47,6 +49,9 @@ pub struct DatePicker {
     disabled: bool,
     /// The keyboard focus on the box (a reader's, or Tab): its ring.
     focused: bool,
+    /// Held open by its owner (a showcase card's forced state): nothing
+    /// closes it, and its panel projects as a group with no `close`.
+    pinned: bool,
     sem: Option<SemId>,
 }
 
@@ -70,6 +75,7 @@ impl DatePicker {
             popover: Popover::new(),
             disabled: false,
             focused: false,
+            pinned: false,
             sem: None,
         };
         picker.show_chosen();
@@ -129,32 +135,48 @@ impl DatePicker {
     /// Choose `date`, as a click on it in the panel does: the box shows
     /// it and the panel closes. Whether the choice moved.
     pub fn choose(&mut self, date: Date) -> bool {
+        let moved = self.pick(date);
+        if moved {
+            self.close();
+        }
+        moved
+    }
+
+    /// Choose `date` and keep the panel open: a reader's or the
+    /// keyboard's `select`, which walks the days choosing each and leaves
+    /// the panel by Escape or its `close`. Whether the choice moved.
+    pub fn pick(&mut self, date: Date) -> bool {
         if !self.calendar.select(date) {
             return false;
         }
         self.show_chosen();
-        self.popover.close();
         true
     }
 
     /// Open when closed, closed when open, as a press on the box does; a
-    /// disabled picker stays closed. Whether it changed.
+    /// disabled or a pinned picker stays as it is. Whether it changed.
     pub fn toggle(&mut self) -> bool {
-        if self.disabled {
+        if self.disabled || self.pinned {
             return false;
         }
         self.popover.toggle();
         true
     }
 
-    /// Ask it open (a forced state of a showcase card); a disabled picker
-    /// stays closed.
+    /// Ask it open; a disabled picker stays closed.
     pub fn open(&mut self) -> bool {
         !self.disabled && self.popover.open()
     }
 
+    /// Held open: a showcase card's forced state, which nothing closes.
+    pub fn pinned(mut self) -> Self {
+        self.pinned = self.open() || self.is_open();
+        self
+    }
+
+    /// Asks it closed; a pinned picker stays open.
     pub fn close(&mut self) -> bool {
-        self.popover.close()
+        !self.pinned && self.popover.close()
     }
 
     pub fn is_open(&self) -> bool {
@@ -175,15 +197,16 @@ impl DatePicker {
         (w + pad * 2.0, h + pad * 2.0)
     }
 
-    /// The field in `bounds`, and the panel placed by its box inside
-    /// `container`.
+    /// The field in `bounds`, and the panel placed by its box and its
+    /// message inside `container`.
     pub fn layout(&self, bounds: Rect, container: Rect, theme: &Theme) -> DatePickerLayout {
         let field = self.field.layout(bounds, theme);
         let size = self.panel_size(container.w, theme);
-        let panel = self
-            .popover
-            .placement(field.input, size, container, theme)
-            .rect;
+        // anchored to the box and the message under it, which it never
+        // covers
+        let input = field.input;
+        let anchor = Rect::new(input.x, input.y, input.w, field.bottom() - input.y);
+        let panel = self.popover.placement(anchor, size, container, theme).rect;
         let calendar = panel.inset(theme.overlay.popover.pad);
         DatePickerLayout {
             field,
@@ -212,21 +235,21 @@ impl DatePicker {
             result = self.field.handle_event(event, bounds, theme);
         }
         if self.popover.is_open() {
-            if self.popover.dismiss(event, l.field.input, l.panel) {
+            if !self.pinned && self.popover.dismiss(event, l.field.input, l.panel) {
                 return result.merge(EventResult::changed());
             }
             let before = self.calendar.selected;
             result = result.merge(self.calendar.handle_event(event, l.calendar, theme));
             if self.calendar.selected != before {
                 self.show_chosen();
-                self.popover.close();
+                self.close();
                 return result.merge(EventResult::clicked());
             }
         }
         if let WidgetEvent::MouseDown { x, y } = *event
             && l.field.input.contains(x, y)
+            && self.toggle()
         {
-            self.popover.toggle();
             return result.merge(EventResult::clicked());
         }
         result
@@ -272,13 +295,24 @@ impl DatePicker {
             self.calendar.selected.map(Date::key).unwrap_or_default(),
         )
         .enabled(!self.disabled);
-        node.action("activate");
-        if self.popover.project(b, id, &name, parent).is_none() {
-            return;
-        }
-        let (Some(cal), Some(panel)) = (self.calendar.sem_id(), Popover::panel_id(id)) else {
+        let Some(panel) = Popover::panel_id(id) else {
             return;
         };
-        self.calendar.project(b, cal, name.as_str(), Some(&panel));
+        if self.pinned {
+            // open for good: no press, and a panel with nothing to close
+            node.state("expanded", true);
+            let mut group = b.node(&panel, Role::Group, name.as_str());
+            if let Some(parent) = parent {
+                group.parent(parent);
+            }
+        } else {
+            node.action("activate");
+            if self.popover.project(b, id, &name, parent).is_none() {
+                return;
+            }
+        }
+        if let Some(cal) = self.calendar.sem_id() {
+            self.calendar.project(b, cal, name.as_str(), Some(&panel));
+        }
     }
 }

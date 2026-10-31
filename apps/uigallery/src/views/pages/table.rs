@@ -243,7 +243,13 @@ pub const PAGES: &[Page] = &[
         "Virtualized rows; columns drop by priority when narrow.",
         Pane::Table,
     ),
-    placeholder("Date Picker"),
+    page(
+        C,
+        "Date Picker",
+        "calendar",
+        "A field that opens the calendar in a popover: the day chosen fills it, a range refuses the rest.",
+        Pane::DatePicker,
+    ),
     page(
         C,
         "Dialog",
