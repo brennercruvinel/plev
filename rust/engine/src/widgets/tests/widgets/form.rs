@@ -1423,3 +1423,25 @@ fn a_command_dialog_projects_its_trigger_or_its_palette() {
             .is_some()
     );
 }
+
+/// On the dialog's sheet the rows stand on the sheet: the palette draws
+/// the same box, captions, rows and keycaps as inline, and less (no
+/// panel of its own under them).
+#[test]
+fn a_command_dialog_draws_no_panel_over_its_sheet() {
+    for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
+        let d = command_dialog();
+        let inline = crate::widgets::form::command::Command::new("Type a command...").group(
+            "File",
+            [
+                ("New file", Some("file"), Some("⌘ N")),
+                ("Save", Some("save"), Some("⌘ S")),
+            ],
+        );
+        let at = Rect::new(0.0, 0.0, 400.0, 0.0);
+        let bare = nodes_of(|c| d.command.render(c, at, &theme));
+        let full = nodes_of(|c| inline.render(c, at, &theme));
+        assert_eq!(texts(&bare), texts(&full));
+        assert!(bare.len() < full.len(), "the panel goes");
+    }
+}
