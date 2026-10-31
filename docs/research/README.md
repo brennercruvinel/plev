@@ -42,14 +42,9 @@ The references studied, the comparisons, the thesis and the paper drafts.
 | 2026-03-11 | [reference analysis: tui patterns](tui-patterns.md) | reference |
 | 2026-03-11 | [reference analysis: WASM tooling ecosystem](wasm-tooling.md) | reference |
 | 2026-06-12 | [mon experiment](mon-experiment-notes.md) | reference |
+| 2026-09-23 | [program: from GPU UI engine to generative interaction runtime](generative-runtime-program.md) | active |
 | 2026-09-23 | [plev: thesis of the generative interaction runtime](generative-runtime-thesis.md) | active |
-
-## paper
-
-| Date | Document | Status |
-|---|---|---|
-| 2022-05-24 | [plev: a GPU-first compositing engine for cross-platform UI rendering](paper/arxiv-paper-outline.md) | draft |
-| 2023-01-14 | [plev differentiators for the paper](paper/brief-strengths.md) | draft |
-| 2023-02-09 | [arxiv paper draft about plev](paper/arxiv-paper-draft.md) | draft |
+| 2026-09-23 | [autonomous cycle journal](autonomous-cycle-journal.md) | reference |
+| undated | [plev — Technical Implementation Plan](technical-plan.md) | reference |
 
 [plev docs](../README.md)

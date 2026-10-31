@@ -260,10 +260,10 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 ## Docs
 
 - [docs/ATLAS.toml](docs/ATLAS.toml): a arquitetura num arquivo só. Tabelas para as máquinas, prosa para as pessoas, o diagrama do frame flow no fim.
-- [docs/](docs/README.md): o acervo, com a [linha do tempo](docs/log/timeline.md), as tasks, os ADRs em [docs/adr/](docs/adr/README.md), as pesquisas e os aprendizados.
+- [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as tasks, os ADRs em [docs/adr/](docs/adr/README.md), as pesquisas e os aprendizados.
 - [docs/ref/operations/code-against-the-plev-engine.md](docs/ref/operations/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/ref/operations/](docs/ref/operations/): validação de pixels, o target web, orquestração de agentes.
-- [docs/log/generative-runtime-program.md](docs/log/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/research/generative-runtime-thesis.md](docs/research/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/ref/operations/generative-runtime-guidelines.md](docs/ref/operations/generative-runtime-guidelines.md).
-- [docs/log/changelog.md](docs/log/changelog.md): o que mudou, do mais novo para o mais antigo.
+- [docs/research/generative-runtime-program.md](docs/research/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/research/generative-runtime-thesis.md](docs/research/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/ref/operations/generative-runtime-guidelines.md](docs/ref/operations/generative-runtime-guidelines.md).
+- [docs/CHANGELOG.md](docs/CHANGELOG.md): o que mudou, do mais novo para o mais antigo, uma seção por data.
 - [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo.
 - [.devops/check/](.devops/check/): os contratos das ferramentas (lychee, nextest, typos).
 

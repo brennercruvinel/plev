@@ -1,5 +1,5 @@
 ---
-id: journal
+id: research-autonomous-cycle-journal
 title: "autonomous cycle journal"
 project: plev
 type: record
@@ -7,7 +7,7 @@ status: reference
 date: 2026-09-23
 date_basis: text
 topics: [agents, process, git, recording, platform]
-relations: [adr-0046, adr-0048, adr-0052, truth-2026-09, operations-autonomy, operations-generative-runtime-guidelines, generative-runtime-program, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, generative-runtime-thesis]
+relations: [adr-0046, adr-0048, adr-0052, operations-autonomy, operations-generative-runtime-guidelines, generative-runtime-program, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, generative-runtime-thesis]
 source: docs/log/journal.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -702,7 +702,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **revisão:** sem defeito. conferido que o aviso na tela não carrega
   texto de fora sem checagem (o caractere recusado sai escapado).
 - **task-76 concluída:** os dez itens na `main`; o arquivo foi para
-  `checked/` e as referências dos ADRs, do [`truth.md`](truth.md), dos learnings e do
+  `checked/` e as referências dos ADRs, do `truth.md`, dos learnings e do
   manifesto do engine foram atualizadas. o que resta é bring-up de
   plataforma (bundle do macOS, linux, windows) e as provas em tela real
   do brenner.
@@ -1658,7 +1658,7 @@ task; aqui fica o que aconteceu e onde ler.
 ### ciclo 1: replanejamento pela verdade
 
 - **disparados:** agente de docs (`task/docs-follow-code`, sem build:
-  corrige as divergências 1 a 25, 31 e 32 do [`truth.md`](truth.md)) e task-82 fase b
+  corrige as divergências 1 a 25, 31 e 32 do `truth.md`) e task-82 fase b
   (`task/82b-wake-everywhere`).
 - **decisão autônoma:** a fase b da task-82 sobe na fila. motivo: a
   auditoria mostrou que a promessa "no change, no frame" do README está
@@ -1676,7 +1676,7 @@ task; aqui fica o que aconteceu e onde ler.
   (2073 passaram), laboratório reproduzido pelo orquestrador (seis
   corridas certas).
 - **integrada:** a auditoria de verdade (`7621403`),
-  [`truth.md`](truth.md). achados que mudam o plano: o binário
+  `truth.md`. achados que mudam o plano: o binário
   `ide` não abre a porta do agente (o checkpoint a rodou só no
   `ide-lab`); digitar não passa pelo dispatcher; 32 divergências entre
   docs e código.
@@ -1685,7 +1685,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **disparada:** task-85 (o commit que o receipt anuncia já está na
   projeção, com `files`), no lugar que a 84 liberou.
 - **decisão autônoma:** as 32 divergências se corrigem antes de planejar
-  a partir dos docs; um agente de docs, sem build, com [`truth.md`](truth.md) como
+  a partir dos docs; um agente de docs, sem build, com `truth.md` como
   fonte; o orquestrador corrige o programa.
 
 ### ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar
@@ -1700,7 +1700,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **disparados:** task-83 (delta com o nó, recusa com autor, regra de stale
   escrita; `task/83-delta-and-refusal`), task-84 (corrida do `Refresh` no
   ide; `task/84-refresh-order`), auditoria de verdade (`task/truth-audit`,
-  só leitura; escreve [`truth.md`](truth.md)).
+  só leitura; escreve `truth.md`).
 - **decisão autônoma:** a recusa com autor usa uma regra exata e limitada
   (ações de outros atores checadas sobre a mesma revisão que o autor viu e
   que chegaram a rodar), preenchida só pelo `Dispatcher`. motivo: a revisão

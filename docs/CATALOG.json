@@ -2,6 +2,768 @@
  "project": "plev",
  "documents": [
   {
+   "path": "docs/CHANGELOG.md",
+   "id": "changelog",
+   "title": "plev changelog",
+   "project": "plev",
+   "type": "record",
+   "status": "active",
+   "date": null,
+   "date_basis": "undated",
+   "topics": [
+    "process",
+    "workspace",
+    "rendering",
+    "agents"
+   ],
+   "relations": [],
+   "source": [
+    "docs/log/changelog.md",
+    "docs/log/README.md",
+    "docs/log/responsiveness-multiplatform-and-fidelity.md",
+    "reconstruction"
+   ],
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-31",
+   "review": "reviewed",
+   "evidence": [
+    "704412f1",
+    "b1e820ba"
+   ],
+   "headings": [
+    {
+     "level": 1,
+     "title": "plev changelog",
+     "anchor": "plev-changelog"
+    },
+    {
+     "level": 2,
+     "title": "Reading the dates",
+     "anchor": "reading-the-dates"
+    },
+    {
+     "level": 3,
+     "title": "Dates revised later",
+     "anchor": "dates-revised-later"
+    },
+    {
+     "level": 3,
+     "title": "What a date in this file means",
+     "anchor": "what-a-date-in-this-file-means"
+    },
+    {
+     "level": 3,
+     "title": "Recovered material",
+     "anchor": "recovered-material"
+    },
+    {
+     "level": 2,
+     "title": "2026-10-27",
+     "anchor": "2026-10-27"
+    },
+    {
+     "level": 2,
+     "title": "2026-10-16",
+     "anchor": "2026-10-16"
+    },
+    {
+     "level": 2,
+     "title": "2026-10-09",
+     "anchor": "2026-10-09"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-29",
+     "anchor": "2026-09-29"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-26",
+     "anchor": "2026-09-26"
+    },
+    {
+     "level": 3,
+     "title": "plev, project state and task map (2026-09-26)",
+     "anchor": "plev-project-state-and-task-map-2026-09-26"
+    },
+    {
+     "level": 4,
+     "title": "estado atual (2026-09-26)",
+     "anchor": "estado-atual-2026-09-26"
+    },
+    {
+     "level": 4,
+     "title": "mapa de tasks",
+     "anchor": "mapa-de-tasks"
+    },
+    {
+     "level": 5,
+     "title": "fase 0, fundamental (p0), completa",
+     "anchor": "fase-0-fundamental-p0-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 1, integracao end-to-end (p0), completa",
+     "anchor": "fase-1-integracao-end-to-end-p0-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 2, mobile/WASM testing (p1), parcial",
+     "anchor": "fase-2-mobilewasm-testing-p1-parcial"
+    },
+    {
+     "level": 5,
+     "title": "fase 3, polish (p2), parcial",
+     "anchor": "fase-3-polish-p2-parcial"
+    },
+    {
+     "level": 5,
+     "title": "fase 4, proof of life (p2), completa",
+     "anchor": "fase-4-proof-of-life-p2-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 4b, quick wins & bug fixes (p0/p1), completa (derivada de task-34)",
+     "anchor": "fase-4b-quick-wins--bug-fixes-p0p1-completa-derivada-de-task-34"
+    },
+    {
+     "level": 5,
+     "title": "fase 6, extensibilidade (p4), parcial",
+     "anchor": "fase-6-extensibilidade-p4-parcial"
+    },
+    {
+     "level": 5,
+     "title": "fase 7, release publica (p0), pendente",
+     "anchor": "fase-7-release-publica-p0-pendente"
+    },
+    {
+     "level": 5,
+     "title": "experiment, gitbutler port (proof of real app)",
+     "anchor": "experiment-gitbutler-port-proof-of-real-app"
+    },
+    {
+     "level": 5,
+     "title": "research",
+     "anchor": "research"
+    },
+    {
+     "level": 5,
+     "title": "fase 8, formatos e interop (2025), completa",
+     "anchor": "fase-8-formatos-e-interop-2025-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 9, edicao e apps reais (2026), completa",
+     "anchor": "fase-9-edicao-e-apps-reais-2026-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 10, demos e plataforma (2025), completa",
+     "anchor": "fase-10-demos-e-plataforma-2025-completa"
+    },
+    {
+     "level": 5,
+     "title": "fase 11, organizacao profissional (2024/2026), completa",
+     "anchor": "fase-11-organizacao-profissional-20242026-completa"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-25",
+     "anchor": "2026-09-25"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-24",
+     "anchor": "2026-09-24"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-23",
+     "anchor": "2026-09-23"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-22",
+     "anchor": "2026-09-22"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-21",
+     "anchor": "2026-09-21"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-19",
+     "anchor": "2026-09-19"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-18",
+     "anchor": "2026-09-18"
+    },
+    {
+     "level": 2,
+     "title": "2026-08-31",
+     "anchor": "2026-08-31"
+    },
+    {
+     "level": 2,
+     "title": "2026-08-30",
+     "anchor": "2026-08-30"
+    },
+    {
+     "level": 2,
+     "title": "2026-08",
+     "anchor": "2026-08"
+    },
+    {
+     "level": 2,
+     "title": "2026-07-13",
+     "anchor": "2026-07-13"
+    },
+    {
+     "level": 2,
+     "title": "2026-06-12",
+     "anchor": "2026-06-12"
+    },
+    {
+     "level": 2,
+     "title": "2026-06-10",
+     "anchor": "2026-06-10"
+    },
+    {
+     "level": 2,
+     "title": "2026-06 to 2026-08, entries without a day",
+     "anchor": "2026-06-to-2026-08-entries-without-a-day"
+    },
+    {
+     "level": 2,
+     "title": "2026-05-11",
+     "anchor": "2026-05-11"
+    },
+    {
+     "level": 2,
+     "title": "2026-04-08",
+     "anchor": "2026-04-08"
+    },
+    {
+     "level": 2,
+     "title": "2026-04-01",
+     "anchor": "2026-04-01"
+    },
+    {
+     "level": 2,
+     "title": "2026-03-11",
+     "anchor": "2026-03-11"
+    },
+    {
+     "level": 2,
+     "title": "2026-03-10",
+     "anchor": "2026-03-10"
+    },
+    {
+     "level": 2,
+     "title": "2026-03-04",
+     "anchor": "2026-03-04"
+    },
+    {
+     "level": 2,
+     "title": "2026-02-16",
+     "anchor": "2026-02-16"
+    },
+    {
+     "level": 2,
+     "title": "2025-11-14",
+     "anchor": "2025-11-14"
+    },
+    {
+     "level": 2,
+     "title": "2025-10-01",
+     "anchor": "2025-10-01"
+    },
+    {
+     "level": 2,
+     "title": "2025-09-24",
+     "anchor": "2025-09-24"
+    },
+    {
+     "level": 2,
+     "title": "2025-08-18",
+     "anchor": "2025-08-18"
+    },
+    {
+     "level": 2,
+     "title": "2025-07-16",
+     "anchor": "2025-07-16"
+    },
+    {
+     "level": 2,
+     "title": "2025-07-08",
+     "anchor": "2025-07-08"
+    },
+    {
+     "level": 2,
+     "title": "2025-06-17",
+     "anchor": "2025-06-17"
+    },
+    {
+     "level": 2,
+     "title": "2025-06-10",
+     "anchor": "2025-06-10"
+    },
+    {
+     "level": 2,
+     "title": "2025-05-21",
+     "anchor": "2025-05-21"
+    },
+    {
+     "level": 2,
+     "title": "2025-05-14",
+     "anchor": "2025-05-14"
+    },
+    {
+     "level": 2,
+     "title": "2025-03-26",
+     "anchor": "2025-03-26"
+    },
+    {
+     "level": 2,
+     "title": "2025-02-19",
+     "anchor": "2025-02-19"
+    },
+    {
+     "level": 3,
+     "title": "session record: responsiveness, real measurement, web target, touch",
+     "anchor": "session-record-responsiveness-real-measurement-web-target-touch"
+    },
+    {
+     "level": 4,
+     "title": "trigger",
+     "anchor": "trigger"
+    },
+    {
+     "level": 4,
+     "title": "episode: text spilling out of shapes",
+     "anchor": "episode-text-spilling-out-of-shapes"
+    },
+    {
+     "level": 4,
+     "title": "episode: no responsive distribution",
+     "anchor": "episode-no-responsive-distribution"
+    },
+    {
+     "level": 4,
+     "title": "episode: browser target",
+     "anchor": "episode-browser-target"
+    },
+    {
+     "level": 4,
+     "title": "episode: web gamma",
+     "anchor": "episode-web-gamma"
+    },
+    {
+     "level": 4,
+     "title": "episode: touch",
+     "anchor": "episode-touch"
+    },
+    {
+     "level": 4,
+     "title": "process learnings preserved",
+     "anchor": "process-learnings-preserved"
+    },
+    {
+     "level": 4,
+     "title": "state at close",
+     "anchor": "state-at-close"
+    },
+    {
+     "level": 2,
+     "title": "2025-02-10",
+     "anchor": "2025-02-10"
+    },
+    {
+     "level": 2,
+     "title": "2025-01-27",
+     "anchor": "2025-01-27"
+    },
+    {
+     "level": 2,
+     "title": "2025-01-08",
+     "anchor": "2025-01-08"
+    },
+    {
+     "level": 2,
+     "title": "2024-12-19",
+     "anchor": "2024-12-19"
+    },
+    {
+     "level": 2,
+     "title": "2024-12-04",
+     "anchor": "2024-12-04"
+    },
+    {
+     "level": 2,
+     "title": "2024-11-20",
+     "anchor": "2024-11-20"
+    },
+    {
+     "level": 2,
+     "title": "2024-10-29",
+     "anchor": "2024-10-29"
+    },
+    {
+     "level": 2,
+     "title": "2024-10-07",
+     "anchor": "2024-10-07"
+    },
+    {
+     "level": 2,
+     "title": "2024-09-18",
+     "anchor": "2024-09-18"
+    },
+    {
+     "level": 2,
+     "title": "2024-07-09",
+     "anchor": "2024-07-09"
+    },
+    {
+     "level": 2,
+     "title": "2024-06-17",
+     "anchor": "2024-06-17"
+    },
+    {
+     "level": 2,
+     "title": "2024-05-29",
+     "anchor": "2024-05-29"
+    },
+    {
+     "level": 2,
+     "title": "2024-05-23",
+     "anchor": "2024-05-23"
+    },
+    {
+     "level": 2,
+     "title": "2024-05-21",
+     "anchor": "2024-05-21"
+    },
+    {
+     "level": 2,
+     "title": "2024-04-14",
+     "anchor": "2024-04-14"
+    },
+    {
+     "level": 2,
+     "title": "2024-02-18",
+     "anchor": "2024-02-18"
+    },
+    {
+     "level": 2,
+     "title": "2024-02-06",
+     "anchor": "2024-02-06"
+    },
+    {
+     "level": 2,
+     "title": "2024-01-22",
+     "anchor": "2024-01-22"
+    },
+    {
+     "level": 2,
+     "title": "2023-12-14",
+     "anchor": "2023-12-14"
+    },
+    {
+     "level": 2,
+     "title": "2023-11-09",
+     "anchor": "2023-11-09"
+    },
+    {
+     "level": 2,
+     "title": "2023-10-02",
+     "anchor": "2023-10-02"
+    },
+    {
+     "level": 2,
+     "title": "2023-08-28",
+     "anchor": "2023-08-28"
+    },
+    {
+     "level": 2,
+     "title": "2023-07-23",
+     "anchor": "2023-07-23"
+    },
+    {
+     "level": 2,
+     "title": "2023-06-12",
+     "anchor": "2023-06-12"
+    },
+    {
+     "level": 2,
+     "title": "2023-05-02",
+     "anchor": "2023-05-02"
+    },
+    {
+     "level": 2,
+     "title": "2023-03-22",
+     "anchor": "2023-03-22"
+    },
+    {
+     "level": 2,
+     "title": "2023-01-25",
+     "anchor": "2023-01-25"
+    },
+    {
+     "level": 2,
+     "title": "2022-12-21",
+     "anchor": "2022-12-21"
+    },
+    {
+     "level": 2,
+     "title": "2022-12-10",
+     "anchor": "2022-12-10"
+    },
+    {
+     "level": 2,
+     "title": "2022-11-19",
+     "anchor": "2022-11-19"
+    },
+    {
+     "level": 2,
+     "title": "2022-10-27",
+     "anchor": "2022-10-27"
+    },
+    {
+     "level": 2,
+     "title": "2022-10-21",
+     "anchor": "2022-10-21"
+    },
+    {
+     "level": 2,
+     "title": "2022-09-14",
+     "anchor": "2022-09-14"
+    },
+    {
+     "level": 2,
+     "title": "2022-09-08",
+     "anchor": "2022-09-08"
+    },
+    {
+     "level": 2,
+     "title": "2022-08-16",
+     "anchor": "2022-08-16"
+    },
+    {
+     "level": 2,
+     "title": "2022-08-11",
+     "anchor": "2022-08-11"
+    },
+    {
+     "level": 2,
+     "title": "2022-07-12",
+     "anchor": "2022-07-12"
+    },
+    {
+     "level": 2,
+     "title": "2022-07-06",
+     "anchor": "2022-07-06"
+    },
+    {
+     "level": 2,
+     "title": "2022-06-15",
+     "anchor": "2022-06-15"
+    },
+    {
+     "level": 2,
+     "title": "2022-05-03",
+     "anchor": "2022-05-03"
+    },
+    {
+     "level": 2,
+     "title": "2022-04-26",
+     "anchor": "2022-04-26"
+    },
+    {
+     "level": 2,
+     "title": "2022-02-24",
+     "anchor": "2022-02-24"
+    },
+    {
+     "level": 2,
+     "title": "2022-01-19",
+     "anchor": "2022-01-19"
+    },
+    {
+     "level": 2,
+     "title": "2021-12-27",
+     "anchor": "2021-12-27"
+    },
+    {
+     "level": 2,
+     "title": "2021-12-18",
+     "anchor": "2021-12-18"
+    },
+    {
+     "level": 2,
+     "title": "2021-12-11",
+     "anchor": "2021-12-11"
+    },
+    {
+     "level": 2,
+     "title": "2021-12-04",
+     "anchor": "2021-12-04"
+    },
+    {
+     "level": 2,
+     "title": "2021-11-08",
+     "anchor": "2021-11-08"
+    },
+    {
+     "level": 2,
+     "title": "2021-10-24",
+     "anchor": "2021-10-24"
+    },
+    {
+     "level": 2,
+     "title": "2021-10-10",
+     "anchor": "2021-10-10"
+    },
+    {
+     "level": 2,
+     "title": "2021-09-27",
+     "anchor": "2021-09-27"
+    },
+    {
+     "level": 2,
+     "title": "2021-09-17",
+     "anchor": "2021-09-17"
+    },
+    {
+     "level": 2,
+     "title": "2021-09-12",
+     "anchor": "2021-09-12"
+    },
+    {
+     "level": 2,
+     "title": "2021-08-30",
+     "anchor": "2021-08-30"
+    },
+    {
+     "level": 2,
+     "title": "2021-08-29",
+     "anchor": "2021-08-29"
+    },
+    {
+     "level": 2,
+     "title": "2021-08-16",
+     "anchor": "2021-08-16"
+    },
+    {
+     "level": 2,
+     "title": "2021-08-15",
+     "anchor": "2021-08-15"
+    },
+    {
+     "level": 2,
+     "title": "2021-08-02",
+     "anchor": "2021-08-02"
+    },
+    {
+     "level": 2,
+     "title": "2021-07-26",
+     "anchor": "2021-07-26"
+    },
+    {
+     "level": 2,
+     "title": "2021-07-19",
+     "anchor": "2021-07-19"
+    },
+    {
+     "level": 2,
+     "title": "2021-07-06",
+     "anchor": "2021-07-06"
+    },
+    {
+     "level": 2,
+     "title": "2021-07-04",
+     "anchor": "2021-07-04"
+    },
+    {
+     "level": 2,
+     "title": "2021-06-21",
+     "anchor": "2021-06-21"
+    },
+    {
+     "level": 2,
+     "title": "2021-06-16",
+     "anchor": "2021-06-16"
+    },
+    {
+     "level": 2,
+     "title": "2021-06-08",
+     "anchor": "2021-06-08"
+    },
+    {
+     "level": 2,
+     "title": "2021-05-27",
+     "anchor": "2021-05-27"
+    },
+    {
+     "level": 2,
+     "title": "2021-05-23",
+     "anchor": "2021-05-23"
+    },
+    {
+     "level": 2,
+     "title": "2021-05-06",
+     "anchor": "2021-05-06"
+    },
+    {
+     "level": 2,
+     "title": "2021-05-02",
+     "anchor": "2021-05-02"
+    },
+    {
+     "level": 2,
+     "title": "2021-04-20",
+     "anchor": "2021-04-20"
+    },
+    {
+     "level": 2,
+     "title": "2021-04-15",
+     "anchor": "2021-04-15"
+    },
+    {
+     "level": 2,
+     "title": "2021-03-28",
+     "anchor": "2021-03-28"
+    },
+    {
+     "level": 2,
+     "title": "2021-03-24",
+     "anchor": "2021-03-24"
+    },
+    {
+     "level": 2,
+     "title": "2021-03-10",
+     "anchor": "2021-03-10"
+    },
+    {
+     "level": 2,
+     "title": "2021-03-06",
+     "anchor": "2021-03-06"
+    },
+    {
+     "level": 2,
+     "title": "undated",
+     "anchor": "undated"
+    },
+    {
+     "level": 2,
+     "title": "summary written when the changelog began",
+     "anchor": "summary-written-when-the-changelog-began"
+    }
+   ]
+  },
+  {
    "path": "docs/README.md",
    "id": "docs",
    "title": "plev docs",
@@ -15,8 +777,7 @@
    ],
    "relations": [
     "docs-conventions",
-    "timeline",
-    "dates-and-sources"
+    "changelog"
    ],
    "source": "docs/README.md",
    "source_revision": "ec0a224c",
@@ -79,22 +840,17 @@
     "architecture-monster-format-v0",
     "architecture-component-catalog",
     "experiment-benchmarks-v02",
-    "paper-outline",
-    "paper-brief-strengths",
-    "paper-draft",
     "research-extracted-patterns",
     "research-parley-vs-cosmic-text",
     "research-wasm-plugin-architecture",
     "research-makepad-gap-analysis",
     "research-plev-vs-makepad-report",
-    "responsiveness-and-fidelity",
+    "changelog",
     "generative-runtime-program",
     "learning-hot-reload",
     "learning-showcase-pages",
     "learning-core-buttons",
     "learning-comps",
-    "changelog",
-    "timeline",
     "adr-0001",
     "adr-0002",
     "adr-0003",
@@ -2690,7 +3446,6 @@
     "task-90",
     "task-91",
     "generative-runtime-program",
-    "truth-2026-09",
     "operations-code-against-the-plev-engine"
    ],
    "source": "docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md",
@@ -6586,14 +7341,14 @@
     "task-82/phase-b",
     "adr-0042"
    ],
-   "evidence": [
-    "d97a375",
-    "a6fec8d"
-   ],
    "source": "reconstruction",
    "source_revision": "c2e3f8cd",
    "revised": "2026-10-31",
    "review": "reviewed",
+   "evidence": [
+    "d97a375",
+    "a6fec8d"
+   ],
    "headings": [
     {
      "level": 1,
@@ -6682,6 +7437,10 @@
     "task-97",
     "adr-0070"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "evidence": [
     "c8a6c3a9",
     "46f272d3",
@@ -6691,10 +7450,6 @@
     "07650665",
     "9c96bde4"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -6771,14 +7526,14 @@
     "task-73",
     "task-73/phase-1-measurements"
    ],
-   "evidence": [
-    "ed814da",
-    "91fdb33"
-   ],
    "source": "reconstruction",
    "source_revision": "c2e3f8cd",
    "revised": "2026-10-31",
    "review": "reviewed",
+   "evidence": [
+    "ed814da",
+    "91fdb33"
+   ],
    "headings": [
     {
      "level": 1,
@@ -6873,6 +7628,10 @@
     "task-69/checkpoint-b-round-2",
     "task-69/checkpoint-b-fixes"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "evidence": [
     "253be85d",
     "210564b8",
@@ -6881,10 +7640,6 @@
     "b8665828",
     "25633cba"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -6952,6 +7707,10 @@
     "task-78",
     "adr-0072"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "evidence": [
     "94109cd3",
     "f6ff13fb",
@@ -6959,10 +7718,6 @@
     "496c6ffa",
     "002debd4"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7046,6 +7801,10 @@
     "task-74/phase-1-audit",
     "task-74/phase-7-large-documents"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "evidence": [
     "df270334",
     "ad6d0d6a",
@@ -7055,10 +7814,6 @@
     "8b4c58e9",
     "727c378e"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7139,6 +7894,10 @@
     "task-77/closing",
     "adr-0064"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "evidence": [
     "8af26af5",
     "35a47b26",
@@ -7146,10 +7905,6 @@
     "f6c688b5",
     "adbf948b"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7429,7 +8184,6 @@
    ],
    "relations": [
     "adr-0036",
-    "truth-2026-09",
     "operations-autonomy",
     "operations-orchestrate-coding-agents-on-this-repo",
     "task-57b",
@@ -8015,1980 +8769,6 @@
      "level": 2,
      "title": "why it survived review twice",
      "anchor": "why-it-survived-review-twice"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/README.md",
-   "id": "index-log",
-   "title": "Log",
-   "project": "plev",
-   "type": "index",
-   "status": "active",
-   "date": null,
-   "date_basis": "generated",
-   "topics": [
-    "navigation"
-   ],
-   "relations": [],
-   "source": "tool/tasks/docbase.py",
-   "source_revision": "generated",
-   "revised": "generated",
-   "review": "generated",
-   "headings": [
-    {
-     "level": 1,
-     "title": "Log",
-     "anchor": "log"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/changelog.md",
-   "id": "changelog",
-   "title": "plev changelog",
-   "project": "plev",
-   "type": "record",
-   "status": "active",
-   "date": "2026-06-20",
-   "date_basis": "header",
-   "topics": [
-    "agents",
-    "platform",
-    "rendering",
-    "generated-surfaces",
-    "text"
-   ],
-   "relations": [
-    "adr-0003",
-    "adr-0010",
-    "adr-0011",
-    "adr-0012",
-    "adr-0013",
-    "adr-0014",
-    "adr-0016",
-    "adr-0022",
-    "adr-0023",
-    "adr-0024",
-    "adr-0025",
-    "adr-0026",
-    "adr-0027",
-    "adr-0028",
-    "adr-0029",
-    "adr-0030",
-    "adr-0031",
-    "adr-0032",
-    "adr-0033",
-    "adr-0034",
-    "adr-0035",
-    "adr-0036",
-    "adr-0037",
-    "adr-0038",
-    "adr-0039",
-    "adr-0040",
-    "adr-0041",
-    "adr-0042",
-    "adr-0043",
-    "adr-0044",
-    "adr-0045",
-    "adr-0046",
-    "adr-0047",
-    "adr-0048",
-    "adr-0049",
-    "adr-0050",
-    "adr-0051",
-    "adr-0074",
-    "adr-0075",
-    "adr-0076",
-    "adr-0077",
-    "adr-0078",
-    "adr-0079",
-    "task-18",
-    "task-19",
-    "task-20",
-    "task-57",
-    "task-57b",
-    "task-58",
-    "task-58b",
-    "task-59",
-    "task-60",
-    "task-61",
-    "task-62",
-    "task-63",
-    "task-64",
-    "task-65",
-    "task-66",
-    "task-66b",
-    "task-67",
-    "task-68",
-    "task-69",
-    "task-70",
-    "task-71",
-    "task-72",
-    "task-73",
-    "task-73/phase-1-measurements",
-    "task-74",
-    "task-75",
-    "task-76",
-    "task-77",
-    "task-78",
-    "task-79",
-    "task-80",
-    "task-81",
-    "task-82",
-    "task-83",
-    "task-84",
-    "task-85",
-    "task-86",
-    "task-87",
-    "task-88",
-    "task-89",
-    "task-90",
-    "task-91",
-    "task-92",
-    "task-93",
-    "task-94",
-    "task-95",
-    "task-96",
-    "task-97",
-    "task-98",
-    "task-99",
-    "task-100",
-    "task-102",
-    "task-103",
-    "adr-0080",
-    "adr-0081",
-    "adr-0083",
-    "adr-0084"
-   ],
-   "source": "docs/log/changelog.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-31",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "plev changelog",
-     "anchor": "plev-changelog"
-    },
-    {
-     "level": 2,
-     "title": "unreleased",
-     "anchor": "unreleased"
-    },
-    {
-     "level": 2,
-     "title": "earlier (pre-changelog, summarized)",
-     "anchor": "earlier-pre-changelog-summarized"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/dates-and-sources.md",
-   "id": "dates-and-sources",
-   "title": "Dates and sources",
-   "project": "plev",
-   "type": "record",
-   "status": "reference",
-   "date": "2026-10-30",
-   "date_basis": "git",
-   "topics": [
-    "editorial",
-    "git"
-   ],
-   "relations": [
-    "adr-0001",
-    "adr-0002",
-    "learning-apps-bypass-the-engine",
-    "learning-the-two-gamma-bugs",
-    "truth-2026-09",
-    "task-26",
-    "task-40",
-    "hoff-visual-tokens"
-   ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "evidence": [
-    "176dd691",
-    "704412f1",
-    "b1e820ba",
-    "95d53881",
-    "1a776d04",
-    "ec0a224c"
-   ],
-   "headings": [
-    {
-     "level": 1,
-     "title": "Dates and sources",
-     "anchor": "dates-and-sources"
-    },
-    {
-     "level": 2,
-     "title": "Dates revised later",
-     "anchor": "dates-revised-later"
-    },
-    {
-     "level": 2,
-     "title": "Reading the timeline",
-     "anchor": "reading-the-timeline"
-    },
-    {
-     "level": 2,
-     "title": "Recovered material",
-     "anchor": "recovered-material"
-    },
-    {
-     "level": 2,
-     "title": "Evidence",
-     "anchor": "evidence"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/generative-runtime-program.md",
-   "id": "generative-runtime-program",
-   "title": "program: from GPU UI engine to generative interaction runtime",
-   "project": "plev",
-   "type": "program",
-   "status": "active",
-   "date": "2026-09-23",
-   "date_basis": "header",
-   "topics": [
-    "process",
-    "agents",
-    "semantics",
-    "ir",
-    "generated-surfaces"
-   ],
-   "relations": [
-    "adr-0023",
-    "adr-0024",
-    "adr-0035",
-    "adr-0037",
-    "adr-0040",
-    "adr-0041",
-    "adr-0043",
-    "adr-0044",
-    "adr-0045",
-    "adr-0047",
-    "adr-0048",
-    "adr-0049",
-    "adr-0050",
-    "adr-0072",
-    "architecture-monster-format-v0",
-    "truth-2026-09",
-    "adr-index",
-    "operations-autonomy",
-    "operations-generative-runtime-guidelines",
-    "project-state-2026-09",
-    "generative-runtime-thesis",
-    "task-18",
-    "task-19",
-    "task-20",
-    "task-39",
-    "task-41",
-    "task-57",
-    "task-57b",
-    "task-58",
-    "task-58b",
-    "task-59",
-    "task-60",
-    "task-61",
-    "task-62",
-    "task-63",
-    "task-64",
-    "task-65",
-    "task-66",
-    "task-66b",
-    "task-67",
-    "task-68",
-    "task-69",
-    "task-70",
-    "task-71",
-    "task-72",
-    "task-73",
-    "task-74",
-    "task-75",
-    "task-76",
-    "task-77",
-    "task-78",
-    "task-79",
-    "task-80",
-    "task-81",
-    "task-82",
-    "task-83",
-    "task-84",
-    "task-85",
-    "task-86",
-    "task-87",
-    "task-88",
-    "task-89",
-    "task-90",
-    "task-91",
-    "task-92",
-    "task-93",
-    "task-94",
-    "task-95",
-    "task-96",
-    "task-97"
-   ],
-   "source": "docs/log/generative-runtime-program.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "evidence": [
-    "b8ba096",
-    "1d384d4",
-    "860b029",
-    "20c601e",
-    "f71dc20",
-    "f5b7cee",
-    "c6738be",
-    "ed814da",
-    "91fdb33",
-    "8978602",
-    "d26c9b1",
-    "c62a05d",
-    "8e6e814",
-    "0ec72f9",
-    "3ba5b04",
-    "dc6fde2",
-    "7b3e48f",
-    "a7a6735",
-    "d97a375",
-    "a6fec8d",
-    "efc87b6",
-    "78f463c",
-    "4896451",
-    "476bbb4",
-    "365d8fd",
-    "e6560a2",
-    "d611fa4",
-    "7f866e8",
-    "d02b4d1",
-    "871f0dd",
-    "22d59fb",
-    "4593a4c",
-    "4573c81",
-    "460c854",
-    "29373d4",
-    "79b8c93",
-    "042d34e",
-    "96c20a0",
-    "49e2822",
-    "7621403",
-    "f101359",
-    "654d740",
-    "37c5e0c"
-   ],
-   "headings": [
-    {
-     "level": 1,
-     "title": "program: from GPU UI engine to generative interaction runtime",
-     "anchor": "program-from-gpu-ui-engine-to-generative-interaction-runtime"
-    },
-    {
-     "level": 2,
-     "title": "1. goal",
-     "anchor": "1-goal"
-    },
-    {
-     "level": 2,
-     "title": "2. mantra para todos os agentes",
-     "anchor": "2-mantra-para-todos-os-agentes"
-    },
-    {
-     "level": 2,
-     "title": "3. estado real do código (diagnóstico, 2026-09-23)",
-     "anchor": "3-estado-real-do-código-diagnóstico-2026-09-23"
-    },
-    {
-     "level": 2,
-     "title": "4. tasks",
-     "anchor": "4-tasks"
-    },
-    {
-     "level": 2,
-     "title": "5. grafo de dependências",
-     "anchor": "5-grafo-de-dependências"
-    },
-    {
-     "level": 2,
-     "title": "6. ondas de integração",
-     "anchor": "6-ondas-de-integração"
-    },
-    {
-     "level": 2,
-     "title": "7. contratos entre tasks",
-     "anchor": "7-contratos-entre-tasks"
-    },
-    {
-     "level": 2,
-     "title": "8. superfícies compartilhadas e ownership",
-     "anchor": "8-superfícies-compartilhadas-e-ownership"
-    },
-    {
-     "level": 2,
-     "title": "9. checkpoints e critérios de parada",
-     "anchor": "9-checkpoints-e-critérios-de-parada"
-    },
-    {
-     "level": 2,
-     "title": "10. métricas que o programa carrega",
-     "anchor": "10-métricas-que-o-programa-carrega"
-    },
-    {
-     "level": 2,
-     "title": "11. decisões",
-     "anchor": "11-decisões"
-    },
-    {
-     "level": 2,
-     "title": "12. estado",
-     "anchor": "12-estado"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/journal.md",
-   "id": "journal",
-   "title": "autonomous cycle journal",
-   "project": "plev",
-   "type": "record",
-   "status": "reference",
-   "date": "2026-09-23",
-   "date_basis": "text",
-   "topics": [
-    "agents",
-    "process",
-    "git",
-    "recording",
-    "platform"
-   ],
-   "relations": [
-    "adr-0046",
-    "adr-0048",
-    "adr-0052",
-    "truth-2026-09",
-    "operations-autonomy",
-    "operations-generative-runtime-guidelines",
-    "generative-runtime-program",
-    "task-18",
-    "task-19",
-    "task-20",
-    "task-61",
-    "task-62",
-    "task-63",
-    "task-64",
-    "task-65",
-    "task-67",
-    "task-68",
-    "task-69",
-    "task-70",
-    "task-71",
-    "task-72",
-    "task-74",
-    "task-75",
-    "task-76",
-    "task-77",
-    "task-78",
-    "task-79",
-    "task-80",
-    "task-82",
-    "task-83",
-    "task-84",
-    "task-85",
-    "task-86",
-    "task-87",
-    "task-88",
-    "task-89",
-    "task-90",
-    "task-91",
-    "task-92",
-    "task-93",
-    "task-94",
-    "task-95",
-    "task-96",
-    "task-97",
-    "generative-runtime-thesis"
-   ],
-   "source": "docs/log/journal.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "evidence": [
-    "6e284bf",
-    "4573c81",
-    "460c854",
-    "37c5e0c",
-    "0071764",
-    "4593a4c",
-    "7d9c569",
-    "f101359",
-    "fed9c8d",
-    "22d59fb",
-    "de95a20",
-    "d611fa4",
-    "c60b9f6",
-    "871f0dd",
-    "ecf51ba",
-    "29373d4",
-    "804e57d",
-    "042d34e",
-    "f309ab4",
-    "f248dd1",
-    "96c20a0",
-    "8e6e814",
-    "5f57fe7",
-    "d02b4d1",
-    "c433751",
-    "79b8c93",
-    "0e0a7b3",
-    "7f866e8",
-    "eea529b",
-    "e6560a2",
-    "49e2822",
-    "7528309",
-    "a6fec8d",
-    "365d8fd",
-    "476bbb4",
-    "78f463c",
-    "1bf6606",
-    "2d4aa4b",
-    "4896451",
-    "7621403",
-    "1ecc84c",
-    "c07a7f0",
-    "c5fdf36"
-   ],
-   "headings": [
-    {
-     "level": 1,
-     "title": "autonomous cycle journal",
-     "anchor": "autonomous-cycle-journal"
-    },
-    {
-     "level": 2,
-     "title": "2026-09-26",
-     "anchor": "2026-09-26"
-    },
-    {
-     "level": 3,
-     "title": "task-78 fase 2 integrada: o plev no wgpu 29",
-     "anchor": "task-78-fase-2-integrada-o-plev-no-wgpu-29"
-    },
-    {
-     "level": 3,
-     "title": "task-78 fase 1 integrada; candle e burn ficam",
-     "anchor": "task-78-fase-1-integrada-candle-e-burn-ficam"
-    },
-    {
-     "level": 2,
-     "title": "2026-09-25",
-     "anchor": "2026-09-25"
-    },
-    {
-     "level": 3,
-     "title": "IME no campo, copiar e colar, e o menu do campo integrados",
-     "anchor": "ime-no-campo-copiar-e-colar-e-o-menu-do-campo-integrados"
-    },
-    {
-     "level": 3,
-     "title": "o IME passou no editor",
-     "anchor": "o-ime-passou-no-editor"
-    },
-    {
-     "level": 3,
-     "title": "shift+seta seleciona nos campos",
-     "anchor": "shiftseta-seleciona-nos-campos"
-    },
-    {
-     "level": 3,
-     "title": "task-74 fase 7 integrada",
-     "anchor": "task-74-fase-7-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-74 fase 5 integrada",
-     "anchor": "task-74-fase-5-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-75 fase 2d integrada",
-     "anchor": "task-75-fase-2d-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-75 fase 2c integrada",
-     "anchor": "task-75-fase-2c-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-65 fechada",
-     "anchor": "task-65-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-74 fase 3 integrada",
-     "anchor": "task-74-fase-3-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-74 fase 2 integrada",
-     "anchor": "task-74-fase-2-integrada"
-    },
-    {
-     "level": 3,
-     "title": "task-71 fechada",
-     "anchor": "task-71-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-64 fechada",
-     "anchor": "task-64-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-77 fechada",
-     "anchor": "task-77-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-18 fechada",
-     "anchor": "task-18-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-19 fechada",
-     "anchor": "task-19-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-20 fechada",
-     "anchor": "task-20-fechada"
-    },
-    {
-     "level": 3,
-     "title": "fechar antes de abrir",
-     "anchor": "fechar-antes-de-abrir"
-    },
-    {
-     "level": 3,
-     "title": "task-79 fase 2: o espelho responde e o segredo não atravessa",
-     "anchor": "task-79-fase-2-o-espelho-responde-e-o-segredo-não-atravessa"
-    },
-    {
-     "level": 3,
-     "title": "task-75 fase 2b: as páginas de componente projetam",
-     "anchor": "task-75-fase-2b-as-páginas-de-componente-projetam"
-    },
-    {
-     "level": 3,
-     "title": "task-75 fase 2a: as páginas que projetam, para o leitor de tela",
-     "anchor": "task-75-fase-2a-as-páginas-que-projetam-para-o-leitor-de-tela"
-    },
-    {
-     "level": 3,
-     "title": "task-96 fase b: os defeitos visuais da validação",
-     "anchor": "task-96-fase-b-os-defeitos-visuais-da-validação"
-    },
-    {
-     "level": 3,
-     "title": "task-97: código e diff no IR, e a demo 5 de novo",
-     "anchor": "task-97-código-e-diff-no-ir-e-a-demo-5-de-novo"
-    },
-    {
-     "level": 3,
-     "title": "task-96: uma superfície gerada no ide, e a demo 5",
-     "anchor": "task-96-uma-superfície-gerada-no-ide-e-a-demo-5"
-    },
-    {
-     "level": 3,
-     "title": "task-80 fase 1: o método e as demos 3 e 4",
-     "anchor": "task-80-fase-1-o-método-e-as-demos-3-e-4"
-    },
-    {
-     "level": 3,
-     "title": "task-70 fase 4 e a task-70 fechada",
-     "anchor": "task-70-fase-4-e-a-task-70-fechada"
-    },
-    {
-     "level": 3,
-     "title": "task-71 fase 1: o parser escreve plev IR",
-     "anchor": "task-71-fase-1-o-parser-escreve-plev-ir"
-    },
-    {
-     "level": 3,
-     "title": "task-75 fase 1: accessibility de plataforma",
-     "anchor": "task-75-fase-1-accessibility-de-plataforma"
-    },
-    {
-     "level": 3,
-     "title": "o Claude estourou o prazo três vezes: o prazo sobe para 300 s",
-     "anchor": "o-claude-estourou-o-prazo-três-vezes-o-prazo-sobe-para-300-s"
-    },
-    {
-     "level": 3,
-     "title": "task-70 fase 3: a sequência repetida vira uma ação",
-     "anchor": "task-70-fase-3-a-sequência-repetida-vira-uma-ação"
-    },
-    {
-     "level": 2,
-     "title": "2026-09-24",
-     "anchor": "2026-09-24"
-    },
-    {
-     "level": 3,
-     "title": "task-70 fase 2: a prova com o Claude de verdade não saiu",
-     "anchor": "task-70-fase-2-a-prova-com-o-claude-de-verdade-não-saiu"
-    },
-    {
-     "level": 3,
-     "title": "task-70 fase 2: uma mudança pedida em palavras",
-     "anchor": "task-70-fase-2-uma-mudança-pedida-em-palavras"
-    },
-    {
-     "level": 3,
-     "title": "task-70 fase 1: a superfície muda aos poucos",
-     "anchor": "task-70-fase-1-a-superfície-muda-aos-poucos"
-    },
-    {
-     "level": 3,
-     "title": "checkpoint b, segunda rodada: a gerada deixou de ser pior",
-     "anchor": "checkpoint-b-segunda-rodada-a-gerada-deixou-de-ser-pior"
-    },
-    {
-     "level": 3,
-     "title": "checkpoint b, as correções integradas",
-     "anchor": "checkpoint-b-as-correções-integradas"
-    },
-    {
-     "level": 3,
-     "title": "checkpoint b, primeira rodada: a gerada é pior hoje",
-     "anchor": "checkpoint-b-primeira-rodada-a-gerada-é-pior-hoje"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o asset compiler mede primeiro (task-72 fase 1)",
-     "anchor": "ciclo-3-o-asset-compiler-mede-primeiro-task-72-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #90 (task-79 fase 1); disparada a task-72 fase 1",
-     "anchor": "ciclo-3-publicado-90-task-79-fase-1-disparada-a-task-72-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: cena por socket (task-79 fase 1)",
-     "anchor": "ciclo-3-cena-por-socket-task-79-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: task-79 devolvida por privacidade",
-     "anchor": "ciclo-3-task-79-devolvida-por-privacidade"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: task-79 parou na sonda; decisão do orquestrador",
-     "anchor": "ciclo-3-task-79-parou-na-sonda-decisão-do-orquestrador"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #89 (task-77 fase 1b); disparada a task-79 fase 1",
-     "anchor": "ciclo-3-publicado-89-task-77-fase-1b-disparada-a-task-79-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o blur segue a escala (task-77 fase 1b)",
-     "anchor": "ciclo-3-o-blur-segue-a-escala-task-77-fase-1b"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #88 (task-77 fase 1); disparada a fase 1b",
-     "anchor": "ciclo-3-publicado-88-task-77-fase-1-disparada-a-fase-1b"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: determinismo visual (task-77 fase 1)",
-     "anchor": "ciclo-3-determinismo-visual-task-77-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: disco",
-     "anchor": "ciclo-3-disco"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #87 (task-76 item 6, task-76 concluída); disparada a task-77 fase 1",
-     "anchor": "ciclo-3-publicado-87-task-76-item-6-task-76-concluída-disparada-a-task-77-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: deep links (task-76 item 6); a task-76 fecha",
-     "anchor": "ciclo-3-deep-links-task-76-item-6-a-task-76-fecha"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: item 6 parou na sonda; decisão do orquestrador",
-     "anchor": "ciclo-3-item-6-parou-na-sonda-decisão-do-orquestrador"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #86 (task-76 item 10); disparado o item 6",
-     "anchor": "ciclo-3-publicado-86-task-76-item-10-disparado-o-item-6"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: câmera e microfone (task-76 item 10)",
-     "anchor": "ciclo-3-câmera-e-microfone-task-76-item-10"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: terminar todas, no Opus",
-     "anchor": "intervenção-do-brenner-terminar-todas-no-opus"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: item 10 parou na sonda; decisão do orquestrador",
-     "anchor": "ciclo-3-item-10-parou-na-sonda-decisão-do-orquestrador"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #85 (task-76 item 9); disparado o item 10",
-     "anchor": "ciclo-3-publicado-85-task-76-item-9-disparado-o-item-10"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: impressão (task-76 item 9)",
-     "anchor": "ciclo-3-impressão-task-76-item-9"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #84 (task-76 item 7); disparado o item 9",
-     "anchor": "ciclo-3-publicado-84-task-76-item-7-disparado-o-item-9"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: sleep e wake (task-76 item 7)",
-     "anchor": "ciclo-3-sleep-e-wake-task-76-item-7"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #83 (task-76 item 5); disparado o item 7",
-     "anchor": "ciclo-3-publicado-83-task-76-item-5-disparado-o-item-7"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: tray e notificações (task-76 item 5)",
-     "anchor": "ciclo-3-tray-e-notificações-task-76-item-5"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #82 (task-76 item 8); disparado o item 5",
-     "anchor": "ciclo-3-publicado-82-task-76-item-8-disparado-o-item-5"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: diálogos nativos (task-76 item 8)",
-     "anchor": "ciclo-3-diálogos-nativos-task-76-item-8"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #81 (task-76 item 4); disparado o item 8",
-     "anchor": "ciclo-3-publicado-81-task-76-item-4-disparado-o-item-8"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: menus nativos (task-76 item 4)",
-     "anchor": "ciclo-3-menus-nativos-task-76-item-4"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #80 (task-76 item 2); disparado o item 4",
-     "anchor": "ciclo-3-publicado-80-task-76-item-2-disparado-o-item-4"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: múltiplas janelas (task-76 item 2)",
-     "anchor": "ciclo-3-múltiplas-janelas-task-76-item-2"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #79 (task-76 item 3); disparado o item 2",
-     "anchor": "ciclo-3-publicado-79-task-76-item-3-disparado-o-item-2"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: diálogos de arquivo e drop no engine (task-76 item 3)",
-     "anchor": "ciclo-3-diálogos-de-arquivo-e-drop-no-engine-task-76-item-3"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #78 (task-76 fase 1); disparado o item 3 da task-76",
-     "anchor": "ciclo-3-publicado-78-task-76-fase-1-disparado-o-item-3-da-task-76"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #77 (task-74 fase 1); disparada a task-76 fase 1",
-     "anchor": "ciclo-3-publicado-77-task-74-fase-1-disparada-a-task-76-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #76; a task-69 espera só o brenner; disparada a task-74 fase 1",
-     "anchor": "ciclo-3-publicado-76-a-task-69-espera-só-o-brenner-disparada-a-task-74-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: um flake do laboratório corrigido antes de publicar a 4c",
-     "anchor": "ciclo-3-um-flake-do-laboratório-corrigido-antes-de-publicar-a-4c"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a demo gravada (task-69 fase 4c); a task-69 espera só o checkpoint b",
-     "anchor": "ciclo-3-a-demo-gravada-task-69-fase-4c-a-task-69-espera-só-o-checkpoint-b"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #75; disparada a fase 4c",
-     "anchor": "ciclo-3-publicado-75-disparada-a-fase-4c"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a tela gerada do editor de vídeo (task-69 fase 4b)",
-     "anchor": "ciclo-3-a-tela-gerada-do-editor-de-vídeo-task-69-fase-4b"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #74; disparada a fase 4b",
-     "anchor": "ciclo-3-publicado-74-disparada-a-fase-4b"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o app dos silêncios (task-69 fase 4a)",
-     "anchor": "ciclo-3-o-app-dos-silêncios-task-69-fase-4a"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicado #73; disparada a fase 4a",
-     "anchor": "ciclo-3-publicado-73-disparada-a-fase-4a"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a tela nasce do que a pessoa escreve (task-69 fase 3b-ii)",
-     "anchor": "ciclo-3-a-tela-nasce-do-que-a-pessoa-escreve-task-69-fase-3b-ii"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicados #71 e #72; disparada a fase 3b-ii",
-     "anchor": "ciclo-3-publicados-71-e-72-disparada-a-fase-3b-ii"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o Claude gera a tela (task-69 fase 3b-i)",
-     "anchor": "ciclo-3-o-claude-gera-a-tela-task-69-fase-3b-i"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a tela gerada mostra os itens (task-95)",
-     "anchor": "ciclo-3-a-tela-gerada-mostra-os-itens-task-95"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: voltar ao que ele mandou",
-     "anchor": "intervenção-do-brenner-voltar-ao-que-ele-mandou"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: o provedor do LLM é o Claude",
-     "anchor": "intervenção-do-brenner-o-provedor-do-llm-é-o-claude"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: o que depende dele fica parado por enquanto",
-     "anchor": "intervenção-do-brenner-o-que-depende-dele-fica-parado-por-enquanto"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: publicados #69 e #70; disparada a task-95",
-     "anchor": "ciclo-3-publicados-69-e-70-disparada-a-task-95"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: uma intenção vira superfície (task-69 fase 3a)",
-     "anchor": "ciclo-3-uma-intenção-vira-superfície-task-69-fase-3a"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a quinta rodada fecha a pergunta do handoff",
-     "anchor": "ciclo-3-a-quinta-rodada-fecha-a-pergunta-do-handoff"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a recusa ensina a pergunta (task-94)",
-     "anchor": "ciclo-3-a-recusa-ensina-a-pergunta-task-94"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: merge com o CI fora",
-     "anchor": "intervenção-do-brenner-merge-com-o-ci-fora"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a quarta rodada fecha, e o CI parou por cobrança",
-     "anchor": "ciclo-3-a-quarta-rodada-fecha-e-o-ci-parou-por-cobrança"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a superfície se transforma (task-69 fase 2) e a quarta rodada",
-     "anchor": "ciclo-3-a-superfície-se-transforma-task-69-fase-2-e-a-quarta-rodada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o P0 fechado e o agente pergunta (task-92)",
-     "anchor": "ciclo-3-o-p0-fechado-e-o-agente-pergunta-task-92"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a primeira superfície materializada (task-69 fase 1)",
-     "anchor": "ciclo-3-a-primeira-superfície-materializada-task-69-fase-1"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a sonda da task-92 achou um P0",
-     "anchor": "ciclo-3-a-sonda-da-task-92-achou-um-p0"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: uma sessão vira teste (task-64 fase c)",
-     "anchor": "ciclo-3-uma-sessão-vira-teste-task-64-fase-c"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a task-69 parou na página",
-     "anchor": "ciclo-3-a-task-69-parou-na-página"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: o plev IR existe (task-68)",
-     "anchor": "ciclo-3-o-plev-ir-existe-task-68"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: task-91 integrada",
-     "anchor": "ciclo-3-task-91-integrada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 3: a onda 5 fecha, a onda 6 abre",
-     "anchor": "ciclo-3-a-onda-5-fecha-a-onda-6-abre"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: a terceira rodada do checkpoint a e uma main vermelha",
-     "anchor": "ciclo-2-a-terceira-rodada-do-checkpoint-a-e-uma-main-vermelha"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: o laboratório mede pelo valor (task-88)",
-     "anchor": "ciclo-2-o-laboratório-mede-pelo-valor-task-88"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: o ide grava a própria sessão (task-63 fase d)",
-     "anchor": "ciclo-2-o-ide-grava-a-própria-sessão-task-63-fase-d"
-    },
-    {
-     "level": 2,
-     "title": "2026-09-23",
-     "anchor": "2026-09-23"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner: severidade",
-     "anchor": "intervenção-do-brenner-severidade"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: a sonda da task-88 mudou o gatilho da pessoa",
-     "anchor": "ciclo-2-a-sonda-da-task-88-mudou-o-gatilho-da-pessoa"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-90 integrada",
-     "anchor": "ciclo-2-task-90-integrada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-89 integrada, o buraco do inspector fechado",
-     "anchor": "ciclo-2-task-89-integrada-o-buraco-do-inspector-fechado"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: a task-90 parou com uma premissa errada do briefing",
-     "anchor": "ciclo-2-a-task-90-parou-com-uma-premissa-errada-do-briefing"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: o ide que alguém usa abre a porta; a 89 decidida por ator",
-     "anchor": "ciclo-2-o-ide-que-alguém-usa-abre-a-porta-a-89-decidida-por-ator"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: o inspector entra e acha um buraco no contrato",
-     "anchor": "ciclo-2-o-inspector-entra-e-acha-um-buraco-no-contrato"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-67 integrada; o guard do limite de linhas no gate",
-     "anchor": "ciclo-2-task-67-integrada-o-guard-do-limite-de-linhas-no-gate"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-67 devolvida com correções pequenas",
-     "anchor": "ciclo-2-task-67-devolvida-com-correções-pequenas"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-82 fechada",
-     "anchor": "ciclo-2-task-82-fechada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-87 integrada",
-     "anchor": "ciclo-2-task-87-integrada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: task-82b devolvida com dois achados dela mesma",
-     "anchor": "ciclo-2-task-82b-devolvida-com-dois-achados-dela-mesma"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 2: checkpoint a de novo, e a onda 5 abre",
-     "anchor": "ciclo-2-checkpoint-a-de-novo-e-a-onda-5-abre"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: task-85 integrada; as correções do checkpoint a completas",
-     "anchor": "ciclo-1-task-85-integrada-as-correções-do-checkpoint-a-completas"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: task-83 integrada",
-     "anchor": "ciclo-1-task-83-integrada"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: docs voltam a dizer o que o código faz",
-     "anchor": "ciclo-1-docs-voltam-a-dizer-o-que-o-código-faz"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: task-83 devolvida com uma correção",
-     "anchor": "ciclo-1-task-83-devolvida-com-uma-correção"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: replanejamento pela verdade",
-     "anchor": "ciclo-1-replanejamento-pela-verdade"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: task-84 integrada, verdade reconstruída",
-     "anchor": "ciclo-1-task-84-integrada-verdade-reconstruída"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar",
-     "anchor": "ciclo-1-ci-do-pr-45-pegou-um-defeito-que-o-gate-deixou-passar"
-    },
-    {
-     "level": 3,
-     "title": "ciclo 1 aberto",
-     "anchor": "ciclo-1-aberto"
-    },
-    {
-     "level": 3,
-     "title": "intervenção do brenner",
-     "anchor": "intervenção-do-brenner"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/project-state.md",
-   "id": "project-state-2026-09",
-   "title": "plev, project state and task map (2026-09-26)",
-   "project": "plev",
-   "type": "record",
-   "status": "active",
-   "date": "2026-09-26",
-   "date_basis": "header",
-   "topics": [
-    "process",
-    "platform"
-   ],
-   "relations": [
-    "task-01",
-    "task-02",
-    "task-03",
-    "task-04",
-    "task-05",
-    "task-06",
-    "task-07",
-    "task-08",
-    "task-09",
-    "task-10",
-    "task-11",
-    "task-12",
-    "task-13",
-    "task-14",
-    "task-15",
-    "task-16",
-    "task-17",
-    "task-18",
-    "task-19",
-    "task-20",
-    "task-21",
-    "task-22",
-    "task-23",
-    "task-24",
-    "task-25",
-    "task-26",
-    "task-27",
-    "task-28",
-    "task-29",
-    "task-30",
-    "task-31",
-    "task-32",
-    "task-33",
-    "task-34",
-    "task-35",
-    "task-36",
-    "task-37",
-    "task-38",
-    "task-39",
-    "task-40",
-    "task-41",
-    "task-42",
-    "task-43",
-    "task-44",
-    "task-45",
-    "task-46",
-    "task-47",
-    "task-48",
-    "task-49",
-    "task-50",
-    "task-51",
-    "task-52",
-    "task-ref",
-    "task-73",
-    "task-74",
-    "task-75",
-    "task-78",
-    "task-80",
-    "generative-runtime-program",
-    "generative-runtime-thesis",
-    "operations-generative-runtime-guidelines",
-    "operations-autonomy",
-    "adr-index",
-    "research-integration-candidates",
-    "research-technology-radar",
-    "timeline"
-   ],
-   "source": "docs/log/README.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "plev, project state and task map (2026-09-26)",
-     "anchor": "plev-project-state-and-task-map-2026-09-26"
-    },
-    {
-     "level": 2,
-     "title": "estado atual (2026-09-26)",
-     "anchor": "estado-atual-2026-09-26"
-    },
-    {
-     "level": 2,
-     "title": "mapa de tasks",
-     "anchor": "mapa-de-tasks"
-    },
-    {
-     "level": 3,
-     "title": "fase 0, fundamental (p0), completa",
-     "anchor": "fase-0-fundamental-p0-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 1, integracao end-to-end (p0), completa",
-     "anchor": "fase-1-integracao-end-to-end-p0-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 2, mobile/WASM testing (p1), parcial",
-     "anchor": "fase-2-mobilewasm-testing-p1-parcial"
-    },
-    {
-     "level": 3,
-     "title": "fase 3, polish (p2), parcial",
-     "anchor": "fase-3-polish-p2-parcial"
-    },
-    {
-     "level": 3,
-     "title": "fase 4, proof of life (p2), completa",
-     "anchor": "fase-4-proof-of-life-p2-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 4b, quick wins & bug fixes (p0/p1), completa (derivada de task-34)",
-     "anchor": "fase-4b-quick-wins--bug-fixes-p0p1-completa-derivada-de-task-34"
-    },
-    {
-     "level": 3,
-     "title": "fase 5, paper arxiv (p3), parcial",
-     "anchor": "fase-5-paper-arxiv-p3-parcial"
-    },
-    {
-     "level": 3,
-     "title": "fase 6, extensibilidade (p4), parcial",
-     "anchor": "fase-6-extensibilidade-p4-parcial"
-    },
-    {
-     "level": 3,
-     "title": "fase 7, release publica (p0), pendente",
-     "anchor": "fase-7-release-publica-p0-pendente"
-    },
-    {
-     "level": 3,
-     "title": "experiment, gitbutler port (proof of real app)",
-     "anchor": "experiment-gitbutler-port-proof-of-real-app"
-    },
-    {
-     "level": 3,
-     "title": "research",
-     "anchor": "research"
-    },
-    {
-     "level": 3,
-     "title": "fase 8, formatos e interop (2025), completa",
-     "anchor": "fase-8-formatos-e-interop-2025-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 9, edicao e apps reais (2026), completa",
-     "anchor": "fase-9-edicao-e-apps-reais-2026-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 10, demos e plataforma (2025), completa",
-     "anchor": "fase-10-demos-e-plataforma-2025-completa"
-    },
-    {
-     "level": 3,
-     "title": "fase 11, organizacao profissional (2024/2026), completa",
-     "anchor": "fase-11-organizacao-profissional-20242026-completa"
-    },
-    {
-     "level": 2,
-     "title": "proximo passo",
-     "anchor": "proximo-passo"
-    },
-    {
-     "level": 2,
-     "title": "marcos",
-     "anchor": "marcos"
-    },
-    {
-     "level": 2,
-     "title": "pesquisa de referencia",
-     "anchor": "pesquisa-de-referencia"
-    },
-    {
-     "level": 2,
-     "title": "decisoes tecnicas chave",
-     "anchor": "decisoes-tecnicas-chave"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/responsiveness-multiplatform-and-fidelity.md",
-   "id": "responsiveness-and-fidelity",
-   "title": "session record: responsiveness, real measurement, web target, touch",
-   "project": "plev",
-   "type": "record",
-   "status": "reference",
-   "date": "2025-02-19",
-   "date_basis": "header",
-   "topics": [
-    "layout",
-    "text",
-    "rendering",
-    "web-wasm",
-    "input"
-   ],
-   "relations": [
-    "adr-0001",
-    "adr-0002",
-    "adr-0006",
-    "adr-0007",
-    "adr-0009",
-    "learning-apps-bypass-the-engine",
-    "learning-the-two-gamma-bugs",
-    "operations-build-and-serve-the-web-target",
-    "operations-orchestrate-coding-agents-on-this-repo",
-    "operations-validate-visuals-by-pixel"
-   ],
-   "source": "docs/log/responsiveness-multiplatform-and-fidelity.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "evidence": [
-    "bb34a1c",
-    "f15198a",
-    "5854941",
-    "15f096f",
-    "30337de",
-    "55c8aa7",
-    "69013d1",
-    "2a33933"
-   ],
-   "headings": [
-    {
-     "level": 1,
-     "title": "session record: responsiveness, real measurement, web target, touch",
-     "anchor": "session-record-responsiveness-real-measurement-web-target-touch"
-    },
-    {
-     "level": 2,
-     "title": "trigger",
-     "anchor": "trigger"
-    },
-    {
-     "level": 2,
-     "title": "episode: text spilling out of shapes",
-     "anchor": "episode-text-spilling-out-of-shapes"
-    },
-    {
-     "level": 2,
-     "title": "episode: no responsive distribution",
-     "anchor": "episode-no-responsive-distribution"
-    },
-    {
-     "level": 2,
-     "title": "episode: browser target",
-     "anchor": "episode-browser-target"
-    },
-    {
-     "level": 2,
-     "title": "episode: web gamma",
-     "anchor": "episode-web-gamma"
-    },
-    {
-     "level": 2,
-     "title": "episode: touch",
-     "anchor": "episode-touch"
-    },
-    {
-     "level": 2,
-     "title": "process learnings preserved",
-     "anchor": "process-learnings-preserved"
-    },
-    {
-     "level": 2,
-     "title": "state at close",
-     "anchor": "state-at-close"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/technical-plan.md",
-   "id": "technical-plan",
-   "title": "plev — Technical Implementation Plan",
-   "project": "plev",
-   "type": "program",
-   "status": "reference",
-   "date": null,
-   "date_basis": "undated",
-   "topics": [
-    "workspace",
-    "rendering",
-    "text",
-    "text-editing",
-    "accessibility"
-   ],
-   "relations": [],
-   "source": "docs/plano-tecnico.md",
-   "source_revision": "a4ad0c07",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "plev — Technical Implementation Plan",
-     "anchor": "plev--technical-implementation-plan"
-    },
-    {
-     "level": 2,
-     "title": "1. Visão e princípios",
-     "anchor": "1-visão-e-princípios"
-    },
-    {
-     "level": 2,
-     "title": "2. Arquitetura alvo",
-     "anchor": "2-arquitetura-alvo"
-    },
-    {
-     "level": 2,
-     "title": "3. WS-0 · `ws/contracts` — Contratos de fronteira",
-     "anchor": "3-ws-0--wscontracts--contratos-de-fronteira"
-    },
-    {
-     "level": 3,
-     "title": "3.1 `TextBackend` (isola cosmic-text)",
-     "anchor": "31-textbackend-isola-cosmic-text"
-    },
-    {
-     "level": 3,
-     "title": "3.2 Scene v2 (primitivas instanciadas)",
-     "anchor": "32-scene-v2-primitivas-instanciadas"
-    },
-    {
-     "level": 3,
-     "title": "3.3 Actions",
-     "anchor": "33-actions"
-    },
-    {
-     "level": 3,
-     "title": "3.4 Measure function no layout",
-     "anchor": "34-measure-function-no-layout"
-    },
-    {
-     "level": 3,
-     "title": "3.5 Convenções de integração",
-     "anchor": "35-convenções-de-integração"
-    },
-    {
-     "level": 2,
-     "title": "4. Workstreams",
-     "anchor": "4-workstreams"
-    },
-    {
-     "level": 3,
-     "title": "WS-A · `ws/text-engine` — Texto",
-     "anchor": "ws-a--wstext-engine--texto"
-    },
-    {
-     "level": 3,
-     "title": "WS-B · `ws/renderer-v2` — Renderer",
-     "anchor": "ws-b--wsrenderer-v2--renderer"
-    },
-    {
-     "level": 3,
-     "title": "WS-C · `ws/editor-core` — Editor",
-     "anchor": "ws-c--wseditor-core--editor"
-    },
-    {
-     "level": 3,
-     "title": "WS-D · `ws/actions-keymap` — Actions, keymap, palette",
-     "anchor": "ws-d--wsactions-keymap--actions-keymap-palette"
-    },
-    {
-     "level": 3,
-     "title": "WS-E · `ws/design-system` — UI",
-     "anchor": "ws-e--wsdesign-system--ui"
-    },
-    {
-     "level": 3,
-     "title": "WS-F · `ws/intelligence` — Tree-sitter + LSP",
-     "anchor": "ws-f--wsintelligence--tree-sitter--lsp"
-    },
-    {
-     "level": 3,
-     "title": "WS-G · `ws/git-real` — Git + basicIDE real",
-     "anchor": "ws-g--wsgit-real--git--basicide-real"
-    },
-    {
-     "level": 3,
-     "title": "WS-H · `ws/a11y-testing` — Acessibilidade + harness",
-     "anchor": "ws-h--wsa11y-testing--acessibilidade--harness"
-    },
-    {
-     "level": 3,
-     "title": "WS-I · `ws/dsl-tooling` — narrate como produto *(opcional, adiável)*",
-     "anchor": "ws-i--wsdsl-tooling--narrate-como-produto-opcional-adiável"
-    },
-    {
-     "level": 2,
-     "title": "5. Ordem de integração (dependências, não datas)",
-     "anchor": "5-ordem-de-integração-dependências-não-datas"
-    },
-    {
-     "level": 2,
-     "title": "6. Decisões técnicas registradas (ADR resumido)",
-     "anchor": "6-decisões-técnicas-registradas-adr-resumido"
-    },
-    {
-     "level": 2,
-     "title": "7. Referências",
-     "anchor": "7-referências"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/timeline.md",
-   "id": "timeline",
-   "title": "Timeline",
-   "project": "plev",
-   "type": "index",
-   "status": "active",
-   "date": null,
-   "date_basis": "generated",
-   "topics": [
-    "navigation"
-   ],
-   "relations": [],
-   "source": "tool/tasks/docbase.py",
-   "source_revision": "generated",
-   "revised": "generated",
-   "review": "generated",
-   "headings": [
-    {
-     "level": 1,
-     "title": "Timeline",
-     "anchor": "timeline"
-    },
-    {
-     "level": 2,
-     "title": "2021",
-     "anchor": "2021"
-    },
-    {
-     "level": 2,
-     "title": "2022",
-     "anchor": "2022"
-    },
-    {
-     "level": 2,
-     "title": "2023",
-     "anchor": "2023"
-    },
-    {
-     "level": 2,
-     "title": "2024",
-     "anchor": "2024"
-    },
-    {
-     "level": 2,
-     "title": "2025",
-     "anchor": "2025"
-    },
-    {
-     "level": 2,
-     "title": "2026",
-     "anchor": "2026"
-    },
-    {
-     "level": 2,
-     "title": "undated",
-     "anchor": "undated"
-    }
-   ]
-  },
-  {
-   "path": "docs/log/truth.md",
-   "id": "truth-2026-09",
-   "title": "what the code on main does now",
-   "project": "plev",
-   "type": "record",
-   "status": "reference",
-   "date": "2026-09-23",
-   "date_basis": "header",
-   "topics": [
-    "semantics",
-    "agents",
-    "recording",
-    "accessibility",
-    "git"
-   ],
-   "relations": [
-    "adr-0023",
-    "adr-0032",
-    "adr-0033",
-    "adr-0035",
-    "adr-0036",
-    "adr-0037",
-    "adr-0038",
-    "adr-0039",
-    "adr-0042",
-    "operations-code-against-the-plev-engine",
-    "generative-runtime-program",
-    "task-39",
-    "task-57",
-    "task-57b",
-    "task-58",
-    "task-58b",
-    "task-59",
-    "task-60",
-    "task-61",
-    "task-62",
-    "task-63",
-    "task-64",
-    "task-65",
-    "task-66",
-    "task-66b",
-    "task-67",
-    "task-68",
-    "task-69",
-    "task-71",
-    "task-73",
-    "task-74",
-    "task-75",
-    "task-76",
-    "task-77",
-    "task-78",
-    "task-79",
-    "task-81",
-    "task-82",
-    "task-83",
-    "task-84",
-    "task-85",
-    "task-86",
-    "task-87",
-    "task-88",
-    "task-89",
-    "task-90",
-    "task-91",
-    "task-92",
-    "task-93"
-   ],
-   "source": "docs/log/truth.md",
-   "source_revision": "e0be6a76",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "evidence": [
-    "c5fdf36",
-    "c07a7f0",
-    "4896451",
-    "2d4aa4b",
-    "78f463c",
-    "476bbb4",
-    "365d8fd",
-    "a6fec8d",
-    "49e2822",
-    "e6560a2",
-    "7f866e8",
-    "79b8c93",
-    "d02b4d1",
-    "8e6e814",
-    "96c20a0",
-    "042d34e",
-    "29373d4",
-    "871f0dd",
-    "d611fa4",
-    "22d59fb",
-    "f101359",
-    "654d740",
-    "4593a4c"
-   ],
-   "headings": [
-    {
-     "level": 1,
-     "title": "what the code on main does now",
-     "anchor": "what-the-code-on-main-does-now"
-    },
-    {
-     "level": 2,
-     "title": "0. mudanças desde a base",
-     "anchor": "0-mudanças-desde-a-base"
-    },
-    {
-     "level": 2,
-     "title": "1. como ler",
-     "anchor": "1-como-ler"
-    },
-    {
-     "level": 2,
-     "title": "2. contratos que existem",
-     "anchor": "2-contratos-que-existem"
-    },
-    {
-     "level": 3,
-     "title": "2.1 `sem`: identidade, significado e forma serde",
-     "anchor": "21-sem-identidade-significado-e-forma-serde"
-    },
-    {
-     "level": 3,
-     "title": "2.2 `sem`: ação, receipt, dispatcher e redação",
-     "anchor": "22-sem-ação-receipt-dispatcher-e-redação"
-    },
-    {
-     "level": 3,
-     "title": "2.3 `wire`: protocolo v1, porta, cli",
-     "anchor": "23-wire-protocolo-v1-porta-cli"
-    },
-    {
-     "level": 3,
-     "title": "2.4 `rec`: gravador, sessão, formato `MONS`",
-     "anchor": "24-rec-gravador-sessão-formato-mons"
-    },
-    {
-     "level": 3,
-     "title": "2.5 engine: ligação, accessibility, headless, frame, relógio",
-     "anchor": "25-engine-ligação-accessibility-headless-frame-relógio"
-    },
-    {
-     "level": 3,
-     "title": "2.6 comps: `Wake`, `Blink`, declaração semântica",
-     "anchor": "26-comps-wake-blink-declaração-semântica"
-    },
-    {
-     "level": 3,
-     "title": "2.7 ide: `Workbench`, nós projetados, `CommitIf`",
-     "anchor": "27-ide-workbench-nós-projetados-commitif"
-    },
-    {
-     "level": 3,
-     "title": "2.8 showcase: porta do agente, ponte, `pace`",
-     "anchor": "28-showcase-porta-do-agente-ponte-pace"
-    },
-    {
-     "level": 2,
-     "title": "3. o que a tese precisa e o que existe agora",
-     "anchor": "3-o-que-a-tese-precisa-e-o-que-existe-agora"
-    },
-    {
-     "level": 2,
-     "title": "4. defeitos e limites conhecidos, conferidos no código",
-     "anchor": "4-defeitos-e-limites-conhecidos-conferidos-no-código"
-    },
-    {
-     "level": 3,
-     "title": "4a. a corrida do `Refresh` no ide",
-     "anchor": "4a-a-corrida-do-refresh-no-ide"
-    },
-    {
-     "level": 3,
-     "title": "4b. `Change::NodeAdded` carrega só o id",
-     "anchor": "4b-changenodeadded-carrega-só-o-id"
-    },
-    {
-     "level": 3,
-     "title": "4c. o nó `stacks.commit[sha]` não expõe os arquivos",
-     "anchor": "4c-o-nó-stackscommitsha-não-expõe-os-arquivos"
-    },
-    {
-     "level": 3,
-     "title": "4d. a recusa stale não diz qual ator causou a mudança",
-     "anchor": "4d-a-recusa-stale-não-diz-qual-ator-causou-a-mudança"
-    },
-    {
-     "level": 3,
-     "title": "4e. a regra \"stale é por `reads`\"",
-     "anchor": "4e-a-regra-stale-é-por-reads"
-    },
-    {
-     "level": 3,
-     "title": "4f. cada comando `plev` abre uma conexão nova",
-     "anchor": "4f-cada-comando-plev-abre-uma-conexão-nova"
-    },
-    {
-     "level": 3,
-     "title": "4g. dívidas da task-82",
-     "anchor": "4g-dívidas-da-task-82"
-    },
-    {
-     "level": 3,
-     "title": "4h. `TODO`, `FIXME`, `unimplemented!`, `todo!` em código de produção",
-     "anchor": "4h-todo-fixme-unimplemented-todo-em-código-de-produção"
-    },
-    {
-     "level": 3,
-     "title": "4i. outros limites que os arquivos citam como abertos",
-     "anchor": "4i-outros-limites-que-os-arquivos-citam-como-abertos"
-    },
-    {
-     "level": 2,
-     "title": "5. onde a documentação diverge do código",
-     "anchor": "5-onde-a-documentação-diverge-do-código"
-    },
-    {
-     "level": 3,
-     "title": "5.1 README e arc.toml",
-     "anchor": "51-readme-e-arctoml"
-    },
-    {
-     "level": 3,
-     "title": "5.2 manual do engine e how-to",
-     "anchor": "52-manual-do-engine-e-how-to"
-    },
-    {
-     "level": 3,
-     "title": "5.3 ADRs dos contratos",
-     "anchor": "53-adrs-dos-contratos"
-    },
-    {
-     "level": 3,
-     "title": "5.4 o programa",
-     "anchor": "54-o-programa"
-    },
-    {
-     "level": 3,
-     "title": "5.5 arquivos de task",
-     "anchor": "55-arquivos-de-task"
-    },
-    {
-     "level": 3,
-     "title": "5.6 o `ide-lab`",
-     "anchor": "56-o-ide-lab"
-    },
-    {
-     "level": 2,
-     "title": "6. testes",
-     "anchor": "6-testes"
-    },
-    {
-     "level": 3,
-     "title": "6.1 `sem`",
-     "anchor": "61-sem"
-    },
-    {
-     "level": 3,
-     "title": "6.2 `wire`",
-     "anchor": "62-wire"
-    },
-    {
-     "level": 3,
-     "title": "6.3 `rec`",
-     "anchor": "63-rec"
-    },
-    {
-     "level": 3,
-     "title": "6.4 `ide` e `git`",
-     "anchor": "64-ide-e-git"
-    },
-    {
-     "level": 3,
-     "title": "6.5 engine, comps, showcase",
-     "anchor": "65-engine-comps-showcase"
-    },
-    {
-     "level": 3,
-     "title": "6.6 comportamentos do contrato sem teste",
-     "anchor": "66-comportamentos-do-contrato-sem-teste"
-    },
-    {
-     "level": 2,
-     "title": "7. ownership agora",
-     "anchor": "7-ownership-agora"
-    },
-    {
-     "level": 2,
-     "title": "8. não confirmado",
-     "anchor": "8-não-confirmado"
     }
    ]
   },
@@ -11177,8 +9957,7 @@
    ],
    "relations": [
     "learning-general",
-    "journal",
-    "truth-2026-09",
+    "research-autonomous-cycle-journal",
     "operations-generative-runtime-guidelines",
     "operations-orchestrate-coding-agents-on-this-repo",
     "generative-runtime-program",
@@ -11441,8 +10220,7 @@
     "process"
    ],
    "relations": [
-    "dates-and-sources",
-    "timeline"
+    "changelog"
    ],
    "source": "reconstruction",
    "source_revision": "c854ebf3",
@@ -11725,7 +10503,6 @@
    ],
    "relations": [
     "learning-general",
-    "truth-2026-09",
     "adr-index",
     "operations-autonomy",
     "operations-generative-runtime-guidelines",
@@ -12176,11 +10953,6 @@
      "level": 1,
      "title": "Research",
      "anchor": "research"
-    },
-    {
-     "level": 2,
-     "title": "paper",
-     "anchor": "paper"
     }
    ]
   },
@@ -12464,6 +11236,770 @@
    ]
   },
   {
+   "path": "docs/research/autonomous-cycle-journal.md",
+   "id": "research-autonomous-cycle-journal",
+   "title": "autonomous cycle journal",
+   "project": "plev",
+   "type": "record",
+   "status": "reference",
+   "date": "2026-09-23",
+   "date_basis": "text",
+   "topics": [
+    "agents",
+    "process",
+    "git",
+    "recording",
+    "platform"
+   ],
+   "relations": [
+    "adr-0046",
+    "adr-0048",
+    "adr-0052",
+    "operations-autonomy",
+    "operations-generative-runtime-guidelines",
+    "generative-runtime-program",
+    "task-18",
+    "task-19",
+    "task-20",
+    "task-61",
+    "task-62",
+    "task-63",
+    "task-64",
+    "task-65",
+    "task-67",
+    "task-68",
+    "task-69",
+    "task-70",
+    "task-71",
+    "task-72",
+    "task-74",
+    "task-75",
+    "task-76",
+    "task-77",
+    "task-78",
+    "task-79",
+    "task-80",
+    "task-82",
+    "task-83",
+    "task-84",
+    "task-85",
+    "task-86",
+    "task-87",
+    "task-88",
+    "task-89",
+    "task-90",
+    "task-91",
+    "task-92",
+    "task-93",
+    "task-94",
+    "task-95",
+    "task-96",
+    "task-97",
+    "generative-runtime-thesis"
+   ],
+   "source": "docs/log/journal.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
+   "evidence": [
+    "6e284bf",
+    "4573c81",
+    "460c854",
+    "37c5e0c",
+    "0071764",
+    "4593a4c",
+    "7d9c569",
+    "f101359",
+    "fed9c8d",
+    "22d59fb",
+    "de95a20",
+    "d611fa4",
+    "c60b9f6",
+    "871f0dd",
+    "ecf51ba",
+    "29373d4",
+    "804e57d",
+    "042d34e",
+    "f309ab4",
+    "f248dd1",
+    "96c20a0",
+    "8e6e814",
+    "5f57fe7",
+    "d02b4d1",
+    "c433751",
+    "79b8c93",
+    "0e0a7b3",
+    "7f866e8",
+    "eea529b",
+    "e6560a2",
+    "49e2822",
+    "7528309",
+    "a6fec8d",
+    "365d8fd",
+    "476bbb4",
+    "78f463c",
+    "1bf6606",
+    "2d4aa4b",
+    "4896451",
+    "7621403",
+    "1ecc84c",
+    "c07a7f0",
+    "c5fdf36"
+   ],
+   "headings": [
+    {
+     "level": 1,
+     "title": "autonomous cycle journal",
+     "anchor": "autonomous-cycle-journal"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-26",
+     "anchor": "2026-09-26"
+    },
+    {
+     "level": 3,
+     "title": "task-78 fase 2 integrada: o plev no wgpu 29",
+     "anchor": "task-78-fase-2-integrada-o-plev-no-wgpu-29"
+    },
+    {
+     "level": 3,
+     "title": "task-78 fase 1 integrada; candle e burn ficam",
+     "anchor": "task-78-fase-1-integrada-candle-e-burn-ficam"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-25",
+     "anchor": "2026-09-25"
+    },
+    {
+     "level": 3,
+     "title": "IME no campo, copiar e colar, e o menu do campo integrados",
+     "anchor": "ime-no-campo-copiar-e-colar-e-o-menu-do-campo-integrados"
+    },
+    {
+     "level": 3,
+     "title": "o IME passou no editor",
+     "anchor": "o-ime-passou-no-editor"
+    },
+    {
+     "level": 3,
+     "title": "shift+seta seleciona nos campos",
+     "anchor": "shiftseta-seleciona-nos-campos"
+    },
+    {
+     "level": 3,
+     "title": "task-74 fase 7 integrada",
+     "anchor": "task-74-fase-7-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-74 fase 5 integrada",
+     "anchor": "task-74-fase-5-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-75 fase 2d integrada",
+     "anchor": "task-75-fase-2d-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-75 fase 2c integrada",
+     "anchor": "task-75-fase-2c-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-65 fechada",
+     "anchor": "task-65-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-74 fase 3 integrada",
+     "anchor": "task-74-fase-3-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-74 fase 2 integrada",
+     "anchor": "task-74-fase-2-integrada"
+    },
+    {
+     "level": 3,
+     "title": "task-71 fechada",
+     "anchor": "task-71-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-64 fechada",
+     "anchor": "task-64-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-77 fechada",
+     "anchor": "task-77-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-18 fechada",
+     "anchor": "task-18-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-19 fechada",
+     "anchor": "task-19-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-20 fechada",
+     "anchor": "task-20-fechada"
+    },
+    {
+     "level": 3,
+     "title": "fechar antes de abrir",
+     "anchor": "fechar-antes-de-abrir"
+    },
+    {
+     "level": 3,
+     "title": "task-79 fase 2: o espelho responde e o segredo não atravessa",
+     "anchor": "task-79-fase-2-o-espelho-responde-e-o-segredo-não-atravessa"
+    },
+    {
+     "level": 3,
+     "title": "task-75 fase 2b: as páginas de componente projetam",
+     "anchor": "task-75-fase-2b-as-páginas-de-componente-projetam"
+    },
+    {
+     "level": 3,
+     "title": "task-75 fase 2a: as páginas que projetam, para o leitor de tela",
+     "anchor": "task-75-fase-2a-as-páginas-que-projetam-para-o-leitor-de-tela"
+    },
+    {
+     "level": 3,
+     "title": "task-96 fase b: os defeitos visuais da validação",
+     "anchor": "task-96-fase-b-os-defeitos-visuais-da-validação"
+    },
+    {
+     "level": 3,
+     "title": "task-97: código e diff no IR, e a demo 5 de novo",
+     "anchor": "task-97-código-e-diff-no-ir-e-a-demo-5-de-novo"
+    },
+    {
+     "level": 3,
+     "title": "task-96: uma superfície gerada no ide, e a demo 5",
+     "anchor": "task-96-uma-superfície-gerada-no-ide-e-a-demo-5"
+    },
+    {
+     "level": 3,
+     "title": "task-80 fase 1: o método e as demos 3 e 4",
+     "anchor": "task-80-fase-1-o-método-e-as-demos-3-e-4"
+    },
+    {
+     "level": 3,
+     "title": "task-70 fase 4 e a task-70 fechada",
+     "anchor": "task-70-fase-4-e-a-task-70-fechada"
+    },
+    {
+     "level": 3,
+     "title": "task-71 fase 1: o parser escreve plev IR",
+     "anchor": "task-71-fase-1-o-parser-escreve-plev-ir"
+    },
+    {
+     "level": 3,
+     "title": "task-75 fase 1: accessibility de plataforma",
+     "anchor": "task-75-fase-1-accessibility-de-plataforma"
+    },
+    {
+     "level": 3,
+     "title": "o Claude estourou o prazo três vezes: o prazo sobe para 300 s",
+     "anchor": "o-claude-estourou-o-prazo-três-vezes-o-prazo-sobe-para-300-s"
+    },
+    {
+     "level": 3,
+     "title": "task-70 fase 3: a sequência repetida vira uma ação",
+     "anchor": "task-70-fase-3-a-sequência-repetida-vira-uma-ação"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-24",
+     "anchor": "2026-09-24"
+    },
+    {
+     "level": 3,
+     "title": "task-70 fase 2: a prova com o Claude de verdade não saiu",
+     "anchor": "task-70-fase-2-a-prova-com-o-claude-de-verdade-não-saiu"
+    },
+    {
+     "level": 3,
+     "title": "task-70 fase 2: uma mudança pedida em palavras",
+     "anchor": "task-70-fase-2-uma-mudança-pedida-em-palavras"
+    },
+    {
+     "level": 3,
+     "title": "task-70 fase 1: a superfície muda aos poucos",
+     "anchor": "task-70-fase-1-a-superfície-muda-aos-poucos"
+    },
+    {
+     "level": 3,
+     "title": "checkpoint b, segunda rodada: a gerada deixou de ser pior",
+     "anchor": "checkpoint-b-segunda-rodada-a-gerada-deixou-de-ser-pior"
+    },
+    {
+     "level": 3,
+     "title": "checkpoint b, as correções integradas",
+     "anchor": "checkpoint-b-as-correções-integradas"
+    },
+    {
+     "level": 3,
+     "title": "checkpoint b, primeira rodada: a gerada é pior hoje",
+     "anchor": "checkpoint-b-primeira-rodada-a-gerada-é-pior-hoje"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o asset compiler mede primeiro (task-72 fase 1)",
+     "anchor": "ciclo-3-o-asset-compiler-mede-primeiro-task-72-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #90 (task-79 fase 1); disparada a task-72 fase 1",
+     "anchor": "ciclo-3-publicado-90-task-79-fase-1-disparada-a-task-72-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: cena por socket (task-79 fase 1)",
+     "anchor": "ciclo-3-cena-por-socket-task-79-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: task-79 devolvida por privacidade",
+     "anchor": "ciclo-3-task-79-devolvida-por-privacidade"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: task-79 parou na sonda; decisão do orquestrador",
+     "anchor": "ciclo-3-task-79-parou-na-sonda-decisão-do-orquestrador"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #89 (task-77 fase 1b); disparada a task-79 fase 1",
+     "anchor": "ciclo-3-publicado-89-task-77-fase-1b-disparada-a-task-79-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o blur segue a escala (task-77 fase 1b)",
+     "anchor": "ciclo-3-o-blur-segue-a-escala-task-77-fase-1b"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #88 (task-77 fase 1); disparada a fase 1b",
+     "anchor": "ciclo-3-publicado-88-task-77-fase-1-disparada-a-fase-1b"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: determinismo visual (task-77 fase 1)",
+     "anchor": "ciclo-3-determinismo-visual-task-77-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: disco",
+     "anchor": "ciclo-3-disco"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #87 (task-76 item 6, task-76 concluída); disparada a task-77 fase 1",
+     "anchor": "ciclo-3-publicado-87-task-76-item-6-task-76-concluída-disparada-a-task-77-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: deep links (task-76 item 6); a task-76 fecha",
+     "anchor": "ciclo-3-deep-links-task-76-item-6-a-task-76-fecha"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: item 6 parou na sonda; decisão do orquestrador",
+     "anchor": "ciclo-3-item-6-parou-na-sonda-decisão-do-orquestrador"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #86 (task-76 item 10); disparado o item 6",
+     "anchor": "ciclo-3-publicado-86-task-76-item-10-disparado-o-item-6"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: câmera e microfone (task-76 item 10)",
+     "anchor": "ciclo-3-câmera-e-microfone-task-76-item-10"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: terminar todas, no Opus",
+     "anchor": "intervenção-do-brenner-terminar-todas-no-opus"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: item 10 parou na sonda; decisão do orquestrador",
+     "anchor": "ciclo-3-item-10-parou-na-sonda-decisão-do-orquestrador"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #85 (task-76 item 9); disparado o item 10",
+     "anchor": "ciclo-3-publicado-85-task-76-item-9-disparado-o-item-10"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: impressão (task-76 item 9)",
+     "anchor": "ciclo-3-impressão-task-76-item-9"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #84 (task-76 item 7); disparado o item 9",
+     "anchor": "ciclo-3-publicado-84-task-76-item-7-disparado-o-item-9"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: sleep e wake (task-76 item 7)",
+     "anchor": "ciclo-3-sleep-e-wake-task-76-item-7"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #83 (task-76 item 5); disparado o item 7",
+     "anchor": "ciclo-3-publicado-83-task-76-item-5-disparado-o-item-7"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: tray e notificações (task-76 item 5)",
+     "anchor": "ciclo-3-tray-e-notificações-task-76-item-5"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #82 (task-76 item 8); disparado o item 5",
+     "anchor": "ciclo-3-publicado-82-task-76-item-8-disparado-o-item-5"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: diálogos nativos (task-76 item 8)",
+     "anchor": "ciclo-3-diálogos-nativos-task-76-item-8"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #81 (task-76 item 4); disparado o item 8",
+     "anchor": "ciclo-3-publicado-81-task-76-item-4-disparado-o-item-8"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: menus nativos (task-76 item 4)",
+     "anchor": "ciclo-3-menus-nativos-task-76-item-4"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #80 (task-76 item 2); disparado o item 4",
+     "anchor": "ciclo-3-publicado-80-task-76-item-2-disparado-o-item-4"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: múltiplas janelas (task-76 item 2)",
+     "anchor": "ciclo-3-múltiplas-janelas-task-76-item-2"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #79 (task-76 item 3); disparado o item 2",
+     "anchor": "ciclo-3-publicado-79-task-76-item-3-disparado-o-item-2"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: diálogos de arquivo e drop no engine (task-76 item 3)",
+     "anchor": "ciclo-3-diálogos-de-arquivo-e-drop-no-engine-task-76-item-3"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #78 (task-76 fase 1); disparado o item 3 da task-76",
+     "anchor": "ciclo-3-publicado-78-task-76-fase-1-disparado-o-item-3-da-task-76"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #77 (task-74 fase 1); disparada a task-76 fase 1",
+     "anchor": "ciclo-3-publicado-77-task-74-fase-1-disparada-a-task-76-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #76; a task-69 espera só o brenner; disparada a task-74 fase 1",
+     "anchor": "ciclo-3-publicado-76-a-task-69-espera-só-o-brenner-disparada-a-task-74-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: um flake do laboratório corrigido antes de publicar a 4c",
+     "anchor": "ciclo-3-um-flake-do-laboratório-corrigido-antes-de-publicar-a-4c"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a demo gravada (task-69 fase 4c); a task-69 espera só o checkpoint b",
+     "anchor": "ciclo-3-a-demo-gravada-task-69-fase-4c-a-task-69-espera-só-o-checkpoint-b"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #75; disparada a fase 4c",
+     "anchor": "ciclo-3-publicado-75-disparada-a-fase-4c"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a tela gerada do editor de vídeo (task-69 fase 4b)",
+     "anchor": "ciclo-3-a-tela-gerada-do-editor-de-vídeo-task-69-fase-4b"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #74; disparada a fase 4b",
+     "anchor": "ciclo-3-publicado-74-disparada-a-fase-4b"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o app dos silêncios (task-69 fase 4a)",
+     "anchor": "ciclo-3-o-app-dos-silêncios-task-69-fase-4a"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicado #73; disparada a fase 4a",
+     "anchor": "ciclo-3-publicado-73-disparada-a-fase-4a"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a tela nasce do que a pessoa escreve (task-69 fase 3b-ii)",
+     "anchor": "ciclo-3-a-tela-nasce-do-que-a-pessoa-escreve-task-69-fase-3b-ii"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicados #71 e #72; disparada a fase 3b-ii",
+     "anchor": "ciclo-3-publicados-71-e-72-disparada-a-fase-3b-ii"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o Claude gera a tela (task-69 fase 3b-i)",
+     "anchor": "ciclo-3-o-claude-gera-a-tela-task-69-fase-3b-i"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a tela gerada mostra os itens (task-95)",
+     "anchor": "ciclo-3-a-tela-gerada-mostra-os-itens-task-95"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: voltar ao que ele mandou",
+     "anchor": "intervenção-do-brenner-voltar-ao-que-ele-mandou"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: o provedor do LLM é o Claude",
+     "anchor": "intervenção-do-brenner-o-provedor-do-llm-é-o-claude"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: o que depende dele fica parado por enquanto",
+     "anchor": "intervenção-do-brenner-o-que-depende-dele-fica-parado-por-enquanto"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: publicados #69 e #70; disparada a task-95",
+     "anchor": "ciclo-3-publicados-69-e-70-disparada-a-task-95"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: uma intenção vira superfície (task-69 fase 3a)",
+     "anchor": "ciclo-3-uma-intenção-vira-superfície-task-69-fase-3a"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a quinta rodada fecha a pergunta do handoff",
+     "anchor": "ciclo-3-a-quinta-rodada-fecha-a-pergunta-do-handoff"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a recusa ensina a pergunta (task-94)",
+     "anchor": "ciclo-3-a-recusa-ensina-a-pergunta-task-94"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: merge com o CI fora",
+     "anchor": "intervenção-do-brenner-merge-com-o-ci-fora"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a quarta rodada fecha, e o CI parou por cobrança",
+     "anchor": "ciclo-3-a-quarta-rodada-fecha-e-o-ci-parou-por-cobrança"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a superfície se transforma (task-69 fase 2) e a quarta rodada",
+     "anchor": "ciclo-3-a-superfície-se-transforma-task-69-fase-2-e-a-quarta-rodada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o P0 fechado e o agente pergunta (task-92)",
+     "anchor": "ciclo-3-o-p0-fechado-e-o-agente-pergunta-task-92"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a primeira superfície materializada (task-69 fase 1)",
+     "anchor": "ciclo-3-a-primeira-superfície-materializada-task-69-fase-1"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a sonda da task-92 achou um P0",
+     "anchor": "ciclo-3-a-sonda-da-task-92-achou-um-p0"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: uma sessão vira teste (task-64 fase c)",
+     "anchor": "ciclo-3-uma-sessão-vira-teste-task-64-fase-c"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a task-69 parou na página",
+     "anchor": "ciclo-3-a-task-69-parou-na-página"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: o plev IR existe (task-68)",
+     "anchor": "ciclo-3-o-plev-ir-existe-task-68"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: task-91 integrada",
+     "anchor": "ciclo-3-task-91-integrada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 3: a onda 5 fecha, a onda 6 abre",
+     "anchor": "ciclo-3-a-onda-5-fecha-a-onda-6-abre"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: a terceira rodada do checkpoint a e uma main vermelha",
+     "anchor": "ciclo-2-a-terceira-rodada-do-checkpoint-a-e-uma-main-vermelha"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: o laboratório mede pelo valor (task-88)",
+     "anchor": "ciclo-2-o-laboratório-mede-pelo-valor-task-88"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: o ide grava a própria sessão (task-63 fase d)",
+     "anchor": "ciclo-2-o-ide-grava-a-própria-sessão-task-63-fase-d"
+    },
+    {
+     "level": 2,
+     "title": "2026-09-23",
+     "anchor": "2026-09-23"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner: severidade",
+     "anchor": "intervenção-do-brenner-severidade"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: a sonda da task-88 mudou o gatilho da pessoa",
+     "anchor": "ciclo-2-a-sonda-da-task-88-mudou-o-gatilho-da-pessoa"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-90 integrada",
+     "anchor": "ciclo-2-task-90-integrada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-89 integrada, o buraco do inspector fechado",
+     "anchor": "ciclo-2-task-89-integrada-o-buraco-do-inspector-fechado"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: a task-90 parou com uma premissa errada do briefing",
+     "anchor": "ciclo-2-a-task-90-parou-com-uma-premissa-errada-do-briefing"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: o ide que alguém usa abre a porta; a 89 decidida por ator",
+     "anchor": "ciclo-2-o-ide-que-alguém-usa-abre-a-porta-a-89-decidida-por-ator"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: o inspector entra e acha um buraco no contrato",
+     "anchor": "ciclo-2-o-inspector-entra-e-acha-um-buraco-no-contrato"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-67 integrada; o guard do limite de linhas no gate",
+     "anchor": "ciclo-2-task-67-integrada-o-guard-do-limite-de-linhas-no-gate"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-67 devolvida com correções pequenas",
+     "anchor": "ciclo-2-task-67-devolvida-com-correções-pequenas"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-82 fechada",
+     "anchor": "ciclo-2-task-82-fechada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-87 integrada",
+     "anchor": "ciclo-2-task-87-integrada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: task-82b devolvida com dois achados dela mesma",
+     "anchor": "ciclo-2-task-82b-devolvida-com-dois-achados-dela-mesma"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 2: checkpoint a de novo, e a onda 5 abre",
+     "anchor": "ciclo-2-checkpoint-a-de-novo-e-a-onda-5-abre"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: task-85 integrada; as correções do checkpoint a completas",
+     "anchor": "ciclo-1-task-85-integrada-as-correções-do-checkpoint-a-completas"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: task-83 integrada",
+     "anchor": "ciclo-1-task-83-integrada"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: docs voltam a dizer o que o código faz",
+     "anchor": "ciclo-1-docs-voltam-a-dizer-o-que-o-código-faz"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: task-83 devolvida com uma correção",
+     "anchor": "ciclo-1-task-83-devolvida-com-uma-correção"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: replanejamento pela verdade",
+     "anchor": "ciclo-1-replanejamento-pela-verdade"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: task-84 integrada, verdade reconstruída",
+     "anchor": "ciclo-1-task-84-integrada-verdade-reconstruída"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1: CI do PR #45 pegou um defeito que o gate deixou passar",
+     "anchor": "ciclo-1-ci-do-pr-45-pegou-um-defeito-que-o-gate-deixou-passar"
+    },
+    {
+     "level": 3,
+     "title": "ciclo 1 aberto",
+     "anchor": "ciclo-1-aberto"
+    },
+    {
+     "level": 3,
+     "title": "intervenção do brenner",
+     "anchor": "intervenção-do-brenner"
+    }
+   ]
+  },
+  {
    "path": "docs/research/charts-visualization.md",
    "id": "research-charts-visualization",
    "title": "reference analysis: charts and visualization",
@@ -12563,7 +12099,6 @@
     "research-competitors",
     "research-linebender-ecosystem",
     "task-21",
-    "task-26",
     "task-28",
     "task-29",
     "task-30",
@@ -13263,6 +12798,210 @@
      "level": 3,
      "title": "concrete action items for plev signals:",
      "anchor": "concrete-action-items-for-plev-signals"
+    }
+   ]
+  },
+  {
+   "path": "docs/research/generative-runtime-program.md",
+   "id": "generative-runtime-program",
+   "title": "program: from GPU UI engine to generative interaction runtime",
+   "project": "plev",
+   "type": "program",
+   "status": "active",
+   "date": "2026-09-23",
+   "date_basis": "header",
+   "topics": [
+    "process",
+    "agents",
+    "semantics",
+    "ir",
+    "generated-surfaces"
+   ],
+   "relations": [
+    "adr-0023",
+    "adr-0024",
+    "adr-0035",
+    "adr-0037",
+    "adr-0040",
+    "adr-0041",
+    "adr-0043",
+    "adr-0044",
+    "adr-0045",
+    "adr-0047",
+    "adr-0048",
+    "adr-0049",
+    "adr-0050",
+    "adr-0072",
+    "architecture-monster-format-v0",
+    "adr-index",
+    "operations-autonomy",
+    "operations-generative-runtime-guidelines",
+    "changelog",
+    "generative-runtime-thesis",
+    "task-18",
+    "task-19",
+    "task-20",
+    "task-39",
+    "task-41",
+    "task-57",
+    "task-57b",
+    "task-58",
+    "task-58b",
+    "task-59",
+    "task-60",
+    "task-61",
+    "task-62",
+    "task-63",
+    "task-64",
+    "task-65",
+    "task-66",
+    "task-66b",
+    "task-67",
+    "task-68",
+    "task-69",
+    "task-70",
+    "task-71",
+    "task-72",
+    "task-73",
+    "task-74",
+    "task-75",
+    "task-76",
+    "task-77",
+    "task-78",
+    "task-79",
+    "task-80",
+    "task-81",
+    "task-82",
+    "task-83",
+    "task-84",
+    "task-85",
+    "task-86",
+    "task-87",
+    "task-88",
+    "task-89",
+    "task-90",
+    "task-91",
+    "task-92",
+    "task-93",
+    "task-94",
+    "task-95",
+    "task-96",
+    "task-97"
+   ],
+   "source": "docs/log/generative-runtime-program.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
+   "evidence": [
+    "b8ba096",
+    "1d384d4",
+    "860b029",
+    "20c601e",
+    "f71dc20",
+    "f5b7cee",
+    "c6738be",
+    "ed814da",
+    "91fdb33",
+    "8978602",
+    "d26c9b1",
+    "c62a05d",
+    "8e6e814",
+    "0ec72f9",
+    "3ba5b04",
+    "dc6fde2",
+    "7b3e48f",
+    "a7a6735",
+    "d97a375",
+    "a6fec8d",
+    "efc87b6",
+    "78f463c",
+    "4896451",
+    "476bbb4",
+    "365d8fd",
+    "e6560a2",
+    "d611fa4",
+    "7f866e8",
+    "d02b4d1",
+    "871f0dd",
+    "22d59fb",
+    "4593a4c",
+    "4573c81",
+    "460c854",
+    "29373d4",
+    "79b8c93",
+    "042d34e",
+    "96c20a0",
+    "49e2822",
+    "7621403",
+    "f101359",
+    "654d740",
+    "37c5e0c"
+   ],
+   "headings": [
+    {
+     "level": 1,
+     "title": "program: from GPU UI engine to generative interaction runtime",
+     "anchor": "program-from-gpu-ui-engine-to-generative-interaction-runtime"
+    },
+    {
+     "level": 2,
+     "title": "1. goal",
+     "anchor": "1-goal"
+    },
+    {
+     "level": 2,
+     "title": "2. mantra para todos os agentes",
+     "anchor": "2-mantra-para-todos-os-agentes"
+    },
+    {
+     "level": 2,
+     "title": "3. estado real do código (diagnóstico, 2026-09-23)",
+     "anchor": "3-estado-real-do-código-diagnóstico-2026-09-23"
+    },
+    {
+     "level": 2,
+     "title": "4. tasks",
+     "anchor": "4-tasks"
+    },
+    {
+     "level": 2,
+     "title": "5. grafo de dependências",
+     "anchor": "5-grafo-de-dependências"
+    },
+    {
+     "level": 2,
+     "title": "6. ondas de integração",
+     "anchor": "6-ondas-de-integração"
+    },
+    {
+     "level": 2,
+     "title": "7. contratos entre tasks",
+     "anchor": "7-contratos-entre-tasks"
+    },
+    {
+     "level": 2,
+     "title": "8. superfícies compartilhadas e ownership",
+     "anchor": "8-superfícies-compartilhadas-e-ownership"
+    },
+    {
+     "level": 2,
+     "title": "9. checkpoints e critérios de parada",
+     "anchor": "9-checkpoints-e-critérios-de-parada"
+    },
+    {
+     "level": 2,
+     "title": "10. métricas que o programa carrega",
+     "anchor": "10-métricas-que-o-programa-carrega"
+    },
+    {
+     "level": 2,
+     "title": "11. decisões",
+     "anchor": "11-decisões"
+    },
+    {
+     "level": 2,
+     "title": "12. estado",
+     "anchor": "12-estado"
     }
    ]
   },
@@ -14125,164 +13864,6 @@
    ]
   },
   {
-   "path": "docs/research/paper/arxiv-paper-draft.md",
-   "id": "paper-draft",
-   "title": "arxiv paper draft about plev",
-   "project": "plev",
-   "type": "draft",
-   "status": "draft",
-   "date": "2023-02-09",
-   "date_basis": "header",
-   "topics": [
-    "paper",
-    "platform"
-   ],
-   "relations": [],
-   "source": "docs/pub/arxiv-paper-draft.md",
-   "source_revision": "5de80aad",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "arxiv paper draft about plev",
-     "anchor": "arxiv-paper-draft-about-plev"
-    },
-    {
-     "level": 2,
-     "title": "abstract",
-     "anchor": "abstract"
-    },
-    {
-     "level": 2,
-     "title": "1. o que e o plev",
-     "anchor": "1-o-que-e-o-plev"
-    },
-    {
-     "level": 2,
-     "title": "2. o problema - o gap que o plev resolve",
-     "anchor": "2-o-problema---o-gap-que-o-plev-resolve"
-    }
-   ]
-  },
-  {
-   "path": "docs/research/paper/arxiv-paper-outline.md",
-   "id": "paper-outline",
-   "title": "plev: a GPU-first compositing engine for cross-platform UI rendering",
-   "project": "plev",
-   "type": "draft",
-   "status": "draft",
-   "date": "2022-05-24",
-   "date_basis": "header",
-   "topics": [
-    "paper",
-    "rendering"
-   ],
-   "relations": [],
-   "source": "docs/pub/arxiv-paper-outline.md",
-   "source_revision": "5de80aad",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "plev: a GPU-first compositing engine for cross-platform UI rendering",
-     "anchor": "plev-a-gpu-first-compositing-engine-for-cross-platform-ui-rendering"
-    },
-    {
-     "level": 2,
-     "title": "arxiv paper outline",
-     "anchor": "arxiv-paper-outline"
-    },
-    {
-     "level": 3,
-     "title": "abstract (~150 words)",
-     "anchor": "abstract-150-words"
-    },
-    {
-     "level": 3,
-     "title": "1. introduction",
-     "anchor": "1-introduction"
-    },
-    {
-     "level": 3,
-     "title": "2. related work",
-     "anchor": "2-related-work"
-    },
-    {
-     "level": 3,
-     "title": "3. architecture",
-     "anchor": "3-architecture"
-    },
-    {
-     "level": 3,
-     "title": "4. cross-platform strategy",
-     "anchor": "4-cross-platform-strategy"
-    },
-    {
-     "level": 3,
-     "title": "5. verbal DSL: plev_narrate!",
-     "anchor": "5-verbal-dsl-plev_narrate"
-    },
-    {
-     "level": 3,
-     "title": "6. accessibility",
-     "anchor": "6-accessibility"
-    },
-    {
-     "level": 3,
-     "title": "7. vector paths",
-     "anchor": "7-vector-paths"
-    },
-    {
-     "level": 3,
-     "title": "8. reactive primitives",
-     "anchor": "8-reactive-primitives"
-    },
-    {
-     "level": 3,
-     "title": "9. evaluation",
-     "anchor": "9-evaluation"
-    },
-    {
-     "level": 3,
-     "title": "10. limitations and future work",
-     "anchor": "10-limitations-and-future-work"
-    },
-    {
-     "level": 3,
-     "title": "11. conclusion",
-     "anchor": "11-conclusion"
-    }
-   ]
-  },
-  {
-   "path": "docs/research/paper/brief-strengths.md",
-   "id": "paper-brief-strengths",
-   "title": "plev differentiators for the paper",
-   "project": "plev",
-   "type": "draft",
-   "status": "draft",
-   "date": "2023-01-14",
-   "date_basis": "header",
-   "topics": [
-    "paper",
-    "competition"
-   ],
-   "relations": [],
-   "source": "docs/pub/brief-strengths.md",
-   "source_revision": "5de80aad",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "plev differentiators for the paper",
-     "anchor": "plev-differentiators-for-the-paper"
-    }
-   ]
-  },
-  {
    "path": "docs/research/parley-vs-cosmic-text.md",
    "id": "research-parley-vs-cosmic-text",
    "title": "parley vs cosmic-text - factual comparison for plev",
@@ -14863,6 +14444,140 @@
      "level": 2,
      "title": "parte 5 - conclusao",
      "anchor": "parte-5---conclusao"
+    }
+   ]
+  },
+  {
+   "path": "docs/research/technical-plan.md",
+   "id": "technical-plan",
+   "title": "plev — Technical Implementation Plan",
+   "project": "plev",
+   "type": "program",
+   "status": "reference",
+   "date": null,
+   "date_basis": "undated",
+   "topics": [
+    "workspace",
+    "rendering",
+    "text",
+    "text-editing",
+    "accessibility"
+   ],
+   "relations": [],
+   "source": "docs/plano-tecnico.md",
+   "source_revision": "a4ad0c07",
+   "revised": "2026-10-30",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "plev — Technical Implementation Plan",
+     "anchor": "plev--technical-implementation-plan"
+    },
+    {
+     "level": 2,
+     "title": "1. Visão e princípios",
+     "anchor": "1-visão-e-princípios"
+    },
+    {
+     "level": 2,
+     "title": "2. Arquitetura alvo",
+     "anchor": "2-arquitetura-alvo"
+    },
+    {
+     "level": 2,
+     "title": "3. WS-0 · `ws/contracts` — Contratos de fronteira",
+     "anchor": "3-ws-0--wscontracts--contratos-de-fronteira"
+    },
+    {
+     "level": 3,
+     "title": "3.1 `TextBackend` (isola cosmic-text)",
+     "anchor": "31-textbackend-isola-cosmic-text"
+    },
+    {
+     "level": 3,
+     "title": "3.2 Scene v2 (primitivas instanciadas)",
+     "anchor": "32-scene-v2-primitivas-instanciadas"
+    },
+    {
+     "level": 3,
+     "title": "3.3 Actions",
+     "anchor": "33-actions"
+    },
+    {
+     "level": 3,
+     "title": "3.4 Measure function no layout",
+     "anchor": "34-measure-function-no-layout"
+    },
+    {
+     "level": 3,
+     "title": "3.5 Convenções de integração",
+     "anchor": "35-convenções-de-integração"
+    },
+    {
+     "level": 2,
+     "title": "4. Workstreams",
+     "anchor": "4-workstreams"
+    },
+    {
+     "level": 3,
+     "title": "WS-A · `ws/text-engine` — Texto",
+     "anchor": "ws-a--wstext-engine--texto"
+    },
+    {
+     "level": 3,
+     "title": "WS-B · `ws/renderer-v2` — Renderer",
+     "anchor": "ws-b--wsrenderer-v2--renderer"
+    },
+    {
+     "level": 3,
+     "title": "WS-C · `ws/editor-core` — Editor",
+     "anchor": "ws-c--wseditor-core--editor"
+    },
+    {
+     "level": 3,
+     "title": "WS-D · `ws/actions-keymap` — Actions, keymap, palette",
+     "anchor": "ws-d--wsactions-keymap--actions-keymap-palette"
+    },
+    {
+     "level": 3,
+     "title": "WS-E · `ws/design-system` — UI",
+     "anchor": "ws-e--wsdesign-system--ui"
+    },
+    {
+     "level": 3,
+     "title": "WS-F · `ws/intelligence` — Tree-sitter + LSP",
+     "anchor": "ws-f--wsintelligence--tree-sitter--lsp"
+    },
+    {
+     "level": 3,
+     "title": "WS-G · `ws/git-real` — Git + basicIDE real",
+     "anchor": "ws-g--wsgit-real--git--basicide-real"
+    },
+    {
+     "level": 3,
+     "title": "WS-H · `ws/a11y-testing` — Acessibilidade + harness",
+     "anchor": "ws-h--wsa11y-testing--acessibilidade--harness"
+    },
+    {
+     "level": 3,
+     "title": "WS-I · `ws/dsl-tooling` — narrate como produto *(opcional, adiável)*",
+     "anchor": "ws-i--wsdsl-tooling--narrate-como-produto-opcional-adiável"
+    },
+    {
+     "level": 2,
+     "title": "5. Ordem de integração (dependências, não datas)",
+     "anchor": "5-ordem-de-integração-dependências-não-datas"
+    },
+    {
+     "level": 2,
+     "title": "6. Decisões técnicas registradas (ADR resumido)",
+     "anchor": "6-decisões-técnicas-registradas-adr-resumido"
+    },
+    {
+     "level": 2,
+     "title": "7. Referências",
+     "anchor": "7-referências"
     }
    ]
   },
@@ -17611,67 +17326,6 @@
    ]
   },
   {
-   "path": "docs/tasks/task-26-arxiv-paper/README.md",
-   "id": "task-26",
-   "title": "task-26: arXiv paper",
-   "project": "plev",
-   "type": "task",
-   "status": "done",
-   "date": "2023-02-13",
-   "date_basis": "header",
-   "topics": [
-    "paper",
-    "research"
-   ],
-   "relations": [
-    "paper-outline"
-   ],
-   "source": [
-    "docs/log/steps/task-26-arxiv-paper.md",
-    "docs/log/changes/task-26.md"
-   ],
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "task-26: arXiv paper",
-     "anchor": "task-26-arxiv-paper"
-    },
-    {
-     "level": 2,
-     "title": "resultado",
-     "anchor": "resultado"
-    },
-    {
-     "level": 2,
-     "title": "conclusao",
-     "anchor": "conclusao"
-    },
-    {
-     "level": 2,
-     "title": "checklist (fase 1, outline)",
-     "anchor": "checklist-fase-1-outline"
-    },
-    {
-     "level": 2,
-     "title": "fase 2 (texto completo)",
-     "anchor": "fase-2-texto-completo"
-    },
-    {
-     "level": 2,
-     "title": "Delivery record",
-     "anchor": "delivery-record"
-    },
-    {
-     "level": 3,
-     "title": "outline criado",
-     "anchor": "outline-criado"
-    }
-   ]
-  },
-  {
    "path": "docs/tasks/task-27-animation-system/README.md",
    "id": "task-27",
    "title": "task-27: animation system",
@@ -19056,74 +18710,6 @@
      "level": 2,
      "title": "fechamento (orquestrador, 2026-09-25)",
      "anchor": "fechamento-orquestrador-2026-09-25"
-    }
-   ]
-  },
-  {
-   "path": "docs/tasks/task-40-paper-arxiv-full-text/README.md",
-   "id": "task-40",
-   "title": "task-40: paper arxiv, full text",
-   "project": "plev",
-   "type": "task",
-   "status": "pending",
-   "date": "2023-12-06",
-   "date_basis": "header",
-   "topics": [
-    "paper",
-    "research"
-   ],
-   "relations": [
-    "paper-outline",
-    "experiment-benchmarks-v02",
-    "research-competitive-positioning",
-    "research-competitors",
-    "task-20",
-    "task-41"
-   ],
-   "source": "docs/mission/steps/pending/task-40-paper-arxiv-texto-completo.md",
-   "source_revision": "b6522b3e",
-   "revised": "2026-10-30",
-   "review": "reviewed",
-   "headings": [
-    {
-     "level": 1,
-     "title": "task-40: paper arxiv, full text",
-     "anchor": "task-40-paper-arxiv-full-text"
-    },
-    {
-     "level": 2,
-     "title": "objetivo",
-     "anchor": "objetivo"
-    },
-    {
-     "level": 2,
-     "title": "contexto",
-     "anchor": "contexto"
-    },
-    {
-     "level": 2,
-     "title": "dependencias",
-     "anchor": "dependencias"
-    },
-    {
-     "level": 2,
-     "title": "checklist",
-     "anchor": "checklist"
-    },
-    {
-     "level": 3,
-     "title": "estrutura (11 secoes do outline)",
-     "anchor": "estrutura-11-secoes-do-outline"
-    },
-    {
-     "level": 3,
-     "title": "producao",
-     "anchor": "producao"
-    },
-    {
-     "level": 2,
-     "title": "notas",
-     "anchor": "notas"
     }
    ]
   },
@@ -22266,7 +21852,6 @@
    ],
    "relations": [
     "adr-0050",
-    "truth-2026-09",
     "task-63",
     "task-65",
     "task-66",
@@ -22430,7 +22015,6 @@
    ],
    "relations": [
     "adr-0046",
-    "truth-2026-09",
     "task-67",
     "task-87",
     "task-89"
@@ -30992,7 +30576,6 @@
     "input"
    ],
    "relations": [
-    "truth-2026-09",
     "task-85",
     "task-87"
    ],
@@ -31145,8 +30728,7 @@
     "task-62",
     "task-83",
     "task-85",
-    "adr-0036",
-    "truth-2026-09"
+    "adr-0036"
    ],
    "source": "docs/log/steps/task-84-ide-refresh-never-goes-back.md",
    "source_revision": "ec0a224c",

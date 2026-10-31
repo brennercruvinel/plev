@@ -516,7 +516,7 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
   [`0053-the-silences-app-is-the-fixed-screen.md`](../../adr/structure/0053-the-silences-app-is-the-fixed-screen.md) a projeção diz "the
   ids in order" onde agora é "the keys in order", e os estados
   `original`, `result`, `range` e `frame` entram na lista da seção "the
-  projection"; o [`changelog.md`](../../log/changelog.md) (a superfície gerada na página
+  projection"; o [`changelog.md`](../../CHANGELOG.md) (a superfície gerada na página
   Silences); no `docs/ATLAS.toml` os módulos `view::apps::silences::{jobs,
   generated, generated::page}` e o `tests/frames.rs` do `surface`.
 

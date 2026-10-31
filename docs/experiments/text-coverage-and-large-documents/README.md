@@ -8,11 +8,11 @@ date: 2026-09-24
 date_basis: text
 topics: [text, fonts, text-editing, performance]
 relations: [task-74, task-74/phase-1-audit, task-74/phase-7-large-documents]
-evidence: [df270334, ad6d0d6a, 36ac4257, e7427780, 71e0a6f2, 8b4c58e9, 727c378e]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
+evidence: [df270334, ad6d0d6a, 36ac4257, e7427780, 71e0a6f2, 8b4c58e9, 727c378e]
 ---
 
 # text coverage per writing system, and the cost of large documents in the editor

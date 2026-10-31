@@ -7,7 +7,7 @@ status: active
 date: null
 date_basis: generated
 topics: [navigation]
-relations: [docs-conventions, timeline, dates-and-sources]
+relations: [docs-conventions, changelog]
 source: docs/README.md
 source_revision: ec0a224c
 revised: 2026-10-31
@@ -26,14 +26,13 @@ backs each claim.
 
 | To | Start at |
 |---|---|
-| follow the story in time | the [timeline](log/timeline.md), and [dates and sources](log/dates-and-sources.md) to read the dates |
+| follow the story in time | the [changelog](CHANGELOG.md), newest first, one section per date; [reading the dates](CHANGELOG.md#reading-the-dates) says how far each date holds |
 | see what was done, task by task | [tasks](tasks/README.md), one folder per task |
 | understand why the code is the way it is | the [ADRs](adr/README.md); [adr/TEMPLATE.md](adr/TEMPLATE.md) for a new one |
 | what was measured, how, and its limits | [experiments](experiments/README.md) |
-| what was studied before building | [research](research/README.md), with the [generative runtime thesis](research/generative-runtime-thesis.md) |
+| what was studied before building | [research](research/README.md), with the [generative runtime thesis](research/generative-runtime-thesis.md) and its [program](research/generative-runtime-program.md) |
 | what went wrong and what stayed | [learnings](learnings/README.md) |
 | work on the code today | [reference](ref/README.md), starting with the [engine manual](ref/operations/code-against-the-plev-engine.md) |
-| what happened, in order | the [log](log/README.md): journal, changelog, programs, project state |
 | the architecture on one page | [ATLAS.toml](ATLAS.toml); the old names and today's in [TERMS.toml](TERMS.toml) |
 
 ## How the pieces connect
@@ -51,4 +50,4 @@ A historical page speaks with the names and paths of its time (`sem`, `comps`,
 `showcase`, `crates/`…); TERMS.toml leads each one to today's name. A command or a
 number in a task holds for the revision it was written at. git only keeps the history
 from June 2026; before that, the date of a page comes from its header, and
-[dates and sources](log/dates-and-sources.md) says where it was revised after the fact.
+[reading the dates](CHANGELOG.md#reading-the-dates) says where it was revised after the fact.

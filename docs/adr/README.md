@@ -7,7 +7,7 @@ status: active
 date: 2026-09-29
 date_basis: header
 topics: [editorial, process]
-relations: [architecture-view-trait-design, architecture-component-design, architecture-layout-engine, architecture-signal-system-design, architecture-input-system-design, architecture-layer-system, architecture-effects-architecture, architecture-dsl-narrate-design, platform-ios-build, platform-mobile-specifics, platform-wasm-webgpu-validation, platform-android-emulator-deploy, architecture-animation-pattern-lerp, architecture-touch-gesture-design, architecture-hot-reload-design, architecture-srp-modularization, architecture-clippy-zero-warnings, architecture-monster-format-v0, architecture-component-catalog, experiment-benchmarks-v02, paper-outline, paper-brief-strengths, paper-draft, research-extracted-patterns, research-parley-vs-cosmic-text, research-wasm-plugin-architecture, research-makepad-gap-analysis, research-plev-vs-makepad-report, responsiveness-and-fidelity, generative-runtime-program, learning-hot-reload, learning-showcase-pages, learning-core-buttons, learning-comps, changelog, timeline, adr-0001, adr-0002, adr-0003, adr-0004, adr-0005, adr-0006, adr-0007, adr-0008, adr-0009, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0015, adr-0016, adr-0017, adr-0018, adr-0019, adr-0020, adr-0021, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0052, adr-0053, adr-0054, adr-0055, adr-0056, adr-0057, adr-0058, adr-0059, adr-0060, adr-0061, adr-0062, adr-0063, adr-0064, adr-0065, adr-0066, adr-0067, adr-0068, adr-0069, adr-0070, adr-0071, adr-0072, adr-0073, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, adr-0080, adr-0081, adr-0082, adr-0083, adr-0084, adr-0085, task-30, task-31, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-87, task-89, task-90, task-91, task-92, task-95, task-96, task-97]
+relations: [architecture-view-trait-design, architecture-component-design, architecture-layout-engine, architecture-signal-system-design, architecture-input-system-design, architecture-layer-system, architecture-effects-architecture, architecture-dsl-narrate-design, platform-ios-build, platform-mobile-specifics, platform-wasm-webgpu-validation, platform-android-emulator-deploy, architecture-animation-pattern-lerp, architecture-touch-gesture-design, architecture-hot-reload-design, architecture-srp-modularization, architecture-clippy-zero-warnings, architecture-monster-format-v0, architecture-component-catalog, experiment-benchmarks-v02, research-extracted-patterns, research-parley-vs-cosmic-text, research-wasm-plugin-architecture, research-makepad-gap-analysis, research-plev-vs-makepad-report, changelog, generative-runtime-program, learning-hot-reload, learning-showcase-pages, learning-core-buttons, learning-comps, adr-0001, adr-0002, adr-0003, adr-0004, adr-0005, adr-0006, adr-0007, adr-0008, adr-0009, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0015, adr-0016, adr-0017, adr-0018, adr-0019, adr-0020, adr-0021, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0052, adr-0053, adr-0054, adr-0055, adr-0056, adr-0057, adr-0058, adr-0059, adr-0060, adr-0061, adr-0062, adr-0063, adr-0064, adr-0065, adr-0066, adr-0067, adr-0068, adr-0069, adr-0070, adr-0071, adr-0072, adr-0073, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, adr-0080, adr-0081, adr-0082, adr-0083, adr-0084, adr-0085, task-30, task-31, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-87, task-89, task-90, task-91, task-92, task-95, task-96, task-97]
 source: docs/adr/README.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -50,15 +50,12 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2022-04-26 | [benchmark-results](../experiments/benchmarks-v02/README.md) | reference | criterion m4 mac: push_rects 159-222m/s, dirty tracking 3.3us/1000, tessellation 1.5-3.7us/shape, signals 67ns/cycle |
-| 2022-05-24 | [arxiv-paper-outline](../research/paper/arxiv-paper-outline.md) | reference | 11 secoes: architecture, cross-platform, DSL, accessibility, vector paths, evaluation |
 | 2022-07-06 | [extracted-patterns](../research/extracted-patterns.md) | reference | 38 patterns de 17 repos em 6 fases, top 10 priorizado com LOC, blueprints para task-30/31 |
 | 2022-08-11 | [parley-vs-cosmic-text](../research/parley-vs-cosmic-text.md) | reference | comparacao factual: cursor API, selection geometry, inlinebox, harfrust, WASM, custo. recomendacao: wait |
 | 2022-09-08 | [wasm-plugin-architecture](../research/wasm-plugin-architecture.md) | reference | wasmtime vs wasmer vs extism, host function interface draft, 10-15ns/call. recomendacao: wait (p4) |
 | 2022-10-27 | [touch-gesture-design](../ref/architecture/touch-gesture-design.md) | reference | 6-state gesturerecognizer, touchtracker fxhashmap, explicit instant para testabilidade, separado do mouse |
 | 2022-11-19 | [makepad-gap-analysis](../research/makepad-gap-analysis.md) | reference | inventario de features visuais do makepad vs plev, 9 categorias, gaps e prioridades |
 | 2022-12-10 | [plev-vs-makepad-report](../research/plev-vs-makepad-report.md) | reference | relatorio detalhado plev vs makepad: core, learnings, philosophy, priority roadmap |
-| 2023-01-14 | [brief-strengths](../research/paper/brief-strengths.md) | reference | bullets dos diferenciais tecnicos: dirty tracking, text atlas, signal system, spring solver, SDF |
-| 2023-02-09 | [arxiv-paper-draft](../research/paper/arxiv-paper-draft.md) | reference | rascunho do paper: abstract + 2 secoes, motivacao, gap analysis |
 
 ## hot reload (2024)
 
@@ -92,7 +89,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | 2025-01-08 | [embed-every-font-weight-in-use](rendering/0003-embed-every-font-weight-in-use.md) | accepted | familia unica embutida (inclusive sans 300-700, desde 2026-08; antes rubik 400-700), familias default pinadas, determinismo |
 | 2025-01-27 | [touch-as-synthesized-pointer-events](interface/0009-touch-as-synthesized-pointer-events.md) | accepted | touch sintetiza pointer events no caminho de mouse existente, sem vocabulario paralelo de evento |
 | 2025-02-10 | [async-gpu-init-and-single-wasm-entry](rendering/0001-async-gpu-init-and-single-wasm-entry.md) | accepted | spawn_local + eventloopproxy para GPU init async, feature web-entry, canvas 100vw/100vh |
-| 2025-02-19 | [responsiveness-multiplatform-and-fidelity](../log/responsiveness-multiplatform-and-fidelity.md) | reference | registro de sessao: text spill, distribuicao responsiva, gamma do browser, touch, licoes |
+| 2025-02-19 | [responsiveness-multiplatform-and-fidelity](../CHANGELOG.md#2025-02-19) | reference | registro de sessao: text spill, distribuicao responsiva, gamma do browser, touch, licoes |
 
 ## onda formatos: monster, lot, parser (2025)
 
@@ -136,7 +133,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 
 ## runtime de interação generativa (2026)
 
-o programa em [programa do runtime generativo](../log/generative-runtime-program.md); uma linha por decisão das tasks 57 a 80.
+o programa em [programa do runtime generativo](../research/generative-runtime-program.md); uma linha por decisão das tasks 57 a 80.
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
@@ -205,7 +202,7 @@ o programa em [programa do runtime generativo](../log/generative-runtime-program
 
 | arquivo | status | resumo |
 |---------|--------|--------|
-| [changelog](../log/changelog.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
+| [changelog](../CHANGELOG.md) | living | log de versoes commit a commit: prime creatures, workspace tiers, kdb consolidado, qa pass, ponte monster |
 
 ## notas
 
@@ -341,4 +338,3 @@ how work is done: hot reload, regression, determinism, lint.
 - [0083](workflows/0083-feature-unification.md) feature unification reduces duplicate compilations
 - [0084](workflows/0084-web-targets-and-ports.md) each web target has one command and a port range
 - [0085](workflows/0085-integration-by-merge-commit.md) integration into main is a pull request merged by merge commit
-

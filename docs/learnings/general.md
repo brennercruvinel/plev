@@ -7,7 +7,7 @@ status: reference
 date: null
 date_basis: undated
 topics: [agents, semantics, process]
-relations: [adr-0036, truth-2026-09, operations-autonomy, operations-orchestrate-coding-agents-on-this-repo, task-57b, task-59, task-62, task-64, task-67, task-68, task-69, task-70, task-71, task-74, task-75, task-76, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-96, task-97]
+relations: [adr-0036, operations-autonomy, operations-orchestrate-coding-agents-on-this-repo, task-57b, task-59, task-62, task-64, task-67, task-68, task-69, task-70, task-71, task-74, task-75, task-76, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-96, task-97]
 source: docs/log/learnings/general.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -553,7 +553,7 @@ segunda rodada"; saídas em `target/agents/exp2/`.
 ### 2026-09-23, task-84 e auditoria de verdade
 
 fonte: `steps/checked/task-84-ide-refresh-never-goes-back-done.md`,
-[`truth.md`](../log/truth.md).
+`truth.md`.
 
 - **pressuposto errado:** "a view é otimista e reconcilia com um refresh"
   era tratado como inofensivo. não era: um refresh lido antes de uma

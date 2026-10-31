@@ -30,7 +30,7 @@ separa o que já existe no repositório do que ainda é hipótese a demonstrar
 (seção 28).
 
 o plano executável (goal, grafo, ordem, contratos entre tasks) está em
-[`generative-runtime-program.md`](../log/generative-runtime-program.md). as regras de trabalho do orquestrador e
+[`generative-runtime-program.md`](generative-runtime-program.md). as regras de trabalho do orquestrador e
 dos agentes estão em [`generative-runtime-guidelines.md`](../ref/operations/generative-runtime-guidelines.md). cada goal virou
 uma task em `docs/log/steps/` (task-57 a task-80).
 

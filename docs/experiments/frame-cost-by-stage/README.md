@@ -8,11 +8,11 @@ date: 2026-09-23
 date_basis: text
 topics: [performance, gpu, rendering]
 relations: [task-73, task-73/phase-1-measurements]
-evidence: [ed814da, 91fdb33]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
+evidence: [ed814da, 91fdb33]
 ---
 
 # what each stage of a frame costs in nine scenarios

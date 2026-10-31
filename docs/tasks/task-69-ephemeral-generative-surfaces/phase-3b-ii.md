@@ -467,7 +467,7 @@ mata o filho".
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  [`changelog.md`](../../log/changelog.md) (a página Surface pede ao Claude, com espera e
+  [`changelog.md`](../../CHANGELOG.md) (a página Surface pede ao Claude, com espera e
   cancel); na entrada `[crates.showcase]` do `docs/ATLAS.toml` a
   dependência `claude-model` (desktop) e os módulos `asking` e `page`;
   o comentário de `app/headless.rs` não muda;

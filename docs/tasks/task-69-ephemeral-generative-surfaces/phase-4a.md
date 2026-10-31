@@ -626,7 +626,7 @@ filho só depois de `detect_silence`/`preview_segment`, `Started` ->
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima); o
-  [`changelog.md`](../../log/changelog.md) (a página Silences); na entrada `[crates.showcase]`
+  [`changelog.md`](../../CHANGELOG.md) (a página Silences); na entrada `[crates.showcase]`
   do `docs/ATLAS.toml` os módulos `model::silences` e
   `view::apps::silences` (com `worker`, `semantics`, `layout`, `draw`) e
   a página; o [`component-catalog.md`](../../ref/architecture/component-catalog.md) se listar as páginas do Apps Demo;

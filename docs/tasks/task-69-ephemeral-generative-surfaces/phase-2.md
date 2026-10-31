@@ -429,7 +429,7 @@ para o orquestrador (o [`adr/`](../../adr/README.md) é proibido aqui):
 ### dependências pendentes e riscos de integração
 
 - para o orquestrador: a linha do índice de ADR (acima), o
-  [`changelog.md`](../../log/changelog.md) (a página Surface troca de forma) e, se quiser, a
+  [`changelog.md`](../../CHANGELOG.md) (a página Surface troca de forma) e, se quiser, a
   entrada do `surface` no `docs/ATLAS.toml`, que descreve a fase 1;
 - a página inclui `rust/screen/tests/fixtures/uigallery-todo-columns.ir.json`
   por `include_str!`. mudar essa fixture muda a página, e o teste

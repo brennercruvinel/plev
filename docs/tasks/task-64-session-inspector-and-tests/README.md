@@ -7,7 +7,7 @@ status: done
 date: 2026-09-25
 date_basis: header
 topics: [recording, semantics, agents]
-relations: [adr-0050, truth-2026-09, task-63, task-65, task-66, task-83]
+relations: [adr-0050, task-63, task-65, task-66, task-83]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -159,7 +159,7 @@ a task é grande (modelo, UI, export, sessão para teste) e foi dividida:
   `target/agents/exp2/`).
 - **fase b:** a UI (timeline, frame com as ligações por cima, painel do
   controle). pede gravar as ligações por frame no `rec`, que hoje não
-  grava ([`truth.md`](../../log/truth.md), 2.4).
+  grava (`truth.md`, 2.4).
 - **fase c:** export de trecho como bug report e sessão para teste com o
   harness isolado.
 

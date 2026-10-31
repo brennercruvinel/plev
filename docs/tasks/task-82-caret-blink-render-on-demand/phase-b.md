@@ -8,7 +8,7 @@ parent: task-82
 date: 2026-09-23
 date_basis: text
 topics: [rendering, performance, input]
-relations: [truth-2026-09, task-85, task-87]
+relations: [task-85, task-87]
 source: docs/log/steps/task-82-caret-blink-render-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
@@ -22,7 +22,7 @@ Records the second phase: the `Wake` reaches the ide, the showcase's Git page an
 
 ## fase b aberta (orquestrador, 2026-09-23)
 
-a auditoria de verdade ([`truth.md`](../../log/truth.md), seções 4g e 5.1)
+a auditoria de verdade (`truth.md`, seções 4g e 5.1)
 mostrou que a promessa do README ("no change, no frame") está quebrada no
 app da prova da tese: o binário `ide` desenha todo frame com o campo de
 commit focado ou com um toast na tela, a página Git do showcase volta a 60
