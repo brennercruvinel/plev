@@ -306,18 +306,20 @@ impl Tree {
                 let radius = r.radius.min(row_rect.h / 2.0);
                 compositor.push(focus_ring_inside(row_rect, radius, theme));
             }
-            self.paint_row(compositor, row, bounds.x, ry, is_selected, &style, r);
+            let span = (bounds.x, bounds.right());
+            self.paint_row(compositor, row, span, ry, is_selected, &style, r);
         }
     }
 
     /// The chevron, the icon (in its tile) and the label of a row at
-    /// `ry`, indented by its depth.
+    /// `ry`, indented by its depth, between the bounds' left and right
+    /// edges `x`: a label too long for what is left is cut.
     #[allow(clippy::too_many_arguments)]
     fn paint_row(
         &self,
         compositor: &mut Compositor,
         row: &TreeRow,
-        x: f32,
+        (x, right): (f32, f32),
         ry: f32,
         selected: bool,
         style: &TextStyle,
@@ -374,8 +376,10 @@ impl Tree {
         cx += box_w + r.label_gap;
 
         let label = if selected { r.label_selected } else { r.label };
+        let room = (right - r.pad_x - cx).max(0.0);
+        let shown = TextMeasurer::truncate_to_width(&row.label, style, room);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&row.label, style, None),
+            key: TextNodeKey::from_style(&shown, style, None),
             x: cx,
             y: ry + TextMeasurer::vertical_center(style, r.row_h),
             color: with_alpha(label, 1.0),

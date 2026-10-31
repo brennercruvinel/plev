@@ -282,3 +282,18 @@ fn a_pager_goes_to_a_page_the_same_from_the_three() {
         Some(Value::Bool(true))
     );
 }
+
+/// The wave 2 pages in the showcase mold (the first table and tree are
+/// in `choices.rs`): the deep tree's leaf is chosen the same from the
+/// three.
+#[test]
+fn a_deep_leaf_is_chosen_the_same_from_the_three() {
+    for (page, id) in [("Tree", "tree_page.group[0].card[1][6]")] {
+        let mut person = gallery(page);
+        person.click(id);
+        let mut reader = gallery(page);
+        reader.press(id);
+        let agent = by_agent(page, "choose", vec![ask(id, "select")]);
+        same(page, &person, &reader, &agent);
+    }
+}
