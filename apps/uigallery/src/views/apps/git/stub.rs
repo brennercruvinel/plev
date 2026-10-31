@@ -71,9 +71,9 @@ impl GitPage {
             "The git workspace needs the git CLI and a worker thread: run the showcase on desktop.",
             14.0,
             400,
-            content.x,
-            content.y + theme.spacing.md,
+            (content.x, content.y + theme.spacing.md),
             theme.glass.text_placeholder.0,
+            theme,
         );
     }
 }

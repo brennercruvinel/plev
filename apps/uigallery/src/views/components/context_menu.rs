@@ -86,9 +86,12 @@ impl ContextMenuPage {
             hint,
             style.font_size,
             style.font_weight,
-            area.x + (area.w - hint_w) / 2.0,
-            area.y + (area.h - style.line_height) / 2.0,
+            (
+                area.x + (area.w - hint_w) / 2.0,
+                area.y + (area.h - style.line_height) / 2.0,
+            ),
             theme.glass.text_placeholder.0,
+            theme,
         );
     }
 }
