@@ -1,6 +1,8 @@
 //! Icon data: Lucide v0.469.0 primitives, verbatim, in the 24x24 viewBox.
 //! The table is kept in alphabetical order (a test checks it); every
-//! entry is one lucide icon under its lucide name.
+//! entry is one lucide icon under its lucide name. The four the kit's
+//! notification badges ask for (image, message-circle, user-plus, video)
+//! come from lucide-react 1.49.0, verbatim too.
 
 /// One SVG primitive of an icon, in the 24x24 viewBox.
 pub(super) enum Shape {
@@ -165,6 +167,15 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             ),
         ],
     ),
+    // lucide-react 1.49.0.
+    (
+        "image",
+        &[
+            SvgRect(3.0, 3.0, 18.0, 18.0, 2.0),
+            Circle(9.0, 9.0, 2.0),
+            Path("m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"),
+        ],
+    ),
     (
         "info",
         &[
@@ -198,6 +209,13 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path("M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"),
             Path("M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"),
         ],
+    ),
+    // lucide-react 1.49.0.
+    (
+        "message-circle",
+        &[Path(
+            "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
+        )],
     ),
     ("minus", &[Path("M5 12h14")]),
     ("moon", &[Path("M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z")]),
@@ -289,6 +307,24 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         &[
             Path("M3 7v6h6"),
             Path("M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"),
+        ],
+    ),
+    // lucide-react 1.49.0.
+    (
+        "user-plus",
+        &[
+            Path("M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"),
+            Circle(9.0, 7.0, 4.0),
+            Line(19.0, 8.0, 19.0, 14.0),
+            Line(22.0, 11.0, 16.0, 11.0),
+        ],
+    ),
+    // lucide-react 1.49.0.
+    (
+        "video",
+        &[
+            Path("m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"),
+            SvgRect(2.0, 6.0, 14.0, 12.0, 2.0),
         ],
     ),
     ("x", &[Path("M18 6 6 18"), Path("m6 6 12 12")]),
