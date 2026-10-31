@@ -304,12 +304,14 @@ impl SkeletonTokens {
 }
 
 /// The progress rail: the kit's video player track
-/// (`components/VideoPlayer`), a pill as thin as the theme's progress
-/// track, its filled part a shade deeper, ending in a head that marks the
+/// (`components/VideoPlayer`), a thin pill, its filled part a shade
+/// deeper, ending in a head that marks the
 /// value. The head is the mark a reader needs, 3:1 on the paper and on
 /// the track; the track and the fill are its setting.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ProgressTokens {
+    /// The rail's thickness; its corners are round.
+    pub height: f32,
     pub track: Color,
     /// The filled part per intent, over the track.
     pub fill: IntentColors,
@@ -323,7 +325,9 @@ pub struct ProgressTokens {
 impl ProgressTokens {
     /// The rail over `paper`, each head moved toward `ink` until it reads
     /// at 3:1 on the paper and on the track over it.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
+        height: f32,
         track: Color,
         fill: IntentColors,
         head_w: f32,
@@ -337,6 +341,7 @@ impl ProgressTokens {
         let rail = over(track, paper);
         let legible = |c: Color| toward_all(over(c, paper), ink, &[paper, rail], MARK_CONTRAST);
         Self {
+            height,
             track,
             fill,
             head_w,

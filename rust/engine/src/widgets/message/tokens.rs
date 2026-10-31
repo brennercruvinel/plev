@@ -512,6 +512,7 @@ impl MessageTokens {
                 let tint = |c: Color, of: Color| Color([c.0[0], c.0[1], c.0[2], of.0[3]]);
                 let fill = k.fill.neutral;
                 ProgressTokens::new(
+                    k.height,
                     tint(colors.text_mid, k.track),
                     IntentColors {
                         neutral: tint(colors.text_mid, fill),
