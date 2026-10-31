@@ -275,7 +275,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
     page(

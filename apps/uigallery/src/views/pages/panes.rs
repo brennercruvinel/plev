@@ -159,7 +159,7 @@ impl Panes {
             dialog: dialog::DialogPage::new(),
             empty: empty::EmptyPage::new(),
             graph: graph::GraphPage::new(),
-            icon_button: icon_button::IconButtonPage::new(),
+            icon_button: icon_button::IconButtonPage::icons(),
             input: input::InputPage::new(),
             navigation_menu: navigation_menu::NavigationMenuPage::new(),
             panel: panel::PanelPage::new(),
