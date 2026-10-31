@@ -31,6 +31,7 @@ use crate::widgets::graph::model::Graph;
 
 use crate::widgets::recipe::rounded_rect_stroke;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder, Value};
 
 /// Fixed world box the layout runs in when the widget computes it.
 const WORLD: f32 = 1000.0;
@@ -38,6 +39,8 @@ const WORLD: f32 = 1000.0;
 const NODE_R: f32 = 5.0;
 /// Click-vs-pan discrimination: below this drag distance a press is a click.
 const CLICK_DIST: f32 = 4.0;
+/// How far past a node's edge a click still finds it.
+const HIT_SLACK: f32 = 3.0;
 
 /// Theme tone for an edge kind (mapped to tokens at render time).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -56,12 +59,13 @@ pub enum EdgeTone {
 
 impl EdgeTone {
     fn color(self, theme: &Theme) -> [f32; 4] {
+        let g = &theme.navigation.graph;
         match self {
-            EdgeTone::Dim => theme.glass.edge.0,
-            EdgeTone::Accent => theme.colors.accent.0,
-            EdgeTone::Info => theme.colors.info.0,
-            EdgeTone::Success => theme.colors.success.0,
-            EdgeTone::Danger => theme.colors.danger.0,
+            EdgeTone::Dim => g.edge_dim.0,
+            EdgeTone::Accent => g.accent.0,
+            EdgeTone::Info => g.edge_info.0,
+            EdgeTone::Success => g.edge_success.0,
+            EdgeTone::Danger => g.edge_danger.0,
         }
     }
 }
@@ -73,7 +77,8 @@ pub struct GraphView {
     scene: Option<GraphScene>,
     transform: ViewTransform,
     /// Fit the world into the viewport on the next render (after
-    /// `set_graph`/`set_scene` or [`fit_view`](Self::fit_view)).
+    /// `set_graph`/`set_scene` or [`fit_view`](Self::fit_view)): the box of
+    /// its nodes, not the world it was laid out in.
     needs_fit: bool,
     hovered: Option<usize>,
     selected: Option<usize>,
@@ -83,6 +88,12 @@ pub struct GraphView {
     drag_dist: f32,
     /// kind → tone overrides (defaults: 0 Dim, 1 Accent, 2 Info).
     edge_tones: HashMap<u8, EdgeTone>,
+    sem: Option<SemId>,
+    /// The node with the keyboard focus, driven by the owning view.
+    focused: Option<usize>,
+    /// The top-left of the bounds it last drew or took an event in: the
+    /// transform is the canvas's own, and this places it in the window.
+    origin: (f32, f32),
 }
 
 impl GraphView {
@@ -96,7 +107,78 @@ impl GraphView {
             drag: None,
             drag_dist: 0.0,
             edge_tones: HashMap::new(),
+            sem: None,
+            focused: None,
+            origin: (0.0, 0.0),
         }
+    }
+
+    /// Keyboard focus on scene node `node`, or on none, driven by the
+    /// owning view: the focus ring around it while it is drawn.
+    pub fn set_focused(&mut self, node: Option<usize>) {
+        let n = self.scene.as_ref().map_or(0, |s| s.positions.len());
+        self.focused = node.filter(|i| *i < n);
+    }
+
+    pub fn focused(&self) -> Option<usize> {
+        self.focused
+    }
+
+    /// The logical identity the render binds the canvas to; each node
+    /// it draws binds as `<id>[<scene ordinal>]`.
+    pub fn set_sem(&mut self, id: SemId) {
+        self.sem = Some(id);
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// Select scene node `node`, or none: what a click on it does. `false`
+    /// for a node the scene does not hold, or when nothing changed.
+    pub fn select(&mut self, node: Option<usize>) -> bool {
+        let n = self.scene.as_ref().map_or(0, |s| s.positions.len());
+        if node.is_some_and(|i| i >= n) || node == self.selected {
+            return false;
+        }
+        self.selected = node;
+        true
+    }
+
+    /// Declares the canvas as `id`: a `Role::Canvas` named `label` whose
+    /// `selected` state is the selected node's ordinal (or none), with a
+    /// `Role::ListItem` `<id>[<i>]` per scene node, labeled by
+    /// `node_label`, that offers `select` (it reads the canvas's
+    /// `selected`). Pan and zoom move the view, not the graph, and are
+    /// not declared. Only the selected node, or the first, is a stop of
+    /// Tab. Returns the canvas's node.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        label: impl Into<String>,
+        parent: Option<&SemId>,
+        mut node_label: impl FnMut(usize) -> String,
+    ) -> NodeBuilder<'b> {
+        let selected = format!("{id}:selected");
+        let n = self.scene.as_ref().map_or(0, |s| s.positions.len());
+        let stop = self.selected.unwrap_or(0);
+        for i in 0..n {
+            let mut node = b.node(id.key(i.to_string()), Role::ListItem, node_label(i));
+            node.parent(id).focusable(i == stop);
+            node.action("select").reads(selected.as_str());
+        }
+        let mut node = b.node(id, Role::Canvas, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        let value = match self.selected {
+            Some(i) => Value::Text(i.to_string()),
+            None => Value::Text(String::new()),
+        };
+        node.state("selected", value);
+        node
     }
 
     /// Set the graph and lay it out inline (O(n²) force iterations on this
@@ -148,7 +230,7 @@ impl GraphView {
     pub fn node_screen_pos(&self, node: usize) -> Option<(f32, f32)> {
         let scene = self.scene.as_ref()?;
         let (wx, wy) = *scene.positions.get(node)?;
-        Some(self.transform.world_to_screen(wx, wy))
+        Some(self.screen(wx, wy))
     }
 
     /// Override the tone of an edge kind.
@@ -164,6 +246,26 @@ impl GraphView {
         })
     }
 
+    /// Binds the canvas and each node it draws inside `bounds`, as the
+    /// square its click finds it in.
+    fn bind_nodes(&self, c: &mut Compositor, id: &SemId, scene: &GraphScene, bounds: Rect) {
+        c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        let r = self.node_r() + HIT_SLACK;
+        for (i, &(wx, wy)) in scene.positions.iter().enumerate() {
+            let (sx, sy) = self.screen(wx, wy);
+            if bounds.contains(sx, sy) {
+                c.bind(&id.key(i.to_string()), [sx - r, sy - r, r * 2.0, r * 2.0]);
+            }
+        }
+    }
+
+    /// A world point in window px: the canvas's transform, then its
+    /// place in the window.
+    fn screen(&self, wx: f32, wy: f32) -> (f32, f32) {
+        let (x, y) = self.transform.world_to_screen(wx, wy);
+        (x + self.origin.0, y + self.origin.1)
+    }
+
     /// Node radius in screen px at the current zoom (clamped so nodes
     /// stay visible zoomed out and stop growing zoomed in).
     fn node_r(&self) -> f32 {
@@ -172,10 +274,10 @@ impl GraphView {
 
     /// Nearest node to a screen point within its click radius.
     fn node_at(&self, scene: &GraphScene, x: f32, y: f32) -> Option<usize> {
-        let r = self.node_r() + 3.0;
+        let r = self.node_r() + HIT_SLACK;
         let mut best: Option<(usize, f32)> = None;
         for (i, &(wx, wy)) in scene.positions.iter().enumerate() {
-            let (sx, sy) = self.transform.world_to_screen(wx, wy);
+            let (sx, sy) = self.screen(wx, wy);
             let d = ((sx - x).powi(2) + (sy - y).powi(2)).sqrt();
             if d <= r && best.is_none_or(|(_, bd)| d < bd) {
                 best = Some((i, d));
@@ -188,6 +290,7 @@ impl GraphView {
         if !bounds.contains(event.pos().0, event.pos().1) && self.drag.is_none() {
             return EventResult::IGNORED;
         }
+        self.origin = (bounds.x, bounds.y);
         let Some(scene) = &self.scene else {
             return EventResult::IGNORED;
         };
@@ -237,7 +340,8 @@ impl GraphView {
             WidgetEvent::Scroll { x, y, delta } => {
                 // Wheel zoom, anchored at the cursor. Trackpad pixel deltas
                 // are small, line deltas large; exp() normalizes both.
-                self.transform.zoom_at((x, y), (-delta * 0.002).exp());
+                let at = (x - self.origin.0, y - self.origin.1);
+                self.transform.zoom_at(at, (-delta * 0.002).exp());
                 EventResult::changed()
             }
         }
@@ -252,17 +356,24 @@ impl GraphView {
         let Some(scene) = &self.scene else {
             return;
         };
+        self.origin = (bounds.x, bounds.y);
         if self.needs_fit {
-            self.transform = ViewTransform::fit(WORLD, WORLD, bounds.w, bounds.h, theme.spacing.xl);
+            let margin = theme.spacing.xl;
+            self.transform =
+                ViewTransform::fit_points(&scene.positions, bounds.w, bounds.h, margin);
             self.needs_fit = false;
         }
 
+        if let Some(id) = &self.sem {
+            self.bind_nodes(c, id, scene, bounds);
+        }
         c.push(SceneNode::PushClip {
             x: bounds.x,
             y: bounds.y,
             w: bounds.w,
             h: bounds.h,
         });
+        let look = &theme.navigation.graph;
         let r = self.node_r();
         let edge_w = (self.transform.scale * 1.2).clamp(0.5, 2.5);
 
@@ -273,9 +384,7 @@ impl GraphView {
         for pass_hot in [false, true] {
             let mut builders: HashMap<u8, PathBuilder> = HashMap::new();
             for i in 0..scene.graph.n_nodes {
-                let (x1, y1) = self
-                    .transform
-                    .world_to_screen(scene.positions[i].0, scene.positions[i].1);
+                let (x1, y1) = self.screen(scene.positions[i].0, scene.positions[i].1);
                 for (k, &j) in scene.graph.neighbors(i).iter().enumerate() {
                     let j = j as usize;
                     if j >= scene.graph.n_nodes || j < i {
@@ -285,9 +394,7 @@ impl GraphView {
                         continue;
                     }
                     let kind = scene.graph.kind(i, k).unwrap_or(0);
-                    let (x2, y2) = self
-                        .transform
-                        .world_to_screen(scene.positions[j].0, scene.positions[j].1);
+                    let (x2, y2) = self.screen(scene.positions[j].0, scene.positions[j].1);
                     let b = builders.entry(kind).or_default();
                     // Lyon requires end() between sub-paths; each edge is
                     // its own open sub-path in the batched stroke.
@@ -304,26 +411,42 @@ impl GraphView {
                 let base = self.edge_tone(kind).color(theme);
                 // Cool pass at low alpha so dense clusters stay readable;
                 // the selected node's incident edges go nearly opaque.
-                let alpha = if pass_hot { 0.9 } else { 0.35 };
+                let alpha = if pass_hot {
+                    look.edge_hot_alpha
+                } else {
+                    look.edge_cool_alpha
+                };
                 c.draw_path(builder.stroke([base[0], base[1], base[2], alpha], edge_w));
             }
         }
 
         // Nodes: accent dots; hovered/selected get a ring and full alpha.
-        let node_color = theme.colors.accent.0;
+        let node_color = look.accent.0;
         for (i, &(wx, wy)) in scene.positions.iter().enumerate() {
-            let (sx, sy) = self.transform.world_to_screen(wx, wy);
+            let (sx, sy) = self.screen(wx, wy);
             let is_sel = self.selected == Some(i);
             let is_hov = self.hovered == Some(i);
-            let alpha = if is_sel || is_hov { 1.0 } else { 0.65 };
+            let alpha = if is_sel || is_hov {
+                1.0
+            } else {
+                look.node_rest_alpha
+            };
             let color = [node_color[0], node_color[1], node_color[2], alpha];
             c.draw_path(PathBuilder::circle(sx, sy, r).fill(color));
             if is_sel || is_hov {
                 c.draw_path(
                     PathBuilder::circle(sx, sy, r + theme.spacing.xs)
-                        .stroke(theme.colors.text.0, theme.control.edge_width),
+                        .stroke(look.ring.0, theme.control.edge_width),
                 );
             }
+        }
+        if let Some(&(wx, wy)) = self.focused.and_then(|i| scene.positions.get(i)) {
+            let (sx, sy) = self.screen(wx, wy);
+            let ring = r + theme.spacing.xs + theme.control.focus_ring_offset;
+            c.draw_path(
+                PathBuilder::circle(sx, sy, ring)
+                    .stroke(theme.colors.accent.0, theme.control.focus_ring_width),
+            );
         }
         c.push(SceneNode::PopClip);
 
@@ -335,8 +458,8 @@ impl GraphView {
                 bounds.y,
                 bounds.w,
                 bounds.h,
-                theme.shape.nav,
-                theme.glass.edge.0,
+                look.frame_radius,
+                look.frame.0,
                 theme.control.edge_width,
             ));
         }
@@ -386,9 +509,7 @@ mod tests {
     fn node0_screen(view: &mut GraphView, theme: &Theme) -> (f32, f32) {
         let mut c = Compositor::new();
         view.render(&mut c, bounds(), theme);
-        let scene = view.scene().unwrap();
-        view.transform
-            .world_to_screen(scene.positions[0].0, scene.positions[0].1)
+        view.node_screen_pos(0).unwrap()
     }
 
     #[test]

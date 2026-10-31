@@ -96,13 +96,17 @@ pub enum Pane {
     InputGroup,
     // task-104 front B, overlays (#155)
     AlertDialog,
+    Drawer,
     DropdownMenu,
     HoverCard,
     Menubar,
     Popover,
+    Sheet,
     // task-104 front C, conversation and feedback (#156)
     Alert,
+    Attachment,
     Bubble,
+    Marker,
     Message,
     MessageScroller,
     // task-104 front D, disclosure and display (#157)
@@ -113,6 +117,8 @@ pub enum Pane {
     Item,
     Kbd,
     Pagination,
+    /// The static table; `Table` is the Data Table.
+    StaticTable,
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
     Calendar,

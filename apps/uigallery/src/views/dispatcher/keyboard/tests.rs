@@ -1,6 +1,7 @@
 //! The keyboard over the context menu (task-75 phase 2c): the menu the
 //! pointer opens is walked with the arrows (they wrap, and skip the
-//! separator and the disabled item), Home and End, and Tab stays in it;
+//! separator; a disabled item, the text field's menu's, in
+//! `tests/component_pages/field_menu.rs`), Home and End, and Tab stays in it;
 //! the one highlight follows the focus; Enter picks the item through the
 //! dispatcher, as a click does.
 
@@ -23,16 +24,18 @@ fn highlighted(view: &ShowcaseView) -> Option<usize> {
 fn the_arrows_walk_the_context_menu_and_enter_picks() {
     let mut view = ShowcaseView::new(1280.0, 800.0);
     view.jump_to_page("context menu");
-    let area = view.page_rect();
-    assert!(view.handle_right_click(area.x + 20.0, area.y + 20.0));
+    let area = view.panes.context_menu.area(view.page_rect(), &view.theme);
+    assert!(view.handle_right_click(area.x + area.w / 2.0, area.y + area.h / 2.0));
     assert_eq!(focused(&view).as_deref(), Some("context_menu[1]"));
-    // The entries: 1, 2, 3, a separator, 4 (disabled), 5.
+    // The kit's file menu: 1, 2, 3, a separator, 4, 5, 6.
     let walk = [
         (NavKey::Down, "context_menu[2]", 1),
         (NavKey::Down, "context_menu[3]", 2),
+        (NavKey::Down, "context_menu[4]", 4),
         (NavKey::Down, "context_menu[5]", 5),
+        (NavKey::Down, "context_menu[6]", 6),
         (NavKey::Down, "context_menu[1]", 0),
-        (NavKey::Up, "context_menu[5]", 5),
+        (NavKey::Up, "context_menu[6]", 6),
     ];
     for (key, at, entry) in walk {
         assert!(view.handle_nav(key), "{key:?}");
@@ -46,7 +49,7 @@ fn the_arrows_walk_the_context_menu_and_enter_picks() {
     assert!(view.handle_edit_key(EditKey::Home));
     assert_eq!(focused(&view).as_deref(), Some("context_menu[1]"));
     assert!(view.handle_edit_key(EditKey::End));
-    assert_eq!(focused(&view).as_deref(), Some("context_menu[5]"));
+    assert_eq!(focused(&view).as_deref(), Some("context_menu[6]"));
     assert!(view.handle_edit_key(EditKey::Tab));
     assert_eq!(
         focused(&view).as_deref(),
@@ -54,12 +57,12 @@ fn the_arrows_walk_the_context_menu_and_enter_picks() {
         "Tab stays in the menu"
     );
     assert!(view.handle_nav(NavKey::Down));
-    assert!(view.handle_enter(), "picks Copy path");
+    assert!(view.handle_enter(), "picks Create new scene...");
     assert!(!view.overlay_holds_pointer(), "picked, it leaves");
     let said = view.semantics().is_some_and(|s| {
         s.nodes()
             .values()
-            .any(|n| n.label == "Context menu: Copy path")
+            .any(|n| n.label == "Context menu: Create new scene...")
     });
     assert!(said, "the pick's toast");
 }

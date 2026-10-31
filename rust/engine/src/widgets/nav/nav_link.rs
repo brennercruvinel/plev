@@ -1,9 +1,12 @@
-//! HOFF nav link: the sidebar row. One `Lg` control tall at the nav
-//! radius, an icon in its slot (the small icon centered in an `Xs`-wide
-//! box), a base-2sm label, an optional trailing shortcut (in the kit's
-//! key cap, task-104d), hint (plain text) or count badge. Faint at rest, text-default hovered, text-active plus
-//! the surface-active wash and the edge rim when active. In a rail (no
-//! room for labels) only the icon slot draws, centered.
+//! Nav link: a row that goes somewhere. An icon in its box (a bare slot,
+//! or the kit's tile that rises while the link is current), a label, an
+//! optional trailing shortcut (in the kit's key cap, task-104d), hint
+//! (plain text) or count badge; the row's box and tones change at rest,
+//! hovered, pressed and active. In a rail (no room for labels) only the
+//! icon's box draws, centered. Every visual value is a
+//! [`NavLinkRecipe`]: the theme's `navigation.link` on its own,
+//! `navigation.sidebar_link` inside the sidebar
+//! ([`NavLink::render_with`]); the key cap is the Kbd's own.
 //!
 //! With a [`SemId`] ([`NavLink::sem`]) the render binds the bounds it
 //! draws and hit-tests with (the rail form too), and
@@ -13,14 +16,14 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{ControlSize, IconSize, Theme};
+use crate::styling::theme::Theme;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
 use crate::widgets::content::Kbd;
 use crate::widgets::icons;
-use crate::widgets::recipe::focus_ring;
-use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::widgets::nav::tokens::{LinkSurface, NavLinkRecipe};
+use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke, shadow_node};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 #[derive(Clone, Debug)]
@@ -130,54 +133,62 @@ impl NavLink {
         self.hovered
     }
 
-    /// Row height: one `Lg` control.
+    /// Row height of the link on its own.
     pub fn height(theme: &Theme) -> f32 {
-        theme.control.height(ControlSize::Lg)
+        theme.navigation.link.height
     }
 
-    /// The icon slot: an `Xs`-wide square.
+    /// The icon's box of the link on its own: its tile or its slot.
     pub fn icon_slot(theme: &Theme) -> f32 {
-        theme.control.height(ControlSize::Xs)
+        theme.navigation.link.icon_box()
     }
 
     pub fn label_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2sm()
+        theme.navigation.link.label.style(&theme.typography)
     }
 
-    fn hint_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
-    }
-
-    /// Horizontal padding inside the row: the `sm` step (the icon slot
-    /// carries its own centering).
-    fn pad(theme: &Theme) -> f32 {
-        theme.spacing.sm
-    }
-
-    /// Width the link wants with its label shown.
+    /// Width the link wants with its label shown, on its own.
     pub fn preferred_width(&self, theme: &Theme) -> f32 {
-        let pad = Self::pad(theme);
-        let mut w = pad * 2.0;
+        self.preferred_width_with(theme, &theme.navigation.link)
+    }
+
+    /// Width the link wants with its label shown, drawn with `recipe`.
+    pub fn preferred_width_with(&self, theme: &Theme, recipe: &NavLinkRecipe) -> f32 {
+        let typo = &theme.typography;
+        let mut w = recipe.pad_start + recipe.pad_end;
         if self.icon.is_some() {
-            w += Self::icon_slot(theme) + theme.spacing.xs;
+            w += recipe.icon_box() + recipe.icon_gap;
         }
-        w += TextMeasurer::measure_styled(&self.label, &Self::label_style(theme), None).0;
+        w += TextMeasurer::measure_styled(&self.label, &recipe.label.style(typo), None).0;
         if let Some(keys) = &self.shortcut {
-            w += theme.spacing.lg + Kbd::new(keys.as_str()).preferred_size(theme).0;
+            w += recipe.trailing_room + Kbd::new(keys.as_str()).preferred_size(theme).0;
         } else if let Some(hint) = &self.hint {
-            w += theme.spacing.lg
-                + TextMeasurer::measure_styled(hint, &Self::hint_style(theme), None).0;
+            w += recipe.trailing_room
+                + TextMeasurer::measure_styled(hint, &recipe.hint.style(typo), None).0;
         }
         if let Some(badge) = &self.badge {
-            w += theme.spacing.lg + badge.preferred_size(theme).0;
+            w += recipe.trailing_room + badge.preferred_size(theme).0;
         }
         w.ceil()
     }
 
     /// Whether `bounds` is wide enough for the label; narrower rows draw
     /// the rail form (icon only).
-    fn shows_label(&self, bounds: Rect, theme: &Theme) -> bool {
-        bounds.w >= Self::icon_slot(theme) + Self::pad(theme) * 2.0 + theme.spacing.xl
+    fn shows_label(bounds: Rect, recipe: &NavLinkRecipe) -> bool {
+        bounds.w >= recipe.icon_box() + recipe.pad_start + recipe.pad_end + recipe.label_min
+    }
+
+    /// The row's face now: active over pressed over hovered over rest.
+    fn surface<'r>(&self, recipe: &'r NavLinkRecipe) -> &'r LinkSurface {
+        if self.active {
+            &recipe.active
+        } else if self.pressed && self.hovered {
+            &recipe.pressed
+        } else if self.hovered {
+            &recipe.hover
+        } else {
+            &recipe.rest
+        }
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
@@ -219,71 +230,59 @@ impl NavLink {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        self.render_with(c, layer, bounds, theme, &theme.navigation.link);
+    }
+
+    /// Draw the link with `recipe` (the sidebar passes its own).
+    pub fn render_with(
+        &self,
+        c: &mut Compositor,
+        layer: LayerId,
+        bounds: Rect,
+        theme: &Theme,
+        recipe: &NavLinkRecipe,
+    ) {
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let glass = &theme.glass;
-        let radius = theme.shape.nav.min(bounds.h / 2.0);
+        let radius = recipe.radius.min(bounds.h / 2.0);
         if self.focused {
             c.push_to_layer(layer, focus_ring(bounds, radius, theme));
         }
-        // The wash and the rim are the active mark; a hovered link only
-        // brightens its text, so the two states never read alike.
-        if self.active {
-            c.push_to_layer(
-                layer,
-                rounded_rect(
-                    bounds.x,
-                    bounds.y,
-                    bounds.w,
-                    bounds.h,
-                    radius,
-                    glass.surface_active.0,
-                ),
-            );
-            c.push_to_layer(
-                layer,
-                rounded_rect_stroke(
-                    bounds.x,
-                    bounds.y,
-                    bounds.w,
-                    bounds.h,
-                    radius,
-                    glass.edge.0,
-                    theme.control.edge_width,
-                ),
-            );
+        let face = self.surface(recipe);
+        let Rect { x, y, w, h } = bounds;
+        if face.fill.0[3] > 0.0 {
+            c.push_to_layer(layer, rounded_rect(x, y, w, h, radius, face.fill.0));
         }
-        let fg = if self.active {
-            glass.text_active.0
-        } else if self.hovered {
-            glass.text_default.0
-        } else {
-            glass.text_faint.0
-        };
+        if face.border.0[3] > 0.0 && recipe.border_width > 0.0 {
+            let rim = rounded_rect_stroke(x, y, w, h, radius, face.border.0, recipe.border_width);
+            c.push_to_layer(layer, rim);
+        }
 
-        let pad = Self::pad(theme);
-        let slot = Self::icon_slot(theme);
-        let icon_px = theme.control.icon(IconSize::Md);
-        let show_label = self.shows_label(bounds, theme);
-        let mut x = bounds.x + pad;
+        let slot = recipe.icon_box();
+        let show_label = Self::shows_label(bounds, recipe);
+        let mut x = bounds.x + recipe.pad_start;
         if let Some(icon) = self.icon {
-            // Rail form: the slot centers in the row instead of leading it.
+            // Rail form: the box centers in the row instead of leading it.
             let slot_x = if show_label {
                 x
             } else {
                 bounds.x + (bounds.w - slot) / 2.0
             };
-            if let Some(node) = icons::icon_at(
-                icon,
-                icon_px,
-                fg,
-                slot_x + (slot - icon_px) / 2.0,
-                bounds.y + (bounds.h - icon_px) / 2.0,
-            ) {
+            let at = Rect::new(slot_x, bounds.y + (bounds.h - slot) / 2.0, slot, slot);
+            if let Some(tile) = recipe.tile.filter(|_| self.active) {
+                if let Some(node) = shadow_node(at, tile.radius, &tile.shadow_current) {
+                    c.push_to_layer(layer, node);
+                }
+                let raised = rounded_rect(at.x, at.y, at.w, at.h, tile.radius, tile.fill_current.0);
+                c.push_to_layer(layer, raised);
+            }
+            let px = recipe.tile.map_or(recipe.icon, |t| t.icon);
+            let (ix, iy) = (at.x + (slot - px) / 2.0, at.y + (slot - px) / 2.0);
+            if let Some(node) = icons::icon_at(icon, px, face.icon.0, ix, iy) {
                 c.push_to_layer(layer, node);
             }
-            x += slot + theme.spacing.xs;
+            x += slot + recipe.icon_gap;
         }
         if !show_label {
             return;
@@ -291,7 +290,7 @@ impl NavLink {
 
         // Trailing hint or badge, right-aligned; the label truncates
         // against whatever is left.
-        let mut right = bounds.x + bounds.w - pad;
+        let mut right = bounds.x + bounds.w - recipe.pad_end;
         if let Some(badge) = &self.badge {
             let (bw, bh) = badge.preferred_size(theme);
             right -= bw;
@@ -301,16 +300,16 @@ impl NavLink {
                 Rect::new(right, bounds.y + (bounds.h - bh) / 2.0, bw, bh),
                 theme,
             );
-            right -= theme.spacing.sm;
+            right -= recipe.trailing_gap;
         } else if let Some(keys) = &self.shortcut {
             let cap = Kbd::new(keys.as_str());
             let (kw, kh) = cap.preferred_size(theme);
             right -= kw;
             let at = Rect::new(right, bounds.y + (bounds.h - kh) / 2.0, kw, kh);
             cap.render_to_layer(c, layer, at, theme);
-            right -= theme.spacing.sm;
+            right -= recipe.trailing_gap;
         } else if let Some(hint) = &self.hint {
-            let style = Self::hint_style(theme);
+            let style = recipe.hint.style(&theme.typography);
             let (hw, _) = TextMeasurer::measure_styled(hint, &style, None);
             right -= hw;
             c.push_to_layer(
@@ -319,12 +318,12 @@ impl NavLink {
                     key: TextNodeKey::from_style(hint, &style, None),
                     x: right,
                     y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                    color: glass.text_placeholder.0,
+                    color: recipe.hint_color.0,
                 },
             );
-            right -= theme.spacing.sm;
+            right -= recipe.trailing_gap;
         }
-        let style = Self::label_style(theme);
+        let style = recipe.label.style(&theme.typography);
         let avail = (right - x).max(0.0);
         let shown = TextMeasurer::truncate_to_width(&self.label, &style, avail);
         c.push_to_layer(
@@ -333,7 +332,7 @@ impl NavLink {
                 key: TextNodeKey::from_style(&shown, &style, None),
                 x,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                color: fg,
+                color: face.label.0,
             },
         );
     }

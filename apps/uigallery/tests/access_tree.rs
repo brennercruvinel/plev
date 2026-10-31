@@ -42,20 +42,26 @@ const PROJECTING: &[&str] = &[
     "Alert",
     "Alert Dialog",
     "Aspect Ratio",
+    "Attachment",
     "Breadcrumb",
     "Bubble",
     "Button",
     "Button Group",
     "Calendar",
     "Carousel",
+    "Chart",
     "Checkbox",
     "Chip",
+    "Code Block",
     "Collapsible",
     "Combobox",
+    "Context Menu",
     "Data Table",
     "Dialog",
+    "Drawer",
     "Dropdown Menu",
     "Field",
+    "Graph",
     "Hover Card",
     "Icon Button",
     "Input",
@@ -63,18 +69,23 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Marker",
     "Menubar",
     "Message",
     "Message Scroller",
     "Navigation Menu",
     "Pagination",
+    "Panel",
+    "Panel Header",
     "Popover",
     "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
+    "Sheet",
     "Slider",
     "Spinner",
+    "Stat",
     "Switch",
     "Table",
     "Tabs",
@@ -118,7 +129,6 @@ const SILENT: &[(&str, Why)] = &[
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
     ),
-    ("Attachment", PLACEHOLDER),
     (
         "Avatar",
         Unprojected("Avatar: an image named by the person, online or not"),
@@ -128,39 +138,13 @@ const SILENT: &[(&str, Why)] = &[
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
-    (
-        "Chart",
-        Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
-    (
-        "Code Block",
-        Unprojected("CodeBlock: a label with the code, named by its caption"),
-    ),
     ("Command", PLACEHOLDER),
-    (
-        "Context Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
     ("Date Picker", PLACEHOLDER),
-    (
-        "Drawer",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
-    (
-        "Graph",
-        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
-    ),
     ("Input OTP", PLACEHOLDER),
-    ("Marker", PLACEHOLDER),
-    ("Panel", Nothing("the glass surface alone")),
-    (
-        "Panel Header",
-        Unprojected("PanelHeader: a heading with its blurb and badge"),
-    ),
     (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
@@ -168,20 +152,12 @@ const SILENT: &[(&str, Why)] = &[
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
     (
-        "Sheet",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
         "Sidebar",
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
     ),
     (
         "Skeleton",
         Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
-    ),
-    (
-        "Stat",
-        Unprojected("Stat: a label with its value, unit and delta"),
     ),
     ("Textarea", PLACEHOLDER),
     (
@@ -496,9 +472,11 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// adds the Resizable page's split: a group whose `set_ratio` no action of
 /// the tree reaches (a value is set through `set_value` or a select's
 /// `select`, and the contract has no splitter role, AccessKit's
-/// `Splitter`); an agent asks it, and a person drags.
+/// `Splitter`); an agent asks it, and a person drags. Task-104 put a
+/// stacked split beside it, the same.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
+    "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
 

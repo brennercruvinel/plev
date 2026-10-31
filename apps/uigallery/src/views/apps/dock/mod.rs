@@ -23,6 +23,13 @@ use engine::widgets::prelude::{
 
 use super::{group_label, panel, text, with_alpha};
 
+/// The dock's own runs (the initials, the composer's hint): the theme's
+/// family and tracking at the engine's default line height for `size`.
+fn dock_style(size: f32, weight: u16, theme: &Theme) -> TextStyle {
+    let line = TextStyle::new(size).line_height;
+    theme.typography.exact(size, line, weight)
+}
+
 #[cfg(test)]
 mod tests;
 
@@ -163,9 +170,9 @@ impl DockPage {
             "Hover lifts a contact; click morphs the dock open.",
             13.0,
             400,
-            stage.x + 24.0,
-            stage.y + 44.0,
+            (stage.x + 24.0, stage.y + 44.0),
             theme.colors.text_dim.0,
+            theme,
         );
 
         // The wallpaper: chat bubbles (`engine::widgets::message::bubble`),
@@ -197,7 +204,9 @@ impl DockPage {
         let dock = self.model.dock_rect(stage);
         let radius = dock.h / 2.0;
         // Real glass: deep shadow, frost, edge-lit translucent pill.
-        c.push(menu_shadow(dock, radius, theme));
+        for node in menu_shadow(dock, radius, theme) {
+            c.push(node);
+        }
         c.draw_backdrop_blur(
             dock.x,
             dock.y,
@@ -217,7 +226,7 @@ impl DockPage {
     /// Avatars: circular-ish rounded rects, lift and fade from the model,
     /// initials centered by measurement (one style measures and draws).
     fn render_roster(&self, c: &mut Compositor, stage: Rect, theme: &Theme) {
-        let style = TextStyle::new(15.0).with_weight(600);
+        let style = dock_style(15.0, 600, theme);
         let edge = theme.glass.edge.0;
         let ink = theme.colors.text.0;
         for (i, (name, hue)) in CONTACTS.iter().enumerate() {
@@ -289,7 +298,7 @@ impl DockPage {
             with_alpha(fill, fill[3] * a),
         ));
         let hint = format!("Message {}", CONTACTS[self.model.selected().unwrap_or(0)].0);
-        let style = TextStyle::new(14.0);
+        let style = dock_style(14.0, 400, theme);
         let (_, th) = TextMeasurer::measure_styled(&hint, &style, None);
         let (tx, ty) = (field.x + 16.0, field.y + (field.h - th) / 2.0);
         let ph = glass.text_placeholder.0;

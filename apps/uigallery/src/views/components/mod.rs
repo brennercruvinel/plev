@@ -51,14 +51,18 @@ pub mod label;
 
 // task-104 front B, overlays (#155)
 pub mod alert_dialog;
+pub mod drawer;
 pub mod dropdown_menu;
 pub mod hover_card;
 pub mod menubar;
 pub mod popover;
+pub mod sheet;
 
 // task-104 front C, conversation and feedback (#156)
 pub mod alert;
+pub mod attachment;
 pub mod bubble;
+pub mod marker;
 pub mod message;
 pub mod message_scroller;
 
@@ -70,6 +74,7 @@ pub mod collapsible;
 pub mod item;
 pub mod kbd;
 pub mod pagination;
+pub mod table_static;
 
 // task-104 front E, selection and dates (#158)
 pub mod button_group;

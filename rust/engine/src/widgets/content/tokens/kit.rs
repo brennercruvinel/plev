@@ -1,6 +1,7 @@
 //! The kit's values, class list by class list (`hoff_core`).
 
 use super::*;
+use crate::styling::theme::hoff_core::SHADES;
 
 impl DisclosureTokens {
     /// The kit, class list by class list.
@@ -324,6 +325,166 @@ impl DisclosureTokens {
             arrow: 16.0,
         };
 
+        // A list's rows are the Folder row (Folder/index.tsx:23: `rounded-xl
+        // border border-transparent hover:bg-[#f1f1f1]`), selected in the
+        // Dropdown's current look (Dropdown :28), as the Item's row.
+        let list = RowRecipe {
+            radius: item.row_radius,
+            border: item.row_border,
+            hover: item.row_hover,
+            selected: item.row_selected,
+            ring_radius: item.row_radius,
+            rule: 0.0,
+            rule_color: NONE,
+        };
+
+        // The kit's one table, the typography page's spec sheet
+        // (templates/TypographyPage/index.tsx:8): `border border-[#ECECEC]
+        // text-[0.6875rem] leading-[1rem] font-medium text-[#7B7B7B]`,
+        // cells `p-5`, the header `text-left font-medium opacity-50` on no
+        // fill, every data cell `border-t border-[#ECECEC]`, the first
+        // `text-[#121212]`. Its gray fails the AAA contrast the tables
+        // meet (#7B7B7B is 4.13 on paper, at opacity 50 far less): the
+        // header and the other cells take shade 7, the theme's darkest
+        // gray that passes (`theme/tests/contrast.rs`). The kit has no
+        // hover nor selection on it: a row takes the AssetCard well's two
+        // washes (AssetCard/index.tsx:10, `bg-[#F8F7F7]
+        // hover:bg-[#F1F1F1]`), the paler hovered, the deeper selected,
+        // square as the table's rules. Heights stay the controls' (one
+        // `Lg` row, one `Xs` header), so the geometry of every table is
+        // the same in every theme.
+        let passing = SHADES[6];
+        let table = TableRecipe {
+            frame: 1.0,
+            frame_color: line,
+            header_fill: NONE,
+            header_radius: 0.0,
+            header_size: 11.0,
+            header_line_height: 16.0,
+            header_weight: 500,
+            header_text: passing,
+            rule: 1.0,
+            rule_color: line,
+            cell_pad: 20.0,
+            cell_size: 11.0,
+            cell_line_height: 16.0,
+            cell_weight: 500,
+            cell: ink,
+            cell_dim: passing,
+            rows: RowRecipe {
+                radius: 0.0,
+                border: 0.0,
+                hover: DisclosureSurface {
+                    fill: hex(0xF8F7F7),
+                    border: NONE,
+                },
+                selected: DisclosureSurface {
+                    fill: wash,
+                    border: NONE,
+                },
+                ring_radius: 0.0,
+                rule: 1.0,
+                rule_color: line,
+            },
+        };
+
+        // The kit has no tree; its nested rows are the scene list's
+        // (SceneAndAssetsSidebar/Scene/Item/index.tsx:45-64): `gap-3 p-0.75
+        // border rounded-xl hover:bg-[#f1f1f1]`, selected `bg-[#f1f1f1]
+        // border-[#e2e2e2]`; the tile `size-8 rounded-lg bg-[#f1f1f1]`,
+        // raised `bg-[#fcfcfc] shadow-[0_0px_4px_0px_rgba(18,18,18,0.10)]`
+        // when selected, its icon `size-4`; the label `text-[0.75rem]
+        // font-medium text-[#121212]` (:82). A row is 40 px: the tile, the
+        // padding and the border on each side. The chevron is the
+        // Accordion's (`size-4 fill-[#7B7B7B]`), a `gap-3` before the
+        // tile; a level indents by the chevron and its gap, so a child's
+        // chevron sits under its parent's tile.
+        let pad = 3.0 + item.row_border;
+        let tile = 32.0;
+        let tree = TreeRecipe {
+            row_h: tile + pad * 2.0,
+            pad_x: pad,
+            indent: 16.0 + 12.0,
+            chevron: 16.0,
+            chevron_gap: 12.0,
+            icon: 16.0,
+            tile: Some(TreeTile {
+                size: tile,
+                radius: 8.0,
+                rest: wash,
+                selected: paper,
+                shadow_selected: ShadowSpec::new([0.0, 0.0], 4.0, 0.0, tint(ink, 0.10)),
+            }),
+            label_gap: 12.0,
+            radius: 12.0,
+            border: item.row_border,
+            seam: [0.0, 0.0],
+            hover: DisclosureSurface {
+                fill: wash,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: wash,
+                border: hex(0xE2E2E2),
+            },
+            font_size: 12.0,
+            line_height: 18.0,
+            font_weight: 500,
+            label: ink,
+            label_selected: ink,
+            chevron_color: gray,
+            icon_color: ink,
+            icon_selected: ink,
+        };
+
+        // The kit's panel, the inspector's (DesignAndAnimationSidebar/
+        // index.tsx:23, `border border-[#ECECEC] rounded-[1.25rem]`), its
+        // sections `px-4` (:25); a group's label `text-[0.75rem]
+        // leading-[1rem] font-medium text-[#7b7b7b]/70` (GuidelineSidebar/
+        // index.tsx:59), whose gray fails AAA and takes shade 7.
+        let panel = PanelRecipe {
+            radius: 20.0,
+            pad: 16.0,
+            label_size: 12.0,
+            label_line_height: 16.0,
+            label_weight: 500,
+            label: passing,
+        };
+        // The Notifications head (Notifications/index.tsx:26-28): `px-5 py-4
+        // border-b border-[#ECECEC]`, the title `text-[0.875rem]
+        // leading-[1.25rem] font-semibold`; a second line in the
+        // notification's `text-[0.75rem] leading-[1rem] font-medium
+        // text-[#7B7B7B]/50` (Notification/index.tsx:68), in shade 7 for
+        // AAA, right under the title's row, whose `py-4` parts them, and
+        // `py-4` below it; the tabs `gap-1` (:30) before the badge.
+        let header = HeaderRecipe {
+            pad_x: 20.0,
+            row: 16.0 + 20.0 + 16.0,
+            blurb_gap: 0.0,
+            blurb_bottom: 16.0,
+            title_size: 14.0,
+            title_line_height: 20.0,
+            title_weight: 600,
+            title: ink,
+            blurb_size: 12.0,
+            blurb_line_height: 16.0,
+            blurb_weight: 500,
+            blurb: passing,
+            badge_gap: 4.0,
+            rule: 1.0,
+            rule_color: line,
+        };
+
+        // The kit has no split: its divider is the kit's line (`border-b
+        // border-[#ECECEC]`, Notifications/index.tsx:26) at rest and, to
+        // say "grab me", its gray (the chevrons' `fill-[#7B7B7B]`), which
+        // a control's part must show at 3:1 (WCAG 1.4.11); the hover
+        // border of an AssetItem (#C4C4C4) is too faint for it.
+        let split = SplitRecipe {
+            rest: line,
+            active: gray,
+        };
+
         Self {
             accordion,
             collapsible,
@@ -333,6 +494,12 @@ impl DisclosureTokens {
             aspect,
             carousel,
             pager,
+            list,
+            table,
+            tree,
+            panel,
+            header,
+            split,
         }
     }
 }

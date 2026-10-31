@@ -286,7 +286,9 @@ impl GraphScreen {
         let x = (sx + 12.0).min(canvas.x + canvas.w - w - 4.0);
         let y = (sy - h - 10.0).max(canvas.y + 4.0);
         let rect = Rect::new(x, y, w, h);
-        c.push(menu_shadow(rect, theme.radius.md, theme));
+        for node in menu_shadow(rect, theme.radius.md, theme) {
+            c.push(node);
+        }
         for node in engine::widgets::prelude::glass_pill(
             rect,
             theme.radius.md,

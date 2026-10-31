@@ -6,8 +6,9 @@
 //! (`theme.overlay.menu`).
 //!
 //! "Live" operates, and says the last item picked. "Menus" shows the
-//! kit's MenuPage menus, open, forced: the profile menu, the file menu,
-//! the filter menu, each in a card as tall as it.
+//! kit's MenuPage menus, open, forced, as the Context Menu page defines
+//! them: the profile menu, the file menu, the filter menu, each in its
+//! own recipe and in a card as tall as it.
 //!
 //! Projected: the trigger `dropdown_menu_page.group[0].card[0]`, a button
 //! with its `expanded`; while open, the menu `<trigger>.panel` and its
@@ -24,45 +25,7 @@ use engine::widgets::prelude::{
 };
 
 use super::showcase::{self, CARD_H, GroupLayout};
-use super::{After, Component, child_id, key_under, root_id, under};
-
-/// The kit's profile menu (`UserDropdown`): four items, a rule, two.
-fn profile() -> Vec<MenuEntry> {
-    vec![
-        MenuEntry::item(1, "Profile").icon("info"),
-        MenuEntry::item(2, "Subscription").icon("heart"),
-        MenuEntry::item(3, "Join Discord").icon("send"),
-        MenuEntry::item(4, "Settings").icon("settings"),
-        MenuEntry::Separator,
-        MenuEntry::item(5, "Updates").icon("history"),
-        MenuEntry::item(6, "Sign out").icon("x"),
-    ]
-}
-
-/// The kit's file menu (`FileMenu`), its shortcuts waiting for the Kbd.
-fn file() -> Vec<MenuEntry> {
-    vec![
-        MenuEntry::item(1, "Export..."),
-        MenuEntry::item(2, "Create new scene..."),
-        MenuEntry::item(3, "Duplicate"),
-        MenuEntry::Separator,
-        MenuEntry::item(4, "Rename"),
-        MenuEntry::item(5, "Move to folder..."),
-        MenuEntry::item(6, "Delete").intent(Intent::Destructive),
-    ]
-}
-
-/// The kit's filter menu (`FiltersMenu`).
-fn filters() -> Vec<MenuEntry> {
-    vec![
-        MenuEntry::item(1, "All scenes"),
-        MenuEntry::item(2, "Designs"),
-        MenuEntry::item(3, "Animation"),
-        MenuEntry::Separator,
-        MenuEntry::item(4, "Newest first"),
-        MenuEntry::item(5, "Oldest first"),
-    ]
-}
+use super::{After, Component, child_id, context_menu, key_under, root_id, under};
 
 /// One of the kit's menus, shown open in its card.
 struct Shown {
@@ -93,22 +56,18 @@ impl DropdownMenuPage {
     pub fn new() -> Self {
         let root = root_id("dropdown_menu_page");
         let mut trigger = IconButton::new("settings").variant(IconButtonVariant::Toolbar);
-        let mut dropdown = DropdownMenu::new(profile());
+        let mut dropdown = DropdownMenu::new(context_menu::profile_menu());
         if let Some(id) = root.as_ref().and_then(trigger_id) {
             dropdown = dropdown.sem(&id);
             trigger = trigger.sem(id);
         }
-        let shown = [
-            ("Profile menu", profile()),
-            ("File menu", file()),
-            ("Filter menu", filters()),
-        ]
-        .into_iter()
-        .map(|(chip, entries)| Shown {
-            chip,
-            menu: ContextMenu::new(entries),
-        })
-        .collect();
+        // The profile menu first: the one the trigger opens.
+        let mut menus = context_menu::kit_menus();
+        menus.rotate_right(1);
+        let shown = menus
+            .into_iter()
+            .map(|(chip, menu)| Shown { chip, menu })
+            .collect();
         Self {
             root,
             trigger,

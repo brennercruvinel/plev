@@ -169,7 +169,7 @@ impl Sidebar {
     /// them, and their index stays put.
     fn rows(&self, band: Rect, theme: &Theme) -> (Vec<Rect>, Vec<Rect>) {
         let pad = theme.spacing.md;
-        let h = NavLink::height(theme);
+        let h = theme.navigation.sidebar_link.height;
         let gap = theme.spacing.xs;
         let x = band.x + pad;
         let w = band.w - pad * 2.0;
@@ -270,7 +270,7 @@ impl Sidebar {
         let pad = theme.spacing.md;
         let links = self.footer_links.len() as f32;
         let links_h = if links > 0.0 {
-            links * NavLink::height(theme) + (links - 1.0) * theme.spacing.xs + pad
+            links * theme.navigation.sidebar_link.height + (links - 1.0) * theme.spacing.xs + pad
         } else {
             0.0
         };
@@ -286,7 +286,7 @@ impl Sidebar {
     /// Rects of the pinned footer links, bottom-up from the sidebar foot.
     pub fn footer_link_rects(&self, rect: Rect, theme: &Theme) -> Vec<Rect> {
         let pad = theme.spacing.md;
-        let h = NavLink::height(theme);
+        let h = theme.navigation.sidebar_link.height;
         let gap = theme.spacing.xs;
         let n = self.footer_links.len();
         (0..n)

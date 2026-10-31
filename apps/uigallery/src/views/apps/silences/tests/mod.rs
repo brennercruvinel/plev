@@ -12,6 +12,7 @@ mod agent;
 mod composites;
 mod ffmpeg;
 mod generative;
+mod sweep;
 
 use crate::domain::silences::{Decision, PROBE_STDERR, parse};
 use accord::{Actor, Change, Rejection, Request, RequestId, Role, SemId, Stage, StateRef, Value};

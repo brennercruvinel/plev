@@ -1,6 +1,6 @@
 //! Front B, overlays (task-104, #155): popover, hover card, dropdown menu,
-//! alert dialog, menubar, sheet and drawer, the same request from the
-//! person, the reader and an agent.
+//! alert dialog, menubar, sheet, drawer and context menu, the same request
+//! from the person, the reader and an agent.
 
 use accord::{Actor, Request, Value};
 use engine::drawing::compositor::{Compositor, LayerId};
@@ -281,7 +281,7 @@ fn the_alert_dialog_opens_and_cancels_the_same_from_the_three() {
     same(ALERT, &person, &reader, &agent);
     assert_eq!(
         label(&agent, "dialog").as_deref(),
-        Some("Delete repository?")
+        Some("Delete this file?")
     );
 
     let before = gallery(ALERT).state();
@@ -332,4 +332,217 @@ fn the_menubar_opens_and_picks_the_same_from_the_three() {
         label(&agent, "menubar_page.picked").as_deref(),
         Some("Copy")
     );
+}
+
+// Sheet and Drawer
+
+/// The edge panel slid in (or out): the overlay stack settled, drawn.
+fn settle(g: &mut Gallery) {
+    for _ in 0..240 {
+        if !g.view.tick(1.0 / 60.0) {
+            break;
+        }
+    }
+    g.frame();
+}
+
+const SHEET: &str = "Sheet";
+const FROM_BOTTOM: &str = "sheet_page.group[0].card[2]";
+
+/// The sheet opens from the three, held to the edge its button names,
+/// with the focus on its close; its save, from the three, closes it and
+/// says so in a toast.
+#[test]
+fn the_sheet_opens_and_saves_the_same_from_the_three() {
+    let mut person = gallery(SHEET);
+    person.click(FROM_BOTTOM);
+    settle(&mut person);
+    let mut reader = gallery(SHEET);
+    reader.press(FROM_BOTTOM);
+    settle(&mut reader);
+    let mut agent = by_agent(SHEET, "sheet-open", vec![ask(FROM_BOTTOM, "activate")]);
+    settle(&mut agent);
+    same(SHEET, &person, &reader, &agent);
+    assert_eq!(label(&agent, "sheet").as_deref(), Some("Profile"));
+    assert_eq!(
+        agent.value("sheet:edge"),
+        Some(Value::Text("bottom".into()))
+    );
+    assert_eq!(focused(&agent).as_deref(), Some("sheet[close]"));
+
+    person.click("sheet[confirm]");
+    reader.press("sheet[confirm]");
+    let asks = vec![ask(FROM_BOTTOM, "activate"), ask("sheet", "confirm")];
+    let mut agent = by_agent(SHEET, "sheet-save", asks);
+    for g in [&mut person, &mut reader, &mut agent] {
+        settle(g);
+        assert_eq!(label(g, "sheet"), None, "answered");
+    }
+    same(SHEET, &person, &reader, &agent);
+}
+
+/// The keyboard: Tab never leaves the open sheet (the trap), Escape
+/// closes it and the focus is the button that opened it again.
+#[test]
+fn tab_stays_in_the_sheet_and_escape_gives_the_focus_back() {
+    let mut g = gallery(SHEET);
+    assert!(g.view.assist_focus(&sid(FROM_BOTTOM)));
+    assert!(g.view.handle_key(" "));
+    settle(&mut g);
+    let mut seen = Vec::new();
+    for _ in 0..4 {
+        assert!(g.view.handle_edit_key(EditKey::Tab));
+        g.frame();
+        seen.push(focused(&g).unwrap_or_default());
+    }
+    assert_eq!(
+        seen,
+        [
+            "sheet[cancel]",
+            "sheet[confirm]",
+            "sheet[close]",
+            "sheet[cancel]"
+        ]
+    );
+    assert!(g.view.close_top_overlay());
+    settle(&mut g);
+    assert_eq!(label(&g, "sheet"), None);
+    assert_eq!(focused(&g).as_deref(), Some(FROM_BOTTOM));
+}
+
+const DRAWER: &str = "Drawer";
+const OPEN_NAV: &str = "drawer_page.group[0].card[0]";
+
+/// The drawer opens from the three with the focus on its current link;
+/// a link picked from the three closes it and names the link in a toast.
+#[test]
+fn the_drawer_opens_and_picks_the_same_from_the_three() {
+    let mut person = gallery(DRAWER);
+    person.click(OPEN_NAV);
+    settle(&mut person);
+    let mut reader = gallery(DRAWER);
+    reader.press(OPEN_NAV);
+    settle(&mut reader);
+    let mut agent = by_agent(DRAWER, "drawer-open", vec![ask(OPEN_NAV, "activate")]);
+    settle(&mut agent);
+    same(DRAWER, &person, &reader, &agent);
+    assert_eq!(
+        focused(&agent).as_deref(),
+        Some("drawer[1]"),
+        "the current link"
+    );
+    assert_eq!(agent.value("drawer[1]:current"), Some(Value::Bool(true)));
+
+    person.click("drawer[3]");
+    reader.press("drawer[3]");
+    let asks = vec![ask(OPEN_NAV, "activate"), ask("drawer[3]", "activate")];
+    let mut agent = by_agent(DRAWER, "drawer-pick", asks);
+    for g in [&mut person, &mut reader, &mut agent] {
+        settle(g);
+        assert_eq!(label(g, "drawer"), None, "closed by the pick");
+    }
+    same(DRAWER, &person, &reader, &agent);
+}
+
+/// A press on the scrim closes the drawer, as the close does for a
+/// reader and an agent: the page is as it loaded.
+#[test]
+fn the_drawer_closes_on_the_scrim_and_by_its_close() {
+    let before = gallery(DRAWER).state();
+    let mut person = gallery(DRAWER);
+    person.click(OPEN_NAV);
+    settle(&mut person);
+    let (w, h) = (person.view.width, person.view.height);
+    person.view.handle_event(&WidgetEvent::MouseDown {
+        x: w - 4.0,
+        y: h / 2.0,
+    });
+    person.view.handle_event(&WidgetEvent::MouseUp {
+        x: w - 4.0,
+        y: h / 2.0,
+    });
+    let mut reader = gallery(DRAWER);
+    reader.press(OPEN_NAV);
+    settle(&mut reader);
+    reader.press("drawer[close]");
+    let asks = vec![ask(OPEN_NAV, "activate"), ask("drawer", "close")];
+    let mut agent = by_agent(DRAWER, "drawer-close", asks);
+    for (who, g) in [
+        ("person", &mut person),
+        ("reader", &mut reader),
+        ("agent", &mut agent),
+    ] {
+        settle(g);
+        assert_eq!(g.state(), before, "{who}");
+    }
+}
+
+// Context Menu
+
+const CONTEXT: &str = "Context Menu";
+const AREA: &str = "context_menu_page.group[0].card[0]";
+const CONTEXT_MENU: &str = "context_menu";
+const CREATE: &str = "context_menu[2]";
+
+impl Gallery {
+    /// The person's right click in the middle of `id`.
+    fn right_click_on(&mut self, id: &str) {
+        let (x, y) = self.middle(id);
+        assert!(self.view.handle_right_click(x, y), "{id} takes it");
+        self.frame();
+    }
+}
+
+/// The kit's file menu opens from the three: a right click in the area,
+/// a reader's press on it, an agent's `open`; an item picked from the
+/// three closes it and says what was picked in a toast.
+#[test]
+fn the_context_menu_opens_and_picks_the_same_from_the_three() {
+    let mut person = gallery(CONTEXT);
+    person.right_click_on(AREA);
+    let mut reader = gallery(CONTEXT);
+    reader.press(AREA);
+    let agent = by_agent(CONTEXT, "context-open", vec![ask(AREA, "open")]);
+    same(CONTEXT, &person, &reader, &agent);
+    assert_eq!(label(&agent, CONTEXT_MENU).as_deref(), Some("context menu"));
+    assert_eq!(
+        label(&agent, CREATE).as_deref(),
+        Some("Create new scene...")
+    );
+
+    person.click(CREATE);
+    reader.press(CREATE);
+    let asks = vec![ask(AREA, "open"), ask(CREATE, "activate")];
+    let agent = by_agent(CONTEXT, "context-pick", asks);
+    same(CONTEXT, &person, &reader, &agent);
+    assert_eq!(label(&agent, CONTEXT_MENU), None, "the menu closed");
+    let said = agent
+        .state()
+        .iter()
+        .any(|n| n.label == "Context menu: Create new scene...");
+    assert!(said, "the pick's toast");
+}
+
+/// The keyboard: the area focused, Space opens the menu with the focus on
+/// its first item; Escape closes it and the area has the focus again; a
+/// second Escape lets it go.
+#[test]
+fn space_opens_the_context_menu_and_escape_gives_the_focus_back() {
+    let mut g = gallery(CONTEXT);
+    assert!(
+        g.view.assist_focus(&sid(AREA)),
+        "a reader moves the focus there"
+    );
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(AREA));
+    assert!(g.view.handle_key(" "));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some("context_menu[1]"));
+    assert!(g.view.close_top_overlay(), "Escape closes the menu");
+    g.frame();
+    assert_eq!(label(&g, CONTEXT_MENU), None);
+    assert_eq!(focused(&g).as_deref(), Some(AREA), "back on the area");
+    assert!(g.view.close_top_overlay(), "a second Escape");
+    g.frame();
+    assert_eq!(focused(&g), None);
 }

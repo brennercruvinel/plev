@@ -113,13 +113,16 @@ impl SwitchPage {
                 label,
                 style.font_size,
                 style.font_weight,
-                rect.right() + theme.spacing.md,
-                rect.y + (rect.h - style.line_height) / 2.0,
+                (
+                    rect.right() + theme.spacing.md,
+                    rect.y + (rect.h - style.line_height) / 2.0,
+                ),
                 if s.disabled {
                     theme.colors.text_dim.0
                 } else {
                     theme.colors.text.0
                 },
+                theme,
             );
         }
     }
