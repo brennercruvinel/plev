@@ -1,6 +1,8 @@
 //! Overlay tokens (task-104, front B): what the hoff core kit writes as
 //! tailwind classes on its anchored overlays, as recipes the widgets
-//! read. One field per overlay; the popover is the first.
+//! read. One field per overlay; the popover is the first. The two edge
+//! panels' (the sheet and the drawer) live beside their widget,
+//! `sheet/tokens.rs`.
 //!
 //! `OverlayTokens::hoff_core` is the kit as written (its Toolbar
 //! `ZoomControl` and `ExportFiles` popovers and the header's
@@ -14,6 +16,8 @@ use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 
+pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
+
 /// The tokens of front B's overlays.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OverlayTokens {
@@ -22,6 +26,8 @@ pub struct OverlayTokens {
     pub hover_card: HoverCardTokens,
     pub menu: MenuTokens,
     pub modal: ModalTokens,
+    pub sheet: SheetTokens,
+    pub drawer: DrawerTokens,
 }
 
 impl OverlayTokens {
@@ -33,6 +39,8 @@ impl OverlayTokens {
             hover_card: HoverCardTokens::hoff_core(),
             menu: MenuTokens::hoff_core(),
             modal: ModalTokens::hoff_core(),
+            sheet: SheetTokens::hoff_core(),
+            drawer: DrawerTokens::hoff_core(),
         }
     }
 
@@ -45,6 +53,8 @@ impl OverlayTokens {
             hover_card: HoverCardTokens::hoff_core(),
             menu: MenuTokens::derive(theme),
             modal: ModalTokens::derive(theme),
+            sheet: SheetTokens::derive(theme),
+            drawer: DrawerTokens::derive(theme),
         }
     }
 }
