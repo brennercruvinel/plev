@@ -1,8 +1,9 @@
 //! Panel Header page: the column head every panel starts with, in the
 //! showcase mold: alone, with its blurb, with its count badge, and a
 //! title longer than its card, cut. The widget is
-//! `engine::widgets::nav::PanelHeader`; its measures and tones are the
-//! theme's (`theme.disclosure.header`): the kit's Notifications head in
+//! `engine::widgets::nav::PanelHeader`, framed (the head of a panel's
+//! content); its measures and tones are the theme's
+//! (`theme.disclosure.header`): the kit's Notifications head in
 //! the core theme, the glass head elsewhere.
 //!
 //! Projected: a group per title, `panel_header_page.group[<g>]`; in it
@@ -44,7 +45,10 @@ fn card_id(root: &SemId, g: usize, c: usize) -> Option<SemId> {
 
 impl PanelHeaderPage {
     pub fn new() -> Self {
-        let card = |title, header| Card { title, header };
+        let card = |title, header: PanelHeader| Card {
+            title,
+            header: header.framed(),
+        };
         let groups = vec![
             Group {
                 title: "Panel Header",
@@ -165,7 +169,6 @@ mod tests {
     fn every_head_fits_its_card_from_280_to_1600() {
         for theme in [Theme::hoff_core(), Theme::hoff()] {
             let page = PanelHeaderPage::new();
-            let style = PanelHeader::title_style(&theme);
             for w in (280..=1600).step_by(8) {
                 let content = Rect::new(0.0, 0.0, w as f32, 800.0);
                 for (group, placed) in page.groups.iter().zip(page.layout(content, &theme)) {
@@ -175,6 +178,7 @@ mod tests {
                         let mut c = Compositor::new();
                         c.begin_frame();
                         card.header.render(&mut c, at, &theme);
+                        let style = card.header.title_style(&theme);
                         let room = card.header.trailing_rect(at, &theme).right();
                         let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
                         let Some(SceneNode::Text { key, x, .. }) = nodes

@@ -164,7 +164,7 @@ impl DisclosureTokens {
     /// badge, no rule.
     fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
         let type_ = &theme.typography;
-        let (caption, title, blurb) = (type_.caption_sm(), type_.title(), type_.base_2r());
+        let caption = type_.caption_sm();
         let panel = PanelRecipe {
             radius: theme.shape.card,
             pad: theme.spacing.lg,
@@ -173,24 +173,7 @@ impl DisclosureTokens {
             label_weight: caption.font_weight,
             label: theme.glass.text_faint,
         };
-        let header = HeaderRecipe {
-            pad_x: theme.spacing.md,
-            row: theme.control.height(crate::styling::theme::ControlSize::Xl),
-            blurb_gap: theme.spacing.xs,
-            blurb_bottom: 0.0,
-            title_size: title.font_size,
-            title_line_height: title.line_height,
-            title_weight: title.font_weight,
-            title: theme.glass.text_default,
-            blurb_size: blurb.font_size,
-            blurb_line_height: blurb.line_height,
-            blurb_weight: blurb.font_weight,
-            blurb: theme.colors.text_dim,
-            badge_gap: theme.spacing.sm,
-            rule: 0.0,
-            rule_color: NONE,
-        };
-        (panel, header)
+        (panel, HeaderRecipe::page_head(theme))
     }
 
     /// The tree every theme drew before the kit, value for value: body
@@ -281,5 +264,32 @@ impl DisclosureTokens {
             rows: list,
         };
         (list, table)
+    }
+}
+
+impl HeaderRecipe {
+    /// The head every theme drew before the kit, from `theme`: the page
+    /// head of the shell in every theme, and the panel head outside the
+    /// core.
+    pub fn page_head(theme: &Theme) -> Self {
+        let title = theme.typography.title();
+        let blurb = theme.typography.base_2r();
+        HeaderRecipe {
+            pad_x: theme.spacing.md,
+            row: theme.control.height(crate::styling::theme::ControlSize::Xl),
+            blurb_gap: theme.spacing.xs,
+            blurb_bottom: 0.0,
+            title_size: title.font_size,
+            title_line_height: title.line_height,
+            title_weight: title.font_weight,
+            title: theme.glass.text_default,
+            blurb_size: blurb.font_size,
+            blurb_line_height: blurb.line_height,
+            blurb_weight: blurb.font_weight,
+            blurb: theme.colors.text_dim,
+            badge_gap: theme.spacing.sm,
+            rule: 0.0,
+            rule_color: NONE,
+        }
     }
 }

@@ -11,6 +11,7 @@ use crate::styling::theme::Theme;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
+use crate::widgets::content::HeaderRecipe;
 use crate::widgets::widget::Rect;
 
 #[derive(Clone, Debug)]
@@ -18,6 +19,10 @@ pub struct PanelHeader {
     pub title: String,
     pub blurb: Option<String>,
     pub badge: Option<Badge>,
+    /// Heads a panel's content (`theme.disclosure.header`, the kit's
+    /// Notifications head in the core theme) rather than a page (the
+    /// shell's head, as every theme drew it before the kit).
+    pub framed: bool,
 }
 
 impl PanelHeader {
@@ -26,6 +31,22 @@ impl PanelHeader {
             title: title.into(),
             blurb: None,
             badge: None,
+            framed: false,
+        }
+    }
+
+    /// Heads a panel's content: the theme's panel head.
+    pub fn framed(mut self) -> Self {
+        self.framed = true;
+        self
+    }
+
+    /// The measures and tones this head draws with.
+    fn recipe(&self, theme: &Theme) -> HeaderRecipe {
+        if self.framed {
+            theme.disclosure.header
+        } else {
+            HeaderRecipe::page_head(theme)
         }
     }
 
@@ -39,31 +60,32 @@ impl PanelHeader {
         self
     }
 
-    pub fn title_style(theme: &Theme) -> TextStyle {
-        let r = &theme.disclosure.header;
+    pub fn title_style(&self, theme: &Theme) -> TextStyle {
+        let r = &self.recipe(theme);
         theme
             .typography
             .exact(r.title_size, r.title_line_height, r.title_weight)
     }
 
-    fn blurb_style(theme: &Theme) -> TextStyle {
-        let r = &theme.disclosure.header;
+    fn blurb_style(&self, theme: &Theme) -> TextStyle {
+        let r = &self.recipe(theme);
         theme
             .typography
             .exact(r.blurb_size, r.blurb_line_height, r.blurb_weight)
     }
 
-    /// Side padding (`theme.disclosure.header`).
+    /// Side padding of a page head (the shell lines its page up with
+    /// it).
     pub fn pad(theme: &Theme) -> f32 {
-        theme.disclosure.header.pad_x
+        HeaderRecipe::page_head(theme).pad_x
     }
 
     /// Header height: the title row, plus the blurb line, the gap above
     /// it and the space below it when there is a blurb, plus the rule.
     pub fn height(&self, theme: &Theme) -> f32 {
-        let r = &theme.disclosure.header;
+        let r = &self.recipe(theme);
         let head = match self.blurb {
-            Some(_) => r.row + Self::blurb_style(theme).line_height + r.blurb_gap + r.blurb_bottom,
+            Some(_) => r.row + self.blurb_style(theme).line_height + r.blurb_gap + r.blurb_bottom,
             None => r.row,
         };
         head + r.rule
@@ -72,8 +94,8 @@ impl PanelHeader {
     /// The rect trailing actions (buttons the owner draws) may use, at
     /// the right of the title row.
     pub fn trailing_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
-        let r = &theme.disclosure.header;
-        let pad = Self::pad(theme);
+        let r = &self.recipe(theme);
+        let pad = r.pad_x;
         let mut right = bounds.x + bounds.w - pad;
         if let Some(badge) = &self.badge {
             right -= badge.preferred_size(theme).0 + r.badge_gap;
@@ -114,10 +136,10 @@ impl PanelHeader {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        let r = &theme.disclosure.header;
-        let pad = Self::pad(theme);
+        let r = &self.recipe(theme);
+        let pad = r.pad_x;
         let row = r.row;
-        let title = Self::title_style(theme);
+        let title = self.title_style(theme);
         let mut right = bounds.x + bounds.w - pad;
         if let Some(badge) = &self.badge {
             let (bw, bh) = badge.preferred_size(theme);
@@ -142,7 +164,7 @@ impl PanelHeader {
             },
         );
         if let Some(blurb) = &self.blurb {
-            let style = Self::blurb_style(theme);
+            let style = self.blurb_style(theme);
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
