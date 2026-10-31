@@ -32,7 +32,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FieldTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -142,7 +142,7 @@ impl Theme {
         let dark = Self::dark().colors;
         let mut theme = Self {
             button: ButtonTokens::derive(&dark),
-            fields: FieldTokens::derive(&dark),
+            form: FormTokens::hoff_core(),
             overlay: OverlayTokens::derive(&dark),
             message: MessageTokens::derive(&dark),
             disclosure: DisclosureTokens::derive(&dark),
@@ -236,7 +236,7 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
         };
         theme.button = ButtonTokens::derive(&theme.colors);
-        theme.fields = FieldTokens::derive(&theme.colors);
+        theme.form = FormTokens::derive(&theme);
         theme.overlay = OverlayTokens::derive(&theme.colors);
         theme.message = MessageTokens::derive(&theme.colors);
         theme.disclosure = DisclosureTokens::derive(&theme.colors);

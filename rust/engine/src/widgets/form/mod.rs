@@ -8,7 +8,7 @@ mod text_field;
 pub mod text_input;
 
 // task-104 front A, fields (#154): one module per widget, and the front's
-// token slot (`Theme::fields`).
+// token slot (`Theme::form`).
 pub mod combobox;
 pub mod command;
 pub mod field;

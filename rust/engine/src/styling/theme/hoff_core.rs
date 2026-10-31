@@ -11,7 +11,7 @@ use super::scales::{
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FieldTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -151,7 +151,7 @@ impl Theme {
                 wash_hover_alpha: 0.16,
             },
             button: ButtonTokens::hoff_core(),
-            fields: FieldTokens::hoff_core(),
+            form: FormTokens::hoff_core(),
             overlay: OverlayTokens::hoff_core(),
             message: MessageTokens::hoff_core(),
             disclosure: DisclosureTokens::hoff_core(),

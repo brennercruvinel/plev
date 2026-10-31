@@ -21,7 +21,7 @@ pub use crate::widgets::buttons::tokens::{
 // task-104: one token slot per front (A fields, B overlays, C conversation,
 // D disclosure, E selection), each in its front's `tokens.rs`.
 pub use crate::widgets::content::tokens::DisclosureTokens;
-pub use crate::widgets::form::tokens::FieldTokens;
+pub use crate::widgets::form::tokens::FormTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
 pub use crate::widgets::selection::tokens::SelectionTokens;
@@ -57,10 +57,11 @@ pub struct Theme {
     /// Button surfaces per variant and the button size ladders.
     pub button: ButtonTokens,
     // task-104: one slot per front; `hoff_core()` copies the kit and every
-    // other theme derives from its palette, as `button` does.
+    // other theme derives from its palette, as `button` does, except `form`,
+    // derived from the finished theme (the hoff glass is written by hand).
     /// Front A: field, label, input group, input OTP, textarea, combobox,
     /// command.
-    pub fields: FieldTokens,
+    pub form: FormTokens,
     /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
     /// sheet, drawer.
     pub overlay: OverlayTokens,
@@ -112,10 +113,11 @@ impl Theme {
         };
         let control = ControlTokens::hoff();
         let shape = ShapeTokens::derive(&radius, control.tabs_pad);
-        Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            fields: FieldTokens::derive(&colors),
+            // a placeholder: derived from the finished theme below
+            form: FormTokens::hoff_core(),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
             disclosure: DisclosureTokens::derive(&colors),
@@ -158,7 +160,9 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
-        }
+        };
+        theme.form = FormTokens::derive(&theme);
+        theme
     }
 
     /// Light theme.
@@ -180,17 +184,18 @@ impl Theme {
             divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
             border_active: Color::hex(0x9699a3),
         };
-        Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            fields: FieldTokens::derive(&colors),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
             disclosure: DisclosureTokens::derive(&colors),
             selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
-        }
+        };
+        theme.form = FormTokens::derive(&theme);
+        theme
     }
 
     /// Named palette lookup.
@@ -349,17 +354,18 @@ impl Theme {
             },
             _ => return None,
         };
-        Some(Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            fields: FieldTokens::derive(&colors),
             overlay: OverlayTokens::derive(&colors),
             message: MessageTokens::derive(&colors),
             disclosure: DisclosureTokens::derive(&colors),
             selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
-        })
+        };
+        theme.form = FormTokens::derive(&theme);
+        Some(theme)
     }
 
     /// Resolve intent to a semantic color.
