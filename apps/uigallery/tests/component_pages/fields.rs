@@ -133,3 +133,31 @@ fn a_labelled_field_takes_the_same_text_from_the_three() {
     );
     same("Label", &person, &reader, &agent);
 }
+
+const CODE: &str = "input_otp_page.group[0].card[0]";
+
+/// The one-time code: a person's typing (a letter in it dropped), a
+/// reader's value and an agent's `set_value` put the same digits, and
+/// none of them sees more of the code than its length.
+#[test]
+pub(super) fn a_code_takes_the_same_digits_from_the_three_and_shows_its_length_only() {
+    let mut person = gallery("Input OTP");
+    person.click(CODE);
+    person.type_in("4829x13");
+    let mut reader = gallery("Input OTP");
+    reader.reader(
+        CODE,
+        Action::SetValue,
+        Some(ActionData::Value("482913".into())),
+    );
+    let agent = by_agent(
+        "Input OTP",
+        "code",
+        vec![ask_with(CODE, "set_value", Value::from("482913"))],
+    );
+    same("Input OTP", &person, &reader, &agent);
+    assert_eq!(person.value(&format!("{CODE}:text")), Some(Value::Int(6)));
+    for g in [&person, &reader, &agent] {
+        assert!(!format!("{:?}", g.state()).contains("482913"));
+    }
+}

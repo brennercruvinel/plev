@@ -53,6 +53,7 @@ const PROJECTING: &[&str] = &[
     "Icon Button",
     "Input",
     "Input Group",
+    "Input OTP",
     "Item",
     "Kbd",
     "Label",
@@ -153,7 +154,6 @@ const SILENT: &[(&str, Why)] = &[
         "Graph",
         Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
     ),
-    ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
     ("Menubar", PLACEHOLDER),
     (

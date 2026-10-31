@@ -85,4 +85,5 @@ text_hosts! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
 }

@@ -268,7 +268,13 @@ pub const PAGES: &[Page] = &[
         "A text field with addons: an icon button, a shortcut hint, a prefix or a suffix.",
         Pane::InputGroup,
     ),
-    placeholder("Input OTP"),
+    page(
+        C,
+        "Input OTP",
+        "square",
+        "A one-time code, a cell per digit: type, paste, Backspace; the arrows move between cells.",
+        Pane::InputOtp,
+    ),
     alias(
         "Item",
         "file",

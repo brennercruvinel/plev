@@ -709,3 +709,175 @@ fn a_search_projects_its_hint_and_its_button() {
         (Role::Button, "search")
     );
 }
+
+// Input OTP
+
+fn code() -> crate::widgets::form::otp::InputOtp {
+    crate::widgets::form::otp::InputOtp::new(&[3, 3]).sem(SemId::parse("s.code").unwrap())
+}
+
+/// Typing fills the cells one by one with digits only, and stops at the
+/// last; Backspace empties the last; a paste over a full code takes what
+/// it has room for (nothing), over a selected cell its first digit; the
+/// full-width digits of an input method count as digits.
+#[test]
+fn a_code_takes_its_digits_a_cell_at_a_time() {
+    use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+    let mut otp = code();
+    otp.input.focus();
+    assert!(otp.input.insert("1a2-3"));
+    assert_eq!((otp.input.text(), otp.active()), ("123", 3));
+    otp.input.insert("456789");
+    assert_eq!(otp.input.text(), "123456");
+    assert!(otp.is_complete());
+    assert_eq!(otp.active(), 5, "the last cell stays active when full");
+    otp.input.edit(crate::widgets::form::EditKey::Backspace);
+    assert_eq!((otp.input.text(), otp.active()), ("12345", 5));
+    otp.input.compose("６", "", None);
+    assert_eq!(otp.input.text(), "123456", "a full-width six");
+    let mut board = LocalClipboard::new();
+    board.set_text("0000");
+    assert!(!otp.input.paste(&mut board), "full: no room");
+    otp.input.edit(crate::widgets::form::EditKey::SelectLeft);
+    assert!(otp.input.paste(&mut board));
+    assert_eq!(
+        otp.input.text(),
+        "123450",
+        "over the selected cell, one digit"
+    );
+}
+
+/// A press on a filled cell selects its digit, and the next one replaces
+/// it; a press on an empty cell puts the caret after the last digit; a
+/// press off the cells blurs.
+#[test]
+fn a_press_on_a_filled_cell_selects_it_and_typing_replaces_it() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 0.0);
+    let mut otp = code().with_text("1234");
+    let l = otp.layout(bounds, &theme);
+    let (x, y) = l.cells[1].center();
+    assert!(
+        otp.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(otp.input.is_focused());
+    assert_eq!(otp.active(), 1);
+    otp.input.insert("9");
+    assert_eq!(otp.input.text(), "1934");
+    let (x, y) = l.cells[5].center();
+    otp.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
+    assert_eq!(
+        otp.active(),
+        4,
+        "after the last digit, not the cell pressed"
+    );
+    let r = otp.handle_event(
+        &WidgetEvent::MouseDown { x: 390.0, y: 300.0 },
+        bounds,
+        &theme,
+    );
+    assert!(r.changed && !otp.input.is_focused());
+    let mut off = code().disabled(true);
+    off.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
+    assert!(!off.input.is_focused(), "disabled");
+}
+
+/// The value set whole (an agent's, a reader's) is the code's or is
+/// refused, the value as it was.
+#[test]
+fn a_code_refuses_a_value_that_is_not_one() {
+    let mut otp = code();
+    assert!(otp.input.set_value("042917"));
+    assert!(otp.input.set_value("0429"), "a part of a code");
+    assert!(!otp.input.set_value("12345a"), "a letter");
+    assert!(!otp.input.set_value("1234567"), "past its cells");
+    assert_eq!(otp.input.text(), "0429", "as it was");
+    assert!(otp.input.set_value(""), "emptied");
+}
+
+/// From narrow to wide the cells stay in the width, in order, apart, and
+/// square; at their natural width they are the Field's box, 48 tall, the
+/// minus in the gap between the groups; the digit never wraps.
+#[test]
+fn a_code_keeps_its_cells_inside_its_width_from_narrow_to_wide() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let otp = code().with_text("123456").label("Verification code");
+        let natural = otp.natural_width(&theme);
+        let least = otp.min_width(&theme).ceil() as usize;
+        assert!(least < 140, "a group fits a narrow phone's card");
+        for w in (least..=600).step_by(4).map(|w| w as f32) {
+            let bounds = Rect::new(20.0, 10.0, w, 0.0);
+            let l = otp.layout(bounds, &theme);
+            assert_eq!(l.cells.len(), 6);
+            let stacked = l.separators.is_empty();
+            for (i, pair) in l.cells.windows(2).enumerate() {
+                if stacked && i == 2 {
+                    assert!(pair[0].bottom() < pair[1].y, "{w}: the rows meet");
+                } else {
+                    assert!(pair[0].right() <= pair[1].x + 0.01, "{w}: cells meet");
+                }
+            }
+            for c in &l.cells {
+                assert!(c.right() <= bounds.right() + 0.01, "{w}: past the width");
+                assert!((c.w - c.h).abs() < 0.01, "{w}: square");
+            }
+            if let Some(s) = l.separators.first() {
+                assert!(l.cells[2].right() < s.x && s.right() < l.cells[3].x);
+            }
+            if w >= natural {
+                assert_eq!(l.cells[0].h, TextField::height(&theme));
+            }
+            let line = theme.form.input.text.line_height;
+            assert!(l.cells[0].h >= line, "{w}: a cell shorter than its digit");
+        }
+    }
+}
+
+/// A code projects as a secret text field: its length only, at most its
+/// cells, named by its label, described and `invalid` with an error.
+#[test]
+fn a_code_projects_secret_with_its_length_only() {
+    let otp = code()
+        .label("Verification code")
+        .error("The code is incorrect")
+        .with_text("4242");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    otp.project(&mut b, otp.sem_id().unwrap(), "Code", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(otp.sem_id().unwrap()).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::TextInput, "Verification code")
+    );
+    assert!(node.constraints.secret);
+    assert_eq!(node.constraints.max_len, Some(6));
+    assert_eq!(node.description.as_deref(), Some("The code is incorrect"));
+    assert_eq!(
+        node.state.get("text"),
+        Some(&Value::Int(4)),
+        "its length, never the digits"
+    );
+    assert_eq!(node.state.get("invalid"), Some(&Value::Bool(true)));
+    assert!(!format!("{snap:?}").contains("4242"));
+}
+
+/// The focused code draws the focus ring on its active cell and the
+/// caret there while it is empty; a masked one draws bullets.
+#[test]
+fn the_active_cell_has_the_ring_and_the_caret() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 0.0);
+    let mut otp = code().with_text("12").masked(true);
+    otp.input.focus();
+    let nodes = nodes_of(|c| otp.render(c, bounds, &theme));
+    let drawn: Vec<String> = texts(&nodes).into_iter().map(|(t, _, _)| t).collect();
+    assert_eq!(drawn, [MASK.to_string(), MASK.to_string()]);
+    let cell = otp.layout(bounds, &theme).cells[2];
+    let caret = nodes
+        .iter()
+        .any(|n| matches!(*n, SceneNode::Rect { x, w, .. } if x > cell.x && x + w < cell.right()));
+    assert!(caret, "the caret in the third cell");
+}

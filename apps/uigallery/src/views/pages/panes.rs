@@ -17,6 +17,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104 front A, fields (#154)
 use super::super::components::field;
 use super::super::components::input_group;
+use super::super::components::input_otp;
 use super::super::components::label;
 
 // task-104 front B, overlays (#155)
@@ -77,6 +78,7 @@ pub struct Panes {
     pub field: field::FormPage,
     pub label: field::FormPage,
     pub input_group: field::FormPage,
+    pub input_otp: field::FormPage,
     // task-104 front B, overlays (#155)
     pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
@@ -161,6 +163,7 @@ impl Panes {
             field: field::page(),
             label: label::page(),
             input_group: input_group::page(),
+            input_otp: input_otp::page(),
             // task-104 front B, overlays (#155)
             popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)

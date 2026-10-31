@@ -162,6 +162,16 @@ pub struct GroupAddons {
     pub text_edge: f32,
 }
 
+/// A one-time code (`super::otp`): its cells are the Field's input box,
+/// square, side by side; these are the spaces between them.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OtpTokens {
+    /// Between two cells of a group.
+    pub gap: f32,
+    /// The minus between two groups, with a gap on either side of it.
+    pub separator: f32,
+}
+
 /// The form slot of the theme.
 #[derive(Clone, Debug, PartialEq)]
 pub struct FormTokens {
@@ -174,6 +184,7 @@ pub struct FormTokens {
     pub adorn: Adornments,
     pub group: GroupAddons,
     pub field: FieldChrome,
+    pub otp: OtpTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -386,6 +397,13 @@ impl FormTokens {
             helper_color: gray,
         };
 
+        // Not in the kit (it has no code input): the Field's own spaces,
+        // the label's `mb-2` between the cells and its icon's `size-4`
+        // for the minus.
+        let otp = OtpTokens {
+            gap: field.label_gap,
+            separator: adorn.lead_icon,
+        };
         Self {
             label,
             input,
@@ -394,6 +412,7 @@ impl FormTokens {
             adorn,
             group,
             field,
+            otp,
         }
     }
 
@@ -476,6 +495,10 @@ impl FormTokens {
             error_color: c.danger,
             helper_color: c.text_mid,
         };
+        let otp = OtpTokens {
+            gap: field.label_gap,
+            separator: adorn.lead_icon,
+        };
         Self {
             label,
             search: input.clone(),
@@ -484,6 +507,7 @@ impl FormTokens {
             adorn,
             group,
             field,
+            otp,
         }
     }
 }

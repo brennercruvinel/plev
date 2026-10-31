@@ -16,17 +16,24 @@ use super::harness::gallery;
 /// front's own, on a line of its own so the fronts merge without a
 /// conflict.
 const PROJECTING: usize = 30
-    // task-104 front A, fields (#154): Field, Label, Input Group
-    + 3;
+    // task-104 front A, fields (#154): Field, Label, Input Group, Input OTP
+    + 4;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its
 /// length.
-const SECRETS: &[(&str, fn())] = &[(
+const SECRETS: &[(&str, fn())] = &[
     // the password fields
-    "Field",
-    fields::a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only,
-)];
+    (
+        "Field",
+        fields::a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only,
+    ),
+    // the one-time codes
+    (
+        "Input OTP",
+        fields::a_code_takes_the_same_digits_from_the_three_and_shows_its_length_only,
+    ),
+];
 
 #[test]
 fn no_component_page_has_a_secret_a_camera_a_person_s_action_or_a_reader_s_state() {

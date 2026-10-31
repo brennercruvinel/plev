@@ -130,6 +130,7 @@ components! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
     // task-104 front B, overlays (#155)
     Popover => popover,
     // task-104 front C, conversation and feedback (#156)
