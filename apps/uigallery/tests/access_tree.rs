@@ -80,11 +80,13 @@ const PROJECTING: &[&str] = &[
     "Panel",
     "Panel Header",
     "Popover",
+    "Progress",
     "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
     "Sheet",
+    "Skeleton",
     "Slider",
     "Spinner",
     "Stat",
@@ -142,19 +144,11 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
     ("Input OTP", PLACEHOLDER),
-    (
-        "Progress",
-        Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
-    ),
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
     (
         "Sidebar",
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Skeleton",
-        Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
     ),
     ("Textarea", PLACEHOLDER),
     (
