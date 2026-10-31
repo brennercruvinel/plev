@@ -11,8 +11,10 @@
 //! ([`FormTokens::derive`]): the text field each of them drew before the
 //! kit, so a theme that is not the core looks as it did.
 
+mod edit;
 mod select;
 
+pub use edit::EditTokens;
 pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
 
 use crate::drawing::text::TextStyle;
@@ -137,6 +139,8 @@ pub enum Look {
     Inset,
     /// A combobox's filter: the select's control as a text box.
     Combo,
+    /// An inline edit's box: the text alone ([`EditTokens::bare`]).
+    Bare,
 }
 
 /// What an input group puts at the ends of its box
@@ -210,6 +214,9 @@ pub struct FormTokens {
     /// A combobox's filter box, the select's control as a text box
     /// ([`SelectRecipe::as_input`]).
     pub combo: InputRecipe,
+    /// The inline edit (`edit.rs`), and its bare box.
+    pub edit: EditTokens,
+    pub bare: InputRecipe,
 }
 
 fn hex(v: u32) -> Color {
@@ -256,6 +263,7 @@ impl FormTokens {
             Look::Search => &self.search,
             Look::Inset => &self.inset,
             Look::Combo => &self.combo,
+            Look::Bare => &self.bare,
         }
     }
 
@@ -438,6 +446,8 @@ impl FormTokens {
         };
         let select = SelectRecipe::hoff_core();
         let combo = select.as_input(&input);
+        let edit = EditTokens::hoff_core();
+        let bare = edit.bare(&input);
         Self {
             label,
             input,
@@ -450,6 +460,8 @@ impl FormTokens {
             area,
             combo,
             select,
+            edit,
+            bare,
         }
     }
 
@@ -546,6 +558,8 @@ impl FormTokens {
         };
         let select = SelectRecipe::derive(theme);
         let combo = select.as_input(&input);
+        let edit = EditTokens::derive(theme);
+        let bare = edit.bare(&input);
         Self {
             label,
             search: input.clone(),
@@ -558,6 +572,8 @@ impl FormTokens {
             area,
             combo,
             select,
+            edit,
+            bare,
         }
     }
 }

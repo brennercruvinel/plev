@@ -157,6 +157,15 @@ impl FormPage {
         }
     }
 
+    /// Blur the focused field and let go of a part a reader focused.
+    /// `false` when nothing was.
+    fn blur_all(&mut self) -> bool {
+        let had = self.focused().is_some() || self.part_focused();
+        self.set_focused(None);
+        self.clear_part_focus();
+        had
+    }
+
     /// Whether a reader's focus is on a part other than a box.
     fn part_focused(&self) -> bool {
         self.specs().any(|s| s.part_focus().is_some())
@@ -359,10 +368,10 @@ impl TextHost for FormPage {
     /// Escape blurs the focused field, or lets go of the eye or the link
     /// a reader focused. `false` when nothing was.
     fn handle_escape(&mut self) -> bool {
-        let had = self.focused().is_some() || self.part_focused();
-        self.set_focused(None);
-        self.clear_part_focus();
-        had
+        if self.focused_spec().is_some_and(|s| s.escape()) {
+            return true;
+        }
+        self.blur_all()
     }
 }
 
@@ -415,7 +424,7 @@ impl Component for FormPage {
             return false;
         }
         let hit = self.at(id);
-        self.handle_escape();
+        self.blur_all();
         match hit {
             Some((at, Part::Box)) => self.set_focused(Some(at)),
             Some((at, part)) => {
@@ -429,6 +438,6 @@ impl Component for FormPage {
     }
 
     fn blur(&mut self) -> bool {
-        self.handle_escape()
+        self.blur_all()
     }
 }

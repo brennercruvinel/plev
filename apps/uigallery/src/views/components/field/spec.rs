@@ -109,6 +109,12 @@ pub(crate) trait CardWidget: 'static {
         false
     }
 
+    /// Escape on the focused widget, before the page blurs it. `false`,
+    /// the default: the page blurs.
+    fn escape(&mut self) -> bool {
+        false
+    }
+
     /// Up or Down on the focused widget. `false`, the default: the
     /// page's focus walk moves.
     fn nav(&mut self, _down: bool) -> bool {

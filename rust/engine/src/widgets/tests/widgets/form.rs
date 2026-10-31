@@ -1194,3 +1194,83 @@ fn a_palette_s_rows_stay_in_its_list() {
         );
     }
 }
+
+// NewField
+
+fn username() -> crate::widgets::form::new_field::NewField {
+    crate::widgets::form::new_field::NewField::new("sophie", "Enter new username")
+        .sem(SemId::parse("s.user").unwrap())
+}
+
+/// A press edits: the box out, empty and focused, the value kept; Enter
+/// (save) keeps what was typed, an empty save keeps the value, cancel
+/// leaves it; a press off it saves.
+#[test]
+fn a_new_field_edits_in_place_and_saves_or_keeps_its_value() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let mut n = username();
+    let l = n.layout(bounds, &theme);
+    assert_eq!(l.whole.h, 20.0, "h-5");
+    let (x, y) = l.whole.center();
+    assert!(
+        n.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(n.is_editing() && n.input.is_focused() && n.input.is_empty());
+    assert!(n.layout(bounds, &theme).text.w >= 120.0, "w-30");
+    assert!(n.save());
+    assert_eq!(n.value(), "sophie", "nothing typed: the value stays");
+    n.edit();
+    n.input.insert("ada");
+    assert!(n.cancel());
+    assert_eq!(n.value(), "sophie");
+    n.edit();
+    n.input.insert("ada");
+    let r = n.handle_event(
+        &WidgetEvent::MouseDown { x: 290.0, y: 200.0 },
+        bounds,
+        &theme,
+    );
+    assert!(r.changed && !n.is_editing());
+    assert_eq!(n.value(), "ada");
+    let mut off = username().disabled(true);
+    assert!(!off.edit() && !off.set_value("x"));
+}
+
+/// It projects as a text field whose text is the value saved, never the
+/// draft, with the pencil at rest and the confirm while editing; the
+/// confirm is green with something to save.
+#[test]
+fn a_new_field_projects_its_value_and_its_icon() {
+    let theme = Theme::hoff_core();
+    let mut n = username();
+    n.edit();
+    n.input.insert("draft");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    n.project(&mut b, n.sem_id().unwrap(), "Username", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(n.sem_id().unwrap()).unwrap();
+    assert_eq!(node.state.get("text"), Some(&Value::from("sophie")));
+    assert_eq!(node.state.get("editing"), Some(&Value::Bool(true)));
+    assert!(snap.get(&SemId::parse("s.user.save").unwrap()).is_some());
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let green = |n: &crate::widgets::form::new_field::NewField| {
+        let nodes = nodes_of(|c| n.render(c, bounds, &theme));
+        let drawn = crate::widgets::icons::icon("circle-check", 16.0, theme.form.edit.confirm.0);
+        let want = match drawn {
+            Some(SceneNode::Path { data }) => data.vertices[0].color,
+            _ => unreachable!(),
+        };
+        nodes
+            .iter()
+            .any(|x| matches!(x, SceneNode::Path { data } if data.vertices[0].color == want))
+    };
+    assert!(green(&n));
+    n.input.set_text("");
+    assert!(!green(&n), "nothing to save: gray");
+    assert!(n.set_value("grace"));
+    assert_eq!((n.value(), n.is_editing()), ("grace", false));
+}

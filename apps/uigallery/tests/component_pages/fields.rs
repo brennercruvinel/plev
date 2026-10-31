@@ -281,3 +281,46 @@ fn a_command_runs_the_same_from_the_three() {
         Some(Value::from("Settings"))
     );
 }
+
+const USERNAME: &str = "field_page.group[2].card[0]";
+
+/// The username edited in place: a person's press, typing and Enter, a
+/// reader's value and an agent's `set_value` save the same value, the box
+/// gone.
+#[test]
+fn a_new_field_saves_the_same_value_from_the_three() {
+    let mut person = gallery("Field");
+    // The group is under the fold at 800 px: the person scrolls to it.
+    person
+        .view
+        .handle_event(&engine::widgets::prelude::WidgetEvent::Scroll {
+            x: 760.0,
+            y: 400.0,
+            delta: 400.0,
+        });
+    person.frame();
+    person.click(USERNAME);
+    person.type_in("grace");
+    person.view.handle_enter();
+    person.frame();
+    let mut reader = gallery("Field");
+    reader.reader(
+        USERNAME,
+        Action::SetValue,
+        Some(ActionData::Value("grace".into())),
+    );
+    let agent = by_agent(
+        "Field",
+        "username",
+        vec![ask_with(USERNAME, "set_value", Value::from("grace"))],
+    );
+    same("Field", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{USERNAME}:text")),
+        Some(Value::from("grace"))
+    );
+    assert_eq!(
+        person.value(&format!("{USERNAME}:editing")),
+        Some(Value::Bool(false))
+    );
+}

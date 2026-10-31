@@ -7,6 +7,10 @@
 //! visual value comes from the theme, and the page's own numbers are the
 //! kit page's (`h-50` cards, `w-60` fields).
 //!
+//! The Username group is the kit's NewField, a value edited in place
+//! (`engine::widgets::form::new_field::NewField`), as the kit's
+//! InputsPage shows it after the passwords.
+//!
 //! The page is a [`FormPage`] (`form.rs`): its focus, keys, projection
 //! and requests are the form pages', its ids under `field_page`.
 
@@ -16,7 +20,18 @@ pub(crate) mod spec;
 pub use form::FormPage;
 pub(crate) use form::{Group, card};
 
+#[cfg(test)]
+use std::any::Any;
+
+use accord::{SemId, SnapshotBuilder, Value};
+use engine::drawing::compositor::Compositor;
+use engine::styling::theme::Theme;
+use engine::widgets::form::TextField;
 use engine::widgets::form::field::Field;
+use engine::widgets::form::new_field::NewField;
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+
+use spec::{CardWidget, Part};
 
 /// The live card's chip, as the kit names it.
 const LIVE: &str = "Default, Click on, Focus, Hover, Typing";
@@ -63,6 +78,14 @@ pub fn page() -> FormPage {
             ],
         },
         Group {
+            title: "Username",
+            columns: 1,
+            cards: vec![card(
+                "Default, Hover, Edit, Confirm",
+                NewField::new("sophie", "Enter new username"),
+            )],
+        },
+        Group {
             title: "Disabled",
             columns: 2,
             cards: vec![
@@ -100,6 +123,97 @@ pub fn page() -> FormPage {
         },
     ];
     FormPage::new("field_page", groups)
+}
+
+impl CardWidget for NewField {
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        Box::new((*self).sem(id))
+    }
+
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        NewField::size(self, room, theme)
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        NewField::render(self, c, rect, theme);
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        if let Some(id) = self.sem_id() {
+            NewField::project(self, b, id, "Username", Some(parent));
+        }
+    }
+
+    fn handle_event(&mut self, event: &WidgetEvent, rect: Rect, theme: &Theme) -> EventResult {
+        NewField::handle_event(self, event, rect, theme)
+    }
+
+    fn text(&self) -> Option<&TextField> {
+        Some(&self.input)
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        Some(&mut self.input)
+    }
+
+    /// The focus edits (the box out); its loss saves.
+    fn set_focused(&mut self, focused: bool) {
+        if focused {
+            self.edit();
+        } else {
+            self.save();
+        }
+    }
+
+    /// Enter saves.
+    fn enter(&mut self) -> bool {
+        self.save()
+    }
+
+    /// Escape keeps the value as it was.
+    fn escape(&mut self) -> bool {
+        self.cancel()
+    }
+
+    fn part_id(&self, part: Part) -> Option<SemId> {
+        match part {
+            Part::Box => self.sem_id().cloned(),
+            Part::Action => self.icon_id(),
+            _ => None,
+        }
+    }
+
+    fn set_part_focus(&mut self, part: Option<Part>) {
+        self.set_icon_focus(part == Some(Part::Action));
+    }
+
+    fn part_focus(&self) -> Option<Part> {
+        self.has_icon_focus().then_some(Part::Action)
+    }
+
+    fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
+        self.is_editing() && self.layout(rect, theme).text.contains(x, y)
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        Some(NewField::ime_area(self, rect, theme))
+    }
+
+    /// `set_value` saves a value as the confirm does; the pencil's
+    /// `activate` edits, the confirm's saves.
+    fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
+        match (part, action, param) {
+            (Part::Box, "set_value", Some(Value::Text(text))) => self.set_value(text),
+            (Part::Action, "activate", None) if self.is_editing() => self.save(),
+            (Part::Action, "activate", None) => self.edit(),
+            _ => false,
+        }
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 #[cfg(test)]
