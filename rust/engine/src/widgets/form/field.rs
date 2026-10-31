@@ -280,9 +280,28 @@ impl Field {
         Rect::new(x, y, w.ceil().min(avail), h)
     }
 
+    /// `text` reads right to left (its first strong letter, as css
+    /// `dir="auto"`): it hangs from the end of its row, not the start.
+    fn reads_rtl(text: &str, style: &TextStyle) -> bool {
+        TextMeasurer::clusters_styled(text, style, None)
+            .first()
+            .is_some_and(|c| c.paragraph_rtl)
+    }
+
+    /// `r` moved to the end of the row from `x`, `w` wide, when `rtl`.
+    fn hang(r: Rect, x: f32, w: f32, rtl: bool) -> Rect {
+        if rtl {
+            Rect::new(x + w - r.w, r.y, r.w, r.h)
+        } else {
+            r
+        }
+    }
+
     /// The label row at `(x, y)`, `w` wide: the label and the link side
     /// by side when both fit on one line, the link under the label, at
-    /// the end, when not. Returns the two rects and the row's height.
+    /// the end, when not; a label that reads right to left mirrors the
+    /// row (the label at the right, the link at the left). Returns the
+    /// two rects and the row's height.
     fn label_row(
         &self,
         x: f32,
@@ -305,9 +324,10 @@ impl Field {
             Some(link) if side_by_side => one_line(link, &f.link).min(w),
             _ => 0.0,
         };
+        let rtl = label.is_some_and(|l| Self::reads_rtl(l.text(), &l.style(theme)));
         let label = label.map(|l| {
             let (lw, lh) = l.size(Some(w - link_w), theme);
-            Rect::new(x, y, lw, lh)
+            Self::hang(Rect::new(x, y, lw, lh), x, w, rtl)
         });
         let below = if side_by_side {
             y
@@ -316,7 +336,7 @@ impl Field {
         };
         let link = link.map(|t| {
             let r = Self::text_rect(t, &f.link, x, below, w);
-            Rect::new(x + w - r.w, r.y, r.w, r.h)
+            Self::hang(r, x, w, !rtl)
         });
         let bottom = [label, link]
             .into_iter()
@@ -366,13 +386,15 @@ impl Field {
             )
         });
         let message = self.message.as_ref().map(|m| {
-            Self::text_rect(
+            let style = &form.field.message;
+            let r = Self::text_rect(
                 m.text(),
-                &form.field.message,
+                style,
                 x,
                 input.bottom() + form.field.message_gap,
                 w,
-            )
+            );
+            Self::hang(r, x, w, Self::reads_rtl(m.text(), style))
         });
         FieldLayout {
             label,

@@ -21,7 +21,7 @@ use engine::widgets::prelude::{
     EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
 };
 
-use super::{group_label, panel, text, with_alpha};
+use super::{group_label, panel, with_alpha};
 
 /// The dock's own runs (the initials, the composer's hint): the theme's
 /// family and tracking at the engine's default line height for `size`.
@@ -165,15 +165,19 @@ impl DockPage {
     fn render_stage(&self, c: &mut Compositor, stage: Rect, theme: &Theme) {
         panel(c, stage, theme);
         group_label(c, "MESSAGE DOCK", stage.x + 24.0, stage.y + 20.0, theme);
-        text(
-            c,
-            "Hover lifts a contact; click morphs the dock open.",
-            13.0,
-            400,
-            (stage.x + 24.0, stage.y + 44.0),
-            theme.colors.text_dim.0,
-            theme,
-        );
+        // The hint wraps in the stage's gutters (the style `text` draws
+        // with), so a narrow stage keeps it in its card.
+        let hint = "Hover lifts a contact; click morphs the dock open.";
+        let hint_style = theme.typography.exact(13.0, 13.0 * 1.4, 400);
+        let hint_w = (stage.w - 48.0).max(0.0);
+        let (_, hint_h) = TextMeasurer::measure_styled(hint, &hint_style, Some(hint_w));
+        c.push(SceneNode::Text {
+            key: TextNodeKey::from_style(hint, &hint_style, Some(hint_w)),
+            x: stage.x + 24.0,
+            y: stage.y + 44.0,
+            color: theme.colors.text_dim.0,
+        });
+        let top = (stage.y + 44.0 + hint_h + 10.0).max(stage.y + 72.0);
 
         // The wallpaper: chat bubbles (`engine::widgets::message::bubble`),
         // each bordered in its contact's color; the first a note centered
@@ -192,7 +196,7 @@ impl DockPage {
                 .accent(Color(CONTACTS[*hue].1));
             let (_, h) = bubble.size(lane.w, theme);
             y -= h + 14.0;
-            if y < stage.y + 72.0 {
+            if y < top {
                 break; // short viewport: keep the wallpaper off the header
             }
             bubble.render(c, Rect::new(lane.x, y, lane.w, h), theme);

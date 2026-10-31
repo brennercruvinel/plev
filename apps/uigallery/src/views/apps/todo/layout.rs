@@ -137,6 +137,13 @@ pub(super) fn checkbox_rect(row: Rect) -> Rect {
     )
 }
 
+/// A row's label as it shows in `w`: whole on one line, or cut with an
+/// ellipsis; the row is one line tall, and a wrapped second line would
+/// spill into the next.
+pub(super) fn label_shown(text: &str, w: f32) -> String {
+    TextMeasurer::truncate_to_width(text, &item_style(), w)
+}
+
 /// Label origin x and the width available before the delete button.
 pub(super) fn label_span(row: Rect) -> (f32, f32) {
     let lx = checkbox_rect(row).x + LABEL_INSET;

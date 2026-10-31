@@ -74,7 +74,6 @@ fn the_focused_field_composes_inline_and_takes_the_commit_as_typing() {
         g.value(&format!("{FIELD}:text")),
         Some(Value::from("日本語"))
     );
-    assert!(g.state().iter().any(|n| n.label == "live value: 日本語"));
     assert!(!texts(&g.c).iter().any(|t| t.contains(NIHONGO)));
 
     // Typing goes on after it, as keys.

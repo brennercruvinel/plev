@@ -66,6 +66,10 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.content_height(content, t),
                 Pane::Label => self.panes.label.content_height(content, t),
                 Pane::InputGroup => self.panes.input_group.content_height(content, t),
+                Pane::InputOtp => self.panes.input_otp.content_height(content, t),
+                Pane::Textarea => self.panes.textarea.content_height(content, t),
+                Pane::Combobox => self.panes.combobox.content_height(content, t),
+                Pane::Command => self.panes.command.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
                 Pane::Drawer => self.panes.drawer.content_height(content, t),
@@ -93,6 +97,7 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
                 Pane::Calendar => self.panes.calendar.content_height(content, t),
+                Pane::DatePicker => self.panes.date_picker.content_height(content, t),
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
@@ -192,6 +197,10 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.handle_event(event, content, t),
                 Pane::Label => self.panes.label.handle_event(event, content, t),
                 Pane::InputGroup => self.panes.input_group.handle_event(event, content, t),
+                Pane::InputOtp => self.panes.input_otp.handle_event(event, content, t),
+                Pane::Textarea => self.panes.textarea.handle_event(event, content, t),
+                Pane::Combobox => self.panes.combobox.handle_event(event, content, t),
+                Pane::Command => self.panes.command.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => {
                     let (r, after) = self.panes.alert_dialog.handle_event(event, content, t);
@@ -255,6 +264,7 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
                 Pane::Calendar => self.panes.calendar.handle_event(event, content, t),
+                Pane::DatePicker => self.panes.date_picker.handle_event(event, content, t),
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
@@ -345,6 +355,10 @@ impl ShowcaseView {
             Some(Pane::Field) => self.panes.field.wake(dt),
             Some(Pane::Label) => self.panes.label.wake(dt),
             Some(Pane::InputGroup) => self.panes.input_group.wake(dt),
+            Some(Pane::InputOtp) => self.panes.input_otp.wake(dt),
+            Some(Pane::Textarea) => self.panes.textarea.wake(dt),
+            Some(Pane::Combobox) => self.panes.combobox.wake(dt),
+            Some(Pane::Command) => self.panes.command.wake(dt),
             // task-104 front B, overlays (#155)
             Some(Pane::Menubar) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
@@ -453,9 +467,26 @@ impl ShowcaseView {
                 }
                 Pane::Tree => self.panes.tree.render(c, content, theme),
                 // task-104 front A, fields (#154)
-                Pane::Field => self.panes.field.render(c, content, theme),
-                Pane::Label => self.panes.label.render(c, content, theme),
-                Pane::InputGroup => self.panes.input_group.render(c, content, theme),
+                Pane::Field => self.panes.field.render(c, layers.overlay, content, theme),
+                Pane::Label => self.panes.label.render(c, layers.overlay, content, theme),
+                Pane::InputGroup => {
+                    self.panes
+                        .input_group
+                        .render(c, layers.overlay, content, theme)
+                }
+                Pane::InputOtp => self
+                    .panes
+                    .input_otp
+                    .render(c, layers.overlay, content, theme),
+                Pane::Textarea => self
+                    .panes
+                    .textarea
+                    .render(c, layers.overlay, content, theme),
+                Pane::Combobox => self
+                    .panes
+                    .combobox
+                    .render(c, layers.overlay, content, theme),
+                Pane::Command => self.panes.command.render(c, layers.overlay, content, theme),
                 // task-104 front B, overlays (#155)
                 Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
                 Pane::Drawer => self.panes.drawer.render(c, content, theme),
@@ -527,6 +558,7 @@ impl ShowcaseView {
                 // task-104 front E, selection and dates (#158)
                 Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
                 Pane::Calendar => self.panes.calendar.render(c, content, theme),
+                Pane::DatePicker => self.panes.date_picker.render(c, content, theme),
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),

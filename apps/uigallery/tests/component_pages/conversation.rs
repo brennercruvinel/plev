@@ -4,6 +4,8 @@
 
 use engine::widgets::prelude::WidgetEvent;
 
+use engine::control::accessibility::accesskit::Action;
+
 use super::harness::{Gallery, ask, by_agent, gallery, sid};
 
 /// The Message page's like chip of the quick comment, and a thread row.
@@ -26,6 +28,11 @@ const PIN: &str = "marker_page.group[1].card[1].marker[0]";
 /// The Badge page's chip at rest, and its destructive count.
 const BADGE: &str = "badge_page.group[0].card[0].badge[0]";
 const COUNT: &str = "badge_page.group[1].card[2].badge[3]";
+
+/// The Avatar page's pin-sized avatar, and the fourth of a stack of five
+/// (under the count where the card is narrow).
+const AVATAR: &str = "avatar_page.group[0].card[0].avatar[0]";
+const STACKED: &str = "avatar_page.group[2].card[1].stack.avatar[3]";
 
 /// The gallery on `page`, scrolled so a person sees `id`.
 fn seen(page: &str, id: &str) -> Gallery {
@@ -251,4 +258,27 @@ fn a_badge_is_read_with_its_intent_and_offers_nothing() {
     let count = s.get(&sid(COUNT)).unwrap();
     assert_eq!(count.label, "4");
     assert!(format!("{:?}", count.state).contains("destructive"));
+}
+
+/// An avatar is a person a reader lands on: an image named by them, with
+/// their presence, offering nothing to the reader nor to an agent; a
+/// person's click leaves the page as it was.
+#[test]
+fn an_avatar_is_read_by_its_person_and_offers_nothing() {
+    let before = gallery("Avatar").state();
+    let mut person = seen("Avatar", AVATAR);
+    person.click(AVATAR);
+    assert_eq!(person.state(), before, "the person");
+    let reader = gallery("Avatar");
+    let s = reader.view.semantics().expect("the page projects");
+    for id in [AVATAR, STACKED] {
+        let n = s
+            .get(&sid(id))
+            .unwrap_or_else(|| panic!("{id} is projected"));
+        assert!(n.actions.is_empty(), "{id}: {:?}", n.actions);
+        assert!(n.focusable, "{id}");
+        assert!(!reader.offers(id, Action::Click), "{id}");
+    }
+    assert_eq!(s.get(&sid(AVATAR)).unwrap().label, "Luna Starfield");
+    assert!(format!("{:?}", s.get(&sid(STACKED)).unwrap().state).contains("online"));
 }

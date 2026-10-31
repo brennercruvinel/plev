@@ -66,7 +66,10 @@ fn a_field_takes_the_same_text_from_the_three() {
         vec![ask_with(id, "set_value", Value::from("Ada"))],
     );
     same("Input", &person, &reader, &agent);
-    assert!(person.state().iter().any(|n| n.label == "live value: Ada"));
+    assert_eq!(
+        person.value(&format!("{id}:text")),
+        Some(Value::from("Ada"))
+    );
 }
 
 /// option. The same option, the list shut.

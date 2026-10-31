@@ -209,7 +209,8 @@ impl NavigationTokens {
         // inside a 1 px rim: 40. Derived where the kit link has nothing:
         // the trailing pad is the dropdown's `pr-3` (`Dropdown:25`), the
         // hint the group title's text (`text-[0.75rem] leading-[1rem]
-        // font-medium text-[#7b7b7b]/70`, `GuidelineSidebar:59`), a press
+        // font-medium`, `GuidelineSidebar:59`) in the kit's gray at full
+        // strength (the title's 70% read too faint for a value), a press
         // the active rim's tone as a fill.
         let surface = |fill, border, icon| LinkSurface {
             fill,
@@ -243,7 +244,7 @@ impl NavigationTokens {
             icon_gap: 12.0,
             label: NavText::new(12.0, 16.0, 600),
             hint: NavText::new(12.0, 16.0, 500),
-            hint_color: tint(gray, 0.7),
+            hint_color: gray,
             trailing_gap: 8.0,
             trailing_room: 20.0,
             label_min: 32.0,

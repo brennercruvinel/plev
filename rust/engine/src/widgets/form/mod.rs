@@ -14,6 +14,7 @@ pub mod command;
 pub mod field;
 pub mod input_group;
 pub mod label;
+pub mod new_field;
 pub mod otp;
 pub mod textarea;
 pub mod tokens;

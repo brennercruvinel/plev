@@ -94,6 +94,10 @@ pub enum Pane {
     Field,
     Label,
     InputGroup,
+    InputOtp,
+    Textarea,
+    Combobox,
+    Command,
     // task-104 front B, overlays (#155)
     AlertDialog,
     Drawer,
@@ -122,6 +126,7 @@ pub enum Pane {
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
     Calendar,
+    DatePicker,
     RadioGroup,
     Toggle,
     ToggleGroup,

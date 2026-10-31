@@ -4,7 +4,9 @@
 //! outgrow it.
 //!
 //! One scroll state, the engine's (`control::input::scroll`), with the
-//! engine's fading scrollbar: the wheel and a touch drag (a synthesized
+//! engine's fading scrollbar, and at rest the paper fading over an edge
+//! the thread runs past (`theme.message.scroller.edge`), the sign that it
+//! goes on: the wheel and a touch drag (a synthesized
 //! wheel) move it, a reader or the keyboard landing on a message scrolls
 //! it into view ([`MessageScroller::reveal`]); a wheel at the end of the
 //! thread is left to the page. As tall as its messages measure at the
@@ -202,6 +204,47 @@ impl MessageScroller {
         result
     }
 
+    /// The edges the thread runs past, `(top, bottom)`: above while it is
+    /// scrolled down, below while it has not reached its end.
+    pub fn cut_edges(&self, bounds: Rect, theme: &Theme) -> (bool, bool) {
+        let inner = Self::inner(bounds, theme);
+        let max = (self.content_h(bounds.w, theme) - inner.h).max(0.0);
+        let off = self.scroll.offset().clamp(0.0, max);
+        (off > 0.5, max > 0.5 && off < max - 0.5)
+    }
+
+    /// The paper fading over each cut edge of the surface, inside the clip.
+    fn render_edges(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let inner = Self::inner(bounds, theme);
+        let t = &theme.message.scroller;
+        let edge = t.edge.min(inner.h / 2.0);
+        let paper = t.fill.0;
+        let clear = [paper[0], paper[1], paper[2], 0.0];
+        let (top, bottom) = self.cut_edges(bounds, theme);
+        let radius = (t.radius - t.border_width).max(0.0);
+        // css 180deg: the first color at the top
+        let fade = |c: &mut Compositor, y: f32, from: [f32; 4], to: [f32; 4]| {
+            c.push(SceneNode::GradientRect {
+                x: inner.x,
+                y,
+                w: inner.w,
+                h: edge,
+                color: from,
+                color2: to,
+                angle_deg: 180.0,
+                corner_radius: radius.min(edge),
+                border_width: 0.0,
+                border_color: [0.0; 4],
+            });
+        };
+        if top {
+            fade(c, inner.y, paper, clear);
+        }
+        if bottom {
+            fade(c, inner.bottom() - edge, clear, paper);
+        }
+    }
+
     /// The bar's fade. `true` while it animates.
     pub fn tick(&mut self, dt: f32) -> bool {
         self.bar.tick(dt)
@@ -246,6 +289,7 @@ impl MessageScroller {
                 m.render(c, r, theme);
             }
         }
+        self.render_edges(c, bounds, theme);
         c.pop_clip();
         self.bar.render(c, inner, &self.scroll, theme);
     }
