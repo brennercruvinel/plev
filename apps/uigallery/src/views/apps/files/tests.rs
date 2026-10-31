@@ -22,6 +22,7 @@ use accord::{
 };
 use engine::control::input::FileDrop;
 use engine::drawing::compositor::Compositor;
+use engine::drawing::text::TextMeasurer;
 use engine::runtime::platform::alerts::{Dialog, FakeAlerts, Level, NoAlerts};
 use engine::runtime::platform::files::{DialogKind, FakeDialogs, NoDialogs};
 use engine::styling::theme::Theme;
@@ -702,7 +703,10 @@ fn two_viewports_render_and_bind_the_page() {
         }
         assert!(zone.bottom() <= open.y, "the buttons are under the zone");
         assert!(warn.x >= open.right(), "warn is beside open");
-        assert!(status.x >= warn.right(), "the status is beside the buttons");
+        assert!(
+            status.x >= warn.right() || status.y >= warn.bottom(),
+            "the status is beside the buttons or under them"
+        );
 
         page.handle_file_drop(
             &dropped(&["/one", "/two", "/three"], None),
@@ -1050,4 +1054,40 @@ fn an_agent_through_the_port_reads_the_files_and_is_refused_the_dialog() {
         }
     );
     assert_eq!(drop.request.target, sid("files.drop"));
+}
+
+/// The width sweep, 280 to 1600 every 8 px, in core and hoff, empty and
+/// with three files: the card in the content, every part in the card,
+/// the status never past it (beside the buttons where it fits, wrapped
+/// under them where not), the tray of files under the buttons.
+#[test]
+fn nothing_cuts_or_overlaps_from_280_to_1600() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let mut todo = TodoPage::new();
+        let mut page = FilesPage::new();
+        for files in [&[][..], &["/tmp/one.txt", "/tmp/a/two.png", "/three"][..]] {
+            page.received.clear();
+            if !files.is_empty() {
+                let content = Rect::new(0.0, 0.0, 900.0, 800.0);
+                page.handle_file_drop(&dropped(files, None), content, &theme, &mut todo, false);
+            }
+            for w in (280..=1600).step_by(8) {
+                let content = Rect::new(0.0, 0.0, w as f32, 800.0);
+                let l = page.layout(content, &theme);
+                let p = l.panel;
+                assert!(
+                    p.x >= content.x && p.right() <= content.right() + 0.5,
+                    "{w}"
+                );
+                for r in [l.zone, l.open, l.warn, l.status, l.tray] {
+                    assert!(r.x >= p.x && r.right() <= p.right() + 0.5, "{w}: {r:?}");
+                    assert!(r.bottom() <= p.bottom() + 0.5, "{w}: {r:?}");
+                }
+                let style = FilesPage::status_style(&theme);
+                let text = page.status_text();
+                let (tw, _) = TextMeasurer::measure_styled(&text, &style, Some(l.status.w));
+                assert!(tw <= l.status.w + 0.5, "{w}: the status fits its box");
+            }
+        }
+    }
 }
