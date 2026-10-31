@@ -1,23 +1,22 @@
 //! Input page: three single-line [`engine::widgets::form::TextField`]s,
-//! the kit's input box (`components/Field/index.tsx:66`) bare, and the
-//! live value they make, as the kit's showcase draws a component (groups
-//! with a title and a rule, cards behind a chip naming what each shows:
-//! the states, the clipboard, the input method). The page owns the
-//! keyboard focus: a click in
-//! a field places the caret, Tab reaches the fields (the view's keyboard,
+//! the kit's input box (`components/Field/index.tsx:66`) under its label
+//! (`:36`, the [`Label`]), as the kit's showcase draws a component (a
+//! group with a title and a rule, cards behind a chip naming what each
+//! shows: the states, the clipboard, the input method). The page owns
+//! the keyboard focus: a click in a field places the caret, Tab reaches the fields (the view's keyboard,
 //! in the order of the projection), Escape blurs; the characters and
 //! editing keys the shell forwards go to the focused one.
 //!
 //! Projected (task-75 phase 2b): each field, `input_page.field[<i>]`, as the
-//! comps projects it, named by its placeholder; `set_value` puts its text
-//! as typing would. The preview line is a label, `input_page.preview`. The
-//! focus a reader asks for is the page's own (the caret).
+//! comps projects it, named by its label; `set_value` puts its text as
+//! typing would. The focus a reader asks for is the page's own (the
+//! caret).
 
-use accord::{Request, Role, SemId, SnapshotBuilder, Value};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use accord::{Request, SemId, SnapshotBuilder, Value};
+use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
+use engine::widgets::form::label::Label;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::field::spec::FIELD_W;
@@ -29,8 +28,11 @@ use crate::views::text_input::host::TextHost;
 /// Number of fields on the page.
 pub const COUNT: usize = 3;
 
-/// What each field asks for: its placeholder and its name.
+/// What each field asks for: its label and its name.
 const LABELS: [&str; COUNT] = ["Full name", "Email address", "Project codename"];
+
+/// An example of what each field takes, its placeholder.
+const PLACEHOLDERS: [&str; COUNT] = ["Ada Lovelace", "ada@hoff.dev", "Nebula"];
 
 /// What each field's card shows.
 const CHIPS: [&str; COUNT] = [
@@ -39,11 +41,12 @@ const CHIPS: [&str; COUNT] = [
     "Input method, Right to left",
 ];
 
-/// The groups: the fields, a card each; the live value.
-const GROUPS: [(&str, usize); 2] = [("Input", COUNT), ("Live value", 1)];
+/// The group's title.
+const TITLE: &str = "Input";
 
 pub struct InputPage {
     root: Option<SemId>,
+    labels: [Label; COUNT],
     fields: [TextField; COUNT],
 }
 
@@ -52,8 +55,8 @@ impl InputPage {
         let root = root_id("input_page");
         let family = child_id(root.as_ref(), "field");
         let mut i = 0;
-        let fields = LABELS.map(|label| {
-            let field = TextField::new(label);
+        let fields = PLACEHOLDERS.map(|placeholder| {
+            let field = TextField::new(placeholder);
             let id = family.as_ref().map(|f| f.key(i.to_string()));
             i += 1;
             match id {
@@ -61,7 +64,11 @@ impl InputPage {
                 None => field,
             }
         });
-        Self { root, fields }
+        Self {
+            root,
+            labels: LABELS.map(Label::new),
+            fields,
+        }
     }
 
     /// The field behind `id`.
@@ -69,35 +76,49 @@ impl InputPage {
         self.fields.iter().position(|f| f.sem_id() == Some(id))
     }
 
-    /// The showcase's groups: per group the title's y, the cards and the
-    /// rule's y, each card as tall as what it shows needs.
-    fn grid(content: Rect, theme: &Theme) -> Vec<showcase::GroupLayout> {
-        let preview = theme.typography.caption_sm().line_height;
-        let heights = [TextField::height(theme), preview];
-        let wanted = GROUPS
-            .iter()
-            .zip(heights)
-            .map(|((_, n), h)| (*n, vec![showcase::card_height(h, theme); *n]));
-        showcase::layout_sized(wanted, content, theme)
+    /// Each card's label and field, `w-60` wide at most, in a card
+    /// `card_w` wide: the label's size and the field's.
+    fn sizes(&self, card_w: f32, theme: &Theme) -> [((f32, f32), (f32, f32)); COUNT] {
+        let w = FIELD_W.min((card_w - theme.spacing.lg * 2.0).max(0.0));
+        let field = (w, TextField::height(theme));
+        std::array::from_fn(|i| (self.labels[i].size(Some(w), theme), field))
     }
 
-    /// Each field centered in its card, `w-60` wide at most.
-    pub fn rects(content: Rect, theme: &Theme) -> [Rect; COUNT] {
-        let grid = Self::grid(content, theme);
-        let cards = grid.first().map(|g| g.cards.clone()).unwrap_or_default();
-        let side = theme.spacing.lg;
+    /// The showcase's group: the title's y, the cards and the rule's y,
+    /// each card as tall as its label over its field needs.
+    fn grid(&self, content: Rect, theme: &Theme) -> showcase::GroupLayout {
+        let gap = theme.form.field.label_gap;
+        let card_w = showcase::card_width(COUNT, content, theme);
+        let heights = self
+            .sizes(card_w, theme)
+            .map(|((_, lh), (_, fh))| showcase::card_height(lh + gap + fh, theme));
+        let wanted = std::iter::once((COUNT, heights.to_vec()));
+        let mut grid = showcase::layout_sized(wanted, content, theme);
+        grid.pop().expect("one group")
+    }
+
+    /// Each card's label and field rects, the two centered as one block.
+    fn parts(&self, content: Rect, theme: &Theme) -> [(Rect, Rect); COUNT] {
+        let grid = self.grid(content, theme);
+        let gap = theme.form.field.label_gap;
         std::array::from_fn(|i| {
-            let card = cards.get(i).copied().unwrap_or(content);
-            let w = FIELD_W.min((card.w - side * 2.0).max(0.0));
-            showcase::centered((w, TextField::height(theme)), card)
+            let card = grid.cards.get(i).copied().unwrap_or(content);
+            let ((lw, lh), (fw, fh)) = self.sizes(card.w, theme)[i];
+            let block = showcase::centered((fw, lh + gap + fh), card);
+            let label = Rect::new(block.x, block.y, lw, lh);
+            let field = Rect::new(block.x, block.y + lh + gap, fw, fh);
+            (label, field)
         })
+    }
+
+    /// Each field's rect.
+    pub fn rects(&self, content: Rect, theme: &Theme) -> [Rect; COUNT] {
+        self.parts(content, theme).map(|(_, field)| field)
     }
 
     /// Bottom edge of the page: the last group's rule.
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        Self::grid(content, theme)
-            .last()
-            .map_or(0.0, |g| g.rule_y - content.y)
+        self.grid(content, theme).rule_y - content.y
     }
 
     pub fn focused(&self) -> Option<usize> {
@@ -131,7 +152,7 @@ impl InputPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let rects = Self::rects(content, theme);
+        let rects = self.rects(content, theme);
         if let WidgetEvent::MouseDown { x, y } = *event {
             if let Some(i) = rects.iter().position(|f| f.contains(x, y)) {
                 self.set_focused(Some(i));
@@ -159,55 +180,16 @@ impl InputPage {
         }
     }
 
-    /// The live preview line under the fields.
-    pub fn preview(&self) -> String {
-        let filled: Vec<&str> = self
-            .fields
-            .iter()
-            .map(|f| f.text())
-            .filter(|t| !t.is_empty())
-            .collect();
-        if filled.is_empty() {
-            "live value: (empty)".to_string()
-        } else {
-            format!("live value: {}", filled.join(" / "))
-        }
-    }
-
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let grid = Self::grid(content, theme);
-        let rects = Self::rects(content, theme);
-        for (i, (g, (title, _))) in grid.iter().zip(GROUPS).enumerate() {
-            showcase::title(c, title, content, g.title_y, theme);
-            if i + 1 < GROUPS.len() {
-                showcase::rule(c, content, g.rule_y, theme);
-            }
-        }
-        if let Some(fields) = grid.first() {
-            for ((card, chip), (field, rect)) in fields
-                .cards
-                .iter()
-                .zip(CHIPS)
-                .zip(self.fields.iter().zip(rects))
-            {
-                showcase::card(c, *card, chip, theme);
-                field.render(c, rect, theme);
-            }
-        }
-        // The live value, centered in its card, cut to it.
-        if let Some(card) = grid.get(1).and_then(|g| g.cards.first()) {
-            showcase::card(c, *card, "Value", theme);
-            let style = theme.typography.caption_sm();
-            let room = (card.w - theme.spacing.lg * 2.0).max(0.0);
-            let shown = TextMeasurer::truncate_to_width(&self.preview(), &style, room);
-            let (w, h) = TextMeasurer::measure_styled(&shown, &style, None);
-            let at = showcase::centered((w.ceil(), h), *card);
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&shown, &style, None),
-                x: at.x,
-                y: at.y,
-                color: theme.colors.text_dim.0,
-            });
+        let grid = self.grid(content, theme);
+        showcase::title(c, TITLE, content, grid.title_y, theme);
+        let parts = self.parts(content, theme);
+        let cards = grid.cards.iter().zip(CHIPS);
+        let widgets = self.labels.iter().zip(&self.fields).zip(parts);
+        for ((card, chip), ((label, field), (label_at, field_at))) in cards.zip(widgets) {
+            showcase::card(c, *card, chip, theme);
+            label.render(c, label_at, theme);
+            field.render(c, field_at, theme);
         }
     }
 }
@@ -259,7 +241,7 @@ impl TextHost for InputPage {
     /// what to copy); another takes a caret at the click, as a press
     /// there. `false` off the fields.
     fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
-        let rects = Self::rects(content, theme);
+        let rects = self.rects(content, theme);
         let Some(i) = rects.iter().position(|r| r.contains(x, y)) else {
             return false;
         };
@@ -283,7 +265,7 @@ impl TextHost for InputPage {
     /// field's caret, laid out in `content`. `None` with no field focused.
     fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
         let i = self.focused()?;
-        Some(self.fields[i].ime_area(Self::rects(content, theme)[i], theme))
+        Some(self.fields[i].ime_area(self.rects(content, theme)[i], theme))
     }
 
     /// Escape blurs the focused field. `false` when none was.
@@ -307,9 +289,6 @@ impl Component for InputPage {
             if let Some(id) = field.sem_id() {
                 field.project(b, id, label, Some(root));
             }
-        }
-        if let Some(preview) = child_id(Some(root), "preview") {
-            b.node(&preview, Role::Label, self.preview()).parent(root);
         }
         let focused = self.focused().and_then(|i| self.fields.get(i));
         if let Some(id) = focused.and_then(TextField::sem_id) {
@@ -390,7 +369,7 @@ mod tests {
     fn click_focuses_field_and_places_caret() {
         let theme = Theme::hoff();
         let mut p = InputPage::new();
-        let field = InputPage::rects(content(), &theme)[1];
+        let field = p.rects(content(), &theme)[1];
 
         let (cx, cy) = field.center();
         let r = p.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy }, content(), &theme);
@@ -439,24 +418,27 @@ mod tests {
         );
     }
 
-    /// The scene mirrors the typed value live (field text + preview).
+    /// Each field draws under its label, the placeholder an example
+    /// while empty, the typed value once typed; nothing else speaks for
+    /// the value.
     #[test]
-    fn scene_shows_typed_value_and_live_preview() {
+    fn a_field_draws_under_its_label_and_shows_what_is_typed() {
+        let theme = Theme::hoff_core();
         let mut p = InputPage::new();
         let before = texts(&p);
-        assert!(
-            before.iter().any(|t| t == "Full name"),
-            "placeholder while empty"
-        );
-        assert!(before.iter().any(|t| t == "live value: (empty)"));
+        for (label, placeholder) in LABELS.iter().zip(PLACEHOLDERS) {
+            assert!(before.iter().any(|t| t == label), "{label}");
+            assert!(before.iter().any(|t| t == placeholder), "{placeholder}");
+        }
+        for (label, field) in p.parts(content(), &theme) {
+            assert!(label.bottom() < field.y, "{label:?} over {field:?}");
+            assert_eq!(label.x, field.x, "the label starts where its box does");
+        }
         p.set_focused(Some(0));
         p.handle_text("Ada");
         let after = texts(&p);
         assert!(after.iter().any(|t| t == "Ada"), "typed value rendered");
-        assert!(
-            after.iter().any(|t| t == "live value: Ada"),
-            "preview mirrors the buffer"
-        );
+        assert!(!after.iter().any(|t| t.contains("live value")));
     }
 
     /// The accent focus ring sits 4px (offset + stroke) outside the
@@ -491,7 +473,7 @@ mod tests {
         };
         assert!(rings(&p).is_empty(), "no focus, no ring");
         p.set_focused(Some(0));
-        let f = InputPage::rects(content(), &theme)[0];
+        let f = p.rects(content(), &theme)[0];
         assert_eq!(rings(&p), vec![(f.x - 4.0, f.y - 4.0)]);
     }
 
@@ -504,7 +486,7 @@ mod tests {
         let long = "a value far wider than the field it was typed into, ".repeat(4);
         for theme in [Theme::hoff_core(), Theme::hoff()] {
             let style = TextField::text_style(&theme);
-            let field = InputPage::rects(content(), &theme)[0];
+            let field = InputPage::new().rects(content(), &theme)[0];
             for focused in [true, false] {
                 let mut p = InputPage::new();
                 p.set_focused(Some(0));
