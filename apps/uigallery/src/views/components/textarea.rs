@@ -19,7 +19,7 @@ use engine::widgets::form::textarea::TextArea;
 use engine::widgets::form::{EditKey, TextField};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-use super::field::spec::{CardWidget, FIELD_W, Part};
+use super::field::spec::{CardWidget, Part};
 use super::field::{FormPage, Group, card};
 
 /// The live card's chip, the Field's.
@@ -105,7 +105,7 @@ impl CardWidget for TextArea {
 
     /// The kit page's `w-60`, narrower when the card is.
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        let w = FIELD_W.min(room);
+        let w = theme.form.field.width.min(room);
         (w, self.height_for(w, theme))
     }
 

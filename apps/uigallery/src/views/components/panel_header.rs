@@ -89,8 +89,8 @@ impl PanelHeaderPage {
             .iter()
             .map(|g| (g.columns, g.cards.len()))
             .collect();
-        fit_layout(&spans, content, theme, |g, c, _| {
-            self.groups[g].cards[c].header.height(theme)
+        fit_layout(&spans, content, theme, |g, c, w| {
+            self.groups[g].cards[c].header.height_for(w, theme)
         })
     }
 
@@ -116,8 +116,9 @@ impl PanelHeaderPage {
             showcase::title(c, group.title, content, placed.title_y, theme);
             for (card, (rect, body)) in group.cards.iter().zip(&placed.cards) {
                 showcase::card(c, *rect, card.title, theme);
-                let at = Rect::new(body.x, body.y, body.w, card.header.height(theme));
-                card.header.render(c, at, theme);
+                let h = card.header.height_for(body.w, theme);
+                card.header
+                    .render(c, Rect::new(body.x, body.y, body.w, h), theme);
             }
             if i != last {
                 showcase::rule(c, content, placed.rule_y, theme);
@@ -173,7 +174,8 @@ mod tests {
                 let content = Rect::new(0.0, 0.0, w as f32, 800.0);
                 for (group, placed) in page.groups.iter().zip(page.layout(content, &theme)) {
                     for (card, (rect, body)) in group.cards.iter().zip(&placed.cards) {
-                        let at = Rect::new(body.x, body.y, body.w, card.header.height(&theme));
+                        let h = card.header.height_for(body.w, &theme);
+                        let at = Rect::new(body.x, body.y, body.w, h);
                         assert!(at.bottom() <= rect.bottom() + 0.01, "{w}px: too tall");
                         let mut c = Compositor::new();
                         c.begin_frame();
@@ -196,6 +198,39 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    /// The page head, every page of the gallery from 280 to 1600 every
+    /// 40 px, under core and hoff: the page the shell hands out starts
+    /// under the blurb's last line, however many lines it wraps to.
+    #[test]
+    fn every_page_starts_under_its_blurb_from_280_to_1600() {
+        use crate::views::{PAGES, ShowcaseView};
+        for name in ["core", "hoff"] {
+            let mut view = ShowcaseView::new(1280.0, 900.0);
+            view.apply_theme(name);
+            let mut wrapped = 0;
+            for (index, page) in PAGES.iter().enumerate() {
+                view.set_page(index);
+                for w in (280..=1600).step_by(40) {
+                    view.resize(w as f32, 900.0, 1.0);
+                    let l = view.shell.layout(&view.theme);
+                    let blurb = view
+                        .shell
+                        .header
+                        .blurb_rect(l.header, l.header_pads, &view.theme)
+                        .unwrap();
+                    let line = view.theme.disclosure.page.at(l.header.w).blurb_line_height;
+                    wrapped += usize::from(blurb.h > line * 1.5);
+                    assert!(
+                        view.content_rect().y >= blurb.bottom() + view.theme.spacing.lg,
+                        "{name} {w}px, {}: the page covers the blurb",
+                        page.title
+                    );
+                }
+            }
+            assert!(wrapped > 0, "{name}: some blurb wraps");
         }
     }
 }

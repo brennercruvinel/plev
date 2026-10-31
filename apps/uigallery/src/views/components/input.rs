@@ -19,7 +19,6 @@ use engine::widgets::form::TextField;
 use engine::widgets::form::label::Label;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::field::spec::FIELD_W;
 use super::{After, Component, EditKey, child_id, root_id, showcase, under};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
@@ -79,7 +78,11 @@ impl InputPage {
     /// Each card's label and field, `w-60` wide at most, in a card
     /// `card_w` wide: the label's size and the field's.
     fn sizes(&self, card_w: f32, theme: &Theme) -> [((f32, f32), (f32, f32)); COUNT] {
-        let w = FIELD_W.min((card_w - theme.spacing.lg * 2.0).max(0.0));
+        let w = theme
+            .form
+            .field
+            .width
+            .min((card_w - theme.spacing.lg * 2.0).max(0.0));
         let field = (w, TextField::height(theme));
         std::array::from_fn(|i| (self.labels[i].size(Some(w), theme), field))
     }
