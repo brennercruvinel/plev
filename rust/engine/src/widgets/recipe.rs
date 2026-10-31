@@ -1,6 +1,8 @@
-//! The HOFF dark-glass drawing recipes every widget shares: edge-lit
-//! pills and surfaces, inset key-light, shadow stacks by elevation, the
-//! focus ring, and the rounded-rect shorthands. Every dimension and color
+//! The drawing recipes every widget shares: rimmed pills and surfaces,
+//! the inset key-light, shadow stacks by elevation, the focus ring, and
+//! the rounded-rect shorthands. How a rim runs and whether a surface is
+//! lit are theme tokens (`glass.rim_fade`, `glass.keylight`): the HOFF
+//! dark glass and the core kit draw through the same recipes. Every dimension and color
 //! comes from the [`Theme`]; a recipe never restates a number the tokens
 //! own.
 //!
@@ -153,29 +155,24 @@ pub fn edge_light(
     c.push_to_layer(layer, SceneNode::PopClip);
 }
 
-/// HOFF inset key-light: `inset 2px 4px 16px rgba(248,248,248,.06)`, a
-/// soft highlight bleeding in from the top-left, the glint that makes a
-/// glass surface read as lit rather than painted.
+/// The theme's inset key-light (`glass.keylight`) over `rect`: in the
+/// HOFF glass `inset 2px 4px 16px rgba(248,248,248,.06)`, a soft
+/// highlight bleeding in from the top-left, the glint that makes a glass
+/// surface read as lit rather than painted. A theme without one (the core
+/// kit) draws nothing.
 pub fn inset_keylight(c: &mut Compositor, layer: LayerId, rect: Rect, radius: f32, theme: &Theme) {
-    let g = &theme.glass;
-    c.push_to_layer(
-        layer,
-        SceneNode::Shadow {
-            x: rect.x,
-            y: rect.y,
-            w: rect.w,
-            h: rect.h,
-            corner_radius: radius,
-            blur_radius: theme.spacing.lg,
-            offset: [theme.spacing.xs / 2.0, theme.spacing.xs],
-            color: g.inset_highlight.0,
-            inset: true,
-        },
-    );
+    let Some(spec) = theme.glass.keylight.as_ref() else {
+        return;
+    };
+    if let Some(node) = shadow_node(rect, radius, spec) {
+        c.push_to_layer(layer, node);
+    }
 }
 
-/// Glass surface pushed to `layer`: translucent fill with the top-lit rim
-/// and the inset key-light, the HOFF card / panel / sheet shell.
+/// Surface pushed to `layer`: the fill inside the theme's rim
+/// ([`glass_pill`]) under its key-light ([`inset_keylight`]). The HOFF
+/// card / panel / sheet shell is a translucent fill with a top-lit rim;
+/// the core kit's, a plain fill inside a 1px `border` (Card :36).
 /// `fill` is usually `theme.glass.surface` (rest) or `surface_hover`.
 pub fn glass_surface(
     c: &mut Compositor,

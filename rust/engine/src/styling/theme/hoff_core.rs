@@ -211,9 +211,10 @@ impl Theme {
                 disabled_alpha: 0.30,
                 wash_alpha: 0.10,
                 wash_hover_alpha: 0.16,
-                // task-104f: still the glass rim; the kit border comes with
-                // the recipes step.
-                rim_fade: 0.0,
+                // The kit's surfaces have a plain `border` (Card :36,
+                // Select :90, FileMenu :33) and no inset key-light.
+                rim_fade: 1.0,
+                keylight: None,
             },
             button: ButtonTokens::hoff_core(),
             form: FormTokens::hoff_core(),
