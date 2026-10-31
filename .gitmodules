@@ -1,0 +1,4 @@
+[submodule "apps/quartzweb"]
+	path = apps/quartzweb
+	url = https://github.com/tiamatio/quartz.git
+	branch = v5
