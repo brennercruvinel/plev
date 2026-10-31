@@ -277,6 +277,21 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     tip.render(&mut c, LayerId::DEFAULT, theme, vw, vh);
     ProgressBar::new(0.5).render(&mut c, row(21.0), theme);
     Spinner::new().render(&mut c, row(22.0), theme);
+    // task-104 front C (#156): a thread row and a quick comment
+    {
+        use crate::widgets::message::message::{Message, MessageKind};
+        Message::new(
+            "Luna Starfield",
+            "2s",
+            "a body long enough to wrap on a phone, at least once",
+        )
+        .divider(true)
+        .render(&mut c, row(23.0), theme);
+        Message::new("Randomdash", "1h", "clamped to three lines")
+            .kind(MessageKind::Quick)
+            .reaction("2")
+            .render(&mut c, row(26.0), theme);
+    }
 
     let mut shell = AppShell::new(
         Sidebar::new(vec![
@@ -597,6 +612,22 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 vec![
                     (id("m.toasts"), Role::Region, Probe::Node),
                     (id("m.toasts[0]"), Role::Status, Probe::Hit),
+                ],
+            ));
+
+            // task-104 front C (#156): a message row and its like chip
+            let message = crate::widgets::message::message::Message::new("Luna", "2s", "body")
+                .kind(crate::widgets::message::message::MessageKind::Quick)
+                .reaction("2")
+                .sem(id("m.message"));
+            let (mut c, _) = frame(false);
+            message.render(&mut c, block(22.0), &theme);
+            message.project(&mut b, &id("m.message"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.message"), Role::ListItem, Probe::Bound),
+                    (id("m.message.reaction"), Role::Button, Probe::Hit),
                 ],
             ));
 

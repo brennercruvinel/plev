@@ -286,12 +286,12 @@ pub const PAGES: &[Page] = &[
     ),
     placeholder("Marker"),
     placeholder("Menubar"),
-    alias(
+    page(
+        C,
         "Message",
         "send",
-        "The message dock.",
-        Pane::Dock,
-        "a message widget apart from the dock",
+        "Comment rows of a thread and the quick comment, with the like chip.",
+        Pane::Message,
     ),
     alias(
         "Message Scroller",

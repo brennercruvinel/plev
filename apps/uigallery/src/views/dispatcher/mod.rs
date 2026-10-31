@@ -66,6 +66,7 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
@@ -166,6 +167,7 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.handle_event(event, content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
@@ -342,6 +344,7 @@ impl ShowcaseView {
                 Pane::Field => self.panes.field.render(c, content, theme),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Message => self.panes.message.render(c, content, theme),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
