@@ -1,6 +1,7 @@
 //! The kit's values, class list by class list (`hoff_core`).
 
 use super::*;
+use crate::styling::theme::hoff_core::SHADES;
 
 impl DisclosureTokens {
     /// The kit, class list by class list.
@@ -324,6 +325,69 @@ impl DisclosureTokens {
             arrow: 16.0,
         };
 
+        // A list's rows are the Folder row (Folder/index.tsx:23: `rounded-xl
+        // border border-transparent hover:bg-[#f1f1f1]`), selected in the
+        // Dropdown's current look (Dropdown :28), as the Item's row.
+        let list = RowRecipe {
+            radius: item.row_radius,
+            border: item.row_border,
+            hover: item.row_hover,
+            selected: item.row_selected,
+            ring_radius: item.row_radius,
+            rule: 0.0,
+            rule_color: NONE,
+        };
+
+        // The kit's one table, the typography page's spec sheet
+        // (templates/TypographyPage/index.tsx:8): `border border-[#ECECEC]
+        // text-[0.6875rem] leading-[1rem] font-medium text-[#7B7B7B]`,
+        // cells `p-5`, the header `text-left font-medium opacity-50` on no
+        // fill, every data cell `border-t border-[#ECECEC]`, the first
+        // `text-[#121212]`. Its gray fails the AAA contrast the tables
+        // meet (#7B7B7B is 4.13 on paper, at opacity 50 far less): the
+        // header and the other cells take shade 7, the theme's darkest
+        // gray that passes (`theme/tests/contrast.rs`). The kit has no
+        // hover nor selection on it: a row takes the AssetCard well's two
+        // washes (AssetCard/index.tsx:10, `bg-[#F8F7F7]
+        // hover:bg-[#F1F1F1]`), the paler hovered, the deeper selected,
+        // square as the table's rules. Heights stay the controls' (one
+        // `Lg` row, one `Xs` header), so the geometry of every table is
+        // the same in every theme.
+        let passing = SHADES[6];
+        let table = TableRecipe {
+            frame: 1.0,
+            frame_color: line,
+            header_fill: NONE,
+            header_radius: 0.0,
+            header_size: 11.0,
+            header_line_height: 16.0,
+            header_weight: 500,
+            header_text: passing,
+            rule: 1.0,
+            rule_color: line,
+            cell_pad: 20.0,
+            cell_size: 11.0,
+            cell_line_height: 16.0,
+            cell_weight: 500,
+            cell: ink,
+            cell_dim: passing,
+            rows: RowRecipe {
+                radius: 0.0,
+                border: 0.0,
+                hover: DisclosureSurface {
+                    fill: hex(0xF8F7F7),
+                    border: NONE,
+                },
+                selected: DisclosureSurface {
+                    fill: wash,
+                    border: NONE,
+                },
+                ring_radius: 0.0,
+                rule: 1.0,
+                rule_color: line,
+            },
+        };
+
         Self {
             accordion,
             collapsible,
@@ -333,6 +397,8 @@ impl DisclosureTokens {
             aspect,
             carousel,
             pager,
+            list,
+            table,
         }
     }
 }
