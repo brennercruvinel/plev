@@ -29,11 +29,13 @@ use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::color::Color;
 use crate::styling::theme::{Intent, Theme};
 use crate::widgets::buttons::{Button, ButtonSize, ButtonVariant, Press};
 use crate::widgets::content::{Avatar, AvatarSize};
 use crate::widgets::icons;
 use crate::widgets::message::message::{Placed, fit, placed, run, width};
+use crate::widgets::message::tokens::KindColors;
 use crate::widgets::recipe::{focus_ring_inside, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, contrast_text};
 
@@ -56,6 +58,40 @@ pub struct AlertLayout {
     pub actions: Vec<Rect>,
 }
 
+/// What a notification is about, as the kit draws it: a glyph and a tone
+/// for the badge on its lead.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NotificationKind {
+    Comment,
+    Video,
+    Invite,
+    Like,
+    Image,
+}
+
+impl NotificationKind {
+    /// The Lucide glyph nearest the kit's (`public/images/notifications`).
+    pub fn glyph(self) -> &'static str {
+        match self {
+            Self::Comment => "message-square",
+            Self::Video => "zap",
+            Self::Invite => "plus",
+            Self::Like => "heart",
+            Self::Image => "image",
+        }
+    }
+
+    pub fn tone(self, kinds: &KindColors) -> Color {
+        match self {
+            Self::Comment => kinds.comment,
+            Self::Video => kinds.video,
+            Self::Invite => kinds.invite,
+            Self::Like => kinds.like,
+            Self::Image => kinds.image,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Alert {
     intent: Intent,
@@ -64,9 +100,9 @@ pub struct Alert {
     detail: String,
     content: String,
     avatar: Option<Avatar>,
-    /// The badge's glyph, when it says more than the intent (the kit's
-    /// notification kinds: a heart for a like, a bubble for a comment).
-    icon: Option<&'static str>,
+    /// What it is about, when the row names it: the badge's glyph and
+    /// tone, apart from the intent.
+    kind: Option<NotificationKind>,
     unread: bool,
     divider: bool,
     actions: Vec<Button>,
@@ -84,7 +120,7 @@ impl Alert {
             detail: detail.into(),
             content: String::new(),
             avatar: None,
-            icon: None,
+            kind: None,
             unread: false,
             divider: false,
             actions: Vec::new(),
@@ -94,12 +130,11 @@ impl Alert {
         }
     }
 
-    /// The badge's glyph, a Lucide name, in place of the intent's (the
-    /// kit's `public/images/notifications`: `heart` for a like,
-    /// `message-square` for a comment, `zap` for a video, `image` for an
-    /// image, `plus` for an invite).
-    pub fn icon(mut self, name: &'static str) -> Self {
-        self.icon = Some(name);
+    /// What it is about: its badge takes the kind's glyph and tone (the
+    /// kit's `public/images/notifications`), and the intent keeps only
+    /// what it means, the role a reader hears.
+    pub fn kind(mut self, kind: NotificationKind) -> Self {
+        self.kind = Some(kind);
         self
     }
 
@@ -424,7 +459,11 @@ impl Alert {
                 color: theme.message.divider.0,
             });
         }
-        let fill = t.intents.of(self.intent).0;
+        let fill = match self.kind {
+            Some(kind) => kind.tone(&t.kinds),
+            None => t.intents.of(self.intent),
+        }
+        .0;
         match (&self.avatar, l.badge) {
             (Some(avatar), Some(badge)) => {
                 avatar.render(c, l.lead, theme);
@@ -459,11 +498,14 @@ impl Alert {
     /// whichever of ink and paper
     /// reads on `fill`.
     fn mark(&self, c: &mut Compositor, disc: Rect, size: f32, fill: [f32; 4]) {
-        let name = self.icon.unwrap_or(match self.intent {
-            Intent::Neutral | Intent::Informational => "info",
-            Intent::Constructive => "check",
-            Intent::Destructive => "alert-triangle",
-        });
+        let name = self
+            .kind
+            .map(NotificationKind::glyph)
+            .unwrap_or(match self.intent {
+                Intent::Neutral | Intent::Informational => "info",
+                Intent::Constructive => "check",
+                Intent::Destructive => "alert-triangle",
+            });
         let (cx, cy) = disc.center();
         let at = (cx - size / 2.0, cy - size / 2.0);
         if let Some(node) = icons::icon_at(name, size, contrast_text(fill), at.0, at.1) {
