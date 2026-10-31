@@ -29,7 +29,7 @@ use super::super::components::{alert, bubble, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{
-    accordion, aspect_ratio, carousel, collapsible, item, kbd, pagination,
+    accordion, aspect_ratio, carousel, collapsible, item, kbd, pagination, table_static,
 };
 
 // task-104 front E, selection and dates (#158)
@@ -102,6 +102,7 @@ pub struct Panes {
     pub item: item::ItemPage,
     pub kbd: kbd::KbdPage,
     pub pagination: pagination::PaginationPage,
+    pub table_static: table_static::TableStaticPage,
     // task-104 front E, selection and dates (#158)
     pub button_group: button_group::ButtonGroupPage,
     pub radio_group: radio_group::RadioGroupPage,
@@ -204,6 +205,7 @@ impl Panes {
             item: item::ItemPage::new(),
             kbd: kbd::KbdPage::new(),
             pagination: pagination::PaginationPage::new(),
+            table_static: table_static::TableStaticPage::new(theme),
             // task-104 front E, selection and dates (#158)
             button_group: button_group::ButtonGroupPage::new(),
             radio_group: radio_group::RadioGroupPage::new(),

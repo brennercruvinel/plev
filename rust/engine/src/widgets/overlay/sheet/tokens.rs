@@ -95,7 +95,8 @@ pub struct DrawerTokens {
     pub icon_box: f32,
     pub icon_box_radius: f32,
     pub icon_box_fill: Color,
-    pub icon_box_shadow: ShadowSpec,
+    /// The icon box's shadow stack, bottom layer first.
+    pub icon_box_shadow: Vec<ShadowSpec>,
     pub icon: f32,
     pub icon_color: Color,
     pub icon_active: Color,
@@ -253,12 +254,12 @@ impl DrawerTokens {
             icon_box: 32.0,
             icon_box_radius: 8.0,
             icon_box_fill: hex(0xFCFCFC),
-            icon_box_shadow: ShadowSpec::new(
+            icon_box_shadow: vec![ShadowSpec::new(
                 [0.0, 0.0],
                 4.0,
                 0.0,
                 Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.10),
-            ),
+            )],
             icon: 20.0,
             icon_color: hex(0x7B7B7B),
             icon_active: ink,
@@ -291,7 +292,7 @@ impl DrawerTokens {
             item_fill: g.surface_active,
             icon_box_radius: theme.shape.micro,
             icon_box_fill: g.surface_hover,
-            icon_box_shadow: theme.shadows.raised,
+            icon_box_shadow: theme.shadows.raised.clone(),
             icon_color: theme.colors.text_mid,
             icon_active: theme.colors.text,
             ..Self::hoff_core()

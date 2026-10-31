@@ -334,7 +334,6 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
     for (page, list, key, count) in [
         ("Scroll Area", "scroll_area_page.list", "selected", 10_000),
         ("Data Table", "table_page.table", "selected_row", 2_000),
-        ("Table", "table_page.table", "selected_row", 2_000),
     ] {
         let row = |i: usize| format!("{list}[{i}]");
         let mut g = gallery(page);
@@ -343,7 +342,9 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         assert!(g.nav(NavKey::Down) && g.nav(NavKey::Down), "{page}: down");
         assert_eq!(g.focused(), Some(row(2)), "{page}");
         assert!(g.ringed(&row(2)), "{page}: the ring on the row");
-        assert_eq!(g.order(), [row(2)], "{page}: the focused row is the stop");
+        // the page's first stop is this table's, on the focused row
+        assert_eq!(g.order()[0], row(2), "{page}: the focused row is the stop");
+        assert!(!g.order().contains(&row(0)), "{page}: one stop per table");
         assert!(g.nav(NavKey::Up), "{page}: up");
         assert_eq!(g.focused(), Some(row(1)), "{page}");
         assert!(g.key(EditKey::End), "{page}: End");
@@ -382,11 +383,7 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         };
         assert_ne!(at, row(4), "{page}: the focus followed the rows");
         assert!(g.ringed(&at), "{page}: {at} in view, with its ring");
-        assert_eq!(
-            g.order(),
-            std::slice::from_ref(&at),
-            "{page}: and it is the stop"
-        );
+        assert_eq!(g.order()[0], at, "{page}: and it is the stop");
         assert!(g.nav(NavKey::Down), "{page}: the arrows go on from there");
     }
 }
@@ -525,8 +522,14 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     let mut g = gallery("Dialog");
     g.tab_to(opener);
     assert!(g.enter(), "opens the modal");
-    let said = |g: &Gallery, words: &str| g.state().iter().any(|n| n.label == words);
-    assert!(said(&g, "Delete repository?"));
+    // The modal on screen, by its id: the page shows the same question
+    // in a card, which stays.
+    let said = |g: &Gallery, words: &str| {
+        g.state()
+            .iter()
+            .any(|n| n.id == sid("dialog") && n.label == words)
+    };
+    assert!(said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.ringed("dialog[cancel]"), "the ring on the cancel");
     for at in ["dialog[confirm]", "dialog[cancel]", "dialog[confirm]"] {
@@ -537,7 +540,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert!(g.back_tab());
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"), "and back");
     assert!(g.space(), "Space presses the cancel");
-    assert!(!said(&g, "Delete repository?"), "the cancel answered it");
+    assert!(!said(&g, "Delete this file?"), "the cancel answered it");
     assert_eq!(g.focused().as_deref(), Some(opener), "the focus is back");
     assert!(g.ringed(opener));
 
@@ -545,7 +548,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.view.close_top_overlay(), "Escape closes the modal first");
     g.frame();
-    assert!(!said(&g, "Delete repository?"));
+    assert!(!said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some(opener), "back on the opener");
 }
 

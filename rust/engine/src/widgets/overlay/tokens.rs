@@ -225,7 +225,7 @@ impl PopoverTokens {
         let panel = ButtonSurface {
             fill: flat(glass.popover),
             overlay: NONE,
-            shadow: vec![theme.shadows.floating, ring(glass.edge_soft)],
+            shadow: [theme.shadows.floating.as_slice(), &[ring(glass.edge_soft)]].concat(),
             text: colors.text,
         };
         let rest = ButtonSurface {
@@ -263,7 +263,8 @@ impl PopoverTokens {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TooltipTokens {
     pub fill: Color,
-    pub shadow: ShadowSpec,
+    /// Its shadow stack, bottom layer first.
+    pub shadow: Vec<ShadowSpec>,
     pub radius: f32,
     pub pad_x: f32,
     pub pad_y: f32,
@@ -284,7 +285,12 @@ impl TooltipTokens {
     pub fn hoff_core() -> Self {
         Self {
             fill: hex(0x121212),
-            shadow: ShadowSpec::new([0.0, 4.0], 4.0, -2.0, Color::rgba(0.0, 0.0, 0.0, 0.40)),
+            shadow: vec![ShadowSpec::new(
+                [0.0, 4.0],
+                4.0,
+                -2.0,
+                Color::rgba(0.0, 0.0, 0.0, 0.40),
+            )],
             radius: 6.0,
             pad_x: 6.0,
             pad_y: 4.0,
@@ -306,7 +312,7 @@ impl TooltipTokens {
         let xs = theme.spacing.xs;
         Self {
             fill: theme.glass.tooltip,
-            shadow: theme.shadows.hint,
+            shadow: theme.shadows.hint.clone(),
             radius: theme.shape.tooltip,
             pad_x: theme.spacing.md,
             pad_y: xs,
@@ -438,7 +444,7 @@ impl MenuTokens {
         let control = &theme.control;
         Self {
             fill: glass.popover,
-            shadow: vec![theme.shadows.floating],
+            shadow: theme.shadows.floating.clone(),
             border: glass.edge_soft,
             border_w: control.edge_width,
             keylight: true,
@@ -503,7 +509,8 @@ impl ModalTokens {
     /// bg-[#FCFCFC] rounded-[2rem] border border-[#ECECEC] shadow-2xl`,
     /// a centered body `p-6` with the title `text-[1.5rem] leading-[2rem]
     /// font-medium mb-2` and the text `text-[0.8125rem]
-    /// leading-[1.2188rem] text-[#7b7b7b]`, a footer `flex gap-3 p-6
+    /// leading-[1.2188rem] text-[#7b7b7b]` (in shade 7: the kit's gray
+    /// fails AA), a footer `flex gap-3 p-6
     /// bg-[#F8F7F7] border-t border-[#E2E2E2]` whose buttons share its
     /// width (`flex-1`), over the scrim `#323232/40`.
     pub fn hoff_core() -> Self {
@@ -526,7 +533,9 @@ impl ModalTokens {
             title: type_.exact(24.0, 32.0, 500),
             body: type_.exact(13.0, 19.5, 400),
             title_color: hex(0x121212),
-            body_color: hex(0x7B7B7B),
+            // The kit's #7b7b7b is 4.13:1 on its paper, under AA; shade 7
+            // (#323232) holds AAA (`styling/theme/tests/contrast.rs`).
+            body_color: hex(0x323232),
             title_gap: 8.0,
             actions_gap: 24.0,
             centered: true,

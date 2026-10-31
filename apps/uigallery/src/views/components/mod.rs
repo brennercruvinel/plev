@@ -72,6 +72,7 @@ pub mod collapsible;
 pub mod item;
 pub mod kbd;
 pub mod pagination;
+pub mod table_static;
 
 // task-104 front E, selection and dates (#158)
 pub mod button_group;

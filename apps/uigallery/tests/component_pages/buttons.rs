@@ -26,7 +26,12 @@ fn a_button_s_press_is_the_same_from_the_person_the_reader_and_an_agent() {
     assert!(said(&g, "Saved! Everything went fine."), "the toast");
     let mut g = gallery("Dialog");
     g.press("dialog_page.delete");
-    assert!(said(&g, "Delete repository?"), "the destructive modal");
+    let modal = g.state().into_iter().find(|n| n.id == sid("dialog"));
+    assert_eq!(
+        modal.map(|n| n.label).as_deref(),
+        Some("Delete this file?"),
+        "the destructive modal"
+    );
     let mut g = gallery("Spinner");
     g.press("spinner_page.toggle");
     assert!(g.state().iter().any(|n| n.label == "Stop spinners"));

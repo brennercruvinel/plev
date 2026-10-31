@@ -25,17 +25,19 @@ const SURFACE_SHARE: f32 = 0.5;
 /// The compositor samples, one card each.
 const SAMPLES: [&str; 4] = ["Gradient", "Backdrop blur", "Clip", "Paths"];
 
-/// The depths, from the theme: a name and the css box-shadow list.
+/// The depths, from the theme: a name and the css box-shadow list (first
+/// layer on top; the theme lists its stacks bottom first).
 fn depths(theme: &Theme) -> Vec<(&'static str, Vec<ShadowSpec>)> {
     let s = &theme.shadows;
-    let stack = |e: Elevation| s.stack(e).to_vec();
+    let css = |layers: &[ShadowSpec]| layers.iter().rev().copied().collect::<Vec<_>>();
+    let stack = |e: Elevation| css(s.stack(e));
     let mut out = vec![
         ("Surface", Vec::new()),
         ("Raised", stack(Elevation::Raised)),
         ("Floating", stack(Elevation::Floating)),
         ("Overlay", stack(Elevation::Overlay)),
         ("Hint", stack(Elevation::Hint)),
-        ("Card", vec![s.card]),
+        ("Card", css(&s.card)),
         ("Button", theme.button.primary.rest.shadow.clone()),
     ];
     // The glass themes light their surfaces from inside; the core kit
@@ -295,6 +297,7 @@ fn ring(cx: f32, cy: f32, r_out: f32, r_in: f32) -> PathBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use engine::widgets::prelude::shadow_node;
 
     fn nodes(theme: &Theme, w: f32) -> Vec<SceneNode> {
         let mut c = Compositor::new();
@@ -303,16 +306,30 @@ mod tests {
     }
 
     /// The shadows drawn are the theme's stacks, layer for layer: no blur
-    /// the page made up.
+    /// the page made up. A layer whose spread eats the sample casts
+    /// nothing, as in css (the large card's `-64px` on its 128 box).
     #[test]
     fn every_shadow_is_a_theme_stack() {
         for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
-            let drawn = nodes(&theme, 1000.0)
+            let content = Rect::new(0.0, 0.0, 1000.0, 800.0);
+            let drawn = nodes(&theme, content.w)
                 .iter()
                 .filter(|n| matches!(n, SceneNode::Shadow { .. }))
                 .count();
-            let layers: usize = depths(&theme).iter().map(|(_, s)| s.len()).sum();
+            let cards = &EffectsPage::layout(content, &theme)[0].cards;
+            let layers: usize = depths(&theme)
+                .iter()
+                .zip(cards)
+                .map(|((_, stack), card)| {
+                    let s = stage(*card, &theme);
+                    stack
+                        .iter()
+                        .filter(|spec| shadow_node(s, theme.shape.card, spec).is_some())
+                        .count()
+                })
+                .sum();
             assert_eq!(drawn, layers);
+            assert!(layers > 0);
         }
     }
 
