@@ -93,6 +93,7 @@ pub enum Pane {
     // task-104 front A, fields (#154)
     Field,
     // task-104 front B, overlays (#155)
+    Popover,
     // task-104 front C, conversation and feedback (#156)
     Message,
     // task-104 front D, disclosure and display (#157)
