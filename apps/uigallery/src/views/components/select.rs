@@ -1,5 +1,6 @@
-//! Select page: the pill select and its dropdown (drawn on the overlay
-//! layer so it floats over the page). The open dropdown takes events
+//! Select page: the select and its dropdown (drawn on the overlay layer
+//! so it floats over the page), as tall as the theme's select recipe
+//! (the kit's `h-9` in the core). The open dropdown takes events
 //! before everything beneath it; Escape closes it.
 //!
 //! Projected (task-75 phase 2b): the select, `select_page.select`, named
@@ -12,7 +13,7 @@
 
 use accord::{Request, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId};
-use engine::styling::theme::{ControlSize, Theme};
+use engine::styling::theme::Theme;
 use engine::widgets::prelude::{EventResult, Rect, Select, WidgetEvent};
 
 use super::{After, Component, child_id, key_under, root_id, under};
@@ -54,12 +55,12 @@ impl SelectPage {
             content.x,
             content.y,
             content.w.min(theme.size.menu_w),
-            theme.control.height(ControlSize::Md),
+            Select::height(theme),
         )
     }
 
     pub fn content_height(&self, _content: Rect, theme: &Theme) -> f32 {
-        theme.control.height(ControlSize::Md)
+        Select::height(theme)
     }
 
     pub fn is_open(&self) -> bool {

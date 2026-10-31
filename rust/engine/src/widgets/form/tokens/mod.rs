@@ -11,6 +11,10 @@
 //! ([`FormTokens::derive`]): the text field each of them drew before the
 //! kit, so a theme that is not the core looks as it did.
 
+mod select;
+
+pub use select::{PanelBody, SelectPanel, SelectRecipe};
+
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypographyScale};
@@ -131,6 +135,8 @@ pub enum Look {
     Field,
     Search,
     Inset,
+    /// A combobox's filter: the select's control as a text box.
+    Combo,
 }
 
 /// What an input group puts at the ends of its box
@@ -197,6 +203,11 @@ pub struct FormTokens {
     pub field: FieldChrome,
     pub otp: OtpTokens,
     pub area: AreaTokens,
+    /// The select and its options panel (`select.rs`).
+    pub select: SelectRecipe,
+    /// A combobox's filter box, the select's control as a text box
+    /// ([`SelectRecipe::as_input`]).
+    pub combo: InputRecipe,
 }
 
 fn hex(v: u32) -> Color {
@@ -242,6 +253,7 @@ impl FormTokens {
             Look::Field => &self.input,
             Look::Search => &self.search,
             Look::Inset => &self.inset,
+            Look::Combo => &self.combo,
         }
     }
 
@@ -421,6 +433,8 @@ impl FormTokens {
             pad_y: 16.0,
             rows: 3,
         };
+        let select = SelectRecipe::hoff_core();
+        let combo = select.as_input(&input);
         Self {
             label,
             input,
@@ -431,6 +445,8 @@ impl FormTokens {
             field,
             otp,
             area,
+            combo,
+            select,
         }
     }
 
@@ -523,6 +539,8 @@ impl FormTokens {
             pad_y: ((input.height - input.text.line_height) / 2.0).max(0.0),
             rows: 3,
         };
+        let select = SelectRecipe::derive(theme);
+        let combo = select.as_input(&input);
         Self {
             label,
             search: input.clone(),
@@ -533,6 +551,8 @@ impl FormTokens {
             field,
             otp,
             area,
+            combo,
+            select,
         }
     }
 }

@@ -1,12 +1,14 @@
-//! HOFF select: a glass pill control (base-2m value + chevron) that
-//! opens a floating options panel on an overlay layer, the active option
-//! marked by a dot. Keyboard focus ([`Select::set_focused`]) rings the
-//! closed pill with the accent ring.
+//! Select: a control (the value and a chevron) that opens a floating
+//! options panel on an overlay layer. Keyboard focus
+//! ([`Select::set_focused`]) rings the closed control with the accent
+//! ring.
 //!
-//! Geometry from the theme: the control and each option are one `Md`
-//! control tall, the pill is the tabs/select radius, the panel is the
-//! card radius with the menu padding, options are the nav radius, the
-//! panel never grows past `size.dropdown_max_h`. With more options than
+//! Every value is the theme's select recipe (`theme.form.select`,
+//! `form/tokens/select.rs`): in the core the kit's Select, a flat
+//! control and panel with the selected row filled; in every other theme
+//! the glass pill and popover it drew before the kit, the selected row
+//! marked by a dot. The panel never grows past the recipe's `max_h`.
+//! With more options than
 //! fit, the rows scroll inside the panel (`select/panel.rs`): the wheel
 //! over the panel scrolls it, the arrow keys ([`Select::highlight_next`],
 //! [`Select::highlight_prev`]) move the highlight and keep it in view,
@@ -19,46 +21,22 @@
 //! declares the select in a semantic projection; the app still owns the
 //! selection.
 
+pub(crate) mod list;
 mod panel;
 
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{ControlSize, IconSize, Theme};
+use crate::styling::theme::Theme;
 use crate::widgets::icons;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
-/// Label style for the control and its options: base-2m.
+/// The text style of the control and its options: the recipe's.
 fn label_style(theme: &Theme) -> TextStyle {
-    theme.typography.base_2m()
-}
-
-/// The per-theme geometry the control, the hit test and the panel share.
-struct Metrics {
-    option_h: f32,
-    pad_x: f32,
-    pad_y: f32,
-    chevron: f32,
-    gap: f32,
-    max_h: f32,
-    dot: f32,
-}
-
-impl Metrics {
-    fn of(theme: &Theme) -> Self {
-        Self {
-            option_h: theme.control.height(ControlSize::Md),
-            pad_x: theme.spacing.lg,
-            pad_y: theme.control.menu_pad,
-            chevron: theme.control.icon(IconSize::Sm),
-            gap: theme.spacing.xs,
-            max_h: theme.size.dropdown_max_h,
-            dot: theme.spacing.sm,
-        }
-    }
+    theme.form.select.text.clone()
 }
 
 /// Dropdown select. The closed control renders in normal flow; while
@@ -268,9 +246,8 @@ impl Select {
             }
             return EventResult::IGNORED;
         }
-        let m = Metrics::of(theme);
         if self.open {
-            self.settle(&m);
+            self.settle(theme);
         }
         match *event {
             WidgetEvent::MouseMove { x, y } => {
@@ -281,7 +258,7 @@ impl Select {
                     result = EventResult::changed();
                 }
                 if self.open {
-                    let hit = self.option_at(x, y, bounds, &m);
+                    let hit = self.option_at(x, y, bounds, theme);
                     if hit != self.highlighted {
                         self.highlighted = hit;
                         result = result.merge(EventResult::changed());
@@ -291,7 +268,7 @@ impl Select {
             }
             WidgetEvent::MouseDown { x, y } => {
                 if self.open {
-                    if let Some(i) = self.option_at(x, y, bounds, &m) {
+                    if let Some(i) = self.option_at(x, y, bounds, theme) {
                         let changed = i != self.selected;
                         self.selected = i;
                         self.close();
@@ -308,17 +285,22 @@ impl Select {
                 }
                 if bounds.contains(x, y) {
                     self.open();
-                    self.settle(&m);
+                    self.settle(theme);
                     EventResult::changed()
                 } else {
                     EventResult::IGNORED
                 }
             }
             WidgetEvent::Scroll { x, y, delta } if self.open => {
-                self.scroll_panel(x, y, delta, bounds, &m)
+                self.scroll_panel(x, y, delta, bounds, theme)
             }
             _ => EventResult::IGNORED,
         }
+    }
+
+    /// The control's height in `theme`: the recipe's.
+    pub fn height(theme: &Theme) -> f32 {
+        theme.form.select.height
     }
 
     /// Render the closed control (selected value + chevron).
@@ -326,37 +308,39 @@ impl Select {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let glass = &theme.glass;
-        let m = Metrics::of(theme);
-        let alpha = if self.disabled {
-            glass.disabled_alpha
-        } else {
-            1.0
-        };
-
-        // Glass pill: rgba($n2,.05), hover .10, focus border rgba($n2,.25).
-        let bg = if self.hovered || self.open {
-            with_alpha(glass.surface_active, glass.surface_active.0[3] * alpha)
-        } else {
-            with_alpha(glass.field, glass.field.0[3] * alpha)
-        };
-        let edge = if self.open {
-            with_alpha(
-                glass.field_focus_border,
-                glass.field_focus_border.0[3] * alpha,
-            )
-        } else {
-            with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha)
-        };
-
-        // Glass field; the chevron icon pushed later stacks on top (the
-        // compositor preserves push order across primitive types).
-        let radius = theme.shape.tabs.min(bounds.h / 2.0);
+        let r = &theme.form.select;
+        let alpha = if self.disabled { r.disabled_alpha } else { 1.0 };
+        let fade = |color: crate::styling::color::Color| with_alpha(color, color.0[3] * alpha);
+        let radius = r.radius.min(bounds.h / 2.0);
         if self.focused {
             compositor.push(focus_ring(bounds, radius, theme));
         }
+        let surface = if self.open {
+            &r.open
+        } else if self.hovered {
+            &r.hover
+        } else if self.focused {
+            &r.focus
+        } else {
+            &r.rest
+        };
+        let shadows: Vec<_> = surface
+            .shadow
+            .iter()
+            .map(|s| crate::styling::theme::ShadowSpec {
+                color: crate::styling::color::Color(fade(s.color)),
+                ..*s
+            })
+            .collect();
+        let layer = crate::drawing::compositor::LayerId::DEFAULT;
+        crate::widgets::recipe::shadow_drops(compositor, layer, bounds, radius, &shadows);
         compositor.push(crate::widgets::recipe::rounded_rect(
-            bounds.x, bounds.y, bounds.w, bounds.h, radius, bg,
+            bounds.x,
+            bounds.y,
+            bounds.w,
+            bounds.h,
+            radius,
+            fade(surface.fill),
         ));
         compositor.push(crate::widgets::recipe::rounded_rect_stroke(
             bounds.x,
@@ -364,18 +348,21 @@ impl Select {
             bounds.w,
             bounds.h,
             radius,
-            edge,
-            theme.control.edge_width_strong,
+            fade(surface.border),
+            r.border_width,
         ));
+        crate::widgets::recipe::shadow_insets(compositor, layer, bounds, radius, &shadows);
 
+        // The value, cut with an ellipsis before the chevron.
         if let Some(label) = self.selected_label() {
             let style = label_style(theme);
-            let text = glass.text_active;
+            let room = (bounds.w - r.pad_start - r.gap - r.chevron - r.pad_end).max(0.0);
+            let shown = TextMeasurer::truncate_to_width(label, &style, room);
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, None),
-                x: bounds.x + m.pad_x,
+                key: TextNodeKey::from_style(&shown, &style, None),
+                x: bounds.x + r.pad_start,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                color: with_alpha(text, text.0[3] * alpha),
+                color: fade(r.value_color),
             });
         }
 
@@ -386,10 +373,10 @@ impl Select {
         };
         if let Some(node) = icons::icon_at(
             chevron,
-            m.chevron,
-            with_alpha(glass.text_faint, glass.text_faint.0[3] * alpha),
-            bounds.x + bounds.w - m.pad_x - m.chevron,
-            bounds.y + (bounds.h - m.chevron) / 2.0,
+            r.chevron,
+            fade(r.chevron_color),
+            bounds.x + bounds.w - r.pad_end - r.chevron,
+            bounds.y + (bounds.h - r.chevron) / 2.0,
         ) {
             compositor.push(node);
         }
