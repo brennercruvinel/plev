@@ -34,7 +34,7 @@ mod tests;
 
 use std::time::Duration;
 
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::gpu::image::{ImageHandle, replace_image_rgba, stream_image_rgba};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::runtime::platform::capture::{
@@ -42,11 +42,11 @@ use engine::runtime::platform::capture::{
 };
 use engine::runtime::window::Background;
 use engine::styling::theme::{ControlSize, Theme};
-use engine::widgets::prelude::{
-    EventResult, ProgressBar, Rect, Switch, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
-};
+use engine::widgets::content::{AspectFrame, AspectRatio, Panel};
+use engine::widgets::form::label::Label;
+use engine::widgets::prelude::{EventResult, ProgressBar, Rect, Switch, Wake, WidgetEvent};
 
-use super::{EditKey, panel};
+use super::EditKey;
 use semantics::{Ids, bounds};
 
 /// The quietest level the meter shows, in dB below full scale: a room's
@@ -372,8 +372,18 @@ impl CapturePage {
         wake.merge(Wake::moving(springs))
     }
 
-    fn label_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+    /// A device's name, the kit's form label.
+    fn label(kind: DeviceKind) -> Label {
+        Label::new(kind.noun())
+    }
+
+    /// The frame box: the kit's aspect well at the camera's proportion.
+    fn frame(&self) -> AspectFrame {
+        let (w, h) = (
+            self.settings.width as f32,
+            self.settings.height.max(1) as f32,
+        );
+        AspectFrame::new("camera frame", AspectRatio::new(w.max(1.0), h))
     }
 
     fn line_style(theme: &Theme) -> TextStyle {
@@ -402,8 +412,7 @@ impl CapturePage {
         }
         y += theme.spacing.md;
         let frame_w = inner_w.min(self.settings.width as f32);
-        let frame_h =
-            (frame_w * self.settings.height as f32 / self.settings.width.max(1) as f32).floor();
+        let frame_h = self.frame().height(frame_w).floor();
         let frame = Rect::new(x + pad, y, frame_w, frame_h);
         y += frame_h + theme.spacing.md;
         let meter = Rect::new(x + pad, y, frame_w, theme.spacing.lg);
@@ -511,63 +520,47 @@ impl CapturePage {
     /// status; each switch binds itself.
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let l = self.layout(content, theme);
-        panel(c, l.panel, theme);
+        Panel::new().render(c, l.panel, theme);
         if let Some(ids) = &self.ids {
             c.bind(&ids.region, bounds(l.panel));
             c.bind(&ids.frame, bounds(l.frame));
             c.bind(&ids.level, bounds(l.meter));
             c.bind(&ids.status, bounds(l.status));
         }
-        let label = Self::label_style(theme);
         let small = Self::line_style(theme);
         for kind in DeviceKind::ALL {
             let i = slot(kind);
             self.switch(kind).render(c, l.switches[i], theme);
             let rect = l.labels[i];
-            let name = kind.noun();
-            let (nw, _) = TextMeasurer::measure_styled(name, &label, None);
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(name, &label, None),
-                x: rect.x,
-                y: rect.y + ((rect.h - label.line_height) / 2.0).floor(),
-                color: theme.colors.text.0,
-            });
-            let line = self.line(kind);
+            let label = Self::label(kind);
+            let (nw, nh) = label.size(None, theme);
+            let ly = rect.y + ((rect.h - nh) / 2.0).floor();
+            label.draw(c, LayerId::DEFAULT, rect.x, ly, None, theme);
+            // The state after the name, cut to what the row has left.
+            let lx = rect.x + nw + theme.spacing.md;
+            let line = TextMeasurer::truncate_to_width(&self.line(kind), &small, rect.right() - lx);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&line, &small, None),
-                x: rect.x + nw + theme.spacing.md,
+                x: lx,
                 y: rect.y + ((rect.h - small.line_height) / 2.0).floor(),
                 color: theme.colors.text_mid.0,
             });
         }
         let f = l.frame;
-        c.push(rounded_rect(
-            f.x,
-            f.y,
-            f.w,
-            f.h,
-            theme.radius.md,
-            theme.glass.field.0,
-        ));
-        c.push(rounded_rect_stroke(
-            f.x,
-            f.y,
-            f.w,
-            f.h,
-            theme.radius.md,
-            theme.glass.edge.0,
-            theme.control.edge_width,
-        ));
+        self.frame().render(c, f, theme);
         match self.showing {
-            Some(handle) => c.draw_image(f.x, f.y, f.w, f.h, handle, theme.radius.md),
+            Some(handle) => {
+                let radius = theme.disclosure.aspect.radius.min(f.w / 2.0).min(f.h / 2.0);
+                c.draw_image(f.x, f.y, f.w, f.h, handle, radius);
+            }
             None => {
                 let words = self.line(DeviceKind::Camera);
-                let (tw, th) = TextMeasurer::measure_styled(&words, &label, None);
+                let (tw, th) = TextMeasurer::measure_styled(&words, &small, Some(f.w));
                 c.push(SceneNode::Text {
-                    key: TextNodeKey::from_style(&words, &label, None),
+                    key: TextNodeKey::from_style(&words, &small, Some(f.w)),
                     x: f.x + ((f.w - tw) / 2.0).floor(),
                     y: f.y + ((f.h - th) / 2.0).floor(),
-                    color: theme.glass.text_faint.0,
+                    color: theme.colors.text_mid.0,
                 });
             }
         }
