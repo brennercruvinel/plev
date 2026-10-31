@@ -349,6 +349,52 @@ fn settle(g: &mut Gallery) {
 const SHEET: &str = "Sheet";
 const FROM_BOTTOM: &str = "sheet_page.group[0].card[2]";
 
+/// Reduced motion on this thread for the test that holds it, off again
+/// at its end.
+struct Reduced;
+
+impl Reduced {
+    fn on() -> Self {
+        engine::compose::animation::set_reduced_motion(true);
+        Reduced
+    }
+}
+
+impl Drop for Reduced {
+    fn drop(&mut self) {
+        engine::compose::animation::set_reduced_motion(false);
+    }
+}
+
+/// The sheet opened and one frame ticked: whether the view still moves,
+/// and the sheet's entry progress on the stack.
+fn sheet_after_one_frame() -> (bool, Vec<f32>) {
+    let mut g = gallery(SHEET);
+    g.click(FROM_BOTTOM);
+    let moving = g.view.tick(1.0 / 60.0);
+    let progress = g
+        .view
+        .overlay_mgr
+        .stack
+        .iter()
+        .map(|o| o.progress())
+        .collect();
+    (moving, progress)
+}
+
+/// With motion the sheet slides in over frames; with reduced motion it
+/// enters in a cut: in on the first frame, and nothing asks for another.
+#[test]
+fn reduced_motion_brings_the_sheet_in_with_a_cut() {
+    let (moving, progress) = sheet_after_one_frame();
+    assert!(moving, "with motion it slides");
+    assert!(progress.iter().all(|p| *p < 1.0), "mid-slide: {progress:?}");
+    let _reduced = Reduced::on();
+    let (moving, progress) = sheet_after_one_frame();
+    assert!(!moving, "reduced: nothing moves after the first frame");
+    assert_eq!(progress, [1.0], "reduced: the sheet is in");
+}
+
 /// The sheet opens from the three, held to the edge its button names,
 /// with the focus on its close; its save, from the three, closes it and
 /// says so in a toast.
@@ -545,4 +591,27 @@ fn space_opens_the_context_menu_and_escape_gives_the_focus_back() {
     assert!(g.view.close_top_overlay(), "a second Escape");
     g.frame();
     assert_eq!(focused(&g), None);
+}
+
+// Tooltip
+
+/// The button is named by its tooltip and described by its key, for the
+/// reader and the agent alike; the kit's bubbles are labels with their
+/// text and key.
+#[test]
+fn the_tooltip_names_its_button_and_the_kit_s_bubbles() {
+    let g = gallery("Tooltip");
+    let node = |id: &str| {
+        g.state()
+            .into_iter()
+            .find(|n| n.id == sid(id))
+            .unwrap_or_else(|| panic!("{id}"))
+    };
+    let button = node("tooltip_page.button");
+    assert_eq!(button.label, "Undo");
+    assert_eq!(button.description.as_deref(), Some("U"));
+    let redo = node("tooltip_page.group[1].card[1]");
+    assert_eq!(redo.label, "Redo");
+    assert_eq!(redo.description.as_deref(), Some("R"));
+    assert_eq!(node("tooltip_page.group[1].card[0]").label, "Copy prompt");
 }

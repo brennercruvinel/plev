@@ -107,3 +107,46 @@ fn the_arrows_choose_along_a_radio_group() {
         assert_eq!(focused(&view), Some(at(1)), "{page}: up is back");
     }
 }
+
+/// A calendar (task-104 front E): left and right move a day, up and down
+/// a week, each choosing the day it lands on; at the month's edge up and
+/// down stay.
+#[test]
+fn the_arrows_choose_along_a_calendar_a_day_and_a_week() {
+    let card = "calendar_page.group[0].card[0]";
+    let at = |day: &str| format!("{card}[2026-10-{day}]");
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    view.jump_to_page("Calendar");
+    assert!(view.assist_focus(&accord::SemId::parse(&at("14")).unwrap()));
+    let selected = |view: &ShowcaseView| {
+        view.semantics().and_then(|s| {
+            let id = accord::SemId::parse(card).ok()?;
+            s.get(&id)?.state.get("selected").cloned()
+        })
+    };
+    let press = |view: &mut ShowcaseView, key: &str| match key {
+        "left" => view.handle_edit_key(EditKey::Left),
+        "right" => view.handle_edit_key(EditKey::Right),
+        "up" => view.handle_nav(NavKey::Up),
+        _ => view.handle_nav(NavKey::Down),
+    };
+    let walk = [
+        ("right", "15"),
+        ("down", "22"),
+        ("up", "15"),
+        ("up", "08"),
+        ("up", "01"),
+        ("left", "31"),
+    ];
+    for (key, to) in walk {
+        assert!(press(&mut view, key), "{key}");
+        assert_eq!(focused(&view), Some(at(to)), "{key}");
+        assert_eq!(
+            selected(&view),
+            Some(accord::Value::Text(format!("2026-10-{to}"))),
+            "{key}: chosen"
+        );
+    }
+    assert!(!press(&mut view, "down"), "the month's edge");
+    assert_eq!(focused(&view), Some(at("31")));
+}

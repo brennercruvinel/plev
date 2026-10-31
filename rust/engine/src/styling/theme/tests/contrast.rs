@@ -9,8 +9,8 @@
 //! light, as the GPU blends into the sRGB surface (`Color::to_linear_array`,
 //! `crate::color`), and the relative luminance is WCAG's, from the linear
 //! channels. The pairs are the ones the design draws: every text token on
-//! every surface text sits on, the tooltip's own text on the tooltip
-//! (`comps` feedback/tooltip.rs draws `text_mid` there), the headline
+//! every surface text sits on, the tooltip's own text and its key's on
+//! the tooltip (`overlay.tooltip`, what feedback/tooltip.rs draws), the headline
 //! gradient as large text, the intents, the accent (the focus ring,
 //! `comps` recipe.rs) and the active border on the page and on a card, and
 //! each button's label on its own fill at rest, hovered and pressed. A
@@ -23,7 +23,7 @@
 //! failing.
 
 use crate::styling::color::Color;
-use crate::styling::theme::{ButtonRecipe, Theme};
+use crate::styling::theme::{ButtonRecipe, Intent, Theme};
 
 /// WCAG 2.2 AA: text (1.4.3).
 const TEXT: f64 = 4.5;
@@ -119,14 +119,22 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             add(fg, bg, TEXT, over(color, under), under);
         }
     }
-    let tooltip = over(g.tooltip, page);
-    add(
-        "colors.text_mid",
-        "glass.tooltip",
-        TEXT,
-        over(c.text_mid, tooltip),
-        tooltip,
-    );
+    // The tooltip's text on its fill, and on its key's square over it.
+    let tip = &t.overlay.tooltip;
+    let tooltip = over(tip.fill, page);
+    let key = over(tip.key.fill, tooltip);
+    for (bg, under) in [
+        ("overlay.tooltip.fill", tooltip),
+        ("overlay.tooltip.key.fill", key),
+    ] {
+        add(
+            "overlay.tooltip.text_color",
+            bg,
+            TEXT,
+            over(tip.text_color, under),
+            under,
+        );
+    }
     let [page_bg, card] = [surfaces[0], surfaces[1]];
     for (bg, under) in [page_bg, card] {
         for (i, stop) in g.text_gradient.iter().enumerate() {
@@ -268,6 +276,11 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         ("informational", a.intents.informational),
         ("constructive", a.intents.constructive),
         ("destructive", a.intents.destructive),
+        ("kinds.comment", a.kinds.comment),
+        ("kinds.video", a.kinds.video),
+        ("kinds.invite", a.kinds.invite),
+        ("kinds.like", a.kinds.like),
+        ("kinds.image", a.kinds.image),
     ] {
         let under = over(fill, card);
         let icon = Color(crate::widgets::widget::contrast_text(fill.0));
@@ -343,6 +356,73 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             );
         }
     }
+    // the badge on the card: the chip's label on its fill and on its
+    // raised paper, an intent's disc on the chip, the dot on the card, and
+    // a count's numeral on its fill.
+    let bd = &t.message.badge;
+    let well = over(c.bg_panel, card);
+    for (name, border) in [
+        ("border", bd.tag.border),
+        ("raised_border", bd.tag.raised_border),
+    ] {
+        for (bg, under) in [("colors.surface", card), ("colors.bg_panel", well)] {
+            add(
+                &format!("message.badge.tag.{name}"),
+                bg,
+                LARGE,
+                over(border, under),
+                under,
+            );
+        }
+    }
+    let chip = over(bd.tag.fill, card);
+    let raised = over(bd.tag.raised_fill, card);
+    add(
+        "message.badge.tag.text",
+        "message.badge.tag.fill",
+        TEXT,
+        over(bd.tag.text.color, chip),
+        chip,
+    );
+    add(
+        "message.badge.tag.text",
+        "message.badge.tag.raised_fill",
+        TEXT,
+        over(bd.tag.text.color, raised),
+        raised,
+    );
+    for (name, intent) in [
+        ("neutral", Intent::Neutral),
+        ("informational", Intent::Informational),
+        ("constructive", Intent::Constructive),
+        ("destructive", Intent::Destructive),
+    ] {
+        if intent != Intent::Neutral {
+            let mark = over(bd.marks.of(intent), chip);
+            add(
+                &format!("message.badge.marks.{name}"),
+                "message.badge.tag.fill",
+                LARGE,
+                mark,
+                chip,
+            );
+        }
+        add(
+            &format!("message.badge.dots.{name}"),
+            "colors.surface",
+            LARGE,
+            over(bd.dots.of(intent), card),
+            card,
+        );
+        let fill = over(bd.count_fill.of(intent), card);
+        add(
+            &format!("message.badge.count_ink.{name}"),
+            &format!("message.badge.count_fill.{name}"),
+            TEXT,
+            over(bd.count_ink.of(intent), fill),
+            fill,
+        );
+    }
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
     // core the kit's #7B7B7B hint and group label fail AA; they take
@@ -398,10 +478,155 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         let fg = format!("overlay.drawer.{fg}");
         add(&fg, "overlay.drawer.item_fill", need, over(color, lit), lit);
     }
+    // task-104 front E: the segment labels on the well and on the thumb,
+    // the radio's label on the page and under the pointer, and the
+    // calendar's weekdays on a card, at AAA (a color of the kit or the
+    // theme that falls under it gives way, `selection::tokens::legible`),
+    // and today's ring, a mark a person must see (1.4.11).
+    let aaa = f64::from(crate::widgets::selection::tokens::TEXT_CONTRAST);
+    let sel = &t.selection;
+    let well = over(sel.segmented.track.fill[0], page_bg.1);
+    let thumb = over(sel.segmented.thumb.fill[0], well);
+    let row = over(sel.radio.row_hover, page_bg.1);
+    for (fg, bg, color, under) in [
+        (
+            "selection.segmented.text",
+            "selection.segmented.track",
+            sel.segmented.text,
+            well,
+        ),
+        (
+            "selection.segmented.text_hover",
+            "selection.segmented.track",
+            sel.segmented.text_hover,
+            well,
+        ),
+        (
+            "selection.segmented.thumb.text",
+            "selection.segmented.thumb",
+            sel.segmented.thumb.text,
+            thumb,
+        ),
+        (
+            "selection.radio.label",
+            "colors.bg",
+            sel.radio.label,
+            page_bg.1,
+        ),
+        (
+            "selection.radio.label",
+            "selection.radio.row_hover",
+            sel.radio.label,
+            row,
+        ),
+        (
+            "selection.calendar.weekday",
+            "colors.surface",
+            sel.calendar.weekday,
+            card,
+        ),
+    ] {
+        add(fg, bg, aaa, over(color, under), under);
+    }
+    let chosen = over(sel.calendar.chosen.rest.fill[0], card);
+    let day = over(sel.calendar.chosen.rest.text, chosen);
+    add(
+        "selection.calendar.chosen.text",
+        "selection.calendar.chosen",
+        aaa,
+        day,
+        chosen,
+    );
+    let cb = &sel.checkbox;
+    let box_on = over(cb.on.fill[0], page_bg.1);
+    add(
+        "selection.checkbox.label",
+        "colors.bg",
+        aaa,
+        over(cb.label, page_bg.1),
+        page_bg.1,
+    );
+    add(
+        "selection.checkbox.mark",
+        "selection.checkbox.on",
+        LARGE,
+        over(cb.mark, box_on),
+        box_on,
+    );
+    let faded = |c: Color, a: f32| Color::rgba(c.0[0], c.0[1], c.0[2], c.0[3] * a);
+    let box_off = over(faded(cb.on.fill[0], cb.disabled_alpha), page_bg.1);
+    add(
+        "selection.checkbox.mark_disabled",
+        "selection.checkbox.on@disabled",
+        LARGE,
+        over(cb.mark_disabled, box_off),
+        box_off,
+    );
+    let edge = cb.off.shadow.first().map_or(cb.off.fill[0], |s| s.color);
+    add(
+        "selection.checkbox.off.edge",
+        "colors.bg",
+        LARGE,
+        over(edge, page_bg.1),
+        page_bg.1,
+    );
+    for (name, tag) in [
+        ("rest", &sel.chip.rest),
+        ("rest_hover", &sel.chip.rest_hover),
+        ("on", &sel.chip.on),
+        ("on_hover", &sel.chip.on_hover),
+    ] {
+        let fill = over(tag.fill[0], page_bg.1);
+        add(
+            &format!("selection.chip.{name}.text"),
+            &format!("selection.chip.{name}"),
+            aaa,
+            over(tag.text, fill),
+            fill,
+        );
+    }
+    // the switch's well off (the radio's disc) and the slider's thumb:
+    // their rings on all they border (1.4.11)
+    let ring_of =
+        |s: &crate::styling::theme::ButtonSurface| s.shadow.last().map_or(s.fill[0], |r| r.color);
+    let well = ring_of(&sel.switch.off);
+    for (bg, under) in [
+        ("colors.bg", page_bg.1),
+        ("selection.radio.row_hover", row),
+        (
+            "selection.switch.off",
+            over(sel.switch.off.fill[0], page_bg.1),
+        ),
+    ] {
+        add(
+            "selection.switch.off.edge",
+            bg,
+            LARGE,
+            over(well, under),
+            under,
+        );
+    }
+    let sl = &sel.slider;
+    let range = over(sl.track.fill[0], page_bg.1);
+    for (bg, under) in [
+        ("selection.slider.track", range),
+        ("selection.slider.fill", over(sl.fill, range)),
+    ] {
+        let edge = over(ring_of(&sl.thumb), under);
+        add("selection.slider.thumb.edge", bg, LARGE, edge, under);
+    }
+    let today = over(sel.calendar.today, card);
+    add(
+        "selection.calendar.today",
+        "colors.surface",
+        LARGE,
+        today,
+        card,
+    );
     out
 }
 
-/// The pairs that fail today, 115 of the 465 (core 41, hoff 18, dark 13,
+/// The pairs that fail today, 114 of the 477 (core 40, hoff 18, dark 13,
 /// light 43), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
@@ -433,7 +658,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("core", "glass.text_default", "glass.popover", 4.13),
     ("core", "glass.text_faint", "glass.popover", 4.13),
     ("core", "glass.text_placeholder", "glass.popover", 1.61),
-    ("core", "colors.text_mid", "glass.tooltip", 4.43),
     ("core", "colors.success", "colors.bg", 2.41),
     ("core", "colors.border_active", "colors.bg", 1.26),
     ("core", "colors.success", "colors.surface", 2.41),
@@ -678,7 +902,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 473,
+        count, 649,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

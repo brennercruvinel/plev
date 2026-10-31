@@ -668,3 +668,4 @@ fn edge_panel_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
 }
 
 mod menu;
+mod tooltip;

@@ -149,7 +149,7 @@ impl Theme {
             overlay: OverlayTokens::hoff_core(),
             message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
-            selection: SelectionTokens::hoff_core(),
+            selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body

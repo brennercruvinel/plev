@@ -155,7 +155,13 @@ pub const PAGES: &[Page] = &[
         "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
         Pane::ButtonGroup,
     ),
-    placeholder("Calendar"),
+    page(
+        C,
+        "Calendar",
+        "history",
+        "One month to choose a day: today ringed, the chosen day the call to action, a range that refuses the rest.",
+        Pane::Calendar,
+    ),
     page(
         C,
         "Card",
@@ -480,7 +486,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Tabs",
         "layers",
-        "Segmented strip sized from its measured labels.",
+        "The kit's tab strip, three tabs and two, long and translated labels.",
         Pane::Tabs,
     ),
     placeholder("Textarea"),
@@ -509,7 +515,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Tooltip",
         "info",
-        "Hover the button: 450 ms, then above the anchor, or below when there is no room.",
+        "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
     ),
     page(

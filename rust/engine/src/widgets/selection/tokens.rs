@@ -13,9 +13,16 @@
 //! The toggle reads the buttons' own `toolbar` recipes and has nothing
 //! here.
 
+pub use super::legible::{
+    MARK_CONTRAST, TEXT_CONTRAST, hue_sextant, legible, legible_at, legible_on,
+};
+use super::legible::{full, reads_on};
 use crate::styling::color::Color;
+use crate::styling::theme::ButtonRecipe;
+use crate::styling::theme::ButtonSurface;
+use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ButtonSurface, Theme};
+use crate::widgets::buttons::tokens::ButtonTokens;
 
 /// The kit's segmented control (`components/Tabs/index.tsx`): a well
 /// with a raised thumb that slides under the chosen segment. The toggle
@@ -72,18 +79,97 @@ pub struct ButtonGroupTokens {
     pub separator_w: f32,
 }
 
-/// The radio group. The kit has no radio: the row is its single-choice
-/// list line (`components/Zoom/index.tsx:15`, `:19`, `:32`) and the disc
-/// is its on/off control, the switch (`components/Switch/index.tsx:11`,
-/// `:17`): the well off, the dark well on, the knob as the dot.
+/// The kit's switch (`components/Switch/index.tsx`): a well, light off
+/// and dark on, and a raised knob. Its measures are the theme's
+/// (`control.switch_size`, `switch_knob`); the radio's disc is drawn with
+/// the same three surfaces.
 #[derive(Clone, Debug, PartialEq)]
-pub struct RadioTokens {
-    /// The disc off (the switch's well) and on (its dark well); `text`
-    /// is unused.
+pub struct SwitchTokens {
+    /// The well off and on; `text` is unused. Off, it is ringed where it
+    /// reads at [`MARK_CONTRAST`] on the page and on a row's hover (the
+    /// radio's disc is this well): the kit draws it with shades alone.
     pub off: ButtonSurface,
     pub on: ButtonSurface,
-    /// The dot on a chosen disc (the switch's knob).
-    pub dot: ButtonSurface,
+    /// The knob (the radio's dot).
+    pub knob: ButtonSurface,
+    /// Opacity of a disabled switch (the buttons' `opacity-30`; the kit
+    /// has no disabled switch).
+    pub disabled_alpha: f32,
+}
+
+/// The kit's range (`app/globals.css:22-55`, the `.range-slider` thumb;
+/// `components/Export/Images/Compression/index.tsx:24` the track and its
+/// fill): a tall well that fills to the value, and a raised block thumb.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SliderTokens {
+    /// The well (`h-9 bg-[#f1f1f1] rounded-lg`); `text` is unused.
+    pub track: ButtonSurface,
+    /// The part up to the value (`rgba(123,123,123,0.3)`).
+    pub fill: Color,
+    /// The thumb (`#f8f7f7`, its three shadows), ringed where it reads
+    /// at [`MARK_CONTRAST`] on the well and on the fill it borders.
+    pub thumb: ButtonSurface,
+    /// The well's height and radius, the thumb's width and radius.
+    pub height: f32,
+    pub radius: f32,
+    pub thumb_w: f32,
+    pub thumb_radius: f32,
+    pub disabled_alpha: f32,
+}
+
+/// The kit's chip: the card's state tag (`components/Card/index.tsx:56`,
+/// `px-3 py-1 border rounded-xl`, 11/16 medium; `bg-[#F1F1F1]`, or
+/// `bg-[#FCFCFC] border-[#ECECEC]` on gray) and the notifications'
+/// filter pill (`components/Notifications/index.tsx:33`, chosen
+/// `bg-[#F1F1F1] text-[#000]`, else `text-[#7B7B7B]`, `hover:text-
+/// [#000]`). A quiet chip is the bordered tag, a selected one the filled.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ChipTokens {
+    pub rest: ButtonSurface,
+    pub rest_hover: ButtonSurface,
+    pub on: ButtonSurface,
+    pub on_hover: ButtonSurface,
+    /// The hue of an informational chip: the theme's info, where it
+    /// stands apart from its success (a constructive chip) on the color
+    /// wheel.
+    pub info: Color,
+    /// `px-3`, `py-1`, `rounded-xl`, the `border`.
+    pub pad_x: f32,
+    pub pad_y: f32,
+    pub radius: f32,
+    pub edge: f32,
+    pub font_size: f32,
+    pub line_height: f32,
+    pub font_weight: u16,
+}
+
+/// The checkbox. The kit has none: its box is the switch's well, off
+/// and on, ringed where it is off by an edge that reads (1.4.11), its
+/// mark the knob's paper, its label the radio's list line color. The box
+/// and the radius are the theme's (`control.box_size`, `shape.micro`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct CheckboxTokens {
+    pub off: ButtonSurface,
+    /// Off under the pointer: the well a shade deeper.
+    pub off_hover: ButtonSurface,
+    pub on: ButtonSurface,
+    /// The check on a box that is on.
+    pub mark: Color,
+    /// The check on a disabled box that is on, drawn whole: the box fades
+    /// to `disabled_alpha`, and the knob's paper would vanish on it, so
+    /// the check takes the first gray that still reads at
+    /// [`MARK_CONTRAST`] there.
+    pub mark_disabled: Color,
+    pub label: Color,
+    pub disabled_alpha: f32,
+}
+
+/// The radio group. The kit has no radio: the row is its single-choice
+/// list line (`components/Zoom/index.tsx:15`, `:19`, `:32`) and the disc
+/// is its on/off control, the switch ([`SwitchTokens`]): the well off,
+/// the dark well on, the knob as the dot.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RadioTokens {
     /// The disc's and the dot's diameters.
     pub disc: f32,
     pub dot_d: f32,
@@ -131,6 +217,14 @@ pub struct CalendarTokens {
     pub weekday_line: f32,
     pub weekday_weight: u16,
     pub weekday: Color,
+    /// Today's ring and its width. The outline button's ring
+    /// (`#E2E2E2`) is 1.3:1 on paper, too faint to mark a day; the kit's
+    /// secondary gray passes 1.4.11.
+    pub today: Color,
+    pub today_w: f32,
+    /// The chosen day: the kit's dark call to action; in a derived theme
+    /// the page's text and background turned over.
+    pub chosen: ButtonRecipe,
     /// A day's number (the segment's 13px, medium).
     pub day_size: f32,
     pub day_line: f32,
@@ -140,6 +234,10 @@ pub struct CalendarTokens {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SelectionTokens {
     pub segmented: SegmentedTokens,
+    pub switch: SwitchTokens,
+    pub checkbox: CheckboxTokens,
+    pub slider: SliderTokens,
+    pub chip: ChipTokens,
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
@@ -154,17 +252,40 @@ fn shade(a: f32) -> Color {
     Color::rgba(50.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, a)
 }
 
+/// A 1px border inside the surface (`border`, which the box holds).
+pub(super) fn border(color: Color) -> ShadowSpec {
+    ShadowSpec::inset([0.0, 0.0], 0.0, 1.0, color)
+}
+
 /// A 1px ring around the surface (`0 0 0 1px color`, the css border).
-fn ring(color: Color) -> ShadowSpec {
+pub(super) fn ring(color: Color) -> ShadowSpec {
     ShadowSpec::new([0.0, 0.0], 0.0, 1.0, color)
 }
 
-const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
+/// The first of `steps` that reads at [`MARK_CONTRAST`] on every one of
+/// `grounds` (each its layers from the bottom up), else the last: the
+/// ring or the mark a person must see keeps (1.4.11).
+pub(super) fn mark_on(steps: &[Color], grounds: &[&[Color]]) -> Color {
+    let last = steps.last().copied().unwrap_or(NONE);
+    steps
+        .iter()
+        .copied()
+        .find(|&c| reads_on(MARK_CONTRAST, c, grounds))
+        .unwrap_or(last)
+}
+
+/// `c` at `alpha` of its own strength: a surface a disabled control
+/// fades.
+pub(super) fn faded(c: Color, alpha: f32) -> Color {
+    Color::rgba(c.0[0], c.0[1], c.0[2], c.0[3] * alpha)
+}
+
+pub(super) const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
 /// The segment ladder, the same under every theme: the kit's heights
 /// and text, `font-semibold`; the line box is the text's own 1.5
 /// (tailwind's body leading, which the arbitrary sizes inherit).
-fn segment_sizes() -> [SegmentMetrics; 2] {
+pub(super) fn segment_sizes() -> [SegmentMetrics; 2] {
     [
         SegmentMetrics {
             height: 32.0,
@@ -241,11 +362,31 @@ impl SelectionTokens {
         // components/Zoom/index.tsx:15 the line, :19 the `size-6 mr-1`
         // slot, :32 the title.
         let ink_a = |a: f32| Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a);
-        let radio = RadioTokens {
+        // The well and the thumb are shades on the paper, under 3:1
+        // (1.4.11): each keeps the kit's drawing and gains a ring of the
+        // kit's border (`#E2E2E2`, Tabs :26) where it reads, else of its
+        // secondary gray, else of its graphite.
+        let edges = [SHADES[4], SHADES[5], SHADES[6]];
+        let well_off = hex(0xECECEC);
+        // components/Zoom/index.tsx:15 `hover:bg-[#F1F1F1]`, the row the
+        // radio's disc sits on
+        let row_hover = hex(0xF1F1F1);
+        let well_edge = mark_on(
+            &edges,
+            &[
+                &[SHADES[0]],
+                &[SHADES[0], row_hover],
+                &[SHADES[0], well_off],
+            ],
+        );
+        let switch = SwitchTokens {
             off: ButtonSurface {
-                fill: [hex(0xECECEC); 2],
+                fill: [well_off; 2],
                 overlay: NONE,
-                shadow: vec![ShadowSpec::inset([0.0, 0.0], 1.0, 0.5, ink_a(0.10))],
+                shadow: vec![
+                    ShadowSpec::inset([0.0, 0.0], 1.0, 0.5, ink_a(0.10)),
+                    ring(well_edge),
+                ],
                 text: ink,
             },
             on: ButtonSurface {
@@ -254,7 +395,7 @@ impl SelectionTokens {
                 shadow: vec![ShadowSpec::inset([0.0, 1.0], 0.6, 0.0, ink_a(0.30))],
                 text: ink,
             },
-            dot: ButtonSurface {
+            knob: ButtonSurface {
                 fill: [hex(0xF8F7F7); 2],
                 overlay: NONE,
                 shadow: vec![
@@ -264,6 +405,102 @@ impl SelectionTokens {
                 ],
                 text: ink,
             },
+            disabled_alpha: 0.30,
+        };
+        // app/globals.css:22 the thumb `height: 36px; width: 24px;
+        // border-radius: 6px; background: #f8f7f7; box-shadow: 0 -1px 4px
+        // -2px rgba(0,0,0,.2) inset, 0 0 2.6px -1px rgba(0,0,0,.17), 0 1px
+        // 4px 0 rgba(0,0,0,.14)`; Compression :24 `h-9 bg-[#f1f1f1]
+        // rounded-lg` and the fill `rgba(123,123,123,0.3)` to the value.
+        let range_well = hex(0xF1F1F1);
+        let range_fill = Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.3);
+        let thumb_edge = mark_on(
+            &edges,
+            &[
+                &[SHADES[0], range_well],
+                &[SHADES[0], range_well, range_fill],
+            ],
+        );
+        let slider = SliderTokens {
+            track: ButtonSurface {
+                fill: [range_well; 2],
+                overlay: NONE,
+                shadow: Vec::new(),
+                text: ink,
+            },
+            fill: range_fill,
+            thumb: ButtonSurface {
+                fill: [hex(0xF8F7F7); 2],
+                overlay: NONE,
+                shadow: vec![
+                    ShadowSpec::new([0.0, 0.0], 2.6, -1.0, black(0.17)),
+                    ShadowSpec::new([0.0, 1.0], 4.0, 0.0, black(0.14)),
+                    ShadowSpec::inset([0.0, -1.0], 4.0, -2.0, black(0.2)),
+                    ring(thumb_edge),
+                ],
+                text: ink,
+            },
+            height: 36.0,
+            radius: 8.0,
+            thumb_w: 24.0,
+            thumb_radius: 6.0,
+            disabled_alpha: switch.disabled_alpha,
+        };
+        let quiet = legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]);
+        let tag = |fill: Color, edge: Color, text: Color| ButtonSurface {
+            fill: [fill; 2],
+            overlay: NONE,
+            shadow: vec![border(edge)],
+            text,
+        };
+        let chip = ChipTokens {
+            rest: tag(SHADES[0], SHADES[3], quiet),
+            rest_hover: tag(SHADES[0], SHADES[3], hex(0x000000)),
+            on: tag(SHADES[2], NONE, hex(0x000000)),
+            // a shade deeper under the pointer, as the toolbar's hover
+            on_hover: tag(SHADES[3], NONE, hex(0x000000)),
+            // the kit theme's info (styling/theme/hoff_core.rs:188)
+            info: BLUE,
+            pad_x: 12.0,
+            pad_y: 4.0,
+            radius: 12.0,
+            edge: 1.0,
+            font_size: 11.0,
+            line_height: 16.0,
+            font_weight: 500,
+        };
+        let edge = legible_at(
+            MARK_CONTRAST,
+            SHADES[4],
+            SHADES[5],
+            switch.off.fill[0],
+            SHADES[0],
+        );
+        let checkbox = CheckboxTokens {
+            off: ButtonSurface {
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            off_hover: ButtonSurface {
+                fill: [SHADES[4]; 2],
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            on: full(&switch.on),
+            mark: switch.knob.fill[0],
+            mark_disabled: mark_on(
+                &[switch.knob.fill[0], SHADES[5], SHADES[6]],
+                &[&[
+                    SHADES[0],
+                    faded(full(&switch.on).fill[0], switch.disabled_alpha),
+                ]],
+            ),
+            // the list line's `text-[#000]` (components/Zoom/index.tsx:32),
+            // as the radio's label
+            label: hex(0x000000),
+            disabled_alpha: switch.disabled_alpha,
+        };
+        let radio = RadioTokens {
             // The knob's size-4.5 as the disc; the dot is the knob drawn
             // at the switch's padding ratio (p-0.5 of h-5.5) inside it.
             disc: 18.0,
@@ -273,7 +510,7 @@ impl SelectionTokens {
             row_h: 36.0,
             row_pad_x: 8.0,
             row_radius: 10.0,
-            row_hover: hex(0xF1F1F1),
+            row_hover,
             label: hex(0x000000),
             font_size: 12.0,
             line_height: 16.0,
@@ -291,20 +528,30 @@ impl SelectionTokens {
             weekday_size: 12.0,
             weekday_line: 16.0,
             weekday_weight: 500,
-            weekday: hex(0x7B7B7B),
+            // the kit's secondary #7B7B7B reads 4.1:1 on its paper; shade 7
+            // passes AAA, as front C's quiet text (message/tokens.rs)
+            weekday: legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]),
+            today: legible_at(MARK_CONTRAST, SHADES[5], SHADES[8], SHADES[0], SHADES[0]),
+            today_w: 1.0,
+            chosen: ButtonTokens::hoff_core().secondary,
             day_size: 13.0,
             day_line: 16.0,
             day_weight: 500,
         };
         Self {
             button_group,
+            switch,
+            checkbox,
+            slider,
+            chip,
             radio,
             calendar,
             segmented: SegmentedTokens {
+                // :43 `text-[#7B7B7B]`, :40 `hover:text-[#121212]`. The
+                // kit's gray reads 3.8:1 on its well; shade 7 passes AAA.
+                text: legible(hex(0x7B7B7B), SHADES[6], track.fill[0], SHADES[0]),
                 track,
                 thumb,
-                // :43 `text-[#7B7B7B]`, :40 `hover:text-[#121212]`.
-                text: hex(0x7B7B7B),
                 text_hover: ink,
                 track_radius: 12.0,
                 thumb_radius: 8.0,
@@ -312,75 +559,6 @@ impl SelectionTokens {
                 edge: 1.0,
                 sizes: segment_sizes(),
                 disabled_alpha: 0.30,
-            },
-        }
-    }
-
-    /// The recipe of any other theme, from the theme built without it
-    /// (`Theme::derive_front_slots` fills the slots last): the well is the
-    /// hover tone ringed by the divider, the thumb the background ringed
-    /// by the active border, the labels the theme's text and its mid tone.
-    pub fn derive(theme: &Theme) -> Self {
-        let kit = Self::hoff_core();
-        let c = &theme.colors;
-        let track = ButtonSurface {
-            fill: [c.bg_hover; 2],
-            overlay: NONE,
-            shadow: vec![ring(c.divider)],
-            text: c.text,
-        };
-        let thumb = ButtonSurface {
-            fill: [c.bg; 2],
-            overlay: NONE,
-            shadow: vec![ring(c.border_active)],
-            text: c.text,
-        };
-        let button_group = ButtonGroupTokens {
-            shell: ButtonSurface {
-                fill: [c.surface; 2],
-                overlay: NONE,
-                shadow: vec![ring(c.divider)],
-                text: c.text,
-            },
-            separator: c.divider,
-            ..kit.button_group
-        };
-        let radio = RadioTokens {
-            off: ButtonSurface {
-                fill: [c.bg_hover; 2],
-                overlay: NONE,
-                shadow: vec![ring(c.divider)],
-                text: c.text,
-            },
-            on: ButtonSurface {
-                fill: [c.accent; 2],
-                overlay: NONE,
-                shadow: Vec::new(),
-                text: c.text,
-            },
-            dot: ButtonSurface {
-                fill: [c.bg; 2],
-                overlay: NONE,
-                shadow: Vec::new(),
-                text: c.text,
-            },
-            row_hover: c.bg_hover,
-            label: c.text,
-            ..kit.radio
-        };
-        Self {
-            segmented: SegmentedTokens {
-                track,
-                thumb,
-                text: c.text_mid,
-                text_hover: c.text,
-                ..kit.segmented
-            },
-            button_group,
-            radio,
-            calendar: CalendarTokens {
-                weekday: c.text_mid,
-                ..kit.calendar
             },
         }
     }

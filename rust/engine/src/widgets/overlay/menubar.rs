@@ -7,9 +7,21 @@
 
 use accord::SemId;
 
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::theme::Theme;
+use crate::widgets::buttons::paint_surface;
 use crate::widgets::feedback::MenuEntry;
 use crate::widgets::overlay::dropdown_menu::DropdownMenu;
 use crate::widgets::overlay::popover::Align;
+use crate::widgets::widget::Rect;
+
+/// The bar at `rect` (`theme.overlay.menubar`): its shadows, its fill, its
+/// border; the titles are drawn after, inside it less its `pad`.
+pub fn render_bar(c: &mut Compositor, layer: LayerId, rect: Rect, theme: &Theme) {
+    let t = &theme.overlay.menubar;
+    let radius = t.radius.min(rect.h / 2.0);
+    paint_surface(c, layer, rect, radius, &t.surface, 1.0, false, theme);
+}
 
 /// A row of menus, at most one open.
 #[derive(Clone, Debug, Default)]

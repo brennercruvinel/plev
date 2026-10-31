@@ -20,7 +20,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::buttons::ButtonVariant;
-use engine::widgets::feedback::alert::Alert;
+use engine::widgets::feedback::alert::{Alert, NotificationKind};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::{After, Component, child_id, root_id, showcase, under};
@@ -98,6 +98,7 @@ fn comment() -> Alert {
         "Randomdash",
         "Commented on Classic Car in Studio",
     )
+    .kind(NotificationKind::Comment)
     .time("1h ago")
     .avatar("Randomdash")
     .content(DRAGGABLE)
@@ -111,6 +112,7 @@ fn invite() -> Alert {
         "3D object is generated",
         "Invited you to edit Minimalist Architecture Scene",
     )
+    .kind(NotificationKind::Invite)
     .time("4h ago")
     .avatar("Hoff")
     .unread(true)
@@ -119,9 +121,14 @@ fn invite() -> Alert {
 }
 
 fn like() -> Alert {
-    Alert::new(Intent::Destructive, "Marina", "Liked Classic Car in Studio")
-        .time("10h ago")
-        .avatar("Marina")
+    Alert::new(
+        Intent::Informational,
+        "Marina",
+        "Liked Classic Car in Studio",
+    )
+    .kind(NotificationKind::Like)
+    .time("10h ago")
+    .avatar("Marina")
 }
 
 fn video() -> Alert {
@@ -130,6 +137,7 @@ fn video() -> Alert {
         "Animation is generated",
         "12s – 720p",
     )
+    .kind(NotificationKind::Video)
     .time("1d ago")
     .avatar("Hoff")
     .content("Prompt: Create 3D character dancing")

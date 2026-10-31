@@ -13,6 +13,7 @@
 //! a semantic projection.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{Intent, Theme};
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
@@ -31,6 +32,35 @@ fn title_style(theme: &Theme) -> &TextStyle {
 /// Body, the same for measuring and rendering.
 fn body_style(theme: &Theme) -> &TextStyle {
     &theme.overlay.modal.body
+}
+
+/// `text` broken into the lines it draws in `width`, each with its
+/// measured width: words packed while they fit, a hard break kept, a word
+/// wider than `width` alone on its line. A centered sheet draws it line by
+/// line, each line centered on its own (the kit's `text-center`), so its
+/// height is the lines' count.
+fn wrap(text: &str, style: &TextStyle, width: f32) -> Vec<(String, f32)> {
+    let measure = |s: &str| TextMeasurer::measure_styled(s, style, None).0;
+    let mut out = Vec::new();
+    for paragraph in text.split('\n') {
+        let mut line = String::new();
+        for word in paragraph.split_whitespace() {
+            if line.is_empty() {
+                line.push_str(word);
+                continue;
+            }
+            let next = format!("{line} {word}");
+            if measure(&next) <= width {
+                line = next;
+            } else {
+                let w = measure(&line);
+                out.push((std::mem::replace(&mut line, word.to_owned()), w));
+            }
+        }
+        let w = measure(&line);
+        out.push((line, w));
+    }
+    out
 }
 
 /// What the user decided.
@@ -52,6 +82,8 @@ pub struct Modal {
     confirm: Button,
     cancel: Button,
     sem: Option<SemId>,
+    /// An illustration over the sheet's top (the kit's `DeleteFile`).
+    art: Option<ImageHandle>,
 }
 
 impl Modal {
@@ -68,6 +100,41 @@ impl Modal {
             confirm: Button::new(confirm_label).variant(ButtonVariant::Secondary),
             cancel: Button::new(cancel_label).variant(ButtonVariant::Primary),
             sem: None,
+            art: None,
+        }
+    }
+
+    /// With `image` over the sheet's top, as wide as the sheet: it rises
+    /// above the sheet and the text starts under it
+    /// (`theme.overlay.modal.art_bottom`, `art_pad_top`).
+    pub fn art(mut self, image: ImageHandle) -> Self {
+        self.art = Some(image);
+        self
+    }
+
+    /// The art's height at a sheet `w` wide, keeping its aspect.
+    fn art_h(&self, w: f32) -> f32 {
+        self.art
+            .filter(|a| a.width > 0)
+            .map_or(0.0, |a| w * a.height as f32 / a.width as f32)
+    }
+
+    /// How far the art rises above a sheet `w` wide: what a page leaves
+    /// clear above the sheet.
+    pub fn overhang(&self, theme: &Theme, w: f32) -> f32 {
+        if self.art.is_none() {
+            return 0.0;
+        }
+        (self.art_h(w) - theme.overlay.modal.art_bottom).max(0.0)
+    }
+
+    /// The text's top padding: under the art, or the sheet's own.
+    fn top_pad(&self, theme: &Theme) -> f32 {
+        let m = &theme.overlay.modal;
+        if self.art.is_some() {
+            m.art_pad_top
+        } else {
+            m.pad
         }
     }
 
@@ -140,11 +207,29 @@ impl Modal {
         theme.overlay.modal.max_w.min((vw - gutter * 2.0).max(0.0))
     }
 
-    fn body_height(&self, theme: &Theme, width: f32) -> f32 {
-        let style = body_style(theme);
-        let pad = theme.overlay.modal.pad;
-        let (_, h) = TextMeasurer::measure_styled(&self.body, style, Some(width - pad * 2.0));
+    /// How tall `text` draws in a sheet `width` wide: its centered lines,
+    /// or the block wrapped at the start.
+    fn text_height(text: &str, style: &TextStyle, theme: &Theme, width: f32) -> f32 {
+        let m = &theme.overlay.modal;
+        let inner = width - m.pad * 2.0;
+        if m.centered {
+            return wrap(text, style, inner).len() as f32 * style.line_height;
+        }
+        let (_, h) = TextMeasurer::measure_styled(text, style, Some(inner));
         h.max(style.line_height)
+    }
+
+    fn body_height(&self, theme: &Theme, width: f32) -> f32 {
+        Self::text_height(&self.body, body_style(theme), theme, width)
+    }
+
+    /// The title's height: its centered lines, or one line at the start.
+    fn title_height(&self, theme: &Theme, width: f32) -> f32 {
+        let style = title_style(theme);
+        if theme.overlay.modal.centered {
+            return Self::text_height(&self.title, style, theme, width);
+        }
+        style.line_height
     }
 
     /// Whether the buttons sit in a footer band of their own.
@@ -156,8 +241,10 @@ impl Modal {
     fn height(&self, theme: &Theme, w: f32) -> f32 {
         let m = &theme.overlay.modal;
         let btn_h = self.confirm.size.height(theme);
-        let text =
-            m.pad + title_style(theme).line_height + m.title_gap + self.body_height(theme, w);
+        let text = self.top_pad(theme)
+            + self.title_height(theme, w)
+            + m.title_gap
+            + self.body_height(theme, w);
         if Self::footed(theme) {
             text + m.pad + m.border_w + m.pad + btn_h + m.pad
         } else {
@@ -175,8 +262,10 @@ impl Modal {
     pub fn dialog_rect_in(&self, theme: &Theme, bounds: Rect) -> Rect {
         let w = Self::width(theme, bounds.w);
         let h = self.height(theme, w);
+        // The art above the sheet is part of what is centered.
+        let over = self.overhang(theme, w);
         let x = bounds.x + ((bounds.w - w) / 2.0).max(0.0);
-        let y = bounds.y + ((bounds.h - h) / 2.0).max(0.0);
+        let y = bounds.y + ((bounds.h - h - over) / 2.0).max(0.0) + over;
         Rect::new(x, y, w, h)
     }
 
@@ -354,37 +443,155 @@ impl Modal {
             );
         }
 
+        // The art over the sheet's top, under the text.
+        if let Some(image) = self.art {
+            let h = self.art_h(dialog.w);
+            compositor.push_to_layer(
+                layer,
+                SceneNode::Image {
+                    x: dialog.x,
+                    y: dialog.y + m.art_bottom - h,
+                    w: dialog.w,
+                    h,
+                    image,
+                    corner_radius: 0.0,
+                },
+            );
+        }
+
         let (title, body) = (title_style(theme), body_style(theme));
         let text_w = dialog.w - m.pad * 2.0;
-        // Centered: each block measured, then centered as a whole.
-        let x_of = |text: &str, style: &TextStyle| {
+        let top = dialog.y + self.top_pad(theme);
+        let body_y = top + self.title_height(theme, dialog.w) + m.title_gap;
+        for (text, style, y, color) in [
+            (&self.title, title, top, m.title_color),
+            (&self.body, body, body_y, m.body_color),
+        ] {
             if !m.centered {
-                return dialog.x + m.pad;
+                compositor.push_to_layer(
+                    layer,
+                    SceneNode::Text {
+                        key: TextNodeKey::from_style(text, style, Some(text_w)),
+                        x: dialog.x + m.pad,
+                        y,
+                        color: color.0,
+                    },
+                );
+                continue;
             }
-            let (w, _) = TextMeasurer::measure_styled(text, style, Some(text_w));
-            dialog.x + (dialog.w - w) / 2.0
-        };
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Text {
-                key: TextNodeKey::from_style(&self.title, title, Some(text_w)),
-                x: x_of(&self.title, title),
-                y: dialog.y + m.pad,
-                color: m.title_color.0,
-            },
-        );
-        compositor.push_to_layer(
-            layer,
-            SceneNode::Text {
-                key: TextNodeKey::from_style(&self.body, body, Some(text_w)),
-                x: x_of(&self.body, body),
-                y: dialog.y + m.pad + title.line_height + m.title_gap,
-                color: m.body_color.0,
-            },
-        );
+            // Centered: each line measured and centered on its own.
+            for (i, (line, w)) in wrap(text, style, text_w).iter().enumerate() {
+                compositor.push_to_layer(
+                    layer,
+                    SceneNode::Text {
+                        key: TextNodeKey::from_style(line, style, None),
+                        x: dialog.x + (dialog.w - w) / 2.0,
+                        y: y + i as f32 * style.line_height,
+                        color: color.0,
+                    },
+                );
+            }
+        }
         self.cancel
             .render_to_layer(compositor, layer, cancel_rect, theme);
         self.confirm
             .render_to_layer(compositor, layer, confirm_rect, theme);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const LONG: &str = "Are you sure you want to delete this file? It leaves every folder it is in, and nothing brings it back.";
+
+    #[test]
+    fn wrap_packs_words_into_the_width_and_keeps_a_hard_break() {
+        let style = &Theme::hoff_core().overlay.modal.body;
+        let lines = wrap(LONG, style, 200.0);
+        assert!(lines.len() > 1, "it wraps");
+        for (line, w) in &lines {
+            assert!(*w <= 200.0 || !line.contains(' '), "{line} fits");
+        }
+        let joined: Vec<&str> = lines.iter().map(|(l, _)| l.as_str()).collect();
+        assert_eq!(joined.join(" "), LONG, "every word, in order");
+        assert_eq!(wrap("one\ntwo", style, 200.0).len(), 2);
+        assert_eq!(
+            wrap("", style, 200.0).len(),
+            1,
+            "an empty line still holds its place"
+        );
+    }
+
+    /// On core each line of the body is centered on the sheet on its own,
+    /// and the sheet is as tall as its lines.
+    #[test]
+    fn a_centered_sheet_centers_each_line_and_grows_with_them() {
+        let theme = Theme::hoff_core();
+        let short = Modal::new("Delete file?", "Gone for good.", "Delete", "Cancel");
+        let long = Modal::new("Delete file?", LONG, "Delete", "Cancel");
+        let dialog = long.dialog_rect(&theme, 1280.0, 800.0);
+        assert!(dialog.h > short.dialog_rect(&theme, 1280.0, 800.0).h);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        long.render_in(&mut c, LayerId::DEFAULT, &theme, dialog);
+        let m = &theme.overlay.modal;
+        let lines = wrap(LONG, &m.body, dialog.w - m.pad * 2.0);
+        let xs: Vec<f32> = c
+            .layer(LayerId::DEFAULT)
+            .map(|l| l.nodes().to_vec())
+            .unwrap_or_default()
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { x, color, .. } if *color == m.body_color.0 => Some(*x),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(xs.len(), lines.len(), "a node per line");
+        let middle = dialog.x + dialog.w / 2.0;
+        for (x, (line, w)) in xs.iter().zip(&lines) {
+            assert!((x + w / 2.0 - middle).abs() < 0.01, "{line} is centered");
+        }
+    }
+
+    /// With art the sheet's text starts under it, the art rises above the
+    /// sheet by its height less `art_bottom`, and the sheet with its art
+    /// is what is centered.
+    #[test]
+    fn the_art_rises_above_the_sheet_and_is_centered_with_it() {
+        let theme = Theme::hoff_core();
+        let m = &theme.overlay.modal;
+        let pixels = vec![255u8; 8 * 8 * 4];
+        let Ok(image) = crate::drawing::gpu::image::load_image_rgba(8, 8, pixels) else {
+            panic!("a square image loads");
+        };
+        let plain = Modal::new("Delete this file?", "Gone.", "Delete", "Cancel");
+        let art = plain.clone().art(image);
+        let bounds = Rect::new(0.0, 0.0, 1280.0, 1000.0);
+        let d = art.dialog_rect_in(&theme, bounds);
+        let over = art.overhang(&theme, d.w);
+        assert_eq!(
+            over,
+            d.w - m.art_bottom,
+            "a square art, as wide as the sheet"
+        );
+        assert_eq!(plain.overhang(&theme, d.w), 0.0);
+        let grew = art.height(&theme, d.w) - plain.height(&theme, d.w);
+        assert_eq!(grew, m.art_pad_top - m.pad, "the text starts under it");
+        let above = d.y - over - bounds.y;
+        let below = bounds.bottom() - d.bottom();
+        assert!((above - below).abs() < 0.01, "centered with its art");
+        let mut c = Compositor::new();
+        c.begin_frame();
+        art.render_in(&mut c, LayerId::DEFAULT, &theme, d);
+        let drawn = c
+            .layer(LayerId::DEFAULT)
+            .map(|l| l.nodes().to_vec())
+            .unwrap_or_default();
+        let at = drawn.iter().find_map(|n| match n {
+            SceneNode::Image { y, h, .. } => Some((*y, *h)),
+            _ => None,
+        });
+        assert_eq!(at, Some((d.y + m.art_bottom - d.w, d.w)));
     }
 }

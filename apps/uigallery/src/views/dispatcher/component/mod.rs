@@ -150,6 +150,7 @@ components! {
     // task-104 front C, conversation and feedback (#156)
     Alert => alert,
     Attachment => attachment,
+    Badge => badge,
     Bubble => bubble,
     Marker => marker,
     Message => message,
@@ -167,6 +168,7 @@ components! {
     PanelHeader => panel_header,
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
+    Calendar => calendar,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,

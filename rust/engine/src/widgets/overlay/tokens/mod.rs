@@ -19,7 +19,7 @@ use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
 
 mod menu;
-pub use menu::{MenuStyle, MenuTokens};
+pub use menu::{MenuStyle, MenuTokens, MenubarTokens};
 
 /// The tokens of front B's overlays.
 #[derive(Clone, Debug, PartialEq)]
@@ -32,6 +32,7 @@ pub struct OverlayTokens {
     pub menu: MenuTokens,
     pub file_menu: MenuTokens,
     pub filter_menu: MenuTokens,
+    pub menubar: MenubarTokens,
     pub modal: ModalTokens,
     pub sheet: SheetTokens,
     pub drawer: DrawerTokens,
@@ -47,6 +48,7 @@ impl OverlayTokens {
             menu: MenuTokens::hoff_core(),
             file_menu: MenuTokens::hoff_core_file(),
             filter_menu: MenuTokens::hoff_core_filter(),
+            menubar: MenubarTokens::hoff_core(),
             modal: ModalTokens::hoff_core(),
             sheet: SheetTokens::hoff_core(),
             drawer: DrawerTokens::hoff_core(),
@@ -63,6 +65,7 @@ impl OverlayTokens {
             menu: MenuTokens::derive(theme),
             file_menu: MenuTokens::derive(theme),
             filter_menu: MenuTokens::derive(theme),
+            menubar: MenubarTokens::derive(theme),
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
             drawer: DrawerTokens::derive(theme),
@@ -132,7 +135,29 @@ pub struct PopoverTokens {
     pub widths: [f32; 2],
     /// Space between the panel's edge and its content (`p-2`).
     pub pad: f32,
+    /// A line of the panel ([`PopoverLineTokens`]).
+    pub line: PopoverLineTokens,
     pub trigger: TriggerTokens,
+}
+
+/// A line of the popover's panel (the kit's zoom `Line`): a check slot, a
+/// label at the start, its keys in a cap at the end.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PopoverLineTokens {
+    pub height: f32,
+    pub pad_x: f32,
+    pub radius: f32,
+    /// The check's slot and the space after it; the check inside it.
+    pub slot: f32,
+    pub slot_gap: f32,
+    pub check: f32,
+    pub check_color: Color,
+    pub label: TextStyle,
+    pub text: Color,
+    /// Under the pointer or the keys.
+    pub hover_fill: Color,
+    /// The narrowest cap of its keys.
+    pub key_min_w: f32,
 }
 
 fn hex(v: u32) -> Color {
@@ -212,6 +237,24 @@ impl PopoverTokens {
             widths: [204.0, 384.0],
             // p-2 (Zoom:54).
             pad: 8.0,
+            // The zoom line (`Zoom/index.tsx:14-35`): `h-9 px-2
+            // rounded-[0.625rem] hover:bg-[#F1F1F1]`, the check's slot
+            // `size-6 mr-1` with `size-4 fill-[#7B7B7B]` in it, the title
+            // `text-[0.75rem] leading-[1rem] font-medium text-[#000]`, the
+            // cap `min-w-8.5`.
+            line: PopoverLineTokens {
+                height: 36.0,
+                pad_x: 8.0,
+                radius: 10.0,
+                slot: 24.0,
+                slot_gap: 4.0,
+                check: 16.0,
+                check_color: hex(0x7B7B7B),
+                label: TypographyScale::hoff_core().exact(12.0, 16.0, 500),
+                text: hex(0x000000),
+                hover_fill: shade3,
+                key_min_w: 34.0,
+            },
             trigger: TriggerTokens {
                 rest,
                 hover,
@@ -263,8 +306,25 @@ impl PopoverTokens {
             shadow: vec![ring(colors.border_active)],
             ..rest.clone()
         };
+        // The line as the theme's menu rows: their height, padding, radius,
+        // label, colors and icon; the slot the icon and its gap.
+        let m = MenuTokens::derive(theme);
+        let line = PopoverLineTokens {
+            height: m.item_h,
+            pad_x: m.item_pad_x,
+            radius: m.item_radius,
+            slot: m.icon,
+            slot_gap: m.gap,
+            check: m.icon,
+            check_color: m.icon_color,
+            label: m.label,
+            text: m.text,
+            hover_fill: m.hover_fill,
+            ..kit.line
+        };
         Self {
             panel,
+            line,
             radius: theme.shape.dropdown,
             radius_menu: theme.shape.dropdown,
             trigger: TriggerTokens {
@@ -294,6 +354,26 @@ pub struct TooltipTokens {
     pub clearance: Clearance,
     /// The widest it gets before its text wraps.
     pub max_w: f32,
+    /// A tooltip that names its shortcut: the key beside the text.
+    pub key: TooltipKeyTokens,
+}
+
+/// The key a tooltip names beside its text (the toolbar's `Action`): a
+/// small square with the key in the tooltip's text, and the tooltip's
+/// own padding around both.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TooltipKeyTokens {
+    /// The square's edge and corner radius.
+    pub size: f32,
+    pub radius: f32,
+    pub fill: Color,
+    /// Its border; alpha 0 is none.
+    pub border: Color,
+    pub border_w: f32,
+    /// The tooltip's padding with a key: top, end, bottom, start.
+    pub pad: [f32; 4],
+    /// Between the text and the key.
+    pub gap: f32,
 }
 
 impl TooltipTokens {
@@ -322,6 +402,18 @@ impl TooltipTokens {
                 edge: 4.0,
             },
             max_w: 240.0,
+            // `Toolbar/Action/index.tsx:35`: `gap-2 !p-0.5 !pl-2`, the
+            // key `[&_span]:size-5 rounded-sm bg-[#303030] border
+            // border-[#fcfcfc]/5`.
+            key: TooltipKeyTokens {
+                size: 20.0,
+                radius: 4.0,
+                fill: hex(0x303030),
+                border: Color::rgba(252.0 / 255.0, 252.0 / 255.0, 252.0 / 255.0, 0.05),
+                border_w: 1.0,
+                pad: [2.0, 2.0, 2.0, 8.0],
+                gap: 8.0,
+            },
         }
     }
 
@@ -344,6 +436,19 @@ impl TooltipTokens {
                 edge: xs,
             },
             max_w: theme.size.tooltip_max_w,
+            // The key: one text line and an `xs` tall, outlined by the
+            // theme's soft edge on the tooltip's own fill (a lit surface
+            // under the text fails AA on dark, `theme/tests/contrast.rs`);
+            // half an `xs` around it, `md` before the text, `sm` between.
+            key: TooltipKeyTokens {
+                size: theme.typography.caption_r().line_height + xs,
+                radius: theme.shape.item.min(xs),
+                fill: theme.glass.tooltip,
+                border: theme.glass.edge_soft,
+                border_w: theme.control.edge_width,
+                pad: [xs / 2.0, xs / 2.0, xs / 2.0, theme.spacing.md],
+                gap: theme.spacing.sm,
+            },
         }
     }
 }
@@ -406,6 +511,11 @@ pub struct ModalTokens {
     pub footer: Color,
     pub footer_rule: Color,
     pub button_gap: f32,
+    /// A dialog with an illustration (`DeleteFile`): the art's bottom,
+    /// from the sheet's top (it rises above the sheet by the rest of its
+    /// height), and the text's top padding under it.
+    pub art_bottom: f32,
+    pub art_pad_top: f32,
 }
 
 impl ModalTokens {
@@ -446,6 +556,10 @@ impl ModalTokens {
             footer: hex(0xF8F7F7),
             footer_rule: hex(0xE2E2E2),
             button_gap: 12.0,
+            // `DeleteFile/index.tsx:6`, `:15`: bottom-[calc(100%-11.25rem)],
+            // pt-39.
+            art_bottom: 180.0,
+            art_pad_top: 156.0,
         }
     }
 
@@ -455,6 +569,7 @@ impl ModalTokens {
     pub fn derive(theme: &Theme) -> Self {
         let glass = &theme.glass;
         let none = Color::rgba(0.0, 0.0, 0.0, 0.0);
+        let kit = Self::hoff_core();
         Self {
             scrim: glass.scrim,
             fill: glass.popover,
@@ -478,6 +593,9 @@ impl ModalTokens {
             footer: none,
             footer_rule: none,
             button_gap: theme.spacing.sm,
+            // The kit's art, as the kit places it.
+            art_bottom: kit.art_bottom,
+            art_pad_top: kit.art_pad_top,
         }
     }
 }

@@ -2,18 +2,29 @@
 //! private typescript design system), the file:line of each beside it.
 
 use super::{
-    AlertTokens, AttachmentTokens, BubbleTokens, CursorShape, IntentColors, MarkerTokens,
-    MessageStyle, MessageText, MessageTokens, ScrollerTokens, ToastTokens,
+    AlertTokens, AttachmentTokens, AvatarTokens, BadgePalette, BadgeTokens, BubbleTokens,
+    CursorShape, IntentColors, KindColors, MarkerTokens, MessageStyle, MessageText, MessageTokens,
+    ScrollerTokens, TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
-use crate::styling::theme::hoff_core::{BLUE, RED, SHADES};
+use crate::styling::theme::hoff_core::{BLUE, GREEN, RED, SHADES};
 
 impl MessageTokens {
     /// The kit as written (the private typescript design system). The
     /// file:line of each value is in the comment beside it.
     pub fn hoff_core() -> Self {
-        let [paper, _, shade3, shade4, shade5, shade6, shade7, _, ink] = SHADES;
+        let [
+            paper,
+            shade2,
+            shade3,
+            shade4,
+            shade5,
+            shade6,
+            shade7,
+            _,
+            ink,
+        ] = SHADES;
         Self {
             // components/Comment/Message/index.tsx
             thread: MessageStyle {
@@ -178,6 +189,15 @@ impl MessageTokens {
                     informational: Color::hex(0x1BA4F3),
                     constructive: Color::hex(0x55B93E),
                     destructive: RED,
+                },
+                // :33-41 per kind: image `#AD9000`, invite `#55b93e`, like
+                // `#fe5938`, video `#1BA4F3`, comment `#8651F8`
+                kinds: KindColors {
+                    comment: Color::hex(0x8651F8),
+                    video: Color::hex(0x1BA4F3),
+                    invite: Color::hex(0x55B93E),
+                    like: RED,
+                    image: Color::hex(0xAD9000),
                 },
                 // :65 `text-[0.8125rem] leading-[1rem] font-semibold`
                 title: MessageText {
@@ -366,6 +386,68 @@ impl MessageTokens {
                 border_width: 1.0,
                 shadow: ShadowSpec::new([0.0, 25.0], 50.0, -12.0, Color::rgba(0.0, 0.0, 0.0, 0.25)),
             },
+            badge: BadgeTokens::new(
+                // components/Card/index.tsx:56 `px-3 py-1 border
+                // rounded-xl text-[0.6875rem] leading-[1rem] font-medium`,
+                // :58 `bg-[#F1F1F1] border-transparent`, on a gray card :57
+                // `bg-[#FCFCFC] border-[#ECECEC]`; the ink of
+                // app/layout.tsx:108
+                TagTokens {
+                    pad_x: 12.0,
+                    pad_y: 4.0,
+                    radius: 12.0,
+                    border_width: 1.0,
+                    text: MessageText {
+                        size: 11.0,
+                        line_height: 16.0,
+                        weight: 500,
+                        color: ink,
+                    },
+                    fill: shade3,
+                    // the kit's hairline is transparent on a white card;
+                    // the chip takes its gray-card #ECECEC, walked to 3:1
+                    // on the paper and on the well (`BadgeTokens::new`)
+                    border: shade4,
+                    raised_fill: paper,
+                    raised_border: shade4,
+                    // components/Notification/index.tsx:72 `size-2
+                    // rounded-full`, the new-item disc; :68 `ml-1`
+                    mark: 8.0,
+                    mark_gap: 4.0,
+                },
+                // the kit draws no count: two of the chip's `py-1` across,
+                // so one digit sits in a disc
+                8.0,
+                // components/HeaderSimple/index.tsx:80 `after:top-1
+                // after:right-1 after:size-1 after:bg-[#fe5938]
+                // after:rounded-full`
+                4.0,
+                4.0,
+                // the intents in the core's accents (the dot's red, the
+                // mention blue of Comment/Message:30, its green), the
+                // neutral in the kit's muted gray; each moves toward the
+                // ink until it reads (`BadgeTokens::new`)
+                BadgePalette {
+                    intents: IntentColors {
+                        neutral: shade6,
+                        informational: BLUE,
+                        constructive: GREEN,
+                        destructive: RED,
+                    },
+                    surface: paper,
+                    // components/Card/index.tsx:52 `bg-[#F8F7F7]`, the
+                    // gray card a chip sits in
+                    well: shade2,
+                    paper,
+                    ink,
+                },
+            ),
+            // components/Notification/index.tsx:72 `size-2 rounded-full
+            // bg-[#55b93e]`, the green mark; :31 `border-2
+            // border-[#FCFCFC]`, the paper ring a mark on an avatar
+            // takes. #55B93E is 2.4:1 on the paper; it moves toward the
+            // ink until it reads (`AvatarTokens::new`)
+            avatar: AvatarTokens::new(8.0, 2.0, Color::hex(0x55B93E), paper, ink),
         }
     }
 }

@@ -53,8 +53,8 @@ use engine::styling::theme::Theme;
 use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, Slider, Wake, WidgetEvent};
 use screen::{Dispatch, SurfaceHost};
 
+use super::EditKey;
 use super::todo::TodoPage;
-use super::{EditKey, panel};
 use crate::views::text_input::clipboard::Keys;
 use fixed_page::layout::{compute, row_parts};
 use fixed_page::semantics::{Ids, Target, Which};

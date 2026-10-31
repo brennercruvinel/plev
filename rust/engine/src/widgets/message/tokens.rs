@@ -29,6 +29,10 @@ use crate::styling::theme::{Intent, ShadowSpec, Theme};
 
 /// `MessageTokens::hoff_core`, the kit's values with their file:line.
 mod kit;
+/// The status pieces: the badge, the avatar's online dot.
+mod status;
+
+pub use status::{AvatarTokens, BadgePalette, BadgeTokens, TagTokens};
 
 /// One text run of a message: size, line height and weight in px, and
 /// its color.
@@ -134,6 +138,18 @@ impl IntentColors {
     }
 }
 
+/// The badge's tone per kind of notification (the kit's
+/// `Notification:33-41`), apart from the row's intent: a like is red and
+/// still only informs.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct KindColors {
+    pub comment: Color,
+    pub video: Color,
+    pub invite: Color,
+    pub like: Color,
+    pub image: Color,
+}
+
 /// The inline alert: the kit's notification row
 /// (`components/Notification`), a lead disc with the intent's badge on
 /// its corner, the title and the time on one line, the detail under them
@@ -158,6 +174,8 @@ pub struct AlertTokens {
     /// The ring's color: the paper the row sits on, opaque.
     pub ring: Color,
     pub intents: IntentColors,
+    /// The badge's tone when the row names its kind.
+    pub kinds: KindColors,
     pub title: MessageText,
     /// How far the title line rises into the column's top.
     pub title_lift: f32,
@@ -299,6 +317,8 @@ pub struct MessageTokens {
     pub attachment: AttachmentTokens,
     pub marker: MarkerTokens,
     pub toast: ToastTokens,
+    pub badge: BadgeTokens,
+    pub avatar: AvatarTokens,
 }
 
 impl MessageTokens {
@@ -354,6 +374,13 @@ impl MessageTokens {
                     informational: colors.info,
                     constructive: colors.success,
                     destructive: colors.danger,
+                },
+                kinds: KindColors {
+                    comment: colors.accent,
+                    video: colors.info,
+                    invite: colors.success,
+                    like: colors.danger,
+                    image: colors.warning,
                 },
                 title: kit.alert.title.recolor(colors.text),
                 time: kit.alert.time.recolor(colors.text_mid),
@@ -414,6 +441,45 @@ impl MessageTokens {
                 border: colors.divider,
                 ..kit.toast
             },
+            // the chip on the hover glass with a hairline in the divider,
+            // the ink in the text tone; the intents' colors from the palette
+            badge: {
+                let k = kit.badge;
+                let paper = Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]);
+                BadgeTokens::new(
+                    TagTokens {
+                        text: k.tag.text.recolor(colors.text),
+                        fill: theme.glass.surface_hover,
+                        border: colors.divider,
+                        raised_fill: paper,
+                        raised_border: colors.divider,
+                        ..k.tag
+                    },
+                    k.count_pad_x,
+                    k.dot,
+                    k.dot_inset,
+                    BadgePalette {
+                        intents: IntentColors {
+                            neutral: colors.text_mid,
+                            informational: colors.info,
+                            constructive: colors.success,
+                            destructive: colors.danger,
+                        },
+                        surface: status::over(colors.surface, paper),
+                        well: colors.bg_panel,
+                        paper,
+                        ink: colors.text,
+                    },
+                )
+            },
+            // the online dot in the success green, ringed by the paper
+            avatar: AvatarTokens::new(
+                kit.avatar.online,
+                kit.avatar.online_ring,
+                colors.success,
+                Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]),
+                colors.text,
+            ),
         }
     }
 }

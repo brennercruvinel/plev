@@ -5,8 +5,8 @@
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::OverlayManager;
-use engine::widgets::overlay::popover::render_panel;
-use engine::widgets::prelude::{ButtonSize, EventResult, Rect, WidgetEvent};
+use engine::widgets::overlay::popover::{Line, render_line, render_panel};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::super::showcase::{self, CARD_H, GroupLayout};
 use super::{Card, PRESETS, PopoverPage, Spot};
@@ -15,8 +15,10 @@ impl PopoverPage {
     /// The panel's size: the kit's small width, the presets stacked.
     fn panel_size(theme: &Theme) -> (f32, f32) {
         let t = &theme.overlay.popover;
-        let row = ButtonSize::Sm.height(theme);
-        (t.widths[0], row * PRESETS.len() as f32 + t.pad * 2.0)
+        (
+            t.widths[0],
+            t.line.height * PRESETS.len() as f32 + t.pad * 2.0,
+        )
     }
 
     /// A forced card's body, the container its popover receives.
@@ -103,7 +105,7 @@ impl PopoverPage {
     /// The presets' rects in a panel at `panel`.
     fn preset_rects(panel: Rect, theme: &Theme) -> impl Iterator<Item = Rect> {
         let inner = panel.inset(theme.overlay.popover.pad);
-        let row = ButtonSize::Sm.height(theme);
+        let row = theme.overlay.popover.line.height;
         (0..PRESETS.len()).map(move |i| Rect::new(inner.x, inner.y + i as f32 * row, inner.w, row))
     }
 
@@ -214,6 +216,7 @@ impl PopoverPage {
                 showcase::rule(c, content, at.rule_y, theme);
             }
         }
+        let zoom_now = self.zoom;
         let places = self.places(content, viewport, theme);
         for (g, ci, trigger, panel) in places {
             let pinned = self.groups[g].pinned;
@@ -239,8 +242,21 @@ impl PopoverPage {
                     h: panel.h,
                 },
             );
-            for (preset, rect) in card.presets.iter().zip(Self::preset_rects(panel, theme)) {
-                preset.render_to_layer(c, layer, rect, theme);
+            let rows = card.presets.iter().zip(Self::preset_rects(panel, theme));
+            for ((preset, rect), (label, zoom, keys)) in rows.zip(PRESETS) {
+                // The preset keeps its press, its focus and its binding;
+                // the kit's line is what it draws.
+                if let Some(id) = preset.sem_id() {
+                    c.bind_to_layer(layer, id, [rect.x, rect.y, rect.w, rect.h]);
+                }
+                let line = Line {
+                    label,
+                    keys: Some(keys),
+                    checked: zoom.shows(zoom_now),
+                    lit: preset.is_hovered(),
+                    focused: preset.is_focused(),
+                };
+                render_line(c, layer, rect, line, theme);
             }
             c.push_to_layer(layer, SceneNode::PopClip);
         }

@@ -38,13 +38,14 @@ use engine::widgets::prelude::{
 
 use super::{After, Component, child_id, key_under, root_id, under};
 
-/// The kit's zoom presets (`components/Zoom/items.tsx`).
-const PRESETS: [(&str, Zoom); 5] = [
-    ("Zoom in", Zoom::In),
-    ("Zoom out", Zoom::Out),
-    ("Zoom to 100%", Zoom::To(100)),
-    ("Zoom to 200%", Zoom::To(200)),
-    ("Zoom to fit", Zoom::Fit),
+/// The kit's zoom presets (`components/Zoom/items.tsx`), each with the
+/// keys its line shows in a cap.
+const PRESETS: [(&str, Zoom, &str); 5] = [
+    ("Zoom in", Zoom::In, "⌘ +"),
+    ("Zoom out", Zoom::Out, "⌘ -"),
+    ("Zoom to 100%", Zoom::To(100), "⌘ 0"),
+    ("Zoom to 200%", Zoom::To(200), "⌘ 1"),
+    ("Zoom to fit", Zoom::Fit, "⌘ 2"),
 ];
 
 /// The step of a zoom in or out, and its limits, in percent.
@@ -57,6 +58,18 @@ enum Zoom {
     Out,
     To(u32),
     Fit,
+}
+
+impl Zoom {
+    /// Whether its line shows the check at the zoom `now` (`None`, fit):
+    /// a step never does.
+    fn shows(self, now: Option<u32>) -> bool {
+        match self {
+            Zoom::To(p) => now == Some(p),
+            Zoom::Fit => now.is_none(),
+            Zoom::In | Zoom::Out => false,
+        }
+    }
 }
 
 /// What a trigger is: the kit's value pill, a toolbar icon, a button.
@@ -189,7 +202,7 @@ impl PopoverPage {
             spot,
             presets: PRESETS
                 .iter()
-                .map(|(label, _)| {
+                .map(|(label, ..)| {
                     Button::new(*label)
                         .variant(ButtonVariant::Ghost)
                         .size(ButtonSize::Sm)
@@ -361,7 +374,7 @@ impl PopoverPage {
     /// Preset `i` of `(g, c)` picked: the zoom changes, the popover
     /// closes, the focus goes back to the trigger.
     fn pick(&mut self, g: usize, c: usize, i: usize) {
-        let Some((_, zoom)) = PRESETS.get(i) else {
+        let Some((_, zoom, _)) = PRESETS.get(i) else {
             return;
         };
         let (lo, hi) = ZOOM_RANGE;
@@ -433,9 +446,9 @@ impl Component for PopoverPage {
                 let Some(panel) = Popover::panel_id(id) else {
                     continue;
                 };
-                for preset in &card.presets {
+                for (preset, (.., keys)) in card.presets.iter().zip(PRESETS) {
                     if let Some(pid) = preset.sem_id() {
-                        preset.project(b, pid, Some(&panel));
+                        preset.project(b, pid, Some(&panel)).description(keys);
                     }
                 }
             }
@@ -537,9 +550,10 @@ fn project_forced(b: &mut SnapshotBuilder, trigger: &SemId, parent: &SemId) {
         return;
     };
     b.node(&panel, Role::Group, "Zoom").parent(parent);
-    for (i, (label, _)) in PRESETS.iter().enumerate() {
+    for (i, (label, _, keys)) in PRESETS.iter().enumerate() {
         b.node(panel.key(i.to_string()), Role::Label, *label)
-            .parent(&panel);
+            .parent(&panel)
+            .description(*keys);
     }
 }
 
