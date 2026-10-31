@@ -275,6 +275,12 @@ pub struct GlassTokens {
     /// are tokens.
     pub wash_alpha: f32,
     pub wash_hover_alpha: f32,
+    /// How much of the rim's top color [`glass_pill`] keeps at the
+    /// bottom: 0 fades the rim out downward (the HOFF top-lit edge), 1
+    /// keeps it whole (a plain border, the core kit's `border`).
+    ///
+    /// [`glass_pill`]: crate::widgets::recipe::glass_pill
+    pub rim_fade: f32,
 }
 
 impl GlassTokens {
@@ -312,6 +318,7 @@ impl GlassTokens {
             disabled_alpha: 0.5,
             wash_alpha: 0.14,
             wash_hover_alpha: 0.22,
+            rim_fade: 0.0,
         }
     }
 }

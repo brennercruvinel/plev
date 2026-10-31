@@ -61,13 +61,16 @@ pub fn rounded_rect_stroke(
 // Glass
 // ---------------------------------------------------------------------------
 
-/// HOFF edge-light pill: a border that only exists at the top, fading
-/// out downward (the CSS original is a masked 165 to 178 degree border).
+/// Rimmed pill: a `width` rim of `edge` around a `fill`. How the rim
+/// runs down the sides is the theme's `glass.rim_fade`: the HOFF glass
+/// (0) keeps it only at the top, fading out downward (the CSS original is
+/// a masked 165 to 178 degree border); the core kit (1) keeps it whole,
+/// a plain `border`.
 ///
-/// Emitted as two SDF nodes: an `edge` to transparent vertical
+/// Emitted as two SDF nodes: an `edge` to faded vertical
 /// [`GradientRect`] underlay the size of `rect`, then the surface fill
-/// inset by `width`. The translucent fill lets the underlay shine
-/// through, which doubles as the HOFF inset key-light.
+/// inset by `width`. A translucent fill lets the underlay shine through,
+/// which doubles as the HOFF inset key-light.
 ///
 /// [`GradientRect`]: SceneNode::GradientRect
 pub fn glass_pill(
@@ -76,7 +79,9 @@ pub fn glass_pill(
     edge: [f32; 4],
     width: f32,
     fill: [f32; 4],
+    theme: &Theme,
 ) -> [SceneNode; 2] {
+    let fade = theme.glass.rim_fade.clamp(0.0, 1.0);
     [
         SceneNode::GradientRect {
             x: rect.x,
@@ -84,7 +89,7 @@ pub fn glass_pill(
             w: rect.w,
             h: rect.h,
             color: edge,
-            color2: [edge[0], edge[1], edge[2], 0.0],
+            color2: [edge[0], edge[1], edge[2], edge[3] * fade],
             // CSS 180deg: first stop (the lit edge) at the top.
             angle_deg: 180.0,
             corner_radius: radius,
@@ -181,7 +186,7 @@ pub fn glass_surface(
     theme: &Theme,
 ) {
     let edge = theme.glass.edge_soft.0;
-    for node in glass_pill(rect, radius, edge, theme.control.edge_width, fill) {
+    for node in glass_pill(rect, radius, edge, theme.control.edge_width, fill, theme) {
         c.push_to_layer(layer, node);
     }
     inset_keylight(c, layer, rect, radius, theme);
