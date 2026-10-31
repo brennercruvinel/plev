@@ -198,3 +198,23 @@ fn the_tessellation_cost() {
         start.elapsed().as_secs_f64() * 1e6 / 1000.0
     );
 }
+
+/// A kit's inline path (UploadAvatar's ring with a plus, 20 wide) fills
+/// inside the size asked for, from the corner asked for; a `d` that does
+/// not parse draws nothing.
+#[test]
+fn a_kit_path_fills_inside_its_box() {
+    let d = "M9.998 1.54a8.46 8.46 0 0 1 8.458 8.458 8.46 8.46 0 0 1-8.458 8.458A8.46 8.46 0 0 1 1.54 9.998 8.46 8.46 0 0 1 9.998 1.54zm0 1.5A6.96 6.96 0 0 0 3.04 9.998a6.96 6.96 0 0 0 6.958 6.958 6.96 6.96 0 0 0 6.958-6.958A6.96 6.96 0 0 0 9.998 3.04zm0 2.673a.75.75 0 0 1 .75.75v2.785l2.786.001a.75.75 0 0 1 .743.648l.007.102a.75.75 0 0 1-.75.75l-2.786-.001v2.786a.75.75 0 0 1-.648.743l-.102.007a.75.75 0 0 1-.75-.75v-2.786l-2.785.001a.75.75 0 0 1-.743-.648l-.007-.102a.75.75 0 0 1 .75-.75l2.785-.001V6.463a.75.75 0 0 1 .648-.743l.102-.007z";
+    let Some(SceneNode::Path { data }) = kit_path_at(d, 20.0, 40.0, WHITE, 100.0, 50.0) else {
+        panic!("the kit's path draws");
+    };
+    assert!(!data.indices.is_empty());
+    for v in &data.vertices {
+        let [x, y] = v.position;
+        assert!(
+            (100.0..=140.0).contains(&x) && (50.0..=90.0).contains(&y),
+            "{x}, {y}"
+        );
+    }
+    assert!(kit_path_at("M0 0 ? 3 4", 20.0, 40.0, WHITE, 0.0, 0.0).is_none());
+}

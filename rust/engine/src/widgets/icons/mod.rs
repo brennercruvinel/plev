@@ -61,6 +61,32 @@ pub fn icon_at(name: &str, size: f32, color: [f32; 4], x: f32, y: f32) -> Option
     icon_path(name, size, color, x, y).map(|data| SceneNode::Path { data })
 }
 
+/// A filled path the kit writes inline in a component (its `d`, verbatim,
+/// in a square viewBox `viewbox` wide), drawn `size` wide with its top
+/// left at `(x, y)`, tinted `color`. The kit's own icons are filled, not
+/// stroked as Lucide's: a ring is its outer and inner outlines, filled
+/// even-odd. `None` for a `d` that does not parse.
+pub fn kit_path_at(
+    d: &str,
+    viewbox: f32,
+    size: f32,
+    color: [f32; 4],
+    x: f32,
+    y: f32,
+) -> Option<SceneNode> {
+    let mut data = parse_svg_path(d, size / viewbox)?.fill(color);
+    for v in &mut data.vertices {
+        v.position[0] += x;
+        v.position[1] += y;
+    }
+    let mut h = FxHasher::default();
+    data.hash.hash(&mut h);
+    x.to_bits().hash(&mut h);
+    y.to_bits().hash(&mut h);
+    data.hash = h.finish();
+    Some(SceneNode::Path { data })
+}
+
 /// Raw tessellated geometry for callers that compose paths themselves.
 pub fn icon_path(
     name: &str,
