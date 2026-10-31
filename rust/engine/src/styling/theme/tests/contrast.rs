@@ -674,11 +674,11 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             fhover,
         ),
         (
-            "selection.folders.placeholder",
-            "selection.folders.search",
-            aaa,
-            fo.placeholder,
-            fsearch,
+            "selection.folders.naming_icon",
+            "selection.folders.naming",
+            LARGE,
+            fo.naming_icon,
+            over(fo.naming.fill[0], fpanel),
         ),
         (
             "selection.folders.mark",
