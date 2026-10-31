@@ -46,3 +46,21 @@ mod field_menu;
 
 /// The privacy promises: no case on these pages, guarded.
 mod promises;
+
+// task-104: one file per front, the same request from the three on its
+// pages (`cargo test -p uigallery --test component_pages <front>`).
+
+/// Front A, fields (#154).
+mod fields;
+
+/// Front B, overlays (#155).
+mod overlays;
+
+/// Front C, conversation and feedback (#156).
+mod conversation;
+
+/// Front D, disclosure and display (#157).
+mod disclosure;
+
+/// Front E, selection and dates (#158).
+mod selection;
