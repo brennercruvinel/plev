@@ -456,3 +456,213 @@ fn tooltip_stays_inside_its_container_across_it() {
         "flipped below"
     );
 }
+
+// Sheet and drawer
+
+use crate::widgets::feedback::ModalAction;
+use crate::widgets::overlay::drawer::{Drawer, DrawerAction};
+use crate::widgets::overlay::sheet::{Edge, Sheet, SheetRow, edge_rect, slide};
+
+fn sheet(edge: Edge) -> Sheet {
+    Sheet::new("Settings", "Changes apply when you save.", "Save", "Cancel")
+        .edge(edge)
+        .row(SheetRow::new("Display name", "Sophie Bennett").hint("Shown on comments"))
+        .row(SheetRow::new("Language", "English"))
+}
+
+fn drawer() -> Drawer {
+    Drawer::new("Research")
+        .group("Foundations", &[("Colors", "layers"), ("Icons", "house")])
+        .group("Components", &[("Buttons", "square")])
+        .current(Some(1))
+}
+
+/// From 280 to 1600 wide and 240 to 1200 tall, every edge: the panel is
+/// inside its container, held to its edge, and leaves a touch target of
+/// scrim to close it by; a side panel is the token's extent when it fits.
+#[test]
+fn edge_panels_hold_their_edge_and_leave_a_touch_target_across_the_range() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let reserve = theme.control.min_touch_target;
+        let mut w = 280.0;
+        while w <= 1600.0 {
+            let h = 240.0 + (w - 280.0) * 0.72;
+            let bounds = Rect::new(10.0, 20.0, w, h);
+            for edge in Edge::ALL {
+                let p = sheet(edge).panel_rect(&theme, bounds);
+                assert!(within(p, bounds), "{edge:?} at {w}");
+                let free = if edge.is_side() { w - p.w } else { h - p.h };
+                assert!(free >= reserve - 0.01, "{edge:?} at {w}: {free}");
+                match edge {
+                    Edge::Left => assert_eq!(p.x, bounds.x),
+                    Edge::Right => assert!((p.right() - bounds.right()).abs() < 0.01),
+                    Edge::Top => assert_eq!(p.y, bounds.y),
+                    Edge::Bottom => assert!((p.bottom() - bounds.bottom()).abs() < 0.01),
+                }
+                let extent = theme.overlay.sheet.panel.extent;
+                if edge.is_side() && w - reserve >= extent {
+                    assert_eq!(p.w, extent, "{edge:?} at {w}");
+                }
+            }
+            let d = drawer().panel_rect(&theme, bounds);
+            assert!(within(d, bounds) && d.x == bounds.x, "drawer at {w}");
+            w += 8.0;
+        }
+    }
+}
+
+/// A top or bottom sheet is as tall as its content when the container
+/// holds it, and the container's width.
+#[test]
+fn top_and_bottom_sheets_are_as_tall_as_their_content() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 800.0, 900.0);
+    for edge in [Edge::Top, Edge::Bottom] {
+        let s = sheet(edge);
+        let p = s.panel_rect(&theme, bounds);
+        assert_eq!(p.w, bounds.w);
+        assert!((p.h - s.content_h(&theme, bounds.w)).abs() < 0.01);
+    }
+    let r = edge_rect(Edge::Bottom, 10_000.0, bounds, &theme);
+    assert_eq!(r.y, theme.control.min_touch_target, "capped");
+}
+
+/// The slide: out of the container at 0, settled at 1, toward its edge.
+#[test]
+fn edge_panels_slide_from_their_edge() {
+    let r = Rect::new(100.0, 0.0, 300.0, 600.0);
+    assert_eq!(slide(r, Edge::Right, 1.0), r);
+    assert_eq!(slide(r, Edge::Right, 0.0).x, 400.0);
+    assert_eq!(slide(r, Edge::Left, 0.0).right(), 100.0);
+    assert_eq!(slide(r, Edge::Top, 0.5).y, -300.0);
+    assert_eq!(slide(r, Edge::Bottom, 2.0), r, "an overshoot holds");
+}
+
+/// The close button, the cancel and a press on the scrim cancel, the
+/// confirm confirms; a press inside the panel is swallowed.
+#[test]
+fn sheet_answers_by_its_buttons_and_cancels_on_the_scrim() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 1000.0, 700.0);
+    let mut s = sheet(Edge::Right);
+    let p = s.panel_rect(&theme, bounds);
+    let (a, r) = s.handle_event(&down(10.0, 10.0), &theme, bounds);
+    assert_eq!(a, ModalAction::Cancel, "the scrim");
+    assert!(r.handled);
+    let (a, r) = s.handle_event(&down(p.x + 30.0, p.y + 200.0), &theme, bounds);
+    assert_eq!(a, ModalAction::None);
+    assert!(r.handled, "it blocks");
+    // The confirm is the footer's end; the close the head's.
+    let m = &theme.overlay.modal;
+    let (bx, by) = (p.right() - m.pad - 4.0, p.bottom() - m.pad - 4.0);
+    s.handle_event(&down(bx, by), &theme, bounds);
+    let (a, _) = s.handle_event(&up(bx, by), &theme, bounds);
+    assert_eq!(a, ModalAction::Confirm);
+    let t = &theme.overlay.sheet;
+    let (cx, cy) = (
+        p.right() - t.pad_y - 8.0,
+        p.y + t.pad_y + t.title.line_height / 2.0,
+    );
+    s.handle_event(&down(cx, cy), &theme, bounds);
+    let (a, _) = s.handle_event(&up(cx, cy), &theme, bounds);
+    assert_eq!(a, ModalAction::Cancel, "the close button");
+}
+
+/// A link picked on release over the link pressed; the close button and
+/// the scrim close.
+#[test]
+fn drawer_picks_a_link_and_closes_on_the_scrim() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 900.0, 700.0);
+    let mut d = drawer();
+    let p = d.panel_rect(&theme, bounds);
+    let t = &theme.overlay.drawer;
+    // The first link: under the head and the first group's label.
+    let y = p.y
+        + t.head_pad * 2.0
+        + t.head_h
+        + t.group_pad * 2.0
+        + t.group_label.line_height
+        + t.item_gap
+        + 10.0;
+    let x = p.x + t.body_pad + 40.0;
+    assert!(
+        d.handle_event(&move_to(x, y), &theme, bounds).1.changed,
+        "hover"
+    );
+    d.handle_event(&down(x, y), &theme, bounds);
+    assert_eq!(
+        d.handle_event(&up(x, y), &theme, bounds).0,
+        DrawerAction::Pick(0)
+    );
+    d.handle_event(&down(x, y), &theme, bounds);
+    let away = y + 200.0;
+    assert_eq!(
+        d.handle_event(&up(x, away), &theme, bounds).0,
+        DrawerAction::None
+    );
+    let (a, _) = d.handle_event(&down(p.right() + 20.0, 300.0), &theme, bounds);
+    assert_eq!(a, DrawerAction::Close);
+    assert!(d.content_h(&theme) < bounds.h);
+}
+
+/// The sheet is a dialog named by its title with its three buttons and
+/// its rows; the drawer a dialog of groups of links, the current marked.
+#[test]
+fn sheet_and_drawer_project_their_dialog() {
+    let id = sid("sheet");
+    let s = sheet(Edge::Bottom).sem(id.clone());
+    let mut b = SnapshotBuilder::new();
+    s.project(&mut b, &id, None);
+    let snap = b.finish().unwrap();
+    let node = snap.get(&id).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::Dialog, "Settings"));
+    assert_eq!(node.state.get("edge"), Some(&Value::Text("bottom".into())));
+    for key in ["close", "cancel", "confirm"] {
+        assert_eq!(snap.get(&id.key(key)).unwrap().role, Role::Button);
+    }
+    let row = snap.get(&id.child("row").unwrap().key("0")).unwrap();
+    assert_eq!(row.label, "Display name: Sophie Bennett");
+
+    let id = sid("drawer");
+    let d = drawer().sem(id.clone());
+    let mut b = SnapshotBuilder::new();
+    d.project(&mut b, &id, None);
+    let snap = b.finish().unwrap();
+    assert_eq!(snap.get(&id).unwrap().role, Role::Dialog);
+    let link = snap.get(&id.key("1")).unwrap();
+    assert_eq!((link.role, link.label.as_str()), (Role::Link, "Icons"));
+    assert_eq!(link.state.get("current"), Some(&Value::Bool(true)));
+    let group = id.child("group").unwrap().key("1");
+    assert_eq!(
+        snap.get(&id.key("2")).unwrap().parent.as_ref(),
+        Some(&group)
+    );
+}
+
+/// Core is the kit's drawer and settings panel; every other theme its
+/// own surface with the kit's extents.
+#[test]
+fn edge_panel_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
+    use crate::styling::color::Color;
+    let core = Theme::hoff_core().overlay;
+    assert_eq!(
+        (core.drawer.panel.extent, core.drawer.panel.radius),
+        (260.0, 0.0)
+    );
+    assert_eq!(core.drawer.panel.fill, Color::hex(0xFCFCFC));
+    assert_eq!(core.drawer.panel.rule, Color::hex(0xECECEC));
+    assert_eq!(
+        (core.sheet.panel.extent, core.sheet.panel.radius),
+        (384.0, 24.0)
+    );
+    assert_eq!(
+        (core.sheet.title.font_size, core.sheet.row_min_h),
+        (18.0, 56.0)
+    );
+    let hoff = Theme::hoff();
+    let d = &hoff.overlay;
+    assert_eq!(d.sheet.panel.fill, hoff.glass.popover);
+    assert_eq!(d.sheet.panel.scrim, hoff.glass.scrim);
+    assert_eq!(d.drawer.panel.extent, 260.0, "the kit's extent");
+}

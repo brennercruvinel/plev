@@ -7,6 +7,7 @@
 use engine::control::input::FileDrop;
 use engine::styling::theme::Intent;
 use engine::widgets::overlay::OverlayKind;
+use engine::widgets::overlay::drawer::DrawerAction;
 use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
 
 use accord::Value;
@@ -436,6 +437,31 @@ impl ShowcaseView {
                         _ => None,
                     };
                     (asked, r.changed)
+                }
+                // task-104 front B: the edge panels (`dispatcher/overlay/edge.rs`).
+                ActiveOverlay::Sheet { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let button = match action {
+                        ModalAction::Confirm => Some("confirm"),
+                        ModalAction::Cancel => Some("cancel"),
+                        ModalAction::None => None,
+                    };
+                    let asked =
+                        button.and_then(|b| widget.sem_id().map(|id| (id.key(b), "activate")));
+                    (asked, r.changed || button.is_some())
+                }
+                ActiveOverlay::Drawer { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let key = match action {
+                        DrawerAction::Pick(i) => Some(i.to_string()),
+                        DrawerAction::Close => Some("close".to_owned()),
+                        DrawerAction::None => None,
+                    };
+                    let acted = key.is_some();
+                    let asked = key.and_then(|k| widget.sem_id().map(|id| (id.key(k), "activate")));
+                    (asked, r.changed || acted)
                 }
             };
             return match asked {
