@@ -561,6 +561,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Topbar",
+        "layout-grid",
+        "The kit's top bars: simple, with a filter or the search at the end, minimal, and the asset header with its thumbnails.",
+        Pane::Topbar,
+    ),
+    page(
+        C,
         "Tree",
         "folder-open",
         "Branches expand and collapse; leaves select.",

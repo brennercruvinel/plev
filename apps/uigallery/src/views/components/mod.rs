@@ -89,6 +89,9 @@ pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;
 
+// task-104 front F, kit foundation
+pub mod topbar;
+
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};
 

@@ -712,11 +712,59 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         today,
         card,
     );
+    // task-104 front F: the headers, on their bar: the logo's ink at AAA,
+    // each action's icon at rest and hovered and the dot of news at 3:1
+    // (marks), on the bar and on the plain action's hover
+    let hd = &t.header;
+    let bar = over(hd.fill, page);
+    add(
+        "header.logo.ink",
+        "header.fill",
+        AAA,
+        over(hd.logo.ink, bar),
+        bar,
+    );
+    for (name, look) in [
+        ("header.nav", &hd.nav),
+        ("header.plain", &hd.plain),
+        ("header.framed", &hd.framed),
+    ] {
+        let r = &look.recipe;
+        let rest = over(r.rest.fill[0], bar);
+        let hover = over(r.hover.fill[0], bar);
+        add(
+            &format!("{name}.rest.text"),
+            &format!("{name}.rest.fill"),
+            LARGE,
+            over(r.rest.text, rest),
+            rest,
+        );
+        add(
+            &format!("{name}.hover.text"),
+            &format!("{name}.hover.fill"),
+            LARGE,
+            over(r.hover.text, hover),
+            hover,
+        );
+    }
+    let plain_hover = over(hd.plain.recipe.hover.fill[0], bar);
+    for (bg, under) in [
+        ("header.fill", bar),
+        ("header.plain.hover.fill", plain_hover),
+    ] {
+        add(
+            "header.dot.color",
+            bg,
+            LARGE,
+            over(hd.dot.color, under),
+            under,
+        );
+    }
     out
 }
 
-/// The pairs that fail today, 114 of the 477 (core 40, hoff 18, dark 13,
-/// light 43), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 110 of the 725 (core 41, hoff 19, dark 13,
+/// light 37), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -909,6 +957,11 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
+    // task-104 front F: the kit's dot of news (#FE5938) on the hovered
+    // action's wash, and hoff's danger as that dot
+    ("core", "header.dot.color", "header.plain.hover.fill", 2.77),
+    ("hoff", "header.dot.color", "header.fill", 2.27),
+    ("hoff", "header.dot.color", "header.plain.hover.fill", 1.45),
 ];
 
 #[test]
@@ -949,7 +1002,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 689,
+        count, 725,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

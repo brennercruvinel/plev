@@ -102,6 +102,7 @@ const PROJECTING: &[&str] = &[
     "Toggle",
     "Toggle Group",
     "Tooltip",
+    "Topbar",
     "Tree",
     "Todo",
     "Surface",
