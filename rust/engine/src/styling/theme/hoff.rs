@@ -138,15 +138,15 @@ impl TypographyScale {
 impl Theme {
     /// The HOFF dark-glass theme — plev's default.
     pub fn hoff() -> Self {
-        // placeholders: the recipes are derived again below, from these colors
+        // placeholders: the recipes are derived again below, from the theme
         let dark = Self::dark().colors;
         let mut theme = Self {
             button: ButtonTokens::derive(&dark),
             form: FormTokens::hoff_core(),
-            overlay: OverlayTokens::derive(&dark),
-            message: MessageTokens::derive(&dark),
-            disclosure: DisclosureTokens::derive(&dark),
-            selection: SelectionTokens::derive(&dark),
+            overlay: OverlayTokens::hoff_core(),
+            message: MessageTokens::hoff_core(),
+            disclosure: DisclosureTokens::hoff_core(),
+            selection: SelectionTokens::hoff_core(),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.
@@ -236,11 +236,7 @@ impl Theme {
             shadows: ShadowTokens::hoff(),
         };
         theme.button = ButtonTokens::derive(&theme.colors);
-        theme.form = FormTokens::derive(&theme);
-        theme.overlay = OverlayTokens::derive(&theme.colors);
-        theme.message = MessageTokens::derive(&theme.colors);
-        theme.disclosure = DisclosureTokens::derive(&theme.colors);
-        theme.selection = SelectionTokens::derive(&theme.colors);
+        theme.derive_front_slots();
         theme
     }
 }

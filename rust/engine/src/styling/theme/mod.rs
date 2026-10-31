@@ -57,8 +57,8 @@ pub struct Theme {
     /// Button surfaces per variant and the button size ladders.
     pub button: ButtonTokens,
     // task-104: one slot per front; `hoff_core()` copies the kit and every
-    // other theme derives from its palette, as `button` does, except `form`,
-    // derived from the finished theme (the hoff glass is written by hand).
+    // other theme derives it from the finished theme (`derive_front_slots`),
+    // since the hoff glass is written by hand.
     /// Front A: field, label, input group, input OTP, textarea, combobox,
     /// command.
     pub form: FormTokens,
@@ -116,12 +116,12 @@ impl Theme {
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            // a placeholder: derived from the finished theme below
+            // placeholders: derived from the finished theme below
             form: FormTokens::hoff_core(),
-            overlay: OverlayTokens::derive(&colors),
-            message: MessageTokens::derive(&colors),
-            disclosure: DisclosureTokens::derive(&colors),
-            selection: SelectionTokens::derive(&colors),
+            overlay: OverlayTokens::hoff_core(),
+            message: MessageTokens::hoff_core(),
+            disclosure: DisclosureTokens::hoff_core(),
+            selection: SelectionTokens::hoff_core(),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -161,7 +161,7 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
         };
-        theme.form = FormTokens::derive(&theme);
+        theme.derive_front_slots();
         theme
     }
 
@@ -187,14 +187,10 @@ impl Theme {
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            overlay: OverlayTokens::derive(&colors),
-            message: MessageTokens::derive(&colors),
-            disclosure: DisclosureTokens::derive(&colors),
-            selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
         };
-        theme.form = FormTokens::derive(&theme);
+        theme.derive_front_slots();
         theme
     }
 
@@ -357,15 +353,22 @@ impl Theme {
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
-            overlay: OverlayTokens::derive(&colors),
-            message: MessageTokens::derive(&colors),
-            disclosure: DisclosureTokens::derive(&colors),
-            selection: SelectionTokens::derive(&colors),
             colors,
             ..Self::dark()
         };
-        theme.form = FormTokens::derive(&theme);
+        theme.derive_front_slots();
         Some(theme)
+    }
+
+    /// task-104: each front's slot derived from the theme built so far
+    /// (palette, glass, shapes), the last step of every constructor but
+    /// `hoff_core`, which copies the kit.
+    pub(crate) fn derive_front_slots(&mut self) {
+        self.form = FormTokens::derive(self);
+        self.overlay = OverlayTokens::derive(self);
+        self.message = MessageTokens::derive(self);
+        self.disclosure = DisclosureTokens::derive(self);
+        self.selection = SelectionTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

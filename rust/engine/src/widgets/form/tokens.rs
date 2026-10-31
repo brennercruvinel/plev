@@ -19,8 +19,8 @@ impl FormTokens {
         Self {}
     }
 
-    /// The recipe of any other theme, from the theme built without it:
-    /// a constructor fills the slot last (`theme.form = FormTokens::derive(&theme)`).
+    /// The recipe of any other theme, from the theme built without it
+    /// (`Theme::derive_front_slots` fills the slots last).
     pub fn derive(_theme: &Theme) -> Self {
         Self {}
     }
