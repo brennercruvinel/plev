@@ -33,12 +33,14 @@ impl ShowcaseView {
     pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         if ime == ImeEvent::Disabled {
             let input = self.panes.input.handle_ime(ime);
+            let field = self.panes.field.handle_ime(ime);
             let editor = self.panes.editor.handle_ime(ime);
-            return input || editor;
+            return input || field || editor;
         }
         match self.pane() {
             Some(Pane::Editor) => self.panes.editor.handle_ime(ime),
             Some(Pane::Input) if !self.overlay_holds_pointer() => self.panes.input.handle_ime(ime),
+            Some(Pane::Field) if !self.overlay_holds_pointer() => self.panes.field.handle_ime(ime),
             _ => false,
         }
     }
@@ -52,6 +54,9 @@ impl ShowcaseView {
             Pane::Editor => Some(self.panes.editor.ime_area()),
             Pane::Input if !self.overlay_holds_pointer() => {
                 self.panes.input.ime_area(self.page_rect(), &self.theme)
+            }
+            Pane::Field if !self.overlay_holds_pointer() => {
+                self.panes.field.ime_area(self.page_rect(), &self.theme)
             }
             _ => None,
         }

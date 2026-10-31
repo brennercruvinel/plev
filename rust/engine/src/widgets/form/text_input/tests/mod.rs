@@ -3,3 +3,4 @@ mod buffer;
 mod clipboard;
 mod component;
 mod ime;
+mod mask;

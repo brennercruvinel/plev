@@ -63,6 +63,7 @@ impl ShowcaseView {
                 Pane::Tooltip => self.panes.tooltip.content_height(content, t),
                 Pane::Tree => self.panes.tree.content_height(content, t),
                 // task-104 front A, fields (#154)
+                Pane::Field => self.panes.field.content_height(content, t),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
@@ -161,6 +162,7 @@ impl ShowcaseView {
                 Pane::Tooltip => self.panes.tooltip.handle_event(event, content, t),
                 Pane::Tree => self.panes.tree.handle_event(event, content, t),
                 // task-104 front A, fields (#154)
+                Pane::Field => self.panes.field.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
@@ -250,6 +252,7 @@ impl ShowcaseView {
             Some(Pane::Capture) => capture,
             Some(Pane::Editor) => self.panes.editor.wake(dt),
             // task-104 front A, fields (#154)
+            Some(Pane::Field) => self.panes.field.wake(dt),
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
@@ -333,6 +336,7 @@ impl ShowcaseView {
                 }
                 Pane::Tree => self.panes.tree.render(c, content, theme),
                 // task-104 front A, fields (#154)
+                Pane::Field => self.panes.field.render(c, content, theme),
                 // task-104 front B, overlays (#155)
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)

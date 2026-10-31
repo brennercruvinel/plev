@@ -184,11 +184,77 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             }
         }
     }
+    // task-104 front A: the field on a card, its box at rest (the
+    // text, the placeholder and the icons inside, the border around)
+    // and the label row and the message line around it.
+    let f = &t.form;
+    let card = surfaces[1].1;
+    let field = over(f.input.rest.fill, card);
+    let link = Color([
+        f.field.link_color.0[0],
+        f.field.link_color.0[1],
+        f.field.link_color.0[2],
+        f.field.link_color.0[3] * f.field.link_alpha,
+    ]);
+    for (fg, bg, need, color, under) in [
+        (
+            "form.input.text_color",
+            "form.input.rest.fill",
+            TEXT,
+            f.input.text_color,
+            field,
+        ),
+        (
+            "form.input.placeholder",
+            "form.input.rest.fill",
+            TEXT,
+            f.input.placeholder,
+            field,
+        ),
+        (
+            "form.adorn.icon_color",
+            "form.input.rest.fill",
+            LARGE,
+            f.adorn.icon_color,
+            field,
+        ),
+        (
+            "form.input.rest.border",
+            "colors.surface",
+            LARGE,
+            f.input.rest.border,
+            card,
+        ),
+        (
+            "form.field.label_color",
+            "colors.surface",
+            TEXT,
+            f.field.label_color,
+            card,
+        ),
+        ("form.field.link_color", "colors.surface", TEXT, link, card),
+        (
+            "form.field.error_color",
+            "colors.surface",
+            TEXT,
+            f.field.error_color,
+            card,
+        ),
+        (
+            "form.field.helper_color",
+            "colors.surface",
+            TEXT,
+            f.field.helper_color,
+            card,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
     out
 }
 
-/// The pairs that fail today, 102 of the 301 (core 36, hoff 15, dark 11,
-/// light 40), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 115 of the 333 (core 41, hoff 18, dark 13,
+/// light 43), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -386,6 +452,44 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
         "button.warning.active.fill",
         2.15,
     ),
+    // task-104 front A: the field. The core pairs are the kit's Field as
+    // written (`components/Field/index.tsx`: the #E2E2E2 border, the
+    // #7B7B7B placeholder, the #FE5938 error, the link at opacity-70) and
+    // the helper in the kit's secondary gray; the others are the glass
+    // field every theme drew before the kit.
+    (
+        "core",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        4.13,
+    ),
+    ("core", "form.input.rest.border", "colors.surface", 1.26),
+    ("core", "form.field.link_color", "colors.surface", 2.13),
+    ("core", "form.field.error_color", "colors.surface", 3.05),
+    ("core", "form.field.helper_color", "colors.surface", 4.13),
+    (
+        "hoff",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        2.76,
+    ),
+    ("hoff", "form.input.rest.border", "colors.surface", 1.63),
+    ("hoff", "form.field.error_color", "colors.surface", 2.34),
+    (
+        "dark",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        2.96,
+    ),
+    ("dark", "form.input.rest.border", "colors.surface", 1.70),
+    (
+        "light",
+        "form.input.placeholder",
+        "form.input.rest.fill",
+        1.31,
+    ),
+    ("light", "form.input.rest.border", "colors.surface", 1.05),
+    ("light", "form.field.error_color", "colors.surface", 4.24),
 ];
 
 #[test]
@@ -426,7 +530,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 301,
+        count, 333,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
