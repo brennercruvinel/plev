@@ -12,6 +12,11 @@
 //! [`DisclosureTokens::derive`]; derived from the core theme, the tokens
 //! are the kit, value for value.
 //!
+//! The rows of a list and a table live here too (`list`, `table`): the
+//! kit has no list nor table widget, so the core takes the kit's language
+//! (its row, its one table), and `derive` is the look every other theme
+//! drew before the kit, so no app outside the core theme changes.
+//!
 //! [`Collapsible`]: super::collapsible::Collapsible
 
 use crate::compose::animation::Easing;
@@ -273,6 +278,87 @@ pub struct PagerRecipe {
     pub arrow: f32,
 }
 
+/// A row of a list or of a table: the surface under it hovered and
+/// selected, the radius of that surface and of the focus ring drawn in
+/// it, and the rule between two rows (width 0 is none).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RowRecipe {
+    pub radius: f32,
+    pub border: f32,
+    pub hover: DisclosureSurface,
+    pub selected: DisclosureSurface,
+    pub ring_radius: f32,
+    pub rule: f32,
+    pub rule_color: Color,
+}
+
+/// A table, derived from the one table the kit writes (the spec sheet of
+/// its typography page): the frame around it, the header band and its
+/// titles, the rule under the header, the cells' padding, text and two
+/// tones (the lead column and the others), and its rows.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TableRecipe {
+    pub frame: f32,
+    pub frame_color: Color,
+    pub header_fill: Color,
+    pub header_radius: f32,
+    pub header_size: f32,
+    pub header_line_height: f32,
+    pub header_weight: u16,
+    pub header_text: Color,
+    pub rule: f32,
+    pub rule_color: Color,
+    pub cell_pad: f32,
+    pub cell_size: f32,
+    pub cell_line_height: f32,
+    pub cell_weight: u16,
+    pub cell: Color,
+    pub cell_dim: Color,
+    pub rows: RowRecipe,
+}
+
+/// The icon tile a tree row's icon sits in (the kit's `size-8
+/// rounded-lg` square), at rest and selected.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TreeTile {
+    pub size: f32,
+    pub radius: f32,
+    pub rest: Color,
+    pub selected: Color,
+    pub shadow_selected: ShadowSpec,
+}
+
+/// A tree's row: its height, the padding before the first glyph, the
+/// indent per depth, the chevron and the gap after it, the icon (in a
+/// tile, for a look that has one) and the gap before the label, the
+/// surface under a hovered or selected row (inset by `seam` x and y so
+/// neighbors keep a seam), the label's text and its two tones, the
+/// chevron's and the icon's colors.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TreeRecipe {
+    pub row_h: f32,
+    pub pad_x: f32,
+    pub indent: f32,
+    pub chevron: f32,
+    pub chevron_gap: f32,
+    pub icon: f32,
+    pub tile: Option<TreeTile>,
+    pub label_gap: f32,
+    pub radius: f32,
+    pub border: f32,
+    pub seam: [f32; 2],
+    pub hover: DisclosureSurface,
+    pub selected: DisclosureSurface,
+    pub font_size: f32,
+    pub line_height: f32,
+    pub font_weight: u16,
+    pub label: Color,
+    pub label_selected: Color,
+    pub chevron_color: Color,
+    pub icon_color: Color,
+    pub icon_selected: Color,
+}
+
 /// How a disclosure moves: the revealed height and the chevron's half
 /// turn, each a duration in seconds and an easing.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -321,6 +407,12 @@ pub struct DisclosureTokens {
     pub carousel: CarouselRecipe,
     /// The pager's cells.
     pub pager: PagerRecipe,
+    /// A virtual list's rows.
+    pub list: RowRecipe,
+    /// A table.
+    pub table: TableRecipe,
+    /// A tree's rows.
+    pub tree: TreeRecipe,
 }
 
 fn hex(v: u32) -> Color {

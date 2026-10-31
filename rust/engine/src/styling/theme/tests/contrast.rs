@@ -648,3 +648,37 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         "these pairs pass now, take them off KNOWN: {fixed:?}"
     );
 }
+
+/// WCAG 2.2 AAA: text (1.4.6).
+const AAA: f64 = 7.0;
+
+/// task-104 front D: the core table's and tree's text meets AAA on every
+/// surface under it (the card, a hovered and a selected row). The kit's
+/// #7B7B7B, and its header at opacity 50, fail it; they take shade 7.
+#[test]
+fn the_core_table_and_tree_text_meets_aaa() {
+    let t = Theme::hoff_core();
+    let (table, tree) = (t.disclosure.table, t.disclosure.tree);
+    let page = over(t.colors.surface, [0.0; 3]);
+    let rows = &table.rows;
+    let unders = [
+        page,
+        over(rows.hover.fill, page),
+        over(rows.selected.fill, page),
+        over(tree.hover.fill, page),
+        over(tree.selected.fill, page),
+    ];
+    let texts = [
+        table.header_text,
+        table.cell,
+        table.cell_dim,
+        tree.label,
+        tree.label_selected,
+    ];
+    for under in unders {
+        for fg in texts {
+            let r = ratio(over(fg, under), under);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+}
