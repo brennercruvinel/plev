@@ -117,6 +117,8 @@ pub enum Pane {
     Item,
     Kbd,
     Pagination,
+    /// The static table; `Table` is the Data Table.
+    StaticTable,
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
     RadioGroup,

@@ -48,8 +48,10 @@ const PROJECTING: &[&str] = &[
     "Button",
     "Button Group",
     "Carousel",
+    "Chart",
     "Checkbox",
     "Chip",
+    "Code Block",
     "Collapsible",
     "Combobox",
     "Data Table",
@@ -57,6 +59,7 @@ const PROJECTING: &[&str] = &[
     "Drawer",
     "Dropdown Menu",
     "Field",
+    "Graph",
     "Hover Card",
     "Icon Button",
     "Input",
@@ -78,6 +81,7 @@ const PROJECTING: &[&str] = &[
     "Sheet",
     "Slider",
     "Spinner",
+    "Stat",
     "Switch",
     "Table",
     "Tabs",
@@ -131,14 +135,6 @@ const SILENT: &[(&str, Why)] = &[
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
-    (
-        "Chart",
-        Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
-    (
-        "Code Block",
-        Unprojected("CodeBlock: a label with the code, named by its caption"),
-    ),
     ("Command", PLACEHOLDER),
     (
         "Context Menu",
@@ -148,10 +144,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
-    ),
-    (
-        "Graph",
-        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
     ),
     ("Input OTP", PLACEHOLDER),
     ("Panel", Nothing("the glass surface alone")),
@@ -172,10 +164,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Skeleton",
         Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
-    ),
-    (
-        "Stat",
-        Unprojected("Stat: a label with its value, unit and delta"),
     ),
     ("Textarea", PLACEHOLDER),
     (

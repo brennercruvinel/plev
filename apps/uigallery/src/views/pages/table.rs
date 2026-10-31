@@ -469,12 +469,12 @@ pub const PAGES: &[Page] = &[
         "Spring toggles, one disabled.",
         Pane::Switch,
     ),
-    alias(
+    page(
+        C,
         "Table",
         "layout-grid",
-        "The data table.",
-        Pane::Table,
-        "a static example without virtualization",
+        "Every row shown, no scroll; columns drop by priority when narrow.",
+        Pane::StaticTable,
     ),
     page(
         C,

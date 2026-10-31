@@ -197,7 +197,9 @@ impl DockPage {
         let dock = self.model.dock_rect(stage);
         let radius = dock.h / 2.0;
         // Real glass: deep shadow, frost, edge-lit translucent pill.
-        c.push(menu_shadow(dock, radius, theme));
+        for node in menu_shadow(dock, radius, theme) {
+            c.push(node);
+        }
         c.draw_backdrop_blur(
             dock.x,
             dock.y,

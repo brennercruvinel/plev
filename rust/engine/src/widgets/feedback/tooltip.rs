@@ -149,8 +149,10 @@ impl Tooltip {
         let t = &theme.overlay.tooltip;
         let rect = self.placement_in(theme, bounds);
         let radius = t.radius.min(rect.h / 2.0);
-        if let Some(shadow) = shadow_node(rect, radius, &t.shadow) {
-            compositor.push_to_layer(layer, shadow);
+        for spec in &t.shadow {
+            if let Some(shadow) = shadow_node(rect, radius, spec) {
+                compositor.push_to_layer(layer, shadow);
+            }
         }
         compositor.push_to_layer(
             layer,

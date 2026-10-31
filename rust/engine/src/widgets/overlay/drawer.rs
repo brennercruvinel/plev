@@ -343,8 +343,10 @@ impl Drawer {
         }
         let b = Rect::new(r.x + t.item_pad, r.y + t.item_pad, t.icon_box, t.icon_box);
         if current {
-            if let Some(node) = shadow_node(b, t.icon_box_radius, &t.icon_box_shadow) {
-                c.push_to_layer(layer, node);
+            for spec in &t.icon_box_shadow {
+                if let Some(node) = shadow_node(b, t.icon_box_radius, spec) {
+                    c.push_to_layer(layer, node);
+                }
             }
             c.push_to_layer(
                 layer,

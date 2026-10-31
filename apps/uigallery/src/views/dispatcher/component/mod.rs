@@ -159,11 +159,17 @@ components! {
     Item => item,
     Kbd => kbd,
     Pagination => pagination,
+    StaticTable => table_static,
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,
+    // task-104 front G, navigation and data
+    Chart => chart,
+    CodeBlock => code_block,
+    Graph => graph,
+    Stat => stat,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

@@ -136,6 +136,8 @@ impl DisclosureTokens {
             label_dim: colors.text_dim,
             ..kit.pager
         };
+        let (list, table) = Self::rows(theme);
+        let tree = Self::tree(theme);
         Self {
             accordion,
             collapsible,
@@ -145,6 +147,99 @@ impl DisclosureTokens {
             aspect,
             carousel,
             pager,
+            list,
+            table,
+            tree,
         }
+    }
+
+    /// The tree every theme drew before the kit, value for value: body
+    /// text rows padded `xs` above and below, `sm` before the first
+    /// glyph, an `lg` indent, `Sm` icons an `xs` apart and two before the
+    /// label; the glass washes under a row in the nav radius, inset half
+    /// a gap and an edge; the label mid, the selected one in the text
+    /// tone, the chevron dim, the icon mid.
+    fn tree(theme: &Theme) -> TreeRecipe {
+        let (colors, glass) = (&theme.colors, &theme.glass);
+        let body = theme.typography.base_2r();
+        let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
+        let gap = theme.spacing.xs;
+        TreeRecipe {
+            row_h: (body.line_height + gap * 2.0).round(),
+            pad_x: theme.spacing.sm,
+            indent: theme.spacing.lg,
+            chevron: icon,
+            chevron_gap: gap,
+            icon,
+            tile: None,
+            label_gap: gap * 2.0,
+            radius: theme.shape.nav,
+            border: 0.0,
+            seam: [gap / 2.0, theme.control.edge_width],
+            hover: DisclosureSurface {
+                fill: glass.surface_hover,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: glass.surface_active,
+                border: NONE,
+            },
+            font_size: body.font_size,
+            line_height: body.line_height,
+            font_weight: body.font_weight,
+            label: colors.text_mid,
+            label_selected: colors.text,
+            chevron_color: colors.text_dim,
+            icon_color: colors.text_mid,
+            icon_selected: colors.text_mid,
+        }
+    }
+
+    /// The rows and the table every theme drew before the kit, value for
+    /// value, so the apps on them (urnadbapp's lists, `screen`'s tables)
+    /// keep their pixels: the hovered and selected rows in the glass
+    /// washes, square, the focus ring in the nav radius; the header band
+    /// in the tabs glass and the nav radius, caption titles in the faint
+    /// glass text, the divider under it; `md` cell padding, body text,
+    /// the lead column in the mid tone, the others faint.
+    fn rows(theme: &Theme) -> (RowRecipe, TableRecipe) {
+        let (colors, glass, type_) = (&theme.colors, &theme.glass, &theme.typography);
+        let list = RowRecipe {
+            radius: 0.0,
+            border: 0.0,
+            hover: DisclosureSurface {
+                fill: glass.surface_hover,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: glass.surface_active,
+                border: NONE,
+            },
+            ring_radius: theme.shape.nav,
+            rule: 0.0,
+            rule_color: NONE,
+        };
+        let caption = type_.caption_sm();
+        let body = type_.base_2r();
+        let table = TableRecipe {
+            frame: 0.0,
+            frame_color: NONE,
+            header_fill: glass.tabs,
+            header_radius: theme.shape.nav,
+            header_size: caption.font_size,
+            header_line_height: caption.line_height,
+            header_weight: caption.font_weight,
+            header_text: glass.text_faint,
+            rule: theme.control.edge_width,
+            rule_color: colors.divider,
+            cell_pad: theme.spacing.md,
+            cell_size: body.font_size,
+            cell_line_height: body.line_height,
+            cell_weight: body.font_weight,
+            cell: colors.text_mid,
+            cell_dim: glass.text_faint,
+            rows: list,
+        };
+        (list, table)
     }
 }

@@ -8,11 +8,11 @@ use engine::control::input::FileDrop;
 use engine::styling::theme::Intent;
 use engine::widgets::overlay::OverlayKind;
 use engine::widgets::overlay::drawer::DrawerAction;
-use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use engine::widgets::prelude::{ContextMenu, EventResult, ModalAction, Rect, WidgetEvent};
 
 use accord::Value;
 
-use super::super::components::context_menu;
+use super::super::components::{context_menu, dialog};
 use super::super::dispatcher::keyboard::Walk;
 use super::super::dispatcher::{ShellTarget, overlay};
 use super::super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
@@ -338,29 +338,11 @@ impl ShowcaseView {
     }
 
     pub(crate) fn open_modal(&mut self, destructive: bool) {
+        // The Dialog page's questions (`components/dialog.rs`).
         let (widget, intent) = if destructive {
-            (
-                Modal::new(
-                    "Delete repository?",
-                    "This permanently removes the repository and all of its \
-                     history. This action cannot be undone.",
-                    "Delete",
-                    "Cancel",
-                )
-                .intent(Intent::Destructive),
-                Intent::Destructive,
-            )
+            (dialog::destructive(), Intent::Destructive)
         } else {
-            (
-                Modal::new(
-                    "Apply settings?",
-                    "Your workspace will reload to apply the new configuration.",
-                    "Apply",
-                    "Cancel",
-                )
-                .intent(Intent::Neutral),
-                Intent::Neutral,
-            )
+            (dialog::plain(), Intent::Neutral)
         };
         let widget = match overlay::id(overlay::DIALOG) {
             Some(id) => widget.sem(id),

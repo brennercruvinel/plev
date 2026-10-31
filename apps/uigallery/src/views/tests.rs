@@ -43,7 +43,7 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     let last_before = link_rects(&view).last().unwrap().y;
     let band_bottom = band(&view).bottom();
     assert!(
-        last_before + NavLink::height(&view.theme) > band_bottom,
+        last_before + view.theme.navigation.sidebar_link.height > band_bottom,
         "500px window: the last link must start below the visible band"
     );
 
@@ -110,11 +110,15 @@ fn sidebar_labels_fit_their_slot_in_the_ui_font() {
     let view = ShowcaseView::new(1280.0, 800.0);
     let t = &view.theme;
     let link_w = link_rects(&view)[0].w;
-    let style = NavLink::label_style(t);
-    let (hint_w, _) =
-        engine::drawing::text::TextMeasurer::measure_styled("14", &t.typography.caption_r(), None);
+    let r = &t.navigation.sidebar_link;
+    let style = r.label.style(&t.typography);
+    let (hint_w, _) = engine::drawing::text::TextMeasurer::measure_styled(
+        "14",
+        &r.hint.style(&t.typography),
+        None,
+    );
     let slot =
-        link_w - t.spacing.sm * 2.0 - NavLink::icon_slot(t) - t.spacing.xs - hint_w - t.spacing.sm;
+        link_w - r.pad_start - r.pad_end - r.icon_box() - r.icon_gap - hint_w - r.trailing_gap;
     for page in PAGES {
         let (w, _) = engine::drawing::text::TextMeasurer::measure_styled(page.title, &style, None);
         assert!(
@@ -268,7 +272,11 @@ fn sidebar_offers_one_nav_link_per_page_under_three_captions() {
     let view = ShowcaseView::new(1200.0, 800.0);
     let rects = link_rects(&view);
     assert_eq!(rects.len(), PAGES.len());
-    assert!(rects.iter().all(|r| r.h == NavLink::height(&view.theme)));
+    assert!(
+        rects
+            .iter()
+            .all(|r| r.h == view.theme.navigation.sidebar_link.height)
+    );
     let sb = &view.shell.sidebar;
     assert_eq!(sb.groups.len(), Group::ALL.len());
     assert_eq!(

@@ -25,9 +25,12 @@ const PROJECTING: usize = 30
     // task-104 front C, conversation (#156): Message, Bubble, Message
     // Scroller, Alert, Attachment, Marker
     + 6
-    // task-104 front D, integrated with C; it moves its share to a line of
-    // its own on its next merge
-    + 3;
+    // task-104 front D, disclosure and display (#157): Accordion,
+    // Collapsible, Aspect Ratio, Carousel, Pagination (Item, Kbd and Table
+    // projected before, through the pages they borrowed)
+    + 5
+    // task-104 front G, navigation and data: Chart, Code Block, Graph, Stat
+    + 4;
 
 /// The pages that show a secret value on purpose, each with the test that
 /// proves the person, the reader and the agent see no more of it than its

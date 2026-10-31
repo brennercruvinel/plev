@@ -264,7 +264,9 @@ impl Select {
         // No path icons inside (the active marker is an SDF dot), so the
         // whole panel can use the gradient edge-light recipe.
         let radius = theme.shape.card;
-        compositor.push_to_layer(layer, menu_shadow(dd, radius, theme));
+        for node in menu_shadow(dd, radius, theme) {
+            compositor.push_to_layer(layer, node);
+        }
         for node in glass_pill(
             dd,
             radius,
