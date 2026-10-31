@@ -121,7 +121,7 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2026-09-26 | [task-78: AI-native applications](task-78-ai-native-apps/README.md) | in-progress |
 | 2026-10-09 | [task-98: workspace reorganization](task-98-workspace-reorganization/README.md) | done |
 | 2026-10-16 | [task-99: explorer integration and platform fixes](task-99-integration-and-portability/README.md) | done |
-| 2026-10-27 | [task-100: interactive graphs and corpus import](task-100-interactive-graphs/README.md) | in-progress |
+| 2026-10-27 | [task-100: interactive graphs and corpus import](task-100-interactive-graphs/README.md) | done |
 | 2026-10-27 | [task-101: on-demand fonts and deterministic fallback](task-101-fonts-by-script/README.md) | done |
 | 2026-10-27 | [task-102: reusable builds and web commands](task-102-builds-and-web-commands/README.md) | done |
 | 2026-10-27 | [task-103: runcheck, every executable in the repository runs](task-103-runcheck-every-executable-runs/README.md) | done |

@@ -70,6 +70,14 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-10-31
+
+- the graphs read ELK too (2026-10-31, PR #146, task-100, adr
+  a-graph-separates-data-appearance-and-layout): the ELK reader and the
+  `elk` and `elk-groups` pages of the graphs demo reach main, which closes
+  task-100 and settles the decision that a graph separates data,
+  appearance and layout.
+
 ## 2026-10-27
 
 - a desktop draws the scripts with the embedded faces (2026-10-27, adr

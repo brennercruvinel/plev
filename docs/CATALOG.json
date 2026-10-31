@@ -65,6 +65,11 @@
     },
     {
      "level": 2,
+     "title": "2026-10-31",
+     "anchor": "2026-10-31"
+    },
+    {
+     "level": 2,
      "title": "2026-10-27",
      "anchor": "2026-10-27"
     },
@@ -6473,7 +6478,7 @@
    "title": "a graph separates data, appearance and layout",
    "project": "plev",
    "type": "adr",
-   "status": "proposed",
+   "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "git",
    "recorded": "2026-10-31",
@@ -16062,7 +16067,7 @@
    "title": "task-100: interactive graphs and corpus import",
    "project": "plev",
    "type": "task",
-   "status": "in-progress",
+   "status": "done",
    "date": "2026-10-27",
    "date_basis": "git",
    "recorded": "2026-10-31",
@@ -16082,7 +16087,8 @@
     "08420f58",
     "b526a9bd",
     "4f079852",
-    "b8bc7639"
+    "b8bc7639",
+    "7c8c4a61"
    ],
    "source": "reconstruction",
    "source_revision": "ec0a224c",
