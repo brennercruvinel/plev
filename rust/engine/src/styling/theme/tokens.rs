@@ -5,6 +5,8 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 
+use super::scales::ShadowSpec;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {
     pub xs: f32,
@@ -281,6 +283,13 @@ pub struct GlassTokens {
     ///
     /// [`glass_pill`]: crate::widgets::recipe::glass_pill
     pub rim_fade: f32,
+    /// The inset key-light [`inset_keylight`] lays over a glass surface,
+    /// a soft highlight bleeding in from the top-left (HOFF: `inset 2px
+    /// 4px 16px rgba(248,248,248,.06)`); `None` draws none (the core kit
+    /// lights no surface).
+    ///
+    /// [`inset_keylight`]: crate::widgets::recipe::inset_keylight
+    pub keylight: Option<ShadowSpec>,
 }
 
 impl GlassTokens {
@@ -319,6 +328,9 @@ impl GlassTokens {
             wash_alpha: 0.14,
             wash_hover_alpha: 0.22,
             rim_fade: 0.0,
+            // The dark ladder these themes are built on: the key-light
+            // offset `xs / 2, xs` and blurred by `lg` (4 and 24).
+            keylight: Some(ShadowSpec::inset([2.0, 4.0], 24.0, 0.0, tint(0.06))),
         }
     }
 }

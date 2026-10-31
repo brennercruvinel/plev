@@ -25,8 +25,8 @@ impl ShowcaseView {
             None => t.size.card_min_w / 2.0,
             Some(pane) => match pane {
                 Pane::Theme => self.panes.themes.content_height(content, t),
-                Pane::Typography => self.panes.typography.content_height(content),
-                Pane::Icons => self.panes.icons.content_height(content),
+                Pane::Typography => self.panes.typography.content_height(content, t),
+                Pane::Icons => self.panes.icons.content_height(content, t),
                 Pane::Effects => self.panes.effects.content_height(content, t),
                 Pane::Avatar => self.panes.avatar.content_height(content, t),
                 Pane::Badge => self.panes.badge.content_height(content, t),
@@ -125,7 +125,7 @@ impl ShowcaseView {
                 // capability as the T key and the menu, through the
                 // dispatcher.
                 Pane::Theme => {
-                    let (r, picked) = self.panes.themes.handle_event(event, content);
+                    let (r, picked) = self.panes.themes.handle_event(event, content, t);
                     if let Some(name) = picked {
                         let name = Value::Text(name.to_owned());
                         self.ask_shell(ShellTarget::Theme, "select", Some(name));

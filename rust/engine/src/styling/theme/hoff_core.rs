@@ -84,6 +84,68 @@ impl ShadowTokens {
     }
 }
 
+impl ControlTokens {
+    /// The kit's control measures, each from the class that writes it
+    /// (paths relative to the kit root). What the kit leaves out keeps the
+    /// HOFF value, named below.
+    pub fn hoff_core() -> Self {
+        Self {
+            // Xs `h-7 px-2` (templates/ButtonsPage/index.tsx:373), Sm `h-9
+            // px-5` (components/Button/index.tsx:59; Select :57, FileMenu
+            // :36), Md `h-10 px-6` (Button :60), Lg `h-11 px-3.5`
+            // (ButtonsPage :293), Xl the field, `h-12 px-5.5`
+            // (components/Field/index.tsx:66).
+            heights: [28.0, 36.0, 40.0, 44.0, 48.0],
+            pad_x: [8.0, 20.0, 24.0, 14.0, 22.0],
+            // `size-4` and `size-5` (Select :81, Field :81); the kit has no
+            // 24 icon, so Lg keeps the HOFF one.
+            icons: [16.0, 20.0, 24.0],
+            // Not the kit's: WCAG 2.5.8 / the apple HIG.
+            min_touch_target: 44.0,
+            // `border` on the card (components/Card/index.tsx:36) and
+            // `border-[1.5px]` on the field (Field :66).
+            edge_width: 1.0,
+            edge_width_strong: 1.5,
+            // The kit draws no focus ring (`outline-0`, Field :91); the
+            // ring stays, for keyboard users.
+            focus_ring_width: 2.0,
+            focus_ring_offset: 2.0,
+            // `p-0.75` (components/Tabs/index.tsx:26).
+            tabs_pad: 3.0,
+            // `p-2` (components/FileMenu/index.tsx:33).
+            menu_pad: 8.0,
+            // `gap-2` (Button :66).
+            inline_gap: 8.0,
+            // The kit has no checkbox: the HOFF box.
+            box_size: 18.0,
+            // `w-10 h-5.5 p-0.5` and the knob `size-4.5`
+            // (components/Switch/index.tsx:11, :17); the derived pad is
+            // the `p-0.5`.
+            switch_size: [40.0, 22.0],
+            switch_knob: 18.0,
+            // The kit's range thumb is a 24 by 36 block (app/globals.css:22),
+            // which a track and a knob diameter do not describe: the HOFF
+            // slider until a slider recipe exists.
+            slider_track: 4.0,
+            slider_knob: 14.0,
+            // The kit hides its scrollbars (`scrollbar-none`): the HOFF bar.
+            scrollbar_w: 6.0,
+            scrollbar_w_hover: 10.0,
+            scrollbar_min_thumb: 24.0,
+            scrollbar_inset: 2.0,
+            // No spinner in the kit.
+            spinner_stroke: 2.0,
+            // The player's trail, `h-0.75`, filled at the same height
+            // (components/VideoPlayer/index.tsx:48, :53).
+            progress_track: 3.0,
+            progress_fill: 3.0,
+            // No split pane in the kit.
+            divider_hit: 10.0,
+            divider_line: 2.0,
+        }
+    }
+}
+
 impl Theme {
     /// The hoff core light theme.
     pub fn hoff_core() -> Self {
@@ -123,7 +185,7 @@ impl Theme {
             xl: 16.0,
             full: 9999.0,
         };
-        let control = ControlTokens::hoff();
+        let control = ControlTokens::hoff_core();
         Self {
             glass: GlassTokens {
                 surface: paper,
@@ -149,9 +211,10 @@ impl Theme {
                 disabled_alpha: 0.30,
                 wash_alpha: 0.10,
                 wash_hover_alpha: 0.16,
-                // task-104f: still the glass rim; the kit border comes with
-                // the recipes step.
-                rim_fade: 0.0,
+                // The kit's surfaces have a plain `border` (Card :36,
+                // Select :90, FileMenu :33) and no inset key-light.
+                rim_fade: 1.0,
+                keylight: None,
             },
             button: ButtonTokens::hoff_core(),
             form: FormTokens::hoff_core(),

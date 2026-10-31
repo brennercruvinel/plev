@@ -1,10 +1,9 @@
 //! The Foundations group: the tokens and primitives the components are
-//! built from (theme palettes, the type scale, the icon set, the
-//! compositor's effects).
+//! built from (the theme's colors, its type styles, the icon set, its
+//! shadows and the compositor's effects), each page in the kit's mold
+//! (`components::showcase`).
 
 pub mod effects;
 pub mod icons;
 pub mod theme;
 pub mod typography;
-
-pub(crate) use super::{group_label, panel, text};

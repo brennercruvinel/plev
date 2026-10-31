@@ -226,18 +226,21 @@ fn the_keys_ask_through_the_dispatcher_and_leave_receipts() {
 fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
     use engine::widgets::prelude::WidgetEvent;
     let mut view = view("Theme");
+    // tall enough for the palettes, the page's last group, to show
+    view.resize(1200.0, 2000.0, 1.0);
     let content = view.page_rect();
     // a point on a card that is not the current theme, found by asking the
     // page itself (its geometry is its own)
     let mut on_card = None;
-    let (mut y, bottom) = (content.y, content.y + 400.0);
+    let (mut y, bottom) = (content.y, content.y + content.h);
     'scan: while y < bottom {
         let mut x = content.x;
         while x < content.x + content.w {
-            let (_, picked) = view
-                .panes
-                .themes
-                .handle_event(&WidgetEvent::MouseDown { x, y }, content);
+            let (_, picked) = view.panes.themes.handle_event(
+                &WidgetEvent::MouseDown { x, y },
+                content,
+                &view.theme,
+            );
             if let Some(name) = picked.filter(|n| *n != view.theme_name) {
                 on_card = Some((x, y, name));
                 break 'scan;
