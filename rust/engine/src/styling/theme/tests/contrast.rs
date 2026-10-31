@@ -1063,3 +1063,38 @@ fn the_core_card_marks_meet_three_to_one() {
         assert!(r >= LARGE, "{fg:?} at {r:.2}");
     }
 }
+
+/// task-104 front D: the core catalog cards' text reads at AAA: the ink
+/// and the muted text on the paper and both washes, the featured plan's
+/// title on its image, and the hover's text on a photo where it sits (the
+/// top of the explore card's title, 38 px above the foot of a 288 px
+/// photo, under the scrim at that height).
+#[test]
+fn the_core_catalog_text_meets_aaa() {
+    let t = Theme::hoff_core();
+    let k = t.disclosure.catalog.palette;
+    let page = over(t.colors.bg, [0.0; 3]);
+    for under in [k.paper, k.panel, k.wash].map(|s| over(s, page)) {
+        for fg in [k.ink, k.muted] {
+            let r = ratio(over(fg, under), under);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+    for under in k.feature.map(|s| over(s, page)) {
+        let r = ratio(over(k.on_image, under), under);
+        assert!(r >= AAA, "on the featured plan at {r:.2}");
+    }
+    let e = &t.disclosure.catalog.explore;
+    let photo_h = e.width / e.ratio;
+    let from_foot = e.bar_pad + e.button / 2.0 + t.disclosure.catalog.tile.title.line_height / 2.0;
+    let at = 1.0 - from_foot / photo_h;
+    let [top, foot] = k.image.map(|c| c.0);
+    let mix: [f32; 4] = std::array::from_fn(|i| top[i] + (foot[i] - top[i]) * at);
+    let scrim_h = t.disclosure.catalog.tile.scrim_h;
+    let alpha = e.scrim_alpha * (1.0 - from_foot / scrim_h);
+    let mut scrim = k.scrim;
+    scrim.0[3] = alpha;
+    let under = over(scrim, over(Color(mix), page));
+    let r = ratio(over(k.on_image, under), under);
+    assert!(r >= AAA, "on a photo at {r:.2}");
+}

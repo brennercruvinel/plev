@@ -170,7 +170,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Card",
         "clipboard",
-        "The HOFF card deck: one glass shell, six preview families with live data.",
+        "The kit's cards page: pricing, slide, asset, scene, explore and asset items.",
         Pane::Card,
     ),
     page(
