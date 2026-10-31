@@ -389,16 +389,28 @@ impl ButtonTokens {
     }
 
     /// Flat recipes from a palette, for the themes that are not the core
-    /// kit: the accent as the primary fill, the panel tone as the
-    /// secondary, the warning color as the warning, dividers as rings.
-    /// Same ladder as the kit.
+    /// kit, in the kit's order of strength: the panel tone as the primary
+    /// (a step off the page), the accent as the secondary (the call to
+    /// action, the strongest), the warning color as the warning, dividers
+    /// as rings. Same ladder as the kit.
     pub fn derive(colors: &ColorTokens) -> Self {
         let kit = Self::hoff_core();
         let text_on = |fill: Color| {
-            // Pick the readable label for a fill by luminance.
-            let c = fill.0;
-            let l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-            if l > 0.5 { colors.bg } else { colors.text }
+            // The page's text or the page's own tone, whichever contrasts
+            // more with the fill as the page shows it (a translucent fill
+            // is mostly the page).
+            let lum = |c: [f32; 4]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+            let (f, b, a) = (fill.0, colors.bg.0, fill.0[3]);
+            let seen = lum([0, 1, 2, 3].map(|i| f[i] * a + b[i] * (1.0 - a)));
+            let ratio = |c: Color| {
+                let l = lum(c.0);
+                (l.max(seen) + 0.05) / (l.min(seen) + 0.05)
+            };
+            if ratio(colors.bg) > ratio(colors.text) {
+                colors.bg
+            } else {
+                colors.text
+            }
         };
         let tint = |c: Color, a: f32| Color([c.0[0], c.0[1], c.0[2], a]);
         let solid = |fill: Color, hover: Color, disabled_alpha: f32| {
@@ -449,8 +461,12 @@ impl ButtonTokens {
             text: colors.text,
         };
         Self {
-            primary: solid(colors.accent, tint(colors.accent, 0.85), 0.30),
-            secondary: solid(colors.bg_panel, colors.bg_hover, 0.30),
+            // The kit's order of strength, whatever the palette: the pale
+            // `isPrimary` is a step off the page, the dark `isSecondary`
+            // (the call to action: a modal's confirm) the most contrasted
+            // fill the theme has.
+            primary: solid(colors.bg_panel, colors.bg_hover, 0.30),
+            secondary: solid(colors.accent, tint(colors.accent, 0.85), 0.30),
             warning: solid(colors.warning, tint(colors.warning, 0.85), 0.30),
             outline: quiet(colors.divider, colors.text, 0.50),
             ghost: quiet(NONE, colors.text_mid, 0.50),

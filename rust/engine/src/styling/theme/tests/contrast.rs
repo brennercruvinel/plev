@@ -747,12 +747,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("hoff", "colors.border_active", "colors.surface", 2.26),
     (
         "hoff",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.57,
-    ),
-    (
-        "hoff",
         "button.warning.rest.text",
         "button.warning.rest.fill",
         3.27,
@@ -814,51 +808,15 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("light", "colors.border_active", "colors.surface", 2.84),
     (
         "light",
-        "button.primary.rest.text",
-        "button.primary.rest.fill",
-        4.06,
-    ),
-    (
-        "light",
-        "button.primary.active.text",
-        "button.primary.active.fill",
-        4.06,
-    ),
-    (
-        "light",
         "button.secondary.rest.text",
         "button.secondary.rest.fill",
         1.09,
     ),
     (
         "light",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.17,
-    ),
-    (
-        "light",
         "button.secondary.active.text",
         "button.secondary.active.fill",
         1.09,
-    ),
-    (
-        "light",
-        "button.warning.rest.text",
-        "button.warning.rest.fill",
-        2.15,
-    ),
-    (
-        "light",
-        "button.warning.hover.text",
-        "button.warning.hover.fill",
-        1.83,
-    ),
-    (
-        "light",
-        "button.warning.active.text",
-        "button.warning.active.fill",
-        2.15,
     ),
     // task-104 front A: the field. The core pairs are the kit's Field as
     // written (`components/Field/index.tsx`: the #E2E2E2 border, the
