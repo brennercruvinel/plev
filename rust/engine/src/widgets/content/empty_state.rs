@@ -2,7 +2,8 @@
 //! title, wrapped message, optional CTA button — centered in the given
 //! bounds. Content-driven: every line is really measured, the stack is
 //! centered as a unit, and the message wraps against the available width
-//! (clamped by a readability maximum, never a viewport constant).
+//! (clamped by a readability maximum, never a viewport constant), each of
+//! its lines centered on its own (the kit's `text-center`).
 
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
@@ -69,6 +70,17 @@ impl EmptyState {
         (bounds.w * MESSAGE_WIDTH_FRAC).min(theme.size.readable_max_w)
     }
 
+    /// The message in the lines it draws in, each with its width: the
+    /// shaper's own breaks (`TextMeasurer::lines`), so each line can be
+    /// centered on its own (the kit's `text-center`).
+    pub fn message_lines(&self, bounds: Rect, theme: &Theme) -> Vec<(String, f32)> {
+        TextMeasurer::lines(
+            &self.message,
+            &Self::message_style(theme),
+            self.message_width(bounds, theme),
+        )
+    }
+
     /// Total stack height for the current content and bounds.
     fn content_height(&self, bounds: Rect, theme: &Theme) -> f32 {
         let gap = Self::gap(theme);
@@ -78,12 +90,9 @@ impl EmptyState {
         }
         h += Self::title_style(theme).line_height + gap;
         if !self.message.is_empty() {
-            let (_, mh) = TextMeasurer::measure_styled(
-                &self.message,
-                &Self::message_style(theme),
-                Some(self.message_width(bounds, theme)),
-            );
-            h += mh + gap;
+            h += self.message_lines(bounds, theme).len() as f32
+                * Self::message_style(theme).line_height
+                + gap;
         }
         if let Some(cta) = &self.cta {
             h += cta.preferred_size(theme).1;
@@ -148,17 +157,18 @@ impl EmptyState {
         });
         y += title_style.line_height + gap;
 
-        if !self.message.is_empty() {
-            let style = Self::message_style(theme);
-            let mw = self.message_width(bounds, theme);
-            let (w, mh) = TextMeasurer::measure_styled(&self.message, &style, Some(mw));
-            compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&self.message, &style, Some(mw)),
-                x: bounds.x + (bounds.w - w.min(mw)) / 2.0,
-                y,
-                color: theme.colors.text_dim.0,
-            });
-            let _ = mh;
+        // each line of the message centered on its own
+        let style = Self::message_style(theme);
+        for (line, w) in self.message_lines(bounds, theme) {
+            if !line.is_empty() {
+                compositor.push(SceneNode::Text {
+                    key: TextNodeKey::from_style(&line, &style, None),
+                    x: bounds.x + (bounds.w - w) / 2.0,
+                    y,
+                    color: theme.colors.text_dim.0,
+                });
+            }
+            y += style.line_height;
         }
 
         if let Some(rect) = self.cta_rect(bounds, theme)

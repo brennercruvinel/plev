@@ -104,3 +104,42 @@ fn each_link_projects_as_a_link_with_active_and_binds_where_it_draws() {
         "the rail is drawn"
     );
 }
+
+/// A long label wraps before the counter, the chevron's gap from it, in
+/// the core and outside it (audit 104q: in the hoff theme it ran into
+/// the "1,024").
+#[test]
+fn a_long_label_keeps_the_chevron_s_gap_from_the_counter() {
+    for theme in [core(), Theme::hoff()] {
+        let c = Collapsible::new("Materials imported from the shared library of the studio")
+            .icon("folder")
+            .counter("1,024");
+        let r = c.recipe(&theme);
+        assert!(r.chevron_gap > 0.0);
+        for w in (240..=1200).step_by(8) {
+            let inner = c.inner(Rect::new(0.0, 0.0, w as f32, 40.0), &theme);
+            let (cw, _) = c.counter_span(r, &theme).unwrap();
+            let tile = c.tile_span(r).map_or(0.0, |(size, gap)| size + gap);
+            let label_end = inner.x + tile + inner.label_w;
+            let counter_x = inner.x + inner.w - r.chevron_box - r.chevron_gap - cw;
+            assert!(counter_x - label_end >= r.chevron_gap - 0.01, "{w}px");
+        }
+    }
+}
+
+/// A disabled trigger shows no state: open or current, it draws the rest
+/// surface, so it never reads as the one in use (audit 104q, hoff).
+#[test]
+fn a_disabled_trigger_draws_the_rest_surface() {
+    for theme in [core(), Theme::hoff()] {
+        let r = theme.disclosure.collapsible.clone();
+        for c in [
+            Collapsible::new("Likes").open(true).disabled(true),
+            Collapsible::new("Likes").current(true).disabled(true),
+        ] {
+            assert_eq!(c.surface(&r), &r.rest);
+        }
+        let open = Collapsible::new("Likes").open(true);
+        assert_eq!(open.surface(&r), &r.open);
+    }
+}

@@ -8,3 +8,5 @@ pub(super) mod on_demand;
 pub(super) mod raster;
 #[cfg(test)]
 pub(super) mod weights;
+#[cfg(test)]
+pub(super) mod lines;

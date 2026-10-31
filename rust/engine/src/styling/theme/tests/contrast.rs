@@ -800,12 +800,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("hoff", "colors.border_active", "colors.surface", 2.26),
     (
         "hoff",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.57,
-    ),
-    (
-        "hoff",
         "button.warning.rest.text",
         "button.warning.rest.fill",
         3.27,
@@ -867,51 +861,15 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("light", "colors.border_active", "colors.surface", 2.84),
     (
         "light",
-        "button.primary.rest.text",
-        "button.primary.rest.fill",
-        4.06,
-    ),
-    (
-        "light",
-        "button.primary.active.text",
-        "button.primary.active.fill",
-        4.06,
-    ),
-    (
-        "light",
         "button.secondary.rest.text",
         "button.secondary.rest.fill",
         1.09,
     ),
     (
         "light",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.17,
-    ),
-    (
-        "light",
         "button.secondary.active.text",
         "button.secondary.active.fill",
         1.09,
-    ),
-    (
-        "light",
-        "button.warning.rest.text",
-        "button.warning.rest.fill",
-        2.15,
-    ),
-    (
-        "light",
-        "button.warning.hover.text",
-        "button.warning.hover.fill",
-        1.83,
-    ),
-    (
-        "light",
-        "button.warning.active.text",
-        "button.warning.active.fill",
-        2.15,
     ),
     // task-104 front A: the field. The core pairs are the kit's Field as
     // written (`components/Field/index.tsx`: the #E2E2E2 border, the
@@ -1061,5 +1019,47 @@ fn the_core_table_and_tree_text_meets_aaa() {
             let r = ratio(over(fg, under), under);
             assert!(r >= AAA, "{fg:?} at {r:.2}");
         }
+    }
+}
+
+/// task-104 front D: the core page head (the kit's Layout title) reads at
+/// AAA on the page, narrow and wide: the title in the ink, the blurb in
+/// shade 7 (the kit's #7B7B7B fails it).
+#[test]
+fn the_core_page_head_meets_aaa() {
+    let t = Theme::hoff_core();
+    let page = over(t.colors.bg, [0.0; 3]);
+    let p = t.disclosure.page;
+    for head in [p.narrow, p.wide] {
+        for fg in [head.title, head.blurb] {
+            let r = ratio(over(fg, page), page);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+}
+
+/// task-104 front D: the core card's chart and legend marks read at 3:1
+/// on the card (WCAG 1.4.11): both bars, both ends of the highlighted
+/// one, its cap, the solid dot, the hollow dot's ring and the ticks. The
+/// baseline is a rule, the kit's line, and is left out.
+#[test]
+fn the_core_card_marks_meet_three_to_one() {
+    let t = Theme::hoff_core();
+    let card = over(t.glass.surface, over(t.colors.bg, [0.0; 3]));
+    let m = t.disclosure.card;
+    let marks = [
+        m.series[0],
+        m.series[1],
+        m.highlight[0],
+        m.highlight[1],
+        m.cap,
+        m.dot_solid[0],
+        m.dot_solid[1],
+        m.dot_ring,
+        m.tick,
+    ];
+    for fg in marks {
+        let r = ratio(over(fg, card), card);
+        assert!(r >= LARGE, "{fg:?} at {r:.2}");
     }
 }

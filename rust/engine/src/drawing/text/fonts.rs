@@ -24,6 +24,13 @@
 //! is embedded so the full upstream upright set is available, but no style
 //! slot uses it.
 //!
+//! The mono face is **JetBrains Mono** Regular, one weight, the Latin range
+//! only (`tool/tasks/subsetter.py`): the code family every theme names
+//! (`TypographyScale::mono_family`), the generic monospace default too. Its
+//! one weight is enough because every shaping path asks for the weight the
+//! named family has nearest ([`matched_weight`]); a glyph past its range
+//! falls back like any other.
+//!
 //! The non-Latin scripts (docs/adr/rendering/0071-embedded-fonts-by-script.md) come from
 //! Noto Sans subsets, Regular and Bold: Arabic, Hebrew, Devanagari, SC, JP,
 //! KR. No family names them: a word whose glyphs the requested face lacks
@@ -222,6 +229,11 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     db.load_font_data(include_bytes!("../../../assets/fonts/Inter-Medium.ttf").to_vec());
     db.load_font_data(include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf").to_vec());
 
+    // JetBrains Mono (SIL OFL, assets/fonts/LICENSE-JetBrainsMono-OFL.txt),
+    // the code face: after Inter, so a glyph the sans lacks still reaches
+    // Inter before it.
+    db.load_font_data(include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec());
+
     // Codicons, the VS Code icon font (CC BY 4.0; texto em assets/fonts/).
     db.load_font_data(include_bytes!("../../../assets/fonts/codicons.ttf").to_vec());
 
@@ -240,11 +252,9 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     // installed on most systems, so default-family text would resolve through
     // the per-word fallback chain (arbitrary faces once weight != 400). Pin
     // sans-serif to Inclusive Sans for deterministic shaping. Monospace is
-    // pinned to the same family: no mono face is embedded, so leaving the
-    // cosmic-text default would send `Family::Monospace` text through the
-    // platform fallback chain.
+    // pinned to the embedded mono face for the same reason.
     db.set_sans_serif_family("Inclusive Sans");
-    db.set_monospace_family("Inclusive Sans");
+    db.set_monospace_family("JetBrains Mono");
     let embedded: Vec<ID> = db
         .faces()
         .filter(|f| !before.contains(&f.id))

@@ -151,7 +151,7 @@ fn demo_text() -> String {
 mod tests {
     use super::*;
 
-    /// The editor writes in the gallery's face: core's Inter from the
+    /// The editor writes in the gallery's mono face: core's from the
     /// first frame and after a switch, hoff's after it.
     #[test]
     fn the_editor_writes_in_the_theme_s_face() {
@@ -167,6 +167,9 @@ mod tests {
             hoff.typography.mono().font_family
         );
         page.set_theme(&core);
-        assert_eq!(page.editor.config().font_family.as_deref(), Some("Inter"));
+        assert_eq!(
+            page.editor.config().font_family.as_deref(),
+            Some(engine::styling::theme::MONO_FAMILY)
+        );
     }
 }
