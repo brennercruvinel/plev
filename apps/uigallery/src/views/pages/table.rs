@@ -494,7 +494,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Toast",
         "send",
-        "One button per intent; click to queue.",
+        "A toast at rest per intent; the buttons queue a live one.",
         Pane::Toast,
     ),
     page(
