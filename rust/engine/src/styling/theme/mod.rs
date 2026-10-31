@@ -68,8 +68,9 @@ pub struct Theme {
     /// sheet, drawer.
     pub overlay: OverlayTokens,
     /// Front C: message, bubble, message scroller, alert, attachment,
-    /// marker, questionnaire.
-    pub message: MessageTokens,
+    /// marker, toast. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub message: Box<MessageTokens>,
     /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
     /// pagination, table.
     pub disclosure: DisclosureTokens,
@@ -125,7 +126,7 @@ impl Theme {
             // placeholders: derived from the finished theme below
             form: FormTokens::hoff_core(),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
             navigation: Box::new(NavigationTokens::hoff_core()),
@@ -373,7 +374,7 @@ impl Theme {
     pub(crate) fn derive_front_slots(&mut self) {
         self.form = FormTokens::derive(self);
         self.overlay = OverlayTokens::derive(self);
-        self.message = MessageTokens::derive(self);
+        *self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);
         self.selection = SelectionTokens::derive(self);
         *self.navigation = NavigationTokens::derive(self);

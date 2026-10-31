@@ -88,7 +88,7 @@ fn parts(l: &MessageLayout) -> Vec<(&'static str, Rect)> {
 #[test]
 fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
     let kit = MessageTokens::hoff_core();
-    assert_eq!(core().message, kit);
+    assert_eq!(*core().message, kit);
     let t = &kit.thread;
     assert_eq!((t.pad, t.gap, t.avatar), (16.0, 16.0, 32.0));
     assert_eq!(
@@ -110,7 +110,7 @@ fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
 
     let hoff = Theme::hoff();
     let derived = MessageTokens::derive(&hoff);
-    assert_eq!(hoff.message, derived);
+    assert_eq!(*hoff.message, derived);
     assert_eq!(derived.thread.name.color, hoff.colors.text);
     assert_eq!(derived.thread.time.color, hoff.colors.text_mid);
     assert_eq!(derived.quick.body.color, hoff.colors.text_mid);
