@@ -224,10 +224,12 @@ mod tests {
             let b = button_size(*t, &theme);
             assert!(b.height(&theme) <= theme.control.height(control(*t)));
         }
-        // hoff core: controls 36/40/44/48/52, buttons 28/36/40/44.
-        assert_eq!(button_size(ControlSize::Xs, &theme), ButtonSize::Sm);
-        assert_eq!(button_size(ControlSize::Sm, &theme), ButtonSize::Md);
-        assert_eq!(button_size(ControlSize::Md, &theme), ButtonSize::Lg);
+        // hoff core: controls 28/36/40/44/48, the button ladder 28/36/40/44
+        // plus the field; each step is its own button, the field the Lg.
+        assert_eq!(button_size(ControlSize::Xs, &theme), ButtonSize::Xs);
+        assert_eq!(button_size(ControlSize::Sm, &theme), ButtonSize::Sm);
+        assert_eq!(button_size(ControlSize::Md, &theme), ButtonSize::Md);
+        assert_eq!(button_size(ControlSize::Lg, &theme), ButtonSize::Lg);
         assert_eq!(button_size(ControlSize::Xl, &theme), ButtonSize::Lg);
     }
 }
