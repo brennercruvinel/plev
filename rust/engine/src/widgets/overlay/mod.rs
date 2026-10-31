@@ -2,6 +2,17 @@ mod item;
 #[cfg(test)]
 mod tests;
 
+// task-104 front B, overlays (#155): one module per widget, and the front's
+// token slot (`Theme::overlay`).
+pub mod alert_dialog;
+pub mod drawer;
+pub mod dropdown_menu;
+pub mod hover_card;
+pub mod menubar;
+pub mod popover;
+pub mod sheet;
+pub mod tokens;
+
 use crate::compose::animation::Spring;
 use crate::styling::theme::MotionPhysics;
 use item::OverlayAnim;

@@ -22,6 +22,8 @@
 //!   empty state, virtual list, tree, separator
 //! - [`feedback`]: modal, context menu, toast, tooltip, progress, spinner,
 //!   scrollbar
+//! - [`message`]: the conversation (task-104 front C)
+//! - [`selection`]: toggles, groups, radios and dates (task-104 front E)
 //! - [`overlay`]: the overlay stack (menus, modals, toasts) with spring
 //!   motion
 //! - [`charts`]: pure chart geometry plus scene emission
@@ -44,7 +46,9 @@ pub mod icons;
 pub mod content;
 pub mod feedback;
 pub mod form;
+pub mod message;
 pub mod nav;
+pub mod selection;
 
 pub mod charts;
 pub mod editor;

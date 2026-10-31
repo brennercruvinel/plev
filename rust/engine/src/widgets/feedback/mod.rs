@@ -8,6 +8,9 @@ mod spinner;
 mod toast;
 mod tooltip;
 
+// task-104 front C, conversation and feedback (#156): the Alert.
+pub mod alert;
+
 pub use context_menu::{ContextMenu, MenuEntry};
 pub use modal::{Modal, ModalAction};
 pub use progress::ProgressBar;

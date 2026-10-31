@@ -14,6 +14,17 @@ mod stat;
 mod table;
 mod tree;
 
+// task-104 front D, disclosure and display (#157): one module per widget,
+// and the front's token slot (`Theme::content`).
+pub mod accordion;
+pub mod aspect_ratio;
+pub mod carousel;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
+pub mod pagination;
+pub mod tokens;
+
 pub use avatar::{Avatar, AvatarSize};
 pub use card::{Card, CardListRow, CardVariant};
 pub use code_block::{CodeBlock, CodeLine, LineKind};
