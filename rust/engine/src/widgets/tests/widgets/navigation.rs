@@ -32,7 +32,7 @@ fn rounded_fills(nodes: &[SceneNode]) -> Vec<[f32; 4]> {
     nodes
         .iter()
         .filter_map(|n| match n {
-            SceneNode::RoundedRect { color, .. } => Some(*color),
+            SceneNode::RoundedRect { color, .. } if color[3] > 0.0 => Some(*color),
             _ => None,
         })
         .collect()
@@ -47,8 +47,17 @@ fn the_slot_is_the_kit_in_core_and_derived_elsewhere() {
         assert_eq!(theme.navigation, NavigationTokens::derive(theme));
     }
     let core = core();
-    assert_eq!(core.navigation, NavigationTokens::hoff_core());
+    let kit = NavigationTokens::hoff_core();
+    assert_eq!(core.navigation.breadcrumb, kit.breadcrumb);
+    assert_eq!(core.navigation.link, kit.link);
     assert_ne!(core.navigation, NavigationTokens::derive(&core));
+    // The sidebar is the chrome: the look of before in core too.
+    let before = NavigationTokens::sidebar_link_of_before(&core);
+    assert_eq!(core.navigation.sidebar_link, before);
+    assert_eq!(
+        core.navigation.sidebar_link,
+        NavigationTokens::derive(&core).link
+    );
 }
 
 // Breadcrumb
@@ -184,4 +193,118 @@ fn breadcrumb_focus_unfolds_the_crumb_it_lands_on() {
     );
     bc.set_focused(None);
     assert_eq!(bc.visible(w, &t), folded);
+}
+
+// Nav link
+
+fn link_faces(link: &NavLink, bounds: Rect, theme: &Theme) -> (Vec<[f32; 4]>, Vec<[f32; 4]>) {
+    let drawn = nodes(|c| link.render(c, bounds, theme));
+    let strokes = drawn
+        .iter()
+        .filter_map(|n| match n {
+            SceneNode::RoundedRect {
+                border_width,
+                border_color,
+                ..
+            } if *border_width > 0.0 => Some(*border_color),
+            _ => None,
+        })
+        .collect();
+    (rounded_fills(&drawn), strokes)
+}
+
+/// The kit's link: 40 tall, its box filled on hover and press, filled
+/// and rimmed while active with the tile raised under the icon; the
+/// label stays ink and the icon turns from gray to ink.
+#[test]
+fn nav_link_states_are_the_kit_link_on_its_own() {
+    let t = core();
+    let r = t.navigation.link;
+    assert_eq!((NavLink::height(&t), NavLink::icon_slot(&t)), (40.0, 32.0));
+    let b = Rect::new(0.0, 0.0, 240.0, NavLink::height(&t));
+    let mut link = NavLink::new("Cards").icon("clipboard");
+    let (fills, rims) = link_faces(&link, b, &t);
+    assert!(
+        fills.is_empty() && rims.is_empty(),
+        "nothing behind a link at rest"
+    );
+    let label = |l: &NavLink| texts(&nodes(|c| l.render(c, b, &t)))[0].1;
+    assert_eq!(label(&link), r.rest.label.0);
+
+    link.handle_event(&move_to(20.0, 20.0), b);
+    assert_eq!(link_faces(&link, b, &t).0, vec![r.hover.fill.0]);
+    link.handle_event(&down(20.0, 20.0), b);
+    assert_eq!(link_faces(&link, b, &t).0, vec![r.pressed.fill.0]);
+    link.handle_event(&up(20.0, 20.0), b);
+
+    let active = NavLink::new("Cards").icon("clipboard").active(true);
+    let (fills, rims) = link_faces(&active, b, &t);
+    let tile = r.tile.expect("the kit link has a tile");
+    assert!(fills.contains(&r.active.fill.0));
+    assert!(fills.contains(&tile.fill_current.0), "the tile rises");
+    assert!(rims.contains(&r.active.border.0));
+    assert_eq!(label(&active), r.active.label.0);
+}
+
+/// The sidebar draws its links with its own recipe: the look of before,
+/// with no tile and no hover box, in core as in hoff.
+#[test]
+fn nav_link_in_the_sidebar_keeps_the_look_of_before() {
+    for t in [core(), hoff()] {
+        let r = t.navigation.sidebar_link;
+        assert!(r.tile.is_none());
+        assert_eq!(r.hover.fill.0[3], 0.0);
+        let b = Rect::new(0.0, 0.0, 240.0, r.height);
+        let mut link = NavLink::new("Cards").icon("clipboard");
+        link.handle_event(&move_to(20.0, 20.0), b);
+        let drawn = nodes(|c| link.render_with(c, LayerId::DEFAULT, b, &t, &r));
+        assert!(rounded_fills(&drawn).is_empty());
+        assert_eq!(texts(&drawn)[0].1, t.glass.text_default.0);
+    }
+}
+
+/// Narrower than its tile, its paddings and a label's least room, the
+/// kit link draws its rail form: the icon alone, centered on its row.
+#[test]
+fn nav_link_rail_form_centers_the_tile() {
+    let t = core();
+    let link = NavLink::new("Cards")
+        .icon("clipboard")
+        .hint("1")
+        .active(true);
+    let rail = Rect::new(0.0, 0.0, 48.0, NavLink::height(&t));
+    let drawn = nodes(|c| link.render(c, rail, &t));
+    assert!(texts(&drawn).is_empty(), "no label or hint in the rail");
+    let tile = t.navigation.link.tile.unwrap();
+    let raised = drawn.iter().find_map(|n| match n {
+        SceneNode::RoundedRect { x, w, color, .. } if *color == tile.fill_current.0 => {
+            Some((*x, *w))
+        }
+        _ => None,
+    });
+    assert_eq!(raised, Some(((48.0 - tile.size) / 2.0, tile.size)));
+    let full = Rect::new(0.0, 0.0, 240.0, NavLink::height(&t));
+    let shown = texts(&nodes(|c| link.render(c, full, &t)));
+    assert_eq!(
+        shown.iter().map(|s| s.0.as_str()).collect::<Vec<_>>(),
+        ["1", "Cards"]
+    );
+}
+
+/// A trail given exactly its preferred width draws every crumb whole:
+/// the sums of measured widths never cut the current place.
+#[test]
+fn breadcrumb_at_its_preferred_width_draws_every_crumb_whole() {
+    for t in [core(), hoff()] {
+        let bc = Breadcrumb::new(["Home", "Projects", "plev", "Components"]);
+        for x in [0.0, 13.3, 288.0, 1001.7] {
+            let w = bc.preferred_width(&t);
+            let bounds = Rect::new(x, 0.0, w, Breadcrumb::height(&t));
+            let drawn: Vec<String> = texts(&nodes(|c| bc.render(c, bounds, &t)))
+                .into_iter()
+                .map(|(s, _)| s)
+                .collect();
+            assert_eq!(drawn, ["Home", "Projects", "plev", "Components"], "{x}");
+        }
+    }
 }

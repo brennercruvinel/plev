@@ -23,6 +23,10 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 const ELLIPSIS: &str = "\u{2026}";
 
+/// How far a crumb may run past its room before it is cut: the sums of
+/// measured widths drift by a fraction of a pixel.
+const SLACK: f32 = 0.5;
+
 #[derive(Clone, Debug)]
 pub struct Breadcrumb {
     pub crumbs: Vec<String>,
@@ -205,7 +209,8 @@ impl Breadcrumb {
                     None => ELLIPSIS,
                 };
                 let x0 = x.min(bounds.right());
-                let w = Self::crumb_w(text, &style, theme).min(bounds.right() - x0);
+                let (full, room) = (Self::crumb_w(text, &style, theme), bounds.right() - x0);
+                let w = if full > room + SLACK { room } else { full };
                 let r = Rect::new(x0, y, w, h);
                 x += w + sep;
                 (i, r)
@@ -302,7 +307,7 @@ impl Breadcrumb {
             };
             // Only a crumb cut to its room truncates (the measure of a
             // whole one, padding taken off again, may round under it).
-            let text = if r.w < Self::crumb_w(text, &style, theme) {
+            let text = if r.w + SLACK < Self::crumb_w(text, &style, theme) {
                 TextMeasurer::truncate_to_width(text, &style, r.w - recipe.pad_x * 2.0)
             } else {
                 text.to_string()

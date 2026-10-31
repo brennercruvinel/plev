@@ -13,8 +13,10 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::hoff_core::SHADES;
+use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::tokens::TypographyScale;
-use crate::styling::theme::{IconSize, Theme};
+use crate::styling::theme::{ControlSize, IconSize, Theme};
+use crate::widgets::content::DisclosureTile;
 
 /// A text run: size, line height and weight in px, in the theme's family
 /// and tracking.
@@ -71,10 +73,70 @@ pub struct BreadcrumbRecipe {
     pub gap: f32,
 }
 
+/// A link's row in one state: its box (fill and rim, alpha 0 is none)
+/// and the tones of its label and its icon.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LinkSurface {
+    pub fill: Color,
+    pub border: Color,
+    pub label: Color,
+    pub icon: Color,
+}
+
+/// A navigation link: the row, its states, the icon in a slot (or on a
+/// tile that rises while the link is current), the label and the
+/// trailing hint. Paddings include the rim.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct NavLinkRecipe {
+    pub height: f32,
+    pub pad_start: f32,
+    pub pad_end: f32,
+    pub radius: f32,
+    pub border_width: f32,
+    pub rest: LinkSurface,
+    pub hover: LinkSurface,
+    pub pressed: LinkSurface,
+    /// The link to where the user is (`active`).
+    pub active: LinkSurface,
+    /// The icon's box: a tile with its own face (the kit), or a bare
+    /// slot of `slot` px (`None`). With a tile the link reads the tile's
+    /// geometry, its raised fill and its shadow; the icon's tones are the
+    /// surfaces'.
+    pub tile: Option<DisclosureTile>,
+    pub slot: f32,
+    pub icon: f32,
+    /// Between the icon's box and the label.
+    pub icon_gap: f32,
+    pub label: NavText,
+    pub hint: NavText,
+    pub hint_color: Color,
+    /// Between the label and a hint or badge, and what the preferred
+    /// width keeps for that space.
+    pub trailing_gap: f32,
+    pub trailing_room: f32,
+    /// Narrower than the icon's box, the paddings and this, the row
+    /// draws its rail form (the icon alone).
+    pub label_min: f32,
+    /// Between two links of a list.
+    pub link_gap: f32,
+}
+
+impl NavLinkRecipe {
+    /// The icon's box edge: the tile's, or the bare slot's.
+    pub fn icon_box(&self) -> f32 {
+        self.tile.map_or(self.slot, |t| t.size)
+    }
+}
+
 /// The navigation slot of a theme (`theme.navigation`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct NavigationTokens {
     pub breadcrumb: BreadcrumbRecipe,
+    /// The navigation menu's link (`NavLink` on its own).
+    pub link: NavLinkRecipe,
+    /// The link as the sidebar draws it: the look of before in every
+    /// theme until the sidebar moves to the kit.
+    pub sidebar_link: NavLinkRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -85,7 +147,7 @@ impl NavigationTokens {
     /// The hoff core kit, values as written in its class lists, and the
     /// derivations where it has no such component.
     pub fn hoff_core() -> Self {
-        let [_paper, _shade2, wash, line, _, gray, _, _, ink] = SHADES;
+        let [paper, _shade2, wash, line, _, gray, _, _, ink] = SHADES;
 
         // No breadcrumb in the kit: a crumb is the home sidebar's link
         // text (`HomeSidebar/NavLink/index.tsx:13`, `text-[0.75rem]
@@ -113,7 +175,70 @@ impl NavigationTokens {
             gap: 2.0,
         };
 
-        Self { breadcrumb }
+        // HomeSidebar/NavLink/index.tsx: the row `p-0.75 rounded-xl
+        // text-[0.75rem] font-semibold border` (:13), `hover:bg-[#f1f1f1]`,
+        // `bg-[#f1f1f1] border-[#ececec]` while active, `border-
+        // transparent` otherwise (:14-16); the tile `size-8 mr-3
+        // rounded-lg`, raised `bg-[#fcfcfc] shadow-[0_0_4px_0_rgba(18,18,
+        // 18,0.10)]` while active (:21-24); the icon `20` in `#7b7b7b`,
+        // `#121212` hovered or active (:27-31); the label in the body's
+        // ink, leading 1rem (`GuidelineSidebar:69`). The row is 3 + 32 + 3
+        // inside a 1 px rim: 40. Derived where the kit link has nothing:
+        // the trailing pad is the dropdown's `pr-3` (`Dropdown:25`), the
+        // hint the group title's text (`text-[0.75rem] leading-[1rem]
+        // font-medium text-[#7b7b7b]/70`, `GuidelineSidebar:59`), a press
+        // the active rim's tone as a fill.
+        let surface = |fill, border, icon| LinkSurface {
+            fill,
+            border,
+            label: ink,
+            icon,
+        };
+        let none = Color::TRANSPARENT;
+        let link = NavLinkRecipe {
+            height: 40.0,
+            pad_start: 4.0,
+            pad_end: 12.0,
+            radius: 12.0,
+            border_width: 1.0,
+            rest: surface(none, none, gray),
+            hover: surface(wash, none, ink),
+            pressed: surface(line, none, ink),
+            active: surface(wash, line, ink),
+            tile: Some(DisclosureTile {
+                size: 32.0,
+                radius: 8.0,
+                gap: 12.0,
+                icon: 20.0,
+                fill_current: paper,
+                shadow_current: ShadowSpec::new([0.0, 0.0], 4.0, 0.0, tint(ink, 0.10)),
+                icon_rest: gray,
+                icon_current: ink,
+            }),
+            slot: 32.0,
+            icon: 20.0,
+            icon_gap: 12.0,
+            label: NavText::new(12.0, 16.0, 600),
+            hint: NavText::new(12.0, 16.0, 500),
+            hint_color: tint(gray, 0.7),
+            trailing_gap: 8.0,
+            trailing_room: 20.0,
+            label_min: 32.0,
+            // The guideline sidebar's list, `flex flex-col gap-0.5`
+            // (`GuidelineSidebar:62`).
+            link_gap: 2.0,
+        };
+
+        // The sidebar is the gallery's chrome: it keeps the look of
+        // before until it moves to the kit as a whole (task-104 step 4).
+        // That look is read from the finished core theme, which
+        // `Theme::hoff_core` writes here last (`sidebar_link_of_before`);
+        // the kit link stands in until then.
+        Self {
+            breadcrumb,
+            link,
+            sidebar_link: link,
+        }
     }
 
     /// What every other theme drew these widgets with before the slot:
@@ -138,6 +263,53 @@ impl NavigationTokens {
             chevron: theme.control.icon(IconSize::Sm),
             gap: theme.spacing.xs,
         };
-        Self { breadcrumb }
+        let link = Self::sidebar_link_of_before(theme);
+        Self {
+            breadcrumb,
+            link,
+            sidebar_link: link,
+        }
+    }
+
+    /// The link of before, in `theme`: one `Lg` control at the nav
+    /// radius, the bare slot of an `Xs` control with the `Md` icon, a
+    /// base-2sm label; faint at rest, the default text hovered, the
+    /// active text on the glass's active wash inside its edge while
+    /// active. Every derived link, and the sidebar's in every theme.
+    pub(crate) fn sidebar_link_of_before(theme: &Theme) -> NavLinkRecipe {
+        let (glass, control) = (&theme.glass, &theme.control);
+        let none = Color::TRANSPARENT;
+        let tone = |c: Color| LinkSurface {
+            fill: none,
+            border: none,
+            label: c,
+            icon: c,
+        };
+        NavLinkRecipe {
+            height: control.height(ControlSize::Lg),
+            pad_start: theme.spacing.sm,
+            pad_end: theme.spacing.sm,
+            radius: theme.shape.nav,
+            border_width: control.edge_width,
+            rest: tone(glass.text_faint),
+            hover: tone(glass.text_default),
+            pressed: tone(glass.text_default),
+            active: LinkSurface {
+                fill: glass.surface_active,
+                border: glass.edge,
+                ..tone(glass.text_active)
+            },
+            tile: None,
+            slot: control.height(ControlSize::Xs),
+            icon: control.icon(IconSize::Md),
+            icon_gap: theme.spacing.xs,
+            label: NavText::of(&theme.typography.base_2sm()),
+            hint: NavText::of(&theme.typography.caption_r()),
+            hint_color: glass.text_placeholder,
+            trailing_gap: theme.spacing.sm,
+            trailing_room: theme.spacing.lg,
+            label_min: theme.spacing.xl,
+            link_gap: theme.spacing.xs,
+        }
     }
 }

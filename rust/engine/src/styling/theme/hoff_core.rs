@@ -127,7 +127,7 @@ impl Theme {
             full: 9999.0,
         };
         let control = ControlTokens::hoff();
-        Self {
+        let mut theme = Self {
             glass: GlassTokens {
                 surface: paper,
                 surface_hover: shade2,
@@ -200,6 +200,10 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff_core(),
-        }
+        };
+        // The sidebar keeps its look of before until it moves to the kit
+        // (task-104 front G, step 4); that look reads the finished theme.
+        theme.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(&theme);
+        theme
     }
 }

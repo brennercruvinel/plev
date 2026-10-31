@@ -17,4 +17,4 @@ pub use panel_header::PanelHeader;
 pub use sidebar::{NavGroup, Sidebar};
 pub use split_pane::{SplitDirection, SplitPane};
 pub use tabs::Tabs;
-pub use tokens::{BreadcrumbRecipe, NavText, NavigationTokens};
+pub use tokens::{BreadcrumbRecipe, LinkSurface, NavLinkRecipe, NavText, NavigationTokens};
