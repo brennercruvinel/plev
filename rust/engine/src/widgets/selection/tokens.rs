@@ -13,10 +13,13 @@
 //! The toggle reads the buttons' own `toolbar` recipes and has nothing
 //! here.
 
+use super::legible::full;
+pub use super::legible::{MARK_CONTRAST, TEXT_CONTRAST, legible, legible_at};
 use crate::styling::color::Color;
+use crate::styling::theme::ButtonRecipe;
+use crate::styling::theme::ButtonSurface;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 use crate::widgets::buttons::tokens::ButtonTokens;
 
 /// The kit's segmented control (`components/Tabs/index.tsx`): a well
@@ -213,67 +216,16 @@ fn shade(a: f32) -> Color {
 }
 
 /// A 1px ring around the surface (`0 0 0 1px color`, the css border).
-fn ring(color: Color) -> ShadowSpec {
+pub(super) fn ring(color: Color) -> ShadowSpec {
     ShadowSpec::new([0.0, 0.0], 0.0, 1.0, color)
 }
 
-const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
-
-/// WCAG 2.2 AAA for text (1.4.6), the bar the front's text colors keep:
-/// a color of the kit or of a theme that falls under it gives way to one
-/// that passes (`theme/tests/contrast.rs` measures the pairs).
-pub const TEXT_CONTRAST: f32 = 7.0;
-
-/// WCAG 2.2 AA for the parts of a control a person must see (1.4.11):
-/// today's ring.
-pub const MARK_CONTRAST: f32 = 3.0;
-
-/// `fg` composed over the opaque linear `under`, in linear light.
-fn over(fg: Color, under: [f32; 3]) -> [f32; 3] {
-    let [r, g, b, a] = fg.to_linear_array();
-    let mix = |c: f32, u: f32| c * a + u * (1.0 - a);
-    [mix(r, under[0]), mix(g, under[1]), mix(b, under[2])]
-}
-
-/// `surface` at its full strength: its fill opaque. The switch's well on
-/// is the ink at 70%, where the knob's paper reads 2.8:1; a check must
-/// read (1.4.11), so the box takes the ink whole.
-fn full(surface: &ButtonSurface) -> ButtonSurface {
-    let opaque = |c: Color| Color::rgba(c.0[0], c.0[1], c.0[2], 1.0);
-    ButtonSurface {
-        fill: surface.fill.map(opaque),
-        ..surface.clone()
-    }
-}
-
-/// WCAG contrast of two linear colors, lighter over darker.
-fn ratio(a: [f32; 3], b: [f32; 3]) -> f32 {
-    let lum = |[r, g, b]: [f32; 3]| 0.2126 * r + 0.7152 * g + 0.0722 * b;
-    let (la, lb) = (lum(a), lum(b));
-    (la.max(lb) + 0.05) / (la.min(lb) + 0.05)
-}
-
-/// `preferred` where it reads at [`TEXT_CONTRAST`] on `fill` laid over
-/// `page`, else `fallback`: the kit's or the theme's quiet text where it
-/// is legible, the stronger one where it is not.
-pub fn legible(preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
-    legible_at(TEXT_CONTRAST, preferred, fallback, fill, page)
-}
-
-/// [`legible`] at the contrast `need`.
-pub fn legible_at(need: f32, preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
-    let under = over(fill, over(page, [0.0; 3]));
-    if ratio(over(preferred, under), under) >= need {
-        preferred
-    } else {
-        fallback
-    }
-}
+pub(super) const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
 /// The segment ladder, the same under every theme: the kit's heights
 /// and text, `font-semibold`; the line box is the text's own 1.5
 /// (tailwind's body leading, which the arbitrary sizes inherit).
-fn segment_sizes() -> [SegmentMetrics; 2] {
+pub(super) fn segment_sizes() -> [SegmentMetrics; 2] {
     [
         SegmentMetrics {
             height: 32.0,
@@ -486,137 +438,6 @@ impl SelectionTokens {
                 edge: 1.0,
                 sizes: segment_sizes(),
                 disabled_alpha: 0.30,
-            },
-        }
-    }
-
-    /// The recipe of any other theme, from the theme built without it
-    /// (`Theme::derive_front_slots` fills the slots last): the well is the
-    /// hover tone ringed by the divider, the thumb the background ringed
-    /// by the active border, the labels the theme's text and its mid tone.
-    pub fn derive(theme: &Theme) -> Self {
-        let kit = Self::hoff_core();
-        let c = &theme.colors;
-        let track = ButtonSurface {
-            fill: [c.bg_hover; 2],
-            overlay: NONE,
-            shadow: vec![ring(c.divider)],
-            text: c.text,
-        };
-        let thumb = ButtonSurface {
-            fill: [c.bg; 2],
-            overlay: NONE,
-            shadow: vec![ring(c.border_active)],
-            text: c.text,
-        };
-        let button_group = ButtonGroupTokens {
-            shell: ButtonSurface {
-                fill: [c.surface; 2],
-                overlay: NONE,
-                shadow: vec![ring(c.divider)],
-                text: c.text,
-            },
-            separator: c.divider,
-            ..kit.button_group
-        };
-        // the kit's call to action is ink on paper, the page's colors
-        // turned over: so is a derived theme's
-        let chosen = ButtonSurface {
-            fill: [c.text; 2],
-            overlay: NONE,
-            shadow: Vec::new(),
-            text: c.bg,
-        };
-        // the kit's well is a step off the page and its on the ink at
-        // 70%: the hover tone ringed by the divider, and the text at the
-        // same strength; the knob is the page
-        let strength = kit.switch.on.fill[0].0[3];
-        let on = Color::rgba(
-            c.text.0[0],
-            c.text.0[1],
-            c.text.0[2],
-            c.text.0[3] * strength,
-        );
-        let switch = SwitchTokens {
-            off: ButtonSurface {
-                fill: [c.bg_hover; 2],
-                overlay: NONE,
-                shadow: vec![ring(c.divider)],
-                text: c.text,
-            },
-            on: ButtonSurface {
-                fill: [on; 2],
-                overlay: NONE,
-                shadow: Vec::new(),
-                text: c.text,
-            },
-            knob: ButtonSurface {
-                fill: [c.bg; 2],
-                overlay: NONE,
-                shadow: vec![ring(c.divider)],
-                text: c.text,
-            },
-            ..kit.switch
-        };
-        // the well a step off the page, filled with the quiet text at the
-        // kit's strength; the thumb is the page, ringed as the knob
-        let part = kit.slider.fill.0[3];
-        let slider = SliderTokens {
-            track: ButtonSurface {
-                fill: [c.bg_hover; 2],
-                overlay: NONE,
-                shadow: Vec::new(),
-                text: c.text,
-            },
-            fill: Color::rgba(c.text_mid.0[0], c.text_mid.0[1], c.text_mid.0[2], part),
-            thumb: switch.knob.clone(),
-            ..kit.slider
-        };
-        let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
-        let checkbox = CheckboxTokens {
-            off: ButtonSurface {
-                shadow: vec![ring(edge)],
-                ..switch.off.clone()
-            },
-            off_hover: ButtonSurface {
-                overlay: c.bg_hover,
-                shadow: vec![ring(edge)],
-                ..switch.off.clone()
-            },
-            on: full(&switch.on),
-            mark: switch.knob.fill[0],
-            label: c.text,
-            ..kit.checkbox
-        };
-        let radio = RadioTokens {
-            row_hover: c.bg_hover,
-            label: c.text,
-            ..kit.radio
-        };
-        Self {
-            segmented: SegmentedTokens {
-                text: legible(c.text_mid, c.text, track.fill[0], c.bg),
-                track,
-                thumb,
-                text_hover: c.text,
-                ..kit.segmented
-            },
-            button_group,
-            switch,
-            checkbox,
-            slider,
-            radio,
-            calendar: CalendarTokens {
-                weekday: legible(c.text_mid, c.text, c.surface, c.bg),
-                today: legible_at(MARK_CONTRAST, c.border_active, c.text, c.surface, c.bg),
-                today_w: theme.control.edge_width,
-                chosen: ButtonRecipe {
-                    rest: chosen.clone(),
-                    hover: chosen.clone(),
-                    active: chosen,
-                    ..kit.calendar.chosen
-                },
-                ..kit.calendar
             },
         }
     }
