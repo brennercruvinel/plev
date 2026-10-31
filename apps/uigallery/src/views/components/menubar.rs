@@ -15,7 +15,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::OverlayManager;
-use engine::widgets::overlay::menubar::Menubar;
+use engine::widgets::overlay::menubar::{Menubar, render_bar};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, MenuEntry, Rect, WidgetEvent, rounded_rect,
 };
@@ -101,7 +101,7 @@ impl MenubarPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
         let menu_h = self.shown.menus[0].1.menu.size(theme).1;
-        let bar_h = ButtonSize::Sm.height(theme);
+        let bar_h = ButtonSize::Sm.height(theme) + theme.overlay.menubar.pad * 2.0;
         let open_h = frame + bar_h + theme.overlay.popover.clearance.gap + menu_h;
         let groups = [
             (1, vec![showcase::card_height(bar_h, theme)]),
@@ -114,10 +114,28 @@ impl MenubarPage {
         showcase::content_height(&self.layout(content, theme), content)
     }
 
-    /// The titles laid out in a row at the top of `body`, wrapping.
+    /// The titles laid out in a row at the top of `body`, inside the bar's
+    /// padding, wrapping.
     fn row(buttons: &[Button], body: Rect, theme: &Theme) -> Vec<Rect> {
+        let t = &theme.overlay.menubar;
+        let inner = body.inset(t.pad);
         let sizes = buttons.iter().map(|b| b.preferred_size(theme));
-        flow(body, body.y, theme.spacing.xs, sizes).0
+        flow(inner, inner.y, t.gap, sizes).0
+    }
+
+    /// The bar around `rects`, its padding outside them.
+    fn bar(rects: &[Rect], theme: &Theme) -> Rect {
+        let pad = theme.overlay.menubar.pad;
+        let (x0, y0) = rects
+            .iter()
+            .fold((f32::MAX, f32::MAX), |(x, y), r| (x.min(r.x), y.min(r.y)));
+        let (x1, y1) = rects.iter().fold((f32::MIN, f32::MIN), |(x, y), r| {
+            (x.max(r.right()), y.max(r.bottom()))
+        });
+        if rects.is_empty() {
+            return Rect::default();
+        }
+        Rect::new(x0 - pad, y0 - pad, x1 - x0 + pad * 2.0, y1 - y0 + pad * 2.0)
     }
 
     /// The live titles and, for each, where its menu goes in `viewport`.
@@ -240,12 +258,10 @@ impl MenubarPage {
             }
         }
         showcase::card(c, layout[0].cards[0], LIVE_CHIP, theme);
-        for (i, (title, (rect, panel))) in self
-            .titles
-            .iter()
-            .zip(self.live(content, viewport, theme))
-            .enumerate()
-        {
+        let live = self.live(content, viewport, theme);
+        let rects: Vec<Rect> = live.iter().map(|(r, _)| *r).collect();
+        render_bar(c, LayerId::DEFAULT, Self::bar(&rects, theme), theme);
+        for (i, (title, (rect, panel))) in self.titles.iter().zip(live).enumerate() {
             if self.bar.menus[i].1.is_open() {
                 Self::highlight(c, rect, theme);
             }
@@ -269,6 +285,7 @@ impl MenubarPage {
         showcase::card(c, card, "Open", theme);
         let body = showcase::body(card, theme);
         let rects = Self::row(&self.shown_titles, body, theme);
+        render_bar(c, LayerId::DEFAULT, Self::bar(&rects, theme), theme);
         for (i, (title, rect)) in self.shown_titles.iter().zip(&rects).enumerate() {
             let menu = &self.shown.menus[i].1;
             if menu.is_open() {

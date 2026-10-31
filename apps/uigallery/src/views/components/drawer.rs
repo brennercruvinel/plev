@@ -19,7 +19,7 @@ use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::overlay::drawer::Drawer;
 use engine::widgets::overlay::sheet::paint_scrim;
-use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent};
+use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect_stroke};
 
 use super::showcase::{self, CARD_H, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
@@ -140,6 +140,17 @@ impl DrawerPage {
         paint_scrim(c, LayerId::DEFAULT, body, &theme.overlay.drawer.panel, 1.0);
         self.shown
             .render_in(c, LayerId::DEFAULT, theme, panel, body);
+        // The container's own edge, a window's, so the drawer's top and
+        // held side read against it and not as the card's content.
+        c.push(rounded_rect_stroke(
+            body.x,
+            body.y,
+            body.w,
+            body.h,
+            0.0,
+            theme.colors.divider.0,
+            theme.control.edge_width,
+        ));
     }
 
     fn set_focus(&mut self, on: bool) {

@@ -1,6 +1,7 @@
-//! What the popover draws: the panel's surface, and the kit's trigger
-//! (a value and a chevron in a bordered pill, raised while its panel is
-//! open). Every value is `theme.overlay.popover`.
+//! What the popover draws: the panel's surface, a line of its content
+//! (the kit's zoom `Line`), and the kit's trigger (a value and a chevron
+//! in a bordered pill, raised while its panel is open). Every value is
+//! `theme.overlay.popover`.
 
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
@@ -8,7 +9,9 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Press, paint_surface};
+use crate::widgets::content::kbd::Kbd;
 use crate::widgets::icons;
+use crate::widgets::recipe::{focus_ring_inside, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// The panel's surface at `rect`: the drop shadow, the fill, the ring.
@@ -18,6 +21,63 @@ pub fn render_panel(c: &mut Compositor, layer: LayerId, rect: Rect, theme: &Them
     let t = &theme.overlay.popover;
     let radius = t.radius.min(rect.h / 2.0).min(rect.w / 2.0);
     paint_surface(c, layer, rect, radius, &t.panel, 1.0, false, theme);
+}
+
+/// What a line of the panel shows: its label, its keys, its check, and
+/// whether it is lit (under the pointer) or holds the keyboard's focus.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Line<'a> {
+    pub label: &'a str,
+    pub keys: Option<&'a str>,
+    pub checked: bool,
+    pub lit: bool,
+    pub focused: bool,
+}
+
+/// One line of the panel at `rect` (`Zoom/index.tsx:14-35`): the lit fill,
+/// the check in its slot (the slot kept unchecked), the label at the
+/// start, the keys in a cap at the end, the focus ring inside.
+pub fn render_line(c: &mut Compositor, layer: LayerId, rect: Rect, line: Line, theme: &Theme) {
+    let l = &theme.overlay.popover.line;
+    let radius = l.radius.min(rect.h / 2.0);
+    if line.lit || line.focused {
+        c.push_to_layer(
+            layer,
+            rounded_rect(rect.x, rect.y, rect.w, rect.h, radius, l.hover_fill.0),
+        );
+    }
+    let x = rect.x + l.pad_x;
+    if line.checked {
+        let at = (l.slot - l.check) / 2.0;
+        let y = rect.y + (rect.h - l.check) / 2.0;
+        if let Some(node) = icons::icon_at("check", l.check, l.check_color.0, x + at, y) {
+            c.push_to_layer(layer, node);
+        }
+    }
+    c.push_to_layer(
+        layer,
+        SceneNode::Text {
+            key: TextNodeKey::from_style(line.label, &l.label, None),
+            x: x + l.slot + l.slot_gap,
+            y: rect.y + (rect.h - l.label.line_height) / 2.0,
+            color: l.text.0,
+        },
+    );
+    if let Some(keys) = line.keys {
+        let cap = Kbd::new(keys);
+        let (w, h) = cap.preferred_size(theme);
+        let w = w.max(l.key_min_w);
+        let at = Rect::new(
+            rect.right() - l.pad_x - w,
+            rect.y + (rect.h - h) / 2.0,
+            w,
+            h,
+        );
+        cap.render_to_layer(c, layer, at, theme);
+    }
+    if line.focused {
+        c.push_to_layer(layer, focus_ring_inside(rect, radius, theme));
+    }
 }
 
 /// The kit's popover trigger (`ZoomControl`): the value it shows and a

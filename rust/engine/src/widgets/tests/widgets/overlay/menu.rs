@@ -123,3 +123,16 @@ fn a_reader_hears_a_row_s_check_and_its_shortcut() {
     assert_eq!(node("2").state.get("checked"), Some(&Value::Bool(true)));
     assert_eq!(node("3").state.get("checked"), Some(&Value::Bool(false)));
 }
+
+#[test]
+fn the_menubar_is_the_kit_s_toolbar_on_core_and_the_theme_s_surface_elsewhere() {
+    use crate::widgets::overlay::tokens::MenubarTokens;
+    let core = Theme::hoff_core();
+    let bar = &core.overlay.menubar;
+    // rounded-[1.25rem], p-2 gap-2, two drops and the #ECECEC border.
+    assert_eq!((bar.radius, bar.pad, bar.gap), (20.0, 8.0, 8.0));
+    assert_eq!(bar.surface.shadow.len(), 3);
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        assert_eq!(theme.overlay.menubar, MenubarTokens::derive(&theme));
+    }
+}
