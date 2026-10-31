@@ -75,7 +75,9 @@ pub enum Kind {
 pub struct Control {
     pub kind: Kind,
     id: Option<SemId>,
-    focused: bool,
+    /// The node of it the keyboard focus is on (itself, a tab, an
+    /// option, its end select).
+    focused: Option<SemId>,
 }
 
 impl Control {
@@ -83,7 +85,7 @@ impl Control {
         Self {
             kind,
             id: None,
-            focused: false,
+            focused: None,
         }
     }
 
@@ -112,7 +114,7 @@ impl Control {
     }
 
     pub fn is_focused(&self) -> bool {
-        self.focused
+        self.focused.is_some()
     }
 
     /// Whether `id` is this control or a node it projects under it (a
@@ -141,17 +143,18 @@ impl Control {
     fn set_focus(&mut self, id: Option<&SemId>) {
         let here = id.filter(|id| self.owns(id));
         let tab = here.and_then(|id| self.index_of(id));
-        self.focused = here.is_some();
+        self.focused = here.cloned();
+        let on = self.focused.is_some();
         match &mut self.kind {
-            Kind::Button(w) => w.set_focused(self.focused),
-            Kind::Icon(w, _) => w.set_focused(self.focused),
-            Kind::Switch(w, _) => w.set_focused(self.focused),
-            Kind::Select(w, _) => w.set_focused(self.focused),
-            Kind::Slider(w, _) => w.set_focused(self.focused),
-            Kind::Field(w, _) => w.set_icon_focus(self.focused),
+            Kind::Button(w) => w.set_focused(on),
+            Kind::Icon(w, _) => w.set_focused(on),
+            Kind::Switch(w, _) => w.set_focused(on),
+            Kind::Select(w, _) => w.set_focused(on),
+            Kind::Slider(w, _) => w.set_focused(on),
+            Kind::Field(w, _) => w.set_icon_focus(on),
             Kind::Group(w, _) => {
                 let on_choice = here.is_some_and(|id| w.choice_id().as_ref() == Some(id));
-                w.input.set_focused(self.focused && !on_choice);
+                w.input.set_focused(on && !on_choice);
                 if let Some(choice) = &mut w.choice {
                     choice.set_focused(on_choice);
                 }
@@ -159,6 +162,27 @@ impl Control {
             Kind::Tabs(w, _) => w.set_focused_tab(tab),
             Kind::Item(_) => {}
         }
+    }
+
+    /// The node the focus is projected on: an option of a list that has
+    /// closed gives it back to its select.
+    fn focus_shown(&self) -> Option<SemId> {
+        let at = self.focused.clone()?;
+        let option_of = |select: &SemId| {
+            at.as_str()
+                .strip_prefix(select.as_str())
+                .is_some_and(|rest| rest.starts_with('['))
+        };
+        Some(match &self.kind {
+            Kind::Select(w, _) if !w.is_open() && self.id.as_ref().is_some_and(option_of) => {
+                self.id.clone()?
+            }
+            Kind::Group(g, _) if !self.is_open() => match g.choice_id() {
+                Some(choice) if option_of(&choice) => choice,
+                _ => at,
+            },
+            _ => at,
+        })
     }
 
     /// An open select: it has every event until it closes.
@@ -231,8 +255,8 @@ impl Control {
             Kind::Group(w, l) => w.project(b, id, l.as_str(), p),
             Kind::Item(i) => project_item(b, id, i, parent),
         }
-        if self.focused {
-            b.focus(id);
+        if let Some(at) = self.focus_shown() {
+            b.focus(&at);
         }
     }
 
@@ -439,7 +463,7 @@ impl Controls {
         let mut took = false;
         for control in &mut self.0 {
             control.set_focus(id);
-            took |= control.focused;
+            took |= control.focused.is_some();
         }
         took
     }
