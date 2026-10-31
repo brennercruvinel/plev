@@ -2,8 +2,9 @@
 //! ButtonsPage draws it: groups with a title and a bottom rule, cards in
 //! rows, one state per card behind a chip that names it, the widget
 //! centered in its card. A page keeps its widgets and its projection; this
-//! lays its groups out and draws the frame around them. Every visual value
-//! comes from the theme.
+//! lays its groups out and draws the frame around them. The values are
+//! the ButtonsPage's as they were, named here; moving them onto
+//! typography tokens is left to the audit of the 47 pages.
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
@@ -14,6 +15,14 @@ use engine::widgets::prelude::{Rect, rounded_rect, rounded_rect_stroke};
 pub(crate) const CARD_H: f32 = 200.0;
 /// Narrowest a card column may get before the row drops a column.
 pub(crate) const CARD_MIN_W: f32 = 300.0;
+/// The group title's line height and weight, at the theme's `title_sm`
+/// size.
+pub(crate) const TITLE_LINE_H: f32 = 28.0;
+pub(crate) const TITLE_WEIGHT: u16 = 500;
+/// The chip label's line height and weight, at the theme's `caption`
+/// size.
+pub(crate) const CHIP_LINE_H: f32 = 16.0;
+pub(crate) const CHIP_WEIGHT: u16 = 500;
 
 /// Where one group lands: its title's top, its cards, the rule under it.
 #[derive(Debug)]
@@ -34,12 +43,18 @@ fn title_gap(theme: &Theme) -> f32 {
     theme.spacing.lg
 }
 
-fn title_style(theme: &Theme) -> TextStyle {
-    theme.typography.exact(theme.typography.title_sm, 28.0, 500)
+/// The group title's text style.
+pub(crate) fn title_style(theme: &Theme) -> TextStyle {
+    theme
+        .typography
+        .exact(theme.typography.title_sm, TITLE_LINE_H, TITLE_WEIGHT)
 }
 
-fn chip_style(theme: &Theme) -> TextStyle {
-    theme.typography.exact(theme.typography.caption, 16.0, 500)
+/// The chip label's text style.
+pub(crate) fn chip_style(theme: &Theme) -> TextStyle {
+    theme
+        .typography
+        .exact(theme.typography.caption, CHIP_LINE_H, CHIP_WEIGHT)
 }
 
 /// Columns a row actually gets at this width: the group's span until the
@@ -116,14 +131,16 @@ pub(crate) fn title(c: &mut Compositor, text: &str, content: Rect, y: f32, theme
     });
 }
 
-/// A card's frame and the chip naming the states it shows; the page draws
-/// the widget over it.
-pub(crate) fn card(c: &mut Compositor, rect: Rect, chip: &str, theme: &Theme) {
-    let style = chip_style(theme);
-    let pad_x = theme.spacing.md;
-    let pad_y = theme.spacing.xs;
+/// A card's frame and, in its top corner, the chip naming the states it
+/// shows; the page draws the widget over it.
+pub(crate) fn card(c: &mut Compositor, rect: Rect, chip_text: &str, theme: &Theme) {
+    card_frame(c, rect, theme);
     let inset = theme.spacing.sm;
-    // The card: a divider-colored hairline at the card radius.
+    chip(c, rect.x + inset, rect.y + inset, chip_text, theme);
+}
+
+/// The card alone: a divider-colored hairline at the card radius.
+pub(crate) fn card_frame(c: &mut Compositor, rect: Rect, theme: &Theme) {
     c.push(rounded_rect_stroke(
         rect.x,
         rect.y,
@@ -133,14 +150,24 @@ pub(crate) fn card(c: &mut Compositor, rect: Rect, chip: &str, theme: &Theme) {
         theme.colors.divider.0,
         1.0,
     ));
-    // The chip naming the states.
-    let (tw, _) = TextMeasurer::measure_styled(chip, &style, None);
-    let at = Rect::new(
-        rect.x + inset,
-        rect.y + inset,
-        tw + pad_x * 2.0,
-        style.line_height + pad_y * 2.0,
-    );
+}
+
+/// The chip's rect with its top-left at `(x, y)`, sized by its text.
+pub(crate) fn chip_rect(x: f32, y: f32, text: &str, theme: &Theme) -> Rect {
+    let style = chip_style(theme);
+    let (tw, _) = TextMeasurer::measure_styled(text, &style, None);
+    Rect::new(
+        x,
+        y,
+        tw + theme.spacing.md * 2.0,
+        style.line_height + theme.spacing.xs * 2.0,
+    )
+}
+
+/// A chip with its top-left at `(x, y)`: the pill and its label. Returns
+/// its rect.
+pub(crate) fn chip(c: &mut Compositor, x: f32, y: f32, text: &str, theme: &Theme) -> Rect {
+    let at = chip_rect(x, y, text, theme);
     c.push(rounded_rect(
         at.x,
         at.y,
@@ -150,11 +177,12 @@ pub(crate) fn card(c: &mut Compositor, rect: Rect, chip: &str, theme: &Theme) {
         theme.colors.bg_hover.0,
     ));
     c.push(SceneNode::Text {
-        key: TextNodeKey::from_style(chip, &style, None),
-        x: at.x + pad_x,
-        y: at.y + pad_y,
+        key: TextNodeKey::from_style(text, &chip_style(theme), None),
+        x: at.x + theme.spacing.md,
+        y: at.y + theme.spacing.xs,
         color: theme.colors.text.0,
     });
+    at
 }
 
 /// The rule under a group (`border-b`); a page leaves it off the last.
