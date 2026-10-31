@@ -235,7 +235,12 @@ impl Combobox {
     /// row saying there are none.
     fn panel(&self, bounds: Rect, theme: &Theme) -> (Rect, Window) {
         let n = self.matches().len().max(1);
-        let dd = list::panel(Self::control(bounds, theme), n, theme);
+        let dd = list::panel(
+            Self::control(bounds, theme),
+            n,
+            theme.form.select.panel.gap,
+            theme,
+        );
         (
             dd,
             Window::new(dd, n, self.scroll_for(theme).offset(), theme),
@@ -418,6 +423,7 @@ impl Combobox {
                 selected: self.selected == Some(m[k]),
                 highlighted: lit == Some(m[k]),
             },
+            &theme.form.select.panel.text,
             theme,
         );
     }

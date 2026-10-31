@@ -5,14 +5,27 @@
 //! and a rule, cards behind a chip naming their states. The widget is
 //! `engine::widgets::form::input_group::InputGroup`.
 //!
+//! The kit's Invite (`components/Invite/index.tsx`) is a group too: the
+//! inset box with a select at its end, whose list floats over the page.
+//!
 //! The page is a form page (`field::FormPage`): its ids under
 //! `input_group_page`, a group projected as its text field (named by its
 //! placeholder, described by its hint) with its icon button
-//! (`….action`) beside it.
+//! (`….action`) and its select (`….choice`) beside it.
 
+use engine::widgets::form::Select;
 use engine::widgets::form::input_group::{Addon, InputGroup};
+use engine::widgets::form::tokens::Look;
 
 use super::field::{FormPage, Group, card};
+
+/// The kit's Invite: who, in the inset box, and what they can do, in the
+/// select at its end.
+fn invite() -> InputGroup {
+    InputGroup::new("Email, name...")
+        .look(Look::Inset)
+        .end_select(Select::new(["can view", "can edit"], 0))
+}
 
 fn search() -> InputGroup {
     InputGroup::new("Search...")
@@ -27,6 +40,11 @@ pub fn page() -> FormPage {
             title: "Search",
             columns: 1,
             cards: vec![card("Default, Hover, Focus", search())],
+        },
+        Group {
+            title: "Invite",
+            columns: 1,
+            cards: vec![card("Default, Hover, Focus, Dropdown", invite())],
         },
         Group {
             title: "Addons",
@@ -102,6 +120,10 @@ mod tests {
                         if let (Some(a), Some(b)) = (l.start, l.end) {
                             assert!(a.right() <= b.x, "{w}: the addons meet");
                         }
+                        if let Some(c) = l.choice {
+                            assert!(c.x >= l.input.x && c.right() <= l.input.right());
+                            assert!(c.y >= l.input.y && c.bottom() <= l.input.bottom());
+                        }
                     }
                 }
             }
@@ -158,5 +180,32 @@ mod tests {
         )
         .unwrap();
         assert!(p.run(&req).is_ok());
+    }
+
+    /// The Invite: a press on its select opens the list over the cards
+    /// beneath, a press on a row picks it and closes the list; the box
+    /// keeps typing beside it.
+    #[test]
+    fn the_invite_s_select_opens_over_the_page_and_picks() {
+        let theme = Theme::hoff_core();
+        let mut p = page();
+        let rect = p.widget_rect((1, 0), content(), &theme).unwrap();
+        let g: &InputGroup = p.spec((1, 0)).and_then(|s| s.get()).unwrap();
+        let choice = g.layout(rect, &theme).choice.expect("a select");
+        assert!(choice.w >= 102.0, "never under the kit's w-25.5");
+        let (x, y) = choice.center();
+        p.handle_event(&WidgetEvent::MouseDown { x, y }, content(), &theme);
+        let g: &InputGroup = p.spec((1, 0)).and_then(|s| s.get()).unwrap();
+        let dd = g.dropdown_rect(rect, &theme).expect("open");
+        let row = theme.form.select.panel.row_h;
+        let (rx, ry) = (dd.x + 10.0, dd.y + theme.form.select.panel.pad + row * 1.5);
+        p.handle_event(&WidgetEvent::MouseDown { x: rx, y: ry }, content(), &theme);
+        let g: &InputGroup = p.spec((1, 0)).and_then(|s| s.get()).unwrap();
+        let c = g.choice.as_ref().unwrap();
+        assert_eq!((c.selected_label(), c.is_open()), (Some("can edit"), false));
+        let (bx, by) = (rect.x + 20.0, rect.y + rect.h / 2.0);
+        p.handle_event(&WidgetEvent::MouseDown { x: bx, y: by }, content(), &theme);
+        assert_eq!(p.focused(), Some((1, 0)));
+        assert!(p.handle_text("ada@hoff.dev"));
     }
 }

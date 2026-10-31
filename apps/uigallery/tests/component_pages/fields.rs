@@ -221,3 +221,28 @@ fn a_combobox_picks_the_same_option_from_the_three() {
         Some(Value::from("Remix"))
     );
 }
+
+const INVITE: &str = "input_group_page.group[1].card[0].choice";
+
+/// The Invite's select: a person's presses, a reader's presses and an
+/// agent's `select` give the same access, the list shut.
+#[test]
+fn the_invite_s_select_picks_the_same_access_from_the_three() {
+    let option = "input_group_page.group[1].card[0].choice[1]";
+    let mut person = gallery("Input Group");
+    person.click(INVITE);
+    person.click(option);
+    let mut reader = gallery("Input Group");
+    reader.press(INVITE);
+    reader.press(option);
+    let agent = by_agent(
+        "Input Group",
+        "invite",
+        vec![ask_with(INVITE, "select", Value::from("can edit"))],
+    );
+    same("Input Group", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{INVITE}:selected")),
+        Some(Value::from("can edit"))
+    );
+}

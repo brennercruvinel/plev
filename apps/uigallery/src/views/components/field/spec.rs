@@ -24,6 +24,8 @@ pub(crate) const FIELD_W: f32 = 240.0;
 pub(crate) const GROUP_W: f32 = 216.0;
 /// A select is the kit's DropdownPage's, `w-44`.
 pub(crate) const SELECT_W: f32 = 176.0;
+/// An input group with a select at its end is the kit's Invite, `w-76.5`.
+pub(crate) const INVITE_W: f32 = 306.0;
 
 /// A part of a widget a request or a reader's focus names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -36,6 +38,8 @@ pub(crate) enum Part {
     Link,
     /// An input group's icon button.
     Action,
+    /// A select inside the widget (an Invite's).
+    Choice,
     /// An open list's option, by its index in the options.
     Option(usize),
 }
@@ -236,7 +240,7 @@ impl CardWidget for Field {
             Part::Box => self.sem_id().cloned(),
             Part::Reveal => self.reveal_id(),
             Part::Link => self.link_id(),
-            Part::Action | Part::Option(_) => None,
+            Part::Action | Part::Choice | Part::Option(_) => None,
         }
     }
 
@@ -315,12 +319,28 @@ impl CardWidget for InputGroup {
         Box::new((*self).sem(id))
     }
 
+    /// The kit's Search, `w-54`, or its Invite, `w-76.5`, with a select.
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        (GROUP_W.min(room), self.height(theme))
+        let w = if self.choice.is_some() {
+            INVITE_W
+        } else {
+            GROUP_W
+        };
+        (w.min(room), self.height(theme))
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
         InputGroup::render(self, c, rect, theme);
+    }
+
+    fn render_overlay(&self, c: &mut Compositor, layer: LayerId, rect: Rect, theme: &Theme) {
+        self.render_dropdown(c, layer, rect, theme);
+    }
+
+    /// An open select has the pointer everywhere: a press off its list
+    /// closes it.
+    fn over_overlay(&self, _x: f32, _y: f32, _rect: Rect, _theme: &Theme) -> bool {
+        self.choice.as_ref().is_some_and(|c| c.is_open())
     }
 
     /// Named by its placeholder.
@@ -347,31 +367,90 @@ impl CardWidget for InputGroup {
         match part {
             Part::Box => self.sem_id().cloned(),
             Part::Action => self.action_id(),
+            Part::Choice => self.choice.as_ref().and(self.choice_id()),
+            Part::Option(i) => {
+                let open = self.choice.as_ref().is_some_and(|c| c.is_open());
+                self.choice_id()
+                    .filter(|_| open)
+                    .map(|id| id.key(i.to_string()))
+            }
             _ => None,
         }
     }
 
+    /// The box, the icon button, the select or an open option of it.
+    fn part(&self, id: &SemId) -> Option<Part> {
+        let n = self.choice.as_ref().map_or(0, |c| c.options.len());
+        [Part::Box, Part::Action, Part::Choice]
+            .into_iter()
+            .chain((0..n).map(Part::Option))
+            .find(|p| self.part_id(*p).as_ref() == Some(id))
+    }
+
     fn set_part_focus(&mut self, part: Option<Part>) {
         self.set_action_focus(part == Some(Part::Action));
+        if let Some(choice) = &mut self.choice {
+            let on = matches!(part, Some(Part::Choice | Part::Option(_)));
+            if !on {
+                choice.close();
+            }
+            choice.set_focused(on);
+            choice.set_highlighted(match part {
+                Some(Part::Option(i)) => Some(i),
+                _ => None,
+            });
+        }
     }
 
     fn part_focus(&self) -> Option<Part> {
-        self.has_action_focus().then_some(Part::Action)
+        if self.has_action_focus() {
+            return Some(Part::Action);
+        }
+        let choice = self.choice.as_ref().filter(|c| c.is_focused())?;
+        Some(match choice.highlighted().filter(|_| choice.is_open()) {
+            Some(i) => Part::Option(i),
+            None => Part::Choice,
+        })
     }
 
     fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
-        self.layout(rect, theme).input.contains(x, y) && !self.on_action(x, y, rect, theme)
+        let l = self.layout(rect, theme);
+        l.input.contains(x, y)
+            && !self.on_action(x, y, rect, theme)
+            && !l.choice.is_some_and(|r| r.contains(x, y))
     }
 
     fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
         Some(InputGroup::ime_area(self, rect, theme))
     }
 
-    /// The icon button's `activate` does what a click does.
+    /// The icon button's `activate` does what a click does; the select's
+    /// `open`, `close` and `select`, and an open option's `select`, what
+    /// a press on them does.
     fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
         match (part, action, param) {
             (Part::Box, "set_value", Some(Value::Text(text))) => self.input.set_value(text),
             (Part::Action, "activate", None) => self.action().is_some(),
+            (Part::Choice | Part::Option(_), _, _) => {
+                let Some(choice) = &mut self.choice else {
+                    return false;
+                };
+                match (part, action, param) {
+                    (Part::Choice, "open", None) => {
+                        choice.open();
+                        true
+                    }
+                    (Part::Choice, "close", None) => {
+                        choice.close();
+                        true
+                    }
+                    (Part::Choice, "select", Some(Value::Text(label))) => {
+                        choice.select_label(label)
+                    }
+                    (Part::Option(i), "select", None) => choice.select_index(i),
+                    _ => false,
+                }
+            }
             _ => false,
         }
     }
