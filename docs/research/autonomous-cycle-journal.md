@@ -6,13 +6,14 @@ type: record
 status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, process, git, recording, platform]
 relations: [adr-0046, adr-0048, adr-0052, operations-autonomy, operations-generative-runtime-guidelines, generative-runtime-program, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, generative-runtime-thesis]
+evidence: [6e284bf, 4573c81, 460c854, 37c5e0c, 0071764, 4593a4c, 7d9c569, f101359, fed9c8d, 22d59fb, de95a20, d611fa4, c60b9f6, 871f0dd, ecf51ba, 29373d4, 804e57d, 042d34e, f309ab4, f248dd1, 96c20a0, 8e6e814, 5f57fe7, d02b4d1, c433751, 79b8c93, 0e0a7b3, 7f866e8, eea529b, e6560a2, 49e2822, 7528309, a6fec8d, 365d8fd, 476bbb4, 78f463c, 1bf6606, 2d4aa4b, 4896451, 7621403, 1ecc84c, c07a7f0, c5fdf36]
 source: docs/log/journal.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [6e284bf, 4573c81, 460c854, 37c5e0c, 0071764, 4593a4c, 7d9c569, f101359, fed9c8d, 22d59fb, de95a20, d611fa4, c60b9f6, 871f0dd, ecf51ba, 29373d4, 804e57d, 042d34e, f309ab4, f248dd1, 96c20a0, 8e6e814, 5f57fe7, d02b4d1, c433751, 79b8c93, 0e0a7b3, 7f866e8, eea529b, e6560a2, 49e2822, 7528309, a6fec8d, 365d8fd, 476bbb4, 78f463c, 1bf6606, 2d4aa4b, 4896451, 7621403, 1ecc84c, c07a7f0, c5fdf36]
 ---
 
 # autonomous cycle journal

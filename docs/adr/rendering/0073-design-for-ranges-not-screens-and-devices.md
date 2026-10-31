@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-29
 date_basis: header
+recorded: 2026-09-29
 topics: [layout, design-system, accessibility, mobile]
 relations: [adr-0002, adr-0027]
 source: docs/adr/rendering/0073-design-for-ranges-not-screens-and-devices.md

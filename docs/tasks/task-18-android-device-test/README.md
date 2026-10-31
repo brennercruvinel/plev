@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [mobile, platform, input]
 relations: [task-11, task-50, task-77]
 source: [docs/log/steps/task-18-android-device-test.md, docs/log/changes/task-18.md]

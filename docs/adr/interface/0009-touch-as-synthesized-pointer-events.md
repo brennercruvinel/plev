@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-01-27
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [input, mobile]
 relations: []
+evidence: [5854941]
 source: docs/adr/interface/0009-touch-as-synthesized-pointer-events.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [5854941]
 ---
 
 # touch input synthesizes pointer events into the existing mouse path

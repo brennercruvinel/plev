@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [hot-reload, semantics, process]
 relations: [adr-0031, adr-0032, adr-0035, task-63, task-65]
 source: docs/adr/workflows/0048-view-source-for-pixels.md

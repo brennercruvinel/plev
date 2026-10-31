@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [mobile, platform, rendering]
 relations: [task-12, task-50, task-77]
 source: [docs/log/steps/task-19-ios-simulator-test.md, docs/log/changes/task-19.md]

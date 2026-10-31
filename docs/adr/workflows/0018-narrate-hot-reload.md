@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2024-02-18
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-22
 topics: [hot-reload, dsl]
 relations: []
 source: docs/adr/workflows/0018-narrate-hot-reload.md

@@ -4,8 +4,9 @@ title: "linebender ecosystem, analysis for plev"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [text, rendering, research]
 relations: [task-05, task-25, task-27, task-28, task-29, task-30, task-31, task-32]
 source: docs/ref/linebender-ecosystem.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Analyzes the linebender ecosystem (vello, xilem, parley, velato, kurbo, peniko and fearless_simd) for plev: what each project teaches about rendering and text architecture, and what is not worth adopting. The point with the greatest impact is parley as a candidate to replace cosmic-text in task-32; plaineditor would resolve much of task-28. The other projects are architecture references, not direct dependencies, and the star counts, versions and downloads are the ones recorded in the page body on the date indicated.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **contexto:** pesquisa de referencia para task-32 (text upgrade assessment) e decisoes arquiteturais futuras do plev.
 **metodologia:** dados coletados via github API, crates.io API, blogs oficiais linebender (tmil-11..24), deepwiki, e prs de projetos consumidores (egui, bevy, slint).
 

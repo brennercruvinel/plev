@@ -3,17 +3,18 @@ id: task-75/phase-2c-keyboard
 title: "task-75 phase 2c: keyboard on the component pages"
 project: plev
 type: section
-status: reference
 parent: task-75
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, input, semantics]
 relations: []
+evidence: [8ba4ef6d, 92635707, f1e04c32, 5dddcf6a, 917cdd2a]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [8ba4ef6d, 92635707, f1e04c32, 5dddcf6a, 917cdd2a]
 ---
 
 # phase 2c: the keyboard probe (2026-09-25)

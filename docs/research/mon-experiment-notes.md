@@ -6,13 +6,14 @@ type: research
 status: reference
 date: 2026-06-12
 date_basis: header
+recorded: 2026-06-12
 topics: [design-system, formats, accessibility]
 relations: [adr-0007, adr-0010, adr-0011, adr-0012]
+evidence: [5eecb0a, a4ad0c0, a044613, 2a33933]
 source: docs/ref/mon-experiment-notes.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [5eecb0a, a4ad0c0, a044613, 2a33933]
 ---
 
 # mon experiment

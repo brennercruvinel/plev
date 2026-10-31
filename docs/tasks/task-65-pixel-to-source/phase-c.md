@@ -3,17 +3,18 @@ id: task-65/phase-c
 title: "task-65 phase c: edit the text and write the literal"
 project: plev
 type: section
-status: reference
 parent: task-65
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [hot-reload, text-editing, input]
 relations: [adr-0048, task-65/phase-a-b]
+evidence: [1e853d8a, 4f11e311, fc814104, 6910ad37]
 source: docs/log/steps/task-65-pixel-to-source.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [1e853d8a, 4f11e311, fc814104, 6910ad37]
 ---
 
 # phase c: the probe

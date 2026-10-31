@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [fonts, text, web-wasm, mobile, determinism]
 relations: [adr-0079, task-74]
 source: docs/adr/rendering/0071-embedded-fonts-by-script.md

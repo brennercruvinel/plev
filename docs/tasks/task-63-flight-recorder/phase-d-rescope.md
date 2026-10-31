@@ -3,10 +3,11 @@ id: task-63/phase-d-rescope
 title: "task-63 phase d re-scoped: the ide records the session"
 project: plev
 type: section
-status: reference
 parent: task-63
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, agents]
 relations: [adr-0037, task-64, task-88]
 source: docs/log/steps/task-63-flight-recorder.md

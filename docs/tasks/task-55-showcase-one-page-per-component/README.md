@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, workspace]
 relations: [adr-0030, changelog]
 source: docs/log/steps/task-55-showcase-one-page-per-component.md

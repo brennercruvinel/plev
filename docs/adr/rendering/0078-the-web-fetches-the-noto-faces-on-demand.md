@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-27
 date_basis: header
+recorded: 2026-10-27
 topics: [fonts, text, web-wasm]
 relations: [adr-0071, adr-0079]
+evidence: [f79400d1, 71ee6291]
 source: docs/adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f79400d1, 71ee6291]
 ---
 
 # the web build fetches the Noto faces when a text first needs them

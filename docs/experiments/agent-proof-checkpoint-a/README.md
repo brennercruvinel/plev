@@ -6,6 +6,7 @@ type: experiment
 status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-10-31
 topics: [agents, semantics, recording, git]
 relations: [task-62, task-62/phase-ab-closing, task-62/phase-c-round-1, task-62/phase-c-round-2, task-62/phase-c-round-3, task-62/phase-c-round-4, task-62/phase-c-round-5, task-88, task-93, adr-0036]
 source: reconstruction

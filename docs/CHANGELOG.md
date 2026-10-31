@@ -6,13 +6,14 @@ type: record
 status: active
 date: null
 date_basis: undated
+recorded: 2026-06-11
 topics: [process, workspace, rendering, agents]
 relations: []
+evidence: [176dd691, 704412f1, b1e820ba]
 source: [docs/log/changelog.md, docs/log/README.md, docs/log/responsiveness-multiplatform-and-fidelity.md, reconstruction]
 source_revision: ec0a224c
 revised: 2026-10-31
 review: reviewed
-evidence: [704412f1, b1e820ba]
 ---
 
 # plev changelog
@@ -21,32 +22,61 @@ What changed in plev since 2021, newest first, one section per date. A date gath
 
 ## Reading the dates
 
-The archive contains dates declared since 2021. The available Git history has a
-root commit on 10 June 2026. These two timelines represent different sources
-and should not be merged automatically.
+Each page carries three dates in its header. `date` is when what it records
+happened, `recorded` is the day its text was written, and `revised` is its last
+editorial revision; `date_basis` says where `date` came from. This file orders
+the records by `date`.
 
-### Dates revised later
+### The history before June 2026
 
-Commit `704412f1` changed the header of the note on `View` from 2026-03-08 to
-2021-03-06, and the [layout ADR](adr/rendering/0002-content-driven-layout-not-fixed-constants.md) from 2026-06-10 to 2024-09-18. The change documents a
-retrospective revision of the date; it does not, by itself, prove when the
-technical work took place.
+The history of plev up to 2026 lived in a Forgejo instance on an old VPS, and it
+was lost there; it could not be recovered. The git history of this repository
+starts on 10 June 2026 (`176dd691`). Between March and June 2026 the lost work was
+written down again, and commit `704412f1` (2026-07-13) gave those records the
+dates of the work itself, from 2021 on: the note on `View`, written on
+2026-03-08, carries 2021-03-06, and the [layout ADR](adr/rendering/0002-content-driven-layout-not-fixed-constants.md),
+written on 2026-06-10, carries 2024-09-18. Those pages have
+`date_basis: reconstructed`, and `recorded` keeps the day they were written.
+
+A record written in 2026 about earlier work speaks with what existed when it was
+written: a machine, a toolchain, a later version of a library. `recorded` says
+from when such a detail comes.
+
+### The reconstruction kept in step
+
+Where one record placed as done what another dated later, the dates were brought
+in line with what the records say:
+
+- the reports of the research briefing (task-ref) take the briefing's date;
+- the extraction of task-34 and its reports come after the animation system
+  (task-27) whose `Spring` and `Tween` they analyse, and after the demo app
+  (task-29);
+- the text assessment (task-32, with the parley vs cosmic-text comparison)
+  comes after accessibility (task-30), which it treats as present, and the
+  plugin research (task-33) after tasks 30 and 31, which it says just landed;
+- the v0.2 benchmarks take the day of their measurement, since they measure
+  the crates of tasks 43 to 46 with Rust 1.94.
+
+A task's `date` is the day it closed; the sessions written inside it carry the
+days the work was done, a few days before.
+
+### Remapped commits
 
 Commit `b1e820ba` remapped hash references after the history purge. For example,
 `34a9893` was replaced by `55c8aa7` in the [ADR on asynchronous GPU initialization](adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md). An old reference may have a recoverable match even if
 the whole earlier history no longer exists.
 
-### What a date in this file means
-
-The pages keep the declared date and its basis in the YAML. This changelog orders
-these declarations; it does not certify each date as contemporary with the event.
-When the text and the header cover distinct periods, the internal entries may
-have their own dates. A missing date is represented as missing, never filled in
-for editorial convenience.
-
 ### Recovered material
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
+
+## 2026-10-31
+
+- the graphs read ELK too (2026-10-31, PR #146, task-100, adr
+  a-graph-separates-data-appearance-and-layout): the ELK reader and the
+  `elk` and `elk-groups` pages of the graphs demo reach main, which closes
+  task-100 and settles the decision that a graph separates data,
+  appearance and layout.
 
 ## 2026-10-27
 
@@ -231,7 +261,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task-22 | error messages & DX | parcial (did you mean feito) |
 | task-23 | CI/CD (github actions) | done (nao testado remotamente) |
 | task-24 | cleanup & readme | parcial (readme feito, license TBD) |
-| task-30 | accessibility (accesskit) | done (feature-gated, lazy activation, focusgraph, 8 testes) |
+| task-30 | accessibility (accesskit) | done (feature-gated, lazy activation, focusgraph, 9 testes) |
 
 ##### fase 4, proof of life (p2), completa
 | task | descricao | status |
@@ -239,7 +269,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task-27 | animation system (easing, tweens, springs) | done (35 testes, ~500 LOC) |
 | task-28 | editable text (cursor, input, IME) | done (44 testes, ~800 LOC) |
 | task-29 | todo app demo (proof of life) | done (~530 LOC, funcional) |
-| task-31 | vector paths (lyon tessellation) | done (~250 LOC, reusa quad pipeline, 11 testes) |
+| task-31 | vector paths (lyon tessellation) | done (~250 LOC, reusa quad pipeline, 13 testes) |
 | task-32 | text upgrade assessment (parley vs cosmic-text) | done (research: wait, nao migrar agora) |
 
 ##### fase 4b, quick wins & bug fixes (p0/p1), completa (derivada de task-34)
@@ -255,7 +285,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task | descricao | status |
 |------|-----------|--------|
 | task-33 | WASM plugin architecture | done (fase 1 research: wait, extism quando API estavel) |
-| task-34 | exploracao/extracao de ideias (56 repos) | done, 38 patterns de 17 repos, top 10 priorizado |
+| task-34 | exploracao/extracao de ideias (56 repos) | done, 38 patterns de 18 repos, top 10 priorizado |
 
 ##### fase 7, release publica (p0), pendente
 | task | descricao | status |
@@ -1586,21 +1616,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 
 ## 2026-03-11
 
-- research: [reference analysis: accessibility (accesskit)](research/accessibility.md)
-- research: [reference analysis: animation and motion](research/animation-motion.md)
-- research: [reference analysis: charts and visualization](research/charts-visualization.md)
-- research: [competitive positioning, plev](research/competitive-positioning.md)
-- research: [competitor analysis, gui/rendering frameworks](research/competitors.md)
-- research: [reference analysis: emulators and WASM runtimes](research/emulators-wasm-runtimes.md)
-- research: [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](research/extraction-fase-ef.md)
-- research: [integration candidates, ranking](research/integration-candidates.md)
-- research: [linebender ecosystem, analysis for plev](research/linebender-ecosystem.md)
-- research: [reference analysis: math, physics and geometry](research/math-physics-geometry.md)
-- research: [pattern extraction: parley, lyon, glam-rs](research/pattern-extraction-parley-lyon-glam.md)
-- research: [pattern extraction: tui apps (yazi, television, bottom)](research/pattern-extraction-tui-apps.md)
-- research: [technology radar, plev](research/technology-radar.md)
-- research: [reference analysis: tui patterns](research/tui-patterns.md)
-- research: [reference analysis: WASM tooling ecosystem](research/wasm-tooling.md)
+- experiment: [benchmark results, plev v0.2](experiments/benchmarks-v02/README.md)
 
 ## 2026-03-10
 
@@ -1842,6 +1858,22 @@ prerequisites already satisfied.
 
 - [task-35: fix spring<t>, analytical solver](tasks/task-35-spring-analytical-solver/README.md)
 
+## 2023-07-11
+
+- [task-33: WASM plugin architecture](tasks/task-33-wasm-plugins/README.md)
+
+## 2023-07-05
+
+- research: [WASM plugin architecture - research doc](research/wasm-plugin-architecture.md)
+
+## 2023-06-25
+
+- [task-32: text system upgrade assessment](tasks/task-32-text-upgrade-assessment/README.md)
+
+## 2023-06-20
+
+- research: [parley vs cosmic-text - factual comparison for plev](research/parley-vs-cosmic-text.md)
+
 ## 2023-06-12
 
 - [task-31: vector path rendering (lyon integration)](tasks/task-31-vector-paths/README.md)
@@ -1849,6 +1881,17 @@ prerequisites already satisfied.
 ## 2023-05-02
 
 - [task-30: accessibility (accesskit)](tasks/task-30-accessibility/README.md)
+
+## 2023-04-12
+
+- [task-34: exploration and extraction of ideas from the reference repos](tasks/task-34-exploration-extraction/README.md)
+- research: [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](research/extraction-fase-ef.md)
+- research: [pattern extraction: parley, lyon, glam-rs](research/pattern-extraction-parley-lyon-glam.md)
+- research: [pattern extraction: tui apps (yazi, television, bottom)](research/pattern-extraction-tui-apps.md)
+
+## 2023-04-06
+
+- research: [extracted patterns, 56 reference repos](research/extracted-patterns.md)
 
 ## 2023-03-22
 
@@ -1878,41 +1921,25 @@ prerequisites already satisfied.
 
 - research: [competitors by tier](research/competitors-by-tier.md)
 
-## 2022-09-14
-
-- [task-33: WASM plugin architecture](tasks/task-33-wasm-plugins/README.md)
-
-## 2022-09-08
-
-- research: [WASM plugin architecture - research doc](research/wasm-plugin-architecture.md)
-
-## 2022-08-16
-
-- [task-32: text system upgrade assessment](tasks/task-32-text-upgrade-assessment/README.md)
-
-## 2022-08-11
-
-- research: [parley vs cosmic-text - factual comparison for plev](research/parley-vs-cosmic-text.md)
-
-## 2022-07-12
-
-- [task-34: exploration and extraction of ideas from the reference repos](tasks/task-34-exploration-extraction/README.md)
-
-## 2022-07-06
-
-- research: [extracted patterns, 56 reference repos](research/extracted-patterns.md)
-
 ## 2022-06-15
 
 - [task-ref: research briefing (50+ repos)](tasks/task-ref-research-briefing/README.md)
+- research: [reference analysis: accessibility (accesskit)](research/accessibility.md)
+- research: [reference analysis: animation and motion](research/animation-motion.md)
+- research: [reference analysis: charts and visualization](research/charts-visualization.md)
+- research: [competitive positioning, plev](research/competitive-positioning.md)
+- research: [competitor analysis, gui/rendering frameworks](research/competitors.md)
+- research: [reference analysis: emulators and WASM runtimes](research/emulators-wasm-runtimes.md)
+- research: [integration candidates, ranking](research/integration-candidates.md)
+- research: [linebender ecosystem, analysis for plev](research/linebender-ecosystem.md)
+- research: [reference analysis: math, physics and geometry](research/math-physics-geometry.md)
+- research: [technology radar, plev](research/technology-radar.md)
+- research: [reference analysis: tui patterns](research/tui-patterns.md)
+- research: [reference analysis: WASM tooling ecosystem](research/wasm-tooling.md)
 
 ## 2022-05-03
 
 - [task-25: benchmarks](tasks/task-25-benchmarks/README.md)
-
-## 2022-04-26
-
-- experiment: [benchmark results, plev v0.2](experiments/benchmarks-v02/README.md)
 
 ## 2022-02-24
 

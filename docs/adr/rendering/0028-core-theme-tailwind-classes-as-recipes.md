@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, gpu]
 relations: []
 source: docs/adr/rendering/0028-core-theme-tailwind-classes-as-recipes.md

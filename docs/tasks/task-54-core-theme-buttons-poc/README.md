@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, gpu]
 relations: [adr-0028]
 source: docs/log/steps/task-54-core-theme-buttons-poc.md

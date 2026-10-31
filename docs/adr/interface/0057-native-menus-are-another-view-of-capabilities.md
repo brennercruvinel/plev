@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, semantics, agents, input]
 relations: [adr-0055, adr-0056, adr-0058, adr-0059, task-76]
 source: docs/adr/interface/0057-native-menus-are-another-view-of-capabilities.md

@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-03-06
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [rendering, performance]
 relations: []
 source: docs/ref/view-trait-design.md

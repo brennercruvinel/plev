@@ -3,17 +3,18 @@ id: task-79/phase-79a-probe
 title: "phase 1 (task-79a): the probe"
 project: plev
 type: section
-status: reference
 parent: task-79
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, recording, performance]
 relations: [task-76, adr-0062, adr-0065]
+evidence: [91be2cd6, 73f08fbc, 7728da47, 5009b657, ac0f9c22, f45bc235, 853b885b, aef62a07, ccb6dc31, 697ff1f2, 22489539, 575bc605, d210a7c2, 0bdef89f]
 source: docs/log/steps/task-79-scene-over-socket.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [91be2cd6, 73f08fbc, 7728da47, 5009b657, ac0f9c22, f45bc235, 853b885b, aef62a07, ccb6dc31, 697ff1f2, 22489539, 575bc605, d210a7c2, 0bdef89f]
 ---
 
 # phase 1 (task-79a): the probe

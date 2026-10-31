@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [rendering, gpu, determinism]
 relations: [adr-0006, adr-0034, operations-orchestrate-coding-agents-on-this-repo, task-57, task-59, task-60, task-64, task-66b, task-67, task-77, generative-runtime-thesis]
+evidence: [c6738be]
 source: docs/log/steps/task-66-headless-first-class.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c6738be]
 ---
 
 # task-66: headless as a first-class citizen

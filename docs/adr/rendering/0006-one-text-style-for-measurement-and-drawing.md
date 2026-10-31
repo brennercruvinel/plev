@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-10-29
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [text, layout]
 relations: []
+evidence: [f15198a]
 source: docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f15198a]
 ---
 
 # one TextStyle per text run, shared by measurement and drawing

@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2022-12-21
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [animation, signals, rendering]
 relations: [task-04]
 source: [docs/log/steps/task-27.md, docs/log/changes/task-27.md]

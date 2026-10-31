@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-22
 date_basis: header
+recorded: 2026-03-22
 topics: [hot-reload, gpu, dsl]
 relations: [adr-0031, architecture-hot-reload-design]
 source: [docs/log/steps/task-56-hot-reload.md, docs/log/changes/gap-1.md]

@@ -3,17 +3,18 @@ id: task-62/phase-ab-closing
 title: "task-62 phases a and b: close-out (2026-09-23)"
 project: plev
 type: section
-status: reference
 parent: task-62
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [semantics, git]
 relations: [adr-0036, task-58b, task-61, task-63, task-73]
+evidence: [8978602]
 source: docs/log/steps/task-62-ide-human-agent-proof.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [8978602]
 ---
 
 # phases a and b closed (2026-09-23)

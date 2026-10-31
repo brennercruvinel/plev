@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, recording]
 relations: [task-57b, task-61, task-62, task-84, task-85, adr-0037, adr-0040, adr-0043, operations-code-against-the-plev-engine, adr-index]
+evidence: [78f463c]
 source: docs/log/steps/task-83-delta-carries-node-refusal-names-actor.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [78f463c]
 ---
 
 # task-83: the delta carries the node that was just added, and the refusal names who acted

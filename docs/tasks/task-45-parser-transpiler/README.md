@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2025-07-16
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [importing, formats]
 relations: [adr-0012]
+evidence: [5eecb0a, f93a57e, aafc091]
 source: [docs/log/steps/task-45-parser-transpiler.md, docs/log/changes/task-45.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [5eecb0a, f93a57e, aafc091]
 ---
 
 # task-45: parser, transpiler poc (react/gpui to builder)

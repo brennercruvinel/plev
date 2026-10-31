@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [recording, formats, semantics, rendering]
 relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, adr-0043, generative-runtime-thesis]
 source: docs/adr/recording/0037-session-recording-replay-not-reexecution.md

@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-05-27
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [input, layout]
 relations: [task-09]
 source: docs/ref/input-system-design.md

@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-08-29
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [mobile, platform, fonts]
 relations: [task-13]
 source: [docs/log/steps/task-12.md, docs/log/changes/task-12.md]

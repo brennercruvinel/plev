@@ -6,13 +6,14 @@ type: experiment
 status: reference
 date: 2026-09-26
 date_basis: text
+recorded: 2026-10-31
 topics: [llm, gpu, performance, web-wasm]
 relations: [task-78, adr-0072]
+evidence: [94109cd3, f6ff13fb, ddd0928c, 496c6ffa, 002debd4]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
-evidence: [94109cd3, f6ff13fb, ddd0928c, 496c6ffa, 002debd4]
 ---
 
 # candle against burn for local LLM inference in process, TinyLlama 1.1B

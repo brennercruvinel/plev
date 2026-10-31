@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics, formats]
 relations: [adr-0026, adr-0032, adr-0033, adr-0035, adr-0038, adr-0040, adr-0043, adr-0044, adr-0047, task-57b, task-62, task-64, task-79, task-83, task-86, task-87, task-89, task-92]
 source: docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md

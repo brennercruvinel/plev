@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, rendering, agents]
 relations: [adr-0060, task-66, task-66b, task-76]
 source: docs/adr/rendering/0061-printing-is-the-frame-on-paper.md

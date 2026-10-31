@@ -6,6 +6,7 @@ type: adr
 status: proposed
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [accessibility, platform, semantics, web-wasm]
 relations: [adr-0038, task-60, task-75]
 source: docs/adr/interface/0068-accessibility-is-production-ready-per-platform.md

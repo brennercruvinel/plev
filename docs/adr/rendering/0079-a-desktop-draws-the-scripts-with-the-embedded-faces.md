@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-27
 date_basis: header
+recorded: 2026-10-27
 topics: [fonts, text, determinism, platform]
 relations: [adr-0071, adr-0078]
+evidence: [bee96c97]
 source: docs/adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [bee96c97]
 ---
 
 # a desktop draws the scripts with the embedded faces, not the system's

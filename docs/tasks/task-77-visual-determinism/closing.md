@@ -3,10 +3,11 @@ id: task-77/closing
 title: "wrap-up (orchestrator, 2026-09-25)"
 project: plev
 type: section
-status: reference
 parent: task-77
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [determinism, platform, mobile]
 relations: [adr-0064, task-18, task-19, task-20]
 source: docs/log/steps/task-77-visual-determinism.md

@@ -3,17 +3,18 @@ id: task-71/phase-1-ir-emitter
 title: "task-71 phase 1: probe and handoff of the plev IR emitter"
 project: plev
 type: section
-status: reference
 parent: task-71
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [importing, ir, formats]
 relations: [task-66, task-68, task-69, adr-0064, adr-0069]
+evidence: [0c08e77a, 9f7e9cfd, 14cd3dfd, 7a240577, 9707a2a6]
 source: docs/log/steps/task-71-compiler-target.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [0c08e77a, 9f7e9cfd, 14cd3dfd, 7a240577, 9707a2a6]
 ---
 
 # task-71 phase 1: probe and handoff of the plev IR emitter

@@ -4,8 +4,9 @@ title: "reference analysis: emulators and WASM runtimes"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [web-wasm, rendering]
 relations: []
 source: docs/ref/emulators-wasm-runtimes.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Reference research on how emulators and language runtimes run inside WASM: render loop, host-guest interface, memory management and frame time. It analyzes five projects (wasmboy, waforth, chasm, wizard engine and pywasm) and extracts from them a model for future language runtimes and plugins in plev, with emulation in a web worker, explicit host bindings and the store, module, instance pattern. The central point is that the guest should produce scenes, not pixels, and the first proposed phase is a minimal set of host bindings for rectangle, text and input.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **contexto:** pesquisa para suporte futuro a fortran, inform 6/7 e outras linguagens rodando no browser via plev.
 
 ---

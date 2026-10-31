@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2025-05-21
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [formats, animation]
 relations: [adr-0010, architecture-monster-format-v0, task-27, task-31]
+evidence: [a4ad0c0, aa802ff]
 source: [docs/log/steps/task-43-monster-codec.md, docs/log/changes/task-43.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a4ad0c0, aa802ff]
 ---
 
 # task-43: monster, binary animation codec v0

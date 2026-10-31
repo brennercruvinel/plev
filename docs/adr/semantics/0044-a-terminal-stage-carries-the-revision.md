@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics]
 relations: [adr-0033, task-62, task-87]
 source: docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md

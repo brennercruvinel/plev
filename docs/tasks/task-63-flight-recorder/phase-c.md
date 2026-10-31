@@ -3,17 +3,18 @@ id: task-63/phase-c
 title: "task-63 phase c: session file, persistence and excerpt"
 project: plev
 type: section
-status: reference
 parent: task-63
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, formats]
 relations: [adr-0037, task-61, task-65, task-66b]
+evidence: [c62a05d]
 source: docs/log/steps/task-63-flight-recorder.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c62a05d]
 ---
 
 # phase c closed (2026-09-23)

@@ -6,6 +6,7 @@ type: learning
 status: reference
 date: 2026-09-19
 date_basis: header
+recorded: 2026-09-19
 topics: [design-system, process, workspace]
 relations: [adr-0027, architecture-component-catalog, operations-validate-visuals-by-pixel]
 source: docs/log/learnings/comps.md

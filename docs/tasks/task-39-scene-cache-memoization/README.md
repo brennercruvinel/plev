@@ -6,6 +6,7 @@ type: task
 status: superseded
 date: 2026-09-25
 date_basis: header
+recorded: 2026-03-13
 topics: [rendering, performance]
 relations: [task-73, research-extracted-patterns]
 source: docs/log/steps/task-39-scene-cache-memoization.md

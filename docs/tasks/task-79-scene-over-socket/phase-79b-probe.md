@@ -3,17 +3,18 @@ id: task-79/phase-79b-probe
 title: "phase 2 (task-79b): the probe"
 project: plev
 type: section
-status: reference
 parent: task-79
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, semantics, accessibility]
 relations: [task-79/phase-79a-probe, adr-0065, adr-0067]
+evidence: [bfe12733, dfbd79de, c3b94b7a, a2b70151, 80d71a45]
 source: docs/log/steps/task-79-scene-over-socket.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [bfe12733, dfbd79de, c3b94b7a, a2b70151, 80d71a45]
 ---
 
 # phase 2 (task-79b): the probe

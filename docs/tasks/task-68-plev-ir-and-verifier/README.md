@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [ir, generated-surfaces, semantics]
 relations: [task-57, task-58, task-69, task-70, task-71, adr-0023, adr-0049, architecture-component-catalog]
+evidence: [871f0dd]
 source: docs/log/steps/task-68-plev-ir-and-verifier.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [871f0dd]
 ---
 
 # task-68: plev IR and verifier

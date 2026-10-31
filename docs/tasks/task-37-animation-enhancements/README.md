@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-10-02
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [animation, effects]
 relations: [task-27, task-35, research-extracted-patterns]
 source: [docs/log/steps/task-37-animation-enhancements.md, docs/log/changes/task-37.md]

@@ -3,17 +3,18 @@ id: task-70/phase-1-operations
 title: "task-70: phase 1, the operations, the inverse, the verification and the host"
 project: plev
 type: section
-status: reference
 parent: task-70
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [ir, generated-surfaces, semantics]
 relations: [adr-0067, task-68, task-69]
+evidence: [872ccafe, a35131bf, 34993190, 35078c72, ce755a67, b3c66abd, ec2ab5db]
 source: docs/log/steps/task-70-adaptive-transformations.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [872ccafe, a35131bf, 34993190, 35078c72, ce755a67, b3c66abd, ec2ab5db]
 ---
 
 # phase 1: the operations, the inverse, the verification and the host

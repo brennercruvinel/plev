@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [agents, recording, research]
 relations: [task-62, task-88, task-92, experiment-agent-proof-checkpoint-a]
+evidence: [654d740, 2059ec3, f529f4d, 6bb75f2, 7dcf925, 363d6dd]
 source: docs/log/steps/task-93-the-lab-person-answers.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [654d740, 2059ec3, f529f4d, 6bb75f2, 7dcf925, 363d6dd]
 ---
 
 # task-93: the person in the lab answers

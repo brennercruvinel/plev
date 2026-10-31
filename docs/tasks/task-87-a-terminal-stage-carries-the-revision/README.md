@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics, performance]
 relations: [adr-0039, adr-0044, task-61, task-83, task-84, task-85, task-88]
+evidence: [1cfb982, 06b35ed, 0c01560, 5fc730b, 365d8fd]
 source: docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [1cfb982, 06b35ed, 0c01560, 5fc730b, 365d8fd]
 ---
 
 # task-87: a terminal stage carries the revision the app was left in
@@ -244,7 +245,7 @@ Commits:
 linha proposta para [`adr/`](../../adr/README.md), depois da do task-83:
 
 ```text
-| 2026-09-23 | [a-terminal-stage-carries-the-revision](a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 160 us no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
+| 2026-09-23 | [a-terminal-stage-carries-the-revision](a-terminal-stage-carries-the-revision.md) | accepted | um estágio terminal (`completed`, `rejected`, `failed`) traz `revision`, a revisão em que o app ficou quando ele saiu, com o que outros atores mudaram até ali, servida no anel como a do `observe` e aceita por `since` e `from_revision`; uma projeção por `forward`, só quando sai um terminal (mediana de 158 us sem ninguém intervindo e 172 us com a pessoa, no laboratório, em debug); não é observação (`Traffic` e `Host::observed` não contam) e não decide nada; protocolo continua v1; `plev --help` diz também o que `--keys` corta; o agente roteirizado foi de 16 para 12 mensagens sem intervenção e de 24 para 17 com a pessoa, com metade dos bytes (task-87) |
 ```
 
 ## fechamento (orquestrador, 2026-09-23)

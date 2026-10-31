@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-08-18
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [workspace, platform]
 relations: [adr-0022]
+evidence: [c2a90f1]
 source: docs/adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c2a90f1]
 ---
 
 # engine at root, libraries and apps in crates, demos in examples

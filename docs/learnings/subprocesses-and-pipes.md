@@ -6,13 +6,14 @@ type: learning
 status: reference
 date: 2026-10-16
 date_basis: git
+recorded: 2026-10-31
 topics: [process, urna]
 relations: [task-99, adr-0026]
+evidence: [05fe993c, 701d2993]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [05fe993c, 701d2993]
 ---
 
 # Why waiting for a process can block reading its output

@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-18
 date_basis: header
+recorded: 2026-09-18
 topics: [design-system, layout, mobile]
 relations: [architecture-component-catalog]
 source: docs/adr/structure/0027-comps-one-design-system-crate.md

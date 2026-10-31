@@ -6,6 +6,7 @@ type: index
 status: active
 date: null
 date_basis: generated
+recorded: 2026-10-09
 topics: [navigation]
 relations: [docs-conventions, changelog]
 source: docs/README.md

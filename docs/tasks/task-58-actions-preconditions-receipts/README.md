@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents]
 relations: [task-57, adr-0033, generative-runtime-thesis, task-59, task-60, task-61, task-62, task-63, task-69, task-70]
+evidence: [20c601e]
 source: docs/log/steps/task-58-actions-preconditions-receipts.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [20c601e]
 ---
 
 # task-58: action with precondition, dispatch and receipts

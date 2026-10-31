@@ -3,24 +3,25 @@ id: task-100
 title: "task-100: interactive graphs and corpus import"
 project: plev
 type: task
-status: in-progress
+status: done
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, layout, platform]
 relations: [adr-0081, adr-0082]
+evidence: [a38eb003, da4be63a, db4b3299, 08420f58, b526a9bd, 4f079852, b8bc7639, 7c8c4a61]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a38eb003, da4be63a, db4b3299, 08420f58, b526a9bd, 4f079852, b8bc7639]
 ---
 
 # task-100: interactive graphs and corpus import
 
 The graph demo now draws d3 and Cytoscape data with plev's model and components, on
 desktop and on the web (`b526a9bd`, already on main). The ELK reader and the `elk` and
-`elk-groups` pages (`b8bc7639`) are on the branch `feat/elk-ir-from-gramorph`, still
-outside main; so the task stays `in-progress`.
+`elk-groups` pages (`b8bc7639`) reached main with PR #146 (`7c8c4a61`,
+2026-10-31), which closes the task.
 
 ## Architecture
 

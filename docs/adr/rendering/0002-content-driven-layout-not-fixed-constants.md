@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-09-18
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [layout, rendering]
 relations: []
+evidence: [15f096f]
 source: docs/adr/rendering/0002-content-driven-layout-not-fixed-constants.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [15f096f]
 ---
 
 # container geometry derives from available space, never from constants

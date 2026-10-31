@@ -4,8 +4,9 @@ title: "reference analysis: animation and motion"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [animation, research]
 relations: [task-27, task-31]
 source: docs/ref/animation-motion.md
@@ -16,7 +17,7 @@ review: reviewed
 
 # reference analysis: animation and motion
 
-Analysis of seven Rust animation and motion libraries (dotlottie-rs, rive-rs, natura, keyframe, mina, easer and interpolation), done in March 2026 as a design reference for task-27, the plev animation system. The result is that these libraries separate easing, interpolation and advanced timelines driven by delta time, and that springs and tweens are distinct problems that can share one interface. From this come the recommendations for task-27: easing and interpolation implemented internally in f32, a public `Interpolate` trait, and an architecture that does not close the door to state machines. It matters because it is the design reference recorded for task-27.
+Analysis of seven Rust animation and motion libraries (dotlottie-rs, rive-rs, natura, keyframe, mina, easer and interpolation), done in the research briefing (task-ref) as a design reference for task-27, the plev animation system. The result is that these libraries separate easing, interpolation and advanced timelines driven by delta time, and that springs and tweens are distinct problems that can share one interface. From this come the recommendations for task-27: easing and interpolation implemented internally in f32, a public `Interpolate` trait, and an architecture that does not close the door to state machines. It matters because it is the design reference recorded for task-27.
 
 ## escopo
 

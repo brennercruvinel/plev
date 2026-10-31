@@ -4,8 +4,9 @@ title: "technology radar, plev"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, competition]
 relations: [research-accessibility, research-animation-motion, research-charts-visualization, research-competitive-positioning, research-competitors, research-emulators-wasm-runtimes, research-integration-candidates, research-linebender-ecosystem, research-math-physics-geometry, research-tui-patterns, research-wasm-tooling, task-27, task-28, task-29, task-30, task-31, task-32, task-33]
 source: docs/ref/technology-radar.md
@@ -16,9 +17,9 @@ review: reviewed
 
 # technology radar, plev
 
-Executive summary of the ecosystem analysis of 2026-03-11, with more than fifty repositories in twelve categories. It sets out plev's position, the threats with severity and mitigation, and the actions by phase of the plan. The central result is that no competitor combines identical shaders across six targets, per-layer dirty tracking and production text, and that the integrations expand the capability without compromising the core architecture.
+Executive summary of the ecosystem analysis of 2022-06-15, with more than fifty repositories in twelve categories. It sets out plev's position, the threats with severity and mitigation, and the actions by phase of the plan. The central result is that no competitor combines identical shaders across six targets, per-layer dirty tracking and production text, and that the integrations expand the capability without compromising the core architecture.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **escopo:** resumo executivo da analise de ecossistema (50+ repos, 12 categorias)
 
 ---
@@ -69,7 +70,7 @@ estas sao referencias para insight. plev nao precisa de nenhuma dessas libs para
 | [`math-physics-geometry.md`](math-physics-geometry.md) | glam, rapier, nalgebra, lyon |
 | [`wasm-tooling.md`](wasm-tooling.md) | 7 ferramentas WASM |
 | [`charts-visualization.md`](charts-visualization.md) | plotters, charming, egui_graphs |
-| [`tui-patterns.md`](tui-patterns.md) | 13 tui apps |
+| [`tui-patterns.md`](tui-patterns.md) | 12 tui apps e o oh-my-zsh |
 | [`emulators-wasm-runtimes.md`](emulators-wasm-runtimes.md) | 5 runtimes WASM |
 | [`competitive-positioning.md`](competitive-positioning.md) | matriz comparativa |
 | [`integration-candidates.md`](integration-candidates.md) | ranking adopt/evaluate/watch/hold |

@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [web-wasm, gpu, performance]
 relations: [task-06, task-77]
 source: [docs/log/steps/task-20-wasm-visual-validation.md, docs/log/changes/task-20.md]

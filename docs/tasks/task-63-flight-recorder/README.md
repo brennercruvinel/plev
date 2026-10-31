@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-23
 topics: [recording, semantics, formats]
 relations: [task-57, task-58, task-60, task-61, task-64, task-65, task-66b, task-73, task-77, task-88, task-89, task-90, adr-0037]
+evidence: [c62a05d, 7e63db3, 8e6e814]
 source: docs/log/steps/task-63-flight-recorder.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c62a05d, 7e63db3, 8e6e814]
 ---
 
 # task-63: session flight recorder

@@ -3,17 +3,18 @@ id: task-75/phase-2a-app-pages
 title: "task-75 phase 2a: app pages that already project"
 project: plev
 type: section
-status: reference
 parent: task-75
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, semantics, agents]
 relations: [adr-0068, task-60, task-70]
+evidence: [168b240e, b7059376, d6a6def9, bcc57315, b8616294, 61bdfcec, 24df5d78, 17c903c9, f208fbab, 0ff5e28d, f3e9f914]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [168b240e, b7059376, d6a6def9, bcc57315, b8616294, 61bdfcec, 24df5d78, 17c903c9, f208fbab, 0ff5e28d, f3e9f914]
 ---
 
 # phase 2a: the probe (2026-09-25)

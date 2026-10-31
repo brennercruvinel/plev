@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2022-02-24
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-09
 topics: [animation, rendering, text]
 relations: [task-27]
 source: docs/ref/animation-pattern-lerp.md

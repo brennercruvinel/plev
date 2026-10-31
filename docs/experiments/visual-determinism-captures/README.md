@@ -6,13 +6,14 @@ type: experiment
 status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-10-31
 topics: [determinism, rendering, effects, platform]
 relations: [task-77, task-77/phase-1a-probe, task-77/phase-1b-blur, task-77/closing, adr-0064]
+evidence: [8af26af5, 35a47b26, 7127f65a, f6c688b5, adbf948b]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
-evidence: [8af26af5, 35a47b26, 7127f65a, f6c688b5, adbf948b]
 ---
 
 # desktop gallery pages: same pixels across scales, themes and runs

@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-07-13
 date_basis: header
+recorded: 2026-07-13
 topics: [editorial, workspace]
 relations: [adr-0013, changelog, research-mon-experiment-notes, operations-build-and-serve-the-web-target]
 source: docs/adr/structure/0022-one-knowledge-tree-and-a-minimal-root.md

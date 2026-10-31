@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [accessibility, semantics]
 relations: [task-57, task-58, task-59, task-61, task-62, task-66, task-73, task-74, task-75, generative-runtime-thesis, adr-0026, adr-0038]
+evidence: [3ba5b04]
 source: docs/log/steps/task-60-accessibility-projection.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3ba5b04]
 ---
 
 # task-60: accessibility as a projection of the contract

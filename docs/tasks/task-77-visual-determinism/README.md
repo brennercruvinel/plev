@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [determinism, rendering, platform, mobile, web-wasm]
 relations: [adr-0024, adr-0064, task-18, task-19, task-20, task-66, task-74, experiment-visual-determinism-captures]
+evidence: [2dd2bc0d, c779fca6, 65d45235, 8af26af5, 35a47b26, a69cd464, 7127f65a, f6c688b5, adbf948b]
 source: docs/log/steps/task-77-visual-determinism.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [2dd2bc0d, c779fca6, 65d45235, 8af26af5, 35a47b26, a69cd464, 7127f65a, f6c688b5, adbf948b]
 ---
 
 # task-77: visual determinism

@@ -3,17 +3,18 @@ id: task-75/phase-2d-lists-and-tables
 title: "task-75 phase 2d: lists and tables with keyboard"
 project: plev
 type: section
-status: reference
 parent: task-75
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, input, semantics]
 relations: []
+evidence: [e61cfa14, 63e36503, 503b9bef, cc6fafc9, 10891b80, 2a19ad66]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e61cfa14, 63e36503, 503b9bef, cc6fafc9, 10891b80, 2a19ad66]
 ---
 
 # phase 2d handoff (2026-09-25)

@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [ir, generated-surfaces, semantics, design-system]
 relations: [adr-0032, adr-0033, generative-runtime-program, task-59, task-68, task-69, task-71, task-80, task-95, task-96, task-97, generative-runtime-thesis]
 source: docs/adr/generated/0049-plev-ir-typed-and-verified.md

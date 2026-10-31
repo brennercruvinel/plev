@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-29
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, process, git, workspace]
 relations: [adr-index, operations-autonomy, operations-build-and-serve-the-web-target, operations-code-against-the-plev-engine, operations-orchestrate-coding-agents-on-this-repo, operations-validate-visuals-by-pixel, generative-runtime-program, task-57]
 source: docs/ref/generative-runtime-guidelines.md

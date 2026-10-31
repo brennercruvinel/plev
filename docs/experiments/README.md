@@ -20,7 +20,7 @@ What was measured or tested: the question, the setup, the results and their limi
 
 | Date | Document | Status |
 |---|---|---|
-| 2022-04-26 | [benchmark results, plev v0.2](benchmarks-v02/README.md) | reference |
+| 2026-03-11 | [benchmark results, plev v0.2](benchmarks-v02/README.md) | reference |
 | 2026-09-23 | [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](agent-proof-checkpoint-a/README.md) | reference |
 | 2026-09-23 | [caret blink as a deadline: frames drawn with a focused, idle field](caret-render-on-demand/README.md) | reference |
 | 2026-09-23 | [what each stage of a frame costs in nine scenarios](frame-cost-by-stage/README.md) | reference |

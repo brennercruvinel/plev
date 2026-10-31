@@ -4,8 +4,9 @@ title: "task-32: text system upgrade assessment"
 project: plev
 type: task
 status: done
-date: 2022-08-16
-date_basis: header
+date: 2023-06-25
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [text, research]
 relations: [research-parley-vs-cosmic-text]
 source: [docs/log/steps/task-32-text-upgrade-assessment.md, docs/log/changes/task-32.md]

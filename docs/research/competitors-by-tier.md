@@ -5,7 +5,8 @@ project: plev
 type: research
 status: reference
 date: 2022-10-21
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [competition, research, gpu, platform]
 relations: [research-makepad-gap-analysis, research-technology-radar]
 source: docs/ref/competitors-by-tier.md

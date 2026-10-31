@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [accessibility, semantics, input]
 relations: [adr-0032, adr-0033, adr-0035, task-59, task-61, task-62, task-75]
+evidence: [263c00c]
 source: docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [263c00c]
 ---
 
 # accessibility projects the semantic snapshot

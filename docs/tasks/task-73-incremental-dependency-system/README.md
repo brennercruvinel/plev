@@ -6,13 +6,14 @@ type: task
 status: in-progress
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [performance, layout, rendering, semantics]
 relations: [task-39, task-57, task-59, task-66, task-69, task-73/phase-1-measurements, task-82, experiment-frame-cost-by-stage]
+evidence: [91fdb33, ed814da]
 source: docs/log/steps/task-73-incremental-dependency-system.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [91fdb33, ed814da]
 ---
 
 # task-73: incremental dependency system

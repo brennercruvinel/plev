@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [layout, platform]
 relations: [adr-0026]
 source: docs/adr/rendering/0029-embed-an-app-view-by-frame-origin.md

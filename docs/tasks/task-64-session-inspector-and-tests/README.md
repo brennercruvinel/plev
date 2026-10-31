@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [recording, semantics, agents]
 relations: [adr-0050, task-63, task-65, task-66, task-83]
+evidence: [e6560a2, d611fa4]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e6560a2, d611fa4]
 ---
 
 # task-64: session inspector, bug report and session for testing

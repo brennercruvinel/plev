@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-08-30
 date_basis: header
+recorded: 2026-08-30
 topics: [platform, generated-surfaces, ir]
 relations: [adr-0008, adr-0051, task-69]
 source: docs/adr/structure/0023-official-app-pattern.md

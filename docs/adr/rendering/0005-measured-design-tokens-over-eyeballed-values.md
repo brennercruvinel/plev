@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-12-19
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [design-system, rendering]
 relations: []
+evidence: [9c5fbd3]
 source: docs/adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [9c5fbd3]
 ---
 
 # design tokens come from measurement of the live reference, not from eyes or static CSS

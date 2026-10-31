@@ -3,17 +3,18 @@ id: task-71/phase-2-html-and-figma
 title: "task-71 phase 2: probe and handoff of the HTML/CSS and Figma sources"
 project: plev
 type: section
-status: reference
 parent: task-71
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [importing, formats, ir]
 relations: [adr-0069, task-68]
+evidence: [e3201af7, 6e99cec8, 7ca7d41e, 0cb09a90, 4e16c349]
 source: docs/log/steps/task-71-compiler-target.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e3201af7, 6e99cec8, 7ca7d41e, 0cb09a90, 4e16c349]
 ---
 
 # task-71 phase 2: probe and handoff of the HTML/CSS and Figma sources

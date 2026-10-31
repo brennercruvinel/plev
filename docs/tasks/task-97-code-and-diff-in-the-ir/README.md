@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [ir, generated-surfaces, text, accessibility]
 relations: [adr-0049, adr-0051, task-68, task-69, task-75, task-80, task-96, experiment-five-demos]
+evidence: [a82087d8, 38960bf8, 82658d2a, 2b4fe23c, 593ff9bf, 10f66729, 9c96bde4, 19ea59bd]
 source: docs/log/steps/task-97-code-and-diff-in-the-ir.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a82087d8, 38960bf8, 82658d2a, 2b4fe23c, 593ff9bf, 10f66729, 9c96bde4, 19ea59bd]
 ---
 
 # task-97: code and diff in the IR vocabulary

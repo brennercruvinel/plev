@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2025-10-01
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-14
 topics: [rendering, animation]
 relations: [adr-0014, task-27, task-31]
+evidence: [c749d12, d2f1060]
 source: [docs/log/steps/task-49-prime-creatures.md, docs/log/changes/task-49.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c749d12, d2f1060]
 ---
 
 # task-49: prime number creatures, port of entropic life

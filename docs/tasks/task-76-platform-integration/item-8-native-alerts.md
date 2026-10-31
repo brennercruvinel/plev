@@ -3,10 +3,11 @@ id: task-76/item-8-native-alerts
 title: "task-76, item 8: native alert and confirmation dialogs"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, agents, semantics]
 relations: [adr-0058, task-58, task-92]
 source: docs/log/steps/task-76-platform-integration.md

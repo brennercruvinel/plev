@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-06-12
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [rendering, gpu]
 relations: []
 source: [docs/log/steps/task-31-vector-paths.md, docs/log/changes/task-31.md]
@@ -74,4 +75,4 @@ implementado modulo completo de vector paths via lyon tessellation, integrado co
 - `examples/paths_demo.rs`
 
 ### testes adicionados
-- 11 em path.rs, 2 em builder.rs, 1 em compositor.rs
+- 10 em path.rs, 2 em builder.rs, 1 em compositor.rs

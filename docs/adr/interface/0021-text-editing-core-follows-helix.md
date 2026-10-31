@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2026-03-04
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [text-editing, text]
 relations: []
 source: docs/adr/interface/0021-text-editing-core-follows-helix.md

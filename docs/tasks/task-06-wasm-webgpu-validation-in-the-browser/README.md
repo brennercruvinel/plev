@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-06-08
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [web-wasm, gpu, process]
 relations: []
 source: [docs/log/steps/task-06.md, docs/log/changes/task-06.md]

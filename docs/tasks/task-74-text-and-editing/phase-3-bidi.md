@@ -3,17 +3,18 @@ id: task-74/phase-3-bidi
 title: "phase 3: bidi in the cursor and the selection"
 project: plev
 type: section
-status: reference
 parent: task-74
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [text, text-editing]
 relations: []
+evidence: [61283afa, 555ac24a, 7a30e038, a746f2b3]
 source: docs/log/steps/task-74-text-and-editing.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [61283afa, 555ac24a, 7a30e038, a746f2b3]
 ---
 
 # phase 3: bidi in the cursor and the selection

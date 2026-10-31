@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [git, semantics]
 relations: [task-62, task-83, task-85, adr-0036]
+evidence: [4896451]
 source: docs/log/steps/task-84-ide-refresh-never-goes-back.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [4896451]
 ---
 
 # task-84: an old refresh does not undo what the ide has already accepted

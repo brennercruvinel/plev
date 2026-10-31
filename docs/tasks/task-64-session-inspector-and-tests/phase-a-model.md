@@ -3,17 +3,18 @@ id: task-64/phase-a-model
 title: "task-64 phase a: inspector model and the plev-inspect CLI"
 project: plev
 type: section
-status: reference
 parent: task-64
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, semantics, agents]
 relations: [adr-0046, task-67, task-87, task-89]
+evidence: [449b748, bfa30b4, c7c715f, e1d7338, e6560a2]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [449b748, bfa30b4, c7c715f, e1d7338, e6560a2]
 ---
 
 # phase a: inspector model and plev-inspect CLI

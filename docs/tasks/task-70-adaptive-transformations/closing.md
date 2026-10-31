@@ -3,10 +3,11 @@ id: task-70/closing
 title: "task-70: task closure, by the orchestrator"
 project: plev
 type: section
-status: reference
 parent: task-70
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [generated-surfaces, ir, accessibility, agents]
 relations: [task-70/phase-1-operations, task-70/phase-2-proposer, task-70/phase-3-composite-capabilities, task-70/phase-4-accessibility, task-75]
 source: docs/log/steps/task-70-adaptive-transformations.md

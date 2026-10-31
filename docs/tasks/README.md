@@ -43,14 +43,14 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2021-12-27 | [task-24: cleanup & readme](task-24-cleanup-readme/README.md) | done |
 | 2022-05-03 | [task-25: benchmarks](task-25-benchmarks/README.md) | done |
 | 2022-06-15 | [task-ref: research briefing (50+ repos)](task-ref-research-briefing/README.md) | done |
-| 2022-07-12 | [task-34: exploration and extraction of ideas from the reference repos](task-34-exploration-extraction/README.md) | done |
-| 2022-08-16 | [task-32: text system upgrade assessment](task-32-text-upgrade-assessment/README.md) | done |
-| 2022-09-14 | [task-33: WASM plugin architecture](task-33-wasm-plugins/README.md) | done |
 | 2022-12-21 | [task-27: animation system](task-27-animation-system/README.md) | done |
 | 2023-01-25 | [task-28: editable text](task-28-editable-text/README.md) | done |
 | 2023-03-22 | [task-29: app demo real (proof of life)](task-29-app-demo-real/README.md) | done |
+| 2023-04-12 | [task-34: exploration and extraction of ideas from the reference repos](task-34-exploration-extraction/README.md) | done |
 | 2023-05-02 | [task-30: accessibility (accesskit)](task-30-accessibility/README.md) | done |
 | 2023-06-12 | [task-31: vector path rendering (lyon integration)](task-31-vector-paths/README.md) | done |
+| 2023-06-25 | [task-32: text system upgrade assessment](task-32-text-upgrade-assessment/README.md) | done |
+| 2023-07-11 | [task-33: WASM plugin architecture](task-33-wasm-plugins/README.md) | done |
 | 2023-07-23 | [task-35: fix spring<t>, analytical solver](task-35-spring-analytical-solver/README.md) | done |
 | 2023-08-28 | [task-36: signal system hardening](task-36-signal-hardening/README.md) | done |
 | 2023-10-02 | [task-37: animation enhancements](task-37-animation-enhancements/README.md) | done |
@@ -121,7 +121,7 @@ One folder per task: the plan, the execution, the delivery and what stayed open.
 | 2026-09-26 | [task-78: AI-native applications](task-78-ai-native-apps/README.md) | in-progress |
 | 2026-10-09 | [task-98: workspace reorganization](task-98-workspace-reorganization/README.md) | done |
 | 2026-10-16 | [task-99: explorer integration and platform fixes](task-99-integration-and-portability/README.md) | done |
-| 2026-10-27 | [task-100: interactive graphs and corpus import](task-100-interactive-graphs/README.md) | in-progress |
+| 2026-10-27 | [task-100: interactive graphs and corpus import](task-100-interactive-graphs/README.md) | done |
 | 2026-10-27 | [task-101: on-demand fonts and deterministic fallback](task-101-fonts-by-script/README.md) | done |
 | 2026-10-27 | [task-102: reusable builds and web commands](task-102-builds-and-web-commands/README.md) | done |
 | 2026-10-27 | [task-103: runcheck, every executable in the repository runs](task-103-runcheck-every-executable-runs/README.md) | done |

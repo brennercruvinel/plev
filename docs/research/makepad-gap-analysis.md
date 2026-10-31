@@ -5,7 +5,8 @@ project: plev
 type: research
 status: reference
 date: 2022-11-19
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [competition, rendering, layout]
 relations: []
 source: docs/ref/makepad-gap-analysis.md

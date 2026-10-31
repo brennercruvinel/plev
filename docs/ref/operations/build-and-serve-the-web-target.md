@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-06-10
 topics: [web-wasm, gpu, platform]
 relations: [adr-0001, operations-validate-visuals-by-pixel, task-61, task-75]
 source: docs/ref/build-and-serve-the-web-target.md

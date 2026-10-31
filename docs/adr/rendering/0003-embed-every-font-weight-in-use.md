@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-01-08
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [text, fonts]
 relations: []
+evidence: [21fdc8c]
 source: docs/adr/rendering/0003-embed-every-font-weight-in-use.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [21fdc8c]
 ---
 
 # embed every font weight the UI uses, and pin the default families

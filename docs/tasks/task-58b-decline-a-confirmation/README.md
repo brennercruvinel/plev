@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents]
 relations: [task-58, task-60, task-62, task-63]
+evidence: [dc6fde2]
 source: docs/log/steps/task-58b-decline-a-confirmation.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [dc6fde2]
 ---
 
 # task-58b: declining a confirmation

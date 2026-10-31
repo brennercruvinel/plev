@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics]
 relations: [task-57, task-57b, task-58, task-59, task-60, task-62, task-63, task-79, adr-0026, adr-0039, generative-runtime-thesis]
+evidence: [0ec72f9]
 source: docs/log/steps/task-61-agent-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [0ec72f9]
 ---
 
 # task-61: agent surface (local socket, observe, act)

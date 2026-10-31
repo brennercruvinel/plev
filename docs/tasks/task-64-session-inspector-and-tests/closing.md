@@ -3,10 +3,11 @@ id: task-64/closing
 title: "task-64 closing: acceptance criterion checked"
 project: plev
 type: section
-status: reference
 parent: task-64
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, agents]
 relations: [task-64/phase-b-ui, task-64/phase-c-session-to-test]
 source: docs/log/steps/task-64-session-inspector-and-tests.md

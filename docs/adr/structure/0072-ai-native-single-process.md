@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-26
 date_basis: header
+recorded: 2026-09-26
 topics: [llm, gpu, web-wasm]
 relations: [task-41, task-78, experiment-local-inference-candle-vs-burn]
 source: docs/adr/structure/0072-ai-native-single-process.md

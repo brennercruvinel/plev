@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, recording]
 relations: [adr-0032, task-57, task-58b, task-60, task-61, task-62, task-63, task-69, task-92]
 source: docs/adr/semantics/0033-actions-carry-observed-state.md

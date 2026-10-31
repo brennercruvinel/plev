@@ -3,17 +3,18 @@ id: task-63/phase-a-b
 title: "task-63 phases a and b: semantic and visual trail in memory"
 project: plev
 type: section
-status: reference
 parent: task-63
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, semantics, formats]
 relations: [task-60, task-73]
+evidence: [7e63db3]
 source: docs/log/steps/task-63-flight-recorder.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7e63db3]
 ---
 
 # phases a and b closed (2026-09-23)

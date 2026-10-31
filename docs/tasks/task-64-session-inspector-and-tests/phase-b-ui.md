@@ -3,17 +3,18 @@ id: task-64/phase-b-ui
 title: "task-64 phase b: inspector UI"
 project: plev
 type: section
-status: reference
 parent: task-64
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, rendering, mobile]
 relations: [adr-0046, task-65]
+evidence: [6de6d9b, a3ddb21, 26c8a86, 2d491d3, 48aca6b]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [6de6d9b, a3ddb21, 26c8a86, 2d491d3, 48aca6b]
 ---
 
 # phase b: inspector UI, plev-inspector window

@@ -6,13 +6,14 @@ type: task
 status: in-progress
 date: 2026-09-26
 date_basis: header
+recorded: 2026-09-23
 topics: [llm, gpu, performance, research]
 relations: [adr-0025, adr-0026, adr-0072, task-66, task-73, task-76, experiment-local-inference-candle-vs-burn]
+evidence: [6e2fce00, d095aeb5, a60b00c4, 2f91d01b, 094d53da, 94109cd3, f6ff13fb, 0dec09a9, a33b74a7, ddd0928c, 71993e9c, ca7cb9eb, 4a04d454, 8839f3c8, bcf0a205, 06df04c8, 496c6ffa, 002debd4, 9e46ce7a]
 source: docs/log/steps/task-78-ai-native-apps.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [6e2fce00, d095aeb5, a60b00c4, 2f91d01b, 094d53da, 94109cd3, f6ff13fb, 0dec09a9, a33b74a7, ddd0928c, 71993e9c, ca7cb9eb, 4a04d454, 8839f3c8, bcf0a205, 06df04c8, 496c6ffa, 002debd4, 9e46ce7a]
 ---
 
 # task-78: AI-native applications

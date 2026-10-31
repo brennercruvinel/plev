@@ -3,16 +3,17 @@ id: adr-0081
 title: "a graph separates data, appearance and layout"
 project: plev
 type: adr
-status: proposed
+status: accepted
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, layout]
 relations: [task-100]
+evidence: [db4b3299, b819b3db, b8bc7639]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [db4b3299, b819b3db, b8bc7639]
 ---
 
 # a graph separates data, appearance and layout
@@ -39,9 +40,8 @@ A new input source can reuse simulation, drawing and hit testing. An ELK file do
 imply support for the layout algorithm that ELK asks for: that capability remains
 limited to the implemented algorithms, force and compound (`b8bc7639`).
 
-The status stays `proposed` because the decision also describes the ELK reader, which is
-not on main. It becomes `accepted` when that branch is merged, or when the text is
-rewritten without ELK.
+The decision also describes the ELK reader; it stayed `proposed` until the reader
+reached main with PR #146 (`7c8c4a61`, 2026-10-31).
 
 ## Alternatives
 

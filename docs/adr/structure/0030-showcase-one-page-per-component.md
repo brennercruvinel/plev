@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, platform]
 relations: [architecture-component-catalog]
 source: docs/adr/structure/0030-showcase-one-page-per-component.md

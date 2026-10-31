@@ -3,10 +3,11 @@ id: task-71/closing
 title: "task-71 closure by the orchestrator"
 project: plev
 type: section
-status: reference
 parent: task-71
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [importing, ir]
 relations: []
 source: docs/log/steps/task-71-compiler-target.md

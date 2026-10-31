@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2026-02-16
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [workspace, process]
 relations: [adr-0013, task-52]
+evidence: [a4ad0c0, b08bce8, 99929b9, c2a90f1, 8aa4a8f, e6f7091, 92c3aaa]
 source: [docs/log/steps/task-51-workspace-restructure.md, docs/log/changes/task-51.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a4ad0c0, b08bce8, 99929b9, c2a90f1, 8aa4a8f, e6f7091, 92c3aaa]
 ---
 
 # task-51: workspace restructure and naming rebrand

@@ -3,17 +3,18 @@ id: task-75/phase-1-probe-and-scripts
 title: "task-75 phase 1: the probe and the manual test scripts"
 project: plev
 type: section
-status: reference
 parent: task-75
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, platform, semantics, design-system]
 relations: [adr-0068, task-60]
+evidence: [1d2aa2eb, 20096a0f, ab951681, e7ca19c1, d811876f]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [1d2aa2eb, 20096a0f, ab951681, e7ca19c1, d811876f]
 ---
 
 # phase 1: the probe (2026-09-25)

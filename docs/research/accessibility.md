@@ -4,8 +4,9 @@ title: "reference analysis: accessibility (accesskit)"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [accessibility, platform, web-wasm]
 relations: [task-28, task-30]
 source: docs/ref/accessibility.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Reference analysis of accesskit, the accessibility library for toolkits that draw their own interface, as plev does with wgpu. Records accesskit's architecture (the tree sent by the toolkit, per-platform adapters, sharing of node classes), the integrations with egui and bevy, and the mapping of `SceneNode` and `HitRegion` to accessibility nodes. The result is the recommendation for task-30: use accesskit and accesskit_winit, which cover macOS, Windows and Linux and, as an optional feature, Android; iOS and WASM have no adapter and require a manual solution or waiting for an adapter. It matters because it defines plev's accessibility path and the estimate of 700 to 900 lines of code.
 
-data: 2026-03-11
+data: 2022-06-15
 status: completo
 
 ## escopo

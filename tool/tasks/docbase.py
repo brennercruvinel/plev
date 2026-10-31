@@ -21,7 +21,9 @@ import sys
 REPO = Path(__file__).resolve().parents[2]
 REQUIRED = ['id', 'title', 'project', 'type', 'status', 'date', 'date_basis', 'topics',
             'relations', 'source', 'source_revision', 'revised', 'review']
-OPTIONAL = ['parent', 'evidence']
+OPTIONAL = ['parent', 'recorded', 'evidence']
+ORDER = ['id', 'title', 'project', 'type', 'parent', 'status', 'date', 'date_basis', 'recorded', 'topics',
+         'relations', 'evidence', 'source', 'source_revision', 'revised', 'review']
 KINDS = {'index', 'record', 'template', 'adr', 'task', 'learning', 'program', 'thesis',
          'experiment', 'draft', 'manual', 'reference', 'research', 'section'}
 STATES = {'active', 'reference', 'proposed', 'accepted', 'superseded', 'pending',
@@ -83,8 +85,7 @@ def parse(text, where):
 
 
 def emit(meta, body):
-    keys = REQUIRED[:5] + [k for k in ('parent',) if k in meta] + REQUIRED[5:]
-    keys += [k for k in meta if k not in keys]
+    keys = [k for k in ORDER if k in meta] + [k for k in meta if k not in ORDER]
     head = ''.join(f'{k}: {scalar(meta[k])}\n' for k in keys if k in meta)
     return '---\n' + head + '---\n\n' + body.strip() + '\n'
 
@@ -194,6 +195,8 @@ def check(root):
             errors.append(f'{path}: date_basis/review {m["date_basis"]}/{m["review"]}')
         if m['date'] is not None and not re.fullmatch(r'\d{4}(-\d{2}(-\d{2})?)?', str(m['date'])):
             errors.append(f'{path}: date {m["date"]}')
+        if m['review'] != 'generated' and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', str(m.get('recorded'))):
+            errors.append(f'{path}: recorded, the day the page was written, is YYYY-MM-DD')
         if not isinstance(m['topics'], list) or not isinstance(m['relations'], list):
             errors.append(f'{path}: topics and relations are lists')
         if not re.search(r'^# ', body, re.M):

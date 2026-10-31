@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, rendering, input]
 relations: [adr-0032, adr-0033, task-57, task-58, task-59, task-60, task-62, task-65, task-73]
 source: docs/adr/semantics/0035-semantic-binding-beside-the-scene.md

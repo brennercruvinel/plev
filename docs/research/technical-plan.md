@@ -6,6 +6,7 @@ type: program
 status: reference
 date: null
 date_basis: undated
+recorded: 2026-06-10
 topics: [workspace, rendering, text, text-editing, accessibility]
 relations: []
 source: docs/plano-tecnico.md

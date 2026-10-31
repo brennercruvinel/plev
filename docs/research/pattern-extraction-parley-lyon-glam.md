@@ -4,8 +4,9 @@ title: "pattern extraction: parley, lyon, glam-rs"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2023-04-12
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, text, text-editing, rendering]
 relations: [task-31, task-32]
 source: docs/ref/pattern-extraction-parley-lyon-glam.md
@@ -16,9 +17,9 @@ review: reviewed
 
 # pattern extraction: parley, lyon, glam-rs
 
-Records the extraction of seven patterns from three reference repositories (parley, lyon and glam-rs), done on 2026-03-11 through a study of the source code. Each pattern includes the excerpt from the source, the comparison with plev, the possible application and a decision: adopt, adapt or ignore. The result that guides the work is the integration path from lyon for vectors (task-31), which reuses the existing quad pipeline, and the recommendation to consider migrating text editing to parley only after the task-32 evaluation.
+Records the extraction of seven patterns from three reference repositories (parley, lyon and glam-rs), done on 2023-04-12 through a study of the source code. Each pattern includes the excerpt from the source, the comparison with plev, the possible application and a decision: adopt, adapt or ignore. The result that guides the work is the integration path from lyon for vectors (task-31), which reuses the existing quad pipeline, and the recommendation to consider migrating text editing to parley only after the task-32 evaluation.
 
-extracted 2026-03-11 by source code study of reference repos.
+extracted 2023-04-12 by source code study of reference repos.
 source repos: `bunker/repos/3d-graphics/rendering/{parley,lyon,glam-rs}/`
 
 ---

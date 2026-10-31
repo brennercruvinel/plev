@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, platform]
 relations: [task-100]
+evidence: [da4be63a, 4aa9706b]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [da4be63a, 4aa9706b]
 ---
 
 # a hosted view uses the engine's window and clock

@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-07-08
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [importing, formats]
 relations: []
+evidence: [5eecb0a]
 source: docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [5eecb0a]
 ---
 
 # the transpiler reports every unmapped construct, never drops silently

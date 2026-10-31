@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2026-05-11
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [git, text-editing, platform]
 relations: [adr-0020, adr-0021, task-42, task-46, task-47]
+evidence: [f15198a]
 source: [docs/log/steps/task-48-ide-git-client.md, docs/log/changes/task-48.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f15198a]
 ---
 
 # task-48: ide, native git client in plev

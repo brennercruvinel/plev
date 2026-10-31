@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, input, semantics, agents]
 relations: [adr-0057, adr-0058, task-76]
 source: docs/adr/interface/0055-file-dialogs-and-drops-are-capabilities.md

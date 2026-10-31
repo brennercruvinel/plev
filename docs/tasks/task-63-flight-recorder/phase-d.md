@@ -3,17 +3,18 @@ id: task-63/phase-d
 title: "task-63 phase d: the ide records the session the inspector reads"
 project: plev
 type: section
-status: reference
 parent: task-63
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, agents, platform, performance]
 relations: [adr-0037, task-64, task-88, task-89, task-90]
+evidence: [8e6e814, dbc0565, 9f27f39, c78ab50, 390ee70, 1ec952b]
 source: docs/log/steps/task-63-flight-recorder.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [8e6e814, dbc0565, 9f27f39, c78ab50, 390ee70, 1ec952b]
 ---
 
 # phase d: the ide records the session (branch `task/63d-ide-records`)

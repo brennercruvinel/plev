@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [generated-surfaces, ir, semantics, layout, agents]
 relations: [adr-0023, adr-0032, adr-0033, adr-0035, adr-0047, adr-0049, task-68, task-69, task-75, task-79, task-80, task-95, task-97]
 source: docs/adr/generated/0051-materialized-surfaces-from-verified-ir.md

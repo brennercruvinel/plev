@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [agents, semantics, recording]
 relations: [task-58, task-58b, task-80, task-89, task-91, adr-0033, adr-0039]
+evidence: [f101359, 2f61463, 7623b7f, e3cf244, 01b9b2a, ae544b7, d56ef44, 64011de, 9792058, 82202ab, d293046]
 source: docs/log/steps/task-92-the-agent-asks-the-person.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f101359, 2f61463, 7623b7f, e3cf244, 01b9b2a, ae544b7, d56ef44, 64011de, 9792058, 82202ab, d293046]
 ---
 
 # task-92: the agent asks the person

@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2024-05-23
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-04-05
 topics: [workspace, process]
 relations: [adr-0015]
 source: docs/ref/srp-modularization.md

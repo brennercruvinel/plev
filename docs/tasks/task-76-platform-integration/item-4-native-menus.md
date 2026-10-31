@@ -3,17 +3,18 @@ id: task-76/item-4-native-menus
 title: "task-76, item 4: native menus"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, semantics, agents]
 relations: [adr-0057, task-59]
+evidence: [3338c38e, da659be1, 5c351c62, 32794c25, 79ecbaed, af75dd50]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3338c38e, da659be1, 5c351c62, 32794c25, 79ecbaed, af75dd50]
 ---
 
 # item 4 handoff: native menus as capabilities

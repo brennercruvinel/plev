@@ -6,13 +6,14 @@ type: experiment
 status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-10-31
 topics: [generated-surfaces, agents, recording, ir]
 relations: [task-80, task-80/phase-1-probe-and-demos, task-80/demo-5-generative-ui, task-96, task-96/phase-a-surface, task-96/phase-b-title-and-column, task-97, adr-0070]
+evidence: [c8a6c3a9, 46f272d3, b26dc988, ae5be30e, 677b1ad9, 07650665, 9c96bde4]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
-evidence: [c8a6c3a9, 46f272d3, b26dc988, ae5be30e, 677b1ad9, 07650665, 9c96bde4]
 ---
 
 # five demos of qualitatively different software, each with its method written before it ran

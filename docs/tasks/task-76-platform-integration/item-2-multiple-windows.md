@@ -3,17 +3,18 @@ id: task-76/item-2-multiple-windows
 title: "task-76, item 2: multiple windows"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, rendering, input]
 relations: [adr-0056, task-58]
+evidence: [3b642d82, 6da95f2a, bd97c817, 6e46fd28]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3b642d82, 6da95f2a, bd97c817, 6e46fd28]
 ---
 
 # handoff of item 2: multiple windows in the engine

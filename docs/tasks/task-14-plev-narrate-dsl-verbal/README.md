@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-09-27
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [dsl, signals]
 relations: [task-04, task-05, task-09]
 source: [docs/log/steps/task-14.md, docs/log/changes/task-14.md]

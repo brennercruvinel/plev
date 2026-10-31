@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-22
 date_basis: header
+recorded: 2026-09-21
 topics: [hot-reload, gpu, process]
 relations: [adr-0007, adr-0018, adr-0019]
 source: docs/adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md

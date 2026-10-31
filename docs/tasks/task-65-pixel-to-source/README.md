@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [hot-reload, input, semantics, text-editing]
 relations: [task-57, task-59, task-64, adr-0048]
+evidence: [042d34e]
 source: docs/log/steps/task-65-pixel-to-source.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [042d34e]
 ---
 
 # task-65: pixel to code and development inspector

@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [text, text-editing, performance]
 relations: [task-74]
 source: docs/adr/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md

@@ -3,17 +3,18 @@ id: task-76/item-3-files-and-drop
 title: "task-76, item 3: file dialogs and drag and drop"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, input, agents, urna]
 relations: [adr-0055, task-58]
+evidence: [6b8bd395, b1a2e686, c90d1e1d, e65564a3, fe5a9279, 77800d1b]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [6b8bd395, b1a2e686, c90d1e1d, e65564a3, fe5a9279, 77800d1b]
 ---
 
 # handoff of item 3: file dialogs and drag and drop

@@ -3,17 +3,18 @@ id: task-77/phase-1b-blur
 title: "phase 1b handoff (task-77b): blur follows the scale"
 project: plev
 type: section
-status: reference
 parent: task-77
+status: reference
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [determinism, rendering, effects]
 relations: [adr-0064]
+evidence: [7127f65a, f6c688b5, adbf948b]
 source: docs/log/steps/task-77-visual-determinism.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7127f65a, f6c688b5, adbf948b]
 ---
 
 # phase 1b handoff (task-77b): blur follows the scale

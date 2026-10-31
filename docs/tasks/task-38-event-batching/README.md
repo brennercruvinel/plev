@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-11-09
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [input, performance]
 relations: [task-09, research-extracted-patterns]
 source: [docs/log/steps/task-38-event-batching.md, docs/log/changes/task-38.md]

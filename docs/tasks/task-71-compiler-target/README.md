@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [importing, ir, formats]
 relations: [adr-0011, adr-0012, adr-0064, adr-0069, task-66, task-68, task-69, generative-runtime-thesis]
+evidence: [0c08e77a, 9f7e9cfd, 14cd3dfd, 7a240577, 9707a2a6, e3201af7, 6e99cec8, 7ca7d41e, 0cb09a90, 4e16c349]
 source: docs/log/steps/task-71-compiler-target.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [0c08e77a, 9f7e9cfd, 14cd3dfd, 7a240577, 9707a2a6, e3201af7, 6e99cec8, 7ca7d41e, 0cb09a90, 4e16c349]
 ---
 
 # task-71: plev as compiler target (importers to IR)

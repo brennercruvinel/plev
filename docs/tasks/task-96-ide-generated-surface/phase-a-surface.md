@@ -3,17 +3,18 @@ id: task-96/phase-a-surface
 title: "task-96, phase a: the generated surface in the ide (probe, handoff and close-out)"
 project: plev
 type: section
-status: reference
 parent: task-96
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-25
 topics: [generated-surfaces, ir, agents, llm]
 relations: [task-69, task-80, task-85, task-93]
+evidence: [73a318a7, 6bacaa3d, f53667c0, 73704549, f8f39298, e315e11e, 2e6c9e9a, 07650665, 9dadd352, 855b1a4d, 3df1297f, 205e90b3, 1283cc5b]
 source: docs/log/steps/task-96-ide-generated-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [73a318a7, 6bacaa3d, f53667c0, 73704549, f8f39298, e315e11e, 2e6c9e9a, 07650665, 9dadd352, 855b1a4d, 3df1297f, 205e90b3, 1283cc5b]
 ---
 
 # phase a (2026-09-25): probe, handoff and close-out

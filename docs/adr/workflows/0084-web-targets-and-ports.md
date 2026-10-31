@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [web-wasm, platform]
 relations: [task-102]
+evidence: [aa51e7d3, 5de80aad]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [aa51e7d3, 5de80aad]
 ---
 
 # each web target has one command and a port range

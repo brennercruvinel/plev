@@ -3,17 +3,18 @@ id: task-70/phase-3-composite-capabilities
 title: "task-70: phase 3, composite capabilities"
 project: plev
 type: section
-status: reference
 parent: task-70
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, recording, semantics]
 relations: [task-70/phase-1-operations, task-70/phase-2-proposer, adr-0067, task-58, task-63]
+evidence: [43cf8ff5, a3ecffd4, 6ccfbad6, d1106ad8, 5fa0874c, 4d96973a, f00af5ea, f74ce129]
 source: docs/log/steps/task-70-adaptive-transformations.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [43cf8ff5, a3ecffd4, 6ccfbad6, d1106ad8, 5fa0874c, 4d96973a, f00af5ea, f74ce129]
 ---
 
 # phase 3: composite capabilities

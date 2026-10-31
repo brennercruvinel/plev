@@ -3,17 +3,18 @@ id: task-96/phase-b-title-and-column
 title: "task-96, phase b: the diff card title and the column shown only with a surface"
 project: plev
 type: section
-status: reference
 parent: task-96
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-25
 topics: [generated-surfaces, layout, git]
 relations: [task-80, task-97]
+evidence: [e71222cf, 3959d958, 4be4bb2f, e42bd571, a427d2b8]
 source: docs/log/steps/task-96-ide-generated-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e71222cf, 3959d958, 4be4bb2f, e42bd571, a427d2b8]
 ---
 
 # phase b (2026-09-25): the diff card title and the column shown only with a surface

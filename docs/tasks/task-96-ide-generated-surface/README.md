@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [generated-surfaces, ir, agents, llm]
 relations: [task-63, task-64, task-68, task-69, task-70, task-80, task-85, task-93, task-97, experiment-five-demos]
+evidence: [73a318a7, 6bacaa3d, f53667c0, 73704549, f8f39298, e315e11e, 2e6c9e9a, 07650665, 9dadd352, 855b1a4d, 3df1297f, 205e90b3, 1283cc5b, e71222cf, 3959d958, 4be4bb2f, e42bd571, a427d2b8]
 source: docs/log/steps/task-96-ide-generated-surface.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [73a318a7, 6bacaa3d, f53667c0, 73704549, f8f39298, e315e11e, 2e6c9e9a, 07650665, 9dadd352, 855b1a4d, 3df1297f, 205e90b3, 1283cc5b, e71222cf, 3959d958, 4be4bb2f, e42bd571, a427d2b8]
 ---
 
 # task-96: a generated surface in the ide

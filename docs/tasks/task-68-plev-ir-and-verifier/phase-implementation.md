@@ -3,17 +3,18 @@ id: task-68/phase-implementation
 title: "task-68 implementation phase: probe, handoff and close-out"
 project: plev
 type: section
-status: reference
 parent: task-68
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [ir, generated-surfaces, semantics]
 relations: [adr-0049, task-65, task-69, task-91]
+evidence: [871f0dd, 08dd8f8, 12e38d3, d6c66ad, cd9c183, 7380294, 2427a55, 454fe6d, 7721adb, 5350b47, 2461bb5]
 source: docs/log/steps/task-68-plev-ir-and-verifier.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [871f0dd, 08dd8f8, 12e38d3, d6c66ad, cd9c183, 7380294, 2427a55, 454fe6d, 7721adb, 5350b47, 2461bb5]
 ---
 
 # handoff (task-68)

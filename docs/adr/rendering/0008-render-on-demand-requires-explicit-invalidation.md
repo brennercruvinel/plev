@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-10-07
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [rendering, input, signals]
 relations: []
+evidence: [83720e3]
 source: docs/adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [83720e3]
 ---
 
 # render on demand makes invalidation a correctness contract

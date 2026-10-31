@@ -4,8 +4,9 @@ title: "competitor analysis, gui/rendering frameworks"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [competition, research, rendering]
 relations: []
 source: docs/ref/competitors.md
@@ -16,9 +17,9 @@ review: reviewed
 
 # competitor analysis, gui/rendering frameworks
 
-Analysis of seven GUI and rendering frameworks (makepad, dioxus, leptos, yew, slint, ribir and Compose Multiplatform), made in March 2026 to position plev as a GPU-first composition engine in Rust. The result is that only makepad is also GPU-first, and that cross-platform text and accessibility are almost universal gaps; the DSL documentation is the central risk for anyone with their own language. It matters because it supports the scope recommendations: keep the engine below a framework, invest in text, plan for accessibility, and document plev_narrate.
+Analysis of seven GUI and rendering frameworks (makepad, dioxus, leptos, yew, slint, ribir and Compose Multiplatform), made in the research briefing (task-ref) to position plev as a GPU-first composition engine in Rust. The result is that only makepad is also GPU-first, and that cross-platform text and accessibility are almost universal gaps; the DSL documentation is the central risk for anyone with their own language. It matters because it supports the scope recommendations: keep the engine below a framework, invest in text, plan for accessibility, and document plev_narrate.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **contexto:** pesquisa de mercado para posicionamento tecnico do plev como engine de composicao GPU-first em rust.
 
 ---

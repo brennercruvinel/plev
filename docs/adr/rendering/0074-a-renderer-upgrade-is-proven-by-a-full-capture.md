@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-26
 date_basis: header
+recorded: 2026-09-26
 topics: [gpu, determinism, process]
 relations: [adr-0072, task-78]
 source: docs/adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md

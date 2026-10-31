@@ -6,6 +6,7 @@ type: learning
 status: reference
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, process, workspace]
 relations: [adr-0030, task-55, architecture-component-catalog]
 source: docs/log/learnings/showcase-pages.md

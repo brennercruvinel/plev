@@ -6,13 +6,14 @@ type: learning
 status: reference
 date: 2026-06-10
 date_basis: header
+recorded: 2026-06-10
 topics: [rendering, gpu, web-wasm]
 relations: []
+evidence: [2a33933]
 source: kdb/explanation/the-two-gamma-bugs.md
 source_revision: d0958da0
 revised: 2026-10-30
 review: reviewed
-evidence: [2a33933]
 ---
 
 # the two gamma bugs: one assumption, two opposite failures

@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-06-10
 topics: [design-system, rendering, layout, text, semantics]
 relations: [adr-0001, adr-0006, adr-0023, adr-0026, adr-0032, adr-0033, adr-0034, adr-0035, adr-0038, adr-0039, adr-0073, architecture-component-catalog, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-57b, task-58, task-59, task-60, task-61, task-62, task-63, task-66, task-66b, task-69, task-73, task-74, task-82, task-83, task-90, task-91]
 source: docs/ref/code-against-the-plev-engine.md

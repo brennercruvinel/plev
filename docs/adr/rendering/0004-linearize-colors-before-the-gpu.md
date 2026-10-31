@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-11-20
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [rendering, gpu]
 relations: []
+evidence: [69013d1]
 source: docs/adr/rendering/0004-linearize-colors-before-the-gpu.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [69013d1]
 ---
 
 # linearize colors before they reach the GPU

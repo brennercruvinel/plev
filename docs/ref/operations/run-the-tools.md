@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-10-27
 date_basis: header
+recorded: 2026-10-27
 topics: [process, agents, recording, performance, importing]
 relations: []
 source: docs/ref/run-the-tools.md

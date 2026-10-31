@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, platform, performance]
 relations: [task-61, task-62, task-64, task-67, task-75, task-82, task-88, task-89, task-90, adr-0039]
+evidence: [7f866e8]
 source: docs/log/steps/task-86-the-ide-opens-the-agent-port.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7f866e8]
 ---
 
 # task-86: the ide people use opens the agent port

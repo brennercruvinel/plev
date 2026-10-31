@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, git, agents]
 relations: [adr-0033, adr-0035, task-58, task-58b, task-59, task-60, task-61, task-69, task-84, task-85]
 source: docs/adr/semantics/0036-commit-checks-the-index-it-observed.md

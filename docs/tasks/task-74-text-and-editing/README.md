@@ -6,6 +6,7 @@ type: task
 status: in-progress
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [text, fonts, text-editing, performance]
 relations: [adr-0021, adr-0024, adr-0071, research-parley-vs-cosmic-text, task-60, task-66, task-77, experiment-text-coverage-and-large-documents]
 source: docs/log/steps/task-74-text-and-editing.md

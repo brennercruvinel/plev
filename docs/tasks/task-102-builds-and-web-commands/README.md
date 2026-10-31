@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [workspace, web-wasm, performance]
 relations: [adr-0083, adr-0084]
+evidence: [540e218d, 706dfa82, aa51e7d3, 62cb40e8, 5de80aad, f57c9054, 229f046b]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [540e218d, 706dfa82, aa51e7d3, 62cb40e8, 5de80aad, f57c9054, 229f046b]
 ---
 
 # task-102: reusable builds and web commands

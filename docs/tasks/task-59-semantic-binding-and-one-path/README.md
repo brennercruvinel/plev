@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, rendering, design-system]
 relations: [task-57, task-58, adr-0035, generative-runtime-thesis, generative-runtime-program, operations-code-against-the-plev-engine, task-60, task-61, task-62, task-63, task-65, task-66, task-68, task-81]
+evidence: [f71dc20, f5b7cee]
 source: docs/log/steps/task-59-semantic-binding-and-one-path.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f71dc20, f5b7cee]
 ---
 
 # task-59: semantic binding with the render and one operational path

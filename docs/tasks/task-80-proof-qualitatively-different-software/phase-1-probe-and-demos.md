@@ -3,17 +3,18 @@ id: task-80/phase-1-probe-and-demos
 title: "task-80, phase 1: probe, five-demo method, demos 3 and 4 and handoff"
 project: plev
 type: section
-status: reference
 parent: task-80
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, recording, generated-surfaces, research]
 relations: [adr-0050, adr-0070, task-60, task-62, task-63, task-64, task-68, task-69, task-70, task-84, task-86, task-87, task-89, task-92, task-93, task-94, task-96, generative-runtime-thesis]
+evidence: [e44e4234, c8a6c3a9, f008c897, 46f272d3, b26dc988, ae5be30e, 677b1ad9]
 source: docs/log/steps/task-80-proof-qualitatively-different-software.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e44e4234, c8a6c3a9, f008c897, 46f272d3, b26dc988, ae5be30e, 677b1ad9]
 ---
 
 # phase 1: probe, five-demo method, demos 3 and 4 and handoff

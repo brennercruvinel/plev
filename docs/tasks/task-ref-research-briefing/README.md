@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2022-06-15
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, competition]
 relations: [task-30, task-31, task-32, task-33, research-competitors, research-linebender-ecosystem, research-accessibility, research-animation-motion, research-math-physics-geometry, research-wasm-tooling, research-charts-visualization, research-tui-patterns, research-emulators-wasm-runtimes, research-competitive-positioning, research-integration-candidates, research-technology-radar]
 source: [docs/log/steps/task-ref-research-briefing.md, docs/log/changes/task-ref.md]

@@ -4,8 +4,9 @@ title: "reference analysis: math, physics and geometry"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [gpu, rendering, performance]
 relations: []
 source: docs/ref/math-physics-geometry.md

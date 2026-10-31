@@ -3,17 +3,18 @@ id: task-76/item-6-deep-links
 title: "task-76, item 6: deep links"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, agents, input]
 relations: [adr-0063]
+evidence: [e3b6c8d2, df91e2a8, edefe39b, 66345cf5, e52359d0]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e3b6c8d2, df91e2a8, edefe39b, 66345cf5, e52359d0]
 ---
 
 # handoff of item 6: deep links

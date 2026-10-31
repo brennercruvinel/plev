@@ -6,6 +6,7 @@ type: adr
 status: proposed
 date: YYYY-MM-DD
 date_basis: text
+recorded: YYYY-MM-DD
 topics: []
 relations: []
 source: reconstruction

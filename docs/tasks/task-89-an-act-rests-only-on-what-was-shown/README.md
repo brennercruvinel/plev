@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics]
 relations: [adr-0039, adr-0047, task-61, task-86, task-87, task-90, task-91]
+evidence: [4d94364, 69b3191, 114151d, ea6176d, a125a06, 79b8c93]
 source: docs/log/steps/task-89-an-act-rests-only-on-what-was-shown.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [4d94364, 69b3191, 114151d, ea6176d, a125a06, 79b8c93]
 ---
 
 # task-89: an act relies only on what was shown to the agent

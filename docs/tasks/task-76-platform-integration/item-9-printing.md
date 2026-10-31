@@ -3,17 +3,18 @@ id: task-76/item-9-printing
 title: "task-76, item 9: printing"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, rendering, gpu]
 relations: [adr-0061, task-66]
+evidence: [3e13a7f1, 9c33b535, 84a95b34, dd14f99b]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3e13a7f1, 9c33b535, 84a95b34, dd14f99b]
 ---
 
 # item 9 handoff: printing, the frame on paper

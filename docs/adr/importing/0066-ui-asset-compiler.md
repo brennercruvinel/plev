@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [performance, fonts, gpu]
 relations: [adr-0011, task-63, task-72, task-74]
 source: docs/adr/importing/0066-ui-asset-compiler.md

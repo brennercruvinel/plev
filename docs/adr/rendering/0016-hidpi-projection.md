@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2024-06-17
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-04-05
 topics: [rendering, text]
 relations: []
 source: docs/adr/rendering/0016-hidpi-projection.md
