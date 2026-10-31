@@ -26,9 +26,13 @@ pub mod pagination;
 pub mod tokens;
 
 pub use accordion::{Accordion, AccordionMode};
-pub use collapsible::{Collapsible, DisclosureLook};
+pub use aspect_ratio::{AspectFrame, AspectRatio};
+pub use collapsible::{Collapsible, DisclosureList, DisclosureLook};
+pub use item::{Item, ItemShape};
+pub use kbd::{Kbd, KbdSize};
 pub use tokens::{
-    DisclosureMotion, DisclosureRecipe, DisclosureSurface, DisclosureTile, DisclosureTokens,
+    AspectRecipe, CapRecipe, DisclosureMotion, DisclosureRail, DisclosureRecipe, DisclosureSurface,
+    DisclosureTile, DisclosureTokens, ItemRecipe,
 };
 
 pub use avatar::{Avatar, AvatarSize};

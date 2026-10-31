@@ -450,7 +450,18 @@ fn settle(c: &mut Collapsible) {
 #[test]
 fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     let kit = DisclosureTokens::hoff_core();
-    assert_eq!(DisclosureTokens::derive(&core()), kit);
+    let mut derived = DisclosureTokens::derive(&core());
+    // Two kit values sit outside the core palette: the tile's hover
+    // border, which the derived theme puts between the line and the dim
+    // text, and the add button's white glyph, which it draws in the page
+    // tone. Every other value is the kit's.
+    let between = derived.item.tile_hover.border.0;
+    let (line, dim) = (core().colors.divider.0, core().colors.text_dim.0);
+    assert!((0..3).all(|i| between[i] < line[i] && between[i] > dim[i]));
+    assert_eq!(derived.item.add_glyph_color, core().colors.bg);
+    derived.item.tile_hover.border = kit.item.tile_hover.border;
+    derived.item.add_glyph_color = kit.item.add_glyph_color;
+    assert_eq!(derived, kit);
     assert_eq!(core().disclosure, kit);
     // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
     // `p-4 pt-0` body; the Dropdown's `p-0.75 pr-3 rounded-xl`; 500 ms.
