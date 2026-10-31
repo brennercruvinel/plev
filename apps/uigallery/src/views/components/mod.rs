@@ -50,6 +50,7 @@ pub mod field;
 // task-104 front B, overlays (#155)
 
 // task-104 front C, conversation and feedback (#156)
+pub mod bubble;
 pub mod message;
 
 // task-104 front D, disclosure and display (#157)

@@ -116,12 +116,12 @@ pub const PAGES: &[Page] = &[
         "A trail that collapses when narrow. Click a crumb.",
         Pane::Breadcrumb,
     ),
-    alias(
+    page(
+        C,
         "Bubble",
         "send",
-        "The message dock's bubbles.",
-        Pane::Dock,
-        "a bubble widget of its own, apart from the dock",
+        "Chat bubbles read and unread, from either side, growing with their words.",
+        Pane::Bubble,
     ),
     page(
         C,

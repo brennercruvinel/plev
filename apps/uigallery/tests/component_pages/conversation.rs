@@ -10,9 +10,9 @@ use super::harness::{Gallery, ask, by_agent, gallery, sid};
 const CHIP: &str = "message_page.group[1].card[0].message[0].reaction";
 const ROW: &str = "message_page.group[0].card[0].message[0]";
 
-/// The gallery on the Message page, scrolled so a person sees `id`.
-fn seen(id: &str) -> Gallery {
-    let mut g = gallery("Message");
+/// The gallery on `page`, scrolled so a person sees `id`.
+fn seen(page: &str, id: &str) -> Gallery {
+    let mut g = gallery(page);
     let bound = g.c.binding(&sid(id)).map(|b| b.rect);
     let [_, y, _, h] = bound.unwrap_or_else(|| panic!("{id} is not bound"));
     if y + h > 700.0 {
@@ -29,7 +29,7 @@ fn seen(id: &str) -> Gallery {
 #[test]
 fn a_like_chip_s_press_leaves_the_message_page_as_it_was_from_the_three() {
     let before = gallery("Message").state();
-    let mut person = seen(CHIP);
+    let mut person = seen("Message", CHIP);
     person.click(CHIP);
     let mut reader = gallery("Message");
     reader.press(CHIP);
@@ -52,17 +52,18 @@ fn a_message_row_is_read_and_its_chip_is_pressed() {
     assert!(chip.actions.iter().any(|a| a.name.as_str() == "activate"));
 }
 
-/// The focus a reader leaves on a message, or on its chip, goes with
+/// The focus a reader leaves on a message, its chip or a bubble goes with
 /// Escape and with a click of the person where no widget is.
 #[test]
 fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
-    for id in [ROW, CHIP] {
+    const BUBBLE: &str = "bubble_page.group[0].card[0].bubble[0]";
+    for (page, id) in [("Message", ROW), ("Message", CHIP), ("Bubble", BUBBLE)] {
         let focused = |g: &Gallery| {
             g.view
                 .semantics()
                 .and_then(|s| s.focused().map(ToString::to_string))
         };
-        let mut g = seen(id);
+        let mut g = seen(page, id);
         assert!(g.view.assist_focus(&sid(id)), "{id}");
         assert_eq!(focused(&g).as_deref(), Some(id), "{id}: projected");
         assert!(g.view.close_top_overlay(), "{id}: Escape lets it go");
@@ -71,7 +72,8 @@ fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
         assert!(g.view.assist_focus(&sid(id)));
         g.frame();
         // beside the row, in the card's inset, level with what is
-        // focused: on screen, where no widget is
+        // focused: on screen, where no widget is (a bubble's row starts
+        // at the card's inset too)
         let row = id.strip_suffix(".reaction").unwrap_or(id);
         let [rx, _, _, _] = g.c.binding(&sid(row)).unwrap().rect;
         let (_, y) = g.middle(id);
