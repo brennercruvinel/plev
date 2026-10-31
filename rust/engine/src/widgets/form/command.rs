@@ -26,10 +26,11 @@ use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
+use crate::widgets::content::kbd::Kbd;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::select::list::{self, Window};
 use crate::widgets::icons;
-use crate::widgets::recipe::{rounded_rect, shadow_drops, shadow_insets};
+use crate::widgets::recipe::rounded_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// One command: its label, a Lucide icon and a shortcut, in a group.
@@ -422,26 +423,11 @@ impl Command {
         }
         let mut end = row.right() - p.text_inset;
         if let Some(keys) = &item.shortcut {
-            let (tw, th) = TextMeasurer::measure_styled(keys, &g.hint_text, None);
-            let (w, h) = (tw.ceil() + g.hint_pad[0] * 2.0, th + g.hint_pad[1] * 2.0);
+            // A menu row's key cap, as the kit's menus draw a shortcut.
+            let cap = Kbd::new(keys.as_str());
+            let (w, h) = cap.preferred_size(theme);
             let r = Rect::new(end - w, row.y + (row.h - h) / 2.0, w, h);
-            let layer = LayerId::DEFAULT;
-            shadow_drops(c, layer, r, g.hint_radius, &g.hint_shadow);
-            c.push(rounded_rect(
-                r.x,
-                r.y,
-                r.w,
-                r.h,
-                g.hint_radius,
-                g.hint_fill.0,
-            ));
-            shadow_insets(c, layer, r, g.hint_radius, &g.hint_shadow);
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(keys, &g.hint_text, None),
-                x: r.x + g.hint_pad[0],
-                y: r.y + g.hint_pad[1],
-                color: g.hint_color.0,
-            });
+            cap.render(c, r, theme);
             end = r.x - theme.form.select.gap;
         }
         let label = Rect::new(row.x + inset, row.y, (end - row.x - inset).max(0.0), row.h);

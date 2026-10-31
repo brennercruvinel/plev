@@ -20,17 +20,25 @@ use crate::widgets::content::DisclosureTile;
 
 mod data;
 mod plot;
+mod tool;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
 pub use plot::{ChartRecipe, GraphRecipe};
+pub use tool::{
+    PlayerRecipe, PlayerTones, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
+};
 
-/// A text run: size, line height and weight in px, in the theme's family;
-/// tracked as the theme tracks unless the run names its own (in em).
+/// A text run: size, line height and weight in px, in the theme's family
+/// (its mono family for a code run); tracked as the theme tracks unless
+/// the run names its own (in em).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NavText {
     pub size: f32,
     pub line_height: f32,
     pub weight: u16,
     pub tracking_em: Option<f32>,
+    /// A code run: the theme's mono family, untracked
+    /// ([`TypographyScale::exact_mono`]).
+    pub mono: bool,
 }
 
 impl NavText {
@@ -40,6 +48,7 @@ impl NavText {
             line_height,
             weight,
             tracking_em: None,
+            mono: false,
         }
     }
 
@@ -51,9 +60,18 @@ impl NavText {
         }
     }
 
+    /// The run in the theme's mono family.
+    pub const fn in_mono(self) -> Self {
+        Self { mono: true, ..self }
+    }
+
     /// The one style the run is measured and drawn with.
     pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        let style = typography.exact(self.size, self.line_height, self.weight);
+        let style = if self.mono {
+            typography.exact_mono(self.size, self.line_height, self.weight)
+        } else {
+            typography.exact(self.size, self.line_height, self.weight)
+        };
         match self.tracking_em {
             Some(em) => style.with_letter_spacing(em * self.size),
             None => style,
@@ -160,6 +178,9 @@ pub struct NavigationTokens {
     pub code: CodeRecipe,
     pub chart: ChartRecipe,
     pub graph: GraphRecipe,
+    /// The ToolbarPage's parts: toolbar, zoom panel, player, view
+    /// controller.
+    pub tool: ToolTokens,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -266,6 +287,7 @@ impl NavigationTokens {
             code: CodeRecipe::hoff_core(),
             chart: ChartRecipe::hoff_core(),
             graph: GraphRecipe::hoff_core(),
+            tool: ToolTokens::hoff_core(),
         }
     }
 
@@ -300,6 +322,7 @@ impl NavigationTokens {
             code: CodeRecipe::derive(theme),
             chart: ChartRecipe::derive(theme),
             graph: GraphRecipe::derive(theme),
+            tool: ToolTokens::derive(theme),
         }
     }
 

@@ -16,8 +16,12 @@ use crate::widgets::recipe::{
 use crate::widgets::widget::Rect;
 
 impl Collapsible {
-    fn surface<'r>(&self, r: &'r DisclosureRecipe) -> &'r DisclosureSurface {
-        if self.current {
+    /// The trigger's surface: a disabled one shows no state (an open or
+    /// current fill under faded text reads as the one in use).
+    pub(super) fn surface<'r>(&self, r: &'r DisclosureRecipe) -> &'r DisclosureSurface {
+        if self.disabled {
+            &r.rest
+        } else if self.current {
             &r.current
         } else if self.open {
             &r.open

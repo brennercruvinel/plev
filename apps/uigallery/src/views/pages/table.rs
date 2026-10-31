@@ -149,7 +149,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
     page(
@@ -364,6 +364,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Menus",
+        "folder",
+        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        Pane::Menus,
+    ),
+    page(
+        C,
         "Message",
         "send",
         "Comment rows of a thread and the quick comment, with the like chip.",
@@ -551,6 +558,13 @@ pub const PAGES: &[Page] = &[
         "layout-grid",
         "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
         Pane::ToggleGroup,
+    ),
+    page(
+        C,
+        "Toolbar",
+        "mouse-pointer-2",
+        "The kit's toolbar page: the toolbar and its zoom panel, play mode, the video player, the view controller.",
+        Pane::Toolbar,
     ),
     page(
         C,

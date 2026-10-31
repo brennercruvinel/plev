@@ -178,6 +178,7 @@ components! {
     ButtonGroup => button_group,
     Calendar => calendar,
     DatePicker => date_picker,
+    Menus => menus,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,
@@ -186,6 +187,7 @@ components! {
     CodeBlock => code_block,
     Graph => graph,
     Stat => stat,
+    Toolbar => toolbar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

@@ -3,7 +3,10 @@
 //! kit's showcase draws a component (groups with a title and a rule,
 //! cards behind a chip naming their states). The widget is
 //! `engine::widgets::form::command::Command`. The palette in a dialog
-//! is the same widget in the Modal of front B, once it lands.
+//! is `command_dialog::CommandDialog`, the same palette on the modal's
+//! sheet: a card holds its Search with the `⌘ K` (a press opens the
+//! palette in the card, the card standing for the window), and one shows
+//! it open.
 //!
 //! The page is a form page (`field::FormPage`): its ids under
 //! `command_page`, a palette projected as its search box with its list
@@ -16,15 +19,14 @@ use std::any::Any;
 use accord::{SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::feedback::Modal;
 use engine::widgets::form::TextField;
 use engine::widgets::form::command::{Command, CommandRow};
+use engine::widgets::form::command_dialog::CommandDialog;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::field::spec::{CardWidget, Part};
 use super::field::{FormPage, Group, card};
-
-/// A palette is `w-72`, narrower when the card is.
-const COMMAND_W: f32 = 288.0;
 
 fn palette() -> Command {
     Command::new("Type a command or search...")
@@ -66,6 +68,14 @@ pub fn page() -> FormPage {
             ],
         },
         Group {
+            title: "Dialog",
+            columns: 2,
+            cards: vec![
+                card("Closed, Press, ⌘ K", CommandDialog::new(palette())),
+                card("Open, Escape", CommandDialog::new(palette()).opened()),
+            ],
+        },
+        Group {
             title: "Content",
             columns: 1,
             cards: vec![card(
@@ -93,7 +103,7 @@ impl CardWidget for Command {
     }
 
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        let w = COMMAND_W.min(room);
+        let w = theme.form.group.palette_width.min(room);
         (w, self.height_for(w, theme))
     }
 
@@ -198,6 +208,133 @@ impl CardWidget for Command {
     }
 }
 
+/// The card stands for the window: closed, the Search; open, the sheet
+/// as a modal is in a window that wide. Open, the rest is the palette's.
+impl CardWidget for CommandDialog {
+    fn with_sem(self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        Box::new((*self).sem(id))
+    }
+
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        if !self.is_open() {
+            let w = theme.form.group.width.min(room);
+            return (w, self.trigger_height(theme));
+        }
+        let w = Modal::width(theme, room).min(room);
+        let s = self.sheet_rect(theme, Rect::new(0.0, 0.0, w, 0.0));
+        (s.w, s.h)
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        if self.is_open() {
+            self.render_in(c, theme, rect);
+        } else {
+            CommandDialog::render(self, c, rect, rect, theme);
+        }
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        CommandDialog::project(self, b, Some(parent));
+    }
+
+    /// A press off the card is off the window the card stands for: not
+    /// the dialog's.
+    fn handle_event(&mut self, event: &WidgetEvent, rect: Rect, theme: &Theme) -> EventResult {
+        if let WidgetEvent::MouseDown { x, y } = *event
+            && !rect.contains(x, y)
+        {
+            return EventResult::IGNORED;
+        }
+        CommandDialog::handle_event(self, event, rect, rect, theme)
+    }
+
+    fn text(&self) -> Option<&TextField> {
+        self.is_open().then_some(&self.command.search.input)
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        self.is_open().then_some(&mut self.command.search.input)
+    }
+
+    fn enter(&mut self) -> bool {
+        CommandDialog::enter(self)
+    }
+
+    fn escape(&mut self) -> bool {
+        CommandDialog::escape(self)
+    }
+
+    fn nav(&mut self, down: bool) -> bool {
+        self.is_open() && self.command.nav(down)
+    }
+
+    /// Closed, the trigger is the action; open, the palette's parts.
+    fn part_id(&self, part: Part) -> Option<SemId> {
+        match (self.is_open(), part) {
+            (false, Part::Action) => self.trigger_id().cloned(),
+            (false, _) => None,
+            (true, part) => CardWidget::part_id(&self.command, part),
+        }
+    }
+
+    /// Closed, the trigger's focus is its search button's ring.
+    fn set_part_focus(&mut self, part: Option<Part>) {
+        if self.is_open() {
+            CardWidget::set_part_focus(&mut self.command, part);
+        } else {
+            self.trigger.set_action_focus(part == Some(Part::Action));
+        }
+    }
+
+    fn part_focus(&self) -> Option<Part> {
+        if !self.is_open() {
+            return self.trigger.has_action_focus().then_some(Part::Action);
+        }
+        CardWidget::part_focus(&self.command)
+    }
+
+    fn part(&self, id: &SemId) -> Option<Part> {
+        if !self.is_open() {
+            return (self.trigger_id() == Some(id)).then_some(Part::Action);
+        }
+        CardWidget::part(&self.command, id)
+    }
+
+    fn on_box(&self, x: f32, y: f32, rect: Rect, theme: &Theme) -> bool {
+        self.is_open()
+            && CardWidget::on_box(&self.command, x, y, self.palette_rect(theme, rect), theme)
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        let palette = self.palette_rect(theme, rect);
+        self.is_open()
+            .then(|| CardWidget::ime_area(&self.command, palette, theme))
+            .flatten()
+    }
+
+    /// The trigger's `activate` opens; open, the palette's own, and a
+    /// command run closes.
+    fn run(&mut self, part: Part, action: &str, param: Option<&Value>) -> bool {
+        if !self.is_open() {
+            let open = part == Part::Action && action == "activate" && param.is_none();
+            if open {
+                self.open();
+            }
+            return open;
+        }
+        let ran = CardWidget::run(&mut self.command, part, action, param);
+        if ran && matches!(part, Part::Option(_)) {
+            self.close();
+        }
+        ran
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use accord::Role;
@@ -230,15 +367,44 @@ mod tests {
                         assert!(card.right() <= w + 0.5, "{what}: card");
                         assert!(rect.x >= card.x && rect.right() <= card.right() + 0.5);
                         assert!(rect.bottom() <= card.bottom() + 0.5, "{what}: under");
-                        let cmd: &Command = c.spec.get().unwrap();
-                        let l = cmd.layout(*rect, &theme);
+                        let dialog: Option<&CommandDialog> = c.spec.get();
+                        let (cmd, at) = match dialog {
+                            Some(d) if !d.is_open() => continue,
+                            Some(d) => (&d.command, d.palette_rect(&theme, *rect)),
+                            None => (c.spec.get::<Command>().unwrap(), *rect),
+                        };
+                        let l = cmd.layout(at, &theme);
+                        assert!(l.search.x >= rect.x && l.search.right() <= rect.right() + 0.5);
                         assert!(
-                            l.list.y >= l.search.bottom() && l.list.bottom() <= rect.bottom() + 0.5
+                            l.list.y >= l.search.bottom() && l.list.bottom() <= rect.bottom() + 0.5,
+                            "{what}: list"
                         );
                     }
                 }
             }
         }
+    }
+
+    /// The dialog's card: a press on its Search opens the palette there
+    /// with the caret in its box; typing filters, Escape closes it.
+    #[test]
+    fn a_press_on_the_search_opens_the_dialog_and_escape_closes_it() {
+        let theme = Theme::hoff_core();
+        let mut p = page();
+        let at = (2, 0);
+        let dialog = |p: &FormPage| -> bool {
+            let d: &CommandDialog = p.spec(at).and_then(|s| s.get()).expect("a dialog");
+            d.is_open()
+        };
+        assert!(!dialog(&p));
+        let rect = p.widget_rect(at, content(), &theme).unwrap();
+        let (x, y) = rect.center();
+        p.handle_event(&WidgetEvent::MouseDown { x, y }, content(), &theme);
+        assert!(dialog(&p), "a press on the Search opens it");
+        assert_eq!(p.focused(), Some(at));
+        assert!(p.handle_text("s"));
+        assert!(p.handle_escape());
+        assert!(!dialog(&p), "Escape closes it");
     }
 
     /// A click focuses the box; typing filters, Down highlights the next

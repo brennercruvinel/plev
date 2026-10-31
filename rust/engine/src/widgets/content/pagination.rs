@@ -347,18 +347,20 @@ impl Pagination {
 /// The pages and gaps of `room` cells over `n` pages around `current`:
 /// all when they fit; the pages around the current one when too few cells
 /// are left for the ends; otherwise the first, the last, the pages around
-/// the current one and a gap on a side that leaves pages out.
+/// the current one and a gap on a side that leaves pages out. The pages
+/// around the current one center on it; an even count leans forward,
+/// toward the pages not seen yet ("1 … 20 21 … 40").
 fn window(n: usize, current: usize, room: usize) -> Vec<PageSlot> {
     if n <= room {
         return (0..n).map(PageSlot::Page).collect();
     }
     if room < 5 {
-        let start = current.saturating_sub(room / 2).min(n - room);
+        let start = current.saturating_sub((room - 1) / 2).min(n - room);
         return (start..start + room).map(PageSlot::Page).collect();
     }
     let middle = room - 4;
     let start = current
-        .saturating_sub(middle / 2)
+        .saturating_sub((middle - 1) / 2)
         .clamp(2, n.saturating_sub(2 + middle).max(2));
     let end = (start + middle).min(n - 2);
     let mut out = vec![PageSlot::Page(0)];
@@ -408,6 +410,12 @@ mod tests {
         let end = window(20, 19, 7);
         assert!(end.contains(&PageSlot::Page(19)) && end.contains(&PageSlot::Page(18)));
         assert!(end.len() <= 7);
+        // An even window leans forward: the next page, not the previous.
+        assert_eq!(
+            pages(&window(40, 19, 6)),
+            [Some(0), None, Some(19), Some(20), None, Some(39)]
+        );
+        assert_eq!(pages(&window(40, 19, 2)), [Some(19), Some(20)]);
         assert_eq!(
             pages(&window(20, 10, 1)),
             [Some(10)],

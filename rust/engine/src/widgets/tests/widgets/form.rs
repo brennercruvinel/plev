@@ -1322,3 +1322,104 @@ fn a_new_field_projects_its_value_and_its_icon() {
     assert!(n.set_value("grace"));
     assert_eq!((n.value(), n.is_editing()), ("grace", false));
 }
+
+// Command dialog
+
+fn command_dialog() -> crate::widgets::form::command_dialog::CommandDialog {
+    use crate::widgets::form::command::Command;
+    let cmd = Command::new("Type a command...").group(
+        "File",
+        [
+            ("New file", Some("file"), Some("⌘ N")),
+            ("Save", Some("save"), Some("⌘ S")),
+        ],
+    );
+    crate::widgets::form::command_dialog::CommandDialog::new(cmd)
+        .sem(SemId::parse("s.palette").unwrap())
+}
+
+/// A press on the trigger opens the palette with its caret, ⌘K toggles
+/// it, Escape and a press off the sheet close it, and a command run
+/// closes it with the command for the owner.
+#[test]
+fn a_command_dialog_opens_runs_and_closes() {
+    let theme = Theme::hoff_core();
+    let window = Rect::new(0.0, 0.0, 1024.0, 768.0);
+    let trigger = Rect::new(20.0, 20.0, 216.0, 40.0);
+    let mut d = command_dialog();
+    let (tx, ty) = trigger.center();
+    let r = d.handle_event(
+        &WidgetEvent::MouseDown { x: tx, y: ty },
+        window,
+        trigger,
+        &theme,
+    );
+    assert!(r.clicked && d.is_open());
+    assert!(d.command.search.input.is_focused(), "the caret in the box");
+    assert!(d.escape() && !d.is_open());
+    assert!(!d.escape(), "closed: Escape is the page's");
+    d.toggle();
+    assert!(d.is_open());
+    let off = WidgetEvent::MouseDown { x: 2.0, y: 700.0 };
+    assert!(d.handle_event(&off, window, trigger, &theme).changed);
+    assert!(!d.is_open(), "a press off the sheet closes");
+    d.toggle();
+    assert!(d.command.nav(true), "Down from the first command");
+    assert!(d.enter(), "Enter runs the highlighted command");
+    assert!(!d.is_open());
+    assert_eq!(d.command.ran().map(|c| c.label.as_str()), Some("Save"));
+}
+
+/// The sheet is a modal's width, inside the window from a phone to a
+/// desktop, the palette inside it by the modal's padding; open, the
+/// scrim covers the window under the sheet.
+#[test]
+fn a_command_dialog_sits_on_the_modal_sheet_in_every_window() {
+    for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
+        let d = command_dialog().opened();
+        for w in [320.0, 768.0, 1440.0] {
+            let window = Rect::new(0.0, 0.0, w, 800.0);
+            let sheet = d.sheet_rect(&theme, window);
+            let modal = theme.overlay.modal.max_w;
+            assert!(sheet.w <= modal + 0.01 && sheet.x >= 0.0 && sheet.right() <= w + 0.01);
+            let palette = d.palette_rect(&theme, sheet);
+            let pad = theme.overlay.modal.pad;
+            assert!((palette.x - sheet.x - pad).abs() < 0.01);
+            assert!(palette.bottom() <= sheet.bottom() + 0.01);
+            let nodes = nodes_of(|c| d.render(c, window, Rect::new(0.0, 0.0, 0.0, 0.0), &theme));
+            let scrim = theme.overlay.modal.scrim.0;
+            assert!(matches!(
+                nodes.first(),
+                Some(SceneNode::Rect { w: sw, color, .. }) if *sw == w && *color == scrim
+            ));
+        }
+    }
+}
+
+/// Closed, a reader finds the trigger, a button with its `⌘ K`; open, a
+/// dialog with the palette in it.
+#[test]
+fn a_command_dialog_projects_its_trigger_or_its_palette() {
+    let parent = SemId::parse("s").unwrap();
+    let project = |d: &crate::widgets::form::command_dialog::CommandDialog| {
+        let mut b = SnapshotBuilder::new();
+        b.node(parent.clone(), Role::Group, "s");
+        d.project(&mut b, Some(&parent));
+        b.finish().expect("a valid projection")
+    };
+    let mut d = command_dialog();
+    let snap = project(&d);
+    let trigger = snap
+        .get(&SemId::parse("s.palette.trigger").unwrap())
+        .unwrap();
+    assert_eq!(trigger.role, Role::Button);
+    assert!(snap.get(&SemId::parse("s.palette").unwrap()).is_none());
+    d.open();
+    let snap = project(&d);
+    let dialog = snap.get(&SemId::parse("s.palette").unwrap()).unwrap();
+    assert_eq!(dialog.role, Role::Dialog);
+    assert!(
+        snap.get(&SemId::parse("s.palette.palette").unwrap())
+            .is_some()
+    );
+}
