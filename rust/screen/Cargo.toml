@@ -10,6 +10,7 @@ name = "screen"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "plev surfaces materialized from verified IR: layout by the engine, tokens by the Theme, widgets by comps, semantics from the IR, events as requests through the app's dispatcher"
 

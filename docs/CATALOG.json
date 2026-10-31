@@ -18942,7 +18942,7 @@
    ],
    "source": "docs/log/steps/task-41-license-and-public-release.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
+   "revised": "2026-10-31",
    "review": "reviewed",
    "headings": [
     {
@@ -18984,6 +18984,11 @@
      "level": 2,
      "title": "notas",
      "anchor": "notas"
+    },
+    {
+     "level": 2,
+     "title": "license decision (2026-10-31)",
+     "anchor": "license-decision-2026-10-31"
     }
    ]
   },

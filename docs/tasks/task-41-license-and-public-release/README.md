@@ -11,13 +11,13 @@ topics: [process, workspace]
 relations: [task-23]
 source: docs/log/steps/task-41-license-and-public-release.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-10-31
 review: reviewed
 ---
 
 # task-41: license + preparation for public release
 
-Records the plan to define the plev license (MIT OR Apache-2.0) and to prepare the repository to be public: a LICENSE file, Cargo.toml metadata, README and a secrets scan. The page body's checklist is still open; according to the note itself, the public repository is enough for the arXiv paper, and publishing on crates.io is not a requirement. It matters because these are the points that help avoid legal and credibility blockers at the public release of the code.
+Records the plan to define the plev license and to prepare the repository to be public: a LICENSE file, Cargo.toml metadata, README and a secrets scan. The plan proposed MIT OR Apache-2.0; on 2026-10-31 the license was decided as MIT alone, which the root `LICENSE` and every manifest now carry. The rest of the checklist is still open, and publishing on crates.io is not a requirement. It matters because these are the points that help avoid legal and credibility blockers at the public release of the code.
 
 ## objetivo
 definir licenca, criar arquivo license, e fazer cleanup final para que o repositorio possa ser tornado publico sem blockers legais ou de credibilidade.
@@ -47,3 +47,13 @@ definir licenca, criar arquivo license, e fazer cleanup final para que o reposit
 - MIT or apache-2.0 e padrao do ecossistema rust (wgpu, winit, taffy, leptos, etc usam isso)
 - dual-license da flexibilidade maxima para usuarios e e compativel com todas as dependencias
 - crates.io publicacao nao e requisito para o paper arxiv, repositorio github publico e suficiente
+
+## license decision (2026-10-31)
+
+Brenner decided the license: MIT, not the MIT OR Apache-2.0 the plan
+proposed. The root `LICENSE` already held the MIT text; the workspace
+manifest carries `license = "MIT"` in `[workspace.package]`, every member
+inherits it with `license.workspace = true`, and the two crates with a
+workspace of their own (`apps/urnadbapp`, `rust/llmrun`) set it directly.
+`cargo metadata` reports MIT for every package. The compatibility of the
+dependencies (the third item of the checklist) was not checked again.

@@ -3,6 +3,7 @@ name = "layers"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Layer system demo, in two windows -- per-layer dirty tracking +"
 

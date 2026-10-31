@@ -11,6 +11,7 @@ name = "offers"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "proposers of plev IR: an intent, the capability registry, the snapshot and the current surface in, a proposed IR out, and only a VerifiedIr past propose_verified; rules without a model, and a language model behind a trait with the verifier's errors sent back a bounded number of times"
 

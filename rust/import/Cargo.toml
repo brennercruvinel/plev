@@ -8,6 +8,7 @@ name = "import"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Importers of plev: lottie and svg to the .monster format; react/tsx + sass, html, figma and gpui sources to plev builder code and plev IR, with an honest droplist"
 

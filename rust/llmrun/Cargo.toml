@@ -3,6 +3,7 @@ name = "llmrun"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.87"
+license = "MIT"
 publish = false
 description = "local llm inference in process: one streaming interface, candle and burn behind features"
 

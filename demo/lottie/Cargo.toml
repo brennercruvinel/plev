@@ -3,6 +3,7 @@ name = "lottie"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
+license.workspace = true
 publish = false
 description = "Lottie player: renders a lottie json file with the `lot` crate on a"
 
