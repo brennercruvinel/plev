@@ -12,7 +12,7 @@ use crate::styling::theme::ButtonSurface;
 pub const TEXT_CONTRAST: f32 = 7.0;
 
 /// WCAG 2.2 AA for the parts of a control a person must see (1.4.11):
-/// today's ring.
+/// today's ring, the switch's well and the slider's thumb.
 pub const MARK_CONTRAST: f32 = 3.0;
 
 /// `fg` composed over the opaque linear `under`, in linear light.
@@ -49,10 +49,27 @@ pub fn legible(preferred: Color, fallback: Color, fill: Color, page: Color) -> C
 
 /// [`legible`] at the contrast `need`.
 pub fn legible_at(need: f32, preferred: Color, fallback: Color, fill: Color, page: Color) -> Color {
-    let under = over(fill, over(page, [0.0; 3]));
-    if ratio(over(preferred, under), under) >= need {
+    legible_on(need, preferred, fallback, &[&[page, fill]])
+}
+
+/// `fg` reads at `need` on `layers`, laid from the bottom up.
+fn reads(need: f32, fg: Color, layers: &[Color]) -> bool {
+    let under = layers.iter().fold([0.0; 3], |u, c| over(*c, u));
+    ratio(over(fg, under), under) >= need
+}
+
+/// [`legible_at`] on every one of `grounds`, each its layers from the
+/// bottom up: a ring a person must see (1.4.11) against all it borders,
+/// the well it holds and what lies around it.
+pub fn legible_on(need: f32, preferred: Color, fallback: Color, grounds: &[&[Color]]) -> Color {
+    if reads_on(need, preferred, grounds) {
         preferred
     } else {
         fallback
     }
+}
+
+/// `fg` reads at `need` on every one of `grounds`.
+pub(super) fn reads_on(need: f32, fg: Color, grounds: &[&[Color]]) -> bool {
+    grounds.iter().all(|layers| reads(need, fg, layers))
 }

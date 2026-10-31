@@ -56,11 +56,16 @@ impl SelectionTokens {
             c.text.0[2],
             c.text.0[3] * strength,
         );
+        // the well off and the thumb ringed by the divider where it reads
+        // at 3:1 on all they border (1.4.11), else the mid tone, else the
+        // text
+        let edges = [c.divider, c.text_mid, c.text];
+        let well_edge = edge_on(&edges, &[&[c.bg], &[c.bg, c.bg_hover]]);
         let switch = SwitchTokens {
             off: ButtonSurface {
                 fill: [c.bg_hover; 2],
                 overlay: NONE,
-                shadow: vec![ring(c.divider)],
+                shadow: vec![ring(well_edge)],
                 text: c.text,
             },
             on: ButtonSurface {
@@ -78,8 +83,16 @@ impl SelectionTokens {
             ..kit.switch
         };
         // the well a step off the page, filled with the quiet text at the
-        // kit's strength; the thumb is the page, ringed as the knob
+        // kit's strength (on its own alpha, as the switch's ink); the thumb
+        // is the page, ringed where it reads
         let part = kit.slider.fill.0[3];
+        let fill = Color::rgba(
+            c.text_mid.0[0],
+            c.text_mid.0[1],
+            c.text_mid.0[2],
+            c.text_mid.0[3] * part,
+        );
+        let thumb_edge = edge_on(&edges, &[&[c.bg, c.bg_hover], &[c.bg, c.bg_hover, fill]]);
         let slider = SliderTokens {
             track: ButtonSurface {
                 fill: [c.bg_hover; 2],
@@ -87,8 +100,11 @@ impl SelectionTokens {
                 shadow: Vec::new(),
                 text: c.text,
             },
-            fill: Color::rgba(c.text_mid.0[0], c.text_mid.0[1], c.text_mid.0[2], part),
-            thumb: switch.knob.clone(),
+            fill,
+            thumb: ButtonSurface {
+                shadow: vec![ring(thumb_edge)],
+                ..switch.knob.clone()
+            },
             ..kit.slider
         };
         // the tag on the page ringed by the divider, its quiet text where

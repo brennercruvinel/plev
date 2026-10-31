@@ -13,8 +13,8 @@
 //! The toggle reads the buttons' own `toolbar` recipes and has nothing
 //! here.
 
-use super::legible::full;
-pub use super::legible::{MARK_CONTRAST, TEXT_CONTRAST, legible, legible_at};
+pub use super::legible::{MARK_CONTRAST, TEXT_CONTRAST, legible, legible_at, legible_on};
+use super::legible::{full, reads_on};
 use crate::styling::color::Color;
 use crate::styling::theme::ButtonRecipe;
 use crate::styling::theme::ButtonSurface;
@@ -83,7 +83,9 @@ pub struct ButtonGroupTokens {
 /// the same three surfaces.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SwitchTokens {
-    /// The well off and on; `text` is unused.
+    /// The well off and on; `text` is unused. Off, it is ringed where it
+    /// reads at [`MARK_CONTRAST`] on the page and on a row's hover (the
+    /// radio's disc is this well): the kit draws it with shades alone.
     pub off: ButtonSurface,
     pub on: ButtonSurface,
     /// The knob (the radio's dot).
@@ -102,7 +104,8 @@ pub struct SliderTokens {
     pub track: ButtonSurface,
     /// The part up to the value (`rgba(123,123,123,0.3)`).
     pub fill: Color,
-    /// The thumb (`#f8f7f7`, its three shadows).
+    /// The thumb (`#f8f7f7`, its three shadows), ringed where it reads
+    /// at [`MARK_CONTRAST`] on the well and on the fill it borders.
     pub thumb: ButtonSurface,
     /// The well's height and radius, the thumb's width and radius.
     pub height: f32,
@@ -248,6 +251,18 @@ pub(super) fn ring(color: Color) -> ShadowSpec {
     ShadowSpec::new([0.0, 0.0], 0.0, 1.0, color)
 }
 
+/// The first of `steps` that reads at [`MARK_CONTRAST`] on every one of
+/// `grounds` (each its layers from the bottom up), else the last: the
+/// edge a control a person must see keeps (1.4.11).
+pub(super) fn edge_on(steps: &[Color], grounds: &[&[Color]]) -> Color {
+    let last = steps.last().copied().unwrap_or(NONE);
+    steps
+        .iter()
+        .copied()
+        .find(|&c| reads_on(MARK_CONTRAST, c, grounds))
+        .unwrap_or(last)
+}
+
 pub(super) const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
 /// The segment ladder, the same under every theme: the kit's heights
@@ -330,11 +345,31 @@ impl SelectionTokens {
         // components/Zoom/index.tsx:15 the line, :19 the `size-6 mr-1`
         // slot, :32 the title.
         let ink_a = |a: f32| Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a);
+        // The well and the thumb are shades on the paper, under 3:1
+        // (1.4.11): each keeps the kit's drawing and gains a ring of the
+        // kit's border (`#E2E2E2`, Tabs :26) where it reads, else of its
+        // secondary gray, else of its graphite.
+        let edges = [SHADES[4], SHADES[5], SHADES[6]];
+        let well_off = hex(0xECECEC);
+        // components/Zoom/index.tsx:15 `hover:bg-[#F1F1F1]`, the row the
+        // radio's disc sits on
+        let row_hover = hex(0xF1F1F1);
+        let well_edge = edge_on(
+            &edges,
+            &[
+                &[SHADES[0]],
+                &[SHADES[0], row_hover],
+                &[SHADES[0], well_off],
+            ],
+        );
         let switch = SwitchTokens {
             off: ButtonSurface {
-                fill: [hex(0xECECEC); 2],
+                fill: [well_off; 2],
                 overlay: NONE,
-                shadow: vec![ShadowSpec::inset([0.0, 0.0], 1.0, 0.5, ink_a(0.10))],
+                shadow: vec![
+                    ShadowSpec::inset([0.0, 0.0], 1.0, 0.5, ink_a(0.10)),
+                    ring(well_edge),
+                ],
                 text: ink,
             },
             on: ButtonSurface {
@@ -360,14 +395,23 @@ impl SelectionTokens {
         // -2px rgba(0,0,0,.2) inset, 0 0 2.6px -1px rgba(0,0,0,.17), 0 1px
         // 4px 0 rgba(0,0,0,.14)`; Compression :24 `h-9 bg-[#f1f1f1]
         // rounded-lg` and the fill `rgba(123,123,123,0.3)` to the value.
+        let range_well = hex(0xF1F1F1);
+        let range_fill = Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.3);
+        let thumb_edge = edge_on(
+            &edges,
+            &[
+                &[SHADES[0], range_well],
+                &[SHADES[0], range_well, range_fill],
+            ],
+        );
         let slider = SliderTokens {
             track: ButtonSurface {
-                fill: [hex(0xF1F1F1); 2],
+                fill: [range_well; 2],
                 overlay: NONE,
                 shadow: Vec::new(),
                 text: ink,
             },
-            fill: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.3),
+            fill: range_fill,
             thumb: ButtonSurface {
                 fill: [hex(0xF8F7F7); 2],
                 overlay: NONE,
@@ -375,6 +419,7 @@ impl SelectionTokens {
                     ShadowSpec::new([0.0, 0.0], 2.6, -1.0, black(0.17)),
                     ShadowSpec::new([0.0, 1.0], 4.0, 0.0, black(0.14)),
                     ShadowSpec::inset([0.0, -1.0], 4.0, -2.0, black(0.2)),
+                    ring(thumb_edge),
                 ],
                 text: ink,
             },
@@ -439,7 +484,7 @@ impl SelectionTokens {
             row_h: 36.0,
             row_pad_x: 8.0,
             row_radius: 10.0,
-            row_hover: hex(0xF1F1F1),
+            row_hover,
             label: hex(0x000000),
             font_size: 12.0,
             line_height: 16.0,

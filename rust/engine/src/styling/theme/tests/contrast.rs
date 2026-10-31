@@ -504,6 +504,36 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             fill,
         );
     }
+    // the switch's well off (the radio's disc) and the slider's thumb:
+    // their rings on all they border (1.4.11)
+    let ring_of =
+        |s: &crate::styling::theme::ButtonSurface| s.shadow.last().map_or(s.fill[0], |r| r.color);
+    let well = ring_of(&sel.switch.off);
+    for (bg, under) in [
+        ("colors.bg", page_bg.1),
+        ("selection.radio.row_hover", row),
+        (
+            "selection.switch.off",
+            over(sel.switch.off.fill[0], page_bg.1),
+        ),
+    ] {
+        add(
+            "selection.switch.off.edge",
+            bg,
+            LARGE,
+            over(well, under),
+            under,
+        );
+    }
+    let sl = &sel.slider;
+    let range = over(sl.track.fill[0], page_bg.1);
+    for (bg, under) in [
+        ("selection.slider.track", range),
+        ("selection.slider.fill", over(sl.fill, range)),
+    ] {
+        let edge = over(ring_of(&sl.thumb), under);
+        add("selection.slider.thumb.edge", bg, LARGE, edge, under);
+    }
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -791,7 +821,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 537,
+        count, 557,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

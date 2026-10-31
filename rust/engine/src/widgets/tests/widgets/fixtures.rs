@@ -131,7 +131,7 @@ fn the_checkbox_is_the_switch_well_off_and_the_ink_on() {
         assert_eq!(fills(false), s.switch.off.fill[0].0);
         let on = fills(true);
         assert_eq!((&on[..3], on[3]), (&s.switch.on.fill[0].0[..3], 1.0));
-        assert_ne!(s.checkbox.off.shadow, s.switch.off.shadow, "the edge");
+        assert!(!s.checkbox.off.shadow.is_empty(), "the edge");
     }
 }
 
