@@ -44,6 +44,9 @@ else
     echo "         the leg runs in CI." >&2
 fi
 
+# docs: every page's header, link and anchor, and the catalog (python, stdlib only).
+python3 tool/tasks/docbase.py check
+
 # docs links: every link into the repository resolves (lychee, offline).
 if command -v lychee >/dev/null 2>&1; then
     lychee --no-progress --config .devops/check/lychee.toml --offline .

@@ -24,7 +24,7 @@
 //! is embedded so the full upstream upright set is available, but no style
 //! slot uses it.
 //!
-//! The non-Latin scripts (docs/adr/rendering/0071-embedded-fonts-by-script.md) come from
+//! The non-Latin scripts (docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md) come from
 //! Noto Sans subsets, Regular and Bold: Arabic, Hebrew, Devanagari, SC, JP,
 //! KR. No family names them: a word whose glyphs the requested face lacks
 //! reaches cosmic-text's last fallback step, every face in the database

@@ -38,7 +38,7 @@ fn drawn_width(text: &str, st: &TextStyle, scale: f32) -> Option<f32> {
 /// legitimately a hair narrower. It can never be *wider*, and it can never
 /// drift by the tens of percent that extra tracking or a family fallback
 /// produce — the "c a r d s" symptom in
-/// docs/adr/rendering/0003-embed-every-font-weight-in-use.md.
+/// docs/decisoes/renderizacao/0003-embed-every-font-weight-in-use.md.
 #[test]
 fn drawn_extent_matches_the_measured_advance_at_every_scale() {
     const TEXT: &str = "1ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

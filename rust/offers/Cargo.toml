@@ -1,5 +1,5 @@
 # offers: proposers of plev IR (task-69 phase 3a,
-# docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md). an intent in text,
+# docs/decisoes/geracao/0052-proposers-propose-the-runtime-verifies.md). an intent in text,
 # the app's capability registry, its snapshot and the surface it shows
 # become a proposed plevir::Ir; propose_verified is the way out and returns
 # only a VerifiedIr. a deterministic proposer by rules, and a proposer that

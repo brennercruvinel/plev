@@ -1,5 +1,5 @@
 //! Accessibility as a projection of the semantic contract
-//! (docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md).
+//! (docs/decisoes/interface/0038-accessibility-projects-the-semantic-snapshot.md).
 //!
 //! The tree assistive technology reads is built from the same
 //! `accord::Snapshot` agents and tests read (`tree`), placed by the

@@ -3,7 +3,7 @@
 //! not survive the trip is reported on a droplist, never dropped silently.
 //!
 //! **Experimental** -- a research poc, not a supported app path
-//! (docs/adr/structure/0023-official-app-pattern.md).
+//! (docs/decisoes/estrutura/0023-official-app-pattern.md).
 //!
 //! Three stages, one module each per source language:
 //! 1. parse  (tsx.rs, sass.rs, gpui.rs, html.rs): tree-sitter -> raw
@@ -25,8 +25,8 @@
 //! unmapped-construct): one react component instance (the hoff research
 //! card, base variant) and one gpui widget instance (the horizontal labeled
 //! separator); task-71 phase 2 adds an HTML/CSS subset (one document, the
-//! body's element) and a Figma export (one screen). The emitted code obeys docs/ref/code-against-the-plev-
-//! engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
+//! body's element) and a Figma export (one screen). The emitted code obeys
+//! docs/referencia/operacao/code-against-the-plev-engine.md: theme tokens where colors hit the HOFF palette, one TextStyle
 //! per text run, content-driven layout (no absolute positioning).
 
 pub mod emit;

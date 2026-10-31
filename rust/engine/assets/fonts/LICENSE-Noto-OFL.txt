@@ -6,7 +6,7 @@ Copyright 2022 The Noto Project Authors (https://github.com/notofonts/devanagari
 © 2014-2021 Adobe (http://www.adobe.com/).
 
 The files NotoSans*-Regular and NotoSans*-Bold in this directory are subsets of the
-Noto fonts above, made by tool/tasks/subsetter.py (docs/adr/rendering/0071-embedded-fonts-by-script.md).
+Noto fonts above, made by tool/tasks/subsetter.py (docs/decisoes/renderizacao/0071-embedded-fonts-by-script.md).
 
 This Font Software is licensed under the SIL Open Font License,
 Version 1.1.

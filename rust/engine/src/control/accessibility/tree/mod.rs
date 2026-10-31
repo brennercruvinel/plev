@@ -1,7 +1,7 @@
 //! The AccessKit tree as a projection of the semantic contract: the nodes,
 //! roles, labels, states and actions come from a `accord::Snapshot`, the
 //! same one agents and tests read, and the bounds from the compositor's
-//! binding table (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md). Nothing
+//! binding table (docs/decisoes/semantica/0035-semantic-binding-beside-the-scene.md). Nothing
 //! is guessed from geometry: a pixel with no `SemId` has no node.
 //!
 //! The rules, each tested:

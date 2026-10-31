@@ -6,7 +6,7 @@
 //! The adapter calls its handlers on whatever thread the platform uses.
 //! They never touch the app: an action request goes into a channel and
 //! the app's `wake` runs, which sends the app's own event through its
-//! `EventLoopProxy` (docs/adr/rendering/0026-worker-results-wake-the-event-loop.md). On
+//! `EventLoopProxy` (docs/decisoes/renderizacao/0026-worker-results-wake-the-event-loop.md). On
 //! the main thread the app drains the channel with `take`, and each
 //! request goes through its dispatcher like any other actor's. The
 //! initial tree is not built on the handler's thread either: activation

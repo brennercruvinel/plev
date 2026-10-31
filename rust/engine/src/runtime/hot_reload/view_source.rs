@@ -1,4 +1,4 @@
-//! View source for pixels (docs/adr/workflows/0048-view-source-for-pixels.md): a point in
+//! View source for pixels (docs/decisoes/processos/0048-view-source-for-pixels.md): a point in
 //! the window leads to the code that made what shows there. A bound
 //! control (`Compositor::hit`) leads to where its node was projected
 //! (`accord::Node::source`); a text with no id over it leads to the string

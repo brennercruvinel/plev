@@ -1,5 +1,5 @@
 //! the session inspector's window (task-64 phase b,
-//! docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md).
+//! docs/decisoes/gravacao/0046-the-inspector-reads-a-session-never-runs-it.md).
 //!
 //! it opens a recorded session (`record::Session`, from the path on the
 //! command line) and shows what the `inspect` model answers about it:

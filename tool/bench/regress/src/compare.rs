@@ -69,7 +69,7 @@ impl Delta {
 }
 
 /// The projection's delta. Equal revisions are equal snapshots
-/// (docs/adr/semantics/0032-semantic-contract-as-pure-projection.md), so `before` is
+/// (docs/decisoes/semantica/0032-semantic-contract-as-pure-projection.md), so `before` is
 /// only read when the revisions differ.
 pub fn semantics(
     revision: Option<&str>,
