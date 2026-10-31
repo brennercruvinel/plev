@@ -153,7 +153,9 @@ impl SilencesPage {
         tag.render(c, at, theme);
         let style = time_style(theme);
 
-        // the band: every cut marked by its decision, the instant shown
+        // the band: every cut marked by its decision, the instant shown,
+        // on the track a meter runs in (the kit's video player track in
+        // core; the glass field read as the paper there, unseen)
         let band = l.timeline;
         c.push(rounded_rect(
             band.x,
@@ -161,7 +163,7 @@ impl SilencesPage {
             band.w,
             band.h,
             theme.radius.sm,
-            theme.glass.field.0,
+            theme.navigation.chart.meter_track.0,
         ));
         let duration = self.model.duration();
         for cut in self.model.cuts() {
