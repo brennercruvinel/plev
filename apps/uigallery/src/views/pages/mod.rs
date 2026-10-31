@@ -95,8 +95,11 @@ pub enum Pane {
     Label,
     InputGroup,
     // task-104 front B, overlays (#155)
+    Popover,
     // task-104 front C, conversation and feedback (#156)
+    Message,
     // task-104 front D, disclosure and display (#157)
+    Accordion,
     // task-104 front E, selection and dates (#158)
     Toggle,
     // apps demo

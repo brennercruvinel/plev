@@ -20,10 +20,13 @@ use super::super::components::label;
 use super::super::components::input_group;
 
 // task-104 front B, overlays (#155)
+use super::super::components::popover;
 
 // task-104 front C, conversation and feedback (#156)
+use super::super::components::message;
 
 // task-104 front D, disclosure and display (#157)
+use super::super::components::accordion;
 
 // task-104 front E, selection and dates (#158)
 use super::super::components::toggle;
@@ -75,8 +78,11 @@ pub struct Panes {
     pub label: field::FormPage,
     pub input_group: field::FormPage,
     // task-104 front B, overlays (#155)
+    pub popover: popover::PopoverPage,
     // task-104 front C, conversation and feedback (#156)
+    pub message: message::MessagePage,
     // task-104 front D, disclosure and display (#157)
+    pub accordion: accordion::AccordionPage,
     // task-104 front E, selection and dates (#158)
     pub toggle: toggle::TogglePage,
     // -- apps demo
@@ -156,8 +162,11 @@ impl Panes {
             label: label::page(),
             input_group: input_group::page(),
             // task-104 front B, overlays (#155)
+            popover: popover::PopoverPage::new(),
             // task-104 front C, conversation and feedback (#156)
+            message: message::MessagePage::new(),
             // task-104 front D, disclosure and display (#157)
+            accordion: accordion::AccordionPage::new(theme),
             // task-104 front E, selection and dates (#158)
             toggle: toggle::TogglePage::new(),
             todo,

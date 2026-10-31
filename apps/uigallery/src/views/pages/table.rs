@@ -78,7 +78,13 @@ pub const PAGES: &[Page] = &[
         Pane::Effects,
     ),
     // -- Components ---------------------------------------------------------
-    placeholder("Accordion"),
+    page(
+        C,
+        "Accordion",
+        "chevron-down",
+        "Sections that open and close, one at a time or several, from the kit's assets sidebar.",
+        Pane::Accordion,
+    ),
     placeholder("Alert"),
     alias(
         "Alert Dialog",
@@ -286,12 +292,12 @@ pub const PAGES: &[Page] = &[
     ),
     placeholder("Marker"),
     placeholder("Menubar"),
-    alias(
+    page(
+        C,
         "Message",
         "send",
-        "The message dock.",
-        Pane::Dock,
-        "a message widget apart from the dock",
+        "Comment rows of a thread and the quick comment, with the like chip.",
+        Pane::Message,
     ),
     alias(
         "Message Scroller",
@@ -322,12 +328,12 @@ pub const PAGES: &[Page] = &[
         "The column head every panel starts with, badge included.",
         Pane::PanelHeader,
     ),
-    alias(
+    page(
+        C,
         "Popover",
         "copy",
-        "The tooltip, until it opens on click.",
-        Pane::Tooltip,
-        "click to open, arbitrary content",
+        "Click the value; the panel answers its container.",
+        Pane::Popover,
     ),
     page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
     placeholder("Questionnaire"),

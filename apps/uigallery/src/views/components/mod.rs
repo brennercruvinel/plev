@@ -50,10 +50,13 @@ pub mod label;
 pub mod input_group;
 
 // task-104 front B, overlays (#155)
+pub mod popover;
 
 // task-104 front C, conversation and feedback (#156)
+pub mod message;
 
 // task-104 front D, disclosure and display (#157)
+pub mod accordion;
 
 // task-104 front E, selection and dates (#158)
 pub mod toggle;

@@ -350,6 +350,46 @@ impl TextMeasurer {
         candidate(lo)
     }
 
+    /// Clamp `text` to at most `lines` lines wrapped at `max_width` px
+    /// (css `line-clamp`), measured with the SAME [`TextStyle`] the
+    /// caller draws with, at the same `max_width` it wraps the drawing
+    /// at. Grapheme-cluster aware, like
+    /// [`truncate_to_width`](Self::truncate_to_width).
+    ///
+    /// Returns `text` unchanged when it already wraps into `lines` or
+    /// fewer (hard line breaks count as lines); otherwise the longest
+    /// prefix (trailing whitespace trimmed) followed by "…" that still
+    /// wraps into `lines`. `lines == 0` keeps nothing.
+    pub fn clamp_to_lines(text: &str, style: &TextStyle, max_width: f32, lines: usize) -> String {
+        const ELLIPSIS: &str = "\u{2026}";
+        if text.is_empty() || lines == 0 {
+            return String::new();
+        }
+        // Half a line of slack absorbs the float sum of line heights.
+        let limit = style.line_height * (lines as f32 + 0.5);
+        let fits = |s: &str| Self::measure_styled(s, style, Some(max_width)).1 <= limit;
+        if fits(text) {
+            return text.to_string();
+        }
+        use unicode_segmentation::UnicodeSegmentation;
+        let graphemes: Vec<&str> = text.graphemes(true).collect();
+        let candidate = |n: usize| -> String {
+            let prefix: String = graphemes[..n].concat();
+            format!("{}{ELLIPSIS}", prefix.trim_end())
+        };
+        // Largest grapheme prefix whose "prefix…" still wraps in `lines`.
+        let (mut lo, mut hi) = (0usize, graphemes.len().saturating_sub(1));
+        while lo < hi {
+            let mid = (lo + hi).div_ceil(2);
+            if fits(&candidate(mid)) {
+                lo = mid;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        candidate(lo)
+    }
+
     /// Fit a `/`-separated path into `max_width` px by dropping whole
     /// directory segments from the middle, keeping the leading directory
     /// and the file name (`crates/…/fonts/Name.ttf`); measured with the

@@ -38,6 +38,7 @@ use uigallery::views::{PAGES, ShowcaseView};
 /// Dialog" shows the Dialog page, "Toggle Group" the todo page's
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
+    "Accordion",
     "Alert Dialog",
     "Breadcrumb",
     "Button",
@@ -55,6 +56,7 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Message",
     "Navigation Menu",
     "Popover",
     "Resizable",
@@ -102,7 +104,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Typography", Nothing("a type specimen")),
     ("Icons", Nothing("a grid of icons, hover only")),
     ("Effects", Nothing("samples of shadow, blur and gradient")),
-    ("Accordion", PLACEHOLDER),
     ("Alert", PLACEHOLDER),
     ("Aspect Ratio", PLACEHOLDER),
     ("Attachment", PLACEHOLDER),
@@ -155,10 +156,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
     ("Menubar", PLACEHOLDER),
-    (
-        "Message",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
     (
         "Message Scroller",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),

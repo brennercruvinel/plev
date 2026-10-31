@@ -1,3 +1,84 @@
 //! Front C, conversation and feedback (task-104, #156): message, bubble,
 //! message scroller, alert, attachment, marker and questionnaire, the same
 //! request from the person, the reader and an agent.
+
+use engine::widgets::prelude::WidgetEvent;
+
+use super::harness::{Gallery, ask, by_agent, gallery, sid};
+
+/// The Message page's like chip of the quick comment, and a thread row.
+const CHIP: &str = "message_page.group[1].card[0].message[0].reaction";
+const ROW: &str = "message_page.group[0].card[0].message[0]";
+
+/// The gallery on the Message page, scrolled so a person sees `id`.
+fn seen(id: &str) -> Gallery {
+    let mut g = gallery("Message");
+    let bound = g.c.binding(&sid(id)).map(|b| b.rect);
+    let [_, y, _, h] = bound.unwrap_or_else(|| panic!("{id} is not bound"));
+    if y + h > 700.0 {
+        g.view.scroll_page_to(y - 200.0);
+        g.frame();
+        g.frame();
+    }
+    g
+}
+
+/// The like chip presses and nothing else happens, as in the kit: the
+/// person's click, the reader's press and the agent's `activate` leave
+/// the page as it was.
+#[test]
+fn a_like_chip_s_press_leaves_the_message_page_as_it_was_from_the_three() {
+    let before = gallery("Message").state();
+    let mut person = seen(CHIP);
+    person.click(CHIP);
+    let mut reader = gallery("Message");
+    reader.press(CHIP);
+    let agent = by_agent("Message", "like", vec![ask(CHIP, "activate")]);
+    assert_eq!(person.state(), before, "the person");
+    assert_eq!(reader.state(), before, "the reader");
+    assert_eq!(agent.state(), before, "the agent");
+}
+
+/// A message is a place a reader lands on, not a control: it offers no
+/// action to the reader nor to an agent, only its like chip does.
+#[test]
+fn a_message_row_is_read_and_its_chip_is_pressed() {
+    let g = gallery("Message");
+    let s = g.view.semantics().expect("the page projects");
+    let row = s.get(&sid(ROW)).expect("the row is projected");
+    assert!(row.actions.is_empty(), "{:?}", row.actions);
+    assert!(row.focusable);
+    let chip = s.get(&sid(CHIP)).expect("the chip is projected");
+    assert!(chip.actions.iter().any(|a| a.name.as_str() == "activate"));
+}
+
+/// The focus a reader leaves on a message, or on its chip, goes with
+/// Escape and with a click of the person where no widget is.
+#[test]
+fn the_focus_a_reader_leaves_on_a_message_goes_with_escape_and_a_click() {
+    for id in [ROW, CHIP] {
+        let focused = |g: &Gallery| {
+            g.view
+                .semantics()
+                .and_then(|s| s.focused().map(ToString::to_string))
+        };
+        let mut g = seen(id);
+        assert!(g.view.assist_focus(&sid(id)), "{id}");
+        assert_eq!(focused(&g).as_deref(), Some(id), "{id}: projected");
+        assert!(g.view.close_top_overlay(), "{id}: Escape lets it go");
+        assert_eq!(focused(&g), None, "{id}: after Escape");
+
+        assert!(g.view.assist_focus(&sid(id)));
+        g.frame();
+        // beside the row, in the card's inset, level with what is
+        // focused: on screen, where no widget is
+        let row = id.strip_suffix(".reaction").unwrap_or(id);
+        let [rx, _, _, _] = g.c.binding(&sid(row)).unwrap().rect;
+        let (_, y) = g.middle(id);
+        let x = rx - 4.0;
+        assert!(g.c.hit(x, y).is_none(), "{id}: nothing at {x},{y}");
+        g.view.handle_event(&WidgetEvent::MouseDown { x, y });
+        g.view.handle_event(&WidgetEvent::MouseUp { x, y });
+        assert_eq!(focused(&g), None, "{id}: a click elsewhere lets it go");
+    }
+}
