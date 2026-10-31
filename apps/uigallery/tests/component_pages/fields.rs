@@ -39,7 +39,7 @@ fn a_field_takes_the_same_text_from_the_three() {
 /// The password: the same secret from the three, and none of them sees
 /// more of it than its length.
 #[test]
-fn a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only() {
+pub(super) fn a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only() {
     let mut person = gallery("Field");
     person.click(PASSWORD);
     person.type_in("hunter2");

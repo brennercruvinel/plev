@@ -46,8 +46,8 @@ pub mod tree;
 // its own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
 pub mod field;
-pub mod label;
 pub mod input_group;
+pub mod label;
 
 // task-104 front B, overlays (#155)
 pub mod popover;

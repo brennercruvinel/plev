@@ -21,7 +21,6 @@ use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::super::showcase;
 use super::super::{After, Component, EditKey, child_id, root_id, under};
-use super::sized;
 use super::spec::{Part, Spec};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
@@ -172,7 +171,7 @@ impl FormPage {
             .groups
             .iter()
             .map(|g| {
-                let card_w = sized::card_width(g.columns, content, theme);
+                let card_w = showcase::card_width(g.columns, content, theme);
                 g.cards
                     .iter()
                     .map(|c| c.spec.size(card_w, side, theme))
@@ -180,10 +179,10 @@ impl FormPage {
             })
             .collect();
         let wanted = self.groups.iter().zip(&sizes).map(|(g, s)| {
-            let h = s.iter().map(|(_, h)| sized::card_height(*h, theme));
+            let h = s.iter().map(|(_, h)| showcase::card_height(*h, theme));
             (g.columns, h.collect())
         });
-        sized::layout_sized(wanted, content, theme)
+        showcase::layout_sized(wanted, content, theme)
             .into_iter()
             .zip(&sizes)
             .map(|(grid, s)| Laid {
