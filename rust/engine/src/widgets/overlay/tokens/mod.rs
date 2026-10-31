@@ -294,6 +294,26 @@ pub struct TooltipTokens {
     pub clearance: Clearance,
     /// The widest it gets before its text wraps.
     pub max_w: f32,
+    /// A tooltip that names its shortcut: the key beside the text.
+    pub key: TooltipKeyTokens,
+}
+
+/// The key a tooltip names beside its text (the toolbar's `Action`): a
+/// small square with the key in the tooltip's text, and the tooltip's
+/// own padding around both.
+#[derive(Clone, Debug, PartialEq)]
+pub struct TooltipKeyTokens {
+    /// The square's edge and corner radius.
+    pub size: f32,
+    pub radius: f32,
+    pub fill: Color,
+    /// Its border; alpha 0 is none.
+    pub border: Color,
+    pub border_w: f32,
+    /// The tooltip's padding with a key: top, end, bottom, start.
+    pub pad: [f32; 4],
+    /// Between the text and the key.
+    pub gap: f32,
 }
 
 impl TooltipTokens {
@@ -322,6 +342,18 @@ impl TooltipTokens {
                 edge: 4.0,
             },
             max_w: 240.0,
+            // `Toolbar/Action/index.tsx:35`: `gap-2 !p-0.5 !pl-2`, the
+            // key `[&_span]:size-5 rounded-sm bg-[#303030] border
+            // border-[#fcfcfc]/5`.
+            key: TooltipKeyTokens {
+                size: 20.0,
+                radius: 4.0,
+                fill: hex(0x303030),
+                border: Color::rgba(252.0 / 255.0, 252.0 / 255.0, 252.0 / 255.0, 0.05),
+                border_w: 1.0,
+                pad: [2.0, 2.0, 2.0, 8.0],
+                gap: 8.0,
+            },
         }
     }
 
@@ -344,6 +376,19 @@ impl TooltipTokens {
                 edge: xs,
             },
             max_w: theme.size.tooltip_max_w,
+            // The key: one text line and an `xs` tall, outlined by the
+            // theme's soft edge on the tooltip's own fill (a lit surface
+            // under the text fails AA on dark, `theme/tests/contrast.rs`);
+            // half an `xs` around it, `md` before the text, `sm` between.
+            key: TooltipKeyTokens {
+                size: theme.typography.caption_r().line_height + xs,
+                radius: theme.shape.item.min(xs),
+                fill: theme.glass.tooltip,
+                border: theme.glass.edge_soft,
+                border_w: theme.control.edge_width,
+                pad: [xs / 2.0, xs / 2.0, xs / 2.0, theme.spacing.md],
+                gap: theme.spacing.sm,
+            },
         }
     }
 }

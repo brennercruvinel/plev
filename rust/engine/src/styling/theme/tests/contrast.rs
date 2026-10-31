@@ -9,8 +9,8 @@
 //! light, as the GPU blends into the sRGB surface (`Color::to_linear_array`,
 //! `crate::color`), and the relative luminance is WCAG's, from the linear
 //! channels. The pairs are the ones the design draws: every text token on
-//! every surface text sits on, the tooltip's own text on the tooltip
-//! (`comps` feedback/tooltip.rs draws `text_mid` there), the headline
+//! every surface text sits on, the tooltip's own text and its key's on
+//! the tooltip (`overlay.tooltip`, what feedback/tooltip.rs draws), the headline
 //! gradient as large text, the intents, the accent (the focus ring,
 //! `comps` recipe.rs) and the active border on the page and on a card, and
 //! each button's label on its own fill at rest, hovered and pressed. A
@@ -119,14 +119,22 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             add(fg, bg, TEXT, over(color, under), under);
         }
     }
-    let tooltip = over(g.tooltip, page);
-    add(
-        "colors.text_mid",
-        "glass.tooltip",
-        TEXT,
-        over(c.text_mid, tooltip),
-        tooltip,
-    );
+    // The tooltip's text on its fill, and on its key's square over it.
+    let tip = &t.overlay.tooltip;
+    let tooltip = over(tip.fill, page);
+    let key = over(tip.key.fill, tooltip);
+    for (bg, under) in [
+        ("overlay.tooltip.fill", tooltip),
+        ("overlay.tooltip.key.fill", key),
+    ] {
+        add(
+            "overlay.tooltip.text_color",
+            bg,
+            TEXT,
+            over(tip.text_color, under),
+            under,
+        );
+    }
     let [page_bg, card] = [surfaces[0], surfaces[1]];
     for (bg, under) in [page_bg, card] {
         for (i, stop) in g.text_gradient.iter().enumerate() {
@@ -337,8 +345,8 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     out
 }
 
-/// The pairs that fail today, 116 of the 369 (core 41, hoff 18, dark 13,
-/// light 44), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 115 of the 425 (core 40, hoff 18, dark 13, light
+/// 44), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -369,7 +377,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("core", "glass.text_default", "glass.popover", 4.13),
     ("core", "glass.text_faint", "glass.popover", 4.13),
     ("core", "glass.text_placeholder", "glass.popover", 1.61),
-    ("core", "colors.text_mid", "glass.tooltip", 4.43),
     ("core", "colors.success", "colors.bg", 2.41),
     ("core", "colors.border_active", "colors.bg", 1.26),
     ("core", "colors.success", "colors.surface", 2.41),
@@ -617,7 +624,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 421,
+        count, 425,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

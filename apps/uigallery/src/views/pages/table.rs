@@ -497,7 +497,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Tooltip",
         "info",
-        "Hover the button: 450 ms, then above the anchor, or below when there is no room.",
+        "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
     ),
     page(
