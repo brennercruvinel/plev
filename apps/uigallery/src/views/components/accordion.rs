@@ -1,7 +1,8 @@
 //! Accordion page, in the mold of the kit's ButtonsPage: groups with a
 //! title and a bottom rule, cards in rows, each card a chip naming the
 //! states it shows over an accordion of `engine::widgets::content`. The
-//! sections are the kit's (3D Objects, Materials) with text bodies; every
+//! sections are the kit's (3D Objects, Materials), with text bodies and,
+//! as its assets sidebar has them, a grid of square thumbnails; every
 //! visual value comes from the theme (`theme.disclosure`).
 //!
 //! The cards are as tall as what they hold: an accordion opening grows
@@ -44,14 +45,6 @@ struct Group {
     /// Cards per row at full width.
     columns: usize,
     cards: Vec<Card>,
-}
-
-/// A group laid out: the title's y, each card's rect with its
-/// accordion's, and the rule's y.
-struct Placed {
-    title_y: f32,
-    cards: Vec<(Rect, Rect)>,
-    rule_y: f32,
 }
 
 pub struct AccordionPage {
@@ -116,6 +109,31 @@ impl AccordionPage {
                     },
                 ],
             },
+            Group {
+                title: "Accordion, the kit's assets",
+                columns: 2,
+                cards: vec![Card {
+                    title: "Thumbnails: Open, Hover",
+                    accordion: Accordion::new(AccordionMode::Multiple)
+                        .with_motion(&theme.disclosure.motion)
+                        .grid(
+                            "3D Objects",
+                            [
+                                ("Cube", "square"),
+                                ("Sphere", "circle"),
+                                ("Stack", "layers"),
+                            ],
+                            true,
+                        )
+                        .grid(
+                            "Materials",
+                            [("Paper", "file"), ("Glass", "eye"), ("Metal", "settings")],
+                            false,
+                        )
+                        .opened(0)
+                        .opened(1),
+                }],
+            },
         ];
         let root = root_id("accordion_page");
         if let Some(root) = &root {
@@ -157,53 +175,15 @@ impl AccordionPage {
 
     /// Every group placed in `content`: cards as tall as their chip and
     /// their accordion now, a row as tall as its tallest card.
-    fn layout(&self, content: Rect, theme: &Theme) -> Vec<Placed> {
-        let pad = showcase::pad(theme);
-        let gap = theme.spacing.sm;
-        let inset = theme.spacing.sm;
-        let title_h = showcase::title_style(theme).line_height;
-        let chip_h = showcase::chip_rect(0.0, 0.0, "", theme).h;
-        let mut y = content.y;
-        let mut out = Vec::with_capacity(self.groups.len());
-        for group in &self.groups {
-            let title_y = y + pad;
-            let cols = showcase::columns(group.columns, content.w, gap);
-            let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
-            let widget_w = (card_w - inset * 2.0).max(0.0);
-            let mut row_y = title_y + title_h + showcase::title_gap(theme);
-            let mut cards = Vec::with_capacity(group.cards.len());
-            for row in group.cards.chunks(cols) {
-                let heights: Vec<f32> = row
-                    .iter()
-                    .map(|card| inset * 3.0 + chip_h + card.accordion.height(widget_w, theme))
-                    .collect();
-                let row_h = heights.iter().copied().fold(0.0, f32::max);
-                for (col, card) in row.iter().enumerate() {
-                    let rect = Rect::new(
-                        content.x + col as f32 * (card_w + gap),
-                        row_y,
-                        card_w,
-                        row_h,
-                    );
-                    let widget = Rect::new(
-                        rect.x + inset,
-                        rect.y + inset * 2.0 + chip_h,
-                        widget_w,
-                        card.accordion.height(widget_w, theme),
-                    );
-                    cards.push((rect, widget));
-                }
-                row_y += row_h + gap;
-            }
-            let rule_y = row_y - gap + pad;
-            out.push(Placed {
-                title_y,
-                cards,
-                rule_y,
-            });
-            y = rule_y;
-        }
-        out
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<Fitted> {
+        let spans: Vec<_> = self
+            .groups
+            .iter()
+            .map(|g| (g.columns, g.cards.len()))
+            .collect();
+        fit_layout(&spans, content, theme, |g, c, w| {
+            self.groups[g].cards[c].accordion.height(w, theme)
+        })
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
@@ -330,6 +310,59 @@ impl Component for AccordionPage {
         self.set_focus(None);
         had
     }
+}
+
+/// A group laid out by `showcase::layout_sized` with each card as tall
+/// as its widget needs (`showcase::card_height`): the title's y, each
+/// card's rect with its widget's (as wide as the card's inside, as tall
+/// as it asked, centered by `showcase::centered`), the rule's y. The front
+/// D pages share it: their widgets grow as a section opens or a label
+/// wraps.
+pub(crate) struct Fitted {
+    pub title_y: f32,
+    pub cards: Vec<(Rect, Rect)>,
+    pub rule_y: f32,
+}
+
+/// The groups down `content`, each as `(span, count)`; `body_h(g, c, w)`
+/// is the height card `c` of group `g` needs at the width `w` its widget
+/// gets. The cards, the rows and the columns are the showcase's.
+pub(crate) fn fit_layout(
+    groups: &[(usize, usize)],
+    content: Rect,
+    theme: &Theme,
+    body_h: impl Fn(usize, usize, f32) -> f32,
+) -> Vec<Fitted> {
+    let inset = theme.spacing.sm;
+    let bodies: Vec<(f32, Vec<f32>)> = groups
+        .iter()
+        .enumerate()
+        .map(|(g, &(span, count))| {
+            let w = (showcase::card_width(span, content, theme) - inset * 2.0).max(0.0);
+            (w, (0..count).map(|c| body_h(g, c, w)).collect())
+        })
+        .collect();
+    let sized = groups.iter().zip(&bodies).map(|(&(span, _), (_, hs))| {
+        let cards = hs
+            .iter()
+            .map(|h| showcase::card_height(*h, theme))
+            .collect();
+        (span, cards)
+    });
+    showcase::layout_sized(sized, content, theme)
+        .into_iter()
+        .zip(&bodies)
+        .map(|(group, (w, hs))| Fitted {
+            title_y: group.title_y,
+            rule_y: group.rule_y,
+            cards: group
+                .cards
+                .into_iter()
+                .zip(hs)
+                .map(|(card, h)| (card, showcase::centered((*w, *h), card)))
+                .collect(),
+        })
+        .collect()
 }
 
 #[cfg(test)]

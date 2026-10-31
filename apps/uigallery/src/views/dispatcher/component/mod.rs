@@ -134,6 +134,10 @@ components! {
     Message => message,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
+    AspectRatio => aspect_ratio,
+    Collapsible => collapsible,
+    Item => item,
+    Kbd => kbd,
     // task-104 front E, selection and dates (#158)
     Toggle => toggle,
 }

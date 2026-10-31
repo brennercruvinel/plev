@@ -40,11 +40,13 @@ use uigallery::views::{PAGES, ShowcaseView};
 const PROJECTING: &[&str] = &[
     "Accordion",
     "Alert Dialog",
+    "Aspect Ratio",
     "Breadcrumb",
     "Button",
     "Button Group",
     "Checkbox",
     "Chip",
+    "Collapsible",
     "Combobox",
     "Data Table",
     "Dialog",
@@ -104,7 +106,6 @@ const SILENT: &[(&str, Why)] = &[
     ("Icons", Nothing("a grid of icons, hover only")),
     ("Effects", Nothing("samples of shadow, blur and gradient")),
     ("Alert", PLACEHOLDER),
-    ("Aspect Ratio", PLACEHOLDER),
     ("Attachment", PLACEHOLDER),
     (
         "Avatar",
@@ -129,7 +130,6 @@ const SILENT: &[(&str, Why)] = &[
         "Code Block",
         Unprojected("CodeBlock: a label with the code, named by its caption"),
     ),
-    ("Collapsible", PLACEHOLDER),
     ("Command", PLACEHOLDER),
     (
         "Context Menu",

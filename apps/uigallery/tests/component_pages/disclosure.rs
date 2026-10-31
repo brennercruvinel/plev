@@ -4,6 +4,7 @@
 
 use accord::Value;
 use engine::control::accessibility::focus;
+use engine::widgets::prelude::WidgetEvent;
 use uigallery::views::{EditKey, NavKey};
 
 use super::harness::{Gallery, ask, by_agent, gallery, same, sid};
@@ -50,6 +51,14 @@ fn an_accordion_section_opens_the_same_from_the_three() {
 #[test]
 fn a_disabled_section_stays_closed_for_a_click() {
     let mut person = gallery("Accordion");
+    // The disabled card is below the fold: the person scrolls to it.
+    let delta = 400.0;
+    person.view.handle_event(&WidgetEvent::Scroll {
+        x: 640.0,
+        y: 400.0,
+        delta,
+    });
+    person.frame();
     let before = person.state();
     person.click(DISABLED);
     assert_eq!(person.state(), before);
@@ -119,4 +128,63 @@ fn the_arrows_walk_the_triggers_of_one_accordion() {
     g.frame();
     assert_eq!(focused(&g).as_deref(), Some(first.as_str()));
     assert!(!g.view.handle_nav(NavKey::Up), "nor wraps up");
+}
+
+/// The Collapsible page's closed card: its trigger opens it the same from
+/// the three, and its links show under its region.
+#[test]
+fn a_collapsible_opens_the_same_from_the_three() {
+    let id = "collapsible_page.group[0].card[0]";
+    let mut person = gallery("Collapsible");
+    person.click(id);
+    let mut reader = gallery("Collapsible");
+    reader.press(id);
+    let agent = by_agent("Collapsible", "open", vec![ask(id, "toggle_expanded")]);
+    same("Collapsible", &person, &reader, &agent);
+    assert_eq!(expanded(&person, id), Some(Value::Bool(true)));
+    let link = sid(&format!("{id}.links[1]"));
+    assert!(
+        person.state().iter().any(|n| n.id == link),
+        "its links show"
+    );
+}
+
+/// The open card's second link becomes the current one the same from
+/// the three.
+#[test]
+fn a_collapsible_s_link_is_activated_the_same_from_the_three() {
+    let id = "collapsible_page.group[0].card[1].links[1]";
+    let mut person = gallery("Collapsible");
+    person.click(id);
+    let mut reader = gallery("Collapsible");
+    reader.press(id);
+    let agent = by_agent("Collapsible", "link", vec![ask(id, "activate")]);
+    same("Collapsible", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{id}:active")),
+        Some(Value::Bool(true))
+    );
+}
+
+/// The arrows walk the options of an Item card, without wrapping, and
+/// Enter chooses the focused one.
+#[test]
+fn the_arrows_walk_an_item_card_and_enter_chooses() {
+    let mut g = gallery("Item");
+    let first = "item_page.group[1].card[0].item[0]";
+    let last = "item_page.group[1].card[0].item[2]";
+    while focused(&g).as_deref() != Some(first) {
+        assert!(g.view.handle_edit_key(EditKey::Tab), "Tab is taken");
+        g.frame();
+    }
+    assert!(g.view.handle_edit_key(EditKey::End));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(last));
+    assert!(!g.view.handle_nav(NavKey::Down), "a card does not wrap");
+    assert!(g.view.handle_enter());
+    g.frame();
+    assert_eq!(
+        g.value(&format!("{last}:selected")),
+        Some(Value::Bool(true))
+    );
 }
