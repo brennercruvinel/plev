@@ -71,9 +71,12 @@ guidelines win and this file gets fixed.
 ## parallel work
 
 - parallel agents are allowed again since 2026-10-31 (Brenner, task-104).
-  this replaces the rule of 2026-09-25, "one agent at a time, with the
-  token cost of each agent written in the journal"; the rules below are
-  what keeps parallel work safe.
+  this replaces "one agent at a time", the first half of the rule of
+  2026-09-25; the rules below are what keeps parallel work safe.
+- the token cost of each agent is written in the
+  [journal](../../research/autonomous-cycle-journal.md) at each
+  integration, one line per agent when several ran. this is the second
+  half of the rule of 2026-09-25 and it still holds.
 - parallel only inside a wave and only when the file surfaces are
   disjoint and written into each briefing (allowed and forbidden paths).
 - a file two tasks of the same wave must touch is sequenced or split into
