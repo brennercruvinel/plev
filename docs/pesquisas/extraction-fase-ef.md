@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, web-wasm, sinais, competicao]
+relations: [task-33, task-34]
 source: docs/ref/extraction-fase-ef.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-34 extraction: fase e (WASM runtime) + fase f (competitors)
+
+Extração de padrões de runtimes WASM (waforth, extism) e de sistemas reativos e de interface (leptos, dioxus, slint), feita nas fases e e f da task-34. Cada padrão traz o trecho de origem, a decisão para o plev (adotar, adaptar, observar ou ignorar) e o efeito no sistema de sinais ou nos plugins WASM (task-33). As decisões de prioridade alta são o conjunto indexado (FxIndexSet) para os assinantes e o guard RAII do observer, ambos no sistema de sinais.
 
 data: 2026-03-11
 
@@ -268,7 +270,7 @@ additionally, `ObserverState` has an `untracked: bool` field. this enables `untr
 | 4 | peek() untracked read + drop-guard write | dioxus | adapt (add peek) | medium |
 | 5 | lazy binding eval + constant sentinel | slint | adopt sentinel | medium |
 | 6 | RAII observer drop guard | leptos | adopt | high |
-| 7 | vello delegation validates own renderer | dioxus | strategic note |, |
+| 7 | vello delegation validates own renderer | dioxus | strategic note | |
 
 ### concrete action items for plev signals:
 

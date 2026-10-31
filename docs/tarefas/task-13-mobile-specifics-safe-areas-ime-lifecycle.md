@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-09-12
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [mobile, input, layout]
+relations: [task-03, task-07, task-08, task-09, task-10, task-11, task-12]
 source: [docs/log/steps/task-13.md, docs/log/changes/task-13.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-13: mobile specifics, safe areas, IME, lifecycle
+
+Registra as funções de mobile compartilhadas por Android e iOS: insets de área segura no layout, teclado virtual com composição de texto, escala de DPI, estado de ciclo de vida unificado (`AppState`) e re-layout ao girar. O resultado é o exemplo `mobile_input`, com 14 testes unitários e 131 testes passando no total. Os insets retornam zero no iOS com winit 0.30, a altura do teclado é uma heurística de 40% da tela, e a verificação em dispositivo ficou pendente.
 
 ## objetivo
 implementar funcionalidades específicas de mobile que são compartilhadas entre android e ios: safe areas, teclado virtual (IME), lifecycle unificado, dpi/scale factor handling.

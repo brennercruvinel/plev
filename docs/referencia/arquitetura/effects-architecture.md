@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-07-04
 date_basis: cabecalho
-topics: [effects]
-relations: []
+topics: [efeitos, gpu, renderizacao]
+relations: [task-08]
 source: docs/ref/effects-architecture.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # effects architecture (task-08)
+
+Descreve a arquitetura dos efeitos de composição da task-08: blur separável em dois passes de 13 taps, sombra como extração de silhueta seguida de blur, e composite final com alpha pré-multiplicado. O resultado é um pool de texturas indexado por largura, altura e formato, que não destrói texturas (o `release` só marca para reuso), e no máximo dois bind groups por efeito, dentro do limite de 4 do WASM. O desenho importa porque define o encadeamento de passes e o custo de memória que o compositor precisa respeitar.
 
 ## pipeline de efeitos (fragment shader only)
 

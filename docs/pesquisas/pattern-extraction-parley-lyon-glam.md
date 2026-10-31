@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, texto, edicao-de-texto, renderizacao]
+relations: [task-31, task-32]
 source: docs/ref/pattern-extraction-parley-lyon-glam.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # pattern extraction: parley, lyon, glam-rs
+
+Registra a extração de sete padrões de três repositórios de referência (parley, lyon e glam-rs), feita em 2026-03-11 pelo estudo do código-fonte. Cada padrão traz o trecho da fonte, a comparação com o plev, a aplicação possível e uma decisão: adotar, adaptar ou ignorar. O resultado que orienta o trabalho é o caminho de integração do lyon para vetores (task-31), que reaproveita o pipeline de quads existente, e a recomendação de só considerar a migração de edição de texto para o parley depois da avaliação da task-32.
 
 extracted 2026-03-11 by source code study of reference repos.
 source repos: `bunker/repos/3d-graphics/rendering/{parley,lyon,glam-rs}/`

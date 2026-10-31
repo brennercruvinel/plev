@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-10-02
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [animacao, efeitos]
+relations: [task-27, task-35, pesquisa-extracted-patterns]
 source: [docs/log/steps/task-37-animation-enhancements.md, docs/log/changes/task-37.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-37: animation enhancements
+
+Registra a ampliação do sistema de animação com `KeyframeSequence` (vários pontos, com easing por segmento), repetição, reverse e delay no tween, easings step e hold, e interpolação const-generic para arrays de `f32`. Era a maior lacuna frente ao tween de dois pontos. O código tem esses tipos em `rust/engine/src/compose/animation/` (`keyframe.rs`, `tween.rs`, `easing.rs`).
 
 ## objetivo
 adicionar keyframesequence, repeat/reverse/delay, step/hold easing, e const-generic interpolate. 4 patterns de keyframe/mina.

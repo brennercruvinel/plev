@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-01-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [texto, input, edicao-de-texto]
+relations: [task-09, task-13, task-29]
 source: [docs/log/steps/task-28.md, docs/log/changes/task-28.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-28: editable text
+
+Registra a entrega do campo de texto editável de uma linha: um `TextBuffer` com cursor e seleção, um mapeamento aproximado entre cursor e pixel, cursor piscante e ponte para o IME, reunidos no componente `TextInput`. O Registro de entrega cita 325 testes passando no workspace; o builder `text_input()` ficou para uma task futura. Importa porque é a camada sobre a qual o app demo (task-29) cria e edita seus itens, e porque a decisão de não usar o `Editor` do cosmic-text define como o texto editável se liga ao scene graph.
 
 ## objetivo
 input de texto editável com cursor, edição básica e integração com IME. mínimo viável para o app demo (task-29), single-line text input funcional.

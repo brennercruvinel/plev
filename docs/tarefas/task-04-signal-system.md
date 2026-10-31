@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-05-06
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [sinais, processo]
 relations: []
 source: [docs/log/steps/task-04.md, docs/log/changes/task-04.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-04: signal system (reatividade)
+
+Registra as primitivas reativas do plev: `create_signal`, `create_effect` e `create_memo`, com tracking automático de dependências e batching de updates. A implementação é um runtime thread-local com modelo push-pull híbrido, comparação no memo para cortar propagação e detecção de ciclos, com 15 testes de reatividade e sem dependência de GPU. Quando um signal muda, só as views que dependem dele são refeitas, e essa é a base do re-render granular.
 
 ## objetivo
 implementar primitivas reativas: `create_signal`, `create_effect`, `create_memo`. signals são a base para re-render granular, quando um signal muda, apenas as views que dependem dele re-renderizam.

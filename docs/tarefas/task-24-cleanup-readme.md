@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-12-27
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [editorial, processo]
 relations: []
 source: [docs/log/steps/task-24.md, docs/log/changes/task-24.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-24: cleanup & readme
+
+Registra a limpeza do código e a criação do README público do plev: a busca por TODO, FIXME e `todo!()` não achou nada, e `cargo doc --no-deps` compila sem erros. O README de 180 linhas traz features, plataformas, quickstart, exemplo da DSL e instruções de build. O diagrama de arquitetura em mermaid aparece como feito no checklist e como não feito no registro de entrega, e o README atual não tem diagrama. Importa porque o código deixa de ter marcas de pendência e o repositório passa a ter um README de entrada.
 
 ## objetivo
 limpar todos, readme publico, cargo doc.

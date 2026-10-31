@@ -1,20 +1,22 @@
 ---
 id: pesquisa-competitors-by-tier
-title: competitors-by-tier
+title: "concorrentes por tier"
 project: plev
 type: pesquisa
 status: referencia
 date: 2022-10-21
 date_basis: cabecalho
-topics: [competitive]
-relations: []
+topics: [competicao, pesquisa, gpu, plataforma]
+relations: [pesquisa-makepad-gap-analysis, pesquisa-technology-radar]
 source: docs/ref/competitors-by-tier.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# competitors-by-tier
+# concorrentes por tier
+
+Organiza os concorrentes do plev em cinco níveis, de concorrentes diretos (makepad, ribir) a referências de outras indústrias (flutter, vello), e diz em cada um onde ele difere do plev. O mapa de posicionamento resume o nicho: motor de composição GPU-first, com acessibilidade nativa, dirty tracking por hash e shaders WebGPU unificados, e a página conclui que nenhum outro projeto Rust reúne essas propriedades ao mesmo tempo. Por que importa: fixa o critério de comparação com outros frameworks Rust de UI.
 
 tier 1 - concorrentes diretos (GPU-first, rust, cross-platform)
 

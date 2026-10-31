@@ -6,15 +6,18 @@ type: rascunho
 status: rascunho
 date: 2022-05-24
 date_basis: cabecalho
-topics: [paper]
+topics: [artigo, renderizacao]
 relations: []
 source: docs/pub/arxiv-paper-outline.md
 source_revision: 5de80aad
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # plev: a GPU-first compositing engine for cross-platform UI rendering
+
+Esboço da estrutura do artigo sobre o plev, em inglês como no original, com abstract, arquitetura, estratégia entre plataformas, a DSL `plev_narrate!`, acessibilidade, caminhos vetoriais, sinais e avaliação. A tese do esboço é que um único codebase Rust com wgpu atinge seis plataformas sem ramificações de plataforma no caminho de renderização, e que as diferenças ficam na inicialização. É um plano, não o texto final, e os números de avaliação não têm data de medição registrada no corpo.
+
 ## arxiv paper outline
 
 ### abstract (~150 words)

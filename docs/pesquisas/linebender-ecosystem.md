@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [text]
-relations: []
+topics: [texto, renderizacao, pesquisa]
+relations: [task-05, task-25, task-27, task-28, task-29, task-30, task-31, task-32]
 source: docs/ref/linebender-ecosystem.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # ecossistema linebender, analise para plev
+
+Analisa o ecossistema linebender (vello, xilem, parley, velato, kurbo, peniko e fearless_simd) para o plev: o que cada projeto ensina sobre arquitetura de rendering e texto, e o que não vale adotar. O ponto de maior impacto é o parley como candidato a substituir o cosmic-text na task-32; o plaineditor resolveria grande parte da task-28. Os demais projetos são referências de arquitetura, não dependências diretas, e os números de estrelas, versões e downloads são os que o corpo registra na data indicada.
 
 **data:** 2026-03-11
 **contexto:** pesquisa de referencia para task-32 (text upgrade assessment) e decisoes arquiteturais futuras do plev.

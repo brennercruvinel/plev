@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-03-28
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [sinais, processo]
+relations: [task-01, task-04, arquitetura-component-design]
 source: [docs/log/steps/task-02.md, docs/log/changes/task-02.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-02: component state management
+
+Registra o estado interno das views: o struct `Component<L>`, os hooks `on_mount`, `on_update` e `on_unmount`, e o acesso tipado ao estado por `state()` e `state_mut()`. O design final fez o render receber `&Self::State` diretamente, em vez de passar o estado pelo viewcontext. A entrega tem 13 testes (9 de componente e 4 de view), e o estado sobrevive entre frames sem realocação. O componente é pré-requisito dos signals da task-04, porque cada instância passa a ter estado próprio.
 
 ## objetivo
 adicionar estado interno às views, lifecycle de componente (mount, update, unmount) e armazenamento de estado local sem globals.

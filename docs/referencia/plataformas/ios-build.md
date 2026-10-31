@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-08-15
 date_basis: cabecalho
-topics: [build-ios]
+topics: [mobile, plataforma, fontes]
 relations: []
 source: docs/ref/ios-build.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # ios build - decisões e conhecimento
+
+Registra as decisões e o conhecimento do build para iOS: fontes embutidas com `include_bytes!`, porque o fontdb não encontra fontes do sistema, Metal como backend, o ciclo de vida do winit 0.30 e os requisitos do Info.plist. O texto descreve os alvos de simulador (`aarch64-apple-ios-sim`) e de aparelho (`aarch64-apple-ios`), e a diferença do build de desktop no carregamento de fontes. O registro importa porque cada um desses pontos diverge do desktop e do Android.
 
 ## font loading no ios
 - `fontdb` (usado por cosmic-text) no ios tenta scan de diretórios linux-style e não encontra fontes do sistema

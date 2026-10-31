@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, competicao]
+relations: [pesquisa-accessibility, pesquisa-animation-motion, pesquisa-charts-visualization, pesquisa-competitive-positioning, pesquisa-competitors, pesquisa-emulators-wasm-runtimes, pesquisa-integration-candidates, pesquisa-linebender-ecosystem, pesquisa-math-physics-geometry, pesquisa-tui-patterns, pesquisa-wasm-tooling, task-27, task-28, task-29, task-30, task-31, task-32, task-33]
 source: docs/ref/technology-radar.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # technology radar, plev
+
+Resumo executivo da análise de ecossistema de 2026-03-11, com mais de cinquenta repositórios em doze categorias. Traz a posição do plev, as ameaças com severidade e mitigação, e as ações por fase do plano. O resultado central é que nenhum competidor reúne shaders idênticos em seis targets, dirty tracking por camada e texto de produção, e que as integrações ampliam a capacidade sem comprometer a arquitetura central.
 
 **data:** 2026-03-11
 **escopo:** resumo executivo da analise de ecossistema (50+ repos, 12 categorias)

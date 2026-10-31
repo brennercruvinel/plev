@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-05-02
 date_basis: cabecalho
-topics: [signals]
-relations: []
+topics: [sinais, git]
+relations: [task-04]
 source: docs/ref/signal-system-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # signal system design
+
+Registra o desenho do sistema de sinais da task-04: um modelo push-pull híbrido, com nós num slotmap geracional e a regra de nunca segurar o borrow do runtime durante a execução de closures do usuário. O resultado é que `set` marca os assinantes e os efeitos verificam as fontes antes de rodar, com memos que cortam a propagação quando o valor não muda. O desenho importa porque a disciplina de borrow evita panics de `RefCell` em código de usuário, e a detecção de ciclos transforma uma escrita circular em erro explícito.
 
 ## data: 2021-05-02
 

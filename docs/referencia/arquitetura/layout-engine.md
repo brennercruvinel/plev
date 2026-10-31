@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-04-15
 date_basis: cabecalho
-topics: [layout]
+topics: [layout, desempenho]
 relations: []
 source: docs/ref/layout-engine.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # layout engine - decisoes e conhecimento
+
+Registra a escolha do taffy 0.9 como motor de layout em vez de uma implementação própria, com a medição de 89 µs para 1000 nós em release, e as notas da API usada. O resultado é um `LayoutEngine` que calcula coordenadas absolutas em duas fases por frame: coleta dos itens de layout e, depois, render com os `ComputedBounds`. O desenho importa porque a dependência e o custo por frame determinam o orçamento de layout do engine.
 
 ## decisao: taffy 0.9 (nao implementacao custom)
 

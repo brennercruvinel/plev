@@ -6,12 +6,12 @@ type: tese
 status: ativo
 date: 2026-09-23
 date_basis: cabecalho
-topics: [thesis, semantics, agents, ir, recorder, generative-ui, runtime]
-relations: []
+topics: [semantica, agentes, ir, gravacao, superficies-geradas]
+relations: [programa-runtime, manual-generative-runtime-guidelines, task-57, task-58, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80]
 source: docs/ref/generative-runtime-thesis.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # plev: tese do runtime de interação generativa
@@ -23,6 +23,11 @@ técnica), as anotações do brenner, o arquivo de concepção da seção plev
 limites) e a rodada de ideias de funcionalidade que a arquitetura já paga.
 não é especificação fechada nem roadmap: é a tese técnica sobre o que o
 plev já contém em embrião e no que essa arquitetura pode se transformar.
+o resultado é a formulação curta da tese: o plev transforma intenção em
+interface, e o critério que a sustenta é que humano e agente operam a mesma
+identidade lógica, com ações verificadas e registradas. importa porque
+separa o que já existe no repositório do que ainda é hipótese a demonstrar
+(seção 28).
 
 o plano executável (goal, grafo, ordem, contratos entre tasks) está em
 [`programa-runtime-generativo.md`](../historia/programa-runtime-generativo.md). as regras de trabalho do orquestrador e

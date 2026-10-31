@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-03-06
 date_basis: cabecalho
-topics: [rendering]
+topics: [renderizacao, desempenho]
 relations: []
 source: docs/ref/view-trait-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # view trait - decisões de design
+
+Registra as decisões de design da trait `View`: a assinatura `render(&self, cx)`, que devolve `Vec<SceneNode>`, um `ViewContext` sem referência ao compositor e as views concretas `RectView` e `TextView`. O resultado são views como declarações puras, testáveis sem GPU, com uma alocação de `Vec` por render que a página considera negligível. O desenho importa porque o compositor continua sendo o único destino dos `SceneNode`, sem mudança em `push()`.
 
 ## assinatura
 ```rust

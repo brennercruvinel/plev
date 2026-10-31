@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-07-23
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [animacao, determinismo]
+relations: [task-27, pesquisa-extracted-patterns]
 source: [docs/log/steps/task-35-spring-analytical-solver.md, docs/log/changes/task-35.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-35: fix spring<t>, analytical solver
+
+Registra a troca da integração por Euler do `Spring<T>` por uma solução analítica do oscilador amortecido, com os três regimes: sub-amortecido, criticamente amortecido e super-amortecido. A motivação é um bug de corretude: com Euler, o resultado dependia da taxa de quadros e divergia em springs rígidos, enquanto a solução analítica é estável para qualquer passo de tempo. O código atual implementa isso em `Spring::tick` (`rust/engine/src/compose/animation/spring.rs:99`), e o teste `spring_frame_rate_independence` compara 30, 60 e 120 fps com tolerância de 0,5; a ideia vem do padrão c1 de [extracted-patterns.md](../pesquisas/extracted-patterns.md).
 
 ## objetivo
 substituir o forward euler integration do spring<t> por solver analitico com coeficientes pre-computados. corrige bug de corretude: resultados diferentes a 30fps vs 60fps.

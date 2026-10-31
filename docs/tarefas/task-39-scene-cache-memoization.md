@@ -6,15 +6,17 @@ type: tarefa
 status: substituido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [renderizacao, desempenho]
+relations: [task-73, pesquisa-extracted-patterns]
 source: docs/log/steps/task-39-scene-cache-memoization.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-39: scene cache, memoization + dirty flag bubbling
+
+Registra a proposta de otimizar o render de componentes com memoização por `PartialEq` (b7) e com flags de dirty propagadas para o pai (b8, `merge_up`), para pular o `render()` quando as props não mudam. A task está com status `substituido`: a [task-73](task-73-incremental-dependency-system.md) a absorveu e levou as opções de memoização e as flags separadas de layout e paint para o ADR da fase 2, comparadas com os números da fase 1. O cache por componente (`cached_nodes`, `needs_render`) já existia e continua no engine; o que restou em aberto é decisão da 73.
 
 ## objetivo
 implementar otimizacoes de rendering por componente: memoizacao via partialeq (b7) e dirty flag bubbling (b8) para pular render() de componentes cujas props nao mudaram.

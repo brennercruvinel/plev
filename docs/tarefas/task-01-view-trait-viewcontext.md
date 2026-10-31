@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-03-10
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [renderizacao, processo]
 relations: []
 source: [docs/log/steps/task-01.md, docs/log/changes/task-01.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-01: view trait + viewcontext
+
+Registra a primeira etapa das views: a trait `View`, que encapsula a produção de `SceneNode`s, e o `ViewContext`, com as informações de viewport. Em `window.rs`, a cena passou a vir das views em vez de ser empurrada direto para o compositor, com `RectView` e `TextView` como primeiras views concretas. O resultado foi validado por 4 testes unitários e pelo `text_demo`, que roda igual ao anterior. A abstração é a base da API declarativa das tasks seguintes.
 
 ## objetivo
 criar a abstração base `View` que encapsula a produção de `SceneNode`s. o usuário do plev deve declarar views que produzem cena, sem tocar no compositor diretamente.
@@ -39,18 +41,6 @@ hoje o `window.rs` empurra `SceneNode::Rect` e `SceneNode::Text` diretamente no 
 - não introduzir alocações por frame, views devem poder reusar buffers
 - manter compatibilidade com o dirty tracking existente do compositor
 - o borrow checker pattern do textsystem::resolve() não pode ser afetado
-
-## trabalho paralelo
-este projeto tem múltiplos agentes e devs trabalhando simultaneamente em tasks diferentes. regras:
-- criar branch `task/TASK-01-view-trait` a partir de `main` antes de começar
-- verificar com `git branch -a` se a branch já existe (outro agente pode ter começado)
-- nunca commitar na `main`, todo trabalho na branch da task
-- não alterar arquivos que pertencem a outras tasks sem registrar no changelog
-- ao concluir: pr para `main` ou avisar o usuário para merge
-
-## workflow
-- ao iniciar: criar branch, mover este arquivo para `mission/steps/ongoing/`
-- ao concluir: renomear para `TASK-01-DONE.md`, mover para `mission/steps/checked/`
 
 ## Registro de entrega
 

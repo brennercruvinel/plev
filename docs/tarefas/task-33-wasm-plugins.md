@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2022-09-14
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [web-wasm, pesquisa]
+relations: [pesquisa-wasm-plugin-architecture]
 source: [docs/log/steps/task-33-wasm-plugins.md, docs/log/changes/task-33.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-33: WASM plugin architecture
+
+Registra a fase 1 da avaliação de plugins WASM para o plev: wasmtime, wasmer e extism comparados, com overhead de 10 a 15 ns por chamada de host, segundo o corpo. A recomendação é esperar, porque a API ainda muda e WASM funciona bem só em 3 de 6 plataformas; quando estabilizar, o caminho é extism atrás de uma feature, só para desktop. O protótipo (fase 2) ficou adiado; a comparação completa está em [wasm-plugin-architecture.md](../pesquisas/wasm-plugin-architecture.md).
 
 ## resultado
 research doc completo: [`wasm-plugin-architecture.md`](../pesquisas/wasm-plugin-architecture.md)

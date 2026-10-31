@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-10-24
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [efeitos, renderizacao]
+relations: [task-07, task-08]
 source: [docs/log/steps/task-16.md, docs/log/changes/task-16.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-16: effects <-> layer integration
+
+Registra o plano de integrar blur e sombra às layers, com efeitos aplicados pela API e processados entre a renderização offscreen e a composição. O corpo traz só a análise da sessão 1 (2021-10-20), e o checklist segue aberto; o código tem `set_layer_effects` e `LayerEffect`, e o mapa das fases marca a task como concluída. Só o código e o mapa sustentam o `concluido` do cabeçalho, porque o corpo não registra o fechamento.
 
 ## objetivo
 effects (blur, shadow) aplicáveis diretamente a layers via API.

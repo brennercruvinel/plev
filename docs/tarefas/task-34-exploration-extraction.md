@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2022-07-12
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [pesquisa, competicao]
+relations: [task-ref, task-27, task-30, task-31, task-32, pesquisa-extracted-patterns, pesquisa-pattern-extraction-parley-lyon-glam, pesquisa-pattern-extraction-tui-apps, pesquisa-extraction-fase-ef]
 source: [docs/log/steps/task-34-exploration-extraction.md, docs/log/changes/task-34.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-34: exploracao e extracao de ideias dos repos de referencia
+
+Registra a leitura do código-fonte de repositórios de referência, clonados fora deste repositório, para extrair padrões de accesskit, parley, lyon, vello, makepad, xilem, animação, apps de TUI, WASM e frameworks concorrentes. O objetivo era estudar e documentar decisões de arquitetura, sem copiar código de terceiros. O resultado é o catálogo de padrões, com a decisão para cada um (adotar, adaptar ou ignorar), e a lista das dez prioridades de implementação; o catálogo principal está em [extracted-patterns.md](../pesquisas/extracted-patterns.md).
 
 ## objetivo
 analisar o codigo-fonte dos 56 repositorios clonados em `bunker/repos/` (colecao local de clones de estudo, fora do repo) e extrair padroes, tecnicas e ideias concretas aplicaveis ao plev. nao e para copiar codigo, e para estudar, entender e documentar decisoes arquiteturais que informem o desenvolvimento futuro.

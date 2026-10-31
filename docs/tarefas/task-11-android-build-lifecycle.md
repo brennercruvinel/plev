@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-08-16
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [mobile, plataforma, gpu]
+relations: [task-10]
 source: [docs/log/steps/task-11.md, docs/log/changes/task-11.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-11: android build + lifecycle
+
+Registra a adaptação do plev para Android, com `android-activity`, GameActivity e Vulkan como backend de GPU. O ciclo de vida suspende e recria a superfície, a fonte embutida segue o caminho do WASM, e `cargo check`, os exemplos e o smoke visual de `text_demo` e `layers_demo` passaram. Build do APK, cross-compilação para `aarch64-linux-android` e teste em dispositivo ficam em aberto, porque dependem de NDK e de aparelho, e não do código.
 
 ## objetivo
 fazer o plev compilar e rodar em android via `android-activity` crate + winit. vulkan como backend GPU.

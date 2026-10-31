@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, renderizacao, input, layout, desempenho]
+relations: [task-30, task-33, task-34]
 source: docs/ref/pattern-extraction-tui-apps.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # pattern extraction: tui apps (yazi, television, bottom)
+
+Extração de onze padrões de três aplicações de terminal em Rust: yazi (gerenciador de arquivos), television (buscador fuzzy com canais) e bottom (monitor de sistema). Cada padrão traz o trecho de origem, a decisão para o plev (adotar, adaptar ou deixar de lado) e a aplicação ao engine ou às aplicações construídas sobre ele. As de maior prioridade são o agrupamento de eventos com limite de renderização (padrão 1) e a navegação automática a partir do layout (padrão 9), exigida pela acessibilidade (task-30); a pesquisa faz parte da task-34, fase d.
 
 data: 2026-03-11
 status: completo

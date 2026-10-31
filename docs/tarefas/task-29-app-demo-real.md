@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-03-22
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [sinais, layout, animacao, input]
+relations: [task-27, task-28]
 source: [docs/log/steps/task-29.md, docs/log/changes/task-29.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-29: app demo real (proof of life)
+
+Registra o app de lista de tarefas construído inteiramente com plev, a prova de integração do engine para além de demos isoladas. O app junta signals, o text input da task-28, as animações da task-27, layout e input em `examples/todo_app.rs`. O Registro de entrega cita `cargo check --workspace --examples` sem avisos e `cargo test --workspace` com 325 testes passando, e a tarefa está marcada como concluída.
 
 ## objetivo
 app não-trivial construído inteiramente com plev. prova que o engine funciona para algo além de demos isolados. deve usar: animações (task-27), texto editável (task-28), signals, layout, layers, input, tudo junto.

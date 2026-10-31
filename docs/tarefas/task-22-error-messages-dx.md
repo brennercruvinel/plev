@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-12-11
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [dsl, processo]
+relations: [task-14, task-05]
 source: [docs/log/steps/task-22.md, docs/log/changes/task-22.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-22: error messages & DX
+
+Registra a melhoria das mensagens de erro do `plev_narrate!`: sugestões "did you mean?" para typos em elementos, modifiers, eventos e keywords de bloco, detecção de sintaxe estilo JS (`onclick` vira `on click`) e de modifier usado como elemento. Os testes novos ficaram em `parse/mod.rs` e `parse/keywords.rs`, caminhos que não existem mais no repositório; trybuild e os avisos do builder para combinações inválidas ficaram de fora por escopo. Importa porque o erro passa a sugerir a correção em vez de apenas rejeitar a entrada.
 
 ## objetivo
 melhorar mensagens de erro e developer experience.

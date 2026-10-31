@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-06-12
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [renderizacao, gpu]
 relations: []
 source: [docs/log/steps/task-31-vector-paths.md, docs/log/changes/task-31.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-31: vector path rendering (lyon integration)
+
+Registra o módulo de vector paths sobre lyon: um `PathBuilder` com curvas e formas prontas, tesselação que reaproveita o pipeline de quads do compositor e um hash estável dos comandos para o dirty tracking. O resultado é o `scenenode::path` e o exemplo `examples/paths_demo.rs`, sem shader novo. Importa porque dá ao engine desenho vetorial sem um pipeline de renderização paralelo.
 
 ## resultado
 implementado modulo completo de vector paths via lyon tessellation, integrado com compositor e builder API.

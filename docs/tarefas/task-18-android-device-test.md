@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [mobile, plataforma, input]
+relations: [task-11, task-50, task-77]
 source: [docs/log/steps/task-18-android-device-test.md, docs/log/changes/task-18.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-18: android build & device test
+
+Registra a compilação do plev para Android e o teste da galeria no emulador: a biblioteca sai pelo cargo-ndk, o APK pelo gradle e a instalação pelo `tool/tasks/screencap.sh android`. O frame do emulador difere do desktop em no máximo 2/255 por canal, e toque, rotação e volta do segundo plano funcionam. Ficaram em aberto a activity que o sistema recria logo após o boot e o arrasto de controles por toque. Importa porque mostra a mesma cena da galeria rodando no Android, como já rodava no desktop e na web.
 
 ## objetivo
 compilar, gerar APK e testar em device/emulator android.

@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-11-08
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [input, renderizacao]
+relations: [task-07, task-09]
 source: [docs/log/steps/task-17.md, docs/log/changes/task-17.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-17: input <-> layer hit-testing
+
+Registra o hit-testing respeitando a ordem de z dos layers: as regiões são percorridas de trás para frente, e layers invisíveis ou com opacidade zero não recebem toques. O `InputState` recebe o layer atual por `set_current_layer()`, e o compositor não mudou. Os seis testes novos cobrem layers invisíveis, opacidade zero, a sobreposição e o reset por frame, e a suíte chegou a 216 testes passando.
 
 ## objetivo
 hit-testing respeitar z_order dos layers.

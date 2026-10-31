@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-04-20
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [layout, processo]
+relations: [task-01]
 source: [docs/log/steps/task-03.md, docs/log/changes/task-03.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-03: layout engine (flexbox-like)
+
+Registra o engine de layout flexbox-like: `LayoutStyle` com direção, alinhamento, justificação, padding, gap e restrições de tamanho, resolvido pelo taffy 0.9, que fica como detalhe interno. As views recebem os bounds calculados pelo viewcontext, o `containerview` aplica o layout aos filhos, e `window.rs` passa a renderizar em duas fases: calcular o layout e depois desenhar. São 19 testes (12 de layout e 7 de view). O registro mede cerca de 34 ms em debug para 1001 nodes; o valor abaixo de 1 ms em release é citado do benchmark do taffy, como indica o próprio registro.
 
 ## objetivo
 implementar sistema de layout que calcula posição e tamanho de views antes de gerar scenenodes. modelo inspirado em flexbox (direção, alinhamento, padding, gap).

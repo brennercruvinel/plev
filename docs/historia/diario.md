@@ -6,15 +6,18 @@ type: registro
 status: referencia
 date: null
 date_basis: sem-data
-topics: [journal, autonomy, status]
-relations: []
+topics: [agentes, processo, git, gravacao, plataforma]
+relations: [adr-0046, adr-0048, adr-0052, estado-codigo-2026-09, manual-autonomy, manual-generative-runtime-guidelines, programa-runtime, task-18, task-19, task-20, task-61, task-62, task-63, task-64, task-65, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97, tese-runtime]
+evidence: [6e284bf, 4573c81, 460c854, 37c5e0c, 0071764, 4593a4c, 7d9c569, f101359, fed9c8d, 22d59fb, de95a20, d611fa4, c60b9f6, 871f0dd, ecf51ba, 29373d4, 804e57d, 042d34e, f309ab4, f248dd1, 96c20a0, 8e6e814, 5f57fe7, d02b4d1, c433751, 79b8c93, 0e0a7b3, 7f866e8, eea529b, e6560a2, 49e2822, 7528309, a6fec8d, 365d8fd, 476bbb4, 78f463c, 1bf6606, 2d4aa4b, 4896451, 7621403, 1ecc84c, c07a7f0, c5fdf36]
 source: docs/log/journal.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # journal do ciclo autônomo
+
+Registra, do mais novo para o mais antigo, o que mudou o `status` do ciclo autônomo do plev nas seções de 2026-09-23 a 2026-09-26: intervenções do Brenner, tasks disparadas e integradas, decisões autônomas, defeitos achados na validação e publicações em PR. Cada entrada resume o acontecimento e aponta para a task onde está o detalhe. O registro mostra a mudança para orquestração autônoma, pedida pelo Brenner, e a integração feita só com o gate local enquanto o CI do GitHub estava parado por cobrança.
 
 uma entrada por acontecimento que importa para o `status`: intervenção do
 brenner, integração, decisão autônoma, bug relevante, agente disparado ou

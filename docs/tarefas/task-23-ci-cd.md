@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-12-18
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [processo, workspace]
 relations: []
 source: [docs/log/steps/task-23.md, docs/log/changes/task-23.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-23: CI/CD
+
+Registra o workflow de CI do plev no GitHub Actions, com seis jobs paralelos: check, test, clippy, fmt, wasm e ios. Na época não havia remote, e o workflow não foi executado no GitHub; o `trunk build --release` e o Android ficaram fora do CI. Importa porque define quais checagens rodam sobre o código e em quais alvos.
 
 ## objetivo
 github actions workflow para CI.

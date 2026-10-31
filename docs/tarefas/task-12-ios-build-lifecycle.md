@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-08-29
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [mobile, plataforma, fontes]
+relations: [task-13]
 source: [docs/log/steps/task-12.md, docs/log/changes/task-12.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-12: ios build + lifecycle
+
+Registra a adaptação do plev para iOS sobre winit 0.30 e Metal, via wgpu, com fonte embutida (o desktop mantém `FontSystem::new()`), tratamento de suspensão e de aviso de memória, e um script de build para o simulador. Os checks para `aarch64-apple-ios` e `aarch64-apple-ios-sim` e a regressão no macOS passaram; o teste no simulador ficou fora do CI. Safe areas e toque ficam para a task-13.
 
 ## objetivo
 fazer o plev compilar e rodar em ios via winit + metal (wgpu). font loading com embedded font (mesmo padrão WASM).

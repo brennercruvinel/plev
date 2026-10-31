@@ -1,22 +1,22 @@
 ---
 id: indice-historico
-title: "knowledge base, plev"
+title: "Índice histórico dos ADRs"
 project: plev
 type: registro
-status: ativo
+status: referencia
 date: 2026-09-29
 date_basis: cabecalho
-topics: [index]
-relations: []
+topics: [editorial, processo]
+relations: [arquitetura-view-trait-design, arquitetura-component-design, arquitetura-layout-engine, arquitetura-signal-system-design, arquitetura-input-system-design, arquitetura-layer-system, arquitetura-effects-architecture, arquitetura-dsl-narrate-design, plataforma-ios-build, plataforma-mobile-specifics, plataforma-wasm-webgpu-validation, plataforma-android-emulator-deploy, arquitetura-animation-pattern-lerp, arquitetura-touch-gesture-design, arquitetura-hot-reload-design, arquitetura-srp-modularization, arquitetura-clippy-zero-warnings, arquitetura-monster-format-v0, arquitetura-component-catalog, benchmarks-v02, artigo-estrutura, artigo-diferenciais, artigo-rascunho, pesquisa-extracted-patterns, pesquisa-parley-vs-cosmic-text, pesquisa-wasm-plugin-architecture, pesquisa-makepad-gap-analysis, pesquisa-plev-vs-makepad-report, responsividade-fidelidade, programa-runtime, aprendizado-hot-reload, aprendizado-showcase-pages, aprendizado-core-buttons, aprendizado-comps, changelog, modelo-decisao, linha-do-tempo, adr-0001, adr-0002, adr-0003, adr-0004, adr-0005, adr-0006, adr-0007, adr-0008, adr-0009, adr-0010, adr-0011, adr-0012, adr-0013, adr-0014, adr-0015, adr-0016, adr-0017, adr-0018, adr-0019, adr-0020, adr-0021, adr-0022, adr-0023, adr-0024, adr-0025, adr-0026, adr-0027, adr-0028, adr-0029, adr-0030, adr-0031, adr-0032, adr-0033, adr-0034, adr-0035, adr-0036, adr-0037, adr-0038, adr-0039, adr-0040, adr-0041, adr-0042, adr-0043, adr-0044, adr-0045, adr-0046, adr-0047, adr-0048, adr-0049, adr-0050, adr-0051, adr-0052, adr-0053, adr-0054, adr-0055, adr-0056, adr-0057, adr-0058, adr-0059, adr-0060, adr-0061, adr-0062, adr-0063, adr-0064, adr-0065, adr-0066, adr-0067, adr-0068, adr-0069, adr-0070, adr-0071, adr-0072, adr-0073, adr-0074, adr-0075, adr-0076, adr-0077, adr-0078, adr-0079, task-30, task-31, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-82, task-83, task-84, task-87, task-89, task-90, task-91, task-92, task-95, task-96, task-97]
 source: docs/adr/README.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# knowledge base, plev
+# Índice histórico dos ADRs
 
-indice dos architecture decision records do plev. cada linha aponta para o arquivo, com status e data reais do frontmatter. a ordem e cronologica de proposito: o git so preservou de 2026-06-10 em diante (expurgo de historico antes do primeiro push), entao este indice e a fonte da linha do tempo que o git perdeu. fundacao em 2021, ondas seguintes ano a ano ate 2026.
+Índice dos architecture decision records (ADRs) do plev, de 2021 a 2026, que retrata o estado de 2026-09. Cada linha aponta para a página da decisão e traz o status e a data do cabeçalho dela. A ordem é cronológica de propósito: o git só preservou o histórico a partir de 2026-06-10, por causa do expurgo feito antes do primeiro push, e este índice foi a fonte da linha do tempo que o git perdeu. A navegação atual é a [linha do tempo](linha-do-tempo.md); esta página fica como registro do que o índice dizia naquele momento.
 
 status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a decisão ainda espera quem decide), `accepted` (decisao em vigor), `draft-v0` (spec em rascunho), `living` (atualizado continuamente), `active` (este indice).
 
@@ -65,7 +65,7 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | 2024-01-22 | [hot-reload-design](../referencia/arquitetura/hot-reload-design.md) | reference | 7 implementacoes estudadas, 3 tiers: shader (vello), DSL (makepad), rust (subsecond). dylib descartado (typeid UB) |
 | 2024-02-06 | [shader-hot-reload-adr](../decisoes/processos/0019-shader-hot-reload.md) | reference, adr-3 reversed | shader reload via notify watcher + pipeline recreation, errorscopeguard; channel polling in about_to_wait replaced by request_redraw (2026-09-22) |
 | 2024-02-18 | [narrate-hot-reload-adr](../decisoes/processos/0018-narrate-hot-reload.md) | reference | narrate DSL reload via runtime parser + override map, re-parse on access |
-| 2026-09-22 | [hot-reload-on-by-default-in-gpu-context](../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md) | accepted | hot reload on em todo debug build desktop: shader e literal (string, cor hex) trocam na janela aberta, estado intacto, sem macro; código rebuilda e re-exec. ideia do rsx-hotreload do dioxus, sem dioxus; aprendizados em docs/log/learnings/hot-reload.md |
+| 2026-09-22 | [hot-reload-on-by-default-in-gpu-context](../decisoes/processos/0031-hot-reload-on-by-default-in-gpu-context.md) | accepted | hot reload on em todo debug build desktop: shader e literal (string, cor hex) trocam na janela aberta, estado intacto, sem macro; código rebuilda e re-exec. ideia do rsx-hotreload do dioxus, sem dioxus; aprendizados em [hot-reload](../aprendizados/hot-reload.md) |
 
 ## lint e modularizacao (2024)
 
@@ -126,15 +126,15 @@ status usados: `reference` (conhecimento congelado de uma sessao), `proposed` (a
 | data | adr | status | resumo |
 |------|-----|--------|--------|
 | 2026-08-30 | [official-app-pattern](../decisoes/estrutura/0023-official-app-pattern.md) | accepted | padrao oficial: estado em structs + widgets retidos + invalidacao explicita (template: showcase); builder para prototipos/demos; view/component/signal/narrate experimentais |
-| 2026-09-21 | [core-theme-tailwind-classes-as-recipes](../decisoes/renderizacao/0028-core-theme-tailwind-classes-as-recipes.md) | accepted | Theme::hoff_core (o kit typescript: shades, accents, sombras, Inter, raios) e theme.button: cada class list de botao virou receita (fill, shadow list com ring e inset, overlay, texto) por estado; Button / IconButton / SubmitButton reescritos; showcase Buttons e a ButtonsPage; dois defeitos globais: mix em alpha reto no rect_sdf (franja escura em toda quina) e sombra blur 0 sem AA; aprendizados em docs/log/learnings/core-buttons.md |
+| 2026-09-21 | [core-theme-tailwind-classes-as-recipes](../decisoes/renderizacao/0028-core-theme-tailwind-classes-as-recipes.md) | accepted | Theme::hoff_core (o kit typescript: shades, accents, sombras, Inter, raios) e theme.button: cada class list de botao virou receita (fill, shadow list com ring e inset, overlay, texto) por estado; Button / IconButton / SubmitButton reescritos; showcase Buttons e a ButtonsPage; dois defeitos globais: mix em alpha reto no rect_sdf (franja escura em toda quina) e sombra blur 0 sem AA; aprendizados em [core-buttons](../aprendizados/core-buttons.md) |
 | 2026-09-21 | [embed-an-app-view-by-frame-origin](../decisoes/renderizacao/0029-embed-an-app-view-by-frame-origin.md) | accepted | view de app ganha origem de frame (WorkspaceView::set_frame, Sidebar.origin); begin_frame e do host; ide vira lib + bin com GitSession; showcase embute Editor e Git como app sections sem gutter |
-| 2026-09-21 | [showcase-one-page-per-component](../decisoes/estrutura/0030-showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em docs/log/learnings/showcase-pages.md |
-| 2026-09-18 | [comps-one-design-system-crate](../decisoes/estrutura/0027-comps-one-design-system-crate.md) | accepted | rust/engine/src/widgets e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em docs/ref/component-catalog.md; aprendizados da sessao em docs/log/learnings/comps.md |
+| 2026-09-21 | [showcase-one-page-per-component](../decisoes/estrutura/0030-showcase-one-page-per-component.md) | accepted | o showcase vira uma pagina por widget do comps: tabela `view::pages::PAGES` em tres grupos (Foundations, Components alfabetico, Apps Demo), pagina propria, alias (mostra o exemplo vizinho com a nota do que falta) ou placeholder (widget que o comps ainda nao tem); `comps::nav::Sidebar` ganha `NavGroup` (grupos que dobram); foco de teclado por pagina; aprendizados em [showcase-pages](../aprendizados/showcase-pages.md) |
+| 2026-09-18 | [comps-one-design-system-crate](../decisoes/estrutura/0027-comps-one-design-system-crate.md) | accepted | rust/engine/src/widgets e o design system (widgets, receitas, icones, charts, overlay, editor, shell) sobre o engine; todo valor visual e token do Theme (shape, control, size, duration, layout, shadows); breakpoints e AppShell (sidebar cheia / rail / drawer); ide, showcase e urnaui consomem, tema e componentes locais apagados; matriz tema x viewport testa todo widget; inventario em [component-catalog](../referencia/arquitetura/component-catalog.md); aprendizados da sessao em [comps](../aprendizados/comps.md) |
 | 2026-09-29 | [design-for-ranges-not-screens-and-devices](../decisoes/renderizacao/0073-design-for-ranges-not-screens-and-devices.md) | accepted | cinco regras para toda mudança visível, em qualquer plataforma: fluid scale, component-driven responsiveness, intrinsic layout, relative and semantic values, progressive adaptation; o texto fica no AGENTS.md (seção design for ranges, not screens) e no manual do engine, com um checkbox por regra no template de PR |
 
 ## runtime de interação generativa (2026)
 
-o programa em docs/log/generative-runtime-program.md; uma linha por decisão das tasks 57 a 80.
+o programa em [programa do runtime generativo](programa-runtime-generativo.md); uma linha por decisão das tasks 57 a 80.
 
 | data | adr | status | resumo |
 |------|-----|--------|--------|
@@ -213,7 +213,7 @@ o programa em docs/log/generative-runtime-program.md; uma linha por decisão das
 
 ## por tema
 
-os registros de decisão numerados ficam em `docs/adr/<tema>/NNNN-<titulo>.md`, a numeração única para todos os temas (o modelo é [TEMPLATE.md](../referencia/editorial/modelo-decisao.md)). os documentos de referência que esta tabela lista acima moraram aqui e hoje estão em `docs/ref/`, `docs/pub/` e `docs/log/`.
+em 2026-09 os registros de decisão numerados ficavam em `docs/adr/<tema>/NNNN-<titulo>.md`, a numeração única para todos os temas (o modelo é [TEMPLATE.md](../referencia/editorial/modelo-decisao.md)). os documentos de referência que esta tabela lista acima ficavam em `docs/ref/`, `docs/pub/` e `docs/log/`.
 
 ### generated
 

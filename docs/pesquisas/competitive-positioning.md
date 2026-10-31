@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [competitive]
-relations: []
+topics: [competicao, gpu]
+relations: [pesquisa-competitors, pesquisa-linebender-ecosystem, task-21, task-26, task-28, task-29, task-30, task-32]
 source: docs/ref/competitive-positioning.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # posicionamento competitivo, plev
+
+Matriz de posicionamento do plev frente a frameworks de interface e de rendering (makepad, iced, egui, GPUI, slint e outros), de 2026-03-11. Compara modelo de rendering, backend GPU, qualidade de texto, dirty tracking, camadas e número de targets, e lista as vantagens que a pesquisa confirmou e os pontos em que cada competidor é superior. O resultado é um nicho próprio, um motor de compositing GPU-first com shaders idênticos em seis targets; o risco apontado é de execução (acessibilidade, documentação e demo app), não técnico.
 
 **data:** 2026-03-11
 **baseado em:** refs/competitors.md, refs/linebender-ecosystem.md, mission/plan/readme.md secoes 5-6

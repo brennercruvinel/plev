@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2022-08-16
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [texto, pesquisa]
+relations: [pesquisa-parley-vs-cosmic-text]
 source: [docs/log/steps/task-32-text-upgrade-assessment.md, docs/log/changes/task-32.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-32: text system upgrade assessment
+
+Registra a avaliação de migrar o sistema de texto do plev do cosmic-text 0.18 para o parley 0.7. A conclusão foi esperar: o parley tem APIs melhores (cursor, seleção, inlinebox e ponte para accesskit), mas está em alpha, não tem rasterizador e o suporte a WASM tem issue aberta. A página lista os gatilhos que reabrem a decisão; a comparação completa está em [parley-vs-cosmic-text.md](../pesquisas/parley-vs-cosmic-text.md).
 
 ## resultado
 documento completo: [`parley-vs-cosmic-text.md`](../pesquisas/parley-vs-cosmic-text.md)

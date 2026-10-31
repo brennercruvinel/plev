@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2022-01-19
 date_basis: cabecalho
-topics: [build-android]
+topics: [mobile, plataforma, gpu]
 relations: []
 source: docs/ref/android-emulator-deploy.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # android emulator deploy
+
+Registra como o plev roda no emulador Android (Pixel 8, API 35, arm64-v8a): o build com cargo-ndk e Gradle e o problema do SwiftShader, que trava a criação do pipeline quando a GPU do emulador está desligada. O resultado é o showcase renderizando no emulador com `hw.gpu.enabled=yes` e `hw.gpu.mode=host`, com inicialização completa em cerca de 700 ms. O registro importa porque é a configuração que permite testar o app no Android sem aparelho físico.
 
 ## resumo
 plev rodando no android emulador (pixel 8, API 35, arm64-v8a) com showcase completo renderizando, quads, texto, layers, effects, input.

@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [accessibility]
-relations: []
+topics: [acessibilidade, plataforma, web-wasm]
+relations: [task-28, task-30]
 source: docs/ref/accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # reference analysis: accessibility (accesskit)
+
+Análise de referência do accesskit, a biblioteca de acessibilidade para toolkits que desenham a própria interface, como o plev faz com wgpu. Registra a arquitetura do accesskit (árvore enviada pelo toolkit, adapters por plataforma, compartilhamento de classes de nó), as integrações com egui e bevy e o mapeamento de `SceneNode` e `HitRegion` para nós de acessibilidade. O resultado é a recomendação para a task-30: usar accesskit e accesskit_winit, que cobrem macOS, Windows e Linux e, como feature opcional, Android; iOS e WASM ficam sem adapter e exigem solução manual ou a espera por um adapter. Importa porque define o caminho de acessibilidade do plev e a estimativa de 700 a 900 linhas de código.
 
 data: 2026-03-11
 status: completo
@@ -52,7 +54,7 @@ o design e inspirado diretamente na arquitetura multi-processo do chromium para 
 | crate | descricao | versao |
 |-------|-----------|--------|
 | `accesskit` | schema core (node, role, action, treeupdate, tree) | 0.24.0 |
-| `accesskit_consumer` | biblioteca consumer platform-independent |, |
+| `accesskit_consumer` | biblioteca consumer platform-independent |  |
 | `accesskit_windows` | adapter windows (UI automation) | 0.32.1 |
 | `accesskit_macos` | adapter macos (nsaccessibility/appkit) | 0.26.0 |
 | `accesskit_unix` | adapter linux/gnome (AT-spi via d-bus/zbus) | 0.21.0 |

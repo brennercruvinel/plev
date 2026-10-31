@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-07-26
 date_basis: cabecalho
-topics: [dsl]
-relations: []
+topics: [dsl, layout]
+relations: [task-05]
 source: docs/ref/dsl-narrate-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # DSL narrate, decisões de design
+
+Registra as decisões de design da DSL narrate: uma gramática híbrida, estruturada e verbal, a desambiguação do parser, as categorias de modificadores e o codegen para a API de builder. O resultado é um conjunto de regras fixas, como modificadores flag sem valor e valores só literais ou `{expr}`, que evita ambiguidade de parse; os stubs de builder valem até a task-05. O desenho importa porque o que a linguagem aceita limita o que o codegen pode gerar.
 
 ## gramática
 

@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-10-10
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [dsl, renderizacao]
+relations: [task-01, task-05, task-14]
 source: [docs/log/steps/task-15.md, docs/log/changes/task-15.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-15: pipeline DSL -> builder -> compositor
+
+Registra a ligação ponta a ponta entre `plev_narrate!` e o builder real: a macro gera código que produz `SceneNode`s renderizados na tela. Os stubs foram trocados por um bridge para `plev::builder`, com conversões numéricas e de texto e os métodos que faltavam. O resultado é o exemplo `narrate_demo`, que compila e renderiza, e a suíte chegou a 207 testes passando.
 
 ## objetivo
 `plev_narrate!` gera código que roda end-to-end: produz scenenodes renderizados na tela.

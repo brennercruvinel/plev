@@ -6,15 +6,17 @@ type: tarefa
 status: pendente
 date: 2023-12-14
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [processo, workspace]
+relations: [task-23]
 source: docs/log/steps/task-41-license-and-public-release.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-41: license + preparacao para release publica
+
+Registra o plano de definir a licença do plev (MIT OR Apache-2.0) e de preparar o repositório para ser público: arquivo LICENSE, metadados do Cargo.toml, README e varredura de segredos. O checklist do corpo está em aberto; segundo a própria nota, o repositório público basta para o paper arXiv, e a publicação no crates.io não é requisito. Importa porque são os pontos que evitam bloqueios legais e de credibilidade na abertura pública do código.
 
 ## objetivo
 definir licenca, criar arquivo license, e fazer cleanup final para que o repositorio possa ser tornado publico sem blockers legais ou de credibilidade.

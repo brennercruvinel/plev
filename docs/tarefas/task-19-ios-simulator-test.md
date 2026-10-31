@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [mobile, plataforma, renderizacao]
+relations: [task-12, task-50, task-77]
 source: [docs/log/steps/task-19-ios-simulator-test.md, docs/log/changes/task-19.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-19: ios simulator test
+
+Registra o build e o teste visual do plev no simulador iOS: a biblioteca compila para `aarch64-apple-ios-sim`, o projeto sai do xcodegen e o app é instalado no iPhone 17 Pro simulado pelo `tool/tasks/screencap.sh ios`. O frame é igual ao do desktop em todo pixel, exceto a faixa da barra de status, e a volta ao app pelo `simctl launch` retoma o mesmo processo. Ficaram em aberto a galeria não recuar para a área segura e a orientação, que o `simctl` não gira. Importa porque confirma o alvo iOS depois que o bloqueio do Xcode foi resolvido.
 
 ## objetivo
 build e teste visual no ios simulator.

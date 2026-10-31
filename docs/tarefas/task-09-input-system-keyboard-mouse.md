@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-07-19
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [input, layout]
+relations: [task-01, task-03, task-07]
 source: [docs/log/steps/task-09.md, docs/log/changes/task-09.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-09: input system, keyboard + mouse
+
+Registra a implementação do input de teclado e mouse: os eventos do winit são traduzidos para tipos próprios do plev (clique, tecla, hover e rolagem) e despachados às views por hit-testing, com fila de eventos em vez de closures. O resultado é o exemplo `input_demo`, com hover, clique e foco básico, e 20 testes de biblioteca passando. É a base que a task-10 (toque e gestos) e a task-17 (hit-testing por layer) estendem.
 
 ## objetivo
 implementar sistema de input para teclado e mouse/pointer. events de winit são traduzidos para o modelo de eventos do plev e despachados para views via hit-testing.
@@ -42,10 +44,6 @@ winit já entrega `WindowEvent::KeyboardInput`, `MouseInput`, `CursorMoved`, etc
 - focus e tab-order são complexos, começar simples (click para focus, escape para unfocus)
 - não processar input no render loop, separar fase de input de fase de render
 - winit keyboard events variam por plataforma, usar `key` (logical) não `scancode` (physical)
-
-## workflow
-- ao iniciar: mover este arquivo para `mission/steps/ongoing/`
-- ao concluir: renomear para `TASK-09-DONE.md`, mover para `mission/steps/checked/`
 
 ## Registro de entrega
 

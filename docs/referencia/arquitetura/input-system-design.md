@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-05-27
 date_basis: cabecalho
-topics: [input]
-relations: []
+topics: [input, layout]
+relations: [task-09]
 source: docs/ref/input-system-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # input system design (task-09)
+
+Registra as decisões do sistema de entrada de teclado e mouse (task-09): uma fila de eventos no lugar de closures, hit-testing por varredura reversa, foco e rastreio de hover. O resultado evita o conflito de borrow entre o estado do app e os handlers, e o hit-testing usa os retângulos diretamente, sem depender da árvore de layout. O desenho importa porque fixa a ordem entre o processamento de eventos e o `begin_frame`, que o exemplo precisa respeitar.
 
 ## event queue vs closures
 closures em inputstate criam problemas de borrow checker (app possui inputstate que possui closures que querem mutar app). event queue resolve: eventos são coletados durante window_event(), drenados e processados no início do render().

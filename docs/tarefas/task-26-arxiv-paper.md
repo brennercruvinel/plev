@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-02-13
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [artigo, pesquisa]
+relations: [artigo-estrutura]
 source: [docs/log/steps/task-26-arxiv-paper.md, docs/log/changes/task-26.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-26: paper arxiv
+
+Registra o outline do artigo do plev para o arXiv: 11 seções que cobrem arquitetura, estratégia multiplataforma, DSL verbal, acessibilidade, vector paths, primitivas reativas e avaliação, além da tabela de trabalhos relacionados. O que a task entregou foi esse outline, em `artigo/estrutura.md`; o texto completo ficou para uma fase futura, que depende dos resultados finais de benchmarks e de features estabilizadas. Importa porque define a ordem da argumentação antes da redação.
 
 ## resultado
 outline completo: [`estrutura.md`](../pesquisas/artigo/estrutura.md)

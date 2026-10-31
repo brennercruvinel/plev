@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2022-12-21
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [animacao, sinais, renderizacao]
+relations: [task-04]
 source: [docs/log/steps/task-27.md, docs/log/changes/task-27.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-27: animation system
+
+Registra o sistema de animação do plev: um `Tween<T>` que interpola valores de signals a partir de um `AnimationTick` (dt e elapsed) lido no render loop, com funções de easing e, como etapa opcional, uma mola. O Registro de entrega lista as cinco fases, da infraestrutura de tempo ao exemplo `animation_demo`, e a tarefa está marcada como concluída. Importa porque o paper precisava mostrar o reactive system em uso prático.
 
 ## objetivo
 sistema de animação baseado em signals, interpolação temporal de valores para transições, hover effects e movimentos. mínimo necessário para demos convincentes e para o paper mostrar o reactive system em uso prático.

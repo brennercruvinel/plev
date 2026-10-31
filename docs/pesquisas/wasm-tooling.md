@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [wasm]
+topics: [web-wasm, plataforma]
 relations: []
 source: docs/ref/wasm-tooling.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # analise de referencia: WASM tooling ecosystem
+
+Levantamento de sete ferramentas do ecossistema WebAssembly (trunk, wasm-pack, extism, serde-wasm-bindgen, spin, lunatic e workers-rs), feito em 2026-03-11 para o build WASM/WebGPU do plev. Registra o estado de cada projeto (releases, issues abertas e arquitetura) sem recomendar adoção. O resultado é que o trunk segue adequado ao build atual, e que serde-wasm-bindgen, wasm-pack e extism são caminhos para a fronteira com JS e para plugins, se o plev vier a precisar deles.
 
 ## escopo
 

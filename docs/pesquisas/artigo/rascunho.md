@@ -1,20 +1,22 @@
 ---
 id: artigo-rascunho
-title: plev
+title: "rascunho do artigo sobre o plev"
 project: plev
 type: rascunho
 status: rascunho
 date: 2023-02-09
 date_basis: cabecalho
-topics: [paper]
+topics: [artigo, plataforma]
 relations: []
 source: docs/pub/arxiv-paper-draft.md
 source_revision: 5de80aad
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# plev
+# rascunho do artigo sobre o plev
+
+Rascunho em português do abstract e das duas primeiras seções do artigo sobre o plev, um motor de compositing GPU para targets nativos e web a partir de um único codebase Rust. O texto defende que a fronteira entre renderização nativa e web é um acidente histórico, descreve o scene graph regenerado a cada frame, o dirty tracking e o atlas de glifos em GPU, e afirma, até onde os autores sabem, ser o primeiro motor a reunir essas propriedades nos seis targets.
 
 ## abstract
 

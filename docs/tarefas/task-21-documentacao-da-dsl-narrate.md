@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-12-04
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [dsl, editorial]
+relations: [task-14, task-15]
 source: [docs/log/steps/task-21.md, docs/log/changes/task-21.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-21: documentacao da DSL narrate
+
+Registra a documentação da sintaxe `plev_narrate!`: a gramática EBNF derivada do parser real, a tabela dos 30 modifiers, exemplos por categoria e a comparação com a builder API. O resultado foi o arquivo `docs/narrate-syntax.md`, com 967 linhas, mas esse caminho não existe no repositório atual; a comparação com JSX ficou por fazer. Importa porque a gramática foi tirada do código do parser, e não escrita de memória.
 
 ## objetivo
 documentacao completa da sintaxe plev_narrate!

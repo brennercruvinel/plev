@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-06-08
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [web-wasm, gpu, processo]
 relations: []
 source: [docs/log/steps/task-06.md, docs/log/changes/task-06.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-06: validação WASM/webgpu no browser
+
+Registra a validação do plev em WASM com WebGPU: o crate compila para `wasm32-unknown-unknown`, e a inicialização assíncrona da GPU passou a usar o padrão do `EventLoopProxy`, com o evento `GpuReady`. O limite de GPU foi trocado de `downlevel_webgl2_defaults` para `Limits::default()`, e `trunk build --release` gerou um bundle de 2,4 MB servido em localhost:8080. Os testes manuais no browser (chrome, firefox e safari) aparecem no corpo como itens que requerem verificação, sem registro de execução.
 
 ## objetivo
 garantir que o plev compila para `wasm32-unknown-unknown` e roda no browser com webgpu, com rendering idêntico ao nativo.

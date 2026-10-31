@@ -6,15 +6,17 @@ type: experimento
 status: referencia
 date: 2022-04-26
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [desempenho, renderizacao, sinais, texto]
+relations: [task-25, task-43, task-44, task-45, task-46]
 source: docs/pub/benchmark-results.md
 source_revision: 5de80aad
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # benchmark results, plev v0.2
+
+Medições do plev v0.2 com criterion, em macOS: construção de cena na CPU, dirty tracking, tessellation com lyon, signals e hashing de nós de texto. Com rects, a construção de cena vai de 0,6 µs (100 rects) a 45 µs (10 mil rects), e 1000 rects estáticos custam 3,3 µs no dirty tracking, o que deixa a cena estática praticamente sem custo depois do primeiro quadro. A tessellation (1,5 a 3,7 µs por forma) é feita uma vez por forma, e não a cada quadro. Limite: a seção de junho de 2026 lista benches novos por crate sem números nesta página, e a data do cabeçalho (2022-04-26) não confere com a máquina (M4) e a versão do Rust (1.94.0) citadas no registro; a data segue em aberto.
 
 machine: macbook pro m4, macos, rust 1.94.0, criterion 0.5
 date: 2022-04-26

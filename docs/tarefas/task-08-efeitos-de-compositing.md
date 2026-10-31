@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-07-06
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [efeitos, gpu]
+relations: [task-07, task-16]
 source: [docs/log/steps/task-08.md, docs/log/changes/task-08.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-08: efeitos de compositing (blur, shadow, opacity)
+
+Registra os efeitos de compositing sobre as camadas: blur gaussiano separável de 13 taps, drop shadow por extração de silhueta e opacity group, todos em fragment shader, com um pool de texturas grow-only. As fases a, b, c e d estão implementadas, com 10 testes passando e o exemplo `effects_demo`. Seguem abertas a fase e (efeitos configuráveis por camada, depende da task-07) e a fase f (benchmark do blur em 1080p abaixo de 2 ms, resize e validação WASM).
 
 ## objetivo
 implementar efeitos visuais que operam sobre camadas: gaussian blur, drop shadow, opacity groups. efeitos são aplicados na composição de camadas, não por primitiva.
@@ -64,10 +66,6 @@ com o layer system (task-07), efeitos são post-processing sobre texturas de cam
 - shadow: render silhueta -> blur -> composite (não re-renderiza cena inteira)
 - texturepool grow-only, texturas nunca destruídas em steady state
 - texturehandle armazena clone do textureview para evitar borrow conflicts com pool
-
-## workflow
-- ao iniciar: mover este arquivo para `mission/steps/ongoing/`
-- ao concluir: renomear para `TASK-08-DONE.md`, mover para `mission/steps/checked/`
 
 ## Registro de entrega
 

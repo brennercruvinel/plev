@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-11-09
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [input, desempenho]
+relations: [task-09, pesquisa-extracted-patterns]
 source: [docs/log/steps/task-38-event-batching.md, docs/log/changes/task-38.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-38: event batching
+
+Registra o agrupamento dos eventos de entrada do winit: os eventos chegados entre dois quadros são acumulados e aplicados de uma vez, com um único render, para reduzir o trabalho de GPU durante entrada rápida. A meta de cinco a dez vezes menos render passes vem do padrão d1 do yazi, e o corpo não traz a medição do benchmark informal que a checklist marca como feito. O buffer e a aplicação em lote estão em `rust/engine/src/runtime/window/events.rs`.
 
 ## objetivo
 batch-drain de eventos winit para reduzir trabalho GPU durante input rapido. 5-10x reducao.

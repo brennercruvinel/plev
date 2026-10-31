@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-09-17
 date_basis: cabecalho
-topics: [build-wasm]
+topics: [web-wasm, gpu]
 relations: []
 source: docs/ref/wasm-webgpu-validation.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # WASM/webgpu validation - knowledge
+
+Registra o conhecimento da validação do alvo WASM com WebGPU: o padrão `EventLoopProxy` para devolver ao event loop o GPU criado de forma assíncrona, os limites do WebGPU e os detalhes de build. O resultado é que o estado deixa de ficar preso em `Initializing`, e o alvo usa `Backends::BROWSER_WEBGPU`. O registro importa porque esse caminho de inicialização é o que o alvo web depende para desenhar.
 
 ## eventloopproxy pattern (GPU init async no WASM)
 

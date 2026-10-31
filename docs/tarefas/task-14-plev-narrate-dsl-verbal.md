@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-09-27
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [dsl, sinais]
+relations: [task-04, task-05, task-09]
 source: [docs/log/steps/task-14.md, docs/log/changes/task-14.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-14: plev_narrate!, DSL verbal
+
+Registra a macro procedural `plev_narrate!`, que traduz uma sintaxe verbal de UI para a API de builder em tempo de compilação, num crate próprio. A sessão 1 entregou parsing, geração de código, interpolação de signals e testes; a sessão 2 rebaseou sobre a master e fechou com 197 testes do workspace passando. A intenção registrada é que a interface seja lida como prosa estruturada e fique mais precisa para geração por LLMs.
 
 ## objetivo
 criar a macro `plev_narrate!` que permite descrever UI em sintaxe verbal "prosa-like". a macro des-sugara para a API declarativa (task-05) em compile-time.

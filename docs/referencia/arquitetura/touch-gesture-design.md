@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2022-10-27
 date_basis: cabecalho
-topics: [input]
+topics: [input, mobile]
 relations: []
 source: docs/ref/touch-gesture-design.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # touch & gesture recognition design
+
+Registra o desenho do reconhecimento de toque e gestos: uma pilha de quatro camadas (eventos do winit, rastreamento por dedo, reconhecedor com seis estados e a fachada `TouchInputState`) e os limiares de tap, long press, arrasto, swipe e pinça. O resultado é um reconhecedor independente da plataforma, testável com instantes explícitos, que convive com o mouse sem estado compartilhado. O desenho importa porque os limiares e as transições definem o que conta como toque, arrasto ou pinça para o usuário.
 
 ## architecture
 the touch/gesture system is layered:

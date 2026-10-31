@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-05-23
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [dsl, processo]
+relations: [task-01, task-03, task-04, task-07, task-08, task-09]
 source: [docs/log/steps/task-05.md, docs/log/changes/task-05.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-05: API declarativa + builder pattern
+
+Registra a API declarativa de builders: `div()`, `text()` e `button()` encadeáveis, com métodos de layout, estilo e eventos, e o macro `#[component]`, que transforma uma função em view. A entrega inclui o crate `plev_macros` (syn 2 e quote 1), 27 testes e o exemplo `builder_demo`. Os eventos `on_click` e `on_hover` são stubs: a conexão com o input ficou para a task-09, e o layout provisório, empilhamento sequencial, para a task-03.
 
 ## objetivo
 criar a API ergonômica tipo `div().flex().center().bg("blue").child(...)` e o macro `#[component]` que transforma funções em views.

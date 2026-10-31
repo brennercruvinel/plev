@@ -6,15 +6,17 @@ type: referencia
 status: referencia
 date: 2021-06-16
 date_basis: cabecalho
-topics: [rendering]
+topics: [renderizacao, gpu]
 relations: []
 source: docs/ref/layer-system.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # layer system - decisões técnicas
+
+Registra as decisões técnicas do sistema de layers: alpha pré-multiplicado em todo o pipeline, uma textura offscreen por layer e um passe de composição com triângulo de tela cheia. O resultado é que uma layer sem mudanças não gera render pass, geometria nem shaping, e cada layer visível custa um draw no composite; a página estima cerca de 8 MB de VRAM por layer em 1920×1080. O desenho importa porque é a base do custo em regime estável da composição.
 
 ## premultiplied alpha
 - mudança de `SrcAlpha/OneMinusSrcAlpha` para `One/OneMinusSrcAlpha` em todo o pipeline

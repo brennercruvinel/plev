@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, gpu, texto, animacao, acessibilidade]
+relations: [pesquisa-linebender-ecosystem, task-25, task-27, task-28, task-29, task-30, task-31, task-32, task-33]
 source: docs/ref/integration-candidates.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # integration candidates, ranking
+
+Ranking das bibliotecas Rust avaliadas para o plev, em quatro categorias: adotar, avaliar, acompanhar e não usar. Cada lib é julgada por maturidade, encaixe com a arquitetura, custo de integração e valor, e ligada à task que a usaria. O resultado: web-time, um easing interno e AccessKit entram como adotar, e Parley e Lyon ficam em avaliar, com Parley atrás de feature flag e comparação quantitativa. Por que importa: define o que entra nas tasks de animação, texto e acessibilidade sem dependências desnecessárias. Limite: o código já ultrapassou parte da análise, pois o engine declara web-time e lyon em `rust/engine/Cargo.toml`, e o workspace usa wgpu 29, não 28.
 
 **data:** 2026-03-11
 **baseado em:** todas as analises em refs/

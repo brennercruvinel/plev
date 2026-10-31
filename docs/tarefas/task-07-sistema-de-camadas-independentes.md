@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2021-06-21
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [renderizacao, gpu]
+relations: [task-01, task-02, task-03, task-04, task-06, task-09]
 source: [docs/log/steps/task-07.md, docs/log/changes/task-07.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-07: sistema de camadas independentes
+
+Registra o sistema de camadas do compositor: cada `Layer` tem textura offscreen própria, com z-order, dirty tracking por camada e API para criar e remover camadas. A composição final combina as texturas no framebuffer com premultiplied alpha, e camadas limpas deixam de ser redesenhadas. A entrega fechou com 89 testes passando, 7 deles novos, e o exemplo `layers_demo`; o checklist marca a camada estática sem draw calls após o primeiro frame.
 
 ## objetivo
 implementar camadas (layers) independentes no compositor. cada camada renderiza para uma textura offscreen propria. camadas estaveis (toolbar, sidebar) nao re-renderizam quando conteudo dinamico muda.
@@ -41,10 +43,6 @@ hoje o compositor tem uma lista flat de scenenodes. com camadas, grupos de nodes
 - composicao de camadas com alpha precisa de blend mode correto (premultiplied alpha)
 - nao criar camada por view, camadas sao agrupamentos logicos (poucas por cena)
 - wgpu no WASM pode ter limites de texturas simultaneas, testar
-
-## workflow
-- ao iniciar: mover este arquivo para `mission/steps/ongoing/`
-- ao concluir: renomear para `TASK-07-DONE.md`, mover para `mission/steps/checked/`
 
 ## Registro de entrega
 

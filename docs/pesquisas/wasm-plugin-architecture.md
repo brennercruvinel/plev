@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2022-09-08
 date_basis: cabecalho
-topics: [wasm]
-relations: []
+topics: [web-wasm, plataforma]
+relations: [task-30, task-31]
 source: docs/ref/wasm-plugin-architecture.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # WASM plugin architecture - research doc
+
+Pesquisa de 2022-09-08 sobre como um plev com plugins WASM carregaria código de terceiros. Compara wasmtime, wasmer e extism, propõe host functions (`plev_push_rect`, `plev_push_text`) em vez de memória compartilhada e estima o aumento do binário. A recomendação é esperar, porque a API ainda muda e iOS, Android e browser exigem soluções próprias; quando o sistema de plugins entrar, o caminho é extism, atrás de uma feature.
 
 ## 1. runtime options
 

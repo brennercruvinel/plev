@@ -1,20 +1,22 @@
 ---
 id: mapa-das-fases
-title: "plev, estado do projeto"
+title: "Mapa das fases e tasks, estado de 2026-09"
 project: plev
 type: registro
 status: ativo
 date: 2026-09-26
 date_basis: cabecalho
-topics: [project-status]
-relations: []
+topics: [processo, plataforma]
+relations: [task-01, task-02, task-03, task-04, task-05, task-06, task-07, task-08, task-09, task-10, task-11, task-12, task-13, task-14, task-15, task-16, task-17, task-18, task-19, task-20, task-21, task-22, task-23, task-24, task-25, task-26, task-27, task-28, task-29, task-30, task-31, task-32, task-33, task-34, task-35, task-36, task-37, task-38, task-39, task-40, task-41, task-42, task-43, task-44, task-45, task-46, task-47, task-48, task-49, task-50, task-51, task-52, task-ref, task-73, task-74, task-75, task-78, task-80, programa-runtime, tese-runtime, manual-generative-runtime-guidelines, manual-autonomy, indice-historico, pesquisa-integration-candidates, pesquisa-technology-radar, linha-do-tempo]
 source: docs/log/README.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# plev, estado do projeto
+# Mapa das fases e tasks, estado de 2026-09
+
+Este registro guarda o mapa das fases e tasks do plev de 2021 a 2026-06-29, a fase anterior ao programa, como estava em 2026-09. Cada fase lista as suas tasks com o estado daquele momento, o que permite localizar pelo número as tasks que os registros antigos citam. Para navegar hoje, use a [linha do tempo](linha-do-tempo.md); o estado atual, em resumo, vem na seção abaixo, e o detalhe é o do programa.
 
 o plev é uma engine de composição GPU-first em rust que está virando um
 runtime de interação generativa: cada controle é também dado (um contrato
@@ -23,14 +25,10 @@ dispatcher. o que é, para onde vai e o estado de cada task ficam no
 programa ([`programa-runtime-generativo.md`](programa-runtime-generativo.md), seção 12); a tese está em
 [`tese-runtime-generativo.md`](../pesquisas/tese-runtime-generativo.md), as regras dos agentes em
 [`generative-runtime-guidelines.md`](../referencia/operacao/generative-runtime-guidelines.md) e o modo de operação do
-orquestrador em [`autonomy.md`](../referencia/operacao/autonomy.md). cada task tem o seu arquivo em
-`steps/`, e o estado dela fica no `status:` do cabeçalho (`in-progress`,
+orquestrador em [`autonomy.md`](../referencia/operacao/autonomy.md). na época, cada task tinha o seu arquivo em
+`steps/`, e o estado dela ficava no `status:` do cabeçalho (`in-progress`,
 `pending`, `done`); as pastas `ongoing/`, `pending/` e `checked/` citadas
-no estado abaixo e nos registros antigos viraram esse campo.
-
-este arquivo guarda o mapa histórico das tasks 01 a 56 (de 2021 a
-2026-06-29), a fase anterior ao programa. o estado atual vem em resumo
-logo abaixo; o detalhe é o do programa.
+no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 
 ## estado atual (2026-09-26)
 

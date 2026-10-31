@@ -6,15 +6,17 @@ type: programa
 status: referencia
 date: null
 date_basis: sem-data
-topics: [programa]
+topics: [workspace, renderizacao, texto, edicao-de-texto, acessibilidade]
 relations: []
 source: docs/plano-tecnico.md
 source_revision: a4ad0c07
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # plev — Plano Técnico de Implementação
+
+Plano técnico para evoluir o plev, de protótipo a um engine de UI GPU-native no nível do GPUI, e o basicIDE, a uma aplicação real de git e IDE. Registra os princípios tirados do estudo de engines, a arquitetura alvo, os contratos de fronteira (`TextBackend`, Scene v2, Actions), os workstreams WS-A a WS-I com donos de diretório e entregas, e a ordem de integração em milestones M0 a M4, sem datas. Importa porque isola a troca do motor de texto (cosmic-text, depois Parley, prevista no plano) atrás de um trait, para que a API pública não dependa da biblioteca. Os caminhos de código citados são da revisão a4ad0c07 do cabeçalho, e vários já não existem na árvore atual, como `crates/basic-ide` e `src/text/atlas.rs`.
 
 > Documento de engenharia. Sem cronogramas ou estimativas — apenas arquitetura,
 > tarefas, contratos e ordem de dependência. Cada workstream (WS) é uma branch

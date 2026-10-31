@@ -1,20 +1,22 @@
 ---
 id: task-10
-title: "task-10: input system, touch + gestures (done)"
+title: "task-10: input system, touch + gestures"
 project: plev
 type: tarefa
 status: concluido
 date: 2021-08-02
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [input, mobile]
+relations: [task-03, task-09]
 source: [docs/log/steps/task-10.md, docs/log/changes/task-10.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
-# task-10: input system, touch + gestures (done)
+# task-10: input system, touch + gestures
+
+Registra a extensão do input para toque multi-toque e gestos (toque, duplo toque, toque longo, arraste, deslize nas quatro direções e pinça), com um reconhecedor em máquina de estados e um estado de toque separado do mouse. O resultado é o exemplo `touch_demo`, com testes de gesto e de rastreamento de dedos e `cargo check` sem warnings. A task-11 considera o toque coberto por esta task.
 
 ## objetivo
 estender o input system para suportar touch (multi-touch) e reconhecimento de gestos (tap, swipe, pinch, long-press). essencial para mobile.

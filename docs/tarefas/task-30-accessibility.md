@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-05-02
 date_basis: cabecalho
-topics: [task-tracking]
+topics: [acessibilidade, input]
 relations: []
 source: [docs/log/steps/task-30-accessibility.md, docs/log/changes/task-30.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-30: accessibility (accesskit)
+
+Registra a integração de acessibilidade via AccessKit: um `AccessibilityState` que acumula os nós de cada frame, um grafo de foco com navegação sequencial e direcional, e o mapeamento entre `ViewId` e `NodeId`, atrás da feature `accessibility`, ativa por padrão. O resultado é uma árvore de acessibilidade atualizada a cada frame, e o código compila sem a feature (`--no-default-features`). Importa porque expõe a interface a leitores de tela e à navegação pelo foco.
 
 ## resultado
 implementado sistema de acessibilidade completo via accesskit, feature-gated como `accessibility` (default on).

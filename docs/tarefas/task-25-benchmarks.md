@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2022-05-03
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [desempenho, renderizacao, sinais]
+relations: [benchmarks-v02]
 source: [docs/log/steps/task-25-benchmarks.md, docs/log/changes/task-25.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-25: benchmarks
+
+Registra a suíte de benchmarks criterion do plev, com seis grupos sobre construção de cena, dirty tracking, tessellation, sinais e hash de nós de texto. Os números medidos num M4 (Mac) são de 159 a 222 milhões de rects por segundo no push_rects, 3,3 µs por 1000 rects em cena estática, 1,5 a 3,7 µs por forma na tessellation e 67 ns por ciclo de sinal. Importa porque é a medida de desempenho que o experimento `benchmarks-v02` tabula.
 
 ## resultado
 suite de criterion benchmarks cobrindo scene construction, dirty tracking, tessellation, signals e text hashing. resultados documentados em [`benchmarks-v02.md`](../experimentos/benchmarks-v02.md).

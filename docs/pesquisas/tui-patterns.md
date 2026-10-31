@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
+topics: [input, layout, pesquisa]
 relations: []
 source: docs/ref/tui-patterns.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # reference analysis: tui patterns
+
+Análise de doze aplicações TUI em Rust, mais o oh-my-zsh como comparação de padrões de plugin, feita em 2026-03-11 para extrair padrões de navegação, composição de componentes, dados em tempo real, busca e layout que valem para um motor GPU como o plev. O resultado são padrões recorrentes, como navegação vim-like, atalhos contextuais, estado local por componente e i/o separado da renderização. Parte deles já existe no plev (input, signals e flexbox); a página aponta o que falta, como um focus tree e um componente de divisor.
 
 data: 2026-03-11
 status: completo

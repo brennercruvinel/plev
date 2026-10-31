@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2022-07-06
 date_basis: cabecalho
-topics: [research]
-relations: []
+topics: [pesquisa, renderizacao, animacao, sinais, acessibilidade]
+relations: [task-30, task-31, task-32, task-33, task-34]
 source: docs/ref/extracted-patterns.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # extracted patterns, 56 reference repos
+
+Reúne os padrões de código extraídos na task-34 de repositórios de referência (accesskit, parley, lyon, vello, keyframe, yazi, leptos, entre outros). Cada padrão traz fonte, descrição, trecho, aplicabilidade ao plev e uma decisão, como adopt, adapt, ignore ou watch; os padrões estão em seis fases: prioridade imediata, rendering e compositing, animação, UX de apps TUI, runtime WASM e competidores. O resultado é a tabela de decisões, com a task-alvo de cada padrão, e um top 10 por prioridade, que orienta as tasks 30 a 33 e os módulos de sinais, animação e compositor. Vários caminhos de código citados nas seções (signal.rs, animation.rs, compositor.rs) não existem mais na árvore atual.
 
 **data:** 2022-07-06
 **task:** task-34

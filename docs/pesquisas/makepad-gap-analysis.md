@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2022-11-19
 date_basis: cabecalho
-topics: [competitive]
+topics: [competicao, renderizacao, layout]
 relations: []
 source: docs/ref/makepad-gap-analysis.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # makepad visual feature inventory vs plev gap analysis
+
+Inventário de recursos visuais do Makepad comparado ao que o plev suportava em 19 de novembro de 2022, com cada item marcado como suportado, parcial ou lacuna. A lista de prioridades separa o que se faz com as primitivas já existentes (canto arredondado por vértice, glow, gradiente, controles compostos e spinner) do que exige um subsistema novo, como recorte, carregamento de imagem, SVG e rolagem virtual. A página orienta a vitrine visual do plev e a ordem das próximas implementações.
 
 date: 2022-11-19
 

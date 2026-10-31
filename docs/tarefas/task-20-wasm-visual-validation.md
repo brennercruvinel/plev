@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2026-09-25
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [web-wasm, gpu, desempenho]
+relations: [task-06, task-77]
 source: [docs/log/steps/task-20-wasm-visual-validation.md, docs/log/changes/task-20.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-20: WASM visual validation
+
+Registra a validação do alvo WASM com WebGPU no browser: o WASM de release ocupa 2,4 MB, e a captura roda no Chromium headless com WebGPU sobre Metal. As capturas medidas batem byte a byte com as do desktop da mesma página, e a rolagem de Typography e Effects fica em 8,3 ms entre frames (p50), a 120 Hz. Importa porque prova a paridade entre web e native, item que estava no checklist, e registra três defeitos que só existiam na web e foram corrigidos.
 
 ## objetivo
 validar rendering WASM/webgpu no browser.

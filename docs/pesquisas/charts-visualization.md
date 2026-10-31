@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [research]
+topics: [pesquisa, renderizacao, grafos, texto]
 relations: []
 source: docs/ref/charts-visualization.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # reference analysis: charts e visualization
+
+Análise de bibliotecas Rust para charts e visualização de dados (plotters, charming e egui_graphs), feita para decidir o que um futuro sistema de gráficos sobre o plev deve aproveitar. O resultado: nenhuma das três se integra ao plev diretamente, porque dependem de backends de rasterização ou marcação, de JavaScript (echarts) ou do egui. Os padrões que valem são a separação entre especificação e renderização (plotters), a API declarativa (charming) e os layouts plugáveis (egui_graphs); o plano de médio prazo é um backend de plotters que emita `SceneNode::Rect` e `SceneNode::Text`, além de primitivas nativas de linha, barra, pizza e dispersão. Por que importa: evita acoplar gráficos ao motor de rendering antes de existir um app que precise deles.
 
 data: 2026-03-11
 status: completo

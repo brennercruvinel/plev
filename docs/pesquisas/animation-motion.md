@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [animation]
-relations: []
+topics: [animacao, pesquisa]
+relations: [task-27, task-31]
 source: docs/ref/animation-motion.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # reference analysis: animation e motion
+
+Análise de sete bibliotecas Rust de animação e movimento (dotlottie-rs, rive-rs, natura, keyframe, mina, easer e interpolation), feita em março de 2026 como referência de design para a task-27, o sistema de animação do plev. O resultado é que essas bibliotecas separam easing, interpolação e timeline avançada por delta time, e que springs e tweens são problemas distintos que podem compartilhar uma mesma interface. Dali saem as recomendações para a task-27: easing e interpolação implementados internamente em f32, um trait `Interpolate` público e uma arquitetura que não feche a porta para state machines. Importa porque é a referência de design registrada para a task-27.
 
 ## escopo
 

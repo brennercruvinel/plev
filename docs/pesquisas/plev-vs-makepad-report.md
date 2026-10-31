@@ -6,18 +6,17 @@ type: pesquisa
 status: referencia
 date: 2022-12-10
 date_basis: cabecalho
-topics: [competitive]
-relations: []
+topics: [competicao, renderizacao, layout, hot-reload]
+relations: [task-42]
 source: docs/ref/plev-vs-makepad-report.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # relatorio tecnico: plev vs makepad
 
-analise comparativa de arquitetura, padroes de design, e licoes para construir
-uma interface de nivel profissional.
+Compara a arquitetura do plev, um motor de composição GPU-first com dirty tracking por hash, com a do makepad, um framework de UI com IDE integrada e layout por turtle. O relatório aponta os padrões do makepad que o plev precisaria para chegar a um nível de interface parecido (dock, virtual scrolling, actions tipadas, tema, árvore de arquivos e editor de código) e estima cerca de 2.930 LOC incrementais sobre os 12 mil existentes. A conclusão é que o plev não precisa virar makepad: a separação entre renderização e widgets permite construir a infraestrutura de widgets sobre a camada existente, sem perder testabilidade. Os números são os de 2022-12-10 e não foram conferidos com o código atual.
 
 data: 2022-12-10
 
@@ -477,7 +476,7 @@ for (source, action) in action_queue.drain() {
 }
 ```
 
-**LOC estimado:** ~100 LOC. combina com task-42 (event dispatch em andamento).
+**LOC estimado:** ~100 LOC. combina com [task-42](../tarefas/task-42-plev-event-dispatch.md) (event dispatch em andamento).
 
 ---
 

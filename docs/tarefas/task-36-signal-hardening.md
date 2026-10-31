@@ -6,15 +6,17 @@ type: tarefa
 status: concluido
 date: 2023-08-28
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [sinais, desempenho]
+relations: [task-04, task-34, pesquisa-extracted-patterns]
 source: [docs/log/steps/task-36-signal-hardening.md, docs/log/changes/task-36.md]
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-36: signal system hardening
+
+Registra quatro melhorias do sistema de sinais, inspiradas nos padrões de leptos, dioxus e slint: subscribers em `FxIndexSet`, um guarda RAII para a pilha de observadores, `peek()` sem criar dependência e um sentinela para sinais constantes. Três foram feitas, e o código atual tem cada uma (`rust/engine/src/runtime/signal/runtime.rs:13`, `execution.rs:14` e `api.rs:56`); o sentinela (f3) ficou de fora por motivo de segurança que a página não detalha. O efeito é corretude diante de panic dentro de `create_effect` e busca O(1) em subscribers.
 
 ## objetivo
 corrigir bugs latentes e melhorar performance do signal system. 4 patterns extraidos de leptos/dioxus/slint.

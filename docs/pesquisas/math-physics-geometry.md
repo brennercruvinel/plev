@@ -6,15 +6,17 @@ type: pesquisa
 status: referencia
 date: 2026-03-11
 date_basis: cabecalho
-topics: [geometry]
+topics: [gpu, renderizacao, desempenho]
 relations: []
 source: docs/ref/math-physics-geometry.md
 source_revision: ec0a224c
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # reference analysis: math, physics e geometry
+
+Análise de quatro bibliotecas Rust para o motor de composição GPU-first do plev: glam (álgebra linear com SIMD), rapier (física 2D e 3D), nalgebra (álgebra linear geral) e lyon (tesselação de paths). A página recomenda adotar glam já em vértices e transformações, adicionar lyon quando aparecer a primeira forma além de quads, monitorar rapier e parry e não usar nalgebra diretamente na API pública. O retrato vale para o plev de março de 2026, mês da coleta dos dados.
 
 ## escopo
 

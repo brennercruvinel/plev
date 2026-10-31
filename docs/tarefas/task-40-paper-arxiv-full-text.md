@@ -6,15 +6,17 @@ type: tarefa
 status: pendente
 date: 2023-12-06
 date_basis: cabecalho
-topics: [task-tracking]
-relations: []
+topics: [artigo, pesquisa]
+relations: [artigo-estrutura, benchmarks-v02, pesquisa-competitive-positioning, pesquisa-competitors, task-20, task-41]
 source: docs/mission/steps/pending/task-40-paper-arxiv-texto-completo.md
 source_revision: b6522b3e
 revised: 2026-10-30
-review: pendente
+review: revisado
 ---
 
 # task-40: paper arxiv, texto completo
+
+Registra o plano de escrever o texto completo do paper *plev: a GPU-first compositing engine for cross-platform UI rendering* para submissão ao arXiv: as onze seções do outline, a produção em LaTeX ou Markdown e a submissão. O status segue `pendente`: o checklist está inteiro em aberto, e o material existente é insumo ([outline](../pesquisas/artigo/estrutura.md), [benchmarks](../experimentos/benchmarks-v02.md) e [posicionamento competitivo](../pesquisas/competitive-positioning.md)), não a redação. Importa porque é a entrega que transforma o material técnico do plev em texto de pesquisa, com as métricas a revalidar contra o código atual.
 
 ## objetivo
 escrever o texto completo do paper "plev: a GPU-first compositing engine for cross-platform UI rendering" para submissao ao arxiv.
