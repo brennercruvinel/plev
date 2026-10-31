@@ -738,3 +738,17 @@ fn a_scroller_stays_whole_over_the_width_range_under_every_theme() {
         }
     }
 }
+
+#[test]
+fn the_scroller_s_border_closes_the_last_message_without_its_hairline() {
+    let theme = core();
+    let s = thread_of(3);
+    let rows = s.rows(surface(320.0, 400.0), &theme);
+    let laid: Vec<_> = s
+        .messages()
+        .iter()
+        .zip(&rows)
+        .map(|(m, r)| m.layout(*r, &theme).divider.is_some())
+        .collect();
+    assert_eq!(laid, [true, true, false]);
+}

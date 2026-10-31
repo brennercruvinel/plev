@@ -38,7 +38,14 @@ pub struct MessageScroller {
 impl MessageScroller {
     /// A thread named `label` (what a reader hears), saying `empty` when
     /// it has no message.
+    /// The surface's border closes the last message: its hairline goes.
     pub fn new(label: impl Into<String>, empty: impl Into<String>, messages: Vec<Message>) -> Self {
+        let last = messages.len().saturating_sub(1);
+        let messages = messages
+            .into_iter()
+            .enumerate()
+            .map(|(i, m)| if i == last { m.divider(false) } else { m })
+            .collect();
         Self {
             label: label.into(),
             empty: empty.into(),
