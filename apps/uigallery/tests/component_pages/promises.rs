@@ -28,8 +28,9 @@ const PROJECTING: usize = 31
     // Context Menu
     + 5
     // task-104 front C, conversation (#156): Message, Bubble, Message
-    // Scroller, Alert, Attachment, Marker, Badge, Avatar, Skeleton, Progress
-    + 10
+    // Scroller, Alert, Attachment, Marker, Badge, Avatar, Skeleton, Progress;
+    // wave 3: Prompt Input
+    + 11
     // task-104 front D, disclosure and display (#157): Accordion,
     // Collapsible, Aspect Ratio, Carousel, Pagination (Item, Kbd and Table
     // projected before, through the pages they borrowed), Panel, Panel

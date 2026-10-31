@@ -29,7 +29,9 @@ use super::super::components::{
 };
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::{alert, attachment, bubble, marker, message, message_scroller};
+use super::super::components::{
+    alert, attachment, bubble, marker, message, message_scroller, prompt_input,
+};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{
@@ -110,6 +112,7 @@ pub struct Panes {
     pub marker: marker::MarkerPage,
     pub message: message::MessagePage,
     pub message_scroller: message_scroller::MessageScrollerPage,
+    pub prompt_input: prompt_input::PromptInputPage,
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
     pub aspect_ratio: aspect_ratio::AspectRatioPage,
@@ -226,6 +229,7 @@ impl Panes {
             marker: marker::MarkerPage::new(),
             message: message::MessagePage::new(),
             message_scroller: message_scroller::MessageScrollerPage::new(),
+            prompt_input: prompt_input::PromptInputPage::new(),
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
             aspect_ratio: aspect_ratio::AspectRatioPage::new(),

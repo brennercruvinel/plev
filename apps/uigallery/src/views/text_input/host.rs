@@ -107,4 +107,6 @@ text_hosts! {
     Menus => menus,
     // task-104 front F, kit foundation
     Topbar => topbar,
+    // task-104 front C, conversation and feedback (#156)
+    PromptInput => prompt_input,
 }

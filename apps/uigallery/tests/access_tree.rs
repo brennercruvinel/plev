@@ -87,6 +87,7 @@ const PROJECTING: &[&str] = &[
     "Panel Header",
     "Popover",
     "Progress",
+    "Prompt Input",
     "Radio Group",
     "Resizable",
     "Scroll Area",

@@ -432,6 +432,13 @@ pub const PAGES: &[Page] = &[
         "The kit's rail: its value, its intents, its narrowest.",
         Pane::Progress,
     ),
+    page(
+        C,
+        "Prompt Input",
+        "send",
+        "The kit's prompt box: the line, its files, setting and model menus, voice input, premade prompts.",
+        Pane::PromptInput,
+    ),
     placeholder("Questionnaire"),
     page(
         C,
