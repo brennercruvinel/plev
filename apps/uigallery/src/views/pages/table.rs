@@ -151,7 +151,13 @@ pub const PAGES: &[Page] = &[
         "The HOFF card deck: one glass shell, six preview families with live data.",
         Pane::Card,
     ),
-    placeholder("Carousel"),
+    page(
+        C,
+        "Carousel",
+        "layers",
+        "Square slides that page under a counter, as many to a page as the width holds.",
+        Pane::Carousel,
+    ),
     page(
         C,
         "Chart",
@@ -319,7 +325,13 @@ pub const PAGES: &[Page] = &[
         "Nav links in every state, and the rail form.",
         Pane::NavigationMenu,
     ),
-    placeholder("Pagination"),
+    page(
+        C,
+        "Pagination",
+        "chevron-right",
+        "Page numbers between two arrows, as many as the width holds.",
+        Pane::Pagination,
+    ),
     page(
         C,
         "Panel",

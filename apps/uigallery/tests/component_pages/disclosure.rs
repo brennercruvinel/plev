@@ -188,3 +188,44 @@ fn the_arrows_walk_an_item_card_and_enter_chooses() {
         Some(Value::Bool(true))
     );
 }
+
+/// The carousel's next arrow pages, and a slide is chosen, the same from
+/// the three.
+#[test]
+fn a_carousel_pages_and_chooses_the_same_from_the_three() {
+    let next = "carousel_page.group[0].card[0].next";
+    let mut person = gallery("Carousel");
+    person.click(next);
+    let mut reader = gallery("Carousel");
+    reader.press(next);
+    let agent = by_agent("Carousel", "page", vec![ask(next, "activate")]);
+    same("Carousel", &person, &reader, &agent);
+
+    let slide = "carousel_page.group[0].card[1].slide[0]";
+    let mut person = gallery("Carousel");
+    person.click(slide);
+    let mut reader = gallery("Carousel");
+    reader.press(slide);
+    let agent = by_agent("Carousel", "slide", vec![ask(slide, "select")]);
+    same("Carousel", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{slide}:selected")),
+        Some(Value::Bool(true))
+    );
+}
+
+/// A pager's page goes current the same from the three.
+#[test]
+fn a_pager_goes_to_a_page_the_same_from_the_three() {
+    let page = "pagination_page.group[0].card[0].page[2]";
+    let mut person = gallery("Pagination");
+    person.click(page);
+    let mut reader = gallery("Pagination");
+    reader.press(page);
+    let agent = by_agent("Pagination", "page", vec![ask(page, "activate")]);
+    same("Pagination", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{page}:current")),
+        Some(Value::Bool(true))
+    );
+}

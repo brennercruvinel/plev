@@ -44,6 +44,7 @@ const PROJECTING: &[&str] = &[
     "Breadcrumb",
     "Button",
     "Button Group",
+    "Carousel",
     "Checkbox",
     "Chip",
     "Collapsible",
@@ -59,6 +60,7 @@ const PROJECTING: &[&str] = &[
     "Label",
     "Message",
     "Navigation Menu",
+    "Pagination",
     "Popover",
     "Resizable",
     "Scroll Area",
@@ -121,7 +123,6 @@ const SILENT: &[(&str, Why)] = &[
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
-    ("Carousel", PLACEHOLDER),
     (
         "Chart",
         Unprojected("the charts: an image with a text alternative, or a table of the data"),
@@ -160,7 +161,6 @@ const SILENT: &[(&str, Why)] = &[
         "Message Scroller",
         Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
     ),
-    ("Pagination", PLACEHOLDER),
     ("Panel", Nothing("the glass surface alone")),
     (
         "Panel Header",

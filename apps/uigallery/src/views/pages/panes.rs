@@ -24,7 +24,9 @@ use super::super::components::popover;
 use super::super::components::message;
 
 // task-104 front D, disclosure and display (#157)
-use super::super::components::{accordion, aspect_ratio, collapsible, item, kbd};
+use super::super::components::{
+    accordion, aspect_ratio, carousel, collapsible, item, kbd, pagination,
+};
 
 // task-104 front E, selection and dates (#158)
 use super::super::components::toggle;
@@ -80,9 +82,11 @@ pub struct Panes {
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
     pub aspect_ratio: aspect_ratio::AspectRatioPage,
+    pub carousel: carousel::CarouselPage,
     pub collapsible: collapsible::CollapsiblePage,
     pub item: item::ItemPage,
     pub kbd: kbd::KbdPage,
+    pub pagination: pagination::PaginationPage,
     // task-104 front E, selection and dates (#158)
     pub toggle: toggle::TogglePage,
     // -- apps demo
@@ -166,9 +170,11 @@ impl Panes {
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
             aspect_ratio: aspect_ratio::AspectRatioPage::new(),
+            carousel: carousel::CarouselPage::new(),
             collapsible: collapsible::CollapsiblePage::new(theme),
             item: item::ItemPage::new(),
             kbd: kbd::KbdPage::new(),
+            pagination: pagination::PaginationPage::new(),
             // task-104 front E, selection and dates (#158)
             toggle: toggle::TogglePage::new(),
             todo,
