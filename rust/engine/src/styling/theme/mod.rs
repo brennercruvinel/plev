@@ -13,7 +13,8 @@ pub use self::scales::{
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
 };
 pub use self::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
+    TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics, SubmitRecipe,
@@ -144,6 +145,7 @@ impl Theme {
                 display: 36.0,
                 line_height_ratio: 1.3,
                 family: None,
+                mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
             },
             spacing: SpacingScale {

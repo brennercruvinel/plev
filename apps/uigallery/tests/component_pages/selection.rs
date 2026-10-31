@@ -341,3 +341,31 @@ fn a_picked_day_and_a_turned_month_are_the_same_from_the_three() {
         Some(Value::Text("2026-10-21".into()))
     );
 }
+
+/// The Menus page: an item of the filter menu, one of the file menu and
+/// a folder.
+const MENU_ROWS: [&str; 3] = [
+    "menus_page.group[0].card[5][3]",
+    "menus_page.group[0].card[1][2]",
+    "menus_page.group[0].card[2][1]",
+];
+
+/// A menu row is picked the same from the person's click, the reader's
+/// press and the agent's `activate`, and its menu says it.
+#[test]
+fn a_menu_row_is_picked_the_same_from_the_three() {
+    for id in MENU_ROWS {
+        let mut person = seeing_on("Menus", id);
+        person.click(id);
+        let mut reader = gallery("Menus");
+        reader.press(id);
+        let agent = by_agent("Menus", "sel_menu", vec![ask(id, "activate")]);
+        same("Menus", &person, &reader, &agent);
+        let menu = &id[..id.rfind('[').unwrap()];
+        let picked = state_on(&person, menu, "picked");
+        assert!(
+            matches!(&picked, Some(Value::Text(t)) if !t.is_empty()),
+            "{id}: {picked:?}"
+        );
+    }
+}

@@ -282,6 +282,11 @@ fn headline_and_mono_come_from_the_ramp() {
     let m = ty.mono();
     assert_eq!(m.font_size, 14.0);
     assert_eq!(m.font_weight, 400);
+    assert_eq!(m.font_family.as_deref(), Some(MONO_FAMILY));
+    assert_eq!(m.letter_spacing, 0.0, "a mono face keeps its grid");
+    let core = Theme::hoff_core().typography.mono();
+    assert_eq!(core.font_family.as_deref(), Some(MONO_FAMILY));
+    assert_eq!(core.letter_spacing, 0.0, "core's tracking is Inter's");
     let r = ty.readout();
     assert_eq!(r.font_size, 10.0);
 }

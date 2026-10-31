@@ -76,6 +76,7 @@ const PROJECTING: &[&str] = &[
     "Label",
     "Marker",
     "Menubar",
+    "Menus",
     "Message",
     "Message Scroller",
     "Navigation Menu",

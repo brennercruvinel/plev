@@ -390,6 +390,57 @@ impl TextMeasurer {
         candidate(lo)
     }
 
+    /// `text` in the lines the shaper breaks it into at `max_width`, the
+    /// same breaks a wrapped draw takes (UAX#14: between words, between
+    /// CJK ideographs, at Thai word bounds; a hard break kept, an empty
+    /// line kept), each with its width measured in `style`, the
+    /// whitespace at a break dropped. A word wider than `max_width` is broken where
+    /// the shaper breaks it. What a widget needs to align each line on its
+    /// own (the kit's `text-center`): draw each at its own x.
+    pub fn lines(text: &str, style: &TextStyle, max_width: f32) -> Vec<(String, f32)> {
+        if text.is_empty() {
+            return Vec::new();
+        }
+        let starts = line_starts(text);
+        // Each line runs from where the one before it ended (in the same
+        // source line) to the furthest of its glyphs: a cluster's glyph
+        // can point back into the line before (Thai), so the lines are a
+        // partition of the text, never an overlap.
+        let ranges: Vec<(usize, usize)> = with_ctx(|ctx| {
+            ctx.prepare(text, style, Some(max_width));
+            let mut prev: Option<(usize, usize)> = None;
+            ctx.scratch
+                .layout_runs()
+                .map(|run| {
+                    let base = starts.get(run.line_i).copied().unwrap_or(0);
+                    let start = match prev {
+                        Some((line, end)) if line == run.line_i => end,
+                        _ => 0,
+                    };
+                    let end = run.glyphs.iter().map(|g| g.end).max().unwrap_or(start);
+                    let end = end.max(start);
+                    prev = Some((run.line_i, end));
+                    (base + start, base + end)
+                })
+                .collect()
+        });
+        ranges
+            .into_iter()
+            .map(|(a, b)| {
+                // a continuation starts past the break's whitespace
+                let line = text.get(a..b).unwrap_or_default();
+                let line = if starts.contains(&a) {
+                    line
+                } else {
+                    line.trim_start()
+                };
+                let line = line.trim_end().to_owned();
+                let w = Self::measure_styled(&line, style, None).0;
+                (line, w)
+            })
+            .collect()
+    }
+
     /// Fit a `/`-separated path into `max_width` px by dropping whole
     /// directory segments from the middle, keeping the leading directory
     /// and the file name (`crates/…/fonts/Name.ttf`); measured with the

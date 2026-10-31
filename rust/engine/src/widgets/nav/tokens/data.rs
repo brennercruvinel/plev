@@ -134,15 +134,16 @@ impl CodeRecipe {
     /// inputs' radius (`rounded-xl`, `Field:66`); the caption the
     /// typography table's text (`TypographyPage:8`, `text-[0.6875rem]
     /// leading-[1rem] font-medium text-[#7B7B7B]`); the code the
-    /// 0.8125rem step on the 1.25rem line, untracked, in the kit's dark
-    /// gray `#323232`; a row's text ink. A diff's rows wash in the kit's
+    /// 0.8125rem step on the 1.25rem line in the theme's mono family
+    /// (untracked, at its one embedded weight), in the kit's dark gray
+    /// `#323232`; a row's text ink. A diff's rows wash in the kit's
     /// green and red at the core glass's wash (10%), a header in
     /// `#F1F1F1`.
     pub fn hoff_core() -> Self {
         use crate::styling::theme::hoff_core::{GREEN, RED};
         let [_, well, wash, line, _, gray, dark, _, ink] = SHADES;
         Self {
-            text: NavText::new(13.0, 20.0, 500).tracked(0.0),
+            text: NavText::new(13.0, 20.0, 400).in_mono(),
             caption: NavText::new(11.0, 16.0, 500),
             pad: 12.0,
             caption_gap: 4.0,
@@ -165,7 +166,7 @@ impl CodeRecipe {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         Self {
-            text: NavText::of(&theme.typography.mono()),
+            text: NavText::of(&theme.typography.mono()).in_mono(),
             caption: NavText::of(&theme.typography.caption_sm()),
             pad: theme.spacing.md,
             caption_gap: theme.spacing.xs,

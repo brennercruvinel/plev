@@ -1792,3 +1792,6 @@ fn the_paper_fades_over_the_edge_the_thread_runs_past() {
     let above = fades(&s, b);
     assert_eq!((above.len(), above[0].2), (1, 1.0), "opaque at the top");
 }
+
+/// The empty state's body, centered line by line.
+mod empty;

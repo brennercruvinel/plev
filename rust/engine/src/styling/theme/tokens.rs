@@ -25,6 +25,10 @@ pub struct SpacingScale {
 /// Inclusive Sans swap (2026-08).
 pub const BODY_LETTER_SPACING_EM: f32 = 0.0;
 
+/// The embedded code face (JetBrains Mono Regular, the Latin range), the
+/// mono family every built-in theme names.
+pub const MONO_FAMILY: &str = "JetBrains Mono";
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypographyScale {
     /// `=small`: 10px in HOFF.
@@ -39,6 +43,9 @@ pub struct TypographyScale {
     /// Face every style resolves to; `None` is the engine default
     /// (Inclusive Sans). The hoff core theme points this at Inter.
     pub family: Option<&'static str>,
+    /// Face of the code styles ([`Self::mono`], [`Self::exact_mono`]):
+    /// [`MONO_FAMILY`] in every built-in theme.
+    pub mono_family: &'static str,
     /// Tracking applied to every style, in em (css `tracking-[-0.02em]`
     /// on the core body). Zero for the HOFF ramp.
     pub tracking_em: f32,
@@ -67,6 +74,16 @@ impl TypographyScale {
             Some(family) => style.with_family(family),
             None => style,
         }
+    }
+
+    /// A code style with an explicit line height in px: the mono family
+    /// at its own spacing, the scale's tracking left out (the tracking is
+    /// the UI face's, and a mono face keeps its grid).
+    pub fn exact_mono(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        TextStyle::new(size)
+            .with_line_height(line_height)
+            .with_weight(weight)
+            .with_family(self.mono_family)
     }
 
     fn body_style(&self, size: f32, lh_factor: f32, weight: u16) -> TextStyle {
@@ -170,12 +187,11 @@ impl TypographyScale {
         self.style(self.title, 1.25, 500)
     }
 
-    /// Code and readouts: body-sm at line-height 1.4 in the single
-    /// embedded UI family (there is no separate mono face; the family is
-    /// tabular enough for short runs). One definition instead of the
-    /// `code_style` helper each gallery section grew.
+    /// Code: body-sm at line-height 1.4 in the mono family. One
+    /// definition instead of the `code_style` helper each gallery section
+    /// grew.
     pub fn mono(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 400)
+        self.exact_mono(self.body_sm, self.body_sm * 1.4, 400)
     }
 
     /// Small readout under a specimen or a chart axis: `small` at 1.5.
