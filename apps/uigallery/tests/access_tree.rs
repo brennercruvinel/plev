@@ -39,17 +39,31 @@ use uigallery::views::{PAGES, ShowcaseView};
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
     "Accordion",
+    "Alert",
     "Alert Dialog",
+    "Aspect Ratio",
+    "Attachment",
+    "Badge",
     "Breadcrumb",
+    "Bubble",
     "Button",
     "Button Group",
+    "Calendar",
+    "Carousel",
+    "Chart",
     "Checkbox",
     "Chip",
+    "Code Block",
+    "Collapsible",
     "Combobox",
     "Command",
+    "Context Menu",
     "Data Table",
     "Dialog",
+    "Drawer",
+    "Dropdown Menu",
     "Field",
+    "Graph",
     "Hover Card",
     "Icon Button",
     "Input",
@@ -58,14 +72,23 @@ const PROJECTING: &[&str] = &[
     "Item",
     "Kbd",
     "Label",
+    "Marker",
+    "Menubar",
     "Message",
+    "Message Scroller",
     "Navigation Menu",
+    "Pagination",
+    "Panel",
+    "Panel Header",
     "Popover",
+    "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
+    "Sheet",
     "Slider",
     "Spinner",
+    "Stat",
     "Switch",
     "Table",
     "Tabs",
@@ -104,80 +127,31 @@ const SILENT: &[(&str, Why)] = &[
         "Theme",
         Unprojected("the palette cards are drawn by hand: options pressed by shell.theme"),
     ),
-    ("Typography", Nothing("a type specimen")),
-    ("Icons", Nothing("a grid of icons, hover only")),
-    ("Effects", Nothing("samples of shadow, blur and gradient")),
-    ("Alert", PLACEHOLDER),
-    ("Aspect Ratio", PLACEHOLDER),
-    ("Attachment", PLACEHOLDER),
+    ("Typography", Nothing("a type specimen table")),
+    ("Icons", Nothing("a grid of icons")),
+    (
+        "Effects",
+        Nothing("samples of the shadow stacks, blur and gradient"),
+    ),
     (
         "Avatar",
         Unprojected("Avatar: an image named by the person, online or not"),
     ),
-    ("Badge", Unprojected("Badge: a label with its count or tag")),
-    (
-        "Bubble",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    ("Calendar", PLACEHOLDER),
     (
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),
     ),
-    ("Carousel", PLACEHOLDER),
-    (
-        "Chart",
-        Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
-    (
-        "Code Block",
-        Unprojected("CodeBlock: a label with the code, named by its caption"),
-    ),
-    ("Collapsible", PLACEHOLDER),
-    (
-        "Context Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
     ("Date Picker", PLACEHOLDER),
-    (
-        "Drawer",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Dropdown Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
-    ),
-    (
-        "Graph",
-        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
-    ),
-    ("Marker", PLACEHOLDER),
-    ("Menubar", PLACEHOLDER),
-    (
-        "Message Scroller",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    ("Pagination", PLACEHOLDER),
-    ("Panel", Nothing("the glass surface alone")),
-    (
-        "Panel Header",
-        Unprojected("PanelHeader: a heading with its blurb and badge"),
     ),
     (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
     ),
     ("Questionnaire", PLACEHOLDER),
-    ("Radio Group", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
-    (
-        "Sheet",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
     (
         "Sidebar",
         Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
@@ -187,12 +161,8 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
     ),
     (
-        "Stat",
-        Unprojected("Stat: a label with its value, unit and delta"),
-    ),
-    (
         "Dock",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+        Unprojected("the dock is drawn by hand: its contacts and a field, over a stage of bubbles"),
     ),
     (
         "Editor",
@@ -502,9 +472,11 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// adds the Resizable page's split: a group whose `set_ratio` no action of
 /// the tree reaches (a value is set through `set_value` or a select's
 /// `select`, and the contract has no splitter role, AccessKit's
-/// `Splitter`); an agent asks it, and a person drags.
+/// `Splitter`); an agent asks it, and a person drags. Task-104 put a
+/// stacked split beside it, the same.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
+    "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
 
@@ -624,6 +596,21 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
     assert_eq!(
         lines,
         [
+            // task-104 front C: the inline alerts, by intent (#156)
+            "alert_page.group[0].card[0].alert[0]",
+            "alert_page.group[0].card[1].alert[0]",
+            "alert_page.group[0].card[2].alert[0]",
+            "alert_page.group[0].card[3].alert[0]",
+            "alert_page.group[1].card[0].alert[0]",
+            "alert_page.group[1].card[1].alert[0]",
+            "alert_page.group[1].card[2].alert[0]",
+            "alert_page.group[1].card[3].alert[0]",
+            "alert_page.group[2].card[0].alert[0]",
+            "alert_page.group[2].card[0].alert[1]",
+            "alert_page.group[2].card[0].alert[2]",
+            "alert_page.group[2].card[0].alert[3]",
+            "alert_page.group[3].card[0].alert[0]",
+            "alert_page.group[3].card[1].alert[0]",
             "capture.status",
             "files.status",
             "silences.counts",

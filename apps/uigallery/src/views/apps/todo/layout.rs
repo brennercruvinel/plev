@@ -1,12 +1,15 @@
-//! Pure geometry for the App tab: no GPU, no window. The footer pills and
-//! the counter are measured with TextMeasurer (one style per run, shared
-//! with drawing); constants exist only as min, max and gap.
+//! Pure geometry for the App tab: no GPU, no window. The footer filters
+//! are the kit's toggle group (`engine::widgets::selection::ToggleGroup`,
+//! its small step), sized by the widget; the counter is measured with
+//! TextMeasurer (one style per run, shared with drawing); constants exist
+//! only as min, max and gap.
 
 use crate::domain::todo::Filter;
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::{Theme, TypographyScale};
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::Rect;
+use engine::widgets::selection::{SegmentSize, ToggleGroup};
 
 pub(super) const PAD: f32 = 24.0;
 /// Readability clamp: the app card never stretches past this width.
@@ -18,18 +21,17 @@ pub(super) const ROW_H: f32 = 44.0;
 pub(super) const LABEL_INSET: f32 = 28.0;
 /// Delete button hit square.
 pub(super) const DEL: f32 = 28.0;
-pub(super) const PILL_H: f32 = 26.0;
 pub(super) const STRIKE_H: f32 = 1.5;
-const PILL_PAD_X: f32 = 12.0;
-const PILL_GAP: f32 = 8.0;
 const COUNTER_GAP: f32 = 16.0;
 
 pub(super) fn item_style() -> TextStyle {
     TypographyScale::hoff().base_2r()
 }
 
-pub(super) fn pill_style() -> TextStyle {
-    TypographyScale::hoff().caption_sm()
+/// The filters as the kit's small toggle group, one segment per
+/// filter in `Filter::ALL` order: what the footer measures and draws.
+pub(super) fn filter_group() -> ToggleGroup {
+    ToggleGroup::new(Filter::ALL.map(|f| f.label())).size(SegmentSize::Sm)
 }
 
 pub(super) fn counter_style() -> TextStyle {
@@ -37,13 +39,15 @@ pub(super) fn counter_style() -> TextStyle {
 }
 
 /// One frame of geometry: card, add field, scrollable list viewport and
-/// the footer (divider, counter origin, one pill rect per filter).
+/// the footer (divider, counter origin, the filter group and one segment
+/// rect per filter).
 pub(super) struct Layout {
     pub panel: Rect,
     pub input: Rect,
     pub list: Rect,
     pub divider_y: f32,
     pub counter: (f32, f32),
+    pub filters: Rect,
     pub pills: [Rect; 3],
 }
 
@@ -62,11 +66,9 @@ pub(super) fn compute(content: Rect, counter: &str, theme: &Theme) -> Layout {
         TextField::height(theme),
     );
 
-    let pstyle = pill_style();
-    let pw = Filter::ALL.map(|f| {
-        (TextMeasurer::measure_styled(f.label(), &pstyle, None).0 + PILL_PAD_X * 2.0).ceil()
-    });
-    let pills_w = pw[0] + pw[1] + pw[2] + PILL_GAP * 2.0;
+    let group = filter_group();
+    let (pills_w, pill_h) = group.preferred_size(theme);
+    let pills_w = pills_w.min(panel.w - PAD * 2.0);
     let cstyle = counter_style();
     let counter_w = TextMeasurer::measure_styled(counter, &cstyle, None).0;
 
@@ -74,25 +76,22 @@ pub(super) fn compute(content: Rect, counter: &str, theme: &Theme) -> Layout {
     // panel the footer stacks them instead of overlapping.
     let stacked = counter_w + COUNTER_GAP + pills_w > panel.w - PAD * 2.0;
     let footer_h = if stacked {
-        PILL_H * 2.0 + 30.0
+        pill_h * 2.0 + 30.0
     } else {
-        PILL_H + 26.0
+        pill_h + 26.0
     };
     let divider_y = panel.y + panel.h - footer_h;
 
-    let pill_y = panel.y + panel.h - PILL_H - 13.0;
-    let mut px = panel.x + panel.w - PAD - pills_w;
-    let pills = pw.map(|w| {
-        let r = Rect::new(px, pill_y, w, PILL_H);
-        px += w + PILL_GAP;
-        r
-    });
+    let pill_y = panel.y + panel.h - pill_h - 13.0;
+    let filters = Rect::new(panel.x + panel.w - PAD - pills_w, pill_y, pills_w, pill_h);
+    let segments = group.segment_rects(filters, theme);
+    let pills = [segments[0], segments[1], segments[2]];
     let counter = (
         panel.x + PAD,
         if stacked {
             divider_y + 8.0
         } else {
-            pill_y + TextMeasurer::vertical_center(&cstyle, PILL_H)
+            pill_y + TextMeasurer::vertical_center(&cstyle, pill_h)
         },
     );
 
@@ -109,6 +108,7 @@ pub(super) fn compute(content: Rect, counter: &str, theme: &Theme) -> Layout {
         list,
         divider_y,
         counter,
+        filters,
         pills,
     }
 }

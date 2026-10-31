@@ -8,7 +8,8 @@
 //! `button_page.group[<g>].card[<c>]`, as the comps projects it, described
 //! by the card's chip (the states it shows); an icon-only button is named
 //! by its icon, the submit button "submit". A button here does nothing but
-//! press, so its `activate` changes nothing.
+//! press, so its `activate` changes nothing. The Icon Button page is this
+//! page with the icon-only groups alone ([`ButtonPage::icons`]).
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
@@ -143,7 +144,22 @@ fn pair(title: &'static str, make: impl Fn(bool) -> Spec) -> Group {
 }
 
 impl ButtonPage {
+    /// The Button page: every group of the kit's ButtonsPage.
     pub fn new() -> Self {
+        Self::with("button_page", Self::groups())
+    }
+
+    /// The Icon Button page: the ButtonsPage's groups of icon-only buttons
+    /// (`:186`, `:219`, `:252`, `:320`), the same cards as on the Button
+    /// page.
+    pub fn icons() -> Self {
+        let mut groups = Self::groups();
+        groups.retain(|g| g.cards.iter().all(|c| matches!(c.spec, Spec::Icon(_))));
+        Self::with("icon_button_page", groups)
+    }
+
+    /// Every group of the kit's ButtonsPage, in its order.
+    fn groups() -> Vec<Group> {
         let button = |variant: ButtonVariant, size: ButtonSize, icon: Option<&'static str>| {
             move |disabled: bool| {
                 let mut b = Button::new("Button")
@@ -280,7 +296,13 @@ impl ButtonPage {
                 },
             ],
         });
-        let root = root_id("button_page");
+        groups
+    }
+
+    /// The page of `groups` under the root `name`, each card's widget
+    /// with its id, `<name>.group[<g>].card[<c>]`.
+    fn with(name: &str, mut groups: Vec<Group>) -> Self {
+        let root = root_id(name);
         if let Some(root) = &root {
             for (g, group) in groups.iter_mut().enumerate() {
                 for (c, card) in std::mem::take(&mut group.cards).into_iter().enumerate() {
@@ -494,5 +516,37 @@ mod tests {
             &theme,
         );
         assert!(r.changed);
+    }
+
+    /// The Icon Button page is the Button page's icon-only groups: the
+    /// three icon buttons live and disabled, the toolbar tool at rest,
+    /// disabled and active, each widget centered in its card.
+    #[test]
+    fn the_icon_page_is_the_icon_groups_of_the_buttons_page() {
+        let page = ButtonPage::icons();
+        let titles: Vec<&str> = page.groups.iter().map(|g| g.title).collect();
+        assert_eq!(
+            titles,
+            [
+                "Ghost icon button",
+                "Large icon button",
+                "Small icon button",
+                "Toolbar button"
+            ]
+        );
+        let toolbar = &page.groups[3];
+        let states: Vec<&str> = toolbar.cards.iter().map(|c| c.title).collect();
+        assert_eq!(states, ["Default, Hover", "Disabled", "Active"]);
+        let theme = Theme::hoff_core();
+        let content = Rect::new(0.0, 0.0, 1000.0, 800.0);
+        for (group, at) in page.groups.iter().zip(page.layout(content, &theme)) {
+            for (card, rect) in group.cards.iter().zip(&at.cards) {
+                let r = ButtonPage::widget_rect(&card.spec, *rect, &theme);
+                let (cy, wy) = (rect.y + rect.h / 2.0, r.y + r.h / 2.0);
+                assert!((cy - wy).abs() <= 0.5, "{}: centered", group.title);
+            }
+        }
+        let root = page.root.as_ref().map(|r| r.as_str().to_string());
+        assert_eq!(root.as_deref(), Some("icon_button_page"));
     }
 }

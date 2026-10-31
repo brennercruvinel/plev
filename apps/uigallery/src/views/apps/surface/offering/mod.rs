@@ -485,12 +485,20 @@ impl Proposing {
         let below = line + h + gap;
         let style = message_style(theme);
         let one = TextMeasurer::measure_styled("Ag", &style, None).1;
-        let text_w = (w - cw - gap).max(0.0);
+        // Cancel ends the controls' line where it has the room, so the
+        // message under it takes the whole width; else it ends the
+        // message's line, as before.
+        let beside = propose.right() + gap + cw <= x + w;
+        let text_w = if beside { w } else { (w - cw - gap).max(0.0) };
         let wrapped = TextMeasurer::measure_styled(&self.message(), &style, Some(text_w)).1;
         let text_h = one.max(wrapped);
-        let band_h = text_h.max(ch);
+        let band_h = if beside { text_h } else { text_h.max(ch) };
         let message = Rect::new(x, below + (band_h - text_h) / 2.0, text_w, text_h);
-        let cancel = Rect::new(x + w - cw, below + (band_h - ch) / 2.0, cw, ch);
+        let cancel = if beside {
+            Rect::new(x + w - cw, line + (h - ch) / 2.0, cw, ch)
+        } else {
+            Rect::new(x + w - cw, below + (band_h - ch) / 2.0, cw, ch)
+        };
         let bottom = below + band_h + gap;
         Row {
             band: Rect::new(x, y, w, bottom - y),

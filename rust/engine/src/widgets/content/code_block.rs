@@ -1,7 +1,8 @@
-//! Code block: monospaced-feel text (the mono ramp step, the single
-//! embedded family) on a field-tone surface at the nav radius, wrapped
-//! at the block width, with an optional caption line. The `code_style`
-//! helper three gallery sections grew is this one widget.
+//! Code block: code on a well, wrapped at the block width, with an
+//! optional caption line. Every visual value is the theme's
+//! `navigation.code` recipe. The `code_style` helper three gallery
+//! sections grew is this one widget. [`CodeBlock::project`] declares it
+//! as a label named by its caption, its code as the value.
 //!
 //! Rows (task-97): given `rows`, the block draws them instead of `code`,
 //! one line box each, cut at the block's width with an ellipsis, clipped
@@ -14,9 +15,10 @@
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
-use crate::widgets::widget::{Rect, with_alpha};
+use crate::widgets::widget::Rect;
 
 /// The kind of one row of a code block: what a diff says of the line.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -36,26 +38,24 @@ impl LineKind {
         LineKind::Header,
     ];
 
-    /// The wash behind a row of this kind: the design system's intent
-    /// wash (the hue of the intent's token at `glass.wash_alpha`, as a
-    /// selected chip and a progress fill draw it), success for a line
-    /// added and danger for one removed; the hovered glass for a header;
-    /// none for context.
+    /// The wash behind a row of this kind, from the recipe: the
+    /// success wash for a line added, the danger one for a line removed,
+    /// the header's; none for context.
     pub fn wash(self, theme: &Theme) -> Option<[f32; 4]> {
-        let g = &theme.glass;
+        let r = &theme.navigation.code;
         match self {
             LineKind::Context => None,
-            LineKind::Added => Some(with_alpha(theme.colors.success, g.wash_alpha)),
-            LineKind::Removed => Some(with_alpha(theme.colors.danger, g.wash_alpha)),
-            LineKind::Header => Some(g.surface_hover.0),
+            LineKind::Added => Some(r.added.0),
+            LineKind::Removed => Some(r.removed.0),
+            LineKind::Header => Some(r.header.0),
         }
     }
 
-    /// The ink of a row's text: the primary text for every kind, the text
-    /// token that reads at WCAG AA over every wash on the block (the
-    /// secondary `text_mid` of the wrapped code does not over a wash).
+    /// The ink of a row's text: one tone for every kind, the one that
+    /// reads at WCAG AA over every wash on the block (the code's own tone
+    /// may not over a wash).
     pub fn ink(self, theme: &Theme) -> [f32; 4] {
-        theme.colors.text.0
+        theme.navigation.code.row_ink.0
     }
 }
 
@@ -86,6 +86,7 @@ pub struct CodeBlock {
     /// How far down the rows are scrolled, in px; the block keeps it
     /// within `0..=max_scroll`.
     pub scroll: f32,
+    sem: Option<SemId>,
 }
 
 impl CodeBlock {
@@ -95,6 +96,7 @@ impl CodeBlock {
             caption: None,
             rows: Vec::new(),
             scroll: 0.0,
+            sem: None,
         }
     }
 
@@ -111,17 +113,55 @@ impl CodeBlock {
         self
     }
 
+    /// The logical identity the render binds the block to.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// The code as text: `code`, or the rows one per line.
+    pub fn text(&self) -> String {
+        if self.rows.is_empty() {
+            return self.code.clone();
+        }
+        let rows: Vec<&str> = self.rows.iter().map(|r| r.text.as_str()).collect();
+        rows.join("\n")
+    }
+
+    /// Declares the block as `id`: a `Role::Label` named by its caption
+    /// ("code" without one), its code as the `value` a reader hears. It
+    /// only reads the widget. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let name = self.caption.as_deref().unwrap_or("code");
+        let mut node = b.node(id, Role::Label, name);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("value", self.text());
+        node
+    }
+
     pub fn text_style(theme: &Theme) -> TextStyle {
-        theme.typography.mono()
+        theme.navigation.code.text.style(&theme.typography)
     }
 
     fn caption_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        theme.navigation.code.caption.style(&theme.typography)
     }
 
-    /// Inner padding: the `md` step.
+    /// Inner padding.
     fn pad(theme: &Theme) -> f32 {
-        theme.spacing.md
+        theme.navigation.code.pad
     }
 
     /// The band the caption takes above the code, its gap included; none
@@ -129,7 +169,7 @@ impl CodeBlock {
     fn caption_band(&self, theme: &Theme) -> f32 {
         self.caption
             .as_ref()
-            .map(|_| Self::caption_style(theme).line_height + theme.spacing.xs)
+            .map(|_| Self::caption_style(theme).line_height + theme.navigation.code.caption_gap)
             .unwrap_or(0.0)
     }
 
@@ -182,32 +222,15 @@ impl CodeBlock {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        let glass = &theme.glass;
+        let r = &theme.navigation.code;
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let pad = Self::pad(theme);
-        let radius = theme.shape.nav;
-        c.push_to_layer(
-            layer,
-            rounded_rect(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                radius,
-                glass.field.0,
-            ),
-        );
-        c.push_to_layer(
-            layer,
-            rounded_rect_stroke(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                radius,
-                glass.edge_soft.0,
-                theme.control.edge_width,
-            ),
-        );
+        let Rect { x, y, w, h } = bounds;
+        c.push_to_layer(layer, rounded_rect(x, y, w, h, r.radius, r.fill.0));
+        let rim = rounded_rect_stroke(x, y, w, h, r.radius, r.border.0, r.border_width);
+        c.push_to_layer(layer, rim);
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let mut y = bounds.y + pad;
         if let Some(caption) = &self.caption {
@@ -218,10 +241,10 @@ impl CodeBlock {
                     key: TextNodeKey::from_style(caption, &style, Some(inner)),
                     x: bounds.x + pad,
                     y,
-                    color: glass.text_faint.0,
+                    color: r.caption_color.0,
                 },
             );
-            y += style.line_height + theme.spacing.xs;
+            y += style.line_height + r.caption_gap;
         }
         if !self.rows.is_empty() {
             self.render_rows(c, layer, bounds, theme);
@@ -233,7 +256,7 @@ impl CodeBlock {
                 key: TextNodeKey::from_style(&self.code, &Self::text_style(theme), Some(inner)),
                 x: bounds.x + pad,
                 y,
-                color: theme.colors.text_mid.0,
+                color: r.code.0,
             },
         );
     }
@@ -246,7 +269,7 @@ impl CodeBlock {
         let style = Self::text_style(theme);
         let row_h = style.line_height;
         let pad = Self::pad(theme);
-        let edge = theme.control.edge_width;
+        let edge = theme.navigation.code.border_width;
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let scroll = self.scroll.clamp(0.0, self.max_scroll(bounds, theme));
         c.push_to_layer(
@@ -303,7 +326,7 @@ mod tests {
     use crate::styling::theme::Theme;
 
     use super::{CodeBlock, CodeLine, LineKind};
-    use crate::widgets::widget::{Rect, with_alpha};
+    use crate::widgets::widget::Rect;
 
     fn nodes(block: &CodeBlock, bounds: Rect, theme: &Theme) -> Vec<SceneNode> {
         let mut c = Compositor::new();
@@ -407,29 +430,28 @@ mod tests {
             let block = CodeBlock::lines(diff()).caption("diff");
             let bounds = Rect::new(0.0, 0.0, 420.0, block.height_for(420.0, &theme));
             let drawn = nodes(&block, bounds, &theme);
-            let g = &theme.glass;
-            let added = with_alpha(theme.colors.success, g.wash_alpha);
-            let removed = with_alpha(theme.colors.danger, g.wash_alpha);
+            let r = &theme.navigation.code;
+            let (added, removed) = (r.added.0, r.removed.0);
             let rows: Vec<(String, f32, [f32; 4])> = texts(&drawn).into_iter().skip(1).collect();
             assert_eq!(rows.len(), 4, "{name}: every row shows");
             for (row, (text, _, ink)) in diff().iter().zip(&rows) {
                 assert_eq!(*text, row.text, "{name}");
-                assert_eq!(*ink, theme.colors.text.0, "{name}: {text}");
+                assert_eq!(*ink, r.row_ink.0, "{name}: {text}");
             }
             let area = block.rows_rect(bounds, &theme);
             let row_h = CodeBlock::row_h(&theme);
             let at = |i: usize| area.y + i as f32 * row_h;
             assert_eq!(
                 washes(&drawn),
-                [(at(0), g.surface_hover.0), (at(2), removed), (at(3), added)],
+                [(at(0), r.header.0), (at(2), removed), (at(3), added)],
                 "{name}: a wash behind the header, the removed and the added, none behind context"
             );
             let allowed = [
-                g.field.0,
-                g.edge_soft.0,
-                g.text_faint.0,
-                g.surface_hover.0,
-                theme.colors.text.0,
+                r.fill.0,
+                r.border.0,
+                r.caption_color.0,
+                r.header.0,
+                r.row_ink.0,
                 added,
                 removed,
             ];
@@ -496,7 +518,7 @@ mod tests {
             let page = over(theme.colors.bg, [0.0; 3]);
             let card = over(theme.colors.surface, page);
             for (under, base) in [("colors.bg", page), ("colors.surface", card)] {
-                let block = over(theme.glass.field, base);
+                let block = over(theme.navigation.code.fill, base);
                 let mut line = format!("{name:>10} over {under:<14}");
                 for kind in LineKind::ALL {
                     let row = kind.wash(&theme).map_or(block, |w| over(Color(w), block));

@@ -1,11 +1,12 @@
-//! HOFF chip: a small status/tag pill — caption-sm label in a radius-full
-//! glass capsule, tinted by [`Intent`]. Filled (`selected`) reads as the
-//! active filter/tag; the outline variant is the quiet default. Static by
+//! The kit's chip (`theme.selection.chip`): the card's state tag and the
+//! notifications' filter pill. Filled (`selected`) reads as the active
+//! filter or tag, the bordered tag is the quiet default; an [`Intent`]
+//! tints the tag, its label whatever reads on it. Static by
 //! default; `interactive(true)` opts into the Button press contract
 //! (click fires on release inside).
 //!
-//! Geometry from the theme: height is the caption-sm line box plus the
-//! `xs` spacing above and below, the side padding is `md` spacing.
+//! Geometry from the tokens: the line box, the kit's `px-3 py-1` and the
+//! border the box holds; painted by the buttons' `paint_surface`.
 //!
 //! `selectable(true)` makes it a filter chip: a click toggles `selected`,
 //! like a checkbox. With a [`SemId`] ([`Chip::sem`]) the render binds the
@@ -13,13 +14,16 @@
 //! chip in a semantic projection. Keyboard focus ([`Chip::set_focused`],
 //! driven by the owning view) rings a chip the pointer reaches.
 
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{Intent, Theme};
+use crate::styling::color::Color;
+use crate::styling::theme::{ButtonSurface, Intent, Theme};
+use crate::widgets::buttons::paint_surface;
+use crate::widgets::selection::tokens::legible;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::widgets::recipe::focus_ring;
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill};
 
 /// Status/tag pill. See the module docs for the interactivity contract.
 #[derive(Clone, Debug)]
@@ -140,21 +144,65 @@ impl Chip {
         self.interactive || self.selectable
     }
 
-    /// Label style: HOFF caption-sm, one style for measure+draw.
+    /// Label style, one for measure and draw: `theme.selection.chip`.
     fn style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        let t = &theme.selection.chip;
+        theme
+            .typography
+            .exact(t.font_size, t.line_height, t.font_weight)
     }
 
-    /// Chip height for a theme: the caption line box plus `xs` above and
-    /// below (HOFF: 16 + 2 * 4 = 24).
+    /// Chip height for a theme: the line box, the `py` above and below,
+    /// and the border the box holds (the kit: 16 + 2 * 4 + 2 = 26).
     pub fn height(theme: &Theme) -> f32 {
-        Self::style(theme).line_height + theme.spacing.xs * 2.0
+        let t = &theme.selection.chip;
+        Self::style(theme).line_height + (t.pad_y + t.edge) * 2.0
     }
 
     /// Intrinsic size from real text measurement.
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        let t = &theme.selection.chip;
         let (tw, _) = TextMeasurer::measure_styled(&self.label, &Self::style(theme), None);
-        ((tw + theme.spacing.md * 2.0).ceil(), Self::height(theme))
+        ((tw + (t.pad_x + t.edge) * 2.0).ceil(), Self::height(theme))
+    }
+
+    /// The surface this chip shows: the theme's quiet or chosen tag, and
+    /// under an intent the tag in the intent's color, its label whatever
+    /// reads on it.
+    fn surface(&self, theme: &Theme) -> ButtonSurface {
+        let t = &theme.selection.chip;
+        let hot = self.hovered && self.pressable();
+        let base = match (self.selected, hot) {
+            (true, false) => &t.on,
+            (true, true) => &t.on_hover,
+            (false, false) => &t.rest,
+            (false, true) => &t.rest_hover,
+        };
+        if self.intent == Intent::Neutral {
+            return base.clone();
+        }
+        let c = &theme.colors;
+        let hue = match self.intent {
+            Intent::Informational => t.info,
+            intent => Color(intent_fill(theme, intent)),
+        };
+        if self.selected {
+            ButtonSurface {
+                fill: [hue; 2],
+                text: legible(c.bg, c.text, hue, c.bg),
+                ..base.clone()
+            }
+        } else {
+            let mut shadow = base.shadow.clone();
+            for s in &mut shadow {
+                s.color = hue;
+            }
+            ButtonSurface {
+                shadow,
+                text: legible(hue, c.text, base.fill[0], c.bg),
+                ..base.clone()
+            }
+        }
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
@@ -201,74 +249,28 @@ impl Chip {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let style = Self::style(theme);
-        let accent = intent_fill(theme, self.intent);
-        let text = theme.colors.text;
-        let glass = &theme.glass;
+        let t = &theme.selection.chip;
+        let radius = t.radius.min(bounds.h / 2.0);
         if self.focused {
-            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+            compositor.push(focus_ring(bounds, radius, theme));
         }
-
-        // Filled (selected): intent wash + intent label. Outline: glass
-        // edge stroke + dim label. Hover brightens both (interactive only).
-        let (bg, edge, fg) = if self.selected {
-            let hot = self.hovered && self.pressable();
-            (
-                with_alpha(
-                    theme.colors.accent,
-                    if hot {
-                        glass.wash_hover_alpha
-                    } else {
-                        glass.wash_alpha
-                    },
-                ),
-                [0.0; 4],
-                if self.intent == Intent::Neutral {
-                    text.0
-                } else {
-                    accent
-                },
-            )
-        } else {
-            let bg = if self.hovered && self.pressable() {
-                theme.glass.surface_hover.0
-            } else {
-                [0.0; 4]
-            };
-            let fg = if self.intent == Intent::Neutral {
-                theme.colors.text_mid.0
-            } else {
-                accent
-            };
-            (bg, theme.glass.edge_soft.0, fg)
-        };
-
-        if bg[3] > 0.001 {
-            compositor.push(rounded_rect(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                bounds.h / 2.0,
-                bg,
-            ));
-        }
-        if edge[3] > 0.001 {
-            compositor.push(rounded_rect_stroke(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                bounds.h / 2.0,
-                edge,
-                theme.control.edge_width,
-            ));
-        }
+        let surface = self.surface(theme);
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            bounds,
+            radius,
+            &surface,
+            1.0,
+            false,
+            theme,
+        );
+        let style = Self::style(theme);
         compositor.push(SceneNode::Text {
             key: TextNodeKey::from_style(&self.label, &style, None),
-            x: bounds.x + theme.spacing.md,
+            x: bounds.x + t.pad_x + t.edge,
             y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-            color: fg,
+            color: surface.text.0,
         });
     }
 }

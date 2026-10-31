@@ -8,19 +8,21 @@
 //! crate); `render` puts them where the halves say.
 
 use crate::domain::silences::Decision;
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::gpu::image::ImageHandle;
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::widgets::content::{AspectFrame, AspectRatio, Panel};
+use engine::widgets::form::label::Label;
 use engine::widgets::prelude::{Badge, ButtonVariant, Intent, Rect, rounded_rect};
 
 use screen::{Frames, NoFrames};
 
-use super::super::{SilencesPage, panel};
+use super::super::SilencesPage;
 use super::jobs::PageFrames;
 use super::layout::{
-    Layout, RowParts, compute, detail_style, label_style, mark_rect, mark_x, range_style,
-    row_parts, stats, status_style, time_style, value_style,
+    ASPECT, Layout, RowParts, compute, detail_style, mark_rect, mark_x, range_style, row_parts,
+    stats, status_style, time_style, value_style,
 };
 use super::semantics::{clock, ms};
 
@@ -47,6 +49,21 @@ fn mark_color(decision: Decision, theme: &Theme) -> [f32; 4] {
         Decision::Apply => theme.colors.danger.0,
         Decision::Reject => theme.glass.text_placeholder.0,
     }
+}
+
+/// The well a frame sits in: the kit's aspect well at the video's shape.
+fn well(name: &str) -> AspectFrame {
+    AspectFrame::new(name, AspectRatio::new(ASPECT, 1.0))
+}
+
+/// The well's corner radius in `at`, which a frame drawn in it takes.
+fn well_radius(at: Rect, theme: &Theme) -> f32 {
+    theme
+        .disclosure
+        .aspect
+        .radius
+        .min(at.w / 2.0)
+        .min(at.h / 2.0)
 }
 
 /// A frame fitted inside `box_`, centered, never scaled up.
@@ -103,21 +120,14 @@ impl SilencesPage {
     }
 
     fn render_video(&self, c: &mut Compositor, l: &Layout, theme: &Theme) {
-        panel(c, l.video_card, theme);
+        Panel::new().render(c, l.video_card, theme);
         if let Some(ids) = &self.ids {
             c.bind(&ids.video, bounds(l.video));
         }
-        c.push(rounded_rect(
-            l.video.x,
-            l.video.y,
-            l.video.w,
-            l.video.h,
-            theme.radius.md,
-            theme.colors.bg_panel.0,
-        ));
+        well("frame").render(c, l.video, theme);
         let shown = self.model.shown();
         match self.frames.get(&ms(shown)) {
-            Some(Ok(handle)) => fit(c, l.video, *handle, theme.radius.md),
+            Some(Ok(handle)) => fit(c, l.video, *handle, well_radius(l.video, theme)),
             other => {
                 let note = match other {
                     Some(Err(why)) => format!("no frame: {why}"),
@@ -134,33 +144,18 @@ impl SilencesPage {
                 });
             }
         }
-        // the clock over the frame, bottom left
+        // the clock over the frame, bottom left: the kit's tag
         let time = format!("{} / {}", clock(shown), clock(self.model.duration()));
+        let tag = Badge::tag(time);
+        let (bw, bh) = tag.preferred_size(theme);
+        let inset = theme.spacing.sm;
+        let at = Rect::new(l.video.x + inset, l.video.bottom() - inset - bh, bw, bh);
+        tag.render(c, at, theme);
         let style = time_style(theme);
-        let (tw, th) = TextMeasurer::measure_styled(&time, &style, None);
-        let (px, py) = (theme.spacing.sm, theme.spacing.xs);
-        let pill = Rect::new(
-            l.video.x + theme.spacing.sm,
-            l.video.bottom() - theme.spacing.sm - th - py * 2.0,
-            tw + px * 2.0,
-            th + py * 2.0,
-        );
-        c.push(rounded_rect(
-            pill.x,
-            pill.y,
-            pill.w,
-            pill.h,
-            pill.h / 2.0,
-            theme.glass.popover.0,
-        ));
-        c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&time, &style, None),
-            x: pill.x + px,
-            y: pill.y + py,
-            color: theme.colors.text.0,
-        });
 
-        // the band: every cut marked by its decision, the instant shown
+        // the band: every cut marked by its decision, the instant shown,
+        // on the track a meter runs in (the kit's video player track in
+        // core; the glass field read as the paper there, unseen)
         let band = l.timeline;
         c.push(rounded_rect(
             band.x,
@@ -168,7 +163,7 @@ impl SilencesPage {
             band.w,
             band.h,
             theme.radius.sm,
-            theme.glass.field.0,
+            theme.navigation.chart.meter_track.0,
         ));
         let duration = self.model.duration();
         for cut in self.model.cuts() {
@@ -207,14 +202,11 @@ impl SilencesPage {
     }
 
     fn render_side(&self, c: &mut Compositor, l: &Layout, theme: &Theme) {
-        panel(c, l.side_card, theme);
-        let label = label_style(theme);
-        c.push(SceneNode::Text {
-            key: TextNodeKey::from_style("detection", &label, None),
-            x: l.side_title.0,
-            y: l.side_title.1,
-            color: theme.glass.text_placeholder.0,
-        });
+        Panel::new().render(c, l.side_card, theme);
+        let (tx, ty) = l.side_title;
+        Label::new("detection")
+            .caption()
+            .draw(c, LayerId::DEFAULT, tx, ty, None, theme);
         let value = value_style(theme);
         let rows = [
             (
@@ -231,12 +223,8 @@ impl SilencesPage {
             ),
         ];
         for (name, text, row, slider) in rows {
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(name, &label, None),
-                x: row.label.0,
-                y: row.label.1,
-                color: theme.colors.text_mid.0,
-            });
+            let (lx, ly) = row.label;
+            Label::new(name).draw(c, LayerId::DEFAULT, lx, ly, None, theme);
             let (vw, _) = TextMeasurer::measure_styled(&text, &value, None);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&text, &value, None),
@@ -265,7 +253,7 @@ impl SilencesPage {
     }
 
     fn render_cuts(&self, c: &mut Compositor, l: &Layout, theme: &Theme) {
-        panel(c, l.cuts_card, theme);
+        Panel::new().render(c, l.cuts_card, theme);
         if let Some(ids) = &self.ids {
             c.bind(&ids.counts, bounds(l.counts));
         }
@@ -339,18 +327,12 @@ impl SilencesPage {
         }
     }
 
-    /// The frame of a cut, or a dark tile with its instant.
+    /// The frame of a cut in the kit's aspect well, or the well with its
+    /// instant.
     fn render_thumb(&self, c: &mut Compositor, at: Rect, middle: f64, theme: &Theme) {
-        c.push(rounded_rect(
-            at.x,
-            at.y,
-            at.w,
-            at.h,
-            theme.radius.sm,
-            theme.colors.bg_panel.0,
-        ));
+        well("cut frame").render(c, at, theme);
         if let Some(Ok(handle)) = self.frames.get(&ms(middle)) {
-            fit(c, at, *handle, theme.radius.sm);
+            fit(c, at, *handle, well_radius(at, theme));
             return;
         }
         let text = clock(middle);

@@ -7,11 +7,12 @@
 use engine::control::input::FileDrop;
 use engine::styling::theme::Intent;
 use engine::widgets::overlay::OverlayKind;
-use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use engine::widgets::overlay::drawer::DrawerAction;
+use engine::widgets::prelude::{ContextMenu, EventResult, ModalAction, Rect, WidgetEvent};
 
 use accord::Value;
 
-use super::super::components::context_menu;
+use super::super::components::{context_menu, dialog};
 use super::super::dispatcher::keyboard::Walk;
 use super::super::dispatcher::{ShellTarget, overlay};
 use super::super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
@@ -301,7 +302,12 @@ impl ShowcaseView {
             }
             Some(Pane::ContextMenu) if self.active_overlay.is_none() => {
                 let content = self.page_rect();
-                if !context_menu::ContextMenuPage::area(content, &self.theme).contains(x, y) {
+                if !self
+                    .panes
+                    .context_menu
+                    .area(content, &self.theme)
+                    .contains(x, y)
+                {
                     return false;
                 }
                 self.open_menu(x, y);
@@ -313,6 +319,16 @@ impl ShowcaseView {
 
     fn open_menu(&mut self, x: f32, y: f32) {
         self.show_menu(context_menu::demo_menu(), x, y);
+    }
+
+    /// The Context Menu page's menu at the middle of its area: a reader's
+    /// press or an agent's `open` there, as a right click.
+    pub(crate) fn open_page_menu(&mut self) {
+        if self.active_overlay.is_some() {
+            return;
+        }
+        let area = self.panes.context_menu.area(self.page_rect(), &self.theme);
+        self.open_menu(area.x + area.w / 2.0, area.y + area.h / 2.0);
     }
 
     /// `widget` opens as the context menu at `(x, y)`, kept inside the
@@ -346,29 +362,11 @@ impl ShowcaseView {
     }
 
     pub(crate) fn open_modal(&mut self, destructive: bool) {
+        // The Dialog page's questions (`components/dialog.rs`).
         let (widget, intent) = if destructive {
-            (
-                Modal::new(
-                    "Delete repository?",
-                    "This permanently removes the repository and all of its \
-                     history. This action cannot be undone.",
-                    "Delete",
-                    "Cancel",
-                )
-                .intent(Intent::Destructive),
-                Intent::Destructive,
-            )
+            (dialog::destructive(), Intent::Destructive)
         } else {
-            (
-                Modal::new(
-                    "Apply settings?",
-                    "Your workspace will reload to apply the new configuration.",
-                    "Apply",
-                    "Cancel",
-                )
-                .intent(Intent::Neutral),
-                Intent::Neutral,
-            )
+            (dialog::plain(), Intent::Neutral)
         };
         let widget = match overlay::id(overlay::DIALOG) {
             Some(id) => widget.sem(id),
@@ -445,6 +443,31 @@ impl ShowcaseView {
                         _ => None,
                     };
                     (asked, r.changed)
+                }
+                // task-104 front B: the edge panels (`dispatcher/overlay/edge.rs`).
+                ActiveOverlay::Sheet { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let button = match action {
+                        ModalAction::Confirm => Some("confirm"),
+                        ModalAction::Cancel => Some("cancel"),
+                        ModalAction::None => None,
+                    };
+                    let asked =
+                        button.and_then(|b| widget.sem_id().map(|id| (id.key(b), "activate")));
+                    (asked, r.changed || button.is_some())
+                }
+                ActiveOverlay::Drawer { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let key = match action {
+                        DrawerAction::Pick(i) => Some(i.to_string()),
+                        DrawerAction::Close => Some("close".to_owned()),
+                        DrawerAction::None => None,
+                    };
+                    let acted = key.is_some();
+                    let asked = key.and_then(|k| widget.sem_id().map(|id| (id.key(k), "activate")));
+                    (asked, r.changed || acted)
                 }
             };
             return match asked {

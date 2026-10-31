@@ -54,16 +54,38 @@ pub mod label;
 pub mod textarea;
 
 // task-104 front B, overlays (#155)
+pub mod alert_dialog;
+pub mod drawer;
+pub mod dropdown_menu;
+pub mod hover_card;
+pub mod menubar;
 pub mod popover;
+pub mod sheet;
 
 // task-104 front C, conversation and feedback (#156)
+pub mod alert;
+pub mod attachment;
+pub mod bubble;
+pub mod marker;
 pub mod message;
+pub mod message_scroller;
 
 // task-104 front D, disclosure and display (#157)
 pub mod accordion;
+pub mod aspect_ratio;
+pub mod carousel;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
+pub mod pagination;
+pub mod table_static;
 
 // task-104 front E, selection and dates (#158)
+pub mod button_group;
+pub mod calendar;
+pub mod radio_group;
 pub mod toggle;
+pub mod toggle_group;
 
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};

@@ -9,9 +9,12 @@ use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
 };
-use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
+};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -34,6 +37,37 @@ pub const ORANGE: Color = Color::hex(0xE36323);
 pub const YELLOW: Color = Color::hex(0xFFB73A);
 pub const RED: Color = Color::hex(0xFE5938);
 pub const PURPLE: Color = Color::hex(0x8755E9);
+
+/// The colors page (templates/ColorsPage/content.tsx): its two groups,
+/// each color under the kit's name, Shade 8 and the yellow and purple
+/// accents included, which no role holds.
+pub const PALETTE: [SwatchGroup; 2] = [
+    SwatchGroup {
+        title: "Shades",
+        colors: &[
+            ("Shade 1", SHADES[0]),
+            ("Shade 2", SHADES[1]),
+            ("Shade 3", SHADES[2]),
+            ("Shade 4", SHADES[3]),
+            ("Shade 5", SHADES[4]),
+            ("Shade 6", SHADES[5]),
+            ("Shade 7", SHADES[6]),
+            ("Shade 8", SHADES[7]),
+            ("Shade 9", SHADES[8]),
+        ],
+    },
+    SwatchGroup {
+        title: "Colors",
+        colors: &[
+            ("Green", GREEN),
+            ("Blue", BLUE),
+            ("Orange", ORANGE),
+            ("Yellow", YELLOW),
+            ("Red", RED),
+            ("Purple", PURPLE),
+        ],
+    },
+];
 
 fn ink(a: f32) -> Color {
     Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a)
@@ -63,23 +97,94 @@ impl TypographyScale {
 }
 
 impl ShadowTokens {
-    /// The depths page: surface, subtle, slight hover, modal, tooltip.
+    /// The kit's depths (templates/DepthsPage/index.tsx), each stack
+    /// listed bottom layer first, the reverse of the css list it copies.
+    /// The page's "Subtle" and "Prompt Input" have no elevation here.
     pub fn hoff_core() -> Self {
         Self {
-            // Subtle: 0 2px 8px -4px black/25.
-            raised: ShadowSpec::new([0.0, 2.0], 8.0, -4.0, black(0.25)),
-            // Surface: 0 8px 16px -12px black/13 over 0 1px 4px -4px black/8.
-            floating: ShadowSpec::new([0.0, 8.0], 16.0, -12.0, black(0.13)),
-            // Modal, four of its layers.
-            overlay: [
-                ShadowSpec::new([0.0, 16.0], 24.0, -12.0, black(0.10)),
-                ShadowSpec::new([0.0, 6.0], 13.0, 0.0, black(0.06)),
-                ShadowSpec::new([0.0, 3.0], 3.0, 0.0, black(0.02)),
-                ShadowSpec::new([0.0, 1.0], 1.0, 0.0, black(0.02)),
+            // Slight hover (:49): 0 2px 8px -4px black/25.
+            raised: vec![ShadowSpec::new([0.0, 2.0], 8.0, -4.0, black(0.25))],
+            // Toolbar (:29): 0 1px 4px -4px black/8, 0 8px 16px -12px
+            // black/13; the select's panel wears it too (Select :90).
+            floating: vec![
+                ShadowSpec::new([0.0, 8.0], 16.0, -12.0, black(0.13)),
+                ShadowSpec::new([0.0, 1.0], 4.0, -4.0, black(0.08)),
             ],
-            // Tooltip: 0 4px 4px -2px black/40.
-            hint: ShadowSpec::new([0.0, 4.0], 4.0, -2.0, black(0.40)),
-            card: ShadowSpec::new([0.0, 8.0], 16.0, -12.0, black(0.13)),
+            // Modal (:78), tailwind's `shadow-2xl`: 0 25px 50px -12px
+            // black/25, as every modal and menu of the kit wears it
+            // (FileMenu :33, DeleteFile :5, Settings :14).
+            overlay: vec![ShadowSpec::new([0.0, 25.0], 50.0, -12.0, black(0.25))],
+            // components/Tooltip/index.tsx:8: 0 4px 4px -2px black/40.
+            hint: vec![ShadowSpec::new([0.0, 4.0], 4.0, -2.0, black(0.40))],
+            // Large card hover (:87): 0 12px 11.1px -12px black/15, 0 80px
+            // 64px -64px black/20, 0 16px 32px -24px black/62.
+            card: vec![
+                ShadowSpec::new([0.0, 16.0], 32.0, -24.0, black(0.62)),
+                ShadowSpec::new([0.0, 80.0], 64.0, -64.0, black(0.20)),
+                ShadowSpec::new([0.0, 12.0], 11.1, -12.0, black(0.15)),
+            ],
+        }
+    }
+}
+
+impl ControlTokens {
+    /// The kit's control measures, each from the class that writes it
+    /// (paths relative to the kit root). What the kit leaves out keeps the
+    /// HOFF value, named below.
+    pub fn hoff_core() -> Self {
+        Self {
+            // Xs `h-7 px-2` (templates/ButtonsPage/index.tsx:373), Sm `h-9
+            // px-5` (components/Button/index.tsx:59; Select :57, FileMenu
+            // :36), Md `h-10 px-6` (Button :60), Lg `h-11 px-3.5`
+            // (ButtonsPage :293), Xl the field, `h-12 px-5.5`
+            // (components/Field/index.tsx:66).
+            heights: [28.0, 36.0, 40.0, 44.0, 48.0],
+            pad_x: [8.0, 20.0, 24.0, 14.0, 22.0],
+            // `size-4` and `size-5` (Select :81, Field :81); the kit has no
+            // 24 icon, so Lg keeps the HOFF one.
+            icons: [16.0, 20.0, 24.0],
+            // Not the kit's: WCAG 2.5.8 / the apple HIG.
+            min_touch_target: 44.0,
+            // `border` on the card (components/Card/index.tsx:36) and
+            // `border-[1.5px]` on the field (Field :66).
+            edge_width: 1.0,
+            edge_width_strong: 1.5,
+            // The kit draws no focus ring (`outline-0`, Field :91); the
+            // ring stays, for keyboard users.
+            focus_ring_width: 2.0,
+            focus_ring_offset: 2.0,
+            // `p-0.75` (components/Tabs/index.tsx:26).
+            tabs_pad: 3.0,
+            // `p-2` (components/FileMenu/index.tsx:33).
+            menu_pad: 8.0,
+            // `gap-2` (Button :66).
+            inline_gap: 8.0,
+            // The kit has no checkbox: the HOFF box.
+            box_size: 18.0,
+            // `w-10 h-5.5 p-0.5` and the knob `size-4.5`
+            // (components/Switch/index.tsx:11, :17); the derived pad is
+            // the `p-0.5`.
+            switch_size: [40.0, 22.0],
+            switch_knob: 18.0,
+            // The kit's range thumb is a 24 by 36 block (app/globals.css:22),
+            // which a track and a knob diameter do not describe: the HOFF
+            // slider until a slider recipe exists.
+            slider_track: 4.0,
+            slider_knob: 14.0,
+            // The kit hides its scrollbars (`scrollbar-none`): the HOFF bar.
+            scrollbar_w: 6.0,
+            scrollbar_w_hover: 10.0,
+            scrollbar_min_thumb: 24.0,
+            scrollbar_inset: 2.0,
+            // No spinner in the kit.
+            spinner_stroke: 2.0,
+            // The player's trail, `h-0.75`, filled at the same height
+            // (components/VideoPlayer/index.tsx:48, :53).
+            progress_track: 3.0,
+            progress_fill: 3.0,
+            // No split pane in the kit.
+            divider_hit: 10.0,
+            divider_line: 2.0,
         }
     }
 }
@@ -114,6 +219,7 @@ impl Theme {
             info: BLUE,
             divider: shade4,
             border_active: shade5,
+            swatches: &PALETTE,
         };
         let radius = RadiusScale {
             none: 0.0,
@@ -123,8 +229,8 @@ impl Theme {
             xl: 16.0,
             full: 9999.0,
         };
-        let control = ControlTokens::hoff();
-        Self {
+        let control = ControlTokens::hoff_core();
+        let mut theme = Self {
             glass: GlassTokens {
                 surface: paper,
                 surface_hover: shade2,
@@ -149,13 +255,18 @@ impl Theme {
                 disabled_alpha: 0.30,
                 wash_alpha: 0.10,
                 wash_hover_alpha: 0.16,
+                // The kit's surfaces have a plain `border` (Card :36,
+                // Select :90, FileMenu :33) and no inset key-light.
+                rim_fade: 1.0,
+                keylight: None,
             },
             button: ButtonTokens::hoff_core(),
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
-            selection: SelectionTokens::hoff_core(),
+            selection: Box::new(SelectionTokens::hoff_core()),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {
@@ -196,6 +307,10 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff_core(),
-        }
+        };
+        // The sidebar keeps its look of before until it moves to the kit
+        // (task-104 front G, step 4); that look reads the finished theme.
+        theme.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(&theme);
+        theme
     }
 }

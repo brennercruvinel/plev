@@ -154,13 +154,16 @@ pub(crate) fn draw_body(c: &mut Compositor, layer: LayerId, dd: Rect, theme: &Th
         // edge-light recipe.
         PanelBody::Glass => {
             let glass = &theme.glass;
-            c.push_to_layer(layer, menu_shadow(dd, p.radius, theme));
+            for node in menu_shadow(dd, p.radius, theme) {
+                c.push_to_layer(layer, node);
+            }
             for node in glass_pill(
                 dd,
                 p.radius,
                 glass.edge_soft.0,
                 p.border_width,
                 glass.popover.0,
+                theme,
             ) {
                 c.push_to_layer(layer, node);
             }

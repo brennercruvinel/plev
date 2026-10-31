@@ -13,13 +13,22 @@
 use crate::domain::dock::{AVATARS, DockModel};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::color::Color;
 use engine::styling::theme::Theme;
 use engine::widgets::icons;
+use engine::widgets::message::bubble::{Bubble, BubbleSide};
 use engine::widgets::prelude::{
     EventResult, Rect, WidgetEvent, glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke,
 };
 
 use super::{group_label, panel, text, with_alpha};
+
+/// The dock's own runs (the initials, the composer's hint): the theme's
+/// family and tracking at the engine's default line height for `size`.
+fn dock_style(size: f32, weight: u16, theme: &Theme) -> TextStyle {
+    let line = TextStyle::new(size).line_height;
+    theme.typography.exact(size, line, weight)
+}
 
 #[cfg(test)]
 mod tests;
@@ -33,8 +42,8 @@ const CONTACTS: [(&str, [f32; 4]); AVATARS] = [
     ("Duda", [0.64, 0.42, 0.47, 1.0]),
 ];
 
-/// Stage wallpaper bubbles (text, contact hue); the first one sits under
-/// the dock so the frost has something visible to blur.
+/// Stage wallpaper bubbles (text, contact), drawn as chat bubbles; the
+/// first one sits under the dock so the frost has something to blur.
 const BUBBLES: [(&str, usize); 3] = [
     ("the dock floats over real content", 0),
     ("so the glass frosts what is underneath", 2),
@@ -161,41 +170,32 @@ impl DockPage {
             "Hover lifts a contact; click morphs the dock open.",
             13.0,
             400,
-            stage.x + 24.0,
-            stage.y + 44.0,
+            (stage.x + 24.0, stage.y + 44.0),
             theme.colors.text_dim.0,
+            theme,
         );
 
-        let style = TextStyle::new(13.0);
-        let mw = (stage.w - 96.0).max(40.0);
+        // The wallpaper: chat bubbles (`engine::widgets::message::bubble`),
+        // each bordered in its contact's color; the first a note centered
+        // under the dock, so the frost has something to blur.
+        let lane = Rect::new(stage.x + 24.0, 0.0, (stage.w - 48.0).max(0.0), 0.0);
         let bottom = stage.y + stage.h;
         let mut y = bottom - 64.0;
         for (i, (line, hue)) in BUBBLES.iter().enumerate() {
-            let (tw, th) = TextMeasurer::measure_styled(line, &style, Some(mw));
-            let (w, h) = (tw + 28.0, th + 14.0);
+            let side = match i {
+                0 => BubbleSide::Center,
+                1 => BubbleSide::Start,
+                _ => BubbleSide::End,
+            };
+            let bubble = Bubble::new(*line)
+                .side(side)
+                .accent(Color(CONTACTS[*hue].1));
+            let (_, h) = bubble.size(lane.w, theme);
             y -= h + 14.0;
             if y < stage.y + 72.0 {
                 break; // short viewport: keep the wallpaper off the header
             }
-            let x = match i {
-                0 => stage.x + (stage.w - w) / 2.0, // under the dock
-                1 => stage.x + 24.0,
-                _ => stage.x + stage.w - 24.0 - w,
-            };
-            c.push(rounded_rect(
-                x,
-                y,
-                w,
-                h,
-                h / 2.0,
-                with_alpha(CONTACTS[*hue].1, 0.30),
-            ));
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(line, &style, Some(mw)),
-                x: x + (w - tw) / 2.0,
-                y: y + (h - th) / 2.0,
-                color: theme.colors.text_mid.0,
-            });
+            bubble.render(c, Rect::new(lane.x, y, lane.w, h), theme);
         }
     }
 
@@ -204,7 +204,9 @@ impl DockPage {
         let dock = self.model.dock_rect(stage);
         let radius = dock.h / 2.0;
         // Real glass: deep shadow, frost, edge-lit translucent pill.
-        c.push(menu_shadow(dock, radius, theme));
+        for node in menu_shadow(dock, radius, theme) {
+            c.push(node);
+        }
         c.draw_backdrop_blur(
             dock.x,
             dock.y,
@@ -213,7 +215,7 @@ impl DockPage {
             radius,
             theme.effects.blur_sigma,
         );
-        for node in glass_pill(dock, radius, glass.edge.0, 1.5, glass.button.0) {
+        for node in glass_pill(dock, radius, glass.edge.0, 1.5, glass.button.0, theme) {
             c.push(node);
         }
         self.render_roster(c, stage, theme);
@@ -224,7 +226,7 @@ impl DockPage {
     /// Avatars: circular-ish rounded rects, lift and fade from the model,
     /// initials centered by measurement (one style measures and draws).
     fn render_roster(&self, c: &mut Compositor, stage: Rect, theme: &Theme) {
-        let style = TextStyle::new(15.0).with_weight(600);
+        let style = dock_style(15.0, 600, theme);
         let edge = theme.glass.edge.0;
         let ink = theme.colors.text.0;
         for (i, (name, hue)) in CONTACTS.iter().enumerate() {
@@ -296,7 +298,7 @@ impl DockPage {
             with_alpha(fill, fill[3] * a),
         ));
         let hint = format!("Message {}", CONTACTS[self.model.selected().unwrap_or(0)].0);
-        let style = TextStyle::new(14.0);
+        let style = dock_style(14.0, 400, theme);
         let (_, th) = TextMeasurer::measure_styled(&hint, &style, None);
         let (tx, ty) = (field.x + 16.0, field.y + (field.h - th) / 2.0);
         let ph = glass.text_placeholder.0;

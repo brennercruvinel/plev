@@ -1,49 +1,26 @@
-//! HOFF actions dropdown: a solid popover body at the pill radius with
-//! the floating shadow and the inset key-light; `Md`-tall items at the
-//! item radius, base-2sm labels (text-default at rest, text-active on
-//! hover), optional leading icon, separators. Width fits the widest
-//! label and never drops under `size.menu_w`.
+//! The menu of the hoff core kit (`ProfileMenu`, `FileMenu`,
+//! `FiltersMenu`, the header's `UserDropdown`): a surface with rows (an
+//! optional leading icon or check, a label, an optional shortcut in a key
+//! cap at the end, highlighted under the pointer or the keys) and
+//! separators. Every value is the recipe of its [`MenuStyle`] in
+//! `theme.overlay`: the kit's on core, and every other theme's own menu
+//! (the popover glass, the key-light) as it was. Width fits the widest
+//! row and never drops under the menu's `min_w`.
 //!
 //! With a [`SemId`] ([`ContextMenu::sem`]) the render binds the menu and
 //! each item to the rects it draws and hit-tests them with, and
 //! [`ContextMenu::project`] declares the menu in a semantic projection.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{ControlSize, IconSize, Intent, Theme};
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::{Intent, Theme};
+use crate::widgets::content::kbd::Kbd;
 use crate::widgets::icons;
+use crate::widgets::overlay::tokens::{MenuStyle, MenuTokens};
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::recipe::{inset_keylight, menu_shadow, rounded_rect, rounded_rect_stroke};
+use crate::widgets::recipe::{inset_keylight, rounded_rect, rounded_rect_stroke, shadow_node};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
-
-/// The per-theme geometry the size, the hit test and the render share.
-struct Metrics {
-    item_h: f32,
-    /// A separator row: one hairline with `xs` above and below.
-    sep_h: f32,
-    pad: f32,
-    radius: f32,
-    item_radius: f32,
-    icon: f32,
-    gap: f32,
-    min_w: f32,
-}
-
-impl Metrics {
-    fn of(theme: &Theme) -> Self {
-        Self {
-            item_h: theme.control.height(ControlSize::Md),
-            sep_h: theme.spacing.xs * 2.0 + theme.control.edge_width,
-            pad: theme.control.menu_pad,
-            radius: theme.shape.pill,
-            item_radius: theme.shape.item,
-            icon: theme.control.icon(IconSize::Sm),
-            gap: theme.control.inline_gap,
-            min_w: theme.size.menu_w,
-        }
-    }
-}
 
 /// One row of a [`ContextMenu`].
 #[derive(Clone, Debug)]
@@ -57,9 +34,17 @@ pub enum MenuEntry {
         disabled: bool,
         /// Colors the label (Destructive = red row, etc.).
         intent: Intent,
+        /// The keys that run it, shown in a cap at the row's end.
+        shortcut: Option<String>,
+        /// A choice the row shows checked or not (a filter); `None`, a
+        /// row with no check.
+        checked: Option<bool>,
     },
     Separator,
 }
+
+/// The check a checkable row draws in its icon slot.
+const CHECK: &str = "check";
 
 impl MenuEntry {
     pub fn item(id: u64, label: impl Into<String>) -> Self {
@@ -69,6 +54,8 @@ impl MenuEntry {
             icon: None,
             disabled: false,
             intent: Intent::Neutral,
+            shortcut: None,
+            checked: None,
         }
     }
 
@@ -92,6 +79,20 @@ impl MenuEntry {
         }
         self
     }
+
+    pub fn shortcut(mut self, keys: impl Into<String>) -> Self {
+        if let Self::Item { shortcut, .. } = &mut self {
+            *shortcut = Some(keys.into());
+        }
+        self
+    }
+
+    pub fn checked(mut self, on: bool) -> Self {
+        if let Self::Item { checked, .. } = &mut self {
+            *checked = Some(on);
+        }
+        self
+    }
 }
 
 /// Context menu rendered at an arbitrary screen position (overlay layer).
@@ -99,6 +100,7 @@ impl MenuEntry {
 #[derive(Clone, Debug)]
 pub struct ContextMenu {
     pub entries: Vec<MenuEntry>,
+    pub style: MenuStyle,
     hovered: Option<usize>,
     sem: Option<SemId>,
 }
@@ -107,9 +109,21 @@ impl ContextMenu {
     pub fn new(entries: Vec<MenuEntry>) -> Self {
         Self {
             entries,
+            style: MenuStyle::default(),
             hovered: None,
             sem: None,
         }
+    }
+
+    /// Drawn as the kit's `style` menu.
+    pub fn style(mut self, style: MenuStyle) -> Self {
+        self.style = style;
+        self
+    }
+
+    /// The recipe it draws with.
+    pub fn tokens<'t>(&self, theme: &'t Theme) -> &'t MenuTokens {
+        theme.overlay.menu_for(self.style)
     }
 
     /// The logical identity the render binds the menu to
@@ -126,8 +140,9 @@ impl ContextMenu {
     /// Declares this menu as `id` in a projection: a `Role::Menu` named
     /// `label` with a `close` action, and one `Role::MenuItem` child
     /// `<id>[<item id>]` per item (separators are not items), named by its
-    /// label, enabled unless disabled, with an `activate` whose policy is
-    /// destructive for a destructive item. The hovered row is never
+    /// label, enabled unless disabled, described by its shortcut, with a
+    /// `checked` state when it has a check, and an `activate` whose policy
+    /// is destructive for a destructive item. The hovered row is never
     /// projected. It only reads the widget; the app owns it and runs the
     /// actions (what an item does, and closing the menu). Pass the id
     /// given to [`ContextMenu::sem`] so the nodes and the bindings name the
@@ -146,11 +161,19 @@ impl ContextMenu {
                 label,
                 disabled,
                 intent,
+                shortcut,
+                checked,
                 ..
             } = entry
             {
                 let mut node = b.node(id.key(item.to_string()), Role::MenuItem, label.as_str());
                 node.parent(id).enabled(!disabled);
+                if let Some(keys) = shortcut {
+                    node.description(keys.as_str());
+                }
+                if let Some(on) = checked {
+                    node.state("checked", *on);
+                }
                 node.action("activate").policy(Policy {
                     destructive: *intent == Intent::Destructive,
                     ..Policy::default()
@@ -181,25 +204,35 @@ impl ContextMenu {
         });
     }
 
-    /// Item label style: base-2sm, the same for measuring and rendering.
-    fn label_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2sm()
+    /// A row's shortcut as a key cap, faded with a disabled row.
+    fn cap(shortcut: &Option<String>, disabled: bool) -> Option<Kbd> {
+        shortcut
+            .as_ref()
+            .map(|k| Kbd::new(k.as_str()).disabled(disabled))
     }
 
-    /// Menu size from real text measurement: the widest row (icon slot,
-    /// label, item padding on both sides, menu padding on both sides),
-    /// never narrower than the menu width token.
+    /// Menu size from real text measurement: the widest row (icon or
+    /// check slot, label, shortcut, item padding on both sides, menu
+    /// padding on both sides), never narrower than the menu width token.
     pub fn size(&self, theme: &Theme) -> (f32, f32) {
-        let m = Metrics::of(theme);
-        let style = Self::label_style(theme);
+        let m = self.tokens(theme);
         let mut w: f32 = m.min_w;
         let mut h = m.pad * 2.0;
         for entry in &self.entries {
             match entry {
-                MenuEntry::Item { label, icon, .. } => {
-                    let (tw, _) = TextMeasurer::measure_styled(label, &style, None);
-                    let icon_w = if icon.is_some() { m.icon + m.gap } else { 0.0 };
-                    w = w.max(tw + icon_w + m.pad * 4.0 + m.gap);
+                MenuEntry::Item {
+                    label,
+                    icon,
+                    shortcut,
+                    checked,
+                    ..
+                } => {
+                    let (tw, _) = TextMeasurer::measure_styled(label, &m.label, None);
+                    let lead = icon.is_some() || checked.is_some();
+                    let icon_w = if lead { m.icon + m.gap } else { 0.0 };
+                    let cap_w = Self::cap(shortcut, false)
+                        .map_or(0.0, |k| k.preferred_size(theme).0 + m.gap);
+                    w = w.max(tw + icon_w + cap_w + (m.pad + m.item_pad_x) * 2.0 + m.gap);
                     h += m.item_h;
                 }
                 MenuEntry::Separator => h += m.sep_h,
@@ -211,7 +244,7 @@ impl ContextMenu {
     /// Row rects (separators included, in entry order) for a menu whose
     /// top-left is at (x, y).
     pub fn entry_rects(&self, x: f32, y: f32, theme: &Theme) -> Vec<Rect> {
-        let m = Metrics::of(theme);
+        let m = self.tokens(theme);
         let (w, _) = self.size(theme);
         let mut rects = Vec::with_capacity(self.entries.len());
         let mut cy = y + m.pad;
@@ -295,9 +328,8 @@ impl ContextMenu {
         x: f32,
         y: f32,
     ) {
-        let m = Metrics::of(theme);
+        let m = self.tokens(theme);
         let (w, h) = self.size(theme);
-        let glass = &theme.glass;
         let body = Rect::new(x, y, w, h);
         let rows = self.entry_rects(x, y, theme);
         if let Some(id) = &self.sem {
@@ -313,37 +345,38 @@ impl ContextMenu {
             }
         }
 
-        // Floating shadow, then the solid popover surface; row icons
-        // pushed later stack on top (push order is preserved across
-        // types).
-        compositor.push_to_layer(layer, menu_shadow(body, m.radius, theme));
-        compositor.push_to_layer(layer, rounded_rect(x, y, w, h, m.radius, glass.popover.0));
-        compositor.push_to_layer(
-            layer,
-            rounded_rect_stroke(
-                x,
-                y,
-                w,
-                h,
-                m.radius,
-                glass.edge_soft.0,
-                theme.control.edge_width,
-            ),
-        );
-        inset_keylight(compositor, layer, body, m.radius, theme);
+        // The shadows, then the surface and its border; row icons pushed
+        // later stack on top (push order is preserved across types).
+        for spec in &m.shadow {
+            if let Some(shadow) = shadow_node(body, m.radius, spec) {
+                compositor.push_to_layer(layer, shadow);
+            }
+        }
+        compositor.push_to_layer(layer, rounded_rect(x, y, w, h, m.radius, m.fill.0));
+        if m.border.0[3] > 0.0 && m.border_w > 0.0 {
+            compositor.push_to_layer(
+                layer,
+                rounded_rect_stroke(x, y, w, h, m.radius, m.border.0, m.border_w),
+            );
+        }
+        if m.keylight {
+            inset_keylight(compositor, layer, body, m.radius, theme);
+        }
 
-        let style = Self::label_style(theme);
+        let style = &m.label;
         for (i, (entry, rect)) in self.entries.iter().zip(rows).enumerate() {
             match entry {
                 MenuEntry::Separator => {
+                    let inset = if m.sep_full { 0.0 } else { m.pad };
+                    let line = m.border_w.max(1.0);
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Rect {
-                            x: rect.x + m.pad,
-                            y: rect.y + (rect.h - theme.control.edge_width) / 2.0,
-                            w: rect.w - m.pad * 2.0,
-                            h: theme.control.edge_width,
-                            color: glass.surface_active.0,
+                            x: rect.x + inset,
+                            y: rect.y + (rect.h - line) / 2.0,
+                            w: rect.w - inset * 2.0,
+                            h: line,
+                            color: m.sep_color.0,
                         },
                     );
                 }
@@ -352,9 +385,11 @@ impl ContextMenu {
                     icon,
                     disabled,
                     intent,
+                    shortcut,
+                    checked,
                     ..
                 } => {
-                    let alpha = if *disabled { glass.disabled_alpha } else { 1.0 };
+                    let alpha = if *disabled { m.disabled_alpha } else { 1.0 };
                     let hovered = self.hovered == Some(i);
                     if hovered {
                         compositor.push_to_layer(
@@ -365,40 +400,55 @@ impl ContextMenu {
                                 rect.w - m.pad * 2.0,
                                 rect.h,
                                 m.item_radius,
-                                glass.surface_active.0,
+                                m.hover_fill.0,
                             ),
                         );
                     }
-                    // base-2sm: text-default at rest, text-active on hover.
-                    let fg = match intent {
+                    // The label and the icon, each at rest or highlighted; an
+                    // intent colors both.
+                    let (fg, ink) = match intent {
                         Intent::Neutral => {
-                            let c = if hovered {
-                                glass.text_active
+                            let (t, i) = if hovered {
+                                (m.text_hover, m.icon_hover)
                             } else {
-                                glass.text_default
+                                (m.text, m.icon_color)
                             };
-                            with_alpha(c, c.0[3] * alpha)
+                            (with_alpha(t, t.0[3] * alpha), with_alpha(i, i.0[3] * alpha))
                         }
                         other => {
                             let c = intent_fill(theme, *other);
-                            [c[0], c[1], c[2], c[3] * alpha]
+                            let c = [c[0], c[1], c[2], c[3] * alpha];
+                            (c, c)
                         }
                     };
-                    let mut tx = rect.x + m.pad * 2.0;
-                    if let Some(name) = icon {
+                    let mut tx = rect.x + m.pad + m.item_pad_x;
+                    // The icon, or the check (its slot kept unchecked).
+                    let lead = match (icon, checked) {
+                        (Some(name), _) => Some(Some(*name)),
+                        (None, Some(on)) => Some(on.then_some(CHECK)),
+                        (None, None) => None,
+                    };
+                    if let Some(name) = lead {
+                        let iy = rect.y + (rect.h - m.icon) / 2.0;
                         if let Some(node) =
-                            icons::icon_at(name, m.icon, fg, tx, rect.y + (rect.h - m.icon) / 2.0)
+                            name.and_then(|n| icons::icon_at(n, m.icon, ink, tx, iy))
                         {
                             compositor.push_to_layer(layer, node);
                         }
                         tx += m.icon + m.gap;
                     }
+                    if let Some(cap) = Self::cap(shortcut, *disabled) {
+                        let (cw, ch) = cap.preferred_size(theme);
+                        let cx = rect.right() - m.pad - m.item_pad_x - cw;
+                        let cy = rect.y + (rect.h - ch) / 2.0;
+                        cap.render_to_layer(compositor, layer, Rect::new(cx, cy, cw, ch), theme);
+                    }
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Text {
-                            key: TextNodeKey::from_style(label, &style, None),
+                            key: TextNodeKey::from_style(label, style, None),
                             x: tx,
-                            y: rect.y + TextMeasurer::vertical_center(&style, rect.h),
+                            y: rect.y + TextMeasurer::vertical_center(style, rect.h),
                             color: fg,
                         },
                     );

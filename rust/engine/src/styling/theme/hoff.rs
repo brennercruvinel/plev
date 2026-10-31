@@ -27,12 +27,15 @@
 
 use super::intent::MotionPhysics;
 use super::scales::{
-    ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
+    ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
     ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
 };
-use super::{DisclosureTokens, FormTokens, MessageTokens, OverlayTokens, SelectionTokens, Theme};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
+};
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
@@ -142,11 +145,12 @@ impl Theme {
         let dark = Self::dark().colors;
         let mut theme = Self {
             button: ButtonTokens::derive(&dark),
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
-            selection: SelectionTokens::hoff_core(),
+            selection: Box::new(SelectionTokens::hoff_core()),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.
@@ -169,6 +173,7 @@ impl Theme {
                 info: GREEN_LIGHT,
                 divider: Color::rgba(1.0, 1.0, 1.0, 0.05),
                 border_active: Color::rgba(1.0, 1.0, 1.0, 0.10),
+                swatches: &[],
             },
             typography: TypographyScale::hoff(),
             spacing: SpacingScale {
@@ -227,6 +232,10 @@ impl Theme {
                 disabled_alpha: 0.5,
                 wash_alpha: 0.14,
                 wash_hover_alpha: 0.22,
+                rim_fade: 0.0,
+                // `inset 2px 4px 16px rgba(248,248,248,.06)`: `xs / 2, xs`
+                // off, blurred by `lg`.
+                keylight: Some(ShadowSpec::inset([2.0, 4.0], 16.0, 0.0, n2(0.06))),
             },
             shape: ShapeTokens::hoff(),
             control: ControlTokens::hoff(),
@@ -266,6 +275,7 @@ impl Theme {
                 info: Color::rgba(43.0 / 255.0, 177.0 / 255.0, 99.0 / 255.0, 0.7),
                 divider: Color::rgba(0.0, 0.0, 0.0, 0.05),
                 border_active: Color::rgba(0.0, 0.0, 0.0, 0.10),
+                swatches: &[],
             },
             glass: GlassTokens {
                 surface: ink(0.02),
@@ -291,6 +301,13 @@ impl Theme {
                 disabled_alpha: dark.glass.disabled_alpha,
                 wash_alpha: dark.glass.wash_alpha,
                 wash_hover_alpha: dark.glass.wash_hover_alpha,
+                rim_fade: dark.glass.rim_fade,
+                keylight: Some(ShadowSpec::inset(
+                    [2.0, 4.0],
+                    16.0,
+                    0.0,
+                    Color::rgba(1.0, 1.0, 1.0, 0.35),
+                )),
             },
             shadows: ShadowTokens::hoff(),
             ..dark

@@ -10,7 +10,9 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::widgets::form::field::Field;
 use crate::widgets::overlay::popover::{Popover, PopoverTrigger, render_panel};
 use crate::widgets::prelude::*;
-use crate::widgets::selection::Toggle;
+use crate::widgets::selection::{
+    ButtonGroup, Calendar, Date, GroupItem, RadioGroup, Toggle, ToggleGroup,
+};
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -103,6 +105,42 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     Toggle::icon_only("eye", "Preview")
         .disabled(true)
         .render(&mut c, row(7.0), theme);
+    let mut group = ToggleGroup::new(["Day", "Week", "Month"]).selected(2);
+    group.set_focused(Some(0));
+    group.render(&mut c, row(10.0), theme);
+    let tools = ButtonGroup::new([
+        GroupItem::Toggle(Toggle::icon_only("eye", "Preview").on(true)),
+        GroupItem::Separator,
+        GroupItem::Action {
+            button: IconButton::new("x").variant(IconButtonVariant::Toolbar),
+            label: "Close".into(),
+        },
+    ]);
+    let mut plan = RadioGroup::new(["Free", "Pro"]).selected(1);
+    plan.set_focused(Some(0));
+    let (plan_w, plan_h) = plan.size_within(content.w, theme);
+    plan.render(
+        &mut c,
+        Rect::new(content.x, row(12.0).y, plan_w, plan_h),
+        theme,
+    );
+    let mut when = Calendar::new(2026, 10);
+    if let Some(day) = Date::new(2026, 10, 31) {
+        when = when.selected(day).today(day);
+        when.set_focused(Some(day));
+    }
+    let (when_w, when_h) = when.size_within(content.w, theme);
+    when.render(
+        &mut c,
+        Rect::new(content.x, row(13.0).y, when_w, when_h),
+        theme,
+    );
+    let (_, tools_h) = tools.size_within(content.w, theme);
+    tools.render(
+        &mut c,
+        Rect::new(content.x, row(11.0).y, content.w, tools_h),
+        theme,
+    );
     Slider::new(0.0, 100.0, 40.0).render(&mut c, row(8.0), theme);
     let mut s = Select::new(["a", "b", "c"], 1);
     s.render(&mut c, row(9.0), theme);
@@ -292,6 +330,66 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             .kind(MessageKind::Quick)
             .reaction("2")
             .render(&mut c, row(26.0), theme);
+        use crate::widgets::message::bubble::{Bubble, BubbleSide};
+        Bubble::new("a bubble long enough to wrap on a phone, at least once")
+            .unread(true)
+            .render(&mut c, row(29.0), theme);
+        Bubble::new("mine")
+            .side(BubbleSide::End)
+            .render(&mut c, row(31.0), theme);
+        use crate::widgets::message::scroller::MessageScroller;
+        let thread = MessageScroller::new(
+            "comments",
+            "none",
+            (0..8)
+                .map(|i| Message::new("Sam", "1m", format!("message {i}")))
+                .collect(),
+        );
+        let h = thread.height(content.w, theme);
+        thread.render(&mut c, Rect::new(content.x, 3400.0, content.w, h), theme);
+        use crate::widgets::buttons::ButtonVariant;
+        use crate::widgets::feedback::alert::Alert;
+        Alert::new(Intent::Constructive, "3D object is generated", "a scene")
+            .time("4h ago")
+            .avatar("Hoff")
+            .content("a content long enough to wrap on a phone, and cut at two lines")
+            .unread(true)
+            .action("Decline", ButtonVariant::Primary)
+            .action("Accept", ButtonVariant::Secondary)
+            .render(
+                &mut c,
+                Rect::new(content.x, 3400.0 + h, content.w, 0.0),
+                theme,
+            );
+        use crate::widgets::message::attachment::{AttachmentKind, AttachmentTray};
+        AttachmentTray::new()
+            .with("a.png", "PNG", AttachmentKind::Image(None))
+            .with(
+                "a file name long enough to be cut on a phone.pdf",
+                "PDF",
+                AttachmentKind::File,
+            )
+            .with("car.glb", "3D", AttachmentKind::Object)
+            .with_add()
+            .show_removes(true)
+            .render(&mut c, Rect::new(content.x, 3200.0, content.w, 0.0), theme);
+        use crate::widgets::message::marker::{CursorState, Marker};
+        for (i, m) in [
+            Marker::pin(["Luna", "Sam", "Ada"]).unread(true),
+            Marker::cursor(CursorState::Point),
+            Marker::cursor(CursorState::Pinned),
+            Marker::cursor(CursorState::Uploading),
+            Marker::cursor(CursorState::Typing),
+        ]
+        .iter()
+        .enumerate()
+        {
+            m.render(
+                &mut c,
+                Rect::new(content.x + i as f32 * 40.0, 3100.0, 0.0, 0.0),
+                theme,
+            );
+        }
     }
 
     // task-104 front B: the popover's trigger, open, and its panel, placed
@@ -462,6 +560,54 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             toggle.render(&mut c, row(3.0), &theme);
             toggle.project(&mut b, &id("m.toggle"), None);
             frames.push((c, vec![(id("m.toggle"), Role::Toggle, Probe::Hit)]));
+
+            let tools = ButtonGroup::new([
+                GroupItem::Toggle(Toggle::icon_only("eye", "Preview").sem(id("m.tools.item[0]"))),
+                GroupItem::Separator,
+                GroupItem::Action {
+                    button: IconButton::new("x").sem(id("m.tools.item[2]")),
+                    label: "Close".into(),
+                },
+            ])
+            .sem(id("m.tools"));
+            let (tw, th) = tools.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            tools.render(&mut c, Rect::new(gutter, row(7.0).y, tw, th), &theme);
+            tools.project(&mut b, &id("m.tools"), "tools", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.tools"), Role::Toolbar, Probe::Bound),
+                    (id("m.tools.item[0]"), Role::Toggle, Probe::Hit),
+                    (id("m.tools.item[2]"), Role::Button, Probe::Hit),
+                ],
+            ));
+
+            let plan = RadioGroup::new(["Free", "Pro"]).sem(id("m.plan"));
+            let (pw, ph) = plan.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            plan.render(&mut c, Rect::new(gutter, row(8.0).y, pw, ph), &theme);
+            plan.project(&mut b, &id("m.plan"), "plan", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.plan"), Role::Group, Probe::Bound),
+                    (id("m.plan[1]"), Role::Radio, Probe::Hit),
+                ],
+            ));
+
+            let group = ToggleGroup::new(["Day", "Week", "Month"]).sem(id("m.view"));
+            let (mut c, _) = frame(false);
+            group.render(&mut c, row(6.0), &theme);
+            group.project(&mut b, &id("m.view"), "view", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.view"), Role::Group, Probe::Bound),
+                    (id("m.view[0]"), Role::Radio, Probe::Hit),
+                    (id("m.view[2]"), Role::Radio, Probe::Hit),
+                ],
+            ));
 
             let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
             let (mut c, _) = frame(false);
@@ -639,6 +785,76 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                     (id("m.message.reaction"), Role::Button, Probe::Hit),
                 ],
             ));
+            let bubble = crate::widgets::message::bubble::Bubble::new("hi").sem(id("m.bubble"));
+            let (mut c, _) = frame(false);
+            bubble.render(&mut c, row(24.0), &theme);
+            bubble.project(&mut b, &id("m.bubble"), None);
+            frames.push((c, vec![(id("m.bubble"), Role::ListItem, Probe::Hit)]));
+            let thread = crate::widgets::message::scroller::MessageScroller::new(
+                "comments",
+                "none",
+                vec![crate::widgets::message::message::Message::new(
+                    "Sam", "1m", "hi",
+                )],
+            )
+            .sem(id("m.thread"));
+            let (mut c, _) = frame(false);
+            let h = thread.height(vw - gutter * 2.0, &theme);
+            thread.render(
+                &mut c,
+                Rect::new(gutter, gutter, vw - gutter * 2.0, h),
+                &theme,
+            );
+            thread.project(&mut b, &id("m.thread"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.thread"), Role::List, Probe::Bound),
+                    (id("m.thread[0]"), Role::ListItem, Probe::Hit),
+                ],
+            ));
+            let alert = crate::widgets::feedback::alert::Alert::new(
+                Intent::Constructive,
+                "Invite",
+                "a scene",
+            )
+            .action("Accept", crate::widgets::buttons::ButtonVariant::Secondary)
+            .sem(id("m.alert"));
+            let (mut c, _) = frame(false);
+            alert.render(&mut c, block(26.0), &theme);
+            alert.project(&mut b, &id("m.alert"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.alert"), Role::Status, Probe::Bound),
+                    (id("m.alert.action[0]"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let tray = crate::widgets::message::attachment::AttachmentTray::new()
+                .with(
+                    "notes.txt",
+                    "TXT",
+                    crate::widgets::message::attachment::AttachmentKind::File,
+                )
+                .with_add()
+                .sem(id("m.files"));
+            let (mut c, _) = frame(false);
+            tray.render(&mut c, block(28.0), &theme);
+            tray.project(&mut b, &id("m.files"), "attachments", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.files"), Role::List, Probe::Node),
+                    (id("m.files[0]"), Role::ListItem, Probe::Hit),
+                    (id("m.files[0].remove"), Role::Button, Probe::Hit),
+                    (id("m.files.add"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let pin = crate::widgets::message::marker::Marker::pin(["Luna"]).sem(id("m.pin"));
+            let (mut c, _) = frame(false);
+            pin.render(&mut c, row(30.0), &theme);
+            pin.project(&mut b, &id("m.pin"), None);
+            frames.push((c, vec![(id("m.pin"), Role::Button, Probe::Hit)]));
 
             let snap = b
                 .finish()

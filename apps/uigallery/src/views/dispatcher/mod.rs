@@ -25,15 +25,15 @@ impl ShowcaseView {
             None => t.size.card_min_w / 2.0,
             Some(pane) => match pane {
                 Pane::Theme => self.panes.themes.content_height(content, t),
-                Pane::Typography => self.panes.typography.content_height(content),
-                Pane::Icons => self.panes.icons.content_height(content),
+                Pane::Typography => self.panes.typography.content_height(content, t),
+                Pane::Icons => self.panes.icons.content_height(content, t),
                 Pane::Effects => self.panes.effects.content_height(content, t),
                 Pane::Avatar => self.panes.avatar.content_height(content, t),
                 Pane::Badge => self.panes.badge.content_height(content, t),
                 Pane::Breadcrumb => self.panes.breadcrumb.content_height(content, t),
                 Pane::Button => self.panes.button.content_height(content, t),
                 Pane::Card => self.panes.card.content_height(content, t),
-                Pane::Chart => self.panes.chart.content_height(content),
+                Pane::Chart => self.panes.chart.content_height(content, t),
                 Pane::Checkbox => self.panes.checkbox.content_height(content, t),
                 Pane::Chip => self.panes.chip.content_height(content, t),
                 Pane::CodeBlock => self.panes.code_block.content_height(content, t),
@@ -71,13 +71,35 @@ impl ShowcaseView {
                 Pane::Combobox => self.panes.combobox.content_height(content, t),
                 Pane::Command => self.panes.command.content_height(content, t),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
+                Pane::Drawer => self.panes.drawer.content_height(content, t),
+                Pane::Sheet => self.panes.sheet.content_height(content, t),
+                Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
+                Pane::Menubar => self.panes.menubar.content_height(content, t),
+                Pane::HoverCard => self.panes.hover_card.content_height(content, t),
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.content_height(content, t),
+                Pane::Attachment => self.panes.attachment.content_height(content, t),
+                Pane::Bubble => self.panes.bubble.content_height(content, t),
+                Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
+                Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
+                Pane::AspectRatio => self.panes.aspect_ratio.content_height(content, t),
+                Pane::Collapsible => self.panes.collapsible.content_height(content, t),
+                Pane::Item => self.panes.item.content_height(content, t),
+                Pane::Kbd => self.panes.kbd.content_height(content, t),
+                Pane::Carousel => self.panes.carousel.content_height(content, t),
+                Pane::Pagination => self.panes.pagination.content_height(content, t),
+                Pane::StaticTable => self.panes.table_static.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
+                Pane::Calendar => self.panes.calendar.content_height(content, t),
+                Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
+                Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -89,7 +111,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
-                Pane::Builder => self.panes.builder.content_height(content),
+                Pane::Builder => self.panes.builder.content_height(content, t),
             },
         }
     }
@@ -114,7 +136,7 @@ impl ShowcaseView {
                 // capability as the T key and the menu, through the
                 // dispatcher.
                 Pane::Theme => {
-                    let (r, picked) = self.panes.themes.handle_event(event, content);
+                    let (r, picked) = self.panes.themes.handle_event(event, content, t);
                     if let Some(name) = picked {
                         let name = Value::Text(name.to_owned());
                         self.ask_shell(ShellTarget::Theme, "select", Some(name));
@@ -129,7 +151,7 @@ impl ShowcaseView {
                 Pane::Breadcrumb => self.panes.breadcrumb.handle_event(event, content, t),
                 Pane::Button => self.panes.button.handle_event(event, content, t),
                 Pane::Card => self.panes.card.handle_event(event, content, t),
-                Pane::Chart => self.panes.chart.handle_event(event, content),
+                Pane::Chart => self.panes.chart.handle_event(event, content, t),
                 Pane::Checkbox => self.panes.checkbox.handle_event(event, content, t),
                 Pane::Chip => self.panes.chip.handle_event(event, content, t),
                 Pane::CodeBlock => self.panes.code_block.handle_event(event, content, t),
@@ -179,16 +201,71 @@ impl ShowcaseView {
                 Pane::Combobox => self.panes.combobox.handle_event(event, content, t),
                 Pane::Command => self.panes.command.handle_event(event, content, t),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => {
+                    let (r, after) = self.panes.alert_dialog.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::Drawer => {
+                    let (r, after) = self.panes.drawer.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::Sheet => {
+                    let (r, after) = self.panes.sheet.handle_event(event, content, t);
+                    if let Some(after) = after {
+                        self.after_component(after);
+                    }
+                    r
+                }
+                Pane::DropdownMenu => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.dropdown_menu;
+                    page.handle_event(event, content, bounds, t)
+                }
+                Pane::Menubar => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.menubar;
+                    page.handle_event(event, content, bounds, t)
+                }
+                Pane::HoverCard => {
+                    let bounds = self.anchored_bounds(content);
+                    self.panes
+                        .hover_card
+                        .handle_event(event, content, bounds, t)
+                }
                 Pane::Popover => {
-                    let bounds = self.popover_bounds(content);
+                    let bounds = self.anchored_bounds(content);
                     self.panes.popover.handle_event(event, content, bounds, t)
                 }
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.handle_event(event, content, t),
+                Pane::Attachment => self.panes.attachment.handle_event(event, content, t),
+                Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
+                Pane::Marker => self.panes.marker.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
+                Pane::MessageScroller => {
+                    self.panes.message_scroller.handle_event(event, content, t)
+                }
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
+                Pane::AspectRatio => self.panes.aspect_ratio.handle_event(event, content, t),
+                Pane::Collapsible => self.panes.collapsible.handle_event(event, content, t),
+                Pane::Item => self.panes.item.handle_event(event, content, t),
+                Pane::Kbd => self.panes.kbd.handle_event(event, content, t),
+                Pane::Carousel => self.panes.carousel.handle_event(event, content, t),
+                Pane::Pagination => self.panes.pagination.handle_event(event, content, t),
+                Pane::StaticTable => self.panes.table_static.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
+                Pane::Calendar => self.panes.calendar.handle_event(event, content, t),
+                Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
+                Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -225,7 +302,7 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.handle_event(event, content),
                 Pane::Editor => self.panes.editor.handle_event(event, content),
                 Pane::Git => self.panes.git.handle_event(event, content),
-                Pane::Builder => self.panes.builder.handle_event(event, content),
+                Pane::Builder => self.panes.builder.handle_event(event, content, t),
             },
         }
     }
@@ -281,15 +358,34 @@ impl ShowcaseView {
             Some(Pane::Combobox) => self.panes.combobox.wake(dt),
             Some(Pane::Command) => self.panes.command.wake(dt),
             // task-104 front B, overlays (#155)
+            Some(Pane::Menubar) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.menubar;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::DropdownMenu) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.dropdown_menu;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::HoverCard) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.hover_card;
+                let mgr = &mut self.overlay_mgr;
+                Wake::moving(page.wake(dt, mgr, content, viewport, &self.theme))
+            }
             Some(Pane::Popover) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
                 let popover = &mut self.panes.popover;
                 Wake::moving(popover.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
             }
             // task-104 front C, conversation and feedback (#156)
+            Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
+            Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
             // task-104 front E, selection and dates (#158)
+            Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -390,17 +486,79 @@ impl ShowcaseView {
                     .render(c, layers.overlay, content, theme),
                 Pane::Command => self.panes.command.render(c, layers.overlay, content, theme),
                 // task-104 front B, overlays (#155)
+                Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
+                Pane::Drawer => self.panes.drawer.render(c, content, theme),
+                Pane::Sheet => self.panes.sheet.render(c, content, theme),
+                Pane::Menubar => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.menubar;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
+                Pane::DropdownMenu => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &mut self.panes.dropdown_menu;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
+                Pane::HoverCard => {
+                    let bounds = self.anchored_bounds(content);
+                    let page = &self.panes.hover_card;
+                    page.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
+                }
                 Pane::Popover => {
-                    let bounds = self.popover_bounds(content);
+                    let bounds = self.anchored_bounds(content);
                     let popover = &mut self.panes.popover;
-                    popover.render(c, layers.overlay, content, bounds, theme);
+                    popover.render(
+                        c,
+                        layers.anchored,
+                        content,
+                        bounds,
+                        theme,
+                        &self.overlay_mgr,
+                    );
                 }
                 // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.render(c, content, theme),
+                Pane::Attachment => self.panes.attachment.render(c, content, theme),
+                Pane::Bubble => self.panes.bubble.render(c, content, theme),
+                Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
+                Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.render(c, content, theme),
+                Pane::AspectRatio => self.panes.aspect_ratio.render(c, content, theme),
+                Pane::Collapsible => self.panes.collapsible.render(c, content, theme),
+                Pane::Item => self.panes.item.render(c, content, theme),
+                Pane::Kbd => self.panes.kbd.render(c, content, theme),
+                Pane::Carousel => self.panes.carousel.render(c, content, theme),
+                Pane::Pagination => self.panes.pagination.render(c, content, theme),
+                Pane::StaticTable => self.panes.table_static.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
+                Pane::Calendar => self.panes.calendar.render(c, content, theme),
+                Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
+                Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

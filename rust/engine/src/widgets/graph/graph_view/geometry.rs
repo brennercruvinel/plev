@@ -309,6 +309,30 @@ impl Default for ViewTransform {
 }
 
 impl ViewTransform {
+    /// Fit the box of `points` (world px) into a `view_w × view_h`
+    /// viewport, centered, with `margin` px of breathing room: the graph
+    /// fills its canvas whatever share of the world its layout took. A
+    /// box with no extent (one node, or none) is a world px wide.
+    pub fn fit_points(points: &[(f32, f32)], view_w: f32, view_h: f32, margin: f32) -> Self {
+        let Some(&(x0, y0)) = points.first() else {
+            return Self::default();
+        };
+        let (mut lo, mut hi) = ((x0, y0), (x0, y0));
+        for &(x, y) in points {
+            lo = (lo.0.min(x), lo.1.min(y));
+            hi = (hi.0.max(x), hi.1.max(y));
+        }
+        let (w, h) = ((hi.0 - lo.0).max(1.0), (hi.1 - lo.1).max(1.0));
+        let fit = Self::fit(w, h, view_w, view_h, margin);
+        Self {
+            offset: (
+                fit.offset.0 - lo.0 * fit.scale,
+                fit.offset.1 - lo.1 * fit.scale,
+            ),
+            scale: fit.scale,
+        }
+    }
+
     /// Fit a `world_w × world_h` layout into a `view_w × view_h` viewport,
     /// centered, with `margin` px of breathing room.
     pub fn fit(world_w: f32, world_h: f32, view_w: f32, view_h: f32, margin: f32) -> Self {

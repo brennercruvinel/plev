@@ -13,16 +13,18 @@ pub use self::scales::{
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
 };
 pub use self::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
     ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
 };
 // task-104: one token slot per front (A fields, B overlays, C conversation,
-// D disclosure, E selection), each in its front's `tokens.rs`.
+// D disclosure, E selection, G navigation and data), each in its front's
+// `tokens.rs`.
 pub use crate::widgets::content::tokens::DisclosureTokens;
 pub use crate::widgets::form::tokens::FormTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
+pub use crate::widgets::nav::tokens::NavigationTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
 pub use crate::widgets::selection::tokens::SelectionTokens;
 
@@ -60,20 +62,27 @@ pub struct Theme {
     // other theme derives it from the finished theme (`derive_front_slots`),
     // since the hoff glass is written by hand.
     /// Front A: field, label, input group, input OTP, textarea, combobox,
-    /// command.
-    pub form: FormTokens,
+    /// command. Boxed, as the navigation: a theme travels by value, and its
+    /// size is every test's stack.
+    pub form: Box<FormTokens>,
     /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
     /// sheet, drawer.
     pub overlay: OverlayTokens,
     /// Front C: message, bubble, message scroller, alert, attachment,
-    /// marker, questionnaire.
-    pub message: MessageTokens,
+    /// marker, toast. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub message: Box<MessageTokens>,
     /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
     /// pagination, table.
     pub disclosure: DisclosureTokens,
     /// Front E: toggle, toggle group, button group, radio group, calendar,
-    /// date picker.
-    pub selection: SelectionTokens,
+    /// date picker. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub selection: Box<SelectionTokens>,
+    /// Front G: breadcrumb, navigation menu, the sidebar's links, stat,
+    /// code block, chart, graph. Boxed: a theme travels by value, and its
+    /// size is every test's stack.
+    pub navigation: Box<NavigationTokens>,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -102,6 +111,7 @@ impl Theme {
             info: Color::rgb(0.0, 0.85, 0.95),
             divider: Color::hex(0x222222),
             border_active: Color::hex(0x444444),
+            swatches: &[],
         };
         let radius = RadiusScale {
             none: 0.0,
@@ -117,11 +127,12 @@ impl Theme {
             glass: GlassTokens::derive(&colors),
             button: ButtonTokens::derive(&colors),
             // placeholders: derived from the finished theme below
-            form: FormTokens::hoff_core(),
+            form: Box::new(FormTokens::hoff_core()),
             overlay: OverlayTokens::hoff_core(),
-            message: MessageTokens::hoff_core(),
+            message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
-            selection: SelectionTokens::hoff_core(),
+            selection: Box::new(SelectionTokens::hoff_core()),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -183,6 +194,7 @@ impl Theme {
             info: Color::rgb(0.0, 0.65, 0.80),
             divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
             border_active: Color::hex(0x9699a3),
+            swatches: &[],
         };
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
@@ -364,11 +376,12 @@ impl Theme {
     /// (palette, glass, shapes), the last step of every constructor but
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
-        self.form = FormTokens::derive(self);
+        *self.form = FormTokens::derive(self);
         self.overlay = OverlayTokens::derive(self);
-        self.message = MessageTokens::derive(self);
+        *self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);
-        self.selection = SelectionTokens::derive(self);
+        *self.selection = SelectionTokens::derive(self);
+        *self.navigation = NavigationTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

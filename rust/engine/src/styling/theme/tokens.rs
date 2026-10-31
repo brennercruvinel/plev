@@ -5,6 +5,8 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 
+use super::scales::ShadowSpec;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {
     pub xs: f32,
@@ -196,6 +198,14 @@ pub struct RadiusScale {
 // ColorTokens -- semantic color palette
 // ============================================================================
 
+/// A group of a design system's named colors, as its colors page lists
+/// them (`Shades`, `Colors`), each with the name the system gives it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SwatchGroup {
+    pub title: &'static str,
+    pub colors: &'static [(&'static str, Color)],
+}
+
 #[derive(Clone, Debug)]
 pub struct ColorTokens {
     pub bg: Color,
@@ -213,6 +223,10 @@ pub struct ColorTokens {
     pub info: Color,
     pub divider: Color,
     pub border_active: Color,
+    /// The design system's own palette, named, beyond the roles above (a
+    /// shade or an accent no role holds); empty for a theme that is only
+    /// its roles.
+    pub swatches: &'static [SwatchGroup],
 }
 
 // ============================================================================
@@ -275,6 +289,19 @@ pub struct GlassTokens {
     /// are tokens.
     pub wash_alpha: f32,
     pub wash_hover_alpha: f32,
+    /// How much of the rim's top color [`glass_pill`] keeps at the
+    /// bottom: 0 fades the rim out downward (the HOFF top-lit edge), 1
+    /// keeps it whole (a plain border, the core kit's `border`).
+    ///
+    /// [`glass_pill`]: crate::widgets::recipe::glass_pill
+    pub rim_fade: f32,
+    /// The inset key-light [`inset_keylight`] lays over a glass surface,
+    /// a soft highlight bleeding in from the top-left (HOFF: `inset 2px
+    /// 4px 16px rgba(248,248,248,.06)`); `None` draws none (the core kit
+    /// lights no surface).
+    ///
+    /// [`inset_keylight`]: crate::widgets::recipe::inset_keylight
+    pub keylight: Option<ShadowSpec>,
 }
 
 impl GlassTokens {
@@ -312,6 +339,10 @@ impl GlassTokens {
             disabled_alpha: 0.5,
             wash_alpha: 0.14,
             wash_hover_alpha: 0.22,
+            rim_fade: 0.0,
+            // The dark ladder these themes are built on: the key-light
+            // offset `xs / 2, xs` and blurred by `lg` (4 and 24).
+            keylight: Some(ShadowSpec::inset([2.0, 4.0], 24.0, 0.0, tint(0.06))),
         }
     }
 }

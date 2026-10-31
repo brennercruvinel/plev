@@ -286,9 +286,9 @@ fn every_theme_but_the_core_derives_its_form_from_itself() {
     let named = names.map(|n| (n, Theme::named(n).expect("a theme")));
     let built = [("dark", Theme::dark()), ("light", Theme::light())];
     for (name, theme) in named.into_iter().chain(built) {
-        assert_eq!(theme.form, FormTokens::derive(&theme), "{name}");
+        assert_eq!(*theme.form, FormTokens::derive(&theme), "{name}");
     }
-    assert_eq!(Theme::hoff_core().form, FormTokens::hoff_core());
+    assert_eq!(*Theme::hoff_core().form, FormTokens::hoff_core());
 }
 
 fn nodes_of(draw: impl FnOnce(&mut Compositor)) -> Vec<SceneNode> {

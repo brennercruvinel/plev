@@ -450,7 +450,30 @@ fn settle(c: &mut Collapsible) {
 #[test]
 fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     let kit = DisclosureTokens::hoff_core();
-    assert_eq!(DisclosureTokens::derive(&core()), kit);
+    let mut derived = DisclosureTokens::derive(&core());
+    // Two kit values sit outside the core palette: the tile's hover
+    // border, which the derived theme puts between the line and the dim
+    // text, and the add button's white glyph, which it draws in the page
+    // tone. Every other value is the kit's.
+    let between = derived.item.tile_hover.border.0;
+    let (line, dim) = (core().colors.divider.0, core().colors.text_dim.0);
+    assert!((0..3).all(|i| between[i] < line[i] && between[i] > dim[i]));
+    assert_eq!(derived.item.add_glyph_color, core().colors.bg);
+    derived.item.tile_hover.border = kit.item.tile_hover.border;
+    derived.item.add_glyph_color = kit.item.add_glyph_color;
+    // The rows and the table derive the look before the kit, which the
+    // test below holds; only the core draws them in the kit's language.
+    assert_ne!(derived.table, kit.table);
+    assert_ne!(derived.tree, kit.tree);
+    derived.list = kit.list;
+    derived.table = kit.table;
+    derived.tree = kit.tree;
+    assert_ne!((derived.panel, derived.header), (kit.panel, kit.header));
+    derived.panel = kit.panel;
+    derived.header = kit.header;
+    assert_ne!(derived.split, kit.split);
+    derived.split = kit.split;
+    assert_eq!(derived, kit);
     assert_eq!(core().disclosure, kit);
     // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
     // `p-4 pt-0` body; the Dropdown's `p-0.75 pr-3 rounded-xl`; 500 ms.
@@ -459,6 +482,132 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     assert_eq!(kit.collapsible.pad, [3.0, 12.0, 3.0, 3.0]);
     assert_eq!(kit.collapsible.radius, 12.0);
     assert_eq!(kit.motion.reveal, 0.5);
+}
+
+/// Every theme but the core draws a list's rows and a table as before the
+/// kit, token for token (the urnadbapp's lists and `screen`'s tables keep
+/// their pixels): the glass washes under a row, square, the nav radius on
+/// its ring; the tabs glass header in the nav radius, caption titles in
+/// the faint glass text, the divider under it, `md` padding, body cells.
+#[test]
+fn rows_and_tables_keep_their_look_outside_the_core() {
+    use crate::styling::theme::ControlSize;
+    use crate::widgets::content::HeaderRecipe;
+    use crate::widgets::nav::PanelHeader;
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        let (list, table) = (theme.disclosure.list, theme.disclosure.table);
+        let g = &theme.glass;
+        assert_eq!(list.hover.fill, g.surface_hover);
+        assert_eq!(list.selected.fill, g.surface_active);
+        assert_eq!((list.radius, list.border, list.rule), (0.0, 0.0, 0.0));
+        assert_eq!(list.ring_radius, theme.shape.nav);
+        assert_eq!(table.rows, list);
+        assert_eq!(table.frame, 0.0);
+        assert_eq!(table.header_fill, g.tabs);
+        assert_eq!(table.header_radius, theme.shape.nav);
+        assert_eq!(table.header_text, g.text_faint);
+        assert_eq!(
+            (table.rule, table.rule_color),
+            (theme.control.edge_width, theme.colors.divider)
+        );
+        assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
+        let tree = theme.disclosure.tree;
+        let body = theme.typography.base_2r();
+        let gap = theme.spacing.xs;
+        assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
+        assert_eq!(
+            (tree.indent, tree.pad_x),
+            (theme.spacing.lg, theme.spacing.sm)
+        );
+        assert_eq!((tree.chevron_gap, tree.label_gap), (gap, gap * 2.0));
+        assert_eq!(tree.seam, [gap / 2.0, theme.control.edge_width]);
+        assert_eq!(
+            (tree.hover.fill, tree.selected.fill),
+            (g.surface_hover, g.surface_active)
+        );
+        assert_eq!(
+            (tree.label, tree.label_selected),
+            (theme.colors.text_mid, theme.colors.text)
+        );
+        assert!(tree.tile.is_none() && tree.border == 0.0);
+        assert_eq!(Panel::pad(&theme), theme.spacing.lg);
+        assert_eq!(Panel::label_style(&theme), theme.typography.caption_sm());
+        assert_eq!(theme.disclosure.panel.radius, theme.shape.card);
+        assert_eq!(theme.disclosure.panel.label, g.text_faint);
+        let xl = theme.control.height(ControlSize::Xl);
+        let head = PanelHeader::new("Changes");
+        assert_eq!(head.height(&theme), xl);
+        let blurb = theme.typography.base_2r().line_height;
+        let with = PanelHeader::new("Changes").blurb("a blurb");
+        assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
+        assert_eq!(head.title_style(&theme), theme.typography.title());
+        assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
+        assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
+        let h = theme.disclosure.header;
+        assert_eq!((h.title, h.blurb), (g.text_default, theme.colors.text_dim));
+        assert_eq!((h.badge_gap, h.rule), (theme.spacing.sm, 0.0));
+        let split = theme.disclosure.split;
+        assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
+        assert_eq!(Table::cell_style(&theme), theme.typography.base_2r());
+        let mut c = Compositor::new();
+        c.begin_frame();
+        let mut list_widget = VirtualList::new(24.0);
+        list_widget.set_item_count(4);
+        list_widget.selected = Some(1);
+        list_widget.render_with(
+            &mut c,
+            Rect::new(0.0, 0.0, 200.0, 96.0),
+            &theme,
+            |_, _, _, _, _| {},
+        );
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        assert!(
+            nodes
+                .iter()
+                .any(|n| matches!(n, SceneNode::Rect { y, h, color, .. }
+            if *y == 24.0 && *h == 24.0 && *color == g.surface_active.0))
+        );
+    }
+}
+
+/// The core draws a table as the kit's spec sheet: a frame, no band, a
+/// rule over every row but the first, the lead cell in ink.
+#[test]
+fn a_core_table_is_the_kit_s_spec_sheet() {
+    let theme = core();
+    let table = theme.disclosure.table;
+    assert_eq!(
+        (table.frame, table.frame_color),
+        (1.0, theme.colors.divider)
+    );
+    assert_eq!(table.header_fill.0[3], 0.0);
+    assert_eq!(table.cell_pad, 20.0);
+    assert_eq!(table.cell, theme.colors.text);
+    let mut t = Table::new(vec![Column::new("Style", &theme)], &theme);
+    t.set_row_count(3);
+    let (row_h, head) = (Table::row_h(&theme), Table::header_h(&theme));
+    let mut c = Compositor::new();
+    c.begin_frame();
+    t.render_with(
+        &mut c,
+        Rect::new(0.0, 0.0, 300.0, 600.0),
+        &theme,
+        |_, _, _, _| {},
+    );
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let rules = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::Rect { h, color, .. }
+            if *h == 1.0 && *color == theme.colors.divider.0)
+        })
+        .count();
+    assert_eq!(rules, 3, "under the header and over rows 1 and 2");
+    let framed = nodes.iter().any(|n| {
+        matches!(n, SceneNode::RoundedRect { h, border_width, .. }
+        if *border_width == 1.0 && (*h - (head + 3.0 * row_h)).abs() < 1e-3)
+    });
+    assert!(framed, "the frame holds the rows there are");
 }
 
 #[test]

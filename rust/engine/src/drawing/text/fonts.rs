@@ -254,6 +254,32 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     embedded
 }
 
+/// The weight a named family actually has nearest to `weight`, by the css
+/// font-matching rules as fontdb's query applies them: the exact weight;
+/// else above 500 the nearest heavier, then lighter; at or below 500 the
+/// nearest lighter, then heavier, with the spec's 400 to 500 gap cut at
+/// 450 (500 first below it, 400 first from it). cosmic-text keeps a family
+/// only on an exact weight match and otherwise falls to another family's
+/// face (a monospace one, for Inter at 700), so every shaping path asks for
+/// this weight instead: a family with no face of the weight asked draws in
+/// its nearest one. `weight` itself when no family is named (the default
+/// sans has every weight) or the family is not in `db`.
+pub(super) fn matched_weight(db: &Database, family: Option<&str>, weight: u16) -> u16 {
+    use cosmic_text::fontdb::{Family, Query, Stretch, Style, Weight};
+    let Some(family) = family else {
+        return weight;
+    };
+    let query = Query {
+        families: &[Family::Name(family)],
+        weight: Weight(weight),
+        stretch: Stretch::Normal,
+        style: Style::Normal,
+    };
+    db.query(&query)
+        .and_then(|id| db.face(id))
+        .map_or(weight, |face| face.weight.0)
+}
+
 /// Removes every face loaded before the embedded ones (a desktop's system
 /// fonts) that carries a family name an embedded face carries. A family
 /// installed on the system under the same name (an Inclusive Sans in

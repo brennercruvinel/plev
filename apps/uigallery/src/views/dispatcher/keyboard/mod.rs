@@ -30,6 +30,7 @@
 use accord::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 use engine::control::accessibility::focus::{self, Direction};
 use engine::control::accessibility::primary;
+use engine::widgets::selection::Date;
 
 use super::super::ShowcaseView;
 use super::super::components::key_under;
@@ -78,6 +79,20 @@ fn ancestor<'a>(seen: &'a Snapshot, node: &Node, role: Role) -> Option<&'a Node>
         at = n.parent.as_ref().and_then(|p| seen.get(p));
     }
     None
+}
+
+/// An accordion's trigger (task-104 front D): a button that toggles what
+/// it reveals, in a group of them. The arrows walk the triggers of that
+/// group (WAI-ARIA's accordion: up, down, Home and End, no wrap).
+fn accordion_trigger(seen: &Snapshot, node: &Node) -> bool {
+    node.actions
+        .iter()
+        .any(|a| a.name.as_str() == "toggle_expanded")
+        && node
+            .parent
+            .as_ref()
+            .and_then(|p| seen.get(p))
+            .is_some_and(|p| p.role == Role::Group)
 }
 
 /// The nodes under `root` that pass `keep` and could have the focus
@@ -252,6 +267,9 @@ impl ShowcaseView {
             Role::TreeItem => return self.tree_key(seen, &id, node, key),
             Role::ListItem | Role::Row => return self.row_key(seen, &id, node, key),
             Role::Slider => return self.slide(seen, &id, node, key),
+            // task-104 front D: up and down along an accordion's triggers
+            Role::Button if accordion_trigger(seen, node) => (down(key), false),
+            Role::Radio => return self.radio_key(seen, &id, node, key),
             Role::Select if matches!(key, Walk::Up | Walk::Down) => {
                 let open = node.state.get("expanded") == Some(&Value::Bool(true));
                 return if open {
@@ -273,6 +291,50 @@ impl ShowcaseView {
         });
         let to = step(&siblings, &id, mv, wrap).cloned();
         to.is_some_and(|to| self.assist_focus(&to))
+    }
+
+    /// A radio (task-104 front E): any arrow, Home and End move along the
+    /// enabled radios of its group, wrapping at the ends, and choose the
+    /// one they land on through the dispatcher, as the person's `select`
+    /// (the WAI-ARIA radio group). In a calendar up and down move a week.
+    fn radio_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
+        let mv = match key {
+            Walk::Left | Walk::Up => Move::Prev,
+            Walk::Right | Walk::Down => Move::Next,
+            Walk::Home => Move::First,
+            Walk::End => Move::Last,
+            Walk::Tab | Walk::Press => return false,
+        };
+        let Some(group) = node.parent.as_ref() else {
+            return false;
+        };
+        let radios = items(seen, group, |n| {
+            n.role == Role::Radio && n.parent.as_ref() == Some(group)
+        });
+        // a calendar's days (the group states the month it shows): up and
+        // down go a week back and ahead, and stay at the month's edges
+        let calendar = seen
+            .get(group)
+            .is_some_and(|g| g.state.contains_key("month"));
+        let to = if calendar && matches!(key, Walk::Up | Walk::Down) {
+            let days = if matches!(key, Walk::Up) { -7 } else { 7 };
+            key_under(group, id)
+                .and_then(Date::parse)
+                .map(|d| group.key(d.add_days(days).key()))
+                .filter(|to| radios.contains(&to))
+        } else {
+            step(&radios, id, mv, true).cloned()
+        };
+        let Some(to) = to else {
+            return false;
+        };
+        if !self.assist_focus(&to) {
+            return false;
+        }
+        let Some(now) = self.semantics() else {
+            return false;
+        };
+        self.ask(&now, &to, "select", None)
     }
 
     /// A list or a table: up and down along its rows, Home and End to its

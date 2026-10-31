@@ -97,7 +97,7 @@ impl Sidebar {
             if r.h == 0.0 || r.y + r.h < band.y || r.y > band.y + band.h {
                 continue;
             }
-            link.render_to_layer(c, layer, r, theme);
+            link.render_with(c, layer, r, theme, &theme.navigation.sidebar_link);
         }
         c.push_to_layer(layer, SceneNode::PopClip);
 
@@ -133,7 +133,7 @@ impl Sidebar {
             .iter()
             .zip(self.footer_link_rects(rect, theme))
         {
-            link.render_to_layer(c, layer, r, theme);
+            link.render_with(c, layer, r, theme, &theme.navigation.sidebar_link);
         }
 
         // Footer hints.

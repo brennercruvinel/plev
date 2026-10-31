@@ -158,10 +158,10 @@ fn density_compact_shrinks_and_comfortable_is_identity() {
 #[test]
 fn hoff_shadows_match_the_spec_values() {
     let s = Theme::hoff().shadows;
-    assert_eq!(s.floating.offset, [0.0, 24.0]);
-    assert_eq!(s.floating.blur, 32.0);
-    assert_eq!(s.floating.spread, -12.0);
-    assert_color(s.floating.color, 18, 18, 18, 0.10);
+    assert_eq!(s.floating[0].offset, [0.0, 24.0]);
+    assert_eq!(s.floating[0].blur, 32.0);
+    assert_eq!(s.floating[0].spread, -12.0);
+    assert_color(s.floating[0].color, 18, 18, 18, 0.10);
 
     assert_eq!(s.overlay[0].offset, [0.0, 24.0]);
     assert_eq!(s.overlay[0].blur, 24.0);
@@ -169,13 +169,35 @@ fn hoff_shadows_match_the_spec_values() {
     assert_color(s.overlay[0].color, 5, 5, 5, 0.09);
     assert_color(s.overlay[3].color, 5, 5, 5, 0.25);
 
-    assert_eq!(s.hint.offset, [0.0, 1.5]);
-    assert_color(s.hint.color, 24, 24, 24, 0.15);
+    assert_eq!(s.hint[0].offset, [0.0, 1.5]);
+    assert_color(s.hint[0].color, 24, 24, 24, 0.15);
 
-    assert_eq!(s.raised.offset, [0.0, 8.0]);
-    assert_eq!(s.raised.blur, 16.0);
-    assert_eq!(s.raised.spread, -4.0);
-    assert_color(s.raised.color, 18, 18, 18, 0.20);
+    assert_eq!(s.raised[0].offset, [0.0, 8.0]);
+    assert_eq!(s.raised[0].blur, 16.0);
+    assert_eq!(s.raised[0].spread, -4.0);
+    assert_color(s.raised[0].color, 18, 18, 18, 0.20);
+}
+
+/// The core stacks are the depths page's, layer for layer, bottom first:
+/// the toolbar's two, the modal's `shadow-2xl`, the large card's three.
+#[test]
+fn core_shadows_are_the_depths_page() {
+    let s = Theme::hoff_core().shadows;
+    assert_eq!(s.raised.len(), 1);
+    assert_eq!((s.raised[0].offset, s.raised[0].blur), ([0.0, 2.0], 8.0));
+    assert_eq!(s.floating.len(), 2);
+    assert_eq!(s.floating[0].offset, [0.0, 8.0]);
+    assert_eq!(s.floating[1].offset, [0.0, 1.0]);
+    assert_eq!(s.overlay.len(), 1);
+    let modal = s.overlay[0];
+    assert_eq!(
+        (modal.offset, modal.blur, modal.spread),
+        ([0.0, 25.0], 50.0, -12.0)
+    );
+    assert_color(modal.color, 0, 0, 0, 0.25);
+    assert_eq!(s.card.len(), 3);
+    assert_color(s.card[0].color, 0, 0, 0, 0.62);
+    assert_eq!(s.hint[0].offset, [0.0, 4.0]);
 }
 
 #[test]
@@ -284,4 +306,26 @@ fn hoff_light_inverts_the_ink_and_keeps_every_scale() {
         Theme::named("hoff-light").unwrap().colors.bg.0,
         light.colors.bg.0
     );
+}
+
+#[test]
+fn core_controls_are_the_kit_measures() {
+    let c = Theme::hoff_core().control;
+    assert_eq!(c.heights, [28.0, 36.0, 40.0, 44.0, 48.0]);
+    assert_eq!(c.pad_x, [8.0, 20.0, 24.0, 14.0, 22.0]);
+    assert_eq!(c.switch_size, [40.0, 22.0]);
+    assert_eq!(c.switch_knob, 18.0);
+    // The knob pad is the switch's `p-0.5`.
+    assert_eq!(c.switch_knob_pad(), 2.0);
+    assert_eq!(c.tabs_pad, 3.0);
+    assert_eq!((c.edge_width, c.edge_width_strong), (1.0, 1.5));
+    assert_eq!((c.progress_track, c.progress_fill), (3.0, 3.0));
+    // The button ladder is the control ladder, the field on top.
+    let b = ButtonTokens::hoff_core();
+    for (m, h) in b.sizes.iter().zip(c.heights) {
+        assert_eq!(m.height, h);
+    }
+    // The other themes keep the HOFF ladder.
+    assert_eq!(Theme::hoff().control, ControlTokens::hoff());
+    assert_eq!(Theme::dark().control, ControlTokens::hoff());
 }

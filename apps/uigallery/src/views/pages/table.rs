@@ -19,6 +19,10 @@ const fn page(
     }
 }
 
+#[allow(
+    dead_code,
+    reason = "every alias has its own page since task-104; Body::Alias stays for the closing to retire"
+)]
 const fn alias(
     title: &'static str,
     icon: &'static str,
@@ -53,28 +57,28 @@ pub const PAGES: &[Page] = &[
         F,
         "Theme",
         "sun",
-        "HOFF tokens and every built-in palette. Click a card to apply it.",
+        "The theme's colors as the kit's colors page shows them, and every built-in palette: click one to apply it.",
         Pane::Theme,
     ),
     page(
         F,
         "Typography",
         "info",
-        "The HOFF scale set in Inclusive Sans: every weight embedded, every readout measured live.",
+        "The kit's type styles set in the theme's face; a value the theme does not hold reads as the kit's.",
         Pane::Typography,
     ),
     page(
         F,
         "Icons",
         "eye",
-        "Lucide icon set, tessellated to GPU paths with per-size caching.",
+        "The Lucide set at the theme's icon sizes, in the kit's iconography cards.",
         Pane::Icons,
     ),
     page(
         F,
         "Effects",
         "moon",
-        "Analytic shadows, gradients, backdrop blur, clip stack and tessellated vector shapes.",
+        "The theme's shadow stacks as the kit's depths page lifts them, then gradients, backdrop blur, clip and paths.",
         Pane::Effects,
     ),
     // -- Components ---------------------------------------------------------
@@ -85,16 +89,34 @@ pub const PAGES: &[Page] = &[
         "Sections that open and close, one at a time or several, from the kit's assets sidebar.",
         Pane::Accordion,
     ),
-    placeholder("Alert"),
-    alias(
+    page(
+        C,
+        "Alert",
+        "info",
+        "Inline alerts by intent, the kit's notifications: read one with a click, answer an invite.",
+        Pane::Alert,
+    ),
+    page(
+        C,
         "Alert Dialog",
         "alert-triangle",
-        "The destructive dialog: a warning button opens it, confirm is the dangerous action.",
-        Pane::Dialog,
-        "its own page, apart from the plain dialog",
+        "A question that blocks the page until it is answered.",
+        Pane::AlertDialog,
     ),
-    placeholder("Aspect Ratio"),
-    placeholder("Attachment"),
+    page(
+        C,
+        "Aspect Ratio",
+        "square",
+        "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
+        Pane::AspectRatio,
+    ),
+    page(
+        C,
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
     page(
         C,
         "Avatar",
@@ -116,12 +138,12 @@ pub const PAGES: &[Page] = &[
         "A trail that collapses when narrow. Click a crumb.",
         Pane::Breadcrumb,
     ),
-    alias(
+    page(
+        C,
         "Bubble",
         "send",
-        "The message dock's bubbles.",
-        Pane::Dock,
-        "a bubble widget of its own, apart from the dock",
+        "Chat bubbles read and unread, from either side, growing with their words.",
+        Pane::Bubble,
     ),
     page(
         C,
@@ -130,14 +152,20 @@ pub const PAGES: &[Page] = &[
         "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
         Pane::Button,
     ),
-    alias(
+    page(
+        C,
         "Button Group",
         "layout-grid",
-        "The toolbar group of the buttons page.",
-        Pane::Button,
-        "a segmented group widget",
+        "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
+        Pane::ButtonGroup,
     ),
-    placeholder("Calendar"),
+    page(
+        C,
+        "Calendar",
+        "history",
+        "One month to choose a day: today ringed, the chosen day the call to action, a range that refuses the rest.",
+        Pane::Calendar,
+    ),
     page(
         C,
         "Card",
@@ -145,7 +173,13 @@ pub const PAGES: &[Page] = &[
         "The HOFF card deck: one glass shell, six preview families with live data.",
         Pane::Card,
     ),
-    placeholder("Carousel"),
+    page(
+        C,
+        "Carousel",
+        "layers",
+        "Square slides that page under a counter, as many to a page as the width holds.",
+        Pane::Carousel,
+    ),
     page(
         C,
         "Chart",
@@ -174,7 +208,13 @@ pub const PAGES: &[Page] = &[
         "Mono block with a caption.",
         Pane::CodeBlock,
     ),
-    placeholder("Collapsible"),
+    page(
+        C,
+        "Collapsible",
+        "chevron-right",
+        "A trigger that reveals a list under a rail, from the kit's home sidebar.",
+        Pane::Collapsible,
+    ),
     page(
         C,
         "Combobox",
@@ -193,7 +233,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
     page(
@@ -211,19 +251,19 @@ pub const PAGES: &[Page] = &[
         "Modal dialogs with spring motion per intent.",
         Pane::Dialog,
     ),
-    alias(
+    page(
+        C,
         "Drawer",
         "chevron-left",
-        "The sidebar as a drawer: this gallery's own chrome on a phone.",
-        Pane::Sidebar,
-        "a drawer apart from the app shell",
+        "The kit's navigation, slid in from the edge over the page.",
+        Pane::Drawer,
     ),
-    alias(
+    page(
+        C,
         "Dropdown Menu",
-        "chevron-down",
-        "The context menu, until it anchors to a button.",
-        Pane::ContextMenu,
-        "anchoring to a trigger button",
+        "layers",
+        "The kit's menus, open from a trigger or shown in their cards.",
+        Pane::DropdownMenu,
     ),
     page(
         C,
@@ -246,18 +286,18 @@ pub const PAGES: &[Page] = &[
         "Pan, wheel and click a node.",
         Pane::Graph,
     ),
-    alias(
+    page(
+        C,
         "Hover Card",
         "eye",
-        "The tooltip, until it holds rich content.",
-        Pane::Tooltip,
-        "rich content and a hover-in delay of its own",
+        "Rest the pointer on the handle; the card follows.",
+        Pane::HoverCard,
     ),
     page(
         C,
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
     page(
@@ -281,19 +321,19 @@ pub const PAGES: &[Page] = &[
         "A one-time code, a cell per digit: type, paste, Backspace; the arrows move between cells.",
         Pane::InputOtp,
     ),
-    alias(
+    page(
+        C,
         "Item",
         "file",
-        "The virtualized list's rows.",
-        Pane::ScrollArea,
-        "an item row widget of its own",
+        "The kit's folder row and asset tile, chosen one at a time.",
+        Pane::Item,
     ),
-    alias(
+    page(
+        C,
         "Kbd",
         "terminal",
-        "The shortcut hints on the nav links.",
-        Pane::NavigationMenu,
-        "a key cap widget",
+        "The kit's key cap, alone and on the nav links that carry a shortcut.",
+        Pane::Kbd,
     ),
     page(
         C,
@@ -302,8 +342,20 @@ pub const PAGES: &[Page] = &[
         "The text that names a control, and a section's caption.",
         Pane::Label,
     ),
-    placeholder("Marker"),
-    placeholder("Menubar"),
+    page(
+        C,
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
+    page(
+        C,
+        "Menubar",
+        "layout-grid",
+        "File, Edit and View: menus in a row, one open at a time.",
+        Pane::Menubar,
+    ),
     page(
         C,
         "Message",
@@ -311,12 +363,12 @@ pub const PAGES: &[Page] = &[
         "Comment rows of a thread and the quick comment, with the like chip.",
         Pane::Message,
     ),
-    alias(
+    page(
+        C,
         "Message Scroller",
         "send",
-        "The message dock's scrolling band.",
-        Pane::Dock,
-        "a scroller apart from the dock",
+        "A comment thread that scrolls past its height, by wheel, touch and keyboard.",
+        Pane::MessageScroller,
     ),
     page(
         C,
@@ -325,7 +377,13 @@ pub const PAGES: &[Page] = &[
         "Nav links in every state, and the rail form.",
         Pane::NavigationMenu,
     ),
-    placeholder("Pagination"),
+    page(
+        C,
+        "Pagination",
+        "chevron-right",
+        "Page numbers between two arrows, as many as the width holds.",
+        Pane::Pagination,
+    ),
     page(
         C,
         "Panel",
@@ -349,7 +407,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
     placeholder("Questionnaire"),
-    placeholder("Radio Group"),
+    page(
+        C,
+        "Radio Group",
+        "circle",
+        "One choice of a list: the kit's list line with its switch as the disc, stacked or in a line.",
+        Pane::RadioGroup,
+    ),
     page(
         C,
         "Resizable",
@@ -378,12 +442,12 @@ pub const PAGES: &[Page] = &[
         "Horizontal and vertical rules.",
         Pane::Separator,
     ),
-    alias(
+    page(
+        C,
         "Sheet",
         "chevron-left",
-        "The sidebar as a drawer sheet.",
-        Pane::Sidebar,
-        "a sheet from any edge, apart from the app shell",
+        "A panel held to any edge, blocking the page until it is answered.",
+        Pane::Sheet,
     ),
     page(
         C,
@@ -427,18 +491,18 @@ pub const PAGES: &[Page] = &[
         "Spring toggles, one disabled.",
         Pane::Switch,
     ),
-    alias(
+    page(
+        C,
         "Table",
         "layout-grid",
-        "The data table.",
-        Pane::Table,
-        "a static example without virtualization",
+        "Every row shown, no scroll; columns drop by priority when narrow.",
+        Pane::StaticTable,
     ),
     page(
         C,
         "Tabs",
         "layers",
-        "Segmented strip sized from its measured labels.",
+        "The kit's tab strip, three tabs and two, long and translated labels.",
         Pane::Tabs,
     ),
     page(
@@ -462,18 +526,18 @@ pub const PAGES: &[Page] = &[
         "The hoff core toolbar action as a toggle: icon, label, icon and label; one card per state.",
         Pane::Toggle,
     ),
-    alias(
+    page(
+        C,
         "Toggle Group",
         "layout-grid",
-        "The todo app's filter pills.",
-        Pane::Todo,
-        "a toggle group widget, extracted from the todo app",
+        "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
+        Pane::ToggleGroup,
     ),
     page(
         C,
         "Tooltip",
         "info",
-        "Hover the button: 450 ms, then above the anchor, or below when there is no room.",
+        "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
     ),
     page(

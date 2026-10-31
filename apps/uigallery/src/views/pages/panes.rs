@@ -24,16 +24,20 @@ use super::super::components::label;
 use super::super::components::textarea;
 
 // task-104 front B, overlays (#155)
-use super::super::components::popover;
+use super::super::components::{
+    alert_dialog, drawer, dropdown_menu, hover_card, menubar, popover, sheet,
+};
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::message;
+use super::super::components::{alert, attachment, bubble, marker, message, message_scroller};
 
 // task-104 front D, disclosure and display (#157)
-use super::super::components::accordion;
+use super::super::components::{
+    accordion, aspect_ratio, carousel, collapsible, item, kbd, pagination, table_static,
+};
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::toggle;
+use super::super::components::{button_group, calendar, radio_group, toggle, toggle_group};
 
 pub struct Panes {
     // -- foundations
@@ -86,13 +90,35 @@ pub struct Panes {
     pub combobox: field::FormPage,
     pub command: field::FormPage,
     // task-104 front B, overlays (#155)
+    pub alert_dialog: alert_dialog::AlertDialogPage,
+    pub drawer: drawer::DrawerPage,
+    pub dropdown_menu: dropdown_menu::DropdownMenuPage,
+    pub hover_card: hover_card::HoverCardPage,
+    pub menubar: menubar::MenubarPage,
     pub popover: popover::PopoverPage,
+    pub sheet: sheet::SheetPage,
     // task-104 front C, conversation and feedback (#156)
+    pub alert: alert::AlertPage,
+    pub attachment: attachment::AttachmentPage,
+    pub bubble: bubble::BubblePage,
+    pub marker: marker::MarkerPage,
     pub message: message::MessagePage,
+    pub message_scroller: message_scroller::MessageScrollerPage,
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
+    pub aspect_ratio: aspect_ratio::AspectRatioPage,
+    pub carousel: carousel::CarouselPage,
+    pub collapsible: collapsible::CollapsiblePage,
+    pub item: item::ItemPage,
+    pub kbd: kbd::KbdPage,
+    pub pagination: pagination::PaginationPage,
+    pub table_static: table_static::TableStaticPage,
     // task-104 front E, selection and dates (#158)
+    pub button_group: button_group::ButtonGroupPage,
+    pub calendar: calendar::CalendarPage,
+    pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
+    pub toggle_group: toggle_group::ToggleGroupPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -144,7 +170,7 @@ impl Panes {
             dialog: dialog::DialogPage::new(),
             empty: empty::EmptyPage::new(),
             graph: graph::GraphPage::new(),
-            icon_button: icon_button::IconButtonPage::new(),
+            icon_button: icon_button::IconButtonPage::icons(),
             input: input::InputPage::new(),
             navigation_menu: navigation_menu::NavigationMenuPage::new(),
             panel: panel::PanelPage::new(),
@@ -174,13 +200,35 @@ impl Panes {
             combobox: combobox::page(),
             command: command::page(),
             // task-104 front B, overlays (#155)
+            alert_dialog: alert_dialog::AlertDialogPage::new(),
+            drawer: drawer::DrawerPage::new(),
+            dropdown_menu: dropdown_menu::DropdownMenuPage::new(),
+            hover_card: hover_card::HoverCardPage::new(),
+            menubar: menubar::MenubarPage::new(),
             popover: popover::PopoverPage::new(),
+            sheet: sheet::SheetPage::new(),
             // task-104 front C, conversation and feedback (#156)
+            alert: alert::AlertPage::new(),
+            attachment: attachment::AttachmentPage::new(),
+            bubble: bubble::BubblePage::new(),
+            marker: marker::MarkerPage::new(),
             message: message::MessagePage::new(),
+            message_scroller: message_scroller::MessageScrollerPage::new(),
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
+            aspect_ratio: aspect_ratio::AspectRatioPage::new(),
+            carousel: carousel::CarouselPage::new(),
+            collapsible: collapsible::CollapsiblePage::new(theme),
+            item: item::ItemPage::new(),
+            kbd: kbd::KbdPage::new(),
+            pagination: pagination::PaginationPage::new(),
+            table_static: table_static::TableStaticPage::new(theme),
             // task-104 front E, selection and dates (#158)
+            button_group: button_group::ButtonGroupPage::new(),
+            calendar: calendar::CalendarPage::new(),
+            radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
+            toggle_group: toggle_group::ToggleGroupPage::new(theme),
             todo,
             surface,
             silences: silences::SilencesPage::new(),
@@ -188,7 +236,11 @@ impl Panes {
             capture: capture::CapturePage::new(theme),
             dock: dock::DockPage::new(),
             editor: editor::EditorPage::new(theme),
-            git: git::GitPage::new(),
+            git: {
+                let mut git = git::GitPage::new();
+                git.set_theme(theme);
+                git
+            },
             builder: builder::BuilderPage::new(),
             detached: None,
             shell: super::super::dispatcher::Shell::new(),

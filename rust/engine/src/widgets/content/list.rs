@@ -5,8 +5,9 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
+use crate::widgets::content::tokens::{DisclosureSurface, RowRecipe};
 use crate::widgets::feedback::Scrollbar;
-use crate::widgets::recipe::focus_ring_inside;
+use crate::widgets::recipe::{focus_ring_inside, rounded_rect, rounded_rect_stroke};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Rows tessellated beyond the viewport on each side, so partially
@@ -61,6 +62,46 @@ pub(super) fn reachable(row: Rect, bounds: Rect) -> Option<Rect> {
     let top = row.y.max(bounds.y);
     let bottom = (row.y + row.h).min(bounds.y + bounds.h);
     (bottom >= top).then(|| Rect::new(row.x, top, row.w, bottom - top))
+}
+
+/// The surface under a hovered or selected row: a plain rect while the
+/// look is square and borderless (the look before the kit), else rounded
+/// and outlined.
+fn paint_row(
+    c: &mut Compositor,
+    layer: LayerId,
+    rect: Rect,
+    rows: &RowRecipe,
+    surface: &DisclosureSurface,
+) {
+    let radius = rows.radius.min(rect.h / 2.0);
+    if radius <= 0.0 {
+        c.push_to_layer(
+            layer,
+            SceneNode::Rect {
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                color: surface.fill.0,
+            },
+        );
+    } else {
+        let fill = rounded_rect(rect.x, rect.y, rect.w, rect.h, radius, surface.fill.0);
+        c.push_to_layer(layer, fill);
+    }
+    if rows.border > 0.0 && surface.border.0[3] > 0.0 {
+        let edge = rounded_rect_stroke(
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
+            radius,
+            surface.border.0,
+            rows.border,
+        );
+        c.push_to_layer(layer, edge);
+    }
 }
 
 /// The key a list names its selected row by: its index, or empty.
@@ -372,6 +413,21 @@ impl VirtualList {
         layer: LayerId,
         bounds: Rect,
         theme: &Theme,
+        row_fn: impl FnMut(&mut Compositor, usize, Rect, bool, bool),
+    ) {
+        let rows = theme.disclosure.list;
+        self.render_rows(compositor, layer, bounds, theme, &rows, row_fn);
+    }
+
+    /// The render in `rows`' look: a list draws in the theme's list rows,
+    /// a [`Table`](super::Table) in its own.
+    pub(crate) fn render_rows(
+        &mut self,
+        compositor: &mut Compositor,
+        layer: LayerId,
+        bounds: Rect,
+        theme: &Theme,
+        rows: &RowRecipe,
         mut row_fn: impl FnMut(&mut Compositor, usize, Rect, bool, bool),
     ) {
         self.set_viewport(bounds);
@@ -385,34 +441,31 @@ impl VirtualList {
             let rect = self.item_rect(index);
             let hovered = self.hovered == Some(index);
             let selected = self.selected == Some(index);
-
-            // HOFF rows: rest .02 / hover .05 / selected .10 white glass.
-            if selected {
+            if index > 0 && rows.rule > 0.0 {
                 compositor.push_to_layer(
                     layer,
                     SceneNode::Rect {
                         x: rect.x,
                         y: rect.y,
                         w: rect.w,
-                        h: rect.h,
-                        color: theme.glass.surface_active.0,
-                    },
-                );
-            } else if hovered {
-                compositor.push_to_layer(
-                    layer,
-                    SceneNode::Rect {
-                        x: rect.x,
-                        y: rect.y,
-                        w: rect.w,
-                        h: rect.h,
-                        color: theme.glass.surface_hover.0,
+                        h: rows.rule,
+                        color: rows.rule_color.0,
                     },
                 );
             }
+            let surface = if selected {
+                Some(&rows.selected)
+            } else if hovered {
+                Some(&rows.hover)
+            } else {
+                None
+            };
+            if let Some(surface) = surface {
+                paint_row(compositor, layer, rect, rows, surface);
+            }
             row_fn(compositor, index, rect, hovered, selected);
             if focused == Some(index) {
-                let radius = theme.shape.nav.min(rect.h / 2.0);
+                let radius = rows.ring_radius.min(rect.h / 2.0);
                 compositor.push_to_layer(layer, focus_ring_inside(rect, radius, theme));
             }
         }
