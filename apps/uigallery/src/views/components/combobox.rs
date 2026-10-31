@@ -21,7 +21,7 @@ use engine::widgets::form::TextField;
 use engine::widgets::form::combobox::Combobox;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-use super::field::spec::{CardWidget, Part, SELECT_W};
+use super::field::spec::{CardWidget, Part};
 use super::field::{FormPage, Group, card};
 
 const FRAMEWORKS: [&str; 6] = ["Next.js", "SvelteKit", "Nuxt", "Remix", "Astro", "Leptos"];
@@ -88,7 +88,7 @@ impl CardWidget for Combobox {
 
     /// The kit's Select, `w-44`; its list floats.
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        (SELECT_W.min(room), Combobox::height(theme))
+        (theme.form.select.width.min(room), Combobox::height(theme))
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {

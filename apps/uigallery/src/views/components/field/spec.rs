@@ -18,15 +18,6 @@ use engine::widgets::form::label::Label;
 use engine::widgets::form::{EditKey, TextField};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-/// A field is the kit page's `w-60` wide, narrower when the card is.
-pub(crate) const FIELD_W: f32 = 240.0;
-/// An input group is the kit's Search, `w-54`.
-pub(crate) const GROUP_W: f32 = 216.0;
-/// A select is the kit's DropdownPage's, `w-44`.
-pub(crate) const SELECT_W: f32 = 176.0;
-/// An input group with a select at its end is the kit's Invite, `w-76.5`.
-pub(crate) const INVITE_W: f32 = 306.0;
-
 /// A part of a widget a request or a reader's focus names.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Part {
@@ -215,7 +206,7 @@ impl CardWidget for Field {
     }
 
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        let w = FIELD_W.min(room);
+        let w = theme.form.field.width.min(room);
         (w, self.height_for(w, theme))
     }
 
@@ -327,10 +318,11 @@ impl CardWidget for InputGroup {
 
     /// The kit's Search, `w-54`, or its Invite, `w-76.5`, with a select.
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        let g = &theme.form.group;
         let w = if self.choice.is_some() {
-            INVITE_W
+            g.invite_width
         } else {
-            GROUP_W
+            g.width
         };
         (w.min(room), self.height(theme))
     }
