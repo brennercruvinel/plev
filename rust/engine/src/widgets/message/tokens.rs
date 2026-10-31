@@ -218,6 +218,55 @@ pub struct AttachmentTokens {
     pub file_max_fraction: f32,
 }
 
+/// One shape of the comment cursor: its box, its corners (the bottom
+/// start one, the tail, smaller), its drop, its fill top to bottom and the
+/// mark inside.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CursorShape {
+    pub w: f32,
+    pub h: f32,
+    pub radius: f32,
+    pub tail_radius: f32,
+    pub shadow: ShadowSpec,
+    pub fill: [Color; 2],
+    /// The plus's edge, and its color.
+    pub mark: f32,
+    pub ink: Color,
+}
+
+/// The markers on a canvas: the kit's comment pin (`components/CommentPin`,
+/// the people of a thread on a tailed pill, read or unread) and its
+/// comment cursor (`components/CommentCursor`: point, pinned, uploading,
+/// typing).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MarkerTokens {
+    /// The pin: around the avatars, its border read and unread, its fill
+    /// and drop; each avatar's edge, the paper ring that cuts it from the
+    /// one before, and how far it slides under that one.
+    pub pin_pad: f32,
+    pub pin_border_width: f32,
+    pub pin_fill: Color,
+    pub pin_read: Color,
+    pub pin_unread: Color,
+    pub pin_shadow: ShadowSpec,
+    pub avatar: f32,
+    pub avatar_ring: f32,
+    pub avatar_overlap: f32,
+    /// The cursor at a point: bordered paper.
+    pub point: CursorShape,
+    pub point_border_width: f32,
+    pub point_border: Color,
+    /// Pinned: the dark one.
+    pub pinned: CursorShape,
+    /// Uploading and typing: the blue one.
+    pub active: CursorShape,
+    /// The typing dots: edge and gap.
+    pub dot: f32,
+    pub dot_gap: f32,
+    /// The plus's bar, as a share of its edge (`1.5` of the kit's `8`).
+    pub mark_bar: f32,
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct MessageTokens {
     /// The row of a comment thread.
@@ -234,6 +283,7 @@ pub struct MessageTokens {
     pub scroller: ScrollerTokens,
     pub alert: AlertTokens,
     pub attachment: AttachmentTokens,
+    pub marker: MarkerTokens,
 }
 
 impl MessageTokens {
@@ -506,6 +556,83 @@ impl MessageTokens {
                 // to the tray's width, where the name is ellipsized
                 file_max_fraction: 1.0,
             },
+            marker: MarkerTokens {
+                // components/CommentPin/index.tsx:10 `p-0.25
+                // border-[1.5px] bg-[#FCFCFC]
+                // shadow-[0px_2px_2px_0px_rgba(0,0,0,0.15)]`, :11 read
+                // `#ECECEC`, unread `#3582FF`
+                pin_pad: 1.0,
+                pin_border_width: 1.5,
+                pin_fill: paper,
+                pin_read: shade4,
+                pin_unread: BLUE,
+                pin_shadow: ShadowSpec::new([0.0, 2.0], 2.0, 0.0, Color::rgba(0.0, 0.0, 0.0, 0.15)),
+                // :16 `-ml-2.5 border-[1.5px] border-[#FCFCFC]`, :20
+                // `size-6`
+                avatar: 24.0,
+                avatar_ring: 1.5,
+                avatar_overlap: 10.0,
+                // components/CommentCursor/index.tsx:12 `w-5 h-4.5
+                // border-[1.5px] border-[#121212] rounded-md
+                // rounded-bl-[1px] bg-[#FCFCFC]
+                // shadow-[0px_2px_4px_rgba(0,0,0,0.15)]`, :28 `size-1.75
+                // fill-[#7B7B7B]/50`. That plus is 1.9:1 on paper; it
+                // takes the full muted gray, 4.1:1
+                point: CursorShape {
+                    w: 20.0,
+                    h: 18.0,
+                    radius: 6.0,
+                    tail_radius: 1.0,
+                    shadow: ShadowSpec::new([0.0, 2.0], 4.0, 0.0, Color::rgba(0.0, 0.0, 0.0, 0.15)),
+                    fill: [paper, paper],
+                    mark: 7.0,
+                    ink: shade6,
+                },
+                point_border_width: 1.5,
+                point_border: ink,
+                // :13 `w-7.5 h-7 rounded-[10px] rounded-bl-[2px]
+                // shadow-[0px_4px_4px_rgba(18,18,18,0.15)]`, :14
+                // `from-[#323232] to-[#121212]`, :29 `size-2.25
+                // fill-[#7B7B7B]`
+                pinned: CursorShape {
+                    w: 30.0,
+                    h: 28.0,
+                    radius: 10.0,
+                    tail_radius: 2.0,
+                    shadow: ShadowSpec::new(
+                        [0.0, 4.0],
+                        4.0,
+                        0.0,
+                        Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.15),
+                    ),
+                    fill: [shade7, ink],
+                    mark: 9.0,
+                    ink: shade6,
+                },
+                // :16 `from-[#34A7FF] to-[#0D7DFD]`, :30 `fill-[#FFFFFF]`.
+                // White is 2.6:1 on #34A7FF; the top takes the kit's
+                // accent blue, 3.6:1, the bottom stays
+                active: CursorShape {
+                    w: 30.0,
+                    h: 28.0,
+                    radius: 10.0,
+                    tail_radius: 2.0,
+                    shadow: ShadowSpec::new(
+                        [0.0, 4.0],
+                        4.0,
+                        0.0,
+                        Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.15),
+                    ),
+                    fill: [BLUE, Color::hex(0x0D7DFD)],
+                    mark: 9.0,
+                    ink: Color::WHITE,
+                },
+                // :21 `gap-0.5 [&_span]:size-0.5`
+                dot: 2.0,
+                dot_gap: 2.0,
+                // :36, the plus path: bars 1.5 wide on an 8 box
+                mark_bar: 1.5 / 8.0,
+            },
         }
     }
 
@@ -581,6 +708,46 @@ impl MessageTokens {
                 detail: kit.attachment.detail.recolor(colors.text_mid),
                 ..kit.attachment
             },
+            // the pin on the page's paper, read in the divider, unread in
+            // the info accent; the cursors bordered in the text tone, the
+            // pinned one in it, the active ones in the info accent
+            // (each composed over the paper: a shape and the patch over its
+            // tail corner overlap, and a translucent fill would show it)
+            marker: {
+                let paper = Color([colors.bg.0[0], colors.bg.0[1], colors.bg.0[2], 1.0]);
+                let solid = |c: Color| solid(c, paper);
+                let (text, info) = (solid(colors.text), solid(colors.info));
+                let k = kit.marker;
+                MarkerTokens {
+                    pin_fill: paper,
+                    pin_read: solid(colors.divider),
+                    pin_unread: info,
+                    point: CursorShape {
+                        fill: [paper, paper],
+                        ink: colors.text_mid,
+                        ..k.point
+                    },
+                    point_border: text,
+                    pinned: CursorShape {
+                        fill: [text, text],
+                        ink: paper,
+                        ..k.pinned
+                    },
+                    active: CursorShape {
+                        fill: [info, info],
+                        ink: Color(crate::widgets::widget::contrast_text(info.0)),
+                        ..k.active
+                    },
+                    ..k
+                }
+            },
         }
     }
+}
+
+/// `c` composed over the opaque `under`: the same color, opaque.
+fn solid(c: Color, under: Color) -> Color {
+    let a = c.0[3];
+    let mix = |i: usize| c.0[i] * a + under.0[i] * (1.0 - a);
+    Color([mix(0), mix(1), mix(2), 1.0])
 }

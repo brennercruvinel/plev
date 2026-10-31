@@ -335,6 +335,23 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
             .with_add()
             .show_removes(true)
             .render(&mut c, Rect::new(content.x, 3200.0, content.w, 0.0), theme);
+        use crate::widgets::message::marker::{CursorState, Marker};
+        for (i, m) in [
+            Marker::pin(["Luna", "Sam", "Ada"]).unread(true),
+            Marker::cursor(CursorState::Point),
+            Marker::cursor(CursorState::Pinned),
+            Marker::cursor(CursorState::Uploading),
+            Marker::cursor(CursorState::Typing),
+        ]
+        .iter()
+        .enumerate()
+        {
+            m.render(
+                &mut c,
+                Rect::new(content.x + i as f32 * 40.0, 3100.0, 0.0, 0.0),
+                theme,
+            );
+        }
     }
 
     // task-104 front B: the popover's trigger, open, and its panel, placed
@@ -747,6 +764,11 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                     (id("m.files.add"), Role::Button, Probe::Hit),
                 ],
             ));
+            let pin = crate::widgets::message::marker::Marker::pin(["Luna"]).sem(id("m.pin"));
+            let (mut c, _) = frame(false);
+            pin.render(&mut c, row(30.0), &theme);
+            pin.project(&mut b, &id("m.pin"), None);
+            frames.push((c, vec![(id("m.pin"), Role::Button, Probe::Hit)]));
 
             let snap = b
                 .finish()

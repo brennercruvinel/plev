@@ -54,6 +54,7 @@ pub mod popover;
 pub mod alert;
 pub mod attachment;
 pub mod bubble;
+pub mod marker;
 pub mod message;
 pub mod message_scroller;
 

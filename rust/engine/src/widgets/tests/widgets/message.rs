@@ -1268,3 +1268,192 @@ fn the_tray_binds_projects_and_maps_its_ids() {
     assert_eq!(t.target(&id("files[3].remove")), Some(TrayFocus::Remove(3)));
     assert_eq!(t.target(&id("files[9]")), None);
 }
+
+// marker
+
+use crate::widgets::message::marker::{CursorState, Marker};
+
+const STATES: [CursorState; 4] = [
+    CursorState::Point,
+    CursorState::Pinned,
+    CursorState::Uploading,
+    CursorState::Typing,
+];
+
+fn marker_nodes(m: &Marker, bounds: Rect, theme: &Theme) -> (Compositor, Vec<SceneNode>) {
+    let mut c = Compositor::new();
+    c.begin_frame();
+    m.render(&mut c, bounds, theme);
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    (c, nodes)
+}
+
+#[test]
+fn the_marker_carries_the_kit_in_core_and_derives_elsewhere() {
+    let kit = MessageTokens::hoff_core().marker;
+    assert_eq!(
+        (kit.avatar, kit.avatar_ring, kit.avatar_overlap),
+        (24.0, 1.5, 10.0)
+    );
+    assert_eq!((kit.point.w, kit.point.h), (20.0, 18.0));
+    assert_eq!(
+        (kit.pinned.w, kit.pinned.h, kit.pinned.tail_radius),
+        (30.0, 28.0, 2.0)
+    );
+    assert_eq!(core().message.marker, kit);
+    let hoff = Theme::hoff();
+    let derived = MessageTokens::derive(&hoff).marker;
+    // the theme's colors composed over its paper: opaque, so a shape and
+    // the patch over its tail corner do not show their overlap
+    for c in [derived.pin_unread, derived.point_border, derived.pin_fill]
+        .into_iter()
+        .chain(derived.active.fill)
+        .chain(derived.pinned.fill)
+    {
+        assert_eq!(c.0[3], 1.0, "{c:?}");
+    }
+    let info = hoff.colors.info.0;
+    let paper = hoff.colors.bg.0;
+    let want = info[1] * info[3] + paper[1] * (1.0 - info[3]);
+    assert!(
+        (derived.pin_unread.0[1] - want).abs() < 1e-5,
+        "the info accent over paper"
+    );
+    let light = MessageTokens::derive(&Theme::light()).marker;
+    assert_eq!(
+        light.pin_unread,
+        Theme::light().colors.info,
+        "an opaque color stays"
+    );
+    assert_eq!(derived.avatar, kit.avatar);
+}
+
+#[test]
+fn a_pin_is_as_wide_as_its_avatars_overlap_and_holds_them() {
+    let theme = core();
+    let t = &theme.message.marker;
+    let one = Marker::pin(["Luna"]);
+    let two = Marker::pin(["Luna", "Sam"]);
+    let (w1, h1) = one.size(&theme);
+    let (w2, h2) = two.size(&theme);
+    assert_eq!(h1, h2);
+    let slot = t.avatar + t.avatar_ring * 2.0;
+    assert!((w2 - w1 - (slot - t.avatar_overlap)).abs() < 1e-3);
+    assert!((h1 - ((t.pin_pad + t.pin_border_width) * 2.0 + slot)).abs() < 1e-3);
+    let l = two.layout(at(0.0), &theme);
+    assert!(l.avatars[1].x > l.avatars[0].x && l.avatars[1].x < l.avatars[0].right());
+    for a in &l.avatars {
+        assert!(within(
+            a.outset(t.avatar_ring),
+            l.rect.inset(t.pin_pad + t.pin_border_width)
+        ));
+    }
+    assert_eq!(
+        Marker::pin(Vec::<String>::new()).size(&theme),
+        one.size(&theme)
+    );
+}
+
+#[test]
+fn every_cursor_state_is_the_kit_s_box_and_draws_finite_under_every_theme() {
+    for name in ["hoff", "core", "plev", "nord", "gruvbox"] {
+        let theme = Theme::named(name).unwrap();
+        for s in STATES {
+            let m = Marker::cursor(s);
+            let (w, h) = m.size(&theme);
+            assert!(w > 0.0 && h > 0.0, "{name}: {s:?}");
+            let (_, nodes) = marker_nodes(&m, at(0.0), &theme);
+            assert!(nodes.len() >= 3, "{name}: {s:?} draws its box and mark");
+        }
+        let (_, nodes) = marker_nodes(&Marker::pin(["Luna", "Sam"]).unread(true), at(0.0), &theme);
+        assert!(!nodes.is_empty());
+    }
+    let theme = core();
+    assert_eq!(
+        Marker::cursor(CursorState::Point).size(&theme),
+        (20.0, 18.0)
+    );
+    assert_eq!(
+        Marker::cursor(CursorState::Typing).size(&theme),
+        (30.0, 28.0)
+    );
+}
+
+#[test]
+fn a_click_on_a_pin_opens_and_reads_it_and_a_cursor_takes_nothing() {
+    let theme = core();
+    let bounds = at(0.0);
+    let mut pin = Marker::pin(["Luna"]).unread(true);
+    let (x, y) = pin.layout(bounds, &theme).rect.center();
+    assert!(pin.handle_event(&move_to(x, y), bounds, &theme).changed);
+    assert!(pin.is_hovered());
+    pin.handle_event(&down(x, y), bounds, &theme);
+    assert!(pin.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(!pin.is_unread());
+    assert!(!pin.open(), "read already");
+
+    let mut cursor = Marker::cursor(CursorState::Pinned);
+    assert_eq!(
+        cursor.handle_event(&down(x, y), bounds, &theme),
+        EventResult::IGNORED
+    );
+    cursor.set_focused(true);
+    assert!(!cursor.is_focused(), "a cursor takes no focus");
+    assert!(!cursor.open());
+}
+
+#[test]
+fn a_pin_tells_unread_by_its_border_and_rings_while_focused() {
+    let theme = core();
+    let t = &theme.message.marker;
+    let border = |m: &Marker| {
+        marker_nodes(m, at(0.0), &theme)
+            .1
+            .iter()
+            .find_map(|n| match n {
+                SceneNode::RoundedRect { color, .. } => Some(*color),
+                _ => None,
+            })
+            .unwrap()
+    };
+    assert_eq!(border(&Marker::pin(["Luna"])), t.pin_read.0);
+    assert_eq!(border(&Marker::pin(["Luna"]).unread(true)), t.pin_unread.0);
+    let mut pin = Marker::pin(["Luna"]);
+    let before = marker_nodes(&pin, at(0.0), &theme).1.len();
+    pin.set_focused(true);
+    assert_eq!(marker_nodes(&pin, at(0.0), &theme).1.len(), before + 1);
+}
+
+#[test]
+fn a_marker_binds_and_projects_a_pin_as_a_button_and_a_cursor_as_an_image() {
+    let theme = core();
+    let pin_id = id("pin");
+    let pin = Marker::pin(["Luna", "Sam"])
+        .unread(true)
+        .sem(pin_id.clone());
+    let (c, _) = marker_nodes(&pin, at(0.0), &theme);
+    let r = pin.layout(at(0.0), &theme).rect;
+    assert_eq!(c.binding(&pin_id).unwrap().rect, [r.x, r.y, r.w, r.h]);
+    let s = snap(|b| {
+        pin.project(b, &pin_id, None);
+    });
+    let node = s.get(&pin_id).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::Button, "Comment by Luna, Sam")
+    );
+    assert_eq!(node.state.get("unread"), Some(&accord::Value::Bool(true)));
+    assert!(node.actions.iter().any(|a| a.name.as_str() == "activate"));
+
+    let cur_id = id("cursor");
+    let cursor = Marker::cursor(CursorState::Typing).sem(cur_id.clone());
+    let s = snap(|b| {
+        cursor.project(b, &cur_id, None);
+    });
+    let node = s.get(&cur_id).unwrap();
+    assert_eq!(
+        (node.role, node.description.as_deref()),
+        (Role::Image, Some("typing"))
+    );
+    assert!(node.actions.is_empty() && !node.focusable);
+}

@@ -134,6 +134,7 @@ components! {
     Alert => alert,
     Attachment => attachment,
     Bubble => bubble,
+    Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
     // task-104 front D, disclosure and display (#157)

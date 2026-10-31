@@ -310,11 +310,44 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // the markers: the unread pin's border and the point cursor's on the
+    // card, and each cursor's mark on both ends of its fill.
+    let m = &t.message.marker;
+    add(
+        "message.marker.pin_unread",
+        "colors.surface",
+        LARGE,
+        over(m.pin_unread, card),
+        card,
+    );
+    add(
+        "message.marker.point_border",
+        "colors.surface",
+        LARGE,
+        over(m.point_border, card),
+        card,
+    );
+    for (name, shape) in [
+        ("point", &m.point),
+        ("pinned", &m.pinned),
+        ("active", &m.active),
+    ] {
+        for (i, fill) in shape.fill.iter().enumerate() {
+            let under = over(*fill, card);
+            add(
+                &format!("message.marker.{name}.ink"),
+                &format!("message.marker.{name}.fill[{i}]"),
+                LARGE,
+                over(shape.ink, under),
+                under,
+            );
+        }
+    }
     out
 }
 
-/// The pairs that fail today, 116 of the 389 (core 41, hoff 18, dark 13,
-/// light 44), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 117 of the 421 (core 41, hoff 18, dark 13,
+/// light 45), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -550,9 +583,10 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
-    // task-104 front C: the alert's unread dot takes the info accent,
-    // which the light theme already draws under 3:1.
+    // task-104 front C: the alert's unread dot and the unread pin take
+    // the info accent, which the light theme already draws under 3:1.
     ("light", "message.alert.unread", "colors.surface", 2.87),
+    ("light", "message.marker.pin_unread", "colors.surface", 2.87),
 ];
 
 #[test]
@@ -593,7 +627,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 389,
+        count, 421,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

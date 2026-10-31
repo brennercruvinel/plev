@@ -296,7 +296,13 @@ pub const PAGES: &[Page] = &[
         Pane::Input,
         "a label widget in comps (the gallery draws its group labels by hand)",
     ),
-    placeholder("Marker"),
+    page(
+        C,
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
     placeholder("Menubar"),
     page(
         C,
