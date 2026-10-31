@@ -1,8 +1,6 @@
 //! Icon data: Lucide v0.469.0 primitives, verbatim, in the 24x24 viewBox.
 //! The table is kept in alphabetical order (a test checks it); every
-//! entry is one lucide icon under its lucide name. The four the kit's
-//! notification badges ask for (image, message-circle, user-plus, video)
-//! come from lucide-react 1.49.0, verbatim too.
+//! entry is one lucide icon under its lucide name.
 
 /// One SVG primitive of an icon, in the 24x24 viewBox.
 pub(super) enum Shape {
@@ -176,7 +174,6 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             ),
         ],
     ),
-    // lucide-react 1.49.0.
     (
         "image",
         &[
@@ -219,13 +216,7 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path("M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"),
         ],
     ),
-    // lucide-react 1.49.0.
-    (
-        "message-circle",
-        &[Path(
-            "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
-        )],
-    ),
+    ("message-circle", &[Path("M7.9 20A9 9 0 1 0 4 16.1L2 22Z")]),
     (
         "message-square",
         &[Path(
@@ -339,7 +330,6 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path("M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"),
         ],
     ),
-    // lucide-react 1.49.0.
     (
         "user-plus",
         &[
@@ -349,7 +339,6 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Line(22.0, 11.0, 16.0, 11.0),
         ],
     ),
-    // lucide-react 1.49.0.
     (
         "video",
         &[
