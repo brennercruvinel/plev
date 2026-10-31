@@ -110,6 +110,9 @@ pub struct FieldChrome {
     pub message_gap: f32,
     pub error_color: Color,
     pub helper_color: Color,
+    /// A field's width where the composition gives it one; the `Rect` it
+    /// gets always wins.
+    pub width: f32,
 }
 
 /// What takes one end of the input box, which sets the text's inset on
@@ -170,6 +173,12 @@ pub struct GroupAddons {
     pub text_edge: f32,
     /// The least width of a select at the end (Invite :26 `w-25.5`).
     pub select_w: f32,
+    /// A group's width where the composition gives it one: a search, an
+    /// invite (a select at its end) and a command palette (the search
+    /// over its list). The `Rect` it gets always wins.
+    pub width: f32,
+    pub invite_width: f32,
+    pub palette_width: f32,
 }
 
 /// A one-time code (`super::otp`): its cells are the Field's input box,
@@ -396,6 +405,13 @@ impl FormTokens {
             text_color: gray,
             text_edge: 12.0,
             select_w: 102.0,
+            // `templates/InputsPage/index.tsx:176` the Search `w-54`, :161
+            // the Invite `w-76.5`.
+            width: 216.0,
+            invite_width: 306.0,
+            // Not in the kit, which has no palette: `w-72`, between its
+            // Search and its Invite.
+            palette_width: 288.0,
         };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
@@ -418,6 +434,8 @@ impl FormTokens {
             // Not in the kit (only an error line): the gray of its
             // secondary text.
             helper_color: gray,
+            // `templates/InputsPage/index.tsx:36`, `w-60`.
+            width: 240.0,
         };
 
         // Not in the kit (it has no code input): the Field's own spaces,
@@ -510,6 +528,11 @@ impl FormTokens {
             text_edge: theme.spacing.md,
             // As wide as its options measure.
             select_w: 0.0,
+            // A menu's width; an invite takes half a readable line, a
+            // palette two fifths of it.
+            width: theme.size.menu_w,
+            invite_width: theme.size.readable_max_w / 2.0,
+            palette_width: theme.size.readable_max_w * 0.4,
         };
         let label = LabelRecipe {
             text: t.caption_sm(),
@@ -528,6 +551,7 @@ impl FormTokens {
             message_gap: theme.spacing.sm,
             error_color: c.danger,
             helper_color: c.text_mid,
+            width: theme.size.menu_w,
         };
         let otp = OtpTokens {
             gap: field.label_gap,

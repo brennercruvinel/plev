@@ -23,9 +23,6 @@ use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use super::field::spec::{CardWidget, Part};
 use super::field::{FormPage, Group, card};
 
-/// A palette is `w-72`, narrower when the card is.
-const COMMAND_W: f32 = 288.0;
-
 fn palette() -> Command {
     Command::new("Type a command or search...")
         .group(
@@ -93,7 +90,7 @@ impl CardWidget for Command {
     }
 
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        let w = COMMAND_W.min(room);
+        let w = theme.form.group.palette_width.min(room);
         (w, self.height_for(w, theme))
     }
 
