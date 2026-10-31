@@ -6,6 +6,7 @@ type: task
 status: superseded
 date: 2026-09-25
 date_basis: header
+recorded: 2026-03-13
 topics: [input, platform]
 relations: [task-58, task-62, task-75]
 source: [docs/log/steps/task-42-plev-event-dispatch.md, docs/log/changes/task-42.md]

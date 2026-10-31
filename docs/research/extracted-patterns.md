@@ -4,8 +4,9 @@ title: "extracted patterns, 56 reference repos"
 project: plev
 type: research
 status: reference
-date: 2022-07-06
-date_basis: header
+date: 2023-04-06
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, rendering, animation, signals, accessibility]
 relations: [task-30, task-31, task-32, task-33, task-34]
 source: docs/ref/extracted-patterns.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Gathers the code patterns extracted in task-34 from reference repositories (accesskit, parley, lyon, vello, keyframe, yazi, leptos, among others). Each pattern includes its source, a description, a snippet, its applicability to plev and a decision, such as adopt, adapt, ignore or watch; the patterns are grouped into six phases: immediate priority, rendering and compositing, animation, UX of TUI apps, WASM runtime and competitors. The result is the decisions table, with the target task of each pattern, and a top 10 by priority, which guides tasks 30 to 33 and the signals, animation and compositor modules. Several code paths cited in the sections (signal.rs, animation.rs, compositor.rs) no longer exist in the current tree.
 
-**data:** 2022-07-06
+**data:** 2023-04-06
 **task:** task-34
 **objetivo:** patterns concretos extraidos do codigo-fonte, aplicaveis ao plev
 
@@ -613,10 +614,6 @@ let _guard = observer.replace(new_observer);
 | c4 | timeline repeat/reverse/delay | mina/keyframe | adopt | animation.rs |
 | c5 | const-generic array interpolate | keyframe | adopt | animation.rs |
 | c6 | step/hold easing | keyframe | adopt | animation.rs |
-| f1 | fxindexset for subscribers | leptos | adopt | signal.rs |
-| f2 | peek() untracked read | dioxus | adapt | signal.rs |
-| f3 | constant-signal sentinel | slint | adopt | signal.rs |
-| f4 | RAII observer drop guard | leptos | adopt | signal.rs |
 | d1 | event batching + render throttle | yazi | **adapt** | input/window.rs |
 | d2 | partial vs full render flag | yazi | adapt | compositor.rs |
 | d3 | layer-based action routing | yazi | adapt | input system |
@@ -652,4 +649,4 @@ let _guard = observer.replace(new_observer);
 | 9 | d8 auto-navigation layout | essencial para task-30 a11y | ~150 LOC | layout/accessibility |
 | 10 | c4 repeat/reverse/delay | patterns comuns de animacao | ~80 LOC | animation.rs |
 
-**total: 38 patterns extraidos de 17 repos em 6 fases.**
+**total: 38 patterns extraidos de 18 repos em 6 fases.**

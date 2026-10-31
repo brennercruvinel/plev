@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2024-04-14
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-30
 topics: [process, platform]
 relations: []
 source: docs/adr/workflows/0017-error-handling-lint-cleanup.md

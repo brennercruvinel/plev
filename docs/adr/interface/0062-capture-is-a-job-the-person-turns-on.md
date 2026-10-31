@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, rendering, semantics, agents]
 relations: [adr-0060, task-76]
 source: docs/adr/interface/0062-capture-is-a-job-the-person-turns-on.md

@@ -4,8 +4,9 @@ title: "parley vs cosmic-text - factual comparison for plev"
 project: plev
 type: research
 status: reference
-date: 2022-08-11
-date_basis: header
+date: 2023-06-20
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [text, research, web-wasm]
 relations: [task-30, task-32]
 source: docs/ref/parley-vs-cosmic-text.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Compares cosmic-text 0.18.2, which plev uses for text, with parley 0.7.0, a candidate to replace it, on factual criteria: cursor and selection API, inline boxes, WASM, stability, rasterization, accesskit and migration cost. The result is the recommendation not to migrate now and to reassess at parley 0.9 or 1.0, with a matrix that links each future need to an action. The comparison underpins task-32, which decides on the migration.
 
-**date:** 2022-08-11
+**date:** 2023-06-20
 **context:** plev uses cosmic-text 0.18.2. task-32 assesses whether to migrate to parley.
 
 ---

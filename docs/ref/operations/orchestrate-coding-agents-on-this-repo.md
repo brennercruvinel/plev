@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-26
 date_basis: header
+recorded: 2026-06-10
 topics: [agents, process, git, workspace]
 relations: [learning-general, adr-index, operations-autonomy, operations-generative-runtime-guidelines, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-60, task-62, task-84]
 source: docs/ref/orchestrate-coding-agents-on-this-repo.md

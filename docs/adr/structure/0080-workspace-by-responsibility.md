@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-09
 date_basis: git
+recorded: 2026-10-31
 topics: [workspace, git]
 relations: [task-98]
+evidence: [d3e65544, 9e31564e, 6c4d6ff3]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [d3e65544, 9e31564e, 6c4d6ff3]
 ---
 
 # the workspace separates libraries, apps, demos and tools

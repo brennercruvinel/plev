@@ -4,8 +4,9 @@ title: "reference analysis: WASM tooling ecosystem"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [web-wasm, platform]
 relations: []
 source: docs/ref/wasm-tooling.md
@@ -16,13 +17,13 @@ review: reviewed
 
 # reference analysis: WASM tooling ecosystem
 
-A survey of seven tools in the WebAssembly ecosystem (trunk, wasm-pack, extism, serde-wasm-bindgen, spin, lunatic and workers-rs), made on 2026-03-11 for the plev WASM/WebGPU build. Records the status of each project (releases, open issues and architecture) without recommending adoption. The result is that trunk remains adequate for the current build, and that serde-wasm-bindgen, wasm-pack and extism are paths for the JS boundary and for plugins, if plev comes to need them.
+A survey of seven tools in the WebAssembly ecosystem (trunk, wasm-pack, extism, serde-wasm-bindgen, spin, lunatic and workers-rs), made on 2022-06-15 for the plev WASM/WebGPU build. Records the status of each project (releases, open issues and architecture) without recommending adoption. The result is that trunk remains adequate for the current build, and that serde-wasm-bindgen, wasm-pack and extism are paths for the JS boundary and for plugins, if plev comes to need them.
 
 ## escopo
 
 levantamento factual de sete ferramentas do ecossistema webassembly relevantes para o plev, engine de composicao GPU-first em rust que ja utiliza trunk para builds WASM/webgpu. o objetivo e documentar estado atual, arquitetura e implicacoes praticas, nao recomendar adocao.
 
-data da pesquisa: 2026-03-11.
+data da pesquisa: 2022-06-15.
 
 ---
 

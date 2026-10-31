@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2025-03-26
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-11
 topics: [animation, formats]
 relations: []
 source: docs/ref/monster-format-v0.md

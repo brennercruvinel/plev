@@ -5,7 +5,8 @@ project: plev
 type: task
 status: pending
 date: 2023-12-14
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [process, workspace]
 relations: [task-23]
 source: docs/log/steps/task-41-license-and-public-release.md

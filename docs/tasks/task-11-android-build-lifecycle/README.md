@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-08-16
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [mobile, platform, gpu]
 relations: [task-10]
 source: [docs/log/steps/task-11.md, docs/log/changes/task-11.md]

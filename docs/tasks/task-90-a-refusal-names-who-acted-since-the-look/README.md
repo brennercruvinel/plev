@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents]
 relations: [adr-0043, adr-0046, operations-code-against-the-plev-engine, task-83, task-86, task-89, task-91]
+evidence: [168c897, 8b1ffa6, 128ca11, f0de28a, d02b4d1]
 source: docs/log/steps/task-90-a-refusal-names-who-acted-since-the-look.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [168c897, 8b1ffa6, 128ca11, f0de28a, d02b4d1]
 ---
 
 # task-90: a refusal names who acted since the agent looked

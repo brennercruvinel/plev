@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [rendering, gpu, platform]
 relations: [task-76]
 source: docs/adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md

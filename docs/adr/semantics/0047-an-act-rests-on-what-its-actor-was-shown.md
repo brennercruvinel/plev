@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics]
 relations: [adr-0039, adr-0043, adr-0044, task-64, task-83, task-87, task-91]
 source: docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md

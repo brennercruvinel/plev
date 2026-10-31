@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, recording]
 relations: [adr-0040, task-57b, task-62, task-83, task-86, task-89, task-90, task-91]
 source: docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md

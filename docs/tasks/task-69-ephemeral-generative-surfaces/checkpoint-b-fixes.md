@@ -3,17 +3,18 @@ id: task-69/checkpoint-b-fixes
 title: "task-69, checkpoint b: the corrections"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [generated-surfaces, rendering, layout]
 relations: [adr-0051, task-75, task-77]
+evidence: [253be85d, 210564b8, 039b5cf6, f4b46794, b8665828, 25633cba]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [253be85d, 210564b8, 039b5cf6, f4b46794, b8665828, 25633cba]
 ---
 
 # checkpoint b, the corrections (task/69i)

@@ -3,17 +3,18 @@ id: task-77/phase-1a-probe
 title: "phase 1 (task-77a): the probe"
 project: plev
 type: section
-status: reference
 parent: task-77
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [determinism, rendering, platform]
 relations: [adr-0034, adr-0064, operations-validate-visuals-by-pixel]
+evidence: [2dd2bc0d, c779fca6, 65d45235, 8af26af5, 35a47b26, a69cd464]
 source: docs/log/steps/task-77-visual-determinism.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [2dd2bc0d, c779fca6, 65d45235, 8af26af5, 35a47b26, a69cd464]
 ---
 
 # phase 1 (task-77a): the probe

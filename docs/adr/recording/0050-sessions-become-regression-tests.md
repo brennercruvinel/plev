@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [recording, process, semantics]
 relations: [adr-0037, adr-0046, task-63, task-64, generative-runtime-thesis]
 source: docs/adr/recording/0050-sessions-become-regression-tests.md

@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [rendering, formats, text]
 relations: [adr-0041, task-57b, task-59, task-62, task-63, task-66, task-67, task-82]
+evidence: [efc87b6]
 source: docs/log/steps/task-66b-svg-export.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [efc87b6]
 ---
 
 # task-66b: SVG export and `--semantics` in headless mode

@@ -10,6 +10,7 @@
    "status": "active",
    "date": null,
    "date_basis": "undated",
+   "recorded": "2026-06-11",
    "topics": [
     "process",
     "workspace",
@@ -17,6 +18,10 @@
     "agents"
    ],
    "relations": [],
+   "evidence": [
+    "704412f1",
+    "b1e820ba"
+   ],
    "source": [
     "docs/log/changelog.md",
     "docs/log/README.md",
@@ -26,10 +31,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-31",
    "review": "reviewed",
-   "evidence": [
-    "704412f1",
-    "b1e820ba"
-   ],
    "headings": [
     {
      "level": 1,
@@ -772,6 +773,7 @@
    "status": "active",
    "date": null,
    "date_basis": "generated",
+   "recorded": "2026-10-09",
    "topics": [
     "navigation"
    ],
@@ -815,6 +817,7 @@
    "status": "active",
    "date": "2026-09-29",
    "date_basis": "header",
+   "recorded": "2026-06-16",
    "topics": [
     "editorial",
     "process"
@@ -1122,6 +1125,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -1248,6 +1252,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -1481,6 +1486,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -1681,6 +1687,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -1700,16 +1707,16 @@
     "task-90",
     "task-91"
    ],
-   "source": "docs/adr/generated/0067-adaptive-transforms-preserve-identity.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "ab3fedf7",
     "99d45162",
     "7e9a7176",
     "873a737f"
    ],
+   "source": "docs/adr/generated/0067-adaptive-transforms-preserve-identity.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -2012,6 +2019,7 @@
    "status": "proposed",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "agents",
     "generated-surfaces",
@@ -2031,14 +2039,14 @@
     "task-96",
     "experiment-five-demos"
    ],
-   "source": "docs/adr/generated/0070-generative-runtime-results.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "c8a6c3a9",
     "6500f2dc"
    ],
+   "source": "docs/adr/generated/0070-generative-runtime-results.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -2100,19 +2108,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-05-14",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "animation",
     "formats"
    ],
    "relations": [],
+   "evidence": [
+    "a4ad0c0"
+   ],
    "source": "docs/adr/importing/0010-binary-animation-format-with-discovered-deltas.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "a4ad0c0"
-   ],
    "headings": [
     {
      "level": 1,
@@ -2149,20 +2158,21 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-06-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "importing",
     "formats",
     "animation"
    ],
    "relations": [],
+   "evidence": [
+    "a044613"
+   ],
    "source": "docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "a044613"
-   ],
    "headings": [
     {
      "level": 1,
@@ -2199,19 +2209,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-07-08",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "importing",
     "formats"
    ],
    "relations": [],
+   "evidence": [
+    "5eecb0a"
+   ],
    "source": "docs/adr/importing/0012-transpiler-reports-every-unmapped-construct.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "5eecb0a"
-   ],
    "headings": [
     {
      "level": 1,
@@ -2249,6 +2260,7 @@
    "status": "accepted",
    "date": "2026-09-18",
    "date_basis": "header",
+   "recorded": "2026-09-18",
    "topics": [
     "urna",
     "formats",
@@ -2298,6 +2310,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "performance",
     "fonts",
@@ -2360,6 +2373,7 @@
    "status": "accepted",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "importing",
     "ir",
@@ -2455,19 +2469,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-01-27",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "input",
     "mobile"
    ],
    "relations": [],
+   "evidence": [
+    "5854941"
+   ],
    "source": "docs/adr/interface/0009-touch-as-synthesized-pointer-events.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "5854941"
-   ],
    "headings": [
     {
      "level": 1,
@@ -2504,7 +2519,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2026-03-04",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "text-editing",
     "text"
@@ -2551,6 +2567,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "semantics",
@@ -2565,13 +2582,13 @@
     "task-62",
     "task-75"
    ],
+   "evidence": [
+    "263c00c"
+   ],
    "source": "docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "263c00c"
-   ],
    "headings": [
     {
      "level": 1,
@@ -2644,6 +2661,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "input",
@@ -2706,6 +2724,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "semantics",
@@ -2770,6 +2789,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "semantics",
@@ -2833,6 +2853,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "semantics",
@@ -2894,6 +2915,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "rendering",
@@ -2965,6 +2987,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "semantics",
@@ -3036,6 +3059,7 @@
    "status": "proposed",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "accessibility",
     "platform",
@@ -3183,6 +3207,7 @@
    "status": "accepted",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "text",
     "text-editing",
@@ -3232,6 +3257,7 @@
    "status": "accepted",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "accessibility",
     "input",
@@ -3282,6 +3308,7 @@
    "status": "accepted",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-09-26",
    "topics": [
     "input",
     "text-editing",
@@ -3331,6 +3358,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "formats",
@@ -3432,6 +3460,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "semantics",
@@ -3524,6 +3553,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "recording",
     "process",
@@ -3617,6 +3647,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "agents",
     "rendering",
@@ -3630,15 +3661,15 @@
     "task-76",
     "task-79"
    ],
-   "source": "docs/adr/recording/0065-scene-travels-as-data.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "919655eb",
     "dc9e146e",
     "7728da47"
    ],
+   "source": "docs/adr/recording/0065-scene-travels-as-data.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -3775,19 +3806,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-02-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "web-wasm",
     "gpu"
    ],
    "relations": [],
+   "evidence": [
+    "55c8aa7"
+   ],
    "source": "docs/adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "55c8aa7"
-   ],
    "headings": [
     {
      "level": 1,
@@ -3824,19 +3856,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-09-18",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "layout",
     "rendering"
    ],
    "relations": [],
+   "evidence": [
+    "15f096f"
+   ],
    "source": "docs/adr/rendering/0002-content-driven-layout-not-fixed-constants.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "15f096f"
-   ],
    "headings": [
     {
      "level": 1,
@@ -3873,19 +3906,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-01-08",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "text",
     "fonts"
    ],
    "relations": [],
+   "evidence": [
+    "21fdc8c"
+   ],
    "source": "docs/adr/rendering/0003-embed-every-font-weight-in-use.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "21fdc8c"
-   ],
    "headings": [
     {
      "level": 1,
@@ -3922,19 +3956,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-11-20",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "rendering",
     "gpu"
    ],
    "relations": [],
+   "evidence": [
+    "69013d1"
+   ],
    "source": "docs/adr/rendering/0004-linearize-colors-before-the-gpu.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "69013d1"
-   ],
    "headings": [
     {
      "level": 1,
@@ -3971,19 +4006,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-12-19",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "design-system",
     "rendering"
    ],
    "relations": [],
+   "evidence": [
+    "9c5fbd3"
+   ],
    "source": "docs/adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "9c5fbd3"
-   ],
    "headings": [
     {
      "level": 1,
@@ -4020,19 +4056,20 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-10-29",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "text",
     "layout"
    ],
    "relations": [],
+   "evidence": [
+    "f15198a"
+   ],
    "source": "docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "f15198a"
-   ],
    "headings": [
     {
      "level": 1,
@@ -4069,7 +4106,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-12-04",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "web-wasm",
     "gpu",
@@ -4078,13 +4116,13 @@
    "relations": [
     "adr-0004"
    ],
+   "evidence": [
+    "2a33933"
+   ],
    "source": "docs/adr/rendering/0007-render-into-an-srgb-view-format.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "2a33933"
-   ],
    "headings": [
     {
      "level": 1,
@@ -4121,20 +4159,21 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-10-07",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-10",
    "topics": [
     "rendering",
     "input",
     "signals"
    ],
    "relations": [],
+   "evidence": [
+    "83720e3"
+   ],
    "source": "docs/adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "83720e3"
-   ],
    "headings": [
     {
      "level": 1,
@@ -4166,7 +4205,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-09-24",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-14",
    "topics": [
     "rendering",
     "animation",
@@ -4213,7 +4253,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-06-17",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-04-05",
    "topics": [
     "rendering",
     "text"
@@ -4255,6 +4296,7 @@
    "status": "accepted",
    "date": "2026-08-31",
    "date_basis": "header",
+   "recorded": "2026-08-31",
    "topics": [
     "text",
     "rendering",
@@ -4302,6 +4344,7 @@
    "status": "accepted",
    "date": "2026-09-18",
    "date_basis": "header",
+   "recorded": "2026-09-18",
    "topics": [
     "urna",
     "performance",
@@ -4349,6 +4392,7 @@
    "status": "accepted",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "gpu"
@@ -4395,6 +4439,7 @@
    "status": "accepted",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "layout",
     "platform"
@@ -4438,6 +4483,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "gpu",
@@ -4488,6 +4534,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "formats",
@@ -4535,6 +4582,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "animation",
     "rendering",
@@ -4581,6 +4629,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "rendering",
     "gpu",
@@ -4636,6 +4685,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "rendering",
     "platform",
@@ -4694,6 +4744,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "platform",
     "rendering",
@@ -4766,6 +4817,7 @@
    "status": "accepted",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "fonts",
     "text",
@@ -4843,6 +4895,7 @@
    "status": "accepted",
    "date": "2026-09-29",
    "date_basis": "header",
+   "recorded": "2026-09-29",
    "topics": [
     "layout",
     "design-system",
@@ -4899,6 +4952,7 @@
    "status": "accepted",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-09-26",
    "topics": [
     "gpu",
     "determinism",
@@ -4949,6 +5003,7 @@
    "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "header",
+   "recorded": "2026-10-27",
    "topics": [
     "fonts",
     "text",
@@ -4958,14 +5013,14 @@
     "adr-0071",
     "adr-0079"
    ],
-   "source": "docs/adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "f79400d1",
     "71ee6291"
    ],
+   "source": "docs/adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -5003,6 +5058,7 @@
    "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "header",
+   "recorded": "2026-10-27",
    "topics": [
     "fonts",
     "text",
@@ -5013,13 +5069,13 @@
     "adr-0071",
     "adr-0078"
    ],
+   "evidence": [
+    "bee96c97"
+   ],
    "source": "docs/adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "bee96c97"
-   ],
    "headings": [
     {
      "level": 1,
@@ -5057,6 +5113,7 @@
    "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "graphs",
     "platform"
@@ -5064,14 +5121,14 @@
    "relations": [
     "task-100"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "da4be63a",
     "4aa9706b"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -5114,6 +5171,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -5177,6 +5235,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -5244,6 +5303,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "rendering",
@@ -5331,6 +5391,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "git",
@@ -5419,6 +5480,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -5530,6 +5592,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -5577,6 +5640,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -5653,6 +5717,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -5703,6 +5768,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -5761,7 +5827,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2025-08-18",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "workspace",
     "platform"
@@ -5769,13 +5836,13 @@
    "relations": [
     "adr-0022"
    ],
+   "evidence": [
+    "c2a90f1"
+   ],
    "source": "docs/adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "c2a90f1"
-   ],
    "headings": [
     {
      "level": 1,
@@ -5812,7 +5879,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-05-21",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-04-05",
    "topics": [
     "workspace",
     "process"
@@ -5863,7 +5931,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2026-04-01",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "git",
     "performance",
@@ -5911,6 +5980,7 @@
    "status": "accepted",
    "date": "2026-07-13",
    "date_basis": "header",
+   "recorded": "2026-07-13",
    "topics": [
     "editorial",
     "workspace"
@@ -5957,6 +6027,7 @@
    "status": "accepted",
    "date": "2026-08-30",
    "date_basis": "header",
+   "recorded": "2026-08-30",
    "topics": [
     "platform",
     "generated-surfaces",
@@ -6013,6 +6084,7 @@
    "status": "accepted",
    "date": "2026-09-18",
    "date_basis": "header",
+   "recorded": "2026-09-18",
    "topics": [
     "design-system",
     "layout",
@@ -6062,6 +6134,7 @@
    "status": "accepted",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "platform"
@@ -6105,6 +6178,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "generated-surfaces",
     "semantics",
@@ -6205,6 +6279,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "rendering",
     "gpu",
@@ -6259,6 +6334,7 @@
    "status": "accepted",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-09-26",
    "topics": [
     "llm",
     "gpu",
@@ -6340,6 +6416,7 @@
    "status": "accepted",
    "date": "2026-10-09",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "workspace",
     "git"
@@ -6347,15 +6424,15 @@
    "relations": [
     "task-98"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "d3e65544",
     "9e31564e",
     "6c4d6ff3"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -6398,6 +6475,7 @@
    "status": "proposed",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "graphs",
     "layout"
@@ -6405,15 +6483,15 @@
    "relations": [
     "task-100"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "db4b3299",
     "b819b3db",
     "b8bc7639"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -6455,7 +6533,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-04-14",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-30",
    "topics": [
     "process",
     "platform"
@@ -6536,7 +6615,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-02-18",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-22",
    "topics": [
     "hot-reload",
     "dsl"
@@ -6587,7 +6667,8 @@
    "type": "adr",
    "status": "accepted",
    "date": "2024-02-06",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-22",
    "topics": [
     "hot-reload",
     "gpu"
@@ -6688,6 +6769,7 @@
    "status": "accepted",
    "date": "2026-09-22",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "hot-reload",
     "gpu",
@@ -6734,6 +6816,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "determinism",
     "semantics",
@@ -6806,6 +6889,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "hot-reload",
     "semantics",
@@ -6864,6 +6948,7 @@
    "status": "accepted",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "determinism",
     "rendering",
@@ -6928,6 +7013,7 @@
    "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "workspace",
     "performance"
@@ -6935,14 +7021,14 @@
    "relations": [
     "task-102"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "540e218d",
     "706dfa82"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -6985,6 +7071,7 @@
    "status": "accepted",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "web-wasm",
     "platform"
@@ -6992,14 +7079,14 @@
    "relations": [
     "task-102"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "aa51e7d3",
     "5de80aad"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7042,6 +7129,7 @@
    "status": "accepted",
    "date": "2026-09-23",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "git",
     "process",
@@ -7053,10 +7141,6 @@
     "learning-generative-runtime",
     "task-66"
    ],
-   "source": "reconstruction",
-   "source_revision": "c4f6c343",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "f41ba225",
     "5f755a6f",
@@ -7064,6 +7148,10 @@
     "3c0d6f3b",
     "9c4bca2d"
    ],
+   "source": "reconstruction",
+   "source_revision": "c4f6c343",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7131,6 +7219,7 @@
    "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "agents",
     "semantics",
@@ -7258,8 +7347,9 @@
    "project": "plev",
    "type": "experiment",
    "status": "reference",
-   "date": "2022-04-26",
-   "date_basis": "header",
+   "date": "2026-03-11",
+   "date_basis": "text",
+   "recorded": "2026-03-11",
    "topics": [
     "performance",
     "rendering",
@@ -7329,6 +7419,7 @@
    "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "rendering",
     "performance",
@@ -7341,14 +7432,14 @@
     "task-82/phase-b",
     "adr-0042"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "d97a375",
     "a6fec8d"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7421,6 +7512,7 @@
    "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "generated-surfaces",
     "agents",
@@ -7437,10 +7529,6 @@
     "task-97",
     "adr-0070"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "c8a6c3a9",
     "46f272d3",
@@ -7450,6 +7538,10 @@
     "07650665",
     "9c96bde4"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7517,6 +7609,7 @@
    "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "performance",
     "gpu",
@@ -7526,14 +7619,14 @@
     "task-73",
     "task-73/phase-1-measurements"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "ed814da",
     "91fdb33"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7616,6 +7709,7 @@
    "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "generated-surfaces",
     "layout",
@@ -7628,10 +7722,6 @@
     "task-69/checkpoint-b-round-2",
     "task-69/checkpoint-b-fixes"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "253be85d",
     "210564b8",
@@ -7640,6 +7730,10 @@
     "b8665828",
     "25633cba"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7697,6 +7791,7 @@
    "status": "reference",
    "date": "2026-09-26",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "llm",
     "gpu",
@@ -7707,10 +7802,6 @@
     "task-78",
     "adr-0072"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "94109cd3",
     "f6ff13fb",
@@ -7718,6 +7809,10 @@
     "496c6ffa",
     "002debd4"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7790,6 +7885,7 @@
    "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "text",
     "fonts",
@@ -7801,10 +7897,6 @@
     "task-74/phase-1-audit",
     "task-74/phase-7-large-documents"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "df270334",
     "ad6d0d6a",
@@ -7814,6 +7906,10 @@
     "8b4c58e9",
     "727c378e"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7881,6 +7977,7 @@
    "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-10-31",
    "topics": [
     "determinism",
     "rendering",
@@ -7894,10 +7991,6 @@
     "task-77/closing",
     "adr-0064"
    ],
-   "source": "reconstruction",
-   "source_revision": "c2e3f8cd",
-   "revised": "2026-10-31",
-   "review": "reviewed",
    "evidence": [
     "8af26af5",
     "35a47b26",
@@ -7905,6 +7998,10 @@
     "f6c688b5",
     "adbf948b"
    ],
+   "source": "reconstruction",
+   "source_revision": "c2e3f8cd",
+   "revised": "2026-10-31",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -7997,19 +8094,20 @@
    "status": "reference",
    "date": "2026-06-10",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "platform",
     "process",
     "agents"
    ],
    "relations": [],
+   "evidence": [
+    "bb34a1c"
+   ],
    "source": "kdb/explanation/why-the-apps-bypassed-the-engine.md",
    "source_revision": "d0958da0",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "bb34a1c"
-   ],
    "headings": [
     {
      "level": 1,
@@ -8047,6 +8145,7 @@
    "status": "reference",
    "date": "2026-09-19",
    "date_basis": "header",
+   "recorded": "2026-09-19",
    "topics": [
     "design-system",
     "process",
@@ -8093,6 +8192,7 @@
    "status": "reference",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "rendering",
@@ -8138,6 +8238,7 @@
    "status": "reference",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "graphs",
     "layout",
@@ -8147,14 +8248,14 @@
     "task-100",
     "adr-0081"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "db4b3299",
     "b8bc7639"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -8177,6 +8278,7 @@
    "status": "reference",
    "date": null,
    "date_basis": "undated",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -8216,14 +8318,14 @@
     "task-96",
     "task-97"
    ],
-   "source": "docs/log/learnings/general.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "c07a7f0",
     "1bf6606"
    ],
+   "source": "docs/log/learnings/general.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -8536,6 +8638,7 @@
    "status": "reference",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-09-26",
    "topics": [
     "agents",
     "process",
@@ -8597,6 +8700,7 @@
    "status": "reference",
    "date": "2026-09-22",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "hot-reload",
     "process",
@@ -8642,6 +8746,7 @@
    "status": "reference",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "process",
@@ -8688,6 +8793,7 @@
    "status": "reference",
    "date": "2026-10-16",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "process",
     "urna"
@@ -8696,14 +8802,14 @@
     "task-99",
     "adr-0026"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "05fe993c",
     "701d2993"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -8726,19 +8832,20 @@
    "status": "reference",
    "date": "2026-06-10",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "rendering",
     "gpu",
     "web-wasm"
    ],
    "relations": [],
+   "evidence": [
+    "2a33933"
+   ],
    "source": "kdb/explanation/the-two-gamma-bugs.md",
    "source_revision": "d0958da0",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "2a33933"
-   ],
    "headings": [
     {
      "level": 1,
@@ -8820,7 +8927,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2022-02-24",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-09",
    "topics": [
     "animation",
     "rendering",
@@ -8879,7 +8987,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2024-07-09",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-04-05",
    "topics": [
     "process",
     "platform"
@@ -8961,6 +9070,7 @@
    "status": "active",
    "date": "2026-09-18",
    "date_basis": "header",
+   "recorded": "2026-09-18",
    "topics": [
     "design-system",
     "platform"
@@ -9067,7 +9177,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-03-24",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "design-system",
     "signals"
@@ -9121,7 +9232,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-07-26",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "dsl",
     "layout"
@@ -9199,7 +9311,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-07-04",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "effects",
     "gpu",
@@ -9269,6 +9382,7 @@
    "status": "reference",
    "date": "2026-06-10",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "design-system",
     "text",
@@ -9277,13 +9391,13 @@
    "relations": [
     "adr-0005"
    ],
+   "evidence": [
+    "9c5fbd3"
+   ],
    "source": "kdb/reference/hoff-visual-tokens.md",
    "source_revision": "d0958da0",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "9c5fbd3"
-   ],
    "headings": [
     {
      "level": 1,
@@ -9325,7 +9439,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2024-01-22",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-22",
    "topics": [
     "hot-reload",
     "dsl",
@@ -9430,7 +9545,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-05-27",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "input",
     "layout"
@@ -9493,7 +9609,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-06-16",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "rendering",
     "gpu"
@@ -9549,7 +9666,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-04-15",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "layout",
     "performance"
@@ -9600,7 +9718,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2025-03-26",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-11",
    "topics": [
     "animation",
     "formats"
@@ -9681,7 +9800,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-05-02",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "signals",
     "git"
@@ -9744,7 +9864,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2024-05-23",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-04-05",
    "topics": [
     "workspace",
     "process"
@@ -9842,7 +9963,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2022-10-27",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "mobile"
@@ -9898,7 +10020,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-03-06",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "rendering",
     "performance"
@@ -9950,6 +10073,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "process",
@@ -10032,6 +10156,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "web-wasm",
     "gpu",
@@ -10094,6 +10219,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "design-system",
     "rendering",
@@ -10215,6 +10341,7 @@
    "status": "active",
    "date": "2026-10-31",
    "date_basis": "editorial",
+   "recorded": "2026-10-31",
    "topics": [
     "editorial",
     "process"
@@ -10263,6 +10390,7 @@
    "status": "active",
    "date": "2026-09-29",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "process",
@@ -10495,6 +10623,7 @@
    "status": "active",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "agents",
     "process",
@@ -10559,6 +10688,7 @@
    "status": "active",
    "date": "2026-10-27",
    "date_basis": "header",
+   "recorded": "2026-10-27",
    "topics": [
     "process",
     "agents",
@@ -10633,6 +10763,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-06-10",
    "topics": [
     "determinism",
     "rendering",
@@ -10718,7 +10849,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2022-01-19",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-09",
    "topics": [
     "mobile",
     "platform",
@@ -10770,7 +10902,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-08-15",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "mobile",
     "platform",
@@ -10827,7 +10960,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-08-30",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "mobile",
     "input"
@@ -10878,7 +11012,8 @@
    "type": "reference",
    "status": "reference",
    "date": "2021-09-17",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "web-wasm",
     "gpu"
@@ -10963,8 +11098,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "accessibility",
     "platform",
@@ -11113,8 +11249,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "animation",
     "research"
@@ -11244,6 +11381,7 @@
    "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "process",
@@ -11297,10 +11435,6 @@
     "task-97",
     "generative-runtime-thesis"
    ],
-   "source": "docs/log/journal.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "6e284bf",
     "4573c81",
@@ -11346,6 +11480,10 @@
     "c07a7f0",
     "c5fdf36"
    ],
+   "source": "docs/log/journal.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -12006,8 +12144,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "rendering",
@@ -12089,8 +12228,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "competition",
     "gpu"
@@ -12169,7 +12309,8 @@
    "type": "research",
    "status": "reference",
    "date": "2022-10-21",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "competition",
     "research",
@@ -12199,8 +12340,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "competition",
     "research",
@@ -12321,8 +12463,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "web-wasm",
     "rendering"
@@ -12427,8 +12570,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2022-07-06",
-   "date_basis": "header",
+   "date": "2023-04-06",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "rendering",
@@ -12732,8 +12876,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2023-04-12",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "web-wasm",
@@ -12810,6 +12955,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "process",
     "agents",
@@ -12888,10 +13034,6 @@
     "task-96",
     "task-97"
    ],
-   "source": "docs/log/generative-runtime-program.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "b8ba096",
     "1d384d4",
@@ -12937,6 +13079,10 @@
     "654d740",
     "37c5e0c"
    ],
+   "source": "docs/log/generative-runtime-program.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -13014,6 +13160,7 @@
    "status": "active",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -13258,8 +13405,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "gpu",
@@ -13412,8 +13560,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "text",
     "rendering",
@@ -13569,7 +13718,8 @@
    "type": "research",
    "status": "reference",
    "date": "2022-11-19",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "competition",
     "rendering",
@@ -13665,8 +13815,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "gpu",
     "rendering",
@@ -13774,6 +13925,7 @@
    "status": "reference",
    "date": "2026-06-12",
    "date_basis": "header",
+   "recorded": "2026-06-12",
    "topics": [
     "design-system",
     "formats",
@@ -13785,16 +13937,16 @@
     "adr-0011",
     "adr-0012"
    ],
-   "source": "docs/ref/mon-experiment-notes.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "5eecb0a",
     "a4ad0c0",
     "a044613",
     "2a33933"
    ],
+   "source": "docs/ref/mon-experiment-notes.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -13870,8 +14022,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2022-08-11",
-   "date_basis": "header",
+   "date": "2023-06-20",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "text",
     "research",
@@ -14120,8 +14273,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2023-04-12",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "text",
@@ -14196,8 +14350,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2023-04-12",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "rendering",
@@ -14295,7 +14450,8 @@
    "type": "research",
    "status": "reference",
    "date": "2022-12-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "competition",
     "rendering",
@@ -14456,6 +14612,7 @@
    "status": "reference",
    "date": null,
    "date_basis": "undated",
+   "recorded": "2026-06-10",
    "topics": [
     "workspace",
     "rendering",
@@ -14588,8 +14745,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "competition"
@@ -14668,8 +14826,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "input",
     "layout",
@@ -14835,8 +14994,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2022-09-08",
-   "date_basis": "header",
+   "date": "2023-07-05",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "web-wasm",
     "platform"
@@ -14929,8 +15089,9 @@
    "project": "plev",
    "type": "research",
    "status": "reference",
-   "date": "2026-03-11",
-   "date_basis": "header",
+   "date": "2022-06-15",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "web-wasm",
     "platform"
@@ -15056,7 +15217,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-03-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "rendering",
     "process"
@@ -15135,7 +15297,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-03-28",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "signals",
     "process"
@@ -15203,7 +15366,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-04-20",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "layout",
     "process"
@@ -15269,7 +15433,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-05-06",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-08",
    "topics": [
     "signals",
     "process"
@@ -15333,7 +15498,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-05-23",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "dsl",
     "process"
@@ -15404,7 +15570,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-06-08",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "web-wasm",
     "gpu",
@@ -15504,7 +15671,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-06-21",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "rendering",
     "gpu"
@@ -15625,7 +15793,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-07-06",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "effects",
     "gpu"
@@ -15722,7 +15891,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-07-19",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "layout"
@@ -15805,7 +15975,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-08-02",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "mobile"
@@ -15893,6 +16064,7 @@
    "status": "in-progress",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "graphs",
     "layout",
@@ -15902,10 +16074,6 @@
     "adr-0081",
     "adr-0082"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "a38eb003",
     "da4be63a",
@@ -15915,6 +16083,10 @@
     "4f079852",
     "b8bc7639"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -15957,6 +16129,7 @@
    "status": "done",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "fonts",
     "text",
@@ -15967,10 +16140,6 @@
     "adr-0079",
     "task-74"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "f79400d1",
     "e2bdaa45",
@@ -15978,6 +16147,10 @@
     "9bdc266f",
     "c243b124"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -16015,6 +16188,7 @@
    "status": "done",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "workspace",
     "web-wasm",
@@ -16024,10 +16198,6 @@
     "adr-0083",
     "adr-0084"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "540e218d",
     "706dfa82",
@@ -16037,6 +16207,10 @@
     "f57c9054",
     "229f046b"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -16074,6 +16248,7 @@
    "status": "done",
    "date": "2026-10-27",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "process",
     "platform",
@@ -16083,13 +16258,13 @@
     "task-98",
     "task-102"
    ],
+   "evidence": [
+    "205fc5f8"
+   ],
    "source": "reconstruction",
    "source_revision": "c4f6c343",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "205fc5f8"
-   ],
    "headings": [
     {
      "level": 1,
@@ -16126,7 +16301,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-08-16",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "mobile",
     "platform",
@@ -16198,7 +16374,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-08-29",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "mobile",
     "platform",
@@ -16285,7 +16462,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-09-12",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "mobile",
     "input",
@@ -16378,7 +16556,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-09-27",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "dsl",
     "signals"
@@ -16456,7 +16635,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-10-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "dsl",
     "rendering"
@@ -16524,7 +16704,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-10-24",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "effects",
     "rendering"
@@ -16591,7 +16772,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-11-08",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "rendering"
@@ -16669,6 +16851,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "mobile",
     "platform",
@@ -16773,6 +16956,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "mobile",
     "platform",
@@ -16867,6 +17051,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "web-wasm",
     "gpu",
@@ -16964,7 +17149,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-12-04",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "dsl",
     "editorial"
@@ -17036,7 +17222,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-12-11",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "dsl",
     "process"
@@ -17118,7 +17305,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-12-18",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "process",
     "workspace"
@@ -17192,7 +17380,8 @@
    "type": "task",
    "status": "done",
    "date": "2021-12-27",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "editorial",
     "process"
@@ -17266,7 +17455,8 @@
    "type": "task",
    "status": "done",
    "date": "2022-05-03",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "performance",
     "rendering",
@@ -17333,7 +17523,8 @@
    "type": "task",
    "status": "done",
    "date": "2022-12-21",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "animation",
     "signals",
@@ -17465,7 +17656,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-01-25",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "text",
     "input",
@@ -17634,7 +17826,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-03-22",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "signals",
     "layout",
@@ -17768,7 +17961,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-05-02",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "accessibility",
     "input"
@@ -17819,8 +18013,8 @@
     },
     {
      "level": 3,
-     "title": "testes (8 novos)",
-     "anchor": "testes-8-novos"
+     "title": "testes (9 novos)",
+     "anchor": "testes-9-novos"
     },
     {
      "level": 2,
@@ -17857,7 +18051,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-06-12",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "rendering",
     "gpu"
@@ -17940,8 +18135,9 @@
    "project": "plev",
    "type": "task",
    "status": "done",
-   "date": "2022-08-16",
-   "date_basis": "header",
+   "date": "2023-06-25",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "text",
     "research"
@@ -18001,8 +18197,9 @@
    "project": "plev",
    "type": "task",
    "status": "done",
-   "date": "2022-09-14",
-   "date_basis": "header",
+   "date": "2023-07-11",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "web-wasm",
     "research"
@@ -18062,8 +18259,9 @@
    "project": "plev",
    "type": "task",
    "status": "done",
-   "date": "2022-07-12",
-   "date_basis": "header",
+   "date": "2023-04-12",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "research",
     "competition"
@@ -18164,8 +18362,8 @@
     },
     {
      "level": 3,
-     "title": "2022-07-06",
-     "anchor": "2022-07-06"
+     "title": "2023-04-06",
+     "anchor": "2023-04-06"
     },
     {
      "level": 4,
@@ -18212,7 +18410,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-07-23",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "animation",
     "determinism"
@@ -18299,7 +18498,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-08-28",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "signals",
     "performance"
@@ -18427,7 +18627,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-10-02",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "animation",
     "effects"
@@ -18565,7 +18766,8 @@
    "type": "task",
    "status": "done",
    "date": "2023-11-09",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "performance"
@@ -18653,6 +18855,7 @@
    "status": "superseded",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-03-13",
    "topics": [
     "rendering",
     "performance"
@@ -18721,7 +18924,8 @@
    "type": "task",
    "status": "pending",
    "date": "2023-12-14",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-13",
    "topics": [
     "process",
     "workspace"
@@ -18785,6 +18989,7 @@
    "status": "superseded",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-03-13",
    "topics": [
     "input",
     "platform"
@@ -18927,7 +19132,8 @@
    "type": "task",
    "status": "done",
    "date": "2025-05-21",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "formats",
     "animation"
@@ -18938,6 +19144,10 @@
     "task-27",
     "task-31"
    ],
+   "evidence": [
+    "a4ad0c0",
+    "aa802ff"
+   ],
    "source": [
     "docs/log/steps/task-43-monster-codec.md",
     "docs/log/changes/task-43.md"
@@ -18945,10 +19155,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "a4ad0c0",
-    "aa802ff"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19030,7 +19236,8 @@
    "type": "task",
    "status": "done",
    "date": "2025-06-17",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "formats",
     "animation"
@@ -19040,6 +19247,10 @@
     "task-31",
     "task-43"
    ],
+   "evidence": [
+    "a044613",
+    "c5535c8"
+   ],
    "source": [
     "docs/log/steps/task-44-lot-lottie-importer.md",
     "docs/log/changes/task-44.md"
@@ -19047,10 +19258,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "a044613",
-    "c5535c8"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19132,13 +19339,19 @@
    "type": "task",
    "status": "done",
    "date": "2025-07-16",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-12",
    "topics": [
     "importing",
     "formats"
    ],
    "relations": [
     "adr-0012"
+   ],
+   "evidence": [
+    "5eecb0a",
+    "f93a57e",
+    "aafc091"
    ],
    "source": [
     "docs/log/steps/task-45-parser-transpiler.md",
@@ -19147,11 +19360,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "5eecb0a",
-    "f93a57e",
-    "aafc091"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19233,7 +19441,8 @@
    "type": "task",
    "status": "done",
    "date": "2026-03-10",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "text-editing",
     "text"
@@ -19243,6 +19452,9 @@
     "task-28",
     "task-48"
    ],
+   "evidence": [
+    "e0d6e3c"
+   ],
    "source": [
     "docs/log/steps/task-46-rope-editing-core.md",
     "docs/log/changes/task-46.md"
@@ -19250,9 +19462,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "e0d6e3c"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19329,7 +19538,8 @@
    "type": "task",
    "status": "done",
    "date": "2026-04-08",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "git",
     "platform"
@@ -19416,7 +19626,8 @@
    "type": "task",
    "status": "done",
    "date": "2026-05-11",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "git",
     "text-editing",
@@ -19429,6 +19640,9 @@
     "task-46",
     "task-47"
    ],
+   "evidence": [
+    "f15198a"
+   ],
    "source": [
     "docs/log/steps/task-48-ide-git-client.md",
     "docs/log/changes/task-48.md"
@@ -19436,9 +19650,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "f15198a"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19520,7 +19731,8 @@
    "type": "task",
    "status": "done",
    "date": "2025-10-01",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-14",
    "topics": [
     "rendering",
     "animation"
@@ -19530,6 +19742,10 @@
     "task-27",
     "task-31"
    ],
+   "evidence": [
+    "c749d12",
+    "d2f1060"
+   ],
    "source": [
     "docs/log/steps/task-49-prime-creatures.md",
     "docs/log/changes/task-49.md"
@@ -19537,10 +19753,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "c749d12",
-    "d2f1060"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19612,7 +19824,8 @@
    "type": "task",
    "status": "done",
    "date": "2025-11-14",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-16",
    "topics": [
     "platform",
     "mobile"
@@ -19624,13 +19837,6 @@
     "task-18",
     "task-19"
    ],
-   "source": [
-    "docs/log/steps/task-50-showcase-multiplatform.md",
-    "docs/log/changes/task-50.md"
-   ],
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "cb6643d",
     "a2c846d",
@@ -19638,6 +19844,13 @@
     "7428245",
     "33ef42c"
    ],
+   "source": [
+    "docs/log/steps/task-50-showcase-multiplatform.md",
+    "docs/log/changes/task-50.md"
+   ],
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -19714,7 +19927,8 @@
    "type": "task",
    "status": "done",
    "date": "2026-02-16",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-06-24",
    "topics": [
     "workspace",
     "process"
@@ -19723,13 +19937,6 @@
     "adr-0013",
     "task-52"
    ],
-   "source": [
-    "docs/log/steps/task-51-workspace-restructure.md",
-    "docs/log/changes/task-51.md"
-   ],
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "a4ad0c0",
     "b08bce8",
@@ -19739,6 +19946,13 @@
     "e6f7091",
     "92c3aaa"
    ],
+   "source": [
+    "docs/log/steps/task-51-workspace-restructure.md",
+    "docs/log/changes/task-51.md"
+   ],
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -19820,7 +20034,8 @@
    "type": "task",
    "status": "done",
    "date": "2024-05-29",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-04-05",
    "topics": [
     "workspace",
     "process"
@@ -19831,6 +20046,9 @@
     "architecture-srp-modularization",
     "task-51"
    ],
+   "evidence": [
+    "b9d9ee7"
+   ],
    "source": [
     "docs/log/steps/task-52-srp-modularization.md",
     "docs/log/changes/task-52.md"
@@ -19838,9 +20056,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "b9d9ee7"
-   ],
    "headings": [
     {
      "level": 1,
@@ -19913,6 +20128,7 @@
    "status": "done",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "git",
     "platform"
@@ -19957,6 +20173,7 @@
    "status": "done",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "gpu"
@@ -20015,6 +20232,7 @@
    "status": "done",
    "date": "2026-09-21",
    "date_basis": "header",
+   "recorded": "2026-09-21",
    "topics": [
     "design-system",
     "workspace"
@@ -20069,6 +20287,7 @@
    "status": "done",
    "date": "2026-09-22",
    "date_basis": "header",
+   "recorded": "2026-03-22",
    "topics": [
     "hot-reload",
     "gpu",
@@ -20182,6 +20401,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -20199,13 +20419,13 @@
     "task-68",
     "task-73"
    ],
+   "evidence": [
+    "860b029"
+   ],
    "source": "docs/log/steps/task-57-semantic-contract.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "860b029"
-   ],
    "headings": [
     {
      "level": 1,
@@ -20358,6 +20578,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -20372,13 +20593,13 @@
     "adr-0040",
     "changelog"
    ],
+   "evidence": [
+    "a7a6735"
+   ],
    "source": "docs/log/steps/task-57b-lean-wire-form-and-one-redaction.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "a7a6735"
-   ],
    "headings": [
     {
      "level": 1,
@@ -20431,6 +20652,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents"
@@ -20447,13 +20669,13 @@
     "task-69",
     "task-70"
    ],
+   "evidence": [
+    "20c601e"
+   ],
    "source": "docs/log/steps/task-58-actions-preconditions-receipts.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "20c601e"
-   ],
    "headings": [
     {
      "level": 1,
@@ -20576,6 +20798,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents"
@@ -20586,13 +20809,13 @@
     "task-62",
     "task-63"
    ],
+   "evidence": [
+    "dc6fde2"
+   ],
    "source": "docs/log/steps/task-58b-decline-a-confirmation.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "dc6fde2"
-   ],
    "headings": [
     {
      "level": 1,
@@ -20630,6 +20853,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "rendering",
@@ -20651,14 +20875,14 @@
     "task-68",
     "task-81"
    ],
-   "source": "docs/log/steps/task-59-semantic-binding-and-one-path.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "f71dc20",
     "f5b7cee"
    ],
+   "source": "docs/log/steps/task-59-semantic-binding-and-one-path.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -20771,6 +20995,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "semantics"
@@ -20789,13 +21014,13 @@
     "adr-0026",
     "adr-0038"
    ],
+   "evidence": [
+    "3ba5b04"
+   ],
    "source": "docs/log/steps/task-60-accessibility-projection.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "3ba5b04"
-   ],
    "headings": [
     {
      "level": 1,
@@ -20893,6 +21118,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -20910,13 +21136,13 @@
     "adr-0039",
     "generative-runtime-thesis"
    ],
+   "evidence": [
+    "0ec72f9"
+   ],
    "source": "docs/log/steps/task-61-agent-surface.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "0ec72f9"
-   ],
    "headings": [
     {
      "level": 1,
@@ -21039,6 +21265,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -21059,13 +21286,13 @@
     "adr-0036",
     "experiment-agent-proof-checkpoint-a"
    ],
+   "evidence": [
+    "8978602"
+   ],
    "source": "docs/log/steps/task-62-ide-human-agent-proof.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "8978602"
-   ],
    "headings": [
     {
      "level": 1,
@@ -21175,10 +21402,11 @@
    "title": "task-62 phases a and b: close-out (2026-09-23)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "git"
@@ -21190,13 +21418,13 @@
     "task-63",
     "task-73"
    ],
+   "evidence": [
+    "8978602"
+   ],
    "source": "docs/log/steps/task-62-ide-human-agent-proof.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "8978602"
-   ],
    "headings": [
     {
      "level": 1,
@@ -21211,10 +21439,11 @@
    "title": "task-62 phase c, first round: design, protocol and result (2026-09-23)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -21347,10 +21576,11 @@
    "title": "task-62 phase c, second round (2026-09-23)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -21384,10 +21614,11 @@
    "title": "task-62 phase c, third round: the task-89 rule (2026-09-24)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -21423,10 +21654,11 @@
    "title": "task-62 phase c, fourth round: the handoff (2026-09-24)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -21459,10 +21691,11 @@
    "title": "task-62 phase c, fifth round: the refusal teaches the question (2026-09-24)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-62",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -21496,6 +21729,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "semantics",
@@ -21516,15 +21750,15 @@
     "task-90",
     "adr-0037"
    ],
-   "source": "docs/log/steps/task-63-flight-recorder.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "c62a05d",
     "7e63db3",
     "8e6e814"
    ],
+   "source": "docs/log/steps/task-63-flight-recorder.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -21649,10 +21883,11 @@
    "title": "task-63 phases a and b: semantic and visual trail in memory",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-63",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "semantics",
@@ -21662,13 +21897,13 @@
     "task-60",
     "task-73"
    ],
+   "evidence": [
+    "7e63db3"
+   ],
    "source": "docs/log/steps/task-63-flight-recorder.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "7e63db3"
-   ],
    "headings": [
     {
      "level": 1,
@@ -21683,10 +21918,11 @@
    "title": "task-63 phase c: session file, persistence and excerpt",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-63",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "formats"
@@ -21697,13 +21933,13 @@
     "task-65",
     "task-66b"
    ],
+   "evidence": [
+    "c62a05d"
+   ],
    "source": "docs/log/steps/task-63-flight-recorder.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "c62a05d"
-   ],
    "headings": [
     {
      "level": 1,
@@ -21718,10 +21954,11 @@
    "title": "task-63 phase d re-scoped: the ide records the session",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-63",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "agents"
@@ -21749,10 +21986,11 @@
    "title": "task-63 phase d: the ide records the session the inspector reads",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-63",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "agents",
@@ -21766,10 +22004,6 @@
     "task-89",
     "task-90"
    ],
-   "source": "docs/log/steps/task-63-flight-recorder.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "8e6e814",
     "dbc0565",
@@ -21778,6 +22012,10 @@
     "390ee70",
     "1ec952b"
    ],
+   "source": "docs/log/steps/task-63-flight-recorder.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -21845,6 +22083,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "semantics",
@@ -21857,14 +22096,14 @@
     "task-66",
     "task-83"
    ],
-   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e6560a2",
     "d611fa4"
    ],
+   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -21974,10 +22213,11 @@
    "title": "task-64 closing: acceptance criterion checked",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-64",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "agents"
@@ -22004,10 +22244,11 @@
    "title": "task-64 phase a: inspector model and the plev-inspect CLI",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-64",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "semantics",
@@ -22019,10 +22260,6 @@
     "task-87",
     "task-89"
    ],
-   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "449b748",
     "bfa30b4",
@@ -22030,6 +22267,10 @@
     "e1d7338",
     "e6560a2"
    ],
+   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -22099,10 +22340,11 @@
    "title": "task-64 phase b: inspector UI",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-64",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "rendering",
@@ -22112,10 +22354,6 @@
     "adr-0046",
     "task-65"
    ],
-   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "6de6d9b",
     "a3ddb21",
@@ -22123,6 +22361,10 @@
     "2d491d3",
     "48aca6b"
    ],
+   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -22222,10 +22464,11 @@
    "title": "task-64 phase c: session to test, and export",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-64",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "determinism",
@@ -22237,10 +22480,6 @@
     "task-68",
     "task-69"
    ],
-   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "edf6420",
     "ed82720",
@@ -22248,6 +22487,10 @@
     "901710c",
     "d611fa4"
    ],
+   "source": "docs/log/steps/task-64-session-inspector-and-tests.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -22365,6 +22608,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "hot-reload",
     "input",
@@ -22377,13 +22621,13 @@
     "task-64",
     "adr-0048"
    ],
+   "evidence": [
+    "042d34e"
+   ],
    "source": "docs/log/steps/task-65-pixel-to-source.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "042d34e"
-   ],
    "headings": [
     {
      "level": 1,
@@ -22498,10 +22742,11 @@
    "title": "task-65 closing: acceptance criterion of the task",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-65",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "hot-reload",
     "text-editing"
@@ -22528,10 +22773,11 @@
    "title": "task-65 phases a and b: from pixel to code",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-65",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "hot-reload",
     "input",
@@ -22541,10 +22787,6 @@
     "adr-0048",
     "task-63"
    ],
-   "source": "docs/log/steps/task-65-pixel-to-source.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "042d34e",
     "a7ae568",
@@ -22558,6 +22800,10 @@
     "ec77e30",
     "41d65d4"
    ],
+   "source": "docs/log/steps/task-65-pixel-to-source.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -22592,10 +22838,11 @@
    "title": "task-65 phase c: edit the text and write the literal",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-65",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "hot-reload",
     "text-editing",
@@ -22605,16 +22852,16 @@
     "adr-0048",
     "task-65/phase-a-b"
    ],
-   "source": "docs/log/steps/task-65-pixel-to-source.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "1e853d8a",
     "4f11e311",
     "fc814104",
     "6910ad37"
    ],
+   "source": "docs/log/steps/task-65-pixel-to-source.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -22637,6 +22884,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "gpu",
@@ -22655,13 +22903,13 @@
     "task-77",
     "generative-runtime-thesis"
    ],
+   "evidence": [
+    "c6738be"
+   ],
    "source": "docs/log/steps/task-66-headless-first-class.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "c6738be"
-   ],
    "headings": [
     {
      "level": 1,
@@ -22759,6 +23007,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "formats",
@@ -22774,13 +23023,13 @@
     "task-67",
     "task-82"
    ],
+   "evidence": [
+    "efc87b6"
+   ],
    "source": "docs/log/steps/task-66b-svg-export.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "efc87b6"
-   ],
    "headings": [
     {
      "level": 1,
@@ -22843,6 +23092,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "determinism",
@@ -22862,10 +23112,6 @@
     "task-86",
     "task-87"
    ],
-   "source": "docs/log/steps/task-67-structural-regression.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "49e2822",
     "9862f55",
@@ -22879,6 +23125,10 @@
     "ca41424",
     "a595c7f"
    ],
+   "source": "docs/log/steps/task-67-structural-regression.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -23016,6 +23266,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -23031,13 +23282,13 @@
     "adr-0049",
     "architecture-component-catalog"
    ],
+   "evidence": [
+    "871f0dd"
+   ],
    "source": "docs/log/steps/task-68-plev-ir-and-verifier.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "871f0dd"
-   ],
    "headings": [
     {
      "level": 1,
@@ -23157,10 +23408,11 @@
    "title": "task-68 implementation phase: probe, handoff and close-out",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-68",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -23172,10 +23424,6 @@
     "task-69",
     "task-91"
    ],
-   "source": "docs/log/steps/task-68-plev-ir-and-verifier.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "871f0dd",
     "08dd8f8",
@@ -23189,6 +23437,10 @@
     "5350b47",
     "2461bb5"
    ],
+   "source": "docs/log/steps/task-68-plev-ir-and-verifier.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -23276,6 +23528,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -23420,10 +23673,11 @@
    "title": "task-69, checkpoint b: the corrections",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "rendering",
@@ -23434,10 +23688,6 @@
     "task-75",
     "task-77"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "253be85d",
     "210564b8",
@@ -23446,6 +23696,10 @@
     "b8665828",
     "25633cba"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -23535,10 +23789,11 @@
    "title": "task-69, checkpoint b: first round",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "agents",
@@ -23565,10 +23820,11 @@
    "title": "task-69, checkpoint b: second round",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "process"
@@ -23596,10 +23852,11 @@
    "title": "task-69, phase 1: surface materializer",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -23612,10 +23869,6 @@
     "task-59",
     "task-68"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "fa5b332",
     "fe0855d",
@@ -23624,6 +23877,10 @@
     "d7fa6d4",
     "22d59fb"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -23758,10 +24015,11 @@
    "title": "task-69, phase 2: transformation by SemId",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "animation",
@@ -23771,10 +24029,6 @@
     "adr-0051",
     "task-75"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "56d8146",
     "d9dc076",
@@ -23784,6 +24038,10 @@
     "3f510b3",
     "4593a4c"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -23888,10 +24146,11 @@
    "title": "task-69, phase 3a: proposers without a provider",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "llm",
@@ -23903,16 +24162,16 @@
     "task-68",
     "task-95"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "47ff75d",
     "8a6123d",
     "605e235",
     "fb4ca07"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24032,10 +24291,11 @@
    "title": "task-69, phase 3b-i: Claude as the proposer's model",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "llm",
     "agents",
@@ -24044,15 +24304,15 @@
    "relations": [
     "adr-0052"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "b771ead",
     "31ff396",
     "524332f"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24152,10 +24412,11 @@
    "title": "task-69, phase 3b-ii: the page asks Claude for the screen",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "llm",
     "agents",
@@ -24165,16 +24426,16 @@
     "adr-0052",
     "task-95"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "53535892",
     "659a562e",
     "fe303efa",
     "00228db1"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24279,10 +24540,11 @@
    "title": "task-69, phase 4a: the silences app and the fixed screen",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "platform"
@@ -24291,10 +24553,6 @@
     "adr-0053",
     "task-93"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "4e3595ae",
     "ae7f113d",
@@ -24304,6 +24562,10 @@
     "72f49b00",
     "f305e67e"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24418,10 +24680,11 @@
    "title": "task-69, phase 4b: the generated screen of the silences",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "agents",
@@ -24433,10 +24696,6 @@
     "adr-0052",
     "adr-0053"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3fb83d34",
     "50a815e9",
@@ -24444,6 +24703,10 @@
     "191aa93e",
     "b30a5b81"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24553,10 +24816,11 @@
    "title": "task-69, phase 4c: recording and the recorded demo",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-69",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "recording",
     "agents"
@@ -24565,10 +24829,6 @@
     "adr-0037",
     "task-63"
    ],
-   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "29efeb93",
     "fb57e228",
@@ -24576,6 +24836,10 @@
     "94942d80",
     "82db3ddf"
    ],
+   "source": "docs/log/steps/task-69-ephemeral-generative-surfaces.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24673,6 +24937,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -24689,16 +24954,16 @@
     "generative-runtime-thesis",
     "adr-0067"
    ],
-   "source": "docs/log/steps/task-70-adaptive-transformations.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "ec2ab5db",
     "5d1ca12f",
     "f74ce129",
     "8124e8a7"
    ],
+   "source": "docs/log/steps/task-70-adaptive-transformations.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24803,10 +25068,11 @@
    "title": "task-70: task closure, by the orchestrator",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-70",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -24838,10 +25104,11 @@
    "title": "task-70: phase 1, the operations, the inverse, the verification and the host",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-70",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -24852,10 +25119,6 @@
     "task-68",
     "task-69"
    ],
-   "source": "docs/log/steps/task-70-adaptive-transformations.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "872ccafe",
     "a35131bf",
@@ -24865,6 +25128,10 @@
     "b3c66abd",
     "ec2ab5db"
    ],
+   "source": "docs/log/steps/task-70-adaptive-transformations.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -24974,10 +25241,11 @@
    "title": "task-70: phase 2, the transformation proposer",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-70",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "llm",
     "agents",
@@ -24990,10 +25258,6 @@
     "task-58",
     "task-69"
    ],
-   "source": "docs/log/steps/task-70-adaptive-transformations.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "793adf98",
     "c01021a4",
@@ -25004,6 +25268,10 @@
     "19fea13d",
     "5d1ca12f"
    ],
+   "source": "docs/log/steps/task-70-adaptive-transformations.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25143,10 +25411,11 @@
    "title": "task-70: phase 3, composite capabilities",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-70",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "recording",
@@ -25159,10 +25428,6 @@
     "task-58",
     "task-63"
    ],
-   "source": "docs/log/steps/task-70-adaptive-transformations.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "43cf8ff5",
     "a3ecffd4",
@@ -25173,6 +25438,10 @@
     "f00af5ea",
     "f74ce129"
    ],
+   "source": "docs/log/steps/task-70-adaptive-transformations.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25287,10 +25556,11 @@
    "title": "task-70: phase 4, accessibility as a transformation",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-70",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "generated-surfaces",
@@ -25302,10 +25572,6 @@
     "adr-0067",
     "task-75"
    ],
-   "source": "docs/log/steps/task-70-adaptive-transformations.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "921e159a",
     "490fe38d",
@@ -25315,6 +25581,10 @@
     "c8c16ed1",
     "8124e8a7"
    ],
+   "source": "docs/log/steps/task-70-adaptive-transformations.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25442,6 +25712,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "importing",
     "ir",
@@ -25457,10 +25728,6 @@
     "task-69",
     "generative-runtime-thesis"
    ],
-   "source": "docs/log/steps/task-71-compiler-target.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "0c08e77a",
     "9f7e9cfd",
@@ -25473,6 +25740,10 @@
     "0cb09a90",
     "4e16c349"
    ],
+   "source": "docs/log/steps/task-71-compiler-target.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25567,10 +25838,11 @@
    "title": "task-71 closure by the orchestrator",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-71",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "importing",
     "ir"
@@ -25594,10 +25866,11 @@
    "title": "task-71 phase 1: probe and handoff of the plev IR emitter",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-71",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "importing",
     "ir",
@@ -25610,10 +25883,6 @@
     "adr-0064",
     "adr-0069"
    ],
-   "source": "docs/log/steps/task-71-compiler-target.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "0c08e77a",
     "9f7e9cfd",
@@ -25621,6 +25890,10 @@
     "7a240577",
     "9707a2a6"
    ],
+   "source": "docs/log/steps/task-71-compiler-target.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25735,10 +26008,11 @@
    "title": "task-71 phase 2: probe and handoff of the HTML/CSS and Figma sources",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-71",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "importing",
     "formats",
@@ -25748,10 +26022,6 @@
     "adr-0069",
     "task-68"
    ],
-   "source": "docs/log/steps/task-71-compiler-target.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e3201af7",
     "6e99cec8",
@@ -25759,6 +26029,10 @@
     "0cb09a90",
     "4e16c349"
    ],
+   "source": "docs/log/steps/task-71-compiler-target.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -25841,6 +26115,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "formats",
     "importing",
@@ -25854,14 +26129,14 @@
     "task-74",
     "task-77"
    ],
-   "source": "docs/log/steps/task-72-ui-asset-compiler.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "74d68143",
     "deee5143"
    ],
+   "source": "docs/log/steps/task-72-ui-asset-compiler.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26034,6 +26309,7 @@
    "status": "in-progress",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "performance",
     "layout",
@@ -26050,14 +26326,14 @@
     "task-82",
     "experiment-frame-cost-by-stage"
    ],
-   "source": "docs/log/steps/task-73-incremental-dependency-system.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "91fdb33",
     "ed814da"
    ],
+   "source": "docs/log/steps/task-73-incremental-dependency-system.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26167,10 +26443,11 @@
    "title": "task-73 phase 1: what each stage of a frame costs",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-73",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "performance",
     "rendering",
@@ -26179,14 +26456,14 @@
    "relations": [
     "task-73"
    ],
-   "source": "docs/log/steps/task-73-measurements.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "4698224",
     "9522ee5"
    ],
+   "source": "docs/log/steps/task-73-measurements.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26339,6 +26616,7 @@
    "status": "in-progress",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "fonts",
@@ -26448,24 +26726,25 @@
    "title": "phase 1: coverage audit per writing system",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "fonts"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "df270334",
     "ad6d0d6a",
     "36ac4257"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26530,10 +26809,11 @@
    "title": "phase 2: embedded Noto Sans",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "fonts"
@@ -26541,16 +26821,16 @@
    "relations": [
     "adr-0071"
    ],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3882aedd",
     "a0f7a0b6",
     "fc304299",
     "caad36f2"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26635,25 +26915,26 @@
    "title": "phase 3: bidi in the cursor and the selection",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "text-editing"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "61283afa",
     "555ac24a",
     "7a30e038",
     "a746f2b3"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26738,20 +27019,17 @@
    "title": "phase 4: IME, clipboard and field menu",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "text-editing",
     "input"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3579e5be",
     "c4866d15",
@@ -26762,6 +27040,10 @@
     "6215bddf",
     "5e56db92"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26871,26 +27153,27 @@
    "title": "phase 5: color emoji",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "fonts",
     "rendering"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "a5457d9d",
     "2460a0ea",
     "17f8393d",
     "787291fb"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -26980,26 +27263,27 @@
    "title": "phase 7: large documents",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-74",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "text",
     "text-editing",
     "performance"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-74-text-and-editing.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e7427780",
     "71e0a6f2",
     "8b4c58e9",
     "727c378e"
    ],
+   "source": "docs/log/steps/task-74-text-and-editing.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27092,6 +27376,7 @@
    "status": "in-progress",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "platform",
@@ -27109,10 +27394,6 @@
     "task-70",
     "task-74"
    ],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "d811876f",
     "f3e9f914",
@@ -27120,6 +27401,10 @@
     "917cdd2a",
     "2a19ad66"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27209,10 +27494,11 @@
    "title": "task-75 phase 1: the probe and the manual test scripts",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-75",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "platform",
@@ -27223,10 +27509,6 @@
     "adr-0068",
     "task-60"
    ],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "1d2aa2eb",
     "20096a0f",
@@ -27234,6 +27516,10 @@
     "e7ca19c1",
     "d811876f"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27343,10 +27629,11 @@
    "title": "task-75 phase 2a: app pages that already project",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-75",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "semantics",
@@ -27357,10 +27644,6 @@
     "task-60",
     "task-70"
    ],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "168b240e",
     "b7059376",
@@ -27374,6 +27657,10 @@
     "0ff5e28d",
     "f3e9f914"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27473,10 +27760,11 @@
    "title": "task-75 phase 2b: component pages",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-75",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "semantics",
@@ -27487,10 +27775,6 @@
     "adr-0068",
     "task-59"
    ],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "7fa4f84c",
     "e5f738e5",
@@ -27501,6 +27785,10 @@
     "5e0d2c2f",
     "3badee06"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27605,20 +27893,17 @@
    "title": "task-75 phase 2c: keyboard on the component pages",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-75",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "input",
     "semantics"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "8ba4ef6d",
     "92635707",
@@ -27626,6 +27911,10 @@
     "5dddcf6a",
     "917cdd2a"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27715,20 +28004,17 @@
    "title": "task-75 phase 2d: lists and tables with keyboard",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-75",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "accessibility",
     "input",
     "semantics"
    ],
    "relations": [],
-   "source": "docs/log/steps/task-75-platform-accessibility.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e61cfa14",
     "63e36503",
@@ -27737,6 +28023,10 @@
     "10891b80",
     "2a19ad66"
    ],
+   "source": "docs/log/steps/task-75-platform-accessibility.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27799,6 +28089,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "rendering",
@@ -27821,14 +28112,14 @@
     "task-66",
     "generative-runtime-thesis"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "7b9f860f",
     "3173d2de"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -27918,10 +28209,11 @@
    "title": "task-76, closing: what went in and what remains",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "process"
@@ -27957,10 +28249,11 @@
    "title": "task-76, item 1: GPU device loss",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "gpu",
     "rendering",
@@ -27969,16 +28262,16 @@
    "relations": [
     "adr-0054"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "93dc4eab",
     "b9ae6aa1",
     "6047a4de",
     "b89caed6"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28043,10 +28336,11 @@
    "title": "task-76, item 10: camera and microphone",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "recording",
@@ -28056,10 +28350,6 @@
     "adr-0062",
     "task-58"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "6d0d1c53",
     "ab221e79",
@@ -28069,6 +28359,10 @@
     "824ee8ab",
     "de4a4d98"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28153,10 +28447,11 @@
    "title": "task-76, item 2: multiple windows",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "rendering",
@@ -28166,16 +28461,16 @@
     "adr-0056",
     "task-58"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3b642d82",
     "6da95f2a",
     "bd97c817",
     "6e46fd28"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28245,10 +28540,11 @@
    "title": "task-76, item 3: file dialogs and drag and drop",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "input",
@@ -28259,10 +28555,6 @@
     "adr-0055",
     "task-58"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "6b8bd395",
     "b1a2e686",
@@ -28271,6 +28563,10 @@
     "fe5a9279",
     "77800d1b"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28345,10 +28641,11 @@
    "title": "task-76, item 4: native menus",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "semantics",
@@ -28358,10 +28655,6 @@
     "adr-0057",
     "task-59"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3338c38e",
     "da659be1",
@@ -28370,6 +28663,10 @@
     "79ecbaed",
     "af75dd50"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28449,10 +28746,11 @@
    "title": "task-76, item 5: system notifications and tray",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "agents",
@@ -28461,16 +28759,16 @@
    "relations": [
     "adr-0059"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "b66c601f",
     "2550c324",
     "fbb7641d",
     "aeaf95b6"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28540,10 +28838,11 @@
    "title": "task-76, item 6: deep links",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "agents",
@@ -28552,10 +28851,6 @@
    "relations": [
     "adr-0063"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e3b6c8d2",
     "df91e2a8",
@@ -28563,6 +28858,10 @@
     "66345cf5",
     "e52359d0"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28652,10 +28951,11 @@
    "title": "task-76, item 7: sleep and wake",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "rendering",
@@ -28664,16 +28964,16 @@
    "relations": [
     "adr-0060"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "7d88e4f3",
     "f4c03f08",
     "022c423f",
     "1bd8a11f"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28743,10 +29043,11 @@
    "title": "task-76, item 8: native alert and confirmation dialogs",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "agents",
@@ -28835,10 +29136,11 @@
    "title": "task-76, item 9: printing",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-76",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "platform",
     "rendering",
@@ -28848,16 +29150,16 @@
     "adr-0061",
     "task-66"
    ],
-   "source": "docs/log/steps/task-76-platform-integration.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "3e13a7f1",
     "9c33b535",
     "84a95b34",
     "dd14f99b"
    ],
+   "source": "docs/log/steps/task-76-platform-integration.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -28950,6 +29252,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "determinism",
     "rendering",
@@ -28967,10 +29270,6 @@
     "task-74",
     "experiment-visual-determinism-captures"
    ],
-   "source": "docs/log/steps/task-77-visual-determinism.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "2dd2bc0d",
     "c779fca6",
@@ -28982,6 +29281,10 @@
     "f6c688b5",
     "adbf948b"
    ],
+   "source": "docs/log/steps/task-77-visual-determinism.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29071,10 +29374,11 @@
    "title": "wrap-up (orchestrator, 2026-09-25)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-77",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "determinism",
     "platform",
@@ -29104,10 +29408,11 @@
    "title": "phase 1 (task-77a): the probe",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-77",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "determinism",
     "rendering",
@@ -29118,10 +29423,6 @@
     "adr-0064",
     "operations-validate-visuals-by-pixel"
    ],
-   "source": "docs/log/steps/task-77-visual-determinism.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "2dd2bc0d",
     "c779fca6",
@@ -29130,6 +29431,10 @@
     "35a47b26",
     "a69cd464"
    ],
+   "source": "docs/log/steps/task-77-visual-determinism.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29239,10 +29544,11 @@
    "title": "phase 1b handoff (task-77b): blur follows the scale",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-77",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "determinism",
     "rendering",
@@ -29251,15 +29557,15 @@
    "relations": [
     "adr-0064"
    ],
-   "source": "docs/log/steps/task-77-visual-determinism.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "7127f65a",
     "f6c688b5",
     "adbf948b"
    ],
+   "source": "docs/log/steps/task-77-visual-determinism.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29347,6 +29653,7 @@
    "status": "in-progress",
    "date": "2026-09-26",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "llm",
     "gpu",
@@ -29362,10 +29669,6 @@
     "task-76",
     "experiment-local-inference-candle-vs-burn"
    ],
-   "source": "docs/log/steps/task-78-ai-native-apps.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "6e2fce00",
     "d095aeb5",
@@ -29387,6 +29690,10 @@
     "002debd4",
     "9e46ce7a"
    ],
+   "source": "docs/log/steps/task-78-ai-native-apps.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29524,6 +29831,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "recording",
@@ -29630,10 +29938,11 @@
    "title": "closure (orchestrator, 2026-09-25)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-79",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "process"
@@ -29660,10 +29969,11 @@
    "title": "phase 1 (task-79a): the probe",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-79",
+   "status": "reference",
    "date": "2026-09-24",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "recording",
@@ -29674,10 +29984,6 @@
     "adr-0062",
     "adr-0065"
    ],
-   "source": "docs/log/steps/task-79-scene-over-socket.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "91be2cd6",
     "73f08fbc",
@@ -29694,6 +30000,10 @@
     "d210a7c2",
     "0bdef89f"
    ],
+   "source": "docs/log/steps/task-79-scene-over-socket.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29793,10 +30103,11 @@
    "title": "phase 2 (task-79b): the probe",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-79",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -29807,10 +30118,6 @@
     "adr-0065",
     "adr-0067"
    ],
-   "source": "docs/log/steps/task-79-scene-over-socket.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "bfe12733",
     "dfbd79de",
@@ -29818,6 +30125,10 @@
     "a2b70151",
     "80d71a45"
    ],
+   "source": "docs/log/steps/task-79-scene-over-socket.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -29910,6 +30221,7 @@
    "status": "in-progress",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "agents",
@@ -29938,10 +30250,6 @@
     "generative-runtime-thesis",
     "experiment-five-demos"
    ],
-   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e44e4234",
     "c8a6c3a9",
@@ -29951,6 +30259,10 @@
     "ae5be30e",
     "677b1ad9"
    ],
+   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -30040,10 +30352,11 @@
    "title": "task-80, demo 5: generative UI in a real application",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-80",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "generated-surfaces",
     "recording",
@@ -30055,15 +30368,15 @@
     "task-96",
     "task-97"
    ],
-   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "2e6c9e9a",
     "e42bd571",
     "10f66729"
    ],
+   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -30123,10 +30436,11 @@
    "title": "task-80, phase 1: probe, five-demo method, demos 3 and 4 and handoff",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-80",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "recording",
@@ -30153,10 +30467,6 @@
     "task-96",
     "generative-runtime-thesis"
    ],
-   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e44e4234",
     "c8a6c3a9",
@@ -30166,6 +30476,10 @@
     "ae5be30e",
     "677b1ad9"
    ],
+   "source": "docs/log/steps/task-80-proof-qualitatively-different-software.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -30393,6 +30707,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "design-system",
     "input"
@@ -30400,13 +30715,13 @@
    "relations": [
     "task-59"
    ],
+   "evidence": [
+    "7b3e48f"
+   ],
    "source": "docs/log/steps/task-81-select-scrolling-panel.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "7b3e48f"
-   ],
    "headings": [
     {
      "level": 1,
@@ -30444,6 +30759,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "performance",
@@ -30454,14 +30770,14 @@
     "task-73",
     "experiment-caret-render-on-demand"
    ],
-   "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "d97a375",
     "a6fec8d"
    ],
+   "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -30506,10 +30822,11 @@
    "title": "task-82 phase a: the caret blink becomes a deadline",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-82",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "performance",
@@ -30520,13 +30837,13 @@
     "task-66b",
     "task-73"
    ],
+   "evidence": [
+    "d97a375"
+   ],
    "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "d97a375"
-   ],
    "headings": [
     {
      "level": 1,
@@ -30566,10 +30883,11 @@
    "title": "task-82 phase b: ide, Git page and urnaui draw only when something changes",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-82",
+   "status": "reference",
    "date": "2026-09-23",
    "date_basis": "text",
+   "recorded": "2026-09-23",
    "topics": [
     "rendering",
     "performance",
@@ -30579,10 +30897,6 @@
     "task-85",
     "task-87"
    ],
-   "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "a6fec8d",
     "890f454",
@@ -30597,6 +30911,10 @@
     "31bf7b4",
     "8a61778"
    ],
+   "source": "docs/log/steps/task-82-caret-blink-render-on-demand.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -30639,6 +30957,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents",
@@ -30656,13 +30975,13 @@
     "operations-code-against-the-plev-engine",
     "adr-index"
    ],
+   "evidence": [
+    "78f463c"
+   ],
    "source": "docs/log/steps/task-83-delta-carries-node-refusal-names-actor.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "78f463c"
-   ],
    "headings": [
     {
      "level": 1,
@@ -30720,6 +31039,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "git",
     "semantics"
@@ -30730,13 +31050,13 @@
     "task-85",
     "adr-0036"
    ],
+   "evidence": [
+    "4896451"
+   ],
    "source": "docs/log/steps/task-84-ide-refresh-never-goes-back.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "4896451"
-   ],
    "headings": [
     {
      "level": 1,
@@ -30789,6 +31109,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "git",
     "semantics",
@@ -30800,13 +31121,13 @@
     "task-84",
     "adr-0036"
    ],
+   "evidence": [
+    "476bbb4"
+   ],
    "source": "docs/log/steps/task-85-the-commit-a-receipt-announces-is-projected.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "476bbb4"
-   ],
    "headings": [
     {
      "level": 1,
@@ -30894,6 +31215,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "platform",
@@ -30911,13 +31233,13 @@
     "task-90",
     "adr-0039"
    ],
+   "evidence": [
+    "7f866e8"
+   ],
    "source": "docs/log/steps/task-86-the-ide-opens-the-agent-port.md",
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "7f866e8"
-   ],
    "headings": [
     {
      "level": 1,
@@ -31010,6 +31332,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -31024,10 +31347,6 @@
     "task-85",
     "task-88"
    ],
-   "source": "docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "1cfb982",
     "06b35ed",
@@ -31035,6 +31354,10 @@
     "5fc730b",
     "365d8fd"
    ],
+   "source": "docs/log/steps/task-87-a-terminal-stage-carries-the-revision.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31092,6 +31415,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics",
@@ -31105,10 +31429,6 @@
     "task-90",
     "experiment-agent-proof-checkpoint-a"
    ],
-   "source": "docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "39f4e4b",
     "fc05db7",
@@ -31119,6 +31439,10 @@
     "a65ee7e",
     "96c20a0"
    ],
+   "source": "docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31246,6 +31570,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "agents",
     "semantics"
@@ -31259,10 +31584,6 @@
     "task-90",
     "task-91"
    ],
-   "source": "docs/log/steps/task-89-an-act-rests-only-on-what-was-shown.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "4d94364",
     "69b3191",
@@ -31271,6 +31592,10 @@
     "a125a06",
     "79b8c93"
    ],
+   "source": "docs/log/steps/task-89-an-act-rests-only-on-what-was-shown.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31363,6 +31688,7 @@
    "status": "done",
    "date": "2026-09-23",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents"
@@ -31376,10 +31702,6 @@
     "task-89",
     "task-91"
    ],
-   "source": "docs/log/steps/task-90-a-refusal-names-who-acted-since-the-look.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "168c897",
     "8b1ffa6",
@@ -31387,6 +31709,10 @@
     "f0de28a",
     "d02b4d1"
    ],
+   "source": "docs/log/steps/task-90-a-refusal-names-who-acted-since-the-look.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31434,6 +31760,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-23",
    "topics": [
     "semantics",
     "agents"
@@ -31447,10 +31774,6 @@
     "task-89",
     "task-90"
    ],
-   "source": "docs/log/steps/task-91-the-dispatcher-knows-when-the-agent-looked.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "4d6eba3",
     "1f9deb3",
@@ -31460,6 +31783,10 @@
     "63cd763",
     "29373d4"
    ],
+   "source": "docs/log/steps/task-91-the-dispatcher-knows-when-the-agent-looked.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31502,6 +31829,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "agents",
     "semantics",
@@ -31516,10 +31844,6 @@
     "adr-0033",
     "adr-0039"
    ],
-   "source": "docs/log/steps/task-92-the-agent-asks-the-person.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "f101359",
     "2f61463",
@@ -31533,6 +31857,10 @@
     "82202ab",
     "d293046"
    ],
+   "source": "docs/log/steps/task-92-the-agent-asks-the-person.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31690,6 +32018,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "agents",
     "recording",
@@ -31701,10 +32030,6 @@
     "task-92",
     "experiment-agent-proof-checkpoint-a"
    ],
-   "source": "docs/log/steps/task-93-the-lab-person-answers.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "654d740",
     "2059ec3",
@@ -31713,6 +32038,10 @@
     "7dcf925",
     "363d6dd"
    ],
+   "source": "docs/log/steps/task-93-the-lab-person-answers.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31815,6 +32144,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "agents",
     "semantics"
@@ -31824,14 +32154,14 @@
     "task-92",
     "task-93"
    ],
-   "source": "docs/log/steps/task-94-the-refusal-points-at-the-question.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "2a6ec95",
     "ef4f5e9"
    ],
+   "source": "docs/log/steps/task-94-the-refusal-points-at-the-question.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -31909,6 +32239,7 @@
    "status": "done",
    "date": "2026-09-24",
    "date_basis": "header",
+   "recorded": "2026-09-24",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -31921,10 +32252,6 @@
     "adr-0051",
     "adr-0052"
    ],
-   "source": "docs/log/steps/task-95-the-todo-projects-its-items-as-a-list.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "4308753",
     "9ca72aa",
@@ -31932,6 +32259,10 @@
     "fa1b4ad",
     "626576d"
    ],
+   "source": "docs/log/steps/task-95-the-todo-projects-its-items-as-a-list.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32059,6 +32390,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -32077,10 +32409,6 @@
     "task-97",
     "experiment-five-demos"
    ],
-   "source": "docs/log/steps/task-96-ide-generated-surface.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "73a318a7",
     "6bacaa3d",
@@ -32101,6 +32429,10 @@
     "e42bd571",
     "a427d2b8"
    ],
+   "source": "docs/log/steps/task-96-ide-generated-surface.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32170,10 +32502,11 @@
    "title": "task-96, phase a: the generated surface in the ide (probe, handoff and close-out)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-96",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-25",
    "topics": [
     "generated-surfaces",
     "ir",
@@ -32186,10 +32519,6 @@
     "task-85",
     "task-93"
    ],
-   "source": "docs/log/steps/task-96-ide-generated-surface.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "73a318a7",
     "6bacaa3d",
@@ -32205,6 +32534,10 @@
     "205e90b3",
     "1283cc5b"
    ],
+   "source": "docs/log/steps/task-96-ide-generated-surface.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32344,10 +32677,11 @@
    "title": "task-96, phase b: the diff card title and the column shown only with a surface",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-96",
+   "status": "reference",
    "date": "2026-09-25",
    "date_basis": "text",
+   "recorded": "2026-09-25",
    "topics": [
     "generated-surfaces",
     "layout",
@@ -32357,10 +32691,6 @@
     "task-80",
     "task-97"
    ],
-   "source": "docs/log/steps/task-96-ide-generated-surface.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "e71222cf",
     "3959d958",
@@ -32368,6 +32698,10 @@
     "e42bd571",
     "a427d2b8"
    ],
+   "source": "docs/log/steps/task-96-ide-generated-surface.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32450,6 +32784,7 @@
    "status": "done",
    "date": "2026-09-25",
    "date_basis": "header",
+   "recorded": "2026-09-25",
    "topics": [
     "ir",
     "generated-surfaces",
@@ -32466,10 +32801,6 @@
     "task-96",
     "experiment-five-demos"
    ],
-   "source": "docs/log/steps/task-97-code-and-diff-in-the-ir.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "a82087d8",
     "38960bf8",
@@ -32480,6 +32811,10 @@
     "9c96bde4",
     "19ea59bd"
    ],
+   "source": "docs/log/steps/task-97-code-and-diff-in-the-ir.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32632,6 +32967,7 @@
    "status": "done",
    "date": "2026-10-09",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "workspace",
     "git"
@@ -32641,6 +32977,12 @@
     "task-51",
     "task-52"
    ],
+   "evidence": [
+    "3161bb89",
+    "d3e65544",
+    "9e31564e",
+    "6c4d6ff3"
+   ],
    "source": [
     "reconstruction",
     "docs/tasks/task-98-workspace-reorganization/change-record.md"
@@ -32648,12 +32990,6 @@
    "source_revision": "ec0a224c",
    "revised": "2026-10-30",
    "review": "reviewed",
-   "evidence": [
-    "3161bb89",
-    "d3e65544",
-    "9e31564e",
-    "6c4d6ff3"
-   ],
    "headings": [
     {
      "level": 1,
@@ -32688,10 +33024,11 @@
    "title": "Reorganization of the repository tree (issue #130, PR #131)",
    "project": "plev",
    "type": "section",
-   "status": "reference",
    "parent": "task-98",
+   "status": "reference",
    "date": "2026-10-09",
    "date_basis": "header",
+   "recorded": "2026-10-09",
    "topics": [
     "workspace",
     "git",
@@ -32701,10 +33038,6 @@
     "adr-0006",
     "architecture-component-catalog"
    ],
-   "source": "docs/log/changes/tree-reorganization.md",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "68521101",
     "3161bb89",
@@ -32713,6 +33046,10 @@
     "63cdad9d",
     "4039b6af"
    ],
+   "source": "docs/log/changes/tree-reorganization.md",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32765,6 +33102,7 @@
    "status": "done",
    "date": "2026-10-16",
    "date_basis": "git",
+   "recorded": "2026-10-31",
    "topics": [
     "urna",
     "platform",
@@ -32775,10 +33113,6 @@
     "task-76",
     "task-98"
    ],
-   "source": "reconstruction",
-   "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
-   "review": "reviewed",
    "evidence": [
     "05fe993c",
     "701d2993",
@@ -32787,6 +33121,10 @@
     "14fd20dd",
     "7f4b9994"
    ],
+   "source": "reconstruction",
+   "source_revision": "ec0a224c",
+   "revised": "2026-10-30",
+   "review": "reviewed",
    "headings": [
     {
      "level": 1,
@@ -32823,7 +33161,8 @@
    "type": "task",
    "status": "done",
    "date": "2022-06-15",
-   "date_basis": "header",
+   "date_basis": "reconstructed",
+   "recorded": "2026-03-11",
    "topics": [
     "research",
     "competition"

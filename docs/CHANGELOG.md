@@ -6,13 +6,14 @@ type: record
 status: active
 date: null
 date_basis: undated
+recorded: 2026-06-11
 topics: [process, workspace, rendering, agents]
 relations: []
+evidence: [704412f1, b1e820ba]
 source: [docs/log/changelog.md, docs/log/README.md, docs/log/responsiveness-multiplatform-and-fidelity.md, reconstruction]
 source_revision: ec0a224c
 revised: 2026-10-31
 review: reviewed
-evidence: [704412f1, b1e820ba]
 ---
 
 # plev changelog
@@ -231,7 +232,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task-22 | error messages & DX | parcial (did you mean feito) |
 | task-23 | CI/CD (github actions) | done (nao testado remotamente) |
 | task-24 | cleanup & readme | parcial (readme feito, license TBD) |
-| task-30 | accessibility (accesskit) | done (feature-gated, lazy activation, focusgraph, 8 testes) |
+| task-30 | accessibility (accesskit) | done (feature-gated, lazy activation, focusgraph, 9 testes) |
 
 ##### fase 4, proof of life (p2), completa
 | task | descricao | status |
@@ -239,7 +240,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task-27 | animation system (easing, tweens, springs) | done (35 testes, ~500 LOC) |
 | task-28 | editable text (cursor, input, IME) | done (44 testes, ~800 LOC) |
 | task-29 | todo app demo (proof of life) | done (~530 LOC, funcional) |
-| task-31 | vector paths (lyon tessellation) | done (~250 LOC, reusa quad pipeline, 11 testes) |
+| task-31 | vector paths (lyon tessellation) | done (~250 LOC, reusa quad pipeline, 13 testes) |
 | task-32 | text upgrade assessment (parley vs cosmic-text) | done (research: wait, nao migrar agora) |
 
 ##### fase 4b, quick wins & bug fixes (p0/p1), completa (derivada de task-34)
@@ -255,7 +256,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 | task | descricao | status |
 |------|-----------|--------|
 | task-33 | WASM plugin architecture | done (fase 1 research: wait, extism quando API estavel) |
-| task-34 | exploracao/extracao de ideias (56 repos) | done, 38 patterns de 17 repos, top 10 priorizado |
+| task-34 | exploracao/extracao de ideias (56 repos) | done, 38 patterns de 18 repos, top 10 priorizado |
 
 ##### fase 7, release publica (p0), pendente
 | task | descricao | status |

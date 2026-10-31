@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-10-31
 date_basis: editorial
+recorded: 2026-10-31
 topics: [editorial, process]
 relations: [changelog]
 source: reconstruction

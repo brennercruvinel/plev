@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [rendering, gpu, determinism]
 relations: [task-77, generative-runtime-thesis]
 source: docs/adr/rendering/0034-headless-render-shares-the-frame-path.md

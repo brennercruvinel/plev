@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, formats]
 relations: [adr-0039, task-61, task-65, task-83]
 source: docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md

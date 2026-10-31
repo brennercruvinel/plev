@@ -3,17 +3,18 @@ id: task-75/phase-2b-component-pages
 title: "task-75 phase 2b: component pages"
 project: plev
 type: section
-status: reference
 parent: task-75
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, semantics, agents, determinism]
 relations: [adr-0068, task-59]
+evidence: [7fa4f84c, e5f738e5, 22819cc9, a64f9e93, 8f8cf475, a66e6e1d, 5e0d2c2f, 3badee06]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7fa4f84c, e5f738e5, 22819cc9, a64f9e93, 8f8cf475, a66e6e1d, 5e0d2c2f, 3badee06]
 ---
 
 # phase 2b: the probe (2026-09-25)

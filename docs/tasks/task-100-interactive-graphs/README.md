@@ -6,13 +6,14 @@ type: task
 status: in-progress
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, layout, platform]
 relations: [adr-0081, adr-0082]
+evidence: [a38eb003, da4be63a, db4b3299, 08420f58, b526a9bd, 4f079852, b8bc7639]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a38eb003, da4be63a, db4b3299, 08420f58, b526a9bd, 4f079852, b8bc7639]
 ---
 
 # task-100: interactive graphs and corpus import

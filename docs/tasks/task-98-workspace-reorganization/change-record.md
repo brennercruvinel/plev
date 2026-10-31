@@ -3,17 +3,18 @@ id: task-98/change-record
 title: "Reorganization of the repository tree (issue #130, PR #131)"
 project: plev
 type: section
-status: reference
 parent: task-98
+status: reference
 date: 2026-10-09
 date_basis: header
+recorded: 2026-10-09
 topics: [workspace, git, process]
 relations: [adr-0006, architecture-component-catalog]
+evidence: [68521101, 3161bb89, d3e65544, 52df2254, 63cdad9d, 4039b6af]
 source: docs/log/changes/tree-reorganization.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [68521101, 3161bb89, d3e65544, 52df2254, 63cdad9d, 4039b6af]
 ---
 
 # Reorganization of the repository tree (issue #130, PR #131)

@@ -3,17 +3,18 @@ id: task-80/demo-5-generative-ui
 title: "task-80, demo 5: generative UI in a real application"
 project: plev
 type: section
-status: reference
 parent: task-80
+status: reference
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [generated-surfaces, recording, ir]
 relations: [task-69, task-93, task-96, task-97]
+evidence: [2e6c9e9a, e42bd571, 10f66729]
 source: docs/log/steps/task-80-proof-qualitatively-different-software.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [2e6c9e9a, e42bd571, 10f66729]
 ---
 
 # demo 5, generative UI in a real application (built by task-96)

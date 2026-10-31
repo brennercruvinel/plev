@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-04-15
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [layout, performance]
 relations: []
 source: docs/ref/layout-engine.md

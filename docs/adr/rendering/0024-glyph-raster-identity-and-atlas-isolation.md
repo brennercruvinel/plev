@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-08-31
 date_basis: header
+recorded: 2026-08-31
 topics: [text, rendering, gpu]
 relations: []
 source: docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md

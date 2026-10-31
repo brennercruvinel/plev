@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [recording, semantics, agents]
 relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, operations-code-against-the-plev-engine]
 source: docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md

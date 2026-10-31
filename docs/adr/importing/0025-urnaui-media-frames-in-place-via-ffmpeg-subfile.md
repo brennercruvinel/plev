@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-18
 date_basis: header
+recorded: 2026-09-18
 topics: [urna, formats, performance]
 relations: [adr-0026]
 source: docs/adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md

@@ -6,13 +6,14 @@ type: learning
 status: reference
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, layout, importing]
 relations: [task-100, adr-0081]
+evidence: [db4b3299, b8bc7639]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [db4b3299, b8bc7639]
 ---
 
 # Separate data, appearance and algorithm in Rust

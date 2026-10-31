@@ -6,13 +6,14 @@ type: experiment
 status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-10-31
 topics: [rendering, performance, input]
 relations: [task-73/phase-1-measurements, task-82, task-82/phase-a, task-82/phase-b, adr-0042]
+evidence: [d97a375, a6fec8d]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
-evidence: [d97a375, a6fec8d]
 ---
 
 # caret blink as a deadline: frames drawn with a focused, idle field

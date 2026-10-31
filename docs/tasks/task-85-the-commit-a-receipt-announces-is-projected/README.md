@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [git, semantics, performance]
 relations: [task-62, task-83, task-84, adr-0036]
+evidence: [476bbb4]
 source: docs/log/steps/task-85-the-commit-a-receipt-announces-is-projected.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [476bbb4]
 ---
 
 # task-85: the commit that the receipt announces is already in the projection, with the files

@@ -4,8 +4,9 @@ title: "WASM plugin architecture - research doc"
 project: plev
 type: research
 status: reference
-date: 2022-09-08
-date_basis: header
+date: 2023-07-05
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [web-wasm, platform]
 relations: [task-30, task-31]
 source: docs/ref/wasm-plugin-architecture.md

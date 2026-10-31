@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [generated-surfaces, semantics, agents]
 relations: [adr-0025, task-69]
 source: docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md

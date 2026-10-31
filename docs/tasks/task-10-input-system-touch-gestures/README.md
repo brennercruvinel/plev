@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-08-02
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [input, mobile]
 relations: [task-03, task-09]
 source: [docs/log/steps/task-10.md, docs/log/changes/task-10.md]
@@ -36,7 +37,7 @@ winit entrega `Touch` events com touch id, position e phase (started, moved, end
 - [x] coexistência touch + mouse (desktop com touchscreen), sistemas independentes, sem conflito
 - [x] exemplo funcional: touch_demo com elemento arrastável, tap/double-tap/long-press/swipe/pinch
 - [x] `cargo check` passa sem warnings
-- [x] `cargo test --lib` passa com 22 testes de touch/gesture (18 gesture + 4 touch tracker)
+- [x] `cargo test --lib` passa com 21 testes de touch/gesture (17 gesture + 4 touch tracker)
 
 ## nota sobre escopo
 - item "gesture handlers em views: `.on_tap()`, `.on_swipe()`, `.on_pinch()`" foi adaptado para usar o padrão de event queue (drain pattern) já estabelecido em task-09, em vez de closures. isso é mais consistente com a arquitetura existente e evita problemas de borrow checker com closures.
@@ -68,6 +69,6 @@ winit entrega `Touch` events com touch id, position e phase (started, moved, end
 - all timing uses std::time::instant (not platform-specific timers)
 
 #### testes
-- 18 gesture tests: tap, tap_rejected_moved, double_tap, double_tap_rejected_far, long_press, long_press_rejected_moved, swipe_right, swipe_up, drag_lifecycle, pinch, cancel_mid_drag, three_fingers, long_press_then_drag, drag_to_pinch, swipe_too_slow_is_drag, tap_too_slow_is_ignored, double_tap_timeout
+- 17 gesture tests: tap, tap_rejected_moved, double_tap, double_tap_rejected_far, long_press, long_press_rejected_moved, swipe_right, swipe_up, drag_lifecycle, pinch, cancel_mid_drag, three_fingers, long_press_then_drag, drag_to_pinch, swipe_too_slow_is_drag, tap_too_slow_is_ignored, double_tap_timeout
 - 4 touch tracker tests: start_and_get, update_tracks_distance, moved_past_slop, finger_distance_two_fingers
 - total: 116 lib tests pass, zero warnings

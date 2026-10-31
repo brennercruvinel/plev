@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [rendering, performance, input]
 relations: [task-62, task-73, experiment-caret-render-on-demand]
+evidence: [d97a375, a6fec8d]
 source: docs/log/steps/task-82-caret-blink-render-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [d97a375, a6fec8d]
 ---
 
 # task-82: the caret cannot request 60 frames per second

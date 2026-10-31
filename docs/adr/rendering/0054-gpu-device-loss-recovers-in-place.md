@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [rendering, gpu, platform]
 relations: [adr-0024, task-76]
 source: docs/adr/rendering/0054-gpu-device-loss-recovers-in-place.md

@@ -3,17 +3,18 @@ id: task-82/phase-b
 title: "task-82 phase b: ide, Git page and urnaui draw only when something changes"
 project: plev
 type: section
-status: reference
 parent: task-82
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [rendering, performance, input]
 relations: [task-85, task-87]
+evidence: [a6fec8d, 890f454, 1e85275, 0d59815, fccb310, 5647f57, 026f9ea, 473c3de, a11a1c0, d3201ef, 31bf7b4, 8a61778]
 source: docs/log/steps/task-82-caret-blink-render-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a6fec8d, 890f454, 1e85275, 0d59815, fccb310, 5647f57, 026f9ea, 473c3de, a11a1c0, d3201ef, 31bf7b4, 8a61778]
 ---
 
 # phase b: ide, Git page and urnaui draw only when something changes

@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-07-04
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [effects, gpu, rendering]
 relations: [task-08]
 source: docs/ref/effects-architecture.md

@@ -5,7 +5,8 @@ project: plev
 type: research
 status: reference
 date: 2022-12-10
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [competition, rendering, layout, hot-reload]
 relations: [task-42]
 source: docs/ref/plev-vs-makepad-report.md

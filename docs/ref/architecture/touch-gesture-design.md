@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2022-10-27
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [input, mobile]
 relations: []
 source: docs/ref/touch-gesture-design.md

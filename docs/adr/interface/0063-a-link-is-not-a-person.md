@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, semantics, agents]
 relations: [adr-0057, adr-0059, task-76]
 source: docs/adr/interface/0063-a-link-is-not-a-person.md

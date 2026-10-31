@@ -3,17 +3,18 @@ id: task-76/item-1-device-loss
 title: "task-76, item 1: GPU device loss"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [gpu, rendering, platform]
 relations: [adr-0054]
+evidence: [93dc4eab, b9ae6aa1, 6047a4de, b89caed6]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [93dc4eab, b9ae6aa1, 6047a4de, b89caed6]
 ---
 
 # phase 1 handoff: GPU device loss (item 1)

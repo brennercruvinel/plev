@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [importing, ir, formats]
 relations: [adr-0011, adr-0012, adr-0049, adr-0051, adr-0064, task-68, task-69, task-71]
 source: docs/adr/importing/0069-importers-target-plev-ir.md

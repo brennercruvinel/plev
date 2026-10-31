@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [fonts, text, web-wasm]
 relations: [adr-0078, adr-0079, task-74]
+evidence: [f79400d1, e2bdaa45, bee96c97, 9bdc266f, c243b124]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [f79400d1, e2bdaa45, bee96c97, 9bdc266f, c243b124]
 ---
 
 # task-101: on-demand fonts and deterministic fallback

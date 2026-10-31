@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2026-04-01
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [git, performance, platform]
 relations: []
 source: docs/adr/structure/0020-git-backend-gix-reads-cli-mutations.md

@@ -3,17 +3,18 @@ id: task-76/item-7-sleep-and-wake
 title: "task-76, item 7: sleep and wake"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, rendering, performance]
 relations: [adr-0060]
+evidence: [7d88e4f3, f4c03f08, 022c423f, 1bd8a11f]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7d88e4f3, f4c03f08, 022c423f, 1bd8a11f]
 ---
 
 # handoff of item 7: sleep and wake

@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2026-04-08
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [git, platform]
 relations: [adr-0020, task-48]
 source: [docs/log/steps/task-47-git-backend.md, docs/log/changes/task-47.md]

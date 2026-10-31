@@ -4,8 +4,9 @@ title: "pattern extraction: tui apps (yazi, television, bottom)"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2023-04-12
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, rendering, input, layout, performance]
 relations: [task-30, task-33, task-34]
 source: docs/ref/pattern-extraction-tui-apps.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Extraction of eleven patterns from three Rust terminal applications: yazi (file manager), television (fuzzy finder with channels) and bottom (system monitor). Each pattern carries the source snippet, the decision for plev (adopt, adapt or drop) and its application to the engine or to the applications built on it. The highest-priority ones are the grouping of events with a render limit (pattern 1) and automatic navigation from the layout (pattern 9), which accessibility requires (task-30); the research is part of task-34, phase d.
 
-data: 2026-03-11
+data: 2023-04-12
 status: completo
 fase: task-34 fase d
 

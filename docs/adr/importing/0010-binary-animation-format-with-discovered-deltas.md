@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-05-14
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [animation, formats]
 relations: []
+evidence: [a4ad0c0]
 source: docs/adr/importing/0010-binary-animation-format-with-discovered-deltas.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a4ad0c0]
 ---
 
 # the monster animation format: keyframes plus discovered deltas

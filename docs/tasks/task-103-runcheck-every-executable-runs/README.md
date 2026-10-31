@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [process, platform, workspace]
 relations: [task-98, task-102]
+evidence: [205fc5f8]
 source: reconstruction
 source_revision: c4f6c343
 revised: 2026-10-30
 review: reviewed
-evidence: [205fc5f8]
 ---
 
 # task-103: runcheck, every executable in the repository runs

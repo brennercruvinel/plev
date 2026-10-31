@@ -3,10 +3,11 @@ id: task-65/closing
 title: "task-65 closing: acceptance criterion of the task"
 project: plev
 type: section
-status: reference
 parent: task-65
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [hot-reload, text-editing]
 relations: [task-65/phase-a-b, task-65/phase-c]
 source: docs/log/steps/task-65-pixel-to-source.md

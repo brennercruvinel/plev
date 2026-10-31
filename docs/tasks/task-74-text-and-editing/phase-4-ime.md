@@ -3,17 +3,18 @@ id: task-74/phase-4-ime
 title: "phase 4: IME, clipboard and field menu"
 project: plev
 type: section
-status: reference
 parent: task-74
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [text, text-editing, input]
 relations: []
+evidence: [3579e5be, c4866d15, 45c0f909, a6bfcb24, 576417b8, f44c834b, 6215bddf, 5e56db92]
 source: docs/log/steps/task-74-text-and-editing.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3579e5be, c4866d15, 45c0f909, a6bfcb24, 576417b8, f44c834b, 6215bddf, 5e56db92]
 ---
 
 # phase 4: IME, clipboard and field menu

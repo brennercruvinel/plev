@@ -3,17 +3,18 @@ id: task-65/phase-a-b
 title: "task-65 phases a and b: from pixel to code"
 project: plev
 type: section
-status: reference
 parent: task-65
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [hot-reload, input, semantics]
 relations: [adr-0048, task-63]
+evidence: [042d34e, a7ae568, d57e86d, c254236, dae72fb, b138ba7, 6e8e134, 683354b, 228bb60, ec77e30, 41d65d4]
 source: docs/log/steps/task-65-pixel-to-source.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [042d34e, a7ae568, d57e86d, c254236, dae72fb, b138ba7, 6e8e134, 683354b, 228bb60, ec77e30, 41d65d4]
 ---
 
 # round 1: agent handoff (phases a and b)

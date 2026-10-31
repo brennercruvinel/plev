@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [generated-surfaces, ir, llm, agents, semantics]
 relations: [adr-0049, adr-0051, task-68, task-69, task-95]
 source: docs/adr/generated/0052-proposers-propose-the-runtime-verifies.md

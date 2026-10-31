@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2024-01-22
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-22
 topics: [hot-reload, dsl, gpu]
 relations: [adr-0031, task-56]
 source: docs/ref/hot-reload-design.md

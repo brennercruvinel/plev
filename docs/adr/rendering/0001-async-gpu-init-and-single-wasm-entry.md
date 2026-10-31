@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-02-10
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [web-wasm, gpu]
 relations: []
+evidence: [55c8aa7]
 source: docs/adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [55c8aa7]
 ---
 
 # async GPU initialization and one wasm entry point per module

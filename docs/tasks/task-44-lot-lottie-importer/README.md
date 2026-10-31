@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2025-06-17
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [formats, animation]
 relations: [adr-0011, task-31, task-43]
+evidence: [a044613, c5535c8]
 source: [docs/log/steps/task-44-lot-lottie-importer.md, docs/log/changes/task-44.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a044613, c5535c8]
 ---
 
 # task-44: lot, lottie importer and bridge to .monster

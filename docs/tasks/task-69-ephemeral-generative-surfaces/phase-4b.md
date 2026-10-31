@@ -3,17 +3,18 @@ id: task-69/phase-4b
 title: "task-69, phase 4b: the generated screen of the silences"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [generated-surfaces, agents, ir]
 relations: [adr-0049, adr-0051, adr-0052, adr-0053]
+evidence: [3fb83d34, 50a815e9, af79fd3b, 191aa93e, b30a5b81]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3fb83d34, 50a815e9, af79fd3b, 191aa93e, b30a5b81]
 ---
 
 # phase 4b: the generated screen of the silences

@@ -4,8 +4,9 @@ title: "competitive positioning, plev"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [competition, gpu]
 relations: [research-competitors, research-linebender-ecosystem, task-21, task-28, task-29, task-30, task-32]
 source: docs/ref/competitive-positioning.md
@@ -16,9 +17,9 @@ review: reviewed
 
 # competitive positioning, plev
 
-Positioning matrix of plev against interface and rendering frameworks (makepad, iced, egui, GPUI, slint and others), dated 2026-03-11. It compares rendering model, GPU backend, text quality, dirty tracking, layers and number of targets, and lists the advantages that the research confirmed and the points where each competitor is stronger. The result is a niche of its own: a GPU-first compositing engine with identical shaders across six targets; the risk identified is one of execution (accessibility, documentation and demo app), not a technical one.
+Positioning matrix of plev against interface and rendering frameworks (makepad, iced, egui, GPUI, slint and others), dated 2022-06-15. It compares rendering model, GPU backend, text quality, dirty tracking, layers and number of targets, and lists the advantages that the research confirmed and the points where each competitor is stronger. The result is a niche of its own: a GPU-first compositing engine with identical shaders across six targets; the risk identified is one of execution (accessibility, documentation and demo app), not a technical one.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **baseado em:** refs/competitors.md, refs/linebender-ecosystem.md, mission/plan/readme.md secoes 5-6
 
 ---

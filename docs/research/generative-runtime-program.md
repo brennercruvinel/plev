@@ -6,13 +6,14 @@ type: program
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [process, agents, semantics, ir, generated-surfaces]
 relations: [adr-0023, adr-0024, adr-0035, adr-0037, adr-0040, adr-0041, adr-0043, adr-0044, adr-0045, adr-0047, adr-0048, adr-0049, adr-0050, adr-0072, architecture-monster-format-v0, adr-index, operations-autonomy, operations-generative-runtime-guidelines, changelog, generative-runtime-thesis, task-18, task-19, task-20, task-39, task-41, task-57, task-57b, task-58, task-58b, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-66b, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80, task-81, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-95, task-96, task-97]
+evidence: [b8ba096, 1d384d4, 860b029, 20c601e, f71dc20, f5b7cee, c6738be, ed814da, 91fdb33, 8978602, d26c9b1, c62a05d, 8e6e814, 0ec72f9, 3ba5b04, dc6fde2, 7b3e48f, a7a6735, d97a375, a6fec8d, efc87b6, 78f463c, 4896451, 476bbb4, 365d8fd, e6560a2, d611fa4, 7f866e8, d02b4d1, 871f0dd, 22d59fb, 4593a4c, 4573c81, 460c854, 29373d4, 79b8c93, 042d34e, 96c20a0, 49e2822, 7621403, f101359, 654d740, 37c5e0c]
 source: docs/log/generative-runtime-program.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [b8ba096, 1d384d4, 860b029, 20c601e, f71dc20, f5b7cee, c6738be, ed814da, 91fdb33, 8978602, d26c9b1, c62a05d, 8e6e814, 0ec72f9, 3ba5b04, dc6fde2, 7b3e48f, a7a6735, d97a375, a6fec8d, efc87b6, 78f463c, 4896451, 476bbb4, 365d8fd, e6560a2, d611fa4, 7f866e8, d02b4d1, 871f0dd, 22d59fb, 4593a4c, 4573c81, 460c854, 29373d4, 79b8c93, 042d34e, 96c20a0, 49e2822, 7621403, f101359, 654d740, 37c5e0c]
 ---
 
 # program: from GPU UI engine to generative interaction runtime

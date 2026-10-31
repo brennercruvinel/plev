@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [generated-surfaces, ir, semantics]
 relations: [task-68, task-69, adr-0049, adr-0051, adr-0052]
+evidence: [4308753, 9ca72aa, 3d8192d, fa1b4ad, 626576d]
 source: docs/log/steps/task-95-the-todo-projects-its-items-as-a-list.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [4308753, 9ca72aa, 3d8192d, fa1b4ad, 626576d]
 ---
 
 # task-95: the todo projects its items as a list

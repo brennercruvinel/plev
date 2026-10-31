@@ -4,8 +4,9 @@ title: "benchmark results, plev v0.2"
 project: plev
 type: experiment
 status: reference
-date: 2022-04-26
-date_basis: header
+date: 2026-03-11
+date_basis: text
+recorded: 2026-03-11
 topics: [performance, rendering, signals, text]
 relations: [task-25, task-43, task-44, task-45, task-46]
 source: docs/pub/benchmark-results.md
@@ -19,7 +20,7 @@ review: reviewed
 Measurements of plev v0.2 with criterion, on macOS: scene construction on the CPU, dirty tracking, tessellation with lyon, signals and hashing of text nodes. With rects, scene construction ranges from 0.6 µs (100 rects) to 45 µs (10 thousand rects), and 1000 static rects cost 3.3 µs in dirty tracking, which leaves the static scene practically free after the first frame. Tessellation (1.5 to 3.7 µs per shape) is done once per shape, not every frame. Limit: the June 2026 section lists new benches per crate without numbers on this page, and the header date (2022-04-26) does not match the machine (M4) and the Rust version (1.94.0) cited in the record; the date remains open.
 
 machine: macbook pro m4, macos, rust 1.94.0, criterion 0.5
-date: 2022-04-26
+date: 2026-03-11
 
 ## scene construction (CPU-side, no GPU)
 

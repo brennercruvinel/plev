@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, recording, performance]
 relations: [adr-0065, task-59, task-61, task-63, task-66, task-77]
 source: docs/log/steps/task-79-scene-over-socket.md

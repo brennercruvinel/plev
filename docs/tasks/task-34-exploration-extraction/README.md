@@ -4,8 +4,9 @@ title: "task-34: exploration and extraction of ideas from the reference repos"
 project: plev
 type: task
 status: done
-date: 2022-07-12
-date_basis: header
+date: 2023-04-12
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [research, competition]
 relations: [task-ref, task-27, task-30, task-31, task-32, research-extracted-patterns, research-pattern-extraction-parley-lyon-glam, research-pattern-extraction-tui-apps, research-extraction-fase-ef]
 source: [docs/log/steps/task-34-exploration-extraction.md, docs/log/changes/task-34.md]
@@ -72,7 +73,7 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
 3. [x] pelo menos 15 patterns documentados cobrindo rendering, a11y, animation, text, UX, **38 patterns extraidos**
 
 ## resultado
-- **38 patterns** extraidos de **17 repos** em **6 fases**
+- **38 patterns** extraidos de **18 repos** em **6 fases**
 - documento principal: [`extracted-patterns.md`](../../research/extracted-patterns.md)
 - documentos auxiliares: [`pattern-extraction-parley-lyon-glam.md`](../../research/pattern-extraction-parley-lyon-glam.md), [`pattern-extraction-tui-apps.md`](../../research/pattern-extraction-tui-apps.md), [`extraction-fase-ef.md`](../../research/extraction-fase-ef.md)
 - top 10 prioridades de implementacao documentadas com estimativa de LOC
@@ -84,7 +85,7 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
 
 ## Delivery record
 
-### 2022-07-06
+### 2023-04-06
 
 #### iniciado
 - branch: `task/TASK-34-exploration-extraction`
@@ -133,7 +134,7 @@ as 12 analises em `mission/knowledge/refs/` documentaram apis, features e concei
   - **f5** dioxus delega ao vello, validacao estrategica
 
 #### finalizado
-- **38 patterns** extraidos de **17 repos** em **6 fases**
+- **38 patterns** extraidos de **18 repos** em **6 fases**
 - documento: [`extracted-patterns.md`](../../research/extracted-patterns.md)
 - top 10 prioridades de implementacao com LOC estimado
 - todos os criterios de aceite atendidos (minimo era 15, entregou 38)

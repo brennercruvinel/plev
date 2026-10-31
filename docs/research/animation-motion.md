@@ -4,8 +4,9 @@ title: "reference analysis: animation and motion"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [animation, research]
 relations: [task-27, task-31]
 source: docs/ref/animation-motion.md

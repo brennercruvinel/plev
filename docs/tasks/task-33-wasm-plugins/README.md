@@ -4,8 +4,9 @@ title: "task-33: WASM plugin architecture"
 project: plev
 type: task
 status: done
-date: 2022-09-14
-date_basis: header
+date: 2023-07-11
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [web-wasm, research]
 relations: [research-wasm-plugin-architecture]
 source: [docs/log/steps/task-33-wasm-plugins.md, docs/log/changes/task-33.md]

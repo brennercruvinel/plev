@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2025-06-10
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-12
 topics: [importing, formats, animation]
 relations: []
+evidence: [a044613]
 source: docs/adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a044613]
 ---
 
 # import foreign formats by conversion, never by embedding a foreign runtime

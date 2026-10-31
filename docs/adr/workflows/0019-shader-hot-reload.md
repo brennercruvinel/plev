@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2024-02-06
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-22
 topics: [hot-reload, gpu]
 relations: [adr-0031, architecture-hot-reload-design, task-56]
 source: docs/adr/workflows/0019-shader-hot-reload.md

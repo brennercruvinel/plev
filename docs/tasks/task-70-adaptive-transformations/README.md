@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [generated-surfaces, ir, semantics, accessibility, agents]
 relations: [task-63, task-68, task-69, task-58, task-75, generative-runtime-thesis, adr-0067]
+evidence: [ec2ab5db, 5d1ca12f, f74ce129, 8124e8a7]
 source: docs/log/steps/task-70-adaptive-transformations.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [ec2ab5db, 5d1ca12f, f74ce129, 8124e8a7]
 ---
 
 # task-70: adaptive transformations

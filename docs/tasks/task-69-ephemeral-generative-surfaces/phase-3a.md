@@ -3,17 +3,18 @@ id: task-69/phase-3a
 title: "task-69, phase 3a: proposers without a provider"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, llm, ir, generated-surfaces]
 relations: [adr-0052, task-68, task-95]
+evidence: [47ff75d, 8a6123d, 605e235, fb4ca07]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [47ff75d, 8a6123d, 605e235, fb4ca07]
 ---
 
 # phase 3a (orchestrator, 2026-09-24)

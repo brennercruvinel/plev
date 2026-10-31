@@ -3,17 +3,18 @@ id: task-64/phase-c-session-to-test
 title: "task-64 phase c: session to test, and export"
 project: plev
 type: section
-status: reference
 parent: task-64
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, determinism, agents]
 relations: [adr-0050, task-63, task-68, task-69]
+evidence: [edf6420, ed82720, bb0a99f, 901710c, d611fa4]
 source: docs/log/steps/task-64-session-inspector-and-tests.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [edf6420, ed82720, bb0a99f, 901710c, d611fa4]
 ---
 
 # phase c: session to test and export

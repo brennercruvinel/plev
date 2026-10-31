@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2025-09-24
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-14
 topics: [rendering, animation, effects]
 relations: []
 source: docs/adr/rendering/0014-motion-trails-by-position-history.md

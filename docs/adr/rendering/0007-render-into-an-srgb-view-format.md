@@ -5,14 +5,15 @@ project: plev
 type: adr
 status: accepted
 date: 2024-12-04
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-10
 topics: [web-wasm, gpu, rendering]
 relations: [adr-0004]
+evidence: [2a33933]
 source: docs/adr/rendering/0007-render-into-an-srgb-view-format.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [2a33933]
 ---
 
 # render into an sRGB view when the surface format cannot be sRGB

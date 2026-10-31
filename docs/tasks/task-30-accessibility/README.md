@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-05-02
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [accessibility, input]
 relations: []
 source: [docs/log/steps/task-30-accessibility.md, docs/log/changes/task-30.md]
@@ -51,7 +52,7 @@ implementado sistema de acessibilidade completo via accesskit, feature-gated com
 | textinput | textinput |
 | root | window |
 
-### testes (8 novos)
+### testes (9 novos)
 - view_id_to_node_id round-trip
 - root_node_id has no viewid
 - empty tree update
@@ -71,7 +72,7 @@ implementado sistema de acessibilidade completo via accesskit, feature-gated com
 - [x] window event forwarding para adapter
 - [x] tree update per-frame no render
 - [x] compila sem feature: `cargo check --no-default-features`
-- [x] 8 testes unitarios
+- [x] 9 testes unitarios
 
 ## Delivery record
 
@@ -85,4 +86,4 @@ implementado sistema de acessibilidade completo via accesskit, feature-gated com
 - `Cargo.toml`, accesskit + accesskit_winit features
 
 ### testes adicionados
-- 8 em accessibility.rs (id mapping, tree gen, focus graph)
+- 9 em accessibility.rs (id mapping, tree gen, focus graph)

@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-06-10
 topics: [determinism, rendering, semantics, platform]
 relations: [adr-0024, adr-0045, adr-0074, operations-generative-runtime-guidelines, task-57, task-66, task-77]
 source: docs/ref/validate-visuals-by-pixel.md

@@ -6,6 +6,7 @@ type: learning
 status: reference
 date: 2026-09-22
 date_basis: header
+recorded: 2026-09-21
 topics: [hot-reload, process, rendering]
 relations: [adr-0031, task-56]
 source: docs/log/learnings/hot-reload.md

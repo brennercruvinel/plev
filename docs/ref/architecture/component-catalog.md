@@ -6,6 +6,7 @@ type: reference
 status: active
 date: 2026-09-18
 date_basis: header
+recorded: 2026-09-18
 topics: [design-system, platform]
 relations: [adr-0023, adr-0027, adr-0035, operations-code-against-the-plev-engine, task-59]
 source: docs/ref/component-catalog.md

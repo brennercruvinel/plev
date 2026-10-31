@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, determinism, rendering, performance]
 relations: [adr-0045, operations-validate-visuals-by-pixel, task-57, task-59, task-64, task-66, task-77, task-82, task-85, task-86, task-87]
+evidence: [49e2822, 9862f55, 8a5c89f, f824a95, 89e10c0, 92297e6, 7a75708, fc4d637, d3f146e, ca41424, a595c7f]
 source: docs/log/steps/task-67-structural-regression.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [49e2822, 9862f55, 8a5c89f, f824a95, 89e10c0, 92297e6, 7a75708, fc4d637, d3f146e, ca41424, a595c7f]
 ---
 
 # task-67: structural regression before pixels

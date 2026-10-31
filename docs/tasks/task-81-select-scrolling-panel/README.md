@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [design-system, input]
 relations: [task-59]
+evidence: [7b3e48f]
 source: docs/log/steps/task-81-select-scrolling-panel.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [7b3e48f]
 ---
 
 # task-81: scrolling panel for `Select`

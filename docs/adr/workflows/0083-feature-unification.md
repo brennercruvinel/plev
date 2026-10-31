@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [workspace, performance]
 relations: [task-102]
+evidence: [540e218d, 706dfa82]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [540e218d, 706dfa82]
 ---
 
 # feature unification reduces duplicate compilations

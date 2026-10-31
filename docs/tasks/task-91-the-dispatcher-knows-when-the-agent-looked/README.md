@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents]
 relations: [adr-0043, adr-0046, adr-0047, operations-code-against-the-plev-engine, task-83, task-89, task-90]
+evidence: [4d6eba3, 1f9deb3, cea6d81, ac89f01, 3886402, 63cd763, 29373d4]
 source: docs/log/steps/task-91-the-dispatcher-knows-when-the-agent-looked.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [4d6eba3, 1f9deb3, cea6d81, ac89f01, 3886402, 63cd763, 29373d4]
 ---
 
 # task-91: the dispatcher knows when the agent looked

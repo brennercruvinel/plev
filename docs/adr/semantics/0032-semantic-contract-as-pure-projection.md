@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, accessibility, recording]
 relations: [adr-0036, task-57, task-59, task-60, task-61, task-62, task-63, task-73, task-80]
 source: docs/adr/semantics/0032-semantic-contract-as-pure-projection.md

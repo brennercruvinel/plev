@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [accessibility, input, semantics]
 relations: [adr-0068, task-75]
 source: docs/adr/interface/0076-the-keyboard-walks-the-projection.md

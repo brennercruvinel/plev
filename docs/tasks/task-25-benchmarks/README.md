@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2022-05-03
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [performance, rendering, signals]
 relations: [experiment-benchmarks-v02]
 source: [docs/log/steps/task-25-benchmarks.md, docs/log/changes/task-25.md]

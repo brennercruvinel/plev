@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: git
+recorded: 2026-10-31
 topics: [git, process, agents]
 relations: [operations-autonomy, operations-orchestrate-coding-agents-on-this-repo, learning-generative-runtime, task-66]
+evidence: [f41ba225, 5f755a6f, d51ec1a2, 3c0d6f3b, 9c4bca2d]
 source: reconstruction
 source_revision: c4f6c343
 revised: 2026-10-30
 review: reviewed
-evidence: [f41ba225, 5f755a6f, d51ec1a2, 3c0d6f3b, 9c4bca2d]
 ---
 
 # integration into main is a pull request merged by merge commit

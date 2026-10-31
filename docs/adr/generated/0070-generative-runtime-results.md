@@ -6,13 +6,14 @@ type: adr
 status: proposed
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-25
 topics: [agents, generated-surfaces, semantics, recording, research]
 relations: [adr-0051, task-62, task-63, task-64, task-69, task-70, task-80, task-84, task-96, experiment-five-demos]
+evidence: [c8a6c3a9, 6500f2dc]
 source: docs/adr/generated/0070-generative-runtime-results.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c8a6c3a9, 6500f2dc]
 ---
 
 # generative runtime results

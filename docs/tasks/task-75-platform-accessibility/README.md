@@ -6,13 +6,14 @@ type: task
 status: in-progress
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [accessibility, platform, input, semantics]
 relations: [adr-0068, task-18, task-19, task-57, task-58, task-59, task-60, task-70, task-74]
+evidence: [d811876f, f3e9f914, 3badee06, 917cdd2a, 2a19ad66]
 source: docs/log/steps/task-75-platform-accessibility.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [d811876f, f3e9f914, 3badee06, 917cdd2a, 2a19ad66]
 ---
 
 # task-75: production-ready platform accessibility

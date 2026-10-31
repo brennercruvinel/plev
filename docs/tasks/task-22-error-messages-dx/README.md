@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-12-11
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [dsl, process]
 relations: [task-14, task-05]
 source: [docs/log/steps/task-22.md, docs/log/changes/task-22.md]
@@ -36,7 +37,7 @@ melhorar mensagens de erro e developer experience.
 - deteccao de js-style (`onclick` -> use `on click`)
 - deteccao de modifier usado como elemento (`bg` -> "is a modifier, not an element")
 - mensagens context-specific para missing values
-- 33 novos testes de error messages (21 em mod.rs + 16 em keywords.rs)
+- 37 novos testes de error messages (21 em mod.rs + 16 em keywords.rs)
 
 ## arquivos modificados
 - `crates/plev_narrate_macro/src/parse/keywords.rs` (levenshtein, suggest_similar, const arrays, 16 testes)
@@ -61,7 +62,7 @@ melhorar mensagens de erro e developer experience.
 - modifier errors: typo detection + context-specific missing value messages
 - event errors: typo detection + js-style detection (`onclick` -> "use `on click`")
 - block keyword errors: typo detection
-- 33 novos testes (21 em mod.rs, 16 em keywords.rs)
+- 37 novos testes (21 em mod.rs, 16 em keywords.rs)
 
 #### nao feito
 - trybuild tests (requer crate adicional + arquivos .rs de expected stderr)

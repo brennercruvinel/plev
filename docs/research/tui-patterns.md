@@ -4,8 +4,9 @@ title: "reference analysis: tui patterns"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [input, layout, research]
 relations: []
 source: docs/ref/tui-patterns.md
@@ -16,9 +17,9 @@ review: reviewed
 
 # reference analysis: tui patterns
 
-Analysis of twelve Rust TUI applications, plus oh-my-zsh as a comparison of plugin patterns, carried out on 2026-03-11 to extract navigation, component composition, real-time data, search and layout patterns that apply to a GPU engine like plev. The result is recurring patterns, such as vim-like navigation, contextual shortcuts, per-component local state and I/O separated from rendering. Some of them already exist in plev (input, signals and flexbox); the page points to what is missing, such as a focus tree and a divider component.
+Analysis of twelve Rust TUI applications, plus oh-my-zsh as a comparison of plugin patterns, carried out on 2022-06-15 to extract navigation, component composition, real-time data, search and layout patterns that apply to a GPU engine like plev. The result is recurring patterns, such as vim-like navigation, contextual shortcuts, per-component local state and I/O separated from rendering. Some of them already exist in plev (input, signals and flexbox); the page points to what is missing, such as a focus tree and a divider component.
 
-data: 2026-03-11
+data: 2022-06-15
 status: completo
 
 ## escopo

@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [agents, semantics]
 relations: [task-62, task-92, task-93]
+evidence: [2a6ec95, ef4f5e9]
 source: docs/log/steps/task-94-the-refusal-points-at-the-question.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [2a6ec95, ef4f5e9]
 ---
 
 # task-94: the refusal that names a person points to the question

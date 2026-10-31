@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-10-09
 date_basis: git
+recorded: 2026-10-31
 topics: [workspace, git]
 relations: [adr-0080, task-51, task-52]
+evidence: [3161bb89, d3e65544, 9e31564e, 6c4d6ff3]
 source: [reconstruction, docs/tasks/task-98-workspace-reorganization/change-record.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [3161bb89, d3e65544, 9e31564e, 6c4d6ff3]
 ---
 
 # task-98: workspace reorganization

@@ -3,17 +3,18 @@ id: task-69/phase-2
 title: "task-69, phase 2: transformation by SemId"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [generated-surfaces, animation, performance]
 relations: [adr-0051, task-75]
+evidence: [56d8146, d9dc076, 0215217, ef2574a, 6a2cb3e, 3f510b3, 4593a4c]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [56d8146, d9dc076, 0215217, ef2574a, 6a2cb3e, 3f510b3, 4593a4c]
 ---
 
 # phase 2: the surface transforms without losing identity

@@ -3,17 +3,18 @@ id: task-69/phase-4c
 title: "task-69, phase 4c: recording and the recorded demo"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [recording, agents]
 relations: [adr-0037, task-63]
+evidence: [29efeb93, fb57e228, 8c0652e7, 94942d80, 82db3ddf]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [29efeb93, fb57e228, 8c0652e7, 94942d80, 82db3ddf]
 ---
 
 # phase 4c: the showcase records the session and the demo is kept as a recording

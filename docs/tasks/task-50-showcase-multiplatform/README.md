@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2025-11-14
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-16
 topics: [platform, mobile]
 relations: [task-06, task-11, task-12, task-18, task-19]
+evidence: [cb6643d, a2c846d, 75861fe, 7428245, 33ef42c]
 source: [docs/log/steps/task-50-showcase-multiplatform.md, docs/log/changes/task-50.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [cb6643d, a2c846d, 75861fe, 7428245, 33ef42c]
 ---
 
 # task-50: multiplatform showcase as a lib (desktop/web/android/ios)

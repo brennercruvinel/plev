@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [agents, rendering, recording, semantics]
 relations: [adr-0062, task-59, task-61, task-76, task-79]
+evidence: [919655eb, dc9e146e, 7728da47]
 source: docs/adr/recording/0065-scene-travels-as-data.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [919655eb, dc9e146e, 7728da47]
 ---
 
 # the scene travels as data

@@ -6,6 +6,7 @@ type: learning
 status: reference
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [design-system, rendering, gpu]
 relations: [adr-0028, adr-0029]
 source: docs/log/learnings/core-buttons.md

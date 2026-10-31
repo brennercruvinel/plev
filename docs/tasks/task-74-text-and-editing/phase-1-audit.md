@@ -3,17 +3,18 @@ id: task-74/phase-1-audit
 title: "phase 1: coverage audit per writing system"
 project: plev
 type: section
-status: reference
 parent: task-74
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [text, fonts]
 relations: []
+evidence: [df270334, ad6d0d6a, 36ac4257]
 source: docs/log/steps/task-74-text-and-editing.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [df270334, ad6d0d6a, 36ac4257]
 ---
 
 # phase 1 report: coverage audit per writing system

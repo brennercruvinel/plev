@@ -3,10 +3,11 @@ id: task-79/closing
 title: "closure (orchestrator, 2026-09-25)"
 project: plev
 type: section
-status: reference
 parent: task-79
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [agents, process]
 relations: [task-79/phase-79a-probe, task-79/phase-79b-probe]
 source: docs/log/steps/task-79-scene-over-socket.md

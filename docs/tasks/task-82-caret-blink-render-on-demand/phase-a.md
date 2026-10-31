@@ -3,17 +3,18 @@ id: task-82/phase-a
 title: "task-82 phase a: the caret blink becomes a deadline"
 project: plev
 type: section
-status: reference
 parent: task-82
+status: reference
 date: 2026-09-23
 date_basis: text
+recorded: 2026-09-23
 topics: [rendering, performance, input]
 relations: [adr-0042, task-66b, task-73]
+evidence: [d97a375]
 source: docs/log/steps/task-82-caret-blink-render-on-demand.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [d97a375]
 ---
 
 # phase a: the caret blink becomes a deadline

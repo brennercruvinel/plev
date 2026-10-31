@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, semantics, research]
 relations: [task-62, task-63, task-87, task-89, task-90, experiment-agent-proof-checkpoint-a]
+evidence: [39f4e4b, fc05db7, d16a69d, fe23fbc, b8a54d2, d99ee64, a65ee7e, 96c20a0]
 source: docs/log/steps/task-88-the-lab-measures-what-the-agent-rested-on.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [39f4e4b, fc05db7, d16a69d, fe23fbc, b8a54d2, d99ee64, a65ee7e, 96c20a0]
 ---
 
 # task-88: the lab measures what the agent rested on
@@ -68,7 +69,7 @@ que a medição saísse inválida; e o roteirizado padrão com a pessoa,
 para ver se a medição de hoje ainda sai válida depois da task-89. a
 segunda saiu como esperado. a primeira não, e a parada vale.
 
-o modo que encadeia entrou como sonda, no commit `1693296`:
+o modo que encadeia entrou como sonda, no commit `39f4e4b9`:
 `ide-lab --arm scripted --scripted chain`. o primeiro `submit` se apoia
 na revisão que o último estágio do `set_value` carregou, sem observação
 antes; depois de uma recusa o agente observa e decide de novo, como o
@@ -420,7 +421,7 @@ pessoa, e uma sem pessoa por modo como referência. as 22 saíram exit 0.
 
 ### commits
 
-- `9a788f0` a sonda: o roteirizado que encadeia o primeiro `submit`
+- `39f4e4b9` a sonda: o roteirizado que encadeia o primeiro `submit`
 - `c094390` a sonda e a parada, no arquivo da task
 - `743824f` o `lab.rs` dividido (corrida e fim), fora do `FROZEN`
 - `13203d8` a medição pelo valor visto e pelo valor vivo

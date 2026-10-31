@@ -3,17 +3,18 @@ id: task-70/phase-4-accessibility
 title: "task-70: phase 4, accessibility as a transformation"
 project: plev
 type: section
-status: reference
 parent: task-70
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [accessibility, generated-surfaces, ir]
 relations: [task-70/phase-1-operations, task-70/phase-3-composite-capabilities, adr-0067, task-75]
+evidence: [921e159a, 490fe38d, d39385b7, 89a97fa0, 7b34736f, c8c16ed1, 8124e8a7]
 source: docs/log/steps/task-70-adaptive-transformations.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [921e159a, 490fe38d, d39385b7, 89a97fa0, 7b34736f, c8c16ed1, 8124e8a7]
 ---
 
 # phase 4: accessibility as a transformation (opened 2026-09-25)

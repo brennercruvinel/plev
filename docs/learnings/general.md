@@ -6,13 +6,14 @@ type: learning
 status: reference
 date: null
 date_basis: undated
+recorded: 2026-09-23
 topics: [agents, semantics, process]
 relations: [adr-0036, operations-autonomy, operations-orchestrate-coding-agents-on-this-repo, task-57b, task-59, task-62, task-64, task-67, task-68, task-69, task-70, task-71, task-74, task-75, task-76, task-79, task-80, task-82, task-83, task-84, task-85, task-86, task-87, task-88, task-89, task-90, task-91, task-92, task-93, task-94, task-96, task-97]
+evidence: [c07a7f0, 1bf6606]
 source: docs/log/learnings/general.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [c07a7f0, 1bf6606]
 ---
 
 # General learnings

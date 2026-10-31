@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-26
 date_basis: header
+recorded: 2026-09-26
 topics: [input, text-editing, agents]
 relations: [task-74]
 source: docs/adr/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md

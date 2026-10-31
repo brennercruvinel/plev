@@ -3,17 +3,18 @@ id: task-69/phase-3b-ii
 title: "task-69, phase 3b-ii: the page asks Claude for the screen"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [llm, agents, generated-surfaces]
 relations: [adr-0052, task-95]
+evidence: [53535892, 659a562e, fe303efa, 00228db1]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [53535892, 659a562e, fe303efa, 00228db1]
 ---
 
 # phase 3b-ii: the Surface page asks Claude for the screen

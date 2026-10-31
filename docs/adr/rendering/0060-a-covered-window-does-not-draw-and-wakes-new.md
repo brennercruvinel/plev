@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [rendering, platform, performance]
 relations: [adr-0042, adr-0054, task-18, task-19, task-76]
 source: docs/adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md

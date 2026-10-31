@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-08-28
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [signals, performance]
 relations: [task-04, task-34, research-extracted-patterns]
 source: [docs/log/steps/task-36-signal-hardening.md, docs/log/changes/task-36.md]

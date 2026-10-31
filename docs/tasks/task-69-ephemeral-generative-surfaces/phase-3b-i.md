@@ -3,17 +3,18 @@ id: task-69/phase-3b-i
 title: "task-69, phase 3b-i: Claude as the proposer's model"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [llm, agents, process]
 relations: [adr-0052]
+evidence: [b771ead, 31ff396, 524332f]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [b771ead, 31ff396, 524332f]
 ---
 
 # phase 3b-i: Claude as the proposer's model

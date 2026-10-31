@@ -3,17 +3,18 @@ id: task-74/phase-5-emoji
 title: "phase 5: color emoji"
 project: plev
 type: section
-status: reference
 parent: task-74
+status: reference
 date: 2026-09-25
 date_basis: text
+recorded: 2026-09-23
 topics: [text, fonts, rendering]
 relations: []
+evidence: [a5457d9d, 2460a0ea, 17f8393d, 787291fb]
 source: docs/log/steps/task-74-text-and-editing.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a5457d9d, 2460a0ea, 17f8393d, 787291fb]
 ---
 
 # phase 5: color emoji

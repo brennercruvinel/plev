@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-25
 date_basis: header
+recorded: 2026-09-23
 topics: [formats, importing, performance, fonts, gpu]
 relations: [adr-0066, task-63, task-74, task-77]
+evidence: [74d68143, deee5143]
 source: docs/log/steps/task-72-ui-asset-compiler.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [74d68143, deee5143]
 ---
 
 # task-72: UI asset compiler

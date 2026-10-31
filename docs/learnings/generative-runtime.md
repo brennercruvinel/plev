@@ -6,6 +6,7 @@ type: learning
 status: reference
 date: 2026-09-26
 date_basis: header
+recorded: 2026-09-26
 topics: [agents, process, llm]
 relations: [adr-0072, adr-0074, adr-0075, adr-0076, adr-0077, operations-autonomy, task-75, task-78]
 source: docs/log/learnings/generative-runtime.md

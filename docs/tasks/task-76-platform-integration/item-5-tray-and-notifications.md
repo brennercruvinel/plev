@@ -3,17 +3,18 @@ id: task-76/item-5-tray-and-notifications
 title: "task-76, item 5: system notifications and tray"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, agents, semantics]
 relations: [adr-0059]
+evidence: [b66c601f, 2550c324, fbb7641d, aeaf95b6]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [b66c601f, 2550c324, fbb7641d, aeaf95b6]
 ---
 
 # item 5 handoff: system notifications and tray as capabilities

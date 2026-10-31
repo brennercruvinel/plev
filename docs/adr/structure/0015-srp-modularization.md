@@ -5,7 +5,8 @@ project: plev
 type: adr
 status: accepted
 date: 2024-05-21
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-04-05
 topics: [workspace, process]
 relations: []
 source: docs/adr/structure/0015-srp-modularization.md
@@ -16,7 +17,7 @@ review: reviewed
 
 # adr-003: modularizacao por single responsibility principle
 
-Decides a limit of 300 lines per `.rs` file and the split of monolithic modules into submodules by single responsibility. The reason was 27 files above that limit, the largest at 1219 lines and with mixed responsibilities. The result was zero files above the limit, the public API unchanged, and the 470 tests passing without modification.
+Decides a limit of 300 lines per `.rs` file and the split of monolithic modules into submodules by single responsibility. The reason was 44 files above that limit, the largest at 1219 lines and with mixed responsibilities. The result was zero files above the limit, the public API unchanged, and the 470 tests passing without modification.
 
 ## status
 
@@ -24,13 +25,13 @@ aceita (2024-05-21)
 
 ## contexto
 
-o codebase do plev engine acumulou 27 arquivos .rs acima de 300 linhas,
+o codebase do plev engine acumulou 44 arquivos .rs acima de 300 linhas,
 com o maior (narrate_runtime.rs) atingindo 1219 linhas. multiplas
 responsabilidades coexistiam em arquivos unicos: definicoes de tipos,
 logica de execucao, API publica e testes.
 
 metricas pre-refatoracao:
-- 27 arquivos acima de 300 linhas
+- 44 arquivos acima de 300 linhas
 - maior arquivo: 1219 linhas (narrate_runtime.rs)
 - responsabilidades misturadas em todos os modulos centrais
 

@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [determinism, semantics, rendering]
 relations: [task-57, task-59, task-66, task-77]
 source: docs/adr/workflows/0045-regression-by-meaning-before-pixels.md

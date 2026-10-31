@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-06-16
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [rendering, gpu]
 relations: []
 source: docs/ref/layer-system.md

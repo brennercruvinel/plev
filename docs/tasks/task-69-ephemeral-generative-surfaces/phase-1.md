@@ -3,17 +3,18 @@ id: task-69/phase-1
 title: "task-69, phase 1: surface materializer"
 project: plev
 type: section
-status: reference
 parent: task-69
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [generated-surfaces, ir, layout, design-system]
 relations: [adr-0051, task-58, task-59, task-68]
+evidence: [fa5b332, fe0855d, 332fe62, 137b91b, d7fa6d4, 22d59fb]
 source: docs/log/steps/task-69-ephemeral-generative-surfaces.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [fa5b332, fe0855d, 332fe62, 137b91b, d7fa6d4, 22d59fb]
 ---
 
 # handoff (task-69 phase 1)

@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, determinism]
 relations: [adr-0032, generative-runtime-thesis, task-58, task-59, task-60, task-61, task-63, task-65, task-68, task-73]
+evidence: [860b029]
 source: docs/log/steps/task-57-semantic-contract.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [860b029]
 ---
 
 # task-57: semantic contract (crate `sem`)

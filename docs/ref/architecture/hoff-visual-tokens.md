@@ -6,13 +6,14 @@ type: reference
 status: reference
 date: 2026-06-10
 date_basis: header
+recorded: 2026-06-10
 topics: [design-system, text, rendering]
 relations: [adr-0005]
+evidence: [9c5fbd3]
 source: kdb/reference/hoff-visual-tokens.md
 source_revision: d0958da0
 revised: 2026-10-30
 review: reviewed
-evidence: [9c5fbd3]
 ---
 
 # hoff visual tokens (measured)

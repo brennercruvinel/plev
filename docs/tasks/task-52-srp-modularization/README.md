@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2024-05-29
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-04-05
 topics: [workspace, process]
 relations: [adr-0015, architecture-clippy-zero-warnings, architecture-srp-modularization, task-51]
+evidence: [b9d9ee7]
 source: [docs/log/steps/task-52-srp-modularization.md, docs/log/changes/task-52.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [b9d9ee7]
 ---
 
 # task-52: modularization by single responsibility principle

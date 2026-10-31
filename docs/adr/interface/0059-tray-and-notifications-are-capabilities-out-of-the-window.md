@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [platform, semantics, agents]
 relations: [adr-0057, adr-0058, task-76]
 source: docs/adr/interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md

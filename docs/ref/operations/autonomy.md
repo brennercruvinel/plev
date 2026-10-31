@@ -6,6 +6,7 @@ type: manual
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [agents, process, git]
 relations: [learning-general, research-autonomous-cycle-journal, operations-generative-runtime-guidelines, operations-orchestrate-coding-agents-on-this-repo, generative-runtime-program, task-75, task-96, task-97, generative-runtime-thesis]
 source: docs/ref/autonomy.md

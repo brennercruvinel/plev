@@ -6,13 +6,14 @@ type: learning
 status: reference
 date: 2026-06-10
 date_basis: header
+recorded: 2026-06-10
 topics: [platform, process, agents]
 relations: []
+evidence: [bb34a1c]
 source: kdb/explanation/why-the-apps-bypassed-the-engine.md
 source_revision: d0958da0
 revised: 2026-10-30
 review: reviewed
-evidence: [bb34a1c]
 ---
 
 # why the apps bypassed the engine, and what that costs

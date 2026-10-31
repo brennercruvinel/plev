@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-10-16
 date_basis: git
+recorded: 2026-10-31
 topics: [urna, platform, process]
 relations: [adr-0026, task-76, task-98]
+evidence: [05fe993c, 701d2993, c836ea73, ac2906a2, 14fd20dd, 7f4b9994]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [05fe993c, 701d2993, c836ea73, ac2906a2, 14fd20dd, 7f4b9994]
 ---
 
 # task-99: explorer integration and platform fixes

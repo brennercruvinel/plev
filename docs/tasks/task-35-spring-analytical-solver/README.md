@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-07-23
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [animation, determinism]
 relations: [task-27, research-extracted-patterns]
 source: [docs/log/steps/task-35-spring-analytical-solver.md, docs/log/changes/task-35.md]

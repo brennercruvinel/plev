@@ -4,8 +4,9 @@ title: "task-34 extraction: phase e (WASM runtime) + phase f (competitors)"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2023-04-12
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, web-wasm, signals, competition]
 relations: [task-33, task-34]
 source: docs/ref/extraction-fase-ef.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Extraction of patterns from WASM runtimes (waforth, extism) and from reactive and interface systems (leptos, dioxus, slint), done in phases e and f of task-34. Each pattern carries the source excerpt, the decision for plev (adopt, adapt, observe or ignore) and the effect on the signal system or on the WASM plugins (task-33). The high-priority decisions are the indexed set (FxIndexSet) for subscribers and the RAII guard of the observer, both in the signal system.
 
-data: 2026-03-11
+data: 2023-04-12
 
 ---
 

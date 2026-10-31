@@ -3,17 +3,18 @@ id: task-73/phase-1-measurements
 title: "task-73 phase 1: what each stage of a frame costs"
 project: plev
 type: section
-status: reference
 parent: task-73
+status: reference
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [performance, rendering, gpu]
 relations: [task-73]
+evidence: [4698224, 9522ee5]
 source: docs/log/steps/task-73-measurements.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [4698224, 9522ee5]
 ---
 
 # task-73 phase 1: what each stage of a frame costs

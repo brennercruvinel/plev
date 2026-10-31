@@ -6,6 +6,7 @@ type: task
 status: done
 date: 2026-09-21
 date_basis: header
+recorded: 2026-09-21
 topics: [git, platform]
 relations: [adr-0029, task-48]
 source: docs/log/steps/task-53-editor-and-git-in-the-showcase.md

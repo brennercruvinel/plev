@@ -6,13 +6,14 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [ir, generated-surfaces, semantics, agents]
 relations: [adr-0049, adr-0051, task-63, task-64, task-68, task-69, task-70, task-75, task-83, task-90, task-91]
+evidence: [ab3fedf7, 99d45162, 7e9a7176, 873a737f]
 source: docs/adr/generated/0067-adaptive-transforms-preserve-identity.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [ab3fedf7, 99d45162, 7e9a7176, 873a737f]
 ---
 
 # adaptive transformations are small verified operations that preserve identity

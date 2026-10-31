@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [animation, rendering, performance]
 relations: [task-62, task-73, task-82]
 source: docs/adr/rendering/0042-a-tick-asks-for-a-deadline.md

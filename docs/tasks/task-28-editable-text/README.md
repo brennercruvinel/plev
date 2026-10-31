@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2023-01-25
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [text, input, text-editing]
 relations: [task-09, task-13, task-29]
 source: [docs/log/steps/task-28.md, docs/log/changes/task-28.md]

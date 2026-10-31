@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-24
 topics: [determinism, rendering, platform]
 relations: [task-77]
 source: docs/adr/workflows/0064-what-identical-means.md

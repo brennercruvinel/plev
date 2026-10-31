@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [rendering, formats, text]
 relations: [adr-0040, task-63, task-66, task-67]
 source: docs/adr/rendering/0041-svg-export-reads-the-scene.md

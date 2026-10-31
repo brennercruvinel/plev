@@ -6,13 +6,14 @@ type: adr
 status: proposed
 date: 2026-10-27
 date_basis: git
+recorded: 2026-10-31
 topics: [graphs, layout]
 relations: [task-100]
+evidence: [db4b3299, b819b3db, b8bc7639]
 source: reconstruction
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [db4b3299, b819b3db, b8bc7639]
 ---
 
 # a graph separates data, appearance and layout

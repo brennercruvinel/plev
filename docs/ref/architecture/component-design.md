@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-03-24
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [design-system, signals]
 relations: [task-02, task-04]
 source: docs/ref/component-design.md

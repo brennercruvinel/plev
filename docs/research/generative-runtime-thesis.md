@@ -6,6 +6,7 @@ type: thesis
 status: active
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, ir, recording, generated-surfaces]
 relations: [generative-runtime-program, operations-generative-runtime-guidelines, task-57, task-58, task-59, task-60, task-61, task-62, task-63, task-64, task-65, task-66, task-67, task-68, task-69, task-70, task-71, task-72, task-73, task-74, task-75, task-76, task-77, task-78, task-79, task-80]
 source: docs/ref/generative-runtime-thesis.md

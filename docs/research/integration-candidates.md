@@ -4,8 +4,9 @@ title: "integration candidates, ranking"
 project: plev
 type: research
 status: reference
-date: 2026-03-11
-date_basis: header
+date: 2022-06-15
+date_basis: reconstructed
+recorded: 2026-03-11
 topics: [research, gpu, text, animation, accessibility]
 relations: [research-linebender-ecosystem, task-25, task-27, task-28, task-29, task-30, task-31, task-32, task-33]
 source: docs/ref/integration-candidates.md
@@ -18,7 +19,7 @@ review: reviewed
 
 Ranking of the Rust libraries evaluated for plev, in four categories: adopt, evaluate, watch and do not use. Each lib is judged by maturity, fit with the architecture, integration cost and value, and linked to the task that would use it. The result: web-time, an internal easing and AccessKit go in the adopt category, and Parley and Lyon stay in evaluate, with Parley behind a feature flag and a quantitative comparison. Why it matters: it defines what goes into the animation, text and accessibility tasks without unnecessary dependencies. Limit: the code has already gone past part of the analysis, since the engine declares web-time and lyon in `rust/engine/Cargo.toml`, and the workspace uses wgpu 29, not 28.
 
-**data:** 2026-03-11
+**data:** 2022-06-15
 **baseado em:** todas as analises em refs/
 
 ---

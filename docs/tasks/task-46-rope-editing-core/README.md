@@ -5,14 +5,15 @@ project: plev
 type: task
 status: done
 date: 2026-03-10
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-06-24
 topics: [text-editing, text]
 relations: [adr-0021, task-28, task-48]
+evidence: [e0d6e3c]
 source: [docs/log/steps/task-46-rope-editing-core.md, docs/log/changes/task-46.md]
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [e0d6e3c]
 ---
 
 # task-46: rope, text editing core

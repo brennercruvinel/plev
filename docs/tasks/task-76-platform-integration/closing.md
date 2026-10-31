@@ -3,10 +3,11 @@ id: task-76/closing
 title: "task-76, closing: what went in and what remains"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: header
+recorded: 2026-09-23
 topics: [platform, process]
 relations: [adr-0054, adr-0055, adr-0056, adr-0057, adr-0058, adr-0059, adr-0060, adr-0061, adr-0062, adr-0063, task-58]
 source: docs/log/steps/task-76-platform-integration.md

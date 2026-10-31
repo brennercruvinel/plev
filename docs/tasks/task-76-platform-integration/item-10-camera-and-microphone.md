@@ -3,17 +3,18 @@ id: task-76/item-10-camera-and-microphone
 title: "task-76, item 10: camera and microphone"
 project: plev
 type: section
-status: reference
 parent: task-76
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [platform, recording, gpu]
 relations: [adr-0062, task-58]
+evidence: [6d0d1c53, ab221e79, 1331b644, f9c678e2, 2644e032, 824ee8ab, de4a4d98]
 source: docs/log/steps/task-76-platform-integration.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [6d0d1c53, ab221e79, 1331b644, f9c678e2, 2644e032, 824ee8ab, de4a4d98]
 ---
 
 # item 10 handoff: camera and microphone

@@ -6,13 +6,14 @@ type: experiment
 status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-10-31
 topics: [generated-surfaces, layout, agents, ir]
 relations: [task-69, task-69/checkpoint-b-round-1, task-69/checkpoint-b-round-2, task-69/checkpoint-b-fixes]
+evidence: [253be85d, 210564b8, 039b5cf6, f4b46794, b8665828, 25633cba]
 source: reconstruction
 source_revision: c2e3f8cd
 revised: 2026-10-31
 review: reviewed
-evidence: [253be85d, 210564b8, 039b5cf6, f4b46794, b8665828, 25633cba]
 ---
 
 # generated silences screen against the fixed screen, checkpoint b of task-69

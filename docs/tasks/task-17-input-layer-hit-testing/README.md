@@ -5,7 +5,8 @@ project: plev
 type: task
 status: done
 date: 2021-11-08
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-13
 topics: [input, rendering]
 relations: [task-07, task-09]
 source: [docs/log/steps/task-17.md, docs/log/changes/task-17.md]

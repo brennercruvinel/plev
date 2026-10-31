@@ -5,7 +5,8 @@ project: plev
 type: reference
 status: reference
 date: 2021-07-26
-date_basis: header
+date_basis: reconstructed
+recorded: 2026-03-08
 topics: [dsl, layout]
 relations: [task-05]
 source: docs/ref/dsl-narrate-design.md

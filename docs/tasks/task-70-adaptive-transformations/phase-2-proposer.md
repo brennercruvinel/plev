@@ -3,17 +3,18 @@ id: task-70/phase-2-proposer
 title: "task-70: phase 2, the transformation proposer"
 project: plev
 type: section
-status: reference
 parent: task-70
+status: reference
 date: 2026-09-24
 date_basis: text
+recorded: 2026-09-23
 topics: [llm, agents, ir, generated-surfaces]
 relations: [task-70/phase-1-operations, adr-0067, task-58, task-69]
+evidence: [793adf98, c01021a4, bdb828ea, 66b5abd5, 38426a12, e80d33dd, 19fea13d, 5d1ca12f]
 source: docs/log/steps/task-70-adaptive-transformations.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [793adf98, c01021a4, bdb828ea, 66b5abd5, 38426a12, e80d33dd, 19fea13d, 5d1ca12f]
 ---
 
 # phase 2: the transformation proposer

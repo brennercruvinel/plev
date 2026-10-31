@@ -6,6 +6,7 @@ type: adr
 status: accepted
 date: 2026-09-18
 date_basis: header
+recorded: 2026-09-18
 topics: [urna, performance, rendering]
 relations: []
 source: docs/adr/rendering/0026-worker-results-wake-the-event-loop.md

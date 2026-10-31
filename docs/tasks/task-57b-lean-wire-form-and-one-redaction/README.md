@@ -6,13 +6,14 @@ type: task
 status: done
 date: 2026-09-23
 date_basis: header
+recorded: 2026-09-23
 topics: [semantics, agents, formats]
 relations: [task-61, task-62, task-63, task-65, adr-0039, adr-0040, changelog]
+evidence: [a7a6735]
 source: docs/log/steps/task-57b-lean-wire-form-and-one-redaction.md
 source_revision: ec0a224c
 revised: 2026-10-30
 review: reviewed
-evidence: [a7a6735]
 ---
 
 # task-57b: lean JSON wire form and a single redaction
