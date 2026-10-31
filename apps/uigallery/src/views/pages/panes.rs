@@ -25,7 +25,7 @@ use super::super::components::textarea;
 
 // task-104 front B, overlays (#155)
 use super::super::components::{
-    alert_dialog, drawer, dropdown_menu, hover_card, menubar, popover, sheet,
+    alert_dialog, drawer, dropdown_menu, hover_card, menubar, modals, popover, sheet,
 };
 
 // task-104 front C, conversation and feedback (#156)
@@ -97,6 +97,7 @@ pub struct Panes {
     pub dropdown_menu: dropdown_menu::DropdownMenuPage,
     pub hover_card: hover_card::HoverCardPage,
     pub menubar: menubar::MenubarPage,
+    pub modals: modals::ModalsPage,
     pub popover: popover::PopoverPage,
     pub sheet: sheet::SheetPage,
     // task-104 front C, conversation and feedback (#156)
@@ -208,6 +209,7 @@ impl Panes {
             dropdown_menu: dropdown_menu::DropdownMenuPage::new(),
             hover_card: hover_card::HoverCardPage::new(),
             menubar: menubar::MenubarPage::new(),
+            modals: modals::ModalsPage::new(),
             popover: popover::PopoverPage::new(),
             sheet: sheet::SheetPage::new(),
             // task-104 front C, conversation and feedback (#156)

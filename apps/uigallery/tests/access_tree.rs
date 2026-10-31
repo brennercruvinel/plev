@@ -78,6 +78,7 @@ const PROJECTING: &[&str] = &[
     "Menubar",
     "Message",
     "Message Scroller",
+    "Modals",
     "Navigation Menu",
     "Pagination",
     "Panel",
