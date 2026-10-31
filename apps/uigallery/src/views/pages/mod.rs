@@ -110,6 +110,7 @@ pub enum Pane {
     Alert,
     Attachment,
     Bubble,
+    Comments,
     Marker,
     Message,
     MessageScroller,

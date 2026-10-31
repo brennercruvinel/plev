@@ -58,6 +58,7 @@ const PROJECTING: &[&str] = &[
     "Collapsible",
     "Combobox",
     "Command",
+    "Comments",
     "Context Menu",
     "Data Table",
     "Date Picker",

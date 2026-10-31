@@ -82,6 +82,7 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.content_height(content, t),
                 Pane::Attachment => self.panes.attachment.content_height(content, t),
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
+                Pane::Comments => self.panes.comments.content_height(content, t),
                 Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
@@ -248,6 +249,7 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.handle_event(event, content, t),
                 Pane::Attachment => self.panes.attachment.handle_event(event, content, t),
                 Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
+                Pane::Comments => self.panes.comments.handle_event(event, content, t),
                 Pane::Marker => self.panes.marker.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
                 Pane::MessageScroller => {
@@ -386,6 +388,7 @@ impl ShowcaseView {
             // task-104 front C, conversation and feedback (#156)
             Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
             Some(Pane::PromptInput) => self.panes.prompt_input.wake(dt),
+            Some(Pane::Comments) => self.panes.comments.wake(dt),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
@@ -546,6 +549,7 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.render(c, content, theme),
                 Pane::Attachment => self.panes.attachment.render(c, content, theme),
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),
+                Pane::Comments => self.panes.comments.render(c, content, theme),
                 Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),

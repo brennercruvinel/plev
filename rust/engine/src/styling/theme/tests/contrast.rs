@@ -540,6 +540,119 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, need, over(color, under), under);
     }
+    // the comment popups: the reply on its well, the close disc's cross on
+    // both ends of its fill, the new comment's and the quick comment's
+    // runs and hints on their paper, their tools at rest and under the
+    // pointer.
+    let cm = &t.message.comment;
+    let well = over(cm.reply.well, over(t.message.scroller.fill, card));
+    let new = over(cm.new.fill, card);
+    let quick = over(cm.quick.fill, card);
+    let new_lit = over(cm.new.tool.hover, new);
+    let quick_lit = over(cm.quick.tool.hover, quick);
+    let close = cm.close.fill.map(|f| over(f, card));
+    for (fg, bg, need, color, under) in [
+        (
+            "message.comment.reply.text",
+            "message.comment.reply.well",
+            TEXT,
+            cm.reply.text.color,
+            well,
+        ),
+        (
+            "message.comment.reply.placeholder",
+            "message.comment.reply.well",
+            TEXT,
+            cm.reply.placeholder,
+            well,
+        ),
+        (
+            "message.comment.close.ink",
+            "message.comment.close.fill[0]",
+            LARGE,
+            cm.close.ink,
+            close[0],
+        ),
+        (
+            "message.comment.close.ink",
+            "message.comment.close.fill[1]",
+            LARGE,
+            cm.close.ink,
+            close[1],
+        ),
+        (
+            "message.comment.new.text",
+            "message.comment.new.fill",
+            TEXT,
+            cm.new.text.color,
+            new,
+        ),
+        (
+            "message.comment.new.placeholder",
+            "message.comment.new.fill",
+            TEXT,
+            cm.new.placeholder,
+            new,
+        ),
+        (
+            "message.comment.new.tool.color",
+            "message.comment.new.fill",
+            LARGE,
+            cm.new.tool.color,
+            new,
+        ),
+        (
+            "message.comment.new.tool.color",
+            "message.comment.new.tool.hover",
+            LARGE,
+            cm.new.tool.color,
+            new_lit,
+        ),
+        (
+            "message.comment.quick.title",
+            "message.comment.quick.fill",
+            TEXT,
+            cm.quick.title.color,
+            quick,
+        ),
+        (
+            "message.comment.quick.subtitle",
+            "message.comment.quick.fill",
+            TEXT,
+            cm.quick.subtitle.color,
+            quick,
+        ),
+        (
+            "message.comment.quick.name",
+            "message.comment.quick.fill",
+            TEXT,
+            cm.quick.name.color,
+            quick,
+        ),
+        (
+            "message.comment.quick.text",
+            "message.comment.quick.fill",
+            TEXT,
+            cm.quick.text.color,
+            quick,
+        ),
+        (
+            "message.comment.quick.placeholder",
+            "message.comment.quick.fill",
+            TEXT,
+            cm.quick.placeholder,
+            quick,
+        ),
+        (
+            "message.comment.quick.tool.color",
+            "message.comment.quick.tool.hover",
+            LARGE,
+            cm.quick.tool.color,
+            quick_lit,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
     // core the kit's #7B7B7B hint and group label fail AA; they take
@@ -1017,6 +1130,25 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
         "message.prompt.fill",
         2.60,
     ),
+    // the comment popups' hints, the kit's #7B7B7B (`placeholder:text-secondary`)
+    (
+        "core",
+        "message.comment.reply.placeholder",
+        "message.comment.reply.well",
+        3.75,
+    ),
+    (
+        "core",
+        "message.comment.new.placeholder",
+        "message.comment.new.fill",
+        4.13,
+    ),
+    (
+        "core",
+        "message.comment.quick.placeholder",
+        "message.comment.quick.fill",
+        4.13,
+    ),
 ];
 
 #[test]
@@ -1057,7 +1189,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 713,
+        count, 769,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -1151,6 +1283,32 @@ fn the_core_prompt_text_meets_aaa() {
         (p.choice.description.color, over(p.choice.hover, panel)),
         (p.files.text.color, over(p.files.hover, panel)),
         (p.premade.row.color, over(p.premade.row_hover, paper)),
+    ];
+    for (fg, under) in pairs {
+        let r = ratio(over(fg, under), under);
+        assert!(r >= AAA, "{fg:?} at {r:.2}");
+    }
+}
+
+/// task-104 front C, wave 3: the core comment popups' text meets AAA on
+/// what is under it: the reply on its well, the new comment's and the
+/// quick comment's runs on their paper. The kit's quick subtitle,
+/// `#7B7B7B`, fails it; it takes shade 7 (`message/tokens/comment.rs`).
+/// The hints are the kit's and known above.
+#[test]
+fn the_core_comment_text_meets_aaa() {
+    let t = Theme::hoff_core();
+    let c = &t.message.comment;
+    let card = over(t.colors.surface, [0.0; 3]);
+    let well = over(c.reply.well, over(t.message.scroller.fill, card));
+    let paper = over(c.quick.fill, card);
+    let pairs = [
+        (c.reply.text.color, well),
+        (c.new.text.color, over(c.new.fill, card)),
+        (c.quick.title.color, paper),
+        (c.quick.subtitle.color, paper),
+        (c.quick.name.color, paper),
+        (c.quick.text.color, paper),
     ];
     for (fg, under) in pairs {
         let r = ratio(over(fg, under), under);

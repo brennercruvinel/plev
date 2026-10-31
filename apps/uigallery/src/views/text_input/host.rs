@@ -105,4 +105,5 @@ text_hosts! {
     Command => command,
     // task-104 front C, conversation and feedback (#156)
     PromptInput => prompt_input,
+    Comments => comments,
 }

@@ -157,6 +157,7 @@ components! {
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,
+    Comments => comments,
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,

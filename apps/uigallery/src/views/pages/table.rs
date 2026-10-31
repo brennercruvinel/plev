@@ -231,6 +231,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Comments",
+        "message-square",
+        "The comment cursor and pin, a thread beside its pin with its reply, the new comment in each state, the quick comment.",
+        Pane::Comments,
+    ),
+    page(
+        C,
         "Context Menu",
         "layers",
         "The kit's menus: a right click in the area opens the file menu at the pointer.",

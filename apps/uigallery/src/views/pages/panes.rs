@@ -30,7 +30,7 @@ use super::super::components::{
 
 // task-104 front C, conversation and feedback (#156)
 use super::super::components::{
-    alert, attachment, bubble, marker, message, message_scroller, prompt_input,
+    alert, attachment, bubble, comments, marker, message, message_scroller, prompt_input,
 };
 
 // task-104 front D, disclosure and display (#157)
@@ -105,6 +105,7 @@ pub struct Panes {
     pub alert: alert::AlertPage,
     pub attachment: attachment::AttachmentPage,
     pub bubble: bubble::BubblePage,
+    pub comments: comments::CommentsPage,
     pub marker: marker::MarkerPage,
     pub message: message::MessagePage,
     pub message_scroller: message_scroller::MessageScrollerPage,
@@ -217,6 +218,7 @@ impl Panes {
             alert: alert::AlertPage::new(),
             attachment: attachment::AttachmentPage::new(),
             bubble: bubble::BubblePage::new(),
+            comments: comments::CommentsPage::new(),
             marker: marker::MarkerPage::new(),
             message: message::MessagePage::new(),
             message_scroller: message_scroller::MessageScrollerPage::new(),
