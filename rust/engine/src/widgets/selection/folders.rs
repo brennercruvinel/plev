@@ -229,7 +229,7 @@ impl Folders {
         let slot_x = s.x + (s.h - t.search_slot) / 2.0;
         let ix = slot_x + (t.search_slot - t.search_icon) / 2.0;
         let iy = s.y + (s.h - t.search_icon) / 2.0;
-        if let Some(n) = icons::icon_at("search", t.search_icon, t.mark.0, ix, iy) {
+        if let Some(n) = icons::icon_at("kit-search", t.search_icon, t.mark.0, ix, iy) {
             c.push(n);
         }
         let ty = s.y + (s.h - style.line_height) / 2.0;
@@ -264,8 +264,8 @@ impl Folders {
                 c.push(focus_ring(r, t.row_radius, theme));
             }
             let (name, color) = match row {
-                FolderRow::New => ("folder-plus", t.mark),
-                FolderRow::Folder(i) => ("folder", t.hues[i % t.hues.len()]),
+                FolderRow::New => ("kit-folder-new", t.mark),
+                FolderRow::Folder(i) => ("kit-folder", t.hues[i % t.hues.len()]),
             };
             let sx = r.x + (r.h - t.slot) / 2.0;
             let ix = sx + (t.slot - t.icon) / 2.0;

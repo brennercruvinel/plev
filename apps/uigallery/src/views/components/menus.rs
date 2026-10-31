@@ -39,12 +39,12 @@ const CARD_BOTTOM: f32 = 64.0;
 const SPAN: usize = 3;
 
 /// The kit's upload menu (`components/Upload/index.tsx:2-27`), its icons
-/// the Lucide ones nearest the kit's paths.
+/// the kit's own paths (`kit-upload-*`).
 fn upload_menu() -> Vec<MenuEntry> {
     vec![
-        MenuEntry::item(1, "Add photos or videos").icon("image-plus"),
-        MenuEntry::item(2, "Add 3D objects").icon("box"),
-        MenuEntry::item(3, "Add files (docs, txt...)").icon("file-plus"),
+        MenuEntry::item(1, "Add photos or videos").icon("kit-upload-media"),
+        MenuEntry::item(2, "Add 3D objects").icon("kit-upload-object"),
+        MenuEntry::item(3, "Add files (docs, txt...)").icon("kit-upload-file"),
     ]
 }
 
