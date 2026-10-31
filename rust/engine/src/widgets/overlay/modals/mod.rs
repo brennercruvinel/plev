@@ -17,6 +17,7 @@
 
 pub mod control;
 pub mod share;
+pub mod share_file;
 pub mod tokens;
 pub mod variations;
 

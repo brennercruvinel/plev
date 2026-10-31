@@ -12,6 +12,7 @@ use accord::{Role, SemId, SnapshotBuilder, Value};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Button, IconButton, Press};
+use crate::widgets::form::input_group::InputGroup;
 use crate::widgets::form::new_field::NewField;
 use crate::widgets::form::{Select, Slider, Switch};
 use crate::widgets::nav::Tabs;
@@ -64,6 +65,8 @@ pub enum Kind {
     Select(Select, String),
     Slider(Slider, String),
     Field(NewField, String),
+    /// A text field with a select at its end (the kit's Invite).
+    Group(InputGroup, String),
     Item(Item),
 }
 
@@ -97,6 +100,7 @@ impl Control {
             Kind::Select(w, l) => Kind::Select(w.sem(id.clone()), l),
             Kind::Slider(w, l) => Kind::Slider(w.sem(id.clone()), l),
             Kind::Field(w, l) => Kind::Field(w.sem(id.clone()), l),
+            Kind::Group(w, l) => Kind::Group(w.sem(id.clone()), l),
             item @ Kind::Item(_) => item,
         };
         self.id = Some(id);
@@ -145,6 +149,13 @@ impl Control {
             Kind::Select(w, _) => w.set_focused(self.focused),
             Kind::Slider(w, _) => w.set_focused(self.focused),
             Kind::Field(w, _) => w.set_icon_focus(self.focused),
+            Kind::Group(w, _) => {
+                let on_choice = here.is_some_and(|id| w.choice_id().as_ref() == Some(id));
+                w.input.set_focused(self.focused && !on_choice);
+                if let Some(choice) = &mut w.choice {
+                    choice.set_focused(on_choice);
+                }
+            }
             Kind::Tabs(w, _) => w.set_focused_tab(tab),
             Kind::Item(_) => {}
         }
@@ -152,7 +163,11 @@ impl Control {
 
     /// An open select: it has every event until it closes.
     pub fn is_open(&self) -> bool {
-        matches!(&self.kind, Kind::Select(s, _) if s.is_open())
+        match &self.kind {
+            Kind::Select(s, _) => s.is_open(),
+            Kind::Group(g, _) => g.choice.as_ref().is_some_and(Select::is_open),
+            _ => false,
+        }
     }
 
     fn handle_event(&mut self, event: &WidgetEvent, r: Rect, theme: &Theme) -> EventResult {
@@ -164,6 +179,7 @@ impl Control {
             Kind::Select(w, _) => w.handle_event(event, r, theme),
             Kind::Slider(w, _) => w.handle_event(event, r, theme),
             Kind::Field(w, _) => w.handle_event(event, r, theme),
+            Kind::Group(w, _) => w.handle_event(event, r, theme),
             Kind::Item(i) => i.press.handle(event, r, false),
         }
     }
@@ -177,6 +193,7 @@ impl Control {
             Kind::Select(w, _) => w.render(c, r, theme),
             Kind::Slider(w, _) => w.render(c, r, theme),
             Kind::Field(w, _) => w.render(c, r, theme),
+            Kind::Group(w, _) => w.render(c, r, theme),
             Kind::Item(_) => {
                 if let Some(id) = &self.id {
                     c.bind(id, [r.x, r.y, r.w, r.h]);
@@ -185,7 +202,8 @@ impl Control {
         }
     }
 
-    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+    /// Its nodes under `parent`, and the focus when it holds it.
+    pub fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
         let Some(id) = &self.id else {
             return;
         };
@@ -210,6 +228,7 @@ impl Control {
                 w.project(b, id, l.as_str(), p);
             }
             Kind::Field(w, l) => w.project(b, id, l, p),
+            Kind::Group(w, l) => w.project(b, id, l.as_str(), p),
             Kind::Item(i) => project_item(b, id, i, parent),
         }
         if self.focused {
@@ -237,22 +256,10 @@ impl Control {
                 Some(i) if i < w.labels.len() => Ok(std::mem::replace(&mut w.active, i) != i),
                 _ => Err(refused()),
             },
-            (Kind::Select(w, _), "open", None) if own => {
-                w.open();
-                Ok(true)
+            (Kind::Select(w, _), _, _) => {
+                let own_id = self.id.clone().ok_or_else(refused)?;
+                run_select(w, &own_id, target, action, param).ok_or_else(refused)
             }
-            (Kind::Select(w, _), "close", None) if own => {
-                w.close();
-                Ok(true)
-            }
-            (Kind::Select(w, _), "select", Some(Value::Text(label))) if own => {
-                let found = w.options.iter().any(|o| o == label);
-                found.then(|| w.select_label(label)).ok_or_else(refused)
-            }
-            (Kind::Select(w, _), "select", None) => match at {
-                Some(i) if i < w.options.len() => Ok(w.select_index(i)),
-                _ => Err(refused()),
-            },
             (Kind::Slider(w, _), "set_value", Some(v)) if own => {
                 let v = match v {
                     Value::Num(n) => *n as f32,
@@ -266,11 +273,57 @@ impl Control {
             (Kind::Slider(w, _), "increment", None) if own => Ok(w.increment()),
             (Kind::Slider(w, _), "decrement", None) if own => Ok(w.decrement()),
             (Kind::Field(w, _), "set_value", Some(Value::Text(t))) if own => Ok(w.set_value(t)),
+            (Kind::Group(w, _), "set_value", Some(Value::Text(t))) if own => {
+                Ok(w.input.set_value(t))
+            }
+            (Kind::Group(w, _), _, _) if !own => {
+                let choice = w.choice_id();
+                let select = w.choice.as_mut().zip(choice).ok_or_else(refused)?;
+                let (select, cid) = select;
+                run_select(select, &cid, target, action, param).ok_or_else(refused)
+            }
             (Kind::Field(w, _), "activate", None) if w.icon_id().as_ref() == Some(target) => {
                 Ok(if w.is_editing() { w.save() } else { w.edit() })
             }
             _ => Err(refused()),
         }
+    }
+}
+
+/// `action` on a select `id` or on one of its options: `None` when it has
+/// no such action.
+fn run_select(
+    w: &mut Select,
+    id: &SemId,
+    target: &SemId,
+    action: &str,
+    param: Option<&Value>,
+) -> Option<bool> {
+    let own = target == id;
+    let at = target
+        .as_str()
+        .strip_prefix(id.as_str())
+        .and_then(|r| r.strip_prefix('['))
+        .and_then(|r| r.strip_suffix(']'))
+        .and_then(|k| k.parse::<usize>().ok());
+    match (action, param) {
+        ("open", None) if own => {
+            w.open();
+            Some(true)
+        }
+        ("close", None) if own => {
+            w.close();
+            Some(true)
+        }
+        ("select", Some(Value::Text(label))) if own => {
+            let found = w.options.iter().any(|o| o == label);
+            found.then(|| w.select_label(label))
+        }
+        ("select", None) => match at {
+            Some(i) if i < w.options.len() && w.is_open() => Some(w.select_index(i)),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -350,10 +403,10 @@ impl Controls {
         theme: &Theme,
     ) {
         for (control, r) in self.0.iter().zip(rects) {
-            if let Kind::Select(s, _) = &control.kind
-                && s.is_open()
-            {
-                s.render_dropdown(c, layer, *r, theme);
+            match &control.kind {
+                Kind::Select(s, _) if s.is_open() => s.render_dropdown(c, layer, *r, theme),
+                Kind::Group(g, _) => g.render_dropdown(c, layer, *r, theme),
+                _ => {}
             }
         }
     }
@@ -395,9 +448,12 @@ impl Controls {
     pub fn close(&mut self) -> bool {
         let mut closed = false;
         for control in &mut self.0 {
-            if let Kind::Select(s, _) = &mut control.kind
-                && s.is_open()
-            {
+            let select = match &mut control.kind {
+                Kind::Select(s, _) => Some(s),
+                Kind::Group(g, _) => g.choice.as_mut(),
+                _ => None,
+            };
+            if let Some(s) = select.filter(|s| s.is_open()) {
                 s.close();
                 closed = true;
             }

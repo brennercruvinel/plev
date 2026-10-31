@@ -25,6 +25,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::overlay::modals::share::{SharePost, ShareProfile};
+use engine::widgets::overlay::modals::share_file::{Person, ShareFile};
 use engine::widgets::overlay::modals::variations::Variations;
 use engine::widgets::overlay::modals::{self, ModalBody};
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
@@ -71,6 +72,16 @@ fn shown(chip: &'static str, filled: bool, body: impl ModalBody + 'static) -> Sh
     }
 }
 
+/// The kit's shared file: two people who can view and edit, the owner.
+fn share_file(id: Option<&SemId>) -> ShareFile {
+    let people = vec![
+        Person::new("Sam Dy", "sam@hoffresearch.com", Some(0)),
+        Person::new("Ellie Joy", "ellie@hoffresearch.com", Some(1)),
+        Person::new("Hellen", "helen@hoffresearch.com", None),
+    ];
+    ShareFile::new(people, "https://research-app.co/file/k373nH", id)
+}
+
 impl ModalsPage {
     pub fn new() -> Self {
         let root = root_id("modals_page");
@@ -108,6 +119,11 @@ impl ModalsPage {
                 ],
             },
             Group {
+                title: "Share file",
+                span: 1,
+                cards: vec![shown("Share file", false, share_file(id(2, 0).as_ref()))],
+            },
+            Group {
                 title: "Quick comment & Delete confirm",
                 span: 2,
                 cards: vec![
@@ -119,7 +135,7 @@ impl ModalsPage {
                             owner: "front C, the Comments tab",
                         },
                     ),
-                    shown("Confirm", true, Confirm::new(id(2, 1).as_ref())),
+                    shown("Confirm", true, Confirm::new(id(3, 1).as_ref())),
                 ],
             },
         ];
