@@ -45,6 +45,7 @@ const PROJECTING: &[&str] = &[
     "Button Group",
     "Checkbox",
     "Chip",
+    "Code Block",
     "Combobox",
     "Data Table",
     "Dialog",
@@ -125,10 +126,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Chart",
         Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
-    (
-        "Code Block",
-        Unprojected("CodeBlock: a label with the code, named by its caption"),
     ),
     ("Collapsible", PLACEHOLDER),
     ("Command", PLACEHOLDER),

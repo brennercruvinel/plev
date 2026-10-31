@@ -137,6 +137,7 @@ components! {
     // task-104 front E, selection and dates (#158)
     Toggle => toggle,
     // task-104 front G, navigation and data
+    CodeBlock => code_block,
     Stat => stat,
 }
 

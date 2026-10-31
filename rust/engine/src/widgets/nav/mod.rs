@@ -18,5 +18,6 @@ pub use sidebar::{NavGroup, Sidebar};
 pub use split_pane::{SplitDirection, SplitPane};
 pub use tabs::Tabs;
 pub use tokens::{
-    BreadcrumbRecipe, LinkSurface, NavLinkRecipe, NavText, NavigationTokens, StatLevel, StatRecipe,
+    BreadcrumbRecipe, CodeRecipe, LinkSurface, NavLinkRecipe, NavText, NavigationTokens, StatLevel,
+    StatRecipe,
 };

@@ -19,7 +19,7 @@ use crate::styling::theme::{ControlSize, IconSize, Theme};
 use crate::widgets::content::DisclosureTile;
 
 mod data;
-pub use data::{StatLevel, StatRecipe};
+pub use data::{CodeRecipe, StatLevel, StatRecipe};
 
 /// A text run: size, line height and weight in px, in the theme's family;
 /// tracked as the theme tracks unless the run names its own (in em).
@@ -155,6 +155,7 @@ pub struct NavigationTokens {
     /// theme until the sidebar moves to the kit.
     pub sidebar_link: NavLinkRecipe,
     pub stat: StatRecipe,
+    pub code: CodeRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -257,6 +258,7 @@ impl NavigationTokens {
             link,
             sidebar_link: link,
             stat: StatRecipe::hoff_core(),
+            code: CodeRecipe::hoff_core(),
         }
     }
 
@@ -288,6 +290,7 @@ impl NavigationTokens {
             link,
             sidebar_link: link,
             stat: StatRecipe::derive(theme),
+            code: CodeRecipe::derive(theme),
         }
     }
 

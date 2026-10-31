@@ -103,3 +103,87 @@ impl StatRecipe {
         }
     }
 }
+
+/// The code block: its box, its text and caption, and the wash behind
+/// each kind of a diff's row.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct CodeRecipe {
+    pub text: NavText,
+    pub caption: NavText,
+    pub pad: f32,
+    /// Between the caption and the code.
+    pub caption_gap: f32,
+    pub radius: f32,
+    pub border_width: f32,
+    pub fill: Color,
+    pub border: Color,
+    /// Wrapped code, the caption, and the text of every row (the one
+    /// tone that reads over every wash).
+    pub code: Color,
+    pub caption_color: Color,
+    pub row_ink: Color,
+    pub added: Color,
+    pub removed: Color,
+    pub header: Color,
+}
+
+impl CodeRecipe {
+    /// No code block in the kit: the well of the pricing card
+    /// (`PriceCard/index.tsx:43`, `p-3 bg-[#F8F7F7]`) inside the card
+    /// shell's rim (`Card/index.tsx:36`, `border-[#ECECEC]`) at the
+    /// inputs' radius (`rounded-xl`, `Field:66`); the caption the
+    /// typography table's text (`TypographyPage:8`, `text-[0.6875rem]
+    /// leading-[1rem] font-medium text-[#7B7B7B]`); the code the
+    /// 0.8125rem step on the 1.25rem line, untracked, in the kit's dark
+    /// gray `#323232`; a row's text ink. A diff's rows wash in the kit's
+    /// green and red at the core glass's wash (10%), a header in
+    /// `#F1F1F1`.
+    pub fn hoff_core() -> Self {
+        use crate::styling::theme::hoff_core::{GREEN, RED};
+        let [_, well, wash, line, _, gray, dark, _, ink] = SHADES;
+        Self {
+            text: NavText::new(13.0, 20.0, 500).tracked(0.0),
+            caption: NavText::new(11.0, 16.0, 500),
+            pad: 12.0,
+            caption_gap: 4.0,
+            radius: 12.0,
+            border_width: 1.0,
+            fill: well,
+            border: line,
+            code: dark,
+            caption_color: gray,
+            row_ink: ink,
+            added: tint(GREEN, 0.10),
+            removed: tint(RED, 0.10),
+            header: wash,
+        }
+    }
+
+    /// The block of before: the mono step on the glass's field at the nav
+    /// radius inside its soft edge, the caption faint, the code mid, the
+    /// rows in the text tone over the intent washes.
+    pub fn derive(theme: &Theme) -> Self {
+        let (colors, glass) = (&theme.colors, &theme.glass);
+        Self {
+            text: NavText::of(&theme.typography.mono()),
+            caption: NavText::of(&theme.typography.caption_sm()),
+            pad: theme.spacing.md,
+            caption_gap: theme.spacing.xs,
+            radius: theme.shape.nav,
+            border_width: theme.control.edge_width,
+            fill: glass.field,
+            border: glass.edge_soft,
+            code: colors.text_mid,
+            caption_color: glass.text_faint,
+            row_ink: colors.text,
+            added: tint(colors.success, glass.wash_alpha),
+            removed: tint(colors.danger, glass.wash_alpha),
+            header: glass.surface_hover,
+        }
+    }
+}
+
+/// `c` at alpha `a` (the hue kept).
+fn tint(c: Color, a: f32) -> Color {
+    Color([c.0[0], c.0[1], c.0[2], a])
+}

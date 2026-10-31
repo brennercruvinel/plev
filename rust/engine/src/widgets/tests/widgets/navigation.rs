@@ -376,3 +376,43 @@ fn stat_projects_a_label_with_its_value() {
     assert_eq!(node.description.as_deref(), Some("+12%"));
     assert!(node.actions.is_empty());
 }
+
+// Code block
+
+/// The kit's well in core: `#F8F7F7` inside the `#ECECEC` rim at 12, the
+/// code on a 20 px line; derived, the glass field of before.
+#[test]
+fn code_recipe_is_the_kit_well_in_core_and_the_glass_field_elsewhere() {
+    use crate::styling::theme::hoff_core::SHADES;
+    let kit = core().navigation.code;
+    assert_eq!(
+        (kit.fill, kit.border, kit.radius),
+        (SHADES[1], SHADES[3], 12.0)
+    );
+    assert_eq!(CodeBlock::row_h(&core()), 20.0);
+    let t = hoff();
+    let old = t.navigation.code;
+    assert_eq!((old.fill, old.border), (t.glass.field, t.glass.edge_soft));
+    assert_eq!(CodeBlock::text_style(&t), t.typography.mono());
+    assert_eq!(LineKind::Header.wash(&t), Some(t.glass.surface_hover.0));
+}
+
+/// The block projects as a label named by its caption, its code (the
+/// rows one per line) as the value, no action.
+#[test]
+fn code_block_projects_its_code() {
+    use accord::{SemId, SnapshotBuilder, Value};
+    let id = SemId::parse("diff").unwrap();
+    let block = CodeBlock::lines(vec![
+        CodeLine::new("-a", LineKind::Removed),
+        CodeLine::new("+b", LineKind::Added),
+    ])
+    .caption("lib.rs");
+    let mut b = SnapshotBuilder::new();
+    block.project(&mut b, &id, None);
+    let snap = b.finish().unwrap();
+    let node = snap.get(&id).unwrap();
+    assert_eq!(node.label, "lib.rs");
+    assert_eq!(node.state.get("value"), Some(&Value::Text("-a\n+b".into())));
+    assert!(node.actions.is_empty());
+}

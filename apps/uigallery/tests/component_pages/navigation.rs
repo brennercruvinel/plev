@@ -58,3 +58,23 @@ fn a_stat_says_its_value_to_the_reader_and_the_agent() {
     assert!(shown.ids.node(&sid(id)).is_some(), "in the reader's tree");
     let _ = g.middle(id);
 }
+
+/// A code block is read: the agent's projection and the reader's tree
+/// hold the same code, bound where the person sees the block.
+#[test]
+fn a_code_block_says_its_code_to_the_reader_and_the_agent() {
+    let id = "code_block_page.group[0].card[1]";
+    let g = gallery("Code Block");
+    let agent = g.view.semantics().expect("the page projects");
+    let read = agent.get(&sid(id)).expect("the agent observes it");
+    assert_eq!(read.label, "shell");
+    assert!(read.actions.is_empty(), "nothing to operate");
+    let (_, shown) = g.shown();
+    assert_eq!(
+        shown.snapshot.get(&sid(id)),
+        Some(read),
+        "the reader hears the same"
+    );
+    assert!(shown.ids.node(&sid(id)).is_some(), "in the reader's tree");
+    let _ = g.middle(id);
+}
