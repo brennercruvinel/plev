@@ -63,15 +63,16 @@ impl Badge {
         }
     }
 
-    /// Intrinsic size from real text measurement. The count disc is a
-    /// circle at least `spacing.xl` wide that stretches into a pill for
-    /// wide numbers.
+    /// Intrinsic size from real text measurement. The count disc is its
+    /// label's line with the `xs` step above and below (it was the `xl`
+    /// step, a 32 px disc in core beside 22 px tags), a circle that
+    /// stretches into a pill for wide numbers.
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
         let style = self.text_style(theme);
         let (tw, _) = TextMeasurer::measure_styled(&self.label, &style, None);
         match self.kind {
             BadgeKind::Count => {
-                let d = theme.spacing.xl;
+                let d = style.line_height + theme.spacing.xs * 2.0;
                 ((tw + theme.spacing.sm).max(d).ceil(), d)
             }
             BadgeKind::Tag => (
