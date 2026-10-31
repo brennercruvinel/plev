@@ -507,14 +507,14 @@ impl MessageTokens {
                 card_lines: [128.0 / 210.0, 72.0 / 210.0],
             },
             // components/VideoPlayer/index.tsx:48-53, the rail on paper:
-            // :49 `min-w-45 h-0.75 rounded-full bg-[#7B7B7B]/20` (the
-            // height is the theme's `control.progress_track`, 3 in the
-            // core), :53 `bg-[#7B7B7B]/30`, its head `after:w-1.25
+            // :49 `min-w-45 h-0.75 rounded-full bg-[#7B7B7B]/20`, :53
+            // `bg-[#7B7B7B]/30`, its head `after:w-1.25
             // after:rounded-full after:bg-[#121212]`. The kit's one rail
             // is neutral; the intents tint it with the core's accents (as
             // the badge) and their heads move toward the ink until they
             // read (`ProgressTokens::new`)
             progress: ProgressTokens::new(
+                3.0,
                 alpha(shade6, 0.2),
                 IntentColors {
                     neutral: alpha(shade6, 0.3),

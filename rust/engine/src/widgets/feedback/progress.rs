@@ -1,9 +1,8 @@
 //! Progress: the hoff core kit's video player rail
-//! (`components/VideoPlayer`): a pill as thin as the theme's progress
-//! track, its filled part a shade deeper, and a head at the fill's end in
+//! (`components/VideoPlayer`): a thin pill, its filled part a shade
+//! deeper, and a head at the fill's end in
 //! the ink (or the intent's color, made to read) that marks the value.
-//! Every value is `theme.message.progress`, the height
-//! `control.progress_track`.
+//! Every value is `theme.message.progress`.
 //!
 //! Behavior apart from the look: the bar holds a value from 0 to 1; a
 //! reader hears it as a progress bar with that value and its range
@@ -66,14 +65,14 @@ impl ProgressBar {
     }
 
     /// The narrowest the kit lays the rail out (`min-w-45`), as tall as
-    /// the theme's track.
+    /// the rail.
     pub fn preferred_size(theme: &Theme) -> (f32, f32) {
-        (theme.message.progress.min_w, theme.control.progress_track)
+        (theme.message.progress.min_w, theme.message.progress.height)
     }
 
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> ProgressLayout {
         let t = &theme.message.progress;
-        let h = theme.control.progress_track.min(bounds.h.max(0.0));
+        let h = t.height.min(bounds.h.max(0.0));
         let w = bounds.w.max(0.0);
         let y = bounds.y + (bounds.h - h) / 2.0;
         let track = Rect::new(bounds.x, y, w, h);
