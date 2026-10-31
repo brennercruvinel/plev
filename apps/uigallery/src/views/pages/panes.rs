@@ -15,6 +15,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104: each front imports its pages under its anchor, a group of its
 // own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
+use super::super::components::field;
 
 // task-104 front B, overlays (#155)
 
@@ -67,6 +68,7 @@ pub struct Panes {
     pub tree: tree::TreePage,
     // -- task-104: each front's pages under its anchor
     // task-104 front A, fields (#154)
+    pub field: field::FieldPage,
     // task-104 front B, overlays (#155)
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
@@ -144,6 +146,7 @@ impl Panes {
             tooltip: tooltip::TooltipPage::new(),
             tree: tree::TreePage::new(),
             // task-104 front A, fields (#154)
+            field: field::FieldPage::new(),
             // task-104 front B, overlays (#155)
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)

@@ -45,6 +45,7 @@ pub mod tree;
 // task-104: each front adds its page modules under its anchor, a group of
 // its own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
+pub mod field;
 
 // task-104 front B, overlays (#155)
 

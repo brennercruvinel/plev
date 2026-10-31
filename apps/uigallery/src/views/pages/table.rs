@@ -220,12 +220,12 @@ pub const PAGES: &[Page] = &[
         "Empty state with and without a call to action.",
         Pane::Empty,
     ),
-    alias(
+    page(
+        C,
         "Field",
         "file",
-        "A text field, until it has a label, helper and error line.",
-        Pane::Input,
-        "label, helper and error",
+        "A text field with its label, link, icon, check or eye, and error or helper line.",
+        Pane::Field,
     ),
     page(
         C,

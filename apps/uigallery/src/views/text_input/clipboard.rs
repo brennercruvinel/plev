@@ -89,6 +89,7 @@ impl super::super::pages::panes::Panes {
     pub(in crate::views) fn keys(&mut self, pane: Option<Pane>) -> Keys<'_> {
         match pane {
             Some(Pane::Input) => self.input.keys(),
+            Some(Pane::Field) => self.field.keys(),
             Some(Pane::Todo) => self.todo.keys(),
             Some(Pane::Surface) => self.surface.keys(&mut self.todo),
             Some(Pane::Silences) => self.silences.keys(),

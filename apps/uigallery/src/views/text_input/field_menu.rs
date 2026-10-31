@@ -73,6 +73,7 @@ impl ShowcaseView {
         let pane = self.pane();
         let took = match pane {
             Some(Pane::Input) => self.panes.input.right_click(x, y, content, &self.theme),
+            Some(Pane::Field) => self.panes.field.right_click(x, y, content, &self.theme),
             _ => false,
         };
         if !took {

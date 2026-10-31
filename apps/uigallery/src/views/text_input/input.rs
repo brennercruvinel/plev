@@ -80,6 +80,7 @@ impl ShowcaseView {
         let typed = !held
             && match self.pane() {
                 Some(Pane::Input) => self.panes.input.handle_text(key),
+                Some(Pane::Field) => self.panes.field.handle_text(key),
                 Some(Pane::Todo) => self.panes.todo.handle_text(key),
                 Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
                 Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
@@ -151,6 +152,7 @@ impl ShowcaseView {
         }
         let blurred = match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_escape(),
+            Some(Pane::Field) => self.panes.field.handle_escape(),
             Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
             Some(Pane::Switch) => self.panes.switch.handle_escape(),
             Some(Pane::Slider) => self.panes.slider.handle_escape(),
@@ -209,6 +211,7 @@ impl ShowcaseView {
         }
         match self.pane() {
             Some(Pane::Input) => self.panes.input.handle_edit_key(key),
+            Some(Pane::Field) => self.panes.field.handle_edit_key(key),
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
             Some(Pane::Surface) => self
                 .panes
@@ -279,6 +282,7 @@ impl ShowcaseView {
             }
             // A text field's own menu (`field_menu.rs`).
             Some(Pane::Input) => self.open_field_menu(x, y),
+            Some(Pane::Field) => self.open_field_menu(x, y),
             _ => false,
         }
     }
