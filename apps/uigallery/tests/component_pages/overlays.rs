@@ -349,6 +349,52 @@ fn settle(g: &mut Gallery) {
 const SHEET: &str = "Sheet";
 const FROM_BOTTOM: &str = "sheet_page.group[0].card[2]";
 
+/// Reduced motion on this thread for the test that holds it, off again
+/// at its end.
+struct Reduced;
+
+impl Reduced {
+    fn on() -> Self {
+        engine::compose::animation::set_reduced_motion(true);
+        Reduced
+    }
+}
+
+impl Drop for Reduced {
+    fn drop(&mut self) {
+        engine::compose::animation::set_reduced_motion(false);
+    }
+}
+
+/// The sheet opened and one frame ticked: whether the view still moves,
+/// and the sheet's entry progress on the stack.
+fn sheet_after_one_frame() -> (bool, Vec<f32>) {
+    let mut g = gallery(SHEET);
+    g.click(FROM_BOTTOM);
+    let moving = g.view.tick(1.0 / 60.0);
+    let progress = g
+        .view
+        .overlay_mgr
+        .stack
+        .iter()
+        .map(|o| o.progress())
+        .collect();
+    (moving, progress)
+}
+
+/// With motion the sheet slides in over frames; with reduced motion it
+/// enters in a cut: in on the first frame, and nothing asks for another.
+#[test]
+fn reduced_motion_brings_the_sheet_in_with_a_cut() {
+    let (moving, progress) = sheet_after_one_frame();
+    assert!(moving, "with motion it slides");
+    assert!(progress.iter().all(|p| *p < 1.0), "mid-slide: {progress:?}");
+    let _reduced = Reduced::on();
+    let (moving, progress) = sheet_after_one_frame();
+    assert!(!moving, "reduced: nothing moves after the first frame");
+    assert_eq!(progress, [1.0], "reduced: the sheet is in");
+}
+
 /// The sheet opens from the three, held to the edge its button names,
 /// with the focus on its close; its save, from the three, closes it and
 /// says so in a toast.
