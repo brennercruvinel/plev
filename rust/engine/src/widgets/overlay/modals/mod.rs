@@ -277,3 +277,6 @@ pub fn focus_all(sets: &mut [&mut Controls], id: Option<&SemId>) -> bool {
     }
     took
 }
+
+#[cfg(test)]
+mod tests;
