@@ -394,6 +394,13 @@ pub struct HeaderRecipe {
     pub rule_color: Color,
 }
 
+/// A split's divider: its color at rest and while hovered or dragged.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SplitRecipe {
+    pub rest: Color,
+    pub active: Color,
+}
+
 /// How a disclosure moves: the revealed height and the chevron's half
 /// turn, each a duration in seconds and an easing.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -452,6 +459,8 @@ pub struct DisclosureTokens {
     pub panel: PanelRecipe,
     /// A panel's head.
     pub header: HeaderRecipe,
+    /// A split's divider.
+    pub split: SplitRecipe,
 }
 
 fn hex(v: u32) -> Color {

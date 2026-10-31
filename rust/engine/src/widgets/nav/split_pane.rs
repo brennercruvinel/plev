@@ -270,12 +270,14 @@ impl SplitPane {
             compositor.bind(id, [g.x, g.y, g.w, g.h]);
         }
         let d = self.divider_rect(bounds);
-        // Rest: the soft glass edge. Hover/drag: the active surface token,
-        // slightly widened — the HOFF way to say "grab me" without color.
+        // Rest and hover/drag tones are the theme's
+        // (`theme.disclosure.split`); hovered or dragged, the line widens
+        // by one edge to say "grab me".
+        let look = &theme.disclosure.split;
         let (color, grow) = if self.dragging || self.hovered {
-            (theme.glass.surface_active.0, 1.0)
+            (look.active.0, theme.control.edge_width)
         } else {
-            (theme.glass.edge_soft.0, 0.0)
+            (look.rest.0, 0.0)
         };
         let rect = match self.direction {
             SplitDirection::Horizontal => Rect::new(d.x - grow / 2.0, d.y, d.w + grow, d.h),

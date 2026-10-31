@@ -139,6 +139,12 @@ impl DisclosureTokens {
         let (list, table) = Self::rows(theme);
         let tree = Self::tree(theme);
         let (panel, header) = Self::panels(theme);
+        // The split as before the kit: the soft glass edge at rest, the
+        // active surface while hovered or dragged.
+        let split = SplitRecipe {
+            rest: theme.glass.edge_soft,
+            active: theme.glass.surface_active,
+        };
         Self {
             accordion,
             collapsible,
@@ -153,6 +159,7 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
+            split,
         }
     }
 

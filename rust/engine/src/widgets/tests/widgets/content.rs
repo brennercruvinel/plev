@@ -471,6 +471,8 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     assert_ne!((derived.panel, derived.header), (kit.panel, kit.header));
     derived.panel = kit.panel;
     derived.header = kit.header;
+    assert_ne!(derived.split, kit.split);
+    derived.split = kit.split;
     assert_eq!(derived, kit);
     assert_eq!(core().disclosure, kit);
     // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
@@ -544,6 +546,8 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         let h = theme.disclosure.header;
         assert_eq!((h.title, h.blurb), (g.text_default, theme.colors.text_dim));
         assert_eq!((h.badge_gap, h.rule), (theme.spacing.sm, 0.0));
+        let split = theme.disclosure.split;
+        assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
         assert_eq!(Table::cell_style(&theme), theme.typography.base_2r());
         let mut c = Compositor::new();
         c.begin_frame();
