@@ -4,7 +4,8 @@
 //!
 //! What the page draws for a capability it also binds, beside the scene,
 //! with the rect it hit-tests with: the card as `todo`, each visible row
-//! as its `todo.item[<id>]`, each pill as its `todo.filter[..]`; the field
+//! as its `todo.item[<id>]`, each filter segment as its `todo.filter[..]`
+//! (the page's own tab ids: the group draws, the page projects); the field
 //! binds itself as `todo.input`.
 
 use crate::domain::todo::Filter;
@@ -12,7 +13,7 @@ use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
 use engine::widgets::icons;
-use engine::widgets::prelude::{Rect, glass_pill, rounded_rect};
+use engine::widgets::prelude::{Rect, rounded_rect};
 
 use super::TodoPage;
 use super::layout::*;
@@ -28,6 +29,10 @@ impl TodoPage {
         if let Some(ids) = &self.ids {
             c.bind(&ids.todo, bounds(l.panel));
         }
+        let focus = self
+            .tab_focus
+            .and_then(|f| Filter::ALL.iter().position(|g| *g == f));
+        self.filters.set_focused(focus);
         self.render_input(c, &l, theme);
         self.render_rows(c, &l, theme);
         self.render_footer(c, &l, theme);
@@ -165,38 +170,11 @@ impl TodoPage {
             y: l.counter.1,
             color: g.text_faint.0,
         });
-        let pstyle = pill_style();
-        for (i, (f, pr)) in Filter::ALL.iter().zip(l.pills).enumerate() {
-            if let Some(ids) = &self.ids {
+        if let Some(ids) = &self.ids {
+            for (f, pr) in Filter::ALL.iter().zip(l.pills) {
                 c.bind(ids.tab(*f), bounds(pr));
             }
-            let active = self.model.filter() == *f;
-            let hovered = self.hover_pill == Some(i);
-            let fill = if active {
-                g.surface_active
-            } else if hovered {
-                g.button_hover
-            } else {
-                g.button
-            };
-            let edge = if active { g.edge } else { g.edge_soft };
-            for node in glass_pill(pr, PILL_H / 2.0, edge.0, 1.0, fill.0) {
-                c.push(node);
-            }
-            let tw = TextMeasurer::measure_styled(f.label(), &pstyle, None).0;
-            let tint = if active {
-                theme.colors.text
-            } else if hovered {
-                theme.colors.text_mid
-            } else {
-                g.text_faint
-            };
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(f.label(), &pstyle, None),
-                x: pr.x + (pr.w - tw) / 2.0,
-                y: pr.y + TextMeasurer::vertical_center(&pstyle, PILL_H),
-                color: tint.0,
-            });
         }
+        self.filters.render(c, l.filters, theme);
     }
 }

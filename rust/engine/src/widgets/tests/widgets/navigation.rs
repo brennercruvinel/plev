@@ -44,13 +44,13 @@ fn rounded_fills(nodes: &[SceneNode]) -> Vec<[f32; 4]> {
 fn the_slot_is_the_kit_in_core_and_derived_elsewhere() {
     let themes = [Theme::hoff(), Theme::dark(), Theme::light()];
     for theme in themes.iter().chain(Theme::named("nord").as_ref()) {
-        assert_eq!(theme.navigation, NavigationTokens::derive(theme));
+        assert_eq!(*theme.navigation, NavigationTokens::derive(theme));
     }
     let core = core();
     let kit = NavigationTokens::hoff_core();
     assert_eq!(core.navigation.breadcrumb, kit.breadcrumb);
     assert_eq!(core.navigation.link, kit.link);
-    assert_ne!(core.navigation, NavigationTokens::derive(&core));
+    assert_ne!(*core.navigation, NavigationTokens::derive(&core));
     // The sidebar is the chrome: the look of before in core too.
     let before = NavigationTokens::sidebar_link_of_before(&core);
     assert_eq!(core.navigation.sidebar_link, before);

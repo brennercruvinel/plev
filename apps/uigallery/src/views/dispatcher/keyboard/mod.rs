@@ -80,6 +80,20 @@ fn ancestor<'a>(seen: &'a Snapshot, node: &Node, role: Role) -> Option<&'a Node>
     None
 }
 
+/// An accordion's trigger (task-104 front D): a button that toggles what
+/// it reveals, in a group of them. The arrows walk the triggers of that
+/// group (WAI-ARIA's accordion: up, down, Home and End, no wrap).
+fn accordion_trigger(seen: &Snapshot, node: &Node) -> bool {
+    node.actions
+        .iter()
+        .any(|a| a.name.as_str() == "toggle_expanded")
+        && node
+            .parent
+            .as_ref()
+            .and_then(|p| seen.get(p))
+            .is_some_and(|p| p.role == Role::Group)
+}
+
 /// The nodes under `root` that pass `keep` and could have the focus
 /// (enabled, not inert), focusable or not, in the order `focus::order`
 /// walks: depth first, children in projection order.
@@ -252,6 +266,9 @@ impl ShowcaseView {
             Role::TreeItem => return self.tree_key(seen, &id, node, key),
             Role::ListItem | Role::Row => return self.row_key(seen, &id, node, key),
             Role::Slider => return self.slide(seen, &id, node, key),
+            // task-104 front D: up and down along an accordion's triggers
+            Role::Button if accordion_trigger(seen, node) => (down(key), false),
+            Role::Radio => return self.radio_key(seen, &id, node, key),
             Role::Select if matches!(key, Walk::Up | Walk::Down) => {
                 let open = node.state.get("expanded") == Some(&Value::Bool(true));
                 return if open {
@@ -273,6 +290,36 @@ impl ShowcaseView {
         });
         let to = step(&siblings, &id, mv, wrap).cloned();
         to.is_some_and(|to| self.assist_focus(&to))
+    }
+
+    /// A radio (task-104 front E): any arrow, Home and End move along the
+    /// enabled radios of its group, wrapping at the ends, and choose the
+    /// one they land on through the dispatcher, as the person's `select`
+    /// (the WAI-ARIA radio group).
+    fn radio_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
+        let mv = match key {
+            Walk::Left | Walk::Up => Move::Prev,
+            Walk::Right | Walk::Down => Move::Next,
+            Walk::Home => Move::First,
+            Walk::End => Move::Last,
+            Walk::Tab | Walk::Press => return false,
+        };
+        let Some(group) = node.parent.as_ref() else {
+            return false;
+        };
+        let radios = items(seen, group, |n| {
+            n.role == Role::Radio && n.parent.as_ref() == Some(group)
+        });
+        let Some(to) = step(&radios, id, mv, true).cloned() else {
+            return false;
+        };
+        if !self.assist_focus(&to) {
+            return false;
+        }
+        let Some(now) = self.semantics() else {
+            return false;
+        };
+        self.ask(&now, &to, "select", None)
     }
 
     /// A list or a table: up and down along its rows, Home and End to its

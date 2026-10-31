@@ -77,8 +77,9 @@ pub struct Theme {
     /// date picker.
     pub selection: SelectionTokens,
     /// Front G: breadcrumb, navigation menu, the sidebar's links, stat,
-    /// code block, chart, graph.
-    pub navigation: NavigationTokens,
+    /// code block, chart, graph. Boxed: a theme travels by value, and its
+    /// size is every test's stack.
+    pub navigation: Box<NavigationTokens>,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -127,7 +128,7 @@ impl Theme {
             message: MessageTokens::hoff_core(),
             disclosure: DisclosureTokens::hoff_core(),
             selection: SelectionTokens::hoff_core(),
-            navigation: NavigationTokens::hoff_core(),
+            navigation: Box::new(NavigationTokens::hoff_core()),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -375,7 +376,7 @@ impl Theme {
         self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);
         self.selection = SelectionTokens::derive(self);
-        self.navigation = NavigationTokens::derive(self);
+        *self.navigation = NavigationTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

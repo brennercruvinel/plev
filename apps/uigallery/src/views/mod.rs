@@ -116,6 +116,10 @@ pub struct ShowcaseView {
 struct Layers {
     list: LayerId,
     overlay: LayerId,
+    /// A page's anchored panels (task-104 front B: the popover), above
+    /// the page and the overlay layer: its opacity is the open panel's
+    /// fade, which the page sets each frame.
+    anchored: LayerId,
     toast: LayerId,
 }
 
@@ -128,7 +132,7 @@ impl ShowcaseView {
             .map(|(i, p)| {
                 let link = NavLink::new(p.title).icon(p.icon);
                 if i < HOTKEY_PAGES {
-                    link.hint(format!("{}", (i + 1) % 10))
+                    link.shortcut(format!("{}", (i + 1) % 10))
                 } else {
                     link
                 }

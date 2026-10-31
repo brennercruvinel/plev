@@ -1,9 +1,15 @@
 //! The Field page: its layout over a continuous range of widths, the
 //! pointer and the keys on a field, and what a request runs.
 
-use accord::{Actor, Snapshot};
+use accord::{Actor, Request, Role, SemId, Snapshot, SnapshotBuilder, Value};
+use engine::styling::theme::Theme;
+use engine::widgets::form::field::{Field, FieldPart};
+use engine::widgets::prelude::{Rect, WidgetEvent};
 
+use super::super::showcase;
+use super::super::{After, Component, EditKey};
 use super::*;
+use crate::views::text_input::host::TextHost;
 
 fn themes() -> [Theme; 2] {
     [Theme::hoff_core(), Theme::hoff()]
@@ -17,7 +23,7 @@ fn overlap(a: Rect, b: Rect) -> bool {
     a.x < b.right() && b.x < a.right() && a.y < b.bottom() && b.y < a.bottom()
 }
 
-fn snapshot(p: &FieldPage) -> Snapshot {
+fn snapshot(p: &FormPage) -> Snapshot {
     let root = p.root().expect("the root parses").clone();
     let mut b = SnapshotBuilder::new();
     b.node(&root, Role::Region, "Field");
@@ -25,7 +31,7 @@ fn snapshot(p: &FieldPage) -> Snapshot {
     b.finish().expect("the page projects")
 }
 
-fn ask(p: &FieldPage, target: &SemId, action: &str, param: Option<Value>) -> Request {
+fn ask(p: &FormPage, target: &SemId, action: &str, param: Option<Value>) -> Request {
     let actor = Actor::Test {
         name: "field".into(),
     };
@@ -35,21 +41,24 @@ fn ask(p: &FieldPage, target: &SemId, action: &str, param: Option<Value>) -> Req
     }
 }
 
-fn field(p: &FieldPage, (g, c): (usize, usize)) -> &Field {
-    &p.groups[g].cards[c].field
+fn field(p: &FormPage, at: (usize, usize)) -> &Field {
+    p.field(at).expect("a field")
 }
 
 /// The center of a field's box, laid out in `content()`.
-fn input_center(p: &FieldPage, at: (usize, usize), theme: &Theme) -> (f32, f32) {
-    let rect = p.field_rect(at, content(), theme).expect("a card");
+fn input_center(p: &FormPage, at: (usize, usize), theme: &Theme) -> (f32, f32) {
+    let rect = p.widget_rect(at, content(), theme).expect("a card");
     field(p, at).layout(rect, theme).input.center()
 }
 
 #[test]
 fn every_field_has_its_id() {
-    let p = FieldPage::new();
+    let p = page();
     assert!(p.root.is_some());
-    assert!(p.fields().all(|f| f.sem_id().is_some()));
+    assert!(
+        p.specs()
+            .all(|s| s.field().is_some_and(|f| f.sem_id().is_some()))
+    );
 }
 
 /// The width sweep: from 280 to 1600 px every 8 px, in the core and the
@@ -60,7 +69,7 @@ fn every_field_has_its_id() {
 /// groups follow each other down the page.
 #[test]
 fn every_card_and_field_stays_in_place_from_280_to_1600() {
-    let p = FieldPage::new();
+    let p = page();
     for theme in themes() {
         for w in (280..=1600).step_by(8).map(|w| w as f32) {
             let content = Rect::new(0.0, 0.0, w, 800.0);
@@ -79,10 +88,12 @@ fn every_card_and_field_stays_in_place_from_280_to_1600() {
                         rect.y >= card.y && rect.bottom() <= card.bottom() + 0.5,
                         "{what}: field leaves its card's height"
                     );
-                    let (chip, _) = vitrine::chip(*card, spec.title, &theme);
+                    let inset = theme.spacing.sm;
+                    let text = showcase::chip_fit(spec.title, card.w - inset * 2.0, &theme);
+                    let chip = showcase::chip_rect(card.x + inset, card.y + inset, &text, &theme);
                     assert!(chip.right() <= card.right(), "{what}: chip");
                     assert!(chip.bottom() <= rect.y, "{what}: chip over the field");
-                    let l = spec.field.layout(*rect, &theme);
+                    let l = spec.spec.field().expect("a field").layout(*rect, &theme);
                     assert!((l.bottom() - rect.bottom()).abs() < 0.5, "{what}: height");
                     let parts = [l.label, l.link, l.message, l.icon, l.check, l.reveal];
                     for r in parts.into_iter().flatten().chain([l.input]) {
@@ -106,7 +117,7 @@ fn every_card_and_field_stays_in_place_from_280_to_1600() {
 /// Wide, a group's cards share a row; narrow, they stack in one column.
 #[test]
 fn cards_share_a_row_wide_and_stack_narrow() {
-    let p = FieldPage::new();
+    let p = page();
     let theme = Theme::hoff_core();
     let wide = p.layout(Rect::new(0.0, 0.0, 1200.0, 800.0), &theme);
     let email = &wide[0].cards;
@@ -124,7 +135,7 @@ fn cards_share_a_row_wide_and_stack_narrow() {
 #[test]
 fn a_click_focuses_a_field_the_keys_edit_it_and_escape_blurs() {
     let theme = Theme::hoff_core();
-    let mut p = FieldPage::new();
+    let mut p = page();
     let (x, y) = input_center(&p, (0, 0), &theme);
     let moved = p.handle_event(&WidgetEvent::MouseMove { x, y }, content(), &theme);
     assert!(moved.changed, "hover");
@@ -145,7 +156,7 @@ fn a_click_focuses_a_field_the_keys_edit_it_and_escape_blurs() {
 #[test]
 fn a_disabled_field_takes_no_caret() {
     let theme = Theme::hoff_core();
-    let mut p = FieldPage::new();
+    let mut p = page();
     let (x, y) = input_center(&p, (2, 0), &theme);
     p.handle_event(&WidgetEvent::MouseDown { x, y }, content(), &theme);
     assert_eq!(p.focused(), None);
@@ -159,7 +170,7 @@ fn a_disabled_field_takes_no_caret() {
 #[test]
 fn a_request_runs_as_the_click_does() {
     let theme = Theme::hoff_core();
-    let mut p = FieldPage::new();
+    let mut p = page();
     let email = field(&p, (0, 0)).sem_id().cloned().unwrap();
     let req = ask(&p, &email, "set_value", Some(Value::from("ada@hoff.dev")));
     assert_eq!(p.run(&req), Ok(After::Nothing));
@@ -169,7 +180,7 @@ fn a_request_runs_as_the_click_does() {
     let req = ask(&p, &eye, "toggle", None);
     assert_eq!(p.run(&req), Ok(After::Nothing));
     assert!(field(&p, (1, 0)).is_revealed());
-    let rect = p.field_rect((1, 0), content(), &theme).unwrap();
+    let rect = p.widget_rect((1, 0), content(), &theme).unwrap();
     let (x, y) = field(&p, (1, 0))
         .layout(rect, &theme)
         .reveal
@@ -183,7 +194,7 @@ fn a_request_runs_as_the_click_does() {
     assert_eq!(p.run(&req), Ok(After::Nothing));
 
     let req = ask(&p, &email, "set_value", Some(Value::from("x")));
-    let mut other = FieldPage::new();
+    let mut other = page();
     other.groups.clear();
     assert!(other.run(&req).is_err(), "no such field");
 }
@@ -193,7 +204,7 @@ fn a_request_runs_as_the_click_does() {
 /// validated one has no eye; the reader's focus is the caret's field.
 #[test]
 fn the_page_projects_its_fields_and_the_focus() {
-    let mut p = FieldPage::new();
+    let mut p = page();
     let snap = snapshot(&p);
     let pw = field(&p, (1, 0)).sem_id().cloned().unwrap();
     let node = snap.get(&pw).unwrap();

@@ -1,9 +1,10 @@
 //! Drawing helpers the section modules share: a text run, the uppercase
 //! group label, the soft panel container.
 
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::TextStyle;
 use engine::styling::theme::Theme;
+use engine::widgets::form::label::Label;
 use engine::widgets::prelude::{Rect, rounded_rect, rounded_rect_stroke};
 
 /// RGBA with overridden alpha.
@@ -32,10 +33,12 @@ pub(crate) fn text(
     });
 }
 
-/// Uppercase group label — the HOFF accordion head (12/600, ls .05em,
-/// rgba($n2,.25)).
+/// Uppercase group label — the HOFF accordion head: the engine's
+/// caption [`Label`] (`theme.form.label.caption`).
 pub(crate) fn group_label(c: &mut Compositor, s: &str, x: f32, y: f32, theme: &Theme) {
-    text(c, s, 12.0, 600, x, y, theme.glass.text_placeholder.0);
+    Label::new(s)
+        .caption()
+        .draw(c, LayerId::DEFAULT, x, y, None, theme);
 }
 
 /// Soft panel container — HOFF list card: radius 20, .02 white glass,

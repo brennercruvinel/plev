@@ -87,9 +87,13 @@ impl ShowcaseView {
 impl super::super::pages::panes::Panes {
     /// Who has the keys on `pane`.
     pub(in crate::views) fn keys(&mut self, pane: Option<Pane>) -> Keys<'_> {
+        if self.text_host(pane).is_some() {
+            return match self.text_host_mut(pane) {
+                Some(host) => host.keys(),
+                None => Keys::Nobody,
+            };
+        }
         match pane {
-            Some(Pane::Input) => self.input.keys(),
-            Some(Pane::Field) => self.field.keys(),
             Some(Pane::Todo) => self.todo.keys(),
             Some(Pane::Surface) => self.surface.keys(&mut self.todo),
             Some(Pane::Silences) => self.silences.keys(),

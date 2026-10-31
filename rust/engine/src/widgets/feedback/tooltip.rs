@@ -1,37 +1,16 @@
-//! HOFF tooltip: the solid tooltip body at the tooltip radius with the
-//! hint shadow, caption-r text-secondary, placed above its anchor (or
-//! below when there is no room) and kept inside the viewport by the
-//! `xs` step.
+//! The tooltip of the hoff core kit (`components/Tooltip`): a dark bubble
+//! with a short line, above its anchor, or below it when there is no room,
+//! kept inside the container it is given. Every value is
+//! `theme.overlay.tooltip`; the placement is the anchored overlays' one
+//! ([`place`]), the popover's.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 
+use crate::widgets::overlay::popover::{Align, Side, place};
 use crate::widgets::recipe::shadow_node;
 use crate::widgets::widget::Rect;
-
-/// The per-theme geometry placement and render share.
-struct Metrics {
-    pad_x: f32,
-    pad_y: f32,
-    /// Gap between the anchor and the tooltip.
-    gap: f32,
-    /// Smallest distance from the viewport edge.
-    margin: f32,
-    max_w: f32,
-}
-
-impl Metrics {
-    fn of(theme: &Theme) -> Self {
-        Self {
-            pad_x: theme.spacing.md,
-            pad_y: theme.spacing.xs,
-            gap: theme.spacing.xs + theme.spacing.xs / 2.0,
-            margin: theme.spacing.xs,
-            max_w: theme.size.tooltip_max_w,
-        }
-    }
-}
 
 /// Seconds of continuous hover before a tooltip shows (the platform
 /// convention on macOS and windows sits between 0.4 and 0.5).
@@ -118,32 +97,33 @@ impl Tooltip {
         }
     }
 
-    /// Body style: caption-r, the same for measuring and rendering.
-    fn text_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
+    /// The bubble's size: the text measured against the widest it gets,
+    /// and the padding.
+    fn size(&self, theme: &Theme) -> (f32, f32) {
+        let t = &theme.overlay.tooltip;
+        let (tw, th) = TextMeasurer::measure_styled(&self.text, &t.text, Some(t.max_w));
+        (
+            tw + t.pad_x * 2.0,
+            th.max(t.text.line_height) + t.pad_y * 2.0,
+        )
     }
 
-    /// Tooltip rect: centered above the anchor, flipped below when there
-    /// is no room, clamped to the viewport.
+    /// The bubble inside `bounds`, the container that receives it:
+    /// centered above the anchor, flipped below when there is no room
+    /// above, shifted and capped to stay inside.
+    pub fn placement_in(&self, theme: &Theme, bounds: Rect) -> Rect {
+        let clear = theme.overlay.tooltip.clearance;
+        let size = self.size(theme);
+        place(self.anchor, size, bounds, Side::Top, Align::Center, clear).rect
+    }
+
+    /// [`Tooltip::placement_in`] a `vw x vh` window, for an owner whose
+    /// container is the window.
     pub fn placement(&self, theme: &Theme, vw: f32, vh: f32) -> Rect {
-        let m = Metrics::of(theme);
-        let style = Self::text_style(theme);
-        let (tw, th) = TextMeasurer::measure_styled(&self.text, &style, Some(m.max_w));
-        let w = tw + m.pad_x * 2.0;
-        let h = th.max(style.line_height) + m.pad_y * 2.0;
-
-        let mut x = self.anchor.x + (self.anchor.w - w) / 2.0;
-        x = x.clamp(m.margin, (vw - w - m.margin).max(m.margin));
-
-        let above = self.anchor.y - m.gap - h;
-        let y = if above >= m.margin {
-            above
-        } else {
-            (self.anchor.y + self.anchor.h + m.gap).min((vh - h - m.margin).max(m.margin))
-        };
-        Rect::new(x, y, w, h)
+        self.placement_in(theme, Rect::new(0.0, 0.0, vw, vh))
     }
 
+    /// [`Tooltip::render_in`] a `vw x vh` window.
     pub fn render(
         &self,
         compositor: &mut Compositor,
@@ -152,14 +132,24 @@ impl Tooltip {
         vw: f32,
         vh: f32,
     ) {
+        self.render_in(compositor, layer, theme, Rect::new(0.0, 0.0, vw, vh));
+    }
+
+    /// The bubble, while visible, on `layer`, inside `bounds`.
+    pub fn render_in(
+        &self,
+        compositor: &mut Compositor,
+        layer: LayerId,
+        theme: &Theme,
+        bounds: Rect,
+    ) {
         if self.state != State::Visible {
             return;
         }
-        let m = Metrics::of(theme);
-        let rect = self.placement(theme, vw, vh);
-
-        let radius = theme.shape.tooltip;
-        if let Some(shadow) = shadow_node(rect, radius, &theme.shadows.hint) {
+        let t = &theme.overlay.tooltip;
+        let rect = self.placement_in(theme, bounds);
+        let radius = t.radius.min(rect.h / 2.0);
+        if let Some(shadow) = shadow_node(rect, radius, &t.shadow) {
             compositor.push_to_layer(layer, shadow);
         }
         compositor.push_to_layer(
@@ -169,7 +159,7 @@ impl Tooltip {
                 y: rect.y,
                 w: rect.w,
                 h: rect.h,
-                color: theme.glass.tooltip.0,
+                color: t.fill.0,
                 corner_radius: radius,
                 border_width: 0.0,
                 border_color: [0.0; 4],
@@ -178,10 +168,10 @@ impl Tooltip {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.text, &Self::text_style(theme), Some(m.max_w)),
-                x: rect.x + m.pad_x,
-                y: rect.y + m.pad_y,
-                color: theme.colors.text_mid.0,
+                key: TextNodeKey::from_style(&self.text, &t.text, Some(t.max_w)),
+                x: rect.x + t.pad_x,
+                y: rect.y + t.pad_y,
+                color: t.text_color.0,
             },
         );
     }

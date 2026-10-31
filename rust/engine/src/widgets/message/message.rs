@@ -30,6 +30,7 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Button, ButtonSize, ButtonVariant};
 use crate::widgets::content::{Avatar, AvatarSize};
+use crate::widgets::icons;
 use crate::widgets::recipe::focus_ring_inside;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -69,6 +70,8 @@ pub struct MessageLayout {
     pub row: Rect,
     pub avatar: Rect,
     pub name: Option<Placed>,
+    /// The seal after the name, when the author is verified.
+    pub seal: Option<Rect>,
     pub time: Option<Placed>,
     pub body: Option<Placed>,
     pub reaction: Option<Rect>,
@@ -83,6 +86,7 @@ pub struct Message {
     kind: MessageKind,
     avatar: Avatar,
     divider: bool,
+    verified: bool,
     reaction: Option<Button>,
     sem: Option<SemId>,
     focused: bool,
@@ -104,6 +108,7 @@ impl Message {
             body: body.into(),
             kind: MessageKind::default(),
             divider: false,
+            verified: false,
             reaction: None,
             sem: None,
             focused: false,
@@ -119,6 +124,17 @@ impl Message {
     pub fn divider(mut self, on: bool) -> Self {
         self.divider = on;
         self
+    }
+
+    /// The author verified: the kit's seal after the name (`✪`), drawn
+    /// as the `badge-check` icon one name line tall.
+    pub fn verified(mut self, on: bool) -> Self {
+        self.verified = on;
+        self
+    }
+
+    pub fn is_verified(&self) -> bool {
+        self.verified
     }
 
     /// The author's photo; without one the avatar shows the initial.
@@ -234,24 +250,43 @@ impl Message {
         let time_style = s.time.style(ty);
         let time = fit(&self.time, &time_style, col_w);
         let time_w = width(&time, &time_style);
-        let name_room = if time.is_empty() {
-            col_w
+        let time_room = if time.is_empty() {
+            0.0
         } else {
-            (col_w - s.time_gap - time_w).max(0.0)
+            s.time_gap + time_w
         };
+        // The seal keeps its place after the name, as the time does.
+        let seal_edge = name_style.line_height;
+        let seal_room = if self.verified {
+            s.seal_gap + seal_edge
+        } else {
+            0.0
+        };
+        let seal_fits = self.verified && col_w >= time_room + seal_room;
+        let name_room = (col_w - time_room - if seal_fits { seal_room } else { 0.0 }).max(0.0);
         let name = fit(&self.author, &name_style, name_room);
         let name_w = width(&name, &name_style);
-        let time_x = if name.is_empty() {
-            col_x
-        } else {
-            col_x + name_w + s.time_gap
+        let seal = seal_fits.then(|| {
+            let x = if name.is_empty() {
+                col_x
+            } else {
+                col_x + name_w + s.seal_gap
+            };
+            Rect::new(x, top, seal_edge, seal_edge)
+        });
+        let after_name = match (&seal, name.is_empty()) {
+            (Some(r), _) => Some(r.right()),
+            (None, false) => Some(col_x + name_w),
+            (None, true) => None,
         };
+        let time_x = after_name.map_or(col_x, |x| x + s.time_gap);
         let name = placed(name, col_x, top, name_w, &name_style);
         let time = placed(time, time_x, top, time_w, &time_style);
         let line_h = [&name, &time]
             .into_iter()
             .flatten()
             .map(|p| p.rect.h)
+            .chain(seal.map(|r| r.h))
             .fold(0.0, f32::max);
         let mut y = top + line_h;
 
@@ -297,6 +332,7 @@ impl Message {
             row,
             avatar,
             name,
+            seal,
             time,
             body,
             reaction,
@@ -329,6 +365,11 @@ impl Message {
         let ty = &theme.typography;
         self.avatar.render(c, l.avatar, theme);
         run(c, l.name.as_ref(), &s.name, ty, None);
+        if let Some(r) = l.seal
+            && let Some(node) = icons::icon_at("badge-check", r.w, s.name.color.0, r.x, r.y)
+        {
+            c.push(node);
+        }
         run(c, l.time.as_ref(), &s.time, ty, None);
         let wrap = l.body.as_ref().map(|b| b.rect.w);
         run(c, l.body.as_ref(), &s.body, ty, wrap);
@@ -377,6 +418,9 @@ impl Message {
         if !self.body.is_empty() {
             node.description(self.body.as_str());
         }
+        if self.verified {
+            node.state("verified", true);
+        }
         node.focusable(true);
         node
     }
@@ -387,13 +431,13 @@ fn reaction_id(id: &SemId) -> Option<SemId> {
     id.child("reaction").ok()
 }
 
-fn width(text: &str, style: &TextStyle) -> f32 {
+pub(crate) fn width(text: &str, style: &TextStyle) -> f32 {
     TextMeasurer::measure_styled(text, style, None).0
 }
 
 /// `text` on one line of `room`, ellipsized; empty when not even the
 /// ellipsis fits, so nothing is drawn past the column.
-fn fit(text: &str, style: &TextStyle, room: f32) -> String {
+pub(crate) fn fit(text: &str, style: &TextStyle, room: f32) -> String {
     if text.is_empty() || room <= 0.0 {
         return String::new();
     }
@@ -405,7 +449,7 @@ fn fit(text: &str, style: &TextStyle, room: f32) -> String {
     }
 }
 
-fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Placed> {
+pub(crate) fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Placed> {
     (!text.is_empty()).then(|| Placed {
         text,
         rect: Rect::new(x, y, w, style.line_height),
@@ -413,7 +457,7 @@ fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Pla
 }
 
 /// One run drawn with the style it was measured with.
-fn run(
+pub(crate) fn run(
     c: &mut Compositor,
     at: Option<&Placed>,
     spec: &MessageText,

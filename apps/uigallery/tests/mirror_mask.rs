@@ -201,7 +201,8 @@ fn a_secret_drawn_never_crosses_and_the_mirror_draws_the_box() {
 /// something is, it differs only inside the masked places. What is masked
 /// today: the Git page's three panes (changes, stacks, diff), bound by
 /// the ide's workbench and not in the gallery's projection, so the rule
-/// counts them as secret.
+/// counts them as secret; and the Field page's three passwords, secret by
+/// their own constraint (task-104 front A).
 #[test]
 fn every_page_mirrors_through_the_mask_but_what_it_hides() {
     let (w, h) = (1280.0, 800.0);
@@ -261,5 +262,13 @@ fn every_page_mirrors_through_the_mask_but_what_it_hides() {
             }
         }
     }
-    assert_eq!(masked, ["Git / core: 3", "Git / hoff: 3"]);
+    assert_eq!(
+        masked,
+        [
+            "Field / core: 3",
+            "Git / core: 3",
+            "Field / hoff: 3",
+            "Git / hoff: 3"
+        ]
+    );
 }

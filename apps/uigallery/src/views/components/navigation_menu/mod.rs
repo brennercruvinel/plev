@@ -11,8 +11,8 @@
 //!
 //! Projected (task-75 phase 2b): each link, `navigation_menu_page.
 //! link[<i>]`, as the engine projects it, under a group per title,
-//! `navigation_menu_page.group[<g>]`, described by its shortcut hint or
-//! its badge; `activate` moves the active mark as a click does. The rail
+//! `navigation_menu_page.group[<g>]`, described by its shortcut, its
+//! hint or its badge; `activate` moves the active mark as a click does. The rail
 //! is the menu's first four links in another form: drawn and clickable,
 //! with no id of its own.
 
@@ -70,7 +70,7 @@ impl NavigationMenuPage {
             NavLink::new("Branches").icon("git-branch"),
             NavLink::new("History").icon("history"),
             NavLink::new("Settings").icon("settings"),
-            NavLink::new("Search").icon("search").hint("Ctrl K"),
+            NavLink::new("Search").icon("search").shortcut("Ctrl K"),
             NavLink::new("History")
                 .icon("history")
                 .badge(Badge::count("4")),
@@ -298,9 +298,8 @@ impl Component for NavigationMenuPage {
                         continue;
                     };
                     let mut node = link.project(b, id, Some(&at));
-                    let aside = link
-                        .hint
-                        .as_deref()
+                    let aside = (link.shortcut.as_deref())
+                        .or(link.hint.as_deref())
                         .or(link.badge.as_ref().map(|b| b.label.as_str()));
                     if let Some(aside) = aside {
                         node.description(aside);

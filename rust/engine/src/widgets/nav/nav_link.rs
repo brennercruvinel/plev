@@ -1,11 +1,12 @@
 //! Nav link: a row that goes somewhere. An icon in its box (a bare slot,
 //! or the kit's tile that rises while the link is current), a label, an
-//! optional trailing hint (a shortcut digit) or count badge; the row's
-//! box and tones change at rest, hovered, pressed and active. In a rail
-//! (no room for labels) only the icon's box draws, centered. Every
-//! visual value is a [`NavLinkRecipe`]: the theme's `navigation.link`
-//! on its own, `navigation.sidebar_link` inside the sidebar
-//! ([`NavLink::render_with`]).
+//! optional trailing shortcut (in the kit's key cap, task-104d), hint
+//! (plain text) or count badge; the row's box and tones change at rest,
+//! hovered, pressed and active. In a rail (no room for labels) only the
+//! icon's box draws, centered. Every visual value is a
+//! [`NavLinkRecipe`]: the theme's `navigation.link` on its own,
+//! `navigation.sidebar_link` inside the sidebar
+//! ([`NavLink::render_with`]); the key cap is the Kbd's own.
 //!
 //! With a [`SemId`] ([`NavLink::sem`]) the render binds the bounds it
 //! draws and hit-tests with (the rail form too), and
@@ -19,6 +20,7 @@ use crate::styling::theme::Theme;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
+use crate::widgets::content::Kbd;
 use crate::widgets::icons;
 use crate::widgets::nav::tokens::{LinkSurface, NavLinkRecipe};
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke, shadow_node};
@@ -28,8 +30,10 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 pub struct NavLink {
     pub label: String,
     pub icon: Option<&'static str>,
-    /// Trailing hint text (a shortcut) in the placeholder tone.
+    /// Trailing hint text in the placeholder tone (a status, a count).
     pub hint: Option<String>,
+    /// Trailing keyboard shortcut, drawn in the kit's key cap.
+    pub shortcut: Option<String>,
     /// Trailing count badge (unread, changes).
     pub badge: Option<Badge>,
     pub active: bool,
@@ -45,6 +49,7 @@ impl NavLink {
             label: label.into(),
             icon: None,
             hint: None,
+            shortcut: None,
             badge: None,
             active: false,
             hovered: false,
@@ -95,6 +100,12 @@ impl NavLink {
 
     pub fn hint(mut self, hint: impl Into<String>) -> Self {
         self.hint = Some(hint.into());
+        self
+    }
+
+    /// A keyboard shortcut, drawn in the kit's key cap.
+    pub fn shortcut(mut self, keys: impl Into<String>) -> Self {
+        self.shortcut = Some(keys.into());
         self
     }
 
@@ -149,7 +160,9 @@ impl NavLink {
             w += recipe.icon_box() + recipe.icon_gap;
         }
         w += TextMeasurer::measure_styled(&self.label, &recipe.label.style(typo), None).0;
-        if let Some(hint) = &self.hint {
+        if let Some(keys) = &self.shortcut {
+            w += recipe.trailing_room + Kbd::new(keys.as_str()).preferred_size(theme).0;
+        } else if let Some(hint) = &self.hint {
             w += recipe.trailing_room
                 + TextMeasurer::measure_styled(hint, &recipe.hint.style(typo), None).0;
         }
@@ -287,6 +300,13 @@ impl NavLink {
                 Rect::new(right, bounds.y + (bounds.h - bh) / 2.0, bw, bh),
                 theme,
             );
+            right -= recipe.trailing_gap;
+        } else if let Some(keys) = &self.shortcut {
+            let cap = Kbd::new(keys.as_str());
+            let (kw, kh) = cap.preferred_size(theme);
+            right -= kw;
+            let at = Rect::new(right, bounds.y + (bounds.h - kh) / 2.0, kw, kh);
+            cap.render_to_layer(c, layer, at, theme);
             right -= recipe.trailing_gap;
         } else if let Some(hint) = &self.hint {
             let style = recipe.hint.style(&theme.typography);
