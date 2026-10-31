@@ -1,12 +1,15 @@
-//! Typography page, the hoff core kit's TypographyPage: groups with a
-//! title and a bottom rule, each a bordered table of styles (style, font,
-//! weight, size / line height, letter spacing), the style's name set in
-//! the style itself. The styles are the active theme's
-//! (`theme.typography`: its ramp and its named styles, in its family and
-//! tracking), so the page shows the face the theme draws with, whatever it
-//! is. Where the table is too narrow for five columns, each row stacks:
-//! the specimen, then its readout in one line. A last group, "Engine",
-//! shows what the text engine does with that face (`type_engine`).
+//! Typography page, the hoff core kit's TypographyPage: its five groups
+//! (Headline, Body, Heading, Title, Paragraph) with a title and a bottom
+//! rule, each a bordered table of the kit's styles (style, font, weight,
+//! size / line height, letter spacing), the style's name set in the style
+//! itself. Each style is drawn in the active theme's family and tracking
+//! (`theme.typography`), so the page shows the face the theme draws with;
+//! where the theme does not hold a kit value, the row says so: a size its
+//! ramp has no step for ("kit only", the specimen dimmed) or a tracking it
+//! does not use ("kit -3%"). Where the table is too narrow for five
+//! columns, each row stacks: the specimen, then its readout in one line. A
+//! last group, "Engine", shows what the text engine does with that face
+//! (`type_engine`).
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
@@ -35,43 +38,134 @@ const HEADERS: [&str; 5] = [
 /// one each.
 const STYLE_SHARES: f32 = 2.0;
 
-/// The groups of the page and their rows, from the theme.
-fn groups(theme: &Theme) -> Vec<(&'static str, Vec<(&'static str, TextStyle)>)> {
+/// One row of the kit's TypographyPage: the name it writes and what its
+/// classes set, size and line height in px, weight, tracking in em (each
+/// row's line of `templates/TypographyPage/index.tsx` is in the comment
+/// above it).
+struct KitStyle {
+    name: &'static str,
+    size: f32,
+    line_h: f32,
+    weight: u16,
+    tracking: f32,
+}
+
+const fn kit(name: &'static str, size: f32, line_h: f32, weight: u16, tracking: f32) -> KitStyle {
+    KitStyle {
+        name,
+        size,
+        line_h,
+        weight,
+        tracking,
+    }
+}
+
+/// The kit's five groups and their rows, as its classes draw them (h5,
+/// h6 and Title are `font-medium` though the kit's table reads
+/// "Regular").
+const KIT: [(&str, &[KitStyle]); 5] = [
+    (
+        "Headline",
+        &[
+            // :25
+            kit("h1", 48.0, 55.2, 400, -0.03),
+            // :34
+            kit("h2", 40.0, 48.0, 400, -0.03),
+            // :43
+            kit("h3", 32.0, 40.0, 400, -0.03),
+            // :52
+            kit("h4", 28.0, 36.0, 400, -0.03),
+            // :61
+            kit("h5", 24.0, 32.0, 500, -0.03),
+            // :70
+            kit("h6", 20.0, 28.0, 500, -0.03),
+        ],
+    ),
+    (
+        "Body",
+        &[
+            // :94
+            kit("Body, X Small", 10.0, 16.0, 400, -0.01),
+            // :103
+            kit("Body, Small", 11.0, 16.0, 500, -0.01),
+            // :112
+            kit("Body, Medium", 12.0, 16.0, 500, -0.01),
+            // :121
+            kit("Body Medium, Strong", 12.0, 16.0, 600, -0.01),
+            // :130
+            kit("Body Large, Strong", 13.0, 16.0, 600, -0.01),
+            // :139
+            kit("Body Large, Medium", 13.0, 16.0, 500, -0.01),
+            // :148
+            kit("Body Large", 13.0, 16.0, 400, -0.01),
+        ],
+    ),
+    (
+        "Heading",
+        &[
+            // :172
+            kit("Heading", 14.0, 20.0, 500, -0.01),
+            // :181
+            kit("Heading, Strong", 14.0, 20.0, 600, -0.02),
+        ],
+    ),
+    (
+        "Title",
+        &[
+            // :205
+            kit("Title", 15.0, 24.0, 500, -0.02),
+            // :214
+            kit("Title, Strong", 15.0, 24.0, 600, -0.02),
+            // :223
+            kit("Title, Large", 18.0, 27.0, 400, -0.02),
+        ],
+    ),
+    (
+        "Paragraph",
+        &[
+            // :247
+            kit("Paragraph, small", 13.0, 19.52, 400, -0.01),
+            // :256
+            kit("Paragraph, medium", 15.0, 22.56, 500, -0.01),
+        ],
+    ),
+];
+
+/// A row of the page: the kit's style set in the theme's face and
+/// tracking, and whether the theme's ramp has its size at all.
+struct Row {
+    kit: &'static KitStyle,
+    style: TextStyle,
+    /// The size is a step of `theme.typography`; a row whose size is not
+    /// is a gap of the theme against the kit, drawn and marked as one.
+    in_ramp: bool,
+}
+
+/// The theme's ramp: the sizes it names.
+fn ramp(theme: &Theme) -> [f32; 7] {
     let t = &theme.typography;
-    vec![
-        (
-            "Headline",
-            vec![
-                ("Display", t.h4()),
-                ("Title", t.exact(t.title, t.line_height(t.title), 400)),
-                ("Title small", t.title()),
-            ],
-        ),
-        (
-            "Body",
-            vec![
-                ("Base", t.base_r()),
-                ("Base, Medium", t.base_m()),
-                ("Base 2", t.base_2r()),
-                ("Base 2, Medium", t.base_2m()),
-                ("Base 2, Strong", t.base_2sm()),
-                ("Base 2, Bold", t.base_2b()),
-                ("Caption", t.caption_r()),
-                ("Caption, Strong", t.caption_sm()),
-                ("Small", t.small_r()),
-                ("Small, Strong", t.small_sm()),
-            ],
-        ),
-        (
-            "Paragraph",
-            vec![
-                ("Body", t.body()),
-                ("Body 2", t.body_2r()),
-                ("Body 2, Medium", t.body_2m()),
-                ("Hairline", t.hairline()),
-            ],
-        ),
+    [
+        t.small, t.caption, t.body_sm, t.body, t.title_sm, t.title, t.display,
     ]
+}
+
+/// The groups of the page and their rows, the kit's styles in the theme.
+fn groups(theme: &Theme) -> Vec<(&'static str, Vec<Row>)> {
+    let t = &theme.typography;
+    let steps = ramp(theme);
+    KIT.iter()
+        .map(|(title, styles)| {
+            let rows = styles
+                .iter()
+                .map(|kit| Row {
+                    kit,
+                    style: t.exact(kit.size, kit.line_h, kit.weight),
+                    in_ramp: steps.iter().any(|s| (s - kit.size).abs() < 0.01),
+                })
+                .collect();
+            (*title, rows)
+        })
+        .collect()
 }
 
 fn weight_name(weight: u16) -> String {
@@ -95,21 +189,35 @@ fn px(v: f32) -> String {
     }
 }
 
-/// The four readouts of a style, after its name.
-fn readouts(style: &TextStyle) -> [String; 4] {
+/// The four readouts of a row, after its name: the face, the weight, the
+/// size over the line height and the tracking as drawn, each kit value
+/// the theme does not hold named beside it.
+fn readouts(row: &Row) -> [String; 4] {
+    let style = &row.style;
+    let percent = |em: f32| (em * 100.0).round() + 0.0;
     let tracking = if style.font_size > 0.0 {
-        (style.letter_spacing / style.font_size * 100.0).round()
+        percent(style.letter_spacing / style.font_size)
     } else {
         0.0
     };
+    let kit_tracking = percent(row.kit.tracking);
+    let size = format!("{}/{}", px(style.font_size), px(style.line_height));
     [
         style
             .font_family
             .clone()
             .unwrap_or_else(|| DEFAULT_FACE.into()),
         weight_name(style.font_weight),
-        format!("{}/{}", px(style.font_size), px(style.line_height)),
-        format!("{}%", tracking + 0.0),
+        if row.in_ramp {
+            size
+        } else {
+            format!("{size} · kit only")
+        },
+        if tracking == kit_tracking {
+            format!("{tracking}%")
+        } else {
+            format!("{tracking}% · kit {kit_tracking}%")
+        },
     ]
 }
 
@@ -117,6 +225,8 @@ fn readouts(style: &TextStyle) -> [String; 4] {
 struct Metrics {
     /// Cell padding (`p-5`).
     pad: f32,
+    /// Between a stacked row's specimen and its readout.
+    gap: f32,
     text: TextStyle,
 }
 
@@ -125,6 +235,7 @@ impl Metrics {
         let t = &theme.typography;
         Self {
             pad: theme.spacing.lg,
+            gap: theme.spacing.sm,
             text: t.exact(t.caption, TABLE_LINE_H, TABLE_WEIGHT),
         }
     }
@@ -136,15 +247,26 @@ impl Metrics {
 
     /// Whether a table `w` wide stacks its rows: a specimen would not fit
     /// its column.
-    fn stacked(&self, w: f32, rows: &[(&str, TextStyle)]) -> bool {
+    fn stacked(&self, w: f32, rows: &[Row]) -> bool {
         let room = Self::style_w(w) - self.pad * 2.0;
-        rows.iter()
-            .any(|(name, s)| TextMeasurer::measure_styled(name, s, None).0 > room)
+        let col = (w - Self::style_w(w)) / 4.0 - self.pad * 2.0;
+        let wide = |text: &str, style: &TextStyle, room: f32| {
+            TextMeasurer::measure_styled(text, style, None).0 > room
+        };
+        rows.iter().any(|r| {
+            wide(r.kit.name, &r.style, room) || readouts(r).iter().any(|v| wide(v, &self.text, col))
+        })
     }
 
-    /// A row's height: its specimen, and in a stacked table its readout.
+    /// A row's height: its specimen, and in a stacked table its readout a
+    /// gap under it (a style as tall as its size leaves its descenders no
+    /// room of their own).
     fn row_h(&self, style: &TextStyle, stacked: bool) -> f32 {
-        let readout = if stacked { self.text.line_height } else { 0.0 };
+        let readout = if stacked {
+            self.gap + self.text.line_height
+        } else {
+            0.0
+        };
         self.pad * 2.0 + style.line_height.max(self.text.line_height) + readout
     }
 
@@ -166,7 +288,7 @@ impl TypographyPage {
         let m = Metrics::of(theme);
         let tables = groups(theme).into_iter().map(|(_, rows)| {
             let stacked = m.stacked(content.w, &rows);
-            let body: f32 = rows.iter().map(|(_, s)| m.row_h(s, stacked)).sum();
+            let body: f32 = rows.iter().map(|r| m.row_h(&r.style, stacked)).sum();
             let header = if stacked { 0.0 } else { m.header_h() };
             Grid {
                 span: 1,
@@ -234,13 +356,7 @@ fn cell(
 
 /// One group's table in `rect`: the border, the header (unless stacked),
 /// and a row per style under a hairline.
-fn draw_table(
-    c: &mut Compositor,
-    rect: Rect,
-    rows: &[(&str, TextStyle)],
-    m: &Metrics,
-    theme: &Theme,
-) {
+fn draw_table(c: &mut Compositor, rect: Rect, rows: &[Row], m: &Metrics, theme: &Theme) {
     let line = theme.control.edge_width;
     let divider = theme.colors.divider.0;
     c.push(rounded_rect_stroke(
@@ -271,7 +387,8 @@ fn draw_table(
         }
         y += m.header_h();
     }
-    for (r, (name, style)) in rows.iter().enumerate() {
+    for (r, row) in rows.iter().enumerate() {
+        let (name, style) = (row.kit.name, &row.style);
         if r > 0 || !stacked {
             c.push(SceneNode::Rect {
                 x: rect.x,
@@ -289,16 +406,14 @@ fn draw_table(
         } else {
             col_room(0)
         };
-        cell(
-            c,
-            name,
-            style,
-            rect.x + m.pad,
-            text_y,
-            room,
-            theme.colors.text.0,
-        );
-        let readouts = readouts(style);
+        // A kit style the theme's ramp lacks is drawn, dimmed: the gap.
+        let ink = if row.in_ramp {
+            theme.colors.text
+        } else {
+            theme.colors.text_mid
+        };
+        cell(c, name, style, rect.x + m.pad, text_y, room, ink.0);
+        let readouts = readouts(row);
         if stacked {
             let joined = readouts.join(" · ");
             cell(
@@ -306,7 +421,7 @@ fn draw_table(
                 &joined,
                 &m.text,
                 rect.x + m.pad,
-                text_y + row_line,
+                text_y + row_line + m.gap,
                 room,
                 dim,
             );
@@ -339,20 +454,37 @@ mod tests {
     fn the_readout_names_the_active_theme_face() {
         let core = Theme::hoff_core();
         let (_, rows) = &groups(&core)[0];
-        assert_eq!(readouts(&rows[0].1)[0], "Inter");
+        assert_eq!(readouts(&rows[0])[0], "Inter");
         let hoff = Theme::hoff();
         let (_, rows) = &groups(&hoff)[0];
-        assert_eq!(readouts(&rows[0].1)[0], DEFAULT_FACE);
+        assert_eq!(readouts(&rows[0])[0], DEFAULT_FACE);
     }
 
+    /// The kit's rows, in its five groups, with its values; a size the
+    /// core ramp lacks and a tracking it does not hold read as gaps.
     #[test]
-    fn the_readouts_are_the_style_measures() {
+    fn the_rows_are_the_kit_styles_with_the_gaps_named() {
         let core = Theme::hoff_core();
-        let style = core.typography.exact(13.0, 16.0, 600);
-        let [_, weight, size, tracking] = readouts(&style);
-        assert_eq!(weight, "Semibold");
-        assert_eq!(size, "13/16");
-        assert_eq!(tracking, "-2%");
+        let all = groups(&core);
+        let titles: Vec<&str> = all.iter().map(|(t, _)| *t).collect();
+        assert_eq!(
+            titles,
+            ["Headline", "Body", "Heading", "Title", "Paragraph"]
+        );
+        let rows: usize = all.iter().map(|(_, r)| r.len()).sum();
+        assert_eq!(rows, 20);
+        // h1: 48/115%, a step of the ramp; -3% where the theme tracks -2%.
+        let h1 = &all[0].1[0];
+        assert!(h1.in_ramp);
+        let [_, weight, size, tracking] = readouts(h1);
+        assert_eq!((weight.as_str(), size.as_str()), ("Regular", "48/55.2"));
+        assert_eq!(tracking, "-2% · kit -3%");
+        // h2: 40/48, no step of the core ramp.
+        let h2 = &all[0].1[1];
+        assert!(!h2.in_ramp);
+        assert_eq!(readouts(h2)[2], "40/48 · kit only");
+        // Title, Strong: -2% as the theme.
+        assert_eq!(readouts(&all[3].1[1])[3], "-2%");
     }
 
     /// Wide tables keep five columns and a header; narrow ones stack; no
