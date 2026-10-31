@@ -1,20 +1,23 @@
-//! HOFF checkbox: 18px radius-6 box, white fill with a dark check when
-//! on, `rgba($n2,.05)` glass with a `.25` border when off, plus an
-//! optional base-2r trailing label. The whole bounds are the hit area;
+//! The checkbox, derived from the kit's switch (the kit has none): the
+//! `control.box_size` box at `shape.micro` is the switch's well, ringed
+//! off and dark on with the knob's paper as the check, plus an optional
+//! base-2r trailing label; `theme.selection.checkbox`, painted by the
+//! buttons' `paint_surface`. The whole bounds are the hit area;
 //! keyboard focus ([`Checkbox::set_focused`]) rings the box itself.
 //!
 //! With a [`SemId`] ([`Checkbox::sem`]) the render binds the bounds it
 //! draws and hit-tests with, and [`Checkbox::project`] declares the
 //! checkbox in a semantic projection; the app still owns `checked`.
 
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::{IconSize, Theme};
 use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
+use crate::widgets::buttons::paint_surface;
 use crate::widgets::recipe::focus_ring;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, contrast_text, with_alpha};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Retained checkbox with optional trailing label. The whole bounds act
 /// as the hit area (box + label), like every native toolkit.
@@ -147,76 +150,56 @@ impl Checkbox {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let glass = &theme.glass;
-        let alpha = if self.disabled {
-            glass.disabled_alpha
-        } else {
-            1.0
-        };
+        let t = &theme.selection.checkbox;
+        let alpha = if self.disabled { t.disabled_alpha } else { 1.0 };
         let box_size = theme.control.box_size;
         let radius = theme.shape.micro;
-        let bx = bounds.x;
-        let by = bounds.y + (bounds.h - box_size) / 2.0;
+        let r = Rect::new(
+            bounds.x,
+            bounds.y + (bounds.h - box_size) / 2.0,
+            box_size,
+            box_size,
+        );
 
         if self.focused {
             // Ring the box, not the label: that is where the action is.
-            compositor.push(focus_ring(
-                Rect::new(bx, by, box_size, box_size),
-                radius,
-                theme,
-            ));
+            compositor.push(focus_ring(r, radius, theme));
         }
 
+        let surface = match (self.checked, self.hovered) {
+            (true, _) => &t.on,
+            (false, true) => &t.off_hover,
+            (false, false) => &t.off,
+        };
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            r,
+            radius,
+            surface,
+            alpha,
+            false,
+            theme,
+        );
         if self.checked {
-            // Filled white ($text-primary) with a dark check on top (push
-            // order is preserved across primitive types).
-            let fill = theme.colors.text;
-            compositor.push(crate::widgets::recipe::rounded_rect(
-                bx,
-                by,
-                box_size,
-                box_size,
-                radius,
-                with_alpha(fill, fill.0[3] * alpha),
-            ));
-            let mark = contrast_text(fill.0);
-            let mark = [mark[0], mark[1], mark[2], alpha];
             // The check glyph sits centered in the box at the small icon
             // size, so it keeps its margin at every box size.
+            let mark = with_alpha(t.mark, t.mark.0[3] * alpha);
             let glyph = theme.control.icon(IconSize::Sm).min(box_size);
             let inset = (box_size - glyph) / 2.0;
-            if let Some(node) = icons::icon_at("check", glyph, mark, bx + inset, by + inset) {
+            if let Some(node) = icons::icon_at("check", glyph, mark, r.x + inset, r.y + inset) {
                 compositor.push(node);
             }
-        } else {
-            // Unchecked: rgba($n2,.05) glass with a .25 border (hover .1 bg).
-            let bg = if self.hovered {
-                glass.surface_active
-            } else {
-                glass.field
-            };
-            let border = glass.field_focus_border;
-            compositor.push(SceneNode::RoundedRect {
-                x: bx,
-                y: by,
-                w: box_size,
-                h: box_size,
-                color: with_alpha(bg, bg.0[3] * alpha),
-                corner_radius: radius,
-                border_width: theme.control.edge_width,
-                border_color: with_alpha(border, border.0[3] * alpha),
-            });
         }
 
         if let Some(label) = &self.label {
             // Label: base-2r.
             let style = theme.typography.base_2r();
-            let text = theme.colors.text_mid;
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::from_style(label, &style, None),
-                x: bx + box_size + theme.control.inline_gap,
+                x: r.right() + theme.control.inline_gap,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
-                color: with_alpha(text, text.0[3] * alpha),
+                color: with_alpha(t.label, t.label.0[3] * alpha),
             });
         }
     }

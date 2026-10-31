@@ -75,8 +75,9 @@ pub struct Theme {
     /// pagination, table.
     pub disclosure: DisclosureTokens,
     /// Front E: toggle, toggle group, button group, radio group, calendar,
-    /// date picker.
-    pub selection: SelectionTokens,
+    /// date picker. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub selection: Box<SelectionTokens>,
     /// Front G: breadcrumb, navigation menu, the sidebar's links, stat,
     /// code block, chart, graph. Boxed: a theme travels by value, and its
     /// size is every test's stack.
@@ -128,7 +129,7 @@ impl Theme {
             overlay: OverlayTokens::hoff_core(),
             message: Box::new(MessageTokens::hoff_core()),
             disclosure: DisclosureTokens::hoff_core(),
-            selection: SelectionTokens::hoff_core(),
+            selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
             colors,
             typography: TypographyScale {
@@ -376,7 +377,7 @@ impl Theme {
         self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);
         self.disclosure = DisclosureTokens::derive(self);
-        self.selection = SelectionTokens::derive(self);
+        *self.selection = SelectionTokens::derive(self);
         *self.navigation = NavigationTokens::derive(self);
     }
 

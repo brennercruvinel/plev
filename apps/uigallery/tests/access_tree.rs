@@ -47,6 +47,7 @@ const PROJECTING: &[&str] = &[
     "Bubble",
     "Button",
     "Button Group",
+    "Calendar",
     "Carousel",
     "Chart",
     "Checkbox",
@@ -133,7 +134,6 @@ const SILENT: &[(&str, Why)] = &[
         Unprojected("Avatar: an image named by the person, online or not"),
     ),
     ("Badge", Unprojected("Badge: a label with its count or tag")),
-    ("Calendar", PLACEHOLDER),
     (
         "Card",
         Unprojected("Card: a group per variant with its words and numbers"),

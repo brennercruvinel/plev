@@ -186,3 +186,73 @@ fn a_radio_is_chosen_the_same_from_the_three() {
         same("Radio Group", &person, &reader, &agent);
     }
 }
+
+fn selected_day(g: &Gallery, calendar: &str) -> Option<Value> {
+    let seen = g.view.semantics()?;
+    seen.get(&sid(calendar))?.state.get("selected").cloned()
+}
+
+/// A day is chosen the same from the person's click, the reader's press
+/// and the agent's `select`, in the live calendar and in the one with a
+/// range.
+#[test]
+fn a_day_is_chosen_the_same_from_the_three() {
+    for (calendar, day, id) in [
+        (
+            "calendar_page.group[0].card[0]",
+            "2026-10-22",
+            "calendar_page.group[0].card[0][2026-10-22]",
+        ),
+        (
+            "calendar_page.group[1].card[0]",
+            "2026-10-12",
+            "calendar_page.group[1].card[0][2026-10-12]",
+        ),
+    ] {
+        let mut person = seeing_on("Calendar", id);
+        person.click(id);
+        assert_eq!(
+            selected_day(&person, calendar),
+            Some(Value::Text(day.into())),
+            "{id}: the click chooses it"
+        );
+        let mut reader = gallery("Calendar");
+        reader.press(id);
+        let agent = by_agent("Calendar", "selection_day", vec![ask(id, "select")]);
+        same("Calendar", &person, &reader, &agent);
+    }
+}
+
+/// The next month's arrow turns the month the same from the three.
+#[test]
+fn the_arrow_turns_the_month_the_same_from_the_three() {
+    let calendar = "calendar_page.group[0].card[0]";
+    let id = "calendar_page.group[0].card[0].next";
+    let mut person = gallery("Calendar");
+    person.click(id);
+    let month = person
+        .view
+        .semantics()
+        .and_then(|s| s.get(&sid(calendar))?.state.get("month").cloned());
+    assert_eq!(month, Some(Value::Text("2026-11".into())));
+    let mut reader = gallery("Calendar");
+    reader.press(id);
+    let agent = by_agent("Calendar", "selection_month", vec![ask(id, "activate")]);
+    same("Calendar", &person, &reader, &agent);
+}
+
+/// A day out of the range and a day of the disabled calendar move for no
+/// one: the click changes nothing and the reader is not offered a press.
+#[test]
+fn a_day_out_of_reach_moves_for_no_one() {
+    for id in [
+        "calendar_page.group[0].card[1][2026-10-22]",
+        "calendar_page.group[1].card[0][2026-10-25]",
+    ] {
+        let mut person = seeing_on("Calendar", id);
+        let before = person.state();
+        person.click(id);
+        assert_eq!(person.state(), before, "{id}");
+        assert!(!gallery("Calendar").offers(id, Action::Click), "{id}");
+    }
+}

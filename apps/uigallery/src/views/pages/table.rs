@@ -155,7 +155,13 @@ pub const PAGES: &[Page] = &[
         "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
         Pane::ButtonGroup,
     ),
-    placeholder("Calendar"),
+    page(
+        C,
+        "Calendar",
+        "history",
+        "One month to choose a day: today ringed, the chosen day the call to action, a range that refuses the rest.",
+        Pane::Calendar,
+    ),
     page(
         C,
         "Card",

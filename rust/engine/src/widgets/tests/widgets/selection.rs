@@ -731,3 +731,52 @@ fn calendar_binds_its_days_under_every_theme_at_360_and_1280() {
         }
     }
 }
+
+/// A day of another month is a blank cell: a click on it chooses
+/// nothing and the month stays, as the projection offers only the month
+/// shown.
+#[test]
+fn calendar_days_of_another_month_do_not_press() {
+    let theme = Theme::hoff_core();
+    let mut cal = Calendar::new(2026, 10);
+    let (w, h) = cal.size_within(320.0, &theme);
+    let bounds = Rect::new(0.0, 0.0, w, h);
+    let (x, y) = cal.layout(bounds, &theme).days[0].center();
+    assert_eq!(cal.grid()[0], d(2026, 9, 28));
+    cal.handle_event(&down(x, y), bounds, &theme);
+    assert!(!cal.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert_eq!((cal.selected, cal.shown), (None, (2026, 10)));
+}
+
+/// The month shown projects one radio a day, named as a person reads it;
+/// today says so, and the days out of the range are disabled.
+#[test]
+fn calendar_projects_the_month_with_today_and_the_range() {
+    let (f, cid) = (id("form"), id("form.due"));
+    let cal = Calendar::new(2026, 10)
+        .today(d(2026, 10, 31))
+        .range(Some(d(2026, 10, 10)), None)
+        .selected(d(2026, 10, 14));
+    let s = snap(|b| {
+        b.node(&f, Role::Group, "form");
+        cal.project(b, &cid, "due", Some(&f));
+    });
+    let node = s.get(&cid).unwrap();
+    assert_eq!(
+        node.state.get("selected"),
+        Some(&Value::Text("2026-10-14".into()))
+    );
+    assert_eq!(
+        node.state.get("month"),
+        Some(&Value::Text("2026-10".into()))
+    );
+    let day = |k: &str| s.get(&cid.key(k)).unwrap();
+    assert_eq!(day("2026-10-31").label, "31 October 2026");
+    assert_eq!(
+        day("2026-10-31").state.get("today"),
+        Some(&Value::Bool(true))
+    );
+    assert_eq!(day("2026-10-14").state.get("today"), None);
+    assert!(!day("2026-10-09").enabled && day("2026-10-10").enabled);
+    assert!(s.get(&cid.key("2026-09-30")).is_none(), "another month");
+}

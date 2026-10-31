@@ -406,6 +406,112 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         let fg = format!("overlay.drawer.{fg}");
         add(&fg, "overlay.drawer.item_fill", need, over(color, lit), lit);
     }
+    // task-104 front E: the segment labels on the well and on the thumb,
+    // the radio's label on the page and under the pointer, and the
+    // calendar's weekdays on a card, at AAA (a color of the kit or the
+    // theme that falls under it gives way, `selection::tokens::legible`),
+    // and today's ring, a mark a person must see (1.4.11).
+    let aaa = f64::from(crate::widgets::selection::tokens::TEXT_CONTRAST);
+    let sel = &t.selection;
+    let well = over(sel.segmented.track.fill[0], page_bg.1);
+    let thumb = over(sel.segmented.thumb.fill[0], well);
+    let row = over(sel.radio.row_hover, page_bg.1);
+    for (fg, bg, color, under) in [
+        (
+            "selection.segmented.text",
+            "selection.segmented.track",
+            sel.segmented.text,
+            well,
+        ),
+        (
+            "selection.segmented.text_hover",
+            "selection.segmented.track",
+            sel.segmented.text_hover,
+            well,
+        ),
+        (
+            "selection.segmented.thumb.text",
+            "selection.segmented.thumb",
+            sel.segmented.thumb.text,
+            thumb,
+        ),
+        (
+            "selection.radio.label",
+            "colors.bg",
+            sel.radio.label,
+            page_bg.1,
+        ),
+        (
+            "selection.radio.label",
+            "selection.radio.row_hover",
+            sel.radio.label,
+            row,
+        ),
+        (
+            "selection.calendar.weekday",
+            "colors.surface",
+            sel.calendar.weekday,
+            card,
+        ),
+    ] {
+        add(fg, bg, aaa, over(color, under), under);
+    }
+    let chosen = over(sel.calendar.chosen.rest.fill[0], card);
+    let day = over(sel.calendar.chosen.rest.text, chosen);
+    add(
+        "selection.calendar.chosen.text",
+        "selection.calendar.chosen",
+        aaa,
+        day,
+        chosen,
+    );
+    let cb = &sel.checkbox;
+    let box_on = over(cb.on.fill[0], page_bg.1);
+    add(
+        "selection.checkbox.label",
+        "colors.bg",
+        aaa,
+        over(cb.label, page_bg.1),
+        page_bg.1,
+    );
+    add(
+        "selection.checkbox.mark",
+        "selection.checkbox.on",
+        LARGE,
+        over(cb.mark, box_on),
+        box_on,
+    );
+    let edge = cb.off.shadow.first().map_or(cb.off.fill[0], |s| s.color);
+    add(
+        "selection.checkbox.off.edge",
+        "colors.bg",
+        LARGE,
+        over(edge, page_bg.1),
+        page_bg.1,
+    );
+    for (name, tag) in [
+        ("rest", &sel.chip.rest),
+        ("rest_hover", &sel.chip.rest_hover),
+        ("on", &sel.chip.on),
+        ("on_hover", &sel.chip.on_hover),
+    ] {
+        let fill = over(tag.fill[0], page_bg.1);
+        add(
+            &format!("selection.chip.{name}.text"),
+            &format!("selection.chip.{name}"),
+            aaa,
+            over(tag.text, fill),
+            fill,
+        );
+    }
+    let today = over(sel.calendar.today, card);
+    add(
+        "selection.calendar.today",
+        "colors.surface",
+        LARGE,
+        today,
+        card,
+    );
     out
 }
 
@@ -685,7 +791,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 477,
+        count, 537,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

@@ -121,6 +121,7 @@ pub enum Pane {
     StaticTable,
     // task-104 front E, selection and dates (#158)
     ButtonGroup,
+    Calendar,
     RadioGroup,
     Toggle,
     ToggleGroup,

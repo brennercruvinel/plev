@@ -30,6 +30,7 @@
 use accord::{Actor, Node, Request, Role, SemId, Snapshot, Value};
 use engine::control::accessibility::focus::{self, Direction};
 use engine::control::accessibility::primary;
+use engine::widgets::selection::Date;
 
 use super::super::ShowcaseView;
 use super::super::components::key_under;
@@ -295,7 +296,7 @@ impl ShowcaseView {
     /// A radio (task-104 front E): any arrow, Home and End move along the
     /// enabled radios of its group, wrapping at the ends, and choose the
     /// one they land on through the dispatcher, as the person's `select`
-    /// (the WAI-ARIA radio group).
+    /// (the WAI-ARIA radio group). In a calendar up and down move a week.
     fn radio_key(&mut self, seen: &Snapshot, id: &SemId, node: &Node, key: Walk) -> bool {
         let mv = match key {
             Walk::Left | Walk::Up => Move::Prev,
@@ -310,7 +311,21 @@ impl ShowcaseView {
         let radios = items(seen, group, |n| {
             n.role == Role::Radio && n.parent.as_ref() == Some(group)
         });
-        let Some(to) = step(&radios, id, mv, true).cloned() else {
+        // a calendar's days (the group states the month it shows): up and
+        // down go a week back and ahead, and stay at the month's edges
+        let calendar = seen
+            .get(group)
+            .is_some_and(|g| g.state.contains_key("month"));
+        let to = if calendar && matches!(key, Walk::Up | Walk::Down) {
+            let days = if matches!(key, Walk::Up) { -7 } else { 7 };
+            key_under(group, id)
+                .and_then(Date::parse)
+                .map(|d| group.key(d.add_days(days).key()))
+                .filter(|to| radios.contains(&to))
+        } else {
+            step(&radios, id, mv, true).cloned()
+        };
+        let Some(to) = to else {
             return false;
         };
         if !self.assist_focus(&to) {
