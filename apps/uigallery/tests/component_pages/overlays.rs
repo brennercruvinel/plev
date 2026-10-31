@@ -281,7 +281,7 @@ fn the_alert_dialog_opens_and_cancels_the_same_from_the_three() {
     same(ALERT, &person, &reader, &agent);
     assert_eq!(
         label(&agent, "dialog").as_deref(),
-        Some("Delete repository?")
+        Some("Delete this file?")
     );
 
     let before = gallery(ALERT).state();

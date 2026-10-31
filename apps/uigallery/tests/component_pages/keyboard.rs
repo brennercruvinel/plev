@@ -525,8 +525,14 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     let mut g = gallery("Dialog");
     g.tab_to(opener);
     assert!(g.enter(), "opens the modal");
-    let said = |g: &Gallery, words: &str| g.state().iter().any(|n| n.label == words);
-    assert!(said(&g, "Delete repository?"));
+    // The modal on screen, by its id: the page shows the same question
+    // in a card, which stays.
+    let said = |g: &Gallery, words: &str| {
+        g.state()
+            .iter()
+            .any(|n| n.id == sid("dialog") && n.label == words)
+    };
+    assert!(said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.ringed("dialog[cancel]"), "the ring on the cancel");
     for at in ["dialog[confirm]", "dialog[cancel]", "dialog[confirm]"] {
@@ -537,7 +543,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert!(g.back_tab());
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"), "and back");
     assert!(g.space(), "Space presses the cancel");
-    assert!(!said(&g, "Delete repository?"), "the cancel answered it");
+    assert!(!said(&g, "Delete this file?"), "the cancel answered it");
     assert_eq!(g.focused().as_deref(), Some(opener), "the focus is back");
     assert!(g.ringed(opener));
 
@@ -545,7 +551,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.view.close_top_overlay(), "Escape closes the modal first");
     g.frame();
-    assert!(!said(&g, "Delete repository?"));
+    assert!(!said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some(opener), "back on the opener");
 }
 

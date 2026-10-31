@@ -203,7 +203,7 @@ fn a_persons_click_on_the_modal_is_a_request_too() {
         .collect();
     assert_eq!(
         toasts,
-        [("Repository deleted (not really).", Intent::Destructive)]
+        [("File deleted (not really).", Intent::Destructive)]
     );
     assert!(!view.overlay_holds_pointer(), "the modal leaves");
 }
