@@ -9,3 +9,5 @@ pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;
 pub mod tokens;
+
+pub use toggle::Toggle;

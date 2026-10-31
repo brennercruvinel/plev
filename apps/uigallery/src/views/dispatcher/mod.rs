@@ -67,6 +67,7 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
+                Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -164,6 +165,7 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
+                Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -335,6 +337,7 @@ impl ShowcaseView {
                 // task-104 front C, conversation and feedback (#156)
                 // task-104 front D, disclosure and display (#157)
                 // task-104 front E, selection and dates (#158)
+                Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

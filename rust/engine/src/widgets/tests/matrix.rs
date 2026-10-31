@@ -8,6 +8,7 @@ use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::widgets::prelude::*;
+use crate::widgets::selection::Toggle;
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -84,6 +85,12 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
         .label("on")
         .render(&mut c, row(6.0), theme);
     Switch::new(true).render(&mut c, row(7.0), theme);
+    let mut toggle = Toggle::new("Bold").icon("eye").on(true);
+    toggle.set_focused(true);
+    toggle.render(&mut c, row(7.0), theme);
+    Toggle::icon_only("eye", "Preview")
+        .disabled(true)
+        .render(&mut c, row(7.0), theme);
     Slider::new(0.0, 100.0, 40.0).render(&mut c, row(8.0), theme);
     let mut s = Select::new(["a", "b", "c"], 1);
     s.render(&mut c, row(9.0), theme);
@@ -400,6 +407,12 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             switch.render(&mut c, row(3.0), &theme);
             switch.project(&mut b, &id("m.switch"), "wifi", None);
             frames.push((c, vec![(id("m.switch"), Role::Toggle, Probe::Hit)]));
+
+            let toggle = Toggle::icon_only("eye", "Preview").sem(id("m.toggle"));
+            let (mut c, _) = frame(false);
+            toggle.render(&mut c, row(3.0), &theme);
+            toggle.project(&mut b, &id("m.toggle"), None);
+            frames.push((c, vec![(id("m.toggle"), Role::Toggle, Probe::Hit)]));
 
             let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
             let (mut c, _) = frame(false);

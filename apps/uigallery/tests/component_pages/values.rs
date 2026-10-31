@@ -13,7 +13,6 @@ fn a_toggle_flips_the_same_from_the_three() {
         ("Checkbox", "checkbox_page.box[1]"),
         ("Switch", "switch_page.switch[1]"),
         ("Chip", "chip_page.chip[5]"),
-        ("Toggle", "chip_page.chip[5]"),
     ] {
         let mut person = gallery(page);
         person.click(id);

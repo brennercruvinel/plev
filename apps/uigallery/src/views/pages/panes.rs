@@ -23,6 +23,7 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104 front D, disclosure and display (#157)
 
 // task-104 front E, selection and dates (#158)
+use super::super::components::toggle;
 
 pub struct Panes {
     // -- foundations
@@ -71,6 +72,7 @@ pub struct Panes {
     // task-104 front C, conversation and feedback (#156)
     // task-104 front D, disclosure and display (#157)
     // task-104 front E, selection and dates (#158)
+    pub toggle: toggle::TogglePage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -148,6 +150,7 @@ impl Panes {
             // task-104 front C, conversation and feedback (#156)
             // task-104 front D, disclosure and display (#157)
             // task-104 front E, selection and dates (#158)
+            toggle: toggle::TogglePage::new(),
             todo,
             surface,
             silences: silences::SilencesPage::new(),
