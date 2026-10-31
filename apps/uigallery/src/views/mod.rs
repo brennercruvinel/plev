@@ -46,6 +46,9 @@ const HOTKEY_PAGES: usize = 10;
 // Active overlay bookkeeping
 // ---------------------------------------------------------------------------
 
+// task-104 front B, overlays (#155): this block is the front's. The new
+// overlays (popover, hover card, dropdown menu, alert dialog, menubar,
+// sheet, drawer) register here and in `dispatcher/overlay/`.
 enum ActiveOverlay {
     Modal {
         id: OverlayId,

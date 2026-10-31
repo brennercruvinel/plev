@@ -39,6 +39,18 @@ pub mod toast;
 pub mod tooltip;
 pub mod tree;
 
+// task-104: each front adds its page modules under its anchor, a group of
+// its own (the blank lines keep rustfmt from sorting one front into another)
+// task-104 front A, fields (#154)
+
+// task-104 front B, overlays (#155)
+
+// task-104 front C, conversation and feedback (#156)
+
+// task-104 front D, disclosure and display (#157)
+
+// task-104 front E, selection and dates (#158)
+
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
 pub(crate) use super::{EditKey, group_label, panel, text};
 
