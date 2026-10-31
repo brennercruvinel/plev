@@ -388,6 +388,55 @@ impl DisclosureTokens {
             },
         };
 
+        // The kit has no tree; its nested rows are the scene list's
+        // (SceneAndAssetsSidebar/Scene/Item/index.tsx:45-64): `gap-3 p-0.75
+        // border rounded-xl hover:bg-[#f1f1f1]`, selected `bg-[#f1f1f1]
+        // border-[#e2e2e2]`; the tile `size-8 rounded-lg bg-[#f1f1f1]`,
+        // raised `bg-[#fcfcfc] shadow-[0_0px_4px_0px_rgba(18,18,18,0.10)]`
+        // when selected, its icon `size-4`; the label `text-[0.75rem]
+        // font-medium text-[#121212]` (:82). A row is 40 px: the tile, the
+        // padding and the border on each side. The chevron is the
+        // Accordion's (`size-4 fill-[#7B7B7B]`), a `gap-3` before the
+        // tile; a level indents by the chevron and its gap, so a child's
+        // chevron sits under its parent's tile.
+        let pad = 3.0 + item.row_border;
+        let tile = 32.0;
+        let tree = TreeRecipe {
+            row_h: tile + pad * 2.0,
+            pad_x: pad,
+            indent: 16.0 + 12.0,
+            chevron: 16.0,
+            chevron_gap: 12.0,
+            icon: 16.0,
+            tile: Some(TreeTile {
+                size: tile,
+                radius: 8.0,
+                rest: wash,
+                selected: paper,
+                shadow_selected: ShadowSpec::new([0.0, 0.0], 4.0, 0.0, tint(ink, 0.10)),
+            }),
+            label_gap: 12.0,
+            radius: 12.0,
+            border: item.row_border,
+            seam: [0.0, 0.0],
+            hover: DisclosureSurface {
+                fill: wash,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: wash,
+                border: hex(0xE2E2E2),
+            },
+            font_size: 12.0,
+            line_height: 18.0,
+            font_weight: 500,
+            label: ink,
+            label_selected: ink,
+            chevron_color: gray,
+            icon_color: ink,
+            icon_selected: ink,
+        };
+
         Self {
             accordion,
             collapsible,
@@ -399,6 +448,7 @@ impl DisclosureTokens {
             pager,
             list,
             table,
+            tree,
         }
     }
 }

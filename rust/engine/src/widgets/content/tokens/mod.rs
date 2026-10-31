@@ -317,6 +317,48 @@ pub struct TableRecipe {
     pub rows: RowRecipe,
 }
 
+/// The icon tile a tree row's icon sits in (the kit's `size-8
+/// rounded-lg` square), at rest and selected.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TreeTile {
+    pub size: f32,
+    pub radius: f32,
+    pub rest: Color,
+    pub selected: Color,
+    pub shadow_selected: ShadowSpec,
+}
+
+/// A tree's row: its height, the padding before the first glyph, the
+/// indent per depth, the chevron and the gap after it, the icon (in a
+/// tile, for a look that has one) and the gap before the label, the
+/// surface under a hovered or selected row (inset by `seam` x and y so
+/// neighbors keep a seam), the label's text and its two tones, the
+/// chevron's and the icon's colors.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TreeRecipe {
+    pub row_h: f32,
+    pub pad_x: f32,
+    pub indent: f32,
+    pub chevron: f32,
+    pub chevron_gap: f32,
+    pub icon: f32,
+    pub tile: Option<TreeTile>,
+    pub label_gap: f32,
+    pub radius: f32,
+    pub border: f32,
+    pub seam: [f32; 2],
+    pub hover: DisclosureSurface,
+    pub selected: DisclosureSurface,
+    pub font_size: f32,
+    pub line_height: f32,
+    pub font_weight: u16,
+    pub label: Color,
+    pub label_selected: Color,
+    pub chevron_color: Color,
+    pub icon_color: Color,
+    pub icon_selected: Color,
+}
+
 /// How a disclosure moves: the revealed height and the chevron's half
 /// turn, each a duration in seconds and an easing.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -369,6 +411,8 @@ pub struct DisclosureTokens {
     pub list: RowRecipe,
     /// A table.
     pub table: TableRecipe,
+    /// A tree's rows.
+    pub tree: TreeRecipe,
 }
 
 fn hex(v: u32) -> Color {

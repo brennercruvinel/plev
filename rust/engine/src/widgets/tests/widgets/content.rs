@@ -464,8 +464,10 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     // The rows and the table derive the look before the kit, which the
     // test below holds; only the core draws them in the kit's language.
     assert_ne!(derived.table, kit.table);
+    assert_ne!(derived.tree, kit.tree);
     derived.list = kit.list;
     derived.table = kit.table;
+    derived.tree = kit.tree;
     assert_eq!(derived, kit);
     assert_eq!(core().disclosure, kit);
     // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
@@ -501,6 +503,25 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
             (theme.control.edge_width, theme.colors.divider)
         );
         assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
+        let tree = theme.disclosure.tree;
+        let body = theme.typography.base_2r();
+        let gap = theme.spacing.xs;
+        assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
+        assert_eq!(
+            (tree.indent, tree.pad_x),
+            (theme.spacing.lg, theme.spacing.sm)
+        );
+        assert_eq!((tree.chevron_gap, tree.label_gap), (gap, gap * 2.0));
+        assert_eq!(tree.seam, [gap / 2.0, theme.control.edge_width]);
+        assert_eq!(
+            (tree.hover.fill, tree.selected.fill),
+            (g.surface_hover, g.surface_active)
+        );
+        assert_eq!(
+            (tree.label, tree.label_selected),
+            (theme.colors.text_mid, theme.colors.text)
+        );
+        assert!(tree.tile.is_none() && tree.border == 0.0);
         assert_eq!(Table::cell_style(&theme), theme.typography.base_2r());
         let mut c = Compositor::new();
         c.begin_frame();

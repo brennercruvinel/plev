@@ -137,6 +137,7 @@ impl DisclosureTokens {
             ..kit.pager
         };
         let (list, table) = Self::rows(theme);
+        let tree = Self::tree(theme);
         Self {
             accordion,
             collapsible,
@@ -148,6 +149,49 @@ impl DisclosureTokens {
             pager,
             list,
             table,
+            tree,
+        }
+    }
+
+    /// The tree every theme drew before the kit, value for value: body
+    /// text rows padded `xs` above and below, `sm` before the first
+    /// glyph, an `lg` indent, `Sm` icons an `xs` apart and two before the
+    /// label; the glass washes under a row in the nav radius, inset half
+    /// a gap and an edge; the label mid, the selected one in the text
+    /// tone, the chevron dim, the icon mid.
+    fn tree(theme: &Theme) -> TreeRecipe {
+        let (colors, glass) = (&theme.colors, &theme.glass);
+        let body = theme.typography.base_2r();
+        let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
+        let gap = theme.spacing.xs;
+        TreeRecipe {
+            row_h: (body.line_height + gap * 2.0).round(),
+            pad_x: theme.spacing.sm,
+            indent: theme.spacing.lg,
+            chevron: icon,
+            chevron_gap: gap,
+            icon,
+            tile: None,
+            label_gap: gap * 2.0,
+            radius: theme.shape.nav,
+            border: 0.0,
+            seam: [gap / 2.0, theme.control.edge_width],
+            hover: DisclosureSurface {
+                fill: glass.surface_hover,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: glass.surface_active,
+                border: NONE,
+            },
+            font_size: body.font_size,
+            line_height: body.line_height,
+            font_weight: body.font_weight,
+            label: colors.text_mid,
+            label_selected: colors.text,
+            chevron_color: colors.text_dim,
+            icon_color: colors.text_mid,
+            icon_selected: colors.text_mid,
         }
     }
 
