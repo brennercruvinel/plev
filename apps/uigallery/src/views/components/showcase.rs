@@ -67,23 +67,43 @@ pub(crate) fn columns(span: usize, w: f32, gap: f32) -> usize {
 }
 
 /// The groups down `content`, each given as `(span, cards)`: the cards
-/// per row at full width and how many cards it has, `CARD_H` tall.
+/// per row at full width and how many cards it has.
 pub(crate) fn layout(
     groups: impl IntoIterator<Item = (usize, usize)>,
     content: Rect,
     theme: &Theme,
 ) -> Vec<GroupLayout> {
-    let groups = groups
+    let sized = groups
         .into_iter()
-        .map(|(span, count)| (span, count, CARD_H));
-    layout_with_heights(groups, content, theme)
+        .map(|(span, count)| (span, vec![CARD_H; count]));
+    layout_sized(sized, content, theme)
 }
 
-/// [`layout`] with each group's own card height, `(span, cards,
-/// height)`: a card that holds more than a widget (an open panel, a
-/// sheet) is as tall as what it holds.
-pub(crate) fn layout_with_heights(
-    groups: impl IntoIterator<Item = (usize, usize, f32)>,
+/// A card's width in a group of `span` cards per row at `content`'s
+/// width: what a page lays a widget out in before it knows how tall the
+/// card must be.
+pub(crate) fn card_width(span: usize, content: Rect, theme: &Theme) -> f32 {
+    let gap = theme.spacing.sm;
+    let cols = columns(span, content.w, gap);
+    (content.w - gap * (cols as f32 - 1.0)) / cols as f32
+}
+
+/// The band the chip takes at the top of a card; a centered widget keeps
+/// as much clear at the bottom.
+fn chip_band(theme: &Theme) -> f32 {
+    theme.spacing.sm * 2.0 + chip_style(theme).line_height + theme.spacing.xs * 2.0
+}
+
+/// The height of a card whose widget is `widget_h` tall: `h-50`, or
+/// taller where the widget, centered, would reach the chip.
+pub(crate) fn card_height(widget_h: f32, theme: &Theme) -> f32 {
+    CARD_H.max(chip_band(theme) * 2.0 + widget_h)
+}
+
+/// [`layout`] with each card's least height (`CARD_H`, or a
+/// [`card_height`]): a row is as tall as its tallest card.
+pub(crate) fn layout_sized(
+    groups: impl IntoIterator<Item = (usize, Vec<f32>)>,
     content: Rect,
     theme: &Theme,
 ) -> Vec<GroupLayout> {
@@ -92,24 +112,32 @@ pub(crate) fn layout_with_heights(
     let title_h = title_style(theme).line_height;
     let mut y = content.y;
     let mut out = Vec::new();
-    for (span, count, card_h) in groups {
+    for (span, heights) in groups {
         let title_y = y + pad;
         let cols = columns(span, content.w, gap);
         let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
         let first_row = title_y + title_h + title_gap(theme);
-        let cards = (0..count)
-            .map(|i| {
-                let (col, row) = (i % cols, i / cols);
-                Rect::new(
+        let mut cards = Vec::with_capacity(heights.len());
+        // The heights of the rows above and their count, kept apart so
+        // rows of `h-50` land where `first_row + row * (CARD_H + gap)`
+        // put them.
+        let mut above = 0.0;
+        let mut rows = 0;
+        for row in heights.chunks(cols) {
+            let h = row.iter().copied().fold(CARD_H, f32::max);
+            let top = first_row + (above + rows as f32 * gap);
+            for col in 0..row.len() {
+                cards.push(Rect::new(
                     content.x + col as f32 * (card_w + gap),
-                    first_row + row as f32 * (card_h + gap),
+                    top,
                     card_w,
-                    card_h,
-                )
-            })
-            .collect();
-        let rows = count.div_ceil(cols);
-        let rule_y = first_row + rows as f32 * card_h + (rows as f32 - 1.0) * gap + pad;
+                    h,
+                ));
+            }
+            above += h;
+            rows += 1;
+        }
+        let rule_y = first_row + above + (rows as f32 - 1.0) * gap + pad;
         out.push(GroupLayout {
             title_y,
             cards,
@@ -150,7 +178,15 @@ pub(crate) fn title(c: &mut Compositor, text: &str, content: Rect, y: f32, theme
 pub(crate) fn card(c: &mut Compositor, rect: Rect, chip_text: &str, theme: &Theme) {
     card_frame(c, rect, theme);
     let inset = theme.spacing.sm;
-    chip(c, rect.x + inset, rect.y + inset, chip_text, theme);
+    let text = chip_fit(chip_text, rect.w - inset * 2.0, theme);
+    chip(c, rect.x + inset, rect.y + inset, &text, theme);
+}
+
+/// A chip's text cut with an ellipsis where the chip, padding included,
+/// would be wider than `w`; the text itself where it fits.
+pub(crate) fn chip_fit(text: &str, w: f32, theme: &Theme) -> String {
+    let room = w - theme.spacing.md * 2.0;
+    TextMeasurer::truncate_to_width(text, &chip_style(theme), room)
 }
 
 /// The card alone: a divider-colored hairline at the card radius.
@@ -241,6 +277,55 @@ mod tests {
         assert_eq!(second[0].y, second[2].y);
         assert!(layout[1].title_y > layout[0].rule_y);
         assert!(content_height(&layout, content) > 2.0 * CARD_H);
+    }
+
+    /// A card grows past `h-50` for a tall widget, and its row with it;
+    /// rows of `h-50` land where the fixed layout puts them.
+    #[test]
+    fn a_tall_card_grows_its_row_only() {
+        let theme = Theme::hoff_core();
+        let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
+        let tall = card_height(400.0, &theme);
+        assert!(tall > 400.0);
+        assert_eq!(card_height(40.0, &theme), CARD_H);
+        let sized = layout_sized([(3, vec![CARD_H, tall, CARD_H, CARD_H])], content, &theme);
+        let cards = &sized[0].cards;
+        assert_eq!(
+            (cards[0].h, cards[1].h),
+            (tall, tall),
+            "the row is the tallest card"
+        );
+        assert_eq!(cards[3].y, cards[0].y + tall + theme.spacing.sm);
+        let fixed = layout([(3, 4), (2, 2)], content, &theme);
+        let same = layout_sized(
+            [(3, vec![CARD_H; 4]), (2, vec![CARD_H; 2])],
+            content,
+            &theme,
+        );
+        for (a, b) in fixed.iter().zip(&same) {
+            assert_eq!(
+                (a.title_y, &a.cards, a.rule_y),
+                (b.title_y, &b.cards, b.rule_y)
+            );
+        }
+        assert_eq!(card_width(3, content, &theme), cards[0].w);
+    }
+
+    /// A chip longer than its card is cut with an ellipsis inside it.
+    #[test]
+    fn a_long_chip_is_cut_to_its_card() {
+        let theme = Theme::hoff_core();
+        let inset = theme.spacing.sm;
+        let card = Rect::new(0.0, 0.0, 160.0, CARD_H);
+        let text = chip_fit(
+            "Default, Click on, Focus, Hover, Typing",
+            card.w - inset * 2.0,
+            &theme,
+        );
+        assert!(text.ends_with('\u{2026}'));
+        let at = chip_rect(card.x + inset, card.y + inset, &text, &theme);
+        assert!(at.right() <= card.right() - inset + 0.5);
+        assert_eq!(chip_fit("Typed", card.w - inset * 2.0, &theme), "Typed");
     }
 
     /// A widget sits in the middle of its card, on whole pixels.
