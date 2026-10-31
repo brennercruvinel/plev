@@ -100,9 +100,20 @@ impl BadgeTokens {
                 ink
             }
         };
-        let count_ink = each(&numeral);
+        // a neutral count is filled with the ink, as the kit's primary
+        // button; the others with their intent
+        let counts = IntentColors {
+            neutral: palette.ink,
+            ..base
+        };
+        let count_ink = IntentColors {
+            neutral: numeral(counts.neutral),
+            informational: numeral(counts.informational),
+            constructive: numeral(counts.constructive),
+            destructive: numeral(counts.destructive),
+        };
         let count_fill = IntentColors {
-            neutral: deepen(over(base.neutral, surface), count_ink.neutral),
+            neutral: deepen(over(counts.neutral, surface), count_ink.neutral),
             informational: deepen(over(base.informational, surface), count_ink.informational),
             constructive: deepen(over(base.constructive, surface), count_ink.constructive),
             destructive: deepen(over(base.destructive, surface), count_ink.destructive),
@@ -181,6 +192,10 @@ pub(super) fn over(c: Color, under: Color) -> Color {
         }
     };
     let a = c.0[3];
+    if a >= 1.0 {
+        // opaque: itself, exactly, not a round trip through linear light
+        return c;
+    }
     let at = |i: usize| gamma(lin(c.0[i]) * a + lin(under.0[i]) * (1.0 - a));
     Color([at(0), at(1), at(2), 1.0])
 }
