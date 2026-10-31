@@ -67,6 +67,8 @@ const PROJECTING: &[&str] = &[
     "Message Scroller",
     "Navigation Menu",
     "Pagination",
+    "Panel",
+    "Panel Header",
     "Popover",
     "Radio Group",
     "Resizable",
@@ -156,11 +158,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Input OTP", PLACEHOLDER),
     ("Marker", PLACEHOLDER),
-    ("Panel", Nothing("the glass surface alone")),
-    (
-        "Panel Header",
-        Unprojected("PanelHeader: a heading with its blurb and badge"),
-    ),
     (
         "Progress",
         Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),

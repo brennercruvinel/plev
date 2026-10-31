@@ -150,6 +150,8 @@ components! {
     Kbd => kbd,
     Pagination => pagination,
     StaticTable => table_static,
+    Panel => panel,
+    PanelHeader => panel_header,
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     RadioGroup => radio_group,

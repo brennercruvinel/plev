@@ -9,6 +9,7 @@
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 use crate::styling::theme::{Elevation, Theme};
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::recipe::{glass_surface, shadow_stack};
 use crate::widgets::widget::Rect;
@@ -62,6 +63,26 @@ impl Panel {
             r.h = (r.h - band).max(0.0);
         }
         r
+    }
+
+    /// Declares this panel as `id` in a projection: a `Role::Group` named
+    /// by its label, or by `name` when it has none. A panel frames and
+    /// takes no action; what it holds the app adds under the returned
+    /// node.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        name: &str,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let label = self.label.as_deref().unwrap_or(name);
+        let mut node = b.node(id, Role::Group, label);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {

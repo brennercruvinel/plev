@@ -8,6 +8,7 @@
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::Badge;
 use crate::widgets::widget::Rect;
@@ -83,6 +84,29 @@ impl PanelHeader {
             (right - bounds.x - pad).max(0.0),
             r.row,
         )
+    }
+
+    /// Declares this head as `id` in a projection: a `Role::Label` named
+    /// by its title, described by its blurb, its badge's text as `badge`.
+    /// A head names what follows it and takes no action.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let mut node = b.node(id, Role::Label, self.title.as_str());
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        if let Some(blurb) = &self.blurb {
+            node.description(blurb.as_str());
+        }
+        if let Some(badge) = &self.badge {
+            node.state("badge", badge.label.clone());
+        }
+        node
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
