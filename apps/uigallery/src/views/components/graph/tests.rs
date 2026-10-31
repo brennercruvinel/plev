@@ -56,7 +56,8 @@ fn every_canvas_projects_its_nodes_and_selection() {
     );
     assert_eq!(
         canvas.state.get("selected"),
-        Some(&Value::Text(String::new()))
+        Some(&Value::Text("0".into())),
+        "the demo opens with a node selected"
     );
     let nodes: Vec<_> = snap.children(&canvas.id).collect();
     assert_eq!(nodes.len(), 12);

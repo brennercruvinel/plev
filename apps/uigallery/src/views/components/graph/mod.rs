@@ -120,6 +120,9 @@ impl GraphPage {
                 )],
             },
         ];
+        // The demo opens with a node selected, so the Selected state its
+        // chip names shows: its edges hot, its ring drawn.
+        groups[0].cards[0].view.select(Some(0));
         let root = root_id("graph_page");
         if let Some(root) = &root {
             for (g, group) in groups.iter_mut().enumerate() {

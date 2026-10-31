@@ -375,7 +375,7 @@ impl GraphView {
         });
         let look = &theme.navigation.graph;
         let r = self.node_r();
-        let edge_w = (self.transform.scale * 1.2).clamp(0.5, 2.5);
+        let edge_w = (self.transform.scale * 1.2).clamp(look.edge_min_w, 2.5);
 
         // Edges: one batched path per kind, cool pass (all edges) then a
         // hot pass (the selected node's incident edges at full alpha).

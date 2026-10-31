@@ -138,6 +138,10 @@ components! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
+    Textarea => textarea,
+    Combobox => combobox,
+    Command => command,
     // task-104 front B, overlays (#155)
     AlertDialog => alert_dialog,
     ContextMenu => context_menu,
@@ -172,6 +176,7 @@ components! {
     // task-104 front E, selection and dates (#158)
     ButtonGroup => button_group,
     Calendar => calendar,
+    DatePicker => date_picker,
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,

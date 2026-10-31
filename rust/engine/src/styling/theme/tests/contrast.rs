@@ -572,6 +572,15 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         over(cb.mark, box_on),
         box_on,
     );
+    let faded = |c: Color, a: f32| Color::rgba(c.0[0], c.0[1], c.0[2], c.0[3] * a);
+    let box_off = over(faded(cb.on.fill[0], cb.disabled_alpha), page_bg.1);
+    add(
+        "selection.checkbox.mark_disabled",
+        "selection.checkbox.on@disabled",
+        LARGE,
+        over(cb.mark_disabled, box_off),
+        box_off,
+    );
     let edge = cb.off.shadow.first().map_or(cb.off.fill[0], |s| s.color);
     add(
         "selection.checkbox.off.edge",
@@ -625,6 +634,23 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         let edge = over(ring_of(&sl.thumb), under);
         add("selection.slider.thumb.edge", bg, LARGE, edge, under);
     }
+    // the date picker's calendar on the popover's panel: its weekdays at
+    // AAA and today's ring
+    let panel = over(t.overlay.popover.panel.fill[0], page_bg.1);
+    add(
+        "selection.calendar.weekday",
+        "overlay.popover.panel",
+        aaa,
+        over(sel.calendar.weekday, panel),
+        panel,
+    );
+    add(
+        "selection.calendar.today",
+        "overlay.popover.panel",
+        LARGE,
+        over(sel.calendar.today, panel),
+        panel,
+    );
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -912,7 +938,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 653,
+        count, 665,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

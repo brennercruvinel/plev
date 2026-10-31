@@ -14,6 +14,9 @@
 //! of the selection, or at the caret, until the input method commits it
 //! as typed text or drops it.
 //!
+//! What it takes is its [`Accept`]: typing, a paste and a commit drop the
+//! characters it does not admit and cut what it has no room for.
+//!
 //! A masked input (a password) draws a bullet per grapheme and lays the
 //! caret, a click and the selection out over the bullets (see
 //! `super::view`); the buffer keeps the text, and nothing of it leaves
@@ -25,6 +28,7 @@ use std::ops::Range;
 use crate::drawing::text::TextStyle;
 use crate::runtime::platform::clipboard::ClipboardProvider;
 
+use super::accept::Accept;
 use super::buffer::TextBuffer;
 use super::view::Shown;
 use super::visual::VisualLine;
@@ -41,6 +45,11 @@ pub struct TextInput {
     pub placeholder: String,
     /// Draw a bullet per grapheme in place of the text (a password).
     pub masked: bool,
+    /// The characters it takes and how many (anything, by default).
+    pub accept: Accept,
+    /// Its text runs over several lines (a text area): a paste keeps its
+    /// line breaks ([`multi_line`]) instead of joining them.
+    pub multiline: bool,
     blink: Blink,
     preedit: Option<Preedit>,
 }
@@ -66,6 +75,8 @@ impl TextInput {
             focused: false,
             placeholder: String::new(),
             masked: false,
+            accept: Accept::ANY,
+            multiline: false,
             blink: Blink::new(),
             preedit: None,
         }
@@ -110,12 +121,28 @@ impl TextInput {
         self.blink.reset();
     }
 
+    /// Type `c` over the selection, when the input admits it and has
+    /// room.
     pub fn handle_char(&mut self, c: char) {
         if !self.focused {
             return;
         }
-        self.buffer.insert_char(c);
+        let mut one = [0; 4];
+        let admitted = self.admitted(c.encode_utf8(&mut one));
+        if let Some(c) = admitted.chars().next() {
+            self.buffer.insert_char(c);
+        }
         self.reset_blink();
+    }
+
+    /// What of `s` the input takes over its selection ([`Accept::admit`]).
+    fn admitted(&self, s: &str) -> String {
+        if self.accept == Accept::ANY {
+            return s.to_owned();
+        }
+        let replaced = self.buffer.selected_text().map_or(0, |t| t.chars().count());
+        self.accept
+            .admit(s, self.buffer.text().chars().count(), replaced)
     }
 
     pub fn handle_backspace(&mut self) {
@@ -320,8 +347,9 @@ impl TextInput {
         if !self.focused {
             return;
         }
+        let committed = self.admitted(committed);
         if !committed.is_empty() {
-            self.buffer.insert_str(committed);
+            self.buffer.insert_str(&committed);
         }
         self.preedit = (!preedit.is_empty()).then(|| Preedit {
             text: preedit.to_owned(),
@@ -367,12 +395,19 @@ impl TextInput {
     }
 
     /// Type what `clipboard` holds, over the selection, on one line (see
-    /// [`single_line`]). `false` with an empty clipboard or unfocused.
+    /// [`single_line`]), or with its line breaks when multiline
+    /// ([`multi_line`]). `false` with an empty clipboard or unfocused.
     pub fn handle_paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
         if !self.focused {
             return false;
         }
-        let text = single_line(&clipboard.get_text().unwrap_or_default());
+        let raw = clipboard.get_text().unwrap_or_default();
+        let lines = if self.multiline {
+            multi_line(&raw)
+        } else {
+            single_line(&raw)
+        };
+        let text = self.admitted(&lines);
         if text.is_empty() {
             return false;
         }
@@ -407,6 +442,21 @@ pub fn single_line(text: &str) -> String {
     text.chars()
         .filter_map(|c| match c {
             '\n' | '\r' | '\t' => Some(' '),
+            c if c.is_control() => None,
+            c => Some(c),
+        })
+        .collect()
+}
+
+/// Text pasted into a text area: every line break (`\r\n`, `\r`) becomes
+/// one `\n`, each tab a space, and any other control character is
+/// dropped.
+pub fn multi_line(text: &str) -> String {
+    let text = text.replace("\r\n", "\n");
+    text.chars()
+        .filter_map(|c| match c {
+            '\n' | '\r' => Some('\n'),
+            '\t' => Some(' '),
             c if c.is_control() => None,
             c => Some(c),
         })

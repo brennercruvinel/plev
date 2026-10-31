@@ -286,9 +286,9 @@ fn every_theme_but_the_core_derives_its_form_from_itself() {
     let named = names.map(|n| (n, Theme::named(n).expect("a theme")));
     let built = [("dark", Theme::dark()), ("light", Theme::light())];
     for (name, theme) in named.into_iter().chain(built) {
-        assert_eq!(theme.form, FormTokens::derive(&theme), "{name}");
+        assert_eq!(*theme.form, FormTokens::derive(&theme), "{name}");
     }
-    assert_eq!(Theme::hoff_core().form, FormTokens::hoff_core());
+    assert_eq!(*Theme::hoff_core().form, FormTokens::hoff_core());
 }
 
 fn nodes_of(draw: impl FnOnce(&mut Compositor)) -> Vec<SceneNode> {
@@ -708,4 +708,569 @@ fn a_search_projects_its_hint_and_its_button() {
         (action.role, action.label.as_str()),
         (Role::Button, "search")
     );
+}
+
+// Input OTP
+
+fn code() -> crate::widgets::form::otp::InputOtp {
+    crate::widgets::form::otp::InputOtp::new(&[3, 3]).sem(SemId::parse("s.code").unwrap())
+}
+
+/// Typing fills the cells one by one with digits only, and stops at the
+/// last; Backspace empties the last; a paste over a full code takes what
+/// it has room for (nothing), over a selected cell its first digit; the
+/// full-width digits of an input method count as digits.
+#[test]
+fn a_code_takes_its_digits_a_cell_at_a_time() {
+    use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+    let mut otp = code();
+    otp.input.focus();
+    assert!(otp.input.insert("1a2-3"));
+    assert_eq!((otp.input.text(), otp.active()), ("123", 3));
+    otp.input.insert("456789");
+    assert_eq!(otp.input.text(), "123456");
+    assert!(otp.is_complete());
+    assert_eq!(otp.active(), 5, "the last cell stays active when full");
+    otp.input.edit(crate::widgets::form::EditKey::Backspace);
+    assert_eq!((otp.input.text(), otp.active()), ("12345", 5));
+    otp.input.compose("６", "", None);
+    assert_eq!(otp.input.text(), "123456", "a full-width six");
+    let mut board = LocalClipboard::new();
+    board.set_text("0000");
+    assert!(!otp.input.paste(&mut board), "full: no room");
+    otp.input.edit(crate::widgets::form::EditKey::SelectLeft);
+    assert!(otp.input.paste(&mut board));
+    assert_eq!(
+        otp.input.text(),
+        "123450",
+        "over the selected cell, one digit"
+    );
+}
+
+/// A press on a filled cell selects its digit, and the next one replaces
+/// it; a press on an empty cell puts the caret after the last digit; a
+/// press off the cells blurs.
+#[test]
+fn a_press_on_a_filled_cell_selects_it_and_typing_replaces_it() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 0.0);
+    let mut otp = code().with_text("1234");
+    let l = otp.layout(bounds, &theme);
+    let (x, y) = l.cells[1].center();
+    assert!(
+        otp.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(otp.input.is_focused());
+    assert_eq!(otp.active(), 1);
+    otp.input.insert("9");
+    assert_eq!(otp.input.text(), "1934");
+    let (x, y) = l.cells[5].center();
+    otp.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
+    assert_eq!(
+        otp.active(),
+        4,
+        "after the last digit, not the cell pressed"
+    );
+    let r = otp.handle_event(
+        &WidgetEvent::MouseDown { x: 390.0, y: 300.0 },
+        bounds,
+        &theme,
+    );
+    assert!(r.changed && !otp.input.is_focused());
+    let mut off = code().disabled(true);
+    off.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme);
+    assert!(!off.input.is_focused(), "disabled");
+}
+
+/// The value set whole (an agent's, a reader's) is the code's or is
+/// refused, the value as it was.
+#[test]
+fn a_code_refuses_a_value_that_is_not_one() {
+    let mut otp = code();
+    assert!(otp.input.set_value("042917"));
+    assert!(otp.input.set_value("0429"), "a part of a code");
+    assert!(!otp.input.set_value("12345a"), "a letter");
+    assert!(!otp.input.set_value("1234567"), "past its cells");
+    assert_eq!(otp.input.text(), "0429", "as it was");
+    assert!(otp.input.set_value(""), "emptied");
+}
+
+/// From narrow to wide the cells stay in the width, in order, apart, and
+/// square; at their natural width they are the Field's box, 48 tall, the
+/// minus in the gap between the groups; the digit never wraps.
+#[test]
+fn a_code_keeps_its_cells_inside_its_width_from_narrow_to_wide() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let otp = code().with_text("123456").label("Verification code");
+        let natural = otp.natural_width(&theme);
+        let least = otp.min_width(&theme).ceil() as usize;
+        assert!(least < 140, "a group fits a narrow phone's card");
+        for w in (least..=600).step_by(4).map(|w| w as f32) {
+            let bounds = Rect::new(20.0, 10.0, w, 0.0);
+            let l = otp.layout(bounds, &theme);
+            assert_eq!(l.cells.len(), 6);
+            let stacked = l.separators.is_empty();
+            for (i, pair) in l.cells.windows(2).enumerate() {
+                if stacked && i == 2 {
+                    assert!(pair[0].bottom() < pair[1].y, "{w}: the rows meet");
+                } else {
+                    assert!(pair[0].right() <= pair[1].x + 0.01, "{w}: cells meet");
+                }
+            }
+            for c in &l.cells {
+                assert!(c.right() <= bounds.right() + 0.01, "{w}: past the width");
+                assert!((c.w - c.h).abs() < 0.01, "{w}: square");
+            }
+            if let Some(s) = l.separators.first() {
+                assert!(l.cells[2].right() < s.x && s.right() < l.cells[3].x);
+            }
+            if w >= natural {
+                assert_eq!(l.cells[0].h, TextField::height(&theme));
+            }
+            let line = theme.form.input.text.line_height;
+            assert!(l.cells[0].h >= line, "{w}: a cell shorter than its digit");
+        }
+    }
+}
+
+/// A code projects as a secret text field: its length only, at most its
+/// cells, named by its label, described and `invalid` with an error.
+#[test]
+fn a_code_projects_secret_with_its_length_only() {
+    let otp = code()
+        .label("Verification code")
+        .error("The code is incorrect")
+        .with_text("4242");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    otp.project(&mut b, otp.sem_id().unwrap(), "Code", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(otp.sem_id().unwrap()).unwrap();
+    assert_eq!(
+        (node.role, node.label.as_str()),
+        (Role::TextInput, "Verification code")
+    );
+    assert!(node.constraints.secret);
+    assert_eq!(node.constraints.max_len, Some(6));
+    assert_eq!(node.description.as_deref(), Some("The code is incorrect"));
+    assert_eq!(
+        node.state.get("text"),
+        Some(&Value::Int(4)),
+        "its length, never the digits"
+    );
+    assert_eq!(node.state.get("invalid"), Some(&Value::Bool(true)));
+    assert!(!format!("{snap:?}").contains("4242"));
+}
+
+/// The focused code draws the focus ring on its active cell and the
+/// caret there while it is empty; a masked one draws bullets.
+#[test]
+fn the_active_cell_has_the_ring_and_the_caret() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 400.0, 0.0);
+    let mut otp = code().with_text("12").masked(true);
+    otp.input.focus();
+    let nodes = nodes_of(|c| otp.render(c, bounds, &theme));
+    let drawn: Vec<String> = texts(&nodes).into_iter().map(|(t, _, _)| t).collect();
+    assert_eq!(drawn, [MASK.to_string(), MASK.to_string()]);
+    let cell = otp.layout(bounds, &theme).cells[2];
+    let caret = nodes
+        .iter()
+        .any(|n| matches!(*n, SceneNode::Rect { x, w, .. } if x > cell.x && x + w < cell.right()));
+    assert!(caret, "the caret in the third cell");
+}
+
+// Textarea
+
+fn area() -> crate::widgets::form::textarea::TextArea {
+    crate::widgets::form::textarea::TextArea::new("Write a message")
+        .sem(SemId::parse("s.area").unwrap())
+}
+
+/// The kit's box is three lines tall at rest (`h-20`, 80 in the core);
+/// one that grows takes its lines up to its most and no more.
+#[test]
+fn a_text_area_is_the_kits_box_and_grows_to_its_most_lines() {
+    let theme = Theme::hoff_core();
+    let w = 300.0;
+    let rest = area().layout(Rect::new(0.0, 0.0, w, 0.0), &theme).input.h;
+    assert_eq!(rest, 80.0);
+    let full = area().with_text("1\n2\n3\n4\n5\n6\n7\n8");
+    assert_eq!(
+        full.layout(Rect::new(0.0, 0.0, w, 0.0), &theme).input.h,
+        80.0
+    );
+    let lh = theme.form.input.text.line_height;
+    let grown = |n: usize| {
+        let text = vec!["line"; n].join("\n");
+        area()
+            .grows(5)
+            .with_text(&text)
+            .layout(Rect::new(0.0, 0.0, w, 0.0), &theme)
+            .input
+            .h
+    };
+    assert_eq!(grown(1), rest, "never under the box at rest");
+    assert_eq!(grown(4), rest + lh);
+    assert_eq!(grown(5), rest + 2.0 * lh);
+    assert_eq!(grown(9), rest + 2.0 * lh, "five lines at most");
+}
+
+/// Enter breaks the line; Up and Down move a line keeping the column,
+/// past the ends to the text's ends; Home and End go to the line's ends;
+/// Left at a line's start goes to the end of the one before.
+#[test]
+fn the_keys_move_over_the_lines() {
+    use crate::widgets::form::EditKey;
+    let theme = Theme::hoff_core();
+    let w = 400.0;
+    let mut a = area().with_text("first line\nfirst more");
+    a.input.focus();
+    nodes_of(|c| a.render(c, Rect::new(0.0, 0.0, w, 0.0), &theme));
+    let cursor = |a: &crate::widgets::form::textarea::TextArea| a.input.input.buffer.cursor();
+    assert_eq!(cursor(&a), 21);
+    assert!(a.edit(EditKey::Home));
+    assert_eq!(cursor(&a), 11);
+    assert!(a.edit(EditKey::Left));
+    assert_eq!(cursor(&a), 10, "the end of the first line");
+    a.edit(EditKey::Home);
+    for _ in 0..3 {
+        a.edit(EditKey::Right);
+    }
+    assert!(a.vertical(true, false));
+    assert_eq!(cursor(&a), 14, "the same column a line down");
+    assert!(a.vertical(true, false));
+    assert_eq!(cursor(&a), 21, "past the last line, the end");
+    a.vertical(false, false);
+    a.vertical(false, false);
+    assert_eq!(cursor(&a), 0, "past the first, the start");
+    a.edit(EditKey::End);
+    assert!(a.newline());
+    assert_eq!(a.input.text(), "first line\n\nfirst more");
+    assert!(a.vertical(true, true), "Shift+Down");
+    assert!(a.input.has_selection());
+}
+
+/// A paste into a text area keeps its line breaks; into a field it joins
+/// them.
+#[test]
+fn a_paste_keeps_its_lines_in_a_text_area_only() {
+    use crate::runtime::platform::clipboard::{ClipboardProvider, LocalClipboard};
+    let mut board = LocalClipboard::new();
+    board.set_text("one\r\ntwo\tthree\n");
+    let mut a = area();
+    a.input.focus();
+    assert!(a.input.paste(&mut board));
+    assert_eq!(a.input.text(), "one\ntwo three\n");
+    let mut f = TextField::new("x");
+    f.focus();
+    f.paste(&mut board);
+    assert_eq!(f.text(), "one two three");
+}
+
+/// A focused area longer than its box scrolls its lines so the caret
+/// stays in the text box, and a long word wraps inside it, from narrow
+/// to wide.
+#[test]
+fn the_caret_stays_in_the_box_from_narrow_to_wide() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        for w in (120..=600).step_by(8).map(|w| w as f32) {
+            let text = format!("{LONG}\n{LONG}\n{LONG}");
+            let mut a = area()
+                .label("Message")
+                .helper("Markdown is fine.")
+                .with_text(&text);
+            a.input.focus();
+            let bounds = Rect::new(10.0, 10.0, w, 0.0);
+            let l = a.layout(bounds, &theme);
+            assert!(l.input.right() <= bounds.right() + 0.01 && l.text.right() <= l.input.right());
+            assert!(
+                l.message.unwrap().y >= l.input.bottom(),
+                "{w}: the message under"
+            );
+            let nodes = nodes_of(|c| a.render(c, bounds, &theme));
+            let ime = a.ime_area(bounds, &theme);
+            assert!(
+                ime.y >= l.text.y - 0.01 && ime.bottom() <= l.text.bottom() + 0.01,
+                "{w}: the caret out of the box"
+            );
+            assert!(
+                ime.x <= l.text.right() + 0.5,
+                "{w}: past the box, {ime:?} in {:?}",
+                l.text
+            );
+            let clipped = nodes
+                .iter()
+                .any(|n| matches!(n, SceneNode::PushClip { .. }));
+            assert!(clipped);
+        }
+    }
+}
+
+/// A press puts the caret on the line pressed; a text area projects as
+/// a multiline text field named by its label.
+#[test]
+fn a_press_places_the_caret_and_the_area_projects_multiline() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let mut a = area().label("Notes").with_text("ab\ncd\nef");
+    let l = a.layout(bounds, &theme);
+    let lh = theme.form.input.text.line_height;
+    let (x, y) = (l.text.x + 200.0, l.text.y + lh * 1.5);
+    assert!(
+        a.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert_eq!(
+        a.input.input.buffer.cursor(),
+        5,
+        "the end of the second line"
+    );
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    a.project(&mut b, a.sem_id().unwrap(), Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(a.sem_id().unwrap()).unwrap();
+    assert_eq!((node.role, node.label.as_str()), (Role::TextInput, "Notes"));
+    assert_eq!(node.state.get("multiline"), Some(&Value::Bool(true)));
+    assert_eq!(node.state.get("text"), Some(&Value::from("ab\ncd\nef")));
+}
+
+// Select recipe and Combobox
+
+/// The core select is the kit's (`h-9`, a flat panel, rows `p-2`, no
+/// dot); every other theme keeps the glass select it drew: one `Md`
+/// control tall, the glass popover, a dot on the chosen row.
+#[test]
+fn the_core_select_is_the_kit_and_the_others_keep_their_glass() {
+    use crate::styling::theme::ControlSize;
+    use crate::widgets::form::tokens::PanelBody;
+    let core = Theme::hoff_core();
+    let s = &core.form.select;
+    assert_eq!(
+        (s.height, s.radius, s.panel.row_h, s.panel.pad),
+        (36.0, 10.0, 32.0, 4.0)
+    );
+    assert!(matches!(s.panel.body, PanelBody::Flat(_)));
+    assert_eq!(s.panel.marker, None);
+    assert_eq!(
+        core.form.combo.height, 36.0,
+        "the combobox's box is the control"
+    );
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        let s = &theme.form.select;
+        assert_eq!(s.height, theme.control.height(ControlSize::Md));
+        assert_eq!(s.panel.body, PanelBody::Glass);
+        assert_eq!(s.panel.marker, Some(theme.spacing.sm));
+        assert_eq!(s.panel.max_h, theme.size.dropdown_max_h);
+    }
+}
+
+fn frameworks() -> crate::widgets::form::combobox::Combobox {
+    crate::widgets::form::combobox::Combobox::new(
+        ["Next.js", "SvelteKit", "Nuxt", "Remix", "Astro"],
+        "Select framework...",
+    )
+    .sem(SemId::parse("s.combo").unwrap())
+}
+
+/// Focused, the text is selected whole and the list opens on `open` or
+/// a key with every option; typing opens it and filters (any case), Down
+/// and Up move over the matches, Enter picks and closes; blurred, the
+/// box shows the chosen option.
+#[test]
+fn a_combobox_filters_highlights_and_picks() {
+    let mut c = frameworks();
+    c.set_focused(true);
+    assert!(!c.is_open(), "focus alone does not open it");
+    assert!(c.nav(true) && c.is_open(), "Down opens it");
+    c.set_focused(false);
+    c.open();
+    assert!(c.is_open());
+    assert_eq!(c.matches().len(), 5);
+    assert!(c.input.insert("X"));
+    assert_eq!(c.matches(), [0, 2, 3], "Next.js, Nuxt, Remix");
+    assert_eq!(c.highlighted(), Some(0));
+    assert!(c.nav(true) && c.nav(true) && c.nav(true));
+    assert_eq!(c.highlighted(), Some(3), "stops at the last match");
+    assert!(c.nav(false));
+    assert!(c.enter());
+    assert_eq!((c.selected_label(), c.is_open()), (Some("Nuxt"), false));
+    assert_eq!(c.input.text(), "Nuxt");
+    c.open();
+    assert_eq!(c.matches().len(), 5, "the chosen label filters nothing");
+    c.input.insert("qq");
+    assert!(c.matches().is_empty());
+    assert!(c.enter() && c.is_open(), "nothing to pick: it stays open");
+    c.set_focused(false);
+    assert_eq!(c.input.text(), "Nuxt", "back to the chosen");
+    let mut off = frameworks().disabled(true);
+    off.set_focused(true);
+    assert!(!off.is_open() && !off.pick(1));
+}
+
+/// The open list sits under the control, a row per match, and a press on
+/// a row picks it; the projection is a select with its query and, open,
+/// its matches as options out of the Tab order.
+#[test]
+fn a_combobox_list_picks_on_a_press_and_projects_its_matches() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 176.0, 36.0);
+    let mut c = frameworks();
+    let (x, y) = bounds.center();
+    assert!(
+        c.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    c.input.insert("r");
+    let dd = c.dropdown_rect(bounds, &theme).expect("open");
+    assert!(dd.y >= bounds.bottom());
+    let p = &theme.form.select.panel;
+    assert_eq!(dd.h, p.pad * 2.0 + p.row_h * 2.0, "Remix, Astro");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    c.project(&mut b, c.sem_id().unwrap(), "Framework", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(c.sem_id().unwrap()).unwrap();
+    assert_eq!(node.role, Role::Select);
+    assert_eq!(node.state.get("query"), Some(&Value::from("r")));
+    assert_eq!(node.state.get("expanded"), Some(&Value::Bool(true)));
+    let astro = snap.get(&SemId::parse("s.combo[4]").unwrap()).unwrap();
+    assert!(astro.focusable && astro.role == Role::Option);
+    assert!(
+        snap.get(&SemId::parse("s.combo[0]").unwrap()).is_none(),
+        "not a match"
+    );
+    let (rx, ry) = (dd.x + 10.0, dd.y + p.pad + p.row_h * 1.5);
+    let r = c.handle_event(&WidgetEvent::MouseDown { x: rx, y: ry }, bounds, &theme);
+    assert!(r.clicked);
+    assert_eq!(c.selected_label(), Some("Astro"));
+}
+
+/// A palette's rows never draw out of its list: every row the draw binds
+/// is inside the list's strip, in every theme, as the list scrolls.
+#[test]
+fn a_palette_s_rows_stay_in_its_list() {
+    use crate::widgets::form::command::Command;
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let cmd = Command::new("Type a command...")
+            .group(
+                "File",
+                [
+                    ("New file", Some("file"), Some("⌘ N")),
+                    ("Open folder", None, None),
+                    ("Save", None, None),
+                ],
+            )
+            .group(
+                "Go to",
+                [
+                    ("Home", None, None),
+                    ("Settings", None, None),
+                    ("Terminal", None, None),
+                ],
+            )
+            .sem(SemId::parse("s.cmd").unwrap());
+        let bounds = Rect::new(0.0, 0.0, 288.0, 0.0);
+        let l = cmd.layout(bounds, &theme);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        cmd.render(&mut c, bounds, &theme);
+        let p = &theme.form.select.panel;
+        let strip = Rect::new(l.list.x, l.list.y + p.pad, l.list.w, l.list.h - p.pad * 2.0);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let clip = nodes.iter().find_map(|n| match *n {
+            SceneNode::PushClip { x, y, w, h } => Some(Rect::new(x, y, w, h)),
+            _ => None,
+        });
+        assert_eq!(
+            clip,
+            Some(strip),
+            "the rows are clipped to the list's strip"
+        );
+    }
+}
+
+// NewField
+
+fn username() -> crate::widgets::form::new_field::NewField {
+    crate::widgets::form::new_field::NewField::new("sophie", "Enter new username")
+        .sem(SemId::parse("s.user").unwrap())
+}
+
+/// A press edits: the box out, empty and focused, the value kept; Enter
+/// (save) keeps what was typed, an empty save keeps the value, cancel
+/// leaves it; a press off it saves.
+#[test]
+fn a_new_field_edits_in_place_and_saves_or_keeps_its_value() {
+    let theme = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let mut n = username();
+    let l = n.layout(bounds, &theme);
+    assert_eq!(l.whole.h, 20.0, "h-5");
+    let (x, y) = l.whole.center();
+    assert!(
+        n.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
+            .clicked
+    );
+    assert!(n.is_editing() && n.input.is_focused() && n.input.is_empty());
+    assert!(n.layout(bounds, &theme).text.w >= 120.0, "w-30");
+    assert!(n.save());
+    assert_eq!(n.value(), "sophie", "nothing typed: the value stays");
+    n.edit();
+    n.input.insert("ada");
+    assert!(n.cancel());
+    assert_eq!(n.value(), "sophie");
+    n.edit();
+    n.input.insert("ada");
+    let r = n.handle_event(
+        &WidgetEvent::MouseDown { x: 290.0, y: 200.0 },
+        bounds,
+        &theme,
+    );
+    assert!(r.changed && !n.is_editing());
+    assert_eq!(n.value(), "ada");
+    let mut off = username().disabled(true);
+    assert!(!off.edit() && !off.set_value("x"));
+}
+
+/// It projects as a text field whose text is the value saved, never the
+/// draft, with the pencil at rest and the confirm while editing; the
+/// confirm is green with something to save.
+#[test]
+fn a_new_field_projects_its_value_and_its_icon() {
+    let theme = Theme::hoff_core();
+    let mut n = username();
+    n.edit();
+    n.input.insert("draft");
+    let parent = SemId::parse("s").unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(parent.clone(), Role::Group, "s");
+    n.project(&mut b, n.sem_id().unwrap(), "Username", Some(&parent));
+    let snap = b.finish().expect("a valid projection");
+    let node = snap.get(n.sem_id().unwrap()).unwrap();
+    assert_eq!(node.state.get("text"), Some(&Value::from("sophie")));
+    assert_eq!(node.state.get("editing"), Some(&Value::Bool(true)));
+    assert!(snap.get(&SemId::parse("s.user.save").unwrap()).is_some());
+    let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
+    let green = |n: &crate::widgets::form::new_field::NewField| {
+        let nodes = nodes_of(|c| n.render(c, bounds, &theme));
+        let drawn = crate::widgets::icons::icon("circle-check", 16.0, theme.form.edit.confirm.0);
+        let want = match drawn {
+            Some(SceneNode::Path { data }) => data.vertices[0].color,
+            _ => unreachable!(),
+        };
+        nodes
+            .iter()
+            .any(|x| matches!(x, SceneNode::Path { data } if data.vertices[0].color == want))
+    };
+    assert!(green(&n));
+    n.input.set_text("");
+    assert!(!green(&n), "nothing to save: gray");
+    assert!(n.set_value("grace"));
+    assert_eq!((n.value(), n.is_editing()), ("grace", false));
 }

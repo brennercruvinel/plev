@@ -1,5 +1,9 @@
-//! Input page: three single-line [`engine::widgets::form::TextField`]s plus the
-//! live value preview line. The page owns the keyboard focus: a click in
+//! Input page: three single-line [`engine::widgets::form::TextField`]s,
+//! the kit's input box (`components/Field/index.tsx:66`) bare, and the
+//! live value they make, as the kit's showcase draws a component (groups
+//! with a title and a rule, cards behind a chip naming what each shows:
+//! the states, the clipboard, the input method). The page owns the
+//! keyboard focus: a click in
 //! a field places the caret, Tab reaches the fields (the view's keyboard,
 //! in the order of the projection), Escape blurs; the characters and
 //! editing keys the shell forwards go to the focused one.
@@ -10,12 +14,14 @@
 //! focus a reader asks for is the page's own (the caret).
 
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
-use engine::drawing::compositor::Compositor;
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::{After, Component, EditKey, child_id, root_id, text, under};
+use super::field::spec::FIELD_W;
+use super::{After, Component, EditKey, child_id, root_id, showcase, under};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
@@ -25,6 +31,16 @@ pub const COUNT: usize = 3;
 
 /// What each field asks for: its placeholder and its name.
 const LABELS: [&str; COUNT] = ["Full name", "Email address", "Project codename"];
+
+/// What each field's card shows.
+const CHIPS: [&str; COUNT] = [
+    "Default, Click on, Focus, Hover, Typing",
+    "Select, Copy, Cut, Paste",
+    "Input method, Right to left",
+];
+
+/// The groups: the fields, a card each; the live value.
+const GROUPS: [(&str, usize); 2] = [("Input", COUNT), ("Live value", 1)];
 
 pub struct InputPage {
     root: Option<SemId>,
@@ -53,20 +69,35 @@ impl InputPage {
         self.fields.iter().position(|f| f.sem_id() == Some(id))
     }
 
-    /// Field rects stacked under the content's top-left, `field_max_w`
-    /// wide at most, one field height each with the `md` spacing between.
-    pub fn rects(content: Rect, theme: &Theme) -> [Rect; COUNT] {
-        let h = TextField::height(theme);
-        let gap = theme.spacing.md;
-        let w = content.w.min(theme.size.readable_max_w / 2.0);
-        std::array::from_fn(|i| Rect::new(content.x, content.y + i as f32 * (h + gap), w, h))
+    /// The showcase's groups: per group the title's y, the cards and the
+    /// rule's y, each card as tall as what it shows needs.
+    fn grid(content: Rect, theme: &Theme) -> Vec<showcase::GroupLayout> {
+        let preview = theme.typography.caption_sm().line_height;
+        let heights = [TextField::height(theme), preview];
+        let wanted = GROUPS
+            .iter()
+            .zip(heights)
+            .map(|((_, n), h)| (*n, vec![showcase::card_height(h, theme); *n]));
+        showcase::layout_sized(wanted, content, theme)
     }
 
-    /// Bottom edge of the page (fields plus the preview line).
+    /// Each field centered in its card, `w-60` wide at most.
+    pub fn rects(content: Rect, theme: &Theme) -> [Rect; COUNT] {
+        let grid = Self::grid(content, theme);
+        let cards = grid.first().map(|g| g.cards.clone()).unwrap_or_default();
+        let side = theme.spacing.lg;
+        std::array::from_fn(|i| {
+            let card = cards.get(i).copied().unwrap_or(content);
+            let w = FIELD_W.min((card.w - side * 2.0).max(0.0));
+            showcase::centered((w, TextField::height(theme)), card)
+        })
+    }
+
+    /// Bottom edge of the page: the last group's rule.
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        let rects = Self::rects(content, theme);
-        let last = rects[COUNT - 1];
-        last.y + last.h + theme.spacing.sm + theme.typography.caption_sm().line_height - content.y
+        Self::grid(content, theme)
+            .last()
+            .map_or(0.0, |g| g.rule_y - content.y)
     }
 
     pub fn focused(&self) -> Option<usize> {
@@ -144,21 +175,40 @@ impl InputPage {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+        let grid = Self::grid(content, theme);
         let rects = Self::rects(content, theme);
-        for (field, rect) in self.fields.iter().zip(rects) {
-            field.render(c, rect, theme);
+        for (i, (g, (title, _))) in grid.iter().zip(GROUPS).enumerate() {
+            showcase::title(c, title, content, g.title_y, theme);
+            if i + 1 < GROUPS.len() {
+                showcase::rule(c, content, g.rule_y, theme);
+            }
         }
-        let last = rects[COUNT - 1];
-        let style = theme.typography.caption_sm();
-        text(
-            c,
-            &self.preview(),
-            style.font_size,
-            style.font_weight,
-            (last.x, last.y + last.h + theme.spacing.sm),
-            theme.colors.text_dim.0,
-            theme,
-        );
+        if let Some(fields) = grid.first() {
+            for ((card, chip), (field, rect)) in fields
+                .cards
+                .iter()
+                .zip(CHIPS)
+                .zip(self.fields.iter().zip(rects))
+            {
+                showcase::card(c, *card, chip, theme);
+                field.render(c, rect, theme);
+            }
+        }
+        // The live value, centered in its card, cut to it.
+        if let Some(card) = grid.get(1).and_then(|g| g.cards.first()) {
+            showcase::card(c, *card, "Value", theme);
+            let style = theme.typography.caption_sm();
+            let room = (card.w - theme.spacing.lg * 2.0).max(0.0);
+            let shown = TextMeasurer::truncate_to_width(&self.preview(), &style, room);
+            let (w, h) = TextMeasurer::measure_styled(&shown, &style, None);
+            let at = showcase::centered((w.ceil(), h), *card);
+            c.push(SceneNode::Text {
+                key: TextNodeKey::from_style(&shown, &style, None),
+                x: at.x,
+                y: at.y,
+                color: theme.colors.text_dim.0,
+            });
+        }
     }
 }
 

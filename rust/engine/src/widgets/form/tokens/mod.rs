@@ -11,6 +11,12 @@
 //! ([`FormTokens::derive`]): the text field each of them drew before the
 //! kit, so a theme that is not the core looks as it did.
 
+mod edit;
+mod select;
+
+pub use edit::EditTokens;
+pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
+
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypographyScale};
@@ -131,6 +137,10 @@ pub enum Look {
     Field,
     Search,
     Inset,
+    /// A combobox's filter: the select's control as a text box.
+    Combo,
+    /// An inline edit's box: the text alone ([`EditTokens::bare`]).
+    Bare,
 }
 
 /// What an input group puts at the ends of its box
@@ -160,6 +170,29 @@ pub struct GroupAddons {
     /// from the text typed beside it.
     pub text_color: Color,
     pub text_edge: f32,
+    /// The least width of a select at the end (Invite :26 `w-25.5`).
+    pub select_w: f32,
+}
+
+/// A one-time code (`super::otp`): its cells are the Field's input box,
+/// square, side by side; these are the spaces between them.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct OtpTokens {
+    /// Between two cells of a group.
+    pub gap: f32,
+    /// The minus between two groups, with a gap on either side of it.
+    pub separator: f32,
+}
+
+/// A text area (`super::textarea`): the Field's box, taller, its text
+/// inset from the top and the bottom as well.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AreaTokens {
+    /// Between the text and the box's top and bottom (`py-4`).
+    pub pad_y: f32,
+    /// The lines the box shows at rest (`h-20`: 80 less the padding is
+    /// three 16px lines).
+    pub rows: usize,
 }
 
 /// The form slot of the theme.
@@ -174,6 +207,16 @@ pub struct FormTokens {
     pub adorn: Adornments,
     pub group: GroupAddons,
     pub field: FieldChrome,
+    pub otp: OtpTokens,
+    pub area: AreaTokens,
+    /// The select and its options panel (`select.rs`).
+    pub select: SelectRecipe,
+    /// A combobox's filter box, the select's control as a text box
+    /// ([`SelectRecipe::as_input`]).
+    pub combo: InputRecipe,
+    /// The inline edit (`edit.rs`), and its bare box.
+    pub edit: EditTokens,
+    pub bare: InputRecipe,
 }
 
 fn hex(v: u32) -> Color {
@@ -219,6 +262,8 @@ impl FormTokens {
             Look::Field => &self.input,
             Look::Search => &self.search,
             Look::Inset => &self.inset,
+            Look::Combo => &self.combo,
+            Look::Bare => &self.bare,
         }
     }
 
@@ -362,6 +407,7 @@ impl FormTokens {
             // far from the edge as its icon button's text is (48 - 36).
             text_color: gray,
             text_edge: 12.0,
+            select_w: 102.0,
         };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
@@ -386,6 +432,22 @@ impl FormTokens {
             helper_color: gray,
         };
 
+        // Not in the kit (it has no code input): the Field's own spaces,
+        // the label's `mb-2` between the cells and its icon's `size-4`
+        // for the minus.
+        let otp = OtpTokens {
+            gap: field.label_gap,
+            separator: adorn.lead_icon,
+        };
+        // :55, the textarea: the input's classes with `h-20 py-4`.
+        let area = AreaTokens {
+            pad_y: 16.0,
+            rows: 3,
+        };
+        let select = SelectRecipe::hoff_core();
+        let combo = select.as_input(&input);
+        let edit = EditTokens::hoff_core();
+        let bare = edit.bare(&input);
         Self {
             label,
             input,
@@ -394,6 +456,12 @@ impl FormTokens {
             adorn,
             group,
             field,
+            otp,
+            area,
+            combo,
+            select,
+            edit,
+            bare,
         }
     }
 
@@ -457,6 +525,8 @@ impl FormTokens {
             hint_edge: theme.spacing.sm,
             text_color: c.text_mid,
             text_edge: theme.spacing.md,
+            // As wide as its options measure.
+            select_w: 0.0,
         };
         let label = LabelRecipe {
             text: t.caption_sm(),
@@ -476,6 +546,20 @@ impl FormTokens {
             error_color: c.danger,
             helper_color: c.text_mid,
         };
+        let otp = OtpTokens {
+            gap: field.label_gap,
+            separator: adorn.lead_icon,
+        };
+        // The text centered in one box's height, as the field draws it,
+        // and three lines at rest, as the kit's.
+        let area = AreaTokens {
+            pad_y: ((input.height - input.text.line_height) / 2.0).max(0.0),
+            rows: 3,
+        };
+        let select = SelectRecipe::derive(theme);
+        let combo = select.as_input(&input);
+        let edit = EditTokens::derive(theme);
+        let bare = edit.bare(&input);
         Self {
             label,
             search: input.clone(),
@@ -484,6 +568,12 @@ impl FormTokens {
             adorn,
             group,
             field,
+            otp,
+            area,
+            combo,
+            select,
+            edit,
+            bare,
         }
     }
 }

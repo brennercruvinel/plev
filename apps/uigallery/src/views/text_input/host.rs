@@ -40,6 +40,20 @@ pub(in crate::views) trait TextHost {
 
     /// Escape blurs what has the focus. `false` when nothing had it.
     fn handle_escape(&mut self) -> bool;
+
+    /// Enter, before the view's focus walk presses with it: a focused
+    /// text area breaks the line. `false` (the default) leaves it to the
+    /// walk.
+    fn handle_enter(&mut self) -> bool {
+        false
+    }
+
+    /// Up (`down` false) or Down, before the view's focus walk: a focused
+    /// text area moves a line. `false` (the default) leaves it to the
+    /// walk.
+    fn handle_nav(&mut self, _down: bool) -> bool {
+        false
+    }
 }
 
 /// The table: one line per pane whose page is a [`TextHost`].
@@ -85,4 +99,8 @@ text_hosts! {
     Field => field,
     Label => label,
     InputGroup => input_group,
+    InputOtp => input_otp,
+    Textarea => textarea,
+    Combobox => combobox,
+    Command => command,
 }

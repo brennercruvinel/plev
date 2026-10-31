@@ -14,6 +14,7 @@ pub mod tokens;
 
 pub use button_group::{ButtonGroup, GroupItem};
 pub use calendar::{Calendar, CalendarLayout, Date};
+pub use date_picker::{DatePicker, DatePickerLayout};
 pub use radio_group::{RadioGroup, RadioLayout, paint_radio};
 pub use toggle::Toggle;
 pub use toggle_group::{SegmentSize, ToggleGroup};

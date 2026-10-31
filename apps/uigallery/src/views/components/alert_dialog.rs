@@ -16,11 +16,11 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
-use engine::styling::theme::{Intent, Theme};
+use engine::styling::theme::Theme;
 use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Modal, Rect, WidgetEvent};
 
 use super::showcase::{self, CARD_H, GroupLayout};
-use super::{After, Component, child_id, root_id, under};
+use super::{After, Component, child_id, dialog, root_id, under};
 
 const LIVE_CHIP: &str = "Default, Hover, Press, Focus";
 const GROUPS: [&str; 2] = ["Live", "States"];
@@ -57,23 +57,12 @@ impl AlertDialogPage {
         let shown = vec![
             Shown {
                 chip: "Destructive",
-                modal: Modal::new(
-                    "Delete this file?",
-                    "This action cannot be undone. Blinky is a bit nervous about it too.",
-                    "Yes, delete it",
-                    "Cancel",
-                )
-                .intent(Intent::Destructive),
+                modal: dialog::destructive(),
                 answers: ["Yes, delete it", "Cancel"],
             },
             Shown {
                 chip: "Neutral",
-                modal: Modal::new(
-                    "Apply settings?",
-                    "Your workspace will reload to apply the new configuration.",
-                    "Apply",
-                    "Cancel",
-                ),
+                modal: dialog::plain(),
                 answers: ["Apply", "Cancel"],
             },
         ];
@@ -93,24 +82,18 @@ impl AlertDialogPage {
         let card_w = showcase::card_width(2, content, theme);
         let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
         let probe = Rect::new(0.0, 0.0, body_w, f32::MAX / 4.0);
-        let tallest = self
+        // Each card as tall as its sheet and the art that rises above it;
+        // a row is as tall as its tallest card.
+        let heights: Vec<f32> = self
             .shown
             .iter()
-            .map(|s| s.modal.dialog_rect_in(theme, probe).h)
-            .fold(0.0, f32::max);
-        let groups = [
-            (
-                1,
-                1,
-                showcase::card_height(self.button.preferred_size(theme).1, theme),
-            ),
-            (2, self.shown.len(), CARD_H.max(frame + tallest)),
-        ];
-        showcase::layout_sized(
-            groups.map(|(span, n, h)| (span, vec![h; n])),
-            content,
-            theme,
-        )
+            .map(|s| {
+                let d = s.modal.dialog_rect_in(theme, probe);
+                CARD_H.max(frame + d.h + s.modal.overhang(theme, d.w))
+            })
+            .collect();
+        let live = showcase::card_height(self.button.preferred_size(theme).1, theme);
+        showcase::layout_sized([(1, vec![live]), (2, heights)], content, theme)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
@@ -132,7 +115,7 @@ impl AlertDialogPage {
             .map(|(s, card)| {
                 let body = showcase::body(*card, theme);
                 let mut d = s.modal.dialog_rect_in(theme, body);
-                d.y = body.y;
+                d.y = body.y + s.modal.overhang(theme, d.w);
                 d
             })
             .collect()

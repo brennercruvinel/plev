@@ -14,7 +14,7 @@
 //! click.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::Compositor;
+use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
@@ -136,19 +136,34 @@ impl FormPage {
     }
 
     fn focused_text(&mut self) -> Option<&mut TextField> {
+        self.focused_spec()?.text_mut()
+    }
+
+    /// The widget whose text box has the caret.
+    fn focused_spec(&mut self) -> Option<&mut Spec> {
         let at = self.focused()?;
-        self.spec_mut(at)?.text_mut()
+        self.spec_mut(at)
     }
 
     /// The caret goes to the box of `at` (one not disabled), or to none.
     pub fn set_focused(&mut self, at: Option<(usize, usize)>) {
         for (g, group) in self.groups.iter_mut().enumerate() {
             for (c, card) in group.cards.iter_mut().enumerate() {
-                if let Some(t) = card.spec.text_mut() {
-                    t.set_focused(at == Some((g, c)));
+                let on = at == Some((g, c));
+                if card.spec.text().is_some_and(|t| t.is_focused() != on) {
+                    card.spec.set_focused(on);
                 }
             }
         }
+    }
+
+    /// Blur the focused field and let go of a part a reader focused.
+    /// `false` when nothing was.
+    fn blur_all(&mut self) -> bool {
+        let had = self.focused().is_some() || self.part_focused();
+        self.set_focused(None);
+        self.clear_part_focus();
+        had
     }
 
     /// Whether a reader's focus is on a part other than a box.
@@ -174,7 +189,7 @@ impl FormPage {
                 let card_w = showcase::card_width(g.columns, content, theme);
                 g.cards
                     .iter()
-                    .map(|c| c.spec.size(card_w, side, theme))
+                    .map(|c| c.spec.size_in(card_w, side, theme))
                     .collect()
             })
             .collect();
@@ -228,6 +243,16 @@ impl FormPage {
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
+        // What floats over the page (an open list) has the pointer first,
+        // and alone where it is.
+        let (x, y) = event.pos();
+        for (group, laid) in self.groups.iter_mut().zip(&layout) {
+            for (card, (_, rect)) in group.cards.iter_mut().zip(&laid.cards) {
+                if card.spec.over_overlay(x, y, *rect, theme) {
+                    return result.merge(card.spec.handle_event(event, *rect, theme));
+                }
+            }
+        }
         for (group, laid) in self.groups.iter_mut().zip(&layout) {
             for (card, (_, rect)) in group.cards.iter_mut().zip(&laid.cards) {
                 result = result.merge(card.spec.handle_event(event, *rect, theme));
@@ -241,8 +266,14 @@ impl FormPage {
         self.focused_text().map_or(Wake::idle(), |t| t.wake(dt))
     }
 
-    pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+    /// Draws the page; what floats over it (an open list) on `overlay`.
+    pub fn render(&self, c: &mut Compositor, overlay: LayerId, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
+        for (group, laid) in self.groups.iter().zip(&layout) {
+            for (card, (_, widget)) in group.cards.iter().zip(&laid.cards) {
+                card.spec.render_overlay(c, overlay, *widget, theme);
+            }
+        }
         let last = self.groups.len().saturating_sub(1);
         for (i, (group, laid)) in self.groups.iter().zip(&layout).enumerate() {
             showcase::title(c, group.title, content, laid.title_y, theme);
@@ -267,7 +298,15 @@ impl TextHost for FormPage {
         if key == EditKey::Tab {
             return false;
         }
-        self.focused_text().is_some_and(|t| t.edit(key.into()))
+        self.focused_spec().is_some_and(|s| s.edit(key.into()))
+    }
+
+    fn handle_enter(&mut self) -> bool {
+        self.focused_spec().is_some_and(|s| s.enter())
+    }
+
+    fn handle_nav(&mut self, down: bool) -> bool {
+        self.focused_spec().is_some_and(|s| s.nav(down))
     }
 
     fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
@@ -301,7 +340,7 @@ impl TextHost for FormPage {
         };
         let selected = self
             .spec(at)
-            .and_then(Spec::text)
+            .and_then(|s| s.text())
             .is_some_and(|t| t.has_selection());
         if self.focused() == Some(at) && selected {
             return true;
@@ -329,10 +368,10 @@ impl TextHost for FormPage {
     /// Escape blurs the focused field, or lets go of the eye or the link
     /// a reader focused. `false` when nothing was.
     fn handle_escape(&mut self) -> bool {
-        let had = self.focused().is_some() || self.part_focused();
-        self.set_focused(None);
-        self.clear_part_focus();
-        had
+        if self.focused_spec().is_some_and(|s| s.escape()) {
+            return true;
+        }
+        self.blur_all()
     }
 }
 
@@ -385,7 +424,7 @@ impl Component for FormPage {
             return false;
         }
         let hit = self.at(id);
-        self.handle_escape();
+        self.blur_all();
         match hit {
             Some((at, Part::Box)) => self.set_focused(Some(at)),
             Some((at, part)) => {
@@ -399,6 +438,6 @@ impl Component for FormPage {
     }
 
     fn blur(&mut self) -> bool {
-        self.handle_escape()
+        self.blur_all()
     }
 }

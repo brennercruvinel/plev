@@ -13,6 +13,7 @@
 //! a semantic projection.
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{Intent, Theme};
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
@@ -81,6 +82,8 @@ pub struct Modal {
     confirm: Button,
     cancel: Button,
     sem: Option<SemId>,
+    /// An illustration over the sheet's top (the kit's `DeleteFile`).
+    art: Option<ImageHandle>,
 }
 
 impl Modal {
@@ -97,6 +100,41 @@ impl Modal {
             confirm: Button::new(confirm_label).variant(ButtonVariant::Secondary),
             cancel: Button::new(cancel_label).variant(ButtonVariant::Primary),
             sem: None,
+            art: None,
+        }
+    }
+
+    /// With `image` over the sheet's top, as wide as the sheet: it rises
+    /// above the sheet and the text starts under it
+    /// (`theme.overlay.modal.art_bottom`, `art_pad_top`).
+    pub fn art(mut self, image: ImageHandle) -> Self {
+        self.art = Some(image);
+        self
+    }
+
+    /// The art's height at a sheet `w` wide, keeping its aspect.
+    fn art_h(&self, w: f32) -> f32 {
+        self.art
+            .filter(|a| a.width > 0)
+            .map_or(0.0, |a| w * a.height as f32 / a.width as f32)
+    }
+
+    /// How far the art rises above a sheet `w` wide: what a page leaves
+    /// clear above the sheet.
+    pub fn overhang(&self, theme: &Theme, w: f32) -> f32 {
+        if self.art.is_none() {
+            return 0.0;
+        }
+        (self.art_h(w) - theme.overlay.modal.art_bottom).max(0.0)
+    }
+
+    /// The text's top padding: under the art, or the sheet's own.
+    fn top_pad(&self, theme: &Theme) -> f32 {
+        let m = &theme.overlay.modal;
+        if self.art.is_some() {
+            m.art_pad_top
+        } else {
+            m.pad
         }
     }
 
@@ -203,7 +241,10 @@ impl Modal {
     fn height(&self, theme: &Theme, w: f32) -> f32 {
         let m = &theme.overlay.modal;
         let btn_h = self.confirm.size.height(theme);
-        let text = m.pad + self.title_height(theme, w) + m.title_gap + self.body_height(theme, w);
+        let text = self.top_pad(theme)
+            + self.title_height(theme, w)
+            + m.title_gap
+            + self.body_height(theme, w);
         if Self::footed(theme) {
             text + m.pad + m.border_w + m.pad + btn_h + m.pad
         } else {
@@ -221,8 +262,10 @@ impl Modal {
     pub fn dialog_rect_in(&self, theme: &Theme, bounds: Rect) -> Rect {
         let w = Self::width(theme, bounds.w);
         let h = self.height(theme, w);
+        // The art above the sheet is part of what is centered.
+        let over = self.overhang(theme, w);
         let x = bounds.x + ((bounds.w - w) / 2.0).max(0.0);
-        let y = bounds.y + ((bounds.h - h) / 2.0).max(0.0);
+        let y = bounds.y + ((bounds.h - h - over) / 2.0).max(0.0) + over;
         Rect::new(x, y, w, h)
     }
 
@@ -400,11 +443,28 @@ impl Modal {
             );
         }
 
+        // The art over the sheet's top, under the text.
+        if let Some(image) = self.art {
+            let h = self.art_h(dialog.w);
+            compositor.push_to_layer(
+                layer,
+                SceneNode::Image {
+                    x: dialog.x,
+                    y: dialog.y + m.art_bottom - h,
+                    w: dialog.w,
+                    h,
+                    image,
+                    corner_radius: 0.0,
+                },
+            );
+        }
+
         let (title, body) = (title_style(theme), body_style(theme));
         let text_w = dialog.w - m.pad * 2.0;
-        let body_y = dialog.y + m.pad + self.title_height(theme, dialog.w) + m.title_gap;
+        let top = dialog.y + self.top_pad(theme);
+        let body_y = top + self.title_height(theme, dialog.w) + m.title_gap;
         for (text, style, y, color) in [
-            (&self.title, title, dialog.y + m.pad, m.title_color),
+            (&self.title, title, top, m.title_color),
             (&self.body, body, body_y, m.body_color),
         ] {
             if !m.centered {
@@ -492,5 +552,46 @@ mod tests {
         for (x, (line, w)) in xs.iter().zip(&lines) {
             assert!((x + w / 2.0 - middle).abs() < 0.01, "{line} is centered");
         }
+    }
+
+    /// With art the sheet's text starts under it, the art rises above the
+    /// sheet by its height less `art_bottom`, and the sheet with its art
+    /// is what is centered.
+    #[test]
+    fn the_art_rises_above_the_sheet_and_is_centered_with_it() {
+        let theme = Theme::hoff_core();
+        let m = &theme.overlay.modal;
+        let pixels = vec![255u8; 8 * 8 * 4];
+        let Ok(image) = crate::drawing::gpu::image::load_image_rgba(8, 8, pixels) else {
+            panic!("a square image loads");
+        };
+        let plain = Modal::new("Delete this file?", "Gone.", "Delete", "Cancel");
+        let art = plain.clone().art(image);
+        let bounds = Rect::new(0.0, 0.0, 1280.0, 1000.0);
+        let d = art.dialog_rect_in(&theme, bounds);
+        let over = art.overhang(&theme, d.w);
+        assert_eq!(
+            over,
+            d.w - m.art_bottom,
+            "a square art, as wide as the sheet"
+        );
+        assert_eq!(plain.overhang(&theme, d.w), 0.0);
+        let grew = art.height(&theme, d.w) - plain.height(&theme, d.w);
+        assert_eq!(grew, m.art_pad_top - m.pad, "the text starts under it");
+        let above = d.y - over - bounds.y;
+        let below = bounds.bottom() - d.bottom();
+        assert!((above - below).abs() < 0.01, "centered with its art");
+        let mut c = Compositor::new();
+        c.begin_frame();
+        art.render_in(&mut c, LayerId::DEFAULT, &theme, d);
+        let drawn = c
+            .layer(LayerId::DEFAULT)
+            .map(|l| l.nodes().to_vec())
+            .unwrap_or_default();
+        let at = drawn.iter().find_map(|n| match n {
+            SceneNode::Image { y, h, .. } => Some((*y, *h)),
+            _ => None,
+        });
+        assert_eq!(at, Some((d.y + m.art_bottom - d.w, d.w)));
     }
 }

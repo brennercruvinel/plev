@@ -15,9 +15,13 @@ use super::super::foundations::{effects, icons, theme, typography};
 // task-104: each front imports its pages under its anchor, a group of its
 // own (the blank lines keep rustfmt from sorting one front into another)
 // task-104 front A, fields (#154)
+use super::super::components::combobox;
+use super::super::components::command;
 use super::super::components::field;
 use super::super::components::input_group;
+use super::super::components::input_otp;
 use super::super::components::label;
+use super::super::components::textarea;
 
 // task-104 front B, overlays (#155)
 use super::super::components::{
@@ -33,7 +37,9 @@ use super::super::components::{
 };
 
 // task-104 front E, selection and dates (#158)
-use super::super::components::{button_group, calendar, radio_group, toggle, toggle_group};
+use super::super::components::{
+    button_group, calendar, date_picker, radio_group, toggle, toggle_group,
+};
 
 pub struct Panes {
     // -- foundations
@@ -81,6 +87,10 @@ pub struct Panes {
     pub field: field::FormPage,
     pub label: field::FormPage,
     pub input_group: field::FormPage,
+    pub input_otp: field::FormPage,
+    pub textarea: field::FormPage,
+    pub combobox: field::FormPage,
+    pub command: field::FormPage,
     // task-104 front B, overlays (#155)
     pub alert_dialog: alert_dialog::AlertDialogPage,
     pub drawer: drawer::DrawerPage,
@@ -108,6 +118,7 @@ pub struct Panes {
     // task-104 front E, selection and dates (#158)
     pub button_group: button_group::ButtonGroupPage,
     pub calendar: calendar::CalendarPage,
+    pub date_picker: date_picker::DatePickerPage,
     pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
@@ -187,6 +198,10 @@ impl Panes {
             field: field::page(),
             label: label::page(),
             input_group: input_group::page(),
+            input_otp: input_otp::page(),
+            textarea: textarea::page(),
+            combobox: combobox::page(),
+            command: command::page(),
             // task-104 front B, overlays (#155)
             alert_dialog: alert_dialog::AlertDialogPage::new(),
             drawer: drawer::DrawerPage::new(),
@@ -214,6 +229,7 @@ impl Panes {
             // task-104 front E, selection and dates (#158)
             button_group: button_group::ButtonGroupPage::new(),
             calendar: calendar::CalendarPage::new(),
+            date_picker: date_picker::DatePickerPage::new(),
             radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
