@@ -50,11 +50,21 @@ pub fn paint_radio(
         t.disc,
         t.disc,
     );
-    let surface = if checked { &t.on } else { &t.off };
+    let well = &theme.selection.switch;
+    let surface = if checked { &well.on } else { &well.off };
     paint_surface(c, layer, disc, t.disc / 2.0, surface, alpha, false, theme);
     if checked {
         let dot = disc.inset((t.disc - t.dot_d) / 2.0);
-        paint_surface(c, layer, dot, t.dot_d / 2.0, &t.dot, alpha, false, theme);
+        paint_surface(
+            c,
+            layer,
+            dot,
+            t.dot_d / 2.0,
+            &well.knob,
+            alpha,
+            false,
+            theme,
+        );
     }
 }
 

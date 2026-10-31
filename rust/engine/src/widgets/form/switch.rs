@@ -1,23 +1,24 @@
-//! HOFF toggle switch: 44x24 pill track with a 16px spring-animated knob
-//! (graphite track fading to the white handle gradient as it travels).
-//! Tick it every frame while animating; keyboard focus
-//! ([`Switch::set_focused`]) rings the track with the accent focus ring.
+//! The kit's switch (`components/Switch/index.tsx`): a pill well, light
+//! off and dark on, and a raised knob that springs across it; the
+//! surfaces are `theme.selection.switch` and the measures
+//! `theme.control.switch_size` and `switch_knob`, painted by the
+//! buttons' `paint_surface`. Tick it every frame while animating;
+//! keyboard focus ([`Switch::set_focused`]) rings the track with the
+//! accent focus ring.
 //!
 //! With a [`SemId`] ([`Switch::sem`]) the render binds the bounds it
 //! draws and hit-tests with, and [`Switch::project`] declares the switch
 //! in a semantic projection; the app still owns `on`.
 
 use crate::compose::animation::Spring;
-use crate::drawing::compositor::{Compositor, SceneNode};
-use crate::styling::theme::{MotionPhysics, Theme};
+use crate::drawing::compositor::{Compositor, LayerId};
+use crate::styling::color::Color;
+use crate::styling::theme::{ButtonSurface, MotionPhysics, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
+use crate::widgets::buttons::paint_surface;
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, mix};
-
-// HOFF switch: `control.switch_size` track (pill), `control.switch_knob`
-// knob inset by the derived pad. The widget centers the track inside its
-// bounds.
 
 /// Toggle switch with a spring-animated knob.
 ///
@@ -176,69 +177,52 @@ impl Switch {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let glass = &theme.glass;
-        let alpha = if self.disabled {
-            glass.disabled_alpha
-        } else {
-            1.0
-        };
+        let s = &theme.selection.switch;
+        let alpha = if self.disabled { s.disabled_alpha } else { 1.0 };
         let [track_w, track_h] = theme.control.switch_size;
         let knob = theme.control.switch_knob;
         let knob_pad = theme.control.switch_knob_pad();
-        let tx = bounds.x + (bounds.w - track_w) / 2.0;
-        let ty = bounds.y + (bounds.h - track_h) / 2.0;
+        let track = Rect::new(
+            bounds.x + (bounds.w - track_w) / 2.0,
+            bounds.y + (bounds.h - track_h) / 2.0,
+            track_w,
+            track_h,
+        );
         let t = self.knob_progress();
 
         if self.focused {
             // Ring the visible track, not the (larger) hit bounds.
-            compositor.push(focus_ring(
-                Rect::new(tx, ty, track_w, track_h),
-                track_h / 2.0,
-                theme,
-            ));
+            compositor.push(focus_ring(track, track_h / 2.0, theme));
         }
 
-        // Track: rgba($n2,.05) off -> rgba(40,40,40,.5) checked, blended
-        // with the knob progress so color and position animate together.
-        let off = glass.field.0;
-        let on = {
-            let b = glass.button.0;
-            [b[0], b[1], b[2], 0.5]
+        // The well's fill blends off to on with the knob's travel, so
+        // color and position move together; its shades are the state the
+        // knob is nearer.
+        let near = if t < 0.5 { &s.off } else { &s.on };
+        let well = ButtonSurface {
+            fill: [0, 1].map(|i| Color(mix(s.off.fill[i].0, s.on.fill[i].0, t))),
+            ..near.clone()
         };
-        let mut track = mix(off, on, t);
-        track[3] *= alpha;
-        compositor.push(SceneNode::RoundedRect {
-            x: tx,
-            y: ty,
-            w: track_w,
-            h: track_h,
-            color: track,
-            corner_radius: track_h / 2.0,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
-
-        // Knob slides 20px between the padded ends. Off: flat
-        // rgba($n2,.3); on: the HOFF white handle gradient (.90 -> .30,
-        // top-lit) — blended along the same progress.
-        let kx = tx + knob_pad + (track_w - knob - knob_pad * 2.0) * t;
-        let flat = glass.knob_gradient[1].0;
-        let mut top = mix(flat, glass.knob_gradient[0].0, t);
-        let mut bottom = flat;
-        top[3] *= alpha;
-        bottom[3] *= alpha;
-        compositor.push(SceneNode::GradientRect {
-            x: kx,
-            y: ty + knob_pad,
-            w: knob,
-            h: knob,
-            color: top,
-            color2: bottom,
-            // CSS 180deg: bright stop at the top.
-            angle_deg: 180.0,
-            corner_radius: knob / 2.0,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            track,
+            track_h / 2.0,
+            &well,
+            alpha,
+            false,
+            theme,
+        );
+        let kx = track.x + knob_pad + (track_w - knob - knob_pad * 2.0) * t;
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            Rect::new(kx, track.y + knob_pad, knob, knob),
+            knob / 2.0,
+            &s.knob,
+            alpha,
+            false,
+            theme,
+        );
     }
 }

@@ -45,60 +45,66 @@ fn core_primary_button_is_the_kit_recipe() {
     assert!(matches!(nodes.last(), Some(SceneNode::Text { .. })));
 }
 
-#[test]
-fn hoff_switch_track_and_knob_match_spec() {
-    let theme = Theme::hoff();
+/// The fills a switch draws, in order: the well, then the knob.
+fn switch_fills(sw: &Switch, theme: &Theme) -> Vec<(Rect, f32, [f32; 4])> {
     let mut c = Compositor::new();
     c.begin_frame();
-    let sw = Switch::new(false);
-    sw.render(&mut c, Rect::new(0.0, 0.0, 44.0, 24.0), &theme);
-    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
-
-    match nodes[0] {
-        SceneNode::RoundedRect {
-            w,
-            h,
-            corner_radius,
-            color,
-            ..
-        } => {
-            assert_eq!((w, h), (44.0, 24.0));
-            assert_eq!(corner_radius, 12.0);
-            assert!((color[3] - 0.05).abs() < 1e-5, "off track rgba($n2,.05)");
-        }
-        ref other => panic!("expected track, got {other:?}"),
-    }
-    match nodes[1] {
-        SceneNode::GradientRect { x, y, w, h, .. } => {
-            assert_eq!((w, h), (16.0, 16.0), "16px knob");
-            assert_eq!((x, y), (4.0, 4.0), "knob rests at (4,4)");
-        }
-        ref other => panic!("expected knob, got {other:?}"),
-    }
+    sw.render(&mut c, Rect::new(0.0, 0.0, 40.0, 22.0), theme);
+    c.layer(LayerId::DEFAULT)
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|n| match *n {
+            SceneNode::GradientRect {
+                x,
+                y,
+                w,
+                h,
+                corner_radius,
+                color,
+                ..
+            } => Some((Rect::new(x, y, w, h), corner_radius, color)),
+            _ => None,
+        })
+        .collect()
 }
 
+/// The kit's switch (components/Switch/index.tsx:11, :17): a 40 by 22
+/// pill well, `#ECECEC` off and ink at 70% on, the 18 knob at the `p-0.5`
+/// pad, travelling `translate-x-4.5`.
 #[test]
-fn hoff_switch_on_knob_is_white_gradient() {
+fn core_switch_is_the_kits_well_and_knob() {
+    let theme = Theme::hoff_core();
+    let off = switch_fills(&Switch::new(false), &theme);
+    assert_eq!(off.len(), 2, "{off:?}");
+    let (well, radius, fill) = off[0];
+    assert_eq!((well, radius), (Rect::new(0.0, 0.0, 40.0, 22.0), 11.0));
+    assert_eq!(fill, crate::styling::color::Color::hex(0xECECEC).0);
+    assert_eq!(off[1].0, Rect::new(2.0, 2.0, 18.0, 18.0));
+    let mut on = Switch::new(true);
+    for _ in 0..300 {
+        on.tick(1.0 / 60.0);
+    }
+    let on = switch_fills(&on, &theme);
+    assert!((on[0].2[3] - 0.70).abs() < 1e-3, "ink at 70%");
+    assert!((on[1].0.x - 20.0).abs() < 0.1, "the knob travels 18px");
+}
+
+/// A derived theme draws the same well and knob from its palette: the
+/// hover tone off, the text at the kit's strength on, the page as knob.
+#[test]
+fn a_derived_switch_takes_the_palette() {
     let theme = Theme::hoff();
+    let c = &theme.colors;
+    let off = switch_fills(&Switch::new(false), &theme);
+    assert_eq!(off[0].2, c.bg_hover.0);
+    assert_eq!(off[1].2, c.bg.0);
     let mut sw = Switch::new(true);
-    // Settle the spring at the on position.
     for _ in 0..300 {
         sw.tick(1.0 / 60.0);
     }
-    let mut c = Compositor::new();
-    c.begin_frame();
-    sw.render(&mut c, Rect::new(0.0, 0.0, 44.0, 24.0), &theme);
-    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
-    match nodes[1] {
-        SceneNode::GradientRect {
-            x, color, color2, ..
-        } => {
-            assert!((x - 24.0).abs() < 0.1, "knob travelled 20px");
-            assert!((color[3] - 0.90).abs() < 0.01, "top stop .90");
-            assert!((color2[3] - 0.30).abs() < 0.01, "bottom stop .30");
-        }
-        ref other => panic!("expected gradient knob, got {other:?}"),
-    }
+    let on = switch_fills(&sw, &theme)[0].2;
+    assert_eq!(&on[..3], &c.text.0[..3]);
 }
 
 #[test]

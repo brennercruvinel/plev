@@ -74,18 +74,28 @@ pub struct ButtonGroupTokens {
     pub separator_w: f32,
 }
 
-/// The radio group. The kit has no radio: the row is its single-choice
-/// list line (`components/Zoom/index.tsx:15`, `:19`, `:32`) and the disc
-/// is its on/off control, the switch (`components/Switch/index.tsx:11`,
-/// `:17`): the well off, the dark well on, the knob as the dot.
+/// The kit's switch (`components/Switch/index.tsx`): a well, light off
+/// and dark on, and a raised knob. Its measures are the theme's
+/// (`control.switch_size`, `switch_knob`); the radio's disc is drawn with
+/// the same three surfaces.
 #[derive(Clone, Debug, PartialEq)]
-pub struct RadioTokens {
-    /// The disc off (the switch's well) and on (its dark well); `text`
-    /// is unused.
+pub struct SwitchTokens {
+    /// The well off and on; `text` is unused.
     pub off: ButtonSurface,
     pub on: ButtonSurface,
-    /// The dot on a chosen disc (the switch's knob).
-    pub dot: ButtonSurface,
+    /// The knob (the radio's dot).
+    pub knob: ButtonSurface,
+    /// Opacity of a disabled switch (the buttons' `opacity-30`; the kit
+    /// has no disabled switch).
+    pub disabled_alpha: f32,
+}
+
+/// The radio group. The kit has no radio: the row is its single-choice
+/// list line (`components/Zoom/index.tsx:15`, `:19`, `:32`) and the disc
+/// is its on/off control, the switch ([`SwitchTokens`]): the well off,
+/// the dark well on, the knob as the dot.
+#[derive(Clone, Debug, PartialEq)]
+pub struct RadioTokens {
     /// The disc's and the dot's diameters.
     pub disc: f32,
     pub dot_d: f32,
@@ -150,6 +160,7 @@ pub struct CalendarTokens {
 #[derive(Clone, Debug, PartialEq)]
 pub struct SelectionTokens {
     pub segmented: SegmentedTokens,
+    pub switch: SwitchTokens,
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
@@ -291,7 +302,7 @@ impl SelectionTokens {
         // components/Zoom/index.tsx:15 the line, :19 the `size-6 mr-1`
         // slot, :32 the title.
         let ink_a = |a: f32| Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, a);
-        let radio = RadioTokens {
+        let switch = SwitchTokens {
             off: ButtonSurface {
                 fill: [hex(0xECECEC); 2],
                 overlay: NONE,
@@ -304,7 +315,7 @@ impl SelectionTokens {
                 shadow: vec![ShadowSpec::inset([0.0, 1.0], 0.6, 0.0, ink_a(0.30))],
                 text: ink,
             },
-            dot: ButtonSurface {
+            knob: ButtonSurface {
                 fill: [hex(0xF8F7F7); 2],
                 overlay: NONE,
                 shadow: vec![
@@ -314,6 +325,9 @@ impl SelectionTokens {
                 ],
                 text: ink,
             },
+            disabled_alpha: 0.30,
+        };
+        let radio = RadioTokens {
             // The knob's size-4.5 as the disc; the dot is the knob drawn
             // at the switch's padding ratio (p-0.5 of h-5.5) inside it.
             disc: 18.0,
@@ -353,6 +367,7 @@ impl SelectionTokens {
         };
         Self {
             button_group,
+            switch,
             radio,
             calendar,
             segmented: SegmentedTokens {
@@ -409,7 +424,17 @@ impl SelectionTokens {
             shadow: Vec::new(),
             text: c.bg,
         };
-        let radio = RadioTokens {
+        // the kit's well is a step off the page and its on the ink at
+        // 70%: the hover tone ringed by the divider, and the text at the
+        // same strength; the knob is the page
+        let strength = kit.switch.on.fill[0].0[3];
+        let on = Color::rgba(
+            c.text.0[0],
+            c.text.0[1],
+            c.text.0[2],
+            c.text.0[3] * strength,
+        );
+        let switch = SwitchTokens {
             off: ButtonSurface {
                 fill: [c.bg_hover; 2],
                 overlay: NONE,
@@ -417,17 +442,20 @@ impl SelectionTokens {
                 text: c.text,
             },
             on: ButtonSurface {
-                fill: [c.accent; 2],
+                fill: [on; 2],
                 overlay: NONE,
                 shadow: Vec::new(),
                 text: c.text,
             },
-            dot: ButtonSurface {
+            knob: ButtonSurface {
                 fill: [c.bg; 2],
                 overlay: NONE,
-                shadow: Vec::new(),
+                shadow: vec![ring(c.divider)],
                 text: c.text,
             },
+            ..kit.switch
+        };
+        let radio = RadioTokens {
             row_hover: c.bg_hover,
             label: c.text,
             ..kit.radio
@@ -441,6 +469,7 @@ impl SelectionTokens {
                 ..kit.segmented
             },
             button_group,
+            switch,
             radio,
             calendar: CalendarTokens {
                 weekday: legible(c.text_mid, c.text, c.surface, c.bg),
