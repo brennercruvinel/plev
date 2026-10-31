@@ -23,7 +23,7 @@ use crate::widgets::form::tokens::{Look, SelectLook};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::{
-    Controls, Item, ItemRole, Kind, ModalBody, boxed, child, glyph, hairline, middle, panel,
+    Controls, Item, ItemRole, Kind, ModalBody, boxed, child, glyph, hairline, middle, panel_with,
     picture, raise, text, text_w, tokens,
 };
 
@@ -280,18 +280,19 @@ impl ModalBody for ShareFile {
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
         let t = tokens(theme);
         let (f, ink) = (&t.share_file, &t.ink);
-        panel(c, rect, &f.panel, theme);
         let l = self.layout(rect, theme);
-        // The foot's band to the sheet's bottom corners, clipped below
-        // its rule.
-        c.push(SceneNode::PushClip {
-            x: l.foot.x,
-            y: l.foot.y,
-            w: l.foot.w,
-            h: l.foot.h,
+        // The foot's band to the sheet's bottom corners, under its edge.
+        let foot = l.foot;
+        panel_with(c, rect, &f.panel, theme, |c| {
+            c.push(SceneNode::PushClip {
+                x: foot.x,
+                y: foot.y,
+                w: foot.w,
+                h: foot.h,
+            });
+            boxed(c, rect, f.panel.radius, ink.well, None);
+            c.push(SceneNode::PopClip);
         });
-        boxed(c, rect, f.panel.radius, ink.well, None);
-        c.push(SceneNode::PopClip);
         for y in l.rules {
             hairline(c, rect.x, y, rect.w, ink.rule_w, ink.rule);
         }

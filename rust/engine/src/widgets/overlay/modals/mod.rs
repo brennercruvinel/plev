@@ -30,10 +30,9 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::widgets::feedback::{SheetLook, sheet_with};
 use crate::widgets::icons;
-use crate::widgets::recipe::{
-    glass_pill, gradient_fill, inset_keylight, rounded_rect, rounded_rect_stroke, shadow_node,
-};
+use crate::widgets::recipe::{gradient_fill, rounded_rect, rounded_rect_stroke, shadow_node};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use control::{Control, Controls, Item, ItemRole, Kind};
@@ -97,38 +96,29 @@ pub fn tokens(theme: &Theme) -> &ModalsTokens {
     &theme.overlay.modals
 }
 
-/// A modal's surface at `rect`: its shadows, its paper (the hoff glass
-/// on a theme that has it) and its edge.
+/// A modal's surface at `rect`: the confirmation modal's sheet
+/// ([`sheet_with`]) as its recipe draws it.
 pub fn panel(c: &mut Compositor, rect: Rect, p: &PanelTokens, theme: &Theme) {
-    let layer = LayerId::DEFAULT;
-    let radius = p.radius.min(rect.h / 2.0).min(rect.w / 2.0);
-    for spec in &p.shadow {
-        if let Some(node) = shadow_node(rect, radius, spec) {
-            c.push(node);
-        }
-    }
-    let Rect { x, y, w, h } = rect;
-    if p.glass {
-        c.push(SceneNode::BackdropBlur {
-            x,
-            y,
-            w,
-            h,
-            corner_radius: radius,
-            sigma: theme.effects.blur_sigma,
-        });
-        for node in glass_pill(rect, radius, p.border.0, p.border_w, p.fill.0, theme) {
-            c.push(node);
-        }
-        inset_keylight(c, layer, rect, radius, theme);
-        return;
-    }
-    c.push(rounded_rect(x, y, w, h, radius, p.fill.0));
-    if p.border.0[3] > 0.0 {
-        c.push(rounded_rect_stroke(
-            x, y, w, h, radius, p.border.0, p.border_w,
-        ));
-    }
+    panel_with(c, rect, p, theme, |_| {});
+}
+
+/// [`panel`] with `inside` drawn on its body, under its edge.
+pub fn panel_with(
+    c: &mut Compositor,
+    rect: Rect,
+    p: &PanelTokens,
+    theme: &Theme,
+    inside: impl FnOnce(&mut Compositor),
+) {
+    let look = SheetLook {
+        fill: p.fill,
+        border: p.border,
+        border_w: p.border_w,
+        radius: p.radius.min(rect.w / 2.0),
+        shadow: &p.shadow,
+        glass: p.glass,
+    };
+    sheet_with(c, LayerId::DEFAULT, theme, rect, &look, inside);
 }
 
 /// A box at `rect`: its fill, then its edge when it has one.

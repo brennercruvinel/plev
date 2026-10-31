@@ -15,7 +15,8 @@
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{Intent, Theme};
+use crate::styling::color::Color;
+use crate::styling::theme::{Intent, ShadowSpec, Theme};
 use accord::{NodeBuilder, Policy, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::{Button, ButtonVariant};
@@ -34,6 +35,20 @@ fn body_style(theme: &Theme) -> &TextStyle {
     &theme.overlay.modal.body
 }
 
+/// What a sheet looks like: its fill, its edge, its corners, its drop
+/// shadows (first on top), and whether it is the hoff glass. The modal's
+/// own is `theme.overlay.modal`'s ([`sheet`]); another dialog brings its
+/// recipe's (the kit's modals, `overlay/modals`).
+#[derive(Clone, Copy, Debug)]
+pub struct SheetLook<'a> {
+    pub fill: Color,
+    pub border: Color,
+    pub border_w: f32,
+    pub radius: f32,
+    pub shadow: &'a [ShadowSpec],
+    pub glass: bool,
+}
+
 /// The modal's sheet at `rect`, the surface any dialog stands on: its
 /// shadow, its body (the hoff glass: frost, edge-light, the solid body
 /// and the inset key-light glint; or the solid fill), then `inside`, then
@@ -47,8 +62,29 @@ pub fn sheet(
     inside: impl FnOnce(&mut Compositor),
 ) {
     let m = &theme.overlay.modal;
+    let look = SheetLook {
+        fill: m.fill,
+        border: m.border,
+        border_w: m.border_w,
+        radius: m.radius,
+        shadow: &m.shadow,
+        glass: m.glass,
+    };
+    sheet_with(compositor, layer, theme, rect, &look, inside);
+}
+
+/// [`sheet`] drawn as `look`.
+pub fn sheet_with(
+    compositor: &mut Compositor,
+    layer: LayerId,
+    theme: &Theme,
+    rect: Rect,
+    look: &SheetLook<'_>,
+    inside: impl FnOnce(&mut Compositor),
+) {
+    let m = look;
     let radius = m.radius.min(rect.h / 2.0);
-    for spec in &m.shadow {
+    for spec in m.shadow {
         if let Some(node) = shadow_node(rect, radius, spec) {
             compositor.push_to_layer(layer, node);
         }
