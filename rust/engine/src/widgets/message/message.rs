@@ -431,13 +431,13 @@ fn reaction_id(id: &SemId) -> Option<SemId> {
     id.child("reaction").ok()
 }
 
-fn width(text: &str, style: &TextStyle) -> f32 {
+pub(crate) fn width(text: &str, style: &TextStyle) -> f32 {
     TextMeasurer::measure_styled(text, style, None).0
 }
 
 /// `text` on one line of `room`, ellipsized; empty when not even the
 /// ellipsis fits, so nothing is drawn past the column.
-fn fit(text: &str, style: &TextStyle, room: f32) -> String {
+pub(crate) fn fit(text: &str, style: &TextStyle, room: f32) -> String {
     if text.is_empty() || room <= 0.0 {
         return String::new();
     }
@@ -449,7 +449,7 @@ fn fit(text: &str, style: &TextStyle, room: f32) -> String {
     }
 }
 
-fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Placed> {
+pub(crate) fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Placed> {
     (!text.is_empty()).then(|| Placed {
         text,
         rect: Rect::new(x, y, w, style.line_height),
@@ -457,7 +457,7 @@ fn placed(text: String, x: f32, y: f32, w: f32, style: &TextStyle) -> Option<Pla
 }
 
 /// One run drawn with the style it was measured with.
-fn run(
+pub(crate) fn run(
     c: &mut Compositor,
     at: Option<&Placed>,
     spec: &MessageText,

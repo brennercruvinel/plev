@@ -39,6 +39,7 @@ use uigallery::views::{PAGES, ShowcaseView};
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
     "Accordion",
+    "Alert",
     "Alert Dialog",
     "Aspect Ratio",
     "Breadcrumb",
@@ -116,7 +117,6 @@ const SILENT: &[(&str, Why)] = &[
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
     ),
-    ("Alert", PLACEHOLDER),
     ("Attachment", PLACEHOLDER),
     (
         "Avatar",
@@ -618,6 +618,21 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
     assert_eq!(
         lines,
         [
+            // task-104 front C: the inline alerts, by intent (#156)
+            "alert_page.group[0].card[0].alert[0]",
+            "alert_page.group[0].card[1].alert[0]",
+            "alert_page.group[0].card[2].alert[0]",
+            "alert_page.group[0].card[3].alert[0]",
+            "alert_page.group[1].card[0].alert[0]",
+            "alert_page.group[1].card[1].alert[0]",
+            "alert_page.group[1].card[2].alert[0]",
+            "alert_page.group[1].card[3].alert[0]",
+            "alert_page.group[2].card[0].alert[0]",
+            "alert_page.group[2].card[0].alert[1]",
+            "alert_page.group[2].card[0].alert[2]",
+            "alert_page.group[2].card[0].alert[3]",
+            "alert_page.group[3].card[0].alert[0]",
+            "alert_page.group[3].card[1].alert[0]",
             "capture.status",
             "files.status",
             "silences.counts",

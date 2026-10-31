@@ -85,7 +85,13 @@ pub const PAGES: &[Page] = &[
         "Sections that open and close, one at a time or several, from the kit's assets sidebar.",
         Pane::Accordion,
     ),
-    placeholder("Alert"),
+    page(
+        C,
+        "Alert",
+        "info",
+        "Inline alerts by intent, the kit's notifications: read one with a click, answer an invite.",
+        Pane::Alert,
+    ),
     page(
         C,
         "Alert Dialog",
