@@ -11,6 +11,7 @@
 //! and requests are the form pages', its ids under `field_page`.
 
 mod form;
+mod sized;
 pub(crate) mod spec;
 
 pub use form::FormPage;

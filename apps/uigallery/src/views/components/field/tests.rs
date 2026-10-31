@@ -55,7 +55,10 @@ fn input_center(p: &FormPage, at: (usize, usize), theme: &Theme) -> (f32, f32) {
 fn every_field_has_its_id() {
     let p = page();
     assert!(p.root.is_some());
-    assert!(p.specs().all(|s| s.field().is_some_and(|f| f.sem_id().is_some())));
+    assert!(
+        p.specs()
+            .all(|s| s.field().is_some_and(|f| f.sem_id().is_some()))
+    );
 }
 
 /// The width sweep: from 280 to 1600 px every 8 px, in the core and the
