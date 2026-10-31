@@ -214,6 +214,59 @@ fn a_carousel_pages_and_chooses_the_same_from_the_three() {
     );
 }
 
+/// The static table's main card.
+const SHEET: &str = "table_static_page.group[0].card[0]";
+
+/// A row of the static table is selected the same from the three: the
+/// person's click, the reader's press, the agent's `select`.
+#[test]
+fn a_static_table_row_is_selected_the_same_from_the_three() {
+    let row = "table_static_page.group[0].card[0][3]";
+    let mut person = gallery("Table");
+    person.click(row);
+    let mut reader = gallery("Table");
+    reader.press(row);
+    let agent = by_agent("Table", "row", vec![ask(row, "select")]);
+    same("Table", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{SHEET}:selected_row")),
+        Some(Value::Text("3".into()))
+    );
+}
+
+/// Tab comes to a static table on its selected row, the arrows walk its
+/// rows without wrapping, Home and End go to its ends, Enter selects the
+/// focused row, and Tab goes on to the next table: each table is one
+/// stop.
+#[test]
+fn tab_and_the_arrows_walk_a_static_table() {
+    let mut g = gallery("Table");
+    let row = |i: usize| format!("{SHEET}[{i}]");
+    assert!(g.view.handle_edit_key(EditKey::Tab), "Tab is taken");
+    g.frame();
+    assert_eq!(focused(&g), Some(row(1)), "the selected row is the stop");
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(focused(&g), Some(row(2)));
+    assert!(g.view.handle_edit_key(EditKey::End));
+    g.frame();
+    assert_eq!(focused(&g), Some(row(9)), "the last of ten");
+    assert!(!g.view.handle_nav(NavKey::Down), "the rows do not wrap");
+    assert!(g.view.handle_edit_key(EditKey::Home));
+    g.frame();
+    assert_eq!(focused(&g), Some(row(0)));
+    assert!(g.view.handle_enter());
+    g.frame();
+    assert_eq!(
+        g.value(&format!("{SHEET}:selected_row")),
+        Some(Value::Text("0".into()))
+    );
+    assert!(g.view.handle_edit_key(EditKey::Tab));
+    g.frame();
+    let next = "table_static_page.group[1].card[0][0]";
+    assert_eq!(focused(&g).as_deref(), Some(next), "the next table");
+}
+
 /// A pager's page goes current the same from the three.
 #[test]
 fn a_pager_goes_to_a_page_the_same_from_the_three() {

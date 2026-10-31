@@ -140,6 +140,7 @@ components! {
     Item => item,
     Kbd => kbd,
     Pagination => pagination,
+    StaticTable => table_static,
     // task-104 front E, selection and dates (#158)
     Toggle => toggle,
 }

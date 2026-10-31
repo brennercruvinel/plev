@@ -334,7 +334,6 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
     for (page, list, key, count) in [
         ("Scroll Area", "scroll_area_page.list", "selected", 10_000),
         ("Data Table", "table_page.table", "selected_row", 2_000),
-        ("Table", "table_page.table", "selected_row", 2_000),
     ] {
         let row = |i: usize| format!("{list}[{i}]");
         let mut g = gallery(page);

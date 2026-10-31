@@ -76,6 +76,7 @@ impl ShowcaseView {
                 Pane::Kbd => self.panes.kbd.content_height(content, t),
                 Pane::Carousel => self.panes.carousel.content_height(content, t),
                 Pane::Pagination => self.panes.pagination.content_height(content, t),
+                Pane::StaticTable => self.panes.table_static.content_height(content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
@@ -187,6 +188,7 @@ impl ShowcaseView {
                 Pane::Kbd => self.panes.kbd.handle_event(event, content, t),
                 Pane::Carousel => self.panes.carousel.handle_event(event, content, t),
                 Pane::Pagination => self.panes.pagination.handle_event(event, content, t),
+                Pane::StaticTable => self.panes.table_static.handle_event(event, content, t),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::Todo => {
@@ -381,6 +383,7 @@ impl ShowcaseView {
                 Pane::Kbd => self.panes.kbd.render(c, content, theme),
                 Pane::Carousel => self.panes.carousel.render(c, content, theme),
                 Pane::Pagination => self.panes.pagination.render(c, content, theme),
+                Pane::StaticTable => self.panes.table_static.render(c, content, theme),
                 // task-104 front E, selection and dates (#158)
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::Todo => {
