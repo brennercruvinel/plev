@@ -14,7 +14,8 @@
 //! Projected ([`CommandDialog::project`]): closed, the trigger, a
 //! `Role::Button` named "Command palette", described by its `⌘ K`, whose
 //! `activate` opens it; open, a `Role::Dialog` named "Command palette" with
-//! the palette in it, as the palette projects.
+//! the palette in it, as the palette projects (Escape closes it, as a
+//! modal's cancel).
 
 use accord::{Role, SemId, SnapshotBuilder};
 
@@ -33,6 +34,9 @@ pub struct CommandDialog {
     pub command: Command,
     /// The closed dialog: the Search with its `⌘ K`.
     pub trigger: InputGroup,
+    /// The trigger's id, bound to the whole box: it is one button to a
+    /// reader, not a field with an icon button.
+    trigger_id: Option<SemId>,
     open: bool,
     sem: Option<SemId>,
 }
@@ -45,14 +49,15 @@ impl CommandDialog {
         Self {
             command,
             trigger,
+            trigger_id: None,
             open: false,
             sem: None,
         }
     }
 
-    /// Shown open, as a state.
+    /// Shown open, as a state: no caret until it is focused.
     pub fn opened(mut self) -> Self {
-        self.open();
+        self.open = true;
         self
     }
 
@@ -62,15 +67,17 @@ impl CommandDialog {
         if let Ok(palette) = id.child("palette") {
             self.command = self.command.sem(palette);
         }
-        if let Ok(trigger) = id.child("trigger") {
-            self.trigger = self.trigger.sem(trigger);
-        }
+        self.trigger_id = id.child("trigger").ok();
         self.sem = Some(id);
         self
     }
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    pub fn trigger_id(&self) -> Option<&SemId> {
+        self.trigger_id.as_ref()
     }
 
     pub fn is_open(&self) -> bool {
@@ -180,6 +187,9 @@ impl CommandDialog {
     /// and the sheet with the palette.
     pub fn render(&self, c: &mut Compositor, window: Rect, trigger: Rect, theme: &Theme) {
         if !self.open {
+            if let Some(id) = &self.trigger_id {
+                c.bind(id, [trigger.x, trigger.y, trigger.w, trigger.h]);
+            }
             self.trigger.render(c, trigger, theme);
             return;
         }
@@ -211,7 +221,7 @@ impl CommandDialog {
             return;
         };
         if !self.open {
-            if let Some(t) = self.trigger.sem_id() {
+            if let Some(t) = &self.trigger_id {
                 let mut node = b.node(t, Role::Button, NAME);
                 if let Some(parent) = parent {
                     node.parent(parent);
@@ -224,7 +234,6 @@ impl CommandDialog {
         if let Some(parent) = parent {
             node.parent(parent);
         }
-        node.action("close");
         if let Some(p) = self.command.sem_id() {
             let name = self.command.search.input.input.placeholder.clone();
             self.command.project(b, p, name, Some(id));
