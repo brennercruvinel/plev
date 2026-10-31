@@ -30,6 +30,7 @@ use super::showcase;
 use super::{After, Component, EditKey, child_id, root_id, under};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
 
 /// A field is the kit page's `w-60` wide, narrower when the card is.
 const FIELD_W: f32 = 240.0;
@@ -321,14 +322,39 @@ impl FieldPage {
         result
     }
 
+    /// The caret blink of the focused field; nothing while none is.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        self.focused_field()
+            .map_or(Wake::idle(), |f| f.input.wake(dt))
+    }
+
+    pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+        let layout = self.layout(content, theme);
+        let last = self.groups.len() - 1;
+        for (i, (group, laid)) in self.groups.iter().zip(&layout).enumerate() {
+            showcase::title(c, group.title, content, laid.title_y, theme);
+            for (card, (rect, field)) in group.cards.iter().zip(&laid.cards) {
+                let (_, chip) = vitrine::chip(*rect, card.title, theme);
+                showcase::card(c, *rect, &chip, theme);
+                card.field.render(c, *field, theme);
+            }
+            // The rule under the group (`border-b`, none on the last).
+            if i != last {
+                showcase::rule(c, content, laid.rule_y, theme);
+            }
+        }
+    }
+}
+
+impl TextHost for FieldPage {
     /// Type `s` into the focused field. `false` when none is focused.
-    pub fn handle_text(&mut self, s: &str) -> bool {
+    fn handle_text(&mut self, s: &str) -> bool {
         self.focused_field().is_some_and(|f| f.input.insert(s))
     }
 
     /// The editing keys edit the focused field. Tab is the view's (it
     /// walks the projection), never an edit.
-    pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
         if key == EditKey::Tab {
             return false;
         }
@@ -338,7 +364,7 @@ impl FieldPage {
 
     /// A step of the input method: the focused field composes;
     /// `Disabled` drops a composition wherever one is.
-    pub fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         let (committed, preedit, cursor) = match ime {
             ImeEvent::Disabled => {
                 let mut dropped = false;
@@ -357,7 +383,7 @@ impl FieldPage {
     /// A right-click on a field's box: it takes the keys for its menu,
     /// keeping a selection it has, or taking a caret at the click.
     /// `false` off the boxes.
-    pub fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+    fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
         let layout = self.layout(content, theme);
         let hit = layout.iter().enumerate().find_map(|(g, laid)| {
             laid.cards.iter().enumerate().find_map(|(c, (_, rect))| {
@@ -381,7 +407,7 @@ impl FieldPage {
     }
 
     /// The focused field has the keys (a chord, the field's menu).
-    pub(in crate::views) fn keys(&mut self) -> Keys<'_> {
+    fn keys(&mut self) -> Keys<'_> {
         match self.focused_field() {
             Some(f) => Keys::Field(&mut f.input),
             None => Keys::Nobody,
@@ -390,7 +416,7 @@ impl FieldPage {
 
     /// Where the input method's candidate window goes: the focused
     /// field's caret, laid out in `content`.
-    pub fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
         let at = self.focused()?;
         let rect = self.field_rect(at, content, theme)?;
         let field = &self.groups[at.0].cards[at.1].field;
@@ -400,36 +426,13 @@ impl FieldPage {
     /// Escape blurs the focused field. `false` when none was.
     /// Escape blurs the focused field, or lets go of the eye or the link
     /// a reader focused. `false` when nothing was.
-    pub fn handle_escape(&mut self) -> bool {
+    fn handle_escape(&mut self) -> bool {
         let had = self.focused().is_some() || self.fields().any(|f| f.part_focus().is_some());
         self.set_focused(None);
         for field in self.fields_mut() {
             field.set_part_focus(None);
         }
         had
-    }
-
-    /// The caret blink of the focused field; nothing while none is.
-    pub fn wake(&mut self, dt: f32) -> Wake {
-        self.focused_field()
-            .map_or(Wake::idle(), |f| f.input.wake(dt))
-    }
-
-    pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let layout = self.layout(content, theme);
-        let last = self.groups.len() - 1;
-        for (i, (group, laid)) in self.groups.iter().zip(&layout).enumerate() {
-            showcase::title(c, group.title, content, laid.title_y, theme);
-            for (card, (rect, field)) in group.cards.iter().zip(&laid.cards) {
-                let (_, chip) = vitrine::chip(*rect, card.title, theme);
-                showcase::card(c, *rect, &chip, theme);
-                card.field.render(c, *field, theme);
-            }
-            // The rule under the group (`border-b`, none on the last).
-            if i != last {
-                showcase::rule(c, content, laid.rule_y, theme);
-            }
-        }
     }
 }
 
