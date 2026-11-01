@@ -58,8 +58,10 @@ pub struct Theme {
     pub layout: LayoutTokens,
     /// Shadow stacks by elevation.
     pub shadows: ShadowTokens,
-    /// Button surfaces per variant and the button size ladders.
-    pub button: ButtonTokens,
+    /// Button surfaces per variant and the button size ladders. Boxed, as
+    /// every slot past a few hundred bytes: a theme travels by value, and
+    /// its size is every test's stack (`theme_stays_small`).
+    pub button: Box<ButtonTokens>,
     // task-104: one slot per front; `hoff_core()` copies the kit and every
     // other theme derives it from the finished theme (`derive_front_slots`),
     // since the hoff glass is written by hand.
@@ -68,15 +70,15 @@ pub struct Theme {
     /// size is every test's stack.
     pub form: Box<FormTokens>,
     /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
-    /// sheet, drawer.
-    pub overlay: OverlayTokens,
+    /// sheet, drawer. Boxed, as the navigation.
+    pub overlay: Box<OverlayTokens>,
     /// Front C: message, bubble, message scroller, alert, attachment,
     /// marker, toast. Boxed, as the navigation: a theme travels by value,
     /// and its size is every test's stack.
     pub message: Box<MessageTokens>,
     /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
-    /// pagination, table.
-    pub disclosure: DisclosureTokens,
+    /// pagination, table. Boxed, as the navigation.
+    pub disclosure: Box<DisclosureTokens>,
     /// Front E: toggle, toggle group, button group, radio group, calendar,
     /// date picker. Boxed, as the navigation: a theme travels by value,
     /// and its size is every test's stack.
@@ -130,12 +132,12 @@ impl Theme {
         let shape = ShapeTokens::derive(&radius, control.tabs_pad);
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
             // placeholders: derived from the finished theme below
             form: Box::new(FormTokens::hoff_core()),
-            overlay: OverlayTokens::hoff_core(),
+            overlay: Box::new(OverlayTokens::hoff_core()),
             message: Box::new(MessageTokens::hoff_core()),
-            disclosure: DisclosureTokens::hoff_core(),
+            disclosure: Box::new(DisclosureTokens::hoff_core()),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
             header: Box::new(HeaderTokens::hoff_core()),
@@ -205,7 +207,7 @@ impl Theme {
         };
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
             colors,
             ..Self::dark()
         };
@@ -371,7 +373,7 @@ impl Theme {
         };
         let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
             colors,
             ..Self::dark()
         };
@@ -384,9 +386,9 @@ impl Theme {
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
         *self.form = FormTokens::derive(self);
-        self.overlay = OverlayTokens::derive(self);
+        *self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);
-        self.disclosure = DisclosureTokens::derive(self);
+        *self.disclosure = DisclosureTokens::derive(self);
         *self.selection = SelectionTokens::derive(self);
         *self.navigation = NavigationTokens::derive(self);
         *self.header = HeaderTokens::derive(self);

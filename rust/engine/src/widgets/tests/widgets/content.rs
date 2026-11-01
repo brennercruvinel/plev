@@ -483,7 +483,7 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     assert_ne!(derived.split, kit.split);
     derived.split = kit.split;
     assert_eq!(derived, kit);
-    assert_eq!(core().disclosure, kit);
+    assert_eq!(*core().disclosure, kit);
     // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
     // `p-4 pt-0` body; the Dropdown's `p-0.75 pr-3 rounded-xl`; 500 ms.
     assert_eq!(kit.accordion.pad, [12.0, 16.0, 12.0, 16.0]);

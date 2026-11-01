@@ -6,8 +6,7 @@
 //!
 //! Design: Show Frame (a switch), Artboard (the size select, the width
 //! and height fields), Materials and Styles (tiles), Background (the
-//! ColorPicker of front A: a named stand-in until it is in the engine,
-//! TODO(task-104a)), Camera (Isometric or Perspective, the distortion's
+//! ColorPicker of front A), Camera (Isometric or Perspective, the distortion's
 //! range and value). Animation: Motion Blur (a switch), Loop (the strip
 //! with the looped span, Short or Long, the span's length), Effects
 //! (tiles), Lens (three selects, each with its eye). Pictures are their
@@ -18,15 +17,22 @@
 //! with its `.switch`, `.select[<i>]`, `.tabs` and `.tile[<i>]`.
 
 mod paint;
+mod project;
 
-use accord::{Role, SemId, SnapshotBuilder};
+use project::size_rects;
+
+use accord::SemId;
 
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Button;
 use crate::widgets::form::Select;
 use crate::widgets::form::Switch;
+use crate::widgets::form::TextField;
+use crate::widgets::form::color_picker::{ColorPart, ColorPicker};
+use crate::widgets::form::tokens::Look;
 use crate::widgets::form::tokens::SelectLook;
 use crate::widgets::nav::Tabs;
+use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// The design tab or the animation's.
@@ -49,7 +55,7 @@ pub enum End {
 #[derive(Clone, Debug)]
 pub enum Body {
     None,
-    Artboard(Select, [String; 2]),
+    Artboard(Select, [TextField; 2]),
     Tiles {
         n: usize,
         cols: usize,
@@ -57,7 +63,8 @@ pub enum Body {
         small: bool,
         picked: Option<usize>,
     },
-    Picker,
+    /// The background's color: the ColorPicker of front A.
+    Picker(ColorPicker),
     Camera(Tabs, f32),
     Loop(Tabs, [f32; 3]),
     Lens(Vec<Select>),
@@ -98,6 +105,11 @@ fn block(title: &str, tab: DesignTab, end: End, body: Body) -> Block {
     }
 }
 
+/// The artboard's width or height: the form's bare field (front A).
+fn size_field(value: &str) -> TextField {
+    TextField::new("").look(Look::Bare).with_text(value)
+}
+
 fn tiles(n: usize, cols: usize, well: bool, small: bool) -> Body {
     Body::Tiles {
         n,
@@ -126,14 +138,17 @@ impl DesignSidebar {
                     "Macro Lens",
                     "Fish-Eye Lens",
                 ],
-                "camera",
+                "kit-artboard",
             ),
-            select(&["Zoom out", "Zoom in"], "zoom-in").look(SelectLook::Filled),
-            select(&["Rotate around", "Rotate 180°", "Rotate 90°"], "rotate-cw")
-                .look(SelectLook::Filled),
+            select(&["Zoom out", "Zoom in"], "kit-camera").look(SelectLook::Filled),
+            select(
+                &["Rotate around", "Rotate 180°", "Rotate 90°"],
+                "kit-camera",
+            )
+            .look(SelectLook::Filled),
         ];
         let sizes = ["800x600", "1024x768", "1280x1024", "1600x1200", "1920x1080"];
-        let artboard = select(&sizes, "frame").label("X Post");
+        let artboard = select(&sizes, "kit-artboard").label("X Post");
         let blocks = vec![
             block(
                 "Show Frame",
@@ -145,11 +160,16 @@ impl DesignSidebar {
                 "Artboard",
                 Design,
                 End::Add,
-                Body::Artboard(artboard, ["800".into(), "600".into()]),
+                Body::Artboard(artboard, ["800", "600"].map(size_field)),
             ),
             block("Materials", Design, End::Add, tiles(4, 2, true, false)),
             block("Styles", Design, End::Add, tiles(2, 2, false, false)),
-            block("Background", Design, End::Add, Body::Picker),
+            block(
+                "Background",
+                Design,
+                End::Add,
+                Body::Picker(ColorPicker::new("F4F4F4", 100)),
+            ),
             block(
                 "Camera",
                 Design,
@@ -211,9 +231,14 @@ impl DesignSidebar {
             let selects = child(&at, "select");
             let select_id = |i: usize| selects.as_ref().map(|f| f.key(i.to_string()));
             match &mut block.body {
-                Body::Artboard(s, _) => {
+                Body::Artboard(s, fields) => {
                     if let Some(sid) = select_id(0) {
                         *s = s.clone().sem(sid);
+                    }
+                    for (f, name) in fields.iter_mut().zip(["width", "height"]) {
+                        if let Some(fid) = child(&at, name) {
+                            *f = f.clone().sem(fid);
+                        }
                     }
                 }
                 Body::Lens(list) => {
@@ -221,6 +246,11 @@ impl DesignSidebar {
                         if let Some(sid) = select_id(i) {
                             *s = s.clone().sem(sid);
                         }
+                    }
+                }
+                Body::Picker(p) => {
+                    if let Some(pid) = child(&at, "color") {
+                        *p = p.clone().sem(pid);
                     }
                 }
                 Body::Camera(t, _) | Body::Loop(t, _) => {
@@ -256,7 +286,7 @@ impl DesignSidebar {
                 let rows = (*n as f32 / cols).ceil();
                 rows * cell + (rows - 1.0).max(0.0) * d.gap
             }
-            Body::Picker => d.field_h * 2.0,
+            Body::Picker(p) => p.height(theme),
             Body::Camera(..) => {
                 let label = d.field_text.line_height;
                 Tabs::height(theme)
@@ -394,14 +424,26 @@ impl DesignSidebar {
         }
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let mut moving = false;
+    /// The switches' knobs and the color picker's caret.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let mut wake = Wake::idle();
         for block in &mut self.blocks {
             if let End::Switch(s) = &mut block.end {
-                moving |= s.tick(dt);
+                wake = wake.merge(Wake::moving(s.tick(dt)));
+            }
+            if let Body::Picker(p) = &mut block.body {
+                wake = wake.merge(p.wake(dt));
             }
         }
-        moving
+        wake
+    }
+
+    /// The background's color picker.
+    pub fn picker_mut(&mut self) -> Option<&mut ColorPicker> {
+        self.blocks.iter_mut().find_map(|b| match &mut b.body {
+            Body::Picker(p) => Some(p),
+            _ => None,
+        })
     }
 
     pub fn handle_event(
@@ -437,6 +479,20 @@ impl DesignSidebar {
                 && let Body::Camera(t, _) | Body::Loop(t, _) = &mut block.body
             {
                 out = out.merge(t.handle_event(event, r, theme));
+            }
+            if let Body::Picker(p) = &mut block.body {
+                out = out.merge(p.handle_event(event, l.body, theme));
+            }
+            if let Body::Artboard(s, fields) = &mut block.body {
+                let rects = size_rects(l.body, s.height_in(theme), theme);
+                let press = matches!(event, WidgetEvent::MouseDown { .. });
+                for (f, at) in fields.iter_mut().zip(rects) {
+                    if (press && at.contains(x, y)) || (!press && f.is_focused()) {
+                        out = out.merge(f.handle_event(event, at, theme));
+                    } else if press && f.is_focused() {
+                        f.unfocus();
+                    }
+                }
             }
             if let Body::Tiles {
                 n, cols, picked, ..
@@ -481,6 +537,20 @@ impl DesignSidebar {
                         let on = is(s.sem_id());
                         s.set_focused(on);
                         found |= on;
+                    }
+                }
+                Body::Picker(p) => {
+                    let part = [ColorPart::Hex, ColorPart::Alpha]
+                        .into_iter()
+                        .find(|part| is(p.text_id(*part)));
+                    match part {
+                        Some(part) => {
+                            p.focus(part);
+                            found = true;
+                        }
+                        None => {
+                            p.blur();
+                        }
                     }
                 }
                 Body::Camera(t, _) | Body::Loop(t, _) => {
@@ -551,72 +621,5 @@ impl DesignSidebar {
             }
         }
         false
-    }
-
-    /// A `Role::Region` named `label`: the Share button, the tabs, and
-    /// per group of the current tab a `Role::Group` with its switch,
-    /// selects, tabs and tiles.
-    #[track_caller]
-    pub fn project(
-        &self,
-        b: &mut SnapshotBuilder,
-        id: &SemId,
-        label: &str,
-        parent: Option<&SemId>,
-    ) {
-        let mut node = b.node(id, Role::Region, label);
-        if let Some(parent) = parent {
-            node.parent(parent);
-        }
-        if let Some(at) = self.share.sem_id() {
-            let mut node = b.node(at, Role::Button, "Share");
-            node.parent(id).action("activate");
-        }
-        if let Some(at) = self.tabs.sem_id() {
-            self.tabs.project(b, at, "Design or animation", Some(id));
-        }
-        let tab = self.current_tab();
-        for (bi, block) in self.blocks.iter().enumerate().filter(|(_, b)| b.tab == tab) {
-            let Some(at) = id.child("block").ok().map(|f| f.key(bi.to_string())) else {
-                continue;
-            };
-            b.node(&at, Role::Group, block.title.as_str()).parent(id);
-            if let End::Switch(s) = &block.end
-                && let Some(sid) = s.sem_id()
-            {
-                s.project(b, sid, block.title.as_str(), Some(&at));
-            }
-            match &block.body {
-                Body::Artboard(s, _) => {
-                    if let Some(sid) = s.sem_id() {
-                        s.project(b, sid, "Artboard size", Some(&at));
-                    }
-                }
-                Body::Lens(list) => {
-                    for s in list {
-                        if let Some(sid) = s.sem_id() {
-                            s.project(b, sid, s.selected_label().unwrap_or("Lens"), Some(&at));
-                        }
-                    }
-                }
-                Body::Camera(t, _) | Body::Loop(t, _) => {
-                    if let Some(tid) = t.sem_id() {
-                        t.project(b, tid, block.title.as_str(), Some(&at));
-                    }
-                }
-                Body::Tiles { n, picked, .. } => {
-                    for i in 0..*n {
-                        let Some(tid) = self.tile_id(bi, i) else {
-                            continue;
-                        };
-                        let name = format!("{} {}", block.title, i + 1);
-                        let mut node = b.node(&tid, Role::Button, name);
-                        node.parent(&at).state("selected", *picked == Some(i));
-                        node.action("activate");
-                    }
-                }
-                _ => {}
-            }
-        }
     }
 }

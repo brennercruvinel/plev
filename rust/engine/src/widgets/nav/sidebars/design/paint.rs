@@ -90,14 +90,15 @@ impl DesignSidebar {
             ));
             match &block.end {
                 End::Switch(s) => s.render(c, l.end, theme),
-                End::Add => icon_in(c, "plus", l.end, d.add_icon, k.mark.0),
-                End::Repeat => icon_in(c, "repeat", l.end, d.add_icon, k.mark.0),
+                End::Add => icon_in(c, "kit-plus", l.end, d.add_icon, k.mark.0),
+                End::Repeat => icon_in(c, "kit-loop", l.end, d.add_icon, k.mark.0),
             }
             self.body(c, l.index, l.body, theme);
         }
     }
 
-    fn eye(&self, c: &mut Compositor, select: Rect, theme: &Theme) {
+    /// The button beside a select, the kit's own glyph.
+    fn action(&self, c: &mut Compositor, select: Rect, icon: &str, theme: &Theme) {
         let d = &theme.navigation.sidebars.canvas.design;
         let r = Rect::new(
             select.right() + d.gap,
@@ -107,7 +108,7 @@ impl DesignSidebar {
         );
         icon_in(
             c,
-            "eye",
+            icon,
             r,
             d.add_icon,
             theme.navigation.sidebars.canvas.mark.0,
@@ -163,7 +164,7 @@ impl DesignSidebar {
             Body::Artboard(select, values) => {
                 let sr = Rect::new(r.x, r.y, r.w - d.gap - d.add, select.height_in(theme));
                 select.render(c, sr, theme);
-                self.eye(c, sr, theme);
+                self.action(c, sr, "kit-lock-on", theme);
                 let y = sr.bottom() + d.gap;
                 let fields = r.w - d.gap - d.unit_w;
                 let fw = (fields - d.stack_gap) / 2.0;
@@ -178,15 +179,13 @@ impl DesignSidebar {
                         k.subtle.0,
                         None,
                     ));
-                    let room = Some((f.w - d.field_text_x).max(0.0));
-                    c.push(text(
-                        value,
-                        &style,
+                    let at = Rect::new(
                         f.x + d.field_text_x,
-                        mid(f),
-                        k.ink.0,
-                        room,
-                    ));
+                        f.y,
+                        (f.w - d.field_text_x).max(0.0),
+                        f.h,
+                    );
+                    value.render(c, at, theme);
                 }
                 let unit = Rect::new(r.right() - d.unit_w, y, d.unit_w, d.field_h);
                 let uw = crate::drawing::text::TextMeasurer::measure_styled("px", &style, None).0;
@@ -253,20 +252,7 @@ impl DesignSidebar {
                     }
                 }
             }
-            Body::Picker => {
-                Self::well(c, r, theme);
-                let x = r.x + d.field_prefix_x;
-                let y = r.y + (r.h - style.line_height * 2.0) / 2.0;
-                c.push(text("ColorPicker", &style, x, y, k.ink.0, None));
-                c.push(text(
-                    "TODO: front A",
-                    &style,
-                    x,
-                    y + style.line_height,
-                    k.subtle.0,
-                    None,
-                ));
-            }
+            Body::Picker(p) => p.render(c, r, theme),
             Body::Camera(tabs, value) => {
                 let tr = Rect::new(r.x, r.y, r.w, crate::widgets::nav::Tabs::height(theme));
                 tabs.render(c, tr, theme);
@@ -292,7 +278,7 @@ impl DesignSidebar {
                     d.range_fill.0,
                 ));
                 let chip = Rect::new(r.right() - d.chip_w, y, d.chip_w, d.field_h);
-                Self::chip(c, chip, "gauge", &format!("{value}"), theme);
+                Self::chip(c, chip, "kit-distortion", &format!("{value}"), theme);
             }
             Body::Loop(tabs, [from, to, total]) => {
                 let strip = Rect::new(r.x, r.y, r.w, d.strip_h);
@@ -334,14 +320,15 @@ impl DesignSidebar {
                 }
                 let y = strip.bottom() + d.gap;
                 let chip = Rect::new(r.right() - d.chip_w_narrow, y, d.chip_w_narrow, d.field_h);
-                Self::chip(c, chip, "timer", &format!("{}s", to - from), theme);
+                Self::chip(c, chip, "kit-duration", &format!("{}s", to - from), theme);
             }
             Body::Lens(list) => {
                 let mut y = r.y;
-                for s in list {
+                let actions = ["kit-view", "kit-more", "kit-more"];
+                for (s, icon) in list.iter().zip(actions) {
                     let sr = Rect::new(r.x, y, r.w - d.gap - d.add, s.height_in(theme));
                     s.render(c, sr, theme);
-                    self.eye(c, sr, theme);
+                    self.action(c, sr, icon, theme);
                     y = sr.bottom() + d.stack_gap;
                 }
             }

@@ -114,4 +114,5 @@ text_hosts! {
     Modals => modals,
     // task-104 front G, navigation and data: the zoom level's field
     Toolbar => toolbar,
+    Sidebar => sidebar,
 }
