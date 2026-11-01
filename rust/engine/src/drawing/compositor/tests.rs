@@ -1496,3 +1496,33 @@ fn drop_gpu_resources_forgets_every_layer_and_marks_it_dirty() {
         assert!(!layer.quad_vertices.is_empty());
     }
 }
+
+#[test]
+fn on_layer_aims_push_and_bind_at_the_layer_and_restores_the_default() {
+    let mut comp = Compositor::new();
+    let top = comp.create_layer(5);
+    let id = accord::SemId::name("panel").unwrap();
+    let rect = SceneNode::Rect {
+        x: 0.0,
+        y: 0.0,
+        w: 4.0,
+        h: 4.0,
+        color: [1.0, 0.0, 0.0, 1.0],
+    };
+    comp.on_layer(top, |c| {
+        c.push(rect.clone());
+        c.bind(&id, [0.0, 0.0, 4.0, 4.0]);
+    });
+    comp.push(rect);
+    let count = |c: &Compositor, l: LayerId| c.layer(l).map_or(0, |l| l.nodes.len());
+    assert_eq!(count(&comp, top), 1, "the push inside lands on the layer");
+    assert_eq!(
+        count(&comp, LayerId::DEFAULT),
+        1,
+        "the push after, on the default"
+    );
+    assert_eq!(comp.binding(&id).map(|b| b.layer), Some(top));
+    comp.begin_frame();
+    comp.push(SceneNode::PopClip);
+    assert_eq!(count(&comp, LayerId::DEFAULT), 1);
+}
