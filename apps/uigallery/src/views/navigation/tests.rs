@@ -376,17 +376,15 @@ fn with_a_finger_the_sidebar_and_the_palette_press_in_44_px_drawn_the_same() {
 
     let mut palette = ShowcaseView::new(1280.0, 800.0);
     assert!(palette.handle_chord("k", true));
-    let seen = check(
+    // its commands (`palette.palette.list[<i>]`); the box above them is
+    // front A's text field, which keeps its own press area
+    let commands = check(
         &mut palette,
         &mut Compositor::new(),
         "palette",
-        &["palette"],
+        &["palette.palette.list["],
     );
-    let commands = seen
-        .iter()
-        .filter(|id| id.as_str().contains(".list["))
-        .count();
-    assert!(commands > 5, "the commands");
+    assert!(commands.len() > 5, "the commands");
 }
 
 /// A tap where two grown press areas meet lands on the nearer drawing
