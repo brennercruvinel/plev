@@ -27,11 +27,8 @@ use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
-/// The kit's plus in a ring (UploadAvatar :24), its 20 px viewBox.
-pub const PLUS_PATH: &str = "M9.998 1.54a8.46 8.46 0 0 1 8.458 8.458 8.46 8.46 0 0 1-8.458 8.458A8.46 8.46 0 0 1 1.54 9.998 8.46 8.46 0 0 1 9.998 1.54zm0 1.5A6.96 6.96 0 0 0 3.04 9.998a6.96 6.96 0 0 0 6.958 6.958 6.96 6.96 0 0 0 6.958-6.958A6.96 6.96 0 0 0 9.998 3.04zm0 2.673a.75.75 0 0 1 .75.75v2.785l2.786.001a.75.75 0 0 1 .743.648l.007.102a.75.75 0 0 1-.75.75l-2.786-.001v2.786a.75.75 0 0 1-.648.743l-.102.007a.75.75 0 0 1-.75-.75v-2.786l-2.785.001a.75.75 0 0 1-.743-.648l-.007-.102a.75.75 0 0 1 .75-.75l2.785-.001V6.463a.75.75 0 0 1 .648-.743l.102-.007z";
-
-/// The plus's viewBox.
-const PLUS_VIEWBOX: f32 = 20.0;
+/// The kit's plus in a ring (UploadAvatar :24, `icons` `kit-plus-circle`).
+const PLUS: &str = "kit-plus-circle";
 
 /// A round photo that asks to be replaced.
 #[derive(Clone, Debug)]
@@ -235,9 +232,7 @@ impl UploadAvatar {
             let side = t.icon.min(d.w);
             let (cx, cy) = d.center();
             let at = (cx - side / 2.0, cy - side / 2.0);
-            if let Some(node) =
-                icons::kit_path_at(PLUS_PATH, PLUS_VIEWBOX, side, t.icon_color.0, at.0, at.1)
-            {
+            if let Some(node) = icons::icon_at(PLUS, side, t.icon_color.0, at.0, at.1) {
                 c.push(node);
             }
         }
