@@ -264,3 +264,23 @@ fn a_focus_that_moves_asks_once_and_the_pointer_s_never_asks() {
     assert_eq!(f.moved(Some(&sid("other.a"))), None, "a page shows as left");
     assert_eq!(f.moved(Some(&sid("other.b"))), Some(sid("other.b")));
 }
+
+/// The geometry is one axis: on x, a wide table's column off the right
+/// edge of its strip scrolls left the least that shows it, a column off
+/// the left edge back, and one in the strip stays (task-104 front I).
+#[test]
+fn the_same_rule_holds_across_a_wide_table() {
+    // a strip 600 wide at x 200, its columns 1800 wide in all
+    let strip = Span::new(200.0, 600.0);
+    let mut columns = ScrollState::new();
+    columns.set_viewport(strip.len);
+    columns.set_content(1800.0);
+    let column = |x: f32| Span::new(x, 160.0);
+    assert_eq!(columns.reveal(column(900.0), strip, MARGIN, NONE), 280.0);
+    assert_eq!(columns.offset(), 280.0);
+    // the same column, now at 620 on screen, is in the strip
+    assert_eq!(columns.reveal(column(620.0), strip, MARGIN, NONE), 0.0);
+    // the first column, now at -80, comes back with its margin
+    assert_eq!(columns.reveal(column(-80.0), strip, MARGIN, NONE), -280.0);
+    assert_eq!(columns.offset(), 0.0);
+}

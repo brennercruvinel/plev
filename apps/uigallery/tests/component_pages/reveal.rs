@@ -304,3 +304,48 @@ fn a_reader_s_scroll_into_view_shows_the_node_and_leaves_the_focus() {
         );
     }
 }
+
+/// Across: no page scrolls sideways, so a stop of Tab must never land off
+/// the window's sides. A carousel projects only the slides of its page
+/// (its arrows page it, the focus never reaches a slide off it), a table
+/// drops columns by priority when narrow; at every width from a phone's
+/// to a desktop's, each stop shows within the window and its clip.
+#[test]
+fn across_every_stop_shows_within_the_window_s_width() {
+    let _reduced = Reduced::on();
+    for page in ["Carousel", "Data Table", "Table"] {
+        for width in [360.0_f32, 480.0, 768.0, 1024.0, 1280.0] {
+            let mut view = ShowcaseView::new(width, 800.0);
+            view.resize(width, 800.0, 1.0);
+            view.jump_to_page(page);
+            assert_eq!(view.page_title(), page);
+            let mut g = Gallery {
+                view,
+                c: Compositor::new(),
+            };
+            g.frame();
+            let stops = g.page_order().len();
+            assert!(stops > 0, "{page}: stops of Tab");
+            for _ in 0..stops {
+                g.tab_to_page(false);
+                let Some(now) = g.focus_now() else { break };
+                let Some(b) = g.c.binding(&now) else {
+                    continue;
+                };
+                let [x, _, w, _] = b.rect;
+                const EPS: f32 = 0.5;
+                assert!(
+                    x >= -EPS && x + w <= width + EPS,
+                    "{page} at {width}: {now} at x {x}..{} off the window",
+                    x + w
+                );
+                if let Some([cx, _, cw, _]) = b.clip {
+                    assert!(
+                        x >= cx - EPS && x + w <= cx + cw + EPS,
+                        "{page} at {width}: {now} cut by its clip"
+                    );
+                }
+            }
+        }
+    }
+}
