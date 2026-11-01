@@ -29,13 +29,8 @@ pub struct SidebarsRecipe {
     pub edge_width: f32,
     /// The canvas sidebars' `rounded-[1.25rem]`.
     pub canvas_radius: f32,
-    /// The head's `p-6` and the logo's 145 x 32.
+    /// The head's `p-6` round the logo (`header::Logo`, front F).
     pub head_pad: f32,
-    pub logo_w: f32,
-    pub logo_h: f32,
-    /// The logo's mark and wordmark until the Logo (front F) is here.
-    pub logo_mark: Color,
-    pub logo_text: NavText,
     /// The rows' `px-5 pb-5`.
     pub body_pad: f32,
     /// A group's caption: `p-2.5`, `mb-0.5`, its run and tone.
@@ -171,7 +166,7 @@ pub struct DesignRecipe {
 
 impl SidebarsRecipe {
     pub fn hoff_core() -> Self {
-        let [paper, _, wash, line, _, _, shade7, _, ink] = SHADES;
+        let [paper, _, wash, line, _, _, shade7, _, _] = SHADES;
         Self {
             width: 240.0,
             min_h: 876.0,
@@ -180,10 +175,6 @@ impl SidebarsRecipe {
             edge_width: 1.0,
             canvas_radius: 20.0,
             head_pad: 24.0,
-            logo_w: 145.0,
-            logo_h: 32.0,
-            logo_mark: ink,
-            logo_text: NavText::new(15.0, 24.0, 600),
             body_pad: 20.0,
             // `p-2.5 text-[0.75rem] leading-[1rem] font-medium
             // text-[#7b7b7b]/70` (GuidelineSidebar:59): shade 7 for AAA.
@@ -223,10 +214,6 @@ impl SidebarsRecipe {
             edge_width: control.edge_width,
             canvas_radius: theme.radius.lg,
             head_pad: space.lg,
-            logo_w: theme.size.sidebar_w - space.lg * 2.0,
-            logo_h: slot,
-            logo_mark: colors.text,
-            logo_text: NavText::of(&theme.typography.base_2sm()),
             body_pad: space.md,
             caption: NavText::of(&theme.typography.caption_r()),
             caption_pad: space.sm,

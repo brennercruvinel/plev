@@ -34,13 +34,13 @@ use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use spec::{CardWidget, Part};
 
 /// The live card's chip, as the kit names it.
-const LIVE: &str = "Default, Click on, Focus, Hover, Typing";
+pub(crate) const LIVE: &str = "Default, Click on, Focus, Hover, Typing";
 
-fn email() -> Field {
+pub(crate) fn email() -> Field {
     Field::new("Enter email").label("Email")
 }
 
-fn password() -> Field {
+pub(crate) fn password() -> Field {
     Field::new("Enter password")
         .label("Password")
         .link("Forgot password?")

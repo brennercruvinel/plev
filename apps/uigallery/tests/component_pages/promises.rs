@@ -51,6 +51,11 @@ const SECRETS: &[(&str, fn())] = &[
         "Field",
         fields::a_password_takes_the_same_secret_from_the_three_and_shows_its_length_only,
     ),
+    // the kit's Password group on the Input tab
+    (
+        "Input",
+        fields::a_password_on_the_input_tab_takes_the_same_secret_and_shows_its_length_only,
+    ),
     // the one-time codes
     (
         "Input OTP",
