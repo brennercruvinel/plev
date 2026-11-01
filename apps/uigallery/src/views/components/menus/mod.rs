@@ -24,7 +24,6 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
 use engine::widgets::form::TextField;
@@ -194,23 +193,14 @@ impl MenusPage {
     }
 
     /// Each card as tall as its widget between the template's `pt-20`
-    /// and `pb-16` (a pending text as tall as it wraps in the card's
-    /// body); a row of more than one at least the template's
+    /// and `pb-16`; a row of more than one at least the template's
     /// `min-h-121.5`, a card alone in its row only as tall as it holds.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let card_w = showcase::card_width(SPAN, content, theme);
-        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
-        let caption = theme.typography.run(TypeRole::Caption.regular());
         let heights = self
             .cards
             .iter()
             .map(|c| {
-                let h = match &c.body {
-                    Body::Pending(name) => {
-                        TextMeasurer::measure_styled(name, &caption, Some(body_w)).1
-                    }
-                    body => Self::size(body, theme).1,
-                };
+                let h = Self::size(&c.body, theme).1;
                 CARD_TOP + h + CARD_BOTTOM
             })
             .collect();
