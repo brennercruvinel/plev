@@ -6,7 +6,11 @@
 //! motion). A focus the pointer moved stays put: the click is where the
 //! person looks.
 //!
-//! It runs after the page drew, for any actor: the rect is the focused
+//! It runs after the page drew, on the frames after something that can
+//! move the focus (`arm_reveal`: a key, the pointer, a reader's or an
+//! agent's request through `assist_focus` and `act`), never on a frame
+//! that only animates: the projection it reads the focus from is built
+//! once per such input, not per frame. For any actor, the rect is the focused
 //! node's binding in this frame (where it draws and is hit), or the union
 //! of its bound descendants'. A widget that scrolls inside the page (a
 //! list, a table, a message thread) brings its row into its own window
@@ -48,7 +52,7 @@ impl ShowcaseView {
     /// `true` when the page jumped there (reduced motion) and the frame
     /// must be drawn again at the new offset; a glide moves on `wake`.
     pub(in crate::views) fn reveal_focus(&mut self, c: &Compositor) -> bool {
-        if self.is_app() {
+        if !std::mem::take(&mut self.reveal_armed) || self.is_app() {
             return false;
         }
         let snapshot = self.semantics();
@@ -75,6 +79,11 @@ impl ShowcaseView {
         !self.glide.is_gliding()
     }
 
+    /// Something that can move the focus ran: the next frame looks.
+    pub(in crate::views) fn arm_reveal(&mut self) {
+        self.reveal_armed = true;
+    }
+
     /// The glide toward a focus, advanced by `dt`: `true` while it moves.
     pub(in crate::views) fn reveal_tick(&mut self, dt: f32) -> bool {
         if !self.glide.is_gliding() {
@@ -89,5 +98,34 @@ impl ShowcaseView {
     /// asks the loop for the next one (`shell/window/pace`).
     pub fn revealing(&self) -> bool {
         self.glide.is_gliding()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use accord::SemId;
+    use engine::drawing::compositor::Compositor;
+
+    use super::super::super::ShowcaseView;
+
+    /// The focus is read on the frame after an input that can move it,
+    /// and on no frame that only animates.
+    #[test]
+    fn only_a_frame_after_an_input_reads_the_focus() {
+        let mut view = ShowcaseView::new(1280.0, 480.0);
+        view.jump_to_page("Input");
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        assert!(!view.reveal_armed, "a frame takes the arm");
+        view.wake(1.0 / 60.0);
+        view.render(&mut c);
+        assert!(!view.reveal_armed, "animating arms nothing");
+        let id = SemId::parse("input_page.group[0].card[0]").ok();
+        if let Some(id) = id {
+            view.assist_focus(&id);
+        }
+        assert!(view.reveal_armed, "a reader's focus arms it");
+        view.render(&mut c);
+        assert!(!view.reveal_armed);
     }
 }

@@ -128,6 +128,10 @@ pub struct ShowcaseView {
     /// the page's window.
     reveal: FocusReveal,
     glide: Glide,
+    /// Something that can move the focus ran since the last frame (a key,
+    /// the pointer, a reader's or an agent's request): the next frame
+    /// looks where the focus is. A frame that only animates does not.
+    reveal_armed: bool,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -190,6 +194,7 @@ impl ShowcaseView {
             pending_scroll: None,
             reveal: FocusReveal::new(),
             glide: Glide::default(),
+            reveal_armed: false,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
@@ -228,6 +233,7 @@ impl ShowcaseView {
     /// over the modal or the menu, the widget the focus is in
     /// (`dispatcher::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        self.arm_reveal();
         // A focused text that runs over lines, or a list under a filter,
         // takes the arrows first (`TextHost::handle_nav`).
         let pane = self.pane();
@@ -274,8 +280,10 @@ impl ShowcaseView {
     fn set_page(&mut self, index: usize) {
         let index = index.min(PAGES.len() - 1);
         if index != self.page {
+            // the next frame takes the new page's focus as it stands
             self.reveal.reset();
             self.glide.stop();
+            self.reveal_armed = true;
         }
         self.page = index;
         let page = &PAGES[index];
