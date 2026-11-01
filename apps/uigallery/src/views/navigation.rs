@@ -21,9 +21,9 @@ use engine::widgets::form::input_group::{Addon, InputGroup};
 use engine::widgets::form::tokens::Look;
 use engine::widgets::header::Logo;
 use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
-use engine::widgets::overlay::sheet::paint_scrim;
+use engine::widgets::overlay::sheet::{Edge, paint_panel, paint_scrim};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
-use engine::widgets::shell::Route;
+use engine::widgets::shell::{Route, SafeArea};
 use engine::widgets::wake::Wake;
 
 use super::ShowcaseView;
@@ -201,8 +201,14 @@ impl Navigation {
         self.sidebar.wake(dt)
     }
 
-    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        self.sidebar.render(c, bounds, theme);
+    /// The panel at `bounds` on its own surface, or (`surface` off) on
+    /// one the caller painted: the drawer's edge panel.
+    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme, surface: bool) {
+        if surface {
+            self.sidebar.render(c, bounds, theme);
+        } else {
+            self.sidebar.render_parts(c, bounds, theme);
+        }
         if let Some(at) = self.sidebar.slot_rect(bounds, theme) {
             if let Some(id) = self.search.sem_id() {
                 c.bind(id, [at.x, at.y, at.w, at.h]);
@@ -243,6 +249,26 @@ impl ShowcaseView {
         {
             dock.toggle_pin(theme, w);
         }
+    }
+
+    /// The last input was a finger (`true`) or a pointer, as the platform
+    /// tells it: a finger has no hover to peek with, so the sidebar is a
+    /// drawer behind the menu button. `true` when that changed.
+    pub fn set_touch(&mut self, on: bool) -> bool {
+        let w = self.shell.dock_window().w;
+        let theme = &self.theme;
+        let Some(dock) = self.shell.dock.as_mut() else {
+            return false;
+        };
+        let before = dock.mode(theme, w);
+        dock.set_touch(on, theme, w);
+        dock.mode(theme, w) != before
+    }
+
+    /// The window's safe area (a notch, a home bar, rounded corners), in
+    /// logical pixels: the chrome, the dock and the page stand inside it.
+    pub fn set_safe_area(&mut self, safe_area: SafeArea) {
+        self.shell.set_safe_area(safe_area);
     }
 
     /// The strip of the panel at `panel` the logo and the pin sit in.
@@ -334,7 +360,20 @@ impl ShowcaseView {
     pub(super) fn escape_sidebar(&mut self) -> bool {
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
-        let escaped = self.shell.dock.as_mut().is_some_and(|d| d.escape(theme, w));
+        let dock = self.shell.dock.as_mut();
+        let drawer = dock.as_ref().is_some_and(|d| d.is_drawer_open());
+        let menu = dock.as_ref().and_then(|d| d.menu_id());
+        let escaped = dock.is_some_and(|d| d.escape(theme, w));
+        // the drawer shut on the keyboard: its focus back to the menu
+        // button that opened it
+        if drawer
+            && escaped
+            && self.sidebar_focus.is_some()
+            && let Some(menu) = menu
+            && self.focus_sidebar(&menu)
+        {
+            return true;
+        }
         self.blur_sidebar() || escaped
     }
 
@@ -345,8 +384,10 @@ impl ShowcaseView {
     }
 
     /// The panel where the dock has it: beside the page while pinned, on
-    /// the overlay layer while it floats over the page, over the drawer's
-    /// scrim.
+    /// the overlay layer while it floats over the page; as a drawer, over
+    /// its scrim on front B's edge panel (`sheet::paint_panel`, the
+    /// theme's drawer surface: its fill, its free edge's rule, corners and
+    /// shadow).
     pub(super) fn render_sidebar(&self, c: &mut Compositor, overlay: LayerId) {
         let theme = &self.theme;
         let Some(d) = self.shell.layout(theme).dock else {
@@ -362,8 +403,14 @@ impl ShowcaseView {
         let layer = if d.floats { overlay } else { LayerId::DEFAULT };
         let head = self.panel_head(panel);
         let w = self.shell.dock_window().w;
+        let drawer = d.mode == DockMode::Drawer;
+        if drawer {
+            let window = Rect::new(0.0, 0.0, self.width, self.height);
+            let t = &theme.overlay.drawer.panel;
+            paint_panel(c, overlay, panel, window, Edge::Left, t);
+        }
         c.on_layer(layer, |c| {
-            self.nav.render(c, panel, theme);
+            self.nav.render(c, panel, theme, !drawer);
             if let Some(dock) = &self.shell.dock {
                 dock.render_pin(c, head, theme, w);
             }
@@ -372,30 +419,4 @@ impl ShowcaseView {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_page_has_one_place_and_back() {
-        for (i, page) in PAGES.iter().enumerate() {
-            let (row, at) = place(i);
-            assert_eq!(page_at(row, at), Some(i), "{}", page.title);
-        }
-        assert_eq!(page_at(Group::ALL.len(), 0), None);
-    }
-
-    #[test]
-    fn the_current_page_marks_its_tab_and_its_group_alone() {
-        let last = PAGES.len() - 1;
-        let mut nav = Navigation::new(0);
-        nav.set_current(last);
-        let (row, at) = place(last);
-        for (r, (m, l)) in nav.menus().enumerate() {
-            assert_eq!(l.current_link(), (r == row).then_some(at));
-            if r == row {
-                assert!(m.is_open(), "navigation opens the group");
-            }
-        }
-        assert_eq!(nav.menus().count(), Group::ALL.len());
-    }
-}
+mod tests;

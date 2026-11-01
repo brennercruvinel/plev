@@ -53,27 +53,32 @@ fn parts(card: &CatalogCard) -> (&str, &[String]) {
 pub(super) fn layout(card: &CatalogCard, b: Rect, theme: &Theme) -> Layout {
     let p = &tokens(theme).price;
     let (description, features) = parts(card);
-    let title_row = p.title_pad[1] * 2.0 + p.title.line_height;
+    let title_row = p.title_pad[1] * 2.0 + theme.typography.run(p.title).line_height;
     let wrap = inner_w(b.w, theme);
-    let desc_h = TextMeasurer::measure_styled(description, &p.description.style(theme), Some(wrap))
-        .1
-        .max(p.description.line_height);
-    let feature = p.feature.style(theme);
+    let desc_h = TextMeasurer::measure_styled(
+        description,
+        &p.description.style(&theme.typography),
+        Some(wrap),
+    )
+    .1
+    .max(theme.typography.run(p.description).line_height);
+    let feature = p.feature.style(&theme.typography);
     let text_w = (wrap - p.check - p.check_pad[0] - p.check_pad[1]).max(0.0);
     let feats: f32 = features
         .iter()
         .map(|f| {
             TextMeasurer::measure_styled(f, &feature, Some(text_w))
                 .1
-                .max(p.feature.line_height)
+                .max(theme.typography.run(p.feature).line_height)
         })
         .sum::<f32>()
         + p.feature_gap * features.len().saturating_sub(1) as f32;
-    let row_h = p
-        .amount
+    let row_h = theme
+        .typography
+        .run(p.amount)
         .line_height
-        .max(p.currency.line_height + p.currency_pad[1] * 2.0)
-        .max(p.unit.line_height * 2.0 + p.unit_pad * 2.0);
+        .max(theme.typography.run(p.currency).line_height + p.currency_pad[1] * 2.0)
+        .max(theme.typography.run(p.unit).line_height * 2.0 + p.unit_pad * 2.0);
     let btn_h = ButtonSize::Md.height(theme);
     let box_h = EDGE * 2.0 + p.pad * 2.0 + row_h + p.button_gap + btn_h;
     // The panel: `p-3`, the description `mb-3 p-3`, the box, the features
@@ -141,7 +146,7 @@ pub(super) fn render(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Th
     text(
         c,
         title,
-        &p.title.style(theme),
+        &p.title.style(&theme.typography),
         b.x + p.title_pad[0],
         b.y + p.title_pad[1],
         title_color,
@@ -151,7 +156,7 @@ pub(super) fn render(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Th
     text(
         c,
         description,
-        &p.description.style(theme),
+        &p.description.style(&theme.typography),
         l.description.x,
         l.description.y,
         k.ink,
@@ -165,7 +170,7 @@ pub(super) fn render(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Th
     shadow_insets(c, LayerId::DEFAULT, bx, p.radius, &p.price_shadow);
     let row_y = bx.y + EDGE + p.pad;
     let mut x = bx.x + EDGE + p.pad;
-    let currency = p.currency.style(theme);
+    let currency = p.currency.style(&theme.typography);
     text(
         c,
         "$",
@@ -176,13 +181,13 @@ pub(super) fn render(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Th
         None,
     );
     x += TextMeasurer::measure_styled("$", &currency, None).0 + p.currency_pad[0] * 2.0;
-    let amount = p.amount.style(theme);
+    let amount = p.amount.style(&theme.typography);
     text(c, price, &amount, x, row_y, k.ink, None);
     x += TextMeasurer::measure_styled(price, &amount, None).0;
     text(
         c,
         "USD /\nmonth",
-        &p.unit.style(theme),
+        &p.unit.style(&theme.typography),
         x + p.unit_pad,
         row_y + p.unit_pad,
         k.muted,
@@ -196,21 +201,21 @@ pub(super) fn render(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Th
     }
 
     // The features, each after a check.
-    let feature = p.feature.style(theme);
+    let feature = p.feature.style(&theme.typography);
     let text_x = l.features.x + p.check_pad[0] + p.check + p.check_pad[1];
     let text_w = (l.features.right() - text_x).max(0.0);
     let mut y = l.features.y;
     for f in features {
         let h = TextMeasurer::measure_styled(f, &feature, Some(text_w))
             .1
-            .max(p.feature.line_height);
+            .max(theme.typography.run(p.feature).line_height);
         icon(
             c,
             "check",
             p.check,
             k.ink,
             l.features.x + p.check_pad[0],
-            y + (p.feature.line_height - p.check) / 2.0,
+            y + (theme.typography.run(p.feature).line_height - p.check) / 2.0,
         );
         text(c, f, &feature, text_x, y, k.ink, Some(text_w));
         y += h + p.feature_gap;

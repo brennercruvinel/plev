@@ -23,7 +23,7 @@
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::recipe::{focus_ring, rounded_rect, shadow_drops};
@@ -110,8 +110,16 @@ impl Bubble {
         self.focused
     }
 
+    /// The bubble's text: what a person wrote, so a word wider than the
+    /// bubble (a link, a long name) breaks inside rather than run out of
+    /// it (CSS `overflow-wrap: anywhere`, as chat bubbles set it).
     fn style(theme: &Theme) -> TextStyle {
-        theme.message.bubble.text.style(&theme.typography)
+        theme
+            .message
+            .bubble
+            .text
+            .style(&theme.typography)
+            .with_overflow_wrap(OverflowWrap::Anywhere)
     }
 
     /// Border plus padding, on each side across and down.

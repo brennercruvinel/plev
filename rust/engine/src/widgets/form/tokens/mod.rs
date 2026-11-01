@@ -205,6 +205,9 @@ pub struct GroupAddons {
     pub width: f32,
     pub invite_width: f32,
     pub palette_width: f32,
+    /// The most of the window's height a command palette's dialog takes
+    /// (the share of a `cmdk` dialog's `60vh`): its list scrolls past it.
+    pub palette_share: f32,
 }
 
 /// A one-time code (`super::otp`): its cells are the Field's input box,
@@ -273,14 +276,10 @@ fn ink_a(a: f32) -> Color {
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
-/// A section's caption: 12px, weight 600, a line of 1.4 (the HOFF
-/// accordion head the gallery's groups were drawn with), in the engine's
-/// face, every theme alike.
-fn caption() -> TextStyle {
-    let size = 12.0;
-    TextStyle::new(size)
-        .with_line_height(size * 1.4)
-        .with_weight(600)
+/// A section's caption: the scale's strong body (12/16 semibold in the
+/// core), in the theme's own face and tracking.
+fn caption(t: &TypographyScale) -> TextStyle {
+    t.role(TypeRole::BodyStrong)
 }
 
 impl FormTokens {
@@ -445,11 +444,13 @@ impl FormTokens {
             // Not in the kit, which has no palette: `w-72`, between its
             // Search and its Invite.
             palette_width: 288.0,
+            // Not in the kit: three fifths of the window, a `60vh`.
+            palette_share: 0.6,
         };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
             color: ink,
-            caption: caption(),
+            caption: caption(&ramp),
             // Not in the kit: the core glass's placeholder tone, as the
             // caption draws in every other theme.
             caption_color: Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.40),
@@ -572,11 +573,12 @@ impl FormTokens {
             width: theme.size.menu_w,
             invite_width: theme.size.readable_max_w / 2.0,
             palette_width: theme.size.readable_max_w * 0.4,
+            palette_share: 0.6,
         };
         let label = LabelRecipe {
             text: t.run(TypeRole::Caption.strong()),
             color: c.text,
-            caption: caption(),
+            caption: caption(&theme.typography),
             caption_color: g.text_placeholder,
             disabled_alpha: g.disabled_alpha,
         };

@@ -37,9 +37,7 @@ impl DisclosureTokens {
             hover: CLEAR,
             open: CLEAR,
             current: CLEAR,
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 600,
+            text_type: TypeRole::BodyStrong.run(),
             label: ink,
             chevron_box: 24.0,
             chevron: 16.0,
@@ -70,9 +68,7 @@ impl DisclosureTokens {
             content_pad: [0.0, 16.0, 16.0, 16.0],
             // The kit's sections hold thumbnails, not text: a text body
             // takes the Dropdown's list text (Dropdown :73-76).
-            body_size: 12.0,
-            body_line_height: 18.0,
-            body_weight: 600,
+            body_type: TypeRole::BodyStrong.run(),
             body: gray,
         };
 
@@ -90,9 +86,7 @@ impl DisclosureTokens {
                 ShadowSpec::inset([0.0, -1.0], 0.6, 0.0, black(0.20)),
                 ShadowSpec::new([0.0, 1.0], 4.2, -1.0, black(0.25)),
             ],
-            font_size: 11.0,
-            line_height: 16.5,
-            font_weight: 500,
+            text_type: TypeRole::Caption.run(),
             text: gray,
         };
 
@@ -123,9 +117,7 @@ impl DisclosureTokens {
                 fill: wash,
                 border: line,
             },
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 600,
+            text_type: TypeRole::BodyStrong.run(),
             label: ink,
             chevron_box: 16.0,
             chevron: 16.0,
@@ -171,9 +163,7 @@ impl DisclosureTokens {
             divider: NONE,
             divider_width: 0.0,
             content_pad: [2.0, 0.0, 0.0, 0.0],
-            body_size: 12.0,
-            body_line_height: 18.0,
-            body_weight: 600,
+            body_type: TypeRole::BodyStrong.run(),
             body: gray,
         };
 
@@ -203,13 +193,9 @@ impl DisclosureTokens {
             icon: 20.0,
             gap: 12.0,
             icon_color: gray,
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 600,
+            text_type: TypeRole::BodyStrong.run(),
             label: ink,
-            meta_size: 11.0,
-            meta_line_height: 16.5,
-            meta_weight: 500,
+            meta_type: TypeRole::Caption.run(),
             meta: gray,
             tile: 60.0,
             tile_radius: 10.0,
@@ -238,13 +224,9 @@ impl DisclosureTokens {
         // leading-[1rem]` (:42) and Search/index.tsx's `text-[0.75rem]
         // leading-[1rem]` (:42), on the counter's cap.
         let kbd = [
+            cap.clone(),
             CapRecipe {
-                line_height: 16.0,
-                ..cap.clone()
-            },
-            CapRecipe {
-                font_size: 12.0,
-                line_height: 16.0,
+                text_type: TypeRole::Label.run(),
                 ..cap
             },
         ];
@@ -293,8 +275,7 @@ impl DisclosureTokens {
             glyph_color: gray,
             ring_outer: (1.5, gray),
             ring_inner: (3.0, paper),
-            counter_size: 12.0,
-            counter_line_height: 18.0,
+            counter_type: TypeRole::Body.run(),
             counter: gray,
             counter_gap: 12.0,
             bar_h: 44.0,
@@ -332,9 +313,7 @@ impl DisclosureTokens {
                 fill: wash,
                 border: line,
             },
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 600,
+            text_type: TypeRole::BodyStrong.run(),
             label: ink,
             label_dim: gray,
             arrow: 16.0,
@@ -374,16 +353,12 @@ impl DisclosureTokens {
             frame_color: line,
             header_fill: NONE,
             header_radius: 0.0,
-            header_size: 11.0,
-            header_line_height: 16.0,
-            header_weight: 500,
+            header_type: TypeRole::Caption.run(),
             header_text: passing,
             rule: 1.0,
             rule_color: line,
             cell_pad: 20.0,
-            cell_size: 11.0,
-            cell_line_height: 16.0,
-            cell_weight: 500,
+            cell_type: TypeRole::Caption.run(),
             cell: ink,
             cell_dim: passing,
             rows: RowRecipe {
@@ -442,9 +417,7 @@ impl DisclosureTokens {
                 fill: wash,
                 border: hex(0xE2E2E2),
             },
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 500,
+            text_type: TypeRole::Label.run(),
             label: ink,
             label_selected: ink,
             chevron_color: gray,
@@ -460,9 +433,7 @@ impl DisclosureTokens {
         let panel = PanelRecipe {
             radius: 20.0,
             pad: 16.0,
-            label_size: 12.0,
-            label_line_height: 16.0,
-            label_weight: 500,
+            label_type: TypeRole::Label.run(),
             label: passing,
         };
         // The Notifications head (Notifications/index.tsx:26-28): `px-5 py-4
@@ -477,13 +448,9 @@ impl DisclosureTokens {
             pad_y: 16.0,
             row: 20.0,
             blurb_gap: 16.0,
-            title_size: 14.0,
-            title_line_height: 20.0,
-            title_weight: 600,
+            title_type: TypeRole::Heading.strong(),
             title: ink,
-            blurb_size: 12.0,
-            blurb_line_height: 16.0,
-            blurb_weight: 500,
+            blurb_type: TypeRole::Label.run(),
             blurb: passing,
             badge_gap: 4.0,
             rule: 1.0,
@@ -504,31 +471,29 @@ impl DisclosureTokens {
         // spans the page column, padded as the page's groups are (Group/
         // index.tsx:7, `p-12`, `p-5`): it bleeds, its title on the gutter.
         // A badge keeps the panel head's `gap-1`.
-        let page_head = |[pad_x, pad_y]: [f32; 2], size: f32, line_height: f32| HeaderRecipe {
+        let page_head = |[pad_x, pad_y]: [f32; 2], title_type: TypeRun, row: f32| HeaderRecipe {
             pad_x,
             pad_y,
-            row: line_height,
+            row,
             blurb_gap: 4.0,
-            title_size: size,
-            title_line_height: line_height,
-            title_weight: 400,
+            title_type,
             title: ink,
-            blurb_size: 13.0,
-            blurb_line_height: 20.0,
-            blurb_weight: 400,
+            blurb_type: TypeRole::Paragraph.run(),
             blurb: passing,
             badge_gap: 4.0,
             rule: 1.0,
             rule_color: line,
         };
+        // The title is h3 at the head's width: the kit's 24/32 narrow and
+        // 32/40 wide are its fluid ends; the row is its line.
         let roles = TypeRoles::hoff_core();
         let h3 = roles.spec(TypeRole::H3);
-        let [min_size, min_lh] = roles
+        let [_, min_lh] = roles
             .fluid_min(TypeRole::H3)
             .unwrap_or([h3.size, h3.line_height]);
         let page = PageHeadRecipe {
-            narrow: page_head([20.0, 20.0], min_size, min_lh),
-            wide: page_head([48.0, 32.0], h3.size, h3.line_height),
+            narrow: page_head([20.0, 20.0], TypeRole::H3.run(), min_lh),
+            wide: page_head([48.0, 32.0], TypeRole::H3.run(), h3.line_height),
             range: roles.range,
             bleed: true,
         };

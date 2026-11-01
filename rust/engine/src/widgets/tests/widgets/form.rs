@@ -581,23 +581,22 @@ fn a_label_wraps_to_its_width_and_fades_when_disabled() {
     assert!((off - rest * theme.form.label.disabled_alpha).abs() < 1e-6);
 }
 
-/// The caption is the HOFF accordion head the gallery's groups were
-/// drawn with, in every theme: 12/600 on a line of 1.4, the engine's
-/// face, the glass's placeholder tone.
+/// The caption is the scale's strong body in every theme, in the theme's
+/// face and tracking, in the glass's placeholder tone.
 #[test]
-fn a_caption_is_the_accordion_head_in_every_theme() {
-    use crate::drawing::text::TextStyle;
+fn a_caption_is_the_strong_body_of_every_theme() {
     use crate::widgets::form::label::Label;
-    let head = TextStyle::new(12.0)
-        .with_line_height(12.0 * 1.4)
-        .with_weight(600);
     for theme in [
         Theme::hoff_core(),
         Theme::hoff(),
         Theme::dark(),
         Theme::light(),
     ] {
+        // In the theme's own face: Inter under the core, not the engine's
+        // default sans.
+        let head = theme.typography.role(TypeRole::BodyStrong);
         assert_eq!(Label::new("A").caption().style(&theme), head);
+        assert_eq!(head.font_family.as_deref(), theme.typography.family);
         assert_eq!(theme.form.label.caption_color, theme.glass.text_placeholder);
     }
 }
@@ -1752,4 +1751,83 @@ fn an_upload_avatar_projects_a_button() {
         let at = accord::StateRef::parse("s.avatar:photo").unwrap();
         assert_eq!(snap.value(&at), Some(&Value::Bool(photo)));
     }
+}
+
+/// The dialog's sheet follows the window's height: as tall as its
+/// commands need up to the theme's share of the window, the list taking
+/// what the box leaves; Down down the list keeps the highlighted command
+/// in view (the least scroll), and Up back to the first shows its
+/// group's caption again.
+#[test]
+fn a_command_dialog_list_follows_the_window_and_the_arrows() {
+    use crate::widgets::form::command::Command;
+    use crate::widgets::form::command_dialog::CommandDialog;
+    let theme = Theme::hoff_core();
+    let names: Vec<&'static str> = (0..60)
+        .map(|i| &*Box::leak(format!("Command {i}").into_boxed_str()))
+        .collect();
+    let cmd =
+        Command::new("Type a command...").group("All", names.iter().map(|n| (*n, None, None)));
+    let mut d = CommandDialog::new(cmd);
+    d.open();
+    let share = theme.form.group.palette_share;
+    let mut last = 0.0;
+    for h in [360.0, 600.0, 900.0, 1400.0] {
+        let window = Rect::new(0.0, 0.0, 1024.0, h);
+        let sheet = d.sheet_rect(&theme, window);
+        assert!(
+            sheet.h <= h * share + 0.01,
+            "{h}: {} past the share",
+            sheet.h
+        );
+        assert!(sheet.h > last, "{h}: the sheet grows with the window");
+        assert!(sheet.y >= 0.0 && sheet.bottom() <= h);
+        let palette = d.palette_rect(&theme, sheet);
+        let l = d.command.layout(palette, &theme);
+        assert!(
+            (l.list.bottom() - palette.bottom()).abs() < 0.01,
+            "the list fills it"
+        );
+        last = sheet.h;
+    }
+    // a few commands: the sheet is as tall as they need
+    let few = CommandDialog::new(Command::new("x").group("G", [("One", None, None)])).opened();
+    let window = Rect::new(0.0, 0.0, 1024.0, 1400.0);
+    let need = few.command.full_height(
+        few.sheet_rect(&theme, window).w - theme.overlay.modal.pad * 2.0,
+        &theme,
+    );
+    assert!((few.sheet_rect(&theme, window).h - need - theme.overlay.modal.pad * 2.0).abs() < 0.01);
+
+    let window = Rect::new(0.0, 0.0, 1024.0, 600.0);
+    let palette = d.palette_rect(&theme, d.sheet_rect(&theme, window));
+    let list = d.command.layout(palette, &theme).list;
+    let shown = |d: &CommandDialog, i: usize| {
+        let x = list.x + list.w / 2.0;
+        let mut y = list.y;
+        let mut rows = 0;
+        while y < list.bottom() {
+            if d.command.item_at(x, y, palette, &theme) == Some(i) {
+                rows += 1;
+            }
+            y += 1.0;
+        }
+        rows as f32 >= theme.form.select.panel.row_h - 1.0
+    };
+    for k in 1..names.len() {
+        assert!(d.command.nav(true));
+        d.command.settle_scroll(palette, &theme);
+        assert!(shown(&d, k), "Down to {k}: in view, whole");
+    }
+    for k in (0..names.len() - 1).rev() {
+        assert!(d.command.nav(false));
+        d.command.settle_scroll(palette, &theme);
+        assert!(shown(&d, k), "Up to {k}: in view, whole");
+    }
+    // the first command's caption shows with it: the list is at its top
+    let first_row = list.y + theme.form.select.panel.pad + theme.form.select.panel.row_h * 1.5;
+    assert_eq!(
+        d.command.item_at(list.x + 4.0, first_row, palette, &theme),
+        Some(0)
+    );
 }

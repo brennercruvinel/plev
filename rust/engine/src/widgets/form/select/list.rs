@@ -12,6 +12,7 @@ use std::ops::Range;
 
 use accord::SemId;
 
+use crate::control::input::reveal::{Cover, Span};
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
@@ -48,17 +49,13 @@ pub(crate) fn sync(scroll: &mut ScrollState, n: usize, theme: &Theme) {
     scroll.set_viewport(view_h(n, theme));
 }
 
-/// Scrolls `scroll` the least that shows row `i` whole.
+/// Scrolls `scroll` the least that shows row `i` whole
+/// (`reveal::nearest`, in the rows' own space).
 pub(crate) fn reveal(scroll: &mut ScrollState, i: usize, n: usize, theme: &Theme) {
     let row_h = theme.form.select.panel.row_h;
-    let view = view_h(n, theme);
-    let top = i as f32 * row_h;
-    let bottom = top + row_h;
-    if top < scroll.offset() {
-        scroll.scroll_to(top);
-    } else if bottom > scroll.offset() + view {
-        scroll.scroll_to(bottom - view);
-    }
+    let row = Span::new(i as f32 * row_h, row_h);
+    let view = Span::new(scroll.offset(), view_h(n, theme));
+    scroll.reveal(row, view, 0.0, Cover::default());
 }
 
 /// The rows a panel shows: the strip they scroll in, how far they are
@@ -73,8 +70,14 @@ pub(crate) struct Window {
 impl Window {
     /// The window of `n` rows in the panel `dd`, scrolled `offset`.
     pub(crate) fn new(dd: Rect, n: usize, offset: f32, theme: &Theme) -> Self {
+        Self::sized(dd, n, view_h(n, theme), offset, theme)
+    }
+
+    /// The same in a strip `view_h` tall, its owner's (a palette sized
+    /// by the window), not the panel's `max_h`.
+    pub(crate) fn sized(dd: Rect, n: usize, view_h: f32, offset: f32, theme: &Theme) -> Self {
         let p = &theme.form.select.panel;
-        let view = Rect::new(dd.x, dd.y + p.pad, dd.w, view_h(n, theme));
+        let view = Rect::new(dd.x, dd.y + p.pad, dd.w, view_h);
         let rows = if view.h > 0.0 && p.row_h > 0.0 {
             let first = (offset / p.row_h).floor() as usize;
             let end = ((offset + view.h) / p.row_h).ceil() as usize;

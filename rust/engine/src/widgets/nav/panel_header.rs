@@ -64,19 +64,17 @@ impl PanelHeader {
 
     /// The title's style at an unbounded width (a page head's wide one).
     pub fn title_style(&self, theme: &Theme) -> TextStyle {
-        Self::title_of(&self.recipe(theme, f32::INFINITY), theme)
+        Self::title_of(&self.recipe(theme, f32::INFINITY), f32::INFINITY, theme)
     }
 
-    fn title_of(r: &HeaderRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.title_size, r.title_line_height, r.title_weight)
+    /// The title's style in a head `width` wide: its run at that width (a
+    /// fluid role, the page head's h3, grows with the head).
+    fn title_of(r: &HeaderRecipe, width: f32, theme: &Theme) -> TextStyle {
+        theme.typography.run_at(r.title_type, width)
     }
 
     fn blurb_of(r: &HeaderRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.blurb_size, r.blurb_line_height, r.blurb_weight)
+        theme.typography.run(r.blurb_type)
     }
 
     /// Side padding of a page head inside the gutter (the shell lines its
@@ -207,7 +205,7 @@ impl PanelHeader {
     ) {
         let r = &self.recipe(theme, bounds.w);
         let band = r.pad_y * 2.0 + r.row;
-        let title = Self::title_of(r, theme);
+        let title = Self::title_of(r, bounds.w, theme);
         let mut right = bounds.x + bounds.w - pads[1];
         if let Some(badge) = &self.badge {
             let (bw, bh) = badge.preferred_size(theme);

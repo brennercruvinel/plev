@@ -64,6 +64,10 @@ pub struct Collapsible {
     current: bool,
     /// The first section of a stack draws no divider above it.
     first: bool,
+    /// The label stays on one line and ends in an ellipsis when it does
+    /// not fit (a sidebar's row), instead of wrapping; the projected name
+    /// is the whole title either way.
+    truncate: bool,
     press: Press,
     motion: DisclosureMotion,
     /// The revealed fraction, 0 closed to 1 open, eased.
@@ -97,6 +101,7 @@ impl Collapsible {
             disabled: false,
             current: false,
             first: false,
+            truncate: false,
             press: Press::default(),
             motion,
             reveal: Tween::new(0.0, motion.reveal, motion.reveal_easing),
@@ -140,6 +145,15 @@ impl Collapsible {
     /// No divider above: the first section of a stack.
     pub fn first(mut self, on: bool) -> Self {
         self.first = on;
+        self
+    }
+
+    /// One line, cut with an ellipsis where it does not fit (CSS
+    /// `truncate`), rather than wrapped: a row of a narrow sidebar, whose
+    /// label must never break inside a word. The whole title is still
+    /// what [`Collapsible::project`] names.
+    pub fn truncate(mut self, on: bool) -> Self {
+        self.truncate = on;
         self
     }
 
@@ -247,9 +261,7 @@ impl Collapsible {
     }
 
     fn label_style(r: &DisclosureRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight)
+        theme.typography.run(r.text_type)
     }
 
     /// The divider's share of the height: none on the first section.
@@ -265,11 +277,7 @@ impl Collapsible {
 
     fn counter_style(r: &DisclosureRecipe, theme: &Theme) -> Option<TextStyle> {
         let counter = r.counter.as_ref()?;
-        Some(
-            theme
-                .typography
-                .exact(counter.font_size, counter.line_height, counter.font_weight),
-        )
+        Some(theme.typography.run(counter.text_type))
     }
 
     /// The counter's pill, `(w, h)`, when there is one to draw.
@@ -282,8 +290,8 @@ impl Collapsible {
         Some((w + pad_x * 2.0, style.line_height + pad_y * 2.0))
     }
 
-    /// The label wraps in what the tile, the counter and the chevron
-    /// leave; a counter stands as far from the label as the chevron from
+    /// The label wraps (or, truncated, is cut) in what the tile, the
+    /// counter and the chevron leave; a counter stands as far from the label as the chevron from
     /// the counter (the kit's `ml-3`, Dropdown :59), so a long label
     /// never runs into it.
     fn inner(&self, trigger: Rect, theme: &Theme) -> Inner {
@@ -301,8 +309,12 @@ impl Collapsible {
             - r.chevron_box)
             .max(0.0);
         let style = Self::label_style(r, theme);
-        let (_, text_h) = TextMeasurer::measure_styled(&self.title, &style, Some(label_w));
-        let label_h = text_h.max(style.line_height);
+        let label_h = if self.truncate {
+            style.line_height
+        } else {
+            let (_, text_h) = TextMeasurer::measure_styled(&self.title, &style, Some(label_w));
+            text_h.max(style.line_height)
+        };
         let h = label_h
             .max(r.chevron_box)
             .max(tile.map_or(0.0, |(size, _)| size))

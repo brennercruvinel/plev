@@ -11,11 +11,10 @@
 //! overlays render under all of them and stay coherent with the theme's
 //! other floating surfaces (the context menu's `glass.popover`).
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
+use crate::styling::theme::{ButtonSurface, Theme};
+use crate::styling::theme::{TypeRole, TypeRun};
 
 pub use super::modals::tokens::ModalsTokens;
 pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
@@ -121,10 +120,8 @@ pub struct TriggerTokens {
     /// Between the value and the chevron.
     pub gap: f32,
     pub radius: f32,
-    /// Value size and line height in px, and weight.
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    /// The value's run.
+    pub value: TypeRun,
     /// The chevron's edge and color; it turns half a turn while open.
     pub chevron: f32,
     pub chevron_color: Color,
@@ -163,7 +160,7 @@ pub struct PopoverLineTokens {
     pub slot_gap: f32,
     pub check: f32,
     pub check_color: Color,
-    pub label: TextStyle,
+    pub label: TypeRun,
     pub text: Color,
     /// Under the pointer or the keys.
     pub hover_fill: Color,
@@ -261,7 +258,7 @@ impl PopoverTokens {
                 slot_gap: 4.0,
                 check: 16.0,
                 check_color: hex(0x7B7B7B),
-                label: TypographyScale::hoff_core().exact(12.0, 16.0, 500),
+                label: TypeRole::Label.run(),
                 text: hex(0x000000),
                 hover_fill: shade3,
                 key_min_w: 34.0,
@@ -276,11 +273,8 @@ impl PopoverTokens {
                 pad_x: 12.0,
                 gap: 8.0,
                 radius: 12.0,
-                // text-[0.875rem] font-medium; the line height is the
-                // preflight's 1.5.
-                font_size: 14.0,
-                line_height: 21.0,
-                font_weight: 500,
+                // text-[0.875rem] font-medium (the preflight's 1.5 line).
+                value: TypeRole::Heading.run(),
                 // size-4 fill-[#7b7b7b].
                 chevron: 16.0,
                 chevron_color: hex(0x7B7B7B),
@@ -359,7 +353,7 @@ pub struct TooltipTokens {
     pub radius: f32,
     pub pad_x: f32,
     pub pad_y: f32,
-    pub text: TextStyle,
+    pub text: TypeRun,
     pub text_color: Color,
     /// From its anchor (main axis), and from the container's edge.
     pub clearance: Clearance,
@@ -405,7 +399,7 @@ impl TooltipTokens {
             radius: 6.0,
             pad_x: 6.0,
             pad_y: 4.0,
-            text: TypographyScale::hoff_core().exact(11.0, 16.0, 500),
+            text: TypeRole::Caption.run(),
             text_color: hex(0xE2E2E2),
             clearance: Clearance {
                 gap: 18.0,
@@ -439,7 +433,7 @@ impl TooltipTokens {
             radius: theme.shape.tooltip,
             pad_x: theme.spacing.md,
             pad_y: xs,
-            text: theme.typography.run(TypeRole::Caption.regular()),
+            text: TypeRole::Caption.regular(),
             text_color: theme.colors.text_mid,
             clearance: Clearance {
                 gap: xs + xs / 2.0,
@@ -511,8 +505,8 @@ pub struct ModalTokens {
     /// The widest the sheet gets; the window less its gutter caps it.
     pub max_w: f32,
     pub pad: f32,
-    pub title: TextStyle,
-    pub body: TextStyle,
+    pub title: TypeRun,
+    pub body: TypeRun,
     pub title_color: Color,
     pub body_color: Color,
     /// Between the title and the body, and between the body and the
@@ -543,7 +537,6 @@ impl ModalTokens {
     /// bg-[#F8F7F7] border-t border-[#E2E2E2]` whose buttons share its
     /// width (`flex-1`), over the scrim `#323232/40`.
     pub fn hoff_core() -> Self {
-        let type_ = TypographyScale::hoff_core();
         Self {
             scrim: Color::rgba(50.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 0.40),
             fill: hex(0xFCFCFC),
@@ -559,8 +552,8 @@ impl ModalTokens {
             radius: 32.0,
             max_w: 356.0,
             pad: 24.0,
-            title: type_.exact(24.0, 32.0, 500),
-            body: type_.exact(13.0, 19.5, 400),
+            title: TypeRole::H5.run(),
+            body: TypeRole::Paragraph.run(),
             title_color: hex(0x121212),
             // The kit's #7b7b7b is 4.13:1 on its paper, under AA; shade 7
             // (#323232) holds AAA (`styling/theme/tests/contrast.rs`).
@@ -598,8 +591,8 @@ impl ModalTokens {
             radius: theme.shape.pill,
             max_w: theme.size.modal_max_w,
             pad: theme.spacing.xxl,
-            title: theme.typography.role(TypeRole::Title),
-            body: theme.typography.role(TypeRole::Body),
+            title: TypeRole::Title.run(),
+            body: TypeRole::Body.run(),
             title_color: theme.colors.text,
             body_color: theme.colors.text_mid,
             title_gap: theme.spacing.sm,

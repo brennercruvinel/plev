@@ -20,6 +20,7 @@ use super::layout::force::{Link, Params, Sim};
 use super::layout::{Layout, compound};
 use super::look::Look;
 use super::model::Graph;
+use crate::compose::animation;
 use crate::drawing::compositor::LayerId;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -234,12 +235,18 @@ impl LiveGraph {
     /// still moves on its own. A drag on a force graph keeps the simulation
     /// warm (`alpha_target`), so it counts here; a drag on a compound graph
     /// moves only with the pointer, whose events already ask for the frame,
-    /// so a press held still asks for none.
+    /// so a press held still asks for none. With reduced motion the graph
+    /// comes to rest in one frame (`Sim::settle`) instead of drifting
+    /// there; a drag still moves with the hand, a step a frame.
     pub fn tick(&mut self, _dt: f32) -> bool {
         let t0 = Instant::now();
         let hot = match &mut self.sim {
             Some(sim) if sim.hot() => {
-                sim.tick();
+                if animation::reduced_motion() && sim.alpha_target <= 0.0 {
+                    sim.settle();
+                } else {
+                    sim.tick();
+                }
                 true
             }
             _ => false,

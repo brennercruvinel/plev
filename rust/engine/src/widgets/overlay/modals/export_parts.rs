@@ -179,6 +179,9 @@ pub(super) fn walk(
 ) -> f32 {
     let t = tokens(theme);
     let (e, ink) = (&t.export, &t.ink);
+    let scale = &theme.typography;
+    let (head_style, note_style) = (scale.run(e.head), scale.run(e.note));
+    let (value_style, title_style) = (scale.run(e.value), scale.run(e.line.title));
     let x = area.x + e.pad;
     let w = (area.w - e.pad * 2.0).max(0.0);
     out.clear();
@@ -197,9 +200,9 @@ pub(super) fn walk(
                 text(
                     c,
                     "Export images",
-                    &e.head,
+                    &head_style,
                     x,
-                    middle(&e.head, y, e.head_h),
+                    middle(&head_style, y, e.head_h),
                     w - e.tool,
                     ink.ink,
                 );
@@ -249,11 +252,19 @@ pub(super) fn walk(
                 hairline(c, area.x, y, area.w, ink.rule_w, ink.rule);
             }
             y += ink.rule_w + e.pad;
-            let head = e.head.line_height;
+            let head = head_style.line_height;
             if let Some(c) = c.as_deref_mut() {
-                text(c, "Compression", &e.head, x, y, w / 2.0, ink.ink);
-                let dims_y = middle(&e.note, y, head);
-                text_end(c, DIMENSIONS, &e.note, x + w, dims_y, w / 2.0, ink.muted);
+                text(c, "Compression", &head_style, x, y, w / 2.0, ink.ink);
+                let dims_y = middle(&note_style, y, head);
+                text_end(
+                    c,
+                    DIMENSIONS,
+                    &note_style,
+                    x + w,
+                    dims_y,
+                    w / 2.0,
+                    ink.muted,
+                );
             }
             y += head + e.note_gap;
             let value = Rect::new(x + w - e.value_w, y, e.value_w, e.range_h);
@@ -261,7 +272,7 @@ pub(super) fn walk(
             if let Some(c) = c.as_deref_mut() {
                 stroke(c, value, e.value_radius, ink.edge, ink.rule_w);
                 let label = format!("{}%", compression(controls).round());
-                let inner = e.value_icon + e.row_gap + text_w(&label, &e.value);
+                let inner = e.value_icon + e.row_gap + text_w(&label, &value_style);
                 let ix = value.x + (value.w - inner) / 2.0;
                 let icon = Rect::new(ix, value.y, e.value_icon, value.h);
                 glyph(c, "chevrons-left-right", e.value_icon, ink.icon, icon);
@@ -269,9 +280,9 @@ pub(super) fn walk(
                 text(
                     c,
                     &label,
-                    &e.value,
+                    &value_style,
                     tx,
-                    middle(&e.value, value.y, value.h),
+                    middle(&value_style, value.y, value.h),
                     value.right() - tx,
                     ink.ink,
                 );
@@ -294,7 +305,7 @@ pub(super) fn walk(
             // still fits beside it; in less room it gives way.
             let longest = lines
                 .iter()
-                .map(|(t, _)| text_w(t, &l.title))
+                .map(|(t, _)| text_w(t, &title_style))
                 .fold(0.0, f32::max);
             let control_w = l.control_w.min((w - l.title_gap - longest).max(0.0));
             for (n, (title, k)) in lines.iter().enumerate() {
@@ -303,17 +314,17 @@ pub(super) fn walk(
                 }
                 let ch = height(controls, *k, theme);
                 out[*k] = Rect::new(x + w - control_w, y, control_w, ch);
-                let mut h = ch.max(l.title_top + l.title.line_height);
+                let mut h = ch.max(l.title_top + title_style.line_height);
                 if let Some(c) = c.as_deref_mut() {
                     let room = w - control_w - l.title_gap;
-                    text(c, title, &l.title, x, y + l.title_top, room, ink.ink);
+                    text(c, title, &title_style, x, y + l.title_top, room, ink.ink);
                 }
                 if section == Section::Video && *k == 3 {
                     let ny = y + ch + e.note_top;
                     if let Some(c) = c.as_deref_mut() {
-                        text_end(c, DIMENSIONS, &e.note, x + w, ny, control_w, ink.muted);
+                        text_end(c, DIMENSIONS, &note_style, x + w, ny, control_w, ink.muted);
                     }
-                    h = h.max(ch + e.note_top + e.note.line_height);
+                    h = h.max(ch + e.note_top + note_style.line_height);
                 }
                 y += h;
             }
@@ -323,7 +334,7 @@ pub(super) fn walk(
     let last = controls.0.len() - 1;
     let bh = height(controls, last, theme);
     let estimate = if section == Section::Video {
-        e.note.line_height + e.note_gap
+        note_style.line_height + e.note_gap
     } else {
         0.0
     };
@@ -333,8 +344,8 @@ pub(super) fn walk(
     if section == Section::Video
         && let Some(c) = c
     {
-        let ny = by - e.note_gap - e.note.line_height;
-        text_centered(c, ESTIMATE, &e.note, x + w / 2.0, ny, w, ink.muted);
+        let ny = by - e.note_gap - note_style.line_height;
+        text_centered(c, ESTIMATE, &note_style, x + w / 2.0, ny, w, ink.muted);
     }
     natural
 }

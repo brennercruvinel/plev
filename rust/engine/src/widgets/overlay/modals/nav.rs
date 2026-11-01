@@ -91,6 +91,7 @@ impl Nav {
         ink: &ModalInk,
         theme: &Theme,
     ) {
+        let scale = &theme.typography;
         for (i, ((icon, label), r)) in self.items.iter().zip(rects).enumerate() {
             let active = i == self.active;
             let hovered = controls.item(i).is_some_and(|it| it.press.hovered);
@@ -114,9 +115,9 @@ impl Nav {
             text(
                 c,
                 label,
-                &n.label,
+                &scale.run(n.label),
                 tx,
-                middle(&n.label, r.y, r.h),
+                middle(&scale.run(n.label), r.y, r.h),
                 end - tx,
                 ink.ink,
             );

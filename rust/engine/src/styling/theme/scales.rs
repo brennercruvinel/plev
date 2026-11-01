@@ -139,8 +139,11 @@ pub struct ControlTokens {
     pub pad_x: [f32; 5],
     /// Icon edge for Sm / Md / Lg (HOFF: 16 / 20 / 24).
     pub icons: [f32; 3],
-    /// Smallest hit target on touch (WCAG 2.5.8 / apple HIG: 44).
+    /// Smallest hit target on touch (WCAG 2.5.5 AAA / apple HIG: 44).
     pub min_touch_target: f32,
+    /// Smallest hit target with a pointer (WCAG 2.5.8 AA: 24): a control
+    /// drawn smaller presses in this much around it (`widgets::hit`).
+    pub min_target: f32,
     /// Edge-light rim width on cards and modals.
     pub edge_width: f32,
     /// Edge-light rim width on buttons and active nav items.
@@ -187,6 +190,7 @@ impl ControlTokens {
             pad_x: [16.0, 12.0, 24.0, 16.0, 32.0],
             icons: [16.0, 20.0, 24.0],
             min_touch_target: 44.0,
+            min_target: 24.0,
             edge_width: 1.0,
             edge_width_strong: 1.5,
             focus_ring_width: 2.0,

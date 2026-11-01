@@ -270,9 +270,7 @@ mod tests {
                 c.begin_frame();
                 page.render(&mut c, content, &theme);
                 let r = &theme.disclosure.tree;
-                let style = theme
-                    .typography
-                    .exact(r.font_size, r.line_height, r.font_weight);
+                let style = theme.typography.run(r.text_type);
                 for node in c.layer(LayerId::DEFAULT).unwrap().nodes() {
                     let SceneNode::Text { key, x, y, .. } = node else {
                         continue;

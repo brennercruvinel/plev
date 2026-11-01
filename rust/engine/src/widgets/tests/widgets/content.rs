@@ -357,6 +357,36 @@ fn virtual_list_visible_range_clamps_at_bottom() {
     assert!(range.start < 100);
 }
 
+/// A focused row scrolls in the least that shows it (`reveal::nearest`);
+/// in a viewport shorter than a row, the row's start shows, coming from
+/// above or below: reading starts there (task-104 front I).
+#[test]
+fn virtual_list_focus_reveals_the_row_and_its_start_in_a_short_viewport() {
+    let mut list = VirtualList::new(24.0);
+    list.set_item_count(100);
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 240.0));
+    list.set_focused(Some(20));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 20 at the bottom"
+    );
+    list.set_focused(Some(15));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 15 shows: stays"
+    );
+    list.set_focused(Some(2));
+    assert_eq!(list.scroll.offset(), 2.0 * 24.0, "row 2 at the top");
+
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 10.0));
+    list.set_focused(Some(30));
+    assert_eq!(list.scroll.offset(), 30.0 * 24.0, "from above: its start");
+    list.set_focused(Some(5));
+    assert_eq!(list.scroll.offset(), 5.0 * 24.0, "from below: its start");
+}
+
 #[test]
 fn virtual_list_renders_only_visible_rows() {
     let mut list = VirtualList::new(24.0);
@@ -587,8 +617,8 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
             theme.typography.role(TypeRole::H3)
         );
         assert_eq!(
-            HeaderRecipe::page_head(&theme).title_size,
-            theme.typography.role(TypeRole::Title).font_size
+            HeaderRecipe::page_head(&theme).title_type,
+            TypeRole::Title.run()
         );
         assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
         let page = theme.disclosure.page;
@@ -902,7 +932,10 @@ fn the_page_starts_under_the_blurb_at_every_width() {
                 .header
                 .blurb_rect(l.header, l.header_pads, &theme)
                 .unwrap();
-            let line = theme.disclosure.page.at(l.header.w).blurb_line_height;
+            let line = theme
+                .typography
+                .run(theme.disclosure.page.at(l.header.w).blurb_type)
+                .line_height;
             lines.insert((b.h / line).round() as u32);
             assert!(
                 b.w <= l.header.w && b.x >= l.header.x,
@@ -939,39 +972,36 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
     let theme = core();
     let page = theme.disclosure.page;
     assert_eq!((page.wide.pad_x, page.wide.pad_y), (48.0, 32.0));
-    assert_eq!(
-        (page.wide.title_size, page.wide.title_line_height),
-        (32.0, 40.0)
-    );
+    assert_eq!(page.wide.title_type, TypeRole::H3.run());
     assert_eq!((page.narrow.pad_x, page.narrow.pad_y), (20.0, 20.0));
-    assert_eq!(
-        (page.narrow.title_size, page.narrow.title_line_height),
-        (24.0, 32.0)
-    );
+    assert_eq!(page.narrow.title_type, TypeRole::H3.run());
+    assert_eq!((page.narrow.row, page.wide.row), (32.0, 40.0));
     assert_eq!(page.range, FLUID_RANGE);
     assert_eq!(page.at(1280.0), page.wide);
     assert_eq!(page.at(360.0), page.narrow);
     // Between the ends the head grows by a line, as h3 does: its title
-    // is h3's at the head's width (its line on a whole pixel), with no
-    // step anywhere.
+    // is h3 at the head's width (the kit's 24/32 narrow, 32/40 wide), its
+    // row h3's line on a whole pixel, with no step anywhere.
     let mut prev = page.at(272.0);
+    let mut prev_title = theme.typography.run_at(prev.title_type, 272.0);
     for w in (280..=1600).step_by(8) {
         let at = page.at(w as f32);
+        let title = theme.typography.run_at(at.title_type, w as f32);
         let h3 = theme.typography.role_at(TypeRole::H3, w as f32);
-        assert_eq!(
-            (at.title_size, at.title_line_height),
-            (h3.font_size, h3.line_height.round()),
-            "{w}"
-        );
+        assert_eq!(title, h3, "{w}");
+        assert_eq!(at.row, h3.line_height.round(), "{w}");
         for (a, b) in [
             (prev.pad_x, at.pad_x),
             (prev.pad_y, at.pad_y),
-            (prev.title_size, at.title_size),
+            (prev.row, at.row),
+            (prev_title.font_size, title.font_size),
         ] {
             assert!(b >= a && b - a <= 1.0, "{w}: no step ({a} to {b})");
         }
-        prev = at;
+        (prev, prev_title) = (at, title);
     }
+    let narrow = theme.typography.run_at(page.narrow.title_type, 360.0);
+    assert_eq!((narrow.font_size, narrow.line_height), (24.0, 32.0));
     let head = PanelHeader::new("Cards");
     assert_eq!(head.height_for(1400.0, &theme), 32.0 + 40.0 + 32.0 + 1.0);
     assert_eq!(head.height_for(360.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);

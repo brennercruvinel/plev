@@ -9,30 +9,7 @@
 //! draws no pixel of a photo.
 
 use super::*;
-
-/// A text run: size, line height, weight.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct TypeSpec {
-    pub size: f32,
-    pub line_height: f32,
-    pub weight: u16,
-}
-
-impl TypeSpec {
-    pub const fn new(size: f32, line_height: f32, weight: u16) -> Self {
-        Self {
-            size,
-            line_height,
-            weight,
-        }
-    }
-
-    pub fn style(&self, theme: &Theme) -> crate::drawing::text::TextStyle {
-        theme
-            .typography
-            .exact(self.size, self.line_height, self.weight)
-    }
-}
+use crate::styling::theme::TypeRole;
 
 /// The pricing card (PriceCard/index.tsx).
 #[derive(Clone, Debug, PartialEq)]
@@ -41,15 +18,15 @@ pub struct PriceRecipe {
     pub radius: f32,
     /// The plan's title row, `px-6 py-3` (:35).
     pub title_pad: [f32; 2],
-    pub title: TypeSpec,
+    pub title: TypeRun,
     /// The inner panel, `p-3 border rounded-[1.25rem]` (:42).
     pub pad: f32,
-    pub description: TypeSpec,
+    pub description: TypeRun,
     /// The price box (:46): `p-3 border rounded-[1.25rem]`, its shadow.
     pub price_shadow: Vec<ShadowSpec>,
-    pub currency: TypeSpec,
-    pub amount: TypeSpec,
-    pub unit: TypeSpec,
+    pub currency: TypeRun,
+    pub amount: TypeRun,
+    pub unit: TypeRun,
     /// The `$` cell's padding (`px-0.5 py-1`), the unit's (`p-2`).
     pub currency_pad: [f32; 2],
     pub unit_pad: f32,
@@ -57,7 +34,7 @@ pub struct PriceRecipe {
     pub button_gap: f32,
     pub features_gap: f32,
     pub feature_gap: f32,
-    pub feature: TypeSpec,
+    pub feature: TypeRun,
     /// The check: `size-4 mr-2.5 ml-0.5`.
     pub check: f32,
     pub check_pad: [f32; 2],
@@ -82,7 +59,7 @@ pub struct TileRecipe {
     pub button_radius: f32,
     pub button_inset: f32,
     pub icon: f32,
-    pub label: TypeSpec,
+    pub label: TypeRun,
     pub label_gap: f32,
     pub label_pad: f32,
     /// The raised button's border (`border-[#DBDBDB]`) and shadow.
@@ -98,8 +75,8 @@ pub struct TileRecipe {
     pub image_gap: f32,
     pub text_pad: f32,
     pub title_gap: f32,
-    pub title: TypeSpec,
-    pub category: TypeSpec,
+    pub title: TypeRun,
+    pub category: TypeRun,
     /// The type badge: `size-10 rounded-lg top-3 left-3`.
     pub badge: f32,
     pub badge_radius: f32,
@@ -140,8 +117,8 @@ pub struct ExploreRecipe {
     pub thumb_radius: f32,
     pub text_gap: f32,
     pub line_gap: f32,
-    pub tag_title: TypeSpec,
-    pub tag_line: TypeSpec,
+    pub tag_title: TypeRun,
+    pub tag_line: TypeRun,
     /// The tag's hover: `shadow-xl`.
     pub lift: Vec<ShadowSpec>,
     /// The slide item: a 50 px image in a `border rounded-xl`.
@@ -236,26 +213,26 @@ impl CatalogTokens {
             width: 320.0,
             radius: 20.0,
             title_pad: [24.0, 12.0],
-            title: TypeSpec::new(20.0, 28.0, 500),
+            title: TypeRole::H6.run(),
             pad: 12.0,
             // `text-[0.9375rem] leading-[1.41rem] font-medium` (:43).
-            description: TypeSpec::new(15.0, 22.56, 500),
+            description: TypeRole::Title.run(),
             // `shadow-[0px_2px_2px_0px_rgba(255,255,255,0.80)_inset, ...]`.
             price_shadow: {
                 let mut s = vec![ShadowSpec::inset([0.0, 2.0], 2.0, 0.0, white(0.80))];
                 s.extend(raised());
                 s
             },
-            currency: TypeSpec::new(24.0, 32.0, 500),
-            amount: TypeSpec::new(40.0, 48.0, 400),
-            unit: TypeSpec::new(12.0, 16.0, 400),
+            currency: TypeRole::H5.run(),
+            amount: TypeRole::H2.run(),
+            unit: TypeRole::Body.run(),
             currency_pad: [2.0, 4.0],
             unit_pad: 8.0,
             button_gap: 8.0,
             features_gap: 12.0,
             feature_gap: 8.0,
             // `text-[0.8125rem] leading-[1.22rem]` (:79).
-            feature: TypeSpec::new(13.0, 19.52, 400),
+            feature: TypeRole::Paragraph.run(),
             check: 16.0,
             check_pad: [2.0, 10.0],
             lift: shadow_2xl(),
@@ -270,7 +247,7 @@ impl CatalogTokens {
             button_radius: 12.0,
             button_inset: 8.0,
             icon: 16.0,
-            label: TypeSpec::new(14.0, 20.0, 600),
+            label: TypeRole::Heading.strong(),
             label_gap: 6.0,
             label_pad: 12.0,
             button_border: hex(0xDBDBDB),
@@ -283,8 +260,8 @@ impl CatalogTokens {
             image_gap: 8.0,
             text_pad: 12.0,
             title_gap: 4.0,
-            title: TypeSpec::new(12.0, 16.0, 600),
-            category: TypeSpec::new(11.0, 16.0, 500),
+            title: TypeRole::BodyStrong.run(),
+            category: TypeRole::Caption.run(),
             badge: 40.0,
             badge_radius: 8.0,
             badge_inset: 12.0,
@@ -311,8 +288,8 @@ impl CatalogTokens {
             thumb_radius: 12.0,
             text_gap: 16.0,
             line_gap: 4.0,
-            tag_title: TypeSpec::new(12.0, 16.0, 600),
-            tag_line: TypeSpec::new(12.0, 16.0, 500),
+            tag_title: TypeRole::BodyStrong.run(),
+            tag_line: TypeRole::Label.run(),
             lift: shadow_xl(),
             slide: 50.0,
             slide_radius: 12.0,

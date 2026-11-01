@@ -12,27 +12,31 @@
 //! kit's `overflow-y-auto scrollbar-none`: a wheel, no bar); the logo
 //! stays.
 //!
+//! Every row is one line: a label that does not fit the width ends in an
+//! ellipsis (the dropdowns and their links are truncated, as a nav link
+//! and a folder are), so a narrow sidebar never breaks a word; the
+//! projected names are whole.
+//!
 //! With a [`SemId`] the rows are `<id>.row[<r>]` (a dropdown's links
 //! `<id>.row[<r>].links[<i>]`), the scenes link `<id>.scenes`, the new
 //! folder `<id>.new` and the folders `<id>.folder[<i>]`.
 
 use accord::SemId;
 
-use crate::drawing::compositor::Compositor;
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureList};
 use crate::widgets::form::TextField;
 use crate::widgets::form::tokens::Look;
-use crate::widgets::icons;
 use crate::widgets::nav::NavLink;
-use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 use crate::widgets::selection::FolderRow;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
-use super::{PRODUCT, caption, caption_h, folder_row, head_h, logo_rect, shell, text};
+use super::{PRODUCT, caption_h, head_h, logo_rect};
 use crate::widgets::header::Logo;
 
+mod paint;
+mod reveal;
 mod semantics;
 
 /// A row of the navigation: a dropdown and its links, or a link.
@@ -87,6 +91,13 @@ fn row_h(row: &HomeRow, w: f32, theme: &Theme) -> f32 {
 
 impl HomeSidebar {
     pub fn new(rows: Vec<HomeRow>, caption: impl Into<String>, scenes: NavLink) -> Self {
+        let rows = rows
+            .into_iter()
+            .map(|row| match row {
+                HomeRow::Menu(m, links) => HomeRow::Menu(m.truncate(true), links.truncate(true)),
+                link => link,
+            })
+            .collect();
         Self {
             rows,
             logo: Logo::new(PRODUCT),
@@ -491,108 +502,6 @@ impl HomeSidebar {
             _ => {}
         }
         out
-    }
-
-    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let t = &theme.navigation.sidebars;
-        shell(c, bounds, false, theme);
-        // bound before its parts: a hit on one of them is the part's
-        if let Some(id) = &self.sem {
-            c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
-        }
-        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
-        self.logo.render(c, at, theme);
-        let l = self.layout(bounds, theme);
-        let body = self.body_rect(bounds, theme);
-        c.push_clip(body.x, body.y, body.w, body.h);
-        self.render_body(c, &l, theme);
-        c.pop_clip();
-    }
-
-    /// The rows, the library and the new folder's field, as laid out.
-    fn render_body(&self, c: &mut Compositor, l: &HomeLayout, theme: &Theme) {
-        let t = &theme.navigation.sidebars;
-        let ft = &theme.selection.folders;
-        let recipe = &theme.navigation.link;
-        for (row, r) in self.rows.iter().zip(&l.rows) {
-            match row {
-                HomeRow::Menu(m, links) => {
-                    let h = links.height(r.w, theme);
-                    m.render(c, *r, h, theme, |c, at| links.render(c, at, theme));
-                }
-                HomeRow::Link(link) => link.render_with(c, c.target(), *r, theme, recipe),
-            }
-        }
-        if self.library {
-            caption(c, &self.caption, l.scenes.x, l.caption_y, l.scenes.w, theme);
-            self.scenes
-                .render_with(c, c.target(), l.scenes, theme, recipe);
-        }
-        for row in self.folder_rows() {
-            let r = Self::folder_rect(row, l);
-            if let Some(id) = self.folder_id(row) {
-                c.bind(&id, [r.x, r.y, r.w, r.h]);
-            }
-            let (label, icon) = match row {
-                FolderRow::New => ("New Folder", ("kit-folder-new", ft.mark.0)),
-                FolderRow::Folder(i) => (
-                    self.folders[i].as_str(),
-                    ("kit-folder", ft.hues[i % ft.hues.len()].0),
-                ),
-            };
-            let (hovered, focused) = (self.hovered == Some(row), self.focused == Some(row));
-            folder_row(c, r, label, icon, hovered, focused, theme);
-        }
-        if let Some(f) = l.field {
-            c.push(rounded_rect(
-                f.x,
-                f.y,
-                f.w,
-                f.h,
-                t.field_radius,
-                t.field_fill.0,
-            ));
-            c.push(rounded_rect_stroke(
-                f.x,
-                f.y,
-                f.w,
-                f.h,
-                t.field_radius,
-                t.field_edge.0,
-                t.edge_width,
-            ));
-            let iy = f.y + (f.h - ft.icon) / 2.0;
-            if let Some(n) = icons::icon_at(
-                "kit-folder",
-                ft.icon,
-                t.field_mark.0,
-                f.x + t.field_icon_x,
-                iy,
-            ) {
-                c.push(n);
-            }
-            let at = Self::name_rect(f, theme);
-            if self.name.is_empty() && !self.name.is_focused() {
-                let style = theme
-                    .typography
-                    .exact(ft.font_size, ft.line_height, ft.font_weight);
-                let y = f.y + (f.h - style.line_height) / 2.0;
-                let shown = "Untitled Folder";
-                c.push(text(
-                    shown,
-                    &style,
-                    at.x,
-                    y,
-                    t.field_placeholder.0,
-                    Some(at.w),
-                ));
-            } else {
-                self.name.render(c, at, theme);
-            }
-            if self.focused == Some(FolderRow::New) {
-                c.push(focus_ring(f, t.field_radius, theme));
-            }
-        }
     }
 }
 

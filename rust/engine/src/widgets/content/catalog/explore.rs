@@ -44,7 +44,7 @@ pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Them
         }
         icon(c, name, t.icon, k.on_image, at.x + mid, at.y + mid);
     }
-    let style = t.title.style(theme);
+    let style = t.title.style(&theme.typography);
     let first = actions[0];
     let room = (first.x - (b.x + e.bar_pad + e.title_pad * 2.0)).max(0.0);
     let shown = TextMeasurer::truncate_to_width(title, &style, room);
@@ -53,7 +53,7 @@ pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Them
         &shown,
         &style,
         b.x + e.bar_pad + e.title_pad,
-        first.y + (e.button - t.title.line_height) / 2.0,
+        first.y + (e.button - theme.typography.run(t.title).line_height) / 2.0,
         k.on_image,
         None,
     );
@@ -77,19 +77,21 @@ pub(super) fn tag(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Theme
     photo(c, thumb, e.thumb_radius, theme);
     let tx = thumb.right() + e.text_gap;
     let tw = (b.right() - inset - tx).max(0.0);
-    let lines = e.tag_title.line_height + e.line_gap + e.tag_line.line_height;
+    let lines = theme.typography.run(e.tag_title).line_height
+        + e.line_gap
+        + theme.typography.run(e.tag_line).line_height;
     let ty = thumb.y + (e.thumb - lines) / 2.0;
-    let title_style = e.tag_title.style(theme);
+    let title_style = e.tag_title.style(&theme.typography);
     let shown = TextMeasurer::truncate_to_width(title, &title_style, tw);
     text(c, &shown, &title_style, tx, ty, k.ink, None);
-    let line_style = e.tag_line.style(theme);
+    let line_style = e.tag_line.style(&theme.typography);
     let line = TextMeasurer::truncate_to_width(description, &line_style, tw);
     text(
         c,
         &line,
         &line_style,
         tx,
-        ty + e.tag_title.line_height + e.line_gap,
+        ty + theme.typography.run(e.tag_title).line_height + e.line_gap,
         k.muted,
         None,
     );

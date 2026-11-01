@@ -28,6 +28,7 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Press, SubmitButton, SubmitButtonSize};
 use crate::widgets::content::{Avatar, AvatarSize};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{
     focus_ring, gradient_fill, rounded_rect, shadow_drops, shadow_insets,
@@ -312,7 +313,7 @@ impl CommentThread {
         if l.popup.is_none() {
             return result;
         }
-        let r = self.close.handle(event, l.close, false);
+        let r = self.close.handle(event, hit_rect(l.close, theme), false);
         if r.clicked {
             self.set_open(false);
             return result.merge(r);
@@ -373,7 +374,9 @@ impl CommentThread {
         let k = &t.close;
         let r = l.close;
         if let Some(id) = self.part_id(ThreadPart::Close) {
-            c.bind(&id, [r.x, r.y, r.w, r.h]);
+            // the 20 px dot presses in the minimum target (`widgets::hit`)
+            let hit = hit_rect(r, theme);
+            c.bind(&id, [hit.x, hit.y, hit.w, hit.h]);
         }
         c.push(gradient_fill(r, r.w / 2.0, k.fill[0].0, k.fill[1].0));
         if self.close.focused {

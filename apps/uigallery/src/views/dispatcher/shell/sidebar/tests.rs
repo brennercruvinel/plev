@@ -303,3 +303,33 @@ fn under_a_modal_the_sidebar_is_inert() {
     let receipt = view.act(req).unwrap();
     assert!(matches!(receipt.stage(), Some(Stage::Rejected(_))), "inert");
 }
+
+/// Tab walking the pinned sidebar in a short window: every part it lands
+/// on stands whole in the panel's body, which scrolls the least that
+/// shows it once the walk passes the fold (WCAG 2.4.11).
+#[test]
+fn tab_past_the_fold_scrolls_the_sidebar_body_to_the_focus() {
+    let mut v = ShowcaseView::new(1280.0, 420.0);
+    v.jump_to_page("Button");
+    v.pin_sidebar(true);
+    let page_stops = order(&v) - 1;
+    tab_to(&mut v, &sid(PIN), page_stops + 2);
+    let theme = v.theme.clone();
+    let rest = v.shell.layout(&theme).dock.expect("docked").rest;
+    let body = v.nav.sidebar.body_rect(rest, &theme);
+    let (mut scrolled, mut walked) = (false, 0);
+    for _ in 0..PAGES.len() + 20 {
+        assert!(v.handle_edit_key(EditKey::Tab));
+        let Some(id) = v.sidebar_focus().cloned() else {
+            break;
+        };
+        if let Some(r) = v.nav.sidebar.part_rect(&id, rest, &theme) {
+            let inside = r.y >= body.y - 0.01 && r.bottom() <= body.bottom() + 0.01;
+            assert!(inside, "{id}: {r:?} outside {body:?}");
+            walked += 1;
+        }
+        scrolled |= v.nav.sidebar.scroll_offset(rest, &theme) > 0.0;
+    }
+    assert!(walked > 10, "the walk went through the rows ({walked})");
+    assert!(scrolled, "a part past the fold scrolled the body");
+}

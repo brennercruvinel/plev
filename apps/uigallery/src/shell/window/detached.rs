@@ -1,7 +1,8 @@
 //! The page in a window of its own (task-76 item 2), desktop only: `D`
 //! outside a text field opens a second window for the active page (the
 //! same page state, the same dispatcher; `ShowcaseView::detach`) and `D`
-//! again, Escape in it or its close button closes it. The main window
+//! again, the platform's close key in it (cmd-w, ctrl-w) or its close
+//! button closes it (Escape closes only what is open in the page). The main window
 //! keeps the chrome and the page: a change made in either window shows in
 //! the other on its next frame. Each window has its own host (context,
 //! compositor, clock): a hover or a scroll draws the window it happened

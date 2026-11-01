@@ -30,6 +30,8 @@ pub struct DisclosureList {
     pressed: Option<usize>,
     focused: Option<usize>,
     disabled: bool,
+    /// Each label on one line, cut with an ellipsis (a sidebar's rows).
+    truncate: bool,
     sem: Option<SemId>,
 }
 
@@ -53,6 +55,14 @@ impl DisclosureList {
         self.disabled = on;
         self.hovered = None;
         self.pressed = None;
+        self
+    }
+
+    /// Each label on one line, cut with an ellipsis where it does not
+    /// fit (CSS `truncate`), rather than wrapped; the projected name is
+    /// the whole label.
+    pub fn truncate(mut self, on: bool) -> Self {
+        self.truncate = on;
         self
     }
 
@@ -116,9 +126,7 @@ impl DisclosureList {
 
     fn style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.collapsible;
-        theme
-            .typography
-            .exact(r.body_size, r.body_line_height, r.body_weight)
+        theme.typography.run(r.body_type)
     }
 
     /// The width a label wraps at, in a list `w` wide.
@@ -128,7 +136,7 @@ impl DisclosureList {
     }
 
     /// Each link's rect in `bounds`: at least the kit's height, taller
-    /// when its label wraps.
+    /// when its label wraps (never, truncated).
     pub fn link_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
         let Some(rail) = Self::rail(theme) else {
             return Vec::new();
@@ -139,13 +147,21 @@ impl DisclosureList {
         self.links
             .iter()
             .map(|label| {
-                let (_, text_h) = TextMeasurer::measure_styled(label, &style, Some(label_w));
-                let h = rail.link_h.max(text_h);
+                let h = rail.link_h.max(self.label_h(label, &style, label_w));
                 let r = Rect::new(bounds.x, y, bounds.w, h);
                 y += h;
                 r
             })
             .collect()
+    }
+
+    /// A label's height: one line, truncated; as it wraps otherwise.
+    fn label_h(&self, label: &str, style: &TextStyle, label_w: f32) -> f32 {
+        if self.truncate {
+            style.line_height
+        } else {
+            TextMeasurer::measure_styled(label, style, Some(label_w)).1
+        }
     }
 
     /// The list's height at width `w`.
@@ -244,9 +260,15 @@ impl DisclosureList {
             } else {
                 rail.link_rest
             };
-            let (_, text_h) = TextMeasurer::measure_styled(label, &style, Some(label_w));
+            let text_h = self.label_h(label, &style, label_w);
+            let key = if self.truncate {
+                let shown = TextMeasurer::truncate_to_width(label, &style, label_w);
+                TextNodeKey::from_style(&shown, &style, None)
+            } else {
+                TextNodeKey::from_style(label, &style, Some(label_w))
+            };
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, Some(label_w)),
+                key,
                 x: at.x + pad_left,
                 y: at.y + (at.h - text_h) / 2.0,
                 color: faded(color, alpha),

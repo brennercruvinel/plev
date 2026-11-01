@@ -7,6 +7,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use super::super::tokens::{DisclosureRecipe, DisclosureSurface};
 use super::Collapsible;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use crate::drawing::text::TextMeasurer;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::icons;
@@ -155,8 +156,14 @@ impl Collapsible {
         let style = Self::label_style(r, theme);
         let label_y = inner.y + (inner.h - inner.label_h) / 2.0;
         c.push_clip(x, label_y, inner.label_w, inner.label_h);
+        let key = if self.truncate {
+            let shown = TextMeasurer::truncate_to_width(&self.title, &style, inner.label_w);
+            TextNodeKey::from_style(&shown, &style, None)
+        } else {
+            TextNodeKey::from_style(&self.title, &style, Some(inner.label_w))
+        };
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&self.title, &style, Some(inner.label_w)),
+            key,
             x,
             y: label_y,
             color: faded(r.label, alpha),

@@ -72,17 +72,17 @@ fn every_theme_derives_the_shapes_and_its_own_colors() {
 fn the_logo_is_its_symbol_its_wordmark_or_both() {
     let t = Theme::hoff_core();
     let l = &t.header.logo;
-    let symbol = Logo::new("Brainwave")
+    let symbol = Logo::new("Plev")
         .kind(LogoKind::Symbol)
         .preferred_size(&t);
     assert_eq!(
         symbol,
         (l.symbol_size + l.pad * 2.0, l.symbol_size + l.pad * 2.0)
     );
-    let word = Logo::new("Brainwave")
+    let word = Logo::new("Plev")
         .kind(LogoKind::Wordmark)
         .preferred_size(&t);
-    let full = Logo::new("Brainwave").preferred_size(&t);
+    let full = Logo::new("Plev").preferred_size(&t);
     assert_eq!(full.0, word.0 + l.symbol_size + l.gap);
     assert!(word.0 > l.symbol_size, "the wordmark is measured");
 }
@@ -253,7 +253,7 @@ fn a_logo_takes_another_name_and_symbol() {
     assert_eq!(Logo::new("Hoff").symbol, None);
     let mut c = Compositor::new();
     logo.render(&mut c, Rect::new(0.0, 0.0, 200.0, 40.0), &t);
-    let h = Header::minimal("Brainwave")
+    let h = Header::minimal("Plev")
         .sem(SemId::parse("page.minimal").expect("an id"))
         .with_logo(logo);
     let swapped = h.slots.iter().find_map(|s| match &s.item {

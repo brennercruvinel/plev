@@ -200,19 +200,20 @@ pub(super) fn walk(
     out: &mut Vec<Rect>,
     mut c: Option<&mut Compositor>,
 ) -> f32 {
+    let scale = &theme.typography;
     let t = tokens(theme);
     let (st, ink) = (&t.settings, &t.ink);
     let o = &st.option;
     out.clear();
     out.resize(controls.0.len(), Rect::new(0.0, 0.0, 0.0, 0.0));
     let mut y = area.y;
-    let title_h = st.title.line_height + st.title_pad_y * 2.0;
+    let title_h = scale.run(st.title).line_height + st.title_pad_y * 2.0;
     if let Some(c) = c.as_deref_mut() {
         let w = area.w - st.title_pad_x * 2.0;
         text(
             c,
             TITLES[s],
-            &st.title,
+            &scale.run(st.title),
             area.x + st.title_pad_x,
             y + st.title_pad_y,
             w,
@@ -226,12 +227,15 @@ pub(super) fn walk(
     for r in rows(s) {
         let (end_w, end_h) = match r.end {
             End::Control(i) => size(controls, i, w / 2.0, theme),
-            End::Value(v) => (text_w(v, &o.value).min(w / 2.0), o.value.line_height),
+            End::Value(v) => (
+                text_w(v, &scale.run(o.value)).min(w / 2.0),
+                scale.run(o.value).line_height,
+            ),
         };
         let text_room = (w - end_w - o.title_gap).max(0.0);
-        let mut block = o.title.line_height;
+        let mut block = scale.run(o.title).line_height;
         if r.description.is_some() {
-            block += o.description_gap + o.description.line_height;
+            block += o.description_gap + scale.run(o.description).line_height;
         }
         let h = o.min_h.max(o.pad_y * 2.0 + block.max(end_h));
         let end = Rect::new(x + w - end_w, y + (h - end_h) / 2.0, end_w, end_h);
@@ -241,10 +245,10 @@ pub(super) fn walk(
         if let Some(c) = c.as_deref_mut() {
             hairline(c, area.x, y, area.w, ink.rule_w, ink.rule);
             let ty = y + (h - block) / 2.0;
-            text(c, r.title, &o.title, x, ty, text_room, ink.ink);
+            text(c, r.title, &scale.run(o.title), x, ty, text_room, ink.ink);
             if let Some(d) = r.description {
-                let dy = ty + o.title.line_height + o.description_gap;
-                text(c, d, &o.description, x, dy, text_room, ink.muted);
+                let dy = ty + scale.run(o.title).line_height + o.description_gap;
+                text(c, d, &scale.run(o.description), x, dy, text_room, ink.muted);
             }
             match r.end {
                 End::Value(v) => {
@@ -254,9 +258,9 @@ pub(super) fn walk(
                     text_end(
                         c,
                         v,
-                        &o.value,
+                        &scale.run(o.value),
                         end.right(),
-                        middle(&o.value, end.y, end.h),
+                        middle(&scale.run(o.value), end.y, end.h),
                         end_w,
                         color,
                     );
@@ -290,6 +294,7 @@ fn plan(
     out: &mut [Rect],
     mut c: Option<&mut Compositor>,
 ) -> f32 {
+    let scale = &theme.typography;
     let t = tokens(theme);
     let (p, ink) = (&t.settings.plan, &t.ink);
     if let Some(c) = c.as_deref_mut() {
@@ -298,9 +303,12 @@ fn plan(
     let (x, w) = (area.x + p.pad, (area.w - p.pad * 2.0).max(0.0));
     let mut y = top + p.pad;
     // The renewal.
-    let renew_h = p.renew_icon.max(t.settings.option.title.line_height) + p.renew_pad_y * 2.0;
+    let renew_h = p
+        .renew_icon
+        .max(scale.run(t.settings.option.title).line_height)
+        + p.renew_pad_y * 2.0;
     if let Some(c) = c.as_deref_mut() {
-        let style = &t.settings.option.title;
+        let style = &scale.run(t.settings.option.title);
         let rx = x + p.renew_pad_x;
         let room = w - p.renew_pad_x * 2.0 - p.renew_icon;
         text(
@@ -323,14 +331,14 @@ fn plan(
     y += renew_h;
     // The price and the buttons, in the plan's lit head.
     let button_h = size(controls, 0, w, theme).1;
-    let head_h = p.head_pad * 2.0 + p.price.line_height + p.buttons_top + button_h;
+    let head_h = p.head_pad * 2.0 + scale.run(p.price).line_height + p.buttons_top + button_h;
     let head = Rect::new(x, y, w, head_h);
     let bw = ((w - p.head_pad * 2.0 - p.buttons_gap) / 2.0).max(0.0);
     let by = head.bottom() - p.head_pad - button_h;
     out[0] = Rect::new(x + p.head_pad, by, bw, button_h);
     out[1] = Rect::new(out[0].right() + p.buttons_gap, by, bw, button_h);
     let features_h = p.features_pad * 2.0
-        + FEATURES.len() as f32 * p.check.max(p.feature.line_height)
+        + FEATURES.len() as f32 * p.check.max(scale.run(p.feature).line_height)
         + (FEATURES.len() as f32 - 1.0) * p.features_gap;
     let frame = Rect::new(x, y, w, head_h + features_h);
     if let Some(c) = c {
@@ -343,29 +351,37 @@ fn plan(
         text(
             c,
             "$",
-            &p.currency,
+            &scale.run(p.currency),
             cur_x,
             py + p.currency_pad[1],
             w,
             ink.muted,
         );
-        let price_x = cur_x + text_w("$", &p.currency) + p.currency_pad[0];
-        text(c, "20", &p.price, price_x, py, w, ink.ink);
-        let period_x = price_x + text_w("20", &p.price) + p.period_pad;
+        let price_x = cur_x + text_w("$", &scale.run(p.currency)) + p.currency_pad[0];
+        text(c, "20", &scale.run(p.price), price_x, py, w, ink.ink);
+        let period_x = price_x + text_w("20", &scale.run(p.price)) + p.period_pad;
         let room = head.right() - p.head_pad - period_x;
         text(
             c,
             "USD /",
-            &p.period,
+            &scale.run(p.period),
             period_x,
             py + p.period_pad,
             room,
             ink.muted,
         );
-        let second = py + p.period_pad + p.period.line_height;
-        text(c, "month", &p.period, period_x, second, room, ink.muted);
+        let second = py + p.period_pad + scale.run(p.period).line_height;
+        text(
+            c,
+            "month",
+            &scale.run(p.period),
+            period_x,
+            second,
+            room,
+            ink.muted,
+        );
         let mut fy = head.bottom() + p.features_pad;
-        let row_h = p.check.max(p.feature.line_height);
+        let row_h = p.check.max(scale.run(p.feature).line_height);
         for f in FEATURES {
             let check = Rect::new(x + p.features_pad + p.check_start, fy, p.check, row_h);
             glyph(c, "check", p.check, ink.ink, check);
@@ -374,9 +390,9 @@ fn plan(
             text(
                 c,
                 f,
-                &p.feature,
+                &scale.run(p.feature),
                 tx,
-                middle(&p.feature, fy, row_h),
+                middle(&scale.run(p.feature), fy, row_h),
                 room,
                 ink.ink,
             );

@@ -3,11 +3,10 @@
 //! [`MenuStyle`]. On every other theme the three are the menu the theme
 //! had, so its menus do not move.
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{ButtonSurface, ControlSize, IconSize, Theme, TypographyScale};
+use crate::styling::theme::{ButtonSurface, ControlSize, IconSize, Theme};
+use crate::styling::theme::{TypeRole, TypeRun};
 
 /// The menubar's bar (the kit's `Toolbar`): a raised surface the titles
 /// sit in, padded, a gap between them.
@@ -105,7 +104,7 @@ pub struct MenuTokens {
     /// Between the icon and the label, and between the label and the
     /// shortcut.
     pub gap: f32,
-    pub label: TextStyle,
+    pub label: TypeRun,
     pub text: Color,
     pub text_hover: Color,
     pub icon_color: Color,
@@ -162,7 +161,7 @@ impl MenuTokens {
             icon: 20.0,
             gap: 14.0,
             // No leading: the preflight's 1.5.
-            label: TypographyScale::hoff_core().exact(12.0, 18.0, 600),
+            label: TypeRole::BodyStrong.run(),
             text: ink,
             text_hover: ink,
             icon_color: hex(0x7B7B7B),
@@ -192,7 +191,7 @@ impl MenuTokens {
             item_pad_x: 8.0,
             icon: 16.0,
             gap: 10.0,
-            label: TypographyScale::hoff_core().exact(12.0, 16.0, 500),
+            label: TypeRole::Label.run(),
             icon_hover: gray,
             sep_color: hex(0xECECEC),
             ..profile
@@ -217,7 +216,7 @@ impl MenuTokens {
             icon: 16.0,
             gap: 8.0,
             // No leading: the preflight's 1.5.
-            label: TypographyScale::hoff_core().exact(12.0, 18.0, 500),
+            label: TypeRole::Label.run(),
             icon_hover: gray,
             sep_h: 17.0,
             sep_color: hex(0xE2E2E2),
@@ -243,7 +242,7 @@ impl MenuTokens {
             icon,
             gap: 10.0 + side,
             // No leading: the preflight's 1.5.
-            label: TypographyScale::hoff_core().exact(13.0, 19.5, 500),
+            label: TypeRole::BodyLg.medium(),
             ..profile
         }
     }
@@ -270,7 +269,7 @@ impl MenuTokens {
             item_radius: theme.shape.item,
             icon: control.icon(IconSize::Sm),
             gap: control.inline_gap,
-            label: theme.typography.role(TypeRole::BodyStrong),
+            label: TypeRole::BodyStrong.run(),
             text: glass.text_default,
             text_hover: glass.text_active,
             icon_color: glass.text_default,
