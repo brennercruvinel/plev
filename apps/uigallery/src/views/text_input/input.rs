@@ -161,14 +161,21 @@ impl ShowcaseView {
         if self.escape_sidebar() {
             return true;
         }
+        if self.blur_page() {
+            return true;
+        }
+        self.overlay_mgr.pop_animated().is_some()
+    }
+
+    /// The page lets its focus go (Escape, or the sidebar took the
+    /// focus): a focused text blurs, an open select closes. `true` when
+    /// it had one.
+    pub(in crate::views) fn blur_page(&mut self) -> bool {
         let pane = self.pane();
         if let Some(host) = self.panes.text_host_mut(pane) {
-            if host.handle_escape() {
-                return true;
-            }
-            return self.overlay_mgr.pop_animated().is_some();
+            return host.handle_escape();
         }
-        let blurred = match pane {
+        match pane {
             Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
             Some(Pane::Switch) => self.panes.switch.handle_escape(),
             Some(Pane::Slider) => self.panes.slider.handle_escape(),
@@ -181,11 +188,7 @@ impl ShowcaseView {
             Some(Pane::Capture) => self.panes.capture.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => self.blur_component(),
-        };
-        if blurred {
-            return true;
         }
-        self.overlay_mgr.pop_animated().is_some()
     }
 
     /// Files dragged over the window, as the engine says it (the shell
@@ -199,12 +202,15 @@ impl ShowcaseView {
     /// the platform shell. On a component page, or over the modal or the
     /// menu, Tab walks the projection and the arrows, Home and End move in
     /// the widget the focus is in (`dispatch::keyboard`), unless a focused
-    /// text field edits with them; on an app page, the page's own. A
+    /// text field edits with them; on an app page, the page's own (Tab
+    /// the page leaves walks to the sidebar). A
     /// `Select` key the page does not take moves as the key without Shift.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
         let plain = key.unshifted();
         if !self.walks() {
-            return self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
+            let took = self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
+            // a page with no Tab of its own: Tab reaches the sidebar
+            return took || (plain == EditKey::Tab && self.walk(Walk::Tab));
         }
         let walk = match plain {
             EditKey::Tab => return self.walk(Walk::Tab),

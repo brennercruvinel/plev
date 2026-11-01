@@ -60,7 +60,9 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
             "shell.theme",
             "shell.detach",
             "shell.show",
-            "shell.print"
+            "shell.print",
+            "shell.sidebar",
+            "shell.sidebar.pin"
         ]
     );
 
@@ -367,7 +369,8 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
         "the page's projection is the page's"
     );
     let gallery = view.gallery_semantics().unwrap();
-    assert_eq!(gallery.len(), page.len() + 6);
+    // the shell's six and the sidebar's landmark and pin (peeking)
+    assert_eq!(gallery.len(), page.len() + 8);
     for (id, node) in page.nodes() {
         assert_eq!(
             gallery.get(id),
@@ -393,7 +396,9 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
             "shell.theme",
             "shell.detach",
             "shell.show",
-            "shell.print"
+            "shell.print",
+            "shell.sidebar",
+            "shell.sidebar.pin"
         ]
     );
 }

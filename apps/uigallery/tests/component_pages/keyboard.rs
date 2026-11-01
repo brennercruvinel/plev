@@ -64,6 +64,10 @@ const UNREACHABLE: &[(&str, &str)] = &[("Resizable", "the split has no splitter 
 /// reader's focus being tied to the Tab sequence.
 const COMPOSITE: &[&str] = &["Data Table", "Scroll Area", "Table"];
 
+/// At most the stops of Tab the sidebar holds shown: its pin, its logo,
+/// its three dropdowns and every page's tab.
+const SIDEBAR_STOPS: usize = 2 + 3 + uigallery::views::PAGES.len();
+
 /// Whether `id` is `widget` or under it.
 fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
     let mut at = Some(id);
@@ -77,18 +81,50 @@ fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
 }
 
 impl Gallery {
+    /// Where the keyboard focus is: on the page, or on the sidebar the
+    /// keyboard walks after it (task-104 front H).
     fn focused(&self) -> Option<String> {
         self.view
-            .semantics()
+            .keyboard_semantics()
             .and_then(|s| s.focused().map(ToString::to_string))
     }
 
+    /// The page's own stops of Tab, the sidebar's aside.
     fn order(&self) -> Vec<String> {
         let seen = self.view.semantics().unwrap_or_default();
         focus::order(&seen)
             .iter()
             .map(|id| id.to_string())
             .collect()
+    }
+
+    fn on_sidebar(&self) -> bool {
+        self.focused()
+            .is_some_and(|at| at.starts_with("shell.sidebar"))
+    }
+
+    /// Tab, then on through the sidebar (its pin, its logo, its
+    /// dropdowns, its tabs) back to the page.
+    fn tab_page(&mut self) -> bool {
+        let took = self.tab();
+        for _ in 0..SIDEBAR_STOPS {
+            if !self.on_sidebar() {
+                break;
+            }
+            self.tab();
+        }
+        took
+    }
+
+    fn back_tab_page(&mut self) -> bool {
+        let took = self.back_tab();
+        for _ in 0..SIDEBAR_STOPS {
+            if !self.on_sidebar() {
+                break;
+            }
+            self.back_tab();
+        }
+        took
     }
 
     /// Each widget of the page that is one stop of Tab (a list, a
@@ -131,7 +167,7 @@ impl Gallery {
 
     /// Tab until `id` has the focus.
     fn tab_to(&mut self, id: &str) {
-        for _ in 0..self.order().len() {
+        for _ in 0..self.order().len() + SIDEBAR_STOPS {
             if self.focused().as_deref() == Some(id) {
                 return;
             }
@@ -209,7 +245,8 @@ impl Gallery {
 }
 
 /// Tab walks every component page in the order of its projection, the
-/// one a screen reader walks, and wraps; Shift-Tab walks it back; the
+/// one a screen reader walks, and wraps (through the sidebar, which the
+/// keyboard walks after the page); Shift-Tab walks it back; the
 /// focus is never nowhere once Tab took it, and the control that has it
 /// shows its ring. A list and a table are one stop each.
 #[test]
@@ -227,21 +264,23 @@ fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
         }
         let order = g.order();
         if order.is_empty() {
-            assert!(!g.tab(), "{page}: nothing to reach");
-            assert_eq!(g.focused(), None, "{page}");
+            // nothing of the page's: Tab reaches the sidebar alone
+            assert!(g.tab(), "{page}: the sidebar's pin");
+            assert!(g.on_sidebar(), "{page}: {:?}", g.focused());
             unreachable.push(*page);
             continue;
         }
         let rings_before = g.rings().len();
         for step in 0..=order.len() {
-            assert!(g.tab(), "{page}: Tab {step} is taken");
+            // past the page's last stop, the sidebar's, then the page again
+            assert!(g.tab_page(), "{page}: Tab {step} is taken");
             let at = &order[step % order.len()];
             assert_eq!(g.focused().as_ref(), Some(at), "{page}: Tab {step}");
             assert!(g.ringed(at), "{page}: {at} shows its ring");
             assert_eq!(g.rings().len(), rings_before + 1, "{page}: one ring more");
         }
         for step in 1..=order.len() {
-            assert!(g.back_tab(), "{page}: Shift-Tab {step}");
+            assert!(g.back_tab_page(), "{page}: Shift-Tab {step}");
             let at = &order[(order.len() * 2 - step) % order.len()];
             assert_eq!(g.focused().as_ref(), Some(at), "{page}: Shift-Tab {step}");
         }

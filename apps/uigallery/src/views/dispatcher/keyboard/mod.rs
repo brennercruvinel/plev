@@ -13,8 +13,9 @@
 //! to the Tab sequence, and an item out of it would lose that focus.
 //!
 //! There is one order and it is the projection's: `focus::next` over the
-//! view's snapshot (`ShowcaseView::semantics`: the page, the toasts and
-//! the overlay that holds the pointer) names the next node, and the page
+//! view's snapshot (`ShowcaseView::keyboard_semantics`: the page, the
+//! toasts and the overlay that holds the pointer, then the sidebar)
+//! names the next node, and the page
 //! takes it through `assist_focus`, the way it takes the focus a screen
 //! reader moves; an arrow picks among the nodes of that same order that
 //! belong to the widget the focus is in. While a modal holds the pointer
@@ -165,10 +166,12 @@ fn number(value: Option<&Value>) -> Option<f64> {
 }
 
 impl ShowcaseView {
-    /// Whether the keyboard walks the projection: on a component page, or
-    /// while an overlay holds the pointer (the modal, the menu).
+    /// Whether the keyboard walks the projection: on a component page,
+    /// while an overlay holds the pointer (the modal, the menu), or while
+    /// the focus is in the sidebar.
     pub(in crate::views) fn walks(&self) -> bool {
         self.overlay_holds_pointer()
+            || self.sidebar_focus.is_some()
             || self
                 .pane()
                 .is_some_and(|pane| self.panes.component(pane).is_some())
@@ -177,7 +180,7 @@ impl ShowcaseView {
     /// One key over the projection as it stands: `true` when it moved the
     /// focus or asked for something.
     pub(in crate::views) fn walk(&mut self, key: Walk) -> bool {
-        let Some(seen) = self.semantics() else {
+        let Some(seen) = self.keyboard_semantics() else {
             return false;
         };
         match key {

@@ -10,7 +10,9 @@
 //! button: `activate`; a person only, cmd-p and the menu; the frame on
 //! paper through the system's printer, task-76 item 9, `print.rs`) and,
 //! while the session is recorded, `shell.save_session` (a button:
-//! `activate`; a person only), and run through the gallery's one
+//! `activate`; a person only), the sidebar `shell.sidebar` (task-104
+//! front H: the landmark, its pin and its tabs, any actor; `sidebar.rs`),
+//! and run through the gallery's one
 //! dispatcher (the todo page's,
 //! lent by `TodoPage::with_dispatcher` as the Surface, Silences and Files
 //! pages do). A key, a menu item, a tray item, a notification, the theme
@@ -100,6 +102,8 @@ struct Asks {
     detach: bool,
     save: bool,
     show: bool,
+    /// The sidebar's pin, panel, a dropdown, a tab picked (`sidebar.rs`).
+    sidebar: Option<SidebarAsk>,
 }
 
 struct Ids {
@@ -110,6 +114,7 @@ struct Ids {
     show: SemId,
     print: SemId,
     save: SemId,
+    sidebar: SemId,
 }
 
 impl Ids {
@@ -122,6 +127,7 @@ impl Ids {
             show: shell.child("show")?,
             print: shell.child("print")?,
             save: shell.child("save_session")?,
+            sidebar: shell.child("sidebar")?,
             shell,
         })
     }
@@ -137,6 +143,7 @@ impl Ids {
             &self.save,
         ]
         .contains(&id)
+            || sidebar::under(id, &self.sidebar)
     }
 
     fn of(&self, target: ShellTarget) -> &SemId {
@@ -197,6 +204,8 @@ struct View<'a> {
     theme_name: &'a str,
     page: usize,
     detached: bool,
+    /// The sidebar the dock places (`sidebar.rs`).
+    bar: Option<Bar<'a>>,
 }
 
 /// The shell as the dispatcher sees it: it projects from the view and
@@ -267,6 +276,9 @@ fn project(shell: &Shell, view: View<'_>, b: &mut SnapshotBuilder) {
             ..Policy::default()
         });
     }
+    if let Some(bar) = view.bar {
+        sidebar::project(bar, b, Some(&ids.shell));
+    }
 }
 
 impl Semantics for ShellOp<'_> {
@@ -324,6 +336,12 @@ impl Operable for ShellOp<'_> {
                 self.shell.print.asked = Some(id);
                 return Execution::Started;
             }
+            (action, target) if sidebar::under(target, &ids.sidebar) => {
+                return match self.view.bar {
+                    Some(bar) => sidebar::execute(bar, asks, action, target),
+                    None => Execution::Failed("the shell has no sidebar".to_owned()),
+                };
+            }
             _ => {
                 return Execution::Failed(format!(
                     "the shell has no {} on {}",
@@ -341,6 +359,7 @@ impl ShowcaseView {
             theme_name: &self.theme_name,
             page: self.page,
             detached: self.panes.detached.is_some(),
+            bar: self.bar(),
         }
     }
 
@@ -373,10 +392,19 @@ impl ShowcaseView {
 
     /// Runs `req` through the gallery's dispatcher, over the shell.
     fn shell_dispatch(&mut self, req: Request) -> RequestId {
+        let (w, inert) = (self.shell.dock_window().w, self.overlay_holds_pointer());
+        let bar = self.shell.dock.as_ref().map(|dock| Bar {
+            dock,
+            nav: &self.nav,
+            theme: &self.theme,
+            w,
+            inert,
+        });
         let view = View {
             theme_name: &self.theme_name,
             page: self.page,
             detached: self.panes.detached.is_some(),
+            bar,
         };
         let todo = &mut self.panes.todo;
         let mut op = ShellOp {
@@ -394,6 +422,9 @@ impl ShowcaseView {
         let id = self.shell_dispatch(req);
         if let Some(index) = self.panes.shell.asks.page.take() {
             self.set_page(index);
+        }
+        if let Some(ask) = self.panes.shell.asks.sidebar.take() {
+            self.apply_sidebar(ask);
         }
         if let Some(name) = self.panes.shell.asks.theme.take() {
             self.set_theme(&name);
@@ -538,6 +569,12 @@ impl ShowcaseView {
 /// The frame on paper (task-76 item 9): `shell.print`, the job beside the
 /// loop, and what is projected about it.
 mod print;
+
+/// The sidebar the dock places (task-104 front H): `shell.sidebar`, its
+/// pin, its dropdowns and its tabs, and the keyboard's focus in it.
+mod sidebar;
+pub(crate) use sidebar::SIDEBAR;
+use sidebar::{Bar, SidebarAsk};
 
 #[cfg(test)]
 mod tests;
