@@ -9,8 +9,8 @@ use crate::widgets::recipe::shadow_drops;
 use crate::widgets::widget::Rect;
 
 /// The explore card: the photo in its rounded frame; under the pointer
-/// the scrim, the title and three actions (like, download, share) at the
-/// foot.
+/// the scrim, the title and the kit's three actions at the foot (its
+/// text, screen and heart glyphs, left to right).
 pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Theme) {
     let (e, k) = (&tokens(theme).explore, palette(theme));
     photo(c, b, e.radius, theme);
@@ -25,7 +25,8 @@ pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Them
     let bar_y = b.bottom() - e.bar_pad - e.button;
     let mut x = b.right() - e.bar_pad - e.button;
     let mid = (e.button - t.icon) / 2.0;
-    for name in ["forward", "download", "heart"] {
+    // Laid from the right: the kit's last button first.
+    for name in ["kit-likes", "kit-screen", "kit-text"] {
         icon(c, name, t.icon, k.on_image, x + mid, bar_y + mid);
         x -= e.button + e.button_gap;
     }

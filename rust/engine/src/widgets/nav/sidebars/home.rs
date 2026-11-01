@@ -15,6 +15,8 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureList};
+use crate::widgets::form::TextField;
+use crate::widgets::form::tokens::Look;
 use crate::widgets::icons;
 use crate::widgets::nav::NavLink;
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
@@ -22,7 +24,8 @@ use crate::widgets::selection::FolderRow;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
-use super::{caption, caption_h, folder_row, head_h, logo, shell, text};
+use super::{PRODUCT, caption, caption_h, folder_row, head_h, logo_rect, shell, text};
+use crate::widgets::header::Logo;
 
 /// A row of the navigation: a dropdown and its links, or a link.
 #[derive(Clone, Debug)]
@@ -45,12 +48,14 @@ pub struct HomeLayout {
 #[derive(Clone, Debug)]
 pub struct HomeSidebar {
     pub rows: Vec<HomeRow>,
+    pub logo: Logo,
     pub caption: String,
     pub scenes: NavLink,
     pub folders: Vec<String>,
     /// The new folder's field is open, with what was typed in it.
     pub naming: bool,
-    pub name: String,
+    /// The new folder's name, the form's bare field (front A).
+    pub name: TextField,
     hovered: Option<FolderRow>,
     focused: Option<FolderRow>,
     sem: Option<SemId>,
@@ -67,11 +72,12 @@ impl HomeSidebar {
     pub fn new(rows: Vec<HomeRow>, caption: impl Into<String>, scenes: NavLink) -> Self {
         Self {
             rows,
+            logo: Logo::new(PRODUCT),
             caption: caption.into(),
             scenes,
             folders: Vec::new(),
             naming: false,
-            name: String::new(),
+            name: TextField::new("Untitled Folder").look(Look::Bare),
             hovered: None,
             focused: None,
             sem: None,
@@ -90,6 +96,9 @@ impl HomeSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
+        if let Ok(l) = id.child("logo") {
+            self.logo = self.logo.clone().sem(l);
+        }
         let rows = id.child("row").ok();
         for (r, row) in self.rows.iter_mut().enumerate() {
             let Some(at) = rows.as_ref().map(|f| f.key(r.to_string())) else {
@@ -105,6 +114,9 @@ impl HomeSidebar {
                 HomeRow::Link(link) => *link = link.clone().sem(at),
             }
         }
+        if let Ok(n) = id.child("name") {
+            self.name = self.name.clone().sem(n);
+        }
         if let Ok(s) = id.child("scenes") {
             self.scenes = self.scenes.clone().sem(s);
         }
@@ -114,6 +126,11 @@ impl HomeSidebar {
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    /// `<id>.logo`, the link home.
+    pub fn logo_id(&self) -> Option<&SemId> {
+        self.logo.sem_id()
     }
 
     /// `<id>.new` or `<id>.folder[<i>]`.
@@ -242,6 +259,31 @@ impl HomeSidebar {
             .any(|r| self.folder_id(r).as_ref() == Some(id))
     }
 
+    /// Where the name is typed: the field after its folder mark.
+    pub fn name_rect(f: Rect, theme: &Theme) -> Rect {
+        let t = &theme.navigation.sidebars;
+        let x = f.x + t.field_text_x;
+        Rect::new(x, f.y, (f.right() - x - t.field_icon_x).max(0.0), f.h)
+    }
+
+    /// The text fields shown now: the name, while it is being given.
+    pub fn text_fields(&mut self) -> Vec<&mut TextField> {
+        if self.naming {
+            vec![&mut self.name]
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Their rects, in the same order.
+    pub fn field_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let l = self.layout(bounds, theme);
+        l.field
+            .map(|f| Self::name_rect(f, theme))
+            .into_iter()
+            .collect()
+    }
+
     pub fn wake(&mut self, dt: f32) -> Wake {
         let mut wake = Wake::idle();
         for row in &mut self.rows {
@@ -259,7 +301,9 @@ impl HomeSidebar {
         theme: &Theme,
     ) -> EventResult {
         let l = self.layout(bounds, theme);
-        let mut out = EventResult::IGNORED;
+        let pad = theme.navigation.sidebars.head_pad;
+        let at = logo_rect(&self.logo, bounds, pad, theme);
+        let mut out = self.logo.handle_event(event, at);
         for (row, r) in self.rows.iter_mut().zip(&l.rows) {
             let res = match row {
                 HomeRow::Menu(m, links) => menu_event(m, links, event, *r, theme),
@@ -275,6 +319,16 @@ impl HomeSidebar {
         }
         out = out.merge(self.scenes.handle_event(event, l.scenes));
         let (x, y) = event.pos();
+        if let Some(f) = l.field {
+            let at = Self::name_rect(f, theme);
+            let press = matches!(event, WidgetEvent::MouseDown { .. });
+            if (press && f.contains(x, y)) || (!press && self.name.is_focused()) {
+                out = out.merge(self.name.handle_event(event, at, theme));
+            } else if press && self.name.is_focused() {
+                self.name.unfocus();
+                out = out.merge(EventResult::changed());
+            }
+        }
         let hit = self
             .folder_rows()
             .find(|r| Self::folder_rect(*r, &l).contains(x, y));
@@ -299,7 +353,8 @@ impl HomeSidebar {
         let t = &theme.navigation.sidebars;
         let ft = &theme.selection.folders;
         shell(c, bounds, false, theme);
-        logo(c, bounds, theme);
+        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
+        self.logo.render(c, at, theme);
         if let Some(id) = &self.sem {
             c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
@@ -323,10 +378,10 @@ impl HomeSidebar {
                 c.bind(&id, [r.x, r.y, r.w, r.h]);
             }
             let (label, icon) = match row {
-                FolderRow::New => ("New Folder", ("folder-plus", ft.mark.0)),
+                FolderRow::New => ("New Folder", ("kit-folder-new", ft.mark.0)),
                 FolderRow::Folder(i) => (
                     self.folders[i].as_str(),
-                    ("folder", ft.hues[i % ft.hues.len()].0),
+                    ("kit-folder", ft.hues[i % ft.hues.len()].0),
                 ),
             };
             let (hovered, focused) = (self.hovered == Some(row), self.focused == Some(row));
@@ -351,29 +406,33 @@ impl HomeSidebar {
                 t.edge_width,
             ));
             let iy = f.y + (f.h - ft.icon) / 2.0;
-            if let Some(n) =
-                icons::icon_at("folder", ft.icon, t.field_mark.0, f.x + t.field_icon_x, iy)
-            {
+            if let Some(n) = icons::icon_at(
+                "kit-folder",
+                ft.icon,
+                t.field_mark.0,
+                f.x + t.field_icon_x,
+                iy,
+            ) {
                 c.push(n);
             }
-            let style = theme
-                .typography
-                .exact(ft.font_size, ft.line_height, ft.font_weight);
-            let (shown, color) = if self.name.is_empty() {
-                ("Untitled Folder", t.field_placeholder)
+            let at = Self::name_rect(f, theme);
+            if self.name.is_empty() && !self.name.is_focused() {
+                let style = theme
+                    .typography
+                    .exact(ft.font_size, ft.line_height, ft.font_weight);
+                let y = f.y + (f.h - style.line_height) / 2.0;
+                let shown = "Untitled Folder";
+                c.push(text(
+                    shown,
+                    &style,
+                    at.x,
+                    y,
+                    t.field_placeholder.0,
+                    Some(at.w),
+                ));
             } else {
-                (self.name.as_str(), ft.label)
-            };
-            let x = f.x + t.field_text_x;
-            let y = f.y + (f.h - style.line_height) / 2.0;
-            c.push(text(
-                shown,
-                &style,
-                x,
-                y,
-                color.0,
-                Some((f.right() - x).max(0.0)),
-            ));
+                self.name.render(c, at, theme);
+            }
             if self.focused == Some(FolderRow::New) {
                 c.push(focus_ring(f, t.field_radius, theme));
             }
@@ -394,6 +453,9 @@ impl HomeSidebar {
         let mut node = b.node(id, Role::Region, label);
         if let Some(parent) = parent {
             node.parent(parent);
+        }
+        if let Some(l) = self.logo.sem_id() {
+            self.logo.project(b, l, Some(id));
         }
         for row in &self.rows {
             match row {
@@ -431,6 +493,11 @@ impl HomeSidebar {
                 node.state("expanded", self.naming);
             }
             node.action("activate");
+        }
+        if self.naming
+            && let Some(at) = self.name.sem_id()
+        {
+            self.name.project(b, at, "Folder name", Some(id));
         }
     }
 }

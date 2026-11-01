@@ -351,9 +351,13 @@ impl ColorPicker {
         // The number's room: the widest opacity and a caret after it.
         let number_w = measure(FULL) + theme.control.focus_ring_width;
         let divider_w = k.border_width;
-        // The kit's width; 0, as wide as the widest opacity measures.
+        // The kit's width, never under what the widest opacity, its `%`
+        // and the part's insets measure (a derived theme's 0: as wide as
+        // that), so `100 %` shows whole.
         let measured = divider_w + k.alpha_pad * 2.0 + number_w + k.alpha_gap + suffix_w;
-        let alpha_w = if k.alpha_w > 0.0 { k.alpha_w } else { measured }
+        let alpha_w = k
+            .alpha_w
+            .max(measured)
             .min((inner.right() - swatch.right() - k.swatch_gap).max(0.0));
         let alpha_part = Rect::new(inner.right() - alpha_w, inner.y, alpha_w, inner.h);
         let text_h = self.hex.box_height(theme);
