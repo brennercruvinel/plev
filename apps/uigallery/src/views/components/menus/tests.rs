@@ -1,6 +1,8 @@
 //! The Menus page's tests.
+use super::super::Component;
 use super::*;
 use crate::views::text_input::host::TextHost;
+use accord::{Request, Role, SnapshotBuilder};
 
 /// The width sweep, 280 to 1600 every 8 px under the core and the
 /// hoff themes: every card in the content and apart, every menu inside
