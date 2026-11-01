@@ -485,8 +485,11 @@ impl Folders {
                 c.push(n);
             }
             let x = sx + t.slot + t.gap;
+            // one line, the row's: a longer name is cut with an ellipsis
+            let room = (r.right() - x).max(0.0);
+            let label = crate::drawing::text::TextMeasurer::truncate_to_width(label, &style, room);
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, Some((r.right() - x).max(0.0))),
+                key: TextNodeKey::from_style(&label, &style, Some(room)),
                 x,
                 y: r.y + (r.h - style.line_height) / 2.0,
                 color: t.label.0,

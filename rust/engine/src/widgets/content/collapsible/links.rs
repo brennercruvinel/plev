@@ -14,7 +14,7 @@ use accord::{Role, SemId, SnapshotBuilder};
 
 use super::super::tokens::DisclosureRail;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::hit::hit_rect;
@@ -157,9 +157,14 @@ impl DisclosureList {
         theme.disclosure.collapsible.rail.as_ref()
     }
 
+    /// The rows' run; a word wider than its row (a larger text, a longer
+    /// language) breaks between its letters where the row wraps.
     fn style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.collapsible;
-        theme.typography.run(r.body_type)
+        theme
+            .typography
+            .run(r.body_type)
+            .with_overflow_wrap(OverflowWrap::Anywhere)
     }
 
     /// The width a label wraps at, in a list `w` wide.

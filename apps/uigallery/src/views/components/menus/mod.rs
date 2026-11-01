@@ -438,7 +438,7 @@ impl MenusPage {
             let at = Self::widget_rect(&card.body, *rect, theme);
             let (r, spot) = match &mut card.body {
                 Body::Menu(m) => {
-                    let (r, id) = m.handle_event(event, at.x, at.y, theme);
+                    let (r, id) = m.handle_event_in(event, at, 0.0, theme);
                     (r, id.map(Spot::Item))
                 }
                 Body::Folders(f) => {
@@ -497,7 +497,7 @@ impl MenusPage {
                 }
                 Body::Models(m) => m.render(c, LayerId::DEFAULT, at, theme),
                 Body::Menu(m) => {
-                    m.render(c, LayerId::DEFAULT, theme, at.x, at.y);
+                    m.render_in(c, LayerId::DEFAULT, theme, at, 0.0);
                     if let Some(Spot::Item(id)) = ring {
                         let rects = m.entry_rects(at.x, at.y, theme);
                         let row = m
@@ -506,7 +506,7 @@ impl MenusPage {
                             .position(|e| matches!(e, MenuEntry::Item { id: x, .. } if *x == id));
                         if let Some(r) = row.and_then(|r| rects.get(r)) {
                             let t = m.tokens(theme);
-                            let row = Rect::new(r.x + t.pad, r.y, r.w - t.pad * 2.0, r.h);
+                            let row = Rect::new(r.x + t.pad, r.y, at.w - t.pad * 2.0, r.h);
                             c.push(focus_ring(row, t.item_radius, theme));
                         }
                     }

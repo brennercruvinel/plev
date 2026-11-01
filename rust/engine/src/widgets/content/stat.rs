@@ -173,13 +173,11 @@ impl Stat {
         (row_w.max(lw).ceil(), self.height_at(f32::INFINITY, theme))
     }
 
-    /// The narrowest the stat draws whole in: the value row, or the
-    /// badge where it is wider (the label truncates).
+    /// The narrowest the stat draws whole in: the value row (the label
+    /// truncates, and a delta wrapped under the value is cut to the
+    /// stat's width, its whole text kept in the projection).
     pub fn min_width(&self, theme: &Theme) -> f32 {
-        let badge = self
-            .delta_badge()
-            .map_or(0.0, |b| b.preferred_size(theme).0);
-        self.value_row_w(theme).max(badge).ceil()
+        self.value_row_w(theme).ceil()
     }
 
     /// The height at `width`: one row more where the delta wraps.
@@ -239,7 +237,7 @@ impl Stat {
         if let Some(badge) = self.delta_badge() {
             let (_, bh) = badge.preferred_size(theme);
             let at = if self.delta_wraps(bounds.w, theme) {
-                let at = Rect::new(bounds.x, label_y, 0.0, 0.0);
+                let at = Rect::new(bounds.x, label_y, bounds.w.max(0.0), 0.0);
                 label_y += bh + r.row_gap;
                 at
             } else {
