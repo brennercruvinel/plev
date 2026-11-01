@@ -2,7 +2,8 @@
 //! showcase mold, its two groups as the kit lays them, each sidebar in a
 //! gray card (`isGray`), centered: the scene and assets sidebar (its
 //! rows and their toggles, or its asset sections), the design and
-//! animation sidebar (its groups, selects, switches and tiles), the home
+//! animation sidebar (its groups, selects, switches, tiles and color
+//! picker), the home
 //! sidebar (its dropdowns,
 //! links and folders) and the guideline sidebar (the kit's own pages,
 //! this one current).
@@ -25,7 +26,13 @@ use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect};
 use engine::widgets::wake::Wake;
 
 use super::showcase::{self, GroupLayout};
-use super::{After, Component, child_id, root_id, under};
+use super::{After, Component, EditKey, child_id, root_id, under};
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
+use accord::Value;
+use engine::widgets::form::TextField;
+use engine::widgets::form::color_picker::ColorPart;
 
 /// What a card shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -58,74 +65,74 @@ fn kit_home() -> HomeSidebar {
         vec![
             HomeRow::Menu(
                 Collapsible::new("Explore")
-                    .icon("layout-grid")
+                    .icon("kit-explore")
                     .current(true)
                     .open(true),
                 DisclosureList::new(["Designs", "Animations"]).current(0),
             ),
             HomeRow::Menu(
-                Collapsible::new("Assets").icon("layers").counter("112"),
+                Collapsible::new("Assets").icon("kit-assets").counter("112"),
                 DisclosureList::new(["3D Objects", "Materials"]),
             ),
-            HomeRow::Link(NavLink::new("Likes").icon("heart")),
+            HomeRow::Link(NavLink::new("Likes").icon("kit-likes")),
         ],
         "My scenes",
-        NavLink::new("My Scenes").icon("box"),
+        NavLink::new("My Scenes").icon("kit-scenes"),
     )
     .folders(["Untitled Folder", "3D Icons"])
 }
 
 /// SidebarPage/content.ts: the guideline's two groups, each page's icon
-/// the Lucide one nearest the kit's drawing; the Sidebar page current,
+/// the kit's own path (`kit-*`); the Sidebar page current,
 /// as the kit's `usePathname` makes it on this page.
 fn kit_guideline() -> GuidelineSidebar {
     GuidelineSidebar::new()
         .group(
             "Foundations",
             &[
-                ("Branding", "venetian-mask"),
-                ("Colors", "swatch-book"),
-                ("Depths", "lightbulb"),
-                ("Icons", "circle"),
-                ("Typography", "type"),
+                ("Branding", "kit-branding"),
+                ("Colors", "kit-colors"),
+                ("Depths", "kit-depths"),
+                ("Icons", "kit-icons"),
+                ("Typography", "kit-typography"),
             ],
         )
         .group(
             "Components",
             &[
-                ("Buttons, tool-tip", "mouse-pointer-2"),
-                ("Cards", "credit-card"),
-                ("Comment", "message-square-more"),
-                ("Dropdown", "arrow-down-wide-narrow"),
-                ("Inputs", "keyboard"),
-                ("Menu", "equal"),
-                ("Notifications", "bell"),
-                ("Modal, Dialogs", "square-mouse-pointer"),
-                ("Sidebar", "panel-left"),
-                ("Prompt Input", "sparkle"),
-                ("Toolbar", "ruler"),
-                ("Topbar", "panel-top"),
+                ("Buttons, tool-tip", "kit-buttons"),
+                ("Cards", "kit-cards"),
+                ("Comment", "kit-comment"),
+                ("Dropdown", "kit-dropdown"),
+                ("Inputs", "kit-inputs"),
+                ("Menu", "kit-menu"),
+                ("Notifications", "kit-notifications"),
+                ("Modal, Dialogs", "kit-modal"),
+                ("Sidebar", "kit-sidebar"),
+                ("Prompt Input", "kit-prompt-input"),
+                ("Toolbar", "kit-toolbar"),
+                ("Topbar", "kit-topbar"),
             ],
         )
         .current(13)
 }
 
 /// SceneAndAssetsSidebar: its head, the scene's eight rows (Object 2
-/// selected, each kind's icon the Lucide one nearest the kit's), the
+/// selected, each kind's icon the kit's own path), the
 /// assets' two sections.
 fn kit_scene() -> SceneSidebar {
     let item = SceneItem::new;
     SceneSidebar::new("Robot 2.0", "3D Design Project")
         .items(
             vec![
-                item("Camera 1", "focus"),
-                item("Dome Light", "sun"),
-                item("Key Light", "lightbulb"),
-                item("Area Light", "lamp-ceiling"),
-                item("Object 2", "box"),
-                item("Background 2", "box"),
-                item("Robot", "box"),
-                item("Background 1", "box"),
+                item("Camera 1", "kit-camera"),
+                item("Dome Light", "kit-dome-light"),
+                item("Key Light", "kit-key-light"),
+                item("Area Light", "kit-area-light"),
+                item("Object 2", "kit-object"),
+                item("Background 2", "kit-object"),
+                item("Robot", "kit-object"),
+                item("Background 1", "kit-object"),
             ],
             Some(4),
         )
@@ -221,11 +228,8 @@ impl SidebarPage {
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
-        let switches = Wake::moving(self.design.tick(dt));
-        self.home
-            .wake(dt)
-            .merge(self.scene.wake(dt))
-            .merge(switches)
+        let design = self.design.wake(dt);
+        self.home.wake(dt).merge(self.scene.wake(dt)).merge(design)
     }
 
     pub fn handle_event(
@@ -285,7 +289,35 @@ impl SidebarPage {
         }
     }
 
+    /// The text fields shown now, in every sidebar.
+    fn fields(&mut self) -> Vec<&mut TextField> {
+        let mut out = self.home.text_fields();
+        out.extend(self.scene.text_fields());
+        out.extend(self.design.text_fields());
+        out
+    }
+
+    fn focused_field(&mut self) -> Option<&mut TextField> {
+        self.fields().into_iter().find(|f| f.is_focused())
+    }
+
     fn set_focus(&mut self, id: Option<&SemId>) {
+        for f in self.fields() {
+            if id.is_some() && f.sem_id() == id {
+                f.focus();
+            } else {
+                f.unfocus();
+            }
+        }
+        let ring = |own: Option<&SemId>| id.is_some() && own == id;
+        let on = [
+            ring(self.home.logo_id()),
+            ring(self.guideline.logo_id()),
+            ring(self.scene.logo_id()),
+        ];
+        self.home.logo.set_focused(on[0]);
+        self.guideline.logo.set_focused(on[1]);
+        self.scene.logo.set_focused(on[2]);
         self.home.focus_id(id);
         let at = id.and_then(|i| self.guideline.position(i));
         self.guideline.set_focused(at);
@@ -343,11 +375,53 @@ impl Component for SidebarPage {
         let miss = || format!("the sidebar page has no {} on {}", req.action, req.target);
         if !matches!(
             req.action.as_str(),
-            "activate" | "toggle_expanded" | "toggle" | "select"
+            "activate" | "toggle_expanded" | "toggle" | "select" | "set_value"
         ) {
             return Err(miss());
         }
         if self.home.activate(&req.target) {
+            return Ok(After::Nothing);
+        }
+        if req.action.as_str() == "set_value" {
+            let Some(Value::Text(text)) = &req.param else {
+                return Err(miss());
+            };
+            if let Some(p) = self.design.picker_mut() {
+                let target = Some(&req.target);
+                if p.text_id(ColorPart::Hex) == target {
+                    return if p.set_hex(text) {
+                        Ok(After::Nothing)
+                    } else {
+                        Err(miss())
+                    };
+                }
+                if p.text_id(ColorPart::Alpha) == target {
+                    return if p.set_opacity(text) {
+                        Ok(After::Nothing)
+                    } else {
+                        Err(miss())
+                    };
+                }
+            }
+            let field = self
+                .fields()
+                .into_iter()
+                .find(|f| f.sem_id() == Some(&req.target));
+            return match field {
+                Some(f) => {
+                    f.set_text(text);
+                    Ok(After::Nothing)
+                }
+                None => Err(miss()),
+            };
+        }
+        // A logo is the link home: nothing to follow in a showcase.
+        let logos = [
+            self.home.logo_id(),
+            self.guideline.logo_id(),
+            self.scene.logo_id(),
+        ];
+        if logos.contains(&Some(&req.target)) {
             return Ok(After::Nothing);
         }
         if self.design.activate(&req.target) {
@@ -398,73 +472,92 @@ impl Component for SidebarPage {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn id(s: &str) -> SemId {
-        SemId::parse(s).unwrap()
+/// The sidebars' fields take the keys: the new folder's name, the
+/// scene's search, the artboard's width and height.
+impl TextHost for SidebarPage {
+    fn handle_text(&mut self, s: &str) -> bool {
+        self.focused_field().is_some_and(|f| f.insert(s))
     }
 
-    fn seen(page: &SidebarPage) -> accord::Snapshot {
-        let root = id("sidebar_page");
-        let mut b = SnapshotBuilder::new();
-        b.node(&root, Role::Region, "Sidebar");
-        page.project(&mut b, &root);
-        b.finish().expect("the page projects a valid tree")
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        key != EditKey::Tab && self.focused_field().is_some_and(|f| f.edit(key.into()))
     }
 
-    fn req(page: &SidebarPage, target: &str, action: &str) -> Request {
-        Request {
-            actor: accord::Actor::Test {
-                name: "sidebar".into(),
-            },
-            target: id(target),
-            action: accord::ActionName::parse(action).unwrap(),
-            param: None,
-            observed: accord::Observation {
-                revision: seen(page).revision(),
-                values: Vec::new(),
-            },
-            ask: None,
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        if let ImeEvent::Disabled = ime {
+            // every field ends its composition: no short circuit
+            let mut ended = false;
+            for f in self.fields() {
+                ended |= f.end_compose();
+            }
+            return ended;
+        }
+        let Some(field) = self.focused_field() else {
+            return false;
+        };
+        match ime {
+            ImeEvent::Preedit(text, cursor) => field.compose("", text, cursor),
+            ImeEvent::Commit(text) => field.compose(text, "", None),
+            ImeEvent::Disabled => false,
         }
     }
 
-    /// Every sidebar fits its card, whole, on a wide page and a phone.
-    #[test]
-    fn every_sidebar_sits_inside_its_card() {
-        for theme in [Theme::hoff_core(), Theme::hoff()] {
-            let page = SidebarPage::new();
-            for w in [1200.0, 330.0] {
-                let content = Rect::new(0.0, 0.0, w, 800.0);
-                for (_, _, card, at) in page.placed(content, &theme) {
-                    assert!(
-                        at.x >= card.x && at.bottom() <= card.bottom(),
-                        "{at:?} {card:?}"
-                    );
-                }
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        for (_, shows, _, at) in self.placed(content, theme) {
+            let (rects, focused): (Vec<Rect>, Vec<bool>) = match shows {
+                Shows::Home => (
+                    self.home.field_rects(at, theme),
+                    vec![self.home.naming && self.home.name.is_focused()],
+                ),
+                Shows::Scene => (
+                    self.scene.field_rects(at, theme),
+                    vec![self.scene.search.input.is_focused()],
+                ),
+                Shows::Design => (
+                    self.design.field_rects(at, theme),
+                    self.design.focused_fields(),
+                ),
+                Shows::Guideline => continue,
+            };
+            if let Some(i) = focused.iter().position(|f| *f) {
+                return rects.get(i).copied();
             }
         }
+        None
     }
 
-    /// A reader's focus rings the part and is projected back; activate
-    /// runs it.
-    #[test]
-    fn a_readers_focus_and_activate_reach_the_sidebars() {
-        let mut page = SidebarPage::new();
-        let new = id("sidebar_page.home.new");
-        assert!(page.focus(&new));
-        assert_eq!(page.focus.as_ref(), Some(&new));
-        let r = req(&page, "sidebar_page.home.new", "activate");
-        page.run(&r).unwrap();
-        assert!(page.home.naming);
-        let r = req(&page, "sidebar_page.home.row[1]", "toggle_expanded");
-        page.run(&r).unwrap();
-        let r = req(&page, "sidebar_page.guideline[1]", "activate");
-        page.run(&r).unwrap();
-        assert_eq!(page.guideline.current_link(), Some(1));
-        assert!(page.blur());
-        let r = req(&page, "sidebar_page.nothing", "activate");
-        assert!(page.run(&r).is_err());
+    fn right_click(&mut self, _x: f32, _y: f32, _content: Rect, _theme: &Theme) -> bool {
+        false
+    }
+
+    fn keys(&mut self) -> Keys<'_> {
+        match self.focused_field() {
+            Some(f) => Keys::Field(f),
+            None => Keys::Nobody,
+        }
+    }
+
+    /// Enter keeps the color typed in the picker.
+    fn handle_enter(&mut self) -> bool {
+        self.design
+            .picker_mut()
+            .is_some_and(|p| p.focused().is_some() && p.enter())
+    }
+
+    /// Escape puts back the picker's color, or leaves a field.
+    fn handle_escape(&mut self) -> bool {
+        if let Some(p) = self.design.picker_mut()
+            && p.focused().is_some()
+        {
+            return p.escape();
+        }
+        let Some(field) = self.focused_field() else {
+            return false;
+        };
+        field.unfocus();
+        true
     }
 }
+
+#[cfg(test)]
+mod tests;

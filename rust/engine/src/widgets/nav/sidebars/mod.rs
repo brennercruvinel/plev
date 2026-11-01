@@ -11,8 +11,8 @@
 //! (`theme.selection.folders`, front E), the dropdowns the collapsible's
 //! (`theme.disclosure`, front D).
 //!
-//! The logo is a stand-in (a mark and the wordmark) until the Logo of
-//! front F is in the engine. TODO(task-104f): draw `Logo` here.
+//! The logo is front F's (`header::Logo`): the whole one on the rails,
+//! the symbol on the scene's panel.
 
 mod design;
 mod guideline;
@@ -27,6 +27,7 @@ pub use scene::{SceneItem, SceneLayout, ScenePart, SceneSidebar, SceneTab, Secti
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 use crate::styling::theme::Theme;
+use crate::widgets::header::Logo;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 use crate::widgets::widget::Rect;
@@ -59,28 +60,19 @@ pub(crate) fn rule(c: &mut Compositor, x: f32, y: f32, w: f32, theme: &Theme) {
     c.push(rounded_rect(x, y, w, t.edge_width, 0.0, t.edge.0));
 }
 
+/// The product the logo names, as the kit's pages do.
+pub const PRODUCT: &str = "Brainwave";
+
 /// The head's height: the logo in its padding.
 pub(crate) fn head_h(theme: &Theme) -> f32 {
     let t = &theme.navigation.sidebars;
-    t.head_pad * 2.0 + t.logo_h
+    t.head_pad * 2.0 + Logo::new(PRODUCT).preferred_size(theme).1
 }
 
-/// The logo at the head's padding: a stand-in mark and wordmark.
-pub(crate) fn logo(c: &mut Compositor, frame: Rect, theme: &Theme) {
-    let t = &theme.navigation.sidebars;
-    let (x, y) = (frame.x + t.head_pad, frame.y + t.head_pad);
-    let mark = t.logo_h;
-    c.push(rounded_rect(x, y, mark, mark, mark / 4.0, t.logo_mark.0));
-    let style = t.logo_text.style(&theme.typography);
-    let gap = (t.logo_w - mark).max(0.0).min(mark) / 2.0;
-    c.push(text(
-        "hoff",
-        &style,
-        x + mark + gap,
-        y + (mark - style.line_height) / 2.0,
-        t.logo_mark.0,
-        None,
-    ));
+/// Where the logo sits: at the head's padding, its own size.
+pub(crate) fn logo_rect(logo: &Logo, frame: Rect, pad: f32, theme: &Theme) -> Rect {
+    let (w, h) = logo.preferred_size(theme);
+    Rect::new(frame.x + pad, frame.y + pad, w, h)
 }
 
 /// A caption's height: its run in its padding, and the gap under it.
