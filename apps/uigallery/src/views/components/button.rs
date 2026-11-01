@@ -497,11 +497,11 @@ impl Component for ButtonPage {
 
 #[cfg(test)]
 mod tests {
-    use super::super::showcase::{CARD_H, CARD_MIN_W};
+    use super::super::showcase::{CARD_H, card_min_w};
     use super::*;
 
     /// Narrow content: rows drop to one column instead of squeezing the
-    /// cards under `CARD_MIN_W`.
+    /// cards under the theme's least card width.
     #[test]
     fn cards_stack_in_narrow_content() {
         let section = ButtonPage::new();
@@ -510,7 +510,7 @@ mod tests {
         for group in &layout {
             for r in &group.cards {
                 assert_eq!(r.x, content.x);
-                assert!(r.w >= CARD_MIN_W);
+                assert!(r.w >= card_min_w(&Theme::hoff_core()));
             }
         }
     }

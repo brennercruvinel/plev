@@ -186,13 +186,13 @@ impl MenusPage {
             .iter()
             .map(|c| (CARD_TOP + Self::size(&c.body, theme).1 + CARD_BOTTOM).max(CARD_MIN_H))
             .collect();
-        showcase::layout_sized([(SPAN, heights)], content, theme)
+        showcase::layout_untitled(SPAN, heights, content, theme)
     }
 
     /// The card's widget: centered across, `pt-20` from the card's top.
     fn widget_rect(body: &Body, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = Self::size(body, theme);
-        let w = w.min(card.w - theme.spacing.sm * 2.0);
+        let w = w.min(showcase::room(card.w, theme));
         Rect::new(
             (card.x + (card.w - w) / 2.0).round(),
             card.y + CARD_TOP,

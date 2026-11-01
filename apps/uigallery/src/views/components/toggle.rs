@@ -152,7 +152,7 @@ impl TogglePage {
     /// never narrower than an ellipsis, centered.
     fn widget_rect(toggle: &Toggle, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = toggle.preferred_size(theme);
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let w = w.min(room).max(toggle.min_width(theme));
         showcase::centered((w, h), card)
     }

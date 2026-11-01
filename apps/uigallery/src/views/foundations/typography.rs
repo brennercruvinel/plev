@@ -290,11 +290,7 @@ impl TypographyPage {
             let stacked = m.stacked(content.w, &rows);
             let body: f32 = rows.iter().map(|r| m.row_h(&r.style, stacked)).sum();
             let header = if stacked { 0.0 } else { m.header_h() };
-            Grid {
-                span: 1,
-                min_w: 0.0,
-                heights: vec![header + body],
-            }
+            Grid::new(1, 0.0, vec![header + body])
         });
         let grids = tables.chain([type_engine::grid(content, theme)]);
         showcase::layout_grids(grids, content, theme)

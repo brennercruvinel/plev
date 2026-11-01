@@ -233,8 +233,9 @@ impl ToolbarPage {
         // A bar that wraps in its card makes the card as tall as the mold
         // needs to keep it clear of the chip.
         let grids = self.groups.iter().map(|g| {
-            let card_w = showcase::card_width_at(g.span, showcase::CARD_MIN_W, content, theme);
-            let room = card_w - theme.spacing.sm * 2.0;
+            let card_w =
+                showcase::card_width_at(g.span, showcase::card_min_w(theme), content, theme);
+            let room = showcase::room(card_w, theme);
             let height = |c: &Card| match c.shows {
                 Shows::Bar(b) => {
                     let bar_h = self.bars[b].size_in(room, theme).1;
@@ -242,11 +243,11 @@ impl ToolbarPage {
                 }
                 _ => c.height,
             };
-            showcase::Grid {
-                span: g.span,
-                min_w: showcase::CARD_MIN_W,
-                heights: g.cards.iter().map(height).collect(),
-            }
+            showcase::Grid::new(
+                g.span,
+                showcase::card_min_w(theme),
+                g.cards.iter().map(height).collect(),
+            )
         });
         showcase::layout_grids(grids, content, theme)
     }
@@ -260,7 +261,7 @@ impl ToolbarPage {
     fn widget_rect(&self, shows: Shows, card: Rect, theme: &Theme) -> Rect {
         let size = match shows {
             // In a card narrower than the bar, the bar wraps (`size_in`).
-            Shows::Bar(b) => self.bars[b].size_in(card.w - theme.spacing.sm * 2.0, theme),
+            Shows::Bar(b) => self.bars[b].size_in(showcase::room(card.w, theme), theme),
             Shows::Player(p) => {
                 // As wide as it asks (the photo's player the kit's
                 // `w-140`), never wider than the card's inside: the track
@@ -272,7 +273,7 @@ impl ToolbarPage {
                 } else {
                     min_w
                 };
-                (w.min(card.w - theme.spacing.sm * 2.0), h)
+                (w.min(showcase::room(card.w, theme)), h)
             }
             Shows::View(v) => self.views[v].preferred_size(theme),
         };

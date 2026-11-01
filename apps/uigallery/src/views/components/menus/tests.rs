@@ -22,7 +22,7 @@ fn every_menu_fits_its_card_from_narrow_to_wide() {
                 {
                     assert!(next.x >= r.right(), "{w}: cards overlap");
                 }
-                let inset = theme.spacing.sm;
+                let inset = showcase::inset(&theme);
                 let chip = showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                 let b = MenusPage::widget_rect(&card.body, *r, &theme);
                 assert!(

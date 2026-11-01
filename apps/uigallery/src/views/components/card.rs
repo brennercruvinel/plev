@@ -10,7 +10,7 @@
 //! Each card is as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`,
 //! `h-59`, square) or as its widget needs, and each widget as wide as the
 //! kit draws it or as its card leaves: the rows drop a column where a card
-//! would get narrower than `showcase::CARD_MIN_W`.
+//! would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
 //! Projected: a group per title, `card_page.group[<g>]`; in it each card,
 //! `...card[<c>]`, a button with `selected` whose `activate` chooses it as
@@ -252,9 +252,12 @@ impl CardPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Rect>)> {
         let grids = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
-            let alone =
-                showcase::columns_at(g.span, showcase::CARD_MIN_W, content.w, theme.spacing.sm)
-                    == 1;
+            let alone = showcase::columns_at(
+                g.span,
+                showcase::card_min_w(theme),
+                content.w,
+                theme.spacing.sm,
+            ) == 1;
             let square = if alone && g.span > 1 {
                 card_w / WIDE_RATIO
             } else {
@@ -269,11 +272,7 @@ impl CardPage {
                     showcase::card_height(h, theme).max(g.height.unwrap_or(square))
                 })
                 .collect();
-            showcase::Grid {
-                span: g.span,
-                min_w: showcase::CARD_MIN_W,
-                heights,
-            }
+            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights)
         });
         showcase::layout_grids(grids, content, theme)
             .into_iter()

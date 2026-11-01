@@ -66,7 +66,7 @@ pub(crate) fn gray_card(c: &mut Compositor, rect: Rect, title: &str, theme: &The
     c.push(rounded_rect_stroke(
         rect.x, rect.y, rect.w, rect.h, radius, edge, 1.0,
     ));
-    let inset = theme.spacing.sm;
+    let inset = showcase::inset(theme);
     let text = showcase::chip_fit(title, rect.w - inset * 2.0, theme);
     let at = showcase::chip_rect(rect.x + inset, rect.y + inset, &text, theme);
     c.push(rounded_rect(
@@ -139,7 +139,7 @@ impl TopbarPage {
             .iter()
             .map(|c| c.header.height(theme) + CARD_PAD_Y * 2.0)
             .collect();
-        showcase::layout_sized([(1, heights)], content, theme)
+        showcase::layout_untitled(1, heights, content, theme)
     }
 
     /// The header's bar inside its card.

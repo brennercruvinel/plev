@@ -159,7 +159,7 @@ impl TabsPage {
     /// its inset on both sides (the labels truncate), never narrower than
     /// its ellipses, centered.
     fn strip_rect(tabs: &Tabs, card: Rect, theme: &Theme) -> Rect {
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let (w, h) = tabs.preferred_size(theme);
         showcase::centered((w.min(room).max(tabs.min_width(theme)), h), card)
     }
@@ -293,7 +293,7 @@ mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let b = TabsPage::strip_rect(&card.tabs, *r, &theme);
