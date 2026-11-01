@@ -581,23 +581,22 @@ fn a_label_wraps_to_its_width_and_fades_when_disabled() {
     assert!((off - rest * theme.form.label.disabled_alpha).abs() < 1e-6);
 }
 
-/// The caption is the HOFF accordion head the gallery's groups were
-/// drawn with, in every theme: 12/600 on a line of 1.4, the engine's
-/// face, the glass's placeholder tone.
+/// The caption is the scale's strong body in every theme, in the theme's
+/// face and tracking, in the glass's placeholder tone.
 #[test]
-fn a_caption_is_the_accordion_head_in_every_theme() {
-    use crate::drawing::text::TextStyle;
+fn a_caption_is_the_strong_body_of_every_theme() {
     use crate::widgets::form::label::Label;
-    let head = TextStyle::new(12.0)
-        .with_line_height(12.0 * 1.4)
-        .with_weight(600);
     for theme in [
         Theme::hoff_core(),
         Theme::hoff(),
         Theme::dark(),
         Theme::light(),
     ] {
+        // In the theme's own face: Inter under the core, not the engine's
+        // default sans.
+        let head = theme.typography.role(TypeRole::BodyStrong);
         assert_eq!(Label::new("A").caption().style(&theme), head);
+        assert_eq!(head.font_family.as_deref(), theme.typography.family);
         assert_eq!(theme.form.label.caption_color, theme.glass.text_placeholder);
     }
 }

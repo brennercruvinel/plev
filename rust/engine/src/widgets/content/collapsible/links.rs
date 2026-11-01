@@ -126,9 +126,7 @@ impl DisclosureList {
 
     fn style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.collapsible;
-        theme
-            .typography
-            .exact(r.body_size, r.body_line_height, r.body_weight)
+        theme.typography.run(r.body_type)
     }
 
     /// The width a label wraps at, in a list `w` wide.

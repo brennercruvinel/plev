@@ -183,9 +183,7 @@ impl Carousel {
     }
 
     fn counter_style(r: &CarouselRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.counter_size, r.counter_line_height, 400)
+        theme.typography.run(r.counter_type)
     }
 
     /// "k of N": the chosen slide, or 0 with none.

@@ -899,7 +899,10 @@ fn the_page_starts_under_the_blurb_at_every_width() {
                 .header
                 .blurb_rect(l.header, l.header_pads, &theme)
                 .unwrap();
-            let line = theme.disclosure.page.at(l.header.w).blurb_line_height;
+            let line = theme
+                .typography
+                .run(theme.disclosure.page.at(l.header.w).blurb_type)
+                .line_height;
             lines.insert((b.h / line).round() as u32);
             assert!(
                 b.w <= l.header.w && b.x >= l.header.x,
@@ -934,15 +937,9 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
     let theme = core();
     let page = theme.disclosure.page;
     assert_eq!((page.wide.pad_x, page.wide.pad_y), (48.0, 32.0));
-    assert_eq!(
-        (page.wide.title_size, page.wide.title_line_height),
-        (32.0, 40.0)
-    );
+    assert_eq!(page.wide.title_type, TypeRole::H3.run());
     assert_eq!((page.narrow.pad_x, page.narrow.pad_y), (20.0, 20.0));
-    assert_eq!(
-        (page.narrow.title_size, page.narrow.title_line_height),
-        (24.0, 32.0)
-    );
+    assert_eq!(page.narrow.title_type, TypeRole::H5.regular());
     assert_eq!(page.wide_from, 1200.0);
     assert_eq!(page.at(1200.0), page.wide);
     assert_eq!(page.at(1199.0), page.narrow);

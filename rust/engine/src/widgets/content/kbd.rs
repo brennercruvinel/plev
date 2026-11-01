@@ -69,9 +69,7 @@ impl Kbd {
     }
 
     fn style(r: &CapRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight)
+        theme.typography.run(r.text_type)
     }
 
     /// The cap's size: its keys measured, padded.

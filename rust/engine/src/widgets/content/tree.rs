@@ -278,9 +278,7 @@ impl Tree {
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         let r = &theme.disclosure.tree;
-        let style = theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight);
+        let style = theme.typography.run(r.text_type);
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }

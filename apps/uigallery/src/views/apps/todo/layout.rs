@@ -6,8 +6,8 @@
 
 use crate::domain::todo::Filter;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
-use engine::styling::theme::{Theme, TypographyScale};
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::Rect;
 use engine::widgets::selection::{SegmentSize, ToggleGroup};
@@ -25,8 +25,9 @@ pub(super) const DEL: f32 = 28.0;
 pub(super) const STRIKE_H: f32 = 1.5;
 const COUNTER_GAP: f32 = 16.0;
 
-pub(super) fn item_style() -> TextStyle {
-    TypographyScale::hoff().role(TypeRole::Body)
+/// A row's label: the theme's body run.
+pub(super) fn item_style(theme: &Theme) -> TextStyle {
+    theme.typography.role(TypeRole::Body)
 }
 
 /// The filters as the kit's small toggle group, one segment per
@@ -35,8 +36,8 @@ pub(super) fn filter_group() -> ToggleGroup {
     ToggleGroup::new(Filter::ALL.map(|f| f.label())).size(SegmentSize::Sm)
 }
 
-pub(super) fn counter_style() -> TextStyle {
-    TypographyScale::hoff().run(TypeRole::Caption.regular())
+pub(super) fn counter_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 /// One frame of geometry: card, add field, scrollable list viewport and
@@ -70,7 +71,7 @@ pub(super) fn compute(content: Rect, counter: &str, theme: &Theme) -> Layout {
     let group = filter_group();
     let (pills_w, pill_h) = group.preferred_size(theme);
     let pills_w = pills_w.min(panel.w - PAD * 2.0);
-    let cstyle = counter_style();
+    let cstyle = counter_style(theme);
     let counter_w = TextMeasurer::measure_styled(counter, &cstyle, None).0;
 
     // Counter and pills share one footer row when both fit; on a narrow
@@ -141,8 +142,8 @@ pub(super) fn checkbox_rect(row: Rect) -> Rect {
 /// A row's label as it shows in `w`: whole on one line, or cut with an
 /// ellipsis; the row is one line tall, and a wrapped second line would
 /// spill into the next.
-pub(super) fn label_shown(text: &str, w: f32) -> String {
-    TextMeasurer::truncate_to_width(text, &item_style(), w)
+pub(super) fn label_shown(text: &str, w: f32, theme: &Theme) -> String {
+    TextMeasurer::truncate_to_width(text, &item_style(theme), w)
 }
 
 /// Label origin x and the width available before the delete button.
