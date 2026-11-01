@@ -17,6 +17,8 @@ use accord::SemId;
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::content::{Collapsible, DisclosureList};
+use engine::widgets::form::input_group::{Addon, InputGroup};
+use engine::widgets::form::tokens::Look;
 use engine::widgets::header::Logo;
 use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
 use engine::widgets::overlay::sheet::paint_scrim;
@@ -63,6 +65,9 @@ pub fn page_at(row: usize, at: usize) -> Option<usize> {
 
 pub struct Navigation {
     pub sidebar: HomeSidebar,
+    /// The Search under the logo, a top bar's (`Look::Header`, front F)
+    /// with its `⌘ K`: a press opens the command palette (`palette.rs`).
+    pub search: InputGroup,
     /// The page the sidebar marks.
     current: usize,
 }
@@ -87,8 +92,13 @@ impl Navigation {
             .collect();
         let mut sidebar = HomeSidebar::new(rows, "", NavLink::new("")).library(false);
         sidebar.logo = Logo::new(PRODUCT);
+        let search = InputGroup::new("Search...")
+            .look(Look::Header)
+            .start(Addon::Icon("search"))
+            .end(Addon::Hint("⌘ K".into()));
         let mut nav = Self {
             sidebar,
+            search,
             current: 0,
         };
         nav.set_current(current);
@@ -97,6 +107,12 @@ impl Navigation {
 
     pub fn current(&self) -> usize {
         self.current
+    }
+
+    /// The theme's measures: the strip under the logo is the Search's
+    /// height.
+    pub fn set_theme(&mut self, theme: &Theme) {
+        self.sidebar.set_slot(self.search.height(theme));
     }
 
     /// The groups' dropdowns and their lists, in `Group::ALL` order.
@@ -187,6 +203,25 @@ impl Navigation {
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         self.sidebar.render(c, bounds, theme);
+        if let Some(at) = self.sidebar.slot_rect(bounds, theme) {
+            if let Some(id) = self.search.sem_id() {
+                c.bind(id, [at.x, at.y, at.w, at.h]);
+            }
+            self.search.render(c, at, theme);
+        }
+    }
+
+    /// A pointer event on the Search in the panel at `bounds`: its hover;
+    /// `clicked` on a press, which asks the palette open.
+    fn search_event(&mut self, event: &WidgetEvent, bounds: Rect, theme: &Theme) -> EventResult {
+        let Some(at) = self.sidebar.slot_rect(bounds, theme) else {
+            return EventResult::IGNORED;
+        };
+        let r = self.search.handle_event(event, at, theme);
+        match *event {
+            WidgetEvent::MouseDown { x, y } if at.contains(x, y) => r.merge(EventResult::clicked()),
+            _ => r,
+        }
     }
 }
 
@@ -212,14 +247,13 @@ impl ShowcaseView {
 
     /// The strip of the panel at `panel` the logo and the pin sit in.
     pub(super) fn panel_head(&self, panel: Rect) -> Rect {
-        let body = HomeSidebar::body_rect(panel, &self.theme);
-        Rect::new(panel.x, panel.y, panel.w, body.y - panel.y)
+        HomeSidebar::head_rect(panel, &self.theme)
     }
 
-    /// The head's buttons' part of a pointer event on the panel at
-    /// `panel`: the pin's and the open drawer's close's, merged, and the
+    /// The head's part of a pointer event on the panel at `panel`: the
+    /// pin's, the open drawer's close's and the Search's, merged, and the
     /// ask a click on one makes (`toggle` on the pin, `activate` on the
-    /// close).
+    /// close and on the Search).
     fn head_event(
         &mut self,
         event: &WidgetEvent,
@@ -228,8 +262,9 @@ impl ShowcaseView {
         let head = self.panel_head(panel);
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
+        let search = self.nav.search_event(event, panel, theme);
         let Some(dock) = self.shell.dock.as_mut() else {
-            return (EventResult::IGNORED, None);
+            return (search, None);
         };
         let pin = dock.pin_event(event, head, theme, w);
         let close = dock.close_event(event, head, theme, w);
@@ -237,10 +272,12 @@ impl ShowcaseView {
             dock.pin_id().map(|id| (id, "toggle"))
         } else if close.clicked {
             dock.close_id().map(|id| (id, "activate"))
+        } else if search.clicked {
+            self.nav.search.sem_id().cloned().map(|id| (id, "activate"))
         } else {
             None
         };
-        (pin.merge(close), ask)
+        (pin.merge(close).merge(search), ask)
     }
 
     /// The chrome's part of a pointer event: `(taken, changed)`. The dock

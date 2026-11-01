@@ -418,7 +418,7 @@ impl ShowcaseView {
     /// a screen reader, an agent), through the gallery's one dispatcher:
     /// the receipt as it stands, with a page or a theme it asked for
     /// applied.
-    pub(super) fn act_shell(&mut self, req: Request) -> Option<Receipt> {
+    pub(in crate::views) fn act_shell(&mut self, req: Request) -> Option<Receipt> {
         let id = self.shell_dispatch(req);
         if let Some(index) = self.panes.shell.asks.page.take() {
             self.set_page(index);

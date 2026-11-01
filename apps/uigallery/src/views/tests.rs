@@ -60,7 +60,7 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     settle(&mut view);
     let mut c = Compositor::new();
     view.render(&mut c);
-    let body = engine::widgets::nav::HomeSidebar::body_rect(panel(&view), &view.theme);
+    let body = view.nav.sidebar.body_rect(panel(&view), &view.theme);
     let button = super::pages::find("Button").unwrap();
     let before = tab(&view, button).unwrap().y;
     assert!(view.nav.sidebar.max_scroll(panel(&view), &view.theme) > 0.0);
@@ -80,7 +80,7 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     // nothing moves.
     let mut tall = pinned(1280.0, 1100.0);
     tall.render(&mut c);
-    let body = engine::widgets::nav::HomeSidebar::body_rect(panel(&tall), &tall.theme);
+    let body = tall.nav.sidebar.body_rect(panel(&tall), &tall.theme);
     let (bx, by) = body.center();
     let before = tab(&tall, 0).unwrap().y;
     let changed = tall.handle_event(&WidgetEvent::Scroll {
@@ -98,7 +98,7 @@ fn sidebar_body_clips_under_the_logo_and_does_not_hit_there() {
     view.jump_to_page("Button");
     settle(&mut view);
     let p = panel(&view);
-    let body = engine::widgets::nav::HomeSidebar::body_rect(p, &view.theme);
+    let body = view.nav.sidebar.body_rect(p, &view.theme);
     let (bx, by) = body.center();
     view.handle_event(&WidgetEvent::Scroll {
         x: bx,

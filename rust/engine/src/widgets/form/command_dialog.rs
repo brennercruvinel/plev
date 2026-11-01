@@ -20,7 +20,7 @@
 
 use accord::{Role, SemId, SnapshotBuilder};
 
-use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::styling::theme::Theme;
 use crate::widgets::feedback::{Modal, sheet};
 use crate::widgets::form::command::Command;
@@ -211,7 +211,8 @@ impl CommandDialog {
         if let Some(id) = &self.sem {
             c.bind(id, [sheet_at.x, sheet_at.y, sheet_at.w, sheet_at.h]);
         }
-        sheet(c, LayerId::DEFAULT, theme, sheet_at, |_| {});
+        let layer = c.target();
+        sheet(c, layer, theme, sheet_at, |_| {});
         self.command
             .render(c, self.palette_rect(theme, sheet_at), theme);
     }

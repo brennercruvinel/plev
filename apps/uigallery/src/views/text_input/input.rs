@@ -15,6 +15,7 @@ use accord::Value;
 use super::super::components::{context_menu, dialog};
 use super::super::dispatcher::keyboard::Walk;
 use super::super::dispatcher::{ShellTarget, overlay};
+use super::super::palette;
 use super::super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
@@ -74,6 +75,10 @@ impl ShowcaseView {
 
     /// Returns `true` when the key was consumed (and a redraw is needed).
     pub fn handle_key(&mut self, key: &str) -> bool {
+        // The open palette has the characters (`palette.rs`).
+        if self.palette_type(key) {
+            return true;
+        }
         // A focused text field owns the characters: "t" types, it does
         // not switch the theme. Not beneath an overlay that holds the
         // pointer: the keyboard is the overlay's then.
@@ -155,7 +160,9 @@ impl ShowcaseView {
     /// select closes), then the rest of the overlay stack. Returns `false`
     /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
+        let was_open = self.palette_open();
         if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
+            self.palette_closed(was_open);
             return true;
         }
         if self.escape_sidebar() {
@@ -206,6 +213,9 @@ impl ShowcaseView {
     /// the page leaves walks to the sidebar). A
     /// `Select` key the page does not take moves as the key without Shift.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if self.palette_edit(key) {
+            return true;
+        }
         let plain = key.unshifted();
         if !self.walks() {
             let took = self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
@@ -258,6 +268,9 @@ impl ShowcaseView {
     /// from their intent field; the Files page presses its focused button;
     /// the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
+        if self.palette_open() {
+            return self.palette_enter();
+        }
         // A focused text that takes Enter (a line break, a pick from a
         // filtered list) has it before the focus walk.
         let pane = self.pane();
@@ -465,6 +478,11 @@ impl ShowcaseView {
                     let asked =
                         button.and_then(|b| widget.sem_id().map(|id| (id.key(b), "activate")));
                     (asked, r.changed || button.is_some())
+                }
+                // task-104 front H: the command palette (`palette.rs`).
+                ActiveOverlay::Palette { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    palette::pointer(widget, event, &self.theme, window)
                 }
                 ActiveOverlay::Drawer { widget, .. } => {
                     let window = Rect::new(0.0, 0.0, vw, vh);

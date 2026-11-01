@@ -48,6 +48,10 @@ impl ShowcaseView {
     /// with none, the key goes where a bare one goes (`handle_key`), as
     /// before. `true` when a frame is needed.
     pub fn handle_chord(&mut self, key: &str, primary: bool) -> bool {
+        // ⌘K (Ctrl+K off macOS), on any page: the command palette.
+        if primary && key.eq_ignore_ascii_case("k") {
+            return self.toggle_palette();
+        }
         let clip = ClipKey::of(key).filter(|_| primary);
         match self.clip_to(clip) {
             Some(changed) => changed,

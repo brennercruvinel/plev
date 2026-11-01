@@ -121,10 +121,16 @@ impl StagedPage {
         self.settled = settled;
     }
 
-    /// The sidebar pinned beside the page, staged again: the frame shows
-    /// it (it peeks, out of the window, by default).
-    pub fn pin_sidebar(&mut self) {
-        self.view.pin_sidebar(true);
+    /// Staged again with the sidebar pinned beside the page (it peeks,
+    /// out of the window, by default) and the command palette open over
+    /// it (⌘K), as asked.
+    pub fn stage_again(&mut self, pinned: bool, palette: bool) {
+        if pinned {
+            self.view.pin_sidebar(true);
+        }
+        if palette {
+            self.view.toggle_palette();
+        }
         self.compositor = Compositor::new();
         self.settle();
     }
