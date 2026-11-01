@@ -6,6 +6,12 @@
 //! (`components/Folder`), drawn as the folder picker of front E draws
 //! its rows.
 //!
+//! Without its library ([`HomeSidebar::library`]) it is the navigation
+//! alone, an app's own sidebar (the gallery's). Everything under the logo
+//! is the body, which scrolls when it runs past the sidebar's height (the
+//! kit's `overflow-y-auto scrollbar-none`: a wheel, no bar); the logo
+//! stays.
+//!
 //! With a [`SemId`] the rows are `<id>.row[<r>]` (a dropdown's links
 //! `<id>.row[<r>].links[<i>]`), the scenes link `<id>.scenes`, the new
 //! folder `<id>.new` and the folders `<id>.folder[<i>]`.
@@ -58,6 +64,12 @@ pub struct HomeSidebar {
     pub name: TextField,
     hovered: Option<FolderRow>,
     focused: Option<FolderRow>,
+    /// The "My scenes" caption, its link and the folders under the
+    /// navigation; off, the sidebar is the navigation alone.
+    library: bool,
+    /// How far the body has scrolled, as asked; the layout holds it to
+    /// what the body overflows by.
+    scroll: f32,
     sem: Option<SemId>,
 }
 
@@ -80,8 +92,17 @@ impl HomeSidebar {
             name: TextField::new("Untitled Folder").look(Look::Bare),
             hovered: None,
             focused: None,
+            library: true,
+            scroll: 0.0,
             sem: None,
         }
+    }
+
+    /// With the "My scenes" caption, its link and the folders (the kit's
+    /// home, the default), or the navigation alone.
+    pub fn library(mut self, on: bool) -> Self {
+        self.library = on;
+        self
     }
 
     pub fn folders(mut self, folders: impl IntoIterator<Item = impl Into<String>>) -> Self {
@@ -142,23 +163,71 @@ impl HomeSidebar {
         }
     }
 
+    /// The new folder and the folders: none without the library.
     fn folder_rows(&self) -> impl Iterator<Item = FolderRow> {
-        std::iter::once(FolderRow::New).chain((0..self.folders.len()).map(FolderRow::Folder))
+        let n = if self.library { self.folders.len() } else { 0 };
+        let new = self.library.then_some(FolderRow::New);
+        new.into_iter().chain((0..n).map(FolderRow::Folder))
     }
 
     pub fn size(&self, theme: &Theme) -> (f32, f32) {
         let t = &theme.navigation.sidebars;
-        let l = self.layout(Rect::new(0.0, 0.0, t.width, 0.0), theme);
-        let end = l.folders.last().copied().unwrap_or(l.new);
-        (t.width, (end.bottom() + t.body_pad).max(t.min_h))
+        let bounds = Rect::new(0.0, 0.0, t.width, 0.0);
+        let end = self.end(&self.place(bounds, 0.0, theme), bounds, theme);
+        (t.width, end.max(t.min_h))
     }
 
+    /// Where the body's last part ends, its padding below it.
+    fn end(&self, l: &HomeLayout, bounds: Rect, theme: &Theme) -> f32 {
+        let t = &theme.navigation.sidebars;
+        let last = if self.library {
+            l.folders.last().copied().unwrap_or(l.new).bottom()
+        } else {
+            l.rows
+                .last()
+                .map_or(bounds.y + head_h(theme), |r| r.bottom())
+        };
+        last + t.body_pad
+    }
+
+    /// The body: everything under the logo, what scrolls.
+    pub fn body_rect(bounds: Rect, theme: &Theme) -> Rect {
+        let head = head_h(theme).min(bounds.h.max(0.0));
+        Rect::new(bounds.x, bounds.y + head, bounds.w, bounds.h - head)
+    }
+
+    /// What the body overflows `bounds` by: how far it can scroll.
+    pub fn max_scroll(&self, bounds: Rect, theme: &Theme) -> f32 {
+        let end = self.end(&self.place(bounds, 0.0, theme), bounds, theme);
+        (end - bounds.bottom()).max(0.0)
+    }
+
+    /// How far the body has scrolled in `bounds`.
+    pub fn scroll_offset(&self, bounds: Rect, theme: &Theme) -> f32 {
+        self.scroll.clamp(0.0, self.max_scroll(bounds, theme))
+    }
+
+    /// Scrolls the body by `delta` (down when positive); `true` when it
+    /// moved.
+    pub fn scroll_by(&mut self, delta: f32, bounds: Rect, theme: &Theme) -> bool {
+        let max = self.max_scroll(bounds, theme);
+        let before = self.scroll.clamp(0.0, max);
+        self.scroll = (before + delta).clamp(0.0, max);
+        self.scroll != before
+    }
+
+    /// The parts in `bounds`, the body scrolled as far as it can be.
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> HomeLayout {
+        self.place(bounds, self.scroll_offset(bounds, theme), theme)
+    }
+
+    /// The parts with the body moved up by `shift`.
+    fn place(&self, bounds: Rect, shift: f32, theme: &Theme) -> HomeLayout {
         let t = &theme.navigation.sidebars;
         let link = &theme.navigation.link;
         let folder_h = theme.selection.folders.row_h;
         let (x, w) = (bounds.x + t.body_pad, bounds.w - t.body_pad * 2.0);
-        let mut y = bounds.y + head_h(theme);
+        let mut y = bounds.y + head_h(theme) - shift;
         let mut rows = Vec::new();
         for row in &self.rows {
             let h = row_h(row, w, theme);
@@ -300,10 +369,31 @@ impl HomeSidebar {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        if let WidgetEvent::Scroll { x, y, delta } = *event {
+            if !bounds.contains(x, y) {
+                return EventResult::IGNORED;
+            }
+            return EventResult {
+                handled: true,
+                changed: self.scroll_by(delta, bounds, theme),
+                clicked: false,
+            };
+        }
         let l = self.layout(bounds, theme);
         let pad = theme.navigation.sidebars.head_pad;
         let at = logo_rect(&self.logo, bounds, pad, theme);
         let mut out = self.logo.handle_event(event, at);
+        // the body's parts scrolled under the logo are not there: a
+        // pointer off the body is away from them (a release still ends a
+        // press)
+        let (x, y) = event.pos();
+        let event = if Self::body_rect(bounds, theme).contains(x, y)
+            || matches!(event, WidgetEvent::MouseUp { .. })
+        {
+            event
+        } else {
+            &AWAY
+        };
         for (row, r) in self.rows.iter_mut().zip(&l.rows) {
             let res = match row {
                 HomeRow::Menu(m, links) => menu_event(m, links, event, *r, theme),
@@ -317,7 +407,9 @@ impl HomeSidebar {
             };
             out = out.merge(res);
         }
-        out = out.merge(self.scenes.handle_event(event, l.scenes));
+        if self.library {
+            out = out.merge(self.scenes.handle_event(event, l.scenes));
+        }
         let (x, y) = event.pos();
         if let Some(f) = l.field {
             let at = Self::name_rect(f, theme);
@@ -351,7 +443,6 @@ impl HomeSidebar {
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         let t = &theme.navigation.sidebars;
-        let ft = &theme.selection.folders;
         shell(c, bounds, false, theme);
         let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
         self.logo.render(c, at, theme);
@@ -359,6 +450,16 @@ impl HomeSidebar {
             c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
         let l = self.layout(bounds, theme);
+        let body = Self::body_rect(bounds, theme);
+        c.push_clip(body.x, body.y, body.w, body.h);
+        self.render_body(c, &l, theme);
+        c.pop_clip();
+    }
+
+    /// The rows, the library and the new folder's field, as laid out.
+    fn render_body(&self, c: &mut Compositor, l: &HomeLayout, theme: &Theme) {
+        let t = &theme.navigation.sidebars;
+        let ft = &theme.selection.folders;
         let recipe = &theme.navigation.link;
         for (row, r) in self.rows.iter().zip(&l.rows) {
             match row {
@@ -369,11 +470,13 @@ impl HomeSidebar {
                 HomeRow::Link(link) => link.render_with(c, LayerId::DEFAULT, *r, theme, recipe),
             }
         }
-        caption(c, &self.caption, l.scenes.x, l.caption_y, l.scenes.w, theme);
-        self.scenes
-            .render_with(c, LayerId::DEFAULT, l.scenes, theme, recipe);
+        if self.library {
+            caption(c, &self.caption, l.scenes.x, l.caption_y, l.scenes.w, theme);
+            self.scenes
+                .render_with(c, LayerId::DEFAULT, l.scenes, theme, recipe);
+        }
         for row in self.folder_rows() {
-            let r = Self::folder_rect(row, &l);
+            let r = Self::folder_rect(row, l);
             if let Some(id) = self.folder_id(row) {
                 c.bind(&id, [r.x, r.y, r.w, r.h]);
             }
@@ -474,7 +577,9 @@ impl HomeSidebar {
                 }
             }
         }
-        if let Some(at) = self.scenes.sem_id() {
+        if self.library
+            && let Some(at) = self.scenes.sem_id()
+        {
             self.scenes
                 .project(b, at, Some(id))
                 .description(self.caption.as_str());
@@ -502,6 +607,12 @@ impl HomeSidebar {
     }
 }
 
+/// A pointer nowhere: what a part hears when the pointer is away from it.
+const AWAY: WidgetEvent = WidgetEvent::MouseMove {
+    x: f32::NEG_INFINITY,
+    y: f32::NEG_INFINITY,
+};
+
 /// A dropdown takes the pointer on its trigger, and its links while it
 /// is open; a pointer away from them leaves their hover.
 fn menu_event(
@@ -521,11 +632,7 @@ fn menu_event(
     if reaches {
         res = res.merge(links.handle_event(event, at, theme));
     } else if matches!(event, WidgetEvent::MouseMove { .. }) {
-        let away = WidgetEvent::MouseMove {
-            x: f32::NEG_INFINITY,
-            y: f32::NEG_INFINITY,
-        };
-        res = res.merge(links.handle_event(&away, at, theme));
+        res = res.merge(links.handle_event(&AWAY, at, theme));
     }
     res
 }

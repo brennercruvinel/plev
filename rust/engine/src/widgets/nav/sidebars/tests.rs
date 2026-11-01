@@ -92,6 +92,38 @@ fn naming_a_folder_opens_its_field_above_the_folders() {
     assert!((moved - (r.field_h + r.row_gap)).abs() < 0.01, "{moved}");
 }
 
+/// Without its library the sidebar is its navigation; a body taller than
+/// the sidebar scrolls under the logo, which stays, and a part scrolled
+/// under it is not hit there.
+#[test]
+fn the_navigation_alone_scrolls_under_the_logo() {
+    use crate::widgets::widget::WidgetEvent;
+    let t = Theme::hoff_core();
+    let mut s = home().library(false);
+    let full = s.size(&t).1;
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let body = HomeSidebar::body_rect(bounds, &t);
+    let before = s.layout(bounds, &t).rows[0];
+    assert!(full > bounds.h && s.max_scroll(bounds, &t) > 0.0);
+    let wheel = WidgetEvent::Scroll {
+        x: 120.0,
+        y: 150.0,
+        delta: 1e4,
+    };
+    let r = s.handle_event(&wheel, bounds, &t);
+    assert!(r.handled && r.changed);
+    assert_eq!(s.scroll_offset(bounds, &t), s.max_scroll(bounds, &t));
+    let after = s.layout(bounds, &t).rows[0];
+    assert!(after.y < before.y && after.y < body.y, "under the logo");
+    let last = *s.layout(bounds, &t).rows.last().unwrap();
+    let pad = t.navigation.sidebars.body_pad;
+    assert!((last.bottom() + pad - bounds.bottom()).abs() < 0.01);
+    // nothing to scroll in a tall frame
+    let tall = Rect::new(0.0, 0.0, 240.0, full + 100.0);
+    assert_eq!(s.scroll_offset(tall, &t), 0.0);
+    assert!(!s.scroll_by(50.0, tall, &t));
+}
+
 /// A reader's activate does what a press does, by id.
 #[test]
 fn activate_by_id_runs_the_part() {
