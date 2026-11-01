@@ -10,6 +10,8 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Kbd, KbdSize};
+use crate::widgets::form::TextField;
+use crate::widgets::form::tokens::Look;
 use crate::widgets::icons;
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -34,6 +36,10 @@ impl ZoomLine {
 #[derive(Clone, Debug)]
 pub struct Zoom {
     pub level: String,
+    /// The level's field, the form's bare text field (front A): a press
+    /// on the level focuses it, and what is typed there is the level
+    /// ([`Zoom::sync_level`]).
+    pub field: TextField,
     pub commands: Vec<ZoomLine>,
     /// The command checked (the last one run).
     pub active: usize,
@@ -44,8 +50,10 @@ pub struct Zoom {
 
 impl Zoom {
     pub fn new(level: impl Into<String>) -> Self {
+        let level = level.into();
         Self {
-            level: level.into(),
+            field: TextField::new("").look(Look::Bare).with_text(&level),
+            level,
             commands: Vec::new(),
             active: 0,
             toggles: Vec::new(),
@@ -119,6 +127,19 @@ impl Zoom {
         (field, section_rule, rows, between)
     }
 
+    /// The level's text in the field: after the icon, to the field's end.
+    pub fn text_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let z = &theme.navigation.tool.zoom;
+        let (f, _, _, _) = self.parts(bounds, theme);
+        let x = f.x + z.field_text_x;
+        Rect::new(x, f.y, (f.right() - x - z.pad).max(0.0), f.h)
+    }
+
+    /// The level is what the field holds.
+    pub fn sync_level(&mut self) {
+        self.level = self.field.text().to_string();
+    }
+
     /// Hover on the rows; a click on a command checks it, on a toggle
     /// flips it. What lands in the panel is handled.
     pub fn handle_event(
@@ -128,6 +149,17 @@ impl Zoom {
         theme: &Theme,
     ) -> EventResult {
         let (_, _, rows, _) = self.parts(bounds, theme);
+        let text = self.text_rect(bounds, theme);
+        let (x, y) = event.pos();
+        let press = matches!(event, WidgetEvent::MouseDown { .. });
+        if (press && text.contains(x, y)) || (!press && self.field.is_focused()) {
+            let r = self.field.handle_event(event, text, theme);
+            if press || r.changed {
+                return EventResult { handled: true, ..r };
+            }
+        } else if press && self.field.is_focused() {
+            self.field.unfocus();
+        }
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let hit = rows.iter().position(|r| r.contains(x, y));
@@ -217,15 +249,20 @@ impl Zoom {
             c.push_to_layer(layer, node);
         }
         let style = z.field_text.style(&theme.typography);
-        c.push_to_layer(
-            layer,
-            SceneNode::Text {
-                key: TextNodeKey::from_style(&self.level, &style, None),
-                x: f.x + z.field_text_x,
-                y: f.y + (f.h - style.line_height) / 2.0,
-                color: z.field_text_color.0,
-            },
-        );
+        if self.field.is_focused() {
+            self.field
+                .render_to_layer(c, layer, self.text_rect(bounds, theme), theme);
+        } else {
+            c.push_to_layer(
+                layer,
+                SceneNode::Text {
+                    key: TextNodeKey::from_style(&self.level, &style, None),
+                    x: f.x + z.field_text_x,
+                    y: f.y + (f.h - style.line_height) / 2.0,
+                    color: z.field_text_color.0,
+                },
+            );
+        }
         for y in [Some(section_rule), between].into_iter().flatten() {
             c.push_to_layer(
                 layer,

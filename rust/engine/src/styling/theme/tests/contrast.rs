@@ -1295,7 +1295,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 781,
+        count, 805,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -1514,5 +1514,31 @@ fn the_core_notifications_header_meets_aaa() {
     ] {
         let r = ratio(over(fg, under), under);
         assert!(r >= AAA, "{fg:?} at {r:.2}");
+/// task-104 front G: the core sidebars' text meets AAA on the surfaces
+/// under it (the panel, a filled row, a field's well), their marks 3:1.
+/// The kit's #7B7B7B text, and its 70% and 50% washes, fail it; that text
+/// takes shade 7.
+#[test]
+fn the_core_sidebars_meet_aaa() {
+    let t = Theme::hoff_core();
+    let s = &t.navigation.sidebars;
+    let k = &s.canvas;
+    let panel = over(s.fill, [0.0; 3]);
+    let unders = [
+        panel,
+        over(s.field_fill, panel),
+        over(k.row_fill, panel),
+        over(k.design.field_fill, panel),
+    ];
+    let texts = [s.caption_color, s.field_placeholder, k.ink, k.subtle];
+    for under in unders {
+        for fg in texts {
+            let r = ratio(over(fg, under), under);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+        for mark in [k.mark, s.field_mark] {
+            let r = ratio(over(mark, under), under);
+            assert!(r >= LARGE, "{mark:?} at {r:.2}");
+        }
     }
 }

@@ -110,4 +110,6 @@ text_hosts! {
     // task-104 front C, conversation and feedback (#156)
     PromptInput => prompt_input,
     Comments => comments,
+    // task-104 front G, navigation and data: the zoom level's field
+    Toolbar => toolbar,
 }
