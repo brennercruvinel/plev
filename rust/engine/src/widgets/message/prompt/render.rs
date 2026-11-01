@@ -30,16 +30,10 @@ impl PromptInput {
         if let (Some(v), Some(at)) = (&self.view, l.view) {
             v.render_to_layer(c, layer, at, theme);
             if let Some(forward) = self.view_focus {
-                // the arrow as front G's controller places it across
-                let tv = &theme.navigation.tool.view;
-                let x = if forward {
-                    at.right() - tv.pad - tv.arrow
-                } else {
-                    at.x + tv.pad
-                };
-                let y = at.y + (tv.thick - tv.arrow) / 2.0;
-                let r = Rect::new(x, y, tv.arrow, tv.arrow);
-                c.push_to_layer(layer, focus_ring(r, tv.arrow / 2.0, theme));
+                // the arrow where front G's controller places it
+                let (back, ahead) = v.arrow_rects(at, theme);
+                let r = if forward { ahead } else { back };
+                c.push_to_layer(layer, focus_ring(r, r.w / 2.0, theme));
             }
         }
         shadow_drops(c, layer, frame, t.radius, &t.shadow);
