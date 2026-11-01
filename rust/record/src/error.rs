@@ -44,9 +44,9 @@ pub enum FileError {
          the player demo (cargo run -p player) or motion::MonsterPlayer"
     )]
     Animation,
-    #[error("unsupported session version {0}; this reader reads 0 and 1")]
+    #[error("unsupported session version {0}; this reader reads 0, 1 and 2")]
     UnsupportedVersion(u16),
-    #[error("unsupported flags {0:#06x}; version 0 defines none")]
+    #[error("unsupported flags {0:#06x}; no version defines any")]
     UnsupportedFlags(u16),
     #[error("unknown section tag {0:#04x}")]
     UnknownSection(u8),

@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [recording, formats, semantics, rendering]
-relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, adr-0043, generative-runtime-thesis]
+relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, task-104, adr-0043, adr-0065, generative-runtime-thesis]
 source: docs/adr/recording/0037-session-recording-replay-not-reexecution.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-01
 review: reviewed
 ---
 
@@ -164,7 +164,7 @@ on a session with a message that points at the session inspector
 untouched.
 
 ```text
-header := magic "MONS", version u16 (0, or 1 with section B), flags u16 0,
+header := magic "MONS", version u16 (2 written; 0 and 1 read), flags u16 0,
           start u64 (ms on the recorder's clock), crate version (u8 len,
           utf8), git sha (u8 len, utf8, "unknown" without git), sec_count
           u16, (tag u8, offset u64, len u64, sha256)*
@@ -176,8 +176,13 @@ A := asset_count u32, (kind u8, len u32, payload)*
 B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
      per chunk: step_count u32, (at u32, kind u8, count u32,
      (id u32 | position u32, x f32, y f32, w f32, h f32)*)*
-     (version 1 only; kind 0 the whole list by id, kind 1 the moved
+     (from version 1; kind 0 the whole list by id, kind 1 the moved
      rects by position in the list)
+text asset (kind 0 of A) := text_len u32, utf8, font_size u32,
+     line_height u32, max_width opt u32, weight u16, letter_spacing
+     u32, family opt (u16 len, utf8), then from version 2 style u8
+     (bit 0 tabular figures, bit 1 OverflowWrap::Anywhere), only when
+     it is not 0
 ```
 
 - the version says which sections a file has (added on 2026-09-23, task-63
@@ -195,6 +200,45 @@ B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
   timeline, byte for byte). a reader built before version 1 refuses a
   version 1 file by its version (`unsupported session version 1`), since
   a strict reader cannot skip a section it does not know.
+- version 2 (added on 2026-11-01, task-104, a decision of Brenner's)
+  keeps a text's wrap rule and its OpenType features. the engine's
+  `TextNodeKey` gained both (`overflow_wrap`, `features`: a textarea or a
+  URL breaks a word wider than its line, `OverflowWrap::Anywhere`; a
+  counter or a table column shapes its figures tabular, `tnum`), and a
+  file of version 0 or 1 brought every text back with
+  `OverflowWrap::Normal` and no features, so a replayed textarea ran its
+  word past the line and a replayed number shifted its neighbours: the
+  replay did not draw what the app drew. what entered:
+  - one `style` byte at the end of a text asset, bit 0 tabular figures,
+    bit 1 `Anywhere`, written only when it is not 0. a text at the
+    engine's defaults (`Normal`, `TextFeatures::NONE`) carries no byte
+    and costs nothing; a styled text costs one byte per asset (an asset
+    is held once per content, so a counter costs a byte per value it
+    showed, not per frame). the encoding (`record::payload::style_bits`)
+    matches every field of `TextFeatures` and every rule of
+    `OverflowWrap` exhaustively: a feature or a rule the engine adds
+    stops the build there until the format gives it a bit, never a
+    silent default.
+  - every window is written as version 2, with or without bindings:
+    section B is there only when the window has them (in version 1 it
+    was required), so a window of default texts and no bindings is the
+    file version 0 wrote but for the version field.
+  - the reader stays strict: in a version 2 file a style byte of 0 (the
+    writer leaves it out) or with a bit no writer sets is a typed
+    `FileError::Asset`; in a file of version 0 or 1 a byte past the
+    family is `FileError::Trailing`, never read as a style.
+  compatibility: every file of version 0 and 1 reads as before, its
+  texts at the defaults they were drawn with then; written again it
+  becomes version 2 with the same I, C, A and B bytes (the fixtures of
+  the gallery and the ide, `rust/record/tests/session/style.rs`). a
+  reader built before version 2 refuses a version 2 file by its version
+  (`unsupported session version 2; this reader reads 0 and 1`), never in
+  part. the readers in the repository (the inspector, `replay`, the
+  ide's rerun and the agent evaluation, the gallery's demo tests) read
+  through `record::Session` and read version 2 as they are; the bench
+  (`tool/bench/regress`, `measure`) does not read sessions. the scene
+  codec that travels to a mirror (adr-0065) carries the same byte in
+  each text key.
 
 - the build identity comes from `rust/record/build.rs` (`git rev-parse
   --short HEAD`, never failing the build) and `CARGO_PKG_VERSION`; task-65
