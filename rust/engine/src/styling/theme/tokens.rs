@@ -7,6 +7,7 @@ use crate::styling::color::Color;
 
 use super::roles::TypeRoles;
 use super::scales::ShadowSpec;
+use super::text_scale::TextScale;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {
@@ -44,6 +45,10 @@ pub struct TypographyScale {
     /// The scale by role ([`super::roles`]): what every recipe resolves
     /// its text against.
     pub roles: TypeRoles,
+    /// The person's text size (ADR 0086): every style below passes
+    /// through it, after the fluid roles took their width. The identity
+    /// in every built-in theme; `Theme::adapted` sets it.
+    pub text_scale: TextScale,
 }
 
 impl TypographyScale {
@@ -51,6 +56,7 @@ impl TypographyScale {
     /// family and tracking. The core ramp is written this way (14/20,
     /// 12/16...).
     pub fn exact(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        let (size, line_height) = self.scaled(size, line_height);
         let style = TextStyle::new(size)
             .with_line_height(line_height)
             .with_weight(weight)
@@ -65,10 +71,18 @@ impl TypographyScale {
     /// at its own spacing, the scale's tracking left out (the tracking is
     /// the UI face's, and a mono face keeps its grid).
     pub fn exact_mono(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        let (size, line_height) = self.scaled(size, line_height);
         TextStyle::new(size)
             .with_line_height(line_height)
             .with_weight(weight)
             .with_family(self.mono_family)
+    }
+
+    /// A designed size and line height as the person's text size draws
+    /// them ([`TextScale`]); as given at the identity.
+    pub fn scaled(&self, size: f32, line_height: f32) -> (f32, f32) {
+        let s = &self.text_scale;
+        (s.size(size), s.line(size, line_height))
     }
 }
 

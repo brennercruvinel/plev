@@ -17,4 +17,4 @@ pub mod silences;
 pub mod surface;
 pub mod todo;
 
-pub(crate) use super::{EditKey, group_label, panel, text, with_alpha};
+pub(crate) use super::{EditKey, group_label, panel, with_alpha};

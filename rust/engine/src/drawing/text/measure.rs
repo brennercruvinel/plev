@@ -223,6 +223,10 @@ impl TextMeasurer {
         if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
             return Self::measure_styled(&now, style, max_width);
         }
+        // pseudo-localization: measure what the frame will draw
+        if let std::borrow::Cow::Owned(local) = super::pseudo::localized(text) {
+            return Self::measure_styled(&local, style, max_width);
+        }
         if text.is_empty() {
             return (0.0, 0.0);
         }

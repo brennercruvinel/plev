@@ -120,8 +120,9 @@ pub struct ShowcaseView {
     pub scale_factor: f32,
     pub theme: Theme,
     pub theme_name: String,
-    /// The preferences `theme` is adapted to (adr-0086).
-    pub prefs: Prefs,
+    /// The person's preferences (ADR 0086): `theme` is the named theme
+    /// adapted to them.
+    prefs: Prefs,
     /// Index into [`PAGES`].
     pub page: usize,
     /// The app chrome: the dock that places the sidebar (peeking from
@@ -321,11 +322,14 @@ impl ShowcaseView {
     }
 
     /// Content area the shell hands the page: past the sidebar, under
-    /// the header, inside the gutter, never narrower than a card.
+    /// the header, inside the gutter, never narrower than a card. Its
+    /// height is the window's (a low window gives a short viewport that
+    /// scrolls; a floor here would place menus and panels past the
+    /// window's bottom).
     fn content_rect(&self) -> Rect {
         let mut r = self.shell.layout(&self.theme).content;
         r.w = r.w.max(self.theme.size.card_min_w);
-        r.h = r.h.max(self.theme.size.field_min_w);
+        r.h = r.h.max(0.0);
         r
     }
 
@@ -372,6 +376,18 @@ impl ShowcaseView {
         self.page_scroll[self.page].offset()
     }
 
+    /// The window height that shows the whole active page at the current
+    /// width, header and gutter included (a sweep's tall frame); the
+    /// window's own for an app, which fills whatever it gets.
+    pub fn page_height(&self) -> f32 {
+        if self.is_app() {
+            return self.height;
+        }
+        let content = self.content_rect();
+        let chrome = self.height - content.h;
+        (chrome + self.page_content_height(content)).max(self.height)
+    }
+
     /// Content rect shifted up by the page scroll offset and down by
     /// the alias note. Pages lay out, hit-test and render against this
     /// rect so events and pixels always agree; the render clips it back
@@ -397,10 +413,7 @@ impl ShowcaseView {
     }
 
     fn set_theme(&mut self, name: &str) {
-        // the theme as the system's preferences ask (`Theme::adapted`)
-        let prefs = Prefs::from_system();
-        if let Some(theme) = foundations::theme::resolve(name).map(|t| t.adapted(&prefs)) {
-            self.prefs = prefs;
+        if let Some(theme) = foundations::theme::resolve(name).map(|t| t.adapted(&self.prefs)) {
             self.panes.editor.set_theme(&theme);
             self.panes.git.set_theme(&theme);
             self.nav.set_theme(&theme);
@@ -409,20 +422,30 @@ impl ShowcaseView {
         }
     }
 
-    /// The theme adapted again when the system's preferences changed since
-    /// (the window reads them when it takes the focus); whether it was.
-    pub fn follow_prefs(&mut self) -> bool {
-        if self.prefs == Prefs::from_system() {
-            return false;
-        }
-        let name = self.theme_name.clone();
-        self.set_theme(&name);
-        true
+    /// The theme adapted again when the system's contrast changed since
+    /// (the window reads it when it takes the focus).
+    pub fn follow_contrast(&mut self) {
+        let contrast = engine::styling::theme::Contrast::from_system();
+        self.set_prefs(self.prefs.with_contrast(contrast));
     }
 
     /// Apply a theme by name (launch argument / snapshot tooling).
     pub fn apply_theme(&mut self, name: &str) {
         self.set_theme(name);
+    }
+
+    /// The person's preferences (the system's text size, a launch
+    /// argument): the theme is adapted to them again.
+    pub fn set_prefs(&mut self, prefs: Prefs) {
+        if prefs != self.prefs {
+            self.prefs = prefs;
+            let name = self.theme_name.clone();
+            self.set_theme(&name);
+        }
+    }
+
+    pub fn prefs(&self) -> &Prefs {
+        &self.prefs
     }
 
     /// Scroll the active page to `offset` px once it has laid out

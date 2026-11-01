@@ -210,9 +210,14 @@ impl Checkbox {
         if let Some(label) = &self.label {
             // Label: base-2r.
             let style = theme.typography.role(TypeRole::Body);
+            // one line, cut where the bounds end (a phone, a larger text
+            // size); the projection keeps the whole label
+            let x = r.right() + theme.control.inline_gap;
+            let label =
+                TextMeasurer::truncate_to_width(label, &style, (bounds.right() - x).max(0.0));
             compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, None),
-                x: r.right() + theme.control.inline_gap,
+                key: TextNodeKey::from_style(&label, &style, None),
+                x,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
                 color: with_alpha(t.label, t.label.0[3] * alpha),
             });

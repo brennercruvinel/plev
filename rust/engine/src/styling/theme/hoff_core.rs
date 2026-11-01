@@ -127,6 +127,7 @@ impl TypographyScale {
             mono_family: MONO_FAMILY,
             tracking_em: -0.02,
             roles: TypeRoles::hoff_core(),
+            text_scale: super::text_scale::TextScale::IDENTITY,
         }
     }
 }

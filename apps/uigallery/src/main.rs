@@ -53,7 +53,8 @@ usage:
   uigallery --render <page> [--out <file.png>] [--svg <file.svg>] [--semantics <file.json>]
             [--svg-report <file.txt>] [--source]
             [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
-            [--pinned] [--palette] [--reduced-motion] [--more-contrast]
+            [--pinned] [--palette] [--reduced-motion] [--text-scale <f>]
+            [--pseudo-locale] [--more-contrast]
                                         one frame of a page, no window: as png, as svg (every
                                         approximation reported on stderr, and to --svg-report
                                         when given), and the page's semantic projection as json
@@ -63,9 +64,15 @@ usage:
                                         out of the window, by default); --palette opens the
                                         command palette (⌘K) over the page. --reduced-motion
                                         draws the page as the system's \"reduce motion\" asks
-                                        (every transition at its end, the live graph at rest);
-                                        --more-contrast as its \"increase contrast\" asks (the
-                                        theme adapted, Contrast::More).
+                                        (every transition at its end, the live graph at rest).
+                                        --text-scale draws text f times larger (1 to 2, the
+                                        system's dynamic type: small text by f, titles by less),
+                                        the controls grown to hold it. the window takes it
+                                        from PLEV_TEXT_SCALE, else from the system.
+                                        --pseudo-locale draws every text as a translation
+                                        about 1.4 times as long (accented, each word grown).
+                                        --more-contrast draws it as the system's \"increase
+                                        contrast\" asks (the theme adapted, Contrast::More).
 defaults: --theme core --width 1200 --height 800 --scale 1 (the window's
 launch size); width and height are logical pixels, the PNG is width*scale
 by height*scale and the SVG's viewBox is the logical size. page titles are
@@ -100,6 +107,8 @@ the sidebar's (\"Data Table\").";
         pub pinned: bool,
         pub palette: bool,
         pub reduced_motion: bool,
+        pub text_scale: f32,
+        pub pseudo_locale: bool,
         pub more_contrast: bool,
     }
 
@@ -111,6 +120,8 @@ the sidebar's (\"Data Table\").";
         let (mut out, mut svg, mut svg_report, mut semantics) = (None, None, None, None);
         let (mut source, mut pinned, mut palette) = (false, false, false);
         let mut reduced_motion = false;
+        let mut text_scale = 1.0;
+        let mut pseudo_locale = false;
         let mut more_contrast = false;
         let mut theme = DEFAULT_THEME.to_string();
         let (mut width, mut height, mut scale) = (DEFAULT_WIDTH, DEFAULT_HEIGHT, 1.0);
@@ -134,6 +145,8 @@ the sidebar's (\"Data Table\").";
                 "--pinned" => pinned = true,
                 "--palette" => palette = true,
                 "--reduced-motion" => reduced_motion = true,
+                "--text-scale" => text_scale = positive(flag, &value()?)?,
+                "--pseudo-locale" => pseudo_locale = true,
                 "--more-contrast" => more_contrast = true,
                 "--theme" => theme = value()?,
                 "--width" => width = positive(flag, &value()?)?,
@@ -178,6 +191,8 @@ the sidebar's (\"Data Table\").";
             pinned,
             palette,
             reduced_motion,
+            text_scale,
+            pseudo_locale,
             more_contrast,
         }))
     }
@@ -203,19 +218,29 @@ the sidebar's (\"Data Table\").";
         // the frame staged as the system's preference would have it; a
         // render never reads the machine's own
         engine::compose::animation::set_reduced_motion(r.reduced_motion);
-        engine::control::accessibility::preference::set_more_contrast(r.more_contrast);
+        engine::drawing::text::pseudo::set_pseudo_locale(r.pseudo_locale);
         let viewport = Viewport::new(r.width, r.height, r.scale);
-        let mut staged = uigallery::shell::stage_page(viewport, &r.page, &r.theme, r.scroll)?;
+        let contrast = if r.more_contrast {
+            engine::styling::theme::Contrast::More
+        } else {
+            engine::styling::theme::Contrast::Standard
+        };
+        let prefs = engine::styling::theme::Prefs::default()
+            .with_text_scale(engine::styling::theme::TextScale::new(r.text_scale))
+            .with_contrast(contrast);
+        let mut staged =
+            uigallery::shell::stage_page_with(viewport, &r.page, &r.theme, r.scroll, prefs)?;
         if r.pinned || r.palette {
             staged.stage_again(r.pinned, r.palette);
         }
         let where_ = format!(
-            "{} / {} at {}x{} scale {}",
+            "{} / {} at {}x{} scale {} text {}",
             staged.title(),
             r.theme,
             r.width,
             r.height,
-            r.scale
+            r.scale,
+            prefs.text_scale.factor()
         );
         if r.out.is_some() || r.svg.is_some() {
             let mut renderer = Renderer::new(viewport, RenderConfig::default())?;
@@ -369,6 +394,16 @@ the sidebar's (\"Data Table\").";
         fn reduced_motion_is_a_flag_and_off_by_default() {
             assert!(!request("--render Graph --out g.png").reduced_motion);
             assert!(request("--render Graph --out g.png --reduced-motion").reduced_motion);
+        }
+
+        #[test]
+        fn text_scale_is_one_unless_asked() {
+            assert_eq!(request("--render Button --out b.png").text_scale, 1.0);
+            let r = request("--render Button --out b.png --text-scale 1.5");
+            assert_eq!(r.text_scale, 1.5);
+            assert!(parse(&args("--render Button --out b.png --text-scale 0")).is_err());
+            assert!(!request("--render Button --out b.png").pseudo_locale);
+            assert!(request("--render Button --out b.png --pseudo-locale").pseudo_locale);
         }
 
         #[test]

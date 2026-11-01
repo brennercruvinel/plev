@@ -1,4 +1,4 @@
-pub mod adapt;
+mod adapt;
 mod color_space;
 pub mod hoff;
 pub mod hoff_core;
@@ -7,6 +7,7 @@ pub mod legibility;
 pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
+mod text_scale;
 pub(crate) mod tokens;
 
 pub use self::adapt::{Contrast, Prefs};
@@ -18,6 +19,7 @@ pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens, fluid,
 };
+pub use self::text_scale::TextScale;
 pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
     TypographyScale,
@@ -160,6 +162,7 @@ impl Theme {
                 mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
                 roles: TypeRoles::derive([10.0, 11.0, 13.0, 16.0, 20.0, 28.0, 36.0], 0.0),
+                text_scale: TextScale::IDENTITY,
             },
             spacing: SpacingScale {
                 xs: 4.0,

@@ -102,8 +102,11 @@ impl CardWidget for Command {
         Box::new((*self).sem(id))
     }
 
+    /// As wide as its widest command asks, from the palette's width up to
+    /// the card's room.
     fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
-        let w = theme.form.group.palette_width.min(room);
+        let floor = theme.form.group.palette_width.min(room);
+        let w = self.preferred_width(theme).clamp(floor, room.max(floor));
         (w, self.height_for(w, theme))
     }
 
@@ -383,6 +386,41 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// The disabled palette has no highlighted command (nothing there
+    /// runs), and a press on a row runs nothing.
+    #[test]
+    fn a_disabled_palette_offers_nothing_to_press() {
+        let theme = Theme::hoff_core();
+        let mut p = page();
+        let cmd = palette_at(&p, (1, 1));
+        assert!(cmd.highlighted().is_none());
+        let rect = p.widget_rect((1, 1), content(), &theme).unwrap();
+        let list = cmd.layout(rect, &theme).list;
+        let pr = &theme.form.select.panel;
+        let (x, y) = (list.x + 30.0, list.y + pr.pad + pr.row_h * 1.5);
+        p.handle_event(&WidgetEvent::MouseDown { x, y }, content(), &theme);
+        assert!(palette_at(&p, (1, 1)).ran().is_none());
+    }
+
+    /// A palette is as wide as its widest command asks, from the token's
+    /// width up to the card's room: the long label is whole where the card
+    /// has room for it.
+    #[test]
+    fn a_palette_is_as_wide_as_its_widest_command() {
+        let theme = Theme::hoff_core();
+        let p = page();
+        let long = palette_at(&p, (3, 0));
+        let wants = long.preferred_width(&theme);
+        assert!(
+            wants > theme.form.group.palette_width,
+            "the long label asks for more"
+        );
+        let rect = p.widget_rect((3, 0), content(), &theme).unwrap();
+        assert!((rect.w - wants).abs() < 0.5, "{} for {wants}", rect.w);
+        let short = p.widget_rect((0, 0), content(), &theme).unwrap();
+        assert!(short.w >= theme.form.group.palette_width);
     }
 
     /// The dialog's card: a press on its Search opens the palette there

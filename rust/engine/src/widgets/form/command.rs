@@ -35,13 +35,19 @@ use crate::control::input::reveal::{Cover, Span};
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::content::kbd::Kbd;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::select::list::{self, Window};
 use crate::widgets::icons;
 use crate::widgets::recipe::rounded_rect;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
+
+/// `color` at `alpha` of its own opacity.
+fn faded(color: Color, alpha: f32) -> Color {
+    Color(with_alpha(color, color.0[3] * alpha))
+}
 
 /// One command: its label, a Lucide icon and a shortcut, in a group.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -222,8 +228,11 @@ impl Command {
     }
 
     /// The highlighted command among those shown: the one moved to, else
-    /// the first.
+    /// the first. None while the palette is disabled: nothing there runs.
     pub fn highlighted(&self) -> Option<usize> {
+        if self.search.input.disabled {
+            return None;
+        }
         let m = self.matches();
         self.highlighted
             .filter(|h| m.contains(h))
@@ -324,6 +333,26 @@ impl Command {
             p.pad * 2.0 + view,
         );
         CommandLayout { search, list }
+    }
+
+    /// The width its content asks for: the widest command's row (its
+    /// insets, its icon, its label as it measures, its key cap), in the
+    /// list's padding. A host clamps it between its floor and its room.
+    pub fn preferred_width(&self, theme: &Theme) -> f32 {
+        let p = &theme.form.select.panel;
+        let gap = theme.form.select.gap;
+        let style = theme.typography.run(p.text);
+        let row = |item: &CommandItem| {
+            let (label, _) = TextMeasurer::measure_styled(&item.label, &style, None);
+            let icon = item.icon.map_or(0.0, |_| theme.form.group.icon + gap);
+            let cap = item
+                .shortcut
+                .as_ref()
+                .map_or(0.0, |k| gap + Kbd::new(k.as_str()).preferred_size(theme).0);
+            p.text_inset * 2.0 + icon + label.ceil() + cap
+        };
+        let widest = self.items.iter().map(row).fold(0.0, f32::max);
+        widest + p.pad * 2.0
     }
 
     /// The height at width `w`: the box and the list, no taller than the
@@ -469,6 +498,13 @@ impl Command {
         });
         let lit = self.highlighted();
         let caption = &theme.form.label;
+        // disabled, the list fades as its box does (the kit's disabled
+        // button, `opacity-30`): its rows read as not there to press
+        let alpha = if self.search.input.disabled {
+            theme.form.select.disabled_alpha
+        } else {
+            1.0
+        };
         for k in window.rows.clone() {
             let row = window.row(k);
             match rows[k] {
@@ -483,10 +519,10 @@ impl Command {
                         ),
                         x: row.x + p.text_inset,
                         y,
-                        color: caption.caption_color.0,
+                        color: faded(caption.caption_color, alpha).0,
                     });
                 }
-                CommandRow::Item(i) => self.item(c, i, row, lit == Some(i), theme),
+                CommandRow::Item(i) => self.item(c, i, row, lit == Some(i), alpha, theme),
             }
         }
         c.push(SceneNode::PopClip);
@@ -514,7 +550,7 @@ impl Command {
 
     /// A command's row: its fill when highlighted, its icon, its label and
     /// its shortcut's keycap at the end; bound to `<list>[<index>]`.
-    fn item(&self, c: &mut Compositor, i: usize, row: Rect, lit: bool, theme: &Theme) {
+    fn item(&self, c: &mut Compositor, i: usize, row: Rect, lit: bool, alpha: f32, theme: &Theme) {
         let p = &theme.form.select.panel;
         let g = &theme.form.group;
         let item = &self.items[i];
@@ -526,7 +562,7 @@ impl Command {
             let radius = p.row_radius.min(r.h / 2.0);
             c.push(rounded_rect(r.x, r.y, r.w, r.h, radius, p.selected_fill.0));
         }
-        let color = if lit { p.active_color } else { p.text_color };
+        let color = faded(if lit { p.active_color } else { p.text_color }, alpha);
         let mut inset = p.text_inset;
         if let Some(name) = item.icon {
             let size = g.icon;
@@ -539,7 +575,7 @@ impl Command {
         let mut end = row.right() - p.text_inset;
         if let Some(keys) = &item.shortcut {
             // A menu row's key cap, as the kit's menus draw a shortcut.
-            let cap = Kbd::new(keys.as_str());
+            let cap = Kbd::new(keys.as_str()).disabled(alpha < 1.0);
             let (w, h) = cap.preferred_size(theme);
             let r = Rect::new(end - w, row.y + (row.h - h) / 2.0, w, h);
             cap.render(c, r, theme);

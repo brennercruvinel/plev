@@ -298,9 +298,11 @@ fn the_core_head_and_widths_are_the_kits() {
 }
 
 /// A focus on a part under the body's fold scrolls the body the least
-/// that shows it whole; one already in view moves nothing.
+/// that shows it whole; one already in view moves nothing. With reduced
+/// motion the body is there at once.
 #[test]
 fn a_part_focused_past_the_fold_scrolls_into_the_body() {
+    crate::compose::animation::set_reduced_motion(true);
     let t = Theme::hoff_core();
     let mut s = home().library(false);
     let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
@@ -320,4 +322,43 @@ fn a_part_focused_past_the_fold_scrolls_into_the_body() {
     );
     assert!(s.reveal(&first, bounds, &t), "back up");
     assert_eq!(s.scroll_offset(bounds, &t), 0.0);
+    assert!(!s.revealing());
+    crate::compose::animation::set_reduced_motion(false);
+}
+
+/// With motion the body glides there with the page's spring: the reveal
+/// starts it, the frames carry it (`wake`), and it lands where reduced
+/// motion puts it at once; the wheel lets it go.
+#[test]
+fn the_body_glides_to_a_focus_with_the_page_s_spring() {
+    let t = Theme::hoff_core();
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let last = SemId::name("home").unwrap().child("row").unwrap().key("2");
+    crate::compose::animation::set_reduced_motion(true);
+    let mut at_once = home().library(false);
+    at_once.reveal(&last, bounds, &t);
+    let landed = at_once.scroll_offset(bounds, &t);
+    crate::compose::animation::set_reduced_motion(false);
+
+    let mut s = home().library(false);
+    assert!(s.reveal(&last, bounds, &t));
+    assert!(s.revealing());
+    assert_eq!(s.scroll_offset(bounds, &t), 0.0, "not there yet");
+    let mut frames = 0;
+    while s.wake(1.0 / 60.0).is_continuous() && frames < 600 {
+        frames += 1;
+        assert!(
+            s.scroll_offset(bounds, &t) <= landed + 1.0,
+            "no wild overshoot"
+        );
+    }
+    assert!(frames > 1, "it took frames");
+    assert!(!s.revealing());
+    assert!((s.scroll_offset(bounds, &t) - landed).abs() < 0.5);
+
+    let first = SemId::name("home").unwrap().child("row").unwrap().key("0");
+    assert!(s.reveal(&first, bounds, &t));
+    s.wake(1.0 / 60.0);
+    s.scroll_by(1.0, bounds, &t);
+    assert!(!s.revealing(), "the wheel takes it");
 }

@@ -9,9 +9,7 @@ use super::contrast::{AAA, LARGE, TEXT, pairs, themes};
 use crate::styling::theme::{Contrast, Prefs};
 
 fn more() -> Prefs {
-    Prefs {
-        contrast: Contrast::More,
-    }
+    Prefs::default().with_contrast(Contrast::More)
 }
 
 /// The root tokens `legibility::settle` holds: the palette's and the
