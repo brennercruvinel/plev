@@ -170,7 +170,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Card",
         "clipboard",
-        "The HOFF card deck: one glass shell, six preview families with live data.",
+        "The kit's cards page: pricing, slide, asset, scene, explore and asset items.",
         Pane::Card,
     ),
     page(
@@ -291,6 +291,13 @@ pub const PAGES: &[Page] = &[
         "git-branch",
         "Pan, wheel and click a node.",
         Pane::Graph,
+    ),
+    page(
+        C,
+        "Home",
+        "house",
+        "The kit's home, its branding: the logo's symbol, its wordmark and both.",
+        Pane::Home,
     ),
     page(
         C,
@@ -432,6 +439,13 @@ pub const PAGES: &[Page] = &[
         "The kit's rail: its value, its intents, its narrowest.",
         Pane::Progress,
     ),
+    page(
+        C,
+        "Prompt Input",
+        "send",
+        "The kit's prompt box: the line, its files, setting and model menus, voice input, premade prompts.",
+        Pane::PromptInput,
+    ),
     placeholder("Questionnaire"),
     page(
         C,
@@ -572,6 +586,13 @@ pub const PAGES: &[Page] = &[
         "info",
         "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
+    ),
+    page(
+        C,
+        "Topbar",
+        "layout-grid",
+        "The kit's top bars: simple, with a filter or the search at the end, minimal, and the asset header with its thumbnails.",
+        Pane::Topbar,
     ),
     page(
         C,

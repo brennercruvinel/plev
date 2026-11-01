@@ -9,6 +9,7 @@ pub mod text_input;
 
 // task-104 front A, fields (#154): one module per widget, and the front's
 // token slot (`Theme::form`).
+pub mod color_picker;
 pub mod combobox;
 pub mod command;
 pub mod command_dialog;

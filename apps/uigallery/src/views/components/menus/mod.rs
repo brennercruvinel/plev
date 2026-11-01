@@ -19,7 +19,7 @@
 //! an `activate` that picks it as a press does, the menu's `picked` the
 //! last pick.
 
-use accord::{Request, Role, SemId, SnapshotBuilder};
+use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
 use engine::widgets::overlay::tokens::MenuStyle;
@@ -39,12 +39,12 @@ const CARD_BOTTOM: f32 = 64.0;
 const SPAN: usize = 3;
 
 /// The kit's upload menu (`components/Upload/index.tsx:2-27`), its icons
-/// the Lucide ones nearest the kit's paths.
+/// the kit's own paths (`kit-upload-*`).
 fn upload_menu() -> Vec<MenuEntry> {
     vec![
-        MenuEntry::item(1, "Add photos or videos").icon("image-plus"),
-        MenuEntry::item(2, "Add 3D objects").icon("box"),
-        MenuEntry::item(3, "Add files (docs, txt...)").icon("file-plus"),
+        MenuEntry::item(1, "Add photos or videos").icon("kit-upload-media"),
+        MenuEntry::item(2, "Add 3D objects").icon("kit-upload-object"),
+        MenuEntry::item(3, "Add files (docs, txt...)").icon("kit-upload-file"),
     ]
 }
 
@@ -60,7 +60,7 @@ enum Body {
     /// Another front's component, named until it arrives.
     Pending(&'static str),
     Menu(ContextMenu),
-    Folders(Folders),
+    Folders(Box<Folders>),
 }
 
 struct Card {
@@ -145,9 +145,9 @@ impl MenusPage {
         let mut cards = vec![
             card("Zoom view options", Body::Pending("Zoom, from front G")),
             card("File menu", menu(file_menu(), MenuStyle::File)),
-            card("File menu", Body::Folders(Folders::new(FOLDERS))),
+            card("File menu", Body::Folders(Box::new(Folders::new(FOLDERS)))),
             card("Select AI model", Body::Pending("SelectAI, from front C")),
-            card("Upload", menu(upload_menu(), MenuStyle::Profile)),
+            card("Upload", menu(upload_menu(), MenuStyle::Upload)),
             card("Filter menu", menu(filter_menu(), MenuStyle::Filter)),
             card("Profile menu", menu(profile_menu(), MenuStyle::Profile)),
         ];
@@ -159,7 +159,7 @@ impl MenusPage {
                 };
                 card.body = match std::mem::replace(&mut card.body, Body::Pending("")) {
                     Body::Menu(m) => Body::Menu(m.sem(id)),
-                    Body::Folders(f) => Body::Folders(f.sem(id)),
+                    Body::Folders(f) => Body::Folders(Box::new((*f).sem(id))),
                     pending => pending,
                 };
             }
@@ -212,8 +212,9 @@ impl MenusPage {
                 check(m, id);
                 label(m, id)
             }
-            (Body::Folders(f), Spot::Row(FolderRow::New)) if f.sem_id().is_some() => {
-                Some("New Folder".to_owned())
+            (Body::Folders(f), Spot::Row(FolderRow::New)) => {
+                f.toggle_naming();
+                return true;
             }
             (Body::Folders(f), Spot::Row(FolderRow::Folder(i))) => f.folders.get(i).cloned(),
             _ => None,
@@ -259,10 +260,61 @@ impl MenusPage {
             })
     }
 
+    /// The folder picker, where it is.
+    fn folders(&self) -> Option<&Folders> {
+        self.cards.iter().find_map(|c| match &c.body {
+            Body::Folders(f) => Some(f.as_ref()),
+            _ => None,
+        })
+    }
+
+    fn folders_card(&self) -> Option<usize> {
+        self.cards
+            .iter()
+            .position(|c| matches!(c.body, Body::Folders(_)))
+    }
+
+    fn folders_mut(&mut self) -> Option<&mut Folders> {
+        self.cards.iter_mut().find_map(|c| match &mut c.body {
+            Body::Folders(f) => Some(f.as_mut()),
+            _ => None,
+        })
+    }
+
+    /// The new folder's name added (Enter, the name's `submit`): the
+    /// card says it.
+    fn commit_name(&mut self) -> bool {
+        let Some(c) = self.folders_card() else {
+            return false;
+        };
+        let name = self.folders_mut().and_then(Folders::commit_name);
+        let made = name.is_some();
+        if made {
+            self.cards[c].picked = name;
+        }
+        made
+    }
+
+    /// The search box's and the name's rects in `content`.
+    fn field_rects(&self, content: Rect, theme: &Theme) -> (Option<Rect>, Option<Rect>) {
+        let (Some(c), Some(f)) = (self.folders_card(), self.folders()) else {
+            return (None, None);
+        };
+        let card = self.layout(content, theme)[0].cards[c];
+        let l = f.layout(Self::widget_rect(&self.cards[c].body, card, theme), theme);
+        (Some(l.search), l.name)
+    }
+
+    /// Escape: an open name's box closes, then the field or the row that
+    /// has the focus lets it go.
     pub fn handle_escape(&mut self) -> bool {
+        if self.folders_mut().is_some_and(Folders::cancel_naming) {
+            return true;
+        }
+        let field = self.folders_mut().is_some_and(Folders::blur_fields);
         let had = self.focus.is_some();
         self.set_focus(None);
-        had
+        field || had
     }
 
     pub fn handle_event(
@@ -272,7 +324,8 @@ impl MenusPage {
         theme: &Theme,
     ) -> EventResult {
         let mut result = EventResult::IGNORED;
-        if matches!(event, WidgetEvent::MouseDown { .. }) && self.handle_escape() {
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.focus.is_some() {
+            self.set_focus(None);
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
@@ -405,22 +458,56 @@ impl Component for MenusPage {
                 (Body::Folders(f), Spot::Row(r)) => f.row_id(r),
                 _ => None,
             });
-        if let Some(id) = focused {
+        let field = self.folders().and_then(|f| f.field()?.sem_id().cloned());
+        if let Some(id) = focused.or(field) {
             b.focus(&id);
         }
     }
 
-    /// An item's or a folder's `activate` picks it, as its press does.
+    /// An item's or a folder's `activate` picks it, as its press does; a
+    /// box's `set_value` puts its text; the name's `submit` adds the
+    /// folder, as Enter does.
     fn run(&mut self, req: &Request) -> Result<After, String> {
-        match (self.at(&req.target), req.action.as_str()) {
-            (Some((c, spot)), "activate") if self.pick(c, spot) => Ok(After::Nothing),
-            _ => Err(format!("the page has no {} on {}", req.action, req.target)),
+        let refuse = || format!("the page has no {} on {}", req.action, req.target);
+        let f = self.folders();
+        let search = f.and_then(|f| f.search.sem_id().cloned());
+        let name = f.and_then(|f| f.naming()?.sem_id().cloned());
+        let target = Some(&req.target);
+        match (req.action.as_str(), &req.param) {
+            ("set_value", Some(Value::Text(text))) if target == search.as_ref() => {
+                let f = self.folders_mut().ok_or_else(refuse)?;
+                f.search.set_text(text);
+                Ok(After::Nothing)
+            }
+            ("set_value", Some(Value::Text(text))) if target == name.as_ref() => {
+                let f = self.folders_mut().and_then(Folders::naming_mut);
+                f.ok_or_else(refuse)?.set_text(text);
+                Ok(After::Nothing)
+            }
+            ("submit", _) if target == name.as_ref() && self.commit_name() => Ok(After::Nothing),
+            ("activate", _) => match self.at(&req.target) {
+                Some((c, spot)) if self.pick(c, spot) => Ok(After::Nothing),
+                _ => Err(refuse()),
+            },
+            _ => Err(refuse()),
         }
     }
 
+    /// A row, an item or a box takes the focus (its ring, or the box's
+    /// caret); another node of the page takes it from them.
     fn focus(&mut self, id: &SemId) -> bool {
         if !self.root.as_ref().is_some_and(|root| under(root, id)) {
             return false;
+        }
+        let f = self.folders();
+        let search = f.and_then(|f| f.search.sem_id()) == Some(id);
+        let name = f.and_then(|f| f.naming()?.sem_id().cloned()).as_ref() == Some(id);
+        if let Some(f) = self.folders_mut() {
+            if search || name {
+                f.focus_field(name);
+            } else {
+                f.blur_fields();
+            }
         }
         self.set_focus(self.at(id));
         true
@@ -431,88 +518,6 @@ impl Component for MenusPage {
     }
 }
 
+mod host;
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// The width sweep, 280 to 1600 every 8 px under the core and the
-    /// hoff themes: every card in the content and apart, every menu inside
-    /// its card and under its chip.
-    #[test]
-    fn every_menu_fits_its_card_from_narrow_to_wide() {
-        for theme in [Theme::hoff_core(), Theme::hoff()] {
-            let page = MenusPage::new();
-            for w in (280..=1600).step_by(8) {
-                let content = Rect::new(0.0, 0.0, w as f32, 800.0);
-                let at = &page.layout(content, &theme)[0];
-                for (n, (card, r)) in page.cards.iter().zip(&at.cards).enumerate() {
-                    assert!(
-                        r.x >= content.x && r.right() <= content.right() + 0.5,
-                        "{w}"
-                    );
-                    if let Some(next) = at.cards.get(n + 1)
-                        && next.y == r.y
-                    {
-                        assert!(next.x >= r.right(), "{w}: cards overlap");
-                    }
-                    let inset = theme.spacing.sm;
-                    let chip = showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
-                    let b = MenusPage::widget_rect(&card.body, *r, &theme);
-                    assert!(
-                        b.x >= r.x && b.right() <= r.right() + 0.5,
-                        "{w}: {}",
-                        card.title
-                    );
-                    assert!(b.y >= chip.bottom() && b.bottom() <= r.bottom(), "{w}");
-                }
-            }
-        }
-    }
-
-    /// A press on a filter moves its check within its section and the
-    /// menu says it; a press on a folder picks it; the focus rings an
-    /// item and Escape lets it go.
-    #[test]
-    fn a_press_picks_and_a_filter_moves_its_check() {
-        let theme = Theme::hoff_core();
-        let mut page = MenusPage::new();
-        let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
-        let layout = page.layout(content, &theme);
-        let press = |page: &mut MenusPage, (x, y): (f32, f32)| {
-            page.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme)
-        };
-        let Body::Menu(m) = &page.cards[5].body else {
-            panic!("the filter menu")
-        };
-        let at = MenusPage::widget_rect(&page.cards[5].body, layout[0].cards[5], &theme);
-        let rows = m.entry_rects(at.x, at.y, &theme);
-        assert!(press(&mut page, rows[2].center()).clicked);
-        let Body::Menu(m) = &page.cards[5].body else {
-            unreachable!()
-        };
-        let checks: Vec<_> = m
-            .entries
-            .iter()
-            .filter_map(|e| match e {
-                MenuEntry::Item { checked, .. } => *checked,
-                _ => None,
-            })
-            .collect();
-        assert_eq!(checks, [false, false, true, true, false]);
-        assert_eq!(page.cards[5].picked.as_deref(), Some("Animation"));
-
-        let Body::Folders(f) = &page.cards[2].body else {
-            panic!("the folders")
-        };
-        let at = MenusPage::widget_rect(&page.cards[2].body, layout[0].cards[2], &theme);
-        let row = f.layout(at, &theme).folders[1];
-        press(&mut page, row.center());
-        assert_eq!(page.cards[2].picked.as_deref(), Some("3D Icons"));
-
-        let id = card_id(page.root.as_ref().unwrap(), 1).unwrap().key("2");
-        assert!(page.focus(&id));
-        assert_eq!(page.focus, Some((1, Spot::Item(2))));
-        assert!(page.handle_escape());
-        assert_eq!(page.focus, None);
-    }
-}
+mod tests;

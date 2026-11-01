@@ -33,6 +33,8 @@ pub(crate) enum Part {
     Choice,
     /// An open list's option, by its index in the options.
     Option(usize),
+    /// A color picker's opacity, the second box of the widget.
+    Alpha,
 }
 
 /// A widget of a form page's card. Only the size, the draw and the
@@ -237,7 +239,7 @@ impl CardWidget for Field {
             Part::Box => self.sem_id().cloned(),
             Part::Reveal => self.reveal_id(),
             Part::Link => self.link_id(),
-            Part::Action | Part::Choice | Part::Option(_) => None,
+            Part::Action | Part::Choice | Part::Option(_) | Part::Alpha => None,
         }
     }
 

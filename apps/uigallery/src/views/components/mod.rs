@@ -71,6 +71,7 @@ pub mod bubble;
 pub mod marker;
 pub mod message;
 pub mod message_scroller;
+pub mod prompt_input;
 
 // task-104 front D, disclosure and display (#157)
 pub mod accordion;
@@ -91,8 +92,12 @@ pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;
 
+// task-104 front F, kit foundation
+pub mod home;
+pub mod topbar;
+
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
-pub(crate) use super::{EditKey, group_label, panel, text};
+pub(crate) use super::{EditKey, panel, text};
 
 use accord::SemId;
 

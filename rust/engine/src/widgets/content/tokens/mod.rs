@@ -487,6 +487,8 @@ pub struct DisclosureTokens {
     pub page: PageHeadRecipe,
     /// A card's chart and legend marks.
     pub card: CardRecipe,
+    /// The kit's catalog cards (its CardsPage).
+    pub catalog: CatalogTokens,
     /// A split's divider.
     pub split: SplitRecipe,
 }
@@ -515,7 +517,11 @@ const CLEAR: DisclosureSurface = DisclosureSurface {
 };
 
 mod card;
+mod catalog;
 mod derive;
 mod kit;
 
 pub use card::CardRecipe;
+pub use catalog::{
+    CatalogPalette, CatalogTokens, ExploreRecipe, PriceRecipe, TileRecipe, TypeSpec,
+};

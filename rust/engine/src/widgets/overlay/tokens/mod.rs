@@ -33,6 +33,8 @@ pub struct OverlayTokens {
     pub menu: MenuTokens,
     pub file_menu: MenuTokens,
     pub filter_menu: MenuTokens,
+    /// The kit's upload menu ([`MenuStyle::Upload`]).
+    pub upload_menu: MenuTokens,
     pub menubar: MenubarTokens,
     pub modal: ModalTokens,
     pub sheet: SheetTokens,
@@ -51,6 +53,7 @@ impl OverlayTokens {
             menu: MenuTokens::hoff_core(),
             file_menu: MenuTokens::hoff_core_file(),
             filter_menu: MenuTokens::hoff_core_filter(),
+            upload_menu: MenuTokens::hoff_core_upload(),
             menubar: MenubarTokens::hoff_core(),
             modal: ModalTokens::hoff_core(),
             sheet: SheetTokens::hoff_core(),
@@ -69,6 +72,7 @@ impl OverlayTokens {
             menu: MenuTokens::derive(theme),
             file_menu: MenuTokens::derive(theme),
             filter_menu: MenuTokens::derive(theme),
+            upload_menu: MenuTokens::derive(theme),
             menubar: MenubarTokens::derive(theme),
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
@@ -83,6 +87,7 @@ impl OverlayTokens {
             MenuStyle::Profile => &self.menu,
             MenuStyle::File => &self.file_menu,
             MenuStyle::Filter => &self.filter_menu,
+            MenuStyle::Upload => &self.upload_menu,
         }
     }
 }

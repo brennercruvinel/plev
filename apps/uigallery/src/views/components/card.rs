@@ -1,182 +1,287 @@
-//! Cards section: the HOFF card deck — every `CardVariant` with sample
-//! data, laid out as a content-driven masonry grid.
+//! Card page: the kit's CardsPage (templates/CardsPage/index.tsx), group
+//! for group, in the showcase mold: the pricing cards (Free, Studio,
+//! Creator), the slide item at rest and active, the asset card, the scene
+//! card and its skeleton, the explore tag, the explore card, and the
+//! ratio and the two asset items. The widgets are
+//! `engine::widgets::content`'s `CatalogCard` and `Item`; every visual
+//! value comes from the theme (`theme.disclosure.catalog`, `.item`). A
+//! photo of the kit is a rectangle in the catalog's image gradient.
+//!
+//! Each card is as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`,
+//! `h-59`, square) or as its widget needs, and each widget as wide as the
+//! kit draws it or as its card leaves: the rows drop a column where a card
+//! would get narrower than `showcase::CARD_MIN_W`.
+//!
+//! Projected: a group per title, `card_page.group[<g>]`; in it each card,
+//! `...card[<c>]`, a button with `selected` whose `activate` chooses it as
+//! a click does; a pricing card a group around its plan's button
+//! `...card[<c>].plan`; the asset items options with `select`.
 
-use engine::drawing::compositor::Compositor;
-use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
+use accord::{Request, Role, SemId, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
-use engine::widgets::prelude::{Card, CardListRow, CardVariant, EventResult, Rect, WidgetEvent};
+use engine::widgets::content::{CatalogCard, CatalogKind, Item, ItemShape, Plan};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
+use engine::widgets::recipe::focus_ring_inside;
 
-use super::group_label;
+use super::{After, Component, child_id, root_id, showcase, under};
 
-const GAP: f32 = 16.0;
-const LABEL_H: f32 = 24.0;
-/// Minimum readable card width — the column count derives from it.
-const CARD_MIN_W: f32 = 320.0;
-/// Maximum card width, so columns do not degenerate on ultra-wide windows.
-const CARD_MAX_W: f32 = 520.0;
-
-/// Procedural cover art: a vertical graphite-to-white wash with a soft
-/// diagonal highlight — monochrome, like the deck's PNG previews.
-fn cover_image(w: u32, h: u32, seed: f32) -> Option<ImageHandle> {
-    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
-    for y in 0..h {
-        for x in 0..w {
-            let fx = x as f32 / w as f32;
-            let fy = y as f32 / h as f32;
-            // Top-lit wash + a diagonal band, all in the HOFF grays.
-            let band = (1.0 - ((fx - fy * 0.8 - seed).abs() * 3.0)).clamp(0.0, 1.0);
-            let glow = (1.0 - fy) * 0.22 + band * 0.10;
-            let base = 40.0 / 255.0;
-            let v = ((base + glow) * 255.0) as u8;
-            pixels.extend_from_slice(&[v, v, v, 255]);
-        }
-    }
-    load_image_rgba(w, h, pixels).ok()
+/// What a card of the page holds.
+enum Body {
+    Catalog(CatalogCard),
+    Item(Item),
+    /// The ratio label of the last group (CardsPage :170-177).
+    Ratio(&'static str),
 }
 
-/// Avatar: a radial-ish bright disc on graphite.
-fn avatar_image() -> Option<ImageHandle> {
-    let (w, h) = (88u32, 88u32);
-    let mut pixels = Vec::with_capacity((w * h * 4) as usize);
-    for y in 0..h {
-        for x in 0..w {
-            let dx = x as f32 / w as f32 - 0.5;
-            let dy = y as f32 / h as f32 - 0.38;
-            let d = (dx * dx + dy * dy).sqrt();
-            let lum = (0.85 - d * 1.4).clamp(0.16, 0.85);
-            let v = (lum * 255.0) as u8;
-            pixels.extend_from_slice(&[v, v, v, 255]);
-        }
-    }
-    load_image_rgba(w, h, pixels).ok()
+struct Card {
+    /// The chip: which states this card shows.
+    title: &'static str,
+    body: Body,
+}
+
+struct Group {
+    title: &'static str,
+    span: usize,
+    /// The kit's card height (`h-150` is 600); `None` is square.
+    height: Option<f32>,
+    cards: Vec<Card>,
 }
 
 pub struct CardPage {
-    cards: Vec<(&'static str, Card)>,
+    root: Option<SemId>,
+    groups: Vec<Group>,
+    /// The card, plan or item a reader or Tab focused.
+    focus: Option<SemId>,
+}
+
+fn group_id(root: &SemId, g: usize) -> Option<SemId> {
+    child_id(Some(root), "group").map(|family| family.key(g.to_string()))
+}
+
+fn card_id(root: &SemId, g: usize, c: usize) -> Option<SemId> {
+    child_id(group_id(root, g).as_ref(), "card").map(|family| family.key(c.to_string()))
+}
+
+fn plan(plan: Plan, title: &str, description: &str, price: &str, features: [&str; 5]) -> Body {
+    Body::Catalog(CatalogCard::new(CatalogKind::Price {
+        plan,
+        title: title.into(),
+        description: description.into(),
+        price: price.into(),
+        features: features.iter().map(|f| (*f).to_string()).collect(),
+    }))
 }
 
 impl CardPage {
     pub fn new() -> Self {
-        let cards = vec![
-            (
-                "STAT",
-                Card::new(CardVariant::Stat {
-                    value: "1,632".into(),
-                    label: "Clicks".into(),
-                    delta: Some(("+12.4%".into(), true)),
-                }),
-            ),
-            (
-                "CHART",
-                Card::new(CardVariant::Chart {
-                    value: "$408.36".into(),
-                    label: "Last month".into(),
-                    groups: vec![(0.42, 0.60), (0.55, 0.88), (0.30, 0.48), (0.62, 0.74)],
-                    highlight: 1,
-                }),
-            ),
-            (
-                "PROFILE",
-                Card::new(CardVariant::Profile {
-                    name: "Artur Hoff".into(),
-                    username: "@hoff".into(),
-                    bio: "Building dark glass interfaces. Every surface is \
-                          #F8F8F8 at six alphas."
-                        .into(),
-                    action: "Follow".into(),
-                    online: true,
-                    avatar: avatar_image(),
-                }),
-            ),
-            (
-                "MEDIA",
-                Card::new(CardVariant::Media {
-                    title: "4K Video Streaming".into(),
-                    caption: "Buffer-free playback on every panel.".into(),
-                    badge: Some("4K".into()),
-                    image: cover_image(352, 248, 0.2),
-                }),
-            ),
-            (
-                "LIST",
-                Card::new(CardVariant::List {
-                    title: "Expense Tracker".into(),
-                    rows: vec![
-                        CardListRow::new("Starter", "$88.00"),
-                        CardListRow::new("Professional", "$128.00").active(true),
-                        CardListRow::new("Syncing workspace", "70%").progress(0.7),
-                    ],
-                }),
-            ),
-            (
-                "STAT — NEGATIVE",
-                Card::new(CardVariant::Stat {
-                    value: "68%".into(),
-                    label: "Bounce rate".into(),
-                    delta: Some(("-3.1%".into(), false)),
-                }),
-            ),
-            (
-                "MEDIA — GLASS",
-                Card::new(CardVariant::Media {
-                    title: "Comparative Tools".into(),
-                    caption: "The video box recipe without artwork.".into(),
-                    badge: Some("HD".into()),
-                    image: None,
-                }),
-            ),
-            (
-                "CTA",
-                Card::new(CardVariant::Cta {
-                    title: "Detailed Analytics".into(),
-                    body: "Track every click with the comparative toolkit and \
-                           the full HOFF glass recipe — one shell, any preview."
-                        .into(),
-                    button: "Discover".into(),
-                }),
-            ),
+        let card = |title, body| Card { title, body };
+        let catalog = |kind| Body::Catalog(CatalogCard::new(kind));
+        let groups = vec![
+            Group {
+                title: "Pricing card",
+                span: 3,
+                height: Some(600.0),
+                cards: vec![
+                    card(
+                        "Free",
+                        plan(
+                            Plan::Free,
+                            "Free",
+                            "Perfect for hobbyists, students, or early-stage creators.",
+                            "0",
+                            [
+                                "Access to a basic asset library",
+                                "15-second video animation",
+                                "Generate up to 10 scenes/month",
+                                "Watermarked exports",
+                                "Try basic AI prompts",
+                            ],
+                        ),
+                    ),
+                    card(
+                        "Studio",
+                        plan(
+                            Plan::Studio,
+                            "Studio",
+                            "For teams and studios that need power, speed.",
+                            "40",
+                            [
+                                "Everything in Creator",
+                                "Unlimited 3D scene generation",
+                                "Full access to premium asset library",
+                                "Animations up to 60 seconds",
+                                "Unlimited Video AI models",
+                            ],
+                        ),
+                    ),
+                    card(
+                        "Creator",
+                        plan(
+                            Plan::Creator,
+                            "Creator",
+                            "For indie creators, and startups who need high-quality output",
+                            "20",
+                            [
+                                "Everything in Free",
+                                "Unlimited 3D scene generation",
+                                "Premium asset library access",
+                                "Animations up to 30 seconds",
+                                "20+ Video AI models",
+                            ],
+                        ),
+                    ),
+                ],
+            },
+            Group {
+                title: "Slide item",
+                span: 2,
+                height: Some(200.0),
+                cards: vec![
+                    card("Default, Hover", catalog(CatalogKind::Slide)),
+                    card(
+                        "Active",
+                        Body::Catalog(CatalogCard::new(CatalogKind::Slide).selected(true)),
+                    ),
+                ],
+            },
+            Group {
+                title: "Asset",
+                span: 1,
+                height: Some(400.0),
+                cards: vec![card("Default, Hover", catalog(CatalogKind::Asset))],
+            },
+            Group {
+                title: "Asset",
+                span: 2,
+                height: Some(480.0),
+                cards: vec![
+                    card(
+                        "Default, Hover",
+                        catalog(CatalogKind::Scene {
+                            title: "Futuristic Humanoid Robot".into(),
+                            category: "Untitled Folder".into(),
+                            video: false,
+                        }),
+                    ),
+                    card("Skeleton", catalog(CatalogKind::SceneSkeleton)),
+                ],
+            },
+            Group {
+                title: "Explore tags",
+                span: 1,
+                height: Some(236.0),
+                cards: vec![card(
+                    "Default, Hover",
+                    catalog(CatalogKind::ExploreSm {
+                        title: "Product Design".into(),
+                        description: "Minimalist, soft".into(),
+                    }),
+                )],
+            },
+            Group {
+                title: "Explore tags",
+                span: 1,
+                height: Some(480.0),
+                cards: vec![card(
+                    "Default, Hover",
+                    catalog(CatalogKind::Explore {
+                        title: "Tran Mau Tri Tam".into(),
+                    }),
+                )],
+            },
+            Group {
+                title: "Asset",
+                span: 3,
+                height: None,
+                cards: vec![
+                    card("Ratio", Body::Ratio("3:4")),
+                    card(
+                        "Material, Add",
+                        Body::Item(Item::new("Material").shape(ItemShape::Tile).icon("layers")),
+                    ),
+                    card(
+                        "Style, Add",
+                        Body::Item(Item::new("Style").shape(ItemShape::Tile).icon("image")),
+                    ),
+                ],
+            },
         ];
-        Self { cards }
+        let mut page = Self {
+            root: root_id("card_page"),
+            groups,
+            focus: None,
+        };
+        if let Some(root) = page.root.clone() {
+            for (g, group) in page.groups.iter_mut().enumerate() {
+                for (c, card) in group.cards.iter_mut().enumerate() {
+                    let Some(id) = card_id(&root, g, c) else {
+                        continue;
+                    };
+                    match &mut card.body {
+                        Body::Catalog(w) => *w = w.clone().sem(id),
+                        Body::Item(w) => *w = w.clone().sem(id),
+                        Body::Ratio(_) => {}
+                    }
+                }
+            }
+        }
+        page
     }
 
-    /// Content-driven masonry: as many columns as `content.w` affords (at
-    /// `CARD_MIN_W` each), stretched to fill the row; each card lands in
-    /// the currently shorter column.
-    fn layout(&self, content: Rect, theme: &Theme) -> Vec<Rect> {
-        let cols = (((content.w + GAP) / (CARD_MIN_W + GAP)).floor() as usize).max(1);
-        let col_w = ((content.w - (cols as f32 - 1.0) * GAP) / cols as f32).min(CARD_MAX_W);
-        let mut col_y = vec![content.y; cols];
-        self.cards
-            .iter()
-            .map(|(_, card)| {
-                // Height measured at the stretched width (CTA bodies
-                // re-wrap their text against it).
-                let mut sized = card.clone();
-                sized.width = Some(col_w);
-                let (_, h) = sized.preferred_size(theme);
-                let col = (0..cols)
-                    .min_by(|a, b| col_y[*a].total_cmp(&col_y[*b]))
-                    .unwrap_or(0);
-                let rect = Rect::new(
-                    content.x + col as f32 * (col_w + GAP),
-                    col_y[col] + LABEL_H,
-                    col_w,
-                    h,
-                );
-                col_y[col] = rect.y + rect.h + GAP + 8.0;
-                rect
+    /// The widget's size in `w` of room.
+    fn widget_size(body: &Body, w: f32, theme: &Theme) -> (f32, f32) {
+        match body {
+            Body::Catalog(card) => card.size(w, theme),
+            Body::Item(item) => item.size(w, theme),
+            Body::Ratio(_) => {
+                let s = theme.disclosure.item.tile;
+                (s, s)
+            }
+        }
+    }
+
+    /// Each group's cards, and in each card the widget's rect.
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Rect>)> {
+        let grids = self.groups.iter().map(|g| {
+            let card_w = showcase::card_width(g.span, content, theme);
+            let room = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
+            let heights = g
+                .cards
+                .iter()
+                .map(|c| {
+                    let (_, h) = Self::widget_size(&c.body, room, theme);
+                    showcase::card_height(h, theme).max(g.height.unwrap_or(card_w))
+                })
+                .collect();
+            showcase::Grid {
+                span: g.span,
+                min_w: showcase::CARD_MIN_W,
+                heights,
+            }
+        });
+        showcase::layout_grids(grids, content, theme)
+            .into_iter()
+            .zip(&self.groups)
+            .map(|(placed, group)| {
+                let rects = placed
+                    .cards
+                    .iter()
+                    .zip(&group.cards)
+                    .map(|(rect, card)| {
+                        let room = showcase::body(*rect, theme).w;
+                        showcase::centered(Self::widget_size(&card.body, room, theme), *rect)
+                    })
+                    .collect();
+                (placed, rects)
             })
             .collect()
     }
 
-    /// Natural height of the laid-out deck (page scrolling needs it).
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
         self.layout(content, theme)
-            .iter()
-            .map(|r| r.y + r.h)
-            .fold(content.y, f32::max)
-            - content.y
-            + GAP
+            .last()
+            .map_or(0.0, |(placed, _)| placed.rule_y - content.y)
     }
 
     pub fn handle_event(
@@ -185,70 +290,204 @@ impl CardPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let rects = self.layout(content, theme);
-        let mut result = EventResult::IGNORED;
-        for ((_, card), rect) in self.cards.iter_mut().zip(rects) {
-            result = result.merge(card.handle_event(event, rect));
+        let layout = self.layout(content, theme);
+        let mut out = EventResult::IGNORED;
+        for (group, (_, rects)) in self.groups.iter_mut().zip(&layout) {
+            for (card, at) in group.cards.iter_mut().zip(rects) {
+                let r = match &mut card.body {
+                    Body::Catalog(w) => w.handle_event(event, *at, theme),
+                    Body::Item(w) => w.handle_event(event, *at),
+                    Body::Ratio(_) => EventResult::IGNORED,
+                };
+                if r.clicked {
+                    return r;
+                }
+                if r.changed {
+                    out = r;
+                }
+            }
         }
-        result
+        out
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let rects = self.layout(content, theme);
-        for ((label, card), rect) in self.cards.iter().zip(rects) {
-            group_label(c, label, rect.x, rect.y - LABEL_H + 2.0, theme);
-            card.render(c, rect, theme);
+        let layout = self.layout(content, theme);
+        let last = self.groups.len().saturating_sub(1);
+        for (i, (group, (placed, rects))) in self.groups.iter().zip(&layout).enumerate() {
+            showcase::title(c, group.title, content, placed.title_y, theme);
+            for ((card, rect), at) in group.cards.iter().zip(&placed.cards).zip(rects) {
+                showcase::card(c, *rect, card.title, theme);
+                match &card.body {
+                    Body::Catalog(w) => w.render(c, *at, theme),
+                    Body::Item(w) => w.render(c, *at, theme),
+                    Body::Ratio(label) => ratio(c, *at, label, theme),
+                }
+                if let Some(ring) = self.focus_rect(card, *at, theme) {
+                    c.push(focus_ring_inside(ring, theme.shape.nav, theme));
+                }
+            }
+            if i != last {
+                showcase::rule(c, content, placed.rule_y, theme);
+            }
         }
+    }
+
+    /// Where the focus ring goes when `card` holds the focus: the plan's
+    /// button, or the widget.
+    fn focus_rect(&self, card: &Card, at: Rect, theme: &Theme) -> Option<Rect> {
+        let focus = self.focus.as_ref()?;
+        match &card.body {
+            Body::Catalog(w) => {
+                let id = w.sem_id()?;
+                if id == focus {
+                    return Some(at);
+                }
+                let plan = id.child("plan").ok()?;
+                (plan == *focus).then(|| w.button_rect(at, theme)).flatten()
+            }
+            Body::Item(w) => (w.sem_id()? == focus).then_some(at),
+            Body::Ratio(_) => None,
+        }
+    }
+
+    /// `(group, card, plan)` of an id of the page.
+    fn at(&self, id: &SemId) -> Option<(usize, usize, bool)> {
+        let root = self.root.as_ref()?;
+        for (g, group) in self.groups.iter().enumerate() {
+            for c in 0..group.cards.len() {
+                let card = card_id(root, g, c)?;
+                if &card == id {
+                    return Some((g, c, false));
+                }
+                if card.child("plan").ok().as_ref() == Some(id) {
+                    return Some((g, c, true));
+                }
+            }
+        }
+        None
+    }
+}
+
+/// The ratio label (CardsPage :170): `size-15 rounded-[0.625rem]
+/// bg-[#F1F1F1] border border-[#ECECEC]`, `text-[0.75rem] leading-[1rem]
+/// font-medium text-[#7B7B7B]` (the catalog's muted text, for AAA).
+fn ratio(c: &mut Compositor, at: Rect, label: &str, theme: &Theme) {
+    let k = &theme.disclosure.catalog.palette;
+    let tile = &theme.disclosure.item;
+    let style = theme.typography.exact(12.0, 16.0, 500);
+    c.push(rounded_rect(
+        at.x,
+        at.y,
+        at.w,
+        at.h,
+        tile.tile_radius,
+        k.wash.0,
+    ));
+    c.push(rounded_rect_stroke(
+        at.x,
+        at.y,
+        at.w,
+        at.h,
+        tile.tile_radius,
+        k.line.0,
+        tile.tile_border,
+    ));
+    let (w, h) = engine::drawing::text::TextMeasurer::measure_styled(label, &style, None);
+    c.push(SceneNode::Text {
+        key: TextNodeKey::from_style(label, &style, None),
+        x: at.x + (at.w - w) / 2.0,
+        y: at.y + (at.h - h) / 2.0,
+        color: k.muted.0,
+    });
+}
+
+impl Component for CardPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (g, group) in self.groups.iter().enumerate() {
+            let Some(at) = group_id(root, g) else {
+                continue;
+            };
+            b.node(&at, Role::Group, group.title).parent(root);
+            for (c, card) in group.cards.iter().enumerate() {
+                let Some(id) = card_id(root, g, c) else {
+                    continue;
+                };
+                match &card.body {
+                    Body::Catalog(w) => {
+                        w.project(b, &id, Some(&at)).description(card.title);
+                    }
+                    Body::Item(w) => {
+                        w.project(b, &id, Some(&at)).description(card.title);
+                    }
+                    Body::Ratio(label) => {
+                        b.node(&id, Role::Label, *label)
+                            .parent(&at)
+                            .description(card.title);
+                    }
+                }
+            }
+        }
+        if let Some(id) = &self.focus {
+            b.focus(id);
+        }
+    }
+
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        let refused = || format!("the card page has no {} on {}", req.action, req.target);
+        let (g, c, on_plan) = self.at(&req.target).ok_or_else(refused)?;
+        match (
+            &mut self.groups[g].cards[c].body,
+            req.action.as_str(),
+            on_plan,
+        ) {
+            (Body::Catalog(w), "activate", plan) => {
+                let priced = matches!(w.kind, CatalogKind::Price { .. });
+                if priced != plan {
+                    return Err(refused());
+                }
+                if matches!(
+                    w.kind,
+                    CatalogKind::Price {
+                        plan: Plan::Free,
+                        ..
+                    }
+                ) {
+                    return Err(format!("{} is the plan in use", req.target));
+                }
+                w.set_selected(true);
+                Ok(After::Nothing)
+            }
+            (Body::Item(w), "select", false) => {
+                w.set_selected(true);
+                Ok(After::Nothing)
+            }
+            _ => Err(refused()),
+        }
+    }
+
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        let takes = self
+            .at(id)
+            .is_some_and(|(g, c, plan)| match &self.groups[g].cards[c].body {
+                Body::Catalog(w) => matches!(w.kind, CatalogKind::Price { .. }) == plan,
+                Body::Item(_) => !plan,
+                Body::Ratio(_) => false,
+            });
+        self.focus = takes.then(|| id.clone());
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        self.focus.take().is_some()
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Distinct column x positions of a laid-out deck.
-    fn column_xs(rects: &[Rect]) -> Vec<f32> {
-        let mut xs: Vec<f32> = rects.iter().map(|r| r.x).collect();
-        xs.sort_by(f32::total_cmp);
-        xs.dedup();
-        xs
-    }
-
-    /// Wide viewport (~1600px window): the deck must redistribute into
-    /// three or more stretched columns instead of two fixed 368px ones.
-    #[test]
-    fn cards_redistribute_into_three_plus_columns_in_wide_content() {
-        let section = CardPage::new();
-        let content = Rect::new(288.0, 80.0, 1272.0, 700.0);
-        let rects = section.layout(content, &Theme::hoff());
-
-        let cols = column_xs(&rects);
-        assert!(
-            cols.len() >= 3,
-            "wide content must yield >= 3 columns, got {}",
-            cols.len()
-        );
-
-        // Columns stretch past the old fixed card width but stay clamped.
-        let col_w = rects[0].w;
-        assert!(rects.iter().all(|r| r.w == col_w));
-        assert!(col_w > 368.0, "columns must stretch, got {col_w}");
-        assert!(col_w <= CARD_MAX_W);
-
-        // Nothing reaches past the content rect.
-        let right = content.x + content.w;
-        assert!(rects.iter().all(|r| r.x + r.w <= right + 0.5));
-    }
-
-    /// Narrow viewport: a single column that follows the content width.
-    #[test]
-    fn cards_collapse_to_one_stretched_column_in_narrow_content() {
-        let section = CardPage::new();
-        let content = Rect::new(288.0, 80.0, 400.0, 700.0);
-        let rects = section.layout(content, &Theme::hoff());
-
-        assert_eq!(column_xs(&rects).len(), 1);
-        assert!(rects.iter().all(|r| r.x == content.x));
-        assert!(rects.iter().all(|r| r.w == content.w));
-    }
-}
+mod tests;

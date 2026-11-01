@@ -1,5 +1,6 @@
 //! Command dialog: the palette ([`Command`]) on the modal's sheet
-//! ([`crate::widgets::feedback::sheet`]) over its scrim, the
+//! ([`crate::widgets::feedback::sheet`]) over its scrim, its rows on the
+//! sheet without a panel of their own ([`Command::bare`]), the
 //! sheet as wide as a modal in that window and as tall as the palette
 //! with the modal's padding around it, centered. Closed, it is the kit's
 //! Search (`components/Search/index.tsx`): the box with its `⌘ K` cap,
@@ -47,7 +48,8 @@ impl CommandDialog {
             .start(Addon::Icon("search"))
             .end(Addon::Hint("⌘ K".into()));
         Self {
-            command,
+            // The sheet is the panel: the rows stand on it.
+            command: command.bare(),
             trigger,
             trigger_id: None,
             open: false,
