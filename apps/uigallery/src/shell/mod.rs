@@ -171,7 +171,24 @@ impl App {
         if let Some(offset) = args.next().and_then(|a| a.parse::<f32>().ok()) {
             view.scroll_page_to(offset);
         }
+        view.set_prefs(Self::launch_prefs());
         view
+    }
+
+    /// The person's preferences (ADR 0086), as the system says them
+    /// (`runtime::platform::prefs`), the text size overridden by
+    /// `PLEV_TEXT_SCALE` where the app is given one (macOS has no system
+    /// value: there it is the app's).
+    fn launch_prefs() -> engine::styling::theme::Prefs {
+        let mut prefs = engine::runtime::platform::prefs::read();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(f) = std::env::var("PLEV_TEXT_SCALE")
+            .ok()
+            .and_then(|v| v.trim().parse::<f32>().ok())
+        {
+            prefs.text_scale = engine::styling::theme::TextScale::new(f);
+        }
+        prefs
     }
 
     /// The shell around `view`, with no window yet.
@@ -569,7 +586,9 @@ pub use window::entry::uigallery_ios_main;
 /// `uigallery --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub use window::headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
+pub use window::headless::{
+    RenderError, StagedPage, render_page, semantics_json, stage_page, stage_page_with,
+};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use window::access::Access;

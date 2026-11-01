@@ -94,7 +94,7 @@ pub fn read(p: Preference) -> Option<bool> {
 /// A command's answer, `(succeeded, stdout, stderr)`; `None` when it
 /// could not run.
 #[cfg(not(any(target_arch = "wasm32", target_os = "ios", target_os = "android")))]
-fn run(program: &str, args: &[&str]) -> Option<(bool, String, String)> {
+pub(crate) fn run(program: &str, args: &[&str]) -> Option<(bool, String, String)> {
     match std::process::Command::new(program).args(args).output() {
         Ok(out) => Some((
             out.status.success(),
@@ -246,7 +246,7 @@ fn windows(p: Preference) -> Option<bool> {
 /// The data of `value` in what `reg query <key> /v <value>` printed: the
 /// line `    <value>    REG_SZ    <data>`.
 #[cfg(any(target_os = "windows", test))]
-pub(super) fn read_reg(stdout: &str, value: &str) -> Option<String> {
+pub(crate) fn read_reg(stdout: &str, value: &str) -> Option<String> {
     stdout.lines().find_map(|line| {
         let mut parts = line.split_whitespace();
         (parts.next()? == value).then_some(())?;
