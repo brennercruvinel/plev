@@ -1510,9 +1510,11 @@ fn on_layer_aims_push_and_bind_at_the_layer_and_restores_the_default() {
         color: [1.0, 0.0, 0.0, 1.0],
     };
     comp.on_layer(top, |c| {
+        assert_eq!(c.target(), top);
         c.push(rect.clone());
         c.bind(&id, [0.0, 0.0, 4.0, 4.0]);
     });
+    assert_eq!(comp.target(), LayerId::DEFAULT);
     comp.push(rect);
     let count = |c: &Compositor, l: LayerId| c.layer(l).map_or(0, |l| l.nodes.len());
     assert_eq!(count(&comp, top), 1, "the push inside lands on the layer");

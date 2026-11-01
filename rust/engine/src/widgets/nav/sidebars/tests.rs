@@ -124,6 +124,22 @@ fn the_navigation_alone_scrolls_under_the_logo() {
     assert!(!s.scroll_by(50.0, tall, &t));
 }
 
+/// Drawn on a layer its owner chose (a sidebar sliding over the page),
+/// all of it lands there: the logo, the counters' shadows, the links.
+#[test]
+fn the_home_draws_whole_on_the_layer_it_is_aimed_at() {
+    use crate::drawing::compositor::{Compositor, LayerId};
+    let t = Theme::hoff_core();
+    let s = home();
+    let (w, h) = s.size(&t);
+    let mut c = Compositor::new();
+    let top = c.create_layer(5);
+    c.on_layer(top, |c| s.render(c, Rect::new(0.0, 0.0, w, h), &t));
+    let count = |l: LayerId| c.layer(l).map_or(0, |l| l.nodes().len());
+    assert!(count(top) > 0);
+    assert_eq!(count(LayerId::DEFAULT), 0);
+}
+
 /// A reader's activate does what a press does, by id.
 #[test]
 fn activate_by_id_runs_the_part() {

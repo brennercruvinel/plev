@@ -6,7 +6,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 use super::super::tokens::{DisclosureRecipe, DisclosureSurface};
 use super::Collapsible;
-use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::icons;
@@ -208,7 +208,7 @@ impl Collapsible {
                 s
             })
             .collect();
-        shadow_drops(c, LayerId::DEFAULT, at, counter.radius, &shadow);
+        shadow_drops(c, c.target(), at, counter.radius, &shadow);
         c.push(rounded_rect(
             at.x,
             at.y,
@@ -217,7 +217,7 @@ impl Collapsible {
             counter.radius,
             faded(counter.fill, alpha),
         ));
-        shadow_insets(c, LayerId::DEFAULT, at, counter.radius, &shadow);
+        shadow_insets(c, c.target(), at, counter.radius, &shadow);
         let [pad_x, pad_y] = counter.pad;
         c.push(SceneNode::Text {
             key: TextNodeKey::from_style(text, &style, None),

@@ -18,7 +18,7 @@
 
 use accord::{Role, SemId, SnapshotBuilder};
 
-use crate::drawing::compositor::{Compositor, LayerId};
+use crate::drawing::compositor::Compositor;
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureList};
 use crate::widgets::form::TextField;
@@ -467,13 +467,13 @@ impl HomeSidebar {
                     let h = links.height(r.w, theme);
                     m.render(c, *r, h, theme, |c, at| links.render(c, at, theme));
                 }
-                HomeRow::Link(link) => link.render_with(c, LayerId::DEFAULT, *r, theme, recipe),
+                HomeRow::Link(link) => link.render_with(c, c.target(), *r, theme, recipe),
             }
         }
         if self.library {
             caption(c, &self.caption, l.scenes.x, l.caption_y, l.scenes.w, theme);
             self.scenes
-                .render_with(c, LayerId::DEFAULT, l.scenes, theme, recipe);
+                .render_with(c, c.target(), l.scenes, theme, recipe);
         }
         for row in self.folder_rows() {
             let r = Self::folder_rect(row, l);

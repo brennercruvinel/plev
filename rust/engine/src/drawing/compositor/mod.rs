@@ -96,6 +96,13 @@ impl Compositor {
         out
     }
 
+    /// The layer `push` and `bind` aim at now: the default one, or the
+    /// one [`Compositor::on_layer`] chose. A widget that draws to a layer
+    /// by its id passes this to land where its owner drew it.
+    pub fn target(&self) -> LayerId {
+        self.target
+    }
+
     /// Request a render regardless of scene changes. Called on input, resize,
     /// and animation ticks so the render loop wakes up.
     pub fn invalidate(&mut self) {
