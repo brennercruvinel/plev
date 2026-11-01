@@ -8,6 +8,7 @@
 
 pub mod checks;
 
+use engine::styling::theme::TypeRole;
 use std::fs;
 use std::path::PathBuf;
 
@@ -118,26 +119,26 @@ pub fn tokens(theme: &Theme) -> Tokens {
             (C::BorderActive, c.border_active.0),
         ],
         typography: vec![
-            (T::H4, style(ty.h4())),
-            (T::Headline, style(ty.headline())),
-            (T::Title, style(ty.title())),
-            (T::BaseR, style(ty.base_r())),
-            (T::BaseM, style(ty.base_m())),
-            (T::Base2r, style(ty.base_2r())),
-            (T::Base2m, style(ty.base_2m())),
-            (T::Base2sm, style(ty.base_2sm())),
-            (T::Base2b, style(ty.base_2b())),
-            (T::CaptionR, style(ty.caption_r())),
-            (T::CaptionSm, style(ty.caption_sm())),
-            (T::SmallR, style(ty.small_r())),
-            (T::SmallSm, style(ty.small_sm())),
-            (T::Body, style(ty.body())),
-            (T::Body2r, style(ty.body_2r())),
-            (T::Body2m, style(ty.body_2m())),
-            (T::Body2b, style(ty.body_2b())),
-            (T::Hairline, style(ty.hairline())),
-            (T::Mono, style(ty.mono())),
-            (T::Readout, style(ty.readout())),
+            (T::H4, style(ty.role(TypeRole::Display))),
+            (T::Headline, style(ty.role(TypeRole::H3))),
+            (T::Title, style(ty.role(TypeRole::Title))),
+            (T::BaseR, style(ty.role(TypeRole::BodyLg))),
+            (T::BaseM, style(ty.run(TypeRole::BodyLg.medium()))),
+            (T::Base2r, style(ty.role(TypeRole::Body))),
+            (T::Base2m, style(ty.run(TypeRole::Body.medium()))),
+            (T::Base2sm, style(ty.role(TypeRole::BodyStrong))),
+            (T::Base2b, style(ty.role(TypeRole::BodyStrong))),
+            (T::CaptionR, style(ty.run(TypeRole::Caption.regular()))),
+            (T::CaptionSm, style(ty.run(TypeRole::Caption.strong()))),
+            (T::SmallR, style(ty.role(TypeRole::Small))),
+            (T::SmallSm, style(ty.run(TypeRole::Small.strong()))),
+            (T::Body, style(ty.role(TypeRole::BodyLg))),
+            (T::Body2r, style(ty.role(TypeRole::Paragraph))),
+            (T::Body2m, style(ty.run(TypeRole::Paragraph.medium()))),
+            (T::Body2b, style(ty.run(TypeRole::Paragraph.medium()))),
+            (T::Hairline, style(ty.role(TypeRole::Caption))),
+            (T::Mono, style(ty.role(TypeRole::Code))),
+            (T::Readout, style(ty.role(TypeRole::Small))),
         ],
         shapes: vec![
             (ShapeRole::Pill, sh.pill),

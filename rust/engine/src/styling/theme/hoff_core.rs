@@ -92,7 +92,6 @@ impl TypographyScale {
             title_sm: 20.0,
             title: 32.0,
             display: 48.0,
-            line_height_ratio: 1.4,
             family: Some("Inter"),
             mono_family: MONO_FAMILY,
             tracking_em: -0.02,

@@ -5,6 +5,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{IconSize, Theme, TypographyScale};
 
 use super::{InputRecipe, InputSurface};
@@ -58,7 +59,7 @@ impl EditTokens {
     /// text measures, one line tall.
     pub fn derive(theme: &Theme) -> Self {
         let c = &theme.colors;
-        let text = theme.typography.caption_sm();
+        let text = theme.typography.run(TypeRole::Caption.strong());
         Self {
             box_h: text.line_height,
             text,

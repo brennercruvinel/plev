@@ -6,6 +6,7 @@
 //! one pins a property of the keys/geometry the rasterizer derives, which
 //! is where the defects lived, rather than the wgpu calls that consume them.
 
+use crate::styling::theme::TypeRole;
 use cosmic_text::{Attrs, Buffer, Family, Metrics, Shaping, Weight};
 
 use super::super::atlas::{COLOR_TEXELS, GLYPH_PADDING, bitmap_x, glyph_uv_rect, slot_width};
@@ -60,7 +61,7 @@ fn glyph_cache_key_is_the_whole_cosmic_key() {
 /// bin is a distinct bitmap: keys must keep them distinct.
 #[test]
 fn same_char_in_different_subpixel_bins_gets_distinct_keys() {
-    let style = crate::styling::theme::TypographyScale::hoff().title();
+    let style = crate::styling::theme::TypographyScale::hoff().role(TypeRole::Title);
     let keys = glyph_keys("Expense Tracker", &style, 1.0);
 
     // The three `e`s of "Expense Tracker" (indices 3, 6 and 13).
@@ -270,7 +271,7 @@ fn color_uvs_are_negative_and_span_four_texels_per_pixel() {
 /// sampled off-grid is blurry no matter how correct the cache is.
 #[test]
 fn glyph_quads_land_on_whole_physical_pixels() {
-    let style = crate::styling::theme::TypographyScale::hoff().title();
+    let style = crate::styling::theme::TypographyScale::hoff().role(TypeRole::Title);
     for scale in [1.0f32, 2.0, 3.0] {
         let mut fs = {
             let mut db = cosmic_text::fontdb::Database::new();

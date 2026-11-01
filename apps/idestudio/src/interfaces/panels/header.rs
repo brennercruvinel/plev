@@ -6,6 +6,7 @@
 use super::layout::ThemeMode;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::buttons::{Badge, Button, ButtonSize};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
@@ -72,7 +73,7 @@ impl Header {
 
         // App name: one style measures and draws, so the tag placed after
         // it never overlaps.
-        let title = theme.typography.title();
+        let title = theme.typography.role(TypeRole::Title);
         let name = "plev ide";
         compositor.push(SceneNode::Text {
             key: TextNodeKey::from_style(name, &title, None),
@@ -95,7 +96,7 @@ impl Header {
         } else {
             format!("{repo_label} \u{00B7} {branch_label}")
         };
-        let center_style = theme.typography.base_2r();
+        let center_style = theme.typography.role(TypeRole::Body);
         let (center_w, _) = TextMeasurer::measure_styled(&center, &center_style, None);
         compositor.push(SceneNode::Text {
             key: TextNodeKey::from_style(&center, &center_style, None),

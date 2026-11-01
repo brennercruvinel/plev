@@ -137,7 +137,8 @@ fn the_separator_ir_and_its_report() {
     assert_eq!(at(133, ".flex()"), Category::Supported);
     assert_eq!(at(136, ".justify_center()"), Category::Impossible);
     assert_eq!(at(145, ".px_2()"), Category::Approximated);
-    assert_eq!(at(148, ".text_xs()"), Category::Approximated);
+    // tailwind text-xs, 12/16, is the caption role on the 4 px grid: exact
+    assert_eq!(at(148, ".text_xs()"), Category::Transformed);
     assert_eq!(at(82, ".h(px(1.))"), Category::Transformed);
     assert_eq!(at(151, ".child(label)"), Category::Transformed);
     for c in Category::ALL {

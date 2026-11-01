@@ -5,6 +5,7 @@ use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::widgets::widget::Rect;
 
 impl Card {
@@ -44,7 +45,7 @@ impl Card {
         }
 
         // Headline value, then dot + label (base-2r, secondary).
-        let headline = ty.headline();
+        let headline = ty.role(TypeRole::H3);
         let value_y = b.y + m.pad + ruler_h + m.gap;
         self.text(
             c,
@@ -56,7 +57,7 @@ impl Card {
             text.0,
             None,
         );
-        let label_style = ty.base_2r();
+        let label_style = ty.role(TypeRole::Body);
         let label_y = value_y + headline.line_height + m.gap_sm;
         self.dot(
             c,
@@ -80,7 +81,7 @@ impl Card {
         // Delta chip: caption-sm in a tooltip-radius surface-hover chip,
         // success or danger colored.
         if let Some((delta, positive)) = delta {
-            let style = ty.caption_sm();
+            let style = ty.run(TypeRole::Caption.strong());
             let (tw, _) = TextMeasurer::measure_styled(delta, &style, None);
             let chip_h = style.line_height + m.gap_sm * 2.0;
             let chip_w = tw + m.gap * 2.0;

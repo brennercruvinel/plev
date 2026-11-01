@@ -157,14 +157,16 @@ mod tests {
     fn the_editor_writes_in_the_theme_s_face() {
         let core = Theme::hoff_core();
         let mut page = EditorPage::new(&core);
-        let mono = core.typography.mono();
+        let mono = core.typography.role(engine::styling::theme::TypeRole::Code);
         assert_eq!(page.editor.config().font_family, mono.font_family);
         assert_eq!(page.editor.config().line_height, mono.line_height);
         let hoff = Theme::hoff();
         page.set_theme(&hoff);
         assert_eq!(
             page.editor.config().font_family,
-            hoff.typography.mono().font_family
+            hoff.typography
+                .role(engine::styling::theme::TypeRole::Code)
+                .font_family
         );
         page.set_theme(&core);
         assert_eq!(

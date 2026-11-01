@@ -7,6 +7,7 @@
 use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 
 /// One size of a stat: the value, the unit after it, the label under it.
@@ -80,19 +81,19 @@ impl StatRecipe {
         let of = NavText::of;
         Self {
             sm: StatLevel {
-                value: of(&ty.base_m()),
-                unit: of(&ty.caption_r()),
-                label: of(&ty.small_r()),
+                value: of(&ty.run(TypeRole::BodyLg.medium())),
+                unit: of(&ty.run(TypeRole::Caption.regular())),
+                label: of(&ty.role(TypeRole::Small)),
             },
             md: StatLevel {
-                value: of(&ty.title()),
-                unit: of(&ty.base_2r()),
-                label: of(&ty.caption_r()),
+                value: of(&ty.role(TypeRole::Title)),
+                unit: of(&ty.role(TypeRole::Body)),
+                label: of(&ty.run(TypeRole::Caption.regular())),
             },
             lg: StatLevel {
-                value: of(&ty.headline()),
-                unit: of(&ty.title()),
-                label: of(&ty.base_2r()),
+                value: of(&ty.role(TypeRole::H3)),
+                unit: of(&ty.role(TypeRole::Title)),
+                label: of(&ty.role(TypeRole::Body)),
             },
             value: colors.text,
             unit: colors.text_mid,
@@ -166,8 +167,8 @@ impl CodeRecipe {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         Self {
-            text: NavText::of(&theme.typography.mono()).in_mono(),
-            caption: NavText::of(&theme.typography.caption_sm()),
+            text: NavText::of(&theme.typography.role(TypeRole::Code)).in_mono(),
+            caption: NavText::of(&theme.typography.run(TypeRole::Caption.strong())),
             pad: theme.spacing.md,
             caption_gap: theme.spacing.xs,
             radius: theme.shape.nav,

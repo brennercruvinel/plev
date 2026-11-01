@@ -18,6 +18,7 @@
 use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::{ShadowSpec, ShadowTokens};
 use crate::styling::theme::{ControlSize, IconSize};
@@ -428,7 +429,7 @@ impl ToolTokens {
             zoom_hover_fill: glass.surface_hover,
             zoom_hover_border: glass.edge,
             zoom_open_border: glass.field_focus_border,
-            zoom_text: NavText::of(&theme.typography.base_2m()),
+            zoom_text: NavText::of(&theme.typography.run(TypeRole::Body.medium())),
             zoom_text_color: colors.text,
             chevron: control.icon(IconSize::Sm),
             chevron_color: colors.text_mid,
@@ -447,14 +448,14 @@ impl ToolTokens {
             field_fill: glass.field,
             field_border: glass.edge_soft,
             field_icon_color: colors.text_mid,
-            field_text: NavText::of(&theme.typography.base_2m()),
+            field_text: NavText::of(&theme.typography.run(TypeRole::Body.medium())),
             field_text_color: colors.text,
             line_radius: theme.shape.nav,
             line_pad_x: space.sm,
             line_hover: glass.surface_hover,
             check_color: colors.text_mid,
             check_gap: space.xs,
-            label: NavText::of(&theme.typography.caption_sm()),
+            label: NavText::of(&theme.typography.run(TypeRole::Caption.strong())),
             label_color: colors.text,
             ..core.zoom
         };

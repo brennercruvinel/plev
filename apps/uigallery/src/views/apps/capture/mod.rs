@@ -32,6 +32,7 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 
+use engine::styling::theme::TypeRole;
 use std::time::Duration;
 
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
@@ -387,7 +388,7 @@ impl CapturePage {
     }
 
     fn line_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
+        theme.typography.run(TypeRole::Caption.regular())
     }
 
     /// The card fills the readable width, centered; a row per switch, the

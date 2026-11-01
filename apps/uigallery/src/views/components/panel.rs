@@ -12,6 +12,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Elevation, Theme};
 use engine::widgets::content::Panel;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
@@ -89,7 +90,7 @@ impl PanelPage {
     }
 
     fn body_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        theme.typography.role(TypeRole::Body)
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Fitted> {

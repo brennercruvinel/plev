@@ -3,6 +3,7 @@
 //! overlay, the toasts).
 
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::styling::theme::TypeRole;
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::prelude::{Rect, Wake};
 
@@ -177,7 +178,7 @@ impl ShowcaseView {
         };
         let owner = PAGES[pages::index_of(pane)].title;
         let note = format!("shares the {owner} example. still missing: {gap}.");
-        let style = theme.typography.caption_r();
+        let style = theme.typography.run(TypeRole::Caption.regular());
         c.push(SceneNode::Text {
             key: TextNodeKey::from_style(&note, &style, Some(content.w)),
             x: content.x,

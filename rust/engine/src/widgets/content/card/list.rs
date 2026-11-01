@@ -5,6 +5,7 @@ use super::{Card, CardListRow, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::widgets::selection::paint_radio;
 use crate::widgets::widget::{Rect, with_alpha};
 
@@ -22,7 +23,7 @@ impl Card {
         let glass = &theme.glass;
         let text = theme.colors.text;
         let ty = &theme.typography;
-        let title_style = ty.title();
+        let title_style = ty.role(TypeRole::Title);
 
         self.text(
             c,
@@ -72,14 +73,14 @@ impl Card {
 
             let content_x = radio.x + radio.w + m.gap + m.gap_sm;
             // Trailing value: caption-sm, primary, right aligned.
-            let trailing_style = ty.caption_sm();
+            let trailing_style = ty.run(TypeRole::Caption.strong());
             let (tw, _) = TextMeasurer::measure_styled(&row.trailing, &trailing_style, None);
             let trailing_x = r.x + r.w - m.pad - tw;
             let content_w = (trailing_x - m.gap * 2.0 - content_x).max(0.0);
             match row.progress {
                 Some(p) => {
                     // Download row: label up, gradient progress under.
-                    let label_style = ty.caption_sm();
+                    let label_style = ty.run(TypeRole::Caption.strong());
                     let block_h = label_style.line_height + m.gap_sm + theme.control.progress_track;
                     let top = r.y + (r.h - block_h) / 2.0;
                     self.text(
@@ -120,7 +121,7 @@ impl Card {
                             theme,
                         );
                     } else {
-                        let style = ty.base_2m();
+                        let style = ty.run(TypeRole::Body.medium());
                         self.text(
                             c,
                             layer,

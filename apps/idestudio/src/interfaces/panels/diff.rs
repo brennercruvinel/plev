@@ -8,6 +8,7 @@ use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::feedback::Scrollbar;
 use engine::widgets::nav::PanelHeader;
 use engine::widgets::prelude::{Rect, Wake};
@@ -100,7 +101,7 @@ impl DiffView {
 
     /// Code style: the mono ramp step; every row is one of its line boxes.
     fn code_style(theme: &Theme) -> TextStyle {
-        theme.typography.mono()
+        theme.typography.role(TypeRole::Code)
     }
 
     pub fn notify_scroll(&mut self) {
@@ -125,7 +126,7 @@ impl DiffView {
         let header_h = header.height(theme);
         let code = Self::code_style(theme);
         let line_h = code.line_height;
-        let number_style = theme.typography.small_r();
+        let number_style = theme.typography.role(TypeRole::Small);
         let pad = theme.spacing.md;
         let content_h = self.lines.len() as f32 * line_h;
         self.scroll.set_viewport(h - header_h);

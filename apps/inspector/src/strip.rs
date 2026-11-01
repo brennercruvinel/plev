@@ -10,6 +10,7 @@ use accord::{Actor, Millis};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::ControlSize;
+use engine::styling::theme::TypeRole;
 use engine::widgets::buttons::Chip;
 use engine::widgets::form::Slider;
 use engine::widgets::recipe::rounded_rect;
@@ -165,7 +166,7 @@ impl Strip {
 
     /// the label column: the widest label, at most a third of the strip.
     fn label_w(&self, width: f32, theme: &Theme) -> f32 {
-        let style = theme.typography.caption_r();
+        let style = theme.typography.run(TypeRole::Caption.regular());
         let widest = self
             .lanes
             .iter()
@@ -237,7 +238,7 @@ impl Strip {
         for (chip, r) in self.chips.iter().zip(&g.chips) {
             chip.render(c, *r, theme);
         }
-        let style = theme.typography.caption_r();
+        let style = theme.typography.run(TypeRole::Caption.regular());
         let label_w = g.scrub.x - rect.x;
         let edge = theme.control.edge_width;
         for (label, lane) in self.lanes.iter().zip(&g.lanes) {

@@ -16,6 +16,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{Elevation, Theme, TypographyScale};
 
@@ -199,16 +200,16 @@ impl SheetTokens {
             },
             pad_x: s.lg,
             pad_y: s.md,
-            title: t.title(),
+            title: t.role(TypeRole::Title),
             title_color: c.text,
-            description: t.base_2r(),
+            description: t.role(TypeRole::Body),
             description_color: c.text_mid,
             gap: s.sm,
-            label: t.base_2sm(),
+            label: t.role(TypeRole::BodyStrong),
             label_color: c.text,
-            hint: t.caption_r(),
+            hint: t.run(TypeRole::Caption.regular()),
             hint_color: c.text_mid,
-            value: t.base_2r(),
+            value: t.role(TypeRole::Body),
             value_color: c.text,
             value_gap: s.md,
             ..Self::hoff_core()
@@ -278,16 +279,16 @@ impl DrawerTokens {
             panel: EdgePanelTokens::derive(theme),
             head_pad: s.lg,
             head_pad_end: s.md,
-            brand: t.title(),
+            brand: t.role(TypeRole::Title),
             brand_color: theme.colors.text,
             body_pad: s.lg,
             group_gap: s.md,
-            group_label: t.caption_r(),
+            group_label: t.run(TypeRole::Caption.regular()),
             group_color: theme.colors.text_mid,
             group_pad: s.sm,
             item_radius: theme.shape.item,
             item_inline: s.md,
-            item_label: t.base_2sm(),
+            item_label: t.role(TypeRole::BodyStrong),
             item_color: theme.colors.text,
             item_fill: g.surface_active,
             icon_box_radius: theme.shape.micro,

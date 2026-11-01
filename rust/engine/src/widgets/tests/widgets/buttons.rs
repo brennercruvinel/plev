@@ -1,6 +1,7 @@
 //! action widgets: button, icon button, chip.
 
 use super::*;
+use crate::styling::theme::TypeRole;
 
 // Button
 
@@ -196,7 +197,7 @@ fn chip_preferred_size_uses_real_measurement() {
     assert_eq!(h, Chip::height(&hoff()));
     let (tw, _) = crate::drawing::text::TextMeasurer::measure_styled(
         "ann",
-        &crate::styling::theme::TypographyScale::hoff().caption_sm(),
+        &crate::styling::theme::TypographyScale::hoff().run(TypeRole::Caption.strong()),
         None,
     );
     assert!((w - (tw + 24.0)).abs() < 1.0, "width is text + padding");

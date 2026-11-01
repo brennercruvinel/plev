@@ -31,6 +31,7 @@
 //! stacks panel cuts at its cards' width. the criterion is the one
 //! written before.
 
+use engine::styling::theme::TypeRole;
 use std::path::{Path, PathBuf};
 
 use accord::{Actor, Millis, SemId, Stage, Value};
@@ -98,7 +99,7 @@ fn millis(t: u64) -> Json {
 /// how many of `texts` are wider than `room` in the mono step: the ones
 /// a view cuts at its width.
 fn cut(texts: &[&str], room: f32, theme: &Theme) -> usize {
-    let style = theme.typography.mono();
+    let style = theme.typography.role(TypeRole::Code);
     texts
         .iter()
         .filter(|t| TextMeasurer::measure_styled(t, &style, None).0 > room + 0.5)
@@ -117,7 +118,7 @@ fn panel_cut(app: &Bench, rect: [f32; 4], on_screen: usize, theme: &Theme) -> us
         .flatten()
         .max()
         .unwrap_or(0);
-    let numbers = theme.typography.small_r();
+    let numbers = theme.typography.role(TypeRole::Small);
     let (num_w, _) = TextMeasurer::measure_styled(&widest.to_string(), &numbers, None);
     let pad = theme.spacing.md;
     let gutter = num_w + theme.spacing.sm;
@@ -262,7 +263,7 @@ impl Demo {
     fn summaries_cut(&self, commits: &[Commit], theme: &Theme) -> Result<usize, String> {
         let pad = theme.spacing.md;
         let (avatar, _) = Avatar::new(String::new()).preferred_size(theme);
-        let style = theme.typography.base_2sm();
+        let style = theme.typography.role(TypeRole::BodyStrong);
         let mut n = 0;
         for c in commits {
             let [_, _, w, _] = self
@@ -292,7 +293,7 @@ impl Demo {
     fn fixed(&mut self, commits: &[Commit]) -> Result<Json, String> {
         let theme = self.app.bench.workspace().theme().clone();
         let header = PanelHeader::new("").height(&theme);
-        let line = theme.typography.mono().line_height;
+        let line = theme.typography.role(TypeRole::Code).line_height;
         let started = self.app.bench.now();
         let mut each = Vec::new();
         let mut last = started;

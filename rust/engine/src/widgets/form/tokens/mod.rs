@@ -23,6 +23,7 @@ pub use upload::UploadTokens;
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypographyScale};
 
 /// One state of the input box.
@@ -534,7 +535,7 @@ impl FormTokens {
             pad_x: theme.spacing.md,
             radius: theme.shape.nav,
             border_width: theme.control.edge_width,
-            text: t.body(),
+            text: t.role(TypeRole::BodyLg),
             text_color: c.text,
             placeholder: g.text_placeholder,
             caret: c.accent,
@@ -573,7 +574,7 @@ impl FormTokens {
             palette_width: theme.size.readable_max_w * 0.4,
         };
         let label = LabelRecipe {
-            text: t.caption_sm(),
+            text: t.run(TypeRole::Caption.strong()),
             color: c.text,
             caption: caption(),
             caption_color: g.text_placeholder,
@@ -581,11 +582,11 @@ impl FormTokens {
         };
         let field = FieldChrome {
             label_gap: theme.spacing.sm,
-            link: t.caption_r(),
+            link: t.run(TypeRole::Caption.regular()),
             link_color: c.text_mid,
             link_alpha: 1.0,
             link_hover_alpha: 1.0,
-            message: t.caption_r(),
+            message: t.run(TypeRole::Caption.regular()),
             message_gap: theme.spacing.sm,
             error_color: c.danger,
             helper_color: c.text_mid,

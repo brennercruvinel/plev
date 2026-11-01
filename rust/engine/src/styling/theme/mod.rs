@@ -152,7 +152,6 @@ impl Theme {
                 title_sm: 20.0,
                 title: 28.0,
                 display: 36.0,
-                line_height_ratio: 1.3,
                 family: None,
                 mono_family: MONO_FAMILY,
                 tracking_em: 0.0,

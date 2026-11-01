@@ -9,6 +9,7 @@
 //! reads at 3:1.
 
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ControlSize, IconSize, Theme};
@@ -215,7 +216,7 @@ impl SidebarsRecipe {
             canvas_radius: theme.radius.lg,
             head_pad: space.lg,
             body_pad: space.md,
-            caption: NavText::of(&theme.typography.caption_r()),
+            caption: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             caption_pad: space.sm,
             caption_gap: space.xs / 2.0,
             caption_color: colors.text_mid,
@@ -299,11 +300,11 @@ impl CanvasRecipe {
             button_icon: control.icon(IconSize::Md),
             button_hover: glass.surface_hover,
             mark: colors.text_mid,
-            title: NavText::of(&theme.typography.base_2sm()),
+            title: NavText::of(&theme.typography.role(TypeRole::BodyStrong)),
             title_gap: space.sm,
             chevron_tile: slot * core.chevron_tile / core.button,
             chevron: control.icon(IconSize::Sm),
-            subtitle: NavText::of(&theme.typography.caption_r()),
+            subtitle: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             subtitle_pad: space.xs / 2.0,
             ink: colors.text,
             subtle: colors.text_mid,
@@ -321,7 +322,7 @@ impl CanvasRecipe {
             tile_fill: glass.surface_hover,
             tile_raised: colors.surface,
             tile_shadow: core.tile_shadow,
-            label: NavText::of(&theme.typography.caption_r()),
+            label: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             label_gap: space.sm,
             toggle: control.icon(IconSize::Sm),
             toggle_gap: space.sm,
@@ -388,7 +389,7 @@ impl DesignRecipe {
             avatar_overlap: space.sm,
             avatars: [colors.warning, colors.info],
             header_h: control.height(ControlSize::Lg) + space.sm,
-            header: NavText::of(&theme.typography.caption_r()),
+            header: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             add: field * core.add / core.field_h,
             add_icon: control.icon(IconSize::Sm),
             gap: space.sm,
@@ -396,7 +397,7 @@ impl DesignRecipe {
             field_h: field,
             field_radius: theme.shape.nav,
             field_fill: glass.surface_hover,
-            field_text: NavText::of(&theme.typography.caption_r()),
+            field_text: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             field_text_x: space.xl,
             field_prefix_x: space.sm,
             unit_w: space.lg,

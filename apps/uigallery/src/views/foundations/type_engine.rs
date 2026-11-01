@@ -9,6 +9,7 @@
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::styling::theme::{TypeRole, TypeRun};
 use engine::widgets::prelude::Rect;
 
 use super::super::components::showcase::{self, CARD_MIN_W, Grid};
@@ -17,7 +18,10 @@ use super::super::components::showcase::{self, CARD_MIN_W, Grid};
 pub(super) const CARDS: [&str; 3] = ["Weights", "Unicode", "Wrapping"];
 /// Cards to a row at full width.
 const SPAN: usize = 3;
-const WEIGHTS: [u16; 4] = [400, 500, 600, 700];
+/// The weights every built-in family embeds a face of (Inter 400, 500
+/// and 600): a heavier one would draw in the 600 and show a step that is
+/// not there.
+const WEIGHTS: [u16; 3] = [400, 500, 600];
 const WEIGHT_SAMPLE: &str = "Sphinx of black quartz";
 /// Only glyphs the embedded faces cover: anything else rasterizes from a
 /// system font (the engine warns about non-embedded faces at raster time).
@@ -61,17 +65,22 @@ struct Styles {
 impl Styles {
     fn of(theme: &Theme) -> Self {
         let t = &theme.typography;
-        let line = |size: f32| t.line_height(size);
+        let body = t.spec(TypeRole::BodyLg);
         Self {
             pad: theme.spacing.lg,
             gap: theme.spacing.xs,
             weights: WEIGHTS
                 .iter()
-                .map(|w| t.exact(t.body, line(t.body), *w))
+                .map(|w| {
+                    t.run(TypeRun {
+                        role: TypeRole::BodyLg,
+                        weight: Some(*w),
+                    })
+                })
                 .collect(),
-            body: t.body(),
-            script: TextStyle::new(t.body).with_line_height(line(t.body)),
-            readout: t.caption_r(),
+            body: t.role(TypeRole::BodyLg),
+            script: TextStyle::new(body.size).with_line_height(body.line_height),
+            readout: t.run(TypeRole::Caption.regular()),
         }
     }
 

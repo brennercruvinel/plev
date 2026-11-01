@@ -13,6 +13,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 
@@ -438,7 +439,7 @@ impl TooltipTokens {
             radius: theme.shape.tooltip,
             pad_x: theme.spacing.md,
             pad_y: xs,
-            text: theme.typography.caption_r(),
+            text: theme.typography.run(TypeRole::Caption.regular()),
             text_color: theme.colors.text_mid,
             clearance: Clearance {
                 gap: xs + xs / 2.0,
@@ -451,7 +452,11 @@ impl TooltipTokens {
             // under the text fails AA on dark, `theme/tests/contrast.rs`);
             // half an `xs` around it, `md` before the text, `sm` between.
             key: TooltipKeyTokens {
-                size: theme.typography.caption_r().line_height + xs,
+                size: theme
+                    .typography
+                    .run(TypeRole::Caption.regular())
+                    .line_height
+                    + xs,
                 radius: theme.shape.item.min(xs),
                 fill: theme.glass.tooltip,
                 border: theme.glass.edge_soft,
@@ -593,8 +598,8 @@ impl ModalTokens {
             radius: theme.shape.pill,
             max_w: theme.size.modal_max_w,
             pad: theme.spacing.xxl,
-            title: theme.typography.title(),
-            body: theme.typography.base_2r(),
+            title: theme.typography.role(TypeRole::Title),
+            body: theme.typography.role(TypeRole::Body),
             title_color: theme.colors.text,
             body_color: theme.colors.text_mid,
             title_gap: theme.spacing.sm,

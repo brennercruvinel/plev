@@ -4,6 +4,7 @@
 
 use super::*;
 use crate::styling::theme::IconSize;
+use crate::styling::theme::TypeRole;
 use crate::widgets::nav::NavigationTokens;
 
 fn core() -> Theme {
@@ -79,7 +80,7 @@ fn breadcrumb_recipe_is_the_kit_link_in_core_and_the_old_trail_elsewhere() {
 
     let t = hoff();
     let old = t.navigation.breadcrumb;
-    let base = t.typography.base_2r();
+    let base = t.typography.role(TypeRole::Body);
     assert_eq!(old.text.style(&t.typography), base);
     assert_eq!((old.pad_x, old.pad_y), (0.0, 0.0));
     assert_eq!(old.hover_fill.0[3], 0.0);
@@ -327,8 +328,8 @@ fn stat_recipe_is_the_price_in_core_and_the_old_ramp_elsewhere() {
     assert_eq!(kit.lg.value.tracking_em, Some(-0.03));
     let t = hoff();
     let s = Stat::new("1.3", "GB").size(StatSize::Lg);
-    assert_eq!(s.value_style(&t), t.typography.headline());
-    assert_eq!(s.label_style(&t), t.typography.base_2r());
+    assert_eq!(s.value_style(&t), t.typography.role(TypeRole::H3));
+    assert_eq!(s.label_style(&t), t.typography.role(TypeRole::Body));
     let tracked = Stat::new("1.3", "GB")
         .size(StatSize::Lg)
         .value_style(&core());
@@ -395,7 +396,7 @@ fn code_recipe_is_the_kit_well_in_core_and_the_glass_field_elsewhere() {
     let t = hoff();
     let old = t.navigation.code;
     assert_eq!((old.fill, old.border), (t.glass.field, t.glass.edge_soft));
-    assert_eq!(CodeBlock::text_style(&t), t.typography.mono());
+    assert_eq!(CodeBlock::text_style(&t), t.typography.role(TypeRole::Code));
     assert_eq!(LineKind::Header.wash(&t), Some(t.glass.surface_hover.0));
 }
 
@@ -432,7 +433,10 @@ fn chart_recipe_is_the_kit_palette_in_core_and_the_old_tones_elsewhere() {
     let t = hoff();
     let old = t.navigation.chart;
     assert_eq!(old.series, [t.colors.accent, t.colors.success]);
-    assert_eq!(old.label.style(&t.typography), t.typography.small_sm());
+    assert_eq!(
+        old.label.style(&t.typography),
+        t.typography.run(TypeRole::Small.strong())
+    );
     assert_eq!(old.meter_track, t.glass.surface_active);
 }
 

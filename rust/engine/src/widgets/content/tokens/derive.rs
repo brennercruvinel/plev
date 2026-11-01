@@ -2,6 +2,7 @@
 //! theme's palette (`derive`).
 
 use super::*;
+use crate::styling::theme::TypeRole;
 
 impl DisclosureTokens {
     /// The kit's geometry and motion in a theme's palette: ink is the
@@ -179,7 +180,7 @@ impl DisclosureTokens {
     /// badge, no rule.
     fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
         let type_ = &theme.typography;
-        let caption = type_.caption_sm();
+        let caption = type_.run(TypeRole::Caption.strong());
         let panel = PanelRecipe {
             radius: theme.shape.card,
             pad: theme.spacing.lg,
@@ -199,7 +200,7 @@ impl DisclosureTokens {
     /// tone, the chevron dim, the icon mid.
     fn tree(theme: &Theme) -> TreeRecipe {
         let (colors, glass) = (&theme.colors, &theme.glass);
-        let body = theme.typography.base_2r();
+        let body = theme.typography.role(TypeRole::Body);
         let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
         let gap = theme.spacing.xs;
         TreeRecipe {
@@ -257,8 +258,8 @@ impl DisclosureTokens {
             rule: 0.0,
             rule_color: NONE,
         };
-        let caption = type_.caption_sm();
-        let body = type_.base_2r();
+        let caption = type_.run(TypeRole::Caption.strong());
+        let body = type_.role(TypeRole::Body);
         let table = TableRecipe {
             frame: 0.0,
             frame_color: NONE,
@@ -286,8 +287,8 @@ impl HeaderRecipe {
     /// The head every theme drew before the kit, from `theme`: the page
     /// head of the shell and the panel head outside the core.
     pub fn page_head(theme: &Theme) -> Self {
-        let title = theme.typography.title();
-        let blurb = theme.typography.base_2r();
+        let title = theme.typography.role(TypeRole::Title);
+        let blurb = theme.typography.role(TypeRole::Body);
         HeaderRecipe {
             pad_x: theme.spacing.md,
             pad_y: 0.0,

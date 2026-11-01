@@ -4,6 +4,7 @@
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::widgets::widget::luminance;
 
@@ -245,8 +246,7 @@ impl GitPage {
             text(
                 c,
                 error,
-                14.0,
-                400,
+                TypeRole::Body,
                 (content.x, content.y + theme.spacing.md),
                 theme.glass.text_placeholder.0,
                 theme,

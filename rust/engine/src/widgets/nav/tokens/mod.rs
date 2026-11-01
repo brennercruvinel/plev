@@ -12,6 +12,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::tokens::TypographyScale;
@@ -311,7 +312,7 @@ impl NavigationTokens {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         let breadcrumb = BreadcrumbRecipe {
-            text: NavText::of(&theme.typography.base_2r()),
+            text: NavText::of(&theme.typography.role(TypeRole::Body)),
             pad_x: 0.0,
             pad_y: 0.0,
             radius: theme.shape.micro,
@@ -373,8 +374,8 @@ impl NavigationTokens {
             slot: control.height(ControlSize::Xs),
             icon: control.icon(IconSize::Md),
             icon_gap: theme.spacing.xs,
-            label: NavText::of(&theme.typography.base_2sm()),
-            hint: NavText::of(&theme.typography.caption_r()),
+            label: NavText::of(&theme.typography.role(TypeRole::BodyStrong)),
+            hint: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
             hint_color: glass.text_placeholder,
             trailing_gap: theme.spacing.sm,
             trailing_room: theme.spacing.lg,

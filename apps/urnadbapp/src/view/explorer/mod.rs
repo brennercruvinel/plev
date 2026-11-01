@@ -9,6 +9,7 @@
 //! from it. Screens bubble intents up as [`Action`]s; only this module
 //! talks to the worker, the clipboard and the recents file.
 
+use engine::styling::theme::TypeRole;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -771,7 +772,7 @@ impl Explorer {
     fn tabs_rect(&self) -> Rect {
         // Equal-width segments; the strip is sized from the longest label
         // (real measurement) rather than a hardcoded width.
-        let style = engine::styling::theme::TypographyScale::hoff().base_2sm();
+        let style = engine::styling::theme::TypographyScale::hoff().role(TypeRole::BodyStrong);
         let max_label = Screen::TABS
             .iter()
             .map(|s| engine::drawing::text::TextMeasurer::measure_styled(s.title(), &style, None).0)

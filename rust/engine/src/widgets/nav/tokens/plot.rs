@@ -12,6 +12,7 @@
 use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::{BLUE, ORANGE, SHADES};
 
 /// The charts' recipe: every color, width and text style the chart
@@ -129,11 +130,11 @@ impl ChartRecipe {
         );
         let text = colors.text;
         Self {
-            label: NavText::of(&ty.small_sm()),
+            label: NavText::of(&ty.run(TypeRole::Small.strong())),
             label_color: glass.text_faint,
-            center: NavText::of(&ty.title()),
+            center: NavText::of(&ty.role(TypeRole::Title)),
             center_color: text,
-            legend: NavText::of(&ty.caption_r()),
+            legend: NavText::of(&ty.run(TypeRole::Caption.regular())),
             legend_color: colors.text_mid,
             grid: colors.divider,
             grid_v_alpha: 0.6,
@@ -155,7 +156,7 @@ impl ChartRecipe {
             swatch_radius: theme.shape.micro / 2.0,
             meter_track: glass.surface_active,
             meter_fill: colors.accent,
-            row: NavText::of(&ty.caption_r()),
+            row: NavText::of(&ty.run(TypeRole::Caption.regular())),
             row_name: colors.text_mid,
             row_value: colors.text_dim,
             row_gap: theme.spacing.sm,
