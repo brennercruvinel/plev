@@ -200,8 +200,9 @@ fn the_glide_moves_with_the_theme_s_motion_and_lands_on_the_offset() {
 
 #[test]
 fn a_glide_far_down_a_long_page_lands_on_its_offset() {
-    // an f32 offset thousands of pixels down rounds coarser than the
-    // spring's rest test: the glide still lands, and soon
+    // thousands of pixels down, where an f32 rounds coarser than the
+    // spring's rest test: the glide lands, and soon (the spring steps its
+    // displacement, `compose::animation::Spring`)
     let mut s = ScrollState::new();
     s.set_viewport(400.0);
     s.set_content(20_000.0);
