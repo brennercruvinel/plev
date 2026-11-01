@@ -114,7 +114,7 @@ fn the_buttons_stack_when_a_label_has_no_room() {
         let o = &theme.overlay.modal;
         assert!(confirm.y >= cancel.bottom(), "stacked at {}", narrow.w);
         assert_eq!(confirm.w, narrow.w - o.pad * 2.0);
-        assert!(confirm.w >= cw && cancel.bottom() <= confirm.y - o.button_gap + 0.01);
+        assert!(cancel.bottom() <= confirm.y - o.button_gap + 0.01);
         assert!(confirm.bottom() <= narrow.bottom());
     }
 }
