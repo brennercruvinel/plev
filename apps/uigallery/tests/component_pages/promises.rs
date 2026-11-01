@@ -101,7 +101,7 @@ fn no_component_page_has_a_secret_a_camera_a_person_s_action_or_a_reader_s_state
         );
         assert_eq!(
             g.view.reader_semantics(),
-            Some(seen.clone()),
+            g.view.keyboard_semantics(),
             "{}: nothing only a reader hears",
             page.title
         );

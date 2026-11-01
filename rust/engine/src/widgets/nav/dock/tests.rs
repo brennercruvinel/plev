@@ -279,7 +279,7 @@ fn it_projects_a_landmark_its_pin_and_in_the_drawer_its_menu() {
     );
 }
 
-/// The pin at the head's right: a click flips it, as `toggle_pin` does;
+/// The pin at the head's right: a click asks the flip `toggle_pin` runs;
 /// it is drawn and bound where it is hit, and the drawer has none.
 #[test]
 fn a_click_on_the_pin_pins_it_and_the_drawer_has_no_pin() {
@@ -294,7 +294,11 @@ fn a_click_on_the_pin_pins_it_and_the_drawer_has_no_pin() {
     d.pin_event(&at(x, y), head, &theme, WIDE.w);
     d.pin_event(&WidgetEvent::MouseDown { x, y }, head, &theme, WIDE.w);
     let up = d.pin_event(&WidgetEvent::MouseUp { x, y }, head, &theme, WIDE.w);
-    assert!(up.clicked && d.is_pinned());
+    assert!(
+        up.clicked && !d.is_pinned(),
+        "the click asks; the app flips"
+    );
+    d.toggle_pin(&theme, WIDE.w);
     let mut c = Compositor::new();
     d.render_pin(&mut c, head, &theme, WIDE.w);
     let bound = c.binding(&d.pin_id().unwrap()).map(|b| b.rect);

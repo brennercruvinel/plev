@@ -32,9 +32,10 @@ impl SidebarDock {
         self.mode(theme, w) != DockMode::Drawer
     }
 
-    /// A pointer event on the pin in `head`: its hover, its press, and a
-    /// release on it flips the pin ([`SidebarDock::toggle_pin`], what a
-    /// reader's and an agent's `toggle` run). `clicked` when it flipped.
+    /// A pointer event on the pin in `head`: its hover and its press.
+    /// `clicked` when a release on it asks the flip, which the app runs
+    /// as a reader's and an agent's `toggle` (through its dispatcher, to
+    /// [`SidebarDock::toggle_pin`]): the pointer adds no path of its own.
     pub fn pin_event(
         &mut self,
         event: &WidgetEvent,
@@ -43,13 +44,8 @@ impl SidebarDock {
         w: f32,
     ) -> EventResult {
         let off = !self.has_pin(theme, w);
-        let r = self
-            .pin_press
-            .handle(event, Self::pin_rect(head, theme), off);
-        if r.clicked {
-            self.toggle_pin(theme, w);
-        }
-        r
+        self.pin_press
+            .handle(event, Self::pin_rect(head, theme), off)
     }
 
     /// The keyboard focus on the pin, or off it.

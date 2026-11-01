@@ -291,8 +291,22 @@ fn every_page_is_a_valid_tree_and_the_silent_ones_are_the_known_ones() {
     for page in PAGES {
         let seen = see(page.title);
         assert_valid(page.title, &seen.update);
-        if seen.shown.snapshot.is_empty() {
-            assert_eq!(seen.update.nodes.len(), 1, "{}: the window", page.title);
+        // the sidebar is every page's (task-104 front H): a page is silent
+        // when the tree has nothing of its own beside it
+        let snapshot = &seen.shown.snapshot;
+        let chrome = snapshot
+            .nodes()
+            .keys()
+            .filter(|id| seen.view.is_sidebar(id))
+            .count();
+        if snapshot.len() == chrome {
+            let window = 1 + chrome;
+            assert_eq!(
+                seen.update.nodes.len(),
+                window,
+                "{}: the window",
+                page.title
+            );
             silent.push(page.title);
         } else {
             projected.push(page.title);
@@ -371,7 +385,7 @@ fn tab_and_the_reader_walk_the_same_order_and_the_page_takes_the_focus() {
         for id in tab {
             let mut fresh = see(title);
             assert!(fresh.view.assist_focus(id), "{title}: {id} refused");
-            let now = fresh.view.semantics().unwrap_or_default();
+            let now = fresh.view.keyboard_semantics().unwrap_or_default();
             if now.focused() != Some(id) {
                 unprojected.push(id.to_string());
             }
@@ -467,11 +481,21 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// `select`, and the contract has no splitter role, AccessKit's
 /// `Splitter`); an agent asks it, and a person drags. Task-104 put a
 /// stacked split beside it, the same.
+///
+/// The sidebar's landmark (task-104 front H) is every page's and left out
+/// of this list: a navigation landmark offers no press, and a reader
+/// shows the panel by moving its focus into it (`SIDEBAR_BY_FOCUS`); an
+/// agent asks its `toggle_expanded`.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
     "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
+
+/// What a reader reaches by its focus and not by an action of the tree:
+/// the sidebar shows while the focus is in it (its pin takes the focus
+/// while it is out).
+const SIDEBAR_BY_FOCUS: &str = "shell.sidebar toggle_expanded";
 
 /// Whether the node's press is off now: its primary action, or the node,
 /// is disabled, so the tree does not offer the press until it is on (a
@@ -536,7 +560,8 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
                 }
             }
             for decl in &node.actions {
-                if !reached.contains(&decl.name.as_str()) {
+                let by_focus = format!("{id} {}", decl.name) == SIDEBAR_BY_FOCUS;
+                if !reached.contains(&decl.name.as_str()) && !by_focus {
                     unreachable.push(format!("{title}: {id} {}", decl.name));
                 }
             }

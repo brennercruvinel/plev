@@ -745,10 +745,22 @@ impl ShowcaseView {
         self.panes.todo.with_dispatcher(|_, _, now| now)
     }
 
-    /// Keyboard focus from assistive technology to a node of the active
-    /// page, or of the overlay that holds the pointer; `false` when
-    /// neither takes it.
+    /// Keyboard focus from assistive technology (and Tab) to a node of
+    /// the active page, of the overlay that holds the pointer, or of the
+    /// sidebar (`shell/sidebar.rs`); `false` when none takes it. The
+    /// sidebar lets its focus go once the page or the overlay takes it.
     pub fn assist_focus(&mut self, id: &SemId) -> bool {
+        if self.is_sidebar(id) {
+            return self.focus_sidebar(id);
+        }
+        let took = self.assist_page_focus(id);
+        if took {
+            self.blur_sidebar();
+        }
+        took
+    }
+
+    fn assist_page_focus(&mut self, id: &SemId) -> bool {
         if self.is_overlay(id) {
             return self.focus_overlay(id);
         }
@@ -846,5 +858,5 @@ mod reader;
 /// page in a window of its own and the recording's save, projected and
 /// run through the gallery's dispatcher.
 mod shell;
-pub(crate) use shell::PERSON_ONLY;
+pub(crate) use shell::{PERSON_ONLY, SIDEBAR};
 pub use shell::{Shell, ShellTarget};

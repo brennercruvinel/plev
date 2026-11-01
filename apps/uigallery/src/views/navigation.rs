@@ -242,6 +242,10 @@ impl ShowcaseView {
                 };
                 let pin = self.pin_event(event, bounds);
                 if pin.clicked {
+                    // the person's toggle, through the dispatcher
+                    if let Some(id) = self.shell.dock.as_ref().and_then(|d| d.pin_id()) {
+                        self.ask_sidebar(&id, "toggle");
+                    }
                     return (true, true);
                 }
                 let (r, picked) = self.nav.handle_event(event, bounds, &self.theme);
@@ -273,11 +277,13 @@ impl ShowcaseView {
         }
     }
 
-    /// Escape: the open drawer closes, a panel shown by the focus hides.
+    /// Escape: the open drawer closes, a panel shown by the focus hides
+    /// and the focus leaves it.
     pub(super) fn escape_sidebar(&mut self) -> bool {
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
-        self.shell.dock.as_mut().is_some_and(|d| d.escape(theme, w))
+        let escaped = self.shell.dock.as_mut().is_some_and(|d| d.escape(theme, w));
+        self.blur_sidebar() || escaped
     }
 
     /// The sidebar's clock and the dock's (its pauses and its slide).

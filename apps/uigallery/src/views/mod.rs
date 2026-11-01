@@ -134,6 +134,10 @@ pub struct ShowcaseView {
     overlay_focus: Option<accord::SemId>,
     /// The shift key is held: Tab walks backward (`dispatcher::keyboard`).
     shift: bool,
+    /// The part of the sidebar the keyboard focus is on (the pin, a
+    /// dropdown, a tab; `dispatcher/shell/sidebar.rs`); `None`, the page
+    /// has it, or nothing does.
+    sidebar_focus: Option<accord::SemId>,
 
     /// One struct per pane, the pages' state.
     panes: pages::panes::Panes,
@@ -159,13 +163,19 @@ impl ShowcaseView {
         let first = &PAGES[0];
         let header = PanelHeader::new(first.title).blurb(first.blurb);
         // peeking: the page has the window, the pin keeps the panel
-        let dock = SidebarDock::new();
+        let sidebar = accord::SemId::parse(dispatcher::SIDEBAR).ok();
+        let mut dock = SidebarDock::new();
+        let mut nav = navigation::Navigation::new(0);
+        if let Some(id) = sidebar {
+            dock = dock.sem(id.clone());
+            nav.sidebar = nav.sidebar.sem(id);
+        }
         Self {
             width,
             height,
             scale_factor: 1.0,
             shell: AppShell::docked(dock, header, width, height),
-            nav: navigation::Navigation::new(0),
+            nav,
             panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
@@ -181,6 +191,7 @@ impl ShowcaseView {
             active_overlay: None,
             overlay_focus: None,
             shift: false,
+            sidebar_focus: None,
             clipboard: None,
         }
     }

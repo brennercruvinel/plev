@@ -132,13 +132,26 @@ mod tests {
 
     #[test]
     fn with_nothing_over_the_page_the_reader_is_shown_the_page_as_it_is() {
+        // the page as it is, and the sidebar after it (task-104 front H)
         let view = view_on("todo");
-        assert_eq!(view.reader_semantics(), view.semantics());
+        let page = view.semantics().unwrap();
+        let seen = view.reader_semantics().unwrap();
+        assert_eq!(seen, view.keyboard_semantics().unwrap());
+        for (id, node) in page.nodes() {
+            assert_eq!(seen.get(id), Some(node), "{id}: the page's own");
+        }
+        let rest: Vec<&str> = seen
+            .nodes()
+            .keys()
+            .filter(|id| page.get(id).is_none())
+            .map(|id| id.as_str())
+            .collect();
+        assert_eq!(rest, ["shell.sidebar", "shell.sidebar.pin"]);
         let view = view_on("separator");
-        assert_eq!(
-            view.reader_semantics(),
-            None,
-            "a page without meaning: the window"
+        let seen = view.reader_semantics().unwrap();
+        assert!(
+            seen.nodes().keys().all(|id| view.is_sidebar(id)),
+            "a page without meaning: the window and the sidebar"
         );
     }
 

@@ -16,7 +16,7 @@
 //! `<id>.row[<r>].links[<i>]`), the scenes link `<id>.scenes`, the new
 //! folder `<id>.new` and the folders `<id>.folder[<i>]`.
 
-use accord::{Role, SemId, SnapshotBuilder};
+use accord::SemId;
 
 use crate::drawing::compositor::Compositor;
 use crate::styling::theme::Theme;
@@ -32,6 +32,8 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::{PRODUCT, caption, caption_h, folder_row, head_h, logo_rect, shell, text};
 use crate::widgets::header::Logo;
+
+mod semantics;
 
 /// A row of the navigation: a dropdown and its links, or a link.
 #[derive(Clone, Debug)]
@@ -267,8 +269,8 @@ impl HomeSidebar {
         }
     }
 
-    /// Keyboard focus on the part `id` names (none when `None` or not
-    /// one of them); `true` when it names one.
+    /// Keyboard focus on the part `id` names, the logo among them (none
+    /// when `None` or not one of them); `true` when it names one.
     pub fn focus_id(&mut self, id: Option<&SemId>) -> bool {
         let mut found = false;
         for row in &mut self.rows {
@@ -287,13 +289,15 @@ impl HomeSidebar {
                 }
             }
         }
+        let logo = id.is_some() && self.logo.sem_id() == id;
+        self.logo.set_focused(logo);
         let on = id.is_some() && self.scenes.sem_id() == id;
         self.scenes.set_focused(on);
         self.focused = id.and_then(|i| {
             self.folder_rows()
                 .find(|r| self.folder_id(*r).as_ref() == Some(i))
         });
-        found || on || self.focused.is_some()
+        found || logo || on || self.focused.is_some()
     }
 
     /// What a press does to the part `id` names: a dropdown opens or
@@ -444,11 +448,12 @@ impl HomeSidebar {
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         let t = &theme.navigation.sidebars;
         shell(c, bounds, false, theme);
-        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
-        self.logo.render(c, at, theme);
+        // bound before its parts: a hit on one of them is the part's
         if let Some(id) = &self.sem {
             c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
+        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
+        self.logo.render(c, at, theme);
         let l = self.layout(bounds, theme);
         let body = Self::body_rect(bounds, theme);
         c.push_clip(body.x, body.y, body.w, body.h);
@@ -539,70 +544,6 @@ impl HomeSidebar {
             if self.focused == Some(FolderRow::New) {
                 c.push(focus_ring(f, t.field_radius, theme));
             }
-        }
-    }
-
-    /// A `Role::Region` named `label`: the dropdowns (their links while
-    /// open), the links, the scenes link, the new folder (`expanded`
-    /// while its field is open) and the folders, each a button.
-    #[track_caller]
-    pub fn project(
-        &self,
-        b: &mut SnapshotBuilder,
-        id: &SemId,
-        label: &str,
-        parent: Option<&SemId>,
-    ) {
-        let mut node = b.node(id, Role::Region, label);
-        if let Some(parent) = parent {
-            node.parent(parent);
-        }
-        if let Some(l) = self.logo.sem_id() {
-            self.logo.project(b, l, Some(id));
-        }
-        for row in &self.rows {
-            match row {
-                HomeRow::Menu(m, links) => {
-                    let Some(at) = m.sem_id() else { continue };
-                    m.project(b, at, Some(id));
-                    let open = m.project_panel(b, at, Some(id)).is_some();
-                    if open && let Ok(panel) = at.child("panel") {
-                        links.project(b, Some(&panel));
-                    }
-                }
-                HomeRow::Link(link) => {
-                    if let Some(at) = link.sem_id() {
-                        link.project(b, at, Some(id));
-                    }
-                }
-            }
-        }
-        if self.library
-            && let Some(at) = self.scenes.sem_id()
-        {
-            self.scenes
-                .project(b, at, Some(id))
-                .description(self.caption.as_str());
-        }
-        for row in self.folder_rows() {
-            let Some(at) = self.folder_id(row) else {
-                continue;
-            };
-            let name = match row {
-                FolderRow::New => "New Folder",
-                FolderRow::Folder(i) => self.folders[i].as_str(),
-            };
-            let mut node = b.node(&at, Role::Button, name);
-            node.parent(id);
-            if row == FolderRow::New {
-                node.state("expanded", self.naming);
-            }
-            node.action("activate");
-        }
-        if self.naming
-            && let Some(at) = self.name.sem_id()
-        {
-            self.name.project(b, at, "Folder name", Some(id));
         }
     }
 }
