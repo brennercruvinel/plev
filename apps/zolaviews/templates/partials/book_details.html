@@ -1,0 +1,52 @@
+{#- The details row of a document section (a task, an experiment), from the
+    [extra] plev/book.mjs writes: the theme's partials/article_details.html
+    reads page fields, which a section does not have. -#}
+{%- set categories = config.extra.categories | default(value=[]) -%}
+{#- a topic or status only links where the taxonomy has it (sections carry
+    topics and statuses that no page may share) -#}
+{%- set tag_taxonomy = get_taxonomy(kind="tags", lang=lang, required=false) -%}
+{%- set status_taxonomy = get_taxonomy(kind="categories", lang=lang, required=false) -%}
+{%- set tag_terms = tag_taxonomy?.items | default(value=[]) -%}
+{%- set status_terms = status_taxonomy?.items | default(value=[]) -%}
+{%- set date = section.extra.date | default(value="") -%}
+{%- set updated = section.extra.updated | default(value="") -%}
+{%- set status = section.extra.status_label | default(value="") -%}
+<div class="article-details">
+  <div class="items">
+    {%- if date -%}
+      <div class="item tooltip" title="{{ date | date(format=date_format_long, locale=date_locale) }}">
+        {{- <icon name="calendar"/> -}}
+        <time datetime="{{ date }}">{{ date | date(format=date_format, locale=date_locale) }}</time>
+      </div>
+    {%- endif -%}
+    {%- if updated -%}
+      <div class="item tooltip" title="{{ updated | date(format=date_format_long, locale=date_locale) }}">
+        {{- <icon name="clock-clockwise"/> -}}
+        <time datetime="{{ updated }}">{{ updated | date(format=date_format, locale=date_locale) }}</time>
+      </div>
+    {%- endif -%}
+    {%- if config.extra.show_reading_time -%}
+      <div class="item tooltip" title="{{ <trans key='words' number={section.word_count}/> }}">
+        {{- <icon name="clock-countdown"/> -}}
+        <span>{{ <trans key="minutes" number={section.reading_time}/> }}</span>
+      </div>
+    {%- endif -%}
+    {%- if status -%}
+      {%- set matched = [c for c in categories if c.name == status] | first -%}
+      <div class="item">
+        {{- <icon name={matched?.icon | default(value="book-bookmark")}/> -}}
+        {%- set status_term = [t for t in status_terms if t.name == status] | first | default(value={}) -%}
+                {%- if status_term?.permalink -%}<a href="{{ status_term.permalink }}">{{ status }}</a>{%- else -%}<span>{{ status }}</span>{%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+  {%- if section.extra.topics -%}
+    <ul class="tags">
+      {%- for tag in section.extra.topics %}
+        {%- set tag_url = [t for t in tag_terms if t.name == tag] | first | default(value={}) -%}
+                {%- set tag_url = tag_url?.permalink | default(value="") -%}
+                <li>{% if tag_url %}<a href="{{ tag_url }}">{{ tag }}</a>{% else %}{{ tag }}{% endif %}</li>
+      {%- endfor -%}
+    </ul>
+  {%- endif %}
+</div>

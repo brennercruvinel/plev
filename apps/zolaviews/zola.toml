@@ -1,0 +1,122 @@
+# plev book on Zola with the Ametrine theme (themes/ametrine, untouched).
+# content/ and static/docs/ are written by plev/book.mjs from plev's docs/.
+
+title = "plev"
+base_url = "http://127.0.0.1:1112"
+description = "The plev knowledge base: the tasks, the decisions, the experiments and what each mistake taught."
+theme = "ametrine"
+
+compile_sass = true
+# off: the minifier drops </table> after a table, and the browser then moves
+# everything that follows (links, backlinks, the footer) above the table
+minify_html = false
+build_search_index = true
+author = "plev"
+generate_feeds = true
+feed_filenames = ["atom.xml"]
+default_language = "en"
+
+# tags are the docs' topics; categories are their status
+taxonomies = [
+  { name = "tags", feed = false },
+  { name = "categories", feed = false },
+]
+
+[markdown]
+smart_punctuation = true
+bottom_footnotes = true
+external_links_class = "external"
+github_alerts = true
+insert_anchor_links = "left"
+
+[markdown.highlighting]
+style = "class"
+light_theme = "monokai-pro-light"
+dark_theme = "monokai-pro"
+extra_themes = [
+  "themes/ametrine/giallo/themes/monokai-pro-light.json",
+  "themes/ametrine/giallo/themes/monokai-pro.json",
+]
+
+[search]
+index_format = "elasticlunr_json"
+
+[link_checker]
+internal_level = "warn"
+
+[extra]
+# a status is a category: its color and icon show on cards and on the
+# categories page
+categories = [
+  { name = "Accepted", description = "Decisions in force.", icon = "seal-check" },
+  { name = "Proposed", description = "Decisions still waiting for whoever decides.", color = "yellow", icon = "question" },
+  { name = "Superseded", description = "Decisions replaced by a later record.", color = "red", icon = "box-arrow-down" },
+  { name = "Done", description = "Finished work, with its delivery recorded.", icon = "check-circle" },
+  { name = "In progress", description = "Work under way.", color = "blue", icon = "spinner" },
+  { name = "Pending", description = "Work not started.", color = "orange", icon = "hourglass" },
+  { name = "Active", description = "Living records, kept up to date.", icon = "pulse" },
+  { name = "Reference", description = "Knowledge frozen from a session, kept as it was.", icon = "books" },
+]
+accent_color = ["purple", "purple"]
+styles = ["book.css"]
+source_url = "https://github.com/brennercruvinel/plev"
+issues_url = "https://github.com/brennercruvinel/plev/issues/new"
+show_reading_time = true
+copy_button = true
+date_format = "dd MMMM y"
+date_format_long = "dd MMMM yyyy"
+date_locale = "en_US"
+timezone = "America/Sao_Paulo"
+# no external scripts, frames or analytics: the book is read locally
+csp = [
+  { directive = "img-src", domains = ["'self'", "https:", "data:"] },
+  { directive = "media-src", domains = ["'self'"] },
+  { directive = "style-src", domains = ["'self'", "'unsafe-inline'"] },
+  { directive = "base-uri", domains = ["'none'"] },
+  { directive = "form-action", domains = ["'none'"] },
+]
+
+[extra.meta]
+favicon = "plev-mark.svg"
+apple_touch_icon = false
+card = false
+
+[extra.nav]
+icon = "plev-mark.svg"
+force_sidebar = true
+links = [
+  { url = "@/changelog.md", name = "Changelog", icon = "clock-counter-clockwise" },
+  { url = "@/blog/_index.md", name = "Blog", icon = "note-pencil" },
+  { name = "The work", category = [
+    { url = "@/tasks/_index.md", name = "Tasks", icon = "list-checks" },
+    { url = "@/adr/_index.md", name = "Decisions", icon = "signpost" },
+    { url = "@/experiments/_index.md", name = "Experiments", icon = "flask" },
+  ] },
+  { name = "What we know", category = [
+    { url = "@/learnings/_index.md", name = "Learnings", icon = "lightbulb" },
+    { url = "@/research/_index.md", name = "Research", icon = "magnifying-glass" },
+    { url = "@/ref/_index.md", name = "Reference", icon = "book-open" },
+  ] },
+  { name = "Maps", category = [
+    { url = "@/atlas.md", name = "Atlas", icon = "map-trifold" },
+    { url = "@/terms.md", name = "Terms", icon = "textbox" },
+    { url = "categories/", name = "By status", icon = "stack" },
+  ] },
+]
+
+[extra.footer]
+copyright = false
+show_powered_by = true
+show_source = true
+show_timestamp = true
+socials = [{ url = "https://github.com/brennercruvinel/plev", icon = "github" }]
+webrings = []
+
+[extra.fediverse]
+
+[extra.analytics]
+
+[extra.debug]
+layout = false
+no_styles = false
+no_emojis = false

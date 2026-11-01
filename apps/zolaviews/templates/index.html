@@ -1,0 +1,38 @@
+{#- The home of the plev book: the mark and the buttons into the book (the
+    way Ametrine's demo opens), the six most recently revised records, the
+    docs' own "where to start", and the book's parts as cards. -#}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="book-hero">
+  <img class="book-mark has-alpha drop-shadow no-hover" src="{{ get_url(path='plev-mark.svg') }}" alt="" />
+  <h1 id="plev">{{ config.title }}</h1>
+  {%- set intro = section.extra.intro | default(value=section.description | default(value="")) -%}
+  {%- if intro -%}
+    {{ intro | markdown | safe }}
+  {%- endif -%}
+  <div class="buttons centered big">
+    <a class="suggested" href="{{ get_url(path='@/tasks/_index.md') }}">{{ <trans key="book_tasks"/> }} →</a>
+    <a href="{{ get_url(path='@/adr/_index.md') }}">{{ <trans key="book_decisions"/> }} →</a>
+    <a href="{{ config.extra.source_url }}">{{ <trans key="book_repository"/> }} →</a>
+  </div>
+</div>
+
+<hr />
+
+{%- set recent = section.extra.recent | default(value=[]) -%}
+{%- if recent | length > 0 -%}
+  <h2 id="recent">{{ <trans key="book_recent"/> }}</h2>
+  {%- set paths = recent -%}
+  {%- include "partials/book_cards.html" -%}
+{%- endif -%}
+
+{{ section.content | safe }}
+
+{%- set parts = section.extra.children | default(value=[]) -%}
+{%- if parts | length > 0 -%}
+  <h2 id="the-book">{{ <trans key="book_parts"/> }}</h2>
+  {%- set paths = parts -%}
+  {%- include "partials/book_cards.html" -%}
+{%- endif -%}
+{% endblock content %}
