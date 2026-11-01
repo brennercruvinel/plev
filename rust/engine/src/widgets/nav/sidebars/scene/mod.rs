@@ -20,11 +20,14 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureLook};
 use crate::widgets::form::input_group::{Addon, InputGroup};
+use crate::widgets::header::{Logo, LogoKind};
 use crate::widgets::nav::Tabs;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 mod paint;
+
+use super::{PRODUCT, logo_rect};
 
 /// The scene's tab or the assets'.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -96,6 +99,8 @@ pub struct SceneLayout {
 #[derive(Clone, Debug)]
 pub struct SceneSidebar {
     pub title: String,
+    /// The logo's symbol (`header::Logo`, front F).
+    pub logo: Logo,
     pub subtitle: String,
     pub tabs: Tabs,
     pub items: Vec<SceneItem>,
@@ -111,6 +116,7 @@ impl SceneSidebar {
     pub fn new(title: impl Into<String>, subtitle: impl Into<String>) -> Self {
         Self {
             title: title.into(),
+            logo: Logo::new(PRODUCT).kind(LogoKind::Symbol),
             subtitle: subtitle.into(),
             tabs: Tabs::new(["Scene", "Assets"]),
             items: Vec::new(),
@@ -156,6 +162,9 @@ impl SceneSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
+        if let Ok(l) = id.child("logo") {
+            self.logo = self.logo.clone().sem(l);
+        }
         if let Ok(f) = id.child("search") {
             self.search = self.search.clone().sem(f);
         }
@@ -173,6 +182,11 @@ impl SceneSidebar {
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    /// `<id>.logo`, the link home.
+    pub fn logo_id(&self) -> Option<&SemId> {
+        self.logo.sem_id()
     }
 
     /// The id of a part.
@@ -247,7 +261,8 @@ impl SceneSidebar {
         let (x, w) = (bounds.x + c.pad, bounds.w - c.pad * 2.0);
         let top = bounds.y + c.pad;
         let panel = Rect::new(x + w - c.button, top, c.button, c.button);
-        let title_y = top + c.button + c.head_gap;
+        let head_row = c.button.max(self.logo.preferred_size(theme).1);
+        let title_y = top + head_row + c.head_gap;
         let subtitle_y = title_y + c.title.line_height + c.subtitle_pad;
         let head_rule = subtitle_y + c.subtitle.line_height + c.subtitle_pad + c.head_pad_b;
         let tabs_y = head_rule + t.edge_width + c.band_pad_y;
@@ -380,7 +395,10 @@ impl SceneSidebar {
         theme: &Theme,
     ) -> EventResult {
         let l = self.layout(bounds, theme);
-        let mut out = self.tabs.handle_event(event, l.tabs, theme);
+        let pad = theme.navigation.sidebars.canvas.pad;
+        let logo = logo_rect(&self.logo, bounds, pad, theme);
+        let mut out = self.logo.handle_event(event, logo);
+        out = out.merge(self.tabs.handle_event(event, l.tabs, theme));
         if self.current_tab() == SceneTab::Assets {
             for (s, r) in self.sections.iter_mut().zip(&l.sections) {
                 out = out.merge(s.head.handle_event(event, *r, theme));
@@ -418,6 +436,9 @@ impl SceneSidebar {
         let mut node = b.node(id, Role::Region, label);
         if let Some(parent) = parent {
             node.parent(parent);
+        }
+        if let Some(l) = self.logo.sem_id() {
+            self.logo.project(b, l, Some(id));
         }
         for (part, name) in [
             (ScenePart::Panel, "Toggle the panel"),

@@ -309,6 +309,15 @@ impl SidebarPage {
                 f.unfocus();
             }
         }
+        let ring = |own: Option<&SemId>| id.is_some() && own == id;
+        let on = [
+            ring(self.home.logo_id()),
+            ring(self.guideline.logo_id()),
+            ring(self.scene.logo_id()),
+        ];
+        self.home.logo.set_focused(on[0]);
+        self.guideline.logo.set_focused(on[1]);
+        self.scene.logo.set_focused(on[2]);
         self.home.focus_id(id);
         let at = id.and_then(|i| self.guideline.position(i));
         self.guideline.set_focused(at);
@@ -405,6 +414,15 @@ impl Component for SidebarPage {
                 }
                 None => Err(miss()),
             };
+        }
+        // A logo is the link home: nothing to follow in a showcase.
+        let logos = [
+            self.home.logo_id(),
+            self.guideline.logo_id(),
+            self.scene.logo_id(),
+        ];
+        if logos.contains(&Some(&req.target)) {
+            return Ok(After::Nothing);
         }
         if self.design.activate(&req.target) {
             return Ok(After::Nothing);

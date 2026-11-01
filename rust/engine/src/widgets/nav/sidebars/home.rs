@@ -24,7 +24,8 @@ use crate::widgets::selection::FolderRow;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
-use super::{caption, caption_h, folder_row, head_h, logo, shell, text};
+use super::{PRODUCT, caption, caption_h, folder_row, head_h, logo_rect, shell, text};
+use crate::widgets::header::Logo;
 
 /// A row of the navigation: a dropdown and its links, or a link.
 #[derive(Clone, Debug)]
@@ -47,6 +48,7 @@ pub struct HomeLayout {
 #[derive(Clone, Debug)]
 pub struct HomeSidebar {
     pub rows: Vec<HomeRow>,
+    pub logo: Logo,
     pub caption: String,
     pub scenes: NavLink,
     pub folders: Vec<String>,
@@ -70,6 +72,7 @@ impl HomeSidebar {
     pub fn new(rows: Vec<HomeRow>, caption: impl Into<String>, scenes: NavLink) -> Self {
         Self {
             rows,
+            logo: Logo::new(PRODUCT),
             caption: caption.into(),
             scenes,
             folders: Vec::new(),
@@ -93,6 +96,9 @@ impl HomeSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
+        if let Ok(l) = id.child("logo") {
+            self.logo = self.logo.clone().sem(l);
+        }
         let rows = id.child("row").ok();
         for (r, row) in self.rows.iter_mut().enumerate() {
             let Some(at) = rows.as_ref().map(|f| f.key(r.to_string())) else {
@@ -120,6 +126,11 @@ impl HomeSidebar {
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    /// `<id>.logo`, the link home.
+    pub fn logo_id(&self) -> Option<&SemId> {
+        self.logo.sem_id()
     }
 
     /// `<id>.new` or `<id>.folder[<i>]`.
@@ -290,7 +301,9 @@ impl HomeSidebar {
         theme: &Theme,
     ) -> EventResult {
         let l = self.layout(bounds, theme);
-        let mut out = EventResult::IGNORED;
+        let pad = theme.navigation.sidebars.head_pad;
+        let at = logo_rect(&self.logo, bounds, pad, theme);
+        let mut out = self.logo.handle_event(event, at);
         for (row, r) in self.rows.iter_mut().zip(&l.rows) {
             let res = match row {
                 HomeRow::Menu(m, links) => menu_event(m, links, event, *r, theme),
@@ -340,7 +353,8 @@ impl HomeSidebar {
         let t = &theme.navigation.sidebars;
         let ft = &theme.selection.folders;
         shell(c, bounds, false, theme);
-        logo(c, bounds, theme);
+        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
+        self.logo.render(c, at, theme);
         if let Some(id) = &self.sem {
             c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
@@ -435,6 +449,9 @@ impl HomeSidebar {
         let mut node = b.node(id, Role::Region, label);
         if let Some(parent) = parent {
             node.parent(parent);
+        }
+        if let Some(l) = self.logo.sem_id() {
+            self.logo.project(b, l, Some(id));
         }
         for row in &self.rows {
             match row {
