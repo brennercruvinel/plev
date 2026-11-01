@@ -251,20 +251,7 @@ impl DesignSidebar {
                     }
                 }
             }
-            Body::Picker => {
-                Self::well(c, r, theme);
-                let x = r.x + d.field_prefix_x;
-                let y = r.y + (r.h - style.line_height * 2.0) / 2.0;
-                c.push(text("ColorPicker", &style, x, y, k.ink.0, None));
-                c.push(text(
-                    "TODO: front A",
-                    &style,
-                    x,
-                    y + style.line_height,
-                    k.subtle.0,
-                    None,
-                ));
-            }
+            Body::Picker(p) => p.render(c, r, theme),
             Body::Camera(tabs, value) => {
                 let tr = Rect::new(r.x, r.y, r.w, crate::widgets::nav::Tabs::height(theme));
                 tabs.render(c, tr, theme);

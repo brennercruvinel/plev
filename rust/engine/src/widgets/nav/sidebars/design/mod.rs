@@ -6,8 +6,7 @@
 //!
 //! Design: Show Frame (a switch), Artboard (the size select, the width
 //! and height fields), Materials and Styles (tiles), Background (the
-//! ColorPicker of front A: a named stand-in until it is in the engine,
-//! TODO(task-104a)), Camera (Isometric or Perspective, the distortion's
+//! ColorPicker of front A), Camera (Isometric or Perspective, the distortion's
 //! range and value). Animation: Motion Blur (a switch), Loop (the strip
 //! with the looped span, Short or Long, the span's length), Effects
 //! (tiles), Lens (three selects, each with its eye). Pictures are their
@@ -29,9 +28,11 @@ use crate::widgets::buttons::Button;
 use crate::widgets::form::Select;
 use crate::widgets::form::Switch;
 use crate::widgets::form::TextField;
+use crate::widgets::form::color_picker::{ColorPart, ColorPicker};
 use crate::widgets::form::tokens::Look;
 use crate::widgets::form::tokens::SelectLook;
 use crate::widgets::nav::Tabs;
+use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// The design tab or the animation's.
@@ -62,7 +63,8 @@ pub enum Body {
         small: bool,
         picked: Option<usize>,
     },
-    Picker,
+    /// The background's color: the ColorPicker of front A.
+    Picker(ColorPicker),
     Camera(Tabs, f32),
     Loop(Tabs, [f32; 3]),
     Lens(Vec<Select>),
@@ -159,7 +161,12 @@ impl DesignSidebar {
             ),
             block("Materials", Design, End::Add, tiles(4, 2, true, false)),
             block("Styles", Design, End::Add, tiles(2, 2, false, false)),
-            block("Background", Design, End::Add, Body::Picker),
+            block(
+                "Background",
+                Design,
+                End::Add,
+                Body::Picker(ColorPicker::new("F4F4F4", 100)),
+            ),
             block(
                 "Camera",
                 Design,
@@ -238,6 +245,11 @@ impl DesignSidebar {
                         }
                     }
                 }
+                Body::Picker(p) => {
+                    if let Some(pid) = child(&at, "color") {
+                        *p = p.clone().sem(pid);
+                    }
+                }
                 Body::Camera(t, _) | Body::Loop(t, _) => {
                     if let Some(tid) = child(&at, "tabs") {
                         *t = t.clone().sem(tid);
@@ -271,7 +283,7 @@ impl DesignSidebar {
                 let rows = (*n as f32 / cols).ceil();
                 rows * cell + (rows - 1.0).max(0.0) * d.gap
             }
-            Body::Picker => d.field_h * 2.0,
+            Body::Picker(p) => p.height(theme),
             Body::Camera(..) => {
                 let label = d.field_text.line_height;
                 Tabs::height(theme)
@@ -409,14 +421,26 @@ impl DesignSidebar {
         }
     }
 
-    pub fn tick(&mut self, dt: f32) -> bool {
-        let mut moving = false;
+    /// The switches' knobs and the color picker's caret.
+    pub fn wake(&mut self, dt: f32) -> Wake {
+        let mut wake = Wake::idle();
         for block in &mut self.blocks {
             if let End::Switch(s) = &mut block.end {
-                moving |= s.tick(dt);
+                wake = wake.merge(Wake::moving(s.tick(dt)));
+            }
+            if let Body::Picker(p) = &mut block.body {
+                wake = wake.merge(p.wake(dt));
             }
         }
-        moving
+        wake
+    }
+
+    /// The background's color picker.
+    pub fn picker_mut(&mut self) -> Option<&mut ColorPicker> {
+        self.blocks.iter_mut().find_map(|b| match &mut b.body {
+            Body::Picker(p) => Some(p),
+            _ => None,
+        })
     }
 
     pub fn handle_event(
@@ -452,6 +476,9 @@ impl DesignSidebar {
                 && let Body::Camera(t, _) | Body::Loop(t, _) = &mut block.body
             {
                 out = out.merge(t.handle_event(event, r, theme));
+            }
+            if let Body::Picker(p) = &mut block.body {
+                out = out.merge(p.handle_event(event, l.body, theme));
             }
             if let Body::Artboard(s, fields) = &mut block.body {
                 let rects = size_rects(l.body, s.height_in(theme), theme);
@@ -507,6 +534,20 @@ impl DesignSidebar {
                         let on = is(s.sem_id());
                         s.set_focused(on);
                         found |= on;
+                    }
+                }
+                Body::Picker(p) => {
+                    let part = [ColorPart::Hex, ColorPart::Alpha]
+                        .into_iter()
+                        .find(|part| is(p.text_id(*part)));
+                    match part {
+                        Some(part) => {
+                            p.focus(part);
+                            found = true;
+                        }
+                        None => {
+                            p.blur();
+                        }
                     }
                 }
                 Body::Camera(t, _) | Body::Loop(t, _) => {

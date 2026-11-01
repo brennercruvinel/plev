@@ -2,7 +2,8 @@
 //! showcase mold, its two groups as the kit lays them, each sidebar in a
 //! gray card (`isGray`), centered: the scene and assets sidebar (its
 //! rows and their toggles, or its asset sections), the design and
-//! animation sidebar (its groups, selects, switches and tiles), the home
+//! animation sidebar (its groups, selects, switches, tiles and color
+//! picker), the home
 //! sidebar (its dropdowns,
 //! links and folders) and the guideline sidebar (the kit's own pages,
 //! this one current).
@@ -31,6 +32,7 @@ use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
 use accord::Value;
 use engine::widgets::form::TextField;
+use engine::widgets::form::color_picker::ColorPart;
 
 /// What a card shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -226,11 +228,8 @@ impl SidebarPage {
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
-        let switches = Wake::moving(self.design.tick(dt));
-        self.home
-            .wake(dt)
-            .merge(self.scene.wake(dt))
-            .merge(switches)
+        let design = self.design.wake(dt);
+        self.home.wake(dt).merge(self.scene.wake(dt)).merge(design)
     }
 
     pub fn handle_event(
@@ -378,6 +377,23 @@ impl Component for SidebarPage {
             let Some(Value::Text(text)) = &req.param else {
                 return Err(miss());
             };
+            if let Some(p) = self.design.picker_mut() {
+                let target = Some(&req.target);
+                if p.text_id(ColorPart::Hex) == target {
+                    return if p.set_hex(text) {
+                        Ok(After::Nothing)
+                    } else {
+                        Err(miss())
+                    };
+                }
+                if p.text_id(ColorPart::Alpha) == target {
+                    return if p.set_opacity(text) {
+                        Ok(After::Nothing)
+                    } else {
+                        Err(miss())
+                    };
+                }
+            }
             let field = self
                 .fields()
                 .into_iter()
@@ -501,7 +517,20 @@ impl TextHost for SidebarPage {
         }
     }
 
+    /// Enter keeps the color typed in the picker.
+    fn handle_enter(&mut self) -> bool {
+        self.design
+            .picker_mut()
+            .is_some_and(|p| p.focused().is_some() && p.enter())
+    }
+
+    /// Escape puts back the picker's color, or leaves a field.
     fn handle_escape(&mut self) -> bool {
+        if let Some(p) = self.design.picker_mut()
+            && p.focused().is_some()
+        {
+            return p.escape();
+        }
         let Some(field) = self.focused_field() else {
             return false;
         };
@@ -511,91 +540,4 @@ impl TextHost for SidebarPage {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn id(s: &str) -> SemId {
-        SemId::parse(s).unwrap()
-    }
-
-    fn seen(page: &SidebarPage) -> accord::Snapshot {
-        let root = id("sidebar_page");
-        let mut b = SnapshotBuilder::new();
-        b.node(&root, Role::Region, "Sidebar");
-        page.project(&mut b, &root);
-        b.finish().expect("the page projects a valid tree")
-    }
-
-    fn req(page: &SidebarPage, target: &str, action: &str) -> Request {
-        Request {
-            actor: accord::Actor::Test {
-                name: "sidebar".into(),
-            },
-            target: id(target),
-            action: accord::ActionName::parse(action).unwrap(),
-            param: None,
-            observed: accord::Observation {
-                revision: seen(page).revision(),
-                values: Vec::new(),
-            },
-            ask: None,
-        }
-    }
-
-    /// Every sidebar fits its card, whole, on a wide page and a phone.
-    #[test]
-    fn every_sidebar_sits_inside_its_card() {
-        for theme in [Theme::hoff_core(), Theme::hoff()] {
-            let page = SidebarPage::new();
-            for w in [1200.0, 330.0] {
-                let content = Rect::new(0.0, 0.0, w, 800.0);
-                for (_, _, card, at) in page.placed(content, &theme) {
-                    assert!(
-                        at.x >= card.x && at.bottom() <= card.bottom(),
-                        "{at:?} {card:?}"
-                    );
-                }
-            }
-        }
-    }
-
-    /// A reader's focus rings the part and is projected back; activate
-    /// runs it.
-    #[test]
-    fn a_readers_focus_and_activate_reach_the_sidebars() {
-        let mut page = SidebarPage::new();
-        let new = id("sidebar_page.home.new");
-        assert!(page.focus(&new));
-        assert_eq!(page.focus.as_ref(), Some(&new));
-        let r = req(&page, "sidebar_page.home.new", "activate");
-        page.run(&r).unwrap();
-        assert!(page.home.naming);
-        let r = req(&page, "sidebar_page.home.row[1]", "toggle_expanded");
-        page.run(&r).unwrap();
-        let r = req(&page, "sidebar_page.guideline[1]", "activate");
-        page.run(&r).unwrap();
-        assert_eq!(page.guideline.current_link(), Some(1));
-        assert!(page.blur());
-        let r = req(&page, "sidebar_page.nothing", "activate");
-        assert!(page.run(&r).is_err());
-    }
-
-    /// A reader's focus on a field gives it the keys; typing and
-    /// `set_value` reach the artboard's width, Escape leaves it.
-    #[test]
-    fn the_sidebars_fields_take_the_keys() {
-        let mut page = SidebarPage::new();
-        let width = id("sidebar_page.design.block[1].width");
-        assert!(page.focus(&width));
-        assert!(page.handle_edit_key(EditKey::Backspace));
-        assert!(page.handle_text("5"));
-        assert_eq!(page.fields()[1].text(), "805");
-        let mut r = req(&page, "sidebar_page.scene.search", "set_value");
-        r.param = Some(Value::Text("robot".into()));
-        page.run(&r).unwrap();
-        assert_eq!(page.scene.search.input.text(), "robot");
-        assert!(page.handle_escape());
-        assert!(!page.handle_text("x"));
-        seen(&page);
-    }
-}
+mod tests;

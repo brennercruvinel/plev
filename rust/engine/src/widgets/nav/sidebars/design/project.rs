@@ -35,6 +35,7 @@ impl DesignSidebar {
             .filter(|b| b.tab == tab)
             .flat_map(|b| match &mut b.body {
                 Body::Artboard(_, fields) => fields.iter_mut().collect(),
+                Body::Picker(p) if p.focused().is_some() => vec![p.text_mut()],
                 _ => Vec::new(),
             })
             .collect()
@@ -48,6 +49,7 @@ impl DesignSidebar {
             .filter(|b| b.tab == tab)
             .flat_map(|b| match &b.body {
                 Body::Artboard(_, fields) => fields.iter().map(|f| f.is_focused()).collect(),
+                Body::Picker(p) if p.focused().is_some() => vec![true],
                 _ => Vec::new(),
             })
             .collect()
@@ -59,6 +61,9 @@ impl DesignSidebar {
             .into_iter()
             .flat_map(|l| match &self.blocks[l.index].body {
                 Body::Artboard(s, _) => size_rects(l.body, s.height_in(theme), theme).to_vec(),
+                Body::Picker(p) if p.focused().is_some() => {
+                    p.ime_area(l.body, theme).into_iter().collect()
+                }
                 _ => Vec::new(),
             })
             .collect()
@@ -106,6 +111,11 @@ impl DesignSidebar {
                         if let Some(fid) = f.sem_id() {
                             f.project(b, fid, name, Some(&at)).description("px");
                         }
+                    }
+                }
+                Body::Picker(p) => {
+                    if let Some(pid) = p.sem_id() {
+                        p.project(b, pid, block.title.as_str(), Some(&at));
                     }
                 }
                 Body::Lens(list) => {
