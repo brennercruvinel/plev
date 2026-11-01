@@ -26,6 +26,7 @@
 // ============================================================================
 
 use super::intent::MotionPhysics;
+use super::roles::TypeRoles;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
@@ -136,6 +137,7 @@ impl TypographyScale {
             family: None,
             mono_family: MONO_FAMILY,
             tracking_em: 0.0,
+            roles: TypeRoles::derive([10.0, 12.0, 14.0, 16.0, 20.0, 32.0, 36.0], 0.0),
         }
     }
 }

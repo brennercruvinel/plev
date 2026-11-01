@@ -5,6 +5,7 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 
+use super::roles::TypeRoles;
 use super::scales::ShadowSpec;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -49,6 +50,9 @@ pub struct TypographyScale {
     /// Tracking applied to every style, in em (css `tracking-[-0.02em]`
     /// on the core body). Zero for the HOFF ramp.
     pub tracking_em: f32,
+    /// The scale by role ([`super::roles`]): what every recipe resolves
+    /// its text against.
+    pub roles: TypeRoles,
 }
 
 impl TypographyScale {

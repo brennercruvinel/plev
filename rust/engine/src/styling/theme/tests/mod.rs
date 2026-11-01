@@ -1,5 +1,7 @@
 mod oklch;
 #[cfg(test)]
+mod roles;
+#[cfg(test)]
 mod scales;
 #[cfg(test)]
 // The inner module only carries the cfg(test) gate for this
