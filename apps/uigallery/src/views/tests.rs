@@ -387,35 +387,20 @@ fn page_texts(view: &mut ShowcaseView, title: &str) -> Vec<String> {
         .collect()
 }
 
-/// Every alias left in the table says whose example it shares and draws
-/// that example; every placeholder left names its slot. The pages come
-/// from the table, so a page that becomes its own drops out of the check
-/// and the check holds with none left.
+/// Every placeholder left names its slot. The pages come from the table,
+/// so a page that becomes its own drops out of the check and the check
+/// holds with none left.
 #[test]
-fn alias_pages_show_the_note_and_placeholders_name_their_slot() {
+fn placeholders_name_their_slot() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
     for page in PAGES {
-        match page.body {
-            Body::Alias { pane, .. } => {
-                let owner = PAGES[pages::index_of(pane)].title;
-                let texts = page_texts(&mut view, page.title);
-                let note = format!("shares the {owner} example");
-                assert!(
-                    texts.iter().any(|t| t.starts_with(&note)),
-                    "{}: {note}",
-                    page.title
-                );
-                assert!(texts.len() > 2, "{}: the shared example draws", page.title);
-            }
-            Body::Placeholder => {
-                let texts = page_texts(&mut view, page.title);
-                assert!(
-                    texts.iter().filter(|t| *t == page.title).count() >= 2,
-                    "{}: header and slot",
-                    page.title
-                );
-            }
-            Body::Pane(_) => {}
+        if page.body == Body::Placeholder {
+            let texts = page_texts(&mut view, page.title);
+            assert!(
+                texts.iter().filter(|t| *t == page.title).count() >= 2,
+                "{}: header and slot",
+                page.title
+            );
         }
     }
 }
@@ -567,7 +552,7 @@ fn wheel_scrolls_overflowing_pages_and_requests_redraw() {
 
         let content = view.content_rect();
         assert!(
-            view.page_content_height(content) > content.h,
+            view.pane_content_height(content) > content.h,
             "{title} fits in 800px now; pick a taller page for this test"
         );
 

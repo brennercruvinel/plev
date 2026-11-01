@@ -68,7 +68,7 @@ fn ask(view: &ShowcaseView, actor: Actor, target: &str, action: &str) -> Request
 }
 
 /// Every page whose pane is in the table: one region, its root, named by
-/// the page's title (an alias by its own), and every other node under it.
+/// the page's title, and every other node under it.
 #[test]
 fn every_component_page_projects_under_a_region_named_by_its_title() {
     let mut pages = 0;

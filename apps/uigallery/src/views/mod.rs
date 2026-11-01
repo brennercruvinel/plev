@@ -30,7 +30,6 @@ pub(crate) use apps::surface::asking::stage_without_host;
 pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
 use dispatcher::keyboard::Walk;
-use engine::styling::theme::TypeRole;
 
 use winit::keyboard::{Key, ModifiersState};
 
@@ -356,21 +355,6 @@ impl ShowcaseView {
         self.pane().is_some_and(Pane::is_app)
     }
 
-    /// Height of the note an alias page shows above the shared example
-    /// (zero for the other pages).
-    fn note_h(&self) -> f32 {
-        match self.current().body {
-            Body::Alias { .. } => {
-                self.theme
-                    .typography
-                    .run(TypeRole::Caption.regular())
-                    .line_height
-                    + self.theme.spacing.xl
-            }
-            _ => 0.0,
-        }
-    }
-
     /// Current page scroll offset of the active page.
     pub fn page_offset(&self) -> f32 {
         self.page_scroll[self.page].offset()
@@ -385,11 +369,10 @@ impl ShowcaseView {
         }
         let content = self.content_rect();
         let chrome = self.height - content.h;
-        (chrome + self.page_content_height(content)).max(self.height)
+        (chrome + self.pane_content_height(content)).max(self.height)
     }
 
-    /// Content rect shifted up by the page scroll offset and down by
-    /// the alias note. Pages lay out, hit-test and render against this
+    /// Content rect shifted up by the page scroll offset. Pages lay out, hit-test and render against this
     /// rect so events and pixels always agree; the render clips it back
     /// to the content viewport.
     fn page_rect(&self) -> Rect {
@@ -398,15 +381,13 @@ impl ShowcaseView {
         }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
-        rect.y += self.note_h();
-        rect.h -= self.note_h();
         rect
     }
 
     /// Sync the active page's scroll limits with the viewport.
     fn sync_page_scroll(&mut self) {
         let content = self.content_rect();
-        let height = self.page_content_height(content);
+        let height = self.pane_content_height(content);
         let scroll = &mut self.page_scroll[self.page];
         scroll.set_viewport(content.h);
         scroll.set_content(height);
