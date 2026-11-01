@@ -555,9 +555,9 @@ mod tests {
 
     #[test]
     fn a_page_without_a_projection_is_an_error_not_an_empty_file() {
-        let staged = staged("Card", "core", DESKTOP);
+        let staged = staged("Separator", "core", DESKTOP);
         match staged.semantics() {
-            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Card"),
+            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Separator"),
             other => panic!("expected NoSemantics, got {:?}", other.map(|s| s.len())),
         }
         assert!(
