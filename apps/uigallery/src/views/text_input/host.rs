@@ -112,4 +112,5 @@ text_hosts! {
     Comments => comments,
     // task-104 front G, navigation and data: the zoom level's field
     Toolbar => toolbar,
+    Sidebar => sidebar,
 }

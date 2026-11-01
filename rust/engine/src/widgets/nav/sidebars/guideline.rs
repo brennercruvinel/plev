@@ -13,7 +13,8 @@ use crate::styling::theme::Theme;
 use crate::widgets::nav::NavLink;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
-use super::{caption, caption_h, head_h, logo, shell};
+use super::{PRODUCT, caption, caption_h, head_h, logo_rect, shell};
+use crate::widgets::header::Logo;
 
 /// A caption and its links.
 #[derive(Clone, Debug)]
@@ -25,6 +26,7 @@ pub struct GuideGroup {
 #[derive(Clone, Debug)]
 pub struct GuidelineSidebar {
     pub groups: Vec<GuideGroup>,
+    pub logo: Logo,
     sem: Option<SemId>,
 }
 
@@ -32,6 +34,7 @@ impl GuidelineSidebar {
     pub fn new() -> Self {
         Self {
             groups: Vec::new(),
+            logo: Logo::new(PRODUCT),
             sem: None,
         }
     }
@@ -56,6 +59,9 @@ impl GuidelineSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
+        if let Ok(l) = id.child("logo") {
+            self.logo = self.logo.clone().sem(l);
+        }
         let links = self.groups.iter_mut().flat_map(|g| g.links.iter_mut());
         for (n, link) in links.enumerate() {
             *link = link.clone().sem(id.key(n.to_string()));
@@ -66,6 +72,11 @@ impl GuidelineSidebar {
 
     pub fn sem_id(&self) -> Option<&SemId> {
         self.sem.as_ref()
+    }
+
+    /// `<id>.logo`, the link home.
+    pub fn logo_id(&self) -> Option<&SemId> {
+        self.logo.sem_id()
     }
 
     fn links(&self) -> impl Iterator<Item = &NavLink> {
@@ -149,7 +160,9 @@ impl GuidelineSidebar {
         theme: &Theme,
     ) -> EventResult {
         let (_, rects) = self.layout(bounds, theme);
-        let mut out = EventResult::IGNORED;
+        let pad = theme.navigation.sidebars.head_pad;
+        let at = logo_rect(&self.logo, bounds, pad, theme);
+        let mut out = self.logo.handle_event(event, at);
         let mut picked = None;
         for (i, (link, r)) in self.links_mut().zip(rects).enumerate() {
             let res = link.handle_event(event, r);
@@ -166,7 +179,9 @@ impl GuidelineSidebar {
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         shell(c, bounds, false, theme);
-        logo(c, bounds, theme);
+        let t = &theme.navigation.sidebars;
+        let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
+        self.logo.render(c, at, theme);
         let t = &theme.navigation.sidebars;
         let (captions, rects) = self.layout(bounds, theme);
         let (x, w) = (bounds.x + t.body_pad, bounds.w - t.body_pad * 2.0);
@@ -194,6 +209,9 @@ impl GuidelineSidebar {
         let mut node = b.node(id, Role::Region, label);
         if let Some(parent) = parent {
             node.parent(parent);
+        }
+        if let Some(l) = self.logo.sem_id() {
+            self.logo.project(b, l, Some(id));
         }
         for (g, group) in self.groups.iter().enumerate() {
             let Ok(family) = id.child("group") else {
