@@ -502,7 +502,7 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
 #[test]
 fn rows_and_tables_keep_their_look_outside_the_core() {
     use crate::styling::theme::ControlSize;
-    use crate::widgets::content::HeaderRecipe;
+    use crate::widgets::content::{HeaderRecipe, PageHeadRecipe};
     use crate::widgets::nav::PanelHeader;
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let (list, table) = (theme.disclosure.list, theme.disclosure.table);
@@ -553,15 +553,21 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         let blurb = theme.typography.role(TypeRole::Body).line_height;
         let with = PanelHeader::new("Changes").blurb("a blurb");
         assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
+        // A page head (the shell's, unframed) titles in h3, a framed
+        // panel head in the title role.
         assert_eq!(
             head.title_style(&theme),
-            theme.typography.role(TypeRole::Title)
+            theme.typography.role(TypeRole::H3)
+        );
+        assert_eq!(
+            HeaderRecipe::page_head(&theme).title_size,
+            theme.typography.role(TypeRole::Title).font_size
         );
         assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
         let page = theme.disclosure.page;
         assert_eq!(
-            (page.narrow, page.wide),
-            (theme.disclosure.header, theme.disclosure.header)
+            page,
+            PageHeadRecipe::derive(&theme, theme.disclosure.header)
         );
         assert!(!page.bleed && !head.bleeds(&theme));
         assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
@@ -895,10 +901,12 @@ fn the_page_starts_under_the_blurb_at_every_width() {
 }
 
 /// The core's page head is the kit's Layout title (Layout/index.tsx:35):
-/// across the page column, `px-12 py-8` 32/40 from a 1200 px head, `p-5`
-/// 24/32 below it, the rule at its foot; the title on the page's gutter.
+/// across the page column, `px-12 py-8` 32/40 wide and `p-5` 24/32 narrow,
+/// growing between them with the head's width; the rule at its foot; the
+/// title on the page's gutter.
 #[test]
 fn the_core_page_head_is_the_kit_s_layout_title() {
+    use crate::styling::theme::FLUID_RANGE;
     use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
     use crate::widgets::shell::AppShell;
     let theme = core();
@@ -913,12 +921,33 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
         (page.narrow.title_size, page.narrow.title_line_height),
         (24.0, 32.0)
     );
-    assert_eq!(page.wide_from, 1200.0);
-    assert_eq!(page.at(1200.0), page.wide);
-    assert_eq!(page.at(1199.0), page.narrow);
+    assert_eq!(page.range, FLUID_RANGE);
+    assert_eq!(page.at(1280.0), page.wide);
+    assert_eq!(page.at(360.0), page.narrow);
+    // Between the ends the head grows by a line, as h3 does: its title
+    // is h3's at the head's width (its line on a whole pixel), with no
+    // step anywhere.
+    let mut prev = page.at(272.0);
+    for w in (280..=1600).step_by(8) {
+        let at = page.at(w as f32);
+        let h3 = theme.typography.role_at(TypeRole::H3, w as f32);
+        assert_eq!(
+            (at.title_size, at.title_line_height),
+            (h3.font_size, h3.line_height.round()),
+            "{w}"
+        );
+        for (a, b) in [
+            (prev.pad_x, at.pad_x),
+            (prev.pad_y, at.pad_y),
+            (prev.title_size, at.title_size),
+        ] {
+            assert!(b >= a && b - a <= 1.0, "{w}: no step ({a} to {b})");
+        }
+        prev = at;
+    }
     let head = PanelHeader::new("Cards");
     assert_eq!(head.height_for(1400.0, &theme), 32.0 + 40.0 + 32.0 + 1.0);
-    assert_eq!(head.height_for(800.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
+    assert_eq!(head.height_for(360.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
     for w in [360.0, 800.0, 1280.0, 1600.0] {
         let sidebar = Sidebar::new(vec![NavLink::new("Cards")]);
         let shell = AppShell::new(sidebar, head.clone(), w, 900.0);
@@ -929,11 +958,15 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
             (page_x, w),
             "{w}: it bleeds"
         );
-        let gutter = theme.layout.gutter(l.breakpoint);
+        let gutter = theme.layout.gutter_at(w - page_x);
         if l.menu_button.is_none() {
             assert_eq!(l.header_pads[0], gutter, "{w}: the title on the gutter");
         }
-        assert_eq!(l.content.y, l.header.y + l.header.h + theme.spacing.lg);
+        assert_eq!(
+            l.content.y,
+            l.header.y + l.header.h,
+            "{w}: the page under the rule"
+        );
         let mut c = Compositor::new();
         c.begin_frame();
         shell

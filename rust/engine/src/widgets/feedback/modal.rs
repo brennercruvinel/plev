@@ -273,7 +273,7 @@ impl Modal {
     /// Sheet width in a `vw`-wide window: the modal's max, or the window
     /// less the breakpoint gutter on each side when that is narrower.
     pub fn width(theme: &Theme, vw: f32) -> f32 {
-        let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+        let gutter = theme.layout.gutter_at(vw);
         theme.overlay.modal.max_w.min((vw - gutter * 2.0).max(0.0))
     }
 

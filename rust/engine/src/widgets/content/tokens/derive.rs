@@ -160,12 +160,7 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
-            page: PageHeadRecipe {
-                narrow: header,
-                wide: header,
-                wide_from: 0.0,
-                bleed: false,
-            },
+            page: PageHeadRecipe::derive(theme, header),
             card: CardRecipe::derive(theme),
             catalog: CatalogTokens::derive(theme),
             split,
@@ -280,6 +275,35 @@ impl DisclosureTokens {
             rows: list,
         };
         (list, table)
+    }
+}
+
+impl PageHeadRecipe {
+    /// A derived theme's page head: the panel head inside the gutter, its
+    /// title the h3 role in the text's main color, fluid with the head's
+    /// width as h3 is. The page's title so stands a step above the
+    /// showcase's group titles (h6) at every width, never smaller nor
+    /// fainter than them.
+    pub fn derive(theme: &Theme, header: HeaderRecipe) -> Self {
+        let roles = &theme.typography.roles;
+        let h3 = roles.spec(TypeRole::H3);
+        let [min_size, min_lh] = roles
+            .fluid_min(TypeRole::H3)
+            .unwrap_or([h3.size, h3.line_height]);
+        let titled = |size: f32, line_height: f32| HeaderRecipe {
+            row: header.row.max(line_height),
+            title_size: size,
+            title_line_height: line_height,
+            title_weight: h3.weight,
+            title: theme.colors.text,
+            ..header
+        };
+        PageHeadRecipe {
+            narrow: titled(min_size, min_lh),
+            wide: titled(h3.size, h3.line_height),
+            range: roles.range,
+            bleed: false,
+        }
     }
 }
 

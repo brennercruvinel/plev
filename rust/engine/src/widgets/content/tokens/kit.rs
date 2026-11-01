@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::styling::theme::hoff_core::SHADES;
+use crate::styling::theme::{TypeRole, TypeRoles};
 
 /// A sub-item's height in a Dropdown's list: `h-8` (32), where the kit
 /// has `h-10` (40). Brenner's adjustment over the kit (2026-11-01): the
@@ -492,9 +493,11 @@ impl DisclosureTokens {
         // The page's title (Layout/index.tsx:35): `px-12 py-8 border-b
         // border-[#ECECEC] text-[2rem] leading-[2.5rem]`, and below the
         // kit's 1420 px viewport `p-5 text-[1.5rem] leading-[2rem]`; the
-        // body's `text-[#121212]` and weight (app/layout.tsx:108). The
-        // page column is that viewport less the `pl-55` sidebar (:15),
-        // so the wide title shows from a 1200 px head. The kit's title
+        // body's `text-[#121212]` and weight (app/layout.tsx:108). Those
+        // two sizes are the h3 role at its fluid ends, so the head grows
+        // between them as h3 does, with the width it gets, and its padding
+        // with it: the kit's one step at a 1200 px head (1420 less the
+        // `pl-55` sidebar, :15) becomes a line (ADR 0073). The kit's title
         // stands alone: a blurb under it takes the comment's text, `mt-1
         // text-[0.8125rem] leading-[1.25rem] text-[#7B7B7B]` (QuickComment/
         // Comment/index.tsx:49), in shade 7 for AAA. The Layout's title
@@ -518,10 +521,15 @@ impl DisclosureTokens {
             rule: 1.0,
             rule_color: line,
         };
+        let roles = TypeRoles::hoff_core();
+        let h3 = roles.spec(TypeRole::H3);
+        let [min_size, min_lh] = roles
+            .fluid_min(TypeRole::H3)
+            .unwrap_or([h3.size, h3.line_height]);
         let page = PageHeadRecipe {
-            narrow: page_head([20.0, 20.0], 24.0, 32.0),
-            wide: page_head([48.0, 32.0], 32.0, 40.0),
-            wide_from: 1420.0 - 220.0,
+            narrow: page_head([20.0, 20.0], min_size, min_lh),
+            wide: page_head([48.0, 32.0], h3.size, h3.line_height),
+            range: roles.range,
             bleed: true,
         };
 

@@ -12,7 +12,7 @@ pub use self::intent::{Intent, MotionPhysics};
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
-    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
+    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens, fluid,
 };
 pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
