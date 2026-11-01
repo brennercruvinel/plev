@@ -77,6 +77,7 @@ impl ShowcaseView {
                 Pane::Sheet => self.panes.sheet.content_height(content, t),
                 Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
                 Pane::Menubar => self.panes.menubar.content_height(content, t),
+                Pane::Modals => self.panes.modals.content_height(content, t),
                 Pane::HoverCard => self.panes.hover_card.content_height(content, t),
                 Pane::Popover => self.panes.popover.content_height(content, t),
                 // task-104 front C, conversation and feedback (#156)
@@ -225,6 +226,7 @@ impl ShowcaseView {
                     }
                     r
                 }
+                Pane::Modals => self.panes.modals.handle_event(event, content, t),
                 Pane::Sheet => {
                     let (r, after) = self.panes.sheet.handle_event(event, content, t);
                     if let Some(after) = after {
@@ -376,6 +378,7 @@ impl ShowcaseView {
             Some(Pane::Combobox) => self.panes.combobox.wake(dt),
             Some(Pane::Command) => self.panes.command.wake(dt),
             // task-104 front B, overlays (#155)
+            Some(Pane::Modals) => self.panes.modals.wake(dt),
             Some(Pane::Menubar) => {
                 let (content, viewport) = (self.page_rect(), self.content_rect());
                 let page = &mut self.panes.menubar;
@@ -516,6 +519,7 @@ impl ShowcaseView {
                 Pane::AlertDialog => self.panes.alert_dialog.render(c, content, theme),
                 Pane::Drawer => self.panes.drawer.render(c, content, theme),
                 Pane::Sheet => self.panes.sheet.render(c, content, theme),
+                Pane::Modals => self.panes.modals.render(c, layers.overlay, content, theme),
                 Pane::Menubar => {
                     let bounds = self.anchored_bounds(content);
                     let page = &mut self.panes.menubar;

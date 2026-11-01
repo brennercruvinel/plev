@@ -12,7 +12,7 @@ mod tooltip;
 pub mod alert;
 
 pub use context_menu::{ContextMenu, MenuEntry};
-pub use modal::{Modal, ModalAction, sheet};
+pub use modal::{Modal, ModalAction, SheetLook, sheet, sheet_with};
 pub use progress::{ProgressBar, ProgressLayout};
 pub use scrollbar::Scrollbar;
 pub use spinner::{Spinner, SpinnerSize};

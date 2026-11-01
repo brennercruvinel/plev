@@ -149,6 +149,7 @@ components! {
     DropdownMenu => dropdown_menu,
     HoverCard => hover_card,
     Menubar => menubar,
+    Modals => modals,
     Popover => popover,
     Sheet => sheet,
     // task-104 front C, conversation and feedback (#156)

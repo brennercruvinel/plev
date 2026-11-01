@@ -105,6 +105,7 @@ pub enum Pane {
     DropdownMenu,
     HoverCard,
     Menubar,
+    Modals,
     Popover,
     Sheet,
     // task-104 front C, conversation and feedback (#156)

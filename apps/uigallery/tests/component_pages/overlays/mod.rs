@@ -615,3 +615,6 @@ fn the_tooltip_names_its_button_and_the_kit_s_bubbles() {
     assert_eq!(redo.description.as_deref(), Some("R"));
     assert_eq!(node("tooltip_page.group[1].card[0]").label, "Copy prompt");
 }
+
+/// The Modals tab (onda 3): the kit's ModalPage.
+mod modals;
