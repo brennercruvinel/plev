@@ -254,6 +254,13 @@ impl App {
                     engine::control::accessibility::reduced_motion::follow_system();
                     engine::control::accessibility::preference::follow_contrast();
                 }
+                // a contrast the system changed meanwhile adapts the theme
+                // (adr-0086); on the desktop the accessibility bridge
+                // reads it when the window takes the focus
+                #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                if on {
+                    self.view.follow_prefs();
+                }
                 #[cfg(any(target_os = "android", target_os = "ios"))]
                 let _ = on;
             }

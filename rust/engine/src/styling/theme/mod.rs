@@ -1,3 +1,4 @@
+pub mod adapt;
 mod color_space;
 pub mod hoff;
 pub mod hoff_core;
@@ -8,6 +9,7 @@ pub(crate) mod scales;
 mod tests;
 pub(crate) mod tokens;
 
+pub use self::adapt::{Contrast, Prefs};
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
 pub use self::legibility::Bar;

@@ -475,3 +475,6 @@ mod tests {
 // from here.
 #[cfg(test)]
 mod contrast;
+// task-104 front M: the theme adapted to more contrast (adr-0086).
+#[cfg(test)]
+mod more_contrast;

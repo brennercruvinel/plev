@@ -24,12 +24,12 @@ use crate::styling::color::Color;
 use crate::styling::theme::{ButtonRecipe, Intent, Theme};
 
 /// WCAG 2.2 AA: text (1.4.3).
-const TEXT: f64 = 4.5;
+pub(super) const TEXT: f64 = 4.5;
 /// WCAG 2.2 AA: large text (1.4.3) and non-text contrast (1.4.11).
-const LARGE: f64 = 3.0;
+pub(super) const LARGE: f64 = 3.0;
 
 /// The four themes the gallery cycles with `T`.
-fn themes() -> [(&'static str, Theme); 4] {
+pub(super) fn themes() -> [(&'static str, Theme); 4] {
     [
         ("core", Theme::hoff_core()),
         ("hoff", Theme::hoff()),
@@ -73,16 +73,16 @@ fn ratio(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 /// One pair as the window shows it.
 #[derive(Debug)]
-struct Pair {
-    theme: &'static str,
-    fg: String,
-    bg: String,
-    need: f64,
-    ratio: f64,
+pub(super) struct Pair {
+    pub(super) theme: &'static str,
+    pub(super) fg: String,
+    pub(super) bg: String,
+    pub(super) need: f64,
+    pub(super) ratio: f64,
 }
 
 /// Every pair of one theme (see the module docs for which).
-fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
+pub(super) fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     let c = &t.colors;
     let g = &t.glass;
     let page = over(c.bg, [0.0; 3]);
@@ -1204,7 +1204,7 @@ fn the_upload_scrim_is_the_least_that_reads() {
 }
 
 /// WCAG 2.2 AAA: text (1.4.6).
-const AAA: f64 = 7.0;
+pub(super) const AAA: f64 = 7.0;
 
 /// task-104 front B, onda 3: the core modals' text meets AAA on every
 /// surface under it (the paper, a sunk band, the hover), and their marks

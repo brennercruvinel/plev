@@ -37,7 +37,7 @@ use winit::keyboard::{Key, ModifiersState};
 use engine::control::input::reveal::{FocusReveal, Glide};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Prefs, Theme};
 use engine::widgets::form::command_dialog::CommandDialog;
 use engine::widgets::nav::{PanelHeader, SidebarDock};
 use engine::widgets::overlay::drawer::Drawer;
@@ -120,6 +120,8 @@ pub struct ShowcaseView {
     pub scale_factor: f32,
     pub theme: Theme,
     pub theme_name: String,
+    /// The preferences `theme` is adapted to (adr-0086).
+    pub prefs: Prefs,
     /// Index into [`PAGES`].
     pub page: usize,
     /// The app chrome: the dock that places the sidebar (peeking from
@@ -210,6 +212,7 @@ impl ShowcaseView {
             panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
+            prefs: Prefs::default(),
             page: 0,
             page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
@@ -394,13 +397,27 @@ impl ShowcaseView {
     }
 
     fn set_theme(&mut self, name: &str) {
-        if let Some(theme) = foundations::theme::resolve(name) {
+        // the theme as the system's preferences ask (`Theme::adapted`)
+        let prefs = Prefs::from_system();
+        if let Some(theme) = foundations::theme::resolve(name).map(|t| t.adapted(&prefs)) {
+            self.prefs = prefs;
             self.panes.editor.set_theme(&theme);
             self.panes.git.set_theme(&theme);
             self.nav.set_theme(&theme);
             self.theme = theme;
             self.theme_name = name.to_string();
         }
+    }
+
+    /// The theme adapted again when the system's preferences changed since
+    /// (the window reads them when it takes the focus); whether it was.
+    pub fn follow_prefs(&mut self) -> bool {
+        if self.prefs == Prefs::from_system() {
+            return false;
+        }
+        let name = self.theme_name.clone();
+        self.set_theme(&name);
+        true
     }
 
     /// Apply a theme by name (launch argument / snapshot tooling).

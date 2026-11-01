@@ -5,7 +5,7 @@
 use crate::styling::color::Color;
 use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
-use super::legible::{MARK_CONTRAST, full, hue_sextant, legible, legible_at};
+use super::legible::{MARK_CONTRAST, full, hue_sextant, legible, legible_at, reads_on};
 use super::tokens::*;
 
 impl SelectionTokens {
@@ -93,6 +93,14 @@ impl SelectionTokens {
             c.text_mid.0[3] * part,
         );
         let thumb_edge = mark_on(&edges, &[&[c.bg, c.bg_hover], &[c.bg, c.bg_hover, fill]]);
+        // where the ring cannot read on the fill (a palette held at more
+        // contrast lights the quiet text), the fill gives way to the ring,
+        // in steps of 2% of its strength
+        let mut fill = fill;
+        while fill.0[3] > 0.0 && !reads_on(MARK_CONTRAST, thumb_edge, &[&[c.bg, c.bg_hover, fill]])
+        {
+            fill.0[3] = (fill.0[3] - 0.02).max(0.0);
+        }
         let slider = SliderTokens {
             track: ButtonSurface {
                 fill: [c.bg_hover; 2],
