@@ -17,7 +17,7 @@ pub(super) fn asset_actions(b: Rect, theme: &Theme) -> [Rect; 3] {
     let t = &tokens(theme).tile;
     let (n, inset) = (t.button, t.button_inset);
     let foot = b.bottom() - inset - n;
-    let lw = TextMeasurer::measure_styled("Share", &t.label.style(theme), None).0;
+    let lw = TextMeasurer::measure_styled("Share", &t.label.style(&theme.typography), None).0;
     let share_w = t.label_pad * 2.0 + t.icon + t.label_gap + lw;
     [
         Rect::new(b.right() - inset - n, b.y + inset, n, n),
@@ -75,9 +75,9 @@ pub(super) fn asset(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
     text(
         c,
         "Share",
-        &t.label.style(theme),
+        &t.label.style(&theme.typography),
         sx + t.icon + t.label_gap,
-        share.y + (t.button - t.label.line_height) / 2.0,
+        share.y + (t.button - theme.typography.run(t.label).line_height) / 2.0,
         k.on_image,
         None,
     );
@@ -89,7 +89,9 @@ pub(super) fn scene_size(w: f32, theme: &Theme) -> (f32, f32) {
     let t = &tokens(theme).tile;
     let w = t.scene_w.min(w);
     let image_h = (w - (t.scene_pad + EDGE) * 2.0) / t.image_ratio;
-    let text_h = t.title.line_height + t.title_gap + t.category.line_height;
+    let text_h = theme.typography.run(t.title).line_height
+        + t.title_gap
+        + theme.typography.run(t.category).line_height;
     let h = (t.scene_pad + EDGE) * 2.0 + image_h + t.image_gap + t.text_pad * 2.0 + text_h;
     (w, h)
 }
@@ -121,7 +123,10 @@ pub(super) fn scene(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         ));
         // `mb-1 p-1` and `p-1` around the bars: the title's and the
         // category's lines.
-        let rows = [ty, ty + t.title.line_height + t.title_gap];
+        let rows = [
+            ty,
+            ty + theme.typography.run(t.title).line_height + t.title_gap,
+        ];
         for (bar_w, y) in t.bars.iter().zip(rows) {
             c.push(rounded_rect(
                 tx + t.bar_pad,
@@ -160,17 +165,17 @@ pub(super) fn scene(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         };
         icon(c, name, t.icon, k.ink, at.x + mid, at.y + mid);
     }
-    let title_style = t.title.style(theme);
+    let title_style = t.title.style(&theme.typography);
     let shown = TextMeasurer::truncate_to_width(title, &title_style, tw);
     text(c, &shown, &title_style, tx, ty, k.ink, None);
-    let cat_style = t.category.style(theme);
+    let cat_style = t.category.style(&theme.typography);
     let cat = TextMeasurer::truncate_to_width(category, &cat_style, tw);
     text(
         c,
         &cat,
         &cat_style,
         tx,
-        ty + t.title.line_height + t.title_gap,
+        ty + theme.typography.run(t.title).line_height + t.title_gap,
         k.muted,
         None,
     );

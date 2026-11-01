@@ -36,9 +36,12 @@
 //! - [`icons`]: the lucide set, tessellated and cached
 //! - [`core`] and [`recipe`]: the widget contract and the glass drawing
 //!   recipes every category shares
+//! - [`hit`]: the press area of a control, grown to the minimum target
+//!   (WCAG 2.5.8; the touch minimum with a finger) around its drawing
 //! - [`wake`]: what a tick asks of the loop (a frame now, the next
 //!   deadline), and the caret clock the text widgets share
 
+pub mod hit;
 pub mod recipe;
 pub mod wake;
 
@@ -64,6 +67,7 @@ mod tests;
 pub mod widget;
 
 pub use crate::styling::theme::{self, Intent, Theme};
+pub use hit::hit_rect;
 pub use wake::Wake;
 pub use widget::{EventResult, Rect, WidgetEvent};
 

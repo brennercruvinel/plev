@@ -9,6 +9,7 @@
 
 use accord::{Constraints, Role, Snapshot, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
+use engine::drawing::text::OverflowWrap;
 
 /// What the user field shows: it travels.
 pub const USER: &str = "brenner-at-the-desk";
@@ -33,6 +34,7 @@ fn key(text: &str, size: f32) -> TextNodeKey {
         font_weight: 400,
         letter_spacing_bits: 0.0f32.to_bits(),
         font_family: None,
+        overflow_wrap: OverflowWrap::Normal,
     }
 }
 

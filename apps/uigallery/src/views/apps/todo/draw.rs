@@ -68,7 +68,7 @@ impl TodoPage {
             h: l.list.h,
         });
         let offset = self.scroll.offset();
-        let style = item_style();
+        let style = item_style(theme);
         for (i, item) in self.model.visible_items().iter().enumerate() {
             let row = row_rect(l.list, i, offset);
             if row.y + ROW_H < l.list.y || row.y > l.list.y + l.list.h {
@@ -100,7 +100,7 @@ impl TodoPage {
             let color = with_alpha(base, base[3] * enter * (1.0 - 0.45 * strike));
             // One line to a row: a label wider than its span is cut with
             // an ellipsis (`label_shown`), never wrapped past the row.
-            let shown = label_shown(item.text(), lw);
+            let shown = label_shown(item.text(), lw, theme);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&shown, &style, None),
                 x: lx,
@@ -168,7 +168,7 @@ impl TodoPage {
             color: g.edge_soft.0,
         });
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&self.counter_text(), &counter_style(), None),
+            key: TextNodeKey::from_style(&self.counter_text(), &counter_style(theme), None),
             x: l.counter.0,
             y: l.counter.1,
             color: g.text_faint.0,

@@ -83,13 +83,13 @@ impl TextField {
     /// The style this field's text is measured, hit-tested and drawn
     /// with: its look's.
     pub fn style(&self, theme: &Theme) -> TextStyle {
-        self.recipe(theme).text.clone()
+        theme.typography.run(self.recipe(theme).text)
     }
 
     /// This field's height: its look's, never shorter than its line.
     pub fn box_height(&self, theme: &Theme) -> f32 {
         let r = self.recipe(theme);
-        r.height.max(r.text.line_height)
+        r.height.max(theme.typography.run(r.text).line_height)
     }
 
     /// Draw a bullet per grapheme in place of the text (a password); the
@@ -235,14 +235,16 @@ impl TextField {
 
     /// The text style the field measures, hit-tests and draws with.
     pub fn text_style(theme: &Theme) -> TextStyle {
-        theme.form.input.text.clone()
+        theme.typography.run(theme.form.input.text)
     }
 
     /// Canonical field height: the recipe's, never shorter than its line
     /// of text.
     pub fn height(theme: &Theme) -> f32 {
         let input = &theme.form.input;
-        input.height.max(input.text.line_height)
+        input
+            .height
+            .max(theme.typography.run(input.text).line_height)
     }
 
     /// Type `s` (characters or a pasted string). `false` when unfocused.

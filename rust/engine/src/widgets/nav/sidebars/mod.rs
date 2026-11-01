@@ -141,9 +141,7 @@ pub(crate) fn folder_row(
     if let Some(n) = icons::icon_at(icon.0, t.icon, icon.1, ix, r.y + (r.h - t.icon) / 2.0) {
         c.push(n);
     }
-    let style = theme
-        .typography
-        .exact(t.font_size, t.line_height, t.font_weight);
+    let style = theme.typography.run(t.text);
     let x = sx + t.slot + t.gap;
     // one line: a long name ends in an ellipsis, never wraps in the row
     let shown = TextMeasurer::truncate_to_width(label, &style, (r.right() - x).max(0.0));

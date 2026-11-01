@@ -296,3 +296,28 @@ fn the_core_head_and_widths_are_the_kits() {
         assert_eq!(theme.navigation.dock.width, s.width);
     }
 }
+
+/// A focus on a part under the body's fold scrolls the body the least
+/// that shows it whole; one already in view moves nothing.
+#[test]
+fn a_part_focused_past_the_fold_scrolls_into_the_body() {
+    let t = Theme::hoff_core();
+    let mut s = home().library(false);
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let body = s.body_rect(bounds, &t);
+    let first = SemId::name("home").unwrap().child("row").unwrap().key("0");
+    assert!(!s.reveal(&first, bounds, &t), "in view already");
+    let last = SemId::name("home").unwrap().child("row").unwrap().key("2");
+    let before = s.part_rect(&last, bounds, &t).unwrap();
+    assert!(before.bottom() > body.bottom(), "past the fold");
+    assert!(s.reveal(&last, bounds, &t));
+    let r = s.part_rect(&last, bounds, &t).unwrap();
+    assert!(r.y >= body.y && r.bottom() <= body.bottom() + 0.01);
+    assert!(
+        (body.bottom() - r.bottom() - t.spacing.sm).abs() < 0.01
+            || s.scroll_offset(bounds, &t) == s.max_scroll(bounds, &t),
+        "the least scroll, a step of air under it"
+    );
+    assert!(s.reveal(&first, bounds, &t), "back up");
+    assert_eq!(s.scroll_offset(bounds, &t), 0.0);
+}

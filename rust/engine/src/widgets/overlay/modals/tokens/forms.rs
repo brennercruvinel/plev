@@ -2,12 +2,11 @@
 //! `components/Settings` as their tailwind classes write them. Both are a
 //! side menu ([`NavTokens`]) beside the section it picks.
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{Theme, TypographyScale};
+use crate::styling::theme::{Theme, TypeRole, TypeRun};
 
-use super::{PanelTokens, hex, restyle, rgba};
+use super::{PanelTokens, hex, rgba};
 
 /// The side menu (`Export/Menu`, the Settings menu): a column `p-*` with
 /// a rule at its end, its items `border rounded-xl text-[0.75rem]
@@ -25,7 +24,7 @@ pub struct NavTokens {
     pub item_radius: f32,
     /// Between the box and the label.
     pub gap: f32,
-    pub label: TextStyle,
+    pub label: TypeRun,
     pub box_size: f32,
     pub box_radius: f32,
     /// A resting box's fill (alpha 0 is none).
@@ -39,7 +38,6 @@ impl NavTokens {
     fn derive(&self, theme: &Theme, box_rest: Color) -> Self {
         Self {
             item_radius: theme.shape.nav,
-            label: restyle(&self.label, &theme.typography),
             box_radius: theme.shape.tooltip,
             box_rest,
             ..self.clone()
@@ -70,7 +68,7 @@ pub struct PreviewTokens {
 /// pr-3 text-[0.75rem] font-semibold`, the control `shrink-0 w-40`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct LineTokens {
-    pub title: TextStyle,
+    pub title: TypeRun,
     pub title_top: f32,
     pub title_gap: f32,
     pub control_w: f32,
@@ -97,7 +95,7 @@ pub struct ExportTokens {
     pub pad: f32,
     pub head_h: f32,
     pub head_bottom: f32,
-    pub head: TextStyle,
+    pub head: TypeRun,
     /// The small square buttons (add, remove, close): edge, glyph, radius.
     pub tool: f32,
     pub tool_icon: f32,
@@ -110,9 +108,9 @@ pub struct ExportTokens {
     pub value_w: f32,
     pub value_radius: f32,
     pub value_icon: f32,
-    pub value: TextStyle,
+    pub value: TypeRun,
     /// The small notes: the dimensions, the estimate.
-    pub note: TextStyle,
+    pub note: TypeRun,
     pub note_gap: f32,
     /// The dimensions under the resolution (`mt-0.5`).
     pub note_top: f32,
@@ -120,8 +118,7 @@ pub struct ExportTokens {
 }
 
 impl ExportTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
-        let medium = type_.exact(12.0, 16.0, 500);
+    pub(super) fn hoff_core() -> Self {
         Self {
             panel: PanelTokens::kit(550.0, 20.0, true),
             min_h: 318.0,
@@ -133,8 +130,8 @@ impl ExportTokens {
                 item_pad_end: 8.0,
                 item_radius: 12.0,
                 gap: 12.0,
-                // text-[0.75rem] font-medium, the preflight's 1.5.
-                label: type_.exact(12.0, 18.0, 500),
+                // text-[0.75rem] font-medium (the preflight's 1.5 line).
+                label: TypeRole::Label.run(),
                 box_size: 32.0,
                 box_radius: 8.0,
                 box_rest: hex(0xF1F1F1),
@@ -159,7 +156,7 @@ impl ExportTokens {
             pad: 16.0,
             head_h: 24.0,
             head_bottom: 16.0,
-            head: medium.clone(),
+            head: TypeRole::Label.run(),
             tool: 24.0,
             tool_icon: 16.0,
             tool_radius: 6.0,
@@ -171,13 +168,13 @@ impl ExportTokens {
             value_w: 72.0,
             value_radius: 10.0,
             value_icon: 16.0,
-            value: medium,
-            // text-[0.625rem], the preflight's 1.5.
-            note: type_.exact(10.0, 15.0, 500),
+            value: TypeRole::Label.run(),
+            // text-[0.625rem] at medium (the preflight's 1.5 line).
+            note: TypeRole::Small.medium(),
             note_gap: 8.0,
             note_top: 2.0,
             line: LineTokens {
-                title: type_.exact(12.0, 18.0, 600),
+                title: TypeRole::BodyStrong.run(),
                 title_top: 10.0,
                 title_gap: 12.0,
                 control_w: 160.0,
@@ -188,7 +185,6 @@ impl ExportTokens {
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
         let s = &theme.shape;
         Self {
             panel: self.panel.derive(theme, s.card),
@@ -200,15 +196,8 @@ impl ExportTokens {
                 button_shadow: theme.shadows.raised.clone(),
                 ..self.preview.clone()
             },
-            head: restyle(&self.head, t),
             tool_radius: s.micro,
             value_radius: s.cluster,
-            value: restyle(&self.value, t),
-            note: restyle(&self.note, t),
-            line: LineTokens {
-                title: restyle(&self.line.title, t),
-                ..self.line.clone()
-            },
             ..self.clone()
         }
     }
@@ -223,12 +212,12 @@ pub struct OptionTokens {
     pub min_h: f32,
     pub pad_x: f32,
     pub pad_y: f32,
-    pub title: TextStyle,
+    pub title: TypeRun,
     pub title_gap: f32,
-    pub description: TextStyle,
+    pub description: TypeRun,
     pub description_gap: f32,
     /// A plain value at the row's end (the email, the display name).
-    pub value: TextStyle,
+    pub value: TypeRun,
     /// The selects' least width (`min-w-32`).
     pub select_w: f32,
     /// The avatar's upload (`UploadAvatar`: `size-12 rounded-full`, while
@@ -257,10 +246,10 @@ pub struct PlanTokens {
     pub radius: f32,
     pub head_pad: f32,
     pub head_shadow: Vec<ShadowSpec>,
-    pub currency: TextStyle,
+    pub currency: TypeRun,
     pub currency_pad: [f32; 2],
-    pub price: TextStyle,
-    pub period: TextStyle,
+    pub price: TypeRun,
+    pub period: TypeRun,
     pub period_pad: f32,
     pub buttons_top: f32,
     pub buttons_gap: f32,
@@ -269,7 +258,7 @@ pub struct PlanTokens {
     pub check: f32,
     pub check_start: f32,
     pub check_gap: f32,
-    pub feature: TextStyle,
+    pub feature: TypeRun,
 }
 
 /// `components/Settings`: `flex w-148.5 min-h-112 rounded-3xl
@@ -281,7 +270,7 @@ pub struct SettingsTokens {
     pub panel: PanelTokens,
     pub min_h: f32,
     pub nav: NavTokens,
-    pub title: TextStyle,
+    pub title: TypeRun,
     pub title_pad_x: f32,
     pub title_pad_y: f32,
     pub option: OptionTokens,
@@ -289,7 +278,7 @@ pub struct SettingsTokens {
 }
 
 impl SettingsTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
+    pub(super) fn hoff_core() -> Self {
         let none = Color::rgba(0.0, 0.0, 0.0, 0.0);
         let clear = rgba(0, 0, 0, 0.0);
         Self {
@@ -303,25 +292,25 @@ impl SettingsTokens {
                 item_pad_end: 10.0,
                 item_radius: 12.0,
                 gap: 12.0,
-                label: type_.exact(12.0, 18.0, 500),
+                label: TypeRole::Label.run(),
                 box_size: 32.0,
                 box_radius: 8.0,
                 box_rest: none,
                 icon: 20.0,
                 chevron: 0.0,
             },
-            title: type_.exact(18.0, 27.0, 500),
+            title: TypeRole::TitleLg.medium(),
             title_pad_x: 24.0,
             title_pad_y: 16.0,
             option: OptionTokens {
                 min_h: 56.0,
                 pad_x: 24.0,
                 pad_y: 16.0,
-                title: type_.exact(12.0, 16.0, 500),
+                title: TypeRole::Label.run(),
                 title_gap: 12.0,
-                description: type_.exact(11.0, 16.0, 500),
+                description: TypeRole::Caption.run(),
                 description_gap: 8.0,
-                value: type_.exact(12.0, 16.0, 500),
+                value: TypeRole::Label.run(),
                 select_w: 128.0,
                 upload: 48.0,
                 upload_scrim: rgba(0, 0, 0, 0.40),
@@ -347,10 +336,10 @@ impl SettingsTokens {
                     ShadowSpec::new([0.0, 3.0], 3.0, 0.0, rgba(0, 0, 0, 0.02)),
                     ShadowSpec::new([0.0, 1.0], 1.0, 0.0, rgba(0, 0, 0, 0.02)),
                 ],
-                currency: type_.exact(24.0, 32.0, 400),
+                currency: TypeRole::H5.regular(),
                 currency_pad: [2.0, 4.0],
-                price: type_.exact(40.0, 48.0, 400),
-                period: type_.exact(12.0, 16.0, 500),
+                price: TypeRole::H2.run(),
+                period: TypeRole::Label.run(),
                 period_pad: 8.0,
                 buttons_top: 8.0,
                 buttons_gap: 8.0,
@@ -360,32 +349,19 @@ impl SettingsTokens {
                 check_start: 2.0,
                 // gap-2 and mr-2.5.
                 check_gap: 18.0,
-                feature: type_.exact(13.0, 19.5, 400),
+                feature: TypeRole::Paragraph.run(),
             },
         }
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
-        let o = &self.option;
         let p = &self.plan;
         Self {
             panel: self.panel.derive(theme, theme.shape.dropdown),
             nav: self.nav.derive(theme, self.nav.box_rest),
-            title: restyle(&self.title, t),
-            option: OptionTokens {
-                title: restyle(&o.title, t),
-                description: restyle(&o.description, t),
-                value: restyle(&o.value, t),
-                ..o.clone()
-            },
             plan: PlanTokens {
                 radius: theme.shape.card,
                 head_shadow: theme.shadows.raised.clone(),
-                currency: restyle(&p.currency, t),
-                price: restyle(&p.price, t),
-                period: restyle(&p.period, t),
-                feature: restyle(&p.feature, t),
                 ..p.clone()
             },
             ..self.clone()

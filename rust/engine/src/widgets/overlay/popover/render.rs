@@ -38,6 +38,7 @@ pub struct Line<'a> {
 /// the check in its slot (the slot kept unchecked), the label at the
 /// start, the keys in a cap at the end, the focus ring inside.
 pub fn render_line(c: &mut Compositor, layer: LayerId, rect: Rect, line: Line, theme: &Theme) {
+    let scale = &theme.typography;
     let l = &theme.overlay.popover.line;
     let radius = l.radius.min(rect.h / 2.0);
     if line.lit || line.focused {
@@ -57,9 +58,9 @@ pub fn render_line(c: &mut Compositor, layer: LayerId, rect: Rect, line: Line, t
     c.push_to_layer(
         layer,
         SceneNode::Text {
-            key: TextNodeKey::from_style(line.label, &l.label, None),
+            key: TextNodeKey::from_style(line.label, &scale.run(l.label), None),
             x: x + l.slot + l.slot_gap,
-            y: rect.y + (rect.h - l.label.line_height) / 2.0,
+            y: rect.y + (rect.h - scale.run(l.label).line_height) / 2.0,
             color: l.text.0,
         },
     );
@@ -123,10 +124,7 @@ impl PopoverTrigger {
     }
 
     fn text_style(theme: &Theme) -> TextStyle {
-        let t = &theme.overlay.popover.trigger;
-        theme
-            .typography
-            .exact(t.font_size, t.line_height, t.font_weight)
+        theme.typography.run(theme.overlay.popover.trigger.value)
     }
 
     /// Intrinsic size: the value measured, the chevron, the padding, at

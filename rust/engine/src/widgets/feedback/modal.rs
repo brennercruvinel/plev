@@ -26,13 +26,13 @@ use crate::widgets::recipe::{
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Title, the same for measuring and rendering.
-fn title_style(theme: &Theme) -> &TextStyle {
-    &theme.overlay.modal.title
+fn title_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(theme.overlay.modal.title)
 }
 
 /// Body, the same for measuring and rendering.
-fn body_style(theme: &Theme) -> &TextStyle {
-    &theme.overlay.modal.body
+fn body_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(theme.overlay.modal.body)
 }
 
 /// What a sheet looks like: its fill, its edge, its corners, its drop
@@ -290,14 +290,14 @@ impl Modal {
     }
 
     fn body_height(&self, theme: &Theme, width: f32) -> f32 {
-        Self::text_height(&self.body, body_style(theme), theme, width)
+        Self::text_height(&self.body, &body_style(theme), theme, width)
     }
 
     /// The title's height: its centered lines, or one line at the start.
     fn title_height(&self, theme: &Theme, width: f32) -> f32 {
         let style = title_style(theme);
         if theme.overlay.modal.centered {
-            return Self::text_height(&self.title, style, theme, width);
+            return Self::text_height(&self.title, &style, theme, width);
         }
         style.line_height
     }
@@ -525,7 +525,7 @@ impl Modal {
             );
         }
 
-        let (title, body) = (title_style(theme), body_style(theme));
+        let (title, body) = (&title_style(theme), &body_style(theme));
         let text_w = dialog.w - m.pad * 2.0;
         let top = dialog.y + self.top_pad(theme);
         let body_y = top + self.title_height(theme, dialog.w) + m.title_gap;

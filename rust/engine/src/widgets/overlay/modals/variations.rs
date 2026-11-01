@@ -83,7 +83,7 @@ impl Variations {
     fn rects(&self, rect: Rect, theme: &Theme) -> Vec<Rect> {
         let v = &tokens(theme).variations;
         let (_, edge) = self.tile(rect.w, theme);
-        let head_h = v.close.max(v.title.line_height);
+        let head_h = v.close.max(theme.typography.run(v.title).line_height);
         let close = Rect::new(
             rect.right() - v.pad - v.close,
             rect.y + v.pad_top,
@@ -114,7 +114,7 @@ impl ModalBody for Variations {
         let v = &tokens(theme).variations;
         let (w, edge) = self.tile(w, theme);
         let rows = self.count.div_ceil(v.columns.max(1)) as f32;
-        let head_h = v.close.max(v.title.line_height);
+        let head_h = v.close.max(theme.typography.run(v.title).line_height);
         let grid = rows * edge + (rows - 1.0).max(0.0) * v.tile_gap;
         (w, v.pad_top + head_h + v.head_gap + grid + v.pad)
     }
@@ -130,6 +130,7 @@ impl ModalBody for Variations {
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let t = tokens(theme);
         let (v, ink) = (&t.variations, &t.ink);
         panel(c, rect, &v.panel, theme);
@@ -140,25 +141,26 @@ impl ModalBody for Variations {
             rect.w - v.pad * 2.0,
             v.close,
         );
+        let (title, count_style) = (scale.run(v.title), scale.run(v.count));
         let count = self.count_text();
-        let count_w = text_w(&count, &v.count);
+        let count_w = text_w(&count, &count_style);
         let count_end = rects[CLOSE].x - v.count_gap;
         let title_w = (count_end - count_w - head.x - v.count_gap).max(0.0);
         text(
             c,
             self.title(),
-            &v.title,
+            &title,
             head.x,
-            middle(&v.title, head.y, head.h),
+            middle(&title, head.y, head.h),
             title_w,
             ink.ink,
         );
         text_end(
             c,
             &count,
-            &v.count,
+            &count_style,
             count_end,
-            middle(&v.count, head.y, head.h),
+            middle(&count_style, head.y, head.h),
             count_w,
             ink.muted,
         );

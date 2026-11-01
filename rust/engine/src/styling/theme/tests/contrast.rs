@@ -1560,7 +1560,12 @@ fn the_core_catalog_text_meets_aaa() {
     }
     let e = &t.disclosure.catalog.explore;
     let photo_h = e.width / e.ratio;
-    let from_foot = e.bar_pad + e.button / 2.0 + t.disclosure.catalog.tile.title.line_height / 2.0;
+    let from_foot = e.bar_pad
+        + e.button / 2.0
+        + t.typography
+            .run(t.disclosure.catalog.tile.title)
+            .line_height
+            / 2.0;
     let at = 1.0 - from_foot / photo_h;
     let [top, foot] = k.image.map(|c| c.0);
     let mix: [f32; 4] = std::array::from_fn(|i| top[i] + (foot[i] - top[i]) * at);

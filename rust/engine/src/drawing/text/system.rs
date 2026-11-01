@@ -291,6 +291,7 @@ impl TextSystem {
         let max_width = key.max_width_bits.map(f32::from_bits);
 
         let mut buffer = Buffer::new(&mut self.font_system, Metrics::new(font_size, line_height));
+        buffer.set_wrap(&mut self.font_system, key.overflow_wrap.cosmic(&key.text));
         buffer.set_size(&mut self.font_system, max_width, None);
         let weight = super::fonts::matched_weight(
             self.font_system.db(),

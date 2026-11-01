@@ -176,10 +176,7 @@ impl RadioGroup {
     }
 
     pub fn text_style(theme: &Theme) -> TextStyle {
-        let t = &theme.selection.radio;
-        theme
-            .typography
-            .exact(t.font_size, t.line_height, t.font_weight)
+        theme.typography.run(theme.selection.radio.text)
     }
 
     /// The space a row takes besides its label.

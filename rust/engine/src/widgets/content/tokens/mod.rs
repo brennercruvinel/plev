@@ -22,6 +22,7 @@
 use crate::compose::animation::Easing;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRun;
 use crate::styling::theme::scales::ShadowSpec;
 
 /// A trigger's surface in one state: its fill and its border color
@@ -58,9 +59,7 @@ pub struct CapRecipe {
     pub radius: f32,
     pub fill: Color,
     pub shadow: Vec<ShadowSpec>,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text_type: TypeRun,
     pub text: Color,
 }
 
@@ -123,9 +122,7 @@ pub struct DisclosureRecipe {
     /// While the section holds the current page (the Dropdown's `active`).
     pub current: DisclosureSurface,
     /// Label size and line height in px, and weight.
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text_type: TypeRun,
     pub label: Color,
     /// The box the chevron is centered in, the chevron's edge, the space
     /// before the box, and the chevron's color.
@@ -148,9 +145,7 @@ pub struct DisclosureRecipe {
     /// Padding around what the disclosure reveals.
     pub content_pad: [f32; 4],
     /// Text revealed as a body: size, line height, weight, color.
-    pub body_size: f32,
-    pub body_line_height: f32,
-    pub body_weight: u16,
+    pub body_type: TypeRun,
     pub body: Color,
 }
 
@@ -172,13 +167,9 @@ pub struct ItemRecipe {
     pub gap: f32,
     pub icon_color: Color,
     /// The label, and the line under it in the dim tone.
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text_type: TypeRun,
     pub label: Color,
-    pub meta_size: f32,
-    pub meta_line_height: f32,
-    pub meta_weight: u16,
+    pub meta_type: TypeRun,
     pub meta: Color,
     /// The tile: its edge, radius, border width, its surfaces, the
     /// thumbnail's edge inside it.
@@ -230,9 +221,8 @@ pub struct CarouselRecipe {
     /// The rings: the outer's width and color, the inner's.
     pub ring_outer: (f32, Color),
     pub ring_inner: (f32, Color),
-    /// The counter: size, line height, color; the space under it.
-    pub counter_size: f32,
-    pub counter_line_height: f32,
+    /// The counter: its run, its color; the space under it.
+    pub counter_type: TypeRun,
     pub counter: Color,
     pub counter_gap: f32,
     /// The bar: height, padding x, gap, fill, border, css shadow list,
@@ -270,9 +260,7 @@ pub struct PagerRecipe {
     pub rest: DisclosureSurface,
     pub hover: DisclosureSurface,
     pub current: DisclosureSurface,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text_type: TypeRun,
     pub label: Color,
     pub label_dim: Color,
     pub arrow: f32,
@@ -302,16 +290,12 @@ pub struct TableRecipe {
     pub frame_color: Color,
     pub header_fill: Color,
     pub header_radius: f32,
-    pub header_size: f32,
-    pub header_line_height: f32,
-    pub header_weight: u16,
+    pub header_type: TypeRun,
     pub header_text: Color,
     pub rule: f32,
     pub rule_color: Color,
     pub cell_pad: f32,
-    pub cell_size: f32,
-    pub cell_line_height: f32,
-    pub cell_weight: u16,
+    pub cell_type: TypeRun,
     pub cell: Color,
     pub cell_dim: Color,
     pub rows: RowRecipe,
@@ -349,9 +333,7 @@ pub struct TreeRecipe {
     pub seam: [f32; 2],
     pub hover: DisclosureSurface,
     pub selected: DisclosureSurface,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text_type: TypeRun,
     pub label: Color,
     pub label_selected: Color,
     pub chevron_color: Color,
@@ -365,9 +347,7 @@ pub struct TreeRecipe {
 pub struct PanelRecipe {
     pub radius: f32,
     pub pad: f32,
-    pub label_size: f32,
-    pub label_line_height: f32,
-    pub label_weight: u16,
+    pub label_type: TypeRun,
     pub label: Color,
 }
 
@@ -382,13 +362,9 @@ pub struct HeaderRecipe {
     pub pad_y: f32,
     pub row: f32,
     pub blurb_gap: f32,
-    pub title_size: f32,
-    pub title_line_height: f32,
-    pub title_weight: u16,
+    pub title_type: TypeRun,
     pub title: Color,
-    pub blurb_size: f32,
-    pub blurb_line_height: f32,
-    pub blurb_weight: u16,
+    pub blurb_type: TypeRun,
     pub blurb: Color,
     pub badge_gap: f32,
     pub rule: f32,
@@ -522,6 +498,4 @@ mod derive;
 mod kit;
 
 pub use card::CardRecipe;
-pub use catalog::{
-    CatalogPalette, CatalogTokens, ExploreRecipe, PriceRecipe, TileRecipe, TypeSpec,
-};
+pub use catalog::{CatalogPalette, CatalogTokens, ExploreRecipe, PriceRecipe, TileRecipe};

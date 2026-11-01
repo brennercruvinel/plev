@@ -155,15 +155,11 @@ impl Item {
     }
 
     fn label_style(r: &ItemRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight)
+        theme.typography.run(r.text_type)
     }
 
     fn meta_style(r: &ItemRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.meta_size, r.meta_line_height, r.meta_weight)
+        theme.typography.run(r.meta_type)
     }
 
     /// The width the row's text wraps at, in a row `w` wide.

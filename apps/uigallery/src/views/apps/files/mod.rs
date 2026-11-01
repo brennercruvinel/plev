@@ -248,18 +248,26 @@ impl FilesPage {
         let (bw, bh) = self.open.preferred_size(theme);
         let open = Rect::new(x + pad, y, bw, bh);
         let (ww, wh) = self.warn.preferred_size(theme);
-        let warn = Rect::new(open.right() + theme.spacing.sm, y, ww, wh.max(bh));
+        let end = x + pad + inner_w;
+        // The second button beside the first where it fits, under it where
+        // not; the status then beside the last.
+        let warn = if open.right() + theme.spacing.sm + ww <= end {
+            Rect::new(open.right() + theme.spacing.sm, y, ww, wh.max(bh))
+        } else {
+            Rect::new(x + pad, open.bottom() + theme.spacing.sm, ww, wh.max(bh))
+        };
+        let row_h = warn.bottom() - y;
         let style = Self::status_style(theme);
         let text = self.status_text();
         let beside_x = warn.right() + theme.spacing.md;
-        let beside_w = (x + pad + inner_w - beside_x).max(0.0);
+        let beside_w = (end - beside_x).max(0.0);
         let (tw, _) = TextMeasurer::measure_styled(&text, &style, None);
         let status = if tw <= beside_w {
-            let sy = y + ((bh - style.line_height) / 2.0).floor();
-            y += bh;
+            let sy = warn.y + ((warn.h - style.line_height) / 2.0).floor();
+            y += row_h;
             Rect::new(beside_x, sy, beside_w, style.line_height)
         } else {
-            y += bh + theme.spacing.sm;
+            y += row_h + theme.spacing.sm;
             let (_, th) = TextMeasurer::measure_styled(&text, &style, Some(inner_w));
             let at = Rect::new(x + pad, y, inner_w, th.max(style.line_height));
             y += at.h;

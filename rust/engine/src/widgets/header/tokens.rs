@@ -272,9 +272,10 @@ impl HeaderTokens {
                 symbol_size: 32.0,
                 gap: 12.0,
                 pad: 4.0,
-                // The wordmark's capitals are 15 of its 16 px: a bold 20 px
-                // face draws them so.
-                word: crate::styling::theme::TypographyScale::hoff_core().exact(20.0, 20.0, 700),
+                // The wordmark's capitals are 15 of its 16 px: the kit's
+                // bold 20 px, in the heaviest face Inter embeds (600).
+                word: crate::styling::theme::TypographyScale::hoff_core()
+                    .role(crate::styling::theme::TypeRole::Wordmark),
                 ink,
             },
         }
@@ -339,11 +340,9 @@ impl HeaderTokens {
                 ..kit.thumbs
             },
             logo: LogoTokens {
-                word: theme.typography.exact(
-                    kit.logo.word.font_size,
-                    kit.logo.word.line_height,
-                    kit.logo.word.font_weight,
-                ),
+                word: theme
+                    .typography
+                    .role(crate::styling::theme::TypeRole::Wordmark),
                 ink: c.text,
                 ..kit.logo
             },

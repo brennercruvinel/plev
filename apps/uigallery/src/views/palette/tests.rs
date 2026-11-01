@@ -204,3 +204,44 @@ fn it_closes_and_runs_the_pin_and_a_theme() {
     assert!(v.handle_enter());
     assert_eq!(v.theme_name, "dracula");
 }
+
+/// The palette's list is fluid with the window: the sheet stays within
+/// the theme's share of the window's height at every height, taller in a
+/// taller window; Down through every command keeps the highlighted one
+/// whole in the list.
+#[test]
+fn the_list_follows_the_window_and_the_arrows_reveal_the_command() {
+    use crate::views::NavKey;
+    use engine::widgets::prelude::Rect;
+    let mut last = 0.0;
+    for h in [400.0, 800.0, 1200.0] {
+        let mut v = ShowcaseView::new(1280.0, h);
+        assert!(v.handle_chord("k", true));
+        let theme = v.theme.clone();
+        let window = Rect::new(0.0, 0.0, 1280.0, h);
+        let p = v.palette_mut().expect("open");
+        let sheet = p.sheet_rect(&theme, window);
+        assert!(sheet.h <= h * theme.form.group.palette_share + 0.01, "{h}");
+        assert!(sheet.h > last, "{h}: taller in a taller window");
+        last = sheet.h;
+        let palette = p.palette_rect(&theme, sheet);
+        let list = p.command.layout(palette, &theme).list;
+        let n = p.command.matches().len();
+        let row_h = theme.form.select.panel.row_h;
+        for _ in 1..n {
+            assert!(v.handle_nav(NavKey::Down));
+            let p = v.palette_mut().expect("open");
+            let lit = p.command.highlighted().expect("one highlighted");
+            let x = list.x + list.w / 2.0;
+            let rows = (0..list.h as usize)
+                .filter(|dy| {
+                    p.command.item_at(x, list.y + *dy as f32, palette, &theme) == Some(lit)
+                })
+                .count();
+            assert!(
+                rows as f32 >= row_h - 1.0,
+                "{h}: command {lit} whole in view"
+            );
+        }
+    }
+}

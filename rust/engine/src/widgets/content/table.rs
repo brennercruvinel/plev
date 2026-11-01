@@ -180,17 +180,13 @@ impl Table {
 
     fn header_style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.table;
-        theme
-            .typography
-            .exact(r.header_size, r.header_line_height, r.header_weight)
+        theme.typography.run(r.header_type)
     }
 
     /// Cell text style (`theme.disclosure.table`).
     pub fn cell_style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.table;
-        theme
-            .typography
-            .exact(r.cell_size, r.cell_line_height, r.cell_weight)
+        theme.typography.run(r.cell_type)
     }
 
     /// Which columns fit in `width`, and where. Columns drop lowest

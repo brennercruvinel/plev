@@ -156,17 +156,22 @@ impl NewField {
     /// Where the parts go, from the top left of `bounds`, as wide as they
     /// measure, never past its width.
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> NewFieldLayout {
+        let scale = &theme.typography;
         let e = &theme.form.edit;
         let h = e.box_h.max(e.icon);
         let room = (bounds.w - e.gap - e.icon).max(0.0);
         let text_w = if self.editing {
             let shown = [self.input.text(), self.input.input.placeholder.as_str()]
-                .map(|t| TextMeasurer::measure_styled(t, &e.text, None).0.ceil())
+                .map(|t| {
+                    TextMeasurer::measure_styled(t, &scale.run(e.text), None)
+                        .0
+                        .ceil()
+                })
                 .into_iter()
                 .fold(e.box_w, f32::max);
             shown + theme.control.focus_ring_width
         } else {
-            TextMeasurer::measure_styled(&self.value, &e.text, None)
+            TextMeasurer::measure_styled(&self.value, &scale.run(e.text), None)
                 .0
                 .ceil()
         }
@@ -240,6 +245,7 @@ impl NewField {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let layer = LayerId::DEFAULT;
         let l = self.layout(bounds, theme);
         let e = &theme.form.edit;
@@ -272,11 +278,11 @@ impl NewField {
                 let r = l.whole;
                 c.bind_to_layer(layer, id, [r.x, r.y, r.w, r.h]);
             }
-            let shown = TextMeasurer::truncate_to_width(&self.value, &e.text, l.text.w);
+            let shown = TextMeasurer::truncate_to_width(&self.value, &scale.run(e.text), l.text.w);
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&shown, &e.text, None),
+                key: TextNodeKey::from_style(&shown, &scale.run(e.text), None),
                 x: l.text.x,
-                y: l.text.y + TextMeasurer::vertical_center(&e.text, l.text.h),
+                y: l.text.y + TextMeasurer::vertical_center(&scale.run(e.text), l.text.h),
                 color: fade(e.color),
             });
         }

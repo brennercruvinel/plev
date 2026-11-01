@@ -13,6 +13,7 @@
 use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::tokens::ColorTokens;
+use crate::styling::theme::{TypeRole, TypeRun};
 
 /// One surface state: fill, shadow list, label color.
 #[derive(Clone, Debug, PartialEq)]
@@ -47,10 +48,9 @@ pub struct ButtonMetrics {
     pub height: f32,
     pub pad_x: f32,
     pub radius: f32,
-    /// Label size and line height in px (14/20, 12/16...).
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    /// The label's run (the kit's 14/20 and 12/16 semibold): the same
+    /// role in every theme, its size the theme's.
+    pub text: TypeRun,
     /// Leading icon edge.
     pub icon: f32,
     /// Gap between icon and label.
@@ -392,9 +392,7 @@ impl ButtonTokens {
                     height: 28.0,
                     pad_x: 8.0,
                     radius: 8.0,
-                    font_size: 13.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyLg.strong(),
                     icon: 16.0,
                     gap: 8.0,
                 },
@@ -403,9 +401,7 @@ impl ButtonTokens {
                     height: 36.0,
                     pad_x: 20.0,
                     radius: 10.0,
-                    font_size: 12.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyStrong.run(),
                     icon: 20.0,
                     gap: 8.0,
                 },
@@ -414,9 +410,7 @@ impl ButtonTokens {
                     height: 40.0,
                     pad_x: 24.0,
                     radius: 12.0,
-                    font_size: 14.0,
-                    line_height: 20.0,
-                    font_weight: 600,
+                    text: TypeRole::Heading.strong(),
                     icon: 20.0,
                     gap: 8.0,
                 },
@@ -425,9 +419,7 @@ impl ButtonTokens {
                     height: 44.0,
                     pad_x: 14.0,
                     radius: 12.0,
-                    font_size: 12.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyStrong.run(),
                     icon: 16.0,
                     gap: 8.0,
                 },

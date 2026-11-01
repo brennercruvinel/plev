@@ -28,6 +28,7 @@ use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::drawing::path::PathBuilder;
 use crate::styling::theme::Theme;
 use crate::widgets::graph::model::Graph;
+use crate::widgets::hit::MinTarget;
 
 use crate::widgets::recipe::rounded_rect_stroke;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -94,6 +95,9 @@ pub struct GraphView {
     /// The top-left of the bounds it last drew or took an event in: the
     /// transform is the canvas's own, and this places it in the window.
     origin: (f32, f32),
+    /// The press minimum the theme asked at the last render: a node's
+    /// click square is never under it (`widgets::hit`).
+    min_target: Option<MinTarget>,
 }
 
 impl GraphView {
@@ -110,6 +114,7 @@ impl GraphView {
             sem: None,
             focused: None,
             origin: (0.0, 0.0),
+            min_target: None,
         }
     }
 
@@ -250,7 +255,7 @@ impl GraphView {
     /// square its click finds it in.
     fn bind_nodes(&self, c: &mut Compositor, id: &SemId, scene: &GraphScene, bounds: Rect) {
         c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
-        let r = self.node_r() + HIT_SLACK;
+        let r = self.hit_r();
         for (i, &(wx, wy)) in scene.positions.iter().enumerate() {
             let (sx, sy) = self.screen(wx, wy);
             if bounds.contains(sx, sy) {
@@ -272,9 +277,16 @@ impl GraphView {
         (NODE_R * self.transform.scale).clamp(2.0, 9.0)
     }
 
+    /// Half the side of a node's click square: the drawn radius and its
+    /// slack, and never under half the minimum target.
+    fn hit_r(&self) -> f32 {
+        let min = self.min_target.map_or(0.0, MinTarget::now);
+        (self.node_r() + HIT_SLACK).max(min / 2.0)
+    }
+
     /// Nearest node to a screen point within its click radius.
     fn node_at(&self, scene: &GraphScene, x: f32, y: f32) -> Option<usize> {
-        let r = self.node_r() + HIT_SLACK;
+        let r = self.hit_r();
         let mut best: Option<(usize, f32)> = None;
         for (i, &(wx, wy)) in scene.positions.iter().enumerate() {
             let (sx, sy) = self.screen(wx, wy);
@@ -357,6 +369,7 @@ impl GraphView {
             return;
         };
         self.origin = (bounds.x, bounds.y);
+        self.min_target = Some(MinTarget::of(theme));
         if self.needs_fit {
             let margin = theme.spacing.xl;
             self.transform =

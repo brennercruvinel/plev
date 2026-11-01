@@ -125,9 +125,7 @@ impl Pagination {
     }
 
     fn style(r: &PagerRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight)
+        theme.typography.run(r.text_type)
     }
 
     /// The cells a pager `w` wide shows, the arrows at the ends.

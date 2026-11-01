@@ -11,6 +11,7 @@ use engine::drawing::compositor::{
 };
 use engine::drawing::gpu::load_image_rgba;
 use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::OverflowWrap;
 
 use super::*;
 
@@ -30,6 +31,7 @@ fn text(s: &str) -> TextNodeKey {
         font_weight: 600,
         letter_spacing_bits: (-0.25f32).to_bits(),
         font_family: Some("Inter".to_owned()),
+        overflow_wrap: OverflowWrap::Normal,
     }
 }
 

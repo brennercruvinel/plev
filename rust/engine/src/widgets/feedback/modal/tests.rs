@@ -6,7 +6,8 @@ const LONG: &str = "Are you sure you want to delete this file? It leaves every f
 
 #[test]
 fn wrap_packs_words_into_the_width_and_keeps_a_hard_break() {
-    let style = &Theme::hoff_core().overlay.modal.body;
+    let theme = Theme::hoff_core();
+    let style = &body_style(&theme);
     let lines = wrap(LONG, style, 200.0);
     assert!(lines.len() > 1, "it wraps");
     for (line, w) in &lines {
@@ -35,7 +36,7 @@ fn a_centered_sheet_centers_each_line_and_grows_with_them() {
     c.begin_frame();
     long.render_in(&mut c, LayerId::DEFAULT, &theme, dialog);
     let m = &theme.overlay.modal;
-    let lines = wrap(LONG, &m.body, dialog.w - m.pad * 2.0);
+    let lines = wrap(LONG, &body_style(&theme), dialog.w - m.pad * 2.0);
     let xs: Vec<f32> = c
         .layer(LayerId::DEFAULT)
         .map(|l| l.nodes().to_vec())

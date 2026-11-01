@@ -119,14 +119,16 @@ impl SharePost {
 
     fn meta_h(theme: &Theme) -> f32 {
         let p = &tokens(theme).share_post;
-        p.avatar.max(p.author.line_height).max(p.clock)
+        p.avatar
+            .max(theme.typography.run(p.author).line_height)
+            .max(p.clock)
     }
 
     fn rects(&self, rect: Rect, theme: &Theme) -> Vec<Rect> {
         let p = &tokens(theme).share_post;
         let x = rect.x + p.pad + p.body_pad;
         let y = Self::body_top(rect, theme)
-            + p.title.line_height
+            + theme.typography.run(p.title).line_height
             + p.title_gap
             + Self::meta_h(theme)
             + p.meta_bottom;
@@ -146,7 +148,7 @@ impl ModalBody for SharePost {
         let w = p.panel.width.min(w);
         let rect = Rect::new(0.0, 0.0, w, 0.0);
         let body = Self::body_top(rect, theme)
-            + p.title.line_height
+            + theme.typography.run(p.title).line_height
             + p.title_gap
             + Self::meta_h(theme)
             + p.meta_bottom
@@ -162,6 +164,7 @@ impl ModalBody for SharePost {
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let t = tokens(theme);
         let (p, ink) = (&t.share_post, &t.ink);
         panel(c, rect, &p.panel, theme);
@@ -178,19 +181,19 @@ impl ModalBody for SharePost {
         let x = rect.x + p.pad + p.body_pad;
         let w = rect.w - (p.pad + p.body_pad) * 2.0;
         let mut y = Self::body_top(rect, theme);
-        text(c, &self.title, &p.title, x, y, w, ink.ink);
-        y += p.title.line_height + p.title_gap;
+        text(c, &self.title, &scale.run(p.title), x, y, w, ink.ink);
+        y += scale.run(p.title).line_height + p.title_gap;
         let h = Self::meta_h(theme);
         let avatar = Rect::new(x, y + (h - p.avatar) / 2.0, p.avatar, p.avatar);
         picture(c, avatar, p.avatar / 2.0, t.pictures.avatars[1]);
         let name_x = avatar.right() + p.author_gap;
-        let name_w = text_w(&self.author, &p.author).min(w);
+        let name_w = text_w(&self.author, &scale.run(p.author)).min(w);
         text(
             c,
             &self.author,
-            &p.author,
+            &scale.run(p.author),
             name_x,
-            middle(&p.author, y, h),
+            middle(&scale.run(p.author), y, h),
             name_w,
             ink.ink,
         );
@@ -205,9 +208,9 @@ impl ModalBody for SharePost {
         text(
             c,
             &self.date,
-            &p.date,
+            &scale.run(p.date),
             date_x,
-            middle(&p.date, y, h),
+            middle(&scale.run(p.date), y, h),
             x + w - date_x,
             ink.muted,
         );
@@ -267,11 +270,12 @@ impl ShareProfile {
     }
 
     fn row_top(rect: Rect, theme: &Theme) -> f32 {
+        let scale = &theme.typography;
         let p = &tokens(theme).share_profile;
         Self::text_top(rect, theme)
-            + p.name.line_height
+            + scale.run(p.name).line_height
             + p.count_gap
-            + p.count.line_height
+            + scale.run(p.count).line_height
             + p.text_bottom
             + p.actions_pad
     }
@@ -309,6 +313,7 @@ impl ModalBody for ShareProfile {
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let t = tokens(theme);
         let (p, ink) = (&t.share_profile, &t.ink);
         panel(c, rect, &p.panel, theme);
@@ -333,9 +338,9 @@ impl ModalBody for ShareProfile {
         let cx = rect.x + rect.w / 2.0;
         let w = inner;
         let y = Self::text_top(rect, theme);
-        text_centered(c, &self.name, &p.name, cx, y, w, ink.ink);
-        let y = y + p.name.line_height + p.count_gap;
-        text_centered(c, &self.line, &p.count, cx, y, w, ink.muted);
+        text_centered(c, &self.name, &scale.run(p.name), cx, y, w, ink.ink);
+        let y = y + scale.run(p.name).line_height + p.count_gap;
+        text_centered(c, &self.line, &scale.run(p.count), cx, y, w, ink.muted);
         self.controls.render(c, &self.rects(rect, theme), theme);
     }
 

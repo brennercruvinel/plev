@@ -14,11 +14,10 @@
 //! core palette's shade 7 (`#323232`, 12:1, AAA) instead
 //! (`styling/theme/tests/contrast.rs`, task-104 front B).
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{Elevation, Theme, TypographyScale};
+use crate::styling::theme::{Elevation, Theme};
+use crate::styling::theme::{TypeRole, TypeRun};
 
 /// The surface of a panel held to one edge of its container.
 #[derive(Clone, Debug, PartialEq)]
@@ -45,18 +44,18 @@ pub struct SheetTokens {
     pub panel: EdgePanelTokens,
     pub pad_x: f32,
     pub pad_y: f32,
-    pub title: TextStyle,
+    pub title: TypeRun,
     pub title_color: Color,
-    pub description: TextStyle,
+    pub description: TypeRun,
     pub description_color: Color,
     /// Between the title and the description, and a row's label and hint.
     pub gap: f32,
     pub row_min_h: f32,
-    pub label: TextStyle,
+    pub label: TypeRun,
     pub label_color: Color,
-    pub hint: TextStyle,
+    pub hint: TypeRun,
     pub hint_color: Color,
-    pub value: TextStyle,
+    pub value: TypeRun,
     pub value_color: Color,
     /// Between a row's label and its value.
     pub value_gap: f32,
@@ -73,13 +72,13 @@ pub struct DrawerTokens {
     pub head_pad_end: f32,
     /// The head's content height (the kit's logo).
     pub head_h: f32,
-    pub brand: TextStyle,
+    pub brand: TypeRun,
     pub brand_color: Color,
     /// Left and right of the groups, and under the last one.
     pub body_pad: f32,
     /// Between two groups.
     pub group_gap: f32,
-    pub group_label: TextStyle,
+    pub group_label: TypeRun,
     pub group_color: Color,
     pub group_pad: f32,
     /// Between a group's label and its first link, and between links.
@@ -88,7 +87,7 @@ pub struct DrawerTokens {
     pub item_radius: f32,
     /// Between the icon's box and the label.
     pub item_inline: f32,
-    pub item_label: TextStyle,
+    pub item_label: TypeRun,
     pub item_color: Color,
     /// A link hovered or current.
     pub item_fill: Color,
@@ -158,7 +157,6 @@ impl SheetTokens {
     /// the value) and the value of `Settings/Profile/index.tsx:33`
     /// (`text-[0.75rem] font-medium`, the preflight's 1.5).
     pub fn hoff_core() -> Self {
-        let type_ = TypographyScale::hoff_core();
         let ink = hex(0x121212);
         // Shade 7: the kit's #7B7B7B fails AA on its paper (module docs).
         let muted = hex(0x323232);
@@ -171,17 +169,17 @@ impl SheetTokens {
             },
             pad_x: 24.0,
             pad_y: 16.0,
-            title: type_.exact(18.0, 27.0, 500),
+            title: TypeRole::TitleLg.medium(),
             title_color: ink,
-            description: type_.exact(13.0, 19.5, 400),
+            description: TypeRole::Paragraph.run(),
             description_color: muted,
             gap: 8.0,
             row_min_h: 56.0,
-            label: type_.exact(12.0, 16.0, 500),
+            label: TypeRole::Label.run(),
             label_color: ink,
-            hint: type_.exact(11.0, 16.0, 500),
+            hint: TypeRole::Caption.run(),
             hint_color: muted,
-            value: type_.exact(12.0, 18.0, 500),
+            value: TypeRole::Label.run(),
             value_color: ink,
             value_gap: 12.0,
         }
@@ -191,7 +189,6 @@ impl SheetTokens {
     /// spacing; the kit's row height.
     pub fn derive(theme: &Theme) -> Self {
         let s = &theme.spacing;
-        let t = &theme.typography;
         let c = &theme.colors;
         Self {
             panel: EdgePanelTokens {
@@ -200,16 +197,16 @@ impl SheetTokens {
             },
             pad_x: s.lg,
             pad_y: s.md,
-            title: t.role(TypeRole::Title),
+            title: TypeRole::Title.run(),
             title_color: c.text,
-            description: t.role(TypeRole::Body),
+            description: TypeRole::Body.run(),
             description_color: c.text_mid,
             gap: s.sm,
-            label: t.role(TypeRole::BodyStrong),
+            label: TypeRole::BodyStrong.run(),
             label_color: c.text,
-            hint: t.run(TypeRole::Caption.regular()),
+            hint: TypeRole::Caption.regular(),
             hint_color: c.text_mid,
-            value: t.role(TypeRole::Body),
+            value: TypeRole::Body.run(),
             value_color: c.text,
             value_gap: s.md,
             ..Self::hoff_core()
@@ -229,7 +226,6 @@ impl DrawerTokens {
     /// (:73-76), the icon `size-5 fill-[#7B7B7B]`, `#121212` hovered or
     /// current (:81). The name takes the sheet's title in the logo's place.
     pub fn hoff_core() -> Self {
-        let type_ = TypographyScale::hoff_core();
         let ink = hex(0x121212);
         Self {
             panel: EdgePanelTokens::hoff_core(),
@@ -237,11 +233,11 @@ impl DrawerTokens {
             // max-[1023px]:pr-4 (:31): the drawer's.
             head_pad_end: 16.0,
             head_h: 32.0,
-            brand: type_.exact(18.0, 27.0, 500),
+            brand: TypeRole::TitleLg.medium(),
             brand_color: ink,
             body_pad: 20.0,
             group_gap: 12.0,
-            group_label: type_.exact(12.0, 16.0, 500),
+            group_label: TypeRole::Label.run(),
             // Shade 7: the kit's #7B7B7B/70 fails AA (module docs).
             group_color: hex(0x323232),
             group_pad: 10.0,
@@ -249,7 +245,7 @@ impl DrawerTokens {
             item_pad: 4.0,
             item_radius: 12.0,
             item_inline: 12.0,
-            item_label: type_.exact(12.0, 16.0, 600),
+            item_label: TypeRole::BodyStrong.run(),
             item_color: ink,
             item_fill: hex(0xF1F1F1),
             icon_box: 32.0,
@@ -274,21 +270,20 @@ impl DrawerTokens {
     pub fn derive(theme: &Theme) -> Self {
         let g = &theme.glass;
         let s = &theme.spacing;
-        let t = &theme.typography;
         Self {
             panel: EdgePanelTokens::derive(theme),
             head_pad: s.lg,
             head_pad_end: s.md,
-            brand: t.role(TypeRole::Title),
+            brand: TypeRole::Title.run(),
             brand_color: theme.colors.text,
             body_pad: s.lg,
             group_gap: s.md,
-            group_label: t.run(TypeRole::Caption.regular()),
+            group_label: TypeRole::Caption.regular(),
             group_color: theme.colors.text_mid,
             group_pad: s.sm,
             item_radius: theme.shape.item,
             item_inline: s.md,
-            item_label: t.role(TypeRole::BodyStrong),
+            item_label: TypeRole::BodyStrong.run(),
             item_color: theme.colors.text,
             item_fill: g.surface_active,
             icon_box_radius: theme.shape.micro,

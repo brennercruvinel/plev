@@ -47,9 +47,7 @@ impl Panel {
     /// Group label style (`theme.disclosure.panel`).
     pub fn label_style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.panel;
-        theme
-            .typography
-            .exact(r.label_size, r.label_line_height, r.label_weight)
+        theme.typography.run(r.label_type)
     }
 
     /// The rect content lays out in: the bounds inset by the padding,

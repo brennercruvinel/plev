@@ -63,10 +63,7 @@ impl ButtonSize {
 
     /// Label style, one source for measuring and drawing.
     pub fn text_style(self, theme: &Theme) -> TextStyle {
-        let m = self.metrics(theme);
-        theme
-            .typography
-            .exact(m.font_size, m.line_height, m.font_weight)
+        theme.typography.run(self.metrics(theme).text)
     }
 }
 

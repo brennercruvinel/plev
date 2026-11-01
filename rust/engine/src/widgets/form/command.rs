@@ -15,6 +15,12 @@
 //!
 //! Inline, the list stands on its panel; on a surface that already is
 //! one, as the dialog's sheet ([`Command::bare`]), the rows stand on it.
+//! Inline, the list never grows past the select panel's `max_h`; sized
+//! by its owner ([`Command::fit`], the dialog's sheet, a share of the
+//! window), it takes what its bounds leave under the box, and its rows
+//! scroll. A key that moves the highlight scrolls the list the least that
+//! shows it (`reveal::nearest`), the group's caption with its first
+//! command.
 //!
 //! Projected ([`Command::project`]): the search box as its field is; the
 //! list beside it (`<id>.list`, `Role::List`, its `count` the commands)
@@ -25,6 +31,7 @@
 
 use accord::{Role, SemId, SnapshotBuilder};
 
+use crate::control::input::reveal::{Cover, Span};
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
@@ -65,6 +72,17 @@ pub struct CommandLayout {
     pub list: Rect,
 }
 
+/// How tall the list's strip may be.
+#[derive(Clone, Copy)]
+enum Room {
+    /// The select panel's `max_h` (inline, or no height given).
+    Capped,
+    /// Every row.
+    Every,
+    /// What this whole height leaves under the box.
+    Bounded(f32),
+}
+
 /// An inline command palette.
 #[derive(Clone, Debug)]
 pub struct Command {
@@ -84,6 +102,9 @@ pub struct Command {
     /// The list on its own panel (inline); off on a surface that already
     /// is one, as the dialog's sheet.
     panel: bool,
+    /// The list takes the height its bounds give (the owner sizes it),
+    /// not the select panel's cap.
+    fit: bool,
     sem: Option<SemId>,
 }
 
@@ -100,6 +121,7 @@ impl Command {
             item_focus: false,
             empty: "No results found.".into(),
             panel: true,
+            fit: false,
             sem: None,
         }
     }
@@ -145,6 +167,17 @@ impl Command {
     /// own: the palette on a sheet that already is one.
     pub fn bare(mut self) -> Self {
         self.panel = false;
+        self
+    }
+
+    /// The list as tall as its bounds leave under the box (its rows, at
+    /// most; one row at least), not capped by the select panel's `max_h`:
+    /// a palette its owner sizes, the dialog's sheet a share of the
+    /// window ([`full_height`](Self::full_height) is every row). Bounds
+    /// with no height (0) still mean the inline palette's
+    /// [`height_for`](Self::height_for).
+    pub fn fit(mut self) -> Self {
+        self.fit = true;
         self
     }
 
@@ -265,18 +298,39 @@ impl Command {
         self.highlighted().is_some_and(|i| self.run(i))
     }
 
-    /// Where the box and the list go in `bounds` (its height is not read:
-    /// the palette takes [`height_for`](Self::height_for)).
+    /// Where the box and the list go in `bounds`. Its height is read only
+    /// when the palette [fits](Self::fit) it and it has one; otherwise
+    /// the palette takes [`height_for`](Self::height_for).
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> CommandLayout {
+        let room = if self.fit && bounds.h > 0.0 {
+            Room::Bounded(bounds.h)
+        } else {
+            Room::Capped
+        };
+        self.place(bounds, room, theme)
+    }
+
+    /// The box and the list, the list's strip as `room` says.
+    fn place(&self, bounds: Rect, room: Room, theme: &Theme) -> CommandLayout {
         let search = Rect::new(bounds.x, bounds.y, bounds.w, self.search.height(theme));
+        let gap = theme.form.field.label_gap;
         // The list a select opens, its rows (one at least, for the empty
         // state) scrolling in the same strip.
         let p = &theme.form.select.panel;
+        let n = self.rows().len().max(1);
+        let view = match room {
+            Room::Capped => list::view_h(n, theme),
+            Room::Every => n as f32 * p.row_h,
+            Room::Bounded(h) => {
+                let left = h - search.h - gap - p.pad * 2.0;
+                (n as f32 * p.row_h).min(left.max(p.row_h))
+            }
+        };
         let list = Rect::new(
             bounds.x,
-            search.bottom() + theme.form.field.label_gap,
+            search.bottom() + gap,
             bounds.w,
-            p.pad * 2.0 + list::view_h(self.rows().len().max(1), theme),
+            p.pad * 2.0 + view,
         );
         CommandLayout { search, list }
     }
@@ -287,8 +341,9 @@ impl Command {
     pub fn preferred_width(&self, theme: &Theme) -> f32 {
         let p = &theme.form.select.panel;
         let gap = theme.form.select.gap;
+        let style = theme.typography.run(p.text);
         let row = |item: &CommandItem| {
-            let (label, _) = TextMeasurer::measure_styled(&item.label, &p.text, None);
+            let (label, _) = TextMeasurer::measure_styled(&item.label, &style, None);
             let icon = item.icon.map_or(0.0, |_| theme.form.group.icon + gap);
             let cap = item
                 .shortcut
@@ -300,32 +355,71 @@ impl Command {
         widest + p.pad * 2.0
     }
 
+    /// The height at width `w`: the box and the list, no taller than the
+    /// select panel's `max_h`.
     pub fn height_for(&self, w: f32, theme: &Theme) -> f32 {
-        self.layout(Rect::new(0.0, 0.0, w, 0.0), theme)
-            .list
-            .bottom()
+        let at = Rect::new(0.0, 0.0, w, 0.0);
+        self.place(at, Room::Capped, theme).list.bottom()
     }
 
-    /// The scroll as the list shows it, the highlight revealed after a
-    /// key. Pure: the draw shows what the next event stores.
-    fn scroll_for(&self, theme: &Theme) -> ScrollState {
+    /// The height at width `w` with every row shown: what a fitted
+    /// palette would take with all the room it wants.
+    pub fn full_height(&self, w: f32, theme: &Theme) -> f32 {
+        let at = Rect::new(0.0, 0.0, w, 0.0);
+        self.place(at, Room::Every, theme).list.bottom()
+    }
+
+    /// The least a fitted palette takes: the box and one row.
+    pub fn min_height(&self, theme: &Theme) -> f32 {
+        let p = &theme.form.select.panel;
+        self.search.height(theme) + theme.form.field.label_gap + p.pad * 2.0 + p.row_h
+    }
+
+    /// The scroll as the list in `bounds` shows it, the highlight
+    /// revealed after a key (the least scroll that shows it whole, the
+    /// group's caption with the group's first command). Pure: the draw
+    /// shows what the next event stores.
+    fn scroll_for(&self, bounds: Rect, theme: &Theme) -> ScrollState {
         let rows = self.rows();
+        let row_h = theme.form.select.panel.row_h;
+        let view = (self.layout(bounds, theme).list.h - theme.form.select.panel.pad * 2.0).max(0.0);
         let mut scroll = self.scroll.clone();
-        list::sync(&mut scroll, rows.len().max(1), theme);
+        scroll.set_content(rows.len().max(1) as f32 * row_h);
+        scroll.set_viewport(view);
         if self.reveal
             && let Some(k) = self
                 .highlighted()
                 .and_then(|h| rows.iter().position(|r| *r == CommandRow::Item(h)))
         {
-            list::reveal(&mut scroll, k, rows.len(), theme);
+            let first = match k.checked_sub(1).map(|j| rows[j]) {
+                Some(CommandRow::Heading(_)) => k - 1,
+                _ => k,
+            };
+            let target = Span::new(first as f32 * row_h, (k + 1 - first) as f32 * row_h);
+            scroll.reveal(
+                target,
+                Span::new(scroll.offset(), view),
+                0.0,
+                Cover::default(),
+            );
         }
         scroll
+    }
+
+    /// Keeps the scroll the list shows in `bounds` (the highlight
+    /// revealed), so the next key reveals from where the list stands, not
+    /// from where the last pointer event left it.
+    pub fn settle_scroll(&mut self, bounds: Rect, theme: &Theme) {
+        self.scroll = self.scroll_for(bounds, theme);
+        self.reveal = false;
     }
 
     fn window(&self, bounds: Rect, theme: &Theme) -> Window {
         let l = self.layout(bounds, theme);
         let n = self.rows().len().max(1);
-        Window::new(l.list, n, self.scroll_for(theme).offset(), theme)
+        let view = (l.list.h - theme.form.select.panel.pad * 2.0).max(0.0);
+        let offset = self.scroll_for(bounds, theme).offset();
+        Window::sized(l.list, n, view, offset, theme)
     }
 
     /// The command under `(x, y)`.
@@ -344,8 +438,7 @@ impl Command {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
-        self.scroll = self.scroll_for(theme);
-        self.reveal = false;
+        self.settle_scroll(bounds, theme);
         let l = self.layout(bounds, theme);
         let r = self.search.handle_event(event, l.search, theme);
         if self.search.input.disabled {
@@ -380,6 +473,7 @@ impl Command {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         // the layer its owner aims at (`Compositor::on_layer`)
         let layer = c.target();
         let l = self.layout(bounds, theme);
@@ -415,9 +509,14 @@ impl Command {
             let row = window.row(k);
             match rows[k] {
                 CommandRow::Heading(g) => {
-                    let y = row.y + TextMeasurer::vertical_center(&caption.caption, row.h);
+                    let y =
+                        row.y + TextMeasurer::vertical_center(&scale.run(caption.caption), row.h);
                     c.push(SceneNode::Text {
-                        key: TextNodeKey::from_style(&self.groups[g], &caption.caption, None),
+                        key: TextNodeKey::from_style(
+                            &self.groups[g],
+                            &scale.run(caption.caption),
+                            None,
+                        ),
                         x: row.x + p.text_inset,
                         y,
                         color: faded(caption.caption_color, alpha).0,
@@ -439,7 +538,7 @@ impl Command {
         color: crate::styling::color::Color,
         theme: &Theme,
     ) {
-        let style = &theme.form.select.panel.text;
+        let style = &theme.typography.run(theme.form.select.panel.text);
         let shown = TextMeasurer::truncate_to_width(text, style, (row.w - inset * 2.0).max(0.0));
         c.push(SceneNode::Text {
             key: TextNodeKey::from_style(&shown, style, None),

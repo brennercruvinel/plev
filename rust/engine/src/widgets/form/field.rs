@@ -30,6 +30,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::form::label::Label;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::Slot;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, focus_ring_inside};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -309,6 +310,7 @@ impl Field {
         w: f32,
         theme: &Theme,
     ) -> (Option<Rect>, Option<Rect>, f32) {
+        let scale = &theme.typography;
         let f = &theme.form.field;
         // One line's width, rounded up as the rects are.
         let one_line = |text: &str, style: &TextStyle| {
@@ -317,11 +319,13 @@ impl Field {
         let label = self.label.as_ref();
         let link = self.link.as_deref();
         let side_by_side = match (label, link) {
-            (Some(label), Some(link)) => label.size(None, theme).0 + one_line(link, &f.link) <= w,
+            (Some(label), Some(link)) => {
+                label.size(None, theme).0 + one_line(link, &scale.run(f.link)) <= w
+            }
             _ => true,
         };
         let link_w = match link {
-            Some(link) if side_by_side => one_line(link, &f.link).min(w),
+            Some(link) if side_by_side => one_line(link, &scale.run(f.link)).min(w),
             _ => 0.0,
         };
         let rtl = label.is_some_and(|l| Self::reads_rtl(l.text(), &l.style(theme)));
@@ -335,7 +339,7 @@ impl Field {
             label.map_or(y, |r| r.bottom())
         };
         let link = link.map(|t| {
-            let r = Self::text_rect(t, &f.link, x, below, w);
+            let r = Self::text_rect(t, &scale.run(f.link), x, below, w);
             Self::hang(r, x, w, !rtl)
         });
         let bottom = [label, link]
@@ -386,7 +390,7 @@ impl Field {
             )
         });
         let message = self.message.as_ref().map(|m| {
-            let style = &form.field.message;
+            let style = &theme.typography.run(form.field.message);
             let r = Self::text_rect(
                 m.text(),
                 style,
@@ -417,7 +421,7 @@ impl Field {
         let l = self.layout(bounds, theme);
         if l.reveal.is_some_and(|r| r.contains(x, y)) {
             Some(FieldPart::Reveal)
-        } else if l.link.is_some_and(|r| r.contains(x, y)) {
+        } else if l.link.is_some_and(|r| hit_rect(r, theme).contains(x, y)) {
             Some(FieldPart::Link)
         } else if l.label.is_some_and(|r| r.contains(x, y)) {
             Some(FieldPart::Label)
@@ -451,7 +455,7 @@ impl Field {
         }
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let over = l.link.is_some_and(|r| r.contains(x, y));
+                let over = l.link.is_some_and(|r| hit_rect(r, theme).contains(x, y));
                 let mut r = self.input.handle_event(event, l.input, theme);
                 if over != self.link_hovered {
                     self.link_hovered = over;
@@ -483,6 +487,7 @@ impl Field {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let l = self.layout(bounds, theme);
         let form = &theme.form;
         let f = &form.field;
@@ -512,14 +517,14 @@ impl Field {
             } else {
                 f.link_alpha
             };
-            text(link, &f.link, r, fade(f.link_color, a));
+            text(link, &scale.run(f.link), r, fade(f.link_color, a));
         }
         if let (Some(message), Some(r)) = (&self.message, l.message) {
             let color = match message {
                 Message::Error(_) => f.error_color,
                 Message::Helper(_) => f.helper_color,
             };
-            text(message.text(), &f.message, r, fade(color, 1.0));
+            text(message.text(), &scale.run(f.message), r, fade(color, 1.0));
         }
 
         self.input.render_to_layer(c, layer, l.input, theme);
@@ -552,6 +557,8 @@ impl Field {
             }
         }
         if let (Some(id), Some(r)) = (self.link_id(), l.link) {
+            // a line of text presses in the minimum target (`widgets::hit`)
+            let r = hit_rect(r, theme);
             c.bind_to_layer(layer, &id, [r.x, r.y, r.w, r.h]);
         }
         // The keyboard focus on the eye (inside the box's end) or the link.

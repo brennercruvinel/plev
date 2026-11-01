@@ -414,19 +414,17 @@ fn popover_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
 /// own (its glass, hint shadow and caption) as it was.
 #[test]
 fn tooltip_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
-    let core = Theme::hoff_core().overlay.tooltip;
+    let theme = Theme::hoff_core();
+    let core = &theme.overlay.tooltip;
     assert_eq!(core.fill, crate::styling::color::Color::hex(0x121212));
     assert_eq!((core.pad_x, core.pad_y, core.radius), (6.0, 4.0, 6.0));
-    assert_eq!((core.text.font_size, core.text.line_height), (11.0, 16.0));
+    let text = theme.typography.run(core.text);
+    assert_eq!((text.font_size, text.line_height), (11.0, 16.0));
     assert_eq!(core.clearance.gap, 18.0, "mb-4.5");
     let hoff = Theme::hoff();
     let t = &hoff.overlay.tooltip;
     assert_eq!(t.fill, hoff.glass.tooltip);
-    assert_eq!(
-        t.text,
-        hoff.typography
-            .run(crate::styling::theme::TypeRole::Caption.regular())
-    );
+    assert_eq!(t.text, crate::styling::theme::TypeRole::Caption.regular());
     assert_eq!(t.radius, hoff.shape.tooltip);
 }
 
@@ -565,7 +563,7 @@ fn sheet_answers_by_its_buttons_and_cancels_on_the_scrim() {
     let t = &theme.overlay.sheet;
     let (cx, cy) = (
         p.right() - t.pad_y - 8.0,
-        p.y + t.pad_y + t.title.line_height / 2.0,
+        p.y + t.pad_y + theme.typography.run(t.title).line_height / 2.0,
     );
     s.handle_event(&down(cx, cy), &theme, bounds);
     let (a, _) = s.handle_event(&up(cx, cy), &theme, bounds);
@@ -586,7 +584,7 @@ fn drawer_picks_a_link_and_closes_on_the_scrim() {
         + t.head_pad * 2.0
         + t.head_h
         + t.group_pad * 2.0
-        + t.group_label.line_height
+        + theme.typography.run(t.group_label).line_height
         + t.item_gap
         + 10.0;
     let x = p.x + t.body_pad + 40.0;
@@ -649,7 +647,8 @@ fn sheet_and_drawer_project_their_dialog() {
 #[test]
 fn edge_panel_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
     use crate::styling::color::Color;
-    let core = Theme::hoff_core().overlay;
+    let theme = Theme::hoff_core();
+    let core = &theme.overlay;
     assert_eq!(
         (core.drawer.panel.extent, core.drawer.panel.radius),
         (260.0, 0.0)
@@ -661,7 +660,10 @@ fn edge_panel_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
         (384.0, 24.0)
     );
     assert_eq!(
-        (core.sheet.title.font_size, core.sheet.row_min_h),
+        (
+            theme.typography.run(core.sheet.title).font_size,
+            core.sheet.row_min_h
+        ),
         (18.0, 56.0)
     );
     let hoff = Theme::hoff();
