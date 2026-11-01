@@ -565,9 +565,13 @@ fn a_label_wraps_to_its_width_and_fades_when_disabled() {
     let line = theme.typography.run(theme.form.label.text).line_height;
     let (w, h) = long.size(Some(120.0), &theme);
     assert!(w <= 120.0 && h > line, "wrapped: {w}x{h}");
+    // the run, a word wider than the line broken inside (task-104p)
     assert_eq!(
         long.style(&theme),
-        theme.typography.run(theme.form.label.text)
+        theme
+            .typography
+            .run(theme.form.label.text)
+            .with_overflow_wrap(crate::drawing::text::OverflowWrap::Anywhere)
     );
     let nodes = nodes_of(|c| long.render(c, Rect::new(0.0, 0.0, 120.0, h), &theme));
     let [(_, _, width)] = texts(&nodes).try_into().expect("one text");
@@ -598,7 +602,11 @@ fn a_caption_is_the_strong_body_of_every_theme() {
         // In the theme's own face: Inter under the core, not the engine's
         // default sans.
         let head = theme.typography.role(TypeRole::BodyStrong);
-        assert_eq!(Label::new("A").caption().style(&theme), head);
+        let anywhere = crate::drawing::text::OverflowWrap::Anywhere;
+        assert_eq!(
+            Label::new("A").caption().style(&theme),
+            head.clone().with_overflow_wrap(anywhere)
+        );
         assert_eq!(head.font_family.as_deref(), theme.typography.family);
         assert_eq!(theme.form.label.caption_color, theme.glass.text_placeholder);
     }

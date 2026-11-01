@@ -311,13 +311,6 @@ const KNOWN: &[(&str, &str, &str)] = &[
         "view[",
         "O: the view controller's back and forward",
     ),
-    // front L's pages
-    (
-        "Modals",
-        "",
-        "L: share rows, reply field, delete confirm, title",
-    ),
-    ("Menus", "", "L: menu rows of fixed width and height"),
     // at twice the size or in a longer language, another front's
     ("Typography", "wide in", "F: the specimen's sample line"),
     // an exception: code does not wrap, the editor scrolls sideways as
