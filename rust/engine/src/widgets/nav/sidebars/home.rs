@@ -506,8 +506,15 @@ impl HomeSidebar {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let t = &theme.navigation.sidebars;
         shell(c, bounds, false, theme);
+        self.render_parts(c, bounds, theme);
+    }
+
+    /// Everything but its own surface (the fill and the rim): the parts
+    /// on a surface the owner painted, a drawer's edge panel
+    /// (`overlay::sheet::paint_panel`).
+    pub fn render_parts(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let t = &theme.navigation.sidebars;
         // bound before its parts: a hit on one of them is the part's
         if let Some(id) = &self.sem {
             c.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
