@@ -97,23 +97,38 @@ pub fn stage_page(
     }
     view.resize(viewport.width, viewport.height, viewport.scale);
 
-    let mut compositor = Compositor::new();
-    let (mut steps, mut settled) = (0, false);
-    while steps < SETTLE_STEPS && !settled {
-        let moving = view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
-        view.render(&mut compositor);
-        steps += 1;
-        settled = !moving;
-    }
-    Ok(StagedPage {
+    let mut staged = StagedPage {
         view,
-        compositor,
-        steps,
-        settled,
-    })
+        compositor: Compositor::new(),
+        steps: 0,
+        settled: false,
+    };
+    staged.settle();
+    Ok(staged)
 }
 
 impl StagedPage {
+    /// Steps the page's fixed clock until it settles, building its scene.
+    fn settle(&mut self) {
+        let (mut steps, mut settled) = (0, false);
+        while steps < SETTLE_STEPS && !settled {
+            let moving = self.view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
+            self.view.render(&mut self.compositor);
+            steps += 1;
+            settled = !moving;
+        }
+        self.steps = steps;
+        self.settled = settled;
+    }
+
+    /// The sidebar pinned beside the page, staged again: the frame shows
+    /// it (it peeks, out of the window, by default).
+    pub fn pin_sidebar(&mut self) {
+        self.view.pin_sidebar(true);
+        self.compositor = Compositor::new();
+        self.settle();
+    }
+
     /// The page's title as the sidebar shows it.
     pub fn title(&self) -> &'static str {
         self.view.page_title()
