@@ -199,7 +199,7 @@ impl TextArea {
         let message = self.message.as_ref().map(|m| {
             let (w, h) = crate::drawing::text::TextMeasurer::measure_styled(
                 m.text(),
-                &f.message,
+                &theme.typography.run(f.message),
                 Some(bounds.w),
             );
             Rect::new(

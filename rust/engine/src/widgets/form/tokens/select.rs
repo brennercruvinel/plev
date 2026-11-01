@@ -10,10 +10,8 @@
 //! the glass popover with its edge light and floating shadow, and a dot
 //! on the selected row.
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
-use crate::styling::theme::{ControlSize, IconSize, ShadowSpec, Theme, TypographyScale};
+use crate::styling::theme::{ControlSize, IconSize, ShadowSpec, Theme, TypeRole, TypeRun};
 
 use super::{InputRecipe, InputSurface};
 
@@ -44,7 +42,7 @@ pub struct SelectPanel {
     pub row_radius: f32,
     /// The text's inset from the panel's edge.
     pub text_inset: f32,
-    pub text: TextStyle,
+    pub text: TypeRun,
     /// An option at rest, and highlighted or selected.
     pub text_color: Color,
     pub active_color: Color,
@@ -94,7 +92,7 @@ pub struct SelectRecipe {
     /// The small control's height and text (`h-8 text-[0.75rem]`), the
     /// inline one's too.
     pub small_height: f32,
-    pub small_text: TextStyle,
+    pub small_text: TypeRun,
     /// The text's inset from the start, and the chevron's from the end.
     pub pad_start: f32,
     pub pad_end: f32,
@@ -104,7 +102,7 @@ pub struct SelectRecipe {
     pub radius: f32,
     pub inline_radius: f32,
     pub border_width: f32,
-    pub text: TextStyle,
+    pub text: TypeRun,
     pub value_color: Color,
     /// The value after a label (`text-[#7B7B7B]/50`), the label's own.
     pub labelled_color: Color,
@@ -157,11 +155,10 @@ impl SelectRecipe {
     /// The kit as written (`components/Select/index.tsx:54`, the button;
     /// `:90`, the options; `:99`, an option).
     pub fn hoff_core() -> Self {
-        let ramp = TypographyScale::hoff_core();
         let hex = Color::hex;
         let (edge, lit) = (hex(0xECECEC), hex(0xE2E2E2));
-        let text = ramp.exact(13.0, 16.0, 500);
-        let small_text = ramp.exact(12.0, 16.0, 500);
+        let text = TypeRole::BodyLg.medium();
+        let small_text = TypeRole::Label.run();
         // :54 `border border-[#ececec] bg-[#F1F1F1]`; `data-[hover]:
         // border-[#E2E2E2] data-[hover]:bg-[#F8F7F7]`; `data-[open]:
         // border-[#e2e2e2] data-[open]:bg-transparent`; `focus:bg-[#FCFCFC]`.
@@ -220,7 +217,7 @@ impl SelectRecipe {
             row_h: 32.0,
             row_radius: 8.0,
             text_inset: 4.0 + 8.0,
-            text: text.clone(),
+            text,
             text_color: hex(0x7B7B7B),
             active_color: hex(0x000000),
             selected_fill: hex(0xF1F1F1),
@@ -275,7 +272,7 @@ impl SelectRecipe {
         let c = &theme.colors;
         let edge = theme.control.edge_width_strong;
         let option_h = theme.control.height(ControlSize::Md);
-        let text = theme.typography.run(TypeRole::Body.medium());
+        let text = TypeRole::Body.medium();
         let pad_x = theme.spacing.lg;
         let filled = SelectSurfaces {
             rest: surface(g.field, g.edge_soft),
@@ -302,14 +299,14 @@ impl SelectRecipe {
             height: option_h,
             width: theme.size.menu_w,
             small_height: theme.control.height(ControlSize::Sm),
-            small_text: theme.typography.run(TypeRole::Caption.regular()),
+            small_text: TypeRole::Caption.regular(),
             pad_start: pad_x,
             pad_end: pad_x,
             gap: theme.spacing.xs,
             radius: theme.shape.tabs,
             inline_radius: theme.shape.nav,
             border_width: edge,
-            text: text.clone(),
+            text,
             value_color: g.text_active,
             labelled_color: g.text_placeholder,
             label_color: g.text_active,
@@ -354,7 +351,7 @@ impl SelectRecipe {
             pad_x: self.pad_start,
             radius: self.radius,
             border_width: self.border_width,
-            text: self.text.clone(),
+            text: self.text,
             text_color: self.value_color,
             placeholder: self.placeholder,
             disabled_alpha: self.disabled_alpha,

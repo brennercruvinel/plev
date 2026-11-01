@@ -22,6 +22,7 @@ use crate::styling::theme::ButtonRecipe;
 use crate::styling::theme::ButtonSurface;
 use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::scales::ShadowSpec;
+use crate::styling::theme::{TypeRole, TypeRun};
 use crate::widgets::buttons::tokens::ButtonTokens;
 
 pub use super::folders::FoldersTokens;
@@ -59,9 +60,8 @@ pub struct SegmentedTokens {
 pub struct SegmentMetrics {
     /// A segment's height, inside the well's padding.
     pub height: f32,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    /// The label's run.
+    pub text: TypeRun,
 }
 
 /// The kit's toolbar shell (`components/Toolbar/index.tsx:72-73`): a
@@ -140,9 +140,8 @@ pub struct ChipTokens {
     pub pad_y: f32,
     pub radius: f32,
     pub edge: f32,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    /// The label's run.
+    pub text: TypeRun,
 }
 
 /// The checkbox. The kit has none: its box is the switch's well, off
@@ -188,9 +187,7 @@ pub struct RadioTokens {
     /// The label (`text-[0.75rem] leading-[1rem] font-medium
     /// text-[#000]`).
     pub label: Color,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text: TypeRun,
     pub disabled_alpha: f32,
 }
 
@@ -210,14 +207,10 @@ pub struct CalendarTokens {
     /// Between cells and rows (`gap-1`).
     pub gap: f32,
     /// The month title (the medium button's 14/20 semibold).
-    pub title_size: f32,
-    pub title_line: f32,
-    pub title_weight: u16,
+    pub title: TypeRun,
     /// The weekday initials (the small segment's 12px, medium, in the
     /// kit's secondary text `#7B7B7B`).
-    pub weekday_size: f32,
-    pub weekday_line: f32,
-    pub weekday_weight: u16,
+    pub weekday_text: TypeRun,
     pub weekday: Color,
     /// Today's ring and its width. The outline button's ring
     /// (`#E2E2E2`) is 1.3:1 on paper, too faint to mark a day; the kit's
@@ -228,9 +221,7 @@ pub struct CalendarTokens {
     /// the page's text and background turned over.
     pub chosen: ButtonRecipe,
     /// A day's number (the segment's 13px, medium).
-    pub day_size: f32,
-    pub day_line: f32,
-    pub day_weight: u16,
+    pub day: TypeRun,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -292,15 +283,11 @@ pub(super) fn segment_sizes() -> [SegmentMetrics; 2] {
     [
         SegmentMetrics {
             height: 32.0,
-            font_size: 13.0,
-            line_height: 19.5,
-            font_weight: 600,
+            text: TypeRole::BodyLg.strong(),
         },
         SegmentMetrics {
             height: 28.0,
-            font_size: 12.0,
-            line_height: 18.0,
-            font_weight: 600,
+            text: TypeRole::BodyStrong.run(),
         },
     ]
 }
@@ -468,9 +455,7 @@ impl SelectionTokens {
             pad_y: 4.0,
             radius: 12.0,
             edge: 1.0,
-            font_size: 11.0,
-            line_height: 16.0,
-            font_weight: 500,
+            text: TypeRole::Caption.run(),
         };
         let edge = legible_at(
             MARK_CONTRAST,
@@ -515,9 +500,7 @@ impl SelectionTokens {
             row_radius: 10.0,
             row_hover,
             label: hex(0x000000),
-            font_size: 12.0,
-            line_height: 16.0,
-            font_weight: 500,
+            text: TypeRole::Label.run(),
             disabled_alpha: 0.30,
         };
         let calendar = CalendarTokens {
@@ -525,21 +508,15 @@ impl SelectionTokens {
             cell_max: 40.0,
             cell_radius: 10.0,
             gap: 4.0,
-            title_size: 14.0,
-            title_line: 20.0,
-            title_weight: 600,
-            weekday_size: 12.0,
-            weekday_line: 16.0,
-            weekday_weight: 500,
+            title: TypeRole::Heading.strong(),
+            weekday_text: TypeRole::Label.run(),
             // the kit's secondary #7B7B7B reads 4.1:1 on its paper; shade 7
             // passes AAA, as front C's quiet text (message/tokens.rs)
             weekday: legible(hex(0x7B7B7B), SHADES[6], SHADES[0], SHADES[0]),
             today: legible_at(MARK_CONTRAST, SHADES[5], SHADES[8], SHADES[0], SHADES[0]),
             today_w: 1.0,
             chosen: ButtonTokens::hoff_core().secondary,
-            day_size: 13.0,
-            day_line: 16.0,
-            day_weight: 500,
+            day: TypeRole::BodyLg.medium(),
         };
         let folders = FoldersTokens::hoff_core();
         Self {

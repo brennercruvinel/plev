@@ -352,6 +352,7 @@ impl Command {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         // the layer its owner aims at (`Compositor::on_layer`)
         let layer = c.target();
         let l = self.layout(bounds, theme);
@@ -380,9 +381,14 @@ impl Command {
             let row = window.row(k);
             match rows[k] {
                 CommandRow::Heading(g) => {
-                    let y = row.y + TextMeasurer::vertical_center(&caption.caption, row.h);
+                    let y =
+                        row.y + TextMeasurer::vertical_center(&scale.run(caption.caption), row.h);
                     c.push(SceneNode::Text {
-                        key: TextNodeKey::from_style(&self.groups[g], &caption.caption, None),
+                        key: TextNodeKey::from_style(
+                            &self.groups[g],
+                            &scale.run(caption.caption),
+                            None,
+                        ),
                         x: row.x + p.text_inset,
                         y,
                         color: caption.caption_color.0,
@@ -404,7 +410,7 @@ impl Command {
         color: crate::styling::color::Color,
         theme: &Theme,
     ) {
-        let style = &theme.form.select.panel.text;
+        let style = &theme.typography.run(theme.form.select.panel.text);
         let shown = TextMeasurer::truncate_to_width(text, style, (row.w - inset * 2.0).max(0.0));
         c.push(SceneNode::Text {
             key: TextNodeKey::from_style(&shown, style, None),

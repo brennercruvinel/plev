@@ -512,10 +512,7 @@ mod tests {
                             assert!(d.x >= b.x - 0.5 && d.right() <= b.right() + 0.5, "{w}");
                             assert!(d.bottom() <= b.bottom() + 0.5, "{w}");
                         }
-                        let style =
-                            theme
-                                .typography
-                                .exact(t.title_size, t.title_line, t.title_weight);
+                        let style = theme.typography.run(t.title);
                         for m in 1..=12 {
                             let title = Calendar::new(2026, m).title();
                             let (tw, _) = engine::drawing::text::TextMeasurer::measure_styled(

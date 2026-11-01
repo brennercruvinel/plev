@@ -3,10 +3,8 @@
 //! turns into a bare box with a confirm. The box is a text field drawn
 //! with nothing around its text ([`super::Look::Bare`]).
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
-use crate::styling::theme::{IconSize, Theme, TypographyScale};
+use crate::styling::theme::{IconSize, Theme, TypeRole, TypeRun};
 
 use super::{InputRecipe, InputSurface};
 
@@ -14,7 +12,7 @@ use super::{InputRecipe, InputSurface};
 #[derive(Clone, Debug, PartialEq)]
 pub struct EditTokens {
     /// The value and the box's text (`text-[0.75rem] font-medium`).
-    pub text: TextStyle,
+    pub text: TypeRun,
     pub color: Color,
     /// Between the value or the box and its icon (`gap-2`).
     pub gap: f32,
@@ -37,10 +35,9 @@ impl EditTokens {
     /// The kit as written (NewField :41, the input; :56, the value; :48
     /// and :63, the icons).
     pub fn hoff_core() -> Self {
-        let ramp = TypographyScale::hoff_core();
         let gray = Color::hex(0x7B7B7B);
         Self {
-            text: ramp.exact(12.0, 16.0, 500),
+            text: TypeRole::Label.run(),
             color: Color::hex(0x121212),
             gap: 8.0,
             icon: 16.0,
@@ -59,9 +56,9 @@ impl EditTokens {
     /// text measures, one line tall.
     pub fn derive(theme: &Theme) -> Self {
         let c = &theme.colors;
-        let text = theme.typography.run(TypeRole::Caption.strong());
+        let text = TypeRole::Caption.strong();
         Self {
-            box_h: text.line_height,
+            box_h: theme.typography.run(text).line_height,
             text,
             color: c.text,
             gap: theme.spacing.sm,
@@ -89,7 +86,7 @@ impl EditTokens {
             height: self.box_h,
             pad_x: 0.0,
             border_width: 0.0,
-            text: self.text.clone(),
+            text: self.text,
             text_color: self.color,
             ..field.clone()
         }

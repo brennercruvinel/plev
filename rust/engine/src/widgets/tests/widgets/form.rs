@@ -255,7 +255,7 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         assert_eq!(input.rest.border, glass.edge_soft);
         assert_eq!(input.pad_x, theme.spacing.md);
         assert_eq!(input.radius, theme.shape.nav);
-        assert_eq!(input.text, theme.typography.role(TypeRole::BodyLg));
+        assert_eq!(input.text, TypeRole::BodyLg.run());
         assert_eq!(
             TextField::height(&theme),
             theme.control.height(crate::styling::theme::ControlSize::Md)
@@ -562,10 +562,13 @@ fn a_label_wraps_to_its_width_and_fades_when_disabled() {
     use crate::widgets::form::label::Label;
     let theme = Theme::hoff_core();
     let long = Label::new("A label far longer than the room it is given to stand in");
-    let line = theme.form.label.text.line_height;
+    let line = theme.typography.run(theme.form.label.text).line_height;
     let (w, h) = long.size(Some(120.0), &theme);
     assert!(w <= 120.0 && h > line, "wrapped: {w}x{h}");
-    assert_eq!(long.style(&theme), theme.form.label.text);
+    assert_eq!(
+        long.style(&theme),
+        theme.typography.run(theme.form.label.text)
+    );
     let nodes = nodes_of(|c| long.render(c, Rect::new(0.0, 0.0, 120.0, h), &theme));
     let [(_, _, width)] = texts(&nodes).try_into().expect("one text");
     assert_eq!(width, Some(120.0));
@@ -658,7 +661,7 @@ fn search_group() -> crate::widgets::form::input_group::InputGroup {
 #[test]
 fn a_search_keeps_its_text_between_its_addons() {
     let theme = Theme::hoff_core();
-    let style = theme.form.search.text.clone();
+    let style = theme.typography.run(theme.form.search.text);
     for w in (120..=600).step_by(8).map(|w| w as f32) {
         let mut g = search_group().with_text(&LONG.repeat(3));
         g.input.focus();
@@ -876,7 +879,7 @@ fn a_code_keeps_its_cells_inside_its_width_from_narrow_to_wide() {
             if w >= natural {
                 assert_eq!(l.cells[0].h, TextField::height(&theme));
             }
-            let line = theme.form.input.text.line_height;
+            let line = theme.typography.run(theme.form.input.text).line_height;
             assert!(l.cells[0].h >= line, "{w}: a cell shorter than its digit");
         }
     }
@@ -950,7 +953,7 @@ fn a_text_area_is_the_kits_box_and_grows_to_its_most_lines() {
         full.layout(Rect::new(0.0, 0.0, w, 0.0), &theme).input.h,
         80.0
     );
-    let lh = theme.form.input.text.line_height;
+    let lh = theme.typography.run(theme.form.input.text).line_height;
     let grown = |n: usize| {
         let text = vec!["line"; n].join("\n");
         area()
@@ -1065,7 +1068,7 @@ fn a_press_places_the_caret_and_the_area_projects_multiline() {
     let bounds = Rect::new(0.0, 0.0, 300.0, 0.0);
     let mut a = area().label("Notes").with_text("ab\ncd\nef");
     let l = a.layout(bounds, &theme);
-    let lh = theme.form.input.text.line_height;
+    let lh = theme.typography.run(theme.form.input.text).line_height;
     let (x, y) = (l.text.x + 200.0, l.text.y + lh * 1.5);
     assert!(
         a.handle_event(&WidgetEvent::MouseDown { x, y }, bounds, &theme)
@@ -1594,7 +1597,7 @@ fn a_color_picker_shows_its_whole_opacity_from_200_to_400() {
         Theme::dark(),
         Theme::light(),
     ] {
-        let style = &theme.form.bare.text;
+        let style = &theme.typography.run(theme.form.bare.text);
         let measure = |t: &str| TextMeasurer::measure_styled(t, style, None).0;
         let number = measure("100") + theme.control.focus_ring_width;
         let p = picker();

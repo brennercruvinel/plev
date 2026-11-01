@@ -122,11 +122,12 @@ impl Select {
 
     /// The text of the control and its options in `theme`.
     pub(super) fn text_style(&self, theme: &Theme) -> TextStyle {
+        let scale = &theme.typography;
         let r = &theme.form.select;
         if self.is_small() {
-            r.small_text.clone()
+            scale.run(r.small_text)
         } else {
-            r.text.clone()
+            scale.run(r.text)
         }
     }
 
