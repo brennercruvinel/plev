@@ -16,6 +16,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::content::{AvatarSize, Skeleton, SkeletonShape};
+use engine::widgets::hit::hit_rect;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::{After, Component, child_id, root_id, showcase, under};
@@ -192,7 +193,7 @@ impl SkeletonPage {
                 .layout(content, theme)
                 .iter()
                 .flat_map(|(_, rects)| rects)
-                .any(|r| r.contains(x, y))
+                .any(|r| hit_rect(*r, theme).contains(x, y))
         {
             self.breathing = !self.breathing;
             return EventResult::changed();
@@ -221,7 +222,10 @@ impl SkeletonPage {
             for ((card, rect), r) in group.cards.iter().zip(&placed.cards).zip(rects) {
                 showcase::card(c, *rect, card.title, theme);
                 if let Some(id) = &card.sem {
-                    c.bind(id, [r.x, r.y, r.w, r.h]);
+                    // a line's skeleton is shorter than a target: where a
+                    // press lands grows around it (WCAG 2.5.8)
+                    let h = hit_rect(*r, theme);
+                    c.bind(id, [h.x, h.y, h.w, h.h]);
                 }
                 card.skeleton.render(c, *r, theme);
             }

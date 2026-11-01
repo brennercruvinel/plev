@@ -28,6 +28,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::form::text_input::view::LineFit;
 use crate::widgets::form::tokens::Look;
 use crate::widgets::form::{EditKey, TextField};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
@@ -185,7 +186,7 @@ impl ComposeLine {
             return EventResult::IGNORED;
         }
         match *event {
-            WidgetEvent::MouseDown { x, y } if bounds.contains(x, y) => {
+            WidgetEvent::MouseDown { x, y } if hit_rect(bounds, theme).contains(x, y) => {
                 let style = Self::style(look, theme);
                 let fit = self.fit(&style, bounds.w, theme);
                 self.field.focus();
@@ -223,7 +224,10 @@ impl ComposeLine {
         theme: &Theme,
     ) {
         if let Some(id) = self.field.sem_id() {
-            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            // a line shorter than a target presses in the least target
+            // around it (WCAG 2.5.8)
+            let r = hit_rect(bounds, theme);
+            c.bind_to_layer(layer, id, [r.x, r.y, r.w, r.h]);
         }
         let marks = theme.form.recipe(Look::Bare);
         let fade = |color: Color| with_alpha(color, color.0[3] * look.alpha);
