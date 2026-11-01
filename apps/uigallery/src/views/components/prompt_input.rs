@@ -17,7 +17,7 @@
 //! prompt, `…card[<c>].prompt`, with its parts as the widget declares
 //! them (`.text`, `.add`, `.files[<i>]`, `.setting`, `.model[<i>]`,
 //! `.voice`, `.submit`, `.premade[<i>]`, `.surprise`,
-//! `.categories[<i>]`), or the model menu, `…card[<c>].models[<i>]`.
+//! `.categories[<i>]`, `.view`), or the model menu, `…card[<c>].models[<i>]`.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
@@ -85,10 +85,10 @@ impl PromptInputPage {
                         "Collapsed, Premade Prompt",
                         PromptInput::new().collapsed(true).premade(true),
                     ),
-                    // TODO(task-104 front G): the kit's ViewController over
-                    // the box (`PromptInput isViewController`), once front G
-                    // lands it; until then the box alone.
-                    prompt("Prompt box with Toolbar", PromptInput::new()),
+                    prompt(
+                        "Prompt box with Toolbar",
+                        PromptInput::new().view_controller(true),
+                    ),
                 ],
             },
             Group {

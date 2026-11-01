@@ -21,6 +21,8 @@ pub enum Part {
     Prompt(usize),
     Surprise,
     Category(usize),
+    /// The view controller's arrows: back (`false`) and forward.
+    Orbit(bool),
 }
 
 impl PromptInput {
@@ -55,6 +57,10 @@ impl PromptInput {
             Part::Prompt(i) => self.premade_id(i),
             Part::Surprise => self.child("surprise"),
             Part::Category(i) => self.indexed("categories", i),
+            Part::Orbit(forward) => {
+                let view = self.child("view")?;
+                view.child(if forward { "forward" } else { "back" }).ok()
+            }
         }
     }
 
@@ -79,6 +85,8 @@ impl PromptInput {
             ("premade", Some(i)) => Part::Prompt(i),
             ("surprise", None) => Part::Surprise,
             ("categories", Some(i)) => Part::Category(i),
+            ("view.back", None) => Part::Orbit(false),
+            ("view.forward", None) => Part::Orbit(true),
             _ => return None,
         })
     }
@@ -104,6 +112,9 @@ impl PromptInput {
         let premade = self.premade.as_ref();
         if let Some(i) = premade.and_then(|p| p.focused) {
             return Some(Part::Prompt(i));
+        }
+        if let Some(forward) = self.view_focus {
+            return Some(Part::Orbit(forward));
         }
         let pressed = [
             (self.add.is_focused(), Part::Add),
@@ -145,6 +156,10 @@ impl PromptInput {
         self.voice_button.set_focused(is(Part::Voice));
         self.submit.set_focused(is(Part::Submit));
         self.submit_focused = is(Part::Submit);
+        self.view_focus = match part {
+            Some(Part::Orbit(forward)) if self.view.is_some() => Some(forward),
+            _ => None,
+        };
         if let Some(p) = &mut self.premade {
             p.focused = match part {
                 Some(Part::Prompt(i)) if i < p.prompts.len() => Some(i),
@@ -198,6 +213,8 @@ impl PromptInput {
             (Part::Surprise, "activate", _) => !self.voice && self.surprise(),
             // a category presses, as in the kit
             (Part::Category(_), "activate", _) => !self.voice,
+            // the arrows press, as the kit's
+            (Part::Orbit(_), "activate", _) => self.view.is_some(),
             _ => false,
         };
         if done {
@@ -295,6 +312,9 @@ impl PromptInput {
                     }
                 }
             }
+        }
+        if let (Some(v), Some(vid)) = (&self.view, self.child("view")) {
+            v.project(b, &vid, "View", Some(id));
         }
         let mut node = b.node(id, Role::Group, label);
         if let Some(parent) = parent {

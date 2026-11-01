@@ -50,6 +50,10 @@ impl PromptInput {
             self.toggle_voice();
         }
         result = result.merge(r);
+        // the view controller's arrows press, as the kit's
+        if let (Some(v), Some(at)) = (&mut self.view, l.view) {
+            result = result.merge(v.handle_event(event, at, theme));
+        }
         let r = self.submit.handle_event(event, l.submit);
         if r.clicked {
             self.submit();
