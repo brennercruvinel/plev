@@ -366,7 +366,24 @@ const KNOWN: &[(&str, &str, &str)] = &[
     ("Textarea", "wide in", "A: the placeholder is not wrapped"),
     ("Separator", "cut across", "the separator page's columns"),
     ("Slider", "cut across", "E: the value beside the slider"),
+    // a low window (`low`): a menu taller than the room under and over
+    // its trigger needs a panel that scrolls, or one that flips
+    (
+        "Dropdown Menu",
+        "out of the window",
+        "B: the menu does not scroll",
+    ),
+    (
+        "Menubar",
+        "out of the window",
+        "B: the menu does not scroll",
+    ),
     // apps that fill the window
+    (
+        "Builder",
+        "cut across",
+        "the builder's status line does not wrap",
+    ),
     ("Editor", "", "the code editor scrolls sideways"),
     ("Surface", "todo", "the todo panel's rows"),
     ("Capture", "", "the capture's note does not wrap"),
