@@ -1,5 +1,6 @@
 use std::ops::Range;
 
+use crate::control::input::reveal::{Cover, Span};
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
@@ -267,23 +268,16 @@ impl VirtualList {
         range.start.min(self.item_count)..range.end.min(self.item_count)
     }
 
-    /// Scrolls the least that brings row `index` wholly into view.
+    /// Scrolls the least that brings row `index` wholly into view
+    /// (`reveal::nearest`, in the rows' own space: a viewport shorter
+    /// than a row shows the row's start).
     fn reveal(&mut self, index: usize) {
         if self.viewport.h <= 0.0 {
             return;
         }
-        let top = index as f32 * self.item_height;
-        let bottom = top + self.item_height;
-        let now = self.scroll.offset();
-        let to = if top < now {
-            top
-        } else if bottom > now + self.viewport.h {
-            bottom - self.viewport.h
-        } else {
-            return;
-        };
-        self.scroll.scroll_to(to);
-        if self.scroll.offset() != now {
+        let row = Span::new(index as f32 * self.item_height, self.item_height);
+        let view = Span::new(self.scroll.offset(), self.viewport.h);
+        if self.scroll.reveal(row, view, 0.0, Cover::default()) != 0.0 {
             self.scrollbar.notify_scroll();
         }
     }

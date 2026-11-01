@@ -329,6 +329,36 @@ fn virtual_list_visible_range_clamps_at_bottom() {
     assert!(range.start < 100);
 }
 
+/// A focused row scrolls in the least that shows it (`reveal::nearest`);
+/// in a viewport shorter than a row, the row's start shows, coming from
+/// above or below: reading starts there (task-104 front I).
+#[test]
+fn virtual_list_focus_reveals_the_row_and_its_start_in_a_short_viewport() {
+    let mut list = VirtualList::new(24.0);
+    list.set_item_count(100);
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 240.0));
+    list.set_focused(Some(20));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 20 at the bottom"
+    );
+    list.set_focused(Some(15));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 15 shows: stays"
+    );
+    list.set_focused(Some(2));
+    assert_eq!(list.scroll.offset(), 2.0 * 24.0, "row 2 at the top");
+
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 10.0));
+    list.set_focused(Some(30));
+    assert_eq!(list.scroll.offset(), 30.0 * 24.0, "from above: its start");
+    list.set_focused(Some(5));
+    assert_eq!(list.scroll.offset(), 5.0 * 24.0, "from below: its start");
+}
+
 #[test]
 fn virtual_list_renders_only_visible_rows() {
     let mut list = VirtualList::new(24.0);
