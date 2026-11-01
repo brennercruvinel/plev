@@ -1,4 +1,5 @@
-# plev
+# plev - Agents & DEVs & Designers playing in the same canvas. 
+
 
 Uma engine de compositing GPU-first em Rust. Um único código desenha o
 mesmo frame no macOS (Metal), no Linux (Vulkan), no navegador (WebGPU), no
