@@ -252,6 +252,7 @@ impl Theme {
         theme.settle_colors(super::Bar::AA);
         *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
+        theme.hold_edges(super::Bar::AA);
         theme
     }
 }

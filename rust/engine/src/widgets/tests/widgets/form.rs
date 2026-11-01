@@ -235,11 +235,7 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         (input.height, input.pad_x, input.radius, input.border_width),
         (48.0, 22.0, 12.0, 1.5)
     );
-    // the kit's #E2E2E2, deepened to the edge a person must see (1.4.11)
-    assert_eq!(
-        input.rest.border,
-        crate::styling::theme::hoff_core::control_edge()
-    );
+    assert_eq!(input.rest.border, Color::hex(0xE2E2E2));
     assert!(input.rest.shadow.is_empty(), "no shadow at rest");
     assert_eq!(input.hover.shadow, input.focus.shadow);
     let lift = input.hover.shadow[0];
@@ -260,17 +256,7 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         assert_eq!(input.rest.fill, glass.field);
         assert_eq!(input.hover.fill, glass.surface_active);
         assert_eq!(input.focus.border, glass.field_focus_border);
-        // the glass's soft edge, as strong as a control's edge must be
-        // on the card (1.4.11, `legibility`)
-        let card: &[Color] = &[theme.colors.bg, theme.colors.surface];
-        assert_eq!(
-            input.rest.border,
-            crate::styling::theme::legibility::reach(
-                glass.edge_soft,
-                crate::styling::theme::legibility::MARK_AA,
-                &[card]
-            )
-        );
+        assert_eq!(input.rest.border, glass.edge_soft);
         assert_eq!(input.pad_x, theme.spacing.md);
         assert_eq!(input.radius, theme.shape.nav);
         assert_eq!(input.text, TypeRole::BodyLg.run());

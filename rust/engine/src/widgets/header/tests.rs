@@ -232,10 +232,7 @@ fn the_header_search_is_the_pinned_search_box() {
     for s in [&header.rest, &header.hover, &header.focus] {
         assert_eq!(
             (s.fill, s.border),
-            (
-                Color::hex(0xF8F7F7),
-                crate::styling::theme::hoff_core::control_edge()
-            )
+            (Color::hex(0xF8F7F7), Color::hex(0xE2E2E2))
         );
     }
     assert_eq!(header.focus.shadow, search.focus.shadow);

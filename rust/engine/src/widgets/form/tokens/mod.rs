@@ -23,7 +23,7 @@ pub use upload::UploadTokens;
 
 use crate::styling::color::Color;
 use crate::styling::theme::hoff_core;
-use crate::styling::theme::legibility::{self, MARK_AA, TEXT_AA};
+use crate::styling::theme::legibility::{self, TEXT_AA};
 use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypeRole, TypeRun};
 
 /// One state of the input box.
@@ -317,7 +317,7 @@ impl FormTokens {
         // :66, the input: `border-[1.5px] border-[#E2E2E2] rounded-xl`, no
         // background; hover and focus add `shadow-[0px_1px_4px_-1px_
         // rgba(0,0,0,0.15)]` and keep the border.
-        let border = hoff_core::control_edge();
+        let border = hex(0xE2E2E2);
         let lifted = vec![ShadowSpec::new([0.0, 1.0], 4.0, -1.0, black(0.15))];
         let rest = InputSurface {
             fill: NONE,
@@ -545,11 +545,12 @@ impl FormTokens {
             shadow: Vec::new(),
         };
         let accent = c.accent.0;
-        // The field's edge, its placeholder and its error line on the card
-        // read as WCAG AA asks (1.4.11, 1.4.3): the glass's soft edge, its
-        // placeholder tone and the danger mark moved the least they must.
+        // The field's placeholder and its error line on the card read as
+        // WCAG AA asks (1.4.3): the glass's placeholder tone and the danger
+        // mark moved the least they must. Its edge is the glass's
+        // (`legibility::Bar::AA`).
         let card: &[Color] = &[c.bg, c.surface];
-        let edge = legibility::reach(g.edge_soft, MARK_AA, &[card]);
+        let edge = g.edge_soft;
         let placeholder =
             legibility::reach(g.text_placeholder, TEXT_AA, &[&[c.bg, c.surface, g.field]]);
         let input = InputRecipe {

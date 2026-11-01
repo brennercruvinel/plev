@@ -5,7 +5,7 @@
 //! measured shadow stacks of its depths page.
 
 use super::intent::MotionPhysics;
-use super::legibility::{self, MARK_AA, TEXT_AA};
+use super::legibility::{self, TEXT_AA};
 use super::roles::TypeRoles;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
@@ -62,14 +62,6 @@ pub fn placeholder_text() -> Color {
 /// paper. It deepens the least it must to read at 4.5:1 there.
 pub fn red_text() -> Color {
     legibility::reach(RED, TEXT_AA, &[&[SHADES[0]]])
-}
-
-/// The kit's hairline (Shade 5, #E2E2E2) where it is the edge a person
-/// must see to find a control (1.4.11), the field's border: 1.26:1 on
-/// paper. It deepens the least it must to read at 3:1 on paper and on
-/// Shade 2, the field's inset well.
-pub fn control_edge() -> Color {
-    legibility::reach(SHADES[4], MARK_AA, &[&[SHADES[0]], &[SHADES[0], SHADES[1]]])
 }
 
 /// The colors page (templates/ColorsPage/content.tsx): its two groups,
@@ -347,9 +339,10 @@ impl Theme {
             shadows: ShadowTokens::hoff_core(),
         };
         // The kit's secondary gray (#7B7B7B) as text, its placeholder ink
-        // at 40%, its green and its #E2E2E2 active border fall under WCAG
-        // AA on its paper: each moves the least it must (`legibility`).
+        // at 40% and its green fall under WCAG AA on its paper: each moves
+        // the least it must (`legibility`); the edges keep the kit's.
         theme.settle_colors(super::Bar::AA);
+        theme.hold_edges(super::Bar::AA);
         // The sidebar keeps its look of before until it moves to the kit
         // (task-104 front G, step 4); that look reads the finished theme.
         theme.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(&theme);

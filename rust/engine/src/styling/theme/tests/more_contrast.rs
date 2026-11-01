@@ -13,9 +13,13 @@ fn more() -> Prefs {
 }
 
 /// The root tokens `legibility::settle` holds: the palette's and the
-/// glass's text, the intents, the accent, the active border.
+/// glass's text, the intents, the accent.
+/// The active border is an edge, held at 3:1 (`Bar::MORE.edge`).
 fn is_palette(fg: &str) -> bool {
-    fg.starts_with("colors.") || (fg.starts_with("glass.text_") && !fg.contains("gradient"))
+    let edge = fg == "colors.border_active";
+    !edge
+        && (fg.starts_with("colors.")
+            || (fg.starts_with("glass.text_") && !fg.contains("gradient")))
 }
 
 #[test]

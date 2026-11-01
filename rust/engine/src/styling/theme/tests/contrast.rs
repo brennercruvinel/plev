@@ -1085,16 +1085,34 @@ pub(super) fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     out
 }
 
-/// The pairs that may fail, each with the reason WCAG grants it: none
-/// today. task-104 front M moved every color under its bar the least it
+/// The pairs that may fail, each with the reason WCAG grants it.
+/// task-104 front M moved every other color under its bar the least it
 /// must (`theme::legibility`), on the four themes' palettes and on the
 /// kit's tokens the fronts copy (116 pairs failed before it: core 46,
 /// hoff 19, dark 13, light 38). What WCAG leaves out is not measured: a
 /// disabled control's text (1.4.3) and decoration. A pair listed here
-/// must be one of those, with its reason beside it; the test fails when
-/// a listed pair starts passing and when a pair that passed starts
-/// failing.
-const KNOWN: &[(&str, &str, &str, f64)] = &[];
+/// must say why; the test fails when a listed pair starts passing and
+/// when a pair that passed starts failing.
+const KNOWN: &[(&str, &str, &str, f64)] = &[
+    // The active border and the field's border keep the theme's (the
+    // kit's #E2E2E2 in the core): the border is not the only thing that
+    // identifies the field (its label and its place do), so WCAG 1.4.11
+    // does not apply; Contrast::More holds them at 3:1. A decision
+    // pending with Brenner (task-104 option B): `Bar::AA.edge` set to
+    // `Some(MARK_AA)` takes them off this list (option A).
+    ("core", "colors.border_active", "colors.bg", 1.3),
+    ("core", "colors.border_active", "colors.surface", 1.3),
+    ("core", "form.input.rest.border", "colors.surface", 1.3),
+    ("hoff", "colors.border_active", "colors.bg", 2.2),
+    ("hoff", "colors.border_active", "colors.surface", 2.3),
+    ("hoff", "form.input.rest.border", "colors.surface", 1.6),
+    ("dark", "colors.border_active", "colors.bg", 2.2),
+    ("dark", "colors.border_active", "colors.surface", 2.0),
+    ("dark", "form.input.rest.border", "colors.surface", 1.7),
+    ("light", "colors.border_active", "colors.bg", 2.7),
+    ("light", "colors.border_active", "colors.surface", 2.8),
+    ("light", "form.input.rest.border", "colors.surface", 1.1),
+];
 
 #[test]
 fn the_ratio_is_wcags() {

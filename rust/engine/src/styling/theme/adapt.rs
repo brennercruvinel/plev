@@ -9,8 +9,10 @@
 //!
 //! task-104 front M brings the contrast: [`Contrast::More`] holds the
 //! palette's text at AAA (7:1) and its marks at 4.5:1 on every surface
-//! (`legibility::settle`), makes the glass opaque, and widens the focus
-//! ring and the control's edge. Every slot the base derived from its
+//! (`legibility::settle`), makes the glass opaque, holds the active
+//! border and the fields' edges at 3:1 (`Theme::hold_edges`; the
+//! standard themes keep the kit's, task-104 option B), and widens the
+//! focus ring and the control's edge. Every slot the base derived from its
 //! palette derives again from the adapted one; a slot a theme copies from
 //! its kit (the core's) keeps its own until its front adds an adapt step.
 
@@ -252,5 +254,7 @@ impl Theme {
         if *link == NavigationTokens::sidebar_link_of_before(base) {
             self.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(self);
         }
+        // the fields' edges at 3:1, the kit's included
+        self.hold_edges(Bar::MORE);
     }
 }

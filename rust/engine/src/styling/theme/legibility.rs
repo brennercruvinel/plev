@@ -21,24 +21,35 @@ pub const MARK_AA: f32 = 3.0;
 /// WCAG 2.2 AAA for text (1.4.6).
 pub const TEXT_AAA: f32 = 7.0;
 
-/// The bars a theme's colors keep: text, and marks (a control's edge, an
-/// intent, a ring, an icon, large text).
+/// The bars a theme's colors keep: text, marks (an intent, a ring, an
+/// icon, large text), and the edges of controls (the active border, the
+/// field's border), `None` where the theme keeps its own.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Bar {
     pub text: f32,
     pub mark: f32,
+    pub edge: Option<f32>,
 }
 
 impl Bar {
     /// The themes' own bar, WCAG AA.
+    ///
+    /// The edges keep the theme's: the field's border is not the only
+    /// thing that tells a person the field is there (its label and its
+    /// place do), so WCAG 1.4.11 does not ask 3:1 of it, and more contrast
+    /// strengthens it. A decision pending with Brenner (task-104, option
+    /// B): `Some(MARK_AA)` here holds them at 3:1 in every theme (A).
     pub const AA: Self = Self {
         text: TEXT_AA,
         mark: MARK_AA,
+        edge: None,
     };
     /// More contrast: AAA for text, AA's text bar for the marks.
+    /// The edges at 3:1.
     pub const MORE: Self = Self {
         text: TEXT_AAA,
         mark: TEXT_AA,
+        edge: Some(MARK_AA),
     };
 }
 
@@ -172,8 +183,9 @@ pub fn fill_under(fill: Color, text: Color, need: f32, page: Color, washes: &[Co
 /// The theme's root colors held to `bar`: every text token on every
 /// surface text sits on (the page, the card, the panel, the hover and the
 /// popover), and on the same surfaces the intents, the accent (the focus
-/// ring), the active border and the headline's gradient, which may sit on
-/// any of them. A token that reads is left as it is.
+/// ring) and the headline's gradient, which may sit on any of them, and
+/// the active border where `bar` holds the edges. A token that reads is
+/// left as it is.
 pub fn settle(colors: &mut ColorTokens, glass: &mut GlassTokens, bar: Bar) {
     let bg = colors.bg;
     let surfaces: [&[Color]; 5] = [
@@ -201,10 +213,12 @@ pub fn settle(colors: &mut ColorTokens, glass: &mut GlassTokens, bar: Bar) {
         &mut colors.danger,
         &mut colors.warning,
         &mut colors.info,
-        &mut colors.border_active,
         top,
         foot,
     ] {
         *mark = reach(*mark, bar.mark, &surfaces);
+    }
+    if let Some(edge) = bar.edge {
+        colors.border_active = reach(colors.border_active, edge, &surfaces);
     }
 }
