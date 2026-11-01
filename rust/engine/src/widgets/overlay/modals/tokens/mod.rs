@@ -7,9 +7,11 @@
 //!
 //! [`ModalsTokens::hoff_core`] is the kit as its tailwind classes write
 //! it. Every other theme derives its recipes from the theme already built
-//! ([`ModalsTokens::derive`]): the kit's geometry and type sizes over the
-//! theme's own floating surface, its text, its dividers and its radii,
-//! as the confirmation modal does (`ModalTokens::derive`).
+//! ([`ModalsTokens::derive`]): the kit's geometry over the theme's own
+//! floating surface, its text, its dividers and its radii, as the
+//! confirmation modal does (`ModalTokens::derive`). Every text keeps its
+//! role ([`TypeRun`](crate::styling::theme::TypeRun)), the same in every
+//! theme, and each theme's scale resolves it.
 //!
 //! On core the kit's secondary gray (#7B7B7B, and its 70 and 80 percent)
 //! is 4.13:1 on the sheet, under AA; it takes shade 7 (#323232), which
@@ -28,10 +30,9 @@ pub use share::{
     VariationsTokens,
 };
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::{Elevation, Theme, TypographyScale};
+use crate::styling::theme::{Elevation, Theme};
 
 pub(super) fn hex(v: u32) -> Color {
     Color::hex(v)
@@ -55,12 +56,6 @@ pub(super) fn shadow_2xl() -> Vec<ShadowSpec> {
         -12.0,
         rgba(0, 0, 0, 0.25),
     )]
-}
-
-/// A text style of `kit`'s size, line height and weight in `type_`'s
-/// family: how a theme keeps the kit's type sizes in its own face.
-pub(super) fn restyle(kit: &TextStyle, type_: &TypographyScale) -> TextStyle {
-    type_.exact(kit.font_size, kit.line_height, kit.font_weight)
 }
 
 /// The shades every modal of the kit draws with.
@@ -237,16 +232,15 @@ pub struct ModalsTokens {
 impl ModalsTokens {
     /// The kit, values as written in the tailwind classes.
     pub fn hoff_core() -> Self {
-        let type_ = TypographyScale::hoff_core();
         Self {
             ink: ModalInk::hoff_core(),
             pictures: PictureTokens::hoff_core(),
-            variations: VariationsTokens::hoff_core(&type_),
-            share_post: SharePostTokens::hoff_core(&type_),
-            share_profile: ShareProfileTokens::hoff_core(&type_),
-            share_file: ShareFileTokens::hoff_core(&type_),
-            export: ExportTokens::hoff_core(&type_),
-            settings: SettingsTokens::hoff_core(&type_),
+            variations: VariationsTokens::hoff_core(),
+            share_post: SharePostTokens::hoff_core(),
+            share_profile: ShareProfileTokens::hoff_core(),
+            share_file: ShareFileTokens::hoff_core(),
+            export: ExportTokens::hoff_core(),
+            settings: SettingsTokens::hoff_core(),
         }
     }
 

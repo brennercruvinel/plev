@@ -2,12 +2,11 @@
 //! `SharePost`, `ShareProfile` and `ShareFile` as their tailwind classes
 //! write them.
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::{Theme, TypographyScale};
+use crate::styling::theme::{Theme, TypeRole, TypeRun};
 use crate::widgets::selection::tokens::{MARK_CONTRAST, legible_at};
 
-use super::{PanelTokens, hex, restyle, rgba};
+use super::{PanelTokens, hex, rgba};
 
 /// The social links and the copy button a shared post and a shared
 /// profile end in (`flex gap-2`, each link `size-10 border
@@ -52,8 +51,8 @@ pub struct VariationsTokens {
     pub pad: f32,
     pub pad_top: f32,
     pub head_gap: f32,
-    pub title: TextStyle,
-    pub count: TextStyle,
+    pub title: TypeRun,
+    pub count: TypeRun,
     pub count_gap: f32,
     pub close: f32,
     pub close_icon: f32,
@@ -68,7 +67,7 @@ pub struct VariationsTokens {
 }
 
 impl VariationsTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
+    pub(super) fn hoff_core() -> Self {
         let mut panel = PanelTokens::kit(208.0, 20.0, false);
         panel.fill = rgba(0xFC, 0xFC, 0xFC, 0.95);
         Self {
@@ -76,8 +75,8 @@ impl VariationsTokens {
             pad: 16.0,
             pad_top: 12.0,
             head_gap: 12.0,
-            title: type_.exact(12.0, 16.0, 600),
-            count: type_.exact(12.0, 18.0, 400),
+            title: TypeRole::BodyStrong.run(),
+            count: TypeRole::Body.run(),
             count_gap: 8.0,
             close: 24.0,
             close_icon: 16.0,
@@ -92,11 +91,8 @@ impl VariationsTokens {
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
         Self {
             panel: self.panel.derive(theme, theme.shape.card),
-            title: restyle(&self.title, t),
-            count: restyle(&self.count, t),
             close_radius: theme.shape.micro,
             tile_radius: theme.shape.item,
             ring: theme.colors.text_mid,
@@ -119,49 +115,45 @@ pub struct SharePostTokens {
     pub picture_pad: f32,
     pub picture_radius: f32,
     pub body_pad: f32,
-    pub title: TextStyle,
+    pub title: TypeRun,
     pub title_gap: f32,
     pub meta_gap: f32,
     pub meta_bottom: f32,
     pub avatar: f32,
     pub author_gap: f32,
-    pub author: TextStyle,
+    pub author: TypeRun,
     pub clock: f32,
     pub date_gap: f32,
-    pub date: TextStyle,
+    pub date: TypeRun,
     pub social: SocialTokens,
 }
 
 impl SharePostTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
+    pub(super) fn hoff_core() -> Self {
         Self {
             panel: PanelTokens::kit(396.0, 32.0, false),
             pad: 8.0,
             picture_pad: 20.0,
             picture_radius: 24.0,
             body_pad: 16.0,
-            title: type_.exact(18.0, 27.0, 400),
+            title: TypeRole::TitleLg.run(),
             title_gap: 12.0,
             meta_gap: 20.0,
             meta_bottom: 24.0,
             avatar: 20.0,
             author_gap: 8.0,
-            author: type_.exact(12.0, 16.0, 600),
+            author: TypeRole::BodyStrong.run(),
             clock: 16.0,
             date_gap: 6.0,
-            date: type_.exact(12.0, 16.0, 500),
+            date: TypeRole::Label.run(),
             social: SocialTokens::hoff_core(),
         }
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
         Self {
             panel: self.panel.derive(theme, theme.shape.pill),
             picture_radius: theme.shape.dropdown,
-            title: restyle(&self.title, t),
-            author: restyle(&self.author, t),
-            date: restyle(&self.date, t),
             social: self.social.derive(theme),
             ..self.clone()
         }
@@ -188,8 +180,8 @@ pub struct ShareProfileTokens {
     pub avatar: f32,
     pub avatar_ring: f32,
     pub avatar_bottom: f32,
-    pub name: TextStyle,
-    pub count: TextStyle,
+    pub name: TypeRun,
+    pub count: TypeRun,
     pub count_gap: f32,
     pub text_bottom: f32,
     pub actions_pad: f32,
@@ -197,7 +189,7 @@ pub struct ShareProfileTokens {
 }
 
 impl ShareProfileTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
+    pub(super) fn hoff_core() -> Self {
         Self {
             panel: PanelTokens::kit(420.0, 32.0, false),
             pad: 8.0,
@@ -208,8 +200,8 @@ impl ShareProfileTokens {
             avatar: 80.0,
             avatar_ring: 4.0,
             avatar_bottom: 12.0,
-            name: type_.exact(20.0, 28.0, 500),
-            count: type_.exact(13.0, 16.0, 600),
+            name: TypeRole::H6.run(),
+            count: TypeRole::BodyLg.strong(),
             count_gap: 4.0,
             text_bottom: 8.0,
             actions_pad: 16.0,
@@ -218,13 +210,10 @@ impl ShareProfileTokens {
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
         Self {
             panel: self.panel.derive(theme, theme.shape.pill),
             cover_outer: theme.shape.dropdown,
             cover_inner: theme.shape.tooltip,
-            name: restyle(&self.name, t),
-            count: restyle(&self.count, t),
             social: self.social.derive(theme),
             ..self.clone()
         }
@@ -243,8 +232,8 @@ pub struct AccessTokens {
     pub box_size: f32,
     pub box_radius: f32,
     pub icon: f32,
-    pub title: TextStyle,
-    pub line: TextStyle,
+    pub title: TypeRun,
+    pub line: TypeRun,
 }
 
 /// A person with access (`ShareFile/Person`: `flex gap-3 px-4 py-2.5`,
@@ -282,23 +271,23 @@ pub struct ShareFileTokens {
     pub pad: f32,
     pub invite_gap: f32,
     pub section_pad_y: f32,
-    pub label: TextStyle,
+    pub label: TypeRun,
     pub label_pad_y: f32,
     pub access: AccessTokens,
     pub person: PersonTokens,
     pub foot_gap: f32,
-    pub link: TextStyle,
+    pub link: TypeRun,
     pub copy_icon: f32,
 }
 
 impl ShareFileTokens {
-    pub(super) fn hoff_core(type_: &TypographyScale) -> Self {
+    pub(super) fn hoff_core() -> Self {
         Self {
             panel: PanelTokens::kit(420.0, 32.0, true),
             pad: 16.0,
             invite_gap: 6.0,
             section_pad_y: 10.0,
-            label: type_.exact(11.0, 16.0, 500),
+            label: TypeRole::Caption.run(),
             label_pad_y: 8.0,
             access: AccessTokens {
                 row_pad_y: 10.0,
@@ -306,8 +295,8 @@ impl ShareFileTokens {
                 box_size: 32.0,
                 box_radius: 8.0,
                 icon: 16.0,
-                title: type_.exact(12.0, 16.0, 500),
-                line: type_.exact(11.0, 16.0, 400),
+                title: TypeRole::Label.run(),
+                line: TypeRole::Caption.regular(),
             },
             person: PersonTokens {
                 pad_y: 10.0,
@@ -323,22 +312,18 @@ impl ShareFileTokens {
                 remove_ink: hex(0xFCFCFC),
             },
             foot_gap: 8.0,
-            link: type_.exact(13.0, 16.0, 400),
+            link: TypeRole::BodyLg.run(),
             copy_icon: 20.0,
         }
     }
 
     pub(super) fn derive(&self, theme: &Theme) -> Self {
-        let t = &theme.typography;
         let c = &theme.colors;
         let a = &self.access;
         Self {
             panel: self.panel.derive(theme, theme.shape.pill),
-            label: restyle(&self.label, t),
             access: AccessTokens {
                 box_radius: theme.shape.tooltip,
-                title: restyle(&a.title, t),
-                line: restyle(&a.line, t),
                 ..a.clone()
             },
             // The owner's mark and the remove's glyph in the theme's own
@@ -350,7 +335,6 @@ impl ShareFileTokens {
                 remove_ink: legible_at(MARK_CONTRAST, c.surface, c.text, c.danger, c.bg),
                 ..self.person.clone()
             },
-            link: restyle(&self.link, t),
             ..self.clone()
         }
     }

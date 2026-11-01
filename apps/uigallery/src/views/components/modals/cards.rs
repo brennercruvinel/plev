@@ -134,8 +134,8 @@ impl ModalBody for Pending {
     }
 
     fn size(&self, w: f32, theme: &Theme) -> (f32, f32) {
-        let style = &modals::tokens(theme).share_post.title;
-        (w, style.line_height)
+        let title = modals::tokens(theme).share_post.title;
+        (w, theme.typography.run(title).line_height)
     }
 
     fn handle_event(&mut self, _event: &WidgetEvent, _rect: Rect, _theme: &Theme) -> EventResult {
@@ -144,7 +144,7 @@ impl ModalBody for Pending {
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
         let t = modals::tokens(theme);
-        let style = &t.share_post.date;
+        let style = &theme.typography.run(t.share_post.date);
         let y = modals::middle(style, rect.y, rect.h);
         let line = self.line();
         modals::text_centered(

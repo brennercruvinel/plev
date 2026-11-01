@@ -139,8 +139,9 @@ impl Tooltip {
     /// The bubble's size: the text measured against the widest it gets,
     /// the key beside it, and the padding.
     pub fn size(&self, theme: &Theme) -> (f32, f32) {
+        let scale = &theme.typography;
         let t = &theme.overlay.tooltip;
-        let (tw, th) = TextMeasurer::measure_styled(&self.text, &t.text, Some(t.max_w));
+        let (tw, th) = TextMeasurer::measure_styled(&self.text, &scale.run(t.text), Some(t.max_w));
         let [top, end, bottom, start] = self.pad(theme);
         let (kw, kh) = match self.key {
             Some(_) => (t.key.gap + t.key.size, t.key.size),
@@ -148,7 +149,7 @@ impl Tooltip {
         };
         (
             start + tw + kw + end,
-            th.max(t.text.line_height).max(kh) + top + bottom,
+            th.max(scale.run(t.text).line_height).max(kh) + top + bottom,
         )
     }
 
@@ -203,6 +204,7 @@ impl Tooltip {
         theme: &Theme,
         rect: Rect,
     ) {
+        let scale = &theme.typography;
         let t = &theme.overlay.tooltip;
         let radius = t.radius.min(rect.h / 2.0);
         for spec in &t.shadow {
@@ -216,13 +218,13 @@ impl Tooltip {
         );
         let [top, end, bottom, start] = self.pad(theme);
         let inner_h = rect.h - top - bottom;
-        let (_, th) = TextMeasurer::measure_styled(&self.text, &t.text, Some(t.max_w));
+        let (_, th) = TextMeasurer::measure_styled(&self.text, &scale.run(t.text), Some(t.max_w));
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.text, &t.text, Some(t.max_w)),
+                key: TextNodeKey::from_style(&self.text, &scale.run(t.text), Some(t.max_w)),
                 x: rect.x + start,
-                y: rect.y + top + (inner_h - th.max(t.text.line_height)) / 2.0,
+                y: rect.y + top + (inner_h - th.max(scale.run(t.text).line_height)) / 2.0,
                 color: t.text_color.0,
             },
         );
@@ -242,13 +244,13 @@ impl Tooltip {
                 rounded_rect_stroke(kx, ky, k.size, k.size, k.radius, k.border.0, k.border_w),
             );
         }
-        let (kw, _) = TextMeasurer::measure_styled(key, &t.text, None);
+        let (kw, _) = TextMeasurer::measure_styled(key, &scale.run(t.text), None);
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(key, &t.text, None),
+                key: TextNodeKey::from_style(key, &scale.run(t.text), None),
                 x: kx + (k.size - kw) / 2.0,
-                y: ky + (k.size - t.text.line_height) / 2.0,
+                y: ky + (k.size - scale.run(t.text).line_height) / 2.0,
                 color: t.text_color.0,
             },
         );

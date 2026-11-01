@@ -23,6 +23,7 @@ fn the_core_roles_are_the_kit_typography_page() {
         (TypeRole::H4, 28.0, 36.0, 400),
         (TypeRole::H5, 24.0, 32.0, 500),
         (TypeRole::H6, 20.0, 28.0, 500),
+        (TypeRole::TitleLg, 18.0, 28.0, 400),
         (TypeRole::Title, 15.0, 24.0, 500),
         (TypeRole::Heading, 14.0, 20.0, 500),
         (TypeRole::BodyLg, 13.0, 16.0, 400),
@@ -89,7 +90,8 @@ fn every_theme_has_every_role_on_the_grid() {
         for pair in ladder.windows(2) {
             assert!(size(pair[0]) >= size(pair[1]), "{name} {pair:?}");
         }
-        assert!(size(TypeRole::H6) >= size(TypeRole::Title), "{name}");
+        assert!(size(TypeRole::H6) >= size(TypeRole::TitleLg), "{name}");
+        assert!(size(TypeRole::TitleLg) >= size(TypeRole::Title), "{name}");
         assert!(size(TypeRole::Body) >= size(TypeRole::Caption), "{name}");
         assert!(size(TypeRole::Caption) >= size(TypeRole::Small), "{name}");
     }

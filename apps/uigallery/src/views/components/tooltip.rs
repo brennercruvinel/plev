@@ -282,7 +282,11 @@ mod tests {
         assert_eq!(h, k.size + k.pad[0] + k.pad[2], "p-0.5 around size-5");
         let (_, plain) = page.shown[0].size(&theme);
         let t = &theme.overlay.tooltip;
-        assert_eq!(plain, t.text.line_height + t.pad_y * 2.0, "py-1 around 16");
+        assert_eq!(
+            plain,
+            theme.typography.run(t.text).line_height + t.pad_y * 2.0,
+            "py-1 around 16"
+        );
     }
 
     /// The keyboard's focus shows the tooltip at once; Escape hides it.

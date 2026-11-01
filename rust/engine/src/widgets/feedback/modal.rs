@@ -26,13 +26,13 @@ use crate::widgets::recipe::{
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Title, the same for measuring and rendering.
-fn title_style(theme: &Theme) -> &TextStyle {
-    &theme.overlay.modal.title
+fn title_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(theme.overlay.modal.title)
 }
 
 /// Body, the same for measuring and rendering.
-fn body_style(theme: &Theme) -> &TextStyle {
-    &theme.overlay.modal.body
+fn body_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(theme.overlay.modal.body)
 }
 
 /// What a sheet looks like: its fill, its edge, its corners, its drop
@@ -290,14 +290,14 @@ impl Modal {
     }
 
     fn body_height(&self, theme: &Theme, width: f32) -> f32 {
-        Self::text_height(&self.body, body_style(theme), theme, width)
+        Self::text_height(&self.body, &body_style(theme), theme, width)
     }
 
     /// The title's height: its centered lines, or one line at the start.
     fn title_height(&self, theme: &Theme, width: f32) -> f32 {
         let style = title_style(theme);
         if theme.overlay.modal.centered {
-            return Self::text_height(&self.title, style, theme, width);
+            return Self::text_height(&self.title, &style, theme, width);
         }
         style.line_height
     }
@@ -499,7 +499,7 @@ impl Modal {
             );
         }
 
-        let (title, body) = (title_style(theme), body_style(theme));
+        let (title, body) = (&title_style(theme), &body_style(theme));
         let text_w = dialog.w - m.pad * 2.0;
         let top = dialog.y + self.top_pad(theme);
         let body_y = top + self.title_height(theme, dialog.w) + m.title_gap;
@@ -547,7 +547,8 @@ mod tests {
 
     #[test]
     fn wrap_packs_words_into_the_width_and_keeps_a_hard_break() {
-        let style = &Theme::hoff_core().overlay.modal.body;
+        let theme = Theme::hoff_core();
+        let style = &body_style(&theme);
         let lines = wrap(LONG, style, 200.0);
         assert!(lines.len() > 1, "it wraps");
         for (line, w) in &lines {
@@ -576,7 +577,7 @@ mod tests {
         c.begin_frame();
         long.render_in(&mut c, LayerId::DEFAULT, &theme, dialog);
         let m = &theme.overlay.modal;
-        let lines = wrap(LONG, &m.body, dialog.w - m.pad * 2.0);
+        let lines = wrap(LONG, &body_style(&theme), dialog.w - m.pad * 2.0);
         let xs: Vec<f32> = c
             .layer(LayerId::DEFAULT)
             .map(|l| l.nodes().to_vec())
