@@ -23,7 +23,7 @@ use engine::widgets::header::Logo;
 use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
 use engine::widgets::overlay::sheet::paint_scrim;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
-use engine::widgets::shell::Route;
+use engine::widgets::shell::{Route, SafeArea};
 use engine::widgets::wake::Wake;
 
 use super::ShowcaseView;
@@ -245,6 +245,26 @@ impl ShowcaseView {
         }
     }
 
+    /// The last input was a finger (`true`) or a pointer, as the platform
+    /// tells it: a finger has no hover to peek with, so the sidebar is a
+    /// drawer behind the menu button. `true` when that changed.
+    pub fn set_touch(&mut self, on: bool) -> bool {
+        let w = self.shell.dock_window().w;
+        let theme = &self.theme;
+        let Some(dock) = self.shell.dock.as_mut() else {
+            return false;
+        };
+        let before = dock.mode(theme, w);
+        dock.set_touch(on, theme, w);
+        dock.mode(theme, w) != before
+    }
+
+    /// The window's safe area (a notch, a home bar, rounded corners), in
+    /// logical pixels: the chrome, the dock and the page stand inside it.
+    pub fn set_safe_area(&mut self, safe_area: SafeArea) {
+        self.shell.set_safe_area(safe_area);
+    }
+
     /// The strip of the panel at `panel` the logo and the pin sit in.
     pub(super) fn panel_head(&self, panel: Rect) -> Rect {
         HomeSidebar::head_rect(panel, &self.theme)
@@ -334,7 +354,20 @@ impl ShowcaseView {
     pub(super) fn escape_sidebar(&mut self) -> bool {
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
-        let escaped = self.shell.dock.as_mut().is_some_and(|d| d.escape(theme, w));
+        let dock = self.shell.dock.as_mut();
+        let drawer = dock.as_ref().is_some_and(|d| d.is_drawer_open());
+        let menu = dock.as_ref().and_then(|d| d.menu_id());
+        let escaped = dock.is_some_and(|d| d.escape(theme, w));
+        // the drawer shut on the keyboard: its focus back to the menu
+        // button that opened it
+        if drawer
+            && escaped
+            && self.sidebar_focus.is_some()
+            && let Some(menu) = menu
+            && self.focus_sidebar(&menu)
+        {
+            return true;
+        }
         self.blur_sidebar() || escaped
     }
 
@@ -382,6 +415,62 @@ mod tests {
             assert_eq!(page_at(row, at), Some(i), "{}", page.title);
         }
         assert_eq!(page_at(Group::ALL.len(), 0), None);
+    }
+
+    /// A finger turns the sidebar into a drawer behind the menu button
+    /// at any width; a pointer that moves turns it back.
+    #[test]
+    fn a_finger_turns_the_sidebar_into_a_drawer_and_a_pointer_back() {
+        let mut view = ShowcaseView::new(1280.0, 800.0);
+        let mode = |v: &ShowcaseView| v.shell.layout(&v.theme).dock.map(|d| d.mode);
+        assert_eq!(mode(&view), Some(DockMode::Peek));
+        assert!(view.set_touch(true));
+        assert_eq!(mode(&view), Some(DockMode::Drawer));
+        assert!(view.shell.layout(&view.theme).menu_button.is_some());
+        assert!(!view.set_touch(true), "nothing changes twice");
+        assert!(view.set_touch(false));
+        assert_eq!(mode(&view), Some(DockMode::Peek));
+    }
+
+    /// The drawer on the keyboard: Enter on the menu button opens it with
+    /// the focus on its close, Tab stays in the panel (the trap), and
+    /// Escape shuts it with the focus back on the menu button.
+    #[test]
+    fn the_open_drawer_traps_the_focus_and_gives_it_back() {
+        let mut view = ShowcaseView::new(360.0, 740.0);
+        let open = |v: &ShowcaseView| v.shell.dock.as_ref().is_some_and(|d| d.is_drawer_open());
+        let d = view.shell.dock.as_ref().expect("docked");
+        let (menu, close) = (d.menu_id().unwrap(), d.close_id().unwrap());
+        assert!(view.focus_sidebar(&menu));
+        assert!(view.handle_enter());
+        assert!(open(&view));
+        assert_eq!(view.sidebar_focus(), Some(&close));
+        for _ in 0..40 {
+            view.handle_edit_key(super::super::EditKey::Tab);
+            let at = view.sidebar_focus().cloned().expect("the focus stays in");
+            assert!(view.is_sidebar(&at) && at != menu, "{at}");
+        }
+        assert!(view.close_top_overlay(), "Escape");
+        assert!(!open(&view));
+        assert_eq!(view.sidebar_focus(), Some(&menu));
+    }
+
+    /// The window's safe area holds the pinned panel and the page off
+    /// the notch's side.
+    #[test]
+    fn the_sidebar_and_the_page_stand_inside_the_safe_area() {
+        let mut view = ShowcaseView::new(1280.0, 800.0);
+        view.pin_sidebar(true);
+        let inset = view.theme.spacing.xl;
+        view.set_safe_area(SafeArea {
+            left: inset,
+            ..SafeArea::default()
+        });
+        let l = view.shell.layout(&view.theme);
+        let dock = l.dock.expect("docked");
+        assert_eq!(dock.mode, DockMode::Pinned);
+        assert_eq!(dock.rest.x, inset);
+        assert!(l.header.x >= dock.rest.right());
     }
 
     #[test]

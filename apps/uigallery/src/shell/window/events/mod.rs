@@ -137,6 +137,12 @@ impl App {
                 let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
                 let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
                 self.set_cursor(id, (x, y));
+                // a pointer that moves (winit tells a finger apart, as a
+                // `Touch`): the sidebar peeks again where it fits
+                let main = Some(id) == self.main;
+                if main && self.view.set_touch(false) {
+                    self.invalidate_in(id);
+                }
                 if self.pointer(id, &WidgetEvent::MouseMove { x, y }) {
                     self.invalidate_in(id);
                 }
