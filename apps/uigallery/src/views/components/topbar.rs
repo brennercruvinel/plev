@@ -148,7 +148,7 @@ impl TopbarPage {
     fn bar(card: Rect, header: &Header, theme: &Theme) -> Rect {
         let h = header.height(theme);
         let spare = (card.w - header.preferred_width(theme)) / 2.0;
-        let pad_x = spare.clamp(theme.spacing.md, showcase::pad(theme));
+        let pad_x = spare.clamp(theme.spacing.md, showcase::pad(card.w, theme));
         Rect::new(
             card.x + pad_x,
             card.y + (card.h - h) / 2.0,
@@ -385,7 +385,7 @@ mod tests {
             .zip(&page.layout(content, &theme)[0].cards)
         {
             let bar = TopbarPage::bar(*rect, &card.header, &theme);
-            assert_eq!(bar.w, rect.w - showcase::pad(&theme) * 2.0);
+            assert_eq!(bar.w, rect.w - showcase::pad(rect.w, &theme) * 2.0);
             assert!((bar.y + bar.h / 2.0 - (rect.y + rect.h / 2.0)).abs() < 0.01);
             assert!(card.header.sem_id().is_some(), "{}", card.title);
         }
