@@ -27,6 +27,7 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
+        wake = wake.merge(Wake::moving(self.reveal_tick(dt)));
         wake = wake.merge(self.sidebar_wake(dt));
         // the palette's caret (`palette.rs`)
         if let Some(ActiveOverlay::Palette { widget, .. }) = &mut self.active_overlay {
@@ -171,6 +172,13 @@ impl ShowcaseView {
 
         self.toasts
             .render(c, layers.toast, &theme, self.width, self.height);
+
+        // A focus that moved out of the page's window brings the page to
+        // it (`reveal.rs`); a jump (reduced motion) is drawn at once, and
+        // the frame drawn again finds the focus already shown.
+        if self.reveal_focus(c) {
+            self.render(c);
+        }
     }
 
     /// The note an alias page shows above the shared example: which

@@ -33,6 +33,7 @@ use dispatcher::keyboard::Walk;
 
 use winit::keyboard::{Key, ModifiersState};
 
+use engine::control::input::reveal::{FocusReveal, Glide};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
 use engine::styling::theme::Theme;
@@ -135,6 +136,11 @@ pub struct ShowcaseView {
     /// A page offset requested before the first layout (launch argument
     /// for snapshots); applied once the content height is known.
     pending_scroll: Option<f32>,
+    /// Focus into view (WCAG 2.4.11, `compositor/reveal.rs`): the focus
+    /// the page showed last, and the glide that brings a new one into
+    /// the page's window.
+    reveal: FocusReveal,
+    glide: Glide,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -199,6 +205,8 @@ impl ShowcaseView {
             page: 0,
             page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
+            reveal: FocusReveal::new(),
+            glide: Glide::default(),
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
@@ -285,6 +293,10 @@ impl ShowcaseView {
     /// link, header title and blurb).
     fn set_page(&mut self, index: usize) {
         let index = index.min(PAGES.len() - 1);
+        if index != self.page {
+            self.reveal.reset();
+            self.glide.stop();
+        }
         self.page = index;
         let page = &PAGES[index];
         self.nav.set_current(index);

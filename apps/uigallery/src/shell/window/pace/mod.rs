@@ -28,7 +28,7 @@ impl App {
         // The real time since the last tick: a deadline the loop
         // slept through arrives whole (`dt` is clamped for motion).
         let since_last = self.clock.tick().since_last;
-        let wake = self.frame_wake(since_last);
+        let mut wake = self.frame_wake(since_last);
         let page_wake = self.view.detached_wake();
         log::debug!(
             "frame: {:.3} s since the last tick, wake now {} next {:?}, page {:?}",
@@ -46,6 +46,9 @@ impl App {
             // Build the scene (includes compositor.begin_frame()), then
             // the shared frame tail.
             self.view.render(host.compositor_mut());
+            // the frame found a focus out of view and started the glide
+            // to it: the next frames carry it (`views/compositor/reveal.rs`)
+            wake = wake.merge(Wake::moving(self.view.revealing()));
             // a literal edited in place, over the frame (`source`)
             #[cfg(all(
                 debug_assertions,
