@@ -1550,7 +1550,7 @@ fn a_color_picker_takes_a_press_in_the_part_pressed() {
 
 /// The parts sit in the box in order, swatch, hex, divider, opacity and
 /// its `%`, from a narrow box to a wide one in every theme; the kit's
-/// box is 38 tall with a 28 swatch, its opacity part 64 wide.
+/// box is 38 tall with a 28 swatch, its opacity part at least 64 wide.
 #[test]
 fn a_color_picker_lays_its_parts_in_the_box() {
     for theme in [
@@ -1579,7 +1579,40 @@ fn a_color_picker_lays_its_parts_in_the_box() {
     }
     let core = Theme::hoff_core();
     let l = picker().layout(Rect::new(0.0, 0.0, 218.0, 0.0), &core);
-    assert_eq!((l.whole.h, l.swatch.w, l.alpha_part.w), (38.0, 28.0, 64.0));
+    assert_eq!((l.whole.h, l.swatch.w), (38.0, 28.0));
+    assert!(l.alpha_part.w >= 64.0, "the kit's w-16: {}", l.alpha_part.w);
+}
+
+/// From 200 to 400 px across (208, the Background group of the kit's
+/// Design sidebar), in every theme, the opacity shows `100 %` whole, and
+/// its number keeps room for the caret after it.
+#[test]
+fn a_color_picker_shows_its_whole_opacity_from_200_to_400() {
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        let style = &theme.form.bare.text;
+        let measure = |t: &str| TextMeasurer::measure_styled(t, style, None).0;
+        let number = measure("100") + theme.control.focus_ring_width;
+        let p = picker();
+        for w in 200u16..=400 {
+            let at = Rect::new(0.0, 0.0, f32::from(w), 0.0);
+            let drawn: Vec<String> = texts(&nodes_of(|c| p.render(c, at, &theme)))
+                .into_iter()
+                .map(|(t, ..)| t)
+                .collect();
+            assert!(
+                drawn.iter().any(|t| t == "100") && drawn.iter().any(|t| t == "%"),
+                "{w}: {drawn:?}"
+            );
+            let l = p.layout(at, &theme);
+            assert!(l.alpha.w >= number, "{w}: {} < {number}", l.alpha.w);
+            assert!(l.suffix.w >= measure("%"), "{w}: {:?}", l.suffix);
+        }
+    }
 }
 
 /// The swatch paints the color at its opacity over its base.
