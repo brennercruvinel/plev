@@ -70,9 +70,10 @@ impl OverlayTokens {
             tooltip: TooltipTokens::derive(theme),
             hover_card: HoverCardTokens::hoff_core(),
             menu: MenuTokens::derive(theme),
-            file_menu: MenuTokens::derive(theme),
-            filter_menu: MenuTokens::derive(theme),
-            upload_menu: MenuTokens::derive(theme),
+            // the theme's menu, each style's label in its kit role
+            file_menu: MenuTokens::derive(theme).labelled(MenuTokens::hoff_core_file().label),
+            filter_menu: MenuTokens::derive(theme).labelled(MenuTokens::hoff_core_filter().label),
+            upload_menu: MenuTokens::derive(theme).labelled(MenuTokens::hoff_core_upload().label),
             menubar: MenubarTokens::derive(theme),
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
@@ -312,7 +313,7 @@ impl PopoverTokens {
             ..rest.clone()
         };
         // The line as the theme's menu rows: their height, padding, radius,
-        // label, colors and icon; the slot the icon and its gap.
+        // colors and icon; the slot the icon and its gap; the kit's label.
         let m = MenuTokens::derive(theme);
         let line = PopoverLineTokens {
             height: m.item_h,
@@ -322,7 +323,6 @@ impl PopoverTokens {
             slot_gap: m.gap,
             check: m.icon,
             check_color: m.icon_color,
-            label: m.label,
             text: m.text,
             hover_fill: m.hover_fill,
             ..kit.line
@@ -433,7 +433,7 @@ impl TooltipTokens {
             radius: theme.shape.tooltip,
             pad_x: theme.spacing.md,
             pad_y: xs,
-            text: TypeRole::Caption.regular(),
+            text: TypeRole::Caption.run(),
             text_color: theme.colors.text_mid,
             clearance: Clearance {
                 gap: xs + xs / 2.0,
@@ -446,11 +446,7 @@ impl TooltipTokens {
             // under the text fails AA on dark, `theme/tests/contrast.rs`);
             // half an `xs` around it, `md` before the text, `sm` between.
             key: TooltipKeyTokens {
-                size: theme
-                    .typography
-                    .run(TypeRole::Caption.regular())
-                    .line_height
-                    + xs,
+                size: theme.typography.run(TypeRole::Caption.run()).line_height + xs,
                 radius: theme.shape.item.min(xs),
                 fill: theme.glass.tooltip,
                 border: theme.glass.edge_soft,
@@ -591,8 +587,8 @@ impl ModalTokens {
             radius: theme.shape.pill,
             max_w: theme.size.modal_max_w,
             pad: theme.spacing.xxl,
-            title: TypeRole::Title.run(),
-            body: TypeRole::Body.run(),
+            title: TypeRole::H5.run(),
+            body: TypeRole::Paragraph.run(),
             title_color: theme.colors.text,
             body_color: theme.colors.text_mid,
             title_gap: theme.spacing.sm,

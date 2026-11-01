@@ -272,7 +272,7 @@ impl SelectRecipe {
         let c = &theme.colors;
         let edge = theme.control.edge_width_strong;
         let option_h = theme.control.height(ControlSize::Md);
-        let text = TypeRole::Body.medium();
+        let text = TypeRole::BodyLg.medium();
         let pad_x = theme.spacing.lg;
         let filled = SelectSurfaces {
             rest: surface(g.field, g.edge_soft),
@@ -299,7 +299,7 @@ impl SelectRecipe {
             height: option_h,
             width: theme.size.menu_w,
             small_height: theme.control.height(ControlSize::Sm),
-            small_text: TypeRole::Caption.regular(),
+            small_text: TypeRole::Label.run(),
             pad_start: pad_x,
             pad_end: pad_x,
             gap: theme.spacing.xs,

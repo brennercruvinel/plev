@@ -166,3 +166,70 @@ fn the_numeric_role_has_tabular_figures() {
         .fold((f32::MAX, f32::MIN), |(lo, hi), w| (lo.min(*w), hi.max(*w)));
     assert!(hi - lo < 0.01, "tabular: {figures:?}");
 }
+
+/// Every `TypeRun` of a theme's recipes by its field path, read off the
+/// theme's pretty Debug: a field opens a level where it ends in `{`, `[`
+/// or `(`, and a run is the role and the weight under it.
+fn runs(theme: &Theme) -> std::collections::BTreeMap<String, Vec<String>> {
+    let text = format!("{theme:#?}");
+    let lines: Vec<&str> = text.lines().collect();
+    let mut path: Vec<(usize, String)> = Vec::new();
+    let mut out: std::collections::BTreeMap<String, Vec<String>> = Default::default();
+    for (i, line) in lines.iter().enumerate() {
+        let indent = line.len() - line.trim_start().len();
+        let item = line.trim();
+        if !(item.ends_with('{') || item.ends_with('[') || item.ends_with('(')) {
+            continue;
+        }
+        path.retain(|(at, _)| *at < indent);
+        let name = item.split(':').next().unwrap_or("").to_string();
+        let field = if item.contains(':') {
+            name
+        } else {
+            String::new()
+        };
+        path.push((indent, field.clone()));
+        if item.ends_with("TypeRun {") {
+            let role = lines[i + 1].trim();
+            let weight = lines[i + 2].trim();
+            let weight = if weight.starts_with("weight: Some(") {
+                lines[i + 3].trim()
+            } else {
+                weight
+            };
+            let at: Vec<&str> = path
+                .iter()
+                .map(|(_, f)| f.as_str())
+                .filter(|f| !f.is_empty())
+                .collect();
+            out.entry(at.join("."))
+                .or_default()
+                .push(format!("{role} {weight}"));
+        }
+    }
+    out
+}
+
+/// A text's role is its component's: every theme sets each recipe's text
+/// in the core's role (and weight), and only the role's measures are the
+/// theme's. The page head (`disclosure.page`) is the page frame's, which
+/// scales its title on its own.
+#[test]
+fn every_theme_keeps_the_core_s_roles() {
+    let core = runs(&Theme::hoff_core());
+    assert!(core.len() > 100, "the runs are read: {}", core.len());
+    for (name, theme) in themes() {
+        let other = runs(&theme);
+        assert_eq!(
+            other.keys().collect::<Vec<_>>(),
+            core.keys().collect::<Vec<_>>(),
+            "{name}"
+        );
+        for (at, roles) in &core {
+            if at.starts_with("disclosure.page") {
+                continue;
+            }
+            assert_eq!(&other[at], roles, "{name}: {at}");
+        }
+    }
+}

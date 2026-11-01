@@ -252,7 +252,7 @@ impl NavigationTokens {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         let breadcrumb = BreadcrumbRecipe {
-            text: TypeRole::Body.run(),
+            text: TypeRole::BodyStrong.run(),
             pad_x: 0.0,
             pad_y: 0.0,
             radius: theme.shape.micro,
@@ -315,7 +315,7 @@ impl NavigationTokens {
             icon: control.icon(IconSize::Md),
             icon_gap: theme.spacing.xs,
             label: TypeRole::BodyStrong.run(),
-            hint: TypeRole::Caption.regular(),
+            hint: TypeRole::Label.run(),
             hint_color: glass.text_placeholder,
             trailing_gap: theme.spacing.sm,
             trailing_room: theme.spacing.lg,

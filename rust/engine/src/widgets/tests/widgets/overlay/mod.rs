@@ -424,7 +424,7 @@ fn tooltip_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
     let hoff = Theme::hoff();
     let t = &hoff.overlay.tooltip;
     assert_eq!(t.fill, hoff.glass.tooltip);
-    assert_eq!(t.text, crate::styling::theme::TypeRole::Caption.regular());
+    assert_eq!(t.text, core.text, "the role is the component's");
     assert_eq!(t.radius, hoff.shape.tooltip);
 }
 

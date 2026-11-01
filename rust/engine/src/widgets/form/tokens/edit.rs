@@ -56,7 +56,7 @@ impl EditTokens {
     /// text measures, one line tall.
     pub fn derive(theme: &Theme) -> Self {
         let c = &theme.colors;
-        let text = TypeRole::Caption.strong();
+        let text = TypeRole::Label.run();
         Self {
             box_h: theme.typography.run(text).line_height,
             text,

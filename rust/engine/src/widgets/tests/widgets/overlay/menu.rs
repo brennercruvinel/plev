@@ -65,9 +65,11 @@ fn menu_tokens_are_the_kit_s_three_on_core_and_the_theme_s_menu_elsewhere() {
     assert_eq!(o.filter_menu.icon, 16.0, "the check's size-4");
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let o = &theme.overlay;
-        assert_eq!(o.file_menu, o.menu, "the theme's menu, for every style");
-        assert_eq!(o.filter_menu, o.menu);
-        assert_eq!(o.upload_menu, o.menu);
+        // the theme's menu for every style, each style's label its kit role
+        let menu = |label| o.menu.clone().labelled(label);
+        assert_eq!(o.file_menu, menu(MenuTokens::hoff_core_file().label));
+        assert_eq!(o.filter_menu, menu(MenuTokens::hoff_core_filter().label));
+        assert_eq!(o.upload_menu, menu(MenuTokens::hoff_core_upload().label));
         assert_eq!(o.menu, MenuTokens::derive(&theme));
     }
 }

@@ -552,7 +552,8 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         );
         assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
         let tree = theme.disclosure.tree;
-        let body = theme.typography.role(TypeRole::Body);
+        // the kit's label role, at the theme's size
+        let body = theme.typography.role(TypeRole::Label);
         let gap = theme.spacing.xs;
         assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
         assert_eq!(
@@ -573,13 +574,14 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!(Panel::pad(&theme), theme.spacing.lg);
         assert_eq!(
             Panel::label_style(&theme),
-            theme.typography.run(TypeRole::Caption.strong())
+            theme.typography.role(TypeRole::Label)
         );
         assert_eq!(theme.disclosure.panel.radius, theme.shape.card);
         assert_eq!(theme.disclosure.panel.label, g.text_faint);
         let xl = theme.control.height(ControlSize::Xl);
         let head = PanelHeader::new("Changes");
         assert_eq!(head.height(&theme), xl);
+        // unframed, the head is the page head of before (the page frame's)
         let blurb = theme.typography.role(TypeRole::Body).line_height;
         let with = PanelHeader::new("Changes").blurb("a blurb");
         assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
@@ -587,12 +589,24 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
             head.title_style(&theme),
             theme.typography.role(TypeRole::Title)
         );
-        assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
-        let page = theme.disclosure.page;
+        // framed, a panel's head in the kit's roles
         assert_eq!(
-            (page.narrow, page.wide),
-            (theme.disclosure.header, theme.disclosure.header)
+            PanelHeader::new("Changes").framed().title_style(&theme),
+            theme.typography.run(TypeRole::Heading.strong())
         );
+        // the panel's head is the page head of before in the kit's roles
+        let kit = Theme::hoff_core().disclosure.header;
+        assert_eq!(
+            theme.disclosure.header,
+            HeaderRecipe {
+                title_type: kit.title_type,
+                blurb_type: kit.blurb_type,
+                ..HeaderRecipe::page_head(&theme)
+            }
+        );
+        let page = theme.disclosure.page;
+        let head_of_before = HeaderRecipe::page_head(&theme);
+        assert_eq!((page.narrow, page.wide), (head_of_before, head_of_before));
         assert!(!page.bleed && !head.bleeds(&theme));
         assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
         let h = theme.disclosure.header;
@@ -602,7 +616,7 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
         assert_eq!(
             Table::cell_style(&theme),
-            theme.typography.role(TypeRole::Body)
+            theme.typography.role(TypeRole::Caption)
         );
         let mut c = Compositor::new();
         c.begin_frame();

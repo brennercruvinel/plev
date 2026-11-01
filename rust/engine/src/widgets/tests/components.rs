@@ -6,7 +6,6 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
 
 use crate::widgets::prelude::*;
@@ -170,9 +169,9 @@ fn stat_height_is_two_ramp_lines_plus_the_gap() {
     let (_, h) = s.preferred_size(&t);
     assert_eq!(
         h,
-        t.typography.role(TypeRole::Title).line_height
+        t.typography.run(t.navigation.stat.md.value).line_height
             + t.spacing.xs
-            + t.typography.run(TypeRole::Caption.regular()).line_height
+            + t.typography.run(t.navigation.stat.md.label).line_height
     );
     let hero = Stat::new("1.3", "GB").size(StatSize::Lg);
     assert!(hero.preferred_size(&t).1 > h);
