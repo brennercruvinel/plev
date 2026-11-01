@@ -210,11 +210,16 @@ impl DropdownMenuPage {
         for (shown, card) in self.shown.iter().zip(&layout[1].cards) {
             showcase::card(c, *card, shown.chip, theme);
             let body = showcase::body(*card, theme);
-            let (w, _) = shown.menu.size(theme);
+            // as wide as it asks, never wider than the card's body (its
+            // labels cut to it)
+            let (w, h) = shown.menu.size(theme);
+            let w = w.min(body.w);
             let x = (body.x + (body.w - w) / 2.0).max(body.x).round();
-            shown.menu.render(c, LayerId::DEFAULT, theme, x, body.y);
+            let panel = Rect::new(x, body.y, w, h);
+            shown.menu.render_in(c, LayerId::DEFAULT, theme, panel, 0.0);
         }
         let (trigger, panel) = self.live(content, viewport, theme);
+        self.dropdown.fit(panel, theme);
         self.trigger.active = self.dropdown.is_open();
         self.trigger.render(c, trigger, theme);
         if let Some(alpha) = self.dropdown.popover.shown(mgr) {

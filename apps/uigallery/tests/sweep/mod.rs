@@ -177,10 +177,13 @@ fn targets(view: &ShowcaseView, c: &Compositor) -> Vec<Target> {
         // a row is short of its whole height when cut: of the 24 px a
         // target needs, or of the line its text takes
         let tall = MIN.max(view.theme.control.height(ControlSize::Xs));
+        // or bound whole under a scroller's clip that cuts it (a row half
+        // scrolled out of a list)
+        let clipped = b.clip.is_some_and(|clip| !holds(clip, b.rect));
         out.push(Target {
             id: id.clone(),
             rect: b.rect,
-            cut: parent.is_some_and(|p| cut_by(b.rect, p.rect, tall)),
+            cut: clipped || parent.is_some_and(|p| cut_by(b.rect, p.rect, tall)),
         });
     }
     out
@@ -296,98 +299,23 @@ pub fn breaks(title: &str, width: f32, case: &Case) -> Vec<String> {
 /// its front; a new break, or one of these spreading to another page,
 /// still fails.
 const KNOWN: &[(&str, &str, &str)] = &[
-    // at every size: targets under 24 px (front C, A, B; hit_targets
-    // looks at the first 800 px only and does not reach them)
-    ("Comments", "under 24", "C: the comment fields and replies"),
+    // targets under 24 px in another front's widget (O: the view
+    // controller, in the toolbar page and in the prompt input)
     (
-        "Field",
-        "card[0]",
-        "A: the inline edit (`h-5`) and its pencil",
+        "Prompt Input",
+        "view.",
+        "O: the view controller's back and forward",
     ),
-    (
-        "Input",
-        "card[0]",
-        "A: the inline edit and the color fields",
-    ),
-    (
-        "Sidebar",
-        "color.",
-        "A: the color fields of the design sidebar",
-    ),
-    ("Prompt Input", "view.", "C: the view's back and forward"),
-    ("Toolbar", "view[", "G: the view's back and forward"),
-    ("Skeleton", "skeleton", "the skeleton is a placeholder"),
-    // front L's pages (Menus, Modals, Topbar)
-    (
-        "Modals",
-        "",
-        "L: share rows, reply field, delete confirm, title",
-    ),
-    ("Menus", "", "L: menu rows of fixed width and height"),
-    ("Topbar", "", "L: the bar at a phone's width"),
-    // at twice the size or in a longer language (the fix is the page's
-    // or the widget's: wrap, truncate, or grow with the text)
-    (
-        "Comments",
-        "wide in",
-        "C: a cut comment measured past its width",
-    ),
-    (
-        "Comments",
-        "overlaps",
-        "C: the quick tools under the send button",
-    ),
-    ("Sheet", "", "B: the sheet form's label column is fixed"),
-    ("Stat", "", "G: the stat card at a phone's width"),
     (
         "Toolbar",
-        "cut across",
-        "G: the toolbar page's own group titles",
+        "view[",
+        "O: the view controller's back and forward",
     ),
-    (
-        "Chart",
-        "cut across",
-        "G: the donut's label at a phone's width",
-    ),
-    ("Context Menu", "⌘", "B: the menu is wider than a phone"),
-    ("Dropdown Menu", "⌘", "B: the menu is wider than a phone"),
-    (
-        "Sidebar",
-        "",
-        "G: the scene and design sidebars' fixed rows",
-    ),
+    // at twice the size or in a longer language, another front's
     ("Typography", "wide in", "F: the specimen's sample line"),
-    ("Collapsible", "wide in", "D: a row's description"),
-    (
-        "Input Group",
-        "wide in 0",
-        "A: the addon leaves the text no room",
-    ),
-    ("Textarea", "wide in", "A: the placeholder is not wrapped"),
-    ("Separator", "cut across", "the separator page's columns"),
-    ("Slider", "cut across", "E: the value beside the slider"),
-    // a low window (`low`): a menu taller than the room under and over
-    // its trigger needs a panel that scrolls, or one that flips
-    (
-        "Dropdown Menu",
-        "out of the window",
-        "B: the menu does not scroll",
-    ),
-    (
-        "Menubar",
-        "out of the window",
-        "B: the menu does not scroll",
-    ),
-    // apps that fill the window
-    (
-        "Builder",
-        "cut across",
-        "the builder's status line does not wrap",
-    ),
+    // an exception: code does not wrap, the editor scrolls sideways as
+    // every code editor does (its lines cut by its own viewport)
     ("Editor", "", "the code editor scrolls sideways"),
-    ("Surface", "todo", "the todo panel's rows"),
-    ("Capture", "", "the capture's note does not wrap"),
-    ("Silences", "", "the cut list's rows"),
 ];
 
 fn known(line: &str) -> Option<&'static str> {

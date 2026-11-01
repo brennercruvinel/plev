@@ -68,8 +68,11 @@ impl Theme {
         for h in self.control.heights.iter_mut() {
             *h = g.h(*h, label);
         }
+        // an icon beside a label grows with the label's size
+        // (`@ScaledMetric(relativeTo:)`), its gap does not
         for m in self.button.sizes.iter_mut() {
             m.height = g.h(m.height, m.text);
+            m.icon = g.metric(m.icon, m.text);
         }
         let sel = &mut *self.selection;
         for m in sel.segmented.sizes.iter_mut() {
@@ -103,6 +106,7 @@ impl Theme {
             &mut overlay.upload_menu,
         ] {
             menu.item_h = g.h(menu.item_h, menu.label);
+            menu.icon = g.metric(menu.icon, menu.label);
         }
         let popover = &mut overlay.popover;
         popover.trigger.height = g.h(popover.trigger.height, popover.trigger.value);
@@ -111,10 +115,30 @@ impl Theme {
         let nav = &mut *self.navigation;
         for link in [&mut nav.link, &mut nav.sidebar_link] {
             link.height = g.h(link.height, link.label);
+            link.icon = g.metric(link.icon, link.label);
+            link.slot = link.slot.max(link.icon);
+            if let Some(tile) = &mut link.tile {
+                // the tile grows by the line, as the link holding it; its
+                // icon by the label, never past the tile's own inset
+                let inset = tile.size - tile.icon;
+                tile.size = g.h(tile.size, link.label);
+                tile.icon = g.metric(tile.icon, link.label).min(tile.size - inset);
+            }
         }
         let canvas = &mut nav.sidebars.canvas;
         canvas.row_h = g.h(canvas.row_h, canvas.label);
-        canvas.design.header_h = g.h(canvas.design.header_h, canvas.design.header);
+        let design = &mut canvas.design;
+        design.header_h = g.h(design.header_h, design.header);
+        // the design sidebar's wells hold a line of their text; the unit
+        // and the value chips hold a word of it beside a field
+        design.field_h = g.h(design.field_h, design.field_text);
+        for w in [
+            &mut design.unit_w,
+            &mut design.chip_w,
+            &mut design.chip_w_narrow,
+        ] {
+            *w = g.metric(*w, design.field_text);
+        }
         let zoom = &mut nav.tool.zoom;
         zoom.line_h = g.h(zoom.line_h, zoom.label);
 
@@ -136,5 +160,17 @@ impl Grow<'_> {
     fn h(&self, h: f32, run: TypeRun) -> f32 {
         let grew = self.now.run(run).line_height - self.base.run(run).line_height;
         if grew > 0.0 { (h + grew).ceil() } else { h }
+    }
+
+    /// `v`, a measure beside a text of `run` (an icon by its label),
+    /// grown by what the run's size grew (`TextScale::metric`), to a
+    /// whole pixel; `v` itself where the size did not grow.
+    fn metric(&self, v: f32, run: TypeRun) -> f32 {
+        let (was, now) = (self.base.run(run).font_size, self.now.run(run).font_size);
+        if now > was && was > 0.0 {
+            (v * now / was).round()
+        } else {
+            v
+        }
     }
 }

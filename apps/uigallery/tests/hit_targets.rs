@@ -1,8 +1,10 @@
 //! Every control a person can press is at least 24 px on each side
 //! (WCAG 2.2, 2.5.8 Target Size (Minimum), AA): the rect each actionable
 //! node of a page's projection binds, the one its press lands in, on
-//! every page at a desktop and at a phone width. The drawing may be
-//! smaller: `engine::widgets::hit_rect` grows the press area around it.
+//! every page at a desktop and at a phone width, the page drawn whole (a
+//! frame as tall as the page, as the text-scale sweep draws it). The
+//! drawing may be smaller: `engine::widgets::hit_rect` grows the press
+//! area around it.
 //!
 //! The shell's sidebar is front H's (its rows, its toggle) and is left
 //! out; what of it falls short is listed in `SIDEBAR`, exact, so a change
@@ -18,14 +20,24 @@ const MIN: f32 = 24.0;
 
 /// The widths the sweep looks at: the kit's desktop and a phone.
 const WIDTHS: [f32; 2] = [1280.0, 360.0];
+/// The window a page opens in before it is grown to its whole height.
+const OPEN_H: f32 = 800.0;
+/// The tallest frame drawn: past it, a page is looked at to here.
+const MAX_H: f32 = 16000.0;
 
 /// What a page binds under its actionable nodes below `MIN`, as
 /// `(page, id, w, h)`.
 fn short_targets(title: &str, width: f32) -> Vec<(String, SemId, f32, f32)> {
-    let mut view = ShowcaseView::new(width, 800.0);
+    let mut view = ShowcaseView::new(width, OPEN_H);
     view.jump_to_page(title);
     let mut c = Compositor::new();
     view.render(&mut c);
+    let tall = view.page_height().min(MAX_H);
+    if tall > OPEN_H + 0.5 {
+        view.resize(width, tall, 1.0);
+        c = Compositor::new();
+        view.render(&mut c);
+    }
     let Some(snapshot) = view.reader_semantics() else {
         return Vec::new();
     };
@@ -66,6 +78,28 @@ fn cut_by(r: [f32; 4], p: [f32; 4]) -> bool {
     (r[3] < MIN && (top || bottom)) || (r[2] < MIN && (start || end))
 }
 
+/// What falls short and is another front's, `(page, part of the id,
+/// why)`: left out of the failure and printed, as the text-scale sweep's
+/// `KNOWN`.
+const OWNED: &[(&str, &str, &str)] = &[
+    (
+        "Toolbar",
+        "view[",
+        "O: the view controller's back and forward",
+    ),
+    (
+        "Prompt Input",
+        ".view.",
+        "O: the view controller's back and forward, in the prompt",
+    ),
+];
+
+fn owned(line: &str) -> bool {
+    OWNED
+        .iter()
+        .any(|(page, part, _)| line.starts_with(&format!("{page} @")) && line.contains(part))
+}
+
 fn sidebar(id: &SemId) -> bool {
     id.as_str().starts_with("shell.sidebar")
 }
@@ -74,12 +108,15 @@ fn sidebar(id: &SemId) -> bool {
 fn every_pressable_node_is_at_least_24_px_on_each_side() {
     let mut short = Vec::new();
     let mut side = Vec::new();
+    let mut theirs = Vec::new();
     for page in PAGES {
         for width in WIDTHS {
             for (title, id, w, h) in short_targets(page.title, width) {
                 let line = format!("{title} @{width}: {id} {w:.1}x{h:.1}");
                 if sidebar(&id) {
                     side.push(line);
+                } else if owned(&line) {
+                    theirs.push(line);
                 } else {
                     short.push(line);
                 }
@@ -92,6 +129,11 @@ fn every_pressable_node_is_at_least_24_px_on_each_side() {
         "sidebar (front H), {} short:\n{}",
         side.len(),
         side.join("\n")
+    );
+    eprintln!(
+        "another front's, {} short:\n{}",
+        theirs.len(),
+        theirs.join("\n")
     );
     assert!(
         short.is_empty(),
