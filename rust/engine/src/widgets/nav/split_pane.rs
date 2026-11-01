@@ -19,6 +19,7 @@ use crate::drawing::compositor::Compositor;
 use crate::styling::theme::Theme;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
+use crate::widgets::hit::MinTarget;
 use crate::widgets::recipe::rounded_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -48,6 +49,9 @@ pub struct SplitPane {
     /// Extra hit margin on each side of the divider, so the thin line is
     /// not a precision game (`(control.divider_hit - divider) / 2`).
     pub grab_margin: f32,
+    /// The grab area across the line is never under the minimum target
+    /// (`widgets::hit`): 24, 44 with a finger.
+    min_target: MinTarget,
     hovered: bool,
     dragging: bool,
     sem: Option<SemId>,
@@ -66,6 +70,7 @@ impl SplitPane {
             min_second: theme.size.field_min_w,
             divider,
             grab_margin: ((theme.control.divider_hit - divider) / 2.0).max(0.0),
+            min_target: MinTarget::of(theme),
             hovered: false,
             dragging: false,
             sem: None,
@@ -195,22 +200,15 @@ impl SplitPane {
     }
 
     /// The grab area around the divider (hit target): the visible line
-    /// plus `grab_margin` on each side.
+    /// plus `grab_margin` on each side, and never thinner across the
+    /// line than the minimum target now (`widgets::hit`).
     pub fn grab_rect(&self, bounds: Rect) -> Rect {
         let d = self.divider_rect(bounds);
+        let across = (self.divider + self.grab_margin * 2.0).max(self.min_target.now());
+        let margin = (across - self.divider) / 2.0;
         match self.direction {
-            SplitDirection::Horizontal => Rect::new(
-                d.x - self.grab_margin,
-                d.y,
-                self.divider + self.grab_margin * 2.0,
-                d.h,
-            ),
-            SplitDirection::Vertical => Rect::new(
-                d.x,
-                d.y - self.grab_margin,
-                d.w,
-                self.divider + self.grab_margin * 2.0,
-            ),
+            SplitDirection::Horizontal => Rect::new(d.x - margin, d.y, across, d.h),
+            SplitDirection::Vertical => Rect::new(d.x, d.y - margin, d.w, across),
         }
     }
 
@@ -270,12 +268,14 @@ impl SplitPane {
             compositor.bind(id, [g.x, g.y, g.w, g.h]);
         }
         let d = self.divider_rect(bounds);
-        // Rest: the soft glass edge. Hover/drag: the active surface token,
-        // slightly widened — the HOFF way to say "grab me" without color.
+        // Rest and hover/drag tones are the theme's
+        // (`theme.disclosure.split`); hovered or dragged, the line widens
+        // by one edge to say "grab me".
+        let look = &theme.disclosure.split;
         let (color, grow) = if self.dragging || self.hovered {
-            (theme.glass.surface_active.0, 1.0)
+            (look.active.0, theme.control.edge_width)
         } else {
-            (theme.glass.edge_soft.0, 0.0)
+            (look.rest.0, 0.0)
         };
         let rect = match self.direction {
             SplitDirection::Horizontal => Rect::new(d.x - grow / 2.0, d.y, d.w + grow, d.h),

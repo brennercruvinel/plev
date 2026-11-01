@@ -1,6 +1,7 @@
 //! action widgets: button, icon button, chip.
 
 use super::*;
+use crate::styling::theme::TypeRole;
 
 // Button
 
@@ -115,6 +116,42 @@ fn submit_button_turns_dark_on_hover_and_while_active() {
         .render(&mut c, B, &t);
 }
 
+/// The kit's SubmitButton: size-10 rounded-xl, `isMedium` size-8
+/// rounded-[0.625rem], the size-4 arrow in both; the pale isPrimary
+/// surface at rest, the dark isSecondary one lit, eased to 90% over the
+/// pale when hovered while active; opacity-40 when disabled. Every
+/// theme gets the same ladder and a lit surface that is its call to
+/// action.
+#[test]
+fn submit_button_is_the_kit_s() {
+    let t = Theme::hoff_core();
+    let s = &t.button.submit;
+    let at = |size: SubmitButtonSize| {
+        let m = size.metrics(&t);
+        (m.size, m.radius, m.icon)
+    };
+    assert_eq!(at(SubmitButtonSize::Lg), (40.0, 12.0, 16.0));
+    assert_eq!(at(SubmitButtonSize::Md), (32.0, 10.0, 16.0));
+    assert_eq!(SubmitButton::new().preferred_size(&t), (40.0, 40.0));
+    assert_eq!(
+        SubmitButton::new()
+            .size(SubmitButtonSize::Md)
+            .preferred_size(&t),
+        (32.0, 32.0)
+    );
+    assert_eq!(s.rest, t.button.primary.rest);
+    assert_eq!(s.lit, t.button.secondary.rest);
+    assert_eq!(s.disabled_alpha, 0.40);
+    // 90% of #323232 over #E5E5E5 at the top stop.
+    let top = s.busy_hover.fill[0].0;
+    let want = (0.9 * 50.0 + 0.1 * 229.0) / 255.0;
+    assert!((top[0] - want).abs() < 1e-4 && top[3] == 1.0, "{top:?}");
+    for theme in [Theme::hoff(), Theme::dark()] {
+        assert_eq!(theme.button.submit.sizes, s.sizes);
+        assert_eq!(theme.button.submit.lit, theme.button.secondary.rest);
+    }
+}
+
 // IconButton
 
 #[test]
@@ -160,7 +197,7 @@ fn chip_preferred_size_uses_real_measurement() {
     assert_eq!(h, Chip::height(&hoff()));
     let (tw, _) = crate::drawing::text::TextMeasurer::measure_styled(
         "ann",
-        &crate::styling::theme::TypographyScale::hoff().caption_sm(),
+        &crate::styling::theme::TypographyScale::hoff().run(TypeRole::Caption.strong()),
         None,
     );
     assert!((w - (tw + 24.0)).abs() < 1.0, "width is text + padding");

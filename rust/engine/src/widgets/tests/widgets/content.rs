@@ -1,6 +1,7 @@
 //! content widgets: card, tree, virtual list, empty state.
 
 use super::*;
+use crate::styling::theme::TypeRole;
 
 // Card
 
@@ -329,6 +330,36 @@ fn virtual_list_visible_range_clamps_at_bottom() {
     assert!(range.start < 100);
 }
 
+/// A focused row scrolls in the least that shows it (`reveal::nearest`);
+/// in a viewport shorter than a row, the row's start shows, coming from
+/// above or below: reading starts there (task-104 front I).
+#[test]
+fn virtual_list_focus_reveals_the_row_and_its_start_in_a_short_viewport() {
+    let mut list = VirtualList::new(24.0);
+    list.set_item_count(100);
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 240.0));
+    list.set_focused(Some(20));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 20 at the bottom"
+    );
+    list.set_focused(Some(15));
+    assert_eq!(
+        list.scroll.offset(),
+        21.0 * 24.0 - 240.0,
+        "row 15 shows: stays"
+    );
+    list.set_focused(Some(2));
+    assert_eq!(list.scroll.offset(), 2.0 * 24.0, "row 2 at the top");
+
+    list.set_viewport(Rect::new(0.0, 0.0, 300.0, 10.0));
+    list.set_focused(Some(30));
+    assert_eq!(list.scroll.offset(), 30.0 * 24.0, "from above: its start");
+    list.set_focused(Some(5));
+    assert_eq!(list.scroll.offset(), 5.0 * 24.0, "from below: its start");
+}
+
 #[test]
 fn virtual_list_renders_only_visible_rows() {
     let mut list = VirtualList::new(24.0);
@@ -429,5 +460,518 @@ fn empty_state_renders_narrow_and_wide_without_gpu() {
         .icon("file")
         .cta(Button::new("Do the thing"))
         .render(&mut c, Rect::new(0.0, 0.0, w, 600.0), &theme);
+    }
+}
+
+// Collapsible and Accordion (task-104d)
+
+use accord::{Role, SemId, SnapshotBuilder};
+
+fn core() -> Theme {
+    Theme::hoff_core()
+}
+
+/// Lets a motion land: 2 s of frames.
+fn settle(c: &mut Collapsible) {
+    for _ in 0..120 {
+        c.wake(1.0 / 60.0);
+    }
+}
+
+#[test]
+fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
+    let kit = DisclosureTokens::hoff_core();
+    let mut derived = DisclosureTokens::derive(&core());
+    // Two kit values sit outside the core palette: the tile's hover
+    // border, which the derived theme puts between the line and the dim
+    // text, and the add button's white glyph, which it draws in the page
+    // tone. Every other value is the kit's.
+    let between = derived.item.tile_hover.border.0;
+    let (line, dim) = (core().colors.divider.0, core().colors.text_dim.0);
+    assert!((0..3).all(|i| between[i] < line[i] && between[i] > dim[i]));
+    assert_eq!(derived.item.add_glyph_color, core().colors.bg);
+    derived.item.tile_hover.border = kit.item.tile_hover.border;
+    derived.item.add_glyph_color = kit.item.add_glyph_color;
+    // The rows and the table derive the look before the kit, which the
+    // test below holds; only the core draws them in the kit's language.
+    assert_ne!(derived.table, kit.table);
+    assert_ne!(derived.tree, kit.tree);
+    derived.list = kit.list;
+    derived.table = kit.table;
+    derived.tree = kit.tree;
+    assert_ne!((derived.panel, derived.header), (kit.panel, kit.header));
+    derived.panel = kit.panel;
+    derived.header = kit.header;
+    // The page head: the kit's Layout title in the core, which bleeds.
+    assert!(kit.page.bleed && !derived.page.bleed);
+    derived.page = kit.page;
+    // The card's marks: the kit's ink and gray in the core only.
+    assert_ne!(derived.card, kit.card);
+    derived.card = kit.card;
+    // The catalog: the kit but its muted text, shade 7 in the core for AAA.
+    assert_ne!(derived.catalog.palette.muted, kit.catalog.palette.muted);
+    derived.catalog.palette.muted = kit.catalog.palette.muted;
+    assert_ne!(derived.split, kit.split);
+    derived.split = kit.split;
+    assert_eq!(derived, kit);
+    assert_eq!(*core().disclosure, kit);
+    // The two kit files, spot-checked: the Accordion's `px-4 py-3`, its
+    // `p-4 pt-0` body; the Dropdown's `p-0.75 pr-3 rounded-xl`; 500 ms.
+    assert_eq!(kit.accordion.pad, [12.0, 16.0, 12.0, 16.0]);
+    assert_eq!(kit.accordion.content_pad, [0.0, 16.0, 16.0, 16.0]);
+    assert_eq!(kit.collapsible.pad, [3.0, 12.0, 3.0, 3.0]);
+    assert_eq!(kit.collapsible.radius, 12.0);
+    assert_eq!(kit.motion.reveal, 0.5);
+}
+
+/// Every theme but the core draws a list's rows and a table as before the
+/// kit, token for token (the urnadbapp's lists and `screen`'s tables keep
+/// their pixels): the glass washes under a row, square, the nav radius on
+/// its ring; the tabs glass header in the nav radius, caption titles in
+/// the faint glass text, the divider under it, `md` padding, body cells.
+#[test]
+fn rows_and_tables_keep_their_look_outside_the_core() {
+    use crate::styling::theme::ControlSize;
+    use crate::widgets::content::HeaderRecipe;
+    use crate::widgets::nav::PanelHeader;
+    for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
+        let (list, table) = (theme.disclosure.list, theme.disclosure.table);
+        let g = &theme.glass;
+        assert_eq!(list.hover.fill, g.surface_hover);
+        assert_eq!(list.selected.fill, g.surface_active);
+        assert_eq!((list.radius, list.border, list.rule), (0.0, 0.0, 0.0));
+        assert_eq!(list.ring_radius, theme.shape.nav);
+        assert_eq!(table.rows, list);
+        assert_eq!(table.frame, 0.0);
+        assert_eq!(table.header_fill, g.tabs);
+        assert_eq!(table.header_radius, theme.shape.nav);
+        assert_eq!(table.header_text, g.text_faint);
+        assert_eq!(
+            (table.rule, table.rule_color),
+            (theme.control.edge_width, theme.colors.divider)
+        );
+        assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
+        let tree = theme.disclosure.tree;
+        let body = theme.typography.role(TypeRole::Body);
+        let gap = theme.spacing.xs;
+        assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
+        assert_eq!(
+            (tree.indent, tree.pad_x),
+            (theme.spacing.lg, theme.spacing.sm)
+        );
+        assert_eq!((tree.chevron_gap, tree.label_gap), (gap, gap * 2.0));
+        assert_eq!(tree.seam, [gap / 2.0, theme.control.edge_width]);
+        assert_eq!(
+            (tree.hover.fill, tree.selected.fill),
+            (g.surface_hover, g.surface_active)
+        );
+        assert_eq!(
+            (tree.label, tree.label_selected),
+            (theme.colors.text_mid, theme.colors.text)
+        );
+        assert!(tree.tile.is_none() && tree.border == 0.0);
+        assert_eq!(Panel::pad(&theme), theme.spacing.lg);
+        assert_eq!(
+            Panel::label_style(&theme),
+            theme.typography.run(TypeRole::Caption.strong())
+        );
+        assert_eq!(theme.disclosure.panel.radius, theme.shape.card);
+        assert_eq!(theme.disclosure.panel.label, g.text_faint);
+        let xl = theme.control.height(ControlSize::Xl);
+        let head = PanelHeader::new("Changes");
+        assert_eq!(head.height(&theme), xl);
+        let blurb = theme.typography.role(TypeRole::Body).line_height;
+        let with = PanelHeader::new("Changes").blurb("a blurb");
+        assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
+        assert_eq!(
+            head.title_style(&theme),
+            theme.typography.role(TypeRole::Title)
+        );
+        assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
+        let page = theme.disclosure.page;
+        assert_eq!(
+            (page.narrow, page.wide),
+            (theme.disclosure.header, theme.disclosure.header)
+        );
+        assert!(!page.bleed && !head.bleeds(&theme));
+        assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
+        let h = theme.disclosure.header;
+        assert_eq!((h.title, h.blurb), (g.text_default, theme.colors.text_dim));
+        assert_eq!((h.badge_gap, h.rule), (theme.spacing.sm, 0.0));
+        let split = theme.disclosure.split;
+        assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
+        assert_eq!(
+            Table::cell_style(&theme),
+            theme.typography.role(TypeRole::Body)
+        );
+        let mut c = Compositor::new();
+        c.begin_frame();
+        let mut list_widget = VirtualList::new(24.0);
+        list_widget.set_item_count(4);
+        list_widget.selected = Some(1);
+        list_widget.render_with(
+            &mut c,
+            Rect::new(0.0, 0.0, 200.0, 96.0),
+            &theme,
+            |_, _, _, _, _| {},
+        );
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        assert!(
+            nodes
+                .iter()
+                .any(|n| matches!(n, SceneNode::Rect { y, h, color, .. }
+            if *y == 24.0 && *h == 24.0 && *color == g.surface_active.0))
+        );
+    }
+}
+
+/// The core draws a table as the kit's spec sheet: a frame, no band, a
+/// rule over every row but the first, the lead cell in ink.
+#[test]
+fn a_core_table_is_the_kit_s_spec_sheet() {
+    let theme = core();
+    let table = theme.disclosure.table;
+    assert_eq!(
+        (table.frame, table.frame_color),
+        (1.0, theme.colors.divider)
+    );
+    assert_eq!(table.header_fill.0[3], 0.0);
+    assert_eq!(table.cell_pad, 20.0);
+    assert_eq!(table.cell, theme.colors.text);
+    let mut t = Table::new(vec![Column::new("Style", &theme)], &theme);
+    t.set_row_count(3);
+    let (row_h, head) = (Table::row_h(&theme), Table::header_h(&theme));
+    let mut c = Compositor::new();
+    c.begin_frame();
+    t.render_with(
+        &mut c,
+        Rect::new(0.0, 0.0, 300.0, 600.0),
+        &theme,
+        |_, _, _, _| {},
+    );
+    let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    let rules = nodes
+        .iter()
+        .filter(|n| {
+            matches!(n, SceneNode::Rect { h, color, .. }
+            if *h == 1.0 && *color == theme.colors.divider.0)
+        })
+        .count();
+    assert_eq!(rules, 3, "under the header and over rows 1 and 2");
+    let framed = nodes.iter().any(|n| {
+        matches!(n, SceneNode::RoundedRect { h, border_width, .. }
+        if *border_width == 1.0 && (*h - (head + 3.0 * row_h)).abs() < 1e-3)
+    });
+    assert!(framed, "the frame holds the rows there are");
+}
+
+#[test]
+fn a_trigger_is_as_tall_as_the_kit_draws_it() {
+    let theme = core();
+    let accordion = |first| {
+        Collapsible::new("3D Objects")
+            .look(DisclosureLook::Accordion)
+            .first(first)
+    };
+    // py-3 around the size-6 chevron box; the divider above the others.
+    assert_eq!(accordion(true).trigger_height(240.0, &theme), 48.0);
+    assert_eq!(accordion(false).trigger_height(240.0, &theme), 49.0);
+    // border, p-0.75 around the size-8 tile.
+    let dropdown = Collapsible::new("Explore").icon("house");
+    assert_eq!(dropdown.trigger_height(240.0, &theme), 40.0);
+    // A long title wraps, and the trigger grows.
+    let long = Collapsible::new("Materials imported from the shared library of the studio")
+        .look(DisclosureLook::Accordion);
+    assert!(long.trigger_height(160.0, &theme) > long.trigger_height(1200.0, &theme));
+}
+
+#[test]
+fn a_collapsible_starts_at_rest_and_opens_to_its_content() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets").open(true);
+    assert_eq!(c.wake(1.0 / 60.0), Wake::idle());
+    let trigger = c.trigger_height(240.0, &theme);
+    let [top, _, bottom, _] = theme.disclosure.collapsible.content_pad;
+    assert_eq!(
+        c.height(240.0, 100.0, &theme),
+        trigger + top + 100.0 + bottom
+    );
+    assert!(c.toggle());
+    settle(&mut c);
+    assert_eq!(c.height(240.0, 100.0, &theme), trigger);
+}
+
+#[test]
+fn opening_moves_the_height_and_lands() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    let closed = c.height(240.0, 100.0, &theme);
+    assert!(c.toggle() && c.is_open());
+    assert_eq!(c.wake(0.1), Wake::continuous());
+    let mid = c.height(240.0, 100.0, &theme);
+    assert!(mid > closed && c.revealed() < 1.0, "it moves: {mid}");
+    for _ in 0..60 {
+        c.wake(1.0 / 60.0);
+    }
+    assert!(!c.is_animating());
+    assert_eq!(c.revealed(), 1.0);
+    assert_eq!(
+        c.wake(1.0 / 60.0),
+        Wake::idle(),
+        "at rest it asks for nothing"
+    );
+}
+
+#[test]
+fn with_reduced_motion_a_collapsible_opens_at_once() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    crate::compose::animation::set_reduced_motion(true);
+    let toggled = c.toggle();
+    let wake = c.wake(1.0 / 60.0);
+    crate::compose::animation::set_reduced_motion(false);
+    assert!(toggled);
+    assert_eq!(c.revealed(), 1.0);
+    assert_eq!(wake, Wake::idle());
+    assert!(c.height(240.0, 100.0, &theme) > c.trigger_height(240.0, &theme));
+}
+
+#[test]
+fn a_click_on_the_trigger_flips_it_and_a_drag_away_does_not() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets");
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let (x, y) = c.trigger_rect(bounds, &theme).center();
+    assert!(c.handle_event(&move_to(x, y), bounds, &theme).changed);
+    c.handle_event(&down(x, y), bounds, &theme);
+    assert!(c.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(c.is_open());
+    c.handle_event(&down(x, y), bounds, &theme);
+    let r = c.handle_event(&up(x, y + 500.0), bounds, &theme);
+    assert!(!r.clicked && c.is_open(), "released outside: nothing");
+}
+
+#[test]
+fn a_disabled_collapsible_neither_flips_nor_projects_enabled() {
+    let theme = core();
+    let mut c = Collapsible::new("Assets").disabled(true);
+    assert!(!c.toggle() && !c.set_open(true));
+    let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
+    let (x, y) = c.trigger_rect(bounds, &theme).center();
+    c.handle_event(&down(x, y), bounds, &theme);
+    assert_eq!(
+        c.handle_event(&up(x, y), bounds, &theme),
+        EventResult::IGNORED
+    );
+    assert!(!c.is_open());
+    let id = SemId::parse("d.assets").unwrap();
+    let mut b = SnapshotBuilder::new();
+    c.project(&mut b, &id, None);
+    assert!(!b.finish().unwrap().get(&id).unwrap().enabled);
+}
+
+#[test]
+fn the_trigger_projects_expanded_and_the_region_only_while_open() {
+    let id = SemId::parse("d.assets").unwrap();
+    let project = |c: &Collapsible| {
+        let mut b = SnapshotBuilder::new();
+        c.project(&mut b, &id, None);
+        c.project_panel(&mut b, &id, None);
+        b.finish().unwrap()
+    };
+    let mut c = Collapsible::new("Assets").sem(id.clone());
+    let closed = project(&c);
+    let node = closed.get(&id).unwrap();
+    assert_eq!(node.role, Role::Button);
+    assert_eq!(
+        node.state.get("expanded"),
+        Some(&accord::Value::Bool(false))
+    );
+    assert!(
+        node.actions
+            .iter()
+            .any(|a| a.name.as_str() == "toggle_expanded")
+    );
+    let panel = id.child("panel").unwrap();
+    assert!(closed.get(&panel).is_none());
+    c.toggle();
+    let open = project(&c);
+    assert_eq!(open.get(&panel).map(|n| n.role), Some(Role::Region));
+}
+
+/// The trigger binds where it draws; the content draws only while some
+/// of it shows, clipped, and the region binds only while open.
+#[test]
+fn the_render_binds_the_trigger_and_clips_the_content() {
+    let theme = core();
+    let id = SemId::parse("d.assets").unwrap();
+    let panel = id.child("panel").unwrap();
+    let draw = |c: &Collapsible| {
+        let mut comp = Compositor::new();
+        comp.begin_frame();
+        let h = c.height(240.0, 80.0, &theme);
+        let mut drawn = false;
+        c.render(
+            &mut comp,
+            Rect::new(0.0, 0.0, 240.0, h),
+            80.0,
+            &theme,
+            |_, _| drawn = true,
+        );
+        (comp, drawn)
+    };
+    let mut c = Collapsible::new("Assets").sem(id.clone());
+    let (comp, drawn) = draw(&c);
+    assert!(!drawn && comp.binding(&panel).is_none());
+    let trigger = c.trigger_rect(Rect::new(0.0, 0.0, 240.0, 0.0), &theme);
+    assert_eq!(
+        comp.binding(&id).unwrap().rect,
+        [trigger.x, trigger.y, trigger.w, trigger.h]
+    );
+    c = c.open(true);
+    let (comp, drawn) = draw(&c);
+    assert!(drawn && comp.binding(&panel).is_some());
+    let nodes = comp.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+    assert!(
+        nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::PushClip { .. }))
+    );
+}
+
+#[test]
+fn a_single_accordion_keeps_one_open_and_a_multiple_one_many() {
+    let theme = core();
+    let make = |mode| {
+        Accordion::new(mode)
+            .item("3D Objects", "meshes")
+            .item("Materials", "surfaces")
+            .opened(0)
+    };
+    let mut single = make(AccordionMode::Single);
+    assert!(single.toggle(1));
+    assert!(single.is_open(1) && !single.is_open(0));
+    let mut multiple = make(AccordionMode::Multiple);
+    assert!(multiple.toggle(1));
+    assert!(multiple.is_open(0) && multiple.is_open(1));
+    assert!(!multiple.toggle(7), "no such section");
+    // The sections stack, the first without a divider, in the height.
+    let bounds = Rect::new(0.0, 0.0, 240.0, multiple.height(240.0, &theme));
+    let rects = multiple.item_rects(bounds, &theme);
+    assert_eq!(rects[1].y, rects[0].bottom());
+    assert_eq!(rects[1].bottom(), bounds.bottom());
+}
+
+#[test]
+fn a_click_in_a_single_accordion_closes_the_open_section() {
+    let theme = core();
+    let mut a = Accordion::new(AccordionMode::Single)
+        .item("3D Objects", "meshes")
+        .item("Materials", "surfaces")
+        .opened(0);
+    let bounds = Rect::new(0.0, 0.0, 240.0, a.height(240.0, &theme));
+    let second = a.item_rects(bounds, &theme)[1];
+    let (x, y) = a.items()[1].trigger_rect(second, &theme).center();
+    a.handle_event(&down(x, y), bounds, &theme);
+    assert!(a.handle_event(&up(x, y), bounds, &theme).clicked);
+    assert!(a.is_open(1) && !a.is_open(0));
+    assert_eq!(a.wake(1.0 / 60.0), Wake::continuous());
+}
+
+/// A head's blurb wraps in the width it gets, and the head is as tall as
+/// its lines: from 280 to 1600 the shell's page starts under the blurb's
+/// last line, in the core and outside it.
+#[test]
+fn the_page_starts_under_the_blurb_at_every_width() {
+    use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
+    use crate::widgets::shell::AppShell;
+    let blurb = "Every asset of the scene and its animation timeline, grouped by \
+                 the folder it was imported into, newest first, with its size";
+    for theme in [core(), hoff()] {
+        let sidebar = Sidebar::new(vec![NavLink::new("Cards"), NavLink::new("Panel")]);
+        let head = PanelHeader::new("Cards").blurb(blurb);
+        let mut shell = AppShell::new(sidebar, head, 280.0, 900.0);
+        let mut lines = std::collections::BTreeSet::new();
+        for w in (280..=1600).step_by(4) {
+            shell.resize(w as f32, 900.0);
+            let l = shell.layout(&theme);
+            let b = shell
+                .header
+                .blurb_rect(l.header, l.header_pads, &theme)
+                .unwrap();
+            let line = theme
+                .typography
+                .run(theme.disclosure.page.at(l.header.w).blurb_type)
+                .line_height;
+            lines.insert((b.h / line).round() as u32);
+            assert!(
+                b.w <= l.header.w && b.x >= l.header.x,
+                "{w}: inside the head"
+            );
+            assert!(
+                b.y + b.h <= l.header.y + l.header.h,
+                "{w}: the head holds the blurb"
+            );
+            assert!(
+                l.content.y >= b.y + b.h + theme.spacing.lg,
+                "{w}: page under the blurb"
+            );
+            if let Some(m) = l.menu_button {
+                assert!(m.x + m.w <= b.x, "{w}: the menu button clears the blurb");
+            }
+        }
+        assert!(
+            lines.len() >= 3,
+            "the blurb wraps to 1, 2, 3 lines: {lines:?}"
+        );
+    }
+}
+
+/// The core's page head is the kit's Layout title (Layout/index.tsx:35):
+/// across the page column, `px-12 py-8` 32/40 from a 1200 px head, `p-5`
+/// 24/32 below it, the rule at its foot; the title on the page's gutter.
+#[test]
+fn the_core_page_head_is_the_kit_s_layout_title() {
+    use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
+    use crate::widgets::shell::AppShell;
+    let theme = core();
+    let page = theme.disclosure.page;
+    assert_eq!((page.wide.pad_x, page.wide.pad_y), (48.0, 32.0));
+    assert_eq!(page.wide.title_type, TypeRole::H3.run());
+    assert_eq!((page.narrow.pad_x, page.narrow.pad_y), (20.0, 20.0));
+    assert_eq!(page.narrow.title_type, TypeRole::H5.regular());
+    assert_eq!(page.wide_from, 1200.0);
+    assert_eq!(page.at(1200.0), page.wide);
+    assert_eq!(page.at(1199.0), page.narrow);
+    let head = PanelHeader::new("Cards");
+    assert_eq!(head.height_for(1400.0, &theme), 32.0 + 40.0 + 32.0 + 1.0);
+    assert_eq!(head.height_for(800.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
+    for w in [360.0, 800.0, 1280.0, 1600.0] {
+        let sidebar = Sidebar::new(vec![NavLink::new("Cards")]);
+        let shell = AppShell::new(sidebar, head.clone(), w, 900.0);
+        let l = shell.layout(&theme);
+        let page_x = l.sidebar.map_or(0.0, |s| s.x + s.w);
+        assert_eq!(
+            (l.header.x, l.header.x + l.header.w),
+            (page_x, w),
+            "{w}: it bleeds"
+        );
+        let gutter = theme.layout.gutter(l.breakpoint);
+        if l.menu_button.is_none() {
+            assert_eq!(l.header_pads[0], gutter, "{w}: the title on the gutter");
+        }
+        assert_eq!(l.content.y, l.header.y + l.header.h + theme.spacing.lg);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        shell
+            .header
+            .render_in(&mut c, LayerId::DEFAULT, l.header, l.header_pads, &theme);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let rule = nodes.iter().any(|n| {
+            matches!(n, SceneNode::Rect { y, h, w: rw, color, .. }
+            if *y + *h == l.header.y + l.header.h && *rw == l.header.w
+                && *color == page.narrow.rule_color.0)
+        });
+        assert!(rule, "{w}: the rule spans the head at its foot");
     }
 }

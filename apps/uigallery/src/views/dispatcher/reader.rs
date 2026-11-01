@@ -1,7 +1,8 @@
 //! What a screen reader is shown (task-75 phase 2a): the view's
 //! projection (`ShowcaseView::semantics`: the page, and the toasts and
-//! the overlay over it, what an agent reads too), and what only a reader
-//! hears. The shell's bridge builds the tree from this snapshot
+//! the overlay over it, what an agent reads too) with the sidebar after
+//! it, as the keyboard walks them (`ShowcaseView::keyboard_semantics`),
+//! and what only a reader hears. The shell's bridge builds the tree from this snapshot
 //! (`app/pace.rs`), and reads a reader's requests back against it.
 //!
 //! What only a reader hears:
@@ -32,7 +33,7 @@ impl ShowcaseView {
     /// and what only a reader hears (see the module docs). `None` when
     /// there is nothing to show but the window.
     pub fn reader_semantics(&self) -> Option<Snapshot> {
-        let seen = self.semantics();
+        let seen = self.keyboard_semantics();
         let notice = self.panes.shell.notice();
         if notice.is_empty() && !self.has_reader_states() {
             return seen;

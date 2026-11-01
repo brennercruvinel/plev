@@ -91,11 +91,13 @@ fn layout_holds_at_narrow_and_wide_widths() {
         let last = l.pills[2];
         assert!(last.x + last.w <= l.panel.x + l.panel.w - PAD + 0.5);
         assert!(
-            l.pills[2].w > l.pills[0].w,
-            "Completed must out-measure All"
+            (l.pills[2].w - l.pills[0].w).abs() < 1e-3,
+            "the filters are equal segments of one group"
         );
+        assert!(l.pills[0].x >= l.filters.x && l.pills[2].right() <= l.filters.right());
         // The counter shares the row only when it fits; otherwise stacked.
-        let cw = TextMeasurer::measure_styled(&s.counter_text(), &counter_style(), None).0;
+        let cw =
+            TextMeasurer::measure_styled(&s.counter_text(), &counter_style(&Theme::hoff()), None).0;
         assert!(
             l.counter.0 + cw <= l.pills[0].x || l.counter.1 + 16.0 <= l.pills[0].y,
             "vw {vw}: counter must never collide with the pills"
@@ -228,7 +230,7 @@ fn strike_width_is_measured_not_estimated() {
     let (lx, lw) = label_span(row_rect(l.list, 2, 0.0));
     let expect = TextMeasurer::measure_styled(
         "Port the todo domain (tested first)",
-        &item_style(),
+        &item_style(&Theme::hoff()),
         Some(lw),
     )
     .0
@@ -310,5 +312,30 @@ fn list_scrolls_inside_and_footer_stays_pinned() {
         &Theme::hoff(),
     );
     assert!(!r.handled);
-    assert!(l.pills[0].y + PILL_H <= l.panel.y + l.panel.h);
+    assert!(l.filters.bottom() <= l.panel.y + l.panel.h);
+}
+
+/// From the narrow 360 window (its 328 content) to the wide one, every
+/// label of the seed shows on one line in its row, whole or cut with an
+/// ellipsis, never wrapped into the next row; the narrow one cuts.
+#[test]
+fn every_label_is_one_line_whole_or_cut() {
+    let s = TodoPage::new();
+    let style = item_style(&Theme::hoff());
+    let mut cut = 0;
+    for w in [328.0, 600.0, 1272.0] {
+        let l = lay(&s, Rect::new(16.0, 118.0, w, 682.0));
+        for (i, item) in s.model.visible_items().iter().enumerate() {
+            let (_, lw) = label_span(row_rect(l.list, i, 0.0));
+            let shown = label_shown(item.text(), lw, &Theme::hoff());
+            let (tw, th) = TextMeasurer::measure_styled(&shown, &style, None);
+            assert!(th <= style.line_height + 0.5, "{w}: {shown} wraps");
+            assert!(tw <= lw + 0.5, "{w}: {shown} overflows");
+            if shown != item.text() {
+                assert!(shown.ends_with('\u{2026}'), "{w}: {shown}");
+                cut += usize::from(w == 328.0);
+            }
+        }
+    }
+    assert!(cut > 0, "the narrow window cuts a long label");
 }

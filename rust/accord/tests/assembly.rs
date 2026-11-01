@@ -416,7 +416,7 @@ fn role_serde_names_match_the_stable_names() {
         assert_eq!(Role::deserialize(d).unwrap(), role);
         assert!(names.insert(role.as_str()));
     }
-    assert_eq!(names.len(), 33);
+    assert_eq!(names.len(), 34);
 }
 
 /// task-70: what a projection adds after the app's own reads the app's

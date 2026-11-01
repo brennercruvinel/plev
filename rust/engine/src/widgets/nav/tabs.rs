@@ -1,31 +1,35 @@
-//! HOFF segmented tabs: a graphite strip (`glass.tabs`, the tabs radius)
-//! whose equal-width segments share one base-2sm style for measurement
-//! and drawing; the active segment is a raised, edge-lit glass block.
-//! Keyboard focus ([`Tabs::set_focused`]) rings the whole strip with the
-//! accent ring; focus on one tab ([`Tabs::set_focused_tab`], what the arrow
-//! keys move) rings that segment instead.
+//! The tab strip: the kit's segmented control (`components/Tabs`), the
+//! same one the toggle group is. Layout, painting and the hover are the
+//! segmented control's ([`ToggleGroup`], `theme.selection.segmented`);
+//! the strip keeps its own contract: a press on a tab switches to it at
+//! once (the tabs of an app switch on the press), the app owns `active`,
+//! and it projects as a tab list. Keyboard focus
+//! ([`Tabs::set_focused`]) rings the whole strip; focus on one tab
+//! ([`Tabs::set_focused_tab`], what the arrow keys move) rings that
+//! segment.
 //!
 //! With a [`SemId`] ([`Tabs::sem`]) the render binds the strip and each
 //! segment to the rects it draws and hit-tests them with, and
 //! [`Tabs::project`] declares the strip in a semantic projection; the app
 //! still owns `active`.
 
-use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::drawing::text::TextMeasurer;
+use crate::drawing::compositor::Compositor;
 use crate::styling::theme::{ControlSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::recipe::{focus_ring, focus_ring_inside, glass_pill, shadow_node};
+use crate::widgets::recipe::focus_ring;
+use crate::widgets::selection::ToggleGroup;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Segmented tab strip. Tabs share the width equally (CSS `flex: 1`);
-/// give the widget [`Tabs::height`] (one `Md` control) for the canonical
-/// `Xs` segments inside the tabs padding.
+/// give the widget [`Tabs::height`] (one `Md` control).
 #[derive(Clone, Debug)]
 pub struct Tabs {
     pub labels: Vec<String>,
     pub active: usize,
-    hovered: Option<usize>,
+    /// The segmented control that lays the strip out, paints it and
+    /// tracks the hover; its choice follows `active`.
+    segments: ToggleGroup,
     focused: bool,
     focused_tab: Option<usize>,
     sem: Option<SemId>,
@@ -33,10 +37,11 @@ pub struct Tabs {
 
 impl Tabs {
     pub fn new(labels: impl IntoIterator<Item = impl Into<String>>) -> Self {
+        let labels: Vec<String> = labels.into_iter().map(Into::into).collect();
         Self {
-            labels: labels.into_iter().map(Into::into).collect(),
+            segments: ToggleGroup::new(labels.clone()),
+            labels,
             active: 0,
-            hovered: None,
             focused: false,
             focused_tab: None,
             sem: None,
@@ -91,7 +96,7 @@ impl Tabs {
     }
 
     pub fn hovered(&self) -> Option<usize> {
-        self.hovered
+        self.segments.hovered()
     }
 
     /// Keyboard focus, driven by the owning view (plev has no global
@@ -115,22 +120,48 @@ impl Tabs {
         self.focused_tab
     }
 
-    /// Canonical strip height: the `Md` control (segments are `Xs` inside
-    /// the tabs padding).
+    /// Canonical strip height: the `Md` control.
     pub fn height(theme: &Theme) -> f32 {
         theme.control.height(ControlSize::Md)
     }
 
-    /// Hit rects for each tab within `bounds`: equal-width segments
-    /// inside the tabs container padding.
+    /// The segmented control as the strip stands now: its labels, the
+    /// active tab under the thumb (the app sets `active` freely, so the
+    /// thumb sits on it with no slide), the focused tab, the hover kept.
+    fn segmented(&self) -> ToggleGroup {
+        let mut g = if self.segments.items == self.labels {
+            self.segments.clone()
+        } else {
+            ToggleGroup::new(self.labels.clone())
+        };
+        if g.selected != self.active {
+            g = g.selected(self.active);
+        }
+        g.set_focused(self.focused_tab);
+        g
+    }
+
+    /// The strip's own size: the segmented control's, every label whole
+    /// in an equal segment with its padding.
+    pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        self.segmented().preferred_size(theme)
+    }
+
+    /// The narrowest strip that still shows every label as an ellipsis.
+    pub fn min_width(&self, theme: &Theme) -> f32 {
+        self.segmented().min_width(theme)
+    }
+
+    /// The label of tab `index` as its segment `segment` shows it: whole,
+    /// or cut with an ellipsis.
+    pub fn shown_label(&self, index: usize, segment: Rect, theme: &Theme) -> String {
+        self.segmented().shown_label(index, segment, theme)
+    }
+
+    /// Hit rects for each tab within `bounds`: the segmented control's
+    /// equal segments inside its well.
     pub fn item_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
-        let pad = theme.control.tabs_pad;
-        let n = self.labels.len().max(1) as f32;
-        let w = (bounds.w - pad * 2.0) / n;
-        let h = bounds.h - pad * 2.0;
-        (0..self.labels.len())
-            .map(|i| Rect::new(bounds.x + pad + i as f32 * w, bounds.y + pad, w, h))
-            .collect()
+        self.segmented().segment_rects(bounds, theme)
     }
 
     fn tab_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
@@ -139,111 +170,46 @@ impl Tabs {
             .position(|r| r.contains(x, y))
     }
 
-    /// Segments are laid out from the theme's tabs padding, so the event
-    /// path takes the same `theme` the render path draws with.
+    /// A press on a tab switches to it; the pointer's moves are the
+    /// segmented control's hover. Segments are laid out from the theme,
+    /// so the event path takes the same `theme` the render path draws
+    /// with.
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        self.segments = self.segmented();
         match *event {
-            WidgetEvent::MouseMove { x, y } => {
-                let hit = self.tab_at(x, y, bounds, theme);
-                if hit != self.hovered {
-                    self.hovered = hit;
-                    EventResult::changed()
-                } else {
-                    EventResult::IGNORED
+            WidgetEvent::MouseMove { .. } => self.segments.handle_event(event, bounds, theme),
+            WidgetEvent::MouseDown { x, y } => match self.tab_at(x, y, bounds, theme) {
+                Some(i) if i != self.active => {
+                    self.active = i;
+                    EventResult::clicked()
                 }
-            }
-            WidgetEvent::MouseDown { x, y } => {
-                if let Some(i) = self.tab_at(x, y, bounds, theme) {
-                    if i != self.active {
-                        self.active = i;
-                        EventResult::clicked()
-                    } else {
-                        EventResult {
-                            handled: true,
-                            ..EventResult::IGNORED
-                        }
-                    }
-                } else {
-                    EventResult::IGNORED
-                }
-            }
+                Some(_) => EventResult {
+                    handled: true,
+                    ..EventResult::IGNORED
+                },
+                None => EventResult::IGNORED,
+            },
             _ => EventResult::IGNORED,
         }
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let glass = &theme.glass;
-        let rects = self.item_rects(bounds, theme);
+        let segments = self.segmented();
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
-            for (i, r) in rects.iter().enumerate() {
+            for (i, r) in segments.segment_rects(bounds, theme).iter().enumerate() {
                 compositor.bind(&id.key(i.to_string()), [r.x, r.y, r.w, r.h]);
             }
         }
-
-        let radius = theme.shape.tabs.min(bounds.h / 2.0);
         if self.focused {
+            let radius = theme.selection.segmented.track_radius.min(bounds.h / 2.0);
             compositor.push(focus_ring(bounds, radius, theme));
         }
-
-        compositor.push(SceneNode::RoundedRect {
-            x: bounds.x,
-            y: bounds.y,
-            w: bounds.w,
-            h: bounds.h,
-            color: glass.tabs.0,
-            corner_radius: radius,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
-
-        // Labels: base-2sm (Tabs.module.sass), one style for measure+render.
-        let style = theme.typography.base_2sm();
-
-        // Active block: raised shadow + edge-light + surface-hover fill at
-        // the block radius.
-        if let Some(rect) = rects.get(self.active) {
-            let block_radius = theme.shape.block.min(rect.h / 2.0);
-            if let Some(shadow) = shadow_node(*rect, block_radius, &theme.shadows.raised) {
-                compositor.push(shadow);
-            }
-            for node in glass_pill(
-                *rect,
-                block_radius,
-                glass.edge.0,
-                theme.control.edge_width_strong,
-                glass.surface_hover.0,
-            ) {
-                compositor.push(node);
-            }
-        }
-        for (i, (label, rect)) in self.labels.iter().zip(&rects).enumerate() {
-            let is_active = i == self.active;
-            let is_hovered = self.hovered == Some(i);
-
-            // base-2sm $text-secondary -> $text-primary on hover/active.
-            let color = if is_active || is_hovered {
-                theme.colors.text
-            } else {
-                theme.colors.text_mid
-            };
-            let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
-            compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, None),
-                x: rect.x + (rect.w - text_w) / 2.0,
-                y: rect.y + TextMeasurer::vertical_center(&style, rect.h),
-                color: color.0,
-            });
-        }
-        // The focused tab's ring last, over the block and the labels.
-        if let Some(rect) = self.focused_tab.and_then(|i| rects.get(i)) {
-            let block_radius = theme.shape.block.min(rect.h / 2.0);
-            compositor.push(focus_ring_inside(*rect, block_radius, theme));
-        }
+        segments.render(compositor, bounds, theme);
     }
 }

@@ -53,11 +53,17 @@ usage:
   uigallery --render <page> [--out <file.png>] [--svg <file.svg>] [--semantics <file.json>]
             [--svg-report <file.txt>] [--source]
             [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
+            [--pinned] [--palette] [--reduced-motion]
                                         one frame of a page, no window: as png, as svg (every
                                         approximation reported on stderr, and to --svg-report
                                         when given), and the page's semantic projection as json
                                         (the sem form `plev observe` serves; --source keeps each
                                         node's source). at least one of --out, --svg, --semantics.
+                                        --pinned keeps the sidebar beside the page (it peeks,
+                                        out of the window, by default); --palette opens the
+                                        command palette (⌘K) over the page. --reduced-motion
+                                        draws the page as the system's \"reduce motion\" asks
+                                        (every transition at its end, the live graph at rest).
 defaults: --theme core --width 1200 --height 800 --scale 1 (the window's
 launch size); width and height are logical pixels, the PNG is width*scale
 by height*scale and the SVG's viewBox is the logical size. page titles are
@@ -89,6 +95,9 @@ the sidebar's (\"Data Table\").";
         pub svg_report: Option<PathBuf>,
         pub semantics: Option<PathBuf>,
         pub source: bool,
+        pub pinned: bool,
+        pub palette: bool,
+        pub reduced_motion: bool,
     }
 
     pub fn parse(args: &[String]) -> Result<Mode, String> {
@@ -97,7 +106,8 @@ the sidebar's (\"Data Table\").";
         }
         let mut page = None;
         let (mut out, mut svg, mut svg_report, mut semantics) = (None, None, None, None);
-        let mut source = false;
+        let (mut source, mut pinned, mut palette) = (false, false, false);
+        let mut reduced_motion = false;
         let mut theme = DEFAULT_THEME.to_string();
         let (mut width, mut height, mut scale) = (DEFAULT_WIDTH, DEFAULT_HEIGHT, 1.0);
         let mut scroll = None;
@@ -117,6 +127,9 @@ the sidebar's (\"Data Table\").";
                 "--svg-report" => svg_report = Some(PathBuf::from(value()?)),
                 "--semantics" => semantics = Some(PathBuf::from(value()?)),
                 "--source" => source = true,
+                "--pinned" => pinned = true,
+                "--palette" => palette = true,
+                "--reduced-motion" => reduced_motion = true,
                 "--theme" => theme = value()?,
                 "--width" => width = positive(flag, &value()?)?,
                 "--height" => height = positive(flag, &value()?)?,
@@ -157,6 +170,9 @@ the sidebar's (\"Data Table\").";
             svg_report,
             semantics,
             source,
+            pinned,
+            palette,
+            reduced_motion,
         }))
     }
 
@@ -178,8 +194,14 @@ the sidebar's (\"Data Table\").";
     /// only when pixels or glyph outlines are wanted; the projection alone
     /// needs none.
     pub fn render(r: &Request) -> Result<(), Box<dyn std::error::Error>> {
+        // the frame staged as the system's preference would have it; a
+        // render never reads the machine's own
+        engine::compose::animation::set_reduced_motion(r.reduced_motion);
         let viewport = Viewport::new(r.width, r.height, r.scale);
         let mut staged = uigallery::shell::stage_page(viewport, &r.page, &r.theme, r.scroll)?;
+        if r.pinned || r.palette {
+            staged.stage_again(r.pinned, r.palette);
+        }
         let where_ = format!(
             "{} / {} at {}x{} scale {}",
             staged.title(),
@@ -334,6 +356,12 @@ the sidebar's (\"Data Table\").";
                     Ok(m) => panic!("{line}: expected an error, got {m:?}"),
                 }
             }
+        }
+
+        #[test]
+        fn reduced_motion_is_a_flag_and_off_by_default() {
+            assert!(!request("--render Graph --out g.png").reduced_motion);
+            assert!(request("--render Graph --out g.png --reduced-motion").reduced_motion);
         }
 
         #[test]

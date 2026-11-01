@@ -1,5 +1,7 @@
 mod oklch;
 #[cfg(test)]
+mod roles;
+#[cfg(test)]
 mod scales;
 #[cfg(test)]
 // The inner module only carries the cfg(test) gate for this
@@ -221,13 +223,6 @@ mod tests {
     // -- Typography --
 
     #[test]
-    fn line_height_computed() {
-        let theme = Theme::dark();
-        let lh = theme.typography.line_height(16.0);
-        assert!((lh - 20.8).abs() < 0.01);
-    }
-
-    #[test]
     fn typography_scale_ordering() {
         let t = Theme::dark().typography;
         assert!(t.small < t.caption);
@@ -238,70 +233,37 @@ mod tests {
         assert!(t.title < t.display);
     }
 
-    /// Every HOFF mixin (variables.sass:39-127) with its exact size,
-    /// line-height and weight. Letter spacing: 0 everywhere since the
-    /// Inclusive Sans swap (the sass reference's 0.025em body tracking
-    /// was calibrated for Rubik).
+    /// The HOFF scale by role, derived from its ramp (variables.sass: 10 /
+    /// 12 / 14 / 16 / 20 / 32 / 36): each role on the ramp step it stands
+    /// for, in the engine's face, untracked since the Inclusive Sans swap.
     #[test]
-    fn hoff_type_ramp_matches_reference_mixins() {
+    fn hoff_roles_derive_from_its_ramp() {
         let t = Theme::hoff().typography;
         assert_eq!(t, TypographyScale::hoff());
         let cases = [
-            ("h4", t.h4(), 36.0, 36.0, 500, 0.0),
-            ("title", t.title(), 20.0, 24.0, 500, 0.0),
-            ("base-r", t.base_r(), 16.0, 24.0, 400, 0.0),
-            ("base-m", t.base_m(), 16.0, 24.0, 500, 0.0),
-            ("base-2r", t.base_2r(), 14.0, 19.6, 400, 0.0),
-            ("base-2m", t.base_2m(), 14.0, 19.6, 500, 0.0),
-            ("base-2sm", t.base_2sm(), 14.0, 19.6, 600, 0.0),
-            ("base-2b", t.base_2b(), 14.0, 19.6, 700, 0.0),
-            ("caption-r", t.caption_r(), 12.0, 15.96, 400, 0.0),
-            ("caption-sm", t.caption_sm(), 12.0, 15.96, 600, 0.0),
-            ("small", t.small_r(), 10.0, 12.0, 400, 0.0),
-            ("small-sm", t.small_sm(), 10.0, 12.0, 600, 0.0),
-            ("body", t.body(), 16.0, 24.0, 400, 0.0),
-            ("body-2r", t.body_2r(), 14.0, 23.8, 400, 0.0),
-            ("body-2m", t.body_2m(), 14.0, 23.8, 500, 0.0),
-            ("body-2b", t.body_2b(), 14.0, 23.8, 500, 0.0),
-            ("hairline", t.hairline(), 12.0, 19.8, 500, 0.0),
+            (TypeRole::Display, 36.0, 40.0, 400),
+            (TypeRole::H1, 32.0, 40.0, 400),
+            (TypeRole::H6, 20.0, 28.0, 500),
+            (TypeRole::Title, 20.0, 24.0, 500),
+            (TypeRole::Heading, 16.0, 24.0, 500),
+            (TypeRole::BodyLg, 16.0, 24.0, 400),
+            (TypeRole::Body, 14.0, 20.0, 400),
+            (TypeRole::BodyStrong, 14.0, 20.0, 600),
+            (TypeRole::Label, 12.0, 16.0, 500),
+            (TypeRole::Caption, 12.0, 16.0, 400),
+            (TypeRole::Small, 10.0, 16.0, 400),
+            (TypeRole::Paragraph, 14.0, 24.0, 400),
+            (TypeRole::Code, 14.0, 20.0, 400),
         ];
-        for (name, style, size, lh, weight, spacing) in cases {
-            assert_eq!(style.font_size, size, "={name}: font-size");
-            assert!(
-                (style.line_height - lh).abs() < 1e-4,
-                "={name}: line-height {} != {lh}",
-                style.line_height
+        for (role, size, lh, weight) in cases {
+            let s = t.role(role);
+            assert_eq!(
+                (s.font_size, s.line_height, s.font_weight),
+                (size, lh, weight),
+                "{}",
+                role.name()
             );
-            assert_eq!(style.font_weight, weight, "={name}: weight");
-            assert!(
-                (style.letter_spacing - spacing).abs() < 1e-4,
-                "={name}: letter-spacing {} != {spacing}",
-                style.letter_spacing
-            );
-        }
-    }
-
-    /// No ramp style carries tracking since the Inclusive Sans swap
-    /// (2026-08): the font's natural spacing replaces the old Rubik-era
-    /// 0.025em body tracking. The token stays (BODY_LETTER_SPACING_EM)
-    /// so a future face can re-enable tracking in one place.
-    #[test]
-    fn hoff_ramp_has_no_letter_spacing() {
-        let t = Theme::hoff().typography;
-        for style in [
-            t.h4(),
-            t.title(),
-            t.base_r(),
-            t.base_2sm(),
-            t.caption_r(),
-            t.small_r(),
-            t.body(),
-            t.body_2r(),
-            t.body_2m(),
-            t.body_2b(),
-            t.hairline(),
-        ] {
-            assert_eq!(style.letter_spacing, 0.0);
+            assert_eq!(s.letter_spacing, 0.0, "{}", role.name());
         }
     }
 

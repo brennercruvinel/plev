@@ -1,10 +1,10 @@
 {
   "bindings": [],
   "counts": {
-    "approximated": 119,
-    "impossible": 196,
+    "approximated": 101,
+    "impossible": 193,
     "supported": 251,
-    "transformed": 27
+    "transformed": 48
   },
   "entries": [
     {
@@ -428,21 +428,21 @@
       "category": "impossible",
       "construct": "style.fontSize 17",
       "node": "settings.root.status_bar.time.time",
-      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/20 px weight 600), is 3 px away, past its tolerance of 2"
     },
     {
       "at": "settings.json:164",
       "category": "impossible",
       "construct": "style.fontWeight 600",
       "node": "settings.root.status_bar.time.time",
-      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/20 px weight 600), is 3 px away, past its tolerance of 2"
     },
     {
       "at": "settings.json:164",
       "category": "impossible",
       "construct": "style.lineHeightPx 22",
       "node": "settings.root.status_bar.time.time",
-      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/19.6 px weight 600), is 3 px away, past its tolerance of 1"
+      "reason": "17/22 px weight 600 has no token: the nearest, theme.typography.base_2sm (14/20 px weight 600), is 3 px away, past its tolerance of 2"
     },
     {
       "at": "settings.json:164",
@@ -1082,27 +1082,27 @@
     },
     {
       "at": "settings.json:320",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 12",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:320",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 400",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:320",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 16",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224234.frame_2147224233.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:320",
@@ -1587,27 +1587,27 @@
     },
     {
       "at": "settings.json:428",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 12",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:428",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 400",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:428",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 16",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224235.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:428",
@@ -2098,27 +2098,27 @@
     },
     {
       "at": "settings.json:544",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 12",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:544",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 400",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:544",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 16",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224236.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:544",
@@ -2628,27 +2628,27 @@
     },
     {
       "at": "settings.json:669",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 12",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:669",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 400",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:669",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 16",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224237.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:669",
@@ -3135,27 +3135,27 @@
     },
     {
       "at": "settings.json:792",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 12",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:792",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 400",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:792",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 16",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply"
+      "node": "settings.root.frame_2147224275.frame_2147224240.frame_2147224238.frame_2147224238.lorem_ipsum_is_simply",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "settings.json:792",
@@ -3994,19 +3994,19 @@
     },
     {
       "at": "settings.json:1012",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 14",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+      "node": "settings.root.frame_2147224297.ur_a_i_pro",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1012",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 500",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+      "node": "settings.root.frame_2147224297.ur_a_i_pro",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1012",
@@ -4016,11 +4016,11 @@
     },
     {
       "at": "settings.json:1012",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 20",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.ur_a_i_pro"
+      "node": "settings.root.frame_2147224297.ur_a_i_pro",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1012",
@@ -4076,17 +4076,19 @@
     },
     {
       "at": "settings.json:1021",
-      "category": "impossible",
+      "category": "approximated",
       "construct": "style.fontSize 14",
-      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
-      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+      "difference": "14/21 px weight 300 goes to theme.typography.base_2r (14/20 px weight 400): no role of weight 300 is near",
+      "ir": "props.typography = base_2r",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience"
     },
     {
       "at": "settings.json:1021",
-      "category": "impossible",
+      "category": "approximated",
       "construct": "style.fontWeight 300",
-      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
-      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+      "difference": "14/21 px weight 300 goes to theme.typography.base_2r (14/20 px weight 400): no role of weight 300 is near",
+      "ir": "props.typography = base_2r",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience"
     },
     {
       "at": "settings.json:1021",
@@ -4096,10 +4098,11 @@
     },
     {
       "at": "settings.json:1021",
-      "category": "impossible",
+      "category": "approximated",
       "construct": "style.lineHeightPx 21",
-      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience",
-      "reason": "14/21 px weight 300 has no token: the nearest, theme.typography.base_2r (14/19.6 px weight 400), is 1.4 px away, past its tolerance of 1"
+      "difference": "14/21 px weight 300 goes to theme.typography.base_2r (14/20 px weight 400): no role of weight 300 is near",
+      "ir": "props.typography = base_2r",
+      "node": "settings.root.frame_2147224297.unlock_limitless_image_creation_all_styles_and_more_experience"
     },
     {
       "at": "settings.json:1021",
@@ -4276,19 +4279,19 @@
     },
     {
       "at": "settings.json:1050",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontSize 14",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.tab_button_base.text"
+      "node": "settings.root.frame_2147224297.tab_button_base.text",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1050",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.fontWeight 500",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.tab_button_base.text"
+      "node": "settings.root.frame_2147224297.tab_button_base.text",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1050",
@@ -4298,11 +4301,11 @@
     },
     {
       "at": "settings.json:1050",
-      "category": "approximated",
+      "category": "transformed",
       "construct": "style.lineHeightPx 20",
-      "difference": "14/20 px weight 500 is 0.4 px from theme.typography.base_2m (14/19.6 px weight 500), within its tolerance of 1",
       "ir": "props.typography = base_2m",
-      "node": "settings.root.frame_2147224297.tab_button_base.text"
+      "node": "settings.root.frame_2147224297.tab_button_base.text",
+      "rule": "14/20 px weight 500 is theme.typography.base_2m (14/20 px weight 500) in the theme"
     },
     {
       "at": "settings.json:1050",

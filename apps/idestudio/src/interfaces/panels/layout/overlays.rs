@@ -2,6 +2,7 @@ use super::{PendingAction, UiRequest, WorkspaceView};
 use accord::RequestId;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::feedback::{ContextMenu, MenuEntry, Modal};
 use engine::widgets::overlay::{MenuItem, OverlayKind};
@@ -301,7 +302,7 @@ impl WorkspaceView {
                 OverlayKind::Tooltip { text } => {
                     // Tooltip at the overlay origin: hint shadow, tooltip
                     // body at the tooltip radius, caption-r text-secondary.
-                    let style = theme.typography.caption_r();
+                    let style = theme.typography.run(TypeRole::Caption.regular());
                     let pad_x = theme.spacing.md;
                     let pad_y = theme.spacing.xs;
                     let (tw, _) = TextMeasurer::measure_styled(text, &style, None);
@@ -312,7 +313,12 @@ impl WorkspaceView {
                         style.line_height + pad_y * 2.0,
                     );
                     let radius = theme.shape.tooltip;
-                    if let Some(shadow) = shadow_node(rect, radius, &theme.shadows.hint) {
+                    for shadow in theme
+                        .shadows
+                        .hint
+                        .iter()
+                        .filter_map(|spec| shadow_node(rect, radius, spec))
+                    {
                         compositor.push_to_layer(layer_id, shadow);
                     }
                     compositor.push_to_layer(
@@ -336,6 +342,8 @@ impl WorkspaceView {
                         },
                     );
                 }
+                // The ide pushes no anchored panel; its owner would draw it.
+                OverlayKind::Anchored => {}
             }
         }
     }

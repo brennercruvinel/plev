@@ -40,10 +40,10 @@
     }
   ],
   "counts": {
-    "approximated": 16,
+    "approximated": 14,
     "impossible": 19,
     "supported": 8,
-    "transformed": 32
+    "transformed": 34
   },
   "entries": [
     {
@@ -215,19 +215,19 @@
     },
     {
       "at": "NoteCard.module.sass:41",
-      "category": "approximated",
+      "category": "transformed",
       "construct": ".meta { font-size: 12px }",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "note_card.root.inner.details.meta"
+      "node": "note_card.root.inner.details.meta",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "NoteCard.module.sass:41",
-      "category": "approximated",
+      "category": "transformed",
       "construct": ".meta { line-height: 1.33 }",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "note_card.root.inner.details.meta"
+      "node": "note_card.root.inner.details.meta",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "NoteCard.module.sass:42",

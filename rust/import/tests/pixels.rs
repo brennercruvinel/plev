@@ -224,8 +224,8 @@ fn whole(a: &Frame, b: &Frame) -> Delta {
 /// each of two rows, where the builder's line sits whole on one row (the
 /// builder's layout lands it on 12); and beside the label the IR's lines
 /// run 4 px further (the chip's padding is `xs`, 4 px, where the source has
-/// 8 on the sides). The label's pixels are the same, though its line box is
-/// 15.96 px (`caption_r`) where the source's is 16.
+/// 8 on the sides). The label's pixels are the same, its line box the
+/// source's 16 px (`caption_r`, the caption role on the 4 px grid).
 #[test]
 fn the_separator_by_pixel() {
     let theme = Theme::hoff();
@@ -246,7 +246,7 @@ fn the_separator_by_pixel() {
     assert_eq!((rb.x, rb.y), (192.0, 10.0), "6 px lower, centered the same");
     assert_eq!((ra.size, rb.size), (12.0, 12.0));
     assert_eq!(ra.color, rb.color, "text_mid, supported");
-    assert!((ra.line - 16.0).abs() < 1e-4 && (rb.line - 15.96).abs() < 1e-3);
+    assert!((ra.line - 16.0).abs() < 1e-4 && (rb.line - 16.0).abs() < 1e-4);
 
     let dy = 6;
     let moved = delta(&a.frame, (0, 0), &b.frame, (0, dy), (400, 60 - dy));
@@ -288,7 +288,7 @@ fn the_separator_by_pixel() {
 /// and the content keep their style and color exactly (`title`, `base_r`,
 /// `text`, `text_mid`): their pixels are the same pixels, moved. The meta
 /// line's color is approximated (`n2(0.66)` read as `text_mid`, 10.2
-/// levels of alpha) and its line box (`caption_r`, 15.96 px), so its pixels
+/// levels of alpha) and its line box (`caption_r`, 16 px), so its pixels
 /// differ, by little. The field and the button are the comps widgets, in
 /// the theme's own style: the source's box is approximated, the field
 /// shows its placeholder (an attribute the code emitter does not read).

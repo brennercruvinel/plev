@@ -9,6 +9,7 @@ use accord::SemId;
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::content::{Avatar, AvatarSize};
 use engine::widgets::feedback::Scrollbar;
@@ -184,9 +185,9 @@ impl MultiStackView {
             h: list.h,
         });
 
-        let branch_style = theme.typography.base_2sm();
-        let msg_style = theme.typography.base_2sm();
-        let meta_style = theme.typography.caption_r();
+        let branch_style = theme.typography.role(TypeRole::BodyStrong);
+        let msg_style = theme.typography.role(TypeRole::BodyStrong);
+        let meta_style = theme.typography.run(TypeRole::Caption.regular());
         let dot = theme.spacing.sm;
         for (si, stack) in self.stacks.iter().enumerate() {
             // Branch header: checked-out branch gets the success dot.

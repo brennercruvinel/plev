@@ -1,21 +1,23 @@
-//! HOFF slider: 4px glass track with the white 90deg progress gradient
-//! and a top-lit 14px knob that grows on hover/drag. The full bounds are
-//! the hit area (no 4px precision games); keyboard focus
-//! ([`Slider::set_focused`]) rings those bounds with the accent ring.
+//! The kit's range slider (`app/globals.css:22`): a tall well that fills
+//! to the value and a raised block thumb, `theme.selection.slider`,
+//! painted by the buttons' `paint_surface`. The well takes the token's
+//! height inside the bounds; the full bounds are the hit area, and
+//! keyboard focus ([`Slider::set_focused`]) rings the well.
 //!
 //! With a [`SemId`] ([`Slider::sem`]) the render binds the bounds it
 //! draws and hit-tests with, and [`Slider::project`] declares the slider
 //! in a semantic projection; the app still owns the value.
 
-use crate::drawing::compositor::{Compositor, SceneNode};
+use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
 
-use crate::widgets::recipe::focus_ring;
+use crate::widgets::buttons::paint_surface;
+use crate::widgets::recipe::{focus_ring, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
-/// Horizontal slider. Dragging anywhere on the bounds moves the knob —
-/// the full height is the hit area so 4px tracks aren't a precision game.
+/// Horizontal slider. Dragging anywhere on the bounds moves the thumb:
+/// the full height is the hit area.
 #[derive(Clone, Debug)]
 pub struct Slider {
     pub min: f32,
@@ -175,13 +177,13 @@ impl Slider {
     }
 
     fn value_at(&self, x: f32, bounds: Rect, theme: &Theme) -> f32 {
-        let knob = theme.control.slider_knob;
-        let usable = (bounds.w - knob).max(1.0);
-        let t = ((x - bounds.x - knob / 2.0) / usable).clamp(0.0, 1.0);
+        let thumb = theme.selection.slider.thumb_w.min(bounds.w);
+        let usable = (bounds.w - thumb).max(1.0);
+        let t = ((x - bounds.x - thumb / 2.0) / usable).clamp(0.0, 1.0);
         self.min + t * (self.max - self.min)
     }
 
-    /// The knob travel maps through the theme's knob size, so the event
+    /// The thumb travel maps through the theme's thumb width, so the event
     /// path takes the same `theme` the render path draws with.
     pub fn handle_event(
         &mut self,
@@ -240,81 +242,63 @@ impl Slider {
         }
     }
 
+    /// The well inside `bounds`: the token's height, never taller than
+    /// the bounds, centered down them.
+    fn well(bounds: Rect, theme: &Theme) -> Rect {
+        let h = theme.selection.slider.height.min(bounds.h);
+        Rect::new(bounds.x, bounds.y + (bounds.h - h) / 2.0, bounds.w, h)
+    }
+
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
-        let glass = &theme.glass;
-        let alpha = if self.disabled {
-            glass.disabled_alpha
-        } else {
-            1.0
-        };
-        let track_h = theme.control.slider_track;
-        let knob_d = theme.control.slider_knob;
-        let ty = bounds.y + (bounds.h - track_h) / 2.0;
+        let s = &theme.selection.slider;
+        let alpha = if self.disabled { s.disabled_alpha } else { 1.0 };
+        let well = Self::well(bounds, theme);
+        let radius = s.radius.min(well.h / 2.0);
         let t = self.ratio();
-        let usable = (bounds.w - knob_d).max(1.0);
-        let knob_x = bounds.x + usable * t;
-        let text = theme.colors.text;
 
         if self.focused {
-            compositor.push(focus_ring(bounds, bounds.h / 2.0, theme));
+            compositor.push(focus_ring(well, radius, theme));
         }
-
-        // Track: rgba($n2,.10).
-        let track = glass.surface_active;
-        compositor.push(SceneNode::RoundedRect {
-            x: bounds.x,
-            y: ty,
-            w: bounds.w,
-            h: track_h,
-            color: with_alpha(track, track.0[3] * alpha),
-            corner_radius: track_h / 2.0,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
-
-        // Filled portion: the HOFF progress gradient
-        // linear-gradient(90deg, rgba(255,255,255,0) -> .40).
-        let fill_w = knob_x + knob_d / 2.0 - bounds.x;
-        if fill_w > 1.0 {
-            compositor.push(SceneNode::GradientRect {
-                x: bounds.x,
-                y: ty,
-                w: fill_w,
-                h: track_h,
-                color: [text.0[0], text.0[1], text.0[2], 0.0],
-                color2: with_alpha(glass.text_faint, glass.text_faint.0[3] * alpha),
-                // CSS 90deg: transparent stop on the left.
-                angle_deg: 90.0,
-                corner_radius: track_h / 2.0,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            well,
+            radius,
+            &s.track,
+            alpha,
+            false,
+            theme,
+        );
+        // The fill to the value, as the kit's gradient stop at `value%`.
+        let fill_w = well.w * t;
+        if fill_w > 0.0 {
+            compositor.push(rounded_rect(
+                well.x,
+                well.y,
+                fill_w,
+                well.h,
+                radius.min(fill_w / 2.0),
+                with_alpha(s.fill, s.fill.0[3] * alpha),
+            ));
         }
-
-        // Knob: the white handle gradient (.90 -> .30, top-lit); grows
-        // subtly on hover/drag.
-        let grow = if self.dragging || self.hovered {
-            1.0
-        } else {
-            0.0
-        };
-        let k = knob_d + grow * 2.0;
-        let top = glass.knob_gradient[0];
-        let bottom = glass.knob_gradient[1];
-        compositor.push(SceneNode::GradientRect {
-            x: knob_x - grow,
-            y: bounds.y + (bounds.h - k) / 2.0,
-            w: k,
-            h: k,
-            color: with_alpha(top, top.0[3] * alpha),
-            color2: with_alpha(bottom, bottom.0[3] * alpha),
-            angle_deg: 180.0,
-            corner_radius: k / 2.0,
-            border_width: 0.0,
-            border_color: [0.0; 4],
-        });
+        let thumb = Rect::new(
+            well.x + (well.w - s.thumb_w).max(0.0) * t,
+            well.y,
+            s.thumb_w.min(well.w),
+            well.h,
+        );
+        paint_surface(
+            compositor,
+            LayerId::DEFAULT,
+            thumb,
+            s.thumb_radius.min(thumb.w / 2.0),
+            &s.thumb,
+            alpha,
+            false,
+            theme,
+        );
     }
 }

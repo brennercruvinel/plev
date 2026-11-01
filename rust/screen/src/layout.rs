@@ -363,6 +363,7 @@ pub(crate) fn axis_of(node: &Node) -> Axis {
 mod tests {
     use super::*;
     use accord::SemId;
+    use engine::styling::theme::TypeRole;
     use plevir::{Bind, Props, Size, SizeToken, SpacingToken};
 
     fn node(id: &str, layout: Option<Layout>, children: Vec<usize>) -> Node {
@@ -479,7 +480,7 @@ mod tests {
             tree.push(n);
             leaves.push(Leaf::Text(TextMeasureSpec {
                 content: text.to_owned(),
-                style: theme.typography.body(),
+                style: theme.typography.role(TypeRole::BodyLg),
                 max_width: None,
             }));
         }
@@ -553,7 +554,7 @@ mod tests {
             Leaf::Container { inset: [0.0; 4] },
             Leaf::Text(TextMeasureSpec {
                 content: "a sentence that is much longer than the room it has".to_owned(),
-                style: theme.typography.body(),
+                style: theme.typography.role(TypeRole::BodyLg),
                 max_width: None,
             }),
             Leaf::Fixed(100.0, 40.0),
@@ -562,7 +563,7 @@ mod tests {
         assert_eq!(r[1].y, r[2].y, "one line: {r:?}");
         assert!(r[2].x + r[2].w <= 310.5, "{r:?}");
         assert!(
-            r[1].h > theme.typography.body().line_height,
+            r[1].h > theme.typography.role(TypeRole::BodyLg).line_height,
             "the text wraps"
         );
     }

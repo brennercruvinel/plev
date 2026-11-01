@@ -6,6 +6,7 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
 
 use crate::widgets::prelude::*;
@@ -45,17 +46,15 @@ fn up(x: f32, y: f32) -> WidgetEvent {
 // ---------------------------------------------------------------------------
 
 #[test]
-fn avatar_sizes_follow_the_control_ladder() {
+fn avatar_sizes_follow_the_kit_ladder_at_the_control_md() {
     let t = hoff();
     assert_eq!(
         Avatar::new("ann").preferred_size(&t).0,
         t.control.height(ControlSize::Md)
     );
-    assert_eq!(
-        Avatar::new("ann").size(AvatarSize::Sm).preferred_size(&t).0,
-        t.control.height(ControlSize::Xs)
-    );
-    assert!(Avatar::new("ann").size(AvatarSize::Lg).preferred_size(&t).0 > 60.0);
+    let sizes = AvatarSize::ALL.map(|s| Avatar::new("ann").size(s).preferred_size(&t).0);
+    assert!(sizes.windows(2).all(|w| w[0] < w[1]), "{sizes:?}");
+    assert_eq!(sizes[4], t.control.height(ControlSize::Md) * 2.0);
 }
 
 #[test]
@@ -64,10 +63,11 @@ fn avatar_without_photo_draws_the_uppercased_initial() {
     let a = Avatar::new("brenner").online(true);
     let n = nodes(|c| a.render(c, Rect::new(0.0, 0.0, 44.0, 44.0), &t));
     assert_eq!(texts(&n), vec!["B".to_string()]);
-    // Disc (glass pill = 2 nodes) + initial + online dot gradient.
+    // The kit's disc in its fill, the initial, the online dot.
+    let fill = t.message.avatar.fill.0;
     assert!(
         n.iter()
-            .any(|n| matches!(n, SceneNode::GradientRect { .. }))
+            .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == fill))
     );
     assert!(Avatar::new("").initial().is_empty());
 }
@@ -92,7 +92,9 @@ fn badge_tag_fits_the_measured_label_plus_padding() {
     let b = Badge::tag("MODIFIED");
     let (w, _) = b.preferred_size(&t);
     let (tw, _) = TextMeasurer::measure_styled("MODIFIED", &b.text_style(&t), None);
-    assert!((w - (tw + t.spacing.sm * 2.0).ceil()).abs() < 1e-3);
+    let tag = &t.message.badge.tag;
+    let frame = (tag.pad_x + tag.border_width) * 2.0;
+    assert!((w - (tw + frame).ceil()).abs() < 1e-3);
     let n = nodes(|c| b.render(c, Rect::new(0.0, 0.0, 0.0, 0.0), &t));
     assert!(matches!(n[0], SceneNode::RoundedRect { w: rw, .. } if rw == w));
 }
@@ -100,14 +102,15 @@ fn badge_tag_fits_the_measured_label_plus_padding() {
 #[test]
 fn badge_count_takes_the_intent_color() {
     let t = hoff();
+    let fills = &t.message.badge.count_fill;
     let n = nodes(|c| Badge::count("9").render(c, Rect::default(), &t));
-    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == t.colors.danger.0));
+    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == fills.destructive.0));
     let n = nodes(|c| {
         Badge::count("9")
             .intent(Intent::Constructive)
             .render(c, Rect::default(), &t)
     });
-    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == t.colors.success.0));
+    assert!(matches!(n[0], SceneNode::RoundedRect { color, .. } if color == fills.constructive.0));
 }
 
 // ---------------------------------------------------------------------------
@@ -167,7 +170,9 @@ fn stat_height_is_two_ramp_lines_plus_the_gap() {
     let (_, h) = s.preferred_size(&t);
     assert_eq!(
         h,
-        t.typography.title().line_height + t.spacing.xs + t.typography.caption_r().line_height
+        t.typography.role(TypeRole::Title).line_height
+            + t.spacing.xs
+            + t.typography.run(TypeRole::Caption.regular()).line_height
     );
     let hero = Stat::new("1.3", "GB").size(StatSize::Lg);
     assert!(hero.preferred_size(&t).1 > h);
@@ -182,12 +187,13 @@ fn stat_with_unit_and_delta_draws_every_part() {
     let n = nodes(|c| s.render(c, Rect::new(0.0, 0.0, 200.0, 60.0), &t));
     let tx = texts(&n);
     assert_eq!(tx, vec!["1.3", "GB", "+12%", "on disk"]);
-    // The delta badge is the only rounded rect.
+    // The delta badge is the only box: its chip, its outline and its
+    // intent's disc.
     assert_eq!(
         n.iter()
             .filter(|n| matches!(n, SceneNode::RoundedRect { .. }))
             .count(),
-        1
+        3
     );
 }
 
@@ -226,20 +232,17 @@ fn skeleton_lines_end_short_and_breathe() {
     assert_eq!(widths.len(), 3);
     assert!(widths[2] < widths[0], "the last line runs short");
     let a = match n[0] {
-        SceneNode::RoundedRect { color, .. } => color[3],
+        SceneNode::RoundedRect { color, .. } => color,
         _ => unreachable!(),
     };
     assert!(sk.tick(t.duration.slow));
     let n2 = nodes(|c| sk.render(c, b, &t));
     let a2 = match n2[0] {
-        SceneNode::RoundedRect { color, .. } => color[3],
+        SceneNode::RoundedRect { color, .. } => color,
         _ => unreachable!(),
     };
     assert_ne!(a, a2, "the wash breathes over time");
-    assert_eq!(
-        sk.preferred_height(&t),
-        Some(3.0 * Skeleton::line_pitch(&t))
-    );
+    assert_eq!(sk.preferred_height(&t), Some(t.message.skeleton.lines_h(3)));
     assert!(
         Skeleton::new(SkeletonShape::Block)
             .preferred_height(&t)

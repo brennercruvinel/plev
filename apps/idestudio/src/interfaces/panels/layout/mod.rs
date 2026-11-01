@@ -321,6 +321,18 @@ impl WorkspaceView {
             .merge(self.toasts.wake(dt))
     }
 
+    /// Draws with a host's theme in the slot of `mode`: a page that
+    /// embeds the workspace hands it its own, so the workspace follows
+    /// the page around it (a light one in the light slot).
+    pub fn use_host_theme(&mut self, theme: Theme, mode: ThemeMode) {
+        let slot = match mode {
+            ThemeMode::Dark => 0,
+            ThemeMode::Light => 1,
+        };
+        self.themes[slot] = theme;
+        self.theme_mode = mode;
+    }
+
     pub fn toggle_theme(&mut self) {
         self.theme_mode = match self.theme_mode {
             ThemeMode::Dark => ThemeMode::Light,

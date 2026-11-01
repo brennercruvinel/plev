@@ -200,6 +200,7 @@
               "component": "text",
               "label": "Unlock limitless image creation, all styles, and more experience.",
               "props": {
+                "typography": "base_2r",
                 "color": "text"
               }
             },

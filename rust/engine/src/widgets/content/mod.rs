@@ -14,7 +14,34 @@ mod stat;
 mod table;
 mod tree;
 
-pub use avatar::{Avatar, AvatarSize};
+// task-104 front D, disclosure and display (#157): one module per widget,
+// and the front's token slot (`Theme::disclosure`).
+pub mod accordion;
+pub mod aspect_ratio;
+pub mod carousel;
+pub mod catalog;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
+pub mod pagination;
+pub mod tokens;
+
+pub use accordion::{Accordion, AccordionMode};
+pub use aspect_ratio::{AspectFrame, AspectRatio};
+pub use carousel::{Carousel, CarouselLayout, CarouselPart};
+pub use catalog::{CatalogCard, CatalogKind, Plan};
+pub use collapsible::{Collapsible, DisclosureList, DisclosureLook};
+pub use item::{Item, ItemShape};
+pub use kbd::{Kbd, KbdSize};
+pub use pagination::{PageSlot, Pagination};
+pub use tokens::{
+    AspectRecipe, CapRecipe, CardRecipe, CarouselRecipe, DisclosureMotion, DisclosureRail,
+    DisclosureRecipe, DisclosureSurface, DisclosureTile, DisclosureTokens, GridRecipe,
+    HeaderRecipe, ItemRecipe, PageHeadRecipe, PagerRecipe, PanelRecipe, RowRecipe, TableRecipe,
+    TreeRecipe, TreeTile,
+};
+
+pub use avatar::{Avatar, AvatarSize, AvatarStack, StackLayout};
 pub use card::{Card, CardListRow, CardVariant};
 pub use code_block::{CodeBlock, CodeLine, LineKind};
 pub use empty_state::EmptyState;

@@ -48,6 +48,10 @@ impl ShowcaseView {
     /// with none, the key goes where a bare one goes (`handle_key`), as
     /// before. `true` when a frame is needed.
     pub fn handle_chord(&mut self, key: &str, primary: bool) -> bool {
+        // ⌘K (Ctrl+K off macOS), on any page: the command palette.
+        if primary && key.eq_ignore_ascii_case("k") {
+            return self.toggle_palette();
+        }
         let clip = ClipKey::of(key).filter(|_| primary);
         match self.clip_to(clip) {
             Some(changed) => changed,
@@ -87,8 +91,13 @@ impl ShowcaseView {
 impl super::super::pages::panes::Panes {
     /// Who has the keys on `pane`.
     pub(in crate::views) fn keys(&mut self, pane: Option<Pane>) -> Keys<'_> {
+        if self.text_host(pane).is_some() {
+            return match self.text_host_mut(pane) {
+                Some(host) => host.keys(),
+                None => Keys::Nobody,
+            };
+        }
         match pane {
-            Some(Pane::Input) => self.input.keys(),
             Some(Pane::Todo) => self.todo.keys(),
             Some(Pane::Surface) => self.surface.keys(&mut self.todo),
             Some(Pane::Silences) => self.silences.keys(),

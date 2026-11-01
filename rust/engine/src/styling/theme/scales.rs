@@ -137,8 +137,11 @@ pub struct ControlTokens {
     pub pad_x: [f32; 5],
     /// Icon edge for Sm / Md / Lg (HOFF: 16 / 20 / 24).
     pub icons: [f32; 3],
-    /// Smallest hit target on touch (WCAG 2.5.8 / apple HIG: 44).
+    /// Smallest hit target on touch (WCAG 2.5.5 AAA / apple HIG: 44).
     pub min_touch_target: f32,
+    /// Smallest hit target with a pointer (WCAG 2.5.8 AA: 24): a control
+    /// drawn smaller presses in this much around it (`widgets::hit`).
+    pub min_target: f32,
     /// Edge-light rim width on cards and modals.
     pub edge_width: f32,
     /// Edge-light rim width on buttons and active nav items.
@@ -185,6 +188,7 @@ impl ControlTokens {
             pad_x: [16.0, 12.0, 24.0, 16.0, 32.0],
             icons: [16.0, 20.0, 24.0],
             min_touch_target: 44.0,
+            min_target: 24.0,
             edge_width: 1.0,
             edge_width_strong: 1.5,
             focus_ring_width: 2.0,
@@ -516,19 +520,22 @@ pub enum Elevation {
     Hint,
 }
 
-/// The HOFF shadow stacks (Modal.module.sass, Actions, Tabs, Tooltip).
+/// The shadow stacks by elevation, each listed bottom layer first (the
+/// reverse of a css `box-shadow` list, whose first entry is on top): the
+/// HOFF ones (Modal.module.sass, Actions, Tabs, Tooltip) are one layer but
+/// the modal's; the core kit's run to three.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ShadowTokens {
     /// Active tabs block: `0 8px 16px -4px rgba(18,18,18,.20)`.
-    pub raised: ShadowSpec,
+    pub raised: Vec<ShadowSpec>,
     /// Floating menu: `0 24px 32px -12px rgba(18,18,18,.10)`.
-    pub floating: ShadowSpec,
-    /// Deep stack under modal / nav / options, four layers.
-    pub overlay: [ShadowSpec; 4],
+    pub floating: Vec<ShadowSpec>,
+    /// Deep stack under modal / nav / options.
+    pub overlay: Vec<ShadowSpec>,
     /// Tooltip: `0 1.5px 2px rgba(24,24,24,.15)`.
-    pub hint: ShadowSpec,
+    pub hint: Vec<ShadowSpec>,
     /// Deck card lift: `0 32px 24px -16px rgba(0,0,0,.40)`.
-    pub card: ShadowSpec,
+    pub card: Vec<ShadowSpec>,
 }
 
 const fn shade(v: f32, alpha: f32) -> Color {
@@ -538,16 +545,16 @@ const fn shade(v: f32, alpha: f32) -> Color {
 impl ShadowTokens {
     pub fn hoff() -> Self {
         Self {
-            raised: ShadowSpec::new([0.0, 8.0], 16.0, -4.0, shade(18.0, 0.20)),
-            floating: ShadowSpec::new([0.0, 24.0], 32.0, -12.0, shade(18.0, 0.10)),
-            overlay: [
+            raised: vec![ShadowSpec::new([0.0, 8.0], 16.0, -4.0, shade(18.0, 0.20))],
+            floating: vec![ShadowSpec::new([0.0, 24.0], 32.0, -12.0, shade(18.0, 0.10))],
+            overlay: vec![
                 ShadowSpec::new([0.0, 24.0], 24.0, -16.0, shade(5.0, 0.09)),
                 ShadowSpec::new([0.0, 6.0], 13.0, 0.0, shade(5.0, 0.10)),
                 ShadowSpec::new([0.0, 6.0], 4.0, -4.0, shade(5.0, 0.10)),
                 ShadowSpec::new([0.0, 5.0], 2.0, -4.0, shade(5.0, 0.25)),
             ],
-            hint: ShadowSpec::new([0.0, 1.5], 2.0, 0.0, shade(24.0, 0.15)),
-            card: ShadowSpec::new([0.0, 32.0], 24.0, -16.0, shade(0.0, 0.40)),
+            hint: vec![ShadowSpec::new([0.0, 1.5], 2.0, 0.0, shade(24.0, 0.15))],
+            card: vec![ShadowSpec::new([0.0, 32.0], 24.0, -16.0, shade(0.0, 0.40))],
         }
     }
 
@@ -556,16 +563,16 @@ impl ShadowTokens {
     pub fn derive(color: Color) -> Self {
         let tint = |a: f32| Color([color.0[0], color.0[1], color.0[2], a]);
         Self {
-            raised: ShadowSpec::new([0.0, 8.0], 16.0, -4.0, tint(0.20)),
-            floating: ShadowSpec::new([0.0, 24.0], 32.0, -12.0, tint(0.25)),
-            overlay: [
+            raised: vec![ShadowSpec::new([0.0, 8.0], 16.0, -4.0, tint(0.20))],
+            floating: vec![ShadowSpec::new([0.0, 24.0], 32.0, -12.0, tint(0.25))],
+            overlay: vec![
                 ShadowSpec::new([0.0, 24.0], 24.0, -16.0, tint(0.20)),
                 ShadowSpec::new([0.0, 6.0], 13.0, 0.0, tint(0.20)),
                 ShadowSpec::new([0.0, 6.0], 4.0, -4.0, tint(0.20)),
                 ShadowSpec::new([0.0, 5.0], 2.0, -4.0, tint(0.35)),
             ],
-            hint: ShadowSpec::new([0.0, 1.5], 2.0, 0.0, tint(0.30)),
-            card: ShadowSpec::new([0.0, 32.0], 24.0, -16.0, tint(0.40)),
+            hint: vec![ShadowSpec::new([0.0, 1.5], 2.0, 0.0, tint(0.30))],
+            card: vec![ShadowSpec::new([0.0, 32.0], 24.0, -16.0, tint(0.40))],
         }
     }
 
@@ -573,10 +580,10 @@ impl ShadowTokens {
     pub fn stack(&self, elevation: Elevation) -> &[ShadowSpec] {
         match elevation {
             Elevation::Base => &[],
-            Elevation::Raised => std::slice::from_ref(&self.raised),
-            Elevation::Floating => std::slice::from_ref(&self.floating),
+            Elevation::Raised => &self.raised,
+            Elevation::Floating => &self.floating,
             Elevation::Overlay => &self.overlay,
-            Elevation::Hint => std::slice::from_ref(&self.hint),
+            Elevation::Hint => &self.hint,
         }
     }
 }

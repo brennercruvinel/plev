@@ -18,7 +18,7 @@ use crate::styling::theme::{ControlSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::content::VirtualList;
-use crate::widgets::recipe::rounded_rect;
+use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// Horizontal alignment of a column's cells.
@@ -91,7 +91,8 @@ pub struct Table {
 }
 
 impl Table {
-    /// Rows are one `Lg` control tall.
+    /// Rows are one `Lg` control tall, in the theme the table is drawn
+    /// in: a table built under one theme follows the next.
     pub fn new(columns: Vec<Column>, theme: &Theme) -> Self {
         Self {
             columns,
@@ -172,18 +173,20 @@ impl Table {
         self.rows.selected
     }
 
-    /// Cell padding: the `md` step.
+    /// Cell padding, left and right (`theme.disclosure.table`).
     pub fn cell_pad(theme: &Theme) -> f32 {
-        theme.spacing.md
+        theme.disclosure.table.cell_pad
     }
 
     fn header_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        let r = &theme.disclosure.table;
+        theme.typography.run(r.header_type)
     }
 
-    /// Cell text style: base-2r.
+    /// Cell text style (`theme.disclosure.table`).
     pub fn cell_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        let r = &theme.disclosure.table;
+        theme.typography.run(r.cell_type)
     }
 
     /// Which columns fit in `width`, and where. Columns drop lowest
@@ -291,6 +294,7 @@ impl Table {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
+        self.rows.set_item_height(Self::row_h(theme));
         self.rows
             .handle_event(event, Self::rows_rect(bounds, theme), theme)
     }
@@ -316,30 +320,32 @@ impl Table {
         theme: &Theme,
         mut cell_fn: impl FnMut(&mut Compositor, usize, Rect, usize),
     ) {
+        self.rows.set_item_height(Self::row_h(theme));
         let layout = self.column_layout(bounds.w, theme);
-        let glass = &theme.glass;
+        let look = &theme.disclosure.table;
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
             self.rows.set_viewport(Self::rows_rect(bounds, theme));
             self.rows.bind_rows(c, layer, id);
         }
 
-        // Header band: tabs-tone strip, caption-sm titles, a hairline
-        // under it.
+        // The header band, its titles, the rule under it.
         let header = Rect::new(bounds.x, bounds.y, bounds.w, Self::header_h(theme));
-        c.push_to_layer(
-            layer,
-            rounded_rect(
-                header.x,
-                header.y,
-                header.w,
-                header.h,
-                theme.shape.nav.min(header.h / 2.0),
-                glass.tabs.0,
-            ),
-        );
+        if look.header_fill.0[3] > 0.0 {
+            c.push_to_layer(
+                layer,
+                rounded_rect(
+                    header.x,
+                    header.y,
+                    header.w,
+                    header.h,
+                    look.header_radius.min(header.h / 2.0),
+                    look.header_fill.0,
+                ),
+            );
+        }
         let style = Self::header_style(theme);
-        for (pos, col_i) in layout.visible.iter().enumerate() {
+        for col_i in &layout.visible {
             let col = &self.columns[*col_i];
             if let Some(cell) = self.cell_rect(header, *col_i, &layout, theme) {
                 let shown = TextMeasurer::truncate_to_width(&col.title, &style, cell.w);
@@ -354,22 +360,23 @@ impl Table {
                         key: TextNodeKey::from_style(&shown, &style, None),
                         x,
                         y: cell.y + TextMeasurer::vertical_center(&style, cell.h),
-                        color: glass.text_faint.0,
+                        color: look.header_text.0,
                     },
                 );
             }
-            let _ = pos;
         }
-        c.push_to_layer(
-            layer,
-            SceneNode::Rect {
-                x: bounds.x,
-                y: header.y + header.h,
-                w: bounds.w,
-                h: theme.control.edge_width,
-                color: theme.colors.divider.0,
-            },
-        );
+        if look.rule > 0.0 {
+            c.push_to_layer(
+                layer,
+                SceneNode::Rect {
+                    x: bounds.x,
+                    y: header.y + header.h,
+                    w: bounds.w,
+                    h: look.rule,
+                    color: look.rule_color.0,
+                },
+            );
+        }
 
         let rows_rect = Self::rows_rect(bounds, theme);
         let visible = layout.visible.clone();
@@ -385,8 +392,9 @@ impl Table {
             })
             .collect();
         let pad = Self::cell_pad(theme);
+        let rows = look.rows;
         self.rows
-            .render_with_to_layer(c, layer, rows_rect, theme, |c, index, row, _, _| {
+            .render_rows(c, layer, rows_rect, theme, &rows, |c, index, row, _, _| {
                 for col in &visible {
                     if let Some((x, w)) = cell_rects[*col] {
                         let cell =
@@ -395,5 +403,20 @@ impl Table {
                     }
                 }
             });
+        // The frame last, over the rows that reach the edge, around the
+        // rows there are: a short table does not frame empty space.
+        if look.frame > 0.0 {
+            let rows_h = self.row_count() as f32 * self.rows.item_height;
+            let frame = rounded_rect_stroke(
+                bounds.x,
+                bounds.y,
+                bounds.w,
+                (Self::header_h(theme) + rows_h).min(bounds.h),
+                0.0,
+                look.frame_color.0,
+                look.frame,
+            );
+            c.push_to_layer(layer, frame);
+        }
     }
 }

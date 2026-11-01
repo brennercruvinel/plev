@@ -1,35 +1,36 @@
 //! Buttons page, the hoff core kit's ButtonsPage: groups with a title and
 //! a bottom rule, cards in rows, one state per card behind a chip that
 //! names it. The widgets are `engine::widgets::buttons` (labeled, icon-only,
-//! submit); every visual value comes from the theme.
+//! submit) and, last, the page's Tooltip bubble at rest; every visual value
+//! comes from the theme.
 //!
 //! Projected (task-75 phase 2b): a group per title,
 //! `button_page.group[<g>]`, and in it each card's widget,
 //! `button_page.group[<g>].card[<c>]`, as the comps projects it, described
 //! by the card's chip (the states it shows); an icon-only button is named
-//! by its icon, the submit button "submit". A button here does nothing but
-//! press, so its `activate` changes nothing.
+//! by its icon, the submit button "submit", the tooltip a label named by
+//! its text. A button here does nothing but press, so its `activate`
+//! changes nothing. The Icon Button page is this
+//! page with the icon-only groups alone ([`ButtonPage::icons`]).
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::{Theme, hoff_core};
 use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
-    Rect, SubmitButton, WidgetEvent, rounded_rect, rounded_rect_stroke,
+    Rect, SubmitButton, Tooltip, WidgetEvent,
 };
 
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
-
-/// A card is as tall as the page's `h-50`.
-const CARD_H: f32 = 200.0;
-/// Narrowest a card column may get before the row drops a column.
-const CARD_MIN_W: f32 = 300.0;
 
 enum Spec {
     Button(Button),
     Icon(IconButton),
     Submit(SubmitButton),
+    /// The bubble alone, shown as the kit's card shows it: no anchor, no
+    /// delay. It binds its id itself (the widget has none).
+    Tooltip(Tooltip, Option<SemId>),
 }
 
 impl Spec {
@@ -38,6 +39,7 @@ impl Spec {
             Spec::Button(b) => b.preferred_size(theme),
             Spec::Icon(b) => b.preferred_size(theme),
             Spec::Submit(b) => b.preferred_size(theme),
+            Spec::Tooltip(t, _) => t.size(theme),
         }
     }
 
@@ -46,6 +48,7 @@ impl Spec {
             Spec::Button(b) => b.handle_event(event, bounds),
             Spec::Icon(b) => b.handle_event(event, bounds),
             Spec::Submit(b) => b.handle_event(event, bounds),
+            Spec::Tooltip(..) => EventResult::IGNORED,
         }
     }
 
@@ -54,6 +57,16 @@ impl Spec {
             Spec::Button(b) => b.render(c, bounds, theme),
             Spec::Icon(b) => b.render(c, bounds, theme),
             Spec::Submit(b) => b.render(c, bounds, theme),
+            Spec::Tooltip(t, id) => {
+                if let Some(id) = id {
+                    c.bind_to_layer(
+                        LayerId::DEFAULT,
+                        id,
+                        [bounds.x, bounds.y, bounds.w, bounds.h],
+                    );
+                }
+                t.render_at(c, LayerId::DEFAULT, theme, bounds);
+            }
         }
     }
 
@@ -63,6 +76,7 @@ impl Spec {
             Spec::Button(b) => Spec::Button(b.sem(id)),
             Spec::Icon(b) => Spec::Icon(b.sem(id)),
             Spec::Submit(b) => Spec::Submit(b.sem(id)),
+            Spec::Tooltip(t, _) => Spec::Tooltip(t, Some(id)),
         }
     }
 
@@ -71,6 +85,7 @@ impl Spec {
             Spec::Button(b) => b.sem_id(),
             Spec::Icon(b) => b.sem_id(),
             Spec::Submit(b) => b.sem_id(),
+            Spec::Tooltip(_, id) => id.as_ref(),
         }
     }
 
@@ -79,17 +94,25 @@ impl Spec {
             Spec::Button(b) => b.set_focused(on),
             Spec::Icon(b) => b.set_focused(on),
             Spec::Submit(b) => b.set_focused(on),
+            // A label: the reader's focus reads it, nothing rings.
+            Spec::Tooltip(..) => {}
         }
     }
 
     /// The widget as the comps projects it, under `parent`, described by
     /// `states`: a labeled button by its label, an icon-only one by its
-    /// icon, the submit button as "submit".
+    /// icon, the submit button as "submit", the tooltip as a label named
+    /// by its text.
     fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: &SemId, states: &str) {
         let mut node = match self {
             Spec::Button(w) => w.project(b, id, Some(parent)),
             Spec::Icon(w) => w.project(b, id, w.icon, Some(parent)),
             Spec::Submit(w) => w.project(b, id, "submit", Some(parent)),
+            Spec::Tooltip(t, _) => {
+                let mut node = b.node(id, Role::Label, t.text.as_str());
+                node.parent(parent);
+                node
+            }
         };
         node.description(states);
     }
@@ -148,7 +171,22 @@ fn pair(title: &'static str, make: impl Fn(bool) -> Spec) -> Group {
 }
 
 impl ButtonPage {
+    /// The Button page: every group of the kit's ButtonsPage.
     pub fn new() -> Self {
+        Self::with("button_page", Self::groups())
+    }
+
+    /// The Icon Button page: the ButtonsPage's groups of icon-only buttons
+    /// (`:186`, `:219`, `:252`, `:320`), the same cards as on the Button
+    /// page.
+    pub fn icons() -> Self {
+        let mut groups = Self::groups();
+        groups.retain(|g| g.cards.iter().all(|c| matches!(c.spec, Spec::Icon(_))));
+        Self::with("icon_button_page", groups)
+    }
+
+    /// Every group of the kit's ButtonsPage, in its order.
+    fn groups() -> Vec<Group> {
         let button = |variant: ButtonVariant, size: ButtonSize, icon: Option<&'static str>| {
             move |disabled: bool| {
                 let mut b = Button::new("Button")
@@ -285,7 +323,22 @@ impl ButtonPage {
                 },
             ],
         });
-        let root = root_id("button_page");
+        // `<Tooltip>Copy prompt</Tooltip>`, one card the row's width.
+        groups.push(Group {
+            title: "Tooltip",
+            columns: 1,
+            cards: vec![Card {
+                title: "Text",
+                spec: Spec::Tooltip(Tooltip::new("Copy prompt"), None),
+            }],
+        });
+        groups
+    }
+
+    /// The page of `groups` under the root `name`, each card's widget
+    /// with its id, `<name>.group[<g>].card[<c>]`.
+    fn with(name: &str, mut groups: Vec<Group>) -> Self {
+        let root = root_id(name);
         if let Some(root) = &root {
             for (g, group) in groups.iter_mut().enumerate() {
                 for (c, card) in std::mem::take(&mut group.cards).into_iter().enumerate() {
@@ -325,88 +378,28 @@ impl ButtonPage {
         }
     }
 
-    /// Group padding: the page's `p-12`, vertical only (the content rect
-    /// already carries the horizontal gutter).
-    fn pad(theme: &Theme) -> f32 {
-        theme.spacing.xxl
-    }
-
-    /// Space between the group title and its cards (`mb-5`).
-    fn title_gap(theme: &Theme) -> f32 {
-        theme.spacing.lg
-    }
-
-    fn title_style(theme: &Theme) -> engine::drawing::text::TextStyle {
-        theme.typography.exact(theme.typography.title_sm, 28.0, 500)
-    }
-
-    fn chip_style(theme: &Theme) -> engine::drawing::text::TextStyle {
-        theme.typography.exact(theme.typography.caption, 16.0, 500)
-    }
-
-    /// Columns a row actually gets at this width: the page's span until
-    /// the cards would get narrower than `CARD_MIN_W`.
-    fn columns(span: usize, w: f32, gap: f32) -> usize {
-        (1..=span)
-            .rev()
-            .find(|n| (w - gap * (*n as f32 - 1.0)) / *n as f32 >= CARD_MIN_W)
-            .unwrap_or(1)
-    }
-
-    /// Per group: the title baseline y, the card rects, the rule y.
-    fn layout(&self, content: Rect, theme: &Theme) -> Vec<(f32, Vec<Rect>, f32)> {
-        let pad = Self::pad(theme);
-        let gap = theme.spacing.sm;
-        let title_h = Self::title_style(theme).line_height;
-        let mut y = content.y;
-        let mut out = Vec::with_capacity(self.groups.len());
-        for group in &self.groups {
-            let title_y = y + pad;
-            let cols = Self::columns(group.columns, content.w, gap);
-            let card_w = (content.w - gap * (cols as f32 - 1.0)) / cols as f32;
-            let mut rects = Vec::with_capacity(group.cards.len());
-            let first_row = title_y + title_h + Self::title_gap(theme);
-            for (i, _) in group.cards.iter().enumerate() {
-                let col = i % cols;
-                let row = i / cols;
-                rects.push(Rect::new(
-                    content.x + col as f32 * (card_w + gap),
-                    first_row + row as f32 * (CARD_H + gap),
-                    card_w,
-                    CARD_H,
-                ));
-            }
-            let rows = group.cards.len().div_ceil(cols);
-            let rule_y = first_row + rows as f32 * CARD_H + (rows as f32 - 1.0) * gap + pad;
-            out.push((title_y, rects, rule_y));
-            y = rule_y;
-        }
-        out
+    /// Per group: the title's top, the card rects, the rule (the
+    /// showcase mold).
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let groups = self.groups.iter().map(|g| (g.columns, g.cards.len()));
+        showcase::layout(groups, content, theme)
     }
 
     fn widget_rect(spec: &Spec, card: Rect, theme: &Theme) -> Rect {
-        let (w, h) = spec.preferred_size(theme);
-        Rect::new(
-            (card.x + (card.w - w) / 2.0).round(),
-            (card.y + (card.h - h) / 2.0).round(),
-            w,
-            h,
-        )
+        showcase::centered(spec.preferred_size(theme), card)
     }
 
     /// Center of the first card's widget (the view tests probe hover
     /// there).
     #[cfg(test)]
     pub(crate) fn first_widget_center(&self, content: Rect, theme: &Theme) -> (f32, f32) {
-        let card = self.layout(content, theme)[0].1[0];
+        let card = self.layout(content, theme)[0].cards[0];
         let r = Self::widget_rect(&self.groups[0].cards[0].spec, card, theme);
         (r.x + r.w / 2.0, r.y + r.h / 2.0)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        self.layout(content, theme)
-            .last()
-            .map_or(0.0, |(_, _, rule)| rule - content.y)
+        showcase::content_height(&self.layout(content, theme), content)
     }
 
     pub fn handle_event(
@@ -420,8 +413,8 @@ impl ButtonPage {
             result = EventResult::changed();
         }
         let layout = self.layout(content, theme);
-        for (group, (_, rects, _)) in self.groups.iter_mut().zip(&layout) {
-            for (card, rect) in group.cards.iter_mut().zip(rects) {
+        for (group, at) in self.groups.iter_mut().zip(&layout) {
+            for (card, rect) in group.cards.iter_mut().zip(&at.cards) {
                 let bounds = Self::widget_rect(&card.spec, *rect, theme);
                 result = result.merge(card.spec.handle_event(event, bounds));
             }
@@ -431,64 +424,17 @@ impl ButtonPage {
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
-        let title_style = Self::title_style(theme);
-        let chip_style = Self::chip_style(theme);
-        let chip_pad_x = theme.spacing.md;
-        let chip_pad_y = theme.spacing.xs;
-        let chip_inset = theme.spacing.sm;
         let last = self.groups.len() - 1;
-        for (i, (group, (title_y, rects, rule_y))) in self.groups.iter().zip(&layout).enumerate() {
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(group.title, &title_style, None),
-                x: content.x,
-                y: *title_y,
-                color: theme.colors.text.0,
-            });
-            for (card, rect) in group.cards.iter().zip(rects) {
-                // The card: a divider-colored hairline at the card radius.
-                c.push(rounded_rect_stroke(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    theme.shape.card,
-                    theme.colors.divider.0,
-                    1.0,
-                ));
-                // The chip naming the states.
-                let (tw, _) = TextMeasurer::measure_styled(card.title, &chip_style, None);
-                let chip = Rect::new(
-                    rect.x + chip_inset,
-                    rect.y + chip_inset,
-                    tw + chip_pad_x * 2.0,
-                    chip_style.line_height + chip_pad_y * 2.0,
-                );
-                c.push(rounded_rect(
-                    chip.x,
-                    chip.y,
-                    chip.w,
-                    chip.h,
-                    theme.shape.nav,
-                    theme.colors.bg_hover.0,
-                ));
-                c.push(SceneNode::Text {
-                    key: TextNodeKey::from_style(card.title, &chip_style, None),
-                    x: chip.x + chip_pad_x,
-                    y: chip.y + chip_pad_y,
-                    color: theme.colors.text.0,
-                });
+        for (i, (group, at)) in self.groups.iter().zip(&layout).enumerate() {
+            showcase::title(c, group.title, content, at.title_y, theme);
+            for (card, rect) in group.cards.iter().zip(&at.cards) {
+                showcase::card(c, *rect, card.title, theme);
                 card.spec
                     .render(c, Self::widget_rect(&card.spec, *rect, theme), theme);
             }
             // The rule under the group (`border-b`, none on the last).
             if i != last {
-                c.push(SceneNode::Rect {
-                    x: content.x,
-                    y: *rule_y,
-                    w: content.w,
-                    h: 1.0,
-                    color: theme.colors.divider.0,
-                });
+                showcase::rule(c, content, at.rule_y, theme);
             }
         }
     }
@@ -523,8 +469,10 @@ impl Component for ButtonPage {
     /// A button's `activate`: it presses, and nothing else happens, as
     /// for a click.
     fn run(&mut self, req: &Request) -> Result<After, String> {
+        let pressable =
+            |(g, c): (usize, usize)| !matches!(self.groups[g].cards[c].spec, Spec::Tooltip(..));
         match (self.at(&req.target), req.action.as_str()) {
-            (Some(_), "activate") => Ok(After::Nothing),
+            (Some(at), "activate") if pressable(at) => Ok(After::Nothing),
             _ => Err(format!(
                 "the button page has no {} on {}",
                 req.action, req.target
@@ -549,6 +497,7 @@ impl Component for ButtonPage {
 
 #[cfg(test)]
 mod tests {
+    use super::super::showcase::{CARD_H, CARD_MIN_W};
     use super::*;
 
     /// Narrow content: rows drop to one column instead of squeezing the
@@ -558,8 +507,8 @@ mod tests {
         let section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 500.0, 900.0);
         let layout = section.layout(content, &Theme::hoff_core());
-        for (_, rects, _) in &layout {
-            for r in rects {
+        for group in &layout {
+            for r in &group.cards {
                 assert_eq!(r.x, content.x);
                 assert!(r.w >= CARD_MIN_W);
             }
@@ -573,17 +522,17 @@ mod tests {
         let section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
         let layout = section.layout(content, &Theme::hoff_core());
-        let (_, first, _) = &layout[0];
+        let first = &layout[0].cards;
         assert_eq!(first.len(), 2);
         assert_eq!(first[0].y, first[1].y);
         assert!(first[1].x > first[0].x);
-        let toolbar = &layout[11].1;
+        let toolbar = &layout[11].cards;
         assert_eq!(toolbar.len(), 3);
         assert_eq!(toolbar[0].y, toolbar[2].y);
         let mut prev = 0.0;
-        for (title_y, _, rule_y) in &layout {
-            assert!(*title_y > prev);
-            prev = *rule_y;
+        for group in &layout {
+            assert!(group.title_y > prev);
+            prev = group.rule_y;
         }
         assert!(section.content_height(content, &Theme::hoff_core()) > 14.0 * CARD_H);
     }
@@ -594,7 +543,7 @@ mod tests {
         let mut section = ButtonPage::new();
         let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
         let theme = Theme::hoff_core();
-        let card = section.layout(content, &theme)[0].1[0];
+        let card = section.layout(content, &theme)[0].cards[0];
         let center = (card.x + card.w / 2.0, card.y + card.h / 2.0);
         let r = section.handle_event(
             &WidgetEvent::MouseMove {
@@ -605,5 +554,79 @@ mod tests {
             &theme,
         );
         assert!(r.changed);
+    }
+
+    /// The Icon Button page is the Button page's icon-only groups: the
+    /// three icon buttons live and disabled, the toolbar tool at rest,
+    /// disabled and active, each widget centered in its card.
+    #[test]
+    fn the_icon_page_is_the_icon_groups_of_the_buttons_page() {
+        let page = ButtonPage::icons();
+        let titles: Vec<&str> = page.groups.iter().map(|g| g.title).collect();
+        assert_eq!(
+            titles,
+            [
+                "Ghost icon button",
+                "Large icon button",
+                "Small icon button",
+                "Toolbar button"
+            ]
+        );
+        let toolbar = &page.groups[3];
+        let states: Vec<&str> = toolbar.cards.iter().map(|c| c.title).collect();
+        assert_eq!(states, ["Default, Hover", "Disabled", "Active"]);
+        let theme = Theme::hoff_core();
+        let content = Rect::new(0.0, 0.0, 1000.0, 800.0);
+        for (group, at) in page.groups.iter().zip(page.layout(content, &theme)) {
+            for (card, rect) in group.cards.iter().zip(&at.cards) {
+                let r = ButtonPage::widget_rect(&card.spec, *rect, &theme);
+                let (cy, wy) = (rect.y + rect.h / 2.0, r.y + r.h / 2.0);
+                assert!((cy - wy).abs() <= 0.5, "{}: centered", group.title);
+            }
+        }
+        let root = page.root.as_ref().map(|r| r.as_str().to_string());
+        assert_eq!(root.as_deref(), Some("icon_button_page"));
+    }
+
+    /// The ButtonsPage ends with its Tooltip: one card, "Text", the
+    /// bubble "Copy prompt" at its own size, projected as a label (not a
+    /// button: it has no `activate`).
+    #[test]
+    fn the_page_ends_with_the_kit_s_tooltip() {
+        let mut page = ButtonPage::new();
+        let theme = Theme::hoff_core();
+        let last = page.groups.last().expect("groups");
+        assert_eq!(last.title, "Tooltip");
+        let card = &last.cards[0];
+        assert_eq!(card.title, "Text");
+        let Spec::Tooltip(tip, Some(id)) = &card.spec else {
+            panic!("the tooltip card holds the bubble with its id");
+        };
+        assert_eq!(card.spec.preferred_size(&theme), tip.size(&theme));
+        let id = id.clone();
+        let root = page.root.clone().expect("the root parses");
+        let mut b = SnapshotBuilder::new();
+        b.node(&root, Role::Region, "Button");
+        page.project(&mut b, &root);
+        let snap = b.finish().expect("a valid tree");
+        let node = snap.get(&id).expect("the bubble is projected");
+        assert_eq!(
+            (node.role, node.label.as_str()),
+            (Role::Label, "Copy prompt")
+        );
+        let req = Request {
+            actor: accord::Actor::Test {
+                name: "button".into(),
+            },
+            target: id,
+            action: accord::ActionName::parse("activate").expect("an action name"),
+            param: None,
+            observed: accord::Observation {
+                revision: snap.revision(),
+                values: Vec::new(),
+            },
+            ask: None,
+        };
+        assert!(page.run(&req).is_err(), "a tooltip does not press");
     }
 }

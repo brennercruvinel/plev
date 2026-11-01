@@ -466,3 +466,21 @@ fn a_hit_within_the_tolerance_reaches_across_a_cell_border() {
     assert_eq!(grid.hit((17.5, 0.0), 3.0), None, "and not past it");
     assert_eq!(grid.hit((100.5, 0.0), 0.0), Some(Hit::Node(2)));
 }
+
+/// Reduced motion: the first frame puts the graph where it comes to rest
+/// (the same place the full run reaches) and the next asks for nothing.
+#[test]
+fn with_reduced_motion_the_graph_rests_in_one_frame() {
+    use crate::compose::animation::set_reduced_motion;
+    let mut rested = force_graph();
+    rested.settle();
+    let mut g = force_graph();
+    assert!(g.moving(), "a new graph is warm");
+    set_reduced_motion(true);
+    let first = g.tick(1.0 / 60.0);
+    let second = g.tick(1.0 / 60.0);
+    set_reduced_motion(false);
+    assert!(first, "the frame that places it");
+    assert!(!second && !g.moving(), "still after it");
+    assert_eq!(g.positions(), rested.positions());
+}

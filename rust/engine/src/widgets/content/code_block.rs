@@ -1,7 +1,8 @@
-//! Code block: monospaced-feel text (the mono ramp step, the single
-//! embedded family) on a field-tone surface at the nav radius, wrapped
-//! at the block width, with an optional caption line. The `code_style`
-//! helper three gallery sections grew is this one widget.
+//! Code block: code on a well, wrapped at the block width, with an
+//! optional caption line. Every visual value is the theme's
+//! `navigation.code` recipe. The `code_style` helper three gallery
+//! sections grew is this one widget. [`CodeBlock::project`] declares it
+//! as a label named by its caption, its code as the value.
 //!
 //! Rows (task-97): given `rows`, the block draws them instead of `code`,
 //! one line box each, cut at the block's width with an ellipsis, clipped
@@ -14,9 +15,10 @@
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
+use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
-use crate::widgets::widget::{Rect, with_alpha};
+use crate::widgets::widget::Rect;
 
 /// The kind of one row of a code block: what a diff says of the line.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -36,26 +38,46 @@ impl LineKind {
         LineKind::Header,
     ];
 
-    /// The wash behind a row of this kind: the design system's intent
-    /// wash (the hue of the intent's token at `glass.wash_alpha`, as a
-    /// selected chip and a progress fill draw it), success for a line
-    /// added and danger for one removed; the hovered glass for a header;
-    /// none for context.
+    /// The wash behind a row of this kind, from the recipe: the
+    /// success wash for a line added, the danger one for a line removed,
+    /// the header's; none for context.
     pub fn wash(self, theme: &Theme) -> Option<[f32; 4]> {
-        let g = &theme.glass;
+        let r = &theme.navigation.code;
         match self {
             LineKind::Context => None,
-            LineKind::Added => Some(with_alpha(theme.colors.success, g.wash_alpha)),
-            LineKind::Removed => Some(with_alpha(theme.colors.danger, g.wash_alpha)),
-            LineKind::Header => Some(g.surface_hover.0),
+            LineKind::Added => Some(r.added.0),
+            LineKind::Removed => Some(r.removed.0),
+            LineKind::Header => Some(r.header.0),
         }
     }
 
-    /// The ink of a row's text: the primary text for every kind, the text
-    /// token that reads at WCAG AA over every wash on the block (the
-    /// secondary `text_mid` of the wrapped code does not over a wash).
+    /// The sign a diff's row opens with and the code after it: `+` on a
+    /// line added, `-` on one removed, a space on context; none on a
+    /// header, or where the row opens with anything else.
+    pub fn marker(self, text: &str) -> Option<(&str, &str)> {
+        let sign = match self {
+            LineKind::Added => '+',
+            LineKind::Removed => '-',
+            LineKind::Context => ' ',
+            LineKind::Header => return None,
+        };
+        text.strip_prefix(sign)
+            .map(|rest| (&text[..sign.len_utf8()], rest))
+    }
+
+    /// The marker column's width: the widest of the three signs.
+    pub fn marker_w(style: &TextStyle) -> f32 {
+        ["+", "-", " "]
+            .iter()
+            .map(|s| TextMeasurer::measure_styled(s, style, None).0)
+            .fold(0.0, f32::max)
+    }
+
+    /// The ink of a row's text: one tone for every kind, the one that
+    /// reads at WCAG AA over every wash on the block (the code's own tone
+    /// may not over a wash).
     pub fn ink(self, theme: &Theme) -> [f32; 4] {
-        theme.colors.text.0
+        theme.navigation.code.row_ink.0
     }
 }
 
@@ -86,6 +108,7 @@ pub struct CodeBlock {
     /// How far down the rows are scrolled, in px; the block keeps it
     /// within `0..=max_scroll`.
     pub scroll: f32,
+    sem: Option<SemId>,
 }
 
 impl CodeBlock {
@@ -95,6 +118,7 @@ impl CodeBlock {
             caption: None,
             rows: Vec::new(),
             scroll: 0.0,
+            sem: None,
         }
     }
 
@@ -111,17 +135,55 @@ impl CodeBlock {
         self
     }
 
+    /// The logical identity the render binds the block to.
+    pub fn sem(mut self, id: SemId) -> Self {
+        self.sem = Some(id);
+        self
+    }
+
+    pub fn sem_id(&self) -> Option<&SemId> {
+        self.sem.as_ref()
+    }
+
+    /// The code as text: `code`, or the rows one per line.
+    pub fn text(&self) -> String {
+        if self.rows.is_empty() {
+            return self.code.clone();
+        }
+        let rows: Vec<&str> = self.rows.iter().map(|r| r.text.as_str()).collect();
+        rows.join("\n")
+    }
+
+    /// Declares the block as `id`: a `Role::Label` named by its caption
+    /// ("code" without one), its code as the `value` a reader hears. It
+    /// only reads the widget. Returns the node for the app to add to.
+    #[track_caller]
+    pub fn project<'b>(
+        &self,
+        b: &'b mut SnapshotBuilder,
+        id: &SemId,
+        parent: Option<&SemId>,
+    ) -> NodeBuilder<'b> {
+        let name = self.caption.as_deref().unwrap_or("code");
+        let mut node = b.node(id, Role::Label, name);
+        if let Some(parent) = parent {
+            node.parent(parent);
+        }
+        node.state("value", self.text());
+        node
+    }
+
     pub fn text_style(theme: &Theme) -> TextStyle {
-        theme.typography.mono()
+        theme.navigation.code.text.style(&theme.typography)
     }
 
     fn caption_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        theme.navigation.code.caption.style(&theme.typography)
     }
 
-    /// Inner padding: the `md` step.
+    /// Inner padding.
     fn pad(theme: &Theme) -> f32 {
-        theme.spacing.md
+        theme.navigation.code.pad
     }
 
     /// The band the caption takes above the code, its gap included; none
@@ -129,7 +191,7 @@ impl CodeBlock {
     fn caption_band(&self, theme: &Theme) -> f32 {
         self.caption
             .as_ref()
-            .map(|_| Self::caption_style(theme).line_height + theme.spacing.xs)
+            .map(|_| Self::caption_style(theme).line_height + theme.navigation.code.caption_gap)
             .unwrap_or(0.0)
     }
 
@@ -182,32 +244,15 @@ impl CodeBlock {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        let glass = &theme.glass;
+        let r = &theme.navigation.code;
+        if let Some(id) = &self.sem {
+            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+        }
         let pad = Self::pad(theme);
-        let radius = theme.shape.nav;
-        c.push_to_layer(
-            layer,
-            rounded_rect(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                radius,
-                glass.field.0,
-            ),
-        );
-        c.push_to_layer(
-            layer,
-            rounded_rect_stroke(
-                bounds.x,
-                bounds.y,
-                bounds.w,
-                bounds.h,
-                radius,
-                glass.edge_soft.0,
-                theme.control.edge_width,
-            ),
-        );
+        let Rect { x, y, w, h } = bounds;
+        c.push_to_layer(layer, rounded_rect(x, y, w, h, r.radius, r.fill.0));
+        let rim = rounded_rect_stroke(x, y, w, h, r.radius, r.border.0, r.border_width);
+        c.push_to_layer(layer, rim);
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let mut y = bounds.y + pad;
         if let Some(caption) = &self.caption {
@@ -218,10 +263,10 @@ impl CodeBlock {
                     key: TextNodeKey::from_style(caption, &style, Some(inner)),
                     x: bounds.x + pad,
                     y,
-                    color: glass.text_faint.0,
+                    color: r.caption_color.0,
                 },
             );
-            y += style.line_height + theme.spacing.xs;
+            y += style.line_height + r.caption_gap;
         }
         if !self.rows.is_empty() {
             self.render_rows(c, layer, bounds, theme);
@@ -233,7 +278,7 @@ impl CodeBlock {
                 key: TextNodeKey::from_style(&self.code, &Self::text_style(theme), Some(inner)),
                 x: bounds.x + pad,
                 y,
-                color: theme.colors.text_mid.0,
+                color: r.code.0,
             },
         );
     }
@@ -246,9 +291,15 @@ impl CodeBlock {
         let style = Self::text_style(theme);
         let row_h = style.line_height;
         let pad = Self::pad(theme);
-        let edge = theme.control.edge_width;
+        let edge = theme.navigation.code.border_width;
         let inner = (bounds.w - pad * 2.0).max(0.0);
         let scroll = self.scroll.clamp(0.0, self.max_scroll(bounds, theme));
+        let marker_w = LineKind::marker_w(&style);
+        // Only a diff's rows have markers: code with an indent is no diff.
+        let diff = self
+            .rows
+            .iter()
+            .any(|r| matches!(r.kind, LineKind::Added | LineKind::Removed));
         c.push_to_layer(
             layer,
             SceneNode::PushClip {
@@ -280,12 +331,23 @@ impl CodeBlock {
                     },
                 );
             }
-            let shown = TextMeasurer::truncate_to_width(&row.text, &style, inner);
+            // A diff's marker ends in a column as wide as the widest sign,
+            // the code after it at one x on every row: in a proportional
+            // face (a theme may name one as its mono family) a `+`, a `-`
+            // and a space would start the code at three x. The row stays
+            // one text, shifted by what its sign is narrower than the
+            // column; in the embedded mono face the shift is zero.
+            let lead = match row.kind.marker(&row.text).filter(|_| diff) {
+                Some((sign, _)) => marker_w - TextMeasurer::measure_styled(sign, &style, None).0,
+                None => 0.0,
+            };
+            let room = (inner - lead).max(0.0);
+            let shown = TextMeasurer::truncate_to_width(&row.text, &style, room);
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
                     key: TextNodeKey::from_style(&shown, &style, None),
-                    x: bounds.x + pad,
+                    x: bounds.x + pad + lead,
                     y,
                     color: row.kind.ink(theme),
                 },
@@ -301,9 +363,10 @@ mod tests {
     use crate::drawing::text::TextMeasurer;
     use crate::styling::color::Color;
     use crate::styling::theme::Theme;
+    use crate::styling::theme::TypeRole;
 
     use super::{CodeBlock, CodeLine, LineKind};
-    use crate::widgets::widget::{Rect, with_alpha};
+    use crate::widgets::widget::Rect;
 
     fn nodes(block: &CodeBlock, bounds: Rect, theme: &Theme) -> Vec<SceneNode> {
         let mut c = Compositor::new();
@@ -390,8 +453,9 @@ mod tests {
             other => panic!("{other:?}"),
         }
         assert_eq!(texts(&drawn)[0].2, theme.glass.text_faint.0, "the caption");
-        let caption = theme.typography.caption_sm().line_height + theme.spacing.xs;
-        let line = theme.typography.mono().line_height;
+        let caption =
+            theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.xs;
+        let line = theme.typography.role(TypeRole::Code).line_height;
         assert_eq!(
             block.height_for(300.0, &theme),
             pad + caption + line + pad,
@@ -407,29 +471,35 @@ mod tests {
             let block = CodeBlock::lines(diff()).caption("diff");
             let bounds = Rect::new(0.0, 0.0, 420.0, block.height_for(420.0, &theme));
             let drawn = nodes(&block, bounds, &theme);
-            let g = &theme.glass;
-            let added = with_alpha(theme.colors.success, g.wash_alpha);
-            let removed = with_alpha(theme.colors.danger, g.wash_alpha);
-            let rows: Vec<(String, f32, [f32; 4])> = texts(&drawn).into_iter().skip(1).collect();
+            let r = &theme.navigation.code;
+            let (added, removed) = (r.added.0, r.removed.0);
+            // a row's runs (its marker, its code) joined by line
+            let mut rows: Vec<(String, f32, [f32; 4])> = Vec::new();
+            for (text, y, ink) in texts(&drawn).into_iter().skip(1) {
+                match rows.last_mut() {
+                    Some(last) if last.1 == y => last.0.push_str(&text),
+                    _ => rows.push((text, y, ink)),
+                }
+            }
             assert_eq!(rows.len(), 4, "{name}: every row shows");
             for (row, (text, _, ink)) in diff().iter().zip(&rows) {
                 assert_eq!(*text, row.text, "{name}");
-                assert_eq!(*ink, theme.colors.text.0, "{name}: {text}");
+                assert_eq!(*ink, r.row_ink.0, "{name}: {text}");
             }
             let area = block.rows_rect(bounds, &theme);
             let row_h = CodeBlock::row_h(&theme);
             let at = |i: usize| area.y + i as f32 * row_h;
             assert_eq!(
                 washes(&drawn),
-                [(at(0), g.surface_hover.0), (at(2), removed), (at(3), added)],
+                [(at(0), r.header.0), (at(2), removed), (at(3), added)],
                 "{name}: a wash behind the header, the removed and the added, none behind context"
             );
             let allowed = [
-                g.field.0,
-                g.edge_soft.0,
-                g.text_faint.0,
-                g.surface_hover.0,
-                theme.colors.text.0,
+                r.fill.0,
+                r.border.0,
+                r.caption_color.0,
+                r.header.0,
+                r.row_ink.0,
                 added,
                 removed,
             ];
@@ -496,7 +566,7 @@ mod tests {
             let page = over(theme.colors.bg, [0.0; 3]);
             let card = over(theme.colors.surface, page);
             for (under, base) in [("colors.bg", page), ("colors.surface", card)] {
-                let block = over(theme.glass.field, base);
+                let block = over(theme.navigation.code.fill, base);
                 let mut line = format!("{name:>10} over {under:<14}");
                 for kind in LineKind::ALL {
                     let row = kind.wash(&theme).map_or(block, |w| over(Color(w), block));
@@ -561,14 +631,52 @@ mod tests {
             for width in [390.0, 1440.0] {
                 let block = CodeBlock::lines(vec![CodeLine::new(&long, LineKind::Added)]);
                 let bounds = Rect::new(0.0, 0.0, width, block.height_for(width, &theme));
-                let inner = width - theme.spacing.md * 2.0;
+                let inner = width - theme.navigation.code.pad * 2.0;
+                let style = CodeBlock::text_style(&theme);
                 for (text, _, _) in texts(&nodes(&block, bounds, &theme)) {
-                    let style = CodeBlock::text_style(&theme);
                     let (w, _) = TextMeasurer::measure_styled(&text, &style, None);
-                    assert!(w <= inner + 0.5, "{width}: {w} > {inner}");
+                    let lead = LineKind::marker_w(&style)
+                        - TextMeasurer::measure_styled("+", &style, None).0;
+                    assert!(lead + w <= inner + 0.5, "{width}: {w} > {inner}");
                     assert!(text.ends_with('\u{2026}') || text == long);
                 }
             }
         }
+    }
+
+    /// The code after a diff's marker starts at one x on every row, the
+    /// face being proportional: each row shifts by what its sign is
+    /// narrower than the marker column. Code with no diff row stays put.
+    #[test]
+    fn a_diff_s_code_starts_at_one_x_after_its_marker() {
+        let theme = Theme::hoff_core();
+        let style = CodeBlock::text_style(&theme);
+        let block = CodeBlock::lines(diff());
+        let bounds = Rect::new(0.0, 0.0, 420.0, block.height_for(420.0, &theme));
+        let drawn = nodes(&block, bounds, &theme);
+        let starts: Vec<f32> = drawn
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { key, x, .. } => {
+                    let (sign, _) = LineKind::ALL.iter().find_map(|k| {
+                        k.marker(&key.text)
+                            .filter(|_| *k != LineKind::Context || key.text.starts_with(' '))
+                    })?;
+                    Some(x + TextMeasurer::measure_styled(sign, &style, None).0)
+                }
+                _ => None,
+            })
+            .collect();
+        assert_eq!(starts.len(), 3, "{starts:?}");
+        assert!(
+            starts.windows(2).all(|w| (w[0] - w[1]).abs() < 0.01),
+            "{starts:?}"
+        );
+        let code = CodeBlock::lines(vec![CodeLine::new("    indented()", LineKind::Context)]);
+        let at = texts(&nodes(&code, bounds, &theme))[0].0.clone();
+        assert_eq!(at, "    indented()", "no diff, no marker");
+        assert_eq!(LineKind::Header.marker("src/lib.rs"), None);
+        assert_eq!(LineKind::Added.marker("+x"), Some(("+", "x")));
+        assert_eq!(LineKind::Added.marker("x"), None);
     }
 }

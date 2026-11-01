@@ -7,13 +7,15 @@
 use engine::control::input::FileDrop;
 use engine::styling::theme::Intent;
 use engine::widgets::overlay::OverlayKind;
-use engine::widgets::prelude::{ContextMenu, EventResult, Modal, ModalAction, Rect, WidgetEvent};
+use engine::widgets::overlay::drawer::DrawerAction;
+use engine::widgets::prelude::{ContextMenu, EventResult, ModalAction, Rect, WidgetEvent};
 
 use accord::Value;
 
-use super::super::components::context_menu;
+use super::super::components::{context_menu, dialog};
 use super::super::dispatcher::keyboard::Walk;
 use super::super::dispatcher::{ShellTarget, overlay};
+use super::super::palette;
 use super::super::{ActiveOverlay, HOTKEY_PAGES, PAGES, Pane, ShowcaseView};
 
 /// Non-character editing keys the platform shell forwards (winit-free so
@@ -73,18 +75,31 @@ impl ShowcaseView {
 
     /// Returns `true` when the key was consumed (and a redraw is needed).
     pub fn handle_key(&mut self, key: &str) -> bool {
+        self.arm_reveal();
+        // The open palette has the characters (`palette.rs`).
+        if self.palette_type(key) {
+            return true;
+        }
         // A focused text field owns the characters: "t" types, it does
         // not switch the theme. Not beneath an overlay that holds the
         // pointer: the keyboard is the overlay's then.
         let held = self.overlay_holds_pointer();
+        let pane = self.pane();
         let typed = !held
-            && match self.pane() {
-                Some(Pane::Input) => self.panes.input.handle_text(key),
-                Some(Pane::Todo) => self.panes.todo.handle_text(key),
-                Some(Pane::Surface) => self.panes.surface.handle_text(key, &mut self.panes.todo),
-                Some(Pane::Silences) => self.panes.silences.handle_text(key, &mut self.panes.todo),
-                Some(Pane::Git) => self.panes.git.handle_text(key),
-                _ => false,
+            && if let Some(host) = self.panes.text_host_mut(pane) {
+                host.handle_text(key)
+            } else {
+                match pane {
+                    Some(Pane::Todo) => self.panes.todo.handle_text(key),
+                    Some(Pane::Surface) => {
+                        self.panes.surface.handle_text(key, &mut self.panes.todo)
+                    }
+                    Some(Pane::Silences) => {
+                        self.panes.silences.handle_text(key, &mut self.panes.todo)
+                    }
+                    Some(Pane::Git) => self.panes.git.handle_text(key),
+                    _ => false,
+                }
             };
         if typed {
             return true;
@@ -132,7 +147,7 @@ impl ShowcaseView {
 
     /// A person picks the page at `index` of the table (a digit, a
     /// sidebar link): `shell.page`, through the dispatcher.
-    fn ask_page(&mut self, index: usize) -> bool {
+    pub(in crate::views) fn ask_page(&mut self, index: usize) -> bool {
         let Some(page) = PAGES.get(index) else {
             return false;
         };
@@ -144,13 +159,32 @@ impl ShowcaseView {
     /// holds the pointer first (the page beneath keeps its focus, the
     /// control that opened it), then the page's focus blurs (an open
     /// select closes), then the rest of the overlay stack. Returns `false`
-    /// when there was nothing to close (caller may quit).
+    /// when there was nothing to close: Escape then does nothing.
     pub fn close_top_overlay(&mut self) -> bool {
+        self.arm_reveal();
+        let was_open = self.palette_open();
         if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
+            self.palette_closed(was_open);
             return true;
         }
-        let blurred = match self.pane() {
-            Some(Pane::Input) => self.panes.input.handle_escape(),
+        if self.escape_sidebar() {
+            return true;
+        }
+        if self.blur_page() {
+            return true;
+        }
+        self.overlay_mgr.pop_animated().is_some()
+    }
+
+    /// The page lets its focus go (Escape, or the sidebar took the
+    /// focus): a focused text blurs, an open select closes. `true` when
+    /// it had one.
+    pub(in crate::views) fn blur_page(&mut self) -> bool {
+        let pane = self.pane();
+        if let Some(host) = self.panes.text_host_mut(pane) {
+            return host.handle_escape();
+        }
+        match pane {
             Some(Pane::Checkbox) => self.panes.checkbox.handle_escape(),
             Some(Pane::Switch) => self.panes.switch.handle_escape(),
             Some(Pane::Slider) => self.panes.slider.handle_escape(),
@@ -163,11 +197,7 @@ impl ShowcaseView {
             Some(Pane::Capture) => self.panes.capture.handle_escape(),
             Some(Pane::Git) => self.panes.git.handle_escape(),
             _ => self.blur_component(),
-        };
-        if blurred {
-            return true;
         }
-        self.overlay_mgr.pop_animated().is_some()
     }
 
     /// Files dragged over the window, as the engine says it (the shell
@@ -181,12 +211,19 @@ impl ShowcaseView {
     /// the platform shell. On a component page, or over the modal or the
     /// menu, Tab walks the projection and the arrows, Home and End move in
     /// the widget the focus is in (`dispatch::keyboard`), unless a focused
-    /// text field edits with them; on an app page, the page's own. A
+    /// text field edits with them; on an app page, the page's own (Tab
+    /// the page leaves walks to the sidebar). A
     /// `Select` key the page does not take moves as the key without Shift.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        self.arm_reveal();
+        if self.palette_edit(key) {
+            return true;
+        }
         let plain = key.unshifted();
         if !self.walks() {
-            return self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
+            let took = self.page_edit_key(key) || (plain != key && self.page_edit_key(plain));
+            // a page with no Tab of its own: Tab reaches the sidebar
+            return took || (plain == EditKey::Tab && self.walk(Walk::Tab));
         }
         let walk = match plain {
             EditKey::Tab => return self.walk(Walk::Tab),
@@ -207,8 +244,11 @@ impl ShowcaseView {
         if self.overlay_holds_pointer() {
             return false;
         }
-        match self.pane() {
-            Some(Pane::Input) => self.panes.input.handle_edit_key(key),
+        let pane = self.pane();
+        if let Some(host) = self.panes.text_host_mut(pane) {
+            return host.handle_edit_key(key);
+        }
+        match pane {
             Some(Pane::Todo) => self.panes.todo.handle_edit_key(key),
             Some(Pane::Surface) => self
                 .panes
@@ -231,6 +271,19 @@ impl ShowcaseView {
     /// from their intent field; the Files page presses its focused button;
     /// the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
+        self.arm_reveal();
+        if self.palette_open() {
+            return self.palette_enter();
+        }
+        // A focused text that takes Enter (a line break, a pick from a
+        // filtered list) has it before the focus walk.
+        let pane = self.pane();
+        if !self.overlay_holds_pointer()
+            && let Some(host) = self.panes.text_host_mut(pane)
+            && host.handle_enter()
+        {
+            return true;
+        }
         if self.walks() {
             return self.walk(Walk::Press);
         }
@@ -264,6 +317,10 @@ impl ShowcaseView {
     }
 
     pub fn handle_right_click(&mut self, x: f32, y: f32) -> bool {
+        // A text field's own menu (`field_menu.rs`).
+        if self.panes.text_host(self.pane()).is_some() {
+            return self.open_field_menu(x, y);
+        }
         match self.pane() {
             Some(Pane::Git) => {
                 let content = self.page_rect();
@@ -271,20 +328,33 @@ impl ShowcaseView {
             }
             Some(Pane::ContextMenu) if self.active_overlay.is_none() => {
                 let content = self.page_rect();
-                if !context_menu::ContextMenuPage::area(content, &self.theme).contains(x, y) {
+                if !self
+                    .panes
+                    .context_menu
+                    .area(content, &self.theme)
+                    .contains(x, y)
+                {
                     return false;
                 }
                 self.open_menu(x, y);
                 true
             }
-            // A text field's own menu (`field_menu.rs`).
-            Some(Pane::Input) => self.open_field_menu(x, y),
             _ => false,
         }
     }
 
     fn open_menu(&mut self, x: f32, y: f32) {
         self.show_menu(context_menu::demo_menu(), x, y);
+    }
+
+    /// The Context Menu page's menu at the middle of its area: a reader's
+    /// press or an agent's `open` there, as a right click.
+    pub(crate) fn open_page_menu(&mut self) {
+        if self.active_overlay.is_some() {
+            return;
+        }
+        let area = self.panes.context_menu.area(self.page_rect(), &self.theme);
+        self.open_menu(area.x + area.w / 2.0, area.y + area.h / 2.0);
     }
 
     /// `widget` opens as the context menu at `(x, y)`, kept inside the
@@ -318,29 +388,11 @@ impl ShowcaseView {
     }
 
     pub(crate) fn open_modal(&mut self, destructive: bool) {
+        // The Dialog page's questions (`components/dialog.rs`).
         let (widget, intent) = if destructive {
-            (
-                Modal::new(
-                    "Delete repository?",
-                    "This permanently removes the repository and all of its \
-                     history. This action cannot be undone.",
-                    "Delete",
-                    "Cancel",
-                )
-                .intent(Intent::Destructive),
-                Intent::Destructive,
-            )
+            (dialog::destructive(), Intent::Destructive)
         } else {
-            (
-                Modal::new(
-                    "Apply settings?",
-                    "Your workspace will reload to apply the new configuration.",
-                    "Apply",
-                    "Cancel",
-                )
-                .intent(Intent::Neutral),
-                Intent::Neutral,
-            )
+            (dialog::plain(), Intent::Neutral)
         };
         let widget = match overlay::id(overlay::DIALOG) {
             Some(id) => widget.sem(id),
@@ -379,6 +431,17 @@ impl ShowcaseView {
     /// Route a pointer event. Returns `true` if a redraw is needed.
     pub fn handle_event(&mut self, event: &WidgetEvent) -> bool {
         let (vw, vh) = (self.width, self.height);
+        // a focus the pointer moves is where the person looks: the page
+        // does not scroll to it (`compositor/reveal.rs`)
+        if matches!(event, WidgetEvent::MouseDown { .. }) {
+            self.reveal.pointer();
+        }
+        if matches!(
+            event,
+            WidgetEvent::MouseDown { .. } | WidgetEvent::MouseUp { .. }
+        ) {
+            self.arm_reveal();
+        }
 
         // Toasts float above everything.
         let toast_result = self.toasts.handle_event(event, &self.theme, vw, vh);
@@ -418,6 +481,36 @@ impl ShowcaseView {
                     };
                     (asked, r.changed)
                 }
+                // task-104 front B: the edge panels (`dispatcher/overlay/edge.rs`).
+                ActiveOverlay::Sheet { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let button = match action {
+                        ModalAction::Confirm => Some("confirm"),
+                        ModalAction::Cancel => Some("cancel"),
+                        ModalAction::None => None,
+                    };
+                    let asked =
+                        button.and_then(|b| widget.sem_id().map(|id| (id.key(b), "activate")));
+                    (asked, r.changed || button.is_some())
+                }
+                // task-104 front H: the command palette (`palette.rs`).
+                ActiveOverlay::Palette { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    palette::pointer(widget, event, &self.theme, window)
+                }
+                ActiveOverlay::Drawer { widget, .. } => {
+                    let window = Rect::new(0.0, 0.0, vw, vh);
+                    let (action, r) = widget.handle_event(event, &self.theme, window);
+                    let key = match action {
+                        DrawerAction::Pick(i) => Some(i.to_string()),
+                        DrawerAction::Close => Some("close".to_owned()),
+                        DrawerAction::None => None,
+                    };
+                    let acted = key.is_some();
+                    let asked = key.and_then(|k| widget.sem_id().map(|id| (id.key(k), "activate")));
+                    (asked, r.changed || acted)
+                }
             };
             return match asked {
                 Some((target, action)) => {
@@ -437,17 +530,13 @@ impl ShowcaseView {
             }
         }
 
-        // The chrome first: sidebar navigation (a drawer is exclusive),
-        // the menu button on a phone.
-        let (shell_result, nav) = self.shell.handle_event(event, &self.theme);
-        if let Some(i) = nav {
-            self.ask_page(i);
-            return true;
+        // The chrome first: the sidebar (an open drawer is exclusive),
+        // the drawer's menu button (`navigation.rs`).
+        let (taken, changed) = self.chrome_event(event);
+        if taken {
+            return result.changed || changed;
         }
-        result = result.merge(shell_result);
-        if shell_result.handled {
-            return result.changed;
-        }
+        result.changed |= changed;
 
         // Clicks on the header band belong to the chrome: widgets scrolled
         // underneath it must not receive them.
@@ -471,6 +560,7 @@ impl ShowcaseView {
             && x >= page_x
         {
             self.sync_page_scroll();
+            self.glide.stop();
             let scroll = &mut self.page_scroll[self.page];
             let old = scroll.offset();
             scroll.scroll_by(delta);

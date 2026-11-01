@@ -13,13 +13,24 @@
 //! Japanese or Chinese) is kept apart from the buffer: it draws in place
 //! of the selection, or at the caret, until the input method commits it
 //! as typed text or drops it.
+//!
+//! What it takes is its [`Accept`]: typing, a paste and a commit drop the
+//! characters it does not admit and cut what it has no room for.
+//!
+//! A masked input (a password) draws a bullet per grapheme and lays the
+//! caret, a click and the selection out over the bullets (see
+//! `super::view`); the buffer keeps the text, and nothing of it leaves
+//! by copy or cut.
 
+use std::borrow::Cow;
 use std::ops::Range;
 
 use crate::drawing::text::TextStyle;
 use crate::runtime::platform::clipboard::ClipboardProvider;
 
+use super::accept::Accept;
 use super::buffer::TextBuffer;
+use super::view::Shown;
 use super::visual::VisualLine;
 use crate::widgets::wake::{Blink, Wake};
 
@@ -32,6 +43,13 @@ pub struct TextInput {
     pub buffer: TextBuffer,
     pub focused: bool,
     pub placeholder: String,
+    /// Draw a bullet per grapheme in place of the text (a password).
+    pub masked: bool,
+    /// The characters it takes and how many (anything, by default).
+    pub accept: Accept,
+    /// Its text runs over several lines (a text area): a paste keeps its
+    /// line breaks ([`multi_line`]) instead of joining them.
+    pub multiline: bool,
     blink: Blink,
     preedit: Option<Preedit>,
 }
@@ -56,6 +74,9 @@ impl TextInput {
             buffer: TextBuffer::new(),
             focused: false,
             placeholder: String::new(),
+            masked: false,
+            accept: Accept::ANY,
+            multiline: false,
             blink: Blink::new(),
             preedit: None,
         }
@@ -100,12 +121,28 @@ impl TextInput {
         self.blink.reset();
     }
 
+    /// Type `c` over the selection, when the input admits it and has
+    /// room.
     pub fn handle_char(&mut self, c: char) {
         if !self.focused {
             return;
         }
-        self.buffer.insert_char(c);
+        let mut one = [0; 4];
+        let admitted = self.admitted(c.encode_utf8(&mut one));
+        if let Some(c) = admitted.chars().next() {
+            self.buffer.insert_char(c);
+        }
         self.reset_blink();
+    }
+
+    /// What of `s` the input takes over its selection ([`Accept::admit`]).
+    fn admitted(&self, s: &str) -> String {
+        if self.accept == Accept::ANY {
+            return s.to_owned();
+        }
+        let replaced = self.buffer.selected_text().map_or(0, |t| t.chars().count());
+        self.accept
+            .admit(s, self.buffer.text().chars().count(), replaced)
     }
 
     pub fn handle_backspace(&mut self) {
@@ -188,13 +225,15 @@ impl TextInput {
             return;
         }
         let pos = self.buffer.cursor();
-        let line = VisualLine::new(self.buffer.text(), &TextStyle::default(), None);
+        let shown = Shown::new(self.buffer.text(), self.masked);
+        let line = VisualLine::new(shown.text(), &TextStyle::default(), None);
+        let at = shown.shown_pos(pos);
         let next = if rightward {
-            line.right_of(pos)
+            line.right_of(at)
         } else {
-            line.left_of(pos)
+            line.left_of(at)
         };
-        let next = next.unwrap_or(pos);
+        let next = next.map_or(pos, |n| shown.source_pos(n));
         if extend {
             self.buffer.select_to(next);
         } else {
@@ -209,11 +248,22 @@ impl TextInput {
     /// composing, the caret is the input method's, in the preedit, laid
     /// out in the text as drawn ([`composed`](Self::composed)).
     pub fn caret_x(&self, style: &TextStyle, width: Option<f32>) -> f32 {
-        match (self.composed(), &self.preedit) {
-            (Some((text, span)), Some(p)) => {
-                VisualLine::new(&text, style, width).caret_x(span.start + p.caret)
-            }
-            _ => VisualLine::new(self.buffer.text(), style, width).caret_x(self.buffer.cursor()),
+        let (text, pos): (Cow<'_, str>, usize) = match (self.composed(), &self.preedit) {
+            (Some((text, span)), Some(p)) => (Cow::Owned(text), span.start + p.caret),
+            _ => (Cow::Borrowed(self.buffer.text()), self.buffer.cursor()),
+        };
+        let shown = Shown::new(&text, self.masked);
+        VisualLine::new(shown.text(), style, width).caret_x(shown.shown_pos(pos))
+    }
+
+    /// The text as drawn: the buffer, or the composition while composing,
+    /// a bullet per grapheme when masked.
+    pub fn shown(&self) -> String {
+        match self.composed() {
+            Some((text, _)) => Shown::new(&text, self.masked).text().to_owned(),
+            None => Shown::new(self.buffer.text(), self.masked)
+                .text()
+                .to_owned(),
         }
     }
 
@@ -228,7 +278,9 @@ impl TextInput {
         if self.preedit.is_some() {
             return Vec::new();
         }
-        VisualLine::new(self.buffer.text(), style, width).boxes(a.min(b), a.max(b))
+        let shown = Shown::new(self.buffer.text(), self.masked);
+        let (lo, hi) = (shown.shown_pos(a.min(b)), shown.shown_pos(a.max(b)));
+        VisualLine::new(shown.text(), style, width).boxes(lo, hi)
     }
 
     /// The text the input method is composing; empty when none.
@@ -255,7 +307,11 @@ impl TextInput {
     /// text origin, for its underline. Empty when not composing.
     pub fn preedit_boxes(&self, style: &TextStyle, width: Option<f32>) -> Vec<(f32, f32)> {
         match self.composed() {
-            Some((text, span)) => VisualLine::new(&text, style, width).boxes(span.start, span.end),
+            Some((text, span)) => {
+                let shown = Shown::new(&text, self.masked);
+                let (lo, hi) = (shown.shown_pos(span.start), shown.shown_pos(span.end));
+                VisualLine::new(shown.text(), style, width).boxes(lo, hi)
+            }
             None => Vec::new(),
         }
     }
@@ -291,8 +347,9 @@ impl TextInput {
         if !self.focused {
             return;
         }
+        let committed = self.admitted(committed);
         if !committed.is_empty() {
-            self.buffer.insert_str(committed);
+            self.buffer.insert_str(&committed);
         }
         self.preedit = (!preedit.is_empty()).then(|| Preedit {
             text: preedit.to_owned(),
@@ -311,9 +368,10 @@ impl TextInput {
     }
 
     /// Copy the selection to `clipboard`. `false`, the clipboard left as
-    /// it was, with nothing selected or unfocused.
+    /// it was, with nothing selected, unfocused or masked (a password
+    /// never leaves by the clipboard).
     pub fn handle_copy(&self, clipboard: &mut dyn ClipboardProvider) -> bool {
-        if !self.focused {
+        if !self.focused || self.masked {
             return false;
         }
         match self.buffer.selected_text() {
@@ -325,7 +383,8 @@ impl TextInput {
         }
     }
 
-    /// Copy the selection, then delete it. `false` with nothing selected.
+    /// Copy the selection, then delete it. `false` with nothing selected
+    /// or masked (see [`handle_copy`](Self::handle_copy)).
     pub fn handle_cut(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
         if !self.handle_copy(clipboard) {
             return false;
@@ -336,12 +395,19 @@ impl TextInput {
     }
 
     /// Type what `clipboard` holds, over the selection, on one line (see
-    /// [`single_line`]). `false` with an empty clipboard or unfocused.
+    /// [`single_line`]), or with its line breaks when multiline
+    /// ([`multi_line`]). `false` with an empty clipboard or unfocused.
     pub fn handle_paste(&mut self, clipboard: &mut dyn ClipboardProvider) -> bool {
         if !self.focused {
             return false;
         }
-        let text = single_line(&clipboard.get_text().unwrap_or_default());
+        let raw = clipboard.get_text().unwrap_or_default();
+        let lines = if self.multiline {
+            multi_line(&raw)
+        } else {
+            single_line(&raw)
+        };
+        let text = self.admitted(&lines);
         if text.is_empty() {
             return false;
         }
@@ -361,7 +427,8 @@ impl TextInput {
     /// place it is drawn.
     pub fn handle_click_in(&mut self, local_x: f32, style: &TextStyle, width: Option<f32>) {
         self.focus();
-        let pos = VisualLine::new(self.buffer.text(), style, width).hit(local_x);
+        let shown = Shown::new(self.buffer.text(), self.masked);
+        let pos = shown.source_pos(VisualLine::new(shown.text(), style, width).hit(local_x));
         self.buffer.set_cursor(pos);
         self.reset_blink();
     }
@@ -375,6 +442,21 @@ pub fn single_line(text: &str) -> String {
     text.chars()
         .filter_map(|c| match c {
             '\n' | '\r' | '\t' => Some(' '),
+            c if c.is_control() => None,
+            c => Some(c),
+        })
+        .collect()
+}
+
+/// Text pasted into a text area: every line break (`\r\n`, `\r`) becomes
+/// one `\n`, each tab a space, and any other control character is
+/// dropped.
+pub fn multi_line(text: &str) -> String {
+    let text = text.replace("\r\n", "\n");
+    text.chars()
+        .filter_map(|c| match c {
+            '\n' | '\r' => Some('\n'),
+            '\t' => Some(' '),
             c if c.is_control() => None,
             c => Some(c),
         })

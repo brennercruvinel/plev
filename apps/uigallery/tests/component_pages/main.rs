@@ -46,3 +46,31 @@ mod field_menu;
 
 /// The privacy promises: no case on these pages, guarded.
 mod promises;
+
+// task-104: one file per front, the same request from the three on its
+// pages (`cargo test -p uigallery --test component_pages <front>`).
+
+/// Front A, fields (#154).
+mod fields;
+
+/// Front B, overlays (#155).
+mod overlays;
+
+/// Front C, conversation and feedback (#156).
+mod conversation;
+
+/// Front D, disclosure and display (#157).
+mod disclosure;
+
+/// Front E, selection and dates (#158).
+mod selection;
+
+/// Front G, navigation and data.
+mod navigation;
+
+/// Front I, focus into view (WCAG 2.4.11): Tab, a reader's focus and an
+/// agent's bring a control under the fold into the page's window.
+mod reveal;
+
+/// Task-104 front L, page fixes: no page shows the text of its making.
+mod placeholders;

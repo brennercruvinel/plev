@@ -10,6 +10,7 @@
 
 use accord::{Request, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{EventResult, Rect, Slider, WidgetEvent};
 
@@ -99,7 +100,8 @@ impl SliderPage {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let style = theme.typography.caption_r();
+        let run = TypeRole::Caption.regular();
+        let style = theme.typography.run(run);
         let captions = [
             format!("{:.0}", self.sliders[0].value()),
             format!("step 1: {:.0}", self.sliders[1].value()),
@@ -115,11 +117,13 @@ impl SliderPage {
             text(
                 c,
                 &caption,
-                style.font_size,
-                style.font_weight,
-                rect.right() + theme.spacing.md,
-                rect.y + (rect.h - style.line_height) / 2.0,
+                run,
+                (
+                    rect.right() + theme.spacing.md,
+                    rect.y + (rect.h - style.line_height) / 2.0,
+                ),
                 theme.colors.text_mid.0,
+                theme,
             );
         }
     }

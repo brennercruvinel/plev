@@ -54,7 +54,12 @@ fn tracking_reaches_text_measure_spec() {
     let el = text("Research Social").tracking(2.0);
     let mut items = Vec::new();
     let mut elements = Vec::new();
-    crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+    crate::compose::builder::layout_pipeline::collect_layout_items(
+        &el,
+        &mut items,
+        &mut elements,
+        None,
+    );
     let spec = items[0]
         .text
         .as_ref()
@@ -83,7 +88,12 @@ fn measure_spec_and_node_key_share_one_text_style() {
 
     let mut items = Vec::new();
     let mut elements = Vec::new();
-    crate::compose::builder::layout_pipeline::collect_layout_items(&el, &mut items, &mut elements);
+    crate::compose::builder::layout_pipeline::collect_layout_items(
+        &el,
+        &mut items,
+        &mut elements,
+        None,
+    );
     let spec = items[0].text.as_ref().expect("measure spec").clone();
 
     let nodes = el.render(&mut test_cx());
@@ -111,6 +121,7 @@ fn tracking_widens_builder_text_measurement() {
             &el,
             &mut items,
             &mut elements,
+            None,
         );
         let mut engine = crate::compose::layout::LayoutEngine::new();
         engine.compute(&items, 800.0, 600.0)[0].width

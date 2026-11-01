@@ -2,22 +2,35 @@ mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
+pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
 pub(crate) mod tokens;
 
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
+pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
 };
 pub use self::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
+    TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
-    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
+    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics, SubmitRecipe,
 };
+// task-104: one token slot per front (A fields, B overlays, C conversation,
+// D disclosure, E selection, G navigation and data), each in its front's
+// `tokens.rs`.
+pub use crate::widgets::content::tokens::DisclosureTokens;
+pub use crate::widgets::form::tokens::FormTokens;
+pub use crate::widgets::header::tokens::HeaderTokens;
+pub use crate::widgets::message::tokens::MessageTokens;
+pub use crate::widgets::nav::tokens::NavigationTokens;
+pub use crate::widgets::overlay::tokens::OverlayTokens;
+pub use crate::widgets::selection::tokens::SelectionTokens;
 
 // ============================================================================
 // Theme -- the root struct (RULE-08)
@@ -47,8 +60,38 @@ pub struct Theme {
     pub layout: LayoutTokens,
     /// Shadow stacks by elevation.
     pub shadows: ShadowTokens,
-    /// Button surfaces per variant and the button size ladders.
-    pub button: ButtonTokens,
+    /// Button surfaces per variant and the button size ladders. Boxed, as
+    /// every slot past a few hundred bytes: a theme travels by value, and
+    /// its size is every test's stack (`theme_stays_small`).
+    pub button: Box<ButtonTokens>,
+    // task-104: one slot per front; `hoff_core()` copies the kit and every
+    // other theme derives it from the finished theme (`derive_front_slots`),
+    // since the hoff glass is written by hand.
+    /// Front A: field, label, input group, input OTP, textarea, combobox,
+    /// command. Boxed, as the navigation: a theme travels by value, and its
+    /// size is every test's stack.
+    pub form: Box<FormTokens>,
+    /// Front B: popover, hover card, dropdown menu, alert dialog, menubar,
+    /// sheet, drawer. Boxed, as the navigation.
+    pub overlay: Box<OverlayTokens>,
+    /// Front C: message, bubble, message scroller, alert, attachment,
+    /// marker, toast. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub message: Box<MessageTokens>,
+    /// Front D: accordion, collapsible, item, kbd, aspect ratio, carousel,
+    /// pagination, table. Boxed, as the navigation.
+    pub disclosure: Box<DisclosureTokens>,
+    /// Front E: toggle, toggle group, button group, radio group, calendar,
+    /// date picker. Boxed, as the navigation: a theme travels by value,
+    /// and its size is every test's stack.
+    pub selection: Box<SelectionTokens>,
+    /// Front G: breadcrumb, navigation menu, the sidebar's links, stat,
+    /// code block, chart, graph. Boxed: a theme travels by value, and its
+    /// size is every test's stack.
+    pub navigation: Box<NavigationTokens>,
+    /// Front F: the kit's top bars and its logo. Boxed, as the
+    /// navigation.
+    pub header: Box<HeaderTokens>,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -77,6 +120,7 @@ impl Theme {
             info: Color::rgb(0.0, 0.85, 0.95),
             divider: Color::hex(0x222222),
             border_active: Color::hex(0x444444),
+            swatches: &[],
         };
         let radius = RadiusScale {
             none: 0.0,
@@ -88,9 +132,17 @@ impl Theme {
         };
         let control = ControlTokens::hoff();
         let shape = ShapeTokens::derive(&radius, control.tabs_pad);
-        Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
+            // placeholders: derived from the finished theme below
+            form: Box::new(FormTokens::hoff_core()),
+            overlay: Box::new(OverlayTokens::hoff_core()),
+            message: Box::new(MessageTokens::hoff_core()),
+            disclosure: Box::new(DisclosureTokens::hoff_core()),
+            selection: Box::new(SelectionTokens::hoff_core()),
+            navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -100,9 +152,10 @@ impl Theme {
                 title_sm: 20.0,
                 title: 28.0,
                 display: 36.0,
-                line_height_ratio: 1.3,
                 family: None,
+                mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
+                roles: TypeRoles::derive([10.0, 11.0, 13.0, 16.0, 20.0, 28.0, 36.0], 0.0),
             },
             spacing: SpacingScale {
                 xs: 4.0,
@@ -129,7 +182,9 @@ impl Theme {
             duration: DurationScale::hoff(),
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
-        }
+        };
+        theme.derive_front_slots();
+        theme
     }
 
     /// Light theme.
@@ -150,13 +205,16 @@ impl Theme {
             info: Color::rgb(0.0, 0.65, 0.80),
             divider: Color::rgba(0.85, 0.85, 0.88, 1.0),
             border_active: Color::hex(0x9699a3),
+            swatches: &[],
         };
-        Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
             colors,
             ..Self::dark()
-        }
+        };
+        theme.derive_front_slots();
+        theme
     }
 
     /// Named palette lookup.
@@ -315,12 +373,27 @@ impl Theme {
             },
             _ => return None,
         };
-        Some(Self {
+        let mut theme = Self {
             glass: GlassTokens::derive(&colors),
-            button: ButtonTokens::derive(&colors),
+            button: Box::new(ButtonTokens::derive(&colors)),
             colors,
             ..Self::dark()
-        })
+        };
+        theme.derive_front_slots();
+        Some(theme)
+    }
+
+    /// task-104: each front's slot derived from the theme built so far
+    /// (palette, glass, shapes), the last step of every constructor but
+    /// `hoff_core`, which copies the kit.
+    pub(crate) fn derive_front_slots(&mut self) {
+        *self.form = FormTokens::derive(self);
+        *self.overlay = OverlayTokens::derive(self);
+        *self.message = MessageTokens::derive(self);
+        *self.disclosure = DisclosureTokens::derive(self);
+        *self.selection = SelectionTokens::derive(self);
+        *self.navigation = NavigationTokens::derive(self);
+        *self.header = HeaderTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

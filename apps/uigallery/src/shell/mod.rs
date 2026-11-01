@@ -38,7 +38,7 @@ use engine::drawing::gpu::GpuContext;
 #[cfg(test)]
 use engine::runtime::window::WindowHost;
 use engine::runtime::window::Windows;
-use engine::widgets::prelude::WidgetEvent;
+use engine::widgets::prelude::{SafeArea, WidgetEvent};
 use winit::application::ApplicationHandler;
 use winit::event::{StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
@@ -299,6 +299,14 @@ impl App {
         let (lw, lh) = host.logical_size();
         let sf = host.scale_factor() as f32;
         if Some(id) == self.main {
+            // the host's insets are physical, the view's logical
+            let sa = host.safe_area();
+            self.view.set_safe_area(SafeArea {
+                top: sa.top / sf,
+                right: sa.right / sf,
+                bottom: sa.bottom / sf,
+                left: sa.left / sf,
+            });
             self.view.resize(lw, lh, sf);
         } else if self.is_page_window(id) {
             self.view.resize_detached(lw, lh, sf);
@@ -535,7 +543,7 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
 
-    /// The loop ends (the window closed, or Escape quit): the recording's
+    /// The loop ends (the window closed, or the platform's quit key): the recording's
     /// window is saved.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {

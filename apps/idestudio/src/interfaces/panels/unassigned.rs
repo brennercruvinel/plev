@@ -8,6 +8,7 @@
 //! column as `changes` and each drawn path as `changes.file[<path>]`, to
 //! the rects it draws and hit-tests with.
 
+use engine::styling::theme::TypeRole;
 use std::collections::HashSet;
 
 use crate::repository::status::StatusColors;
@@ -300,8 +301,8 @@ impl UnassignedView {
             h: list.h,
         });
 
-        let status_style = theme.typography.caption_sm();
-        let name_style = theme.typography.base_2sm();
+        let status_style = theme.typography.run(TypeRole::Caption.strong());
+        let name_style = theme.typography.role(TypeRole::BodyStrong);
         let status_w = theme.control.box_size;
         let dot = theme.spacing.sm;
         // A path with two rows binds its first drawn one.

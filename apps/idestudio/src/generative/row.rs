@@ -21,6 +21,7 @@
 
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{IconSize, Theme};
 use engine::widgets::prelude::{EventResult, Rect, TextField, WidgetEvent};
 
@@ -65,7 +66,7 @@ pub(crate) struct Asked {
 }
 
 fn message_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_sm()
+    theme.typography.run(TypeRole::Caption.strong())
 }
 
 fn bounds(r: Rect) -> [f32; 4] {
@@ -142,7 +143,7 @@ impl Generated {
     /// The width the proposer takes: its widest option, the paddings and
     /// the chevron, as the select draws them.
     fn proposer_w(&self, theme: &Theme) -> f32 {
-        let style = theme.typography.base_2m();
+        let style = theme.typography.run(TypeRole::Body.medium());
         let text = self
             .proposer
             .options

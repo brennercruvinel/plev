@@ -2,7 +2,9 @@
 //! domain model (uigallery::domain::todo). engine::widgets::form::text_input::TextInput owns
 //! editing, focus, blink and cursor byte mapping; rows pair the design
 //! system Checkbox with a strike-through whose width comes from
-//! TextMeasurer (never chars * factor); filters are HOFF glass pills; the
+//! TextMeasurer (never chars * factor); the filters are the kit's toggle
+//! group (`engine::widgets::selection::ToggleGroup`), drawn and hovered
+//! by the widget while a click still asks the dispatcher; the
 //! list scrolls internally (ScrollState) so the footer never overflows.
 //!
 //! The page is a capability (`semantics.rs`): it projects what it means,
@@ -32,6 +34,7 @@ use engine::control::input::scroll::ScrollState;
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::{Checkbox, EventResult, Rect, Wake, WidgetEvent};
+use engine::widgets::selection::ToggleGroup;
 
 use super::EditKey;
 use crate::views::text_input::clipboard::Keys;
@@ -47,7 +50,9 @@ pub struct TodoPage {
     rows: Vec<(u64, Checkbox)>,
     hover_row: Option<u64>,
     hover_delete: Option<u64>,
-    hover_pill: Option<usize>,
+    /// The filters' toggle group: it draws them and tracks the hover;
+    /// its choice follows the model, set where `select` runs.
+    filters: ToggleGroup,
     /// The ids the page projects and binds; `None` only if the constant
     /// ids failed to parse (a test proves they do not), which leaves the
     /// page without semantics: every request is then refused.
@@ -95,7 +100,7 @@ impl TodoPage {
             rows: Vec::new(),
             hover_row: None,
             hover_delete: None,
-            hover_pill: None,
+            filters: filter_group(),
             ids,
             dispatcher: Dispatcher::new(),
             clock: web_time::Instant::now(),
@@ -175,12 +180,8 @@ impl TodoPage {
 
         // Filter pills.
         match *event {
-            WidgetEvent::MouseMove { x, y } => {
-                let hit = l.pills.iter().position(|p| p.contains(x, y));
-                if hit != self.hover_pill {
-                    self.hover_pill = hit;
-                    r.changed = true;
-                }
+            WidgetEvent::MouseMove { .. } => {
+                r.changed |= self.filters.handle_event(event, l.filters, theme).changed;
             }
             WidgetEvent::MouseDown { x, y } => {
                 let hit = l
@@ -328,6 +329,7 @@ impl TodoPage {
     /// Advance item tweens and the cursor blink: frames while a tween
     /// runs, and for the focused caret only the next flip.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        Wake::moving(self.model.update(dt)).merge(self.input.wake(dt))
+        let sliding = self.filters.tick(dt);
+        Wake::moving(self.model.update(dt) || sliding).merge(self.input.wake(dt))
     }
 }

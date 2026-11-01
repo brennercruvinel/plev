@@ -6,7 +6,11 @@ mod content;
 mod feedback;
 mod fixtures;
 mod form;
+mod message;
 mod nav;
+mod navigation;
+mod overlay;
+mod selection;
 mod semantics;
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};

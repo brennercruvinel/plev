@@ -97,23 +97,44 @@ pub fn stage_page(
     }
     view.resize(viewport.width, viewport.height, viewport.scale);
 
-    let mut compositor = Compositor::new();
-    let (mut steps, mut settled) = (0, false);
-    while steps < SETTLE_STEPS && !settled {
-        let moving = view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
-        view.render(&mut compositor);
-        steps += 1;
-        settled = !moving;
-    }
-    Ok(StagedPage {
+    let mut staged = StagedPage {
         view,
-        compositor,
-        steps,
-        settled,
-    })
+        compositor: Compositor::new(),
+        steps: 0,
+        settled: false,
+    };
+    staged.settle();
+    Ok(staged)
 }
 
 impl StagedPage {
+    /// Steps the page's fixed clock until it settles, building its scene.
+    fn settle(&mut self) {
+        let (mut steps, mut settled) = (0, false);
+        while steps < SETTLE_STEPS && !settled {
+            let moving = self.view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
+            self.view.render(&mut self.compositor);
+            steps += 1;
+            settled = !moving;
+        }
+        self.steps = steps;
+        self.settled = settled;
+    }
+
+    /// Staged again with the sidebar pinned beside the page (it peeks,
+    /// out of the window, by default) and the command palette open over
+    /// it (⌘K), as asked. The compositor stays: the view's layers were
+    /// made in it, and each frame begins its layers afresh.
+    pub fn stage_again(&mut self, pinned: bool, palette: bool) {
+        if pinned {
+            self.view.pin_sidebar(true);
+        }
+        if palette {
+            self.view.toggle_palette();
+        }
+        self.settle();
+    }
+
     /// The page's title as the sidebar shows it.
     pub fn title(&self) -> &'static str {
         self.view.page_title()
@@ -254,6 +275,22 @@ mod tests {
         };
         let [r, g, b, _] = t.colors.bg.to_array();
         [r, g, b].map(|c| (c * 255.0).round() as u8)
+    }
+
+    /// Staged again with the palette open, the frame draws its sheet on
+    /// a layer the compositor has: the view's layers were made in it.
+    #[test]
+    fn staged_again_the_palette_draws_on_a_layer_that_exists() {
+        let mut staged = match stage_page(DESKTOP, "Button", "core", None) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        staged.stage_again(true, true);
+        let c = staged.compositor();
+        let id = accord::SemId::parse("palette").expect("an id");
+        let bound = c.binding(&id).expect("the palette is bound");
+        let layer = c.layer(bound.layer).expect("its layer exists");
+        assert!(!layer.nodes().is_empty(), "its sheet is drawn");
     }
 
     #[test]
@@ -421,10 +458,15 @@ mod tests {
     /// one is on the report, and a report line names its node.
     #[test]
     fn the_effects_page_reports_its_shadows_gradients_and_blur() {
-        let Some(mut r) = renderer(DESKTOP) else {
+        // Tall enough for the compositor group, under the depths.
+        let tall = Viewport {
+            height: 1600.0,
+            ..DESKTOP
+        };
+        let Some(mut r) = renderer(tall) else {
             return;
         };
-        let export = match staged("Effects", "hoff", DESKTOP).svg(&mut r) {
+        let export = match staged("Effects", "hoff", tall).svg(&mut r) {
             Ok(e) => e,
             Err(e) => panic!("{e}"),
         };
@@ -500,16 +542,20 @@ mod tests {
         };
         let mut runs: Vec<(String, String)> = Vec::new();
         for title in ["Card", "Effects", "Typography"] {
-            let export = match staged(title, "hoff", DESKTOP).svg(&mut r) {
+            // the sidebar pinned, so it draws on every page
+            let mut page = staged(title, "hoff", DESKTOP);
+            page.view.pin_sidebar(true);
+            page.view.render(&mut page.compositor);
+            let export = match page.svg(&mut r) {
                 Ok(e) => e,
                 Err(e) => panic!("{title}: {e}"),
             };
             runs.push((
                 group(&export.svg, "Foundations"),
-                group(&export.svg, "Accordion"),
+                group(&export.svg, "Components"),
             ));
         }
-        for (label, at) in [("Foundations", 0usize), ("Accordion", 1)] {
+        for (label, at) in [("Foundations", 0usize), ("Components", 1)] {
             let first = if at == 0 { &runs[0].0 } else { &runs[0].1 };
             assert!(first.matches("<path d=").count() >= 9, "{label}: {first}");
             for (title, run) in ["Effects", "Typography"].iter().zip(&runs[1..]) {
@@ -550,9 +596,9 @@ mod tests {
 
     #[test]
     fn a_page_without_a_projection_is_an_error_not_an_empty_file() {
-        let staged = staged("Card", "core", DESKTOP);
+        let staged = staged("Separator", "core", DESKTOP);
         match staged.semantics() {
-            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Card"),
+            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Separator"),
             other => panic!("expected NoSemantics, got {:?}", other.map(|s| s.len())),
         }
         assert!(

@@ -1,64 +1,20 @@
-//! The system's "reduce motion", read without a new dependency (task-75
-//! phase 1), for `animation::set_reduced_motion`.
-//!
-//! macOS keeps it as `reduceMotion` in the `com.apple.universalaccess`
-//! defaults, and `/usr/bin/defaults read` answers it: `1` when it is on,
-//! `0` when it was turned off, and an error that says the pair "does not
-//! exist" when nobody ever turned it on (off). The call takes about 10 ms,
-//! so it runs when the bridge attaches and when the window takes the focus
+//! The system's "reduce motion", for `animation::set_reduced_motion`
+//! (task-75 phase 1; every system since task-104k). Where and how each
+//! system says it is `preference`'s ([`super::preference::read`]): macOS
+//! `defaults`, the Linux desktop portal or GNOME's settings, the Windows
+//! registry, the browser's `prefers-reduced-motion`; iOS and Android are
+//! not read yet (`None`, nothing changes). The read takes a few ms, so it
+//! runs when the bridge attaches and when the window takes the focus
 //! again (the person may have changed it meanwhile), never per frame.
-//!
 //! Winit 0.30 has no word on it (its `WindowEvent::Focused` is how the
-//! bridge knows to read again). The other systems wait for their target or
-//! for a dependency the engine does not have: Windows answers through
-//! `SystemParametersInfo` (the `windows` crate), GNOME through `gsettings`
-//! (`org.gnome.desktop.interface enable-animations`), the browser through
-//! `matchMedia` (a `web-sys` feature the engine does not declare), iOS
-//! through UIKit and Android through its settings over JNI. There the
-//! answer is `None`, and nothing changes.
+//! bridge knows to read again).
 
 use crate::compose::animation;
 
 /// Whether the system asks for reduced motion; `None` where it cannot be
-/// read (another system, or `defaults` did not answer).
+/// read (a system without a source, or none answered).
 pub fn system_reduces_motion() -> Option<bool> {
-    #[cfg(target_os = "macos")]
-    {
-        let out = std::process::Command::new("/usr/bin/defaults")
-            .args(["read", "com.apple.universalaccess", "reduceMotion"])
-            .output();
-        match out {
-            Ok(out) => read_defaults(
-                out.status.success(),
-                &String::from_utf8_lossy(&out.stdout),
-                &String::from_utf8_lossy(&out.stderr),
-            ),
-            Err(e) => {
-                log::debug!("accessibility: reduce motion unread: {e}");
-                None
-            }
-        }
-    }
-    #[cfg(not(target_os = "macos"))]
-    {
-        None
-    }
-}
-
-/// What `defaults read com.apple.universalaccess reduceMotion` said: on
-/// for `1` (or `true`), off for `0` (or `false`) and for a key that does
-/// not exist (never turned on: "does not exist" up to macOS 26, "Could not
-/// find key" from macOS 27); `None` for anything else.
-#[cfg(any(target_os = "macos", test))]
-fn read_defaults(ok: bool, stdout: &str, stderr: &str) -> Option<bool> {
-    if ok {
-        return match stdout.trim() {
-            "1" | "true" | "YES" => Some(true),
-            "0" | "false" | "NO" => Some(false),
-            _ => None,
-        };
-    }
-    (stderr.contains("does not exist") || stderr.contains("Could not find key")).then_some(false)
+    super::preference::read(super::preference::Preference::ReduceMotion)
 }
 
 /// Reads the system's preference and makes it this thread's motion
@@ -78,37 +34,12 @@ pub fn follow_system() -> Option<bool> {
     reduced
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
 
-    #[test]
-    fn what_defaults_says_is_read() {
-        assert_eq!(read_defaults(true, "1\n", ""), Some(true));
-        assert_eq!(read_defaults(true, "0\n", ""), Some(false));
-        assert_eq!(read_defaults(true, "true", ""), Some(true));
-        assert_eq!(read_defaults(true, "maybe", ""), None);
-        let never = "2026-09-25 00:23:20.472 defaults[82835:10452456] \n\
-                     The domain/default pair of (com.apple.universalaccess, \
-                     reduceMotion) does not exist\n";
-        assert_eq!(
-            read_defaults(false, "", never),
-            Some(false),
-            "never set: off"
-        );
-        let never_27 = "Error: Could not find key 'reduceMotion' in domain \
-                        'com.apple.universalaccess'.\n";
-        assert_eq!(
-            read_defaults(false, "", never_27),
-            Some(false),
-            "never set, macOS 27 wording: off"
-        );
-        assert_eq!(read_defaults(false, "", "Could not read domain"), None);
-    }
-
     /// The real `defaults`, on the machine that runs the test: it answers,
     /// whatever the person chose. Nothing is set by it.
-    #[cfg(target_os = "macos")]
     #[test]
     fn macos_answers() {
         assert!(system_reduces_motion().is_some());

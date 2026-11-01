@@ -281,14 +281,15 @@ fn more_contrast_measured_pair_by_pair_in_core() {
             let is = [17.96, 18.26].iter().any(|r| (a.ratio - r).abs() < 0.01);
             assert!(is, "{name}: {}", a.line());
         }
-        // the badge filled: its text in contrast to the accent
+        // the badge filled: its numeral in the paper on the ink (the
+        // badge's neutral count, `theme.message.badge`)
         let filled = after
             .iter()
             .find(|p| p.bg == "#121212")
             .expect("the filled badge");
         assert_eq!(
             (filled.text.as_str(), filled.fg.as_str()),
-            ("pending", "#FAFAFC")
+            ("pending", "#FCFCFC")
         );
         // nothing that passed stops passing
         for (b, a) in before.iter().zip(&after) {

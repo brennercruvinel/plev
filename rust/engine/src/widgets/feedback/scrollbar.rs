@@ -3,6 +3,7 @@ use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::styling::theme::Theme;
 
+use crate::widgets::hit::min_target;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
 /// Seconds without scroll activity before the bar fades out.
@@ -94,6 +95,18 @@ impl Scrollbar {
         )
     }
 
+    /// The strip a press on the bar lands in: the track's height, and
+    /// across it the track with its inset grown to the minimum target
+    /// (`widgets::hit`), kept inside `bounds` from its trailing edge: the
+    /// 6 px bar presses in 24 (44 with a finger).
+    pub fn press_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let track = self.track_rect(bounds, theme);
+        let w = (track.w + theme.control.scrollbar_inset)
+            .max(min_target(theme))
+            .min(bounds.w);
+        Rect::new(bounds.x + bounds.w - w, track.y, w, track.h)
+    }
+
     /// Thumb rect derived from the scroll state (proportional size).
     pub fn thumb_rect(&self, bounds: Rect, scroll: &ScrollState, theme: &Theme) -> Rect {
         let track = self.track_rect(bounds, theme);
@@ -172,14 +185,15 @@ impl Scrollbar {
                     return EventResult::IGNORED;
                 }
                 let thumb = self.thumb_rect(bounds, scroll, theme);
-                if thumb.contains(x, y) {
+                let band = self.press_rect(bounds, theme);
+                let grip = Rect::new(band.x, thumb.y, band.w, thumb.h);
+                if grip.contains(x, y) {
                     self.dragging = true;
                     self.drag_grab = y - thumb.y;
                     self.idle = 0.0;
                     return EventResult::changed();
                 }
-                let track = self.track_rect(bounds, theme);
-                if track.contains(x, y) {
+                if band.contains(x, y) {
                     // Jump so the thumb centers on the click, then drag.
                     self.dragging = true;
                     self.drag_grab = thumb.h / 2.0;

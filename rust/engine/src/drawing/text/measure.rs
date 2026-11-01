@@ -350,6 +350,103 @@ impl TextMeasurer {
         candidate(lo)
     }
 
+    /// Clamp `text` to at most `lines` lines wrapped at `max_width` px
+    /// (css `line-clamp`), measured with the SAME [`TextStyle`] the
+    /// caller draws with, at the same `max_width` it wraps the drawing
+    /// at. Grapheme-cluster aware, like
+    /// [`truncate_to_width`](Self::truncate_to_width).
+    ///
+    /// Returns `text` unchanged when it already wraps into `lines` or
+    /// fewer (hard line breaks count as lines) and no line runs past
+    /// `max_width` (a word wider than the line under
+    /// `OverflowWrap::Normal`); otherwise the longest prefix (trailing
+    /// whitespace trimmed) followed by "…" that does. `lines == 0` keeps
+    /// nothing.
+    pub fn clamp_to_lines(text: &str, style: &TextStyle, max_width: f32, lines: usize) -> String {
+        const ELLIPSIS: &str = "\u{2026}";
+        if text.is_empty() || lines == 0 {
+            return String::new();
+        }
+        // Half a line of slack absorbs the float sum of line heights.
+        let limit = style.line_height * (lines as f32 + 0.5);
+        let fits = |s: &str| {
+            let (w, h) = Self::measure_styled(s, style, Some(max_width));
+            h <= limit && w <= max_width + 0.5
+        };
+        if fits(text) {
+            return text.to_string();
+        }
+        use unicode_segmentation::UnicodeSegmentation;
+        let graphemes: Vec<&str> = text.graphemes(true).collect();
+        let candidate = |n: usize| -> String {
+            let prefix: String = graphemes[..n].concat();
+            format!("{}{ELLIPSIS}", prefix.trim_end())
+        };
+        // Largest grapheme prefix whose "prefix…" still wraps in `lines`.
+        let (mut lo, mut hi) = (0usize, graphemes.len().saturating_sub(1));
+        while lo < hi {
+            let mid = (lo + hi).div_ceil(2);
+            if fits(&candidate(mid)) {
+                lo = mid;
+            } else {
+                hi = mid - 1;
+            }
+        }
+        candidate(lo)
+    }
+
+    /// `text` in the lines the shaper breaks it into at `max_width`, the
+    /// same breaks a wrapped draw takes (UAX#14: between words, between
+    /// CJK ideographs, at Thai word bounds; a hard break kept, an empty
+    /// line kept), each with its width measured in `style`, the
+    /// whitespace at a break dropped. A word wider than `max_width` stays
+    /// whole on its line (wider than `max_width`), or breaks between its
+    /// graphemes when the style asks `OverflowWrap::Anywhere`. What a widget needs to align each line on its
+    /// own (the kit's `text-center`): draw each at its own x.
+    pub fn lines(text: &str, style: &TextStyle, max_width: f32) -> Vec<(String, f32)> {
+        if text.is_empty() {
+            return Vec::new();
+        }
+        let starts = line_starts(text);
+        // Each line runs from where the one before it ended (in the same
+        // source line) to the furthest of its glyphs: a cluster's glyph
+        // can point back into the line before (Thai), so the lines are a
+        // partition of the text, never an overlap.
+        let ranges: Vec<(usize, usize)> = with_ctx(|ctx| {
+            ctx.prepare(text, style, Some(max_width));
+            let mut prev: Option<(usize, usize)> = None;
+            ctx.scratch
+                .layout_runs()
+                .map(|run| {
+                    let base = starts.get(run.line_i).copied().unwrap_or(0);
+                    let start = match prev {
+                        Some((line, end)) if line == run.line_i => end,
+                        _ => 0,
+                    };
+                    let end = run.glyphs.iter().map(|g| g.end).max().unwrap_or(start);
+                    let end = end.max(start);
+                    prev = Some((run.line_i, end));
+                    (base + start, base + end)
+                })
+                .collect()
+        });
+        ranges
+            .into_iter()
+            .map(|(a, b)| {
+                // a continuation starts past the break's whitespace
+                let line = text.get(a..b).unwrap_or_default();
+                let line = if starts.contains(&a) {
+                    line
+                } else {
+                    line.trim_start()
+                };
+                let line = line.trim_end().to_owned();
+                let w = Self::measure_styled(&line, style, None).0;
+                (line, w)
+            })
+            .collect()
+    }
+
     /// Fit a `/`-separated path into `max_width` px by dropping whole
     /// directory segments from the middle, keeping the leading directory
     /// and the file name (`crates/…/fonts/Name.ttf`); measured with the
@@ -473,8 +570,10 @@ impl TextMeasurer {
             super::on_demand::want(text);
             let fs = &mut ctx.font_system;
             let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
+            buffer.set_wrap(fs, style.overflow_wrap.cosmic(text));
             buffer.set_size(fs, max_width, None);
-            buffer.set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
+            let attrs = attrs_for(style, fs.db());
+            buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);
             buffer.shape_until_scroll(fs, false);
             ShapedText {
                 buffer,

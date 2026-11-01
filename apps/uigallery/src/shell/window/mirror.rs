@@ -36,6 +36,7 @@ use accord::redactor::is_secret;
 use accord::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use engine::control::accessibility::primary;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::OverflowWrap;
 use record::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
 use socket::{
     Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
@@ -334,6 +335,7 @@ impl Viewer {
                 font_weight: 500,
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
+                overflow_wrap: OverflowWrap::Normal,
             };
             let width = 6.0 * label.text.chars().count() as f32 + 6.0;
             c.push_to_layer(

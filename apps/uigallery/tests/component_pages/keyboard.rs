@@ -18,12 +18,15 @@ use super::harness::{Gallery, gallery, sid};
 /// Every component page (the 19 panes of `dispatch/component.rs`, under
 /// the 30 titles the gallery gives them).
 const PAGES: &[&str] = &[
+    "Accordion",
     "Alert Dialog",
     "Breadcrumb",
     "Button",
     "Button Group",
+    "Carousel",
     "Checkbox",
     "Chip",
+    "Collapsible",
     "Combobox",
     "Data Table",
     "Dialog",
@@ -35,6 +38,7 @@ const PAGES: &[&str] = &[
     "Kbd",
     "Label",
     "Navigation Menu",
+    "Pagination",
     "Popover",
     "Resizable",
     "Scroll Area",
@@ -58,7 +62,11 @@ const UNREACHABLE: &[(&str, &str)] = &[("Resizable", "the split has no splitter 
 /// The pages with a widget that is one stop of Tab (task-75 phase 2d): a
 /// list or a table. A tab list and a tree stay a stop per item, a screen
 /// reader's focus being tied to the Tab sequence.
-const COMPOSITE: &[&str] = &["Data Table", "Item", "Scroll Area", "Table"];
+const COMPOSITE: &[&str] = &["Data Table", "Scroll Area", "Table"];
+
+/// At most the stops of Tab the sidebar holds shown: its pin, its logo,
+/// its three dropdowns and every page's tab.
+const SIDEBAR_STOPS: usize = 2 + 3 + uigallery::views::PAGES.len();
 
 /// Whether `id` is `widget` or under it.
 fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
@@ -73,18 +81,50 @@ fn inside(seen: &Snapshot, id: &SemId, widget: &SemId) -> bool {
 }
 
 impl Gallery {
+    /// Where the keyboard focus is: on the page, or on the sidebar the
+    /// keyboard walks after it (task-104 front H).
     fn focused(&self) -> Option<String> {
         self.view
-            .semantics()
+            .keyboard_semantics()
             .and_then(|s| s.focused().map(ToString::to_string))
     }
 
+    /// The page's own stops of Tab, the sidebar's aside.
     fn order(&self) -> Vec<String> {
         let seen = self.view.semantics().unwrap_or_default();
         focus::order(&seen)
             .iter()
             .map(|id| id.to_string())
             .collect()
+    }
+
+    fn on_sidebar(&self) -> bool {
+        self.focused()
+            .is_some_and(|at| at.starts_with("shell.sidebar"))
+    }
+
+    /// Tab, then on through the sidebar (its pin, its logo, its
+    /// dropdowns, its tabs) back to the page.
+    fn tab_page(&mut self) -> bool {
+        let took = self.tab();
+        for _ in 0..SIDEBAR_STOPS {
+            if !self.on_sidebar() {
+                break;
+            }
+            self.tab();
+        }
+        took
+    }
+
+    fn back_tab_page(&mut self) -> bool {
+        let took = self.back_tab();
+        for _ in 0..SIDEBAR_STOPS {
+            if !self.on_sidebar() {
+                break;
+            }
+            self.back_tab();
+        }
+        took
     }
 
     /// Each widget of the page that is one stop of Tab (a list, a
@@ -127,7 +167,7 @@ impl Gallery {
 
     /// Tab until `id` has the focus.
     fn tab_to(&mut self, id: &str) {
-        for _ in 0..self.order().len() {
+        for _ in 0..self.order().len() + SIDEBAR_STOPS {
             if self.focused().as_deref() == Some(id) {
                 return;
             }
@@ -205,7 +245,8 @@ impl Gallery {
 }
 
 /// Tab walks every component page in the order of its projection, the
-/// one a screen reader walks, and wraps; Shift-Tab walks it back; the
+/// one a screen reader walks, and wraps (through the sidebar, which the
+/// keyboard walks after the page); Shift-Tab walks it back; the
 /// focus is never nowhere once Tab took it, and the control that has it
 /// shows its ring. A list and a table are one stop each.
 #[test]
@@ -223,21 +264,23 @@ fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
         }
         let order = g.order();
         if order.is_empty() {
-            assert!(!g.tab(), "{page}: nothing to reach");
-            assert_eq!(g.focused(), None, "{page}");
+            // nothing of the page's: Tab reaches the sidebar alone
+            assert!(g.tab(), "{page}: the sidebar's pin");
+            assert!(g.on_sidebar(), "{page}: {:?}", g.focused());
             unreachable.push(*page);
             continue;
         }
         let rings_before = g.rings().len();
         for step in 0..=order.len() {
-            assert!(g.tab(), "{page}: Tab {step} is taken");
+            // past the page's last stop, the sidebar's, then the page again
+            assert!(g.tab_page(), "{page}: Tab {step} is taken");
             let at = &order[step % order.len()];
             assert_eq!(g.focused().as_ref(), Some(at), "{page}: Tab {step}");
             assert!(g.ringed(at), "{page}: {at} shows its ring");
             assert_eq!(g.rings().len(), rings_before + 1, "{page}: one ring more");
         }
         for step in 1..=order.len() {
-            assert!(g.back_tab(), "{page}: Shift-Tab {step}");
+            assert!(g.back_tab_page(), "{page}: Shift-Tab {step}");
             let at = &order[(order.len() * 2 - step) % order.len()];
             assert_eq!(g.focused().as_ref(), Some(at), "{page}: Shift-Tab {step}");
         }
@@ -329,9 +372,7 @@ fn the_arrows_walk_the_tree_open_and_close_its_branches() {
 fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
     for (page, list, key, count) in [
         ("Scroll Area", "scroll_area_page.list", "selected", 10_000),
-        ("Item", "scroll_area_page.list", "selected", 10_000),
         ("Data Table", "table_page.table", "selected_row", 2_000),
-        ("Table", "table_page.table", "selected_row", 2_000),
     ] {
         let row = |i: usize| format!("{list}[{i}]");
         let mut g = gallery(page);
@@ -340,7 +381,9 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         assert!(g.nav(NavKey::Down) && g.nav(NavKey::Down), "{page}: down");
         assert_eq!(g.focused(), Some(row(2)), "{page}");
         assert!(g.ringed(&row(2)), "{page}: the ring on the row");
-        assert_eq!(g.order(), [row(2)], "{page}: the focused row is the stop");
+        // the page's first stop is this table's, on the focused row
+        assert_eq!(g.order()[0], row(2), "{page}: the focused row is the stop");
+        assert!(!g.order().contains(&row(0)), "{page}: one stop per table");
         assert!(g.nav(NavKey::Up), "{page}: up");
         assert_eq!(g.focused(), Some(row(1)), "{page}");
         assert!(g.key(EditKey::End), "{page}: End");
@@ -379,11 +422,7 @@ fn the_arrows_walk_the_rows_of_a_list_and_a_table() {
         };
         assert_ne!(at, row(4), "{page}: the focus followed the rows");
         assert!(g.ringed(&at), "{page}: {at} in view, with its ring");
-        assert_eq!(
-            g.order(),
-            std::slice::from_ref(&at),
-            "{page}: and it is the stop"
-        );
+        assert_eq!(g.order()[0], at, "{page}: and it is the stop");
         assert!(g.nav(NavKey::Down), "{page}: the arrows go on from there");
     }
 }
@@ -522,8 +561,14 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     let mut g = gallery("Dialog");
     g.tab_to(opener);
     assert!(g.enter(), "opens the modal");
-    let said = |g: &Gallery, words: &str| g.state().iter().any(|n| n.label == words);
-    assert!(said(&g, "Delete repository?"));
+    // The modal on screen, by its id: the page shows the same question
+    // in a card, which stays.
+    let said = |g: &Gallery, words: &str| {
+        g.state()
+            .iter()
+            .any(|n| n.id == sid("dialog") && n.label == words)
+    };
+    assert!(said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.ringed("dialog[cancel]"), "the ring on the cancel");
     for at in ["dialog[confirm]", "dialog[cancel]", "dialog[confirm]"] {
@@ -534,7 +579,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert!(g.back_tab());
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"), "and back");
     assert!(g.space(), "Space presses the cancel");
-    assert!(!said(&g, "Delete repository?"), "the cancel answered it");
+    assert!(!said(&g, "Delete this file?"), "the cancel answered it");
     assert_eq!(g.focused().as_deref(), Some(opener), "the focus is back");
     assert!(g.ringed(opener));
 
@@ -542,7 +587,7 @@ fn the_modal_traps_the_focus_and_gives_it_back_when_it_closes() {
     assert_eq!(g.focused().as_deref(), Some("dialog[cancel]"));
     assert!(g.view.close_top_overlay(), "Escape closes the modal first");
     g.frame();
-    assert!(!said(&g, "Delete repository?"));
+    assert!(!said(&g, "Delete this file?"));
     assert_eq!(g.focused().as_deref(), Some(opener), "back on the opener");
 }
 

@@ -99,6 +99,7 @@ impl Bridge {
             return Err(BridgeError::WindowVisible);
         }
         super::reduced_motion::follow_system();
+        super::preference::follow_contrast();
         let (activation, actions, deactivation, inbox) = handlers(Arc::new(wake));
         let adapter = accesskit_winit::Adapter::with_direct_handlers(
             event_loop,
@@ -122,6 +123,7 @@ impl Bridge {
     pub fn process_event(&mut self, window: &Window, event: &WindowEvent) {
         if matches!(event, WindowEvent::Focused(true)) {
             super::reduced_motion::follow_system();
+            super::preference::follow_contrast();
         }
         self.adapter.process_event(window, event);
     }
@@ -303,7 +305,7 @@ mod tests {
             .iter()
             .filter_map(|a| match a {
                 Assist::Request(r) => Some((r.target.as_str(), &r.actor)),
-                Assist::Focus(_) => None,
+                Assist::Focus(_) | Assist::Reveal(_) => None,
             })
             .collect();
         assert_eq!(

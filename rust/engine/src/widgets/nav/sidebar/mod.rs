@@ -15,6 +15,7 @@ mod input;
 mod render;
 
 use crate::control::input::scroll::ScrollState;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{SidebarMode, Theme};
 
 use crate::widgets::nav::NavLink;
@@ -160,7 +161,7 @@ impl Sidebar {
 
     /// Height of a group caption row.
     pub fn group_h(theme: &Theme) -> f32 {
-        theme.typography.caption_sm().line_height + theme.spacing.md
+        theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.md
     }
 
     /// The band's rows in scrolled space: one rect per group caption and
@@ -169,7 +170,7 @@ impl Sidebar {
     /// them, and their index stays put.
     fn rows(&self, band: Rect, theme: &Theme) -> (Vec<Rect>, Vec<Rect>) {
         let pad = theme.spacing.md;
-        let h = NavLink::height(theme);
+        let h = theme.navigation.sidebar_link.height;
         let gap = theme.spacing.xs;
         let x = band.x + pad;
         let w = band.w - pad * 2.0;
@@ -210,6 +211,16 @@ impl Sidebar {
             .chain(links.iter())
             .map(|r| r.y + r.h)
             .fold(0.0, f32::max)
+    }
+
+    /// The height that shows every row unscrolled in the mode the
+    /// sidebar takes at `vw`: the brand, the band's rows (a folded group
+    /// its caption alone) and the footer. A host that sizes the sidebar
+    /// to its content (one embedded in a page) asks for this; the
+    /// full-height column scrolls its band instead.
+    pub fn natural_h(&self, theme: &Theme, vw: f32) -> f32 {
+        let mode = self.mode(theme, vw);
+        self.brand_h(theme, mode) + self.rows_h(theme) + self.footer_h(theme, mode)
     }
 
     fn sync_active(&mut self) {
@@ -261,8 +272,8 @@ impl Sidebar {
             return theme.spacing.lg;
         }
         theme.spacing.xl
-            + theme.typography.title().line_height
-            + theme.typography.small_sm().line_height
+            + theme.typography.role(TypeRole::Title).line_height
+            + theme.typography.run(TypeRole::Small.strong()).line_height
             + theme.spacing.lg
     }
 
@@ -270,7 +281,7 @@ impl Sidebar {
         let pad = theme.spacing.md;
         let links = self.footer_links.len() as f32;
         let links_h = if links > 0.0 {
-            links * NavLink::height(theme) + (links - 1.0) * theme.spacing.xs + pad
+            links * theme.navigation.sidebar_link.height + (links - 1.0) * theme.spacing.xs + pad
         } else {
             0.0
         };
@@ -278,7 +289,11 @@ impl Sidebar {
             return theme.spacing.lg + links_h;
         }
         theme.spacing.lg
-            + self.footer.len() as f32 * theme.typography.caption_r().line_height
+            + self.footer.len() as f32
+                * theme
+                    .typography
+                    .run(TypeRole::Caption.regular())
+                    .line_height
             + theme.spacing.lg
             + links_h
     }
@@ -286,7 +301,7 @@ impl Sidebar {
     /// Rects of the pinned footer links, bottom-up from the sidebar foot.
     pub fn footer_link_rects(&self, rect: Rect, theme: &Theme) -> Vec<Rect> {
         let pad = theme.spacing.md;
-        let h = NavLink::height(theme);
+        let h = theme.navigation.sidebar_link.height;
         let gap = theme.spacing.xs;
         let n = self.footer_links.len();
         (0..n)
