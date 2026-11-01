@@ -7,8 +7,9 @@
 //! `active` dropdown starts open on a page that loads; the others keep
 //! how the person left them.
 //!
-//! Where the panel stands (pinned beside the page, peeking, a drawer) is
-//! the shell's dock; this is what it holds. A tab picked here comes back
+//! Where the panel stands (peeking by default, pinned beside the page by
+//! the pin at the right of its head, a drawer) is the shell's dock; this
+//! is what it holds. A tab picked here comes back
 //! as its page index, and the view asks `shell.page` for it, as a key
 //! and an agent do.
 
@@ -196,6 +197,35 @@ impl ShowcaseView {
         self.shell.layout(&self.theme).dock.and_then(|d| d.panel)
     }
 
+    /// Pins the sidebar beside the page (`true`) or lets it peek, as the
+    /// pin does: tests and tools that read the page at a known width.
+    pub fn pin_sidebar(&mut self, on: bool) {
+        let w = self.shell.dock_window().w;
+        let theme = &self.theme;
+        if let Some(dock) = self.shell.dock.as_mut()
+            && dock.is_pinned() != on
+        {
+            dock.toggle_pin(theme, w);
+        }
+    }
+
+    /// The strip of the panel at `panel` the logo and the pin sit in.
+    pub(super) fn panel_head(&self, panel: Rect) -> Rect {
+        let body = HomeSidebar::body_rect(panel, &self.theme);
+        Rect::new(panel.x, panel.y, panel.w, body.y - panel.y)
+    }
+
+    /// The pin's part of a pointer event on the panel at `panel`.
+    fn pin_event(&mut self, event: &WidgetEvent, panel: Rect) -> EventResult {
+        let head = self.panel_head(panel);
+        let w = self.shell.dock_window().w;
+        let theme = &self.theme;
+        match self.shell.dock.as_mut() {
+            Some(dock) => dock.pin_event(event, head, theme, w),
+            None => EventResult::IGNORED,
+        }
+    }
+
     /// The chrome's part of a pointer event: `(taken, changed)`. The dock
     /// takes the drawer's menu button and the open drawer; the panel
     /// takes what is on it, and a tab picked there asks `shell.page`.
@@ -210,7 +240,12 @@ impl ShowcaseView {
                 let Some(bounds) = panel.or_else(|| self.panel_rect()) else {
                     return (true, false);
                 };
+                let pin = self.pin_event(event, bounds);
+                if pin.clicked {
+                    return (true, true);
+                }
                 let (r, picked) = self.nav.handle_event(event, bounds, &self.theme);
+                let r = r.merge(pin);
                 if let Some(i) = picked {
                     self.ask_page(i);
                     let w = self.shell.dock_window().w;
@@ -228,7 +263,8 @@ impl ShowcaseView {
                 );
                 let changed = match panel {
                     Some(bounds) if heard => {
-                        self.nav.handle_event(event, bounds, &self.theme).0.changed
+                        let pin = self.pin_event(event, bounds).changed;
+                        self.nav.handle_event(event, bounds, &self.theme).0.changed || pin
                     }
                     _ => false,
                 };
@@ -266,7 +302,14 @@ impl ShowcaseView {
             return;
         };
         let layer = if d.floats { overlay } else { LayerId::DEFAULT };
-        c.on_layer(layer, |c| self.nav.render(c, panel, theme));
+        let head = self.panel_head(panel);
+        let w = self.shell.dock_window().w;
+        c.on_layer(layer, |c| {
+            self.nav.render(c, panel, theme);
+            if let Some(dock) = &self.shell.dock {
+                dock.render_pin(c, head, theme, w);
+            }
+        });
     }
 }
 

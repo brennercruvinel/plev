@@ -505,7 +505,11 @@ mod tests {
         };
         let mut runs: Vec<(String, String)> = Vec::new();
         for title in ["Card", "Effects", "Typography"] {
-            let export = match staged(title, "hoff", DESKTOP).svg(&mut r) {
+            // the sidebar pinned, so it draws on every page
+            let mut page = staged(title, "hoff", DESKTOP);
+            page.view.pin_sidebar(true);
+            page.view.render(&mut page.compositor);
+            let export = match page.svg(&mut r) {
                 Ok(e) => e,
                 Err(e) => panic!("{title}: {e}"),
             };
