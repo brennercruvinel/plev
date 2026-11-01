@@ -116,6 +116,7 @@ fn the_box_holds_over_every_width_in_every_state() {
             PromptInput::new().files_open(true),
             PromptInput::new().models_open(true),
             PromptInput::new().collapsed(true).premade(true),
+            PromptInput::new().view_controller(true),
         ]
     };
     for theme in themes() {
@@ -145,6 +146,10 @@ fn the_box_holds_over_every_width_in_every_state() {
                 }
                 if let Some(panel) = l.models {
                     assert!(inside(panel, block), "{w}: models");
+                }
+                if let Some(v) = l.view {
+                    assert!(inside(v, block), "{w}: the view controller");
+                    assert!(v.bottom() <= frame.y, "{w}: over the box");
                 }
                 if let Some(pl) = &l.premade {
                     assert!(inside(pl.panel, block), "{w}: premade");
@@ -237,8 +242,13 @@ fn every_part_is_named_back_and_the_projection_validates() {
         Part::Prompt(2),
         Part::Surprise,
         Part::Category(4),
+        Part::Orbit(false),
+        Part::Orbit(true),
     ];
-    let p = PromptInput::new().premade(true).sem(id.clone());
+    let p = PromptInput::new()
+        .premade(true)
+        .view_controller(true)
+        .sem(id.clone());
     for part in parts {
         let pid = p.part_id(part).expect("an id");
         assert_eq!(p.part_of(&pid), Some(part), "{pid}");
@@ -248,6 +258,7 @@ fn every_part_is_named_back_and_the_projection_validates() {
         PromptInput::new().models_open(true),
         PromptInput::new().collapsed(true).premade(true),
         PromptInput::new().voice(true).premade(true),
+        PromptInput::new().view_controller(true),
     ] {
         let p = p.sem(id.clone());
         let mut b = SnapshotBuilder::new();

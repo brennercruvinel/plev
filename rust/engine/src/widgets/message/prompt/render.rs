@@ -27,6 +27,9 @@ impl PromptInput {
             let ids: Vec<_> = (0..p.prompts.len()).map(|i| self.premade_id(i)).collect();
             p.render(c, layer, pl, &ids, theme);
         }
+        if let (Some(v), Some(at)) = (&self.view, l.view) {
+            v.render_to_layer(c, layer, at, theme);
+        }
         shadow_drops(c, layer, frame, t.radius, &t.shadow);
         let border = if self.hovered || self.held_hover {
             t.border_hover

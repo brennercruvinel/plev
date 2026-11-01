@@ -4,7 +4,8 @@
 //! setting's select, the model menu's trigger and its listbox
 //! (`SelectAi`), the voice toggle and the submit button. Collapsed, the
 //! line hides until voice input shows it; with premade prompts, a panel
-//! of suggestions sits over the box (`PremadePrompt`).
+//! of suggestions sits over the box (`PremadePrompt`); with the toolbar,
+//! the view controller (front G's) sits centered over it.
 //!
 //! Sized for ranges, never for one screen: the box is as wide as its
 //! column up to the kit's `w-135.5` (`prompt.max_w`), and as tall as its
@@ -27,7 +28,8 @@
 //!
 //! The parts take `<id>.text`, `.add` (its menu `.files[<i>]`),
 //! `.setting`, `.model` (its options `.model[<i>]`), `.voice`, `.submit`,
-//! and over the box `.premade[<i>]`, `.surprise`, `.categories[<i>]`;
+//! and over the box `.premade[<i>]`, `.surprise`, `.categories[<i>]`,
+//! `.view` (its arrows `.view.back` and `.view.forward`);
 //! [`PromptInput::project`] declares them and [`PromptInput::act`] runs
 //! what a reader or an agent asks of them.
 
@@ -48,6 +50,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::buttons::{IconButton, IconButtonSize, IconButtonVariant, Press, SubmitButton};
 use crate::widgets::form::Select;
 use crate::widgets::form::tokens::SelectLook;
+use crate::widgets::nav::ViewController;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::Rect;
 use premade::Premade;
@@ -85,6 +88,8 @@ pub struct PromptLayout {
     /// The model listbox, open.
     pub models: Option<Rect>,
     pub premade: Option<PremadeLayout>,
+    /// The view controller over the box.
+    pub view: Option<Rect>,
 }
 
 #[derive(Clone, Debug)]
@@ -109,6 +114,7 @@ pub struct PromptInput {
     submit_focused: bool,
     collapsed: bool,
     premade: Option<Premade>,
+    view: Option<ViewController>,
     hovered: bool,
     /// Shows the hover at rest (a showcase card of the state).
     held_hover: bool,
@@ -147,6 +153,7 @@ impl PromptInput {
             submit_focused: false,
             collapsed: false,
             premade: None,
+            view: None,
             hovered: false,
             held_hover: false,
             sent: None,
@@ -163,6 +170,12 @@ impl PromptInput {
     /// The premade prompts over the box (`premadePrompt`).
     pub fn premade(mut self, on: bool) -> Self {
         self.premade = on.then(Premade::kit);
+        self
+    }
+
+    /// The view controller over the box (`isViewController`).
+    pub fn view_controller(mut self, on: bool) -> Self {
+        self.view = on.then(|| ViewController::new(false));
         self
     }
 
@@ -215,6 +228,9 @@ impl PromptInput {
         }
         if let Some(c) = child("submit") {
             self.submit = self.submit.sem(c);
+        }
+        if let (Some(v), Some(c)) = (&mut self.view, child("view")) {
+            *v = v.clone().sem(c);
         }
         if let Some(p) = &mut self.premade {
             if let Some(c) = child("surprise") {
@@ -481,7 +497,11 @@ impl PromptInput {
         let models = (self.model.size(theme).1 + t.panel.gap - below_row).max(0.0);
         let setting = self.setting.dropdown_rect(l.setting, theme);
         let setting = (setting.bottom() - frame.bottom()).max(0.0);
-        (files.max(premade), models.max(setting))
+        let view = self
+            .view
+            .as_ref()
+            .map_or(0.0, |v| v.preferred_size(theme).1 + t.view_gap);
+        (files.max(premade).max(view), models.max(setting))
     }
 
     fn files_panel_h(&self, theme: &Theme) -> f32 {
@@ -564,7 +584,13 @@ impl PromptInput {
             .as_ref()
             .filter(|_| !self.voice)
             .map(|p| p.layout(frame, theme));
+        let view = self.view.as_ref().map(|v| {
+            let (w, h) = v.preferred_size(theme);
+            let x = (frame.x + (frame.w - w) / 2.0).max(frame.x);
+            Rect::new(x, frame.y - t.view_gap - h, w, h)
+        });
         PromptLayout {
+            view,
             frame,
             text,
             add,
