@@ -110,10 +110,11 @@ impl ShowcaseView {
         self.glide.tick(scroll, dt)
     }
 
-    /// Whether the page glides toward a focus: the frame that started it
-    /// asks the loop for the next one (`shell/window/pace`).
+    /// Whether the page, or the sidebar's body, glides toward a focus:
+    /// the frame that started it asks the loop for the next one
+    /// (`shell/window/pace`).
     pub fn revealing(&self) -> bool {
-        self.glide.is_gliding()
+        self.glide.is_gliding() || self.nav.sidebar.revealing()
     }
 }
 
