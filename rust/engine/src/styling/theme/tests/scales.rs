@@ -147,6 +147,22 @@ fn the_gutter_is_fluid_between_its_ends() {
     }
 }
 
+/// The gutter's ends are the showcase's group padding: the kit's `p-5`
+/// and `p-12` in the core, the spacing ramp's `lg` and `xxl` elsewhere.
+#[test]
+fn the_gutter_is_the_group_padding() {
+    assert_eq!(Theme::hoff_core().layout.gutter, [20.0, 48.0]);
+    for t in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::hoff_light(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        assert_eq!(t.layout.gutter, [t.spacing.lg, t.spacing.xxl]);
+    }
+}
+
 #[test]
 fn columns_and_sidebar_grow_with_the_breakpoint() {
     let l = Theme::hoff().layout;
