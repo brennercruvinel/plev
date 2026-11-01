@@ -7,7 +7,7 @@
 //!
 //! The kit has no such behavior (its sidebars are always there), so the
 //! dock is one rule in every theme, [`DockRecipe::derive`], over the
-//! theme's spacing, durations and sizes, the sidebars' width and the
+//! theme's spacing, durations and sizes, the shell's sidebar width and the
 //! navigation link. [`DockRecipe::hoff_core`] writes the same rule in
 //! the kit's terms (tailwind's steps and the core scales), and a test
 //! holds the two equal in the core theme.
@@ -25,7 +25,8 @@ const EASE_IN_OUT: Easing = Easing::CubicBezier(0.4, 0.0, 0.2, 1.0);
 /// What the dock reads from a theme.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DockRecipe {
-    /// The panel's width: the sidebars' (`w-60` in the kit).
+    /// The panel's width: the app shell's sidebar
+    /// (`navigation.sidebars.shell_w`, `!w-55` in the kit's `Layout`).
     pub width: f32,
     /// The strip at the window's edge a pointer reveals a peeking
     /// sidebar from: the `sm` step of the spacing.

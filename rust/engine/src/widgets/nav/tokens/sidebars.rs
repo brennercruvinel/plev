@@ -19,8 +19,12 @@ use super::NavText;
 /// field of the home and guideline sidebars.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SidebarsRecipe {
-    /// `w-60`.
+    /// `w-60`: a sidebar on its own (`HomeSidebar`, `GuidelineSidebar`).
     pub width: f32,
+    /// The app shell's sidebar, the kit's `Layout` (`!w-55`,
+    /// `components/Layout/index.tsx:20`): the dock's panel
+    /// (`navigation.dock.width`).
+    pub shell_w: f32,
     /// `min-h-219`; 0 where a theme lets the sidebar be as tall as its rows.
     pub min_h: f32,
     /// `bg-[#FCFCFC]`, the rim `border-[#ECECEC]`.
@@ -29,7 +33,9 @@ pub struct SidebarsRecipe {
     pub edge_width: f32,
     /// The canvas sidebars' `rounded-[1.25rem]`.
     pub canvas_radius: f32,
-    /// The head's `p-6` round the logo (`header::Logo`, front F).
+    /// The head's padding round the logo (`header::Logo`, front F): the
+    /// kit's `p-6` less the logo's own `p-1` (`theme.header.logo.pad`),
+    /// so the mark stands where the kit's does and the head is its 80.
     pub head_pad: f32,
     /// The rows' `px-5 pb-5`.
     pub body_pad: f32,
@@ -169,12 +175,14 @@ impl SidebarsRecipe {
         let [paper, _, wash, line, _, _, shade7, _, _] = SHADES;
         Self {
             width: 240.0,
+            shell_w: 220.0,
             min_h: 876.0,
             fill: paper,
             edge: line,
             edge_width: 1.0,
             canvas_radius: 20.0,
-            head_pad: 24.0,
+            // `p-6` (24) less the logo's `p-1` (4)
+            head_pad: 20.0,
             body_pad: 20.0,
             // `p-2.5 text-[0.75rem] leading-[1rem] font-medium
             // text-[#7b7b7b]/70` (GuidelineSidebar:59): shade 7 for AAA.
@@ -208,12 +216,16 @@ impl SidebarsRecipe {
         let slot = control.height(ControlSize::Xs);
         Self {
             width: theme.size.sidebar_w,
+            // one sidebar width in a theme of its own
+            shell_w: theme.size.sidebar_w,
             min_h: 0.0,
             fill: colors.surface,
             edge: glass.edge_soft,
             edge_width: control.edge_width,
             canvas_radius: theme.radius.lg,
-            head_pad: space.lg,
+            // the mark at the `lg` step, the logo's own pad inside it
+            // (every theme's logo keeps the kit's, `HeaderTokens::derive`)
+            head_pad: (space.lg - theme.header.logo.pad).max(0.0),
             body_pad: space.md,
             caption: NavText::of(&theme.typography.caption_r()),
             caption_pad: space.sm,
