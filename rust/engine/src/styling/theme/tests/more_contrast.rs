@@ -93,3 +93,47 @@ fn more_contrast_widens_the_focus_ring_and_the_edge() {
         }
     }
 }
+
+/// The glass's text keeps its ladder in the four themes, standard and with
+/// more contrast: active over default over faint, each a step
+/// (`legibility::LADDER_STEP`) over the next on every surface text sits
+/// on, and the faint and the placeholder at least at the bar.
+#[test]
+fn the_glass_text_keeps_its_ladder() {
+    use crate::styling::color::Color;
+    use crate::styling::theme::legibility::{Bar, LADDER_STEP, contrast};
+    for (name, base) in themes() {
+        // more contrast may leave less room over its bar: there the steps
+        // share it, and the least a step may be is 4%
+        for (t, bar, step) in [
+            (base.clone(), Bar::AA, LADDER_STEP),
+            (base.adapted(&more()), Bar::MORE, 1.04),
+        ] {
+            let (c, g) = (&t.colors, &t.glass);
+            let bg = c.bg;
+            let grounds: [&[Color]; 5] = [
+                &[bg],
+                &[bg, c.surface],
+                &[bg, c.bg_panel],
+                &[bg, c.bg_hover],
+                &[bg, g.popover],
+            ];
+            let worst = |fg: Color| {
+                grounds
+                    .iter()
+                    .map(|l| contrast(fg, l))
+                    .fold(f32::INFINITY, f32::min)
+            };
+            let [active, default, faint, ph] = [
+                g.text_active,
+                g.text_default,
+                g.text_faint,
+                g.text_placeholder,
+            ]
+            .map(worst);
+            assert!(faint >= bar.text && ph >= bar.text, "{name}: {faint} {ph}");
+            assert!(default >= faint * step, "{name}: {default} over {faint}");
+            assert!(active >= default * step, "{name}: {active} over {default}");
+        }
+    }
+}
