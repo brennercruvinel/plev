@@ -103,7 +103,19 @@ impl TextField {
         } else {
             &recipe.rest
         };
-        draw_box(c, layer, bounds, recipe, surface, alpha);
+        // the border fades between the states (`edge`)
+        let target = if focused {
+            2.0
+        } else if self.hovered {
+            1.0
+        } else {
+            0.0
+        };
+        let drawn = InputSurface {
+            border: self.edge.border(recipe, target, theme.duration.fast),
+            ..surface.clone()
+        };
+        draw_box(c, layer, bounds, recipe, &drawn, alpha);
 
         let (text_x, text_y, text_w) = self.text_box(bounds, &style, theme, slots);
         let fit = self.fit(&style, text_w, theme);

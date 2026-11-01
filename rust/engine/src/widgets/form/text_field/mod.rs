@@ -38,6 +38,7 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use super::text_input::keys::{ClipKey, EditKey};
 
+mod edge;
 pub(crate) mod render;
 
 /// Retained single-line text field over a [`TextInput`].
@@ -52,6 +53,8 @@ pub struct TextField {
     slots: [Slot; 2],
     /// Which input box it draws (`theme.form.recipe`).
     look: Look,
+    /// The border's fade between rest, hover and focus (`edge`).
+    edge: edge::EdgeFade,
 }
 
 impl TextField {
@@ -63,6 +66,7 @@ impl TextField {
             sem: None,
             slots: [Slot::Pad; 2],
             look: Look::Field,
+            edge: edge::EdgeFade::default(),
         }
     }
 
@@ -415,7 +419,12 @@ impl TextField {
     /// flip (`next`); blurred, nothing. The owner merges it with its
     /// other motion and the shell sleeps until the earliest deadline.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.input.wake(dt)
+        let wake = self.input.wake(dt);
+        if self.edge.running() {
+            wake.merge(Wake::continuous())
+        } else {
+            wake
+        }
     }
 
     /// Hover tracks the bounds; a press inside focuses and places the

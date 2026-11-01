@@ -4,9 +4,11 @@
 //! (through `motion::decode`) and every asset reference is checked, and
 //! anything the writer would not have written is a typed `FileError`.
 //!
-//! a window with bindings is written with section B, as version 1; one
-//! without is written as version 0, the layout before bindings were
-//! recorded, and a version 0 file reads with no bindings (see `bound`).
+//! every window is written as version 2: with section B when it has
+//! bindings, without it when not, and each text with its wrap rule and
+//! OpenType features (see `format` and `payload`). a file of version 0
+//! reads with no bindings (see `bound`), and one of version 0 or 1 with
+//! every text at the engine's defaults.
 //!
 //! one form the writer no longer writes still reads: a snapshot event
 //! from before task-83 names each node its step added by id only
@@ -41,7 +43,7 @@ pub struct Persisted {
     pub chunks_bytes: usize,
     pub assets_bytes: usize,
     /// section B, where each bound control showed; 0 when the window has
-    /// no bindings and the file is version 0.
+    /// no bindings and the file leaves the section out.
     pub bindings_bytes: usize,
     /// events written.
     pub events: usize,
@@ -173,7 +175,8 @@ impl Session {
     pub fn from_bytes(bytes: &[u8]) -> Result<Session, FileError> {
         let parsed = format::parse(bytes)?;
         let [events, index, chunks, assets] = parsed.sections;
-        let assets = read_assets(assets)?;
+        let styled = parsed.version >= format::VERSION_TEXT_STYLE;
+        let assets = read_assets(assets, styled)?;
         let mut chunks = read_chunks(index, chunks, &assets)?;
         if let Some(payload) = parsed.bindings {
             let starts: Vec<Millis> = chunks.iter().map(|c| c.start).collect();
@@ -272,12 +275,12 @@ fn nodes_added_by_id(json: &mut Json) -> Result<usize, String> {
     Ok(put)
 }
 
-fn read_assets(payload: &[u8]) -> Result<Vec<Asset>, FileError> {
+fn read_assets(payload: &[u8], styled: bool) -> Result<Vec<Asset>, FileError> {
     let mut c = Cur::new(payload);
     let count = c.count(5, "asset count")?;
     let mut out = Vec::with_capacity(count);
     for at in 0..count {
-        out.push(match read_asset(&mut c, at)? {
+        out.push(match read_asset(&mut c, at, styled)? {
             Read::Ready(asset) => Asset::Live(asset),
             Read::Image(image) => {
                 // the store checks its pixel count in u32 and its atlas

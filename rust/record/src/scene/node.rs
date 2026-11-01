@@ -3,7 +3,6 @@
 //! doc of `scene`.
 
 use engine::drawing::compositor::{Layer, LayerEffect, SceneNode, TextNodeKey};
-use engine::drawing::text::OverflowWrap;
 
 use super::SceneError;
 use super::asset::{image_key, path_key};
@@ -156,27 +155,32 @@ fn put_key(b: &mut Put, k: &TextNodeKey) {
     b.u16(k.font_weight);
     b.u32(k.letter_spacing_bits);
     b.opt_str(k.font_family.as_deref());
+    b.u8(crate::payload::style_bits(k.features, k.overflow_wrap));
 }
 
 /// a text key read back field by field, never through
 /// `TextNodeKey::new`, which would take the string the source has now
 /// under hot reload.
 fn take_key(t: &mut Take<'_>) -> Result<TextNodeKey, SceneError> {
+    let text = t.str("a text")?;
+    let font_size_bits = t.u32("a text's size")?;
+    let line_height_bits = t.u32("a text's line height")?;
+    let max_width_bits = t.opt_u32("a text's width")?;
+    let font_weight = t.u16("a text's weight")?;
+    let letter_spacing_bits = t.u32("a text's letter spacing")?;
+    let font_family = t.opt_str("a text's family")?;
+    let (features, overflow_wrap) = crate::payload::from_style_bits(t.u8("a text's style")?)
+        .ok_or(SceneError::Invalid("a text's style"))?;
     Ok(TextNodeKey {
-        text: t.str("a text")?,
-        font_size_bits: t.u32("a text's size")?,
-        line_height_bits: t.u32("a text's line height")?,
-        max_width_bits: t.opt_u32("a text's width")?,
-        font_weight: t.u16("a text's weight")?,
-        letter_spacing_bits: t.u32("a text's letter spacing")?,
-        font_family: t.opt_str("a text's family")?,
-        // not in the format (versions 0 and 1 predate both): every text
-        // comes back with no OpenType features, so a replayed numeric run
-        // shapes its figures proportional, and `Normal`, so a recipe's
-        // `Anywhere` text whose word is wider than its line replays
-        // unbroken; a format version adds them
-        features: engine::drawing::text::TextFeatures::NONE,
-        overflow_wrap: OverflowWrap::Normal,
+        text,
+        font_size_bits,
+        line_height_bits,
+        max_width_bits,
+        font_weight,
+        letter_spacing_bits,
+        font_family,
+        features,
+        overflow_wrap,
     })
 }
 

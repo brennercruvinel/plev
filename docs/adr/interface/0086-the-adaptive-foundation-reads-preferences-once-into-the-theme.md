@@ -189,6 +189,17 @@ task-104 study:
   `gsettings` `org.gnome.desktop.a11y.interface high-contrast`. The web:
   `matchMedia('(prefers-contrast: more)')`.
 
+- Note (2026-11-01, task-104 front M, the coordinator's choice): More
+  aims at AAA (7:1) for text where it is reachable, and 4.5:1 for marks;
+  the edges of controls go to 3:1. This differs from the recommendation
+  in open question 5 (an AA target). Why: the standard themes already
+  meet AA (`legibility::settle` at `Bar::AA`), so a More at AA would
+  change almost nothing a person can see; AAA is what "increase
+  contrast" adds over a theme that already passes. The cost the question
+  named holds: more colors move, and the kit's copies stay at AA until
+  their front adds an adapt step. The adapted themes are measured on the
+  pairs of `theme/tests/contrast.rs` (`tests/more_contrast.rs`).
+
 ### reduced motion
 
 - The semantics stay as task-75 phase 1 set them: every finite

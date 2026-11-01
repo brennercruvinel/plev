@@ -292,6 +292,41 @@ impl FormTokens {
         }
     }
 
+    /// The fields' edges on `ground` (the page, the card): focused,
+    /// strong enough to find the field in use (3:1, WCAG 1.4.11); at rest
+    /// the design's, or `edge` where a bar holds the edges (more
+    /// contrast); hovered, where the design keeps the rest's, halfway
+    /// between the two (the kit's step, #E2E2E2 to #C4C4C4). A border the
+    /// design leaves out (transparent) stays out. Holding twice changes
+    /// nothing.
+    pub fn hold_edges(&mut self, ground: [Color; 2], edge: Option<f32>) {
+        let hold = |c: Color, need: f32| {
+            if c.0[3] > 0.0 {
+                legibility::reach(c, need, &[&ground])
+            } else {
+                c
+            }
+        };
+        for input in [
+            &mut self.input,
+            &mut self.search,
+            &mut self.inset,
+            &mut self.header,
+            &mut self.combo,
+            &mut self.bare,
+        ] {
+            input.focus.border = hold(input.focus.border, legibility::MARK_AA);
+            if let Some(need) = edge {
+                input.rest.border = hold(input.rest.border, need);
+                input.hover.border = hold(input.hover.border, need);
+            }
+            let (rest, focus) = (input.rest.border, input.focus.border);
+            if input.hover.border == rest && rest.0[3] > 0.0 && rest != focus {
+                input.hover.border = Color(crate::widgets::widget::mix(rest.0, focus.0, 0.5));
+            }
+        }
+    }
+
     /// The input box of `look`.
     pub fn recipe(&self, look: Look) -> &InputRecipe {
         match look {
@@ -508,7 +543,7 @@ impl FormTokens {
         let combo = select.as_input(&input);
         let edit = EditTokens::hoff_core();
         let bare = edit.bare(&input);
-        Self {
+        let mut form = Self {
             label,
             input,
             search,
@@ -525,7 +560,10 @@ impl FormTokens {
             bare,
             color: ColorTokens::hoff_core(),
             upload: UploadTokens::hoff_core(),
-        }
+        };
+        // the fields' edges in their states (`hold_edges`)
+        form.hold_edges([hoff_core::SHADES[0]; 2], None);
+        form
     }
 
     /// The recipe for a theme that is not the core kit, read from
@@ -633,7 +671,7 @@ impl FormTokens {
         let combo = select.as_input(&input);
         let edit = EditTokens::derive(theme);
         let bare = edit.bare(&input);
-        Self {
+        let mut form = Self {
             label,
             // the search and the header's field write the kit's label
             search: InputRecipe {
@@ -658,6 +696,9 @@ impl FormTokens {
             bare,
             color: ColorTokens::derive(theme),
             upload: UploadTokens::derive(theme),
-        }
+        };
+        // the fields' edges in their states (`hold_edges`)
+        form.hold_edges([theme.colors.bg, theme.colors.surface], None);
+        form
     }
 }

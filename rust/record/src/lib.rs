@@ -103,7 +103,9 @@ mod weigh;
 pub use bound::Bound;
 pub use error::{FileError, FrameError, ReadError};
 pub use event::{Event, InputKind, Kind};
-pub use format::{ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, VERSION_BINDINGS, probe};
+pub use format::{
+    ANIMATION_MAGIC, Build, FileKind, MAGIC, VERSION, VERSION_BINDINGS, VERSION_TEXT_STYLE, probe,
+};
 pub use hook::install_panic_hook;
 pub use limits::{Limits, Stats};
 pub use persist::Persisted;

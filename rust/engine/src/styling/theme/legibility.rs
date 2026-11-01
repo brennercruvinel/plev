@@ -37,8 +37,9 @@ impl Bar {
     /// The edges keep the theme's: the field's border is not the only
     /// thing that tells a person the field is there (its label and its
     /// place do), so WCAG 1.4.11 does not ask 3:1 of it, and more contrast
-    /// strengthens it. A decision pending with Brenner (task-104, option
-    /// B): `Some(MARK_AA)` here holds them at 3:1 in every theme (A).
+    /// strengthens it; focused, a field's border reaches 3:1 in every bar
+    /// (`FormTokens::hold_edges`). Brenner's decision B (task-104);
+    /// `Some(MARK_AA)` here would hold them at 3:1 at rest too (A).
     pub const AA: Self = Self {
         text: TEXT_AA,
         mark: MARK_AA,
@@ -52,6 +53,14 @@ impl Bar {
         edge: Some(MARK_AA),
     };
 }
+
+/// The least step of contrast between two tones of one ladder (the
+/// glass's active, default and faint text): each reads at least 1.15
+/// times the one under it (AA's 4.5 becomes about 5.2, then 6.0), so a
+/// settled ladder keeps its order. Where the strongest tone has less room
+/// (a pale ink at AAA), the steps share it. A chosen step, to review with
+/// the design (task-104 front M).
+pub const LADDER_STEP: f32 = 1.15;
 
 /// One channel from sRGB to linear light.
 fn linear(c: f32) -> f32 {
@@ -199,13 +208,24 @@ pub fn settle(colors: &mut ColorTokens, glass: &mut GlassTokens, bar: Bar) {
         &mut colors.text,
         &mut colors.text_mid,
         &mut colors.text_dim,
-        &mut glass.text_active,
-        &mut glass.text_default,
         &mut glass.text_faint,
         &mut glass.text_placeholder,
     ] {
         *text = reach(*text, bar.text, &surfaces);
     }
+    // the glass's ladder keeps its order, from the faintest up: the
+    // default a step over the faint, the active a step over the default
+    // (a tone that already stands higher keeps its own)
+    // where the strongest tone cannot reach two whole steps over the bar
+    // (hoff's pale ink at AAA), the steps share what room there is
+    let ceiling = worst(
+        reach(glass.text_active, f32::INFINITY, &surfaces),
+        &surfaces,
+    );
+    let step = LADDER_STEP.min((ceiling / bar.text).sqrt());
+    let above = |below: Color| (worst(below, &surfaces) * step).max(bar.text);
+    glass.text_default = reach(glass.text_default, above(glass.text_faint), &surfaces);
+    glass.text_active = reach(glass.text_active, above(glass.text_default), &surfaces);
     let [top, foot] = &mut glass.text_gradient;
     for mark in [
         &mut colors.accent,
