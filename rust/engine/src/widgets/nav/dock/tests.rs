@@ -44,9 +44,9 @@ fn dock() -> SidebarDock {
 fn the_core_recipe_is_the_rule_in_the_core_scales() {
     let core = Theme::hoff_core();
     let nav = &core.navigation;
-    let rule = DockRecipe::derive(&core, nav.sidebars.shell_w, &nav.link);
+    let rule = DockRecipe::derive(&core, nav.sidebars.width, &nav.link);
     assert_eq!(nav.dock, rule);
-    assert_eq!(nav.dock.width, nav.sidebars.shell_w);
+    assert_eq!(nav.dock.width, nav.sidebars.width);
     assert_eq!(nav.dock.zone, core.spacing.sm);
     assert_eq!(nav.dock.slide, core.duration.slow);
     assert_eq!(nav.dock.content_min_w, core.size.card_min_w);
@@ -55,7 +55,7 @@ fn the_core_recipe_is_the_rule_in_the_core_scales() {
         let nav = &theme.navigation;
         assert_eq!(
             nav.dock,
-            DockRecipe::derive(&theme, nav.sidebars.shell_w, &nav.link)
+            DockRecipe::derive(&theme, nav.sidebars.width, &nav.link)
         );
     }
 }

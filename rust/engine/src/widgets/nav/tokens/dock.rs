@@ -26,7 +26,7 @@ const EASE_IN_OUT: Easing = Easing::CubicBezier(0.4, 0.0, 0.2, 1.0);
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DockRecipe {
     /// The panel's width: the app shell's sidebar
-    /// (`navigation.sidebars.shell_w`, `!w-55` in the kit's `Layout`).
+    /// (`navigation.sidebars.width`, the kit's `HomeSidebar` `w-60`).
     pub width: f32,
     /// The strip at the window's edge a pointer reveals a peeking
     /// sidebar from: the `sm` step of the spacing.
