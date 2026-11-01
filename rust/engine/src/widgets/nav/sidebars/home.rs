@@ -23,6 +23,7 @@
 
 use accord::SemId;
 
+use crate::control::input::reveal::Glide;
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureList};
 use crate::widgets::form::TextField;
@@ -76,6 +77,10 @@ pub struct HomeSidebar {
     /// How far the body has scrolled, as asked; the layout holds it to
     /// what the body overflows by.
     scroll: f32,
+    /// The body gliding toward a focus, with the page's spring
+    /// (`reveal::Glide`), and how far it could scroll when it started.
+    glide: Glide,
+    glide_max: f32,
     /// A strip under the logo the app fills, this high (the gallery's
     /// search); 0, none.
     slot: f32,
@@ -110,6 +115,8 @@ impl HomeSidebar {
             focused: None,
             library: true,
             scroll: 0.0,
+            glide: Glide::default(),
+            glide_max: 0.0,
             slot: 0.0,
             sem: None,
         }
@@ -271,6 +278,8 @@ impl HomeSidebar {
     /// Scrolls the body by `delta` (down when positive); `true` when it
     /// moved.
     pub fn scroll_by(&mut self, delta: f32, bounds: Rect, theme: &Theme) -> bool {
+        // the person took the scroll: a glide lets go where it is
+        self.glide.stop();
         let max = self.max_scroll(bounds, theme);
         let before = self.scroll.clamp(0.0, max);
         self.scroll = (before + delta).clamp(0.0, max);
@@ -417,7 +426,7 @@ impl HomeSidebar {
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
-        let mut wake = Wake::idle();
+        let mut wake = Wake::moving(self.glide_tick(dt));
         for row in &mut self.rows {
             if let HomeRow::Menu(m, _) = row {
                 wake = wake.merge(m.wake(dt));

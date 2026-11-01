@@ -24,6 +24,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
 use engine::widgets::form::TextField;
@@ -39,11 +40,10 @@ use super::showcase::{self, GroupLayout};
 use super::toolbar::kit_zoom;
 use super::{After, Component, child_id, key_under, root_id, under};
 
-/// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20);
-/// the least height holds a row of more than one.
+/// The template's card: `min-h-121.5` (MenuPage/index.tsx:20), the
+/// least height of a row of more than one; a card alone in its row is
+/// only as tall as it holds.
 const CARD_MIN_H: f32 = 486.0;
-const CARD_TOP: f32 = 80.0;
-const CARD_BOTTOM: f32 = 64.0;
 /// `RowCards` of `span={3}`: three to a row.
 const SPAN: usize = 3;
 
@@ -192,17 +192,26 @@ impl MenusPage {
         }
     }
 
-    /// Each card as tall as its widget between the template's `pt-20`
-    /// and `pb-16`; a row of more than one at least the template's
-    /// `min-h-121.5`, a card alone in its row only as tall as it holds.
+    /// The line under a menu that says its last pick: one caption line
+    /// and the gap above it.
+    fn pick_line(theme: &Theme) -> f32 {
+        theme.spacing.sm + Self::caption(theme).line_height
+    }
+
+    fn caption(theme: &Theme) -> TextStyle {
+        theme.typography.run(TypeRole::Caption.regular())
+    }
+
+    /// Each card as tall as its menu and the pick's line under it, in the
+    /// showcase's frame (the chip's band above, as much below); a row of
+    /// more than one at least the template's `min-h-121.5`, a card alone
+    /// in its row only as tall as it holds.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let pick = Self::pick_line(theme);
         let heights = self
             .cards
             .iter()
-            .map(|c| {
-                let h = Self::size(&c.body, theme).1;
-                CARD_TOP + h + CARD_BOTTOM
-            })
+            .map(|c| showcase::card_height(Self::size(&c.body, theme).1 + pick, theme))
             .collect();
         let grid = showcase::Grid::new(SPAN, showcase::card_min_w(theme), heights)
             .floor(CARD_MIN_H)
@@ -210,16 +219,15 @@ impl MenusPage {
         showcase::layout_grids([grid], content, theme)
     }
 
-    /// The card's widget: centered across, `pt-20` from the card's top.
+    /// The card's widget: centered across, at the top of the card's body
+    /// (under the chip), never wider than the body. The widgets that lay
+    /// out in a rect (the zoom, the folders, the models) take that width;
+    /// a context menu keeps its recipe's, which the narrowest card holds.
     fn widget_rect(body: &Body, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = Self::size(body, theme);
-        let w = w.min(showcase::room(card.w, theme));
-        Rect::new(
-            (card.x + (card.w - w) / 2.0).round(),
-            card.y + CARD_TOP,
-            w,
-            h,
-        )
+        let room = showcase::body(card, theme);
+        let w = w.min(room.w);
+        Rect::new((room.x + (room.w - w) / 2.0).round(), room.y, w, h)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
@@ -472,7 +480,7 @@ impl MenusPage {
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
-        let caption = theme.typography.run(TypeRole::Caption.regular());
+        let caption = Self::caption(theme);
         for (i, (card, rect)) in self.cards.iter().zip(&layout[0].cards).enumerate() {
             showcase::card(c, *rect, card.title, theme);
             let at = Self::widget_rect(&card.body, *rect, theme);
@@ -506,11 +514,13 @@ impl MenusPage {
                 Body::Folders(f) => f.render(c, at, theme),
             }
             if let Some(picked) = &card.picked {
+                // one line under the menu, cut to the body's width
                 let body = showcase::body(*rect, theme);
+                let line = TextMeasurer::truncate_to_width(picked, &caption, body.w);
                 c.push(SceneNode::Text {
-                    key: TextNodeKey::from_style(picked, &caption, Some(body.w)),
+                    key: TextNodeKey::from_style(&line, &caption, None),
                     x: body.x,
-                    y: body.bottom() - caption.line_height,
+                    y: at.bottom() + theme.spacing.sm,
                     color: theme.colors.text_mid.0,
                 });
             }

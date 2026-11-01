@@ -163,16 +163,35 @@ impl ShareFile {
             Kind::Group(g, _) => g.height(theme),
             _ => send_h,
         };
-        let row_h = group_h.max(send_h);
         let y = rect.y + f.pad;
-        let group_w = (w - f.invite_gap - send_w).max(0.0);
-        controls[INVITE] = Rect::new(x, y + (row_h - group_h) / 2.0, group_w, group_h);
-        controls[SEND] = Rect::new(
-            x + group_w + f.invite_gap,
-            y + (row_h - send_h) / 2.0,
-            send_w,
-            send_h,
-        );
+        let beside = (w - f.invite_gap - send_w).max(0.0);
+        // Beside its button while the box keeps the narrowest useful
+        // field's room for the typed text past its select; under it
+        // otherwise, the button across the row.
+        let select_w = match &self.controls.0[INVITE].kind {
+            Kind::Group(g, _) => g
+                .layout(Rect::new(0.0, 0.0, beside, group_h), theme)
+                .choice
+                .map_or(0.0, |r| r.w),
+            _ => 0.0,
+        };
+        let stacked = beside - select_w < theme.size.field_min_w;
+        let row_h = if stacked {
+            controls[INVITE] = Rect::new(x, y, w, group_h);
+            let below = y + group_h + f.invite_gap;
+            controls[SEND] = Rect::new(x, below, w, send_h);
+            group_h + f.invite_gap + send_h
+        } else {
+            let row_h = group_h.max(send_h);
+            controls[INVITE] = Rect::new(x, y + (row_h - group_h) / 2.0, beside, group_h);
+            controls[SEND] = Rect::new(
+                x + beside + f.invite_gap,
+                y + (row_h - send_h) / 2.0,
+                send_w,
+                send_h,
+            );
+            row_h
+        };
         // The general access.
         let rule0 = y + row_h + f.pad;
         let access_label = rule0 + ink.rule_w + f.section_pad_y;
@@ -505,5 +524,37 @@ impl ModalBody for ShareFile {
 
     fn close(&mut self) -> bool {
         self.controls.close()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sheet() -> ShareFile {
+        let people = vec![Person::new("Sam Dy", "sam@hoffresearch.com", Some(0))];
+        ShareFile::new(people, "https://research-app.co/file/k373nH", None)
+    }
+
+    /// At the kit's width the Invite button sits beside the box; where
+    /// the box would keep less than the narrowest useful field past its
+    /// select, the button goes under it, across the row, and the sheet
+    /// grows by it.
+    #[test]
+    fn the_invite_button_goes_under_the_box_when_narrow() {
+        for theme in [Theme::hoff_core(), Theme::hoff()] {
+            let s = sheet();
+            let wide = tokens(&theme).share_file.panel.width;
+            let l = s.layout(Rect::new(0.0, 0.0, wide, 0.0), &theme);
+            let (group, send) = (l.controls[INVITE], l.controls[SEND]);
+            assert!(send.x >= group.right(), "beside at {wide}");
+            assert!((send.y + send.h / 2.0 - (group.y + group.h / 2.0)).abs() < 0.5);
+
+            let narrow = s.layout(Rect::new(0.0, 0.0, 280.0, 0.0), &theme);
+            let (group, send) = (narrow.controls[INVITE], narrow.controls[SEND]);
+            assert!(send.y >= group.bottom(), "under at 280");
+            assert_eq!((send.x, send.w), (group.x, group.w));
+            assert!(narrow.foot.bottom() > l.foot.bottom());
+        }
     }
 }
