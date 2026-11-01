@@ -319,3 +319,32 @@ fn a_panel_and_a_head_read_as_a_group_and_a_label() {
         Some(Value::Text("3".into()))
     );
 }
+
+/// The Studio plan's button on the Card page.
+const STUDIO: &str = "card_page.group[0].card[1].plan";
+
+/// A plan is taken the same from the three: the person's click on its
+/// button, the reader's press, the agent's `activate`.
+#[test]
+fn a_plan_is_taken_the_same_from_the_three() {
+    let mut person = gallery("Card");
+    person.click(STUDIO);
+    let mut reader = gallery("Card");
+    reader.press(STUDIO);
+    let agent = by_agent("Card", "plan", vec![ask(STUDIO, "activate")]);
+    same("Card", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{STUDIO}:selected")),
+        Some(Value::Bool(true))
+    );
+}
+
+/// The plan in use takes nothing: its button is disabled for the three.
+#[test]
+fn the_plan_in_use_takes_no_click() {
+    let free = "card_page.group[0].card[0].plan";
+    let mut person = gallery("Card");
+    let before = person.state();
+    person.click(free);
+    assert_eq!(person.state(), before);
+}

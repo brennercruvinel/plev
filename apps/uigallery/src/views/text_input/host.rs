@@ -103,6 +103,12 @@ text_hosts! {
     Textarea => textarea,
     Combobox => combobox,
     Command => command,
+    // task-104 front E, selection (#158)
+    Menus => menus,
+    // task-104 front F, kit foundation
+    Topbar => topbar,
+    // task-104 front C, conversation and feedback (#156)
+    PromptInput => prompt_input,
     // task-104 front G, navigation and data: the zoom level's field
     Toolbar => toolbar,
 }

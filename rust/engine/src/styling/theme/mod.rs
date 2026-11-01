@@ -24,6 +24,7 @@ pub use crate::widgets::buttons::tokens::{
 // `tokens.rs`.
 pub use crate::widgets::content::tokens::DisclosureTokens;
 pub use crate::widgets::form::tokens::FormTokens;
+pub use crate::widgets::header::tokens::HeaderTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
 pub use crate::widgets::nav::tokens::NavigationTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
@@ -84,6 +85,9 @@ pub struct Theme {
     /// code block, chart, graph. Boxed: a theme travels by value, and its
     /// size is every test's stack.
     pub navigation: Box<NavigationTokens>,
+    /// Front F: the kit's top bars and its logo. Boxed, as the
+    /// navigation.
+    pub header: Box<HeaderTokens>,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -134,6 +138,7 @@ impl Theme {
             disclosure: DisclosureTokens::hoff_core(),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -384,6 +389,7 @@ impl Theme {
         self.disclosure = DisclosureTokens::derive(self);
         *self.selection = SelectionTokens::derive(self);
         *self.navigation = NavigationTokens::derive(self);
+        *self.header = HeaderTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

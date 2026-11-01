@@ -114,6 +114,7 @@ pub enum Pane {
     Marker,
     Message,
     MessageScroller,
+    PromptInput,
     // task-104 front D, disclosure and display (#157)
     Accordion,
     AspectRatio,
@@ -132,6 +133,9 @@ pub enum Pane {
     RadioGroup,
     Toggle,
     ToggleGroup,
+    // task-104 front F, kit foundation
+    Home,
+    Topbar,
     // apps demo
     Todo,
     Surface,

@@ -160,11 +160,13 @@ components! {
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
+    PromptInput => prompt_input,
     Progress => progress,
     Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,
+    Card => card,
     Carousel => carousel,
     Collapsible => collapsible,
     Item => item,
@@ -181,6 +183,9 @@ components! {
     RadioGroup => radio_group,
     Toggle => toggle,
     ToggleGroup => toggle_group,
+    // task-104 front F, kit foundation
+    Home => home,
+    Topbar => topbar,
     // task-104 front G, navigation and data
     Chart => chart,
     CodeBlock => code_block,

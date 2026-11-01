@@ -181,7 +181,6 @@ impl SelectionTokens {
             // the panel is the theme's popover glass, the box and the hover
             // its hover tone, the marks its mid tone where they read
             folders: FoldersTokens {
-                placeholder: words(c.text_mid),
                 label: words(c.text),
                 panel: theme.overlay.popover.panel.clone(),
                 search: ButtonSurface {
@@ -191,6 +190,13 @@ impl SelectionTokens {
                     text: c.text,
                 },
                 row_hover: c.bg_hover,
+                naming: ButtonSurface {
+                    fill: [c.bg_hover; 2],
+                    overlay: NONE,
+                    shadow: vec![border(c.divider)],
+                    text: c.text,
+                },
+                naming_icon: mark_on(&[c.accent, c.text], &[&[c.bg, glass, c.bg_hover]]),
                 mark: mark_on(&[c.text_mid, c.text], &[&[c.bg], &[c.bg, c.bg_hover]]),
                 hues: [c.warning, c.success, c.info, c.danger],
                 ..kit.folders.clone()

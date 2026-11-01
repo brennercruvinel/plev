@@ -29,7 +29,9 @@ use super::super::components::{
 };
 
 // task-104 front C, conversation and feedback (#156)
-use super::super::components::{alert, attachment, bubble, marker, message, message_scroller};
+use super::super::components::{
+    alert, attachment, bubble, marker, message, message_scroller, prompt_input,
+};
 
 // task-104 front D, disclosure and display (#157)
 use super::super::components::{
@@ -40,6 +42,9 @@ use super::super::components::{
 use super::super::components::{
     button_group, calendar, date_picker, menus, radio_group, toggle, toggle_group,
 };
+
+// task-104 front F, kit foundation
+use super::super::components::{home, topbar};
 
 pub struct Panes {
     // -- foundations
@@ -107,6 +112,7 @@ pub struct Panes {
     pub marker: marker::MarkerPage,
     pub message: message::MessagePage,
     pub message_scroller: message_scroller::MessageScrollerPage,
+    pub prompt_input: prompt_input::PromptInputPage,
     // task-104 front D, disclosure and display (#157)
     pub accordion: accordion::AccordionPage,
     pub aspect_ratio: aspect_ratio::AspectRatioPage,
@@ -124,6 +130,9 @@ pub struct Panes {
     pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
+    // task-104 front F, kit foundation
+    pub home: home::HomePage,
+    pub topbar: topbar::TopbarPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -220,6 +229,7 @@ impl Panes {
             marker: marker::MarkerPage::new(),
             message: message::MessagePage::new(),
             message_scroller: message_scroller::MessageScrollerPage::new(),
+            prompt_input: prompt_input::PromptInputPage::new(),
             // task-104 front D, disclosure and display (#157)
             accordion: accordion::AccordionPage::new(theme),
             aspect_ratio: aspect_ratio::AspectRatioPage::new(),
@@ -237,6 +247,9 @@ impl Panes {
             radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
+            // task-104 front F, kit foundation
+            home: home::HomePage::new(),
+            topbar: topbar::TopbarPage::new(),
             todo,
             surface,
             silences: silences::SilencesPage::new(),

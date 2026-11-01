@@ -537,6 +537,7 @@ impl DisclosureTokens {
             header,
             page,
             card: CardRecipe::hoff_core(),
+            catalog: CatalogTokens::hoff_core(),
             split,
         }
     }

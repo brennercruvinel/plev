@@ -13,6 +13,9 @@
 //! runs it ([`Command::enter`]), a press on a row runs that one; the
 //! command run last is [`Command::ran`] for the owner to act on.
 //!
+//! Inline, the list stands on its panel; on a surface that already is
+//! one, as the dialog's sheet ([`Command::bare`]), the rows stand on it.
+//!
 //! Projected ([`Command::project`]): the search box as its field is; the
 //! list beside it (`<id>.list`, `Role::List`, its `count` the commands)
 //! with the command run last as `ran`, and in it each command shown
@@ -72,6 +75,9 @@ pub struct Command {
     /// A reader or Tab put the focus on the highlighted command.
     item_focus: bool,
     empty: String,
+    /// The list on its own panel (inline); off on a surface that already
+    /// is one, as the dialog's sheet.
+    panel: bool,
     sem: Option<SemId>,
 }
 
@@ -87,6 +93,7 @@ impl Command {
             ran: None,
             item_focus: false,
             empty: "No results found.".into(),
+            panel: true,
             sem: None,
         }
     }
@@ -125,6 +132,13 @@ impl Command {
     /// What the list says when nothing matches.
     pub fn empty(mut self, text: impl Into<String>) -> Self {
         self.empty = text.into();
+        self
+    }
+
+    /// The list straight on the surface under it, without a panel of its
+    /// own: the palette on a sheet that already is one.
+    pub fn bare(mut self) -> Self {
+        self.panel = false;
         self
     }
 
@@ -341,7 +355,9 @@ impl Command {
         let layer = LayerId::DEFAULT;
         let l = self.layout(bounds, theme);
         self.search.render(c, l.search, theme);
-        list::draw_body(c, layer, l.list, theme);
+        if self.panel {
+            list::draw_body(c, layer, l.list, theme);
+        }
         let p = &theme.form.select.panel;
         let rows = self.rows();
         if rows.is_empty() {

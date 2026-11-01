@@ -16,6 +16,9 @@ pub enum Chars {
     /// The ASCII letters and digits (a recovery code), the full-width
     /// digits read as digits.
     Alphanumeric,
+    /// The hex digits, `0`-`9` and `a`-`f` in either case (a color), the
+    /// full-width digits read as digits.
+    Hex,
 }
 
 /// What an input admits.
@@ -57,6 +60,7 @@ impl Accept {
         };
         let ok = match self.chars {
             Chars::Digits => c.is_ascii_digit(),
+            Chars::Hex => c.is_ascii_hexdigit(),
             _ => c.is_ascii_alphanumeric(),
         };
         ok.then_some(c)
@@ -111,5 +115,18 @@ mod tests {
             max: Some(8),
         };
         assert_eq!(code.admit("ab-12 CD", 0, 0), "ab12CD");
+    }
+
+    #[test]
+    fn a_color_takes_hex_digits_in_either_case() {
+        let hex = Accept {
+            chars: Chars::Hex,
+            max: Some(6),
+        };
+        assert_eq!(hex.admit("#f4G4-F4", 0, 0), "f44F4");
+        assert_eq!(hex.admit("１a", 0, 0), "1a", "a full-width digit");
+        assert_eq!(hex.admit("ABCDEF", 3, 0), "ABC", "three left");
+        assert!(hex.takes("00ff7A"));
+        assert!(!hex.takes("#00ff7A"), "set whole, as it is");
     }
 }
