@@ -1794,7 +1794,7 @@ fn a_command_dialog_list_follows_the_window_and_the_arrows() {
     // a few commands: the sheet is as tall as they need
     let few = CommandDialog::new(Command::new("x").group("G", [("One", None, None)])).opened();
     let window = Rect::new(0.0, 0.0, 1024.0, 1400.0);
-    let need = few.command.height_for(
+    let need = few.command.full_height(
         few.sheet_rect(&theme, window).w - theme.overlay.modal.pad * 2.0,
         &theme,
     );

@@ -118,14 +118,21 @@ impl CommandDialog {
 
     /// The sheet in `window`: a modal's width there, as tall as the
     /// palette needs up to the theme's share of the window's height (the
-    /// box and one row at least, the window at most), centered.
+    /// box and one row at least, the window at most), centered. A window
+    /// with no height (0, a card that sizes it) takes the inline
+    /// palette's height.
     pub fn sheet_rect(&self, theme: &Theme, window: Rect) -> Rect {
         let pad = theme.overlay.modal.pad;
         let w = Modal::width(theme, window.w).min(window.w);
-        let need = self.command.height_for((w - pad * 2.0).max(0.0), theme) + pad * 2.0;
-        let least = self.command.min_height(theme) + pad * 2.0;
-        let most = (window.h * theme.form.group.palette_share).max(least);
-        let h = need.min(most).min(window.h.max(0.0));
+        let inner = (w - pad * 2.0).max(0.0);
+        let h = if window.h > 0.0 {
+            let need = self.command.full_height(inner, theme) + pad * 2.0;
+            let least = self.command.min_height(theme) + pad * 2.0;
+            let most = (window.h * theme.form.group.palette_share).max(least);
+            need.min(most).min(window.h)
+        } else {
+            self.command.height_for(inner, theme) + pad * 2.0
+        };
         let x = window.x + ((window.w - w) / 2.0).max(0.0);
         let y = window.y + ((window.h - h) / 2.0).max(0.0);
         Rect::new(x, y, w, h)

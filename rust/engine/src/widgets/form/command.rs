@@ -66,6 +66,17 @@ pub struct CommandLayout {
     pub list: Rect,
 }
 
+/// How tall the list's strip may be.
+#[derive(Clone, Copy)]
+enum Room {
+    /// The select panel's `max_h` (inline, or no height given).
+    Capped,
+    /// Every row.
+    Every,
+    /// What this whole height leaves under the box.
+    Bounded(f32),
+}
+
 /// An inline command palette.
 #[derive(Clone, Debug)]
 pub struct Command {
@@ -156,7 +167,9 @@ impl Command {
     /// The list as tall as its bounds leave under the box (its rows, at
     /// most; one row at least), not capped by the select panel's `max_h`:
     /// a palette its owner sizes, the dialog's sheet a share of the
-    /// window. [`height_for`](Self::height_for) is then every row.
+    /// window ([`full_height`](Self::full_height) is every row). Bounds
+    /// with no height (0) still mean the inline palette's
+    /// [`height_for`](Self::height_for).
     pub fn fit(mut self) -> Self {
         self.fit = true;
         self
@@ -277,25 +290,29 @@ impl Command {
     }
 
     /// Where the box and the list go in `bounds`. Its height is read only
-    /// when the palette [fits](Self::fit) it; inline the palette takes
-    /// [`height_for`](Self::height_for).
+    /// when the palette [fits](Self::fit) it and it has one; otherwise
+    /// the palette takes [`height_for`](Self::height_for).
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> CommandLayout {
-        self.place(bounds, self.fit.then_some(bounds.h), theme)
+        let room = if self.fit && bounds.h > 0.0 {
+            Room::Bounded(bounds.h)
+        } else {
+            Room::Capped
+        };
+        self.place(bounds, room, theme)
     }
 
-    /// The box and the list, the list's strip within `room` (the whole
-    /// palette's height) when there is one.
-    fn place(&self, bounds: Rect, room: Option<f32>, theme: &Theme) -> CommandLayout {
+    /// The box and the list, the list's strip as `room` says.
+    fn place(&self, bounds: Rect, room: Room, theme: &Theme) -> CommandLayout {
         let search = Rect::new(bounds.x, bounds.y, bounds.w, self.search.height(theme));
         let gap = theme.form.field.label_gap;
         // The list a select opens, its rows (one at least, for the empty
         // state) scrolling in the same strip.
         let p = &theme.form.select.panel;
         let n = self.rows().len().max(1);
-        let view = match (self.fit, room) {
-            (false, _) => list::view_h(n, theme),
-            (true, None) => n as f32 * p.row_h,
-            (true, Some(h)) => {
+        let view = match room {
+            Room::Capped => list::view_h(n, theme),
+            Room::Every => n as f32 * p.row_h,
+            Room::Bounded(h) => {
                 let left = h - search.h - gap - p.pad * 2.0;
                 (n as f32 * p.row_h).min(left.max(p.row_h))
             }
@@ -309,12 +326,18 @@ impl Command {
         CommandLayout { search, list }
     }
 
-    /// The height at width `w`: the box and the list, every row of it
-    /// when the palette fits its bounds.
+    /// The height at width `w`: the box and the list, no taller than the
+    /// select panel's `max_h`.
     pub fn height_for(&self, w: f32, theme: &Theme) -> f32 {
-        self.place(Rect::new(0.0, 0.0, w, 0.0), None, theme)
-            .list
-            .bottom()
+        let at = Rect::new(0.0, 0.0, w, 0.0);
+        self.place(at, Room::Capped, theme).list.bottom()
+    }
+
+    /// The height at width `w` with every row shown: what a fitted
+    /// palette would take with all the room it wants.
+    pub fn full_height(&self, w: f32, theme: &Theme) -> f32 {
+        let at = Rect::new(0.0, 0.0, w, 0.0);
+        self.place(at, Room::Every, theme).list.bottom()
     }
 
     /// The least a fitted palette takes: the box and one row.
