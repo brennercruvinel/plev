@@ -18,7 +18,8 @@ impl Element {
     pub fn render_interactive(&self, cx: &mut ViewContext) -> RenderResult {
         let mut items = Vec::new();
         let mut elements = Vec::new();
-        collect_layout_items(self, &mut items, &mut elements);
+        let family = cx.theme.as_ref().and_then(|t| t.typography.family);
+        collect_layout_items(self, &mut items, &mut elements, family);
 
         let mut engine = LayoutEngine::new();
         let bounds = engine.compute(&items, cx.width, cx.height);

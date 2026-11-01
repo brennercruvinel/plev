@@ -15,6 +15,7 @@ pub(crate) fn collect_layout_items<'a>(
     element: &'a Element,
     items: &mut Vec<LayoutItem>,
     elements: &mut Vec<&'a Element>,
+    family: Option<&str>,
 ) -> usize {
     let index = items.len();
     // Reserve slot with placeholder
@@ -29,14 +30,14 @@ pub(crate) fn collect_layout_items<'a>(
     let child_indices: Vec<usize> = element
         .children
         .iter()
-        .map(|child| collect_layout_items(child, items, elements))
+        .map(|child| collect_layout_items(child, items, elements, family))
         .collect();
 
     // Fill in real style and children
     items[index] = LayoutItem {
         style: to_layout_style(element),
         children: child_indices,
-        text: text_measure_spec(element),
+        text: text_measure_spec(element, family),
     };
 
     index
@@ -45,7 +46,7 @@ pub(crate) fn collect_layout_items<'a>(
 /// Build the measure spec for text leaf nodes, mirroring exactly the string
 /// transformations `emit_text` applies (children merge, uppercase, truncate),
 /// so layout measures the same text the renderer shapes.
-fn text_measure_spec(element: &Element) -> Option<TextMeasureSpec> {
+fn text_measure_spec(element: &Element, family: Option<&str>) -> Option<TextMeasureSpec> {
     let ElementKind::Text {
         content,
         font_size,
@@ -66,7 +67,7 @@ fn text_measure_spec(element: &Element) -> Option<TextMeasureSpec> {
         content: resolved.into_owned(),
         // Same resolved style the emitter keys the draw with (see
         // `emit::resolved_text_style`): measure == draw, by construction.
-        style: resolved_text_style(element, *font_size, *line_height),
+        style: resolved_text_style(element, *font_size, *line_height, family),
         max_width: *max_width,
     })
 }
