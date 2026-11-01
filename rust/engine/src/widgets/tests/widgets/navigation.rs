@@ -68,10 +68,7 @@ fn the_slot_is_the_kit_in_core_and_derived_elsewhere() {
 #[test]
 fn breadcrumb_recipe_is_the_kit_link_in_core_and_the_old_trail_elsewhere() {
     let kit = core().navigation.breadcrumb;
-    assert_eq!(
-        (kit.text.size, kit.text.line_height, kit.text.weight),
-        (12.0, 16.0, 600)
-    );
+    assert_eq!(kit.text, TypeRole::BodyStrong.run());
     assert_eq!(
         (kit.pad_x, kit.pad_y, kit.radius, kit.chevron),
         (8.0, 4.0, 8.0, 16.0)
@@ -317,15 +314,7 @@ fn breadcrumb_at_its_preferred_width_draws_every_crumb_whole() {
 #[test]
 fn stat_recipe_is_the_price_in_core_and_the_old_ramp_elsewhere() {
     let kit = core().navigation.stat;
-    assert_eq!(
-        (
-            kit.lg.value.size,
-            kit.lg.value.line_height,
-            kit.lg.value.weight
-        ),
-        (40.0, 48.0, 400)
-    );
-    assert_eq!(kit.lg.value.tracking_em, Some(-0.03));
+    assert_eq!(kit.lg.value, TypeRole::H2.run());
     let t = hoff();
     let s = Stat::new("1.3", "GB").size(StatSize::Lg);
     assert_eq!(s.value_style(&t), t.typography.role(TypeRole::H3));

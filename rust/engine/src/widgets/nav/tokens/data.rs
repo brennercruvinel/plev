@@ -4,18 +4,18 @@
 //! and its shadows, with the class list it comes from; `derive` writes
 //! back what the widget drew with before the slot.
 
-use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::styling::theme::TypeRole;
+use crate::styling::theme::TypeRun;
 use crate::styling::theme::hoff_core::SHADES;
 
 /// One size of a stat: the value, the unit after it, the label under it.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StatLevel {
-    pub value: NavText,
-    pub unit: NavText,
-    pub label: NavText,
+    pub value: TypeRun,
+    pub unit: TypeRun,
+    pub label: TypeRun,
 }
 
 /// The stat: three sizes, three tones and the spaces between the parts.
@@ -47,22 +47,21 @@ impl StatRecipe {
     /// medium over the 15/24 body; 15/24 semibold over 12/16).
     pub fn hoff_core() -> Self {
         let [_, _, _, _, _, gray, _, _, ink] = SHADES;
-        let heading = -0.03;
         Self {
             sm: StatLevel {
-                value: NavText::new(15.0, 24.0, 600).tracked(-0.02),
-                unit: NavText::new(12.0, 16.0, 500).tracked(-0.01),
-                label: NavText::new(11.0, 16.0, 500).tracked(-0.01),
+                value: TypeRole::Title.strong(),
+                unit: TypeRole::Label.run(),
+                label: TypeRole::Caption.run(),
             },
             md: StatLevel {
-                value: NavText::new(24.0, 32.0, 500).tracked(heading),
-                unit: NavText::new(15.0, 24.0, 500).tracked(-0.02),
-                label: NavText::new(12.0, 16.0, 400),
+                value: TypeRole::H5.run(),
+                unit: TypeRole::Title.run(),
+                label: TypeRole::Body.run(),
             },
             lg: StatLevel {
-                value: NavText::new(40.0, 48.0, 400).tracked(heading),
-                unit: NavText::new(24.0, 32.0, 500).tracked(heading),
-                label: NavText::new(12.0, 16.0, 400),
+                value: TypeRole::H2.run(),
+                unit: TypeRole::H5.run(),
+                label: TypeRole::Body.run(),
             },
             value: ink,
             unit: gray,
@@ -77,23 +76,22 @@ impl StatRecipe {
     /// headline over base-2r, the unit a ramp step under its value; the
     /// value in the text tone, the unit mid, the label dim.
     pub fn derive(theme: &Theme) -> Self {
-        let (ty, colors, sp) = (&theme.typography, &theme.colors, &theme.spacing);
-        let of = NavText::of;
+        let (colors, sp) = (&theme.colors, &theme.spacing);
         Self {
             sm: StatLevel {
-                value: of(&ty.run(TypeRole::BodyLg.medium())),
-                unit: of(&ty.run(TypeRole::Caption.regular())),
-                label: of(&ty.role(TypeRole::Small)),
+                value: TypeRole::BodyLg.medium(),
+                unit: TypeRole::Caption.regular(),
+                label: TypeRole::Small.run(),
             },
             md: StatLevel {
-                value: of(&ty.role(TypeRole::Title)),
-                unit: of(&ty.role(TypeRole::Body)),
-                label: of(&ty.run(TypeRole::Caption.regular())),
+                value: TypeRole::Title.run(),
+                unit: TypeRole::Body.run(),
+                label: TypeRole::Caption.regular(),
             },
             lg: StatLevel {
-                value: of(&ty.role(TypeRole::H3)),
-                unit: of(&ty.role(TypeRole::Title)),
-                label: of(&ty.role(TypeRole::Body)),
+                value: TypeRole::H3.run(),
+                unit: TypeRole::Title.run(),
+                label: TypeRole::Body.run(),
             },
             value: colors.text,
             unit: colors.text_mid,
@@ -109,8 +107,8 @@ impl StatRecipe {
 /// each kind of a diff's row.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CodeRecipe {
-    pub text: NavText,
-    pub caption: NavText,
+    pub text: TypeRun,
+    pub caption: TypeRun,
     pub pad: f32,
     /// Between the caption and the code.
     pub caption_gap: f32,
@@ -144,8 +142,8 @@ impl CodeRecipe {
         use crate::styling::theme::hoff_core::{GREEN, RED};
         let [_, well, wash, line, _, gray, dark, _, ink] = SHADES;
         Self {
-            text: NavText::new(13.0, 20.0, 400).in_mono(),
-            caption: NavText::new(11.0, 16.0, 500),
+            text: TypeRole::Code.run(),
+            caption: TypeRole::Caption.run(),
             pad: 12.0,
             caption_gap: 4.0,
             radius: 12.0,
@@ -167,8 +165,8 @@ impl CodeRecipe {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         Self {
-            text: NavText::of(&theme.typography.role(TypeRole::Code)).in_mono(),
-            caption: NavText::of(&theme.typography.run(TypeRole::Caption.strong())),
+            text: TypeRole::Code.run(),
+            caption: TypeRole::Caption.strong(),
             pad: theme.spacing.md,
             caption_gap: theme.spacing.xs,
             radius: theme.shape.nav,

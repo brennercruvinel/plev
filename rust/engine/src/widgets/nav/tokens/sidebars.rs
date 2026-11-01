@@ -14,7 +14,7 @@ use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ControlSize, IconSize, Theme};
 
-use super::NavText;
+use crate::styling::theme::TypeRun;
 
 /// The shell, the head with its logo, the captions and the new-folder
 /// field of the home and guideline sidebars.
@@ -35,7 +35,7 @@ pub struct SidebarsRecipe {
     /// The rows' `px-5 pb-5`.
     pub body_pad: f32,
     /// A group's caption: `p-2.5`, `mb-0.5`, its run and tone.
-    pub caption: NavText,
+    pub caption: TypeRun,
     pub caption_pad: f32,
     pub caption_gap: f32,
     pub caption_color: Color,
@@ -76,12 +76,12 @@ pub struct CanvasRecipe {
     pub mark: Color,
     /// The project's title (`text-[0.9375rem] leading-[1.5rem]
     /// font-semibold`, `gap-2.5`) and its chevron's `size-6` tile.
-    pub title: NavText,
+    pub title: TypeRun,
     pub title_gap: f32,
     pub chevron_tile: f32,
     pub chevron: f32,
     /// The project's kind (`py-0.5`, `#7B7B7B/80`: shade 7 for AAA).
-    pub subtitle: NavText,
+    pub subtitle: TypeRun,
     pub subtitle_pad: f32,
     pub ink: Color,
     pub subtle: Color,
@@ -103,7 +103,7 @@ pub struct CanvasRecipe {
     pub tile_fill: Color,
     pub tile_raised: Color,
     pub tile_shadow: ShadowSpec,
-    pub label: NavText,
+    pub label: TypeRun,
     pub label_gap: f32,
     /// The row's toggles: `size-4`, `gap-3`, `right-3`; gray at rest,
     /// ink when on.
@@ -140,7 +140,7 @@ pub struct DesignRecipe {
     pub avatar_overlap: f32,
     pub avatars: [Color; 2],
     pub header_h: f32,
-    pub header: NavText,
+    pub header: TypeRun,
     pub add: f32,
     pub add_icon: f32,
     pub gap: f32,
@@ -148,7 +148,7 @@ pub struct DesignRecipe {
     pub field_h: f32,
     pub field_radius: f32,
     pub field_fill: Color,
-    pub field_text: NavText,
+    pub field_text: TypeRun,
     pub field_text_x: f32,
     pub field_prefix_x: f32,
     pub unit_w: f32,
@@ -179,7 +179,7 @@ impl SidebarsRecipe {
             body_pad: 20.0,
             // `p-2.5 text-[0.75rem] leading-[1rem] font-medium
             // text-[#7b7b7b]/70` (GuidelineSidebar:59): shade 7 for AAA.
-            caption: NavText::new(12.0, 16.0, 500),
+            caption: TypeRole::Label.run(),
             caption_pad: 10.0,
             caption_gap: 2.0,
             caption_color: shade7,
@@ -216,7 +216,7 @@ impl SidebarsRecipe {
             canvas_radius: theme.radius.lg,
             head_pad: space.lg,
             body_pad: space.md,
-            caption: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            caption: TypeRole::Caption.regular(),
             caption_pad: space.sm,
             caption_gap: space.xs / 2.0,
             caption_color: colors.text_mid,
@@ -247,11 +247,11 @@ impl CanvasRecipe {
             button_icon: 20.0,
             button_hover: shade2,
             mark: gray,
-            title: NavText::new(15.0, 24.0, 600),
+            title: TypeRole::Title.strong(),
             title_gap: 10.0,
             chevron_tile: 24.0,
             chevron: 16.0,
-            subtitle: NavText::new(12.0, 16.0, 500),
+            subtitle: TypeRole::Label.run(),
             subtitle_pad: 2.0,
             ink,
             subtle: shade7,
@@ -269,7 +269,7 @@ impl CanvasRecipe {
             tile_fill: wash,
             tile_raised: paper,
             tile_shadow: ShadowSpec::new([0.0, 0.0], 4.0, 0.0, tint(ink, 0.10)),
-            label: NavText::new(12.0, 16.0, 500),
+            label: TypeRole::Label.run(),
             label_gap: 12.0,
             toggle: 16.0,
             toggle_gap: 12.0,
@@ -300,11 +300,11 @@ impl CanvasRecipe {
             button_icon: control.icon(IconSize::Md),
             button_hover: glass.surface_hover,
             mark: colors.text_mid,
-            title: NavText::of(&theme.typography.role(TypeRole::BodyStrong)),
+            title: TypeRole::BodyStrong.run(),
             title_gap: space.sm,
             chevron_tile: slot * core.chevron_tile / core.button,
             chevron: control.icon(IconSize::Sm),
-            subtitle: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            subtitle: TypeRole::Caption.regular(),
             subtitle_pad: space.xs / 2.0,
             ink: colors.text,
             subtle: colors.text_mid,
@@ -322,7 +322,7 @@ impl CanvasRecipe {
             tile_fill: glass.surface_hover,
             tile_raised: colors.surface,
             tile_shadow: core.tile_shadow,
-            label: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            label: TypeRole::Caption.regular(),
             label_gap: space.sm,
             toggle: control.icon(IconSize::Sm),
             toggle_gap: space.sm,
@@ -350,7 +350,7 @@ impl DesignRecipe {
             avatar_overlap: 8.0,
             avatars: [ORANGE, BLUE],
             header_h: 48.0,
-            header: NavText::new(12.0, 16.0, 600),
+            header: TypeRole::BodyStrong.run(),
             add: 24.0,
             add_icon: 16.0,
             gap: 8.0,
@@ -358,7 +358,7 @@ impl DesignRecipe {
             field_h: 36.0,
             field_radius: 10.0,
             field_fill: wash,
-            field_text: NavText::new(12.0, 16.0, 500),
+            field_text: TypeRole::Label.run(),
             field_text_x: 30.0,
             field_prefix_x: 10.0,
             unit_w: 24.0,
@@ -389,7 +389,7 @@ impl DesignRecipe {
             avatar_overlap: space.sm,
             avatars: [colors.warning, colors.info],
             header_h: control.height(ControlSize::Lg) + space.sm,
-            header: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            header: TypeRole::Caption.regular(),
             add: field * core.add / core.field_h,
             add_icon: control.icon(IconSize::Sm),
             gap: space.sm,
@@ -397,7 +397,7 @@ impl DesignRecipe {
             field_h: field,
             field_radius: theme.shape.nav,
             field_fill: glass.surface_hover,
-            field_text: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            field_text: TypeRole::Caption.regular(),
             field_text_x: space.xl,
             field_prefix_x: space.sm,
             unit_w: space.lg,

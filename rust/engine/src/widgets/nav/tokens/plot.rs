@@ -9,10 +9,10 @@
 //! same first series. `derive` writes back what the charts and the graph
 //! drew with before the slot.
 
-use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::styling::theme::TypeRole;
+use crate::styling::theme::TypeRun;
 use crate::styling::theme::hoff_core::{BLUE, ORANGE, SHADES};
 
 /// The charts' recipe: every color, width and text style the chart
@@ -20,12 +20,12 @@ use crate::styling::theme::hoff_core::{BLUE, ORANGE, SHADES};
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ChartRecipe {
     /// Tick, value and percent labels.
-    pub label: NavText,
+    pub label: TypeRun,
     pub label_color: Color,
     /// The donut's center figure and its legend.
-    pub center: NavText,
+    pub center: TypeRun,
     pub center_color: Color,
-    pub legend: NavText,
+    pub legend: TypeRun,
     pub legend_color: Color,
     /// Grid lines (the vertical ones at `grid_v_alpha` of the grid's
     /// alpha) and the bars' baseline.
@@ -59,7 +59,7 @@ pub struct ChartRecipe {
     pub meter_fill: Color,
     /// The labeled bars' text, their names' and values' tones, the
     /// space after a name and before a value.
-    pub row: NavText,
+    pub row: TypeRun,
     pub row_name: Color,
     pub row_value: Color,
     pub row_gap: f32,
@@ -79,11 +79,11 @@ impl ChartRecipe {
     pub fn hoff_core() -> Self {
         let [paper, _, _, line, _, gray, dark, _, ink] = SHADES;
         Self {
-            label: NavText::new(11.0, 16.0, 500),
+            label: TypeRole::Caption.run(),
             label_color: gray,
-            center: NavText::new(24.0, 32.0, 500).tracked(-0.03),
+            center: TypeRole::H5.run(),
             center_color: ink,
-            legend: NavText::new(12.0, 16.0, 500),
+            legend: TypeRole::Label.run(),
             legend_color: dark,
             grid: line,
             grid_v_alpha: 0.6,
@@ -105,7 +105,7 @@ impl ChartRecipe {
             swatch_radius: 3.0,
             meter_track: alpha(gray, 0.20),
             meter_fill: ink,
-            row: NavText::new(11.0, 16.0, 500),
+            row: TypeRole::Caption.run(),
             row_name: dark,
             row_value: gray,
             row_gap: 8.0,
@@ -122,19 +122,14 @@ impl ChartRecipe {
     /// the accent's line, the success hue on the tallest bar and the
     /// second band's edge, the text tone at fixed alphas for the rest.
     pub fn derive(theme: &Theme) -> Self {
-        let (colors, glass, control, ty) = (
-            &theme.colors,
-            &theme.glass,
-            &theme.control,
-            &theme.typography,
-        );
+        let (colors, glass, control) = (&theme.colors, &theme.glass, &theme.control);
         let text = colors.text;
         Self {
-            label: NavText::of(&ty.run(TypeRole::Small.strong())),
+            label: TypeRole::Small.strong(),
             label_color: glass.text_faint,
-            center: NavText::of(&ty.role(TypeRole::Title)),
+            center: TypeRole::Title.run(),
             center_color: text,
-            legend: NavText::of(&ty.run(TypeRole::Caption.regular())),
+            legend: TypeRole::Caption.regular(),
             legend_color: colors.text_mid,
             grid: colors.divider,
             grid_v_alpha: 0.6,
@@ -156,7 +151,7 @@ impl ChartRecipe {
             swatch_radius: theme.shape.micro / 2.0,
             meter_track: glass.surface_active,
             meter_fill: colors.accent,
-            row: NavText::of(&ty.run(TypeRole::Caption.regular())),
+            row: TypeRole::Caption.regular(),
             row_name: colors.text_mid,
             row_value: colors.text_dim,
             row_gap: theme.spacing.sm,

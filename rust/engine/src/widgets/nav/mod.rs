@@ -28,9 +28,8 @@ pub use split_pane::{SplitDirection, SplitPane};
 pub use tabs::Tabs;
 pub use tokens::{
     BreadcrumbRecipe, CanvasRecipe, ChartRecipe, CodeRecipe, DesignRecipe, DockRecipe, GraphRecipe,
-    LinkSurface, NavLinkRecipe, NavText, NavigationTokens, PlayerRecipe, PlayerTones,
-    SidebarsRecipe, StatLevel, StatRecipe, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe,
-    ZoomRecipe,
+    LinkSurface, NavLinkRecipe, NavigationTokens, PlayerRecipe, PlayerTones, SidebarsRecipe,
+    StatLevel, StatRecipe, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
 };
 pub use toolbar::{
     PlayerLayout, Tool, Toolbar, ToolbarLayout, VideoPlayer, ViewController, Zoom, ZoomLine,

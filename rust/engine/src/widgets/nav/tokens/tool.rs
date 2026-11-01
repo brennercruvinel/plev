@@ -15,10 +15,10 @@
 //! player on is a gradient of its dark shades in every theme (an image
 //! does not follow the theme), and what sits on it is the kit's paper.
 
-use super::NavText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::styling::theme::TypeRole;
+use crate::styling::theme::TypeRun;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::{ShadowSpec, ShadowTokens};
 use crate::styling::theme::{ControlSize, IconSize};
@@ -67,7 +67,7 @@ pub struct ToolbarRecipe {
     pub zoom_hover_fill: Color,
     pub zoom_hover_border: Color,
     pub zoom_open_border: Color,
-    pub zoom_text: NavText,
+    pub zoom_text: TypeRun,
     pub zoom_text_color: Color,
     pub chevron: f32,
     pub chevron_color: Color,
@@ -98,7 +98,7 @@ pub struct ZoomRecipe {
     pub field_icon_color: Color,
     /// From the field's edge to its text (the icon centered in it).
     pub field_text_x: f32,
-    pub field_text: NavText,
+    pub field_text: TypeRun,
     pub field_text_color: Color,
     /// A command row.
     pub line_h: f32,
@@ -109,7 +109,7 @@ pub struct ZoomRecipe {
     pub check: f32,
     pub check_color: Color,
     pub check_gap: f32,
-    pub label: NavText,
+    pub label: TypeRun,
     pub label_color: Color,
 }
 
@@ -143,7 +143,7 @@ pub struct PlayerRecipe {
     pub track_h: f32,
     pub track_min_w: f32,
     pub head_w: f32,
-    pub time: NavText,
+    pub time: TypeRun,
     pub time_w: f32,
     pub time_gap: f32,
     pub repeat: f32,
@@ -277,7 +277,7 @@ impl ToolTokens {
             zoom_hover_fill: paper,
             zoom_hover_border: rim,
             zoom_open_border: alpha(ink, 0.1),
-            zoom_text: NavText::new(14.0, 20.0, 500),
+            zoom_text: TypeRole::Heading.run(),
             zoom_text_color: ink,
             chevron: 16.0,
             chevron_color: gray,
@@ -307,7 +307,7 @@ impl ToolTokens {
             field_icon: 16.0,
             field_icon_color: gray,
             field_text_x: 36.0,
-            field_text: NavText::new(14.0, 20.0, 500),
+            field_text: TypeRole::Heading.run(),
             field_text_color: ink,
             line_h: 36.0,
             line_radius: 10.0,
@@ -317,7 +317,7 @@ impl ToolTokens {
             check: 16.0,
             check_color: gray,
             check_gap: 4.0,
-            label: NavText::new(12.0, 16.0, 500),
+            label: TypeRole::Label.run(),
             label_color: black,
         };
         // VideoPlayer: `h-11 pl-2.5 pr-3.5 rounded-3xl border-[#ececec]
@@ -341,7 +341,7 @@ impl ToolTokens {
             track_h: 3.0,
             track_min_w: 180.0,
             head_w: 5.0,
-            time: NavText::new(12.0, 16.0, 600),
+            time: TypeRole::BodyStrong.run(),
             time_w: 24.0,
             time_gap: 16.0,
             repeat: 32.0,
@@ -429,7 +429,7 @@ impl ToolTokens {
             zoom_hover_fill: glass.surface_hover,
             zoom_hover_border: glass.edge,
             zoom_open_border: glass.field_focus_border,
-            zoom_text: NavText::of(&theme.typography.run(TypeRole::Body.medium())),
+            zoom_text: TypeRole::Body.medium(),
             zoom_text_color: colors.text,
             chevron: control.icon(IconSize::Sm),
             chevron_color: colors.text_mid,
@@ -448,14 +448,14 @@ impl ToolTokens {
             field_fill: glass.field,
             field_border: glass.edge_soft,
             field_icon_color: colors.text_mid,
-            field_text: NavText::of(&theme.typography.run(TypeRole::Body.medium())),
+            field_text: TypeRole::Body.medium(),
             field_text_color: colors.text,
             line_radius: theme.shape.nav,
             line_pad_x: space.sm,
             line_hover: glass.surface_hover,
             check_color: colors.text_mid,
             check_gap: space.xs,
-            label: NavText::of(&theme.typography.run(TypeRole::Caption.strong())),
+            label: TypeRole::Caption.strong(),
             label_color: colors.text,
             ..core.zoom
         };

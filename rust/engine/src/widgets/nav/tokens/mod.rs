@@ -10,13 +10,11 @@
 //! widgets drew with before the slot existed (the hoff glass and the
 //! generic tokens), so those themes look as they did.
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::scales::ShadowSpec;
-use crate::styling::theme::tokens::TypographyScale;
-use crate::styling::theme::{ControlSize, IconSize, Theme};
+use crate::styling::theme::{ControlSize, IconSize, Theme, TypeRun};
 use crate::widgets::content::DisclosureTile;
 
 mod data;
@@ -32,69 +30,11 @@ pub use tool::{
     PlayerRecipe, PlayerTones, ToolRecipe, ToolTokens, ToolbarRecipe, ViewRecipe, ZoomRecipe,
 };
 
-/// A text run: size, line height and weight in px, in the theme's family
-/// (its mono family for a code run); tracked as the theme tracks unless
-/// the run names its own (in em).
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct NavText {
-    pub size: f32,
-    pub line_height: f32,
-    pub weight: u16,
-    pub tracking_em: Option<f32>,
-    /// A code run: the theme's mono family, untracked
-    /// ([`TypographyScale::exact_mono`]).
-    pub mono: bool,
-}
-
-impl NavText {
-    pub const fn new(size: f32, line_height: f32, weight: u16) -> Self {
-        Self {
-            size,
-            line_height,
-            weight,
-            tracking_em: None,
-            mono: false,
-        }
-    }
-
-    /// The run with its own tracking (the kit's `tracking-[-0.03em]`).
-    pub const fn tracked(self, em: f32) -> Self {
-        Self {
-            tracking_em: Some(em),
-            ..self
-        }
-    }
-
-    /// The run in the theme's mono family.
-    pub const fn in_mono(self) -> Self {
-        Self { mono: true, ..self }
-    }
-
-    /// The one style the run is measured and drawn with.
-    pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        let style = if self.mono {
-            typography.exact_mono(self.size, self.line_height, self.weight)
-        } else {
-            typography.exact(self.size, self.line_height, self.weight)
-        };
-        match self.tracking_em {
-            Some(em) => style.with_letter_spacing(em * self.size),
-            None => style,
-        }
-    }
-
-    /// The run of a style the theme already names (what a derived theme
-    /// drew with before), at the theme's tracking.
-    pub fn of(style: &TextStyle) -> Self {
-        Self::new(style.font_size, style.line_height, style.font_weight)
-    }
-}
-
 /// The breadcrumb: each crumb a small target with its own box, the
 /// chevron between two crumbs, an ellipsis where leading crumbs fold.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct BreadcrumbRecipe {
-    pub text: NavText,
+    pub text: TypeRun,
     /// A crumb's padding: inline (each side) and block (top and bottom).
     pub pad_x: f32,
     pub pad_y: f32,
@@ -149,8 +89,8 @@ pub struct NavLinkRecipe {
     pub icon: f32,
     /// Between the icon's box and the label.
     pub icon_gap: f32,
-    pub label: NavText,
-    pub hint: NavText,
+    pub label: TypeRun,
+    pub hint: TypeRun,
     pub hint_color: Color,
     /// Between the label and a hint or badge, and what the preferred
     /// width keeps for that space.
@@ -214,7 +154,7 @@ impl NavigationTokens {
         // in the group title's faint gray (`text-[#7b7b7b]/70`,
         // `GuidelineSidebar:59`), `gap-0.5` each side.
         let breadcrumb = BreadcrumbRecipe {
-            text: NavText::new(12.0, 16.0, 600),
+            text: TypeRole::BodyStrong.run(),
             pad_x: 8.0,
             pad_y: 4.0,
             radius: 8.0,
@@ -273,8 +213,8 @@ impl NavigationTokens {
             slot: 32.0,
             icon: 20.0,
             icon_gap: 12.0,
-            label: NavText::new(12.0, 16.0, 600),
-            hint: NavText::new(12.0, 16.0, 500),
+            label: TypeRole::BodyStrong.run(),
+            hint: TypeRole::Label.run(),
             hint_color: gray,
             trailing_gap: 8.0,
             trailing_room: 20.0,
@@ -312,7 +252,7 @@ impl NavigationTokens {
     pub fn derive(theme: &Theme) -> Self {
         let (colors, glass) = (&theme.colors, &theme.glass);
         let breadcrumb = BreadcrumbRecipe {
-            text: NavText::of(&theme.typography.role(TypeRole::Body)),
+            text: TypeRole::Body.run(),
             pad_x: 0.0,
             pad_y: 0.0,
             radius: theme.shape.micro,
@@ -374,8 +314,8 @@ impl NavigationTokens {
             slot: control.height(ControlSize::Xs),
             icon: control.icon(IconSize::Md),
             icon_gap: theme.spacing.xs,
-            label: NavText::of(&theme.typography.role(TypeRole::BodyStrong)),
-            hint: NavText::of(&theme.typography.run(TypeRole::Caption.regular())),
+            label: TypeRole::BodyStrong.run(),
+            hint: TypeRole::Caption.regular(),
             hint_color: glass.text_placeholder,
             trailing_gap: theme.spacing.sm,
             trailing_room: theme.spacing.lg,
