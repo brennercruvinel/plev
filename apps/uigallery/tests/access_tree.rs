@@ -59,6 +59,7 @@ const PROJECTING: &[&str] = &[
     "Collapsible",
     "Combobox",
     "Command",
+    "Comments",
     "Context Menu",
     "Data Table",
     "Date Picker",
@@ -83,6 +84,7 @@ const PROJECTING: &[&str] = &[
     "Message Scroller",
     "Modals",
     "Navigation Menu",
+    "Notifications",
     "Pagination",
     "Panel",
     "Panel Header",
@@ -94,6 +96,7 @@ const PROJECTING: &[&str] = &[
     "Scroll Area",
     "Select",
     "Sheet",
+    "Sidebar",
     "Skeleton",
     "Slider",
     "Spinner",
@@ -150,10 +153,6 @@ const SILENT: &[(&str, Why)] = &[
     ),
     ("Questionnaire", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
-    (
-        "Sidebar",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
     (
         "Dock",
         Unprojected("the dock is drawn by hand: its contacts and a field, over a stage of bubbles"),
@@ -607,6 +606,13 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
             "alert_page.group[3].card[1].alert[0]",
             "capture.status",
             "files.status",
+            // task-104 front C, wave 3: the notification variations (the
+            // dropdown's rows are list items)
+            "notifications_page.group[0].card[0].alert",
+            "notifications_page.group[0].card[1].alert",
+            "notifications_page.group[0].card[2].alert",
+            "notifications_page.group[0].card[3].alert",
+            "notifications_page.group[0].card[4].alert",
             "silences.counts",
             "silences.status",
             "silences_surface.status",

@@ -9,6 +9,7 @@
 //! draws in the same page are here too: [`VideoPlayer`] and
 //! [`ViewController`].
 
+mod layout;
 mod player;
 mod view;
 mod zoom;
@@ -24,8 +25,11 @@ use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Button, Press};
 use crate::widgets::feedback::Tooltip;
+use crate::widgets::form::TextField;
 use crate::widgets::icons;
-use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets};
+use crate::widgets::recipe::{
+    focus_ring, rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets,
+};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::tokens::ToolbarRecipe;
@@ -39,6 +43,7 @@ pub struct Tool {
     pub key: String,
     pub disabled: bool,
     press: Press,
+    focused: bool,
     sem: Option<SemId>,
 }
 
@@ -50,6 +55,7 @@ impl Tool {
             key: key.into(),
             disabled: false,
             press: Press::default(),
+            focused: false,
             sem: None,
         }
     }
@@ -165,7 +171,8 @@ pub struct ToolbarLayout {
     pub divider: Option<Rect>,
     pub zoom: Rect,
     pub history: Vec<Rect>,
-    /// The vertical rule before the export side.
+    /// The rule before the export side: upright beside it, or across
+    /// the bar over its own row when the bar wraps.
     pub split: Rect,
     pub export: Rect,
 }
@@ -186,6 +193,7 @@ pub struct Toolbar {
     pub export: Button,
     zoom_press: Press,
     zoom_sem: Option<SemId>,
+    zoom_focused: bool,
     tooltip: Option<Tooltip>,
 }
 
@@ -202,6 +210,7 @@ impl Toolbar {
             export: Button::new("Export"),
             zoom_press: Press::default(),
             zoom_sem: None,
+            zoom_focused: false,
             tooltip: None,
         }
     }
@@ -261,66 +270,6 @@ impl Toolbar {
         }
     }
 
-    /// The bar's size: the tools, the zoom control and the history in a
-    /// row, then the export side.
-    pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
-        let r = Self::recipe(theme);
-        let n =
-            self.tools.len() + self.history.len() + 1 + usize::from(self.divider_after.is_some());
-        let row = (self.tools.len() + self.history.len()) as f32 * r.tool.size
-            + self.zoom_w(theme)
-            + self.divider_w(theme)
-            + n.saturating_sub(1) as f32 * r.gap;
-        let w = r.pad * 2.0 + row + r.border_width + r.pad * 2.0 + r.export_w;
-        (w, r.pad * 2.0 + r.tool.size)
-    }
-
-    /// Every part's rect in a bar drawn at `bounds`' top-left.
-    pub fn layout(&self, bounds: Rect, theme: &Theme) -> ToolbarLayout {
-        let r = Self::recipe(theme);
-        let (w, h) = self.preferred_size(theme);
-        let y = bounds.y + r.pad;
-        let mut x = bounds.x + r.pad;
-        let mut place = |w: f32| {
-            let at = Rect::new(x, y, w, r.tool.size);
-            x += w + r.gap;
-            at
-        };
-        let mut tools = Vec::with_capacity(self.tools.len());
-        let mut divider = None;
-        for i in 0..self.tools.len() {
-            tools.push(place(r.tool.size));
-            if self.divider_after == Some(i + 1) {
-                let at = place(r.border_width);
-                divider = Some(Rect::new(at.x, bounds.y, at.w, h));
-            }
-        }
-        let zoom = place(self.zoom_w(theme));
-        let history = self.history.iter().map(|_| place(r.tool.size)).collect();
-        let export_x = bounds.x + w - r.pad - r.export_w;
-        let split = Rect::new(
-            export_x - r.pad - r.border_width,
-            bounds.y,
-            r.border_width,
-            h,
-        );
-        let export_h = self.export.preferred_size(theme).1;
-        let export = Rect::new(
-            export_x,
-            bounds.y + (h - export_h) / 2.0,
-            r.export_w,
-            export_h,
-        );
-        ToolbarLayout {
-            tools,
-            divider,
-            zoom,
-            history,
-            split,
-            export,
-        }
-    }
-
     /// The zoom panel's rect: under the control, its end on the
     /// control's end.
     pub fn panel_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
@@ -351,6 +300,8 @@ impl Toolbar {
                 && !at.zoom.contains(x, y)
             {
                 self.open = false;
+                self.zoom.field.unfocus();
+                self.zoom.sync_level();
                 out = EventResult::changed();
             }
         }
@@ -378,25 +329,78 @@ impl Toolbar {
         }
         out = merge(out, r);
         out = merge(out, self.export.handle_event(event, at.export));
-        let tip = hovered.map(|(label, key, rect)| {
-            let mut tip = Tooltip::new(label).key(key);
-            tip.show(rect);
-            tip
-        });
-        if tip.as_ref().map(|t| (&t.text, &t.key))
-            != self.tooltip.as_ref().map(|t| (&t.text, &t.key))
-        {
-            out = merge(out, EventResult::changed());
+        // The pointer's tooltip waits out the Tooltip's delay; one the
+        // keyboard's focus shows stays while nothing is hovered.
+        let focused = self.tools.iter().chain(&self.history).any(|t| t.focused);
+        match hovered {
+            Some((label, key, rect)) => {
+                let same = self
+                    .tooltip
+                    .as_ref()
+                    .is_some_and(|t| t.text == label && t.key.as_deref() == Some(key.as_str()));
+                if !same {
+                    let mut tip = Tooltip::new(label).key(key);
+                    tip.set_hover(true, rect);
+                    self.tooltip = Some(tip);
+                    out = merge(out, EventResult::changed());
+                }
+            }
+            None if !focused && self.tooltip.take().is_some() => {
+                out = merge(out, EventResult::changed());
+            }
+            None => {}
         }
-        self.tooltip = tip;
         out
+    }
+
+    /// The zoom level's field while it has the keys.
+    pub fn level_field(&mut self) -> Option<&mut TextField> {
+        if self.open && self.zoom.field.is_focused() {
+            Some(&mut self.zoom.field)
+        } else {
+            None
+        }
+    }
+
+    /// A tooltip is on screen (past its delay, or shown by the focus).
+    pub fn tooltip_shown(&self) -> bool {
+        self.tooltip.as_ref().is_some_and(|t| t.is_visible())
+    }
+
+    /// Advances the tooltip's delay; `true` while a frame is needed.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        self.tooltip.as_mut().is_some_and(|t| t.tick(dt))
+    }
+
+    /// Keyboard focus on the part `id` names (a tool, the zoom control,
+    /// the export), or on none: its ring, and a tool's tooltip at once.
+    /// `true` when `id` names one of them.
+    pub fn focus_id(&mut self, id: Option<&SemId>, bounds: Rect, theme: &Theme) -> bool {
+        let at = self.layout(bounds, theme);
+        let is = |own: Option<&SemId>| id.is_some() && own == id;
+        let mut tip = None;
+        let tools = self.tools.iter_mut().zip(&at.tools);
+        for (tool, rect) in tools.chain(self.history.iter_mut().zip(&at.history)) {
+            tool.focused = is(tool.sem.as_ref());
+            if tool.focused {
+                let mut t = Tooltip::new(tool.label.clone()).key(tool.key.clone());
+                t.show(*rect);
+                tip = Some(t);
+            }
+        }
+        let had = tip.is_some();
+        self.tooltip = tip;
+        self.zoom_focused = is(self.zoom_sem.as_ref());
+        let export = is(self.export.sem_id());
+        self.export.set_focused(export);
+        had || self.zoom_focused || export
     }
 
     /// The bar; the open panel and the tooltip go on top, from
     /// [`Toolbar::render_overlay`].
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
         let r = Self::recipe(theme);
-        let (w, h) = self.preferred_size(theme);
+        let (w, h) = self.size_in(bounds.w, theme);
         let bar = Rect::new(bounds.x, bounds.y, w, h);
         shadow_drops(c, layer, bar, r.radius, &r.shadow);
         c.push_to_layer(
@@ -419,6 +423,15 @@ impl Toolbar {
         for (i, (tool, rect)) in self.tools.iter().zip(&at.tools).enumerate() {
             let active = self.selectable && self.active == Some(i);
             tool.render_to_layer(c, layer, *rect, active, theme);
+        }
+        let rings = self.tools.iter().zip(&at.tools);
+        for (tool, rect) in rings.chain(self.history.iter().zip(&at.history)) {
+            if tool.focused {
+                c.push_to_layer(layer, focus_ring(*rect, r.tool.radius, theme));
+            }
+        }
+        if self.zoom_focused {
+            c.push_to_layer(layer, focus_ring(at.zoom, r.zoom_radius, theme));
         }
         for rule in at.divider.iter().chain([&at.split]) {
             c.push_to_layer(layer, rule_node(*rule, r));
@@ -496,7 +509,7 @@ impl Toolbar {
             self.zoom
                 .render_to_layer(c, layer, self.panel_rect(bounds, theme), theme);
         }
-        if let Some(tip) = &self.tooltip {
+        if let Some(tip) = self.tooltip.as_ref().filter(|t| t.is_visible()) {
             tip.render_in(c, layer, theme, room);
         }
     }

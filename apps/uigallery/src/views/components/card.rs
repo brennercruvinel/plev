@@ -26,6 +26,9 @@ use engine::widgets::recipe::focus_ring_inside;
 
 use super::{After, Component, child_id, root_id, showcase, under};
 
+/// The ratio a square card takes alone in its row (`aspect-[1.8]`).
+const WIDE_RATIO: f32 = 1.8;
+
 /// What a card of the page holds.
 enum Body {
     Catalog(CatalogCard),
@@ -43,7 +46,11 @@ struct Card {
 struct Group {
     title: &'static str,
     span: usize,
-    /// The kit's card height (`h-150` is 600); `None` is square.
+    /// The kit's card height (`h-150` is 600); `None` is square while
+    /// the row keeps more than one card, and 1.8 times as wide as tall
+    /// once a card takes the whole row (`aspect-square
+    /// max-[1023px]:aspect-[1.8]`, CardsPage :160, where the kit's span
+    /// 3 card goes full width).
     height: Option<f32>,
     cards: Vec<Card>,
 }
@@ -245,13 +252,21 @@ impl CardPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Rect>)> {
         let grids = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
+            let alone =
+                showcase::columns_at(g.span, showcase::CARD_MIN_W, content.w, theme.spacing.sm)
+                    == 1;
+            let square = if alone && g.span > 1 {
+                card_w / WIDE_RATIO
+            } else {
+                card_w
+            };
             let room = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
             let heights = g
                 .cards
                 .iter()
                 .map(|c| {
                     let (_, h) = Self::widget_size(&c.body, room, theme);
-                    showcase::card_height(h, theme).max(g.height.unwrap_or(card_w))
+                    showcase::card_height(h, theme).max(g.height.unwrap_or(square))
                 })
                 .collect();
             showcase::Grid {

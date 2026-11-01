@@ -405,3 +405,169 @@ fn the_keyboard_walks_the_prompt_s_menus_and_escape_closes_them() {
     assert!(g.view.close_top_overlay(), "then the focus goes");
     assert_eq!(focused(&g), None);
 }
+
+// wave 3: the Comments page's single-comment thread, its conversation and
+// the new comment that is being typed.
+const THREAD: &str = "comments_page.group[1].card[1].thread";
+const THREAD_REPLY: &str = "comments_page.group[1].card[1].thread.reply";
+const THREAD_SEND: &str = "comments_page.group[1].card[1].thread.send";
+const THREAD_CLOSE: &str = "comments_page.group[1].card[1].thread.close";
+const TALK: &str = "comments_page.group[1].card[2].thread.messages";
+const TYPING_ADD: &str = "comments_page.group[2].card[1].new.tools[0]";
+
+/// A reply typed and sent: the person's typing and clicks, the reader's
+/// value and press, the agent's `set_value` and `activate` end the thread
+/// with the same message.
+#[test]
+fn a_reply_is_sent_the_same_from_the_three() {
+    let page = "Comments";
+    let mut person = seen(page, THREAD_REPLY);
+    person.click(THREAD_REPLY);
+    person.type_in("On it");
+    person.click(THREAD_SEND);
+    let mut reader = gallery(page);
+    reader.reader(
+        THREAD_REPLY,
+        Action::SetValue,
+        Some(ActionData::Value("On it".into())),
+    );
+    reader.press(THREAD_SEND);
+    let agent = by_agent(
+        page,
+        "reply",
+        vec![
+            ask_with(THREAD_REPLY, "set_value", Value::from("On it")),
+            ask(THREAD_SEND, "activate"),
+        ],
+    );
+    same(page, &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{THREAD}.messages:count")),
+        Some(Value::Int(2))
+    );
+}
+
+/// The close disc closes the thread to its pin, from the three.
+#[test]
+fn closing_a_thread_is_the_same_from_the_three() {
+    let page = "Comments";
+    let mut person = seen(page, THREAD_CLOSE);
+    person.click(THREAD_CLOSE);
+    let mut reader = gallery(page);
+    reader.press(THREAD_CLOSE);
+    let agent = by_agent(page, "close", vec![ask(THREAD_CLOSE, "activate")]);
+    same(page, &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{THREAD}:open")),
+        Some(Value::Bool(false))
+    );
+}
+
+/// The add tool of a new comment being typed attaches a picture, from the
+/// three.
+#[test]
+fn attaching_to_a_new_comment_is_the_same_from_the_three() {
+    let page = "Comments";
+    let mut person = seen(page, TYPING_ADD);
+    person.click(TYPING_ADD);
+    let mut reader = gallery(page);
+    reader.press(TYPING_ADD);
+    let agent = by_agent(page, "attach", vec![ask(TYPING_ADD, "activate")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// The keyboard in a conversation: a reader's focus on its first message,
+/// Down to the next, no wrap past the last; Escape lets the focus go.
+#[test]
+fn the_arrows_walk_a_conversation_and_escape_lets_go() {
+    let mut g = gallery("Comments");
+    let focused = |g: &Gallery| {
+        g.view
+            .semantics()
+            .and_then(|s| s.focused().map(ToString::to_string))
+    };
+    let first = format!("{TALK}[0]");
+    let second = format!("{TALK}[1]");
+    assert!(g.view.assist_focus(&sid(&first)));
+    g.frame();
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(second.as_str()));
+    assert!(!g.view.handle_nav(NavKey::Down), "no wrap");
+    assert!(g.view.close_top_overlay(), "Escape");
+    assert_eq!(focused(&g), None);
+}
+
+// wave 3: the Notifications page's comment variation and its dropdown.
+const VARIATION: &str = "notifications_page.group[0].card[0].alert";
+const DROP: &str = "notifications_page.group[1].card[0].dropdown";
+const UNREAD: &str = "notifications_page.group[1].card[0].dropdown.filter[1]";
+const DROP_ACCEPT: &str = "notifications_page.group[1].card[0].dropdown.list[2].action[1]";
+
+/// The Unread filter, from the three: the same rows shown.
+#[test]
+fn the_unread_filter_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = seen(page, UNREAD);
+    person.click(UNREAD);
+    let mut reader = gallery(page);
+    reader.press(UNREAD);
+    let agent = by_agent(page, "unread", vec![ask(UNREAD, "select")]);
+    same(page, &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{DROP}.list:count")),
+        Some(Value::Int(5))
+    );
+}
+
+/// Answering the invite in the dropdown reads it, from the three.
+#[test]
+fn answering_in_the_dropdown_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = seen(page, DROP_ACCEPT);
+    person.click(DROP_ACCEPT);
+    let mut reader = gallery(page);
+    reader.press(DROP_ACCEPT);
+    let agent = by_agent(page, "accept", vec![ask(DROP_ACCEPT, "activate")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// A variation read by a click, a press and `activate`.
+#[test]
+fn reading_a_variation_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = gallery(page);
+    person.click(VARIATION);
+    let mut reader = gallery(page);
+    reader.press(VARIATION);
+    let agent = by_agent(page, "read", vec![ask(VARIATION, "activate")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// The keyboard in the dropdown: the arrows walk its rows, End goes to
+/// the last (scrolled in), the filters are a tab list the arrows cross;
+/// Escape lets the focus go.
+#[test]
+fn the_keyboard_walks_the_dropdown() {
+    let mut g = gallery("Notifications");
+    let focused = |g: &Gallery| {
+        g.view
+            .semantics()
+            .and_then(|s| s.focused().map(ToString::to_string))
+    };
+    assert!(g.view.assist_focus(&sid(&format!("{DROP}.list[0]"))));
+    g.frame();
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(focused(&g), Some(format!("{DROP}.list[1]")));
+    assert!(g.view.handle_edit_key(EditKey::End));
+    g.frame();
+    assert_eq!(focused(&g), Some(format!("{DROP}.list[7]")));
+    assert!(g.view.assist_focus(&sid(&format!("{DROP}.filter[0]"))));
+    g.frame();
+    assert!(g.view.handle_edit_key(EditKey::Right));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(UNREAD));
+    assert!(g.view.close_top_overlay(), "Escape");
+    assert_eq!(focused(&g), None);
+}

@@ -21,7 +21,11 @@ use engine::widgets::nav::{Tool, Toolbar, VideoPlayer, ViewController, Zoom};
 use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent, gradient_fill};
 
 use super::showcase::{self, GroupLayout};
-use super::{After, Component, child_id, root_id, under};
+use super::{After, Component, EditKey, child_id, root_id, under};
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
+use engine::widgets::form::TextField;
 
 /// The toolbar and player cards are the kit's `h-60`; the view
 /// controller and photo cards its `h-88`.
@@ -59,6 +63,9 @@ pub struct ToolbarPage {
     views: Vec<ViewController>,
     /// What a screen reader focused, projected back as the focus.
     focus: Option<SemId>,
+    /// The page's rect and theme at the last event: where a focus that
+    /// comes from the projection rings its part.
+    last: Option<(Rect, Theme)>,
 }
 
 /// `toolbar_page.<name>[<i>]`.
@@ -218,14 +225,28 @@ impl ToolbarPage {
             players,
             views,
             focus: None,
+            last: None,
         }
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let grids = self.groups.iter().map(|g| showcase::Grid {
-            span: g.span,
-            min_w: showcase::CARD_MIN_W,
-            heights: g.cards.iter().map(|c| c.height).collect(),
+        // A bar that wraps in its card makes the card as tall as the mold
+        // needs to keep it clear of the chip.
+        let grids = self.groups.iter().map(|g| {
+            let card_w = showcase::card_width_at(g.span, showcase::CARD_MIN_W, content, theme);
+            let room = card_w - theme.spacing.sm * 2.0;
+            let height = |c: &Card| match c.shows {
+                Shows::Bar(b) => {
+                    let bar_h = self.bars[b].size_in(room, theme).1;
+                    c.height.max(showcase::card_height(bar_h, theme))
+                }
+                _ => c.height,
+            };
+            showcase::Grid {
+                span: g.span,
+                min_w: showcase::CARD_MIN_W,
+                heights: g.cards.iter().map(height).collect(),
+            }
         });
         showcase::layout_grids(grids, content, theme)
     }
@@ -238,7 +259,8 @@ impl ToolbarPage {
     /// start when it is wider than the card.
     fn widget_rect(&self, shows: Shows, card: Rect, theme: &Theme) -> Rect {
         let size = match shows {
-            Shows::Bar(b) => self.bars[b].preferred_size(theme),
+            // In a card narrower than the bar, the bar wraps (`size_in`).
+            Shows::Bar(b) => self.bars[b].size_in(card.w - theme.spacing.sm * 2.0, theme),
             Shows::Player(p) => {
                 // As wide as it asks (the photo's player the kit's
                 // `w-140`), never wider than the card's inside: the track
@@ -280,6 +302,9 @@ impl ToolbarPage {
         content: Rect,
         theme: &Theme,
     ) -> EventResult {
+        if self.last.as_ref().is_none_or(|(at, _)| *at != content) {
+            self.last = Some((content, theme.clone()));
+        }
         let mut out = EventResult::IGNORED;
         for (shows, _, rect) in self.placed(content, theme) {
             let r = match shows {
@@ -456,11 +481,114 @@ impl Component for ToolbarPage {
             return false;
         }
         self.focus = Some(id.clone());
+        self.focus_bars(Some(id));
         true
     }
 
     fn blur(&mut self) -> bool {
+        self.focus_bars(None);
         self.focus.take().is_some()
+    }
+}
+
+impl ToolbarPage {
+    /// The keyboard's focus on a bar's part: its ring, a tool's tooltip.
+    /// The bars' rects are the last laid out (`placed_at`).
+    fn focus_bars(&mut self, id: Option<&SemId>) {
+        let (content, theme) = self
+            .last
+            .clone()
+            .unwrap_or_else(|| (Rect::new(0.0, 0.0, 1200.0, 800.0), Theme::hoff_core()));
+        for (shows, _, rect) in self.placed(content, &theme) {
+            if let Shows::Bar(b) = shows {
+                self.bars[b].focus_id(id, rect, &theme);
+            }
+        }
+    }
+
+    /// The tooltips' delay; `true` while a frame is needed.
+    pub fn tick(&mut self, dt: f32) -> bool {
+        let mut moving = false;
+        for bar in &mut self.bars {
+            moving |= bar.tick(dt);
+        }
+        moving
+    }
+
+    /// The open bar's zoom field that has the keys.
+    fn level_field(&mut self) -> Option<&mut TextField> {
+        self.bars.iter_mut().find_map(|b| b.level_field())
+    }
+
+    fn sync_levels(&mut self) {
+        for bar in &mut self.bars {
+            bar.zoom.sync_level();
+        }
+    }
+}
+
+/// The zoom level's field takes the keys while it is focused.
+impl TextHost for ToolbarPage {
+    fn handle_text(&mut self, s: &str) -> bool {
+        let typed = self.level_field().is_some_and(|f| f.insert(s));
+        self.sync_levels();
+        typed
+    }
+
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if key == EditKey::Tab {
+            return false;
+        }
+        let edited = self.level_field().is_some_and(|f| f.edit(key.into()));
+        self.sync_levels();
+        edited
+    }
+
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let Some(field) = self.level_field() else {
+            return false;
+        };
+        let changed = match ime {
+            ImeEvent::Disabled => field.end_compose(),
+            ImeEvent::Preedit(text, cursor) => field.compose("", text, cursor),
+            ImeEvent::Commit(text) => field.compose(text, "", None),
+        };
+        self.sync_levels();
+        changed
+    }
+
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        self.placed(content, theme)
+            .into_iter()
+            .find_map(|(shows, _, rect)| match shows {
+                Shows::Bar(b) if self.bars[b].open && self.bars[b].zoom.field.is_focused() => {
+                    let bar = &self.bars[b];
+                    let at = bar.zoom.text_rect(bar.panel_rect(rect, theme), theme);
+                    Some(bar.zoom.field.ime_area(at, theme))
+                }
+                _ => None,
+            })
+    }
+
+    fn right_click(&mut self, _x: f32, _y: f32, _content: Rect, _theme: &Theme) -> bool {
+        false
+    }
+
+    fn keys(&mut self) -> Keys<'_> {
+        match self.level_field() {
+            Some(field) => Keys::Field(field),
+            None => Keys::Nobody,
+        }
+    }
+
+    /// Escape leaves the field, the level as typed.
+    fn handle_escape(&mut self) -> bool {
+        let Some(field) = self.level_field() else {
+            return false;
+        };
+        field.unfocus();
+        self.sync_levels();
+        true
     }
 }
 
