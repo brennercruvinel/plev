@@ -157,10 +157,12 @@ components! {
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,
+    Comments => comments,
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
     PromptInput => prompt_input,
+    Notifications => notifications,
     Progress => progress,
     Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)
@@ -192,6 +194,7 @@ components! {
     Graph => graph,
     Stat => stat,
     Toolbar => toolbar,
+    Sidebar => sidebar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

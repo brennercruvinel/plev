@@ -91,3 +91,25 @@ fn the_cards_project_and_run() {
     let scene = card_id(&root, 3, 0).unwrap();
     assert!(page.run(&req(scene)).is_ok());
 }
+
+/// The last group's cards are square while the row keeps two or three,
+/// and 1.8 times as wide as tall once one takes the whole row (never
+/// lower than a card's floor).
+#[test]
+fn the_square_cards_widen_alone_in_their_row() {
+    let theme = Theme::hoff_core();
+    let page = CardPage::new();
+    let last = |w: f32| {
+        let layout = page.layout(Rect::new(0.0, 0.0, w, 800.0), &theme);
+        layout.last().unwrap().0.cards[0]
+    };
+    let wide = last(1200.0);
+    assert!((wide.w - wide.h).abs() < 0.5, "square: {wide:?}");
+    // Alone at 600 (two would be narrower than a card may get); at 320
+    // the card's own floor (`h-50`) holds it taller than 1.8.
+    let narrow = last(600.0);
+    assert!(
+        (narrow.w / narrow.h - WIDE_RATIO).abs() < 0.01,
+        "{narrow:?}"
+    );
+}

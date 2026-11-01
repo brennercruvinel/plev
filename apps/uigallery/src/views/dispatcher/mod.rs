@@ -83,10 +83,12 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.content_height(content, t),
                 Pane::Attachment => self.panes.attachment.content_height(content, t),
                 Pane::Bubble => self.panes.bubble.content_height(content, t),
+                Pane::Comments => self.panes.comments.content_height(content, t),
                 Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
                 Pane::PromptInput => self.panes.prompt_input.content_height(content, t),
+                Pane::Notifications => self.panes.notifications.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.content_height(content, t),
@@ -254,12 +256,14 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.handle_event(event, content, t),
                 Pane::Attachment => self.panes.attachment.handle_event(event, content, t),
                 Pane::Bubble => self.panes.bubble.handle_event(event, content, t),
+                Pane::Comments => self.panes.comments.handle_event(event, content, t),
                 Pane::Marker => self.panes.marker.handle_event(event, content, t),
                 Pane::Message => self.panes.message.handle_event(event, content, t),
                 Pane::MessageScroller => {
                     self.panes.message_scroller.handle_event(event, content, t)
                 }
                 Pane::PromptInput => self.panes.prompt_input.handle_event(event, content, t),
+                Pane::Notifications => self.panes.notifications.handle_event(event, content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.handle_event(event, content, t),
@@ -396,6 +400,8 @@ impl ShowcaseView {
             // task-104 front C, conversation and feedback (#156)
             Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
             Some(Pane::PromptInput) => self.panes.prompt_input.wake(dt),
+            Some(Pane::Comments) => self.panes.comments.wake(dt),
+            Some(Pane::Notifications) => Wake::moving(self.panes.notifications.tick(dt)),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
@@ -403,6 +409,9 @@ impl ShowcaseView {
             Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
             // task-104 front F, kit foundation
             Some(Pane::Topbar) => self.panes.topbar.wake(dt),
+            // task-104 front G, navigation and data
+            Some(Pane::Sidebar) => self.panes.sidebar.wake(dt),
+            Some(Pane::Toolbar) => Wake::moving(self.panes.toolbar.tick(dt)),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -559,6 +568,8 @@ impl ShowcaseView {
                 Pane::Alert => self.panes.alert.render(c, content, theme),
                 Pane::Attachment => self.panes.attachment.render(c, content, theme),
                 Pane::Bubble => self.panes.bubble.render(c, content, theme),
+                Pane::Comments => self.panes.comments.render(c, content, theme),
+                Pane::Notifications => self.panes.notifications.render(c, content, theme),
                 Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),

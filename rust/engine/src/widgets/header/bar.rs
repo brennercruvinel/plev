@@ -223,6 +223,21 @@ impl Header {
         header
     }
 
+    /// `logo` in the place of the header's own, in its kind (the
+    /// symbol alone stays the symbol): another product's name and mark.
+    pub fn with_logo(mut self, logo: Logo) -> Self {
+        for s in &mut self.slots {
+            if let HeaderItem::Logo(old) = &s.item {
+                let mut new = logo.clone().kind(old.kind);
+                if let Some(id) = old.sem_id() {
+                    new = new.sem(id.clone());
+                }
+                s.item = HeaderItem::Logo(new);
+            }
+        }
+        self
+    }
+
     /// The id the header projects as; each part is `<id>.<key>`.
     pub fn sem(mut self, id: SemId) -> Self {
         for s in &mut self.slots {

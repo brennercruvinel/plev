@@ -231,6 +231,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Comments",
+        "message-square",
+        "The comment cursor and pin, a thread beside its pin with its reply, the new comment in each state, the quick comment.",
+        Pane::Comments,
+    ),
+    page(
+        C,
         "Context Menu",
         "layers",
         "The kit's menus: a right click in the area opens the file menu at the pointer.",
@@ -399,6 +406,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Notifications",
+        "info",
+        "The kit's notification in its variations, and the dropdown: All and Unread over a list that scrolls.",
+        Pane::Notifications,
+    ),
+    page(
+        C,
         "Pagination",
         "chevron-right",
         "Page numbers between two arrows, as many as the width holds.",
@@ -486,7 +500,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Sidebar",
         "layout-grid",
-        "The sidebar widget embedded in the page: brand, grouped links, footer.",
+        "The kit's sidebar page: the scene and assets, design and animation, home and guideline sidebars.",
         Pane::Sidebar,
     ),
     page(

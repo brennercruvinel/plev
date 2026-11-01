@@ -27,13 +27,21 @@ use crate::styling::color::Color;
 use crate::styling::theme::tokens::TypographyScale;
 use crate::styling::theme::{Intent, ShadowSpec, Theme};
 
+/// The comment popups: the thread, the new comment, the quick comment.
+mod comment;
 /// `MessageTokens::hoff_core`, the kit's values with their file:line.
 mod kit;
+/// The notifications dropdown.
+mod notifications;
 /// The prompt input and its menus.
 mod prompt;
 /// The status pieces: the badge, the avatar's online dot.
 mod status;
 
+pub use comment::{
+    CloseTokens, CommentTokens, NewCommentTokens, QuickCommentTokens, ReplyTokens, ToolTokens,
+};
+pub use notifications::NotificationsTokens;
 pub use prompt::{
     ChoiceTokens, MenuRowTokens, PanelTokens, PremadeTokens, PromptTokens, TriggerTokens,
     VoiceTokens,
@@ -337,6 +345,10 @@ pub struct MessageTokens {
     /// The prompt input, its model and add-files menus, its premade
     /// prompts (task-104 wave 3).
     pub prompt: PromptTokens,
+    /// The comment popups (task-104 wave 3).
+    pub comment: CommentTokens,
+    /// The notifications dropdown (task-104 wave 3).
+    pub notifications: NotificationsTokens,
 }
 
 impl MessageTokens {
@@ -558,6 +570,8 @@ impl MessageTokens {
                 ..kit.spinner
             },
             prompt: PromptTokens::derive(theme),
+            comment: CommentTokens::derive(theme),
+            notifications: NotificationsTokens::derive(theme),
         }
     }
 }
