@@ -10,6 +10,7 @@ pub enum Role {
     Window,
     Group,
     Region,
+    Navigation,
     Toolbar,
     Button,
     Toggle,
@@ -44,10 +45,11 @@ pub enum Role {
 
 impl Role {
     /// every role, in declaration order.
-    pub const ALL: [Role; 33] = [
+    pub const ALL: [Role; 34] = [
         Role::Window,
         Role::Group,
         Role::Region,
+        Role::Navigation,
         Role::Toolbar,
         Role::Button,
         Role::Toggle,
@@ -108,6 +110,7 @@ impl Role {
             Role::Window => "window",
             Role::Group => "group",
             Role::Region => "region",
+            Role::Navigation => "navigation",
             Role::Toolbar => "toolbar",
             Role::Button => "button",
             Role::Toggle => "toggle",
