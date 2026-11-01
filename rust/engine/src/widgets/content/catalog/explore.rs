@@ -1,16 +1,29 @@
 //! The explore card (ExploreCard/index.tsx), its small tag
 //! (ExploreCardSm/index.tsx) and the slide item (CardsPage :80-100).
 
-use super::{CatalogCard, CatalogKind, EDGE, boxed, icon, palette, photo, scrim, text, tokens};
+use super::{
+    CatalogCard, CatalogKind, EDGE, boxed, glass, icon, palette, photo, scrim, text, tokens,
+};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::recipe::shadow_drops;
 use crate::widgets::widget::Rect;
 
+/// The explore card's three action buttons in `b`, left to right, at
+/// the foot's right end (`p-3`, `gap-1`).
+pub(super) fn explore_actions(b: Rect, theme: &Theme) -> [Rect; 3] {
+    let e = &tokens(theme).explore;
+    let y = b.bottom() - e.bar_pad - e.button;
+    let last = b.right() - e.bar_pad - e.button;
+    let step = e.button + e.button_gap;
+    [2.0, 1.0, 0.0].map(|k| Rect::new(last - step * k, y, e.button, e.button))
+}
+
 /// The explore card: the photo in its rounded frame; under the pointer
 /// the scrim, the title and the kit's three actions at the foot (its
-/// text, screen and heart glyphs, left to right).
+/// text, screen and heart glyphs, left to right), the one under the
+/// pointer in the glass.
 pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Theme) {
     let (e, k) = (&tokens(theme).explore, palette(theme));
     photo(c, b, e.radius, theme);
@@ -22,23 +35,25 @@ pub(super) fn card(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Them
     }
     let t = &tokens(theme).tile;
     scrim(c, b, t.scrim_h, e.scrim_alpha, e.radius, theme);
-    let bar_y = b.bottom() - e.bar_pad - e.button;
-    let mut x = b.right() - e.bar_pad - e.button;
+    let actions = explore_actions(b, theme);
     let mid = (e.button - t.icon) / 2.0;
-    // Laid from the right: the kit's last button first.
-    for name in ["kit-likes", "kit-screen", "kit-text"] {
-        icon(c, name, t.icon, k.on_image, x + mid, bar_y + mid);
-        x -= e.button + e.button_gap;
+    let glyphs = ["kit-text", "kit-screen", "kit-likes"];
+    for (i, (at, name)) in actions.iter().zip(glyphs).enumerate() {
+        if card.hot == Some(i) {
+            glass(c, *at, e.button_radius, theme);
+        }
+        icon(c, name, t.icon, k.on_image, at.x + mid, at.y + mid);
     }
     let style = t.title.style(theme);
-    let room = (x + e.button - (b.x + e.bar_pad + e.title_pad * 2.0)).max(0.0);
+    let first = actions[0];
+    let room = (first.x - (b.x + e.bar_pad + e.title_pad * 2.0)).max(0.0);
     let shown = TextMeasurer::truncate_to_width(title, &style, room);
     text(
         c,
         &shown,
         &style,
         b.x + e.bar_pad + e.title_pad,
-        bar_y + (e.button - t.title.line_height) / 2.0,
+        first.y + (e.button - t.title.line_height) / 2.0,
         k.on_image,
         None,
     );

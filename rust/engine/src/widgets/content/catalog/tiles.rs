@@ -1,16 +1,36 @@
 //! The asset card (AssetCard/index.tsx) and the scene card (SceneCard/
 //! index.tsx) with its skeleton (SceneCardSkeleton/index.tsx).
 
-use super::{CatalogCard, CatalogKind, EDGE, boxed, icon, palette, photo, scrim, text, tokens};
+use super::{
+    CatalogCard, CatalogKind, EDGE, boxed, glass, icon, palette, photo, scrim, text, tokens,
+};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::recipe::{rounded_rect, shadow_drops};
 use crate::widgets::widget::Rect;
 
+/// The asset card's three buttons in `b`: the add at the top right, the
+/// download at the bottom left, the share (its icon and label, `px-3`) at
+/// the bottom right.
+pub(super) fn asset_actions(b: Rect, theme: &Theme) -> [Rect; 3] {
+    let t = &tokens(theme).tile;
+    let (n, inset) = (t.button, t.button_inset);
+    let foot = b.bottom() - inset - n;
+    let lw = TextMeasurer::measure_styled("Share", &t.label.style(theme), None).0;
+    let share_w = t.label_pad * 2.0 + t.icon + t.label_gap + lw;
+    [
+        Rect::new(b.right() - inset - n, b.y + inset, n, n),
+        Rect::new(b.x + inset, foot, n, n),
+        Rect::new(b.right() - inset - share_w, foot, share_w, n),
+    ]
+}
+
 /// The asset card: the panel wash (the hover's wash), the photo inset
 /// `p-6`; under the pointer the scrim from the bottom, the raised add
-/// button at the top right, the download and the share at the foot.
+/// button at the top right, the download and the share at the foot. The
+/// button under the pointer hovers as the kit's: the add takes the panel
+/// wash (`hover:bg-[#F8F7F7]`), the two on the photo the glass.
 pub(super) fn asset(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &Theme) {
     let (t, k) = (&tokens(theme).tile, palette(theme));
     let hovered = card.press.hovered;
@@ -27,32 +47,37 @@ pub(super) fn asset(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         return;
     }
     scrim(c, b, t.scrim_h, t.scrim_alpha, t.asset_radius, theme);
-    let (n, inset) = (t.button, t.button_inset);
-    let add = Rect::new(b.right() - inset - n, b.y + inset, n, n);
+    let [add, download, share] = asset_actions(b, theme);
     shadow_drops(c, LayerId::DEFAULT, add, t.button_radius, &t.raised);
-    boxed(c, add, t.button_radius, k.paper, t.button_border);
-    let mid = (n - t.icon) / 2.0;
+    let add_fill = if card.hot == Some(0) {
+        k.panel
+    } else {
+        k.paper
+    };
+    boxed(c, add, t.button_radius, add_fill, t.button_border);
+    for (i, at) in [(1, download), (2, share)] {
+        if card.hot == Some(i) {
+            glass(c, at, t.button_radius, theme);
+        }
+    }
+    let mid = (t.button - t.icon) / 2.0;
     icon(c, "plus", t.icon, k.ink, add.x + mid, add.y + mid);
-    let foot = b.bottom() - inset - n;
     icon(
         c,
         "download",
         t.icon,
         k.on_image,
-        b.x + inset + mid,
-        foot + mid,
+        download.x + mid,
+        download.y + mid,
     );
-    let label = t.label.style(theme);
-    let lw = TextMeasurer::measure_styled("Share", &label, None).0;
-    let share_w = t.label_pad * 2.0 + t.icon + t.label_gap + lw;
-    let sx = b.right() - inset - share_w + t.label_pad;
-    icon(c, "forward", t.icon, k.on_image, sx, foot + mid);
+    let sx = share.x + t.label_pad;
+    icon(c, "forward", t.icon, k.on_image, sx, share.y + mid);
     text(
         c,
         "Share",
-        &label,
+        &t.label.style(theme),
         sx + t.icon + t.label_gap,
-        foot + (n - t.label.line_height) / 2.0,
+        share.y + (t.button - t.label.line_height) / 2.0,
         k.on_image,
         None,
     );

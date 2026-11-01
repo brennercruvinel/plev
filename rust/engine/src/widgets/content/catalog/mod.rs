@@ -13,7 +13,8 @@
 //! `Role::Button` with `selected` and an `activate` that reads it; a
 //! pricing card is a `Role::Group` around its plan's button,
 //! `<id>.plan`. The hover's actions only show under the pointer, as in
-//! the kit, and take no action of their own.
+//! the kit, and take no action of their own; the one under the pointer
+//! hovers as the kit's does.
 
 mod explore;
 mod price;
@@ -73,6 +74,9 @@ pub enum CatalogKind {
 pub struct CatalogCard {
     pub kind: CatalogKind,
     press: Press,
+    /// The hover's action under the pointer, by index in
+    /// [`CatalogCard::actions`].
+    hot: Option<usize>,
     selected: bool,
     /// A plan's button (pricing cards only).
     button: Option<Button>,
@@ -88,6 +92,7 @@ impl CatalogCard {
         Self {
             kind,
             press: Press::default(),
+            hot: None,
             selected: false,
             button,
             sem: None,
@@ -121,6 +126,26 @@ impl CatalogCard {
     /// Shows the hover (the pointer over it), as a pinned state.
     pub fn set_hovered(&mut self, on: bool) {
         self.press.hovered = on;
+        if !on {
+            self.hot = None;
+        }
+    }
+
+    /// The hover's action under the pointer, by index in
+    /// [`CatalogCard::actions`].
+    pub fn hot_action(&self) -> Option<usize> {
+        self.hot
+    }
+
+    /// The buttons the hover shows in `bounds`: the asset card's add,
+    /// download and share, the explore card's three, left to right; none
+    /// for the others.
+    pub fn actions(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        match self.kind {
+            CatalogKind::Asset => tiles::asset_actions(bounds, theme).to_vec(),
+            CatalogKind::Explore { .. } => explore::explore_actions(bounds, theme).to_vec(),
+            _ => Vec::new(),
+        }
     }
 
     pub fn is_hovered(&self) -> bool {
@@ -191,7 +216,20 @@ impl CatalogCard {
             }
             out = r;
         }
-        let r = self.press.handle(event, bounds, false);
+        let mut r = self.press.handle(event, bounds, false);
+        if let WidgetEvent::MouseMove { x, y } = *event {
+            let hot = if self.press.hovered {
+                self.actions(bounds, theme)
+                    .iter()
+                    .position(|a| a.contains(x, y))
+            } else {
+                None
+            };
+            if hot != self.hot {
+                self.hot = hot;
+                r = EventResult::changed();
+            }
+        }
         if r.clicked && self.button.is_none() {
             self.selected = true;
             return r;
@@ -276,6 +314,12 @@ fn boxed(c: &mut Compositor, r: Rect, radius: f32, fill: Color, border: Color) {
 fn photo(c: &mut Compositor, r: Rect, radius: f32, theme: &Theme) {
     let [top, bottom] = palette(theme).image;
     c.push(gradient_fill(r, radius, top.0, bottom.0));
+}
+
+/// The hover of a button on a photo: the glass fill and its edge.
+fn glass(c: &mut Compositor, r: Rect, radius: f32, theme: &Theme) {
+    let k = palette(theme);
+    boxed(c, r, radius, k.glass, k.glass_line);
 }
 
 /// The scrim a hover lays from the bottom of an image, `h` tall, at

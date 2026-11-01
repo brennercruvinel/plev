@@ -151,7 +151,8 @@ pub struct ExploreRecipe {
 
 /// The catalog's palette: the kit's paper, its two washes, its line and
 /// ring, the ink, the muted text; a photo's gradient and the featured
-/// plan's, the scrim over a photo and the text on it. A photo is content,
+/// plan's, the scrim over a photo, the text on it and the hover of a
+/// button on it (a glass fill and edge of that text). A photo is content,
 /// not chrome: every theme keeps the kit's.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct CatalogPalette {
@@ -166,6 +167,8 @@ pub struct CatalogPalette {
     pub feature: [Color; 2],
     pub scrim: Color,
     pub on_image: Color,
+    pub glass: Color,
+    pub glass_line: Color,
 }
 
 /// The catalog slot.
@@ -205,6 +208,7 @@ fn shadow_xl() -> Vec<ShadowSpec> {
 impl CatalogTokens {
     /// The kit, class list by class list.
     pub fn hoff_core() -> Self {
+        let on_image = hex(0xFCFCFC);
         let palette = CatalogPalette {
             paper: hex(0xFCFCFC),
             panel: hex(0xF8F7F7),
@@ -220,9 +224,13 @@ impl CatalogTokens {
             // The featured plan's image (`/images/bg-pricing.png`, under
             // a `text-[#FCFCFC]` title): shade 7 to the ink.
             feature: [hex(0x323232), hex(0x121212)],
-            // `from-[#171717]/100`, `text-[#FCFCFC]`.
+            // `from-[#171717]/100`, `text-[#FCFCFC]`; a button on a photo
+            // hovers `hover:bg-[#FCFCFC]/15 hover:border-[#FCFCFC]/25`
+            // (AssetCard :30-40, ExploreCard :28-58).
             scrim: hex(0x171717),
-            on_image: hex(0xFCFCFC),
+            on_image,
+            glass: tint(on_image, 0.15),
+            glass_line: tint(on_image, 0.25),
         };
         let price = PriceRecipe {
             width: 320.0,

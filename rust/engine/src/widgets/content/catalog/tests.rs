@@ -134,6 +134,47 @@ fn the_explore_actions_and_the_video_badge_are_the_kit_s_glyphs() {
     assert_eq!(glyphs(video), 1);
 }
 
+/// The button under the pointer hovers as the kit's: the two on the
+/// asset's photo and the explore card's three in the glass (`#FCFCFC` at
+/// 15, its edge at 25), the asset's add in the panel wash.
+#[test]
+fn the_button_under_the_pointer_takes_the_kit_s_hover() {
+    let t = core();
+    let k = t.disclosure.catalog.palette;
+    let glass =
+        |n: &SceneNode| matches!(n, SceneNode::RoundedRect { color, .. } if *color == k.glass.0);
+    for i in [1, 4] {
+        let mut card = all().remove(i);
+        let (w, h) = card.size(1000.0, &t);
+        let b = Rect::new(0.0, 0.0, w, h);
+        let actions = card.actions(b, &t);
+        assert_eq!(actions.len(), 3, "{}", card.label());
+        for (n, at) in actions.iter().enumerate() {
+            let (x, y) = at.center();
+            let r = card.handle_event(&WidgetEvent::MouseMove { x, y }, b, &t);
+            assert!(card.is_hovered() && r.changed, "{} {n}", card.label());
+            assert_eq!(card.hot_action(), Some(n));
+            let seen = nodes(&card, b, &t);
+            let on_photo = !(i == 1 && n == 0);
+            assert_eq!(
+                seen.iter().filter(|&n| glass(n)).count(),
+                usize::from(on_photo)
+            );
+            if !on_photo {
+                assert!(seen.iter().any(|n| matches!(
+                    n,
+                    SceneNode::RoundedRect { color, w, .. } if *color == k.panel.0 && *w == at.w
+                )));
+            }
+        }
+        card.handle_event(&WidgetEvent::MouseMove { x: w / 2.0, y: 2.0 }, b, &t);
+        assert_eq!(card.hot_action(), None);
+        assert!(!nodes(&card, b, &t).iter().any(glass));
+    }
+    assert_eq!(k.glass.0[3], 0.15);
+    assert_eq!(k.glass_line.0[3], 0.25);
+}
+
 /// A click chooses a card; on a pricing card its plan's button does, and
 /// the plan in use takes no click.
 #[test]
