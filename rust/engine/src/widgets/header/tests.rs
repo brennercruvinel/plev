@@ -34,7 +34,11 @@ fn the_tokens_are_the_kit_s() {
     assert_eq!((h.framed.radius, h.framed.icon), (12.0, 16.0));
     assert_eq!(h.nav.recipe.disabled_alpha, 0.40);
     assert_eq!((h.dot.size, h.dot.inset), (4.0, 4.0));
-    assert_eq!(h.dot.color, crate::styling::color::Color::hex(0xFE5938));
+    // the kit's #FE5938, deepened the least it must to read as a mark on
+    // the bar and on the plain action's hover (1.4.11)
+    let red = crate::styling::color::Color::hex(0xFE5938);
+    assert!(h.dot.color.0[0] <= red.0[0] && h.dot.color.0[1] <= red.0[1]);
+    assert!((h.dot.color.to_oklch().h - red.to_oklch().h).abs() < 2.0);
     assert_eq!(h.search_w, 260.0);
     assert_eq!((h.avatar.size, h.avatar.pad), (40.0, 4.0));
     let t = &h.thumbs;
@@ -72,9 +76,7 @@ fn every_theme_derives_the_shapes_and_its_own_colors() {
 fn the_logo_is_its_symbol_its_wordmark_or_both() {
     let t = Theme::hoff_core();
     let l = &t.header.logo;
-    let symbol = Logo::new("Plev")
-        .kind(LogoKind::Symbol)
-        .preferred_size(&t);
+    let symbol = Logo::new("Plev").kind(LogoKind::Symbol).preferred_size(&t);
     assert_eq!(
         symbol,
         (l.symbol_size + l.pad * 2.0, l.symbol_size + l.pad * 2.0)

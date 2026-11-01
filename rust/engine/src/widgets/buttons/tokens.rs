@@ -11,6 +11,7 @@
 //! [`ButtonTokens::derive`], so the widgets render under all of them.
 
 use crate::styling::color::Color;
+use crate::styling::theme::legibility::{TEXT_AA, fill_under};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::tokens::ColorTokens;
 use crate::styling::theme::{TypeRole, TypeRun};
@@ -244,8 +245,12 @@ impl ButtonTokens {
         // isOrange: E36323 -> DF5A18, top key-light white/33, ring
         // BF4A0F and an orange glow 0 3px 4px -1px rgba(252,96,16,.95);
         // hover washes white/10.
+        // Its paper label reads 3.4:1 on the orange, 2.7:1 under the
+        // hover's wash: each end deepens the least it must for the label
+        // to read at AA (1.4.3) bare and washed (`legibility::fill_under`).
+        let deep = |end: Color| fill_under(end, paper, TEXT_AA, paper, &[white(0.10)]);
         let warning_rest = ButtonSurface {
-            fill: [hex(0xE36323), hex(0xDF5A18)],
+            fill: [hex(0xE36323), hex(0xDF5A18)].map(deep),
             overlay: NONE,
             shadow: vec![
                 ShadowSpec::inset([0.0, 1.0], 0.0, 0.0, white(0.33)),
@@ -472,7 +477,11 @@ impl ButtonTokens {
             }
         };
         let tint = |c: Color, a: f32| Color([c.0[0], c.0[1], c.0[2], a]);
+        // A fill its label does not read on (AA, 1.4.3) moves the least
+        // it must away from the label (`legibility::fill_under`).
+        let legible = |fill: Color| fill_under(fill, text_on(fill), TEXT_AA, colors.bg, &[]);
         let solid = |fill: Color, hover: Color, disabled_alpha: f32| {
+            let (fill, hover) = (legible(fill), legible(hover));
             let rest = ButtonSurface {
                 fill: flat(fill),
                 overlay: NONE,

@@ -19,5 +19,7 @@ pub fn read() -> Prefs {
     if let Some(factor) = text_scale::system_text_scale() {
         prefs.text_scale = TextScale::new(factor);
     }
+    // increase contrast, read where the system says it (`preference`)
+    prefs.contrast = crate::styling::theme::Contrast::from_system();
     prefs
 }

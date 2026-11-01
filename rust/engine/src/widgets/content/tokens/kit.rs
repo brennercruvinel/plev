@@ -18,7 +18,9 @@ impl DisclosureTokens {
     /// The kit, class list by class list.
     pub fn hoff_core() -> Self {
         let ink = hex(0x121212);
-        let gray = hex(0x7B7B7B);
+        // the kit's #7B7B7B, where it is text the gray that reads at AA
+        // (`hoff_core::secondary_text`), as the core palette's dim text
+        let gray = crate::styling::theme::hoff_core::secondary_text();
         let line = hex(0xECECEC);
         let wash = hex(0xF1F1F1);
         let paper = hex(0xFCFCFC);
