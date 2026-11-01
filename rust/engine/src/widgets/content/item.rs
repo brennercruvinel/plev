@@ -333,7 +333,7 @@ impl Item {
             c.push(gradient_fill(add, r.add / 2.0, top.0, bottom.0));
             let inset = (r.add - r.add_glyph) / 2.0;
             if let Some(node) = icons::icon_at(
-                "plus",
+                "kit-plus",
                 r.add_glyph,
                 r.add_glyph_color.0,
                 add.x + inset,
@@ -442,9 +442,11 @@ mod tests {
         assert_eq!(c.binding(&id).unwrap().rect, [4.0, 8.0, 240.0, 40.0]);
     }
 
-    /// The tile shows its add mark only under the pointer.
+    /// The tile shows its add mark, the kit's own plus, only under the
+    /// pointer.
     #[test]
     fn the_tile_marks_its_add_button_on_hover() {
+        assert!(icons::has_icon("kit-plus"));
         let theme = core();
         let at = Rect::new(0.0, 0.0, 60.0, 60.0);
         let paths = |item: &Item| {
