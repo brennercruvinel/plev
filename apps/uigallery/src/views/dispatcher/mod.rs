@@ -692,6 +692,7 @@ impl ShowcaseView {
     /// receipt as it stands after the dispatch; `None` when the page
     /// takes none.
     pub fn act(&mut self, req: Request) -> Option<Receipt> {
+        self.arm_reveal();
         if self.is_shell(&req.target) {
             return self.act_shell(req);
         }
@@ -750,6 +751,7 @@ impl ShowcaseView {
     /// sidebar (`shell/sidebar.rs`); `false` when none takes it. The
     /// sidebar lets its focus go once the page or the overlay takes it.
     pub fn assist_focus(&mut self, id: &SemId) -> bool {
+        self.arm_reveal();
         if self.is_sidebar(id) {
             return self.focus_sidebar(id);
         }

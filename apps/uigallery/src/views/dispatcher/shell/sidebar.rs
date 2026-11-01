@@ -2,7 +2,9 @@
 //! the navigation landmark the dock declares (`expanded`, `mode`,
 //! `pinned`, a `toggle_expanded`), its pin `shell.sidebar.pin` (a toggle,
 //! `on`), in the drawer its menu button `shell.sidebar.menu` and, open,
-//! its close `shell.sidebar.close` (where the pin was), and while
+//! its close `shell.sidebar.close` (where the pin was), the Search under
+//! the logo `shell.sidebar.search` (a button whose `activate` opens the
+//! command palette, as ⌘K does), and while
 //! it shows, the HomeSidebar's parts under it: the logo (a link to the
 //! first page), each group's dropdown `shell.sidebar.row[<r>]` and, while
 //! open, its tabs `shell.sidebar.row[<r>].links[<i>]`. A tab is the
@@ -18,11 +20,12 @@
 //! again unless it is pinned. A reader meets the same order
 //! (`reader_semantics` builds on [`ShowcaseView::keyboard_semantics`]).
 
-use accord::{Execution, Outcome, SemId, Snapshot, SnapshotBuilder, Value};
+use accord::{Execution, Outcome, Role, SemId, Snapshot, SnapshotBuilder, Value};
 use engine::styling::theme::Theme;
-use engine::widgets::nav::SidebarDock;
+use engine::widgets::nav::{DockMode, SidebarDock};
 
 use super::super::super::navigation::{self, Navigation};
+use super::super::super::palette;
 use super::super::super::{PAGES, ShowcaseView};
 use super::super::detached;
 use super::Asks;
@@ -55,6 +58,8 @@ pub(super) enum SidebarAsk {
     Group(usize),
     /// A tab or the logo picked: the drawer closes.
     Picked,
+    /// The Search pressed: the command palette opens (`palette.rs`).
+    Search,
 }
 
 /// A part of the sidebar a request names.
@@ -64,6 +69,7 @@ enum Part {
     Pin,
     Menu,
     Close,
+    Search,
     Logo,
     Group(usize),
     /// A tab, by its page.
@@ -96,6 +102,9 @@ fn part(bar: Bar<'_>, id: &SemId) -> Option<Part> {
     if dock.close_id().as_ref() == Some(id) {
         return Some(Part::Close);
     }
+    if bar.nav.search.sem_id() == Some(id) {
+        return Some(Part::Search);
+    }
     if bar.nav.sidebar.logo_id() == Some(id) {
         return Some(Part::Logo);
     }
@@ -119,6 +128,13 @@ pub(super) fn project(bar: Bar<'_>, b: &mut SnapshotBuilder, parent: Option<&Sem
         && let Some(mut node) = b.reopen(id)
     {
         node.inert(true);
+    }
+    // the Search heads the panel with the pin: ⌘K opens the palette
+    // whether the panel shows or not
+    if let Some(search) = bar.nav.search.sem_id() {
+        let mut node = b.node(search, Role::Button, palette::NAME);
+        node.parent(id).description("⌘ K");
+        node.action("activate");
     }
     if bar.dock.expanded(bar.theme, bar.w) {
         bar.nav.sidebar.project_parts(b, id);
@@ -149,6 +165,10 @@ pub(super) fn execute(bar: Bar<'_>, asks: &mut Asks, action: &str, target: &SemI
             asks.sidebar = Some(SidebarAsk::Group(r));
             let open = bar.nav.menus().nth(r).is_some_and(|(m, _)| m.is_open());
             put("expanded", Value::Bool(!open));
+        }
+        ("activate", Some(Part::Search)) => {
+            asks.sidebar = Some(SidebarAsk::Search);
+            put("open", Value::Bool(true));
         }
         ("activate", Some(at @ (Part::Tab(_) | Part::Logo))) => {
             let page = match at {
@@ -194,10 +214,19 @@ impl ShowcaseView {
             return seen;
         };
         let mut b = SnapshotBuilder::new();
-        if let Some(seen) = &seen {
+        // the open drawer is modal: the walk stays in its panel (the
+        // trap), the page and the menu button under its scrim out of it
+        let trapped =
+            bar.dock.is_drawer_open() && bar.dock.mode(bar.theme, bar.w) == DockMode::Drawer;
+        if let Some(seen) = seen.as_ref().filter(|_| !trapped) {
             detached::extend(&mut b, seen);
         }
         project(bar, &mut b, None);
+        if let Some(menu) = bar.dock.menu_id().filter(|_| trapped)
+            && let Some(mut node) = b.reopen(&menu)
+        {
+            node.inert(true);
+        }
         if let Some(at) = &self.sidebar_focus {
             b.focus(at.clone());
         }
@@ -227,6 +256,7 @@ impl ShowcaseView {
         self.blur_page();
         self.sidebar_focus = Some(id.clone());
         self.nav.sidebar.focus_id(Some(id));
+        self.nav.search.set_action_focus(at == Some(Part::Search));
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
         if let Some(dock) = self.shell.dock.as_mut() {
@@ -245,6 +275,7 @@ impl ShowcaseView {
             return false;
         }
         self.nav.sidebar.focus_id(None);
+        self.nav.search.set_action_focus(false);
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
         if let Some(dock) = self.shell.dock.as_mut() {
@@ -258,6 +289,14 @@ impl ShowcaseView {
 
     /// What a request on the sidebar asked, now that it ran.
     pub(super) fn apply_sidebar(&mut self, ask: SidebarAsk) {
+        if ask == SidebarAsk::Search {
+            // the palette takes the keys: the sidebar lets its focus go,
+            // and has it back when the palette closes
+            let opener = self.sidebar_focus.clone();
+            self.blur_sidebar();
+            self.open_palette(opener);
+            return;
+        }
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
         let Some(dock) = self.shell.dock.as_mut() else {
@@ -268,8 +307,18 @@ impl ShowcaseView {
                 dock.toggle_pin(theme, w);
             }
             SidebarAsk::Expand => {
+                let drawer = dock.mode(theme, w) == DockMode::Drawer;
                 dock.toggle_expanded(theme, w);
-                if !dock.expanded(theme, w) {
+                let open = dock.expanded(theme, w);
+                let (menu, close) = (dock.menu_id(), dock.close_id());
+                if drawer && self.sidebar_focus.is_some() {
+                    // the keyboard follows the drawer: into it on its
+                    // close, back to the menu button when it shuts
+                    let to = if open { close } else { menu };
+                    if let Some(to) = to {
+                        self.focus_sidebar(&to);
+                    }
+                } else if !open {
                     self.blur_sidebar();
                 }
             }
@@ -284,12 +333,16 @@ impl ShowcaseView {
                 }
             }
             SidebarAsk::Picked => dock.picked(theme, w),
+            // before the dock (`open_palette`)
+            SidebarAsk::Search => {}
         }
         // a focused part that is gone (its dropdown closed) lets it go
         if let Some(at) = self.sidebar_focus.clone()
-            && self
-                .bar()
-                .is_none_or(|bar| !bar.dock.expanded(bar.theme, bar.w) || part(bar, &at).is_none())
+            && self.bar().is_none_or(|bar| {
+                // the menu button stands outside the panel
+                let p = part(bar, &at);
+                p.is_none() || (p != Some(Part::Menu) && !bar.dock.expanded(bar.theme, bar.w))
+            })
         {
             self.blur_sidebar();
         }

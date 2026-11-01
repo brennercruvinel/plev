@@ -28,7 +28,12 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
+        wake = wake.merge(Wake::moving(self.reveal_tick(dt)));
         wake = wake.merge(self.sidebar_wake(dt));
+        // the palette's caret (`palette.rs`)
+        if let Some(ActiveOverlay::Palette { widget, .. }) = &mut self.active_overlay {
+            wake = wake.merge(widget.command.search.input.wake(dt));
+        }
         // The git tab always ticks (its caret and toasts keep time
         // whichever page shows); only the page on screen asks the loop
         // for frames. Worker events land through `apply_git`.
@@ -157,12 +162,24 @@ impl ShowcaseView {
                 ActiveOverlay::Drawer { widget, .. } => {
                     widget.render(c, layers.overlay, &theme, window, shown);
                 }
+                // the scrim over the window and the sheet, on the overlay
+                // layer, which fades with the entry
+                ActiveOverlay::Palette { widget, .. } => {
+                    c.on_layer(layers.overlay, |c| widget.render(c, window, window, &theme));
+                }
             }
         }
         c.set_layer_opacity(layers.overlay, overlay_opacity);
 
         self.toasts
             .render(c, layers.toast, &theme, self.width, self.height);
+
+        // A focus that moved out of the page's window brings the page to
+        // it (`reveal.rs`); a jump (reduced motion) is drawn at once, and
+        // the frame drawn again finds the focus already shown.
+        if self.reveal_focus(c) {
+            self.render(c);
+        }
     }
 
     /// The note an alias page shows above the shared example: which

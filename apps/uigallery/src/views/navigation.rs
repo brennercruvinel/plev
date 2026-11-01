@@ -17,11 +17,13 @@ use accord::SemId;
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::content::{Collapsible, DisclosureList};
+use engine::widgets::form::input_group::{Addon, InputGroup};
+use engine::widgets::form::tokens::Look;
 use engine::widgets::header::Logo;
 use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
 use engine::widgets::overlay::sheet::paint_scrim;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
-use engine::widgets::shell::Route;
+use engine::widgets::shell::{Route, SafeArea};
 use engine::widgets::wake::Wake;
 
 use super::ShowcaseView;
@@ -63,6 +65,9 @@ pub fn page_at(row: usize, at: usize) -> Option<usize> {
 
 pub struct Navigation {
     pub sidebar: HomeSidebar,
+    /// The Search under the logo, a top bar's (`Look::Header`, front F)
+    /// with its `⌘ K`: a press opens the command palette (`palette.rs`).
+    pub search: InputGroup,
     /// The page the sidebar marks.
     current: usize,
 }
@@ -87,8 +92,13 @@ impl Navigation {
             .collect();
         let mut sidebar = HomeSidebar::new(rows, "", NavLink::new("")).library(false);
         sidebar.logo = Logo::new(PRODUCT);
+        let search = InputGroup::new("Search...")
+            .look(Look::Header)
+            .start(Addon::Icon("search"))
+            .end(Addon::Hint("⌘ K".into()));
         let mut nav = Self {
             sidebar,
+            search,
             current: 0,
         };
         nav.set_current(current);
@@ -97,6 +107,12 @@ impl Navigation {
 
     pub fn current(&self) -> usize {
         self.current
+    }
+
+    /// The theme's measures: the strip under the logo is the Search's
+    /// height.
+    pub fn set_theme(&mut self, theme: &Theme) {
+        self.sidebar.set_slot(self.search.height(theme));
     }
 
     /// The groups' dropdowns and their lists, in `Group::ALL` order.
@@ -187,6 +203,25 @@ impl Navigation {
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
         self.sidebar.render(c, bounds, theme);
+        if let Some(at) = self.sidebar.slot_rect(bounds, theme) {
+            if let Some(id) = self.search.sem_id() {
+                c.bind(id, [at.x, at.y, at.w, at.h]);
+            }
+            self.search.render(c, at, theme);
+        }
+    }
+
+    /// A pointer event on the Search in the panel at `bounds`: its hover;
+    /// `clicked` on a press, which asks the palette open.
+    fn search_event(&mut self, event: &WidgetEvent, bounds: Rect, theme: &Theme) -> EventResult {
+        let Some(at) = self.sidebar.slot_rect(bounds, theme) else {
+            return EventResult::IGNORED;
+        };
+        let r = self.search.handle_event(event, at, theme);
+        match *event {
+            WidgetEvent::MouseDown { x, y } if at.contains(x, y) => r.merge(EventResult::clicked()),
+            _ => r,
+        }
     }
 }
 
@@ -210,16 +245,35 @@ impl ShowcaseView {
         }
     }
 
-    /// The strip of the panel at `panel` the logo and the pin sit in.
-    pub(super) fn panel_head(&self, panel: Rect) -> Rect {
-        let body = HomeSidebar::body_rect(panel, &self.theme);
-        Rect::new(panel.x, panel.y, panel.w, body.y - panel.y)
+    /// The last input was a finger (`true`) or a pointer, as the platform
+    /// tells it: a finger has no hover to peek with, so the sidebar is a
+    /// drawer behind the menu button. `true` when that changed.
+    pub fn set_touch(&mut self, on: bool) -> bool {
+        let w = self.shell.dock_window().w;
+        let theme = &self.theme;
+        let Some(dock) = self.shell.dock.as_mut() else {
+            return false;
+        };
+        let before = dock.mode(theme, w);
+        dock.set_touch(on, theme, w);
+        dock.mode(theme, w) != before
     }
 
-    /// The head's buttons' part of a pointer event on the panel at
-    /// `panel`: the pin's and the open drawer's close's, merged, and the
+    /// The window's safe area (a notch, a home bar, rounded corners), in
+    /// logical pixels: the chrome, the dock and the page stand inside it.
+    pub fn set_safe_area(&mut self, safe_area: SafeArea) {
+        self.shell.set_safe_area(safe_area);
+    }
+
+    /// The strip of the panel at `panel` the logo and the pin sit in.
+    pub(super) fn panel_head(&self, panel: Rect) -> Rect {
+        HomeSidebar::head_rect(panel, &self.theme)
+    }
+
+    /// The head's part of a pointer event on the panel at `panel`: the
+    /// pin's, the open drawer's close's and the Search's, merged, and the
     /// ask a click on one makes (`toggle` on the pin, `activate` on the
-    /// close).
+    /// close and on the Search).
     fn head_event(
         &mut self,
         event: &WidgetEvent,
@@ -228,8 +282,9 @@ impl ShowcaseView {
         let head = self.panel_head(panel);
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
+        let search = self.nav.search_event(event, panel, theme);
         let Some(dock) = self.shell.dock.as_mut() else {
-            return (EventResult::IGNORED, None);
+            return (search, None);
         };
         let pin = dock.pin_event(event, head, theme, w);
         let close = dock.close_event(event, head, theme, w);
@@ -237,10 +292,12 @@ impl ShowcaseView {
             dock.pin_id().map(|id| (id, "toggle"))
         } else if close.clicked {
             dock.close_id().map(|id| (id, "activate"))
+        } else if search.clicked {
+            self.nav.search.sem_id().cloned().map(|id| (id, "activate"))
         } else {
             None
         };
-        (pin.merge(close), ask)
+        (pin.merge(close).merge(search), ask)
     }
 
     /// The chrome's part of a pointer event: `(taken, changed)`. The dock
@@ -297,7 +354,20 @@ impl ShowcaseView {
     pub(super) fn escape_sidebar(&mut self) -> bool {
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
-        let escaped = self.shell.dock.as_mut().is_some_and(|d| d.escape(theme, w));
+        let dock = self.shell.dock.as_mut();
+        let drawer = dock.as_ref().is_some_and(|d| d.is_drawer_open());
+        let menu = dock.as_ref().and_then(|d| d.menu_id());
+        let escaped = dock.is_some_and(|d| d.escape(theme, w));
+        // the drawer shut on the keyboard: its focus back to the menu
+        // button that opened it
+        if drawer
+            && escaped
+            && self.sidebar_focus.is_some()
+            && let Some(menu) = menu
+            && self.focus_sidebar(&menu)
+        {
+            return true;
+        }
         self.blur_sidebar() || escaped
     }
 
@@ -345,6 +415,129 @@ mod tests {
             assert_eq!(page_at(row, at), Some(i), "{}", page.title);
         }
         assert_eq!(page_at(Group::ALL.len(), 0), None);
+    }
+
+    /// A finger turns the sidebar into a drawer behind the menu button
+    /// at any width; a pointer that moves turns it back.
+    #[test]
+    fn a_finger_turns_the_sidebar_into_a_drawer_and_a_pointer_back() {
+        let mut view = ShowcaseView::new(1280.0, 800.0);
+        let mode = |v: &ShowcaseView| v.shell.layout(&v.theme).dock.map(|d| d.mode);
+        assert_eq!(mode(&view), Some(DockMode::Peek));
+        assert!(view.set_touch(true));
+        assert_eq!(mode(&view), Some(DockMode::Drawer));
+        assert!(view.shell.layout(&view.theme).menu_button.is_some());
+        assert!(!view.set_touch(true), "nothing changes twice");
+        assert!(view.set_touch(false));
+        assert_eq!(mode(&view), Some(DockMode::Peek));
+    }
+
+    /// The drawer on the keyboard: Enter on the menu button opens it with
+    /// the focus on its close, Tab stays in the panel (the trap), and
+    /// Escape shuts it with the focus back on the menu button.
+    #[test]
+    fn the_open_drawer_traps_the_focus_and_gives_it_back() {
+        let mut view = ShowcaseView::new(360.0, 740.0);
+        let open = |v: &ShowcaseView| v.shell.dock.as_ref().is_some_and(|d| d.is_drawer_open());
+        let d = view.shell.dock.as_ref().expect("docked");
+        let (menu, close) = (d.menu_id().unwrap(), d.close_id().unwrap());
+        assert!(view.focus_sidebar(&menu));
+        assert!(view.handle_enter());
+        assert!(open(&view));
+        assert_eq!(view.sidebar_focus(), Some(&close));
+        for _ in 0..40 {
+            view.handle_edit_key(super::super::EditKey::Tab);
+            let at = view.sidebar_focus().cloned().expect("the focus stays in");
+            assert!(view.is_sidebar(&at) && at != menu, "{at}");
+        }
+        assert!(view.close_top_overlay(), "Escape");
+        assert!(!open(&view));
+        assert_eq!(view.sidebar_focus(), Some(&menu));
+    }
+
+    /// The window's safe area holds the pinned panel and the page off
+    /// the notch's side.
+    #[test]
+    fn the_sidebar_and_the_page_stand_inside_the_safe_area() {
+        let mut view = ShowcaseView::new(1280.0, 800.0);
+        view.pin_sidebar(true);
+        let inset = view.theme.spacing.xl;
+        view.set_safe_area(SafeArea {
+            left: inset,
+            ..SafeArea::default()
+        });
+        let l = view.shell.layout(&view.theme);
+        let dock = l.dock.expect("docked");
+        assert_eq!(dock.mode, DockMode::Pinned);
+        assert_eq!(dock.rest.x, inset);
+        assert!(l.header.x >= dock.rest.right());
+    }
+
+    /// A sidebar 200 wide (narrower than its 240) keeps every group's
+    /// label on one line, cut with an ellipsis, never broken inside the
+    /// word: each trigger is as tall as in a wide panel and each tab a
+    /// link high; a reader and an agent still hear the whole name.
+    #[test]
+    fn a_narrow_sidebar_cuts_its_labels_on_one_line() {
+        use accord::SnapshotBuilder;
+        use engine::drawing::compositor::SceneNode;
+        let theme = Theme::hoff_core();
+        let mut nav = Navigation::new(0);
+        for row in &mut nav.sidebar.rows {
+            if let HomeRow::Menu(m, _) = row {
+                *m = m.clone().open(true);
+            }
+        }
+        let tall = 1e4;
+        let narrow = Rect::new(0.0, 0.0, 200.0, tall);
+        let wide = Rect::new(0.0, 0.0, 1000.0, tall);
+        for (r, g) in Group::ALL.iter().enumerate() {
+            let at = |b| nav.trigger_rect(r, b, &theme).unwrap().h;
+            assert_eq!(at(narrow), at(wide), "{} takes one line", g.label());
+        }
+        let link_h = theme.disclosure.collapsible.rail.as_ref().unwrap().link_h;
+        for (i, page) in PAGES.iter().enumerate() {
+            let h = nav.tab_rect(i, narrow, &theme).unwrap().h;
+            assert_eq!(h, link_h, "{} takes one line", page.title);
+        }
+        // drawn: each group's label one line (no wrap width), some cut
+        let mut c = Compositor::new();
+        nav.render(&mut c, narrow, &theme);
+        let texts: Vec<_> = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { key, .. } => Some(key.clone()),
+                _ => None,
+            })
+            .collect();
+        let mut cut = 0;
+        for g in Group::ALL {
+            let label = g.label();
+            let key = texts
+                .iter()
+                .find(|k| {
+                    let stem = k.text.trim_end_matches('…');
+                    k.text == label || (k.text.ends_with('…') && label.starts_with(stem))
+                })
+                .unwrap_or_else(|| panic!("{label} is drawn"));
+            assert_eq!(key.max_width_bits, None, "{label} does not wrap");
+            cut += usize::from(key.text != label);
+        }
+        assert!(cut > 0, "at 200 a label is cut");
+        // projected: the whole names
+        let id = SemId::name("nav").unwrap();
+        nav.sidebar = nav.sidebar.clone().sem(id.clone());
+        let mut b = SnapshotBuilder::new();
+        nav.sidebar.project(&mut b, &id, "Pages", None);
+        let snap = b.finish().unwrap();
+        let rows = id.child("row").unwrap();
+        for (r, g) in Group::ALL.iter().enumerate() {
+            let node = snap.get(&rows.key(r.to_string())).unwrap();
+            assert_eq!(node.label, g.label());
+        }
     }
 
     #[test]

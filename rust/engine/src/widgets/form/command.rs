@@ -26,7 +26,7 @@
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::control::input::scroll::ScrollState;
-use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::content::kbd::Kbd;
@@ -352,7 +352,8 @@ impl Command {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let layer = LayerId::DEFAULT;
+        // the layer its owner aims at (`Compositor::on_layer`)
+        let layer = c.target();
         let l = self.layout(bounds, theme);
         self.search.render(c, l.search, theme);
         if self.panel {

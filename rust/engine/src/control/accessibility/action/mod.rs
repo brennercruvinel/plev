@@ -52,6 +52,11 @@ pub enum Assist {
     /// Keyboard focus to this node: the app moves its own focus there,
     /// as it does for Tab.
     Focus(SemId),
+    /// Scroll this node into view (AccessKit's `ScrollIntoView`, macOS's
+    /// `AXScrollToVisible`): the app scrolls what holds it, the least
+    /// that shows it (`control::input::reveal`), and the focus stays
+    /// where it is.
+    Reveal(SemId),
 }
 
 /// Why a screen reader's request carries nothing to the app. None of
@@ -168,6 +173,7 @@ pub fn translate(req: &ActionRequest, shown: &Shown) -> Result<Assist, Unmapped>
                     .map_err(Unmapped::Contract)
             }
             Action::Focus => Err(Unmapped::NotFocusable(id.clone())),
+            Action::ScrollIntoView => Ok(Assist::Reveal(item.clone())),
             other => Err(Unmapped::Unsupported(other)),
         };
     }
@@ -194,6 +200,7 @@ pub fn translate(req: &ActionRequest, shown: &Shown) -> Result<Assist, Unmapped>
         }
         Action::Increment => ("increment", None),
         Action::Decrement => ("decrement", None),
+        Action::ScrollIntoView => return Ok(Assist::Reveal(id.clone())),
         other => return Err(Unmapped::Unsupported(other)),
     };
     Request::observe(&shown.snapshot, Actor::Assistive, id, action, param)

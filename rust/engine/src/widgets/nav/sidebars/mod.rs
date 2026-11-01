@@ -25,7 +25,7 @@ pub use home::{HomeLayout, HomeRow, HomeSidebar};
 pub use scene::{SceneItem, SceneLayout, ScenePart, SceneSidebar, SceneTab, Section};
 
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::drawing::text::TextStyle;
+use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::header::Logo;
 use crate::widgets::icons;
@@ -61,7 +61,7 @@ pub(crate) fn rule(c: &mut Compositor, x: f32, y: f32, w: f32, theme: &Theme) {
 }
 
 /// The product the logo names, as the kit's pages do.
-pub const PRODUCT: &str = "Brainwave";
+pub const PRODUCT: &str = "Plev";
 
 /// The head's height: the logo in its padding.
 pub(crate) fn head_h(theme: &Theme) -> f32 {
@@ -145,13 +145,15 @@ pub(crate) fn folder_row(
         .typography
         .exact(t.font_size, t.line_height, t.font_weight);
     let x = sx + t.slot + t.gap;
+    // one line: a long name ends in an ellipsis, never wraps in the row
+    let shown = TextMeasurer::truncate_to_width(label, &style, (r.right() - x).max(0.0));
     c.push(text(
-        label,
+        &shown,
         &style,
         x,
         r.y + (r.h - style.line_height) / 2.0,
         t.label.0,
-        Some((r.right() - x).max(0.0)),
+        None,
     ));
 }
 

@@ -12,6 +12,7 @@ mod components;
 mod foundations;
 mod navigation;
 mod pages;
+mod palette;
 
 pub mod compositor;
 mod dispatcher;
@@ -33,9 +34,11 @@ use engine::styling::theme::TypeRole;
 
 use winit::keyboard::{Key, ModifiersState};
 
+use engine::control::input::reveal::{FocusReveal, Glide};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
 use engine::styling::theme::Theme;
+use engine::widgets::form::command_dialog::CommandDialog;
 use engine::widgets::nav::{PanelHeader, SidebarDock};
 use engine::widgets::overlay::drawer::Drawer;
 use engine::widgets::overlay::sheet::Sheet;
@@ -74,6 +77,16 @@ enum ActiveOverlay {
         id: OverlayId,
         widget: Box<Drawer>,
     },
+    /// The gallery's command palette, ⌘K on any page (task-104 front H,
+    /// `palette.rs`): the tabs, the themes and the sidebar's pin.
+    Palette {
+        id: OverlayId,
+        widget: Box<CommandDialog>,
+        commands: Vec<palette::Cmd>,
+        /// The part of the sidebar the focus was on when it opened: it
+        /// gets the focus back when the palette closes.
+        opener: Option<accord::SemId>,
+    },
 }
 
 impl ActiveOverlay {
@@ -82,7 +95,8 @@ impl ActiveOverlay {
             ActiveOverlay::Modal { id, .. }
             | ActiveOverlay::Menu { id, .. }
             | ActiveOverlay::Sheet { id, .. }
-            | ActiveOverlay::Drawer { id, .. } => *id,
+            | ActiveOverlay::Drawer { id, .. }
+            | ActiveOverlay::Palette { id, .. } => *id,
         }
     }
 
@@ -123,6 +137,18 @@ pub struct ShowcaseView {
     /// A page offset requested before the first layout (launch argument
     /// for snapshots); applied once the content height is known.
     pending_scroll: Option<f32>,
+    /// Focus into view (WCAG 2.4.11, `compositor/reveal.rs`): the focus
+    /// the page showed last, and the glide that brings a new one into
+    /// the page's window.
+    reveal: FocusReveal,
+    glide: Glide,
+    /// Something that can move the focus ran since the last frame (a key,
+    /// the pointer, a reader's or an agent's request): the next frame
+    /// looks where the focus is. A frame that only animates does not.
+    reveal_armed: bool,
+    /// A node a screen reader asked to see (`ScrollIntoView`), shown at
+    /// the next frame whether or not it has the focus.
+    pending_reveal: Option<accord::SemId>,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -167,7 +193,11 @@ impl ShowcaseView {
         let sidebar = accord::SemId::parse(dispatcher::SIDEBAR).ok();
         let mut dock = SidebarDock::new();
         let mut nav = navigation::Navigation::new(0);
+        nav.set_theme(&theme);
         if let Some(id) = sidebar {
+            if let Ok(search) = id.child("search") {
+                nav.search = nav.search.clone().sem(search);
+            }
             dock = dock.sem(id.clone());
             nav.sidebar = nav.sidebar.sem(id);
         }
@@ -183,6 +213,10 @@ impl ShowcaseView {
             page: 0,
             page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
+            reveal: FocusReveal::new(),
+            glide: Glide::default(),
+            reveal_armed: false,
+            pending_reveal: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
@@ -221,6 +255,10 @@ impl ShowcaseView {
     /// over the modal or the menu, the widget the focus is in
     /// (`dispatcher::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        self.arm_reveal();
+        if self.palette_open() {
+            return self.palette_nav(matches!(key, NavKey::Down));
+        }
         // A focused text that runs over lines, or a list under a filter,
         // takes the arrows first (`TextHost::handle_nav`).
         let pane = self.pane();
@@ -266,6 +304,13 @@ impl ShowcaseView {
     /// link, header title and blurb).
     fn set_page(&mut self, index: usize) {
         let index = index.min(PAGES.len() - 1);
+        if index != self.page {
+            // the next frame takes the new page's focus as it stands
+            self.reveal.reset();
+            self.glide.stop();
+            self.reveal_armed = true;
+            self.pending_reveal = None;
+        }
         self.page = index;
         let page = &PAGES[index];
         self.nav.set_current(index);
@@ -352,6 +397,7 @@ impl ShowcaseView {
         if let Some(theme) = foundations::theme::resolve(name) {
             self.panes.editor.set_theme(&theme);
             self.panes.git.set_theme(&theme);
+            self.nav.set_theme(&theme);
             self.theme = theme;
             self.theme_name = name.to_string();
         }

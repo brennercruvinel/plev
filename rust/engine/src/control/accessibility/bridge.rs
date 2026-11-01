@@ -303,7 +303,7 @@ mod tests {
             .iter()
             .filter_map(|a| match a {
                 Assist::Request(r) => Some((r.target.as_str(), &r.actor)),
-                Assist::Focus(_) => None,
+                Assist::Focus(_) | Assist::Reveal(_) => None,
             })
             .collect();
         assert_eq!(

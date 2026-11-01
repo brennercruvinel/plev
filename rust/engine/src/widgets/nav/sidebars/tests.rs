@@ -102,7 +102,7 @@ fn the_navigation_alone_scrolls_under_the_logo() {
     let mut s = home().library(false);
     let full = s.size(&t).1;
     let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
-    let body = HomeSidebar::body_rect(bounds, &t);
+    let body = s.body_rect(bounds, &t);
     let before = s.layout(bounds, &t).rows[0];
     assert!(full > bounds.h && s.max_scroll(bounds, &t) > 0.0);
     let wheel = WidgetEvent::Scroll {
@@ -276,4 +276,23 @@ fn the_design_parts_answer_by_id() {
         panic!()
     };
     assert!(!sw.on);
+}
+
+/// The kit's measures in the core theme: the head is the `p-6` round a
+/// 32 logo (80, the mark 24 from the edges, the logo's own `p-1`
+/// inside), and the shell's sidebar is the `HomeSidebar`'s `w-60`, the
+/// rows it carries (the `Layout`'s `!w-55` is for text links only).
+#[test]
+fn the_core_head_and_widths_are_the_kits() {
+    let t = Theme::hoff_core();
+    assert_eq!(head_h(&t), 80.0);
+    let logo = &t.header.logo;
+    assert_eq!(t.navigation.sidebars.head_pad + logo.pad, 24.0);
+    assert_eq!(t.navigation.dock.width, 240.0);
+    assert_eq!(t.navigation.sidebars.width, 240.0);
+    for theme in [Theme::hoff(), Theme::dark()] {
+        let s = &theme.navigation.sidebars;
+        assert_eq!(s.head_pad + theme.header.logo.pad, theme.spacing.lg);
+        assert_eq!(theme.navigation.dock.width, s.width);
+    }
 }
