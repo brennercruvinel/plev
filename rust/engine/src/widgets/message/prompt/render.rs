@@ -27,6 +27,15 @@ impl PromptInput {
             let ids: Vec<_> = (0..p.prompts.len()).map(|i| self.premade_id(i)).collect();
             p.render(c, layer, pl, &ids, theme);
         }
+        if let (Some(v), Some(at)) = (&self.view, l.view) {
+            v.render_to_layer(c, layer, at, theme);
+            if let Some(forward) = self.view_focus {
+                // the arrow where front G's controller places it
+                let (back, ahead) = v.arrow_rects(at, theme);
+                let r = if forward { ahead } else { back };
+                c.push_to_layer(layer, focus_ring(r, r.w / 2.0, theme));
+            }
+        }
         shadow_drops(c, layer, frame, t.radius, &t.shadow);
         let border = if self.hovered || self.held_hover {
             t.border_hover

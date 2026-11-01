@@ -399,6 +399,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Modals",
+        "layers",
+        "The kit's modals: variations, sharing a post, a profile and a file, a delete confirm, export and settings with their sections.",
+        Pane::Modals,
+    ),
+    page(
+        C,
         "Navigation Menu",
         "layout-grid",
         "Nav links in every state, and the rail form.",

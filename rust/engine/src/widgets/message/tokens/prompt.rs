@@ -147,6 +147,8 @@ pub struct PromptTokens {
     pub files: MenuRowTokens,
     pub voice: VoiceTokens,
     pub premade: PremadeTokens,
+    /// Between the view controller and the box under it.
+    pub view_gap: f32,
 }
 
 /// `components/PromptInput/index.tsx:34`, `components/Comment/index.tsx:21`
@@ -343,6 +345,8 @@ impl PromptTokens {
                 footer_gap: 6.0,
                 footer_fill: shade2,
             },
+            // components/ViewController/index.tsx:11 `bottom-full mb-4`
+            view_gap: 16.0,
         }
     }
 

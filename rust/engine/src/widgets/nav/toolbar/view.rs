@@ -62,6 +62,14 @@ impl ViewController {
         }
     }
 
+    /// The back arrow and the forward arrow, in a pill at `bounds`'
+    /// top-left: the one source for whoever marks an arrow (a focus ring
+    /// drawn by the widget that holds the controller).
+    pub fn arrow_rects(&self, bounds: Rect, theme: &Theme) -> (Rect, Rect) {
+        let (back, forward, _) = self.parts(bounds, theme);
+        (back, forward)
+    }
+
     /// The back arrow, the forward arrow and the ruler's start, in a
     /// pill at `bounds`' top-left.
     fn parts(&self, bounds: Rect, theme: &Theme) -> (Rect, Rect, f32) {

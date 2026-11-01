@@ -60,6 +60,7 @@ pub mod drawer;
 pub mod dropdown_menu;
 pub mod hover_card;
 pub mod menubar;
+pub mod modals;
 pub mod popover;
 pub mod sheet;
 

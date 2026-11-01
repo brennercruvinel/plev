@@ -108,10 +108,11 @@ fn the_hover_shows_the_actions() {
     }
 }
 
-/// The explore card's three actions and the video scene's badge draw the
-/// kit's own glyphs (`kit-*`): an unknown name would draw nothing.
+/// The asset card's three buttons, the explore card's three actions and
+/// the scene's type badge (image or video) draw the kit's own glyphs
+/// (`kit-*`): an unknown name would draw nothing.
 #[test]
-fn the_explore_actions_and_the_video_badge_are_the_kit_s_glyphs() {
+fn the_cards_glyphs_are_the_kit_s_own() {
     let t = core();
     let glyphs = |mut card: CatalogCard| {
         let (w, h) = card.size(1000.0, &t);
@@ -122,16 +123,73 @@ fn the_explore_actions_and_the_video_badge_are_the_kit_s_glyphs() {
             .filter(|n| matches!(n, SceneNode::Path { .. }))
             .count()
     };
-    for name in ["kit-text", "kit-screen", "kit-likes", "kit-clapperboard"] {
+    for name in [
+        "kit-plus-large",
+        "kit-download",
+        "kit-share",
+        "kit-text",
+        "kit-screen",
+        "kit-likes",
+        "kit-image",
+        "kit-clapperboard",
+    ] {
         assert!(icons::has_icon(name), "{name}");
     }
-    assert_eq!(glyphs(all().remove(4)), 3);
-    let video = CatalogCard::new(CatalogKind::Scene {
-        title: "Futuristic Humanoid Robot".into(),
-        category: "Untitled Folder".into(),
-        video: true,
-    });
-    assert_eq!(glyphs(video), 1);
+    assert_eq!(
+        glyphs(all().remove(1)),
+        3,
+        "the asset's add, download, share"
+    );
+    assert_eq!(glyphs(all().remove(4)), 3, "the explore card's actions");
+    for video in [false, true] {
+        let scene = CatalogCard::new(CatalogKind::Scene {
+            title: "Futuristic Humanoid Robot".into(),
+            category: "Untitled Folder".into(),
+            video,
+        });
+        assert_eq!(glyphs(scene), 1, "the badge, video {video}");
+    }
+}
+
+/// The button under the pointer hovers as the kit's: the two on the
+/// asset's photo and the explore card's three in the glass (`#FCFCFC` at
+/// 15, its edge at 25), the asset's add in the panel wash.
+#[test]
+fn the_button_under_the_pointer_takes_the_kit_s_hover() {
+    let t = core();
+    let k = t.disclosure.catalog.palette;
+    let glass =
+        |n: &SceneNode| matches!(n, SceneNode::RoundedRect { color, .. } if *color == k.glass.0);
+    for i in [1, 4] {
+        let mut card = all().remove(i);
+        let (w, h) = card.size(1000.0, &t);
+        let b = Rect::new(0.0, 0.0, w, h);
+        let actions = card.actions(b, &t);
+        assert_eq!(actions.len(), 3, "{}", card.label());
+        for (n, at) in actions.iter().enumerate() {
+            let (x, y) = at.center();
+            let r = card.handle_event(&WidgetEvent::MouseMove { x, y }, b, &t);
+            assert!(card.is_hovered() && r.changed, "{} {n}", card.label());
+            assert_eq!(card.hot_action(), Some(n));
+            let seen = nodes(&card, b, &t);
+            let on_photo = !(i == 1 && n == 0);
+            assert_eq!(
+                seen.iter().filter(|&n| glass(n)).count(),
+                usize::from(on_photo)
+            );
+            if !on_photo {
+                assert!(seen.iter().any(|n| matches!(
+                    n,
+                    SceneNode::RoundedRect { color, w, .. } if *color == k.panel.0 && *w == at.w
+                )));
+            }
+        }
+        card.handle_event(&WidgetEvent::MouseMove { x: w / 2.0, y: 2.0 }, b, &t);
+        assert_eq!(card.hot_action(), None);
+        assert!(!nodes(&card, b, &t).iter().any(glass));
+    }
+    assert_eq!(k.glass.0[3], 0.15);
+    assert_eq!(k.glass_line.0[3], 0.25);
 }
 
 /// A click chooses a card; on a pricing card its plan's button does, and

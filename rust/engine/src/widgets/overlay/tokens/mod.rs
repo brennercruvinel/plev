@@ -16,6 +16,7 @@ use crate::styling::color::Color;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonSurface, Theme, TypographyScale};
 
+pub use super::modals::tokens::ModalsTokens;
 pub use super::sheet::{DrawerTokens, EdgePanelTokens, SheetTokens};
 
 mod menu;
@@ -38,6 +39,8 @@ pub struct OverlayTokens {
     pub modal: ModalTokens,
     pub sheet: SheetTokens,
     pub drawer: DrawerTokens,
+    /// The kit's modals (onda 3, `overlay/modals/tokens`).
+    pub modals: Box<ModalsTokens>,
 }
 
 impl OverlayTokens {
@@ -55,6 +58,7 @@ impl OverlayTokens {
             modal: ModalTokens::hoff_core(),
             sheet: SheetTokens::hoff_core(),
             drawer: DrawerTokens::hoff_core(),
+            modals: Box::new(ModalsTokens::hoff_core()),
         }
     }
 
@@ -73,6 +77,7 @@ impl OverlayTokens {
             modal: ModalTokens::derive(theme),
             sheet: SheetTokens::derive(theme),
             drawer: DrawerTokens::derive(theme),
+            modals: Box::new(ModalsTokens::derive(theme)),
         }
     }
 
