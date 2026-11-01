@@ -11,6 +11,7 @@
 use crate::styling::color::Color;
 
 use super::roles::FLUID_RANGE;
+use super::tokens::SpacingScale;
 
 // ----------------------------------------------------------------------------
 // Shape: corner radius by role
@@ -410,7 +411,11 @@ pub struct LayoutTokens {
     pub medium_max_w: f32,
     /// Page gutter at its narrowest and widest: it grows on a straight
     /// line between them as the page goes from `gutter_range[0]` to
-    /// `gutter_range[1]` wide ([`LayoutTokens::gutter_at`]).
+    /// `gutter_range[1]` wide ([`LayoutTokens::gutter_at`]). The core
+    /// writes the kit's; every other theme derives it from its spacing
+    /// ramp ([`LayoutTokens::gutter_of`]), the ends the showcase's group
+    /// padding grows between, so the page's sides and its groups' padding
+    /// are one measure.
     pub gutter: [f32; 2],
     /// The page widths the gutter grows between.
     pub gutter_range: [f32; 2],
@@ -448,6 +453,20 @@ impl LayoutTokens {
             Breakpoint::Medium => 1,
             Breakpoint::Expanded => 2,
         }
+    }
+
+    /// The hoff core kit's layout: its gutter the Group's padding, `p-5`
+    /// narrow and `p-12` wide (components/Group/index.tsx:7).
+    pub fn hoff_core() -> Self {
+        Self {
+            gutter: [20.0, 48.0],
+            ..Self::hoff()
+        }
+    }
+
+    /// A derived theme's gutter ends: its spacing's `lg` and `xxl`.
+    pub fn gutter_of(spacing: &SpacingScale) -> [f32; 2] {
+        [spacing.lg, spacing.xxl]
     }
 
     /// The gutter of a page `width` wide: fluid between the token's ends,
