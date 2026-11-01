@@ -27,9 +27,13 @@ use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
 use engine::widgets::form::TextField;
 
-/// The toolbar and player cards are the kit's `h-60`; the view
-/// controller and photo cards its `h-88`: the least height of a row of
-/// more than one, and the photo's.
+/// The stage heights the kit gives its demos (templates/ToolbarPage/
+/// index.tsx): `h-60` for the toolbars (:18, :24) and the players (:27,
+/// :30), `h-88` for the view controllers (:33, :36) and the photo (:43).
+/// The page declares them as floors: a card alone in its row by the kit's
+/// design (the toolbars, the photo) always keeps its stage; a row of the
+/// span-2 cards keeps it while it holds more than one, and a card that
+/// falls alone in a narrow column is as tall as its widget.
 const BAR_CARD_H: f32 = 240.0;
 const TALL_CARD_H: f32 = 352.0;
 /// The photo player's width, the kit's `w-140`.
@@ -232,19 +236,17 @@ impl ToolbarPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         // A card is as tall as its widget needs to keep clear of the chip
-        // (a bar that wraps grows it); the kit's `h-60` and `h-88` hold a
-        // row of more than one, so its stages line up. The photo is the
-        // player's own content: its card keeps the photo's height.
+        // (a bar that wraps grows it), and at least the kit's stage where
+        // the page declares it (BAR_CARD_H, TALL_CARD_H): always for a card
+        // the kit sets alone in its row, for the others while their row
+        // holds more than one.
         let grids = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
             let probe = Rect::new(0.0, 0.0, card_w, 0.0);
             let height = |c: &Card| {
                 let widget_h = self.widget_rect(c.shows, probe, theme).h;
                 let h = showcase::card_height(widget_h, theme);
-                match c.shows {
-                    Shows::Player(p) if self.players[p].on_image => h.max(c.height),
-                    _ => h,
-                }
+                if g.span == 1 { h.max(c.height) } else { h }
             };
             let floor = g.cards.iter().map(|c| c.height).fold(0.0, f32::max);
             let heights = g.cards.iter().map(height).collect();
