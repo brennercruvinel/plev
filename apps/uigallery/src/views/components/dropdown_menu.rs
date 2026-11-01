@@ -25,7 +25,7 @@ use engine::widgets::prelude::{
     ContextMenu, EventResult, IconButton, IconButtonVariant, MenuEntry, Rect, WidgetEvent,
 };
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, context_menu, key_under, root_id, under};
 
 /// One of the kit's menus, shown open in its card.
@@ -80,7 +80,7 @@ impl DropdownMenuPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let tallest = self
             .shown
             .iter()
@@ -92,7 +92,7 @@ impl DropdownMenuPage {
                 1,
                 showcase::card_height(self.trigger.preferred_size(theme).1, theme),
             ),
-            (3, self.shown.len(), CARD_H.max(frame + tallest)),
+            (3, self.shown.len(), frame + tallest),
         ];
         showcase::layout_sized(
             groups.map(|(span, n, h)| (span, vec![h; n])),

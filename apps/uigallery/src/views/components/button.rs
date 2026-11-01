@@ -382,7 +382,9 @@ impl ButtonPage {
     /// showcase mold).
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.columns, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, _| {
+            self.groups[g].cards[c].spec.preferred_size(theme).1
+        })
     }
 
     fn widget_rect(spec: &Spec, card: Rect, theme: &Theme) -> Rect {
@@ -497,7 +499,7 @@ impl Component for ButtonPage {
 
 #[cfg(test)]
 mod tests {
-    use super::super::showcase::{CARD_H, card_min_w};
+    use super::super::showcase::{card_min_h, card_min_w};
     use super::*;
 
     /// Narrow content: rows drop to one column instead of squeezing the
@@ -534,7 +536,8 @@ mod tests {
             assert!(group.title_y > prev);
             prev = group.rule_y;
         }
-        assert!(section.content_height(content, &Theme::hoff_core()) > 14.0 * CARD_H);
+        let theme = Theme::hoff_core();
+        assert!(section.content_height(content, &theme) > 14.0 * card_min_h(&theme));
     }
 
     /// Every card's widget gets pointer events at its centered rect.

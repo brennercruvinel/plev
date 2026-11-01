@@ -148,7 +148,10 @@ impl BreadcrumbPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, w| {
+            let trail = &self.groups[g].cards[c].trail;
+            Self::widget_rect(trail, Rect::new(0.0, 0.0, w, 0.0), theme).h
+        })
     }
 
     /// The trail's rect in its card: as wide as it asks, never wider than

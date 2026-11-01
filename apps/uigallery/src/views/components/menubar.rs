@@ -21,7 +21,7 @@ use engine::widgets::prelude::{
     Button, ButtonSize, ButtonVariant, EventResult, MenuEntry, Rect, WidgetEvent, rounded_rect,
 };
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, flow, key_under, root_id, under};
 
 fn menus() -> Vec<(String, Vec<MenuEntry>)> {
@@ -100,13 +100,13 @@ impl MenubarPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let menu_h = self.shown.menus[0].1.menu.size(theme).1;
         let bar_h = ButtonSize::Sm.height(theme) + theme.overlay.menubar.pad * 2.0;
         let open_h = frame + bar_h + theme.overlay.popover.clearance.gap + menu_h;
         let groups = [
             (1, vec![showcase::card_height(bar_h, theme)]),
-            (1, vec![CARD_H.max(open_h)]),
+            (1, vec![open_h]),
         ];
         showcase::layout_sized(groups, content, theme)
     }

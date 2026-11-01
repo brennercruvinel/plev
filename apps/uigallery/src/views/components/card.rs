@@ -7,8 +7,9 @@
 //! value comes from the theme (`theme.disclosure.catalog`, `.item`). A
 //! photo of the kit is a rectangle in the catalog's image gradient.
 //!
-//! Each card is as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`,
-//! `h-59`, square) or as its widget needs, and each widget as wide as the
+//! Each card is as tall as its widget needs and, in a row of more than one,
+//! at least as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`, `h-59`);
+//! the square group keeps its aspect. Each widget as wide as the
 //! kit draws it or as its card leaves: the rows drop a column where a card
 //! would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
@@ -46,7 +47,8 @@ struct Card {
 struct Group {
     title: &'static str,
     span: usize,
-    /// The kit's card height (`h-150` is 600); `None` is square while
+    /// The kit's card height (`h-150` is 600), the least of a row of more
+    /// than one; `None` is square while
     /// the row keeps more than one card, and 1.8 times as wide as tall
     /// once a card takes the whole row (`aspect-square
     /// max-[1023px]:aspect-[1.8]`, CardsPage :160, where the kit's span
@@ -269,10 +271,14 @@ impl CardPage {
                 .iter()
                 .map(|c| {
                     let (_, h) = Self::widget_size(&c.body, room, theme);
-                    showcase::card_height(h, theme).max(g.height.unwrap_or(square))
+                    let least = if g.height.is_none() { square } else { 0.0 };
+                    showcase::card_height(h, theme).max(least)
                 })
                 .collect();
-            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights)
+            // The kit's heights line a row of cards up; a card alone in
+            // its row is as tall as its widget (or its aspect).
+            let floor = g.height.unwrap_or(0.0);
+            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
             .into_iter()

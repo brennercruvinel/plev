@@ -271,6 +271,10 @@ pub struct SizeTokens {
     /// narrowest a grid column may shrink one to.
     pub card_w: f32,
     pub card_min_w: f32,
+    /// The least height of a card that shares its row with others (the
+    /// kit's showcase card, `h-50`): what lines a row's stages up. A card
+    /// alone in its row is as tall as what it holds.
+    pub card_min_h: f32,
     /// Widest a column of body text should grow.
     pub readable_max_w: f32,
     /// Narrowest useful text field.
@@ -292,6 +296,7 @@ impl SizeTokens {
             sidebar_rail_w: 72.0,
             card_w: 368.0,
             card_min_w: 280.0,
+            card_min_h: 200.0,
             readable_max_w: 720.0,
             field_min_w: 160.0,
             toast_w: 320.0,

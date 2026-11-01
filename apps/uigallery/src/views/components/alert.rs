@@ -543,7 +543,6 @@ mod tests {
                     for (i, (card, rects)) in placed.cards.iter().enumerate() {
                         let tall = Rect::new(content.x, card.y, content.w, card.h);
                         assert!(within(*card, tall), "{w}: card {g}.{i} out of the content");
-                        assert!(card.h >= showcase::CARD_H);
                         for (a, r) in group.cards[i].alerts.iter().zip(rects) {
                             assert!(within(*r, *card), "{w}: alert {r:?} out of {g}.{i}");
                             assert!(r.w >= a.min_width(&theme), "{w}: {g}.{i} too narrow");

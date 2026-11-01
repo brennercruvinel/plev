@@ -64,6 +64,33 @@ fn card_default_width_is_hoff_368() {
     }
 }
 
+/// A card's height follows the width it gets: the preferred size is the
+/// height at its own width, every width from 280 to 1600 holds at least a
+/// line, and a wrapping text (the profile's bio) grows the card in a
+/// narrow column.
+#[test]
+fn a_card_is_as_tall_as_its_content_at_its_width() {
+    let theme = hoff();
+    let line = theme.typography.role(TypeRole::Body).line_height;
+    for card in sample_cards() {
+        let (w, h) = card.preferred_size(&theme);
+        assert_eq!(card.height_for(w, &theme), h);
+        for w in (280..=1600).step_by(8) {
+            let at = card.height_for(w as f32, &theme);
+            assert!(at.is_finite() && at > line, "{w}: {at}");
+        }
+    }
+    let long = Card::new(CardVariant::Profile {
+        name: "Artur".into(),
+        username: "@artur".into(),
+        bio: "Designs dark glass for the people who read the small print twice.".into(),
+        action: "Follow".into(),
+        online: true,
+        avatar: None,
+    });
+    assert!(long.height_for(280.0, &theme) > long.height_for(1200.0, &theme));
+}
+
 #[test]
 fn card_deck_shell_is_the_discreet_post_lift() {
     let theme = Theme::hoff();
