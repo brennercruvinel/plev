@@ -65,74 +65,74 @@ fn kit_home() -> HomeSidebar {
         vec![
             HomeRow::Menu(
                 Collapsible::new("Explore")
-                    .icon("layout-grid")
+                    .icon("kit-explore")
                     .current(true)
                     .open(true),
                 DisclosureList::new(["Designs", "Animations"]).current(0),
             ),
             HomeRow::Menu(
-                Collapsible::new("Assets").icon("layers").counter("112"),
+                Collapsible::new("Assets").icon("kit-assets").counter("112"),
                 DisclosureList::new(["3D Objects", "Materials"]),
             ),
-            HomeRow::Link(NavLink::new("Likes").icon("heart")),
+            HomeRow::Link(NavLink::new("Likes").icon("kit-likes")),
         ],
         "My scenes",
-        NavLink::new("My Scenes").icon("box"),
+        NavLink::new("My Scenes").icon("kit-scenes"),
     )
     .folders(["Untitled Folder", "3D Icons"])
 }
 
 /// SidebarPage/content.ts: the guideline's two groups, each page's icon
-/// the Lucide one nearest the kit's drawing; the Sidebar page current,
+/// the kit's own path (`kit-*`); the Sidebar page current,
 /// as the kit's `usePathname` makes it on this page.
 fn kit_guideline() -> GuidelineSidebar {
     GuidelineSidebar::new()
         .group(
             "Foundations",
             &[
-                ("Branding", "venetian-mask"),
-                ("Colors", "swatch-book"),
-                ("Depths", "lightbulb"),
-                ("Icons", "circle"),
-                ("Typography", "type"),
+                ("Branding", "kit-branding"),
+                ("Colors", "kit-colors"),
+                ("Depths", "kit-depths"),
+                ("Icons", "kit-icons"),
+                ("Typography", "kit-typography"),
             ],
         )
         .group(
             "Components",
             &[
-                ("Buttons, tool-tip", "mouse-pointer-2"),
-                ("Cards", "credit-card"),
-                ("Comment", "message-square-more"),
-                ("Dropdown", "arrow-down-wide-narrow"),
-                ("Inputs", "keyboard"),
-                ("Menu", "equal"),
-                ("Notifications", "bell"),
-                ("Modal, Dialogs", "square-mouse-pointer"),
-                ("Sidebar", "panel-left"),
-                ("Prompt Input", "sparkle"),
-                ("Toolbar", "ruler"),
-                ("Topbar", "panel-top"),
+                ("Buttons, tool-tip", "kit-buttons"),
+                ("Cards", "kit-cards"),
+                ("Comment", "kit-comment"),
+                ("Dropdown", "kit-dropdown"),
+                ("Inputs", "kit-inputs"),
+                ("Menu", "kit-menu"),
+                ("Notifications", "kit-notifications"),
+                ("Modal, Dialogs", "kit-modal"),
+                ("Sidebar", "kit-sidebar"),
+                ("Prompt Input", "kit-prompt-input"),
+                ("Toolbar", "kit-toolbar"),
+                ("Topbar", "kit-topbar"),
             ],
         )
         .current(13)
 }
 
 /// SceneAndAssetsSidebar: its head, the scene's eight rows (Object 2
-/// selected, each kind's icon the Lucide one nearest the kit's), the
+/// selected, each kind's icon the kit's own path), the
 /// assets' two sections.
 fn kit_scene() -> SceneSidebar {
     let item = SceneItem::new;
     SceneSidebar::new("Robot 2.0", "3D Design Project")
         .items(
             vec![
-                item("Camera 1", "focus"),
-                item("Dome Light", "sun"),
-                item("Key Light", "lightbulb"),
-                item("Area Light", "lamp-ceiling"),
-                item("Object 2", "box"),
-                item("Background 2", "box"),
-                item("Robot", "box"),
-                item("Background 1", "box"),
+                item("Camera 1", "kit-camera"),
+                item("Dome Light", "kit-dome-light"),
+                item("Key Light", "kit-key-light"),
+                item("Area Light", "kit-area-light"),
+                item("Object 2", "kit-object"),
+                item("Background 2", "kit-object"),
+                item("Robot", "kit-object"),
+                item("Background 1", "kit-object"),
             ],
             Some(4),
         )

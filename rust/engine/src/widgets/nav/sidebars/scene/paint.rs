@@ -26,7 +26,7 @@ impl SceneSidebar {
         // the logo's symbol, the panel button
         let logo = super::super::logo_rect(&self.logo, bounds, k.pad, theme);
         self.logo.render(c, logo, theme);
-        self.button(c, ScenePart::Panel, l.panel, "panel-left", theme);
+        self.button(c, ScenePart::Panel, l.panel, "kit-panel", theme);
         // the project's title, its chevron, its kind
         let style = k.title.style(&theme.typography);
         c.push(text(&self.title, &style, x, l.title_y, k.ink.0, None));
@@ -48,7 +48,7 @@ impl SceneSidebar {
         }
         let ci = tile.x + (tile.w - k.chevron) / 2.0;
         if let Some(n) = icons::icon_at(
-            "chevron-down",
+            "kit-chevron-down",
             k.chevron,
             k.ink.0,
             ci,

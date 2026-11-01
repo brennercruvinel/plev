@@ -378,10 +378,10 @@ impl HomeSidebar {
                 c.bind(&id, [r.x, r.y, r.w, r.h]);
             }
             let (label, icon) = match row {
-                FolderRow::New => ("New Folder", ("folder-plus", ft.mark.0)),
+                FolderRow::New => ("New Folder", ("kit-folder-new", ft.mark.0)),
                 FolderRow::Folder(i) => (
                     self.folders[i].as_str(),
-                    ("folder", ft.hues[i % ft.hues.len()].0),
+                    ("kit-folder", ft.hues[i % ft.hues.len()].0),
                 ),
             };
             let (hovered, focused) = (self.hovered == Some(row), self.focused == Some(row));
@@ -406,9 +406,13 @@ impl HomeSidebar {
                 t.edge_width,
             ));
             let iy = f.y + (f.h - ft.icon) / 2.0;
-            if let Some(n) =
-                icons::icon_at("folder", ft.icon, t.field_mark.0, f.x + t.field_icon_x, iy)
-            {
+            if let Some(n) = icons::icon_at(
+                "kit-folder",
+                ft.icon,
+                t.field_mark.0,
+                f.x + t.field_icon_x,
+                iy,
+            ) {
                 c.push(n);
             }
             let at = Self::name_rect(f, theme);

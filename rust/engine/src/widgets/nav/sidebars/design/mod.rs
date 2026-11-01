@@ -138,14 +138,17 @@ impl DesignSidebar {
                     "Macro Lens",
                     "Fish-Eye Lens",
                 ],
-                "camera",
+                "kit-artboard",
             ),
-            select(&["Zoom out", "Zoom in"], "zoom-in").look(SelectLook::Filled),
-            select(&["Rotate around", "Rotate 180°", "Rotate 90°"], "rotate-cw")
-                .look(SelectLook::Filled),
+            select(&["Zoom out", "Zoom in"], "kit-camera").look(SelectLook::Filled),
+            select(
+                &["Rotate around", "Rotate 180°", "Rotate 90°"],
+                "kit-camera",
+            )
+            .look(SelectLook::Filled),
         ];
         let sizes = ["800x600", "1024x768", "1280x1024", "1600x1200", "1920x1080"];
-        let artboard = select(&sizes, "frame").label("X Post");
+        let artboard = select(&sizes, "kit-artboard").label("X Post");
         let blocks = vec![
             block(
                 "Show Frame",

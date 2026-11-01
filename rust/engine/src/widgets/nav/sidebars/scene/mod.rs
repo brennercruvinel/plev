@@ -39,9 +39,9 @@ pub enum SceneTab {
 
 /// The toggles of a row, in the kit's order: (name, icon off, icon on).
 const TOGGLES: [(&str, &str, &str); 3] = [
-    ("lock", "lock-open", "lock"),
-    ("hide", "eye", "eye-off"),
-    ("mark", "sparkles", "sparkles"),
+    ("lock", "kit-lock", "kit-lock-on"),
+    ("hide", "kit-view", "kit-view-on"),
+    ("mark", "kit-sparkle", "kit-sparkle"),
 ];
 
 /// A row of the scene: its kind's icon, its name, its toggles.
