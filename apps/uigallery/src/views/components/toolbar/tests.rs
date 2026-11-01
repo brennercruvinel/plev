@@ -9,7 +9,7 @@ use engine::styling::color::Color;
 use engine::styling::theme::Theme;
 use engine::widgets::prelude::{Rect, WidgetEvent};
 
-use super::{Component, Shows, ToolbarPage};
+use super::{Component, EditKey, Shows, TextHost, ToolbarPage};
 
 fn sid(text: &str) -> SemId {
     SemId::parse(text).expect("the id parses")
@@ -169,4 +169,80 @@ fn the_core_recipe_keeps_the_bars() {
     assert!(ratio(p.solid.track, p.fill) >= 3.0);
     assert!(ratio(tool.view.tick, tool.view.fill) >= 3.0);
     assert!(ratio(p.on_image.time, p.image[0]) >= 7.0);
+}
+
+/// At a phone's width every bar wraps inside its card: no part passes
+/// the card's end, and the bar is as wide as the room it was given.
+#[test]
+fn at_360_every_bar_wraps_inside_its_card() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let page = ToolbarPage::new();
+        let content = Rect::new(0.0, 0.0, 330.0, 800.0);
+        for (shows, card, rect) in page.placed(content, &theme) {
+            let Shows::Bar(b) = shows else { continue };
+            assert!(
+                rect.right() <= card.right() + 0.01,
+                "{rect:?} past {card:?}"
+            );
+            let l = page.bars[b].layout(rect, &theme);
+            let parts = l.tools.iter().chain(&l.history).chain([&l.zoom, &l.export]);
+            for r in parts {
+                assert!(
+                    r.right() <= rect.right() + 0.01 && r.bottom() <= rect.bottom() + 0.01,
+                    "{r:?} {rect:?}"
+                );
+            }
+        }
+    }
+}
+
+/// A hovered tool's tooltip waits out the Tooltip's delay; the
+/// keyboard's focus shows it at once and rings the tool.
+#[test]
+fn the_tooltip_waits_for_the_pointer_and_not_for_the_focus() {
+    let theme = Theme::hoff_core();
+    let mut page = ToolbarPage::new();
+    let content = Rect::new(0.0, 0.0, 1200.0, 800.0);
+    let (_, _, rect) = page.placed(content, &theme)[0];
+    let tool = page.bars[0].layout(rect, &theme).tools[1];
+    let (x, y) = (tool.x + tool.w / 2.0, tool.y + tool.h / 2.0);
+    page.handle_event(&WidgetEvent::MouseMove { x, y }, content, &theme);
+    let shown = |p: &ToolbarPage| p.bars[0].tooltip_shown();
+    assert!(!shown(&page), "no tooltip before the delay");
+    for _ in 0..60 {
+        page.tick(1.0 / 60.0);
+    }
+    assert!(shown(&page), "the tooltip after the delay");
+    page.handle_event(
+        &WidgetEvent::MouseMove { x: -9.0, y: -9.0 },
+        content,
+        &theme,
+    );
+    assert!(!shown(&page));
+    assert!(page.focus(&sid("toolbar_page.bar[0].tool[2]")));
+    assert!(shown(&page), "the focus shows it at once");
+    assert!(page.blur());
+    assert!(!shown(&page));
+}
+
+/// A press on the open panel's level focuses its field; typing there is
+/// the level, Escape leaves it.
+#[test]
+fn the_zoom_level_takes_typing() {
+    let theme = Theme::hoff_core();
+    let mut page = ToolbarPage::new();
+    let content = Rect::new(0.0, 0.0, 1200.0, 800.0);
+    let (_, _, rect) = page.placed(content, &theme)[0];
+    page.bars[0].open = true;
+    let panel = page.bars[0].panel_rect(rect, &theme);
+    let at = page.bars[0].zoom.text_rect(panel, &theme);
+    let (x, y) = (at.right() - 1.0, at.y + at.h / 2.0);
+    page.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme);
+    page.handle_event(&WidgetEvent::MouseUp { x, y }, content, &theme);
+    assert!(page.bars[0].zoom.field.is_focused());
+    assert!(page.handle_edit_key(EditKey::Backspace));
+    assert!(page.handle_text("5%"));
+    assert_eq!(page.bars[0].zoom.level, "1005%");
+    assert!(page.handle_escape());
+    assert!(!page.bars[0].zoom.field.is_focused());
 }

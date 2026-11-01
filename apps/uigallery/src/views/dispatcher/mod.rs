@@ -394,6 +394,7 @@ impl ShowcaseView {
             Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
             // task-104 front G, navigation and data
             Some(Pane::Sidebar) => self.panes.sidebar.wake(dt),
+            Some(Pane::Toolbar) => Wake::moving(self.panes.toolbar.tick(dt)),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {

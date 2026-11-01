@@ -103,4 +103,6 @@ text_hosts! {
     Textarea => textarea,
     Combobox => combobox,
     Command => command,
+    // task-104 front G, navigation and data: the zoom level's field
+    Toolbar => toolbar,
 }
