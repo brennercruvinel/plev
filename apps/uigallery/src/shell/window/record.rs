@@ -391,6 +391,7 @@ mod tests {
         let dir = tempfile::TempDir::new().expect("a temp dir");
         let mut recording = Recording::new(dir.path().join("sessions"), Limits::default());
         let mut view = ShowcaseView::new(1200.0, 800.0);
+        view.pin_sidebar(true);
         view.jump_to_page("silences");
         view.resize(1200.0, 800.0, 1.0);
         recording.attach(&mut view);

@@ -32,6 +32,8 @@ const RULES: &str = "the list with the video and the counts";
 /// frame and transition settled: the view and its last frame.
 fn gallery(intent: &str) -> (ShowcaseView, Compositor) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the window the fixture saw: the sidebar pinned beside the page
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     view.panes
         .silences
@@ -161,6 +163,8 @@ fn wash(ms: u64) -> Result<ImageHandle, String> {
 /// for nothing) is never asked.
 fn claude_review() -> (ShowcaseView, Compositor) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the window the fixture saw: the sidebar pinned beside the page
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     let filled = view.stage_silences_frames(&mut wash);
     assert_eq!(filled, [0, 4017, 9009], "the instant shown and each cut's");

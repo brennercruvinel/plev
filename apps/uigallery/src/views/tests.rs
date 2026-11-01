@@ -21,6 +21,13 @@ fn starts_on_the_first_page_with_the_core_theme() {
 
 // -- The sidebar (the kit's HomeSidebar where the dock puts it) ----------
 
+/// A view with the sidebar pinned beside the page, as the pin leaves it.
+fn pinned(w: f32, h: f32) -> ShowcaseView {
+    let mut view = ShowcaseView::new(w, h);
+    view.pin_sidebar(true);
+    view
+}
+
 /// The panel's rect now.
 fn panel(view: &ShowcaseView) -> Rect {
     view.panel_rect().expect("the panel shows")
@@ -48,7 +55,7 @@ fn settle(view: &mut ShowcaseView) {
 #[test]
 fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     // Short, on a component: its group open, the tabs overflow the body.
-    let mut view = ShowcaseView::new(1280.0, 500.0);
+    let mut view = pinned(1280.0, 500.0);
     view.jump_to_page("Button");
     settle(&mut view);
     let mut c = Compositor::new();
@@ -71,7 +78,7 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
 
     // Tall, on the first page: only Foundations open, everything fits,
     // nothing moves.
-    let mut tall = ShowcaseView::new(1280.0, 1100.0);
+    let mut tall = pinned(1280.0, 1100.0);
     tall.render(&mut c);
     let body = engine::widgets::nav::HomeSidebar::body_rect(panel(&tall), &tall.theme);
     let (bx, by) = body.center();
@@ -87,7 +94,7 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
 
 #[test]
 fn sidebar_body_clips_under_the_logo_and_does_not_hit_there() {
-    let mut view = ShowcaseView::new(1280.0, 500.0);
+    let mut view = pinned(1280.0, 500.0);
     view.jump_to_page("Button");
     settle(&mut view);
     let p = panel(&view);
@@ -123,7 +130,7 @@ fn sidebar_body_clips_under_the_logo_and_does_not_hit_there() {
 #[test]
 fn sidebar_tabs_fit_one_line_in_the_ui_font() {
     // Every tab keeps the kit's height: no title wraps in the rail list.
-    let mut view = ShowcaseView::new(1280.0, 4000.0);
+    let mut view = pinned(1280.0, 4000.0);
     for g in 0..Group::ALL.len() {
         if let Some(r) = view.nav.trigger_rect(g, panel(&view), &view.theme)
             && !view.nav.menus().nth(g).unwrap().0.is_open()
@@ -144,7 +151,7 @@ fn sidebar_is_pinned_where_it_fits_and_a_drawer_where_it_does_not() {
     let t = Theme::hoff_core();
     let r = t.navigation.dock;
     // Wide: pinned beside the page, at the kit's width.
-    let wide = ShowcaseView::new(1400.0, 900.0);
+    let wide = pinned(1400.0, 900.0);
     assert_eq!(wide.page_x(), r.width);
     // Phone: a drawer behind the menu button; the page spans the width.
     let mut phone = ShowcaseView::new(390.0, 844.0);
@@ -179,6 +186,42 @@ fn sidebar_is_pinned_where_it_fits_and_a_drawer_where_it_does_not() {
         phone.render(&mut c);
         assert!(page_nodes(&phone, &c) > 0, "{}", page.title);
     }
+}
+
+#[test]
+fn sidebar_peeks_from_the_edge_and_the_pin_keeps_it_beside_the_page() {
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    let r = view.theme.navigation.dock;
+    assert_eq!(view.page_x(), 0.0, "peeking: the page has the window");
+    assert!(view.panel_rect().is_none());
+    view.handle_event(&WidgetEvent::MouseMove { x: 1.0, y: 400.0 });
+    settle(&mut view);
+    let p = panel(&view);
+    assert_eq!((p.x, p.w), (0.0, r.width), "the edge reveals it");
+    assert_eq!(view.page_x(), 0.0, "over the page");
+    let mut c = Compositor::new();
+    view.render(&mut c);
+    let overlay = view.layers.unwrap().overlay;
+    assert!(c.layer(overlay).unwrap().nodes().len() > 1, "it floats");
+    // the pin, at the head's right
+    let head = view.panel_head(p);
+    let pin = engine::widgets::nav::SidebarDock::pin_rect(head, &view.theme);
+    view.handle_event(&WidgetEvent::MouseMove {
+        x: pin.center().0,
+        y: pin.center().1,
+    });
+    assert!(click(&mut view, pin));
+    assert!(view.shell.dock.as_ref().unwrap().is_pinned());
+    assert_eq!(view.page_x(), r.width, "pinned: the page starts past it");
+    // the preference holds across pages
+    view.jump_to_page("Button");
+    assert_eq!(view.page_x(), r.width);
+    // let go, it slides out once the pointer leaves
+    assert!(click(&mut view, pin));
+    view.handle_event(&WidgetEvent::MouseMove { x: 900.0, y: 400.0 });
+    settle(&mut view);
+    assert!(view.panel_rect().is_none());
+    assert_eq!(view.page_x(), 0.0);
 }
 
 /// Nodes the page itself emitted on the default layer: what sits between
@@ -298,7 +341,7 @@ fn sidebar_offers_one_tab_per_page_under_three_dropdowns() {
 
 #[test]
 fn folding_a_group_hides_its_tabs_and_navigation_opens_it() {
-    let mut view = ShowcaseView::new(1200.0, 800.0);
+    let mut view = pinned(1200.0, 800.0);
     assert!(tab(&view, 0).is_some(), "the current group starts open");
     let foundations = view.nav.trigger_rect(0, panel(&view), &view.theme).unwrap();
     assert!(click(&mut view, foundations));
@@ -424,7 +467,7 @@ fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
 
 #[test]
 fn probe_hover_over_sidebar_reports_change() {
-    let mut view = ShowcaseView::new(1200.0, 800.0);
+    let mut view = pinned(1200.0, 800.0);
     let rect = tab(&view, 2).unwrap();
     let (cx, cy) = rect.center();
     assert!(
@@ -463,7 +506,7 @@ fn probe_hover_over_buttons_reports_change() {
 
 #[test]
 fn probe_click_sidebar_switches_page_and_reports_change() {
-    let mut view = ShowcaseView::new(1200.0, 800.0);
+    let mut view = pinned(1200.0, 800.0);
     let rect = tab(&view, 3).unwrap();
     let (cx, cy) = rect.center();
     view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy });

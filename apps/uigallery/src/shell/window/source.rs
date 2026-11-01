@@ -345,6 +345,8 @@ mod tests {
     /// first item's row (its checkbox side).
     fn todo() -> App {
         let mut view = ShowcaseView::new(1200.0, 800.0);
+        // the sidebar pinned: its logo is a text that is no literal
+        view.pin_sidebar(true);
         view.jump_to_page("Todo");
         view.resize(1200.0, 800.0, 1.0);
         let mut app = App::with_bare_window(view);

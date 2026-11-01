@@ -259,6 +259,7 @@ fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
     assert_eq!(first.request.actor, Actor::Human);
 
     // a sidebar tab is `shell.page`
+    view.pin_sidebar(true);
     let panel = view.panel_rect().expect("the pinned sidebar");
     let tab = view.nav.tab_rect(3, panel, &view.theme).expect("open");
     let (x, y) = tab.center();

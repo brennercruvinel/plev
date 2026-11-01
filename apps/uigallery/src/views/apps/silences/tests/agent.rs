@@ -55,6 +55,8 @@ pub(super) fn gallery_with<T: Send + 'static>(
     agent: impl FnOnce(PathBuf) -> T + Send + 'static,
 ) -> (T, ShowcaseView) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the window the fixture saw: the sidebar pinned beside the page
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     assert_eq!(view.page_title(), "Silences");
     view.panes

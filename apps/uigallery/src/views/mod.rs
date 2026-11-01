@@ -107,8 +107,9 @@ pub struct ShowcaseView {
     pub theme_name: String,
     /// Index into [`PAGES`].
     pub page: usize,
-    /// The app chrome: the dock that places the sidebar (pinned beside
-    /// the page, a drawer where the window cannot hold both), the page
+    /// The app chrome: the dock that places the sidebar (peeking from
+    /// the window's edge, pinned beside the page, a drawer where the
+    /// window cannot hold both), the page
     /// header, and the content rect the page lays out in.
     pub shell: AppShell,
     /// The sidebar the dock places: the kit's HomeSidebar over the page
@@ -157,7 +158,8 @@ impl ShowcaseView {
         let theme = Theme::hoff_core();
         let first = &PAGES[0];
         let header = PanelHeader::new(first.title).blurb(first.blurb);
-        let dock = SidebarDock::new().pinned(true);
+        // peeking: the page has the window, the pin keeps the panel
+        let dock = SidebarDock::new();
         Self {
             width,
             height,

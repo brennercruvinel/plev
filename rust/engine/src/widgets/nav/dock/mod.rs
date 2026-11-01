@@ -24,13 +24,14 @@
 //! `Tween` lands at once).
 //!
 //! `mod.rs` is the state and the geometry, `input.rs` the pointer, the
-//! timers and the keys, `project.rs` what is told to a reader and an
-//! agent.
+//! timers and the keys, `pin.rs` the pin the dock draws in the panel's
+//! head, `project.rs` what is told to a reader and an agent.
 //!
 //! [`DockRecipe`]: crate::widgets::nav::DockRecipe
 //! [`DockRecipe::fits`]: crate::widgets::nav::DockRecipe::fits
 
 mod input;
+mod pin;
 mod project;
 #[cfg(test)]
 mod tests;
@@ -39,6 +40,7 @@ use accord::SemId;
 
 use crate::compose::animation::{Tween, reduced_motion};
 use crate::styling::theme::Theme;
+use crate::widgets::buttons::Press;
 use crate::widgets::widget::Rect;
 
 /// How the panel stands beside the page.
@@ -114,6 +116,8 @@ pub struct SidebarDock {
     /// The mode of the last layout: a mode that changes under the panel
     /// (the window narrowed) settles it at once.
     mode: DockMode,
+    /// The pin's hover, press and focus (`pin.rs`).
+    pin_press: Press,
     sem: Option<SemId>,
 }
 
@@ -137,6 +141,7 @@ impl SidebarDock {
             reveal: Tween::new(0.0, 0.0, Default::default()),
             target: 0.0,
             mode: DockMode::Peek,
+            pin_press: Press::default(),
             sem: None,
         }
     }
