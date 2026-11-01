@@ -218,12 +218,28 @@ pub(super) fn walk(
                 };
                 let fixed = e.size_w + e.tool + e.tool_gap + e.row_gap * 3.0;
                 let color_w = e.color_w.min((w - fixed - tabs_min).max(0.0));
-                let tabs_w = (w - fixed - color_w).max(0.0);
-                let mut at = x;
-                for (j, cw) in [e.size_w, color_w, tabs_w].into_iter().enumerate() {
+                let place = |out: &mut Vec<Rect>, j: usize, at: f32, top: f32, cw: f32| {
                     let ch = height(controls, k + j, theme);
-                    out[k + j] = Rect::new(at, y + (h - ch) / 2.0, cw, ch);
-                    at += cw + e.row_gap;
+                    out[k + j] = Rect::new(at, top + (h - ch) / 2.0, cw, ch);
+                };
+                if color_w >= e.size_w {
+                    // One line: the scale, the profile, the format, the
+                    // remove.
+                    let tabs_w = (w - fixed - color_w).max(0.0);
+                    place(out, 0, x, y, e.size_w);
+                    place(out, 1, x + e.size_w + e.row_gap, y, color_w);
+                    let tx = x + e.size_w + color_w + e.row_gap * 2.0;
+                    place(out, 2, tx, y, tabs_w);
+                } else {
+                    // Short of room (the profile would be narrower than
+                    // the scale): the scale and the profile, then the
+                    // format beside the remove.
+                    let color_w = (w - e.size_w - e.row_gap).max(0.0);
+                    place(out, 0, x, y, e.size_w);
+                    place(out, 1, x + e.size_w + e.row_gap, y, color_w);
+                    y += h + e.row_gap;
+                    let tabs_w = (w - e.tool - e.tool_gap - e.row_gap).max(0.0);
+                    place(out, 2, x, y, tabs_w);
                 }
                 out[k + 3] = Rect::new(x + w - e.tool, y + (h - e.tool) / 2.0, e.tool, e.tool);
                 y += h + if row == 0 { e.row_gap } else { 0.0 };

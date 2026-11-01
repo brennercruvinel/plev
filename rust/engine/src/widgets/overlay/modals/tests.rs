@@ -115,7 +115,7 @@ fn the_side_menu_switches_the_section_and_its_controls() {
     assert_eq!(s.run(&security, "select", None), Some(Ok(true)));
     assert_eq!(s.section(), 2);
     let mut b = SnapshotBuilder::new();
-    b.node(&id("page"), accord::Role::Region, "page");
+    b.node(id("page"), accord::Role::Region, "page");
     s.project(&mut b, &root, &id("page"));
     let Ok(seen) = b.finish() else {
         panic!("the projection holds");
