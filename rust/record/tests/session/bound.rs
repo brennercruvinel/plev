@@ -205,13 +205,14 @@ fn the_bindings_of_a_frame_are_kept_when_they_change_and_read_back_at_any_time()
     assert_eq!(memory.hit_at(100, 180.0, 380.0), Some(sid("notices[0]")));
     assert_eq!(memory.hit_at(100, 300.0, 10.0), None);
 
-    // the file: version 1, and every instant reads as in memory.
+    // the file: version 2 with section B, and every instant reads as in
+    // memory.
     let tmp = tempfile::tempdir()?;
     let path = tmp.path().join("bound.monster");
     let written = rec.persist(&path)?;
     assert!(written.bindings_bytes > 0, "{written:?}");
     let bytes = std::fs::read(&path)?;
-    assert_eq!(bytes[4..6], record::VERSION_BINDINGS.to_le_bytes());
+    assert_eq!(bytes[4..6], record::VERSION_TEXT_STYLE.to_le_bytes());
     let file = Session::open(&path)?;
     for t in 90..400 {
         assert_eq!(file.bindings_at(t), memory.bindings_at(t), "at {t}");
@@ -311,12 +312,12 @@ fn a_file_from_before_the_bindings_opens_with_none() -> Fallible {
     }
     assert_eq!(file.bindings_at(99), None);
 
-    // a window with no bindings is written as version 0, the same bytes a
-    // reader before them reads, and says so in what it wrote.
+    // a window with no bindings is written as version 2 without section
+    // B, and says so in what it wrote.
     let bare = Recorder::default();
     bare.frame_scene(10, &[rect(0.0, 0.0, 4.0, 4.0)])?;
     let (bare, written) = bare.snapshot_window().to_bytes()?;
-    assert_eq!(bare[4..6], record::VERSION.to_le_bytes());
+    assert_eq!(bare[4..6], record::VERSION_TEXT_STYLE.to_le_bytes());
     assert_eq!(written.bindings_bytes, 0);
     let back = Session::from_bytes(&bare)?;
     assert_eq!(back.bindings_at(10), Some(Vec::new()));
@@ -331,7 +332,7 @@ fn a_file_from_before_the_bindings_opens_with_none() -> Fallible {
     Ok(())
 }
 
-/// `bytes` (a version 1 file) with section B replaced by `payload`, its
+/// `bytes` (a file with section B) with section B replaced by `payload`, its
 /// sha256 and length made right, so only the payload is wrong.
 fn with_section_b(bytes: &[u8], payload: &[u8]) -> Vec<u8> {
     const ENTRY: usize = 49;
