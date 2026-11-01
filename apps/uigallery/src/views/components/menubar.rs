@@ -13,6 +13,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::overlay::menubar::{Menubar, render_bar};
@@ -272,7 +273,7 @@ impl MenubarPage {
             }
         }
         if let Some(picked) = &self.picked {
-            let style = theme.typography.caption_r();
+            let style = theme.typography.run(TypeRole::Caption.regular());
             let body = showcase::body(layout[0].cards[0], theme);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(picked, &style, Some(body.w)),

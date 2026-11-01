@@ -414,8 +414,7 @@ mod tests {
     fn the_page_holds_over_the_whole_width_range() {
         let page = ToastPage::new();
         let mut large = Theme::hoff_core();
-        large.message.alert.detail.size *= 1.5;
-        large.message.alert.detail.line_height *= 1.5;
+        large.message.alert.detail.run = engine::styling::theme::TypeRole::H6.run();
         for theme in [Theme::hoff_core(), Theme::hoff(), large] {
             for w in (280..=1600).step_by(8) {
                 let content = Rect::new(24.0, 0.0, w as f32, 800.0);

@@ -2,6 +2,7 @@
 //! and its layout over the content it is given.
 
 use super::*;
+use crate::styling::theme::TypeRole;
 use crate::widgets::message::message::{Message, MessageKind, MessageLayout};
 use crate::widgets::message::tokens::MessageTokens;
 use accord::{Role, SemId, Snapshot, SnapshotBuilder};
@@ -91,19 +92,21 @@ fn the_core_theme_carries_the_kit_and_the_others_derive_it() {
     assert_eq!(*core().message, kit);
     let t = &kit.thread;
     assert_eq!((t.pad, t.gap, t.avatar), (16.0, 16.0, 32.0));
+    assert_eq!(t.name.run, TypeRole::Label.run());
+    assert_eq!((t.time.run, t.time_gap), (TypeRole::Caption.run(), 8.0));
     assert_eq!(
-        (t.name.size, t.name.line_height, t.name.weight),
-        (12.0, 16.0, 500)
-    );
-    assert_eq!((t.time.size, t.time_gap), (11.0, 8.0));
-    assert_eq!(
-        (t.body.size, t.body.line_height, t.body_lines),
-        (13.0, 19.52, None)
+        (t.body.run, t.body_lines),
+        (TypeRole::Paragraph.run(), None)
     );
     let q = &kit.quick;
     assert_eq!((q.pad, q.gap, q.avatar), (12.0, 12.0, 36.0));
+    let ty = &core().typography;
     assert_eq!(
-        (q.name.weight, q.body.line_height, q.body_lines),
+        (
+            q.name.style(ty).font_weight,
+            q.body.line_height(ty),
+            q.body_lines
+        ),
         (600, 20.0, Some(3))
     );
     assert_eq!(kit.divider_width, 1.0);
@@ -259,7 +262,7 @@ fn the_quick_body_is_clamped_to_three_lines_and_the_thread_body_is_not() {
     let theme = core();
     let q = quick(LONG).layout(at(320.0), &theme);
     let body = q.body.unwrap();
-    let lh = theme.message.quick.body.line_height;
+    let lh = theme.message.quick.body.line_height(&theme.typography);
     assert!(body.text.ends_with('\u{2026}'), "{:?}", body.text);
     assert_eq!((body.rect.h / lh).round(), 3.0);
     let chip = q.reaction.unwrap();
@@ -270,7 +273,7 @@ fn the_quick_body_is_clamped_to_three_lines_and_the_thread_body_is_not() {
 
     let t = thread(LONG).layout(at(320.0), &theme).body.unwrap();
     assert_eq!(t.text, LONG);
-    assert!(t.rect.h / theme.message.thread.body.line_height > 3.5);
+    assert!(t.rect.h / theme.message.thread.body.line_height(&theme.typography) > 3.5);
 }
 
 #[test]
@@ -425,7 +428,7 @@ fn a_bubble_grows_with_its_text_up_to_its_share_of_the_row_then_wraps() {
     let theme = core();
     let t = &theme.message.bubble;
     let short = Bubble::new("ok").size(600.0, &theme);
-    let line = t.text.line_height + (t.pad_y + t.border_width) * 2.0;
+    let line = t.text.line_height(&theme.typography) + (t.pad_y + t.border_width) * 2.0;
     assert_eq!(short.1, line, "one line");
     let long = Bubble::new(LONG).size(600.0, &theme);
     assert!(long.0 <= 600.0 * t.max_fraction + 0.5, "{long:?}");
@@ -553,7 +556,11 @@ fn a_verified_author_s_seal_follows_the_name_and_keeps_its_place_on_a_narrow_row
     let l = m.layout(at(320.0), &theme);
     let (name, seal, time) = (l.name.unwrap(), l.seal.unwrap(), l.time.unwrap());
     assert_eq!(seal.x, name.rect.right() + s.seal_gap);
-    assert_eq!(seal.h, s.name.line_height, "one name line tall");
+    assert_eq!(
+        seal.h,
+        s.name.line_height(&theme.typography),
+        "one name line tall"
+    );
     assert_eq!(time.rect.x, seal.right() + s.time_gap);
     let (_, drawn) = nodes(&m, at(320.0), &theme);
     assert!(
@@ -1526,10 +1533,7 @@ fn the_badge_carries_the_kit_in_core() {
     let b = core().message.badge;
     let [paper, well, shade3, ..] = SHADES;
     assert_eq!((b.tag.pad_x, b.tag.pad_y, b.tag.radius), (12.0, 4.0, 12.0));
-    assert_eq!(
-        (b.tag.text.size, b.tag.text.line_height, b.tag.text.weight),
-        (11.0, 16.0, 500)
-    );
+    assert_eq!(b.tag.text.run, TypeRole::Caption.run());
     assert_eq!((b.tag.fill, b.tag.raised_fill), (shade3, paper));
     // the outline shows on the paper and in the gray card's well, so the
     // chip does not vanish where its fill nearly matches what is under it

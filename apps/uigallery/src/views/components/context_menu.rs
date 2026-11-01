@@ -16,6 +16,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::tokens::MenuStyle;
 use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
@@ -200,7 +201,7 @@ impl ContextMenuPage {
             c.bind(id, [area.x, area.y, area.w, area.h]);
         }
         let body = showcase::body(area, theme);
-        let style = theme.typography.base_2r();
+        let style = theme.typography.role(TypeRole::Body);
         let (w, h) = TextMeasurer::measure_styled(HINT, &style, Some(body.w));
         c.push(SceneNode::Text {
             key: TextNodeKey::from_style(HINT, &style, Some(body.w)),

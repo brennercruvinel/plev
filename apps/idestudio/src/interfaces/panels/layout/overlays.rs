@@ -2,6 +2,7 @@ use super::{PendingAction, UiRequest, WorkspaceView};
 use accord::RequestId;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::feedback::{ContextMenu, MenuEntry, Modal};
 use engine::widgets::overlay::{MenuItem, OverlayKind};
@@ -301,7 +302,7 @@ impl WorkspaceView {
                 OverlayKind::Tooltip { text } => {
                     // Tooltip at the overlay origin: hint shadow, tooltip
                     // body at the tooltip radius, caption-r text-secondary.
-                    let style = theme.typography.caption_r();
+                    let style = theme.typography.run(TypeRole::Caption.regular());
                     let pad_x = theme.spacing.md;
                     let pad_y = theme.spacing.xs;
                     let (tw, _) = TextMeasurer::measure_styled(text, &style, None);

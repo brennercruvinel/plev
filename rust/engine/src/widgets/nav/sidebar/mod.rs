@@ -15,6 +15,7 @@ mod input;
 mod render;
 
 use crate::control::input::scroll::ScrollState;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{SidebarMode, Theme};
 
 use crate::widgets::nav::NavLink;
@@ -160,7 +161,7 @@ impl Sidebar {
 
     /// Height of a group caption row.
     pub fn group_h(theme: &Theme) -> f32 {
-        theme.typography.caption_sm().line_height + theme.spacing.md
+        theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.md
     }
 
     /// The band's rows in scrolled space: one rect per group caption and
@@ -271,8 +272,8 @@ impl Sidebar {
             return theme.spacing.lg;
         }
         theme.spacing.xl
-            + theme.typography.title().line_height
-            + theme.typography.small_sm().line_height
+            + theme.typography.role(TypeRole::Title).line_height
+            + theme.typography.run(TypeRole::Small.strong()).line_height
             + theme.spacing.lg
     }
 
@@ -288,7 +289,11 @@ impl Sidebar {
             return theme.spacing.lg + links_h;
         }
         theme.spacing.lg
-            + self.footer.len() as f32 * theme.typography.caption_r().line_height
+            + self.footer.len() as f32
+                * theme
+                    .typography
+                    .run(TypeRole::Caption.regular())
+                    .line_height
             + theme.spacing.lg
             + links_h
     }

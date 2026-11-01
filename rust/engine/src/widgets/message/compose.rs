@@ -155,8 +155,8 @@ impl ComposeLine {
     }
 
     /// The line's height: its run's.
-    pub fn height(look: &LineLook) -> f32 {
-        look.text.line_height
+    pub fn height(look: &LineLook, theme: &Theme) -> f32 {
+        look.text.line_height(&theme.typography)
     }
 
     /// How the text sits in a box `w` wide (the field's rule).

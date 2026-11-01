@@ -12,6 +12,7 @@
 use super::MessageText;
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -53,9 +54,7 @@ impl NotificationsTokens {
             header_pad_x: 20.0,
             header_pad_y: 16.0,
             title: MessageText {
-                size: 14.0,
-                line_height: 20.0,
-                weight: 600,
+                run: TypeRole::Heading.strong(),
                 color: ink,
             },
             // :30 `gap-1`, :33 `text-[0.75rem] leading-[1rem] font-medium
@@ -68,9 +67,7 @@ impl NotificationsTokens {
             tab_radius: 10.0,
             tab_gap: 4.0,
             tab: MessageText {
-                size: 12.0,
-                line_height: 16.0,
-                weight: 500,
+                run: TypeRole::Label.run(),
                 color: shade7,
             },
             tab_fill: shade3,

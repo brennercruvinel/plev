@@ -288,7 +288,7 @@ impl DesignSidebar {
             }
             Body::Picker(p) => p.height(theme),
             Body::Camera(..) => {
-                let label = d.field_text.line_height;
+                let label = theme.typography.run(d.field_text).line_height;
                 Tabs::height(theme)
                     + theme.navigation.sidebars.canvas.band_pad_y
                     + label

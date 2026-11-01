@@ -321,13 +321,18 @@ mod tests {
     #[test]
     fn the_page_holds_over_the_whole_width_range() {
         let page = BadgePage::new();
-        let scaled = |k: f32| {
+        let scaled = |role: engine::styling::theme::TypeRole| {
             let mut t = Theme::hoff_core();
-            t.message.badge.tag.text.size *= k;
-            t.message.badge.tag.text.line_height *= k;
+            t.message.badge.tag.text.run = role.run();
             t
         };
-        for theme in [Theme::hoff_core(), Theme::hoff(), scaled(1.5), scaled(0.85)] {
+        use engine::styling::theme::TypeRole::{Small, Title};
+        for theme in [
+            Theme::hoff_core(),
+            Theme::hoff(),
+            scaled(Title),
+            scaled(Small),
+        ] {
             for w in (280..=1600).step_by(8) {
                 let content = Rect::new(24.0, 0.0, w as f32, 800.0);
                 let mut prev = content.y;

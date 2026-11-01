@@ -20,6 +20,7 @@ use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::nav::Breadcrumb;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
@@ -212,7 +213,7 @@ impl BreadcrumbPage {
 
     /// The echo under the trail it names, centered in its card.
     fn render_echo(c: &mut Compositor, note: &str, trail: Rect, card: Rect, theme: &Theme) {
-        let style = theme.typography.caption_r();
+        let style = theme.typography.run(TypeRole::Caption.regular());
         let room = card.w - theme.spacing.sm * 2.0;
         let shown = TextMeasurer::truncate_to_width(note, &style, room);
         let (w, _) = TextMeasurer::measure_styled(&shown, &style, None);

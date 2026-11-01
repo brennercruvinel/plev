@@ -105,7 +105,7 @@ impl PromptInput {
         }
         let x = r.x + t.pad_x;
         let room = (r.w - t.pad_x * 2.0 - t.gap - t.chevron).max(0.0);
-        let y = r.y + (r.h - t.text.line_height) / 2.0;
+        let y = r.y + (r.h - t.text.line_height(&theme.typography)) / 2.0;
         let run = crate::widgets::message::tokens::MessageText {
             color: crate::styling::color::Color(with_alpha(
                 t.text.color,
@@ -160,7 +160,7 @@ impl PromptInput {
                 c.push_to_layer(layer, node);
             }
             let x = bx + t.icon_box + t.gap;
-            let y = r.y + (r.h - t.text.line_height) / 2.0;
+            let y = r.y + (r.h - t.text.line_height(&theme.typography)) / 2.0;
             line(
                 c,
                 layer,

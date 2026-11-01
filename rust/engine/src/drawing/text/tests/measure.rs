@@ -1,5 +1,6 @@
 use super::super::backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
 use super::super::measure::TextMeasurer;
+use crate::styling::theme::TypeRole;
 
 fn sans(font_size: f32) -> TextStyle {
     TextStyle::new(font_size).with_family("Inclusive Sans")
@@ -411,7 +412,7 @@ fn line_metrics_come_from_real_faces() {
 #[test]
 fn vertical_center_centers_glyph_box_in_44px_pill() {
     // base-2sm inside the canonical 44px HOFF button.
-    let style = crate::styling::theme::TypographyScale::hoff().base_2sm();
+    let style = crate::styling::theme::TypographyScale::hoff().role(TypeRole::BodyStrong);
     let container_h = 44.0;
     let y = TextMeasurer::vertical_center(&style, container_h);
     let m = TextMeasurer::line_metrics(&style);
@@ -429,10 +430,10 @@ fn vertical_center_consistent_across_ramp() {
     // Every HOFF style stays strictly inside a 44px control.
     let ramp = crate::styling::theme::TypographyScale::hoff();
     for style in [
-        ramp.caption_sm(),
-        ramp.base_2sm(),
-        ramp.base_2m(),
-        ramp.base_m(),
+        ramp.run(TypeRole::Caption.strong()),
+        ramp.role(TypeRole::BodyStrong),
+        ramp.run(TypeRole::Body.medium()),
+        ramp.run(TypeRole::BodyLg.medium()),
     ] {
         let y = TextMeasurer::vertical_center(&style, 44.0);
         let m = TextMeasurer::line_metrics(&style);

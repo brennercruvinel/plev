@@ -1,6 +1,7 @@
 //! content widgets: card, tree, virtual list, empty state.
 
 use super::*;
+use crate::styling::theme::TypeRole;
 
 // Card
 
@@ -521,7 +522,7 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         );
         assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
         let tree = theme.disclosure.tree;
-        let body = theme.typography.base_2r();
+        let body = theme.typography.role(TypeRole::Body);
         let gap = theme.spacing.xs;
         assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
         assert_eq!(
@@ -540,16 +541,22 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         );
         assert!(tree.tile.is_none() && tree.border == 0.0);
         assert_eq!(Panel::pad(&theme), theme.spacing.lg);
-        assert_eq!(Panel::label_style(&theme), theme.typography.caption_sm());
+        assert_eq!(
+            Panel::label_style(&theme),
+            theme.typography.run(TypeRole::Caption.strong())
+        );
         assert_eq!(theme.disclosure.panel.radius, theme.shape.card);
         assert_eq!(theme.disclosure.panel.label, g.text_faint);
         let xl = theme.control.height(ControlSize::Xl);
         let head = PanelHeader::new("Changes");
         assert_eq!(head.height(&theme), xl);
-        let blurb = theme.typography.base_2r().line_height;
+        let blurb = theme.typography.role(TypeRole::Body).line_height;
         let with = PanelHeader::new("Changes").blurb("a blurb");
         assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
-        assert_eq!(head.title_style(&theme), theme.typography.title());
+        assert_eq!(
+            head.title_style(&theme),
+            theme.typography.role(TypeRole::Title)
+        );
         assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
         let page = theme.disclosure.page;
         assert_eq!(
@@ -563,7 +570,10 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!((h.badge_gap, h.rule), (theme.spacing.sm, 0.0));
         let split = theme.disclosure.split;
         assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
-        assert_eq!(Table::cell_style(&theme), theme.typography.base_2r());
+        assert_eq!(
+            Table::cell_style(&theme),
+            theme.typography.role(TypeRole::Body)
+        );
         let mut c = Compositor::new();
         c.begin_frame();
         let mut list_widget = VirtualList::new(24.0);

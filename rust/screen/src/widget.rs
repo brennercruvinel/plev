@@ -8,6 +8,7 @@
 //! the surface turns it into a request for the capability the IR bound.
 
 use accord::{Snapshot, Value};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::buttons::{Button, ButtonVariant, Chip, IconButton, SubmitButton};
 use engine::widgets::content::{Column, Table};
@@ -487,9 +488,14 @@ fn sync_slider(s: &mut Slider, node: &Node, shown: &Snapshot) {
 pub(crate) fn slider_band(theme: &Theme) -> f32 {
     theme
         .typography
-        .caption_sm()
+        .run(engine::styling::theme::TypeRole::Caption.strong())
         .line_height
-        .max(theme.typography.caption_r().line_height)
+        .max(
+            theme
+                .typography
+                .run(TypeRole::Caption.regular())
+                .line_height,
+        )
         + theme.spacing.xs
 }
 

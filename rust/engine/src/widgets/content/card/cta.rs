@@ -3,6 +3,7 @@
 use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, Theme};
 use crate::widgets::recipe::glass_pill;
 use crate::widgets::widget::{Rect, with_alpha};
@@ -30,9 +31,9 @@ impl Card {
         let w = b.w - inset * 2.0;
 
         // Title, then the body paragraph, then the CTA pill.
-        let title_style = ty.title();
+        let title_style = ty.role(TypeRole::Title);
         self.text(c, layer, title, &title_style, x, b.y + m.pad, text.0, None);
-        let style = ty.body();
+        let style = ty.role(TypeRole::BodyLg);
         let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w));
         let body_y = b.y + m.pad + title_style.line_height + m.gap;
         self.text(
@@ -48,7 +49,7 @@ impl Card {
 
         // CTA pill: an `Lg` control with the `Xl` padding, base-m label,
         // faint edge ring + frozen glow.
-        let bstyle = ty.base_m();
+        let bstyle = ty.run(TypeRole::BodyLg.medium());
         let (tw, _) = TextMeasurer::measure_styled(button, &bstyle, None);
         let btn = Rect::new(
             x,

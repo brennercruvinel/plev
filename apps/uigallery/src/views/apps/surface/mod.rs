@@ -53,6 +53,7 @@ use accord::{
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::{EmptyState, EventResult, Rect, Tabs, Wake, WidgetEvent};
 use plevir::{Capabilities, GenerationPolicy, verify_json};
 use screen::{Dispatch, SurfaceHost};
@@ -144,7 +145,7 @@ struct Halves {
 }
 
 fn caption_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_sm()
+    theme.typography.run(TypeRole::Caption.strong())
 }
 
 /// The band a caption takes at `width`: its measured lines and a gap.

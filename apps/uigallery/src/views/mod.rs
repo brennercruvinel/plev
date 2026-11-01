@@ -30,6 +30,7 @@ pub(crate) use apps::surface::asking::stage_without_host;
 pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
 use dispatcher::keyboard::Walk;
+use engine::styling::theme::TypeRole;
 
 use winit::keyboard::{Key, ModifiersState};
 
@@ -353,7 +354,11 @@ impl ShowcaseView {
     fn note_h(&self) -> f32 {
         match self.current().body {
             Body::Alias { .. } => {
-                self.theme.typography.caption_r().line_height + self.theme.spacing.xl
+                self.theme
+                    .typography
+                    .run(TypeRole::Caption.regular())
+                    .line_height
+                    + self.theme.spacing.xl
             }
             _ => 0.0,
         }

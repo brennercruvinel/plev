@@ -2,6 +2,7 @@
 //! one (css font matching), never in another family: the core theme's
 //! Inter embeds 400, 500 and 600, so its 700 is the SemiBold.
 
+use crate::styling::theme::TypeRole;
 use cosmic_text::fontdb::Database;
 
 use super::super::backend::TextStyle;
@@ -39,7 +40,7 @@ fn a_bold_core_style_is_inter_semibold() {
     );
     all_inter(&bold);
     // `=base-2b`, the ramp's bold, too.
-    all_inter(&t.base_2b());
+    all_inter(&t.role(TypeRole::BodyStrong));
 }
 
 /// The code style draws in the embedded mono face on both face sets, one
@@ -47,7 +48,7 @@ fn a_bold_core_style_is_inter_semibold() {
 #[test]
 fn the_mono_style_is_jetbrains_mono_on_a_grid() {
     let t = TypographyScale::hoff_core();
-    let mono = t.mono();
+    let mono = t.role(TypeRole::Code);
     for faces in [Faces::Embedded, Faces::Desktop] {
         let report = shape_report(TEXT, &mono, None, faces);
         assert_eq!(report.families(), [MONO_FAMILY], "{faces:?}");

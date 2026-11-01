@@ -17,6 +17,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::overlay::hover_card::HoverCard;
@@ -107,11 +108,11 @@ impl HoverCardPage {
     }
 
     fn name_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_sm()
+        theme.typography.run(TypeRole::Caption.strong())
     }
 
     fn text_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
+        theme.typography.run(TypeRole::Caption.regular())
     }
 
     /// The card's size at `max_w`: the avatar, the name and handle beside

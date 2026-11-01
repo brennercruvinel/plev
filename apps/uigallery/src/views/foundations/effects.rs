@@ -10,6 +10,7 @@
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::path::PathBuilder;
 use engine::drawing::text::TextMeasurer;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ShadowSpec, Theme};
 use engine::widgets::prelude::{
     EventResult, Rect, WidgetEvent, gradient_fill, rounded_rect, rounded_rect_stroke, shadow_drops,
@@ -170,7 +171,7 @@ fn stage(card: Rect, theme: &Theme) -> Rect {
 /// `text` centered under the card's sample, in the caption style.
 fn caption(c: &mut Compositor, card: Rect, text: &str, theme: &Theme) {
     let s = stage(card, theme);
-    let style = theme.typography.caption_r();
+    let style = theme.typography.run(TypeRole::Caption.regular());
     let room = card.w - theme.spacing.sm * 2.0;
     let text = TextMeasurer::truncate_to_width(text, &style, room);
     let (w, _) = TextMeasurer::measure_styled(&text, &style, None);

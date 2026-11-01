@@ -11,9 +11,9 @@
 //! Beside them the front's other pieces: the bubble (`CommentPin`), the
 //! scroller (`Comment`), the inline alert (`Notification`, by intent).
 //!
-//! Text runs are written as the kit writes them, a size, a line height
-//! and a weight in px, and become a style through
-//! [`TypographyScale::exact`], so the family and the tracking stay the
+//! Text runs keep the role of the kit's class (`text-[0.75rem]
+//! leading-[1rem] font-medium` is the label) and become a style through
+//! the theme's scale, so the size, the family and the tracking are the
 //! theme's. The like chip is not restated here: it is the labeled
 //! button's outline recipe at the `Xs` step (`theme.button`), the same
 //! surface the kit gives it.
@@ -25,7 +25,7 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::tokens::TypographyScale;
-use crate::styling::theme::{Intent, ShadowSpec, Theme};
+use crate::styling::theme::{Intent, ShadowSpec, Theme, TypeRun};
 
 /// The comment popups: the thread, the new comment, the quick comment.
 mod comment;
@@ -51,20 +51,23 @@ pub use status::{
     TagTokens,
 };
 
-/// One text run of a message: size, line height and weight in px, and
-/// its color.
+/// One text run of a message: its run of the theme's scale, and its
+/// color.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MessageText {
-    pub size: f32,
-    pub line_height: f32,
-    pub weight: u16,
+    pub run: TypeRun,
     pub color: Color,
 }
 
 impl MessageText {
     /// The one style this run is measured and drawn with.
     pub fn style(&self, typography: &TypographyScale) -> TextStyle {
-        typography.exact(self.size, self.line_height, self.weight)
+        typography.run(self.run)
+    }
+
+    /// The run's line height in `typography`.
+    pub fn line_height(&self, typography: &TypographyScale) -> f32 {
+        typography.spec(self.run.role).line_height
     }
 
     fn recolor(self, color: Color) -> Self {

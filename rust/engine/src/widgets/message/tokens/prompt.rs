@@ -10,6 +10,7 @@
 
 use super::MessageText;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::{ORANGE, SHADES};
 use crate::styling::theme::{ShadowSpec, Theme};
 
@@ -202,9 +203,7 @@ impl PromptTokens {
             // is 4.1:1 on paper: a hint, kept as the kit's and listed
             // with the theme's placeholders (styling/theme/tests/contrast.rs)
             text: MessageText {
-                size: 15.0,
-                line_height: 24.0,
-                weight: 400,
+                run: TypeRole::Title.regular(),
                 color: ink,
             },
             placeholder: shade6,
@@ -224,9 +223,7 @@ impl PromptTokens {
                 radius: 12.0,
                 min_w: 148.0,
                 text: MessageText {
-                    size: 14.0,
-                    line_height: 20.0,
-                    weight: 500,
+                    run: TypeRole::Heading.run(),
                     color: ink,
                 },
                 chevron: 16.0,
@@ -262,15 +259,11 @@ impl PromptTokens {
                 pad_y: 10.0,
                 radius: 12.0,
                 title: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::BodyLg.medium(),
                     color: ink,
                 },
                 description: MessageText {
-                    size: 11.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Caption.run(),
                     color: shade7,
                 },
                 description_gap: 4.0,
@@ -291,9 +284,7 @@ impl PromptTokens {
                 icon: 20.0,
                 icon_box: 24.0,
                 text: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::BodyLg.medium(),
                     color: ink,
                 },
                 icon_color: shade6,
@@ -334,9 +325,7 @@ impl PromptTokens {
                 row_pad: 12.0,
                 row_radius: 10.0,
                 row: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 400,
+                    run: TypeRole::BodyLg.run(),
                     color: ink,
                 },
                 row_hover: shade2,

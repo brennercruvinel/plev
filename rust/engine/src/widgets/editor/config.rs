@@ -2,6 +2,7 @@
 
 use crate::drawing::text::backend::TextStyle;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 
 /// Visual and behavioral configuration of an [`EditorView`](super::EditorView).
 #[derive(Clone, Debug, PartialEq)]
@@ -43,7 +44,7 @@ impl EditorConfig {
     /// Configuration from the theme: the mono ramp style sets the font and
     /// the line height, the caret blinks at the platform half-period.
     pub fn from_theme(theme: &Theme) -> Self {
-        let style = theme.typography.mono();
+        let style = theme.typography.role(TypeRole::Code);
         Self {
             font_size: style.font_size,
             line_height: style.line_height,

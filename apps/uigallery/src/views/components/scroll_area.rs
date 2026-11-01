@@ -12,6 +12,7 @@
 use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::icons;
 use engine::widgets::prelude::{EventResult, Rect, VirtualList, WidgetEvent};
 
@@ -110,8 +111,8 @@ impl ScrollAreaPage {
         let dim = theme.colors.text_dim.0;
         let fg = theme.colors.text.0;
         let mid = theme.colors.text_mid.0;
-        let body = theme.typography.base_2r();
-        let small = theme.typography.caption_r();
+        let body = theme.typography.role(TypeRole::Body);
+        let small = theme.typography.run(TypeRole::Caption.regular());
         let icon = theme.control.icon(engine::styling::theme::IconSize::Sm);
         let pad = theme.spacing.md;
         self.list.render_with_to_layer(
@@ -155,12 +156,10 @@ impl ScrollAreaPage {
             },
         );
         if let Some(i) = self.list.selected {
-            let style = theme.typography.caption_r();
             text(
                 c,
                 &format!("selected: Item {i}"),
-                style.font_size,
-                style.font_weight,
+                TypeRole::Caption.regular(),
                 (bounds.x, bounds.bottom() + theme.spacing.sm),
                 dim,
                 theme,

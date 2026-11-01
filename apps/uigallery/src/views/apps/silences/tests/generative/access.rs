@@ -18,6 +18,7 @@ use engine::control::accessibility::accesskit::{
 use engine::control::accessibility::{self, Assist, Chrome, Shown};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use plevir::{Preference, Preferences};
 
 use super::super::super::SilencesPage;
@@ -303,7 +304,7 @@ fn the_demo_larger_text_and_more_contrast_over_the_review_by_the_rules() {
     let range = "0:03.0 to 0:05.0";
     let body = size_of(&c, range).expect("the range drawn");
     let theme = Theme::hoff_core();
-    assert_eq!(body, theme.typography.body().font_size);
+    assert_eq!(body, theme.typography.role(TypeRole::BodyLg).font_size);
     for (target, action, param) in [
         (
             "silences_surface.intent",
@@ -332,7 +333,7 @@ fn the_demo_larger_text_and_more_contrast_over_the_review_by_the_rules() {
     );
     assert_eq!(
         size_of(&c, range),
-        Some(theme.typography.title().font_size),
+        Some(theme.typography.role(TypeRole::Title).font_size),
         "one size up"
     );
     assert!(

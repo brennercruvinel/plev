@@ -7,6 +7,7 @@
 
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{IconSize, Theme};
 use crate::widgets::icons;
 
@@ -48,11 +49,11 @@ impl EmptyState {
     }
 
     fn title_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_m()
+        theme.typography.run(TypeRole::BodyLg.medium())
     }
 
     fn message_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        theme.typography.role(TypeRole::Body)
     }
 
     /// Gap between the icon/title/message/CTA blocks: the `lg` step.

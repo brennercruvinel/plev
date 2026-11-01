@@ -5,6 +5,7 @@ use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, IconSize, Theme};
 use crate::widgets::recipe::glass_pill;
 use crate::widgets::widget::Rect;
@@ -126,7 +127,7 @@ impl Card {
             c.push_to_layer(layer, icon);
         }
         if let Some(badge) = badge {
-            let style = ty.caption_sm();
+            let style = ty.run(TypeRole::Caption.strong());
             let (bw, _) = TextMeasurer::measure_styled(badge, &style, None);
             self.text(
                 c,
@@ -141,7 +142,7 @@ impl Card {
         }
 
         // Title + caption.
-        let title_style = ty.title();
+        let title_style = ty.role(TypeRole::Title);
         let ty0 = box_r.y + box_r.h + m.pad;
         self.text(
             c,
@@ -157,7 +158,7 @@ impl Card {
             c,
             layer,
             caption,
-            &ty.base_2r(),
+            &ty.role(TypeRole::Body),
             b.x + m.pad,
             ty0 + title_style.line_height + m.gap_sm,
             theme.colors.text_mid.0,

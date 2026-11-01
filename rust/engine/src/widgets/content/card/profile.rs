@@ -5,6 +5,7 @@ use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, Theme};
 use crate::widgets::recipe::glass_pill;
 use crate::widgets::widget::Rect;
@@ -59,7 +60,7 @@ impl Card {
             if let Some(initial) = name.chars().next() {
                 let s: String = initial.to_uppercase().collect();
                 // Avatar initial: the title style, centered.
-                let style = ty.title();
+                let style = ty.role(TypeRole::Title);
                 let (tw, _) = TextMeasurer::measure_styled(&s, &style, None);
                 self.text(
                     c,
@@ -82,14 +83,14 @@ impl Card {
         // Name (base-2sm, primary) and username (caption-r, the meta
         // register text-tertiary, not the fainter placeholder tone, which
         // read gray-on-gray over the lifted card).
-        let name_style = ty.base_2sm();
+        let name_style = ty.role(TypeRole::BodyStrong);
         let text_x = av.x + av.w + m.gap + m.gap_sm;
         self.text(c, layer, name, &name_style, text_x, b.y + pad, text.0, None);
         self.text(
             c,
             layer,
             username,
-            &ty.caption_r(),
+            &ty.run(TypeRole::Caption.regular()),
             text_x,
             b.y + pad + name_style.line_height + m.gap_sm / 2.0,
             theme.colors.text_dim.0,
@@ -97,7 +98,7 @@ impl Card {
         );
 
         // Action pill (FollowButton): a `Sm` glass button, caption-sm.
-        let style = ty.caption_sm();
+        let style = ty.run(TypeRole::Caption.strong());
         let (tw, _) = TextMeasurer::measure_styled(action, &style, None);
         let pad_x = theme.control.pad_x(ControlSize::Sm);
         let bh = theme.control.height(ControlSize::Sm);
@@ -130,7 +131,7 @@ impl Card {
             c,
             layer,
             bio,
-            &ty.body_2r(),
+            &ty.role(TypeRole::Paragraph),
             text_x,
             b.y + pad + size + m.gap,
             theme.colors.text_mid.0,
