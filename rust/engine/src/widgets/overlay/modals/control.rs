@@ -14,7 +14,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Button, IconButton, Press};
 use crate::widgets::form::input_group::InputGroup;
 use crate::widgets::form::new_field::NewField;
-use crate::widgets::form::{Select, Slider, Switch};
+use crate::widgets::form::{Select, Slider, Switch, TextField};
 use crate::widgets::nav::Tabs;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -153,7 +153,9 @@ impl Control {
             Kind::Slider(w, _) => w.set_focused(on),
             Kind::Field(w, _) => w.set_icon_focus(on),
             Kind::Group(w, _) => {
-                let on_choice = here.is_some_and(|id| w.choice_id().as_ref() == Some(id));
+                let choice = w.choice_id();
+                let on_choice =
+                    here.is_some_and(|id| choice.as_ref().is_some_and(|c| within(c, id)));
                 w.input.set_focused(on && !on_choice);
                 if let Some(choice) = &mut w.choice {
                     choice.set_focused(on_choice);
@@ -183,6 +185,73 @@ impl Control {
             },
             _ => at,
         })
+    }
+
+    /// The text field of it that has the keys: a value's box while it is
+    /// edited, the Invite's box while it is focused.
+    pub fn text_mut(&mut self) -> Option<&mut TextField> {
+        let on_choice = self.on_choice();
+        let t = match &mut self.kind {
+            Kind::Field(w, _) if w.is_editing() => &mut w.input,
+            Kind::Group(g, _) if !on_choice => &mut g.input,
+            _ => return None,
+        };
+        t.is_focused().then_some(t)
+    }
+
+    fn text(&self) -> Option<&TextField> {
+        let t = match &self.kind {
+            Kind::Field(w, _) if w.is_editing() => &w.input,
+            // The keyboard focus on its select is not the box's.
+            Kind::Group(g, _) if !self.on_choice() => &g.input,
+            _ => return None,
+        };
+        t.is_focused().then_some(t)
+    }
+
+    /// Whether the keyboard focus is on its end select.
+    fn on_choice(&self) -> bool {
+        match &self.kind {
+            Kind::Group(g, _) => match (g.choice_id(), &self.focused) {
+                (Some(choice), Some(at)) => within(&choice, at),
+                _ => false,
+            },
+            _ => false,
+        }
+    }
+
+    /// Where the input method's window goes for its box at `r`.
+    fn ime_area(&self, r: Rect, theme: &Theme) -> Option<Rect> {
+        self.text()?;
+        match &self.kind {
+            Kind::Field(w, _) => Some(w.ime_area(r, theme)),
+            Kind::Group(g, _) => Some(g.ime_area(r, theme)),
+            _ => None,
+        }
+    }
+
+    /// Enter in its box: a value edited is saved.
+    fn enter(&mut self) -> bool {
+        match &mut self.kind {
+            Kind::Field(w, _) if w.is_editing() => w.save(),
+            _ => false,
+        }
+    }
+
+    /// Escape in its box: a value edited keeps what it was, the Invite's
+    /// box lets the keys go.
+    fn escape(&mut self) -> bool {
+        if self.text().is_none() {
+            return false;
+        }
+        match &mut self.kind {
+            Kind::Field(w, _) => w.cancel(),
+            Kind::Group(g, _) => {
+                g.input.unfocus();
+                true
+            }
+            _ => false,
+        }
     }
 
     /// An open select: it has every event until it closes.
@@ -257,6 +326,9 @@ impl Control {
         }
         if let Some(at) = self.focus_shown() {
             b.focus(&at);
+        } else if self.text().is_some() {
+            // A box the person typed into holds the keys.
+            b.focus(id);
         }
     }
 
@@ -312,6 +384,13 @@ impl Control {
             _ => Err(refused()),
         }
     }
+}
+
+/// Whether `id` is `of` or one of its options (`<of>[<i>]`).
+fn within(of: &SemId, id: &SemId) -> bool {
+    id.as_str()
+        .strip_prefix(of.as_str())
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with('['))
 }
 
 /// `action` on a select `id` or on one of its options: `None` when it has
@@ -483,6 +562,43 @@ impl Controls {
             }
         }
         closed
+    }
+
+    /// The text field that has the keys, if any.
+    pub fn text_mut(&mut self) -> Option<&mut TextField> {
+        self.0.iter_mut().find_map(Control::text_mut)
+    }
+
+    /// The candidate window of the box that has the keys, at `rects`.
+    pub fn ime_area(&self, rects: &[Rect], theme: &Theme) -> Option<Rect> {
+        self.0
+            .iter()
+            .zip(rects)
+            .find_map(|(c, r)| c.ime_area(*r, theme))
+    }
+
+    /// Enter in the box that has the keys: `true` when it took it.
+    pub fn enter(&mut self) -> bool {
+        self.0.iter_mut().any(Control::enter)
+    }
+
+    /// Escape in the box that has the keys: `true` when it took it.
+    pub fn escape(&mut self) -> bool {
+        self.0.iter_mut().any(Control::escape)
+    }
+
+    /// Drops a composition wherever one is.
+    pub fn end_compose(&mut self) -> bool {
+        let mut dropped = false;
+        for c in &mut self.0 {
+            if let Kind::Field(w, _) = &mut c.kind {
+                dropped |= w.input.end_compose();
+            }
+            if let Kind::Group(g, _) = &mut c.kind {
+                dropped |= g.input.end_compose();
+            }
+        }
+        dropped
     }
 
     pub fn any_open(&self) -> bool {

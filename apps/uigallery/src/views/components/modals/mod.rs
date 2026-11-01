@@ -20,6 +20,7 @@
 mod cards;
 #[cfg(test)]
 mod tests;
+mod text;
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};

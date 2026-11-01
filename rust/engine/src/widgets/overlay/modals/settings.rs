@@ -203,6 +203,32 @@ impl ModalBody for Settings {
         self.sections[self.nav.active].any_open()
     }
 
+    fn text_mut(&mut self) -> Option<&mut crate::widgets::form::TextField> {
+        let active = self.nav.active;
+        self.sections[active].text_mut()
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        let l = self.layout(rect, theme);
+        self.sections[self.nav.active].ime_area(&l.controls, theme)
+    }
+
+    fn enter(&mut self) -> bool {
+        let active = self.nav.active;
+        self.sections[active].enter()
+    }
+
+    fn escape_text(&mut self) -> bool {
+        let active = self.nav.active;
+        self.sections[active].escape()
+    }
+
+    fn end_compose(&mut self) -> bool {
+        self.sections
+            .iter_mut()
+            .fold(false, |d, s| s.end_compose() | d)
+    }
+
     fn close(&mut self) -> bool {
         let active = self.nav.active;
         self.sections[active].close()

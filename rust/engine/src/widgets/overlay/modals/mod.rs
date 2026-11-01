@@ -82,6 +82,32 @@ pub trait ModalBody {
         false
     }
 
+    /// The text field that has the keys (a value edited in place, the
+    /// Invite's box), for the page to type into.
+    fn text_mut(&mut self) -> Option<&mut crate::widgets::form::TextField> {
+        None
+    }
+
+    /// Where the input method's window goes, laid out at `rect`.
+    fn ime_area(&self, _rect: Rect, _theme: &Theme) -> Option<Rect> {
+        None
+    }
+
+    /// Enter in the box that has the keys: `true` when it took it.
+    fn enter(&mut self) -> bool {
+        false
+    }
+
+    /// Escape in the box that has the keys: `true` when it took it.
+    fn escape_text(&mut self) -> bool {
+        false
+    }
+
+    /// Drops a composition wherever one is.
+    fn end_compose(&mut self) -> bool {
+        false
+    }
+
     /// Animation: `true` while something moves.
     fn tick(&mut self, _dt: f32) -> bool {
         false

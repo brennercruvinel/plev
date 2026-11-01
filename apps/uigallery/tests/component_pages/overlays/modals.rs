@@ -4,6 +4,7 @@
 //! Tab, arrows and Escape over the same controls.
 
 use accord::Value;
+use engine::control::accessibility::accesskit::{Action, ActionData};
 use uigallery::views::EditKey;
 
 use super::super::harness::{Gallery, ask, ask_with, by_agent, gallery, same, sid};
@@ -20,6 +21,7 @@ const VIDEO: &str = "modals_page.group[4].card[0].section[1]";
 const RATE: &str = "modals_page.group[4].card[0].video.rate";
 const RATE_30: &str = "modals_page.group[4].card[0].video.rate[1]";
 const INVITE_CAN: &str = "modals_page.group[2].card[0].invite.choice";
+const USERNAME: &str = "modals_page.group[5].card[0].general.username";
 
 /// The person, and how far they scrolled the page.
 struct Person {
@@ -166,4 +168,30 @@ fn escape_closes_an_open_select_first() {
     assert!(g.view.close_top_overlay());
     g.frame();
     assert_eq!(focused(&g), None);
+}
+
+/// The username of Settings edited in place: the person presses it,
+/// types and presses Enter; a reader sets the value; an agent asks
+/// `set_value`. The three save the same, the box gone.
+#[test]
+fn a_settings_value_is_typed_and_saved_the_same_from_the_three() {
+    let mut person = Person::new();
+    person.click(USERNAME);
+    person.g.type_in("grace");
+    person.g.view.handle_enter();
+    person.g.frame();
+    let person = person.g;
+    let mut reader = gallery(PAGE);
+    reader.reader(
+        USERNAME,
+        Action::SetValue,
+        Some(ActionData::Value("grace".into())),
+    );
+    let ask = ask_with(USERNAME, "set_value", Value::from("grace"));
+    let agent = by_agent(PAGE, "modals-username", vec![ask]);
+    same(PAGE, &person, &reader, &agent);
+    let text = person.value(&format!("{USERNAME}:text"));
+    assert_eq!(text, Some(Value::from("grace")));
+    let editing = person.value(&format!("{USERNAME}:editing"));
+    assert_eq!(editing, Some(Value::Bool(false)));
 }

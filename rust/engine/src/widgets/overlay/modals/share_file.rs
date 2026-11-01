@@ -468,6 +468,23 @@ impl ModalBody for ShareFile {
         self.controls.any_open()
     }
 
+    fn text_mut(&mut self) -> Option<&mut crate::widgets::form::TextField> {
+        self.controls.text_mut()
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        self.controls
+            .ime_area(&self.layout(rect, theme).controls, theme)
+    }
+
+    fn escape_text(&mut self) -> bool {
+        self.controls.escape()
+    }
+
+    fn end_compose(&mut self) -> bool {
+        self.controls.end_compose()
+    }
+
     fn close(&mut self) -> bool {
         self.controls.close()
     }
