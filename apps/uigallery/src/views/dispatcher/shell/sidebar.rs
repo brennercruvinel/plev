@@ -242,8 +242,9 @@ impl ShowcaseView {
     }
 
     /// The keyboard focus to `id` of the sidebar (Tab, a reader): the page
-    /// lets its own go, the part shows its ring, and a peeking panel shows
-    /// while the focus is in it. The landmark itself takes none; the menu
+    /// lets its own go, the part shows its ring (the body scrolled the
+    /// least that shows it), and a peeking panel shows while the focus is
+    /// in it. The landmark itself takes none; the menu
     /// button is outside the panel.
     pub(in crate::views) fn focus_sidebar(&mut self, id: &SemId) -> bool {
         let Some(bar) = self.bar() else {
@@ -256,6 +257,11 @@ impl ShowcaseView {
         self.blur_page();
         self.sidebar_focus = Some(id.clone());
         self.nav.sidebar.focus_id(Some(id));
+        // a part past the body's fold scrolls into it (WCAG 2.4.11), where
+        // the panel settles
+        if let Some(rest) = self.shell.layout(&self.theme).dock.map(|d| d.rest) {
+            self.nav.sidebar.reveal(id, rest, &self.theme);
+        }
         self.nav.search.set_action_focus(at == Some(Part::Search));
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
