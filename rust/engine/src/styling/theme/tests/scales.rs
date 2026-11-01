@@ -334,3 +334,16 @@ fn core_controls_are_the_kit_measures() {
     assert_eq!(Theme::hoff().control, ControlTokens::hoff());
     assert_eq!(Theme::dark().control, ControlTokens::hoff());
 }
+
+/// A theme travels by value: a test holds a few, and the unoptimized
+/// build copies each move, on a test thread's 2 MiB stack. Every slot past
+/// a few hundred bytes is boxed, so a new slot that is not shows here,
+/// not as a stack overflow in a parallel run.
+#[test]
+fn theme_stays_small() {
+    let size = std::mem::size_of::<Theme>();
+    assert!(
+        size <= 2048,
+        "Theme is {size} bytes: box the slot that grew"
+    );
+}
