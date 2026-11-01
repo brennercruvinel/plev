@@ -28,6 +28,7 @@ use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
 use crate::widgets::buttons::{ButtonVariant, Press};
+use crate::widgets::content::EmptyState;
 use crate::widgets::feedback::Scrollbar;
 use crate::widgets::feedback::alert::{Alert, NotificationKind};
 use crate::widgets::message::message::width;
@@ -209,12 +210,34 @@ impl Notifications {
             + theme.message.divider_width
     }
 
-    /// The shown rows' height, all of them, `w` wide.
+    /// The shown rows' height, all of them, `w` wide; with none, the
+    /// empty state's with the theme's `lg` clear around it.
     pub fn content_h(&self, w: f32, theme: &Theme) -> f32 {
-        self.shown()
+        let shown = self.shown();
+        if shown.is_empty() {
+            let state = self
+                .empty_state()
+                .height(Rect::new(0.0, 0.0, w, 0.0), theme);
+            return state + theme.spacing.lg * 2.0;
+        }
+        shown
             .into_iter()
             .map(|i| self.alerts[i].height(w, theme))
             .sum()
+    }
+
+    /// What the list says while the filter shows nothing: none yet under
+    /// All, all read under Unread.
+    pub fn empty_state(&self) -> EmptyState {
+        let (title, message) = if self.filter == 0 {
+            (
+                "No notifications yet",
+                "Comments, invites and likes land here.",
+            )
+        } else {
+            ("You're all caught up", "Nothing waits to be read.")
+        };
+        EmptyState::new(title, message).icon("kit-notifications")
     }
 
     /// The dropdown's size in a column `avail` wide.
@@ -420,6 +443,9 @@ impl Notifications {
         });
         let list = l.list;
         c.push_clip(list.x, list.y, list.w, list.h);
+        if self.shown().is_empty() {
+            self.empty_state().render(c, list, theme);
+        }
         for (i, r) in self.rows(list, theme) {
             if r.bottom() > list.y && r.y < list.bottom() {
                 self.alerts[i].render(c, r, theme);

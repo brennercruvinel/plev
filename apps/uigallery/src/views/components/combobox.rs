@@ -77,6 +77,11 @@ pub fn page() -> FormPage {
                 ),
             ],
         },
+        Group {
+            title: "Search",
+            columns: 2,
+            cards: vec![card("Typed, No results", NoResults::new("Elm"))],
+        },
     ];
     FormPage::new("combobox_page", groups)
 }
@@ -193,6 +198,62 @@ impl CardWidget for Combobox {
             }
             (Part::Option(i), "select", None) => self.pick(i),
             _ => false,
+        }
+    }
+
+    #[cfg(test)]
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// The search that finds nothing, as a picture: the box with what was
+/// typed and, under it in the card, the list as the open dropdown shows
+/// it, the row saying nothing matches. It holds no focus and takes no
+/// press; it reads as the status it shows.
+struct NoResults {
+    combo: Combobox,
+    said: &'static str,
+    id: Option<SemId>,
+}
+
+impl NoResults {
+    fn new(query: &str) -> Self {
+        let said = "No framework matches.";
+        let mut combo = framework().empty(said);
+        combo.input.set_text(query);
+        Self {
+            combo,
+            said,
+            id: None,
+        }
+    }
+}
+
+impl CardWidget for NoResults {
+    fn with_sem(mut self: Box<Self>, id: SemId) -> Box<dyn CardWidget> {
+        self.id = Some(id);
+        self
+    }
+
+    /// The box, the kit's `w-44`, and the list under it.
+    fn size(&self, room: f32, theme: &Theme) -> (f32, f32) {
+        let w = theme.form.select.width.min(room);
+        let at = Rect::new(0.0, 0.0, w, Combobox::height(theme));
+        (w, self.combo.list_rect(at, theme).bottom())
+    }
+
+    fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        self.combo.render(c, rect, theme);
+        let layer = c.target();
+        self.combo.render_list(c, layer, rect, theme);
+    }
+
+    /// A status named by what the list says, described by the query.
+    fn project(&self, b: &mut SnapshotBuilder, parent: &SemId) {
+        if let Some(id) = &self.id {
+            let mut node = b.node(id, accord::Role::Status, self.said);
+            node.parent(parent).description(self.combo.input.text());
         }
     }
 

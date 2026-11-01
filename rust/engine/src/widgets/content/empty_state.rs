@@ -82,6 +82,12 @@ impl EmptyState {
         )
     }
 
+    /// How tall the stack is in `bounds`' width: what a holder gives it
+    /// so nothing of it is cut (a table's body, a card).
+    pub fn height(&self, bounds: Rect, theme: &Theme) -> f32 {
+        self.content_height(bounds, theme)
+    }
+
     /// Total stack height for the current content and bounds.
     fn content_height(&self, bounds: Rect, theme: &Theme) -> f32 {
         let gap = Self::gap(theme);

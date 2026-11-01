@@ -17,7 +17,7 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::{ControlSize, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::content::VirtualList;
+use crate::widgets::content::{EmptyState, VirtualList};
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -88,6 +88,8 @@ pub struct Table {
     pub columns: Vec<Column>,
     pub rows: VirtualList,
     sem: Option<SemId>,
+    /// What it shows under its header while it has no rows.
+    empty: Option<EmptyState>,
 }
 
 impl Table {
@@ -98,7 +100,31 @@ impl Table {
             columns,
             rows: VirtualList::new(Self::row_h(theme)),
             sem: None,
+            empty: None,
         }
+    }
+
+    /// What the table shows under its header while it has no rows (the
+    /// kit's empty state: an icon, a title, a line saying why).
+    pub fn empty(mut self, state: EmptyState) -> Self {
+        self.empty = Some(state);
+        self
+    }
+
+    /// The empty state it shows now: one is set and there are no rows.
+    pub fn empty_shown(&self) -> Option<&EmptyState> {
+        self.empty.as_ref().filter(|_| self.row_count() == 0)
+    }
+
+    /// How tall the table is `w` wide with no rows: its header and its
+    /// empty state with the theme's `lg` clear around it; the header
+    /// alone without one.
+    pub fn empty_height(&self, w: f32, theme: &Theme) -> f32 {
+        let pad = theme.spacing.lg;
+        let state = self.empty.as_ref().map_or(0.0, |e| {
+            e.height(Rect::new(0.0, 0.0, w, 0.0), theme) + pad * 2.0
+        });
+        Self::header_h(theme) + state
     }
 
     /// The logical identity the render binds the table to
@@ -403,10 +429,18 @@ impl Table {
                     }
                 }
             });
+        if let Some(state) = self.empty_shown() {
+            let rows = Self::rows_rect(bounds, theme);
+            c.on_layer(layer, |c| state.render(c, rows, theme));
+        }
         // The frame last, over the rows that reach the edge, around the
-        // rows there are: a short table does not frame empty space.
+        // rows there are: a short table does not frame empty space (an
+        // empty state is the table's).
         if look.frame > 0.0 {
-            let rows_h = self.row_count() as f32 * self.rows.item_height;
+            let rows_h = match self.empty_shown() {
+                Some(_) => bounds.h,
+                None => self.row_count() as f32 * self.rows.item_height,
+            };
             let frame = rounded_rect_stroke(
                 bounds.x,
                 bounds.y,

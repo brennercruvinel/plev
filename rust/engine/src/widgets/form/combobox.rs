@@ -299,6 +299,12 @@ impl Combobox {
         scroll
     }
 
+    /// The list's rect below the control, open or not: where a picture
+    /// of the open state (a showcase card) draws it.
+    pub fn list_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        self.panel(bounds, theme).0
+    }
+
     /// The list's rect while open.
     pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Option<Rect> {
         self.is_open().then(|| self.panel(bounds, theme).0)
@@ -425,10 +431,16 @@ impl Combobox {
     /// Draws the open list on `layer` (an overlay, so it floats over what
     /// is below the control); nothing while closed.
     pub fn render_dropdown(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        let scale = &theme.typography;
-        if !self.is_open() {
-            return;
+        if self.is_open() {
+            self.render_list(c, layer, bounds, theme);
         }
+    }
+
+    /// The list on `layer` below the control at `bounds`, open or not:
+    /// the matches for the text in the box, or the row saying there are
+    /// none. What the open dropdown draws, and a picture of that state.
+    pub fn render_list(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let (dd, window) = self.panel(bounds, theme);
         list::draw_body(c, layer, dd, theme);
         let m = self.matches();

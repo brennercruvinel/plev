@@ -21,6 +21,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::EmptyState;
 use engine::widgets::message::attachment::AttachmentKind;
 use engine::widgets::message::comment::CommentThread;
 use engine::widgets::message::compose::ComposeLine;
@@ -142,6 +143,16 @@ impl CommentsPage {
                                 Message::new("Sam", "1s", "@Luna Thank, I’m working on it"),
                             ],
                             "Sam",
+                        )),
+                    ),
+                    card(
+                        "Empty: no comments yet",
+                        Sample::Empty(Box::new(
+                            EmptyState::new(
+                                "No comments yet",
+                                "Pin a comment to the scene to start a thread.",
+                            )
+                            .icon("kit-comment"),
                         )),
                     ),
                 ],
