@@ -314,7 +314,7 @@ fn with_a_finger_the_sidebar_and_the_palette_press_in_44_px_drawn_the_same() {
         let nodes = c.layers().iter().map(|l| l.nodes().to_vec()).collect();
         (nodes, bound)
     }
-    fn check(v: &mut ShowcaseView, c: &mut Compositor, what: &str, roots: &[&str]) -> usize {
+    fn check(v: &mut ShowcaseView, c: &mut Compositor, what: &str, roots: &[&str]) -> Vec<SemId> {
         let (drawn, pointer) = frame(v, c, false, roots);
         let (touched, finger) = frame(v, c, true, roots);
         assert!(
@@ -334,37 +334,59 @@ fn with_a_finger_the_sidebar_and_the_palette_press_in_44_px_drawn_the_same() {
                 "{what} {id}"
             );
         }
-        finger.len()
+        finger.into_iter().map(|(id, _)| id).collect()
+    }
+    // what the panel shows: its head's button, the Search, every group's
+    // trigger and the open group's tabs, each one pressed
+    fn panel(v: &ShowcaseView, head: Option<SemId>) -> Vec<SemId> {
+        let mut want: Vec<SemId> = head.into_iter().collect();
+        want.extend(v.nav.search.sem_id().cloned());
+        for (m, links) in v.nav.menus() {
+            want.extend(m.sem_id().cloned());
+            if m.is_open() {
+                want.extend((0..links.len()).filter_map(|i| links.link_id(i)));
+            }
+        }
+        want
+    }
+    fn holds(seen: &[SemId], want: &[SemId], what: &str) {
+        for id in want {
+            assert!(seen.contains(id), "{what}: {id} is pressed in 44");
+        }
     }
     let sidebar = ["shell.sidebar"];
     let mut pinned = ShowcaseView::new(1280.0, 800.0);
     pinned.pin_sidebar(true);
-    let n = check(&mut pinned, &mut Compositor::new(), "pinned", &sidebar);
-    assert!(n > 10, "the pin, the Search, the groups and a group's tabs");
+    let seen = check(&mut pinned, &mut Compositor::new(), "pinned", &sidebar);
+    let pin = pinned.shell.dock.as_ref().unwrap().pin_id();
+    let want = panel(&pinned, pin);
+    assert!(want.len() > Group::ALL.len() + 2, "a group is open");
+    holds(&seen, &want, "pinned");
 
     let mut narrow = ShowcaseView::new(360.0, 740.0);
     let mut c = Compositor::new();
-    assert!(
-        check(&mut narrow, &mut c, "closed", &sidebar) >= 1,
-        "the menu"
-    );
+    let seen = check(&mut narrow, &mut c, "closed", &sidebar);
     let menu = narrow.shell.dock.as_ref().unwrap().menu_id().unwrap();
+    holds(&seen, std::slice::from_ref(&menu), "closed");
     assert!(narrow.ask_sidebar(&menu, "activate"));
     narrow.sidebar_wake(10.0);
-    assert!(
-        check(&mut narrow, &mut c, "drawer", &sidebar) > 10,
-        "the close and the rows"
-    );
+    let seen = check(&mut narrow, &mut c, "drawer", &sidebar);
+    let close = narrow.shell.dock.as_ref().unwrap().close_id();
+    holds(&seen, &panel(&narrow, close), "drawer");
 
     let mut palette = ShowcaseView::new(1280.0, 800.0);
     assert!(palette.handle_chord("k", true));
-    let n = check(
+    let seen = check(
         &mut palette,
         &mut Compositor::new(),
         "palette",
         &["palette"],
     );
-    assert!(n > 5, "the commands");
+    let commands = seen
+        .iter()
+        .filter(|id| id.as_str().contains(".list["))
+        .count();
+    assert!(commands > 5, "the commands");
 }
 
 /// A tap where two grown press areas meet lands on the nearer drawing
