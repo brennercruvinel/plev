@@ -7,6 +7,7 @@ pub mod lifecycle;
 pub mod links;
 pub mod menu;
 pub mod notify;
+pub mod prefs;
 pub mod print;
 pub mod tray;
 use winit::window::Window;
