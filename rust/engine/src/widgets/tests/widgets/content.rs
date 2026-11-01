@@ -511,6 +511,10 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     // The catalog: the kit but its muted text, shade 7 in the core for AAA.
     assert_ne!(derived.catalog.palette.muted, kit.catalog.palette.muted);
     derived.catalog.palette.muted = kit.catalog.palette.muted;
+    // and its ring the kit's hairline, where the derived one takes the
+    // active border, which the palette holds at 3:1 (`theme::legibility`)
+    assert_ne!(derived.catalog.palette.ring, kit.catalog.palette.ring);
+    derived.catalog.palette.ring = kit.catalog.palette.ring;
     assert_ne!(derived.split, kit.split);
     derived.split = kit.split;
     assert_eq!(derived, kit);

@@ -24,6 +24,8 @@ pub use upload::UploadTokens;
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 use crate::styling::theme::TypeRole;
+use crate::styling::theme::hoff_core;
+use crate::styling::theme::legibility::{self, MARK_AA, TEXT_AA};
 use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypographyScale};
 
 /// One state of the input box.
@@ -312,11 +314,15 @@ impl FormTokens {
     pub fn hoff_core() -> Self {
         let ramp = TypographyScale::hoff_core();
         let gray = hex(0x7B7B7B);
+        // The gray where it is text (a placeholder, a hint, a link), and
+        // the kit's red and hairline where they must read (WCAG AA, 1.4.3
+        // and 1.4.11): each moved the least it must (`hoff_core`).
+        let quiet = hoff_core::secondary_text();
 
         // :66, the input: `border-[1.5px] border-[#E2E2E2] rounded-xl`, no
         // background; hover and focus add `shadow-[0px_1px_4px_-1px_
         // rgba(0,0,0,0.15)]` and keep the border.
-        let border = hex(0xE2E2E2);
+        let border = hoff_core::control_edge();
         let lifted = vec![ShadowSpec::new([0.0, 1.0], 4.0, -1.0, black(0.15))];
         let rest = InputSurface {
             fill: NONE,
@@ -341,7 +347,7 @@ impl FormTokens {
             // placeholder:text-[#7B7B7B]`.
             text: ramp.exact(13.0, 16.0, 400),
             text_color: hex(0x000000),
-            placeholder: gray,
+            placeholder: quiet,
             // Not in the kit (the browser's caret and selection): the
             // body ink and its wash.
             caret: ink,
@@ -417,7 +423,13 @@ impl FormTokens {
             },
             height: 40.0,
             pad_x: 16.0,
-            placeholder: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.50),
+            // the kit's gray at 50% on its #F8F7F7 well, a hint as the
+            // field's: as opaque as it must be to read (WCAG AA)
+            placeholder: legibility::reach(
+                Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.50),
+                TEXT_AA,
+                &[&[hoff_core::SHADES[0], hex(0xF8F7F7)]],
+            ),
             ..input.clone()
         };
         // Search :21 the icon button, :41 the `⌘ K` hint (the key cap,
@@ -434,7 +446,7 @@ impl FormTokens {
             addon_gap: 4.0,
             // Not in the kit (no text addon): the gray of its icons, as
             // far from the edge as its icon button's text is (48 - 36).
-            text_color: gray,
+            text_color: quiet,
             text_edge: 12.0,
             select_w: 102.0,
             // `templates/InputsPage/index.tsx:176` the Search `w-54`, :161
@@ -452,22 +464,32 @@ impl FormTokens {
             color: ink,
             caption: caption(&ramp),
             // Not in the kit: the core glass's placeholder tone, as the
-            // caption draws in every other theme.
-            caption_color: Color::rgba(18.0 / 255.0, 18.0 / 255.0, 18.0 / 255.0, 0.40),
+            // caption draws in every other theme
+            // (as opaque as it must be to read, WCAG AA).
+            caption_color: hoff_core::placeholder_text(),
             disabled_alpha: input.disabled_alpha,
         };
         let field = FieldChrome {
             label_gap: 8.0,
             link: ramp.exact(12.0, 16.0, 500),
-            link_color: gray,
-            link_alpha: 0.70,
+            // The kit's gray at 70% reads 2.1:1, and in linear light no
+            // tone at 70% reaches AA on paper: the ink, at the least share
+            // that reads (`legibility::reach`), lit whole under the
+            // pointer as the kit's.
+            link_color: ink,
+            link_alpha: legibility::reach(
+                Color::rgba(ink.0[0], ink.0[1], ink.0[2], 0.70),
+                TEXT_AA,
+                &[&[hoff_core::SHADES[0]]],
+            )
+            .0[3],
             link_hover_alpha: 1.0,
             message: ramp.exact(11.0, 16.0, 500),
             message_gap: 8.0,
-            error_color: hex(0xFE5938),
+            error_color: hoff_core::red_text(),
             // Not in the kit (only an error line): the gray of its
             // secondary text.
-            helper_color: gray,
+            helper_color: quiet,
             // `templates/InputsPage/index.tsx:36`, `w-60`.
             width: 240.0,
         };
@@ -528,9 +550,16 @@ impl FormTokens {
             shadow: Vec::new(),
         };
         let accent = c.accent.0;
+        // The field's edge, its placeholder and its error line on the card
+        // read as WCAG AA asks (1.4.11, 1.4.3): the glass's soft edge, its
+        // placeholder tone and the danger mark moved the least they must.
+        let card: &[Color] = &[c.bg, c.surface];
+        let edge = legibility::reach(g.edge_soft, MARK_AA, &[card]);
+        let placeholder =
+            legibility::reach(g.text_placeholder, TEXT_AA, &[&[c.bg, c.surface, g.field]]);
         let input = InputRecipe {
-            rest: surface(g.field, g.edge_soft),
-            hover: surface(g.surface_active, g.edge_soft),
+            rest: surface(g.field, edge),
+            hover: surface(g.surface_active, edge),
             focus: surface(g.surface_active, g.field_focus_border),
             height: theme.control.height(ControlSize::Md),
             pad_x: theme.spacing.md,
@@ -538,7 +567,7 @@ impl FormTokens {
             border_width: theme.control.edge_width,
             text: t.role(TypeRole::BodyLg),
             text_color: c.text,
-            placeholder: g.text_placeholder,
+            placeholder,
             caret: c.accent,
             selection: Color::rgba(accent[0], accent[1], accent[2], g.wash_alpha),
             composing: g.text_active,
@@ -590,7 +619,7 @@ impl FormTokens {
             link_hover_alpha: 1.0,
             message: t.run(TypeRole::Caption.regular()),
             message_gap: theme.spacing.sm,
-            error_color: c.danger,
+            error_color: legibility::reach(c.danger, TEXT_AA, &[card]),
             helper_color: c.text_mid,
             width: theme.size.menu_w,
         };

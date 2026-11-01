@@ -2,6 +2,7 @@ mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
+pub mod legibility;
 pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
@@ -9,6 +10,7 @@ pub(crate) mod tokens;
 
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
+pub use self::legibility::Bar;
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
@@ -183,6 +185,8 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }
@@ -213,6 +217,8 @@ impl Theme {
             colors,
             ..Self::dark()
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }
@@ -381,6 +387,14 @@ impl Theme {
         };
         theme.derive_front_slots();
         Some(theme)
+    }
+
+    /// The root colors held to `bar` (`legibility::settle`): each color of
+    /// the palette and of the glass moved the least it must, none that
+    /// already reads. The four built-in themes take it before their
+    /// buttons and front slots derive from the palette.
+    pub(crate) fn settle_colors(&mut self, bar: Bar) {
+        legibility::settle(&mut self.colors, &mut self.glass, bar);
     }
 
     /// task-104: each front's slot derived from the theme built so far

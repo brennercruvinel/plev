@@ -5,6 +5,7 @@
 //! measured shadow stacks of its depths page.
 
 use super::intent::MotionPhysics;
+use super::legibility::{self, MARK_AA, TEXT_AA};
 use super::roles::TypeRoles;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
@@ -40,6 +41,36 @@ pub const ORANGE: Color = Color::hex(0xE36323);
 pub const YELLOW: Color = Color::hex(0xFFB73A);
 pub const RED: Color = Color::hex(0xFE5938);
 pub const PURPLE: Color = Color::hex(0x8755E9);
+
+/// The kit's secondary gray (Shade 6, #7B7B7B) where it is text: on its
+/// paper it reads 4.13:1, under WCAG AA (1.4.3). It moves the least it
+/// must (`legibility::reach`) to read at 4.5:1 on paper and on Shade 3,
+/// the darkest surface the kit lays text on; the swatch keeps the kit's.
+pub fn secondary_text() -> Color {
+    legibility::reach(SHADES[5], TEXT_AA, &[&[SHADES[0]], &[SHADES[0], SHADES[2]]])
+}
+
+/// The core glass's placeholder, the ink at 40% (1.6:1 on paper): as
+/// opaque as it must be to read at 4.5:1 on paper and on Shade 3. It is
+/// what `settle` makes of `glass.text_placeholder`, for the kit's tokens
+/// that copy it (the field's caption).
+pub fn placeholder_text() -> Color {
+    legibility::reach(ink(0.40), TEXT_AA, &[&[SHADES[0]], &[SHADES[0], SHADES[2]]])
+}
+
+/// The kit's red (#FE5938) where it is text, an error line: 3.05:1 on
+/// paper. It deepens the least it must to read at 4.5:1 there.
+pub fn red_text() -> Color {
+    legibility::reach(RED, TEXT_AA, &[&[SHADES[0]]])
+}
+
+/// The kit's hairline (Shade 5, #E2E2E2) where it is the edge a person
+/// must see to find a control (1.4.11), the field's border: 1.26:1 on
+/// paper. It deepens the least it must to read at 3:1 on paper and on
+/// Shade 2, the field's inset well.
+pub fn control_edge() -> Color {
+    legibility::reach(SHADES[4], MARK_AA, &[&[SHADES[0]], &[SHADES[0], SHADES[1]]])
+}
 
 /// The colors page (templates/ColorsPage/content.tsx): its two groups,
 /// each color under the kit's name, Shade 8 and the yellow and purple
@@ -202,7 +233,7 @@ impl Theme {
             shade3,
             shade4,
             shade5,
-            shade6,
+            _shade6,
             shade7,
             _shade8,
             ink9,
@@ -213,8 +244,8 @@ impl Theme {
             bg_panel: shade2,
             bg_hover: shade3,
             text: ink9,
-            text_mid: shade6,
-            text_dim: shade6,
+            text_mid: secondary_text(),
+            text_dim: secondary_text(),
             accent: ink9,
             accent_dim: shade7,
             success: GREEN,
@@ -252,10 +283,10 @@ impl Theme {
                 inset_highlight: Color::rgba(1.0, 1.0, 1.0, 0.33),
                 knob_gradient: [paper, shade2],
                 text_gradient: [ink9, shade7],
-                text_faint: shade6,
-                text_placeholder: ink(0.40),
+                text_faint: secondary_text(),
+                text_placeholder: placeholder_text(),
                 text_active: ink9,
-                text_default: shade6,
+                text_default: secondary_text(),
                 disabled_alpha: 0.30,
                 wash_alpha: 0.10,
                 wash_hover_alpha: 0.16,
@@ -313,6 +344,10 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff_core(),
         };
+        // The kit's secondary gray (#7B7B7B) as text, its placeholder ink
+        // at 40%, its green and its #E2E2E2 active border fall under WCAG
+        // AA on its paper: each moves the least it must (`legibility`).
+        theme.settle_colors(super::Bar::AA);
         // The sidebar keeps its look of before until it moves to the kit
         // (task-104 front G, step 4); that look reads the finished theme.
         theme.navigation.sidebar_link = NavigationTokens::sidebar_link_of_before(&theme);

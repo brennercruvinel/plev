@@ -371,18 +371,37 @@ mod tests {
         // $text-primary / $text-secondary / $text-tertiary over $n2.
         assert_eq!(t.colors.text.0, rgba8(248, 248, 248, 0.95));
         assert_eq!(t.colors.text_mid.0, rgba8(248, 248, 248, 0.70));
-        assert_eq!(t.colors.text_dim.0, rgba8(248, 248, 248, 0.50));
-        assert_eq!(t.glass.text_faint.0, rgba8(248, 248, 248, 0.40));
-        assert_eq!(t.glass.text_placeholder.0, rgba8(248, 248, 248, 0.25));
+        // $text-tertiary, the faint and the placeholder tones are under
+        // AA on the hover: each is the spec's ink, as opaque as it must
+        // be to read (`legibility`), never less than the spec's
+        for (c, spec) in [
+            (t.colors.text_dim, 0.50),
+            (t.glass.text_faint, 0.40),
+            (t.glass.text_placeholder, 0.25),
+        ] {
+            let ink = rgba8(248, 248, 248, spec);
+            assert_eq!(&c.0[..3], &ink[..3]);
+            assert!(c.0[3] >= spec && c.0[3] < 0.55, "{c:?}");
+        }
     }
 
     #[test]
     fn hoff_accents_exact() {
         let t = Theme::hoff();
-        assert_eq!(t.colors.danger.0, rgba8(0xBD, 0x30, 0x27, 1.0));
         assert_eq!(t.colors.success.0, rgba8(0x55, 0xF0, 0x8B, 1.0));
         assert_eq!(t.colors.info.0, rgba8(124, 255, 176, 0.7));
-        assert_eq!(t.colors.warning.0, rgba8(255, 77, 0, 0.9));
+        // the spec's #BD3027 and orange at 90% read under 3:1 on its
+        // glass: each lightens the least it must (`legibility`), its hue
+        // kept
+        use crate::styling::color::Color;
+        let hue = |c: [f32; 4]| Color(c).to_oklch().h;
+        for (c, spec) in [
+            (t.colors.danger, rgba8(0xBD, 0x30, 0x27, 1.0)),
+            (t.colors.warning, rgba8(255, 77, 0, 0.9)),
+        ] {
+            assert!((hue(c.0) - hue(spec)).abs() < 6.0, "{c:?}");
+            assert!(c.to_oklch().l > Color(spec).to_oklch().l, "{c:?}");
+        }
     }
 
     #[test]

@@ -8,12 +8,10 @@
 //! by pair, in the core theme. No theme's color changes; what no token of
 //! the IR reaches is listed with why.
 
-use std::collections::BTreeSet;
-
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::styling::theme::Theme;
 use engine::widgets::prelude::Rect;
-use plevir::{Component, Preference, Preferences};
+use plevir::{Preference, Preferences};
 use screen::NoFrames;
 
 use super::super::super::SilencesPage;
@@ -191,11 +189,12 @@ fn the_measure_is_task_75_s() {
     let white = over([1.0; 4], [0.0; 3]);
     let black = over([0.0, 0.0, 0.0, 1.0], [0.0; 3]);
     assert!((ratio(white, black) - 21.0).abs() < 1e-9);
-    // the core's secondary ink, #7B7B7B, on its paper, #FCFCFC: 4.13, as
-    // the engine's contrast test records it
+    // the kit's secondary gray, #7B7B7B, on its paper, #FCFCFC: 4.13, as
+    // the engine's contrast test recorded it before the core's text took
+    // the gray that reads (task-104 front M)
     let theme = Theme::hoff_core();
     let paper = over(theme.colors.bg.0, [0.0; 3]);
-    let mid = over(theme.colors.text_mid.0, paper);
+    let mid = over(engine::styling::theme::hoff_core::SHADES[5].0, paper);
     assert!(
         (ratio(mid, paper) - 4.13).abs() < 0.01,
         "{}",
@@ -215,27 +214,12 @@ fn measured(page: &mut SilencesPage, theme: &Theme) -> Vec<Pair> {
     pairs(&c, theme)
 }
 
-/// The labels of the stats of the surface open: comps draws them.
-fn stat_labels(page: &SilencesPage) -> BTreeSet<String> {
-    let id = page.generated.id.clone().expect("open");
-    let surface = page.generated.host.get(&id).expect("open");
-    let mut out = BTreeSet::new();
-    let mut stack = vec![&surface.verified().ir().surface.root];
-    while let Some(n) = stack.pop() {
-        if n.component == Some(Component::Stat) {
-            out.extend(n.label.clone());
-        }
-        stack.extend(n.children.iter());
-        stack.extend(n.repeat.as_ref().map(|r| &r.item));
-    }
-    out
-}
-
 /// The contrast of the review by the rules and of the Claude's, pair by
-/// pair in the core theme: before, the badges, the images' labels and
-/// the sliders' labels fail AA; with "more contrast", every pair passes
-/// but the stats' labels, which comps draws in `text_dim` and no role of
-/// the IR reaches (4.13 on the paper). Every ratio is in the record.
+/// pair in the core theme: every pair passes AA, as the core's palette
+/// and the kit's tokens keep it (task-104 front M; before it the badges,
+/// the images' and the sliders' labels and the stats' labels, the kit's
+/// #7B7B7B, read 3.96 and 4.13), and "more contrast" makes none fail.
+/// Every ratio is in the record.
 #[test]
 fn more_contrast_measured_pair_by_pair_in_core() {
     let theme = Theme::hoff_core();
@@ -248,7 +232,6 @@ fn more_contrast_measured_pair_by_pair_in_core() {
             review()
         };
         let name = if claude { "the Claude's" } else { "the rules'" };
-        let stats = stat_labels(&page);
         let before = measured(&mut page, &theme);
         let app = page.snapshot().unwrap();
         let on = Preferences::default().with(Preference::MoreContrast, true);
@@ -259,27 +242,8 @@ fn more_contrast_measured_pair_by_pair_in_core() {
             eprintln!("  {}\n  -> {:.2}", b.line(), a.ratio);
         }
         assert_eq!(before.len(), after.len(), "{name}: the same runs");
-        let failing = |pairs: &[Pair]| -> Vec<Pair> {
-            pairs.iter().filter(|p| !p.passes()).cloned().collect()
-        };
-        // what no token reaches: a stat's label, in `text_dim`
-        for p in failing(&after) {
-            assert!(stats.contains(&p.text), "{name}: {}", p.line());
-            assert_eq!(p.fg, "#7B7B7B", "{name}: {}", p.line());
-            assert!((p.ratio - 4.13).abs() < 0.01, "{}", p.line());
-        }
-        // what it made pass, with the ratio before and after
-        let fixed: Vec<(&Pair, &Pair)> = before
-            .iter()
-            .zip(&after)
-            .filter(|(b, a)| !b.passes() && a.passes())
-            .collect();
-        assert!(!fixed.is_empty(), "{name}");
-        for (b, a) in &fixed {
-            let was = [3.96, 4.13].iter().any(|r| (b.ratio - r).abs() < 0.01);
-            assert!(was, "{name}: {}", b.line());
-            let is = [17.96, 18.26].iter().any(|r| (a.ratio - r).abs() < 0.01);
-            assert!(is, "{name}: {}", a.line());
+        for p in before.iter().chain(&after) {
+            assert!(p.passes(), "{name}: {}", p.line());
         }
         // the badge filled: its numeral in the paper on the ink (the
         // badge's neutral count, `theme.message.badge`)
