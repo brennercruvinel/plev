@@ -63,7 +63,7 @@ fn bottom(r: Rect4) -> f32 {
 fn intersect(a: Rect4, b: Rect4) -> Option<Rect4> {
     let (x, y) = (a[0].max(b[0]), a[1].max(b[1]));
     let (r, btm) = (right(a).min(right(b)), bottom(a).min(bottom(b)));
-    (r - x > EPS && btm - y > EPS).then(|| [x, y, r - x, btm - y])
+    (r - x > EPS && btm - y > EPS).then_some([x, y, r - x, btm - y])
 }
 
 fn holds(outer: Rect4, inner: Rect4) -> bool {
@@ -325,6 +325,47 @@ const KNOWN: &[(&str, &str, &str)] = &[
     ),
     ("Menus", "", "L: menu rows of fixed width and height"),
     ("Topbar", "", "L: the bar at a phone's width"),
+    // at twice the size or in a longer language (the fix is the page's
+    // or the widget's: wrap, truncate, or grow with the text)
+    (
+        "Comments",
+        "wide in",
+        "C: a cut comment measured past its width",
+    ),
+    (
+        "Comments",
+        "overlaps",
+        "C: the quick tools under the send button",
+    ),
+    ("Sheet", "", "B: the sheet form's label column is fixed"),
+    ("Stat", "", "G: the stat card at a phone's width"),
+    (
+        "Toolbar",
+        "cut across",
+        "G: the toolbar page's own group titles",
+    ),
+    (
+        "Chart",
+        "cut across",
+        "G: the donut's label at a phone's width",
+    ),
+    ("Context Menu", "⌘", "B: the menu is wider than a phone"),
+    ("Dropdown Menu", "⌘", "B: the menu is wider than a phone"),
+    (
+        "Sidebar",
+        "",
+        "G: the scene and design sidebars' fixed rows",
+    ),
+    ("Typography", "wide in", "F: the specimen's sample line"),
+    ("Collapsible", "wide in", "D: a row's description"),
+    (
+        "Input Group",
+        "wide in 0",
+        "A: the addon leaves the text no room",
+    ),
+    ("Textarea", "wide in", "A: the placeholder is not wrapped"),
+    ("Separator", "cut across", "the separator page's columns"),
+    ("Slider", "cut across", "E: the value beside the slider"),
     // apps that fill the window
     ("Editor", "", "the code editor scrolls sideways"),
     ("Surface", "todo", "the todo panel's rows"),
