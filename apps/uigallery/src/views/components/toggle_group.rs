@@ -210,13 +210,16 @@ impl<W: Choice> ChoicePage<W> {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, w| {
+            let widget = &self.groups[g].cards[c].widget;
+            Self::widget_rect(widget, Rect::new(0.0, 0.0, w, 0.0), theme).h
+        })
     }
 
     /// The widget's rect in its card: its size within the card less its
     /// inset on both sides, centered.
     fn widget_rect(widget: &W, card: Rect, theme: &Theme) -> Rect {
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         showcase::centered(widget.size_in(room, theme), card)
     }
 
@@ -446,7 +449,7 @@ pub(super) mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let b = ChoicePage::widget_rect(&card.widget, *r, &theme);

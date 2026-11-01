@@ -24,6 +24,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
 use engine::widgets::form::TextField;
@@ -39,7 +40,8 @@ use super::showcase::{self, GroupLayout};
 use super::toolbar::kit_zoom;
 use super::{After, Component, child_id, key_under, root_id, under};
 
-/// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20).
+/// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20);
+/// the least height holds a row of more than one.
 const CARD_MIN_H: f32 = 486.0;
 const CARD_TOP: f32 = 80.0;
 const CARD_BOTTOM: f32 = 64.0;
@@ -191,19 +193,37 @@ impl MenusPage {
         }
     }
 
+    /// Each card as tall as its widget between the template's `pt-20`
+    /// and `pb-16` (a pending text as tall as it wraps in the card's
+    /// body); a row of more than one at least the template's
+    /// `min-h-121.5`, a card alone in its row only as tall as it holds.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let card_w = showcase::card_width(SPAN, content, theme);
+        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
+        let caption = theme.typography.run(TypeRole::Caption.regular());
         let heights = self
             .cards
             .iter()
-            .map(|c| (CARD_TOP + Self::size(&c.body, theme).1 + CARD_BOTTOM).max(CARD_MIN_H))
+            .map(|c| {
+                let h = match &c.body {
+                    Body::Pending(name) => {
+                        TextMeasurer::measure_styled(name, &caption, Some(body_w)).1
+                    }
+                    body => Self::size(body, theme).1,
+                };
+                CARD_TOP + h + CARD_BOTTOM
+            })
             .collect();
-        showcase::layout_sized([(SPAN, heights)], content, theme)
+        let grid = showcase::Grid::new(SPAN, showcase::card_min_w(theme), heights)
+            .floor(CARD_MIN_H)
+            .untitled();
+        showcase::layout_grids([grid], content, theme)
     }
 
     /// The card's widget: centered across, `pt-20` from the card's top.
     fn widget_rect(body: &Body, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = Self::size(body, theme);
-        let w = w.min(card.w - theme.spacing.sm * 2.0);
+        let w = w.min(showcase::room(card.w, theme));
         Rect::new(
             (card.x + (card.w - w) / 2.0).round(),
             card.y + CARD_TOP,

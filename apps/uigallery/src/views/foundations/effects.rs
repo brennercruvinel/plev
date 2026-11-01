@@ -110,11 +110,7 @@ impl EffectsPage {
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let side = showcase::card_width_at(SPAN, Self::min_w(theme), content, theme);
         let counts = [depths(theme).len(), SAMPLES.len()];
-        let grids = counts.map(|n| Grid {
-            span: SPAN,
-            min_w: Self::min_w(theme),
-            heights: vec![side; n],
-        });
+        let grids = counts.map(|n| Grid::new(SPAN, Self::min_w(theme), vec![side; n]));
         showcase::layout_grids(grids, content, theme)
     }
 
@@ -172,7 +168,7 @@ fn stage(card: Rect, theme: &Theme) -> Rect {
 fn caption(c: &mut Compositor, card: Rect, text: &str, theme: &Theme) {
     let s = stage(card, theme);
     let style = theme.typography.run(TypeRole::Caption.regular());
-    let room = card.w - theme.spacing.sm * 2.0;
+    let room = showcase::room(card.w, theme);
     let text = TextMeasurer::truncate_to_width(text, &style, room);
     let (w, _) = TextMeasurer::measure_styled(&text, &style, None);
     c.push(SceneNode::Text {

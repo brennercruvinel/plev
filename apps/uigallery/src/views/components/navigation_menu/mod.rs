@@ -163,7 +163,7 @@ impl NavigationMenuPage {
     /// (`w-60` less its `px-5`), never wider than the card less its
     /// inset; a rail is the rail sidebar's.
     fn column_w(shows: &Shows, card_w: f32, theme: &Theme) -> f32 {
-        let room = card_w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card_w, theme);
         let w = match shows {
             Shows::Links(_) => theme.size.sidebar_w - theme.spacing.lg * 2.0,
             Shows::Rail => theme.size.sidebar_rail_w - theme.spacing.md * 2.0,

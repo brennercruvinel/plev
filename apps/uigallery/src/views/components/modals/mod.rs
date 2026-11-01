@@ -33,7 +33,7 @@ use engine::widgets::overlay::modals::variations::Variations;
 use engine::widgets::overlay::modals::{self, ModalBody};
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 use cards::{Confirm, Quick};
 
@@ -163,7 +163,7 @@ impl ModalsPage {
     /// The frame a card keeps around its widget: the chip band at the top
     /// and the body's margin at the bottom.
     fn frame(theme: &Theme) -> f32 {
-        CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h
+        showcase::body_height(0.0, theme)
     }
 
     /// Each card as tall as its modal at the width its body has; a row is
@@ -172,11 +172,11 @@ impl ModalsPage {
         let frame = Self::frame(theme);
         let sized = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
-            let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
+            let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
             let heights = g
                 .cards
                 .iter()
-                .map(|s| CARD_H.max(frame + s.body.size(body_w, theme).1))
+                .map(|s| frame + s.body.size(body_w, theme).1)
                 .collect();
             (g.span, heights)
         });

@@ -150,9 +150,7 @@ impl BubblePage {
     /// The width a card's bubbles share: its inside, up to a readable
     /// column.
     fn lane_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     /// Each bubble's row height in a lane `w` wide: the bubble and the gap

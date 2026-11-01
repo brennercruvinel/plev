@@ -63,8 +63,7 @@ fn assert_finite(nodes: &[SceneNode], what: &str) {
 fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut c = Compositor::new();
     c.begin_frame();
-    let bp = theme.layout.breakpoint(vw);
-    let gutter = theme.layout.gutter(bp);
+    let gutter = theme.layout.gutter_at(vw);
     let content = Rect::new(gutter, gutter, vw - gutter * 2.0, vh - gutter * 2.0);
     let row = |i: f32| Rect::new(content.x, content.y + i * 60.0, content.w, 44.0);
 
@@ -442,7 +441,7 @@ fn widgets_with_a_sem_id_project_and_bind_under_every_theme_at_phone_and_desktop
     let mut rects = Vec::new();
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, vh) in VIEWPORTS {
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
             let field = TextField::new("name")
                 .with_text("brenner")
@@ -524,7 +523,7 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, vh) in VIEWPORTS {
             let what = format!("theme {t} at {vw}x{vh}");
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
             let block = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 200.0);
             let label = |i: usize| format!("row {i}");
@@ -903,7 +902,7 @@ fn a_long_select_reaches_its_last_option_under_every_theme_at_phone_and_desktop_
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, _) in VIEWPORTS {
             let what = format!("theme {t} at {vw}");
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let control = Rect::new(gutter, gutter, vw - gutter * 2.0, 44.0);
             let mut select =
                 Select::new((0..20).map(|i| format!("option {i}")), 0).sem(long.clone());
@@ -947,7 +946,7 @@ fn modal_and_toast_fit_a_phone_width() {
     let (vw, vh) = (390.0, 844.0);
     let modal = Modal::new("T", "B", "OK", "No");
     let d = modal.dialog_rect(&theme, vw, vh);
-    let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+    let gutter = theme.layout.gutter_at(vw);
     assert!(d.x >= gutter - 0.5 && d.x + d.w <= vw - gutter + 0.5);
     let mut toasts = ToastManager::new();
     toasts.push("hi", Intent::Neutral, &theme);

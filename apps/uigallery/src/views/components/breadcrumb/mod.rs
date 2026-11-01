@@ -148,13 +148,16 @@ impl BreadcrumbPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, w| {
+            let trail = &self.groups[g].cards[c].trail;
+            Self::widget_rect(trail, Rect::new(0.0, 0.0, w, 0.0), theme).h
+        })
     }
 
     /// The trail's rect in its card: as wide as it asks, never wider than
     /// the card less its inset on both sides (it folds), centered.
     fn widget_rect(trail: &Breadcrumb, card: Rect, theme: &Theme) -> Rect {
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let w = trail.preferred_width(theme).min(room);
         showcase::centered((w, Breadcrumb::height(theme)), card)
     }
@@ -214,7 +217,7 @@ impl BreadcrumbPage {
     /// The echo under the trail it names, centered in its card.
     fn render_echo(c: &mut Compositor, note: &str, trail: Rect, card: Rect, theme: &Theme) {
         let style = theme.typography.run(TypeRole::Caption.regular());
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let shown = TextMeasurer::truncate_to_width(note, &style, room);
         let (w, _) = TextMeasurer::measure_styled(&shown, &style, None);
         c.push(SceneNode::Text {

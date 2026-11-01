@@ -126,11 +126,30 @@ fn breakpoints_split_the_width_axis_in_three() {
     assert_eq!(l.breakpoint(2560.0), Breakpoint::Expanded);
 }
 
+/// The gutter grows with the page's width without a step: from its
+/// narrow end to its wide one, never more than a pixel between two widths
+/// 8 px apart (the slope, rounded).
 #[test]
-fn gutters_columns_and_sidebar_grow_with_the_breakpoint() {
+fn the_gutter_is_fluid_between_its_ends() {
     let l = Theme::hoff().layout;
-    assert!(l.gutter(Breakpoint::Compact) < l.gutter(Breakpoint::Medium));
-    assert!(l.gutter(Breakpoint::Medium) < l.gutter(Breakpoint::Expanded));
+    let [from, to] = l.gutter_range;
+    assert_eq!(l.gutter_at(0.0), l.gutter[0]);
+    assert_eq!(l.gutter_at(from), l.gutter[0]);
+    assert_eq!(l.gutter_at(to), l.gutter[1]);
+    assert_eq!(l.gutter_at(4000.0), l.gutter[1]);
+    let slope = (l.gutter[1] - l.gutter[0]) / (to - from);
+    let mut prev = l.gutter_at(272.0);
+    for w in (280..=1600).step_by(8) {
+        let g = l.gutter_at(w as f32);
+        assert!(g >= prev, "{w}: it never shrinks as the page grows");
+        assert!(g - prev <= (slope * 8.0).ceil(), "{w}: no step");
+        prev = g;
+    }
+}
+
+#[test]
+fn columns_and_sidebar_grow_with_the_breakpoint() {
+    let l = Theme::hoff().layout;
     assert!(l.columns(Breakpoint::Compact) < l.columns(Breakpoint::Expanded));
     assert_eq!(l.sidebar_mode(Breakpoint::Compact), SidebarMode::Drawer);
     assert_eq!(l.sidebar_mode(Breakpoint::Medium), SidebarMode::Rail);

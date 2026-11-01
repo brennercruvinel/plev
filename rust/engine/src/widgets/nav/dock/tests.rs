@@ -236,7 +236,7 @@ fn the_mode_follows_the_content_rule_across_widths() {
                 pinned_seen = true;
                 assert_eq!(l.mode, DockMode::Pinned, "{w}");
                 let page = w - l.page_x;
-                let gutter = theme.layout.gutter(theme.layout.breakpoint(page));
+                let gutter = theme.layout.gutter_at(page);
                 assert!(page - gutter * 2.0 >= r.content_min_w, "{w}");
             } else {
                 drawer_seen = true;
@@ -362,13 +362,16 @@ mod shell {
         let r = theme.navigation.dock;
         let mut s = docked(WIDE.w, WIDE.h);
         let l = s.layout(&theme);
-        let gutter = theme.layout.gutter(l.breakpoint);
+        // The gutter is the page's: the window's when it peeks, the
+        // window less the panel once it is pinned.
+        let gutter = theme.layout.gutter_at(WIDE.w);
         assert_eq!(l.dock.map(|d| d.mode), Some(DockMode::Peek));
         assert!(l.sidebar.is_none() && l.menu_button.is_none());
         assert_eq!(l.content.x, gutter);
         s.dock.as_mut().unwrap().toggle_pin(&theme, WIDE.w);
         let l = s.layout(&theme);
         assert_eq!(l.sidebar.map(|p| p.w), Some(r.width));
+        let gutter = theme.layout.gutter_at(WIDE.w - r.width);
         assert_eq!(l.content.x, r.width + gutter);
     }
 
