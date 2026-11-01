@@ -68,15 +68,11 @@ impl PanelHeader {
     }
 
     fn title_of(r: &HeaderRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.title_size, r.title_line_height, r.title_weight)
+        theme.typography.run(r.title_type)
     }
 
     fn blurb_of(r: &HeaderRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.blurb_size, r.blurb_line_height, r.blurb_weight)
+        theme.typography.run(r.blurb_type)
     }
 
     /// Side padding of a page head inside the gutter (the shell lines its

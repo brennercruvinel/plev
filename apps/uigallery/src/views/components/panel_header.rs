@@ -221,7 +221,8 @@ mod tests {
                         .header
                         .blurb_rect(l.header, l.header_pads, &view.theme)
                         .unwrap();
-                    let line = view.theme.disclosure.page.at(l.header.w).blurb_line_height;
+                    let blurb_type = view.theme.disclosure.page.at(l.header.w).blurb_type;
+                    let line = view.theme.typography.run(blurb_type).line_height;
                     wrapped += usize::from(blurb.h > line * 1.5);
                     assert!(
                         view.content_rect().y >= blurb.bottom() + view.theme.spacing.lg,

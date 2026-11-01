@@ -247,9 +247,7 @@ impl Collapsible {
     }
 
     fn label_style(r: &DisclosureRecipe, theme: &Theme) -> TextStyle {
-        theme
-            .typography
-            .exact(r.font_size, r.line_height, r.font_weight)
+        theme.typography.run(r.text_type)
     }
 
     /// The divider's share of the height: none on the first section.
@@ -265,11 +263,7 @@ impl Collapsible {
 
     fn counter_style(r: &DisclosureRecipe, theme: &Theme) -> Option<TextStyle> {
         let counter = r.counter.as_ref()?;
-        Some(
-            theme
-                .typography
-                .exact(counter.font_size, counter.line_height, counter.font_weight),
-        )
+        Some(theme.typography.run(counter.text_type))
     }
 
     /// The counter's pill, `(w, h)`, when there is one to draw.

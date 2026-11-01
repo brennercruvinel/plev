@@ -179,14 +179,11 @@ impl DisclosureTokens {
     /// below it, the glass default title, the dim blurb, `sm` before the
     /// badge, no rule.
     fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
-        let type_ = &theme.typography;
-        let caption = type_.run(TypeRole::Caption.strong());
+        let caption_run = TypeRole::Caption.strong();
         let panel = PanelRecipe {
             radius: theme.shape.card,
             pad: theme.spacing.lg,
-            label_size: caption.font_size,
-            label_line_height: caption.line_height,
-            label_weight: caption.font_weight,
+            label_type: caption_run,
             label: theme.glass.text_faint,
         };
         (panel, HeaderRecipe::page_head(theme))
@@ -200,11 +197,11 @@ impl DisclosureTokens {
     /// tone, the chevron dim, the icon mid.
     fn tree(theme: &Theme) -> TreeRecipe {
         let (colors, glass) = (&theme.colors, &theme.glass);
-        let body = theme.typography.role(TypeRole::Body);
+        let body_run = TypeRole::Body.run();
         let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
         let gap = theme.spacing.xs;
         TreeRecipe {
-            row_h: (body.line_height + gap * 2.0).round(),
+            row_h: (theme.typography.run(body_run).line_height + gap * 2.0).round(),
             pad_x: theme.spacing.sm,
             indent: theme.spacing.lg,
             chevron: icon,
@@ -223,9 +220,7 @@ impl DisclosureTokens {
                 fill: glass.surface_active,
                 border: NONE,
             },
-            font_size: body.font_size,
-            line_height: body.line_height,
-            font_weight: body.font_weight,
+            text_type: body_run,
             label: colors.text_mid,
             label_selected: colors.text,
             chevron_color: colors.text_dim,
@@ -242,7 +237,7 @@ impl DisclosureTokens {
     /// glass text, the divider under it; `md` cell padding, body text,
     /// the lead column in the mid tone, the others faint.
     fn rows(theme: &Theme) -> (RowRecipe, TableRecipe) {
-        let (colors, glass, type_) = (&theme.colors, &theme.glass, &theme.typography);
+        let (colors, glass) = (&theme.colors, &theme.glass);
         let list = RowRecipe {
             radius: 0.0,
             border: 0.0,
@@ -258,23 +253,19 @@ impl DisclosureTokens {
             rule: 0.0,
             rule_color: NONE,
         };
-        let caption = type_.run(TypeRole::Caption.strong());
-        let body = type_.role(TypeRole::Body);
+        let caption_run = TypeRole::Caption.strong();
+        let body_run = TypeRole::Body.run();
         let table = TableRecipe {
             frame: 0.0,
             frame_color: NONE,
             header_fill: glass.tabs,
             header_radius: theme.shape.nav,
-            header_size: caption.font_size,
-            header_line_height: caption.line_height,
-            header_weight: caption.font_weight,
+            header_type: caption_run,
             header_text: glass.text_faint,
             rule: theme.control.edge_width,
             rule_color: colors.divider,
             cell_pad: theme.spacing.md,
-            cell_size: body.font_size,
-            cell_line_height: body.line_height,
-            cell_weight: body.font_weight,
+            cell_type: body_run,
             cell: colors.text_mid,
             cell_dim: glass.text_faint,
             rows: list,
@@ -287,20 +278,16 @@ impl HeaderRecipe {
     /// The head every theme drew before the kit, from `theme`: the page
     /// head of the shell and the panel head outside the core.
     pub fn page_head(theme: &Theme) -> Self {
-        let title = theme.typography.role(TypeRole::Title);
-        let blurb = theme.typography.role(TypeRole::Body);
+        let title_run = TypeRole::Title.run();
+        let blurb_run = TypeRole::Body.run();
         HeaderRecipe {
             pad_x: theme.spacing.md,
             pad_y: 0.0,
             row: theme.control.height(crate::styling::theme::ControlSize::Xl),
             blurb_gap: theme.spacing.xs,
-            title_size: title.font_size,
-            title_line_height: title.line_height,
-            title_weight: title.font_weight,
+            title_type: title_run,
             title: theme.glass.text_default,
-            blurb_size: blurb.font_size,
-            blurb_line_height: blurb.line_height,
-            blurb_weight: blurb.font_weight,
+            blurb_type: blurb_run,
             blurb: theme.colors.text_dim,
             badge_gap: theme.spacing.sm,
             rule: 0.0,
