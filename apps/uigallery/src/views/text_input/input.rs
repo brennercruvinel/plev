@@ -159,7 +159,7 @@ impl ShowcaseView {
     /// holds the pointer first (the page beneath keeps its focus, the
     /// control that opened it), then the page's focus blurs (an open
     /// select closes), then the rest of the overlay stack. Returns `false`
-    /// when there was nothing to close (caller may quit).
+    /// when there was nothing to close: Escape then does nothing.
     pub fn close_top_overlay(&mut self) -> bool {
         self.arm_reveal();
         let was_open = self.palette_open();

@@ -77,6 +77,7 @@ python3 -m http.server 8090 --directory web/dist
 ## known gaps to recheck when touching this path
 
 - a missing favicon logs one 404
-- the uigallery handles Escape and CloseRequested with `event_loop.exit()`
-  (`apps/uigallery/src/shell/mod.rs`); on wasm an exit freezes the canvas until
-  reload. gate the exit off on wasm when touching that code
+- the uigallery handles CloseRequested with `event_loop.exit()`
+  (`apps/uigallery/src/shell/window/events/mod.rs`); on wasm an exit freezes
+  the canvas until reload. Escape no longer exits anywhere (it closes what is
+  open, nothing more), and the quit keys are desktop only
