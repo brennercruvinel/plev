@@ -61,6 +61,8 @@ fn the_drawer_slides_in_and_with_reduced_motion_cuts() {
     for reduced in [false, true] {
         set_reduced_motion(reduced);
         let mut view = ShowcaseView::new(360.0, 740.0);
+        // a frame settles the dock in the mode the window gives it
+        view.sidebar_wake(1.0 / 60.0);
         let menu = view.shell.dock.as_ref().unwrap().menu_id().unwrap();
         assert!(view.focus_sidebar(&menu));
         assert!(view.handle_enter(), "Enter on the menu opens it");
@@ -217,4 +219,129 @@ fn the_current_page_marks_its_tab_and_its_group_alone() {
         }
     }
     assert_eq!(nav.menus().count(), Group::ALL.len());
+}
+
+/// Target size (WCAG 2.5.8, AA): every control of the sidebar, its dock
+/// and the palette is hit in a rect at least 24 px on each side, as it
+/// is bound in a drawn frame: pinned, as an open drawer at 360, and the
+/// palette open. Each measure prints (`--nocapture`) for the record.
+#[test]
+fn every_sidebar_and_palette_control_is_at_least_24_px() {
+    use engine::drawing::compositor::Compositor;
+    const AA: f32 = 24.0;
+    // one compositor per view: its overlay layer lives in the first
+    fn check(v: &mut ShowcaseView, c: &mut Compositor, what: &str, roots: &[&str]) -> usize {
+        v.render(c);
+        let snap = v.gallery_semantics().expect("a projection");
+        let mut seen = 0;
+        for (id, node) in snap.nodes() {
+            let under = roots.iter().any(|r| id.as_str().starts_with(r));
+            if !under || node.actions.is_empty() {
+                continue;
+            }
+            let Some(b) = c.binding(id) else { continue };
+            let [_, _, w, h] = b.rect;
+            eprintln!("target {what} {id} {:?} {w:.1}x{h:.1}", node.role);
+            assert!(w >= AA && h >= AA, "{what} {id}: {w}x{h} under {AA}");
+            seen += 1;
+        }
+        seen
+    }
+    let sidebar = ["shell.sidebar"];
+    let mut pinned = ShowcaseView::new(1280.0, 800.0);
+    pinned.pin_sidebar(true);
+    assert!(check(&mut pinned, &mut Compositor::new(), "pinned", &sidebar) > 10);
+
+    let mut narrow = ShowcaseView::new(360.0, 740.0);
+    let mut c = Compositor::new();
+    assert!(
+        check(&mut narrow, &mut c, "closed", &sidebar) >= 1,
+        "the menu button"
+    );
+    let menu = narrow.shell.dock.as_ref().unwrap().menu_id().unwrap();
+    assert!(narrow.ask_sidebar(&menu, "activate"));
+    narrow.sidebar_wake(10.0);
+    assert!(check(&mut narrow, &mut c, "drawer", &sidebar) > 10);
+
+    let mut palette = ShowcaseView::new(1280.0, 800.0);
+    assert!(palette.handle_chord("k", true));
+    assert!(
+        check(
+            &mut palette,
+            &mut Compositor::new(),
+            "palette",
+            &["palette"]
+        ) > 5
+    );
+}
+
+/// The width sweep (#163's acceptance): from 280 to 1600 every 8 px, in
+/// core and hoff, pinned or not, the chrome cuts nothing. The panel, its
+/// rows and their labels (one line each) stand inside the window; the
+/// page's column starts past a pinned panel; the menu button and the
+/// palette's sheet are inside the window, and a drawer leaves a touch
+/// target of scrim to close it by.
+#[test]
+fn nothing_in_the_chrome_cuts_from_280_to_1600() {
+    const E: f32 = 0.5;
+    let inside = |r: Rect, o: Rect| {
+        r.x >= o.x - E
+            && r.y >= o.y - E
+            && r.right() <= o.right() + E
+            && r.bottom() <= o.bottom() + E
+    };
+    for name in ["core", "hoff"] {
+        let mut v = ShowcaseView::new(1280.0, 800.0);
+        v.apply_theme(name);
+        let mut palette = ShowcaseView::new(1280.0, 800.0);
+        palette.apply_theme(name);
+        assert!(palette.handle_chord("k", true));
+        let wide = Rect::new(0.0, 0.0, 1e3, 1e4);
+        let one_line = v.nav.trigger_rect(0, wide, &v.theme).unwrap().h;
+        for w in (280..=1600).step_by(8) {
+            let w = w as f32;
+            let window = Rect::new(0.0, 0.0, w, 800.0);
+            v.resize(w, 800.0, 1.0);
+            for pinned in [false, true] {
+                v.pin_sidebar(pinned);
+                let l = v.shell.layout(&v.theme);
+                let d = l.dock.expect("docked");
+                assert!(inside(d.rest, window), "{name} {w}: {:?}", d.rest);
+                assert!(
+                    inside(l.content, window) && inside(l.header, window),
+                    "{name} {w}"
+                );
+                assert!(
+                    l.content.x >= d.page_x - E,
+                    "{name} {w}: the page past the panel"
+                );
+                if let Some(mb) = l.menu_button {
+                    assert!(inside(mb, window), "{name} {w}: the menu");
+                }
+                if d.mode == DockMode::Drawer {
+                    let scrim = w - d.rest.right();
+                    assert!(scrim >= v.theme.control.min_touch_target - E, "{name} {w}");
+                }
+                let rows = v.nav.sidebar.layout(d.rest, &v.theme).rows;
+                for (r, row) in rows.iter().enumerate() {
+                    assert!(
+                        row.x >= d.rest.x - E && row.right() <= d.rest.right() + E,
+                        "{name} {w}"
+                    );
+                    let t = v.nav.trigger_rect(r, d.rest, &v.theme).unwrap();
+                    assert_eq!(t.h, one_line, "{name} {w}: row {r} on one line");
+                }
+            }
+            palette.resize(w, 800.0, 1.0);
+            let theme = palette.theme.clone();
+            let p = palette.palette_mut().expect("open");
+            let sheet = p.sheet_rect(&theme, window);
+            assert!(inside(sheet, window), "{name} {w}: the palette {sheet:?}");
+            let box_ = p
+                .command
+                .layout(p.palette_rect(&theme, sheet), &theme)
+                .search;
+            assert!(inside(box_, sheet), "{name} {w}: the palette's box");
+        }
+    }
 }
