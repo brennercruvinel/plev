@@ -146,10 +146,7 @@ impl Chip {
 
     /// Label style, one for measure and draw: `theme.selection.chip`.
     fn style(theme: &Theme) -> TextStyle {
-        let t = &theme.selection.chip;
-        theme
-            .typography
-            .exact(t.font_size, t.line_height, t.font_weight)
+        theme.typography.run(theme.selection.chip.text)
     }
 
     /// Chip height for a theme: the line box, the `py` above and below,

@@ -306,10 +306,6 @@ impl Calendar {
         format!("{} {}", MONTHS[self.shown.1 as usize - 1], self.shown.0)
     }
 
-    fn style(theme: &Theme, size: f32, line: f32, weight: u16) -> TextStyle {
-        theme.typography.exact(size, line, weight)
-    }
-
     /// A day cell's edge in `width`: a seventh of it on whole pixels,
     /// clamped.
     fn cell(width: f32, theme: &Theme) -> f32 {
@@ -322,10 +318,11 @@ impl Calendar {
     /// The calendar's size within `max_w`.
     pub fn size_within(&self, max_w: f32, theme: &Theme) -> (f32, f32) {
         let t = &theme.selection.calendar;
+        let weekday_line = theme.typography.run(t.weekday_text).line_height;
         let cell = Self::cell(max_w, theme);
         (
             cell * 7.0 + t.gap * 6.0,
-            cell + t.gap + t.weekday_line + t.gap + cell * 6.0 + t.gap * 5.0,
+            cell + t.gap + weekday_line + t.gap + cell * 6.0 + t.gap * 5.0,
         )
     }
 
@@ -339,6 +336,7 @@ impl Calendar {
     /// `bounds`, the grid centered across it.
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> CalendarLayout {
         let t = &theme.selection.calendar;
+        let weekday_line = theme.typography.run(t.weekday_text).line_height;
         let cell = Self::cell(bounds.w, theme);
         let grid_w = cell * 7.0 + t.gap * 6.0;
         let x0 = bounds.x + ((bounds.w - grid_w) / 2.0).max(0.0);
@@ -349,8 +347,8 @@ impl Calendar {
         let title = Rect::new(x0, bounds.y, (prev.x - t.gap - x0).max(0.0), cell);
         let wd_y = bounds.y + cell + t.gap;
         let col = |i: usize| x0 + i as f32 * (cell + t.gap);
-        let weekdays = std::array::from_fn(|i| Rect::new(col(i), wd_y, cell, t.weekday_line));
-        let top = wd_y + t.weekday_line + t.gap;
+        let weekdays = std::array::from_fn(|i| Rect::new(col(i), wd_y, cell, weekday_line));
+        let top = wd_y + weekday_line + t.gap;
         let days = (0..42)
             .map(|i| {
                 Rect::new(
@@ -452,6 +450,7 @@ impl Calendar {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let t = &theme.selection.calendar;
         let b = &theme.button;
         let l = self.layout(bounds, theme);
@@ -469,7 +468,7 @@ impl Calendar {
         } else {
             1.0
         };
-        let title = Self::style(theme, t.title_size, t.title_line, t.title_weight);
+        let title = scale.run(t.title);
         text(
             c,
             &self.title(),
@@ -481,11 +480,11 @@ impl Calendar {
         );
         self.prev.render(c, l.prev, theme);
         self.next.render(c, l.next, theme);
-        let wd = Self::style(theme, t.weekday_size, t.weekday_line, t.weekday_weight);
+        let wd = scale.run(t.weekday_text);
         for (name, r) in WEEKDAYS.iter().zip(&l.weekdays) {
             text(c, name, &wd, *r, true, t.weekday, fade);
         }
-        let day = Self::style(theme, t.day_size, t.day_line, t.day_weight);
+        let day = scale.run(t.day);
         for (i, (date, r)) in grid.iter().zip(&l.days).enumerate() {
             if date.month != self.shown.1 {
                 continue;

@@ -71,12 +71,12 @@ pub(crate) struct RowParts {
 
 /// A slider's name: the kit's form label.
 pub(super) fn label_style(theme: &Theme) -> TextStyle {
-    theme.form.label.text.clone()
+    theme.typography.run(theme.form.label.text)
 }
 
 /// The side card's heading: the kit's caption label.
 pub(super) fn caption_style(theme: &Theme) -> TextStyle {
-    theme.form.label.caption.clone()
+    theme.typography.run(theme.form.label.caption)
 }
 
 pub(super) fn value_style(theme: &Theme) -> TextStyle {
