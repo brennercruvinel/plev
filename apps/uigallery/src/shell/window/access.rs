@@ -146,7 +146,10 @@ mod tests {
             .filter(|id| page.get(id).is_none())
             .map(|id| id.as_str())
             .collect();
-        assert_eq!(rest, ["shell.sidebar", "shell.sidebar.pin"]);
+        assert_eq!(
+            rest,
+            ["shell.sidebar", "shell.sidebar.pin", "shell.sidebar.search"]
+        );
         let view = view_on("separator");
         let seen = view.reader_semantics().unwrap();
         assert!(

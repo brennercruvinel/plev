@@ -72,6 +72,9 @@ pub struct HomeSidebar {
     /// How far the body has scrolled, as asked; the layout holds it to
     /// what the body overflows by.
     scroll: f32,
+    /// A strip under the logo the app fills, this high (the gallery's
+    /// search); 0, none.
+    slot: f32,
     sem: Option<SemId>,
 }
 
@@ -96,8 +99,52 @@ impl HomeSidebar {
             focused: None,
             library: true,
             scroll: 0.0,
+            slot: 0.0,
             sem: None,
         }
+    }
+
+    /// A strip `h` high under the logo, the body's width, that the app
+    /// fills ([`HomeSidebar::slot_rect`]): it stays with the logo while
+    /// the body scrolls, a section's gap above the body. 0 takes it away.
+    pub fn set_slot(&mut self, h: f32) {
+        self.slot = h.max(0.0);
+    }
+
+    /// The logo's strip at the top of `bounds`.
+    pub fn head_rect(bounds: Rect, theme: &Theme) -> Rect {
+        Rect::new(
+            bounds.x,
+            bounds.y,
+            bounds.w,
+            head_h(theme).min(bounds.h.max(0.0)),
+        )
+    }
+
+    /// The strip under the logo in `bounds`, as wide as the body's rows;
+    /// `None` without one.
+    pub fn slot_rect(&self, bounds: Rect, theme: &Theme) -> Option<Rect> {
+        let t = &theme.navigation.sidebars;
+        (self.slot > 0.0).then(|| {
+            Rect::new(
+                bounds.x + t.body_pad,
+                bounds.y + head_h(theme),
+                bounds.w - t.body_pad * 2.0,
+                self.slot,
+            )
+        })
+    }
+
+    /// What stands above the body: the logo's strip, and the slot under
+    /// it with a section's gap.
+    fn top(&self, theme: &Theme) -> f32 {
+        let gap = theme.navigation.sidebars.group_gap;
+        head_h(theme)
+            + if self.slot > 0.0 {
+                self.slot + gap
+            } else {
+                0.0
+            }
     }
 
     /// With the "My scenes" caption, its link and the folders (the kit's
@@ -187,14 +234,15 @@ impl HomeSidebar {
         } else {
             l.rows
                 .last()
-                .map_or(bounds.y + head_h(theme), |r| r.bottom())
+                .map_or(bounds.y + self.top(theme), |r| r.bottom())
         };
         last + t.body_pad
     }
 
-    /// The body: everything under the logo, what scrolls.
-    pub fn body_rect(bounds: Rect, theme: &Theme) -> Rect {
-        let head = head_h(theme).min(bounds.h.max(0.0));
+    /// The body: everything under the logo (and the slot), what
+    /// scrolls.
+    pub fn body_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let head = self.top(theme).min(bounds.h.max(0.0));
         Rect::new(bounds.x, bounds.y + head, bounds.w, bounds.h - head)
     }
 
@@ -229,7 +277,7 @@ impl HomeSidebar {
         let link = &theme.navigation.link;
         let folder_h = theme.selection.folders.row_h;
         let (x, w) = (bounds.x + t.body_pad, bounds.w - t.body_pad * 2.0);
-        let mut y = bounds.y + head_h(theme) - shift;
+        let mut y = bounds.y + self.top(theme) - shift;
         let mut rows = Vec::new();
         for row in &self.rows {
             let h = row_h(row, w, theme);
@@ -391,7 +439,7 @@ impl HomeSidebar {
         // pointer off the body is away from them (a release still ends a
         // press)
         let (x, y) = event.pos();
-        let event = if Self::body_rect(bounds, theme).contains(x, y)
+        let event = if self.body_rect(bounds, theme).contains(x, y)
             || matches!(event, WidgetEvent::MouseUp { .. })
         {
             event
@@ -455,7 +503,7 @@ impl HomeSidebar {
         let at = logo_rect(&self.logo, bounds, t.head_pad, theme);
         self.logo.render(c, at, theme);
         let l = self.layout(bounds, theme);
-        let body = Self::body_rect(bounds, theme);
+        let body = self.body_rect(bounds, theme);
         c.push_clip(body.x, body.y, body.w, body.h);
         self.render_body(c, &l, theme);
         c.pop_clip();

@@ -32,6 +32,7 @@ use engine::widgets::prelude::{ContextMenu, MenuEntry, ModalAction, ToastManager
 use engine::widgets::form::ClipKey;
 
 use super::super::components::context_menu;
+use super::super::palette::{self, Cmd};
 use super::super::text_input::field_menu;
 use super::super::{ActiveOverlay, ShowcaseView};
 
@@ -92,6 +93,10 @@ struct Overlays<'a> {
     /// A text field's menu picked: the clipboard key the view runs on
     /// the field once the dispatch is over (`field_menu.rs`).
     clip: &'a mut Option<ClipKey>,
+    /// A command of the palette ran: what it does and who asked, which
+    /// the view asks of the shell once the dispatch is over
+    /// (`palette.rs`).
+    ran: &'a mut Option<(Cmd, Actor)>,
 }
 
 /// The toasts on screen and the overlay that holds the pointer, into `b`,
@@ -133,6 +138,7 @@ fn project(
         }
         ActiveOverlay::Sheet { widget, .. } => edge::project_sheet(widget, focus, b),
         ActiveOverlay::Drawer { widget, .. } => edge::project_drawer(widget, focus, b),
+        ActiveOverlay::Palette { widget, .. } => palette::project(widget, focus, b),
     }
 }
 
@@ -172,6 +178,8 @@ enum Asked {
     Sheet(OverlayId, bool),
     /// A link of the drawer, picked.
     Link(OverlayId, usize),
+    /// The command palette asked (`palette.rs`).
+    Palette(OverlayId, palette::Ask),
 }
 
 impl Overlays<'_> {
@@ -199,6 +207,9 @@ impl Overlays<'_> {
             }
             ActiveOverlay::Sheet { id, widget } => edge::sheet_asked(widget, *id, req),
             ActiveOverlay::Drawer { id, widget } => edge::drawer_asked(widget, *id, req),
+            ActiveOverlay::Palette { id, widget, .. } => {
+                palette::asked(widget, req).map(|a| Asked::Palette(*id, a))
+            }
         }
     }
 }
@@ -284,6 +295,29 @@ impl Operable for Overlays<'_> {
                 );
                 outcome.result.insert("item".to_owned(), Value::Text(label));
             }
+            Some(Asked::Palette(overlay, ask)) => {
+                let Some(ActiveOverlay::Palette {
+                    widget, commands, ..
+                }) = self.active.as_mut()
+                else {
+                    return Execution::Failed(format!("{} is not open", req.target));
+                };
+                match ask {
+                    palette::Ask::Close => self.mgr.pop_id_animated(overlay),
+                    palette::Ask::Filter(text) => {
+                        widget.command.search.input.set_value(&text);
+                        outcome.result.insert("text".to_owned(), Value::Text(text));
+                    }
+                    palette::Ask::Run(i) => {
+                        let label = widget.command.items()[i].label.clone();
+                        // it fades out open, as it was
+                        widget.command.run(i);
+                        *self.ran = commands.get(i).map(|c| (*c, req.actor.clone()));
+                        self.mgr.pop_id_animated(overlay);
+                        outcome.result.insert("item".to_owned(), Value::Text(label));
+                    }
+                }
+            }
             None => {
                 return Execution::Failed(format!("no overlay has {action} on {}", req.target));
             }
@@ -327,18 +361,25 @@ impl ShowcaseView {
             Some(ActiveOverlay::Menu { widget, .. }) => widget.sem_id(),
             Some(ActiveOverlay::Sheet { widget, .. }) => widget.sem_id(),
             Some(ActiveOverlay::Drawer { widget, .. }) => widget.sem_id(),
+            Some(ActiveOverlay::Palette { widget, .. }) => widget.sem_id(),
             None => None,
+        };
+        // the palette's box and list are children of the dialog by path
+        let within = |at: &SemId| {
+            std::iter::successors(id.parent_path(), |p| p.parent_path()).any(|p| &p == at)
         };
         [self.toasts.sem_id(), modal]
             .into_iter()
             .flatten()
-            .any(|at| at == id || key_under(id, at).is_some())
+            .any(|at| at == id || key_under(id, at).is_some() || within(at))
     }
 
     /// A request aimed at an overlay, from any actor, through the
     /// gallery's one dispatcher: the receipt as it stands.
     pub(in crate::views) fn act_overlay(&mut self, req: Request) -> Option<Receipt> {
         let mut clip = None;
+        let mut ran = None;
+        let was_open = self.palette_open();
         let mut op = Overlays {
             toasts: &mut self.toasts,
             mgr: &mut self.overlay_mgr,
@@ -346,6 +387,7 @@ impl ShowcaseView {
             focus: self.overlay_focus.as_ref(),
             theme: &self.theme,
             clip: &mut clip,
+            ran: &mut ran,
         };
         let id = self
             .panes
@@ -354,7 +396,12 @@ impl ShowcaseView {
         if let Some(key) = clip {
             self.clip_to(Some(key));
         }
-        self.panes.todo.receipt(id).cloned()
+        let receipt = self.panes.todo.receipt(id).cloned();
+        if let Some((cmd, actor)) = ran {
+            self.run_palette(cmd, actor);
+        }
+        self.palette_closed(was_open);
+        receipt
     }
 
     /// A person's click on a button of the modal or an item of the menu
@@ -417,6 +464,14 @@ impl ShowcaseView {
                     .and_then(|menu| key_under(id, menu))
                     .and_then(|key| key.parse::<u64>().ok());
                 widget.set_highlighted(item);
+            }
+            Some(ActiveOverlay::Palette { widget, .. }) => {
+                let list = widget.command.list_id();
+                let item = list
+                    .as_ref()
+                    .and_then(|l| key_under(id, l))
+                    .and_then(|k| k.parse::<usize>().ok());
+                widget.command.focus_item(item);
             }
             Some(active) => edge::show_focus(active, id),
             None => {}

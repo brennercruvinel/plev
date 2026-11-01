@@ -102,7 +102,7 @@ fn the_navigation_alone_scrolls_under_the_logo() {
     let mut s = home().library(false);
     let full = s.size(&t).1;
     let bounds = Rect::new(0.0, 0.0, 240.0, 200.0);
-    let body = HomeSidebar::body_rect(bounds, &t);
+    let body = s.body_rect(bounds, &t);
     let before = s.layout(bounds, &t).rows[0];
     assert!(full > bounds.h && s.max_scroll(bounds, &t) > 0.0);
     let wheel = WidgetEvent::Scroll {
