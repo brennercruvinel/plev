@@ -446,9 +446,12 @@ impl TextField {
             }
             return EventResult::IGNORED;
         }
+        // where a press lands: the box, grown to the least target around
+        // it (44 px with a finger, `widgets::hit`); the drawing is the box
+        let hit = crate::widgets::hit::hit_rect(bounds, theme);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let inside = bounds.contains(x, y);
+                let inside = hit.contains(x, y);
                 if inside != self.hovered {
                     self.hovered = inside;
                     EventResult::changed()
@@ -457,7 +460,7 @@ impl TextField {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if bounds.contains(x, y) {
+                if hit.contains(x, y) {
                     let style = self.style(theme);
                     let (text_x, _, text_w) = self.text_box(bounds, &style, theme, slots);
                     let fit = self.fit(&style, text_w, theme);

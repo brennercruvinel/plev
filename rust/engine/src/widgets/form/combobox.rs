@@ -29,6 +29,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::form::select::list::{self, Row, Window};
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::{Look, Slot};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
@@ -341,7 +342,7 @@ impl Combobox {
                 {
                     return EventResult::changed();
                 }
-                if control.contains(x, y) && !self.is_open() {
+                if hit_rect(control, theme).contains(x, y) && !self.is_open() {
                     self.open();
                     return EventResult::clicked();
                 }
