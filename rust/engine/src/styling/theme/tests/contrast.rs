@@ -1514,6 +1514,9 @@ fn the_core_notifications_header_meets_aaa() {
     ] {
         let r = ratio(over(fg, under), under);
         assert!(r >= AAA, "{fg:?} at {r:.2}");
+    }
+}
+
 /// task-104 front G: the core sidebars' text meets AAA on the surfaces
 /// under it (the panel, a filled row, a field's well), their marks 3:1.
 /// The kit's #7B7B7B text, and its 70% and 50% washes, fail it; that text
