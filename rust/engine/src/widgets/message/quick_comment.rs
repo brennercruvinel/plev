@@ -215,7 +215,8 @@ impl QuickComment {
         let (cs, _) = self.close.preferred_size(theme);
         let close = Rect::new(inner.x + t.header_pad, inner.y + t.header_pad, cs, cs);
         let tx = close.right() + t.header_gap;
-        let head_h = t.title.line_height + t.subtitle.line_height;
+        let head_h =
+            t.title.line_height(&theme.typography) + t.subtitle.line_height(&theme.typography);
         let title = Rect::new(
             tx,
             close.y + (cs - head_h).max(0.0) / 2.0,
@@ -253,14 +254,14 @@ impl QuickComment {
         let avatar = Rect::new(cx, top, quick.avatar, quick.avatar);
         let col = avatar.right() + quick.gap;
         let col_w = (cx + cw - col).max(0.0);
-        let name = Rect::new(col, top, col_w, t.name.line_height);
+        let name = Rect::new(col, top, col_w, t.name.line_height(&theme.typography));
         let seal = self.verified.then(|| {
             let style = t.name.style(&theme.typography);
             let w = super::message::width(self.replier.name.as_str(), &style);
-            let edge = t.name.line_height;
+            let edge = t.name.line_height(&theme.typography);
             Rect::new(col + w + quick.seal_gap, top, edge, edge)
         });
-        let line_h = ComposeLine::height(&Self::look(theme));
+        let line_h = ComposeLine::height(&Self::look(theme), theme);
         let line = Rect::new(col, name.bottom() + t.line_gap, col_w, line_h);
         let row_y = line.bottom().max(avatar.bottom()) + t.tools_top;
         let tool = &t.tool;
@@ -335,7 +336,7 @@ impl QuickComment {
             room,
             theme,
         );
-        let sub_y = l.title.y + t.title.line_height;
+        let sub_y = l.title.y + t.title.line_height(&theme.typography);
         line(
             c,
             layer,

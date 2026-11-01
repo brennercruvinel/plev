@@ -35,7 +35,10 @@ fn the_core_is_the_kit_and_the_others_derive_it() {
     for theme in themes() {
         let t = &theme.message.prompt;
         assert_eq!(t.max_w, kit.max_w);
-        assert_eq!(t.text.line_height, kit.text.line_height);
+        assert_eq!(
+            t.text.line_height(&theme.typography),
+            kit.text.line_height(&theme.typography)
+        );
         if theme.message.prompt != kit {
             assert_eq!(t.text.color, theme.colors.text);
             assert_eq!(t.choice.title.color, theme.colors.text);
@@ -57,7 +60,10 @@ fn the_model_menu_chooses_by_a_click_and_projects_both_ways() {
     let mut m = SelectAi::kit().sem(id.clone());
     let (w, h) = m.size(&theme);
     let c = &theme.message.prompt.choice;
-    let row = c.pad_y * 2.0 + c.title.line_height + c.description_gap + c.description.line_height;
+    let row = c.pad_y * 2.0
+        + c.title.line_height(&theme.typography)
+        + c.description_gap
+        + c.description.line_height(&theme.typography);
     assert_eq!(w, 204.0);
     assert_eq!(h, 2.0 * (1.0 + 8.0) + 4.0 * row);
     let b = Rect::new(0.0, 0.0, w, h);

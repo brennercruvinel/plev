@@ -92,7 +92,7 @@ impl MessageScroller {
 
     fn empty_h(theme: &Theme) -> f32 {
         let s = &theme.message.thread;
-        theme.message.scroller.empty.line_height + s.pad * 2.0
+        theme.message.scroller.empty.line_height(&theme.typography) + s.pad * 2.0
     }
 
     /// The messages' height, all of them, in a surface `width` wide.
