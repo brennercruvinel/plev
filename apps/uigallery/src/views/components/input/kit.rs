@@ -1,6 +1,7 @@
 //! The kit's InputsPage (`templates/InputsPage/index.tsx`) on the Input
-//! tab: its groups in its order, each card behind the chip the kit gives
-//! it, as a form page (`field::FormPage`) whose ids are under
+//! tab: its seven groups in its order (Email, Password, Username, Replace
+//! avatar, Invite, Color picker, Search), each card behind the chip the
+//! kit gives it, as a form page (`field::FormPage`) whose ids are under
 //! `input_page`. The widgets the Field and Input Group tabs already show
 //! are the same widgets here; the avatar upload and the color picker plug
 //! in below.
@@ -20,14 +21,51 @@ use engine::widgets::form::upload_avatar::UploadAvatar;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
 use super::super::field::spec::{CardWidget, Part};
-use super::super::field::{FormPage, Group, card};
+use super::super::field::{FormPage, Group, LIVE, card, email, password};
+use super::super::input_group::{invite, search};
+use engine::widgets::form::new_field::NewField;
 
 /// The page root the kit's groups share with the Input group.
 pub(super) const ROOT: &str = "input_page";
 
-/// The kit's groups.
+/// The kit's groups, in its order (InputsPage :26-182).
 pub(super) fn page() -> FormPage {
     let groups = vec![
+        Group {
+            title: "Email",
+            columns: 3,
+            cards: vec![
+                card(LIVE, email()),
+                card(
+                    "Typed",
+                    email().with_text("sophie@hoff.dev").validated(true),
+                ),
+                card(
+                    "Message, With icon",
+                    email().icon("scan").error("This email is already taken."),
+                ),
+            ],
+        },
+        Group {
+            title: "Password",
+            columns: 3,
+            cards: vec![
+                card(LIVE, password()),
+                card(
+                    "Typed",
+                    password().with_text("correct horse").validated(true),
+                ),
+                card("Message", password().error("Confirm password is incorrect")),
+            ],
+        },
+        Group {
+            title: "Username",
+            columns: 1,
+            cards: vec![card(
+                "Default, Hover, Edit, Confirm",
+                NewField::new("sophie", "Enter new username"),
+            )],
+        },
         Group {
             title: "Replace avatar",
             columns: 2,
@@ -37,6 +75,11 @@ pub(super) fn page() -> FormPage {
             ],
         },
         Group {
+            title: "Invite",
+            columns: 1,
+            cards: vec![card("Default, Hover, Focus, Dropdown", invite())],
+        },
+        Group {
             title: "Color picker",
             columns: 1,
             // :167-171, the kit's own color, `F4F4F4` at 100 %.
@@ -44,6 +87,11 @@ pub(super) fn page() -> FormPage {
                 "Default, Hover, Focus",
                 ColorPicker::new("F4F4F4", 100),
             )],
+        },
+        Group {
+            title: "Search",
+            columns: 1,
+            cards: vec![card("Default, Hover, Focus", search())],
         },
     ];
     FormPage::new(ROOT, groups)
