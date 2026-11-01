@@ -325,9 +325,10 @@ fn a_new_field_saves_the_same_value_from_the_three() {
     );
 }
 
-const PICKER: &str = "input_page.group[0].card[0]";
-const HEX: &str = "input_page.group[0].card[0].hex";
-const ALPHA: &str = "input_page.group[0].card[0].alpha";
+const PICKER: &str = "input_page.group[5].card[0]";
+const HEX: &str = "input_page.group[5].card[0].hex";
+const ALPHA: &str = "input_page.group[5].card[0].alpha";
+const NO_AVATAR: &str = "input_page.group[3].card[1]";
 
 /// The person scrolls the page until `id` is on screen.
 fn scroll_to(g: &mut Gallery, id: &str) {
@@ -412,4 +413,57 @@ fn a_color_picker_takes_the_same_color_from_the_three() {
         person.value(&format!("{PICKER}:value")),
         Some(Value::from("#33669980"))
     );
+}
+
+/// The avatar upload without a photo: a person's press, a reader's press
+/// and an agent's `activate` ask for a file, and the gallery's answer
+/// puts the same photo in.
+#[test]
+fn an_avatar_upload_takes_the_same_photo_from_the_three() {
+    let mut person = gallery("Input");
+    scroll_to(&mut person, NO_AVATAR);
+    person.click(NO_AVATAR);
+    let mut reader = gallery("Input");
+    reader.press(NO_AVATAR);
+    let agent = by_agent("Input", "avatar", vec![ask(NO_AVATAR, "activate")]);
+    same("Input", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{NO_AVATAR}:photo")),
+        Some(Value::Bool(true))
+    );
+}
+
+const INPUT_PASSWORD: &str = "input_page.group[1].card[0]";
+
+/// The kit's Password group on the Input tab: the same secret from the
+/// three, and none of them sees more of it than its length.
+#[test]
+pub(super) fn a_password_on_the_input_tab_takes_the_same_secret_and_shows_its_length_only() {
+    let mut person = gallery("Input");
+    scroll_to(&mut person, INPUT_PASSWORD);
+    person.click(INPUT_PASSWORD);
+    person.type_in("hunter2");
+    let mut reader = gallery("Input");
+    reader.reader(
+        INPUT_PASSWORD,
+        Action::SetValue,
+        Some(ActionData::Value("hunter2".into())),
+    );
+    let agent = by_agent(
+        "Input",
+        "input-password",
+        vec![ask_with(
+            INPUT_PASSWORD,
+            "set_value",
+            Value::from("hunter2"),
+        )],
+    );
+    same("Input", &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{INPUT_PASSWORD}:text")),
+        Some(Value::Int(7))
+    );
+    for g in [&person, &reader, &agent] {
+        assert!(!format!("{:?}", g.state()).contains("hunter2"));
+    }
 }
