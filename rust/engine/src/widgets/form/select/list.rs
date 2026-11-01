@@ -73,8 +73,14 @@ pub(crate) struct Window {
 impl Window {
     /// The window of `n` rows in the panel `dd`, scrolled `offset`.
     pub(crate) fn new(dd: Rect, n: usize, offset: f32, theme: &Theme) -> Self {
+        Self::sized(dd, n, view_h(n, theme), offset, theme)
+    }
+
+    /// The same in a strip `view_h` tall, its owner's (a palette sized
+    /// by the window), not the panel's `max_h`.
+    pub(crate) fn sized(dd: Rect, n: usize, view_h: f32, offset: f32, theme: &Theme) -> Self {
         let p = &theme.form.select.panel;
-        let view = Rect::new(dd.x, dd.y + p.pad, dd.w, view_h(n, theme));
+        let view = Rect::new(dd.x, dd.y + p.pad, dd.w, view_h);
         let rows = if view.h > 0.0 && p.row_h > 0.0 {
             let first = (offset / p.row_h).floor() as usize;
             let end = ((offset + view.h) / p.row_h).ceil() as usize;

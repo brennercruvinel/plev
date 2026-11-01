@@ -2,7 +2,10 @@
 //! ([`crate::widgets::feedback::sheet`]) over its scrim, its rows on the
 //! sheet without a panel of their own ([`Command::bare`]), the
 //! sheet as wide as a modal in that window and as tall as the palette
-//! with the modal's padding around it, centered. Closed, it is the kit's
+//! with the modal's padding around it, centered, up to a share of the
+//! window's height (`theme.form.group.palette_share`): past it the list
+//! scrolls in what the box leaves ([`Command::fit`]), so the palette
+//! grows and shrinks with the window. Closed, it is the kit's
 //! Search (`components/Search/index.tsx`): the box with its `⌘ K` cap,
 //! which a press opens. ⌘K (Ctrl+K off macOS) opens and closes it
 //! ([`CommandDialog::toggle`], the owner's key), Escape closes it, a
@@ -49,7 +52,7 @@ impl CommandDialog {
             .end(Addon::Hint("⌘ K".into()));
         Self {
             // The sheet is the panel: the rows stand on it.
-            command: command.bare(),
+            command: command.bare().fit(),
             trigger,
             trigger_id: None,
             open: false,
@@ -114,11 +117,15 @@ impl CommandDialog {
     }
 
     /// The sheet in `window`: a modal's width there, as tall as the
-    /// palette needs, centered.
+    /// palette needs up to the theme's share of the window's height (the
+    /// box and one row at least, the window at most), centered.
     pub fn sheet_rect(&self, theme: &Theme, window: Rect) -> Rect {
         let pad = theme.overlay.modal.pad;
         let w = Modal::width(theme, window.w).min(window.w);
-        let h = self.command.height_for((w - pad * 2.0).max(0.0), theme) + pad * 2.0;
+        let need = self.command.height_for((w - pad * 2.0).max(0.0), theme) + pad * 2.0;
+        let least = self.command.min_height(theme) + pad * 2.0;
+        let most = (window.h * theme.form.group.palette_share).max(least);
+        let h = need.min(most).min(window.h.max(0.0));
         let x = window.x + ((window.w - w) / 2.0).max(0.0);
         let y = window.y + ((window.h - h) / 2.0).max(0.0);
         Rect::new(x, y, w, h)

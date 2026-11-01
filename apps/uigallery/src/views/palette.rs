@@ -277,9 +277,22 @@ impl ShowcaseView {
         }
     }
 
-    /// Up and Down while the palette is open: the highlight moves.
+    /// Up and Down while the palette is open: the highlight moves, and
+    /// the list scrolls the least that shows it, kept from one key to the
+    /// next.
     pub(super) fn palette_nav(&mut self, down: bool) -> bool {
-        self.palette_mut().is_some_and(|p| p.command.nav(down))
+        if !self.palette_open() {
+            return false;
+        }
+        let window = Rect::new(0.0, 0.0, self.width, self.height);
+        let theme = &self.theme;
+        let Some(ActiveOverlay::Palette { widget, .. }) = &mut self.active_overlay else {
+            return false;
+        };
+        let moved = widget.command.nav(down);
+        let at = widget.palette_rect(theme, widget.sheet_rect(theme, window));
+        widget.command.settle_scroll(at, theme);
+        moved
     }
 
     /// Enter while the palette is open: the person asks the highlighted
