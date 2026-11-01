@@ -1,7 +1,8 @@
 //! Keyboard bridge for the platform shell: winit named keys map onto the
 //! view's winit-free editing keys (Tab focus cycling, the Forms text
-//! fields, the App add field and its Enter). Escape stays in app.rs,
-//! which owns close/quit.
+//! fields, the App add field and its Enter). Escape stays in the
+//! shell's window events (`shell/window/events`): it closes what is open,
+//! never the window.
 
 use winit::keyboard::NamedKey;
 

@@ -61,7 +61,7 @@ pub(crate) fn rule(c: &mut Compositor, x: f32, y: f32, w: f32, theme: &Theme) {
 }
 
 /// The product the logo names, as the kit's pages do.
-pub const PRODUCT: &str = "Brainwave";
+pub const PRODUCT: &str = "Plev";
 
 /// The head's height: the logo in its padding.
 pub(crate) fn head_h(theme: &Theme) -> f32 {
