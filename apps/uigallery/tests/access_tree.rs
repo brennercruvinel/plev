@@ -50,6 +50,7 @@ const PROJECTING: &[&str] = &[
     "Button",
     "Button Group",
     "Calendar",
+    "Card",
     "Carousel",
     "Chart",
     "Checkbox",
@@ -86,6 +87,7 @@ const PROJECTING: &[&str] = &[
     "Panel Header",
     "Popover",
     "Progress",
+    "Prompt Input",
     "Radio Group",
     "Resizable",
     "Scroll Area",
@@ -102,6 +104,7 @@ const PROJECTING: &[&str] = &[
     "Toast",
     "Toggle",
     "Toggle Group",
+    "Toolbar",
     "Tooltip",
     "Topbar",
     "Tree",
@@ -139,10 +142,6 @@ const SILENT: &[(&str, Why)] = &[
     (
         "Effects",
         Nothing("samples of the shadow stacks, blur and gradient"),
-    ),
-    (
-        "Card",
-        Unprojected("Card: a group per variant with its words and numbers"),
     ),
     (
         "Empty",

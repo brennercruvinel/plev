@@ -166,6 +166,7 @@ impl DisclosureTokens {
                 bleed: false,
             },
             card: CardRecipe::derive(theme),
+            catalog: CatalogTokens::derive(theme),
             split,
         }
     }

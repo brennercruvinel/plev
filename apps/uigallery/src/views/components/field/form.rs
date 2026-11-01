@@ -213,6 +213,19 @@ impl FormPage {
             .collect()
     }
 
+    /// Whether `(x, y)` is on what floats over the page (an open list):
+    /// the pointer there is the page's alone, not a page's around it.
+    pub(crate) fn over_overlay(&self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+        let layout = self.layout(content, theme);
+        self.groups.iter().zip(&layout).any(|(group, laid)| {
+            group
+                .cards
+                .iter()
+                .zip(&laid.cards)
+                .any(|(card, (_, rect))| card.spec.over_overlay(x, y, *rect, theme))
+        })
+    }
+
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
         self.layout(content, theme)
             .last()

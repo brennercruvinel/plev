@@ -56,6 +56,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.content_height(content, t),
                 Pane::Spinner => self.panes.spinner.content_height(content, t),
                 Pane::Stat => self.panes.stat.content_height(content, t),
+                Pane::Toolbar => self.panes.toolbar.content_height(content, t),
                 Pane::Switch => self.panes.switch.content_height(content, t),
                 Pane::Table => self.panes.table.content_height(content, t),
                 Pane::Tabs => self.panes.tabs.content_height(content, t),
@@ -85,6 +86,7 @@ impl ShowcaseView {
                 Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
+                Pane::PromptInput => self.panes.prompt_input.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.content_height(content, t),
@@ -185,6 +187,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.handle_event(event, content, t),
                 Pane::Spinner => self.panes.spinner.handle_event(event, content, t),
                 Pane::Stat => self.panes.stat.handle_event(event, content, t),
+                Pane::Toolbar => self.panes.toolbar.handle_event(event, content, t),
                 Pane::Switch => self.panes.switch.handle_event(event, content, t),
                 Pane::Table => self.panes.table.handle_event(event, content, t),
                 Pane::Tabs => self.panes.tabs.handle_event(event, content, t),
@@ -256,6 +259,7 @@ impl ShowcaseView {
                 Pane::MessageScroller => {
                     self.panes.message_scroller.handle_event(event, content, t)
                 }
+                Pane::PromptInput => self.panes.prompt_input.handle_event(event, content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.handle_event(event, content, t),
@@ -391,6 +395,7 @@ impl ShowcaseView {
             }
             // task-104 front C, conversation and feedback (#156)
             Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
+            Some(Pane::PromptInput) => self.panes.prompt_input.wake(dt),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
@@ -444,7 +449,7 @@ impl ShowcaseView {
                 Pane::Empty => self.panes.empty.render(c, content, theme),
                 Pane::Graph => self.panes.graph.render(c, content, theme),
                 Pane::IconButton => self.panes.icon_button.render(c, content, theme),
-                Pane::Input => self.panes.input.render(c, content, theme),
+                Pane::Input => self.panes.input.render(c, layers.overlay, content, theme),
                 Pane::NavigationMenu => self.panes.navigation_menu.render(c, content, theme),
                 Pane::Panel => self.panes.panel.render(c, content, theme),
                 Pane::PanelHeader => self.panes.panel_header.render(c, content, theme),
@@ -461,6 +466,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.render(c, content, theme),
                 Pane::Spinner => self.panes.spinner.render(c, content, theme),
                 Pane::Stat => self.panes.stat.render(c, content, theme),
+                Pane::Toolbar => self.panes.toolbar.render(c, content, theme),
                 Pane::Switch => self.panes.switch.render(c, content, theme),
                 Pane::Table => self.panes.table.render(c, content, theme),
                 Pane::Tabs => self.panes.tabs.render(c, content, theme),
@@ -556,6 +562,11 @@ impl ShowcaseView {
                 Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
+                Pane::PromptInput => {
+                    self.panes
+                        .prompt_input
+                        .render(c, layers.overlay, content, theme)
+                }
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.render(c, content, theme),
                 Pane::AspectRatio => self.panes.aspect_ratio.render(c, content, theme),

@@ -11,9 +11,11 @@
 //! ([`FormTokens::derive`]): the text field each of them drew before the
 //! kit, so a theme that is not the core looks as it did.
 
+mod color;
 mod edit;
 mod select;
 
+pub use color::ColorTokens;
 pub use edit::EditTokens;
 pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
 
@@ -247,6 +249,8 @@ pub struct FormTokens {
     /// The inline edit (`edit.rs`), and its bare box.
     pub edit: EditTokens,
     pub bare: InputRecipe,
+    /// The color picker (`color.rs`).
+    pub color: ColorTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -496,6 +500,7 @@ impl FormTokens {
             select,
             edit,
             bare,
+            color: ColorTokens::hoff_core(),
         }
     }
 
@@ -611,6 +616,7 @@ impl FormTokens {
             select,
             edit,
             bare,
+            color: ColorTokens::derive(theme),
         }
     }
 }

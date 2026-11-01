@@ -170,7 +170,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Card",
         "clipboard",
-        "The HOFF card deck: one glass shell, six preview families with live data.",
+        "The kit's cards page: pricing, slide, asset, scene, explore and asset items.",
         Pane::Card,
     ),
     page(
@@ -432,6 +432,13 @@ pub const PAGES: &[Page] = &[
         "The kit's rail: its value, its intents, its narrowest.",
         Pane::Progress,
     ),
+    page(
+        C,
+        "Prompt Input",
+        "send",
+        "The kit's prompt box: the line, its files, setting and model menus, voice input, premade prompts.",
+        Pane::PromptInput,
+    ),
     placeholder("Questionnaire"),
     page(
         C,
@@ -558,6 +565,13 @@ pub const PAGES: &[Page] = &[
         "layout-grid",
         "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
         Pane::ToggleGroup,
+    ),
+    page(
+        C,
+        "Toolbar",
+        "mouse-pointer-2",
+        "The kit's toolbar page: the toolbar and its zoom panel, play mode, the video player, the view controller.",
+        Pane::Toolbar,
     ),
     page(
         C,

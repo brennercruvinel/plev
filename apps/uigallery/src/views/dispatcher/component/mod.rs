@@ -160,11 +160,13 @@ components! {
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
+    PromptInput => prompt_input,
     Progress => progress,
     Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)
     Accordion => accordion,
     AspectRatio => aspect_ratio,
+    Card => card,
     Carousel => carousel,
     Collapsible => collapsible,
     Item => item,
@@ -189,6 +191,7 @@ components! {
     CodeBlock => code_block,
     Graph => graph,
     Stat => stat,
+    Toolbar => toolbar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay

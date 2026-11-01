@@ -477,6 +477,9 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
     // The card's marks: the kit's ink and gray in the core only.
     assert_ne!(derived.card, kit.card);
     derived.card = kit.card;
+    // The catalog: the kit but its muted text, shade 7 in the core for AAA.
+    assert_ne!(derived.catalog.palette.muted, kit.catalog.palette.muted);
+    derived.catalog.palette.muted = kit.catalog.palette.muted;
     assert_ne!(derived.split, kit.split);
     derived.split = kit.split;
     assert_eq!(derived, kit);
