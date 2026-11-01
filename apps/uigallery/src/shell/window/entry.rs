@@ -61,6 +61,10 @@ pub fn run_web() {
     engine::drawing::text::on_faces_arrived(move || {
         let _ = faces.send_event(UserEvent::Faces);
     });
+    // the browser's prefers-reduced-motion and prefers-contrast, read
+    // again when the page takes the focus (`events`)
+    engine::control::accessibility::reduced_motion::follow_system();
+    engine::control::accessibility::preference::follow_contrast();
     event_loop.spawn_app(app);
 }
 

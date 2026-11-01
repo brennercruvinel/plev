@@ -241,7 +241,14 @@ impl App {
                     target_os = "ios"
                 )))]
                 self.focus_changed(id, on);
-                #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+                // the browser has no bridge to read them again
+                // (`Bridge::process_event`): the page reads them here
+                #[cfg(target_arch = "wasm32")]
+                if on {
+                    engine::control::accessibility::reduced_motion::follow_system();
+                    engine::control::accessibility::preference::follow_contrast();
+                }
+                #[cfg(any(target_os = "android", target_os = "ios"))]
                 let _ = on;
             }
 
