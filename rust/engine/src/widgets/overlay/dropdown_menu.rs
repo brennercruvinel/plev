@@ -10,9 +10,16 @@
 //! id>]`, as the context menu projects them. The arrow keys move among
 //! the items through the projection (the gallery's keyboard), and the
 //! highlight follows ([`DropdownMenu::highlight`]).
+//!
+//! A menu taller than the room its placement leaves (a low window: the
+//! placement caps the panel to the space under or over its trigger)
+//! scrolls its rows inside the panel: the wheel moves them, and a row
+//! the keys highlight scrolls in the least that shows it
+//! (`reveal::nearest`, [`DropdownMenu::fit`]).
 
 use accord::{NodeBuilder, SemId, SnapshotBuilder};
 
+use crate::control::input::reveal::{Cover, Span, nearest};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use crate::widgets::feedback::{ContextMenu, MenuEntry};
@@ -24,6 +31,11 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 pub struct DropdownMenu {
     pub popover: Popover,
     pub menu: ContextMenu,
+    /// How far the rows are scrolled in a capped panel.
+    offset: f32,
+    /// The highlight moved by the keys or a reader: the next
+    /// [`DropdownMenu::fit`] scrolls it in.
+    reveal: bool,
 }
 
 impl DropdownMenu {
@@ -33,6 +45,8 @@ impl DropdownMenu {
         Self {
             popover: Popover::new(),
             menu: ContextMenu::new(entries),
+            offset: 0.0,
+            reveal: false,
         }
     }
 
@@ -53,9 +67,10 @@ impl DropdownMenu {
         self.popover.open()
     }
 
-    /// Closes it; the highlight goes with it.
+    /// Closes it; the highlight and the scroll go with it.
     pub fn close(&mut self) -> bool {
         self.menu.set_highlighted(None);
+        self.offset = 0.0;
         self.popover.close()
     }
 
@@ -70,6 +85,38 @@ impl DropdownMenu {
     /// The item `id` highlighted (the keys, a reader's focus), or none.
     pub fn highlight(&mut self, id: Option<u64>) {
         self.menu.set_highlighted(id);
+        self.reveal = id.is_some();
+    }
+
+    /// How far the rows are scrolled.
+    pub fn offset(&self) -> f32 {
+        self.offset
+    }
+
+    /// The scroll in line with the menu placed at `panel`: held to what
+    /// the panel leaves, and a highlight the keys moved scrolled in the
+    /// least that shows its row whole. The owner calls it before it
+    /// draws; `true` when the rows moved.
+    pub fn fit(&mut self, panel: Rect, theme: &Theme) -> bool {
+        let before = self.offset;
+        let max = self.menu.max_offset(panel, theme);
+        if std::mem::take(&mut self.reveal)
+            && let Some(i) = self.menu.hovered()
+        {
+            let view = self.menu.rows_view(panel, theme);
+            let rows = self.menu.entry_rects(0.0, -self.offset, theme);
+            if let Some(row) = rows.get(i) {
+                let top = view.y - panel.y;
+                self.offset += nearest(
+                    Span::new(row.y, row.h),
+                    Span::new(top, view.h),
+                    0.0,
+                    Cover::default(),
+                );
+            }
+        }
+        self.offset = self.offset.clamp(0.0, max);
+        self.offset != before
     }
 
     /// Where the menu goes by `anchor` inside `bounds`.
@@ -91,7 +138,27 @@ impl DropdownMenu {
         if !self.is_open() {
             return (EventResult::IGNORED, None);
         }
-        let (r, picked) = self.menu.handle_event(event, panel.x, panel.y, theme);
+        if let WidgetEvent::Scroll { x, y, delta } = *event
+            && panel.contains(x, y)
+        {
+            let max = self.menu.max_offset(panel, theme);
+            let to = (self.offset + delta).clamp(0.0, max);
+            if max <= 0.0 {
+                return (EventResult::IGNORED, None);
+            }
+            let moved = to != self.offset;
+            self.offset = to;
+            let r = if moved {
+                EventResult::changed()
+            } else {
+                EventResult {
+                    handled: true,
+                    ..EventResult::IGNORED
+                }
+            };
+            return (r, None);
+        }
+        let (r, picked) = self.menu.handle_event_in(event, panel, self.offset, theme);
         if picked.is_some() {
             self.close();
             return (r, picked);
@@ -103,9 +170,10 @@ impl DropdownMenu {
         (r, None)
     }
 
-    /// The menu at `panel` on `layer`.
+    /// The menu at `panel` on `layer`, its rows scrolled when the panel
+    /// was capped shorter than the menu.
     pub fn render(&self, c: &mut Compositor, layer: LayerId, panel: Rect, theme: &Theme) {
-        self.menu.render(c, layer, theme, panel.x, panel.y);
+        self.menu.render_in(c, layer, theme, panel, self.offset);
     }
 
     /// Adds the menu to a projection where its trigger is declared: the

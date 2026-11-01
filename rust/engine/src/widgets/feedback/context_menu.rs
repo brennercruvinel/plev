@@ -260,8 +260,42 @@ impl ContextMenu {
         rects
     }
 
-    fn item_at(&self, px: f32, py: f32, x: f32, y: f32, theme: &Theme) -> Option<usize> {
-        self.entry_rects(x, y, theme)
+    /// The menu's whole size laid at `(x, y)`: the panel it fills when
+    /// nothing caps it.
+    fn whole(&self, x: f32, y: f32, theme: &Theme) -> Rect {
+        let (w, h) = self.size(theme);
+        Rect::new(x, y, w, h)
+    }
+
+    /// The strip the rows of a menu placed at `panel` show in: the panel
+    /// inside its padding, top and bottom. A panel capped shorter than
+    /// the menu scrolls its rows there, clipped to it.
+    pub fn rows_view(&self, panel: Rect, theme: &Theme) -> Rect {
+        let pad = self.tokens(theme).pad;
+        Rect::new(
+            panel.x,
+            panel.y + pad,
+            panel.w,
+            (panel.h - pad * 2.0).max(0.0),
+        )
+    }
+
+    /// How far the rows of a menu placed at `panel` scroll, at most: what
+    /// the menu is taller than the panel.
+    pub fn max_offset(&self, panel: Rect, theme: &Theme) -> f32 {
+        (self.size(theme).1 - panel.h).max(0.0)
+    }
+
+    /// The item under `(px, py)` in the menu placed at `panel`, its rows
+    /// scrolled `offset`; a capped menu only shows rows inside its strip.
+    fn item_in(&self, px: f32, py: f32, panel: Rect, offset: f32, theme: &Theme) -> Option<usize> {
+        if !panel.contains(px, py)
+            || (self.max_offset(panel, theme) > 0.0
+                && !self.rows_view(panel, theme).contains(px, py))
+        {
+            return None;
+        }
+        self.entry_rects(panel.x, panel.y - offset, theme)
             .iter()
             .enumerate()
             .find(|(i, r)| matches!(self.entries[*i], MenuEntry::Item { .. }) && r.contains(px, py))
@@ -287,9 +321,22 @@ impl ContextMenu {
         y: f32,
         theme: &Theme,
     ) -> (EventResult, Option<u64>) {
+        let panel = self.whole(x, y, theme);
+        self.handle_event_in(event, panel, 0.0, theme)
+    }
+
+    /// [`ContextMenu::handle_event`] for a menu placed at `panel`, its
+    /// rows scrolled `offset` ([`ContextMenu::render_in`]).
+    pub fn handle_event_in(
+        &mut self,
+        event: &WidgetEvent,
+        panel: Rect,
+        offset: f32,
+        theme: &Theme,
+    ) -> (EventResult, Option<u64>) {
         match *event {
             WidgetEvent::MouseMove { x: px, y: py } => {
-                let hit = self.item_at(px, py, x, y, theme).filter(|&i| {
+                let hit = self.item_in(px, py, panel, offset, theme).filter(|&i| {
                     !matches!(self.entries[i], MenuEntry::Item { disabled: true, .. })
                 });
                 if hit != self.hovered {
@@ -300,7 +347,7 @@ impl ContextMenu {
                 }
             }
             WidgetEvent::MouseDown { x: px, y: py } => {
-                if let Some(i) = self.item_at(px, py, x, y, theme)
+                if let Some(i) = self.item_in(px, py, panel, offset, theme)
                     && let MenuEntry::Item { id, disabled, .. } = &self.entries[i]
                 {
                     if *disabled {
@@ -329,21 +376,36 @@ impl ContextMenu {
         x: f32,
         y: f32,
     ) {
+        self.render_in(compositor, layer, theme, self.whole(x, y, theme), 0.0);
+    }
+
+    /// The menu drawn into `panel`, the rect its placement gave it: the
+    /// surface fills the panel, and a panel capped shorter than the menu
+    /// (a low window) scrolls the rows `offset` inside its padding,
+    /// clipped there, each row bound under that clip.
+    pub fn render_in(
+        &self,
+        compositor: &mut Compositor,
+        layer: LayerId,
+        theme: &Theme,
+        panel: Rect,
+        offset: f32,
+    ) {
         let m = self.tokens(theme);
-        let (w, h) = self.size(theme);
+        let (x, y) = (panel.x, panel.y);
+        // never wider than the panel (a phone, a larger text): the labels
+        // are cut to what the row leaves them
+        let w = self.size(theme).0.min(panel.w.max(0.0));
+        let h = panel.h;
         let body = Rect::new(x, y, w, h);
-        let rows = self.entry_rects(x, y, theme);
+        let scrolls = self.max_offset(panel, theme) > 0.0;
+        let offset = if scrolls { offset } else { 0.0 };
+        let mut rows = self.entry_rects(x, y - offset, theme);
+        for r in &mut rows {
+            r.w = w;
+        }
         if let Some(id) = &self.sem {
             compositor.bind_to_layer(layer, id, [x, y, w, h]);
-            for (entry, r) in self.entries.iter().zip(&rows) {
-                if let MenuEntry::Item { id: item, .. } = entry {
-                    compositor.bind_to_layer(
-                        layer,
-                        &id.key(item.to_string()),
-                        [r.x, r.y, r.w, r.h],
-                    );
-                }
-            }
         }
 
         // The shadows, then the surface and its border; row icons pushed
@@ -364,6 +426,29 @@ impl ContextMenu {
             inset_keylight(compositor, layer, body, m.radius, theme);
         }
 
+        if scrolls {
+            let view = self.rows_view(panel, theme);
+            compositor.push_to_layer(
+                layer,
+                SceneNode::PushClip {
+                    x: view.x,
+                    y: view.y,
+                    w: view.w,
+                    h: view.h,
+                },
+            );
+        }
+        if let Some(id) = &self.sem {
+            for (entry, r) in self.entries.iter().zip(&rows) {
+                if let MenuEntry::Item { id: item, .. } = entry {
+                    compositor.bind_to_layer(
+                        layer,
+                        &id.key(item.to_string()),
+                        [r.x, r.y, r.w, r.h],
+                    );
+                }
+            }
+        }
         let style = &theme.typography.run(m.label);
         for (i, (entry, rect)) in self.entries.iter().zip(rows).enumerate() {
             match entry {
@@ -438,16 +523,19 @@ impl ContextMenu {
                         }
                         tx += m.icon + m.gap;
                     }
+                    let mut end = rect.right() - m.pad - m.item_pad_x;
                     if let Some(cap) = Self::cap(shortcut, *disabled) {
                         let (cw, ch) = cap.preferred_size(theme);
-                        let cx = rect.right() - m.pad - m.item_pad_x - cw;
+                        let cx = end - cw;
                         let cy = rect.y + (rect.h - ch) / 2.0;
                         cap.render_to_layer(compositor, layer, Rect::new(cx, cy, cw, ch), theme);
+                        end = cx - m.gap;
                     }
+                    let label = TextMeasurer::truncate_to_width(label, style, (end - tx).max(0.0));
                     compositor.push_to_layer(
                         layer,
                         SceneNode::Text {
-                            key: TextNodeKey::from_style(label, style, None),
+                            key: TextNodeKey::from_style(&label, style, None),
                             x: tx,
                             y: rect.y + TextMeasurer::vertical_center(style, rect.h),
                             color: fg,
@@ -455,6 +543,9 @@ impl ContextMenu {
                     );
                 }
             }
+        }
+        if scrolls {
+            compositor.push_to_layer(layer, SceneNode::PopClip);
         }
     }
 }
