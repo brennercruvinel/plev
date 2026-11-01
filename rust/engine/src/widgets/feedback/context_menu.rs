@@ -227,7 +227,8 @@ impl ContextMenu {
                     checked,
                     ..
                 } => {
-                    let (tw, _) = TextMeasurer::measure_styled(label, &m.label, None);
+                    let (tw, _) =
+                        TextMeasurer::measure_styled(label, &theme.typography.run(m.label), None);
                     let lead = icon.is_some() || checked.is_some();
                     let icon_w = if lead { m.icon + m.gap } else { 0.0 };
                     let cap_w = Self::cap(shortcut, false)
@@ -363,7 +364,7 @@ impl ContextMenu {
             inset_keylight(compositor, layer, body, m.radius, theme);
         }
 
-        let style = &m.label;
+        let style = &theme.typography.run(m.label);
         for (i, (entry, rect)) in self.entries.iter().zip(rows).enumerate() {
             match entry {
                 MenuEntry::Separator => {

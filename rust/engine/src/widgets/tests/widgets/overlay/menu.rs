@@ -54,13 +54,14 @@ fn menu_tokens_are_the_kit_s_three_on_core_and_the_theme_s_menu_elsewhere() {
         (204.0, 40.0, 20.0, 16.0)
     );
     let up = &o.upload_menu;
-    assert_eq!((up.label.font_size, up.label.font_weight), (13.0, 500));
+    let label = core.typography.run(up.label);
+    assert_eq!((label.font_size, label.font_weight), (13.0, 500));
     assert_eq!(
         up.item_pad_x + up.icon + up.gap,
         8.0 + 24.0 + 10.0,
         "px-2, size-6, gap-2.5"
     );
-    assert_eq!(o.file_menu.label.font_weight, 500);
+    assert_eq!(core.typography.run(o.file_menu.label).font_weight, 500);
     assert_eq!(o.filter_menu.icon, 16.0, "the check's size-4");
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let o = &theme.overlay;
@@ -88,7 +89,11 @@ fn a_file_menu_row_draws_its_shortcut_in_a_cap_and_grows_for_it() {
     assert_eq!(count(&drawn(&keyed, &theme), shadows), menu + 2 * cap);
     let m = &theme.overlay.file_menu;
     let long = "A row whose label is long enough to fill it";
-    let (tw, _) = crate::drawing::text::TextMeasurer::measure_styled(long, &m.label, None);
+    let (tw, _) = crate::drawing::text::TextMeasurer::measure_styled(
+        long,
+        &theme.typography.run(m.label),
+        None,
+    );
     let (cw, _) = Kbd::new("⇧⌘E").preferred_size(&theme);
     let (w, _) = keyed.size(&theme);
     assert!(

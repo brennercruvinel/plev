@@ -22,7 +22,10 @@ fn tooltip_key_tokens_are_the_toolbar_s_on_core_and_the_theme_s_elsewhere() {
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let t = &theme.overlay.tooltip;
         assert_eq!(*t, TooltipTokens::derive(&theme));
-        assert!(t.key.size > t.text.line_height, "the key holds its letter");
+        assert!(
+            t.key.size > theme.typography.run(t.text).line_height,
+            "the key holds its letter"
+        );
     }
 }
 

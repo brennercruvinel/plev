@@ -125,15 +125,17 @@ impl ShareFile {
     }
 
     fn row_h(theme: &Theme) -> f32 {
+        let scale = &theme.typography;
         let f = &tokens(theme).share_file;
-        let lines = f.access.title.line_height + f.access.line.line_height;
+        let lines = scale.run(f.access.title).line_height + scale.run(f.access.line).line_height;
         let a = &f.access;
         a.box_size.max(lines) + a.row_pad_y * 2.0
     }
 
     fn person_h(theme: &Theme) -> f32 {
+        let scale = &theme.typography;
         let f = &tokens(theme).share_file;
-        let lines = f.access.title.line_height + f.access.line.line_height;
+        let lines = scale.run(f.access.title).line_height + scale.run(f.access.line).line_height;
         f.person
             .avatar
             .max(lines)
@@ -143,7 +145,7 @@ impl ShareFile {
 
     fn label_h(theme: &Theme) -> f32 {
         let f = &tokens(theme).share_file;
-        f.label.line_height + f.label_pad_y * 2.0
+        theme.typography.run(f.label).line_height + f.label_pad_y * 2.0
     }
 
     fn layout(&self, rect: Rect, theme: &Theme) -> Layout {
@@ -227,6 +229,7 @@ impl ShareFile {
     }
 
     fn draw_person(&self, c: &mut Compositor, i: usize, row: Rect, select_x: f32, theme: &Theme) {
+        let scale = &theme.typography;
         let t = tokens(theme);
         let (f, ink) = (&t.share_file, &t.ink);
         let (p, a) = (&f.person, &f.access);
@@ -236,16 +239,16 @@ impl ShareFile {
         let colors = t.pictures.avatars[(i + 1) % t.pictures.avatars.len()];
         picture(c, avatar, p.avatar / 2.0, colors);
         let tx = avatar.right() + a.gap;
-        let lines = a.title.line_height + a.line.line_height;
+        let lines = scale.run(a.title).line_height + scale.run(a.line).line_height;
         let ty = row.y + (row.h - lines) / 2.0;
         let room = (select_x - a.gap - tx).max(0.0);
-        text(c, &person.name, &a.title, tx, ty, room, ink.ink);
+        text(c, &person.name, &scale.run(a.title), tx, ty, room, ink.ink);
         text(
             c,
             &person.email,
-            &a.line,
+            &scale.run(a.line),
             tx,
-            ty + a.title.line_height,
+            ty + scale.run(a.title).line_height,
             room,
             ink.muted,
         );
@@ -278,6 +281,7 @@ impl ModalBody for ShareFile {
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let t = tokens(theme);
         let (f, ink) = (&t.share_file, &t.ink);
         let l = self.layout(rect, theme);
@@ -302,7 +306,7 @@ impl ModalBody for ShareFile {
         text(
             c,
             "General access",
-            &f.label,
+            &scale.run(f.label),
             x,
             label_y(l.access_label),
             w,
@@ -311,7 +315,7 @@ impl ModalBody for ShareFile {
         text(
             c,
             "People with access",
-            &f.label,
+            &scale.run(f.label),
             x,
             label_y(l.people_label),
             w,
@@ -329,15 +333,23 @@ impl ModalBody for ShareFile {
             boxed(c, b, a.box_radius, ink.well, Some((ink.edge, ink.rule_w)));
             glyph(c, icon, a.icon, ink.ink, b);
             let tx = b.right() + a.gap;
-            let lines = a.title.line_height + a.line.line_height;
+            let lines = scale.run(a.title).line_height + scale.run(a.line).line_height;
             let ty = row.y + (row.h - lines) / 2.0;
-            text(c, title, &a.title, tx, ty, row.right() - tx, ink.ink);
+            text(
+                c,
+                title,
+                &scale.run(a.title),
+                tx,
+                ty,
+                row.right() - tx,
+                ink.ink,
+            );
             text(
                 c,
                 line,
-                &a.line,
+                &scale.run(a.line),
                 tx,
-                ty + a.title.line_height,
+                ty + scale.run(a.title).line_height,
                 row.right() - tx,
                 ink.muted,
             );
@@ -348,15 +360,15 @@ impl ModalBody for ShareFile {
                 Some(k) => l.controls[k].x,
                 None => {
                     // The owner: the word and the shield at the row's end.
-                    let owner_w = text_w("Owner", &a.title) + a.gap + p.shield;
+                    let owner_w = text_w("Owner", &scale.run(a.title)) + a.gap + p.shield;
                     let end = row.right() - f.pad - p.owner_pad_x;
                     let ox = end - owner_w;
                     text(
                         c,
                         "Owner",
-                        &a.title,
+                        &scale.run(a.title),
                         ox,
-                        middle(&a.title, row.y, row.h),
+                        middle(&scale.run(a.title), row.y, row.h),
                         owner_w,
                         ink.ink,
                     );
@@ -374,9 +386,9 @@ impl ModalBody for ShareFile {
         text(
             c,
             &self.link,
-            &f.link,
+            &scale.run(f.link),
             x,
-            middle(&f.link, l.foot.y, l.foot.h),
+            middle(&scale.run(f.link), l.foot.y, l.foot.h),
             room,
             ink.muted,
         );

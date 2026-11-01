@@ -25,6 +25,8 @@ pub enum TypeRole {
     H4,
     H5,
     H6,
+    /// The kit's `Title, Large`: the head of a sheet or a modal.
+    TitleLg,
     Title,
     Heading,
     BodyLg,
@@ -42,7 +44,7 @@ pub enum TypeRole {
 }
 
 impl TypeRole {
-    pub const COUNT: usize = 19;
+    pub const COUNT: usize = 20;
     /// Every role, largest first: the order of the Typography page.
     pub const ALL: [TypeRole; Self::COUNT] = [
         Self::Display,
@@ -52,6 +54,7 @@ impl TypeRole {
         Self::H4,
         Self::H5,
         Self::H6,
+        Self::TitleLg,
         Self::Title,
         Self::Heading,
         Self::BodyLg,
@@ -82,6 +85,7 @@ impl TypeRole {
             Self::H4 => "h4",
             Self::H5 => "h5",
             Self::H6 => "h6",
+            Self::TitleLg => "title-lg",
             Self::Title => "title",
             Self::Heading => "heading",
             Self::BodyLg => "body-lg",
@@ -252,6 +256,8 @@ impl TypeRoles {
                 s(28.0, 36.0, 400, head),
                 s(24.0, 32.0, 500, head),
                 s(20.0, 28.0, 500, head),
+                // Title, Large 18/150% regular (:223), on the grid.
+                s(18.0, 28.0, 400, ui),
                 // Title 15/24 medium (:205).
                 s(15.0, 24.0, 500, ui),
                 // Heading 14/20 medium (:172).
@@ -307,6 +313,8 @@ impl TypeRoles {
             h(3),
             h(4),
             h(5),
+            // title-lg: the small title at regular, between h6 and title.
+            s(title_sm, 1.4, 400),
             s(title_sm, 1.2, 500),
             s(body, 1.43, 500),
             s(body, 1.5, 400),

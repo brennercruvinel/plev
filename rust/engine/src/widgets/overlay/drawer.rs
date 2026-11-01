@@ -166,7 +166,7 @@ impl Drawer {
                 y += t.group_gap;
             }
             labels.push(y);
-            y += t.group_pad * 2.0 + t.group_label.line_height + t.item_gap;
+            y += t.group_pad * 2.0 + theme.typography.run(t.group_label).line_height + t.item_gap;
             for (i, _) in group.links.iter().enumerate() {
                 if i > 0 {
                     y += t.item_gap;
@@ -265,6 +265,7 @@ impl Drawer {
         panel: Rect,
         clip: Rect,
     ) {
+        let scale = &theme.typography;
         let t = &theme.overlay.drawer;
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, id, [panel.x, panel.y, panel.w, panel.h]);
@@ -290,9 +291,11 @@ impl Drawer {
         c.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.title, &t.brand, Some(name_w)),
+                key: TextNodeKey::from_style(&self.title, &scale.run(t.brand), Some(name_w)),
                 x: panel.x + t.head_pad,
-                y: panel.y + t.head_pad + TextMeasurer::vertical_center(&t.brand, t.head_h),
+                y: panel.y
+                    + t.head_pad
+                    + TextMeasurer::vertical_center(&scale.run(t.brand), t.head_h),
                 color: t.brand_color.0,
             },
         );
@@ -303,7 +306,7 @@ impl Drawer {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(&group.title, &t.group_label, None),
+                    key: TextNodeKey::from_style(&group.title, &scale.run(t.group_label), None),
                     x: panel.x + t.body_pad + t.group_pad,
                     y: y + t.group_pad,
                     color: t.group_color.0,
@@ -325,6 +328,7 @@ impl Drawer {
         r: Rect,
         i: usize,
     ) {
+        let scale = &theme.typography;
         let t = &theme.overlay.drawer;
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, &id.key(i.to_string()), [r.x, r.y, r.w, r.h]);
@@ -365,9 +369,9 @@ impl Drawer {
         c.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&link.label, &t.item_label, Some(w)),
+                key: TextNodeKey::from_style(&link.label, &scale.run(t.item_label), Some(w)),
                 x,
-                y: r.y + TextMeasurer::vertical_center(&t.item_label, r.h),
+                y: r.y + TextMeasurer::vertical_center(&scale.run(t.item_label), r.h),
                 color: t.item_color.0,
             },
         );

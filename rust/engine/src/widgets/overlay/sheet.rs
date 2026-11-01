@@ -335,14 +335,15 @@ impl Sheet {
     }
 
     fn head_h(&self, theme: &Theme, w: f32) -> f32 {
+        let scale = &theme.typography;
         let t = &theme.overlay.sheet;
         let text_w = w - t.pad_x * 2.0;
-        let description = Self::text_h(&self.description, &t.description, text_w);
-        t.pad_y + t.title.line_height + t.gap + description + t.pad_y
+        let description = Self::text_h(&self.description, &scale.run(t.description), text_w);
+        t.pad_y + scale.run(t.title).line_height + t.gap + description + t.pad_y
     }
 
     fn value_w(row: &SheetRow, theme: &Theme) -> f32 {
-        let style = &theme.overlay.sheet.value;
+        let style = &theme.typography.run(theme.overlay.sheet.value);
         TextMeasurer::measure_styled(&row.value, style, None)
             .0
             .ceil()
@@ -355,11 +356,12 @@ impl Sheet {
     }
 
     fn row_h(row: &SheetRow, theme: &Theme, w: f32) -> f32 {
+        let scale = &theme.typography;
         let t = &theme.overlay.sheet;
         let lw = Self::label_w(row, theme, w);
-        let mut text = Self::text_h(&row.label, &t.label, lw);
+        let mut text = Self::text_h(&row.label, &scale.run(t.label), lw);
         if let Some(hint) = &row.hint {
-            text += t.gap + Self::text_h(hint, &t.hint, lw);
+            text += t.gap + Self::text_h(hint, &scale.run(t.hint), lw);
         }
         (t.pad_y * 2.0 + text).max(t.row_min_h)
     }
@@ -387,13 +389,14 @@ impl Sheet {
     }
 
     fn parts(&self, theme: &Theme, p: Rect) -> Parts {
+        let scale = &theme.typography;
         let t = &theme.overlay.sheet;
         let m = &theme.overlay.modal;
         let (cw, ch) = self.close.preferred_size(theme);
         let top = p.y + t.pad_y;
         let close = Rect::new(
             p.right() - t.pad_y - cw,
-            top + (t.title.line_height - ch) / 2.0,
+            top + (scale.run(t.title).line_height - ch) / 2.0,
             cw,
             ch,
         );
@@ -413,7 +416,7 @@ impl Sheet {
         Parts {
             close,
             title: (p.x + t.pad_x, top),
-            description_y: top + t.title.line_height + t.gap,
+            description_y: top + scale.run(t.title).line_height + t.gap,
             rows: Rect::new(p.x, head, p.w, footer_y - head),
             row_y,
             footer_y,
@@ -480,6 +483,7 @@ impl Sheet {
         panel: Rect,
         clip: Rect,
     ) {
+        let scale = &theme.typography;
         let t = &theme.overlay.sheet;
         let m = &theme.overlay.modal;
         if let Some(id) = &self.sem {
@@ -501,12 +505,20 @@ impl Sheet {
             c.push_to_layer(layer, SceneNode::Text { key, x, y, color });
         };
         let (tx, ty) = parts.title;
-        text(c, &self.title, &t.title, title_w, tx, ty, t.title_color.0);
+        text(
+            c,
+            &self.title,
+            &scale.run(t.title),
+            title_w,
+            tx,
+            ty,
+            t.title_color.0,
+        );
         let dy = parts.description_y;
         text(
             c,
             &self.description,
-            &t.description,
+            &scale.run(t.description),
             text_w,
             tx,
             dy,
@@ -527,20 +539,36 @@ impl Sheet {
             c.push_to_layer(layer, rule);
             let h = Self::row_h(row, theme, panel.w);
             let lw = Self::label_w(row, theme, panel.w);
-            let mut block = Self::text_h(&row.label, &t.label, lw);
+            let mut block = Self::text_h(&row.label, &scale.run(t.label), lw);
             if let Some(hint) = &row.hint {
-                block += t.gap + Self::text_h(hint, &t.hint, lw);
+                block += t.gap + Self::text_h(hint, &scale.run(t.hint), lw);
             }
             let ly = y + (h - block) / 2.0;
-            text(c, &row.label, &t.label, lw, tx, ly, t.label_color.0);
+            text(
+                c,
+                &row.label,
+                &scale.run(t.label),
+                lw,
+                tx,
+                ly,
+                t.label_color.0,
+            );
             if let Some(hint) = &row.hint {
-                let hy = ly + Self::text_h(&row.label, &t.label, lw) + t.gap;
-                text(c, hint, &t.hint, lw, tx, hy, t.hint_color.0);
+                let hy = ly + Self::text_h(&row.label, &scale.run(t.label), lw) + t.gap;
+                text(c, hint, &scale.run(t.hint), lw, tx, hy, t.hint_color.0);
             }
             let vw = Self::value_w(row, theme);
             let vx = panel.right() - t.pad_x - vw;
-            let vy = y + TextMeasurer::vertical_center(&t.value, h);
-            text(c, &row.value, &t.value, vw + 1.0, vx, vy, t.value_color.0);
+            let vy = y + TextMeasurer::vertical_center(&scale.run(t.value), h);
+            text(
+                c,
+                &row.value,
+                &scale.run(t.value),
+                vw + 1.0,
+                vx,
+                vy,
+                t.value_color.0,
+            );
         }
         c.push_to_layer(layer, SceneNode::PopClip);
 
