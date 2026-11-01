@@ -414,6 +414,11 @@ impl ShowcaseView {
     /// Route a pointer event. Returns `true` if a redraw is needed.
     pub fn handle_event(&mut self, event: &WidgetEvent) -> bool {
         let (vw, vh) = (self.width, self.height);
+        // a focus the pointer moves is where the person looks: the page
+        // does not scroll to it (`compositor/reveal.rs`)
+        if matches!(event, WidgetEvent::MouseDown { .. }) {
+            self.reveal.pointer();
+        }
 
         // Toasts float above everything.
         let toast_result = self.toasts.handle_event(event, &self.theme, vw, vh);
@@ -527,6 +532,7 @@ impl ShowcaseView {
             && x >= page_x
         {
             self.sync_page_scroll();
+            self.glide.stop();
             let scroll = &mut self.page_scroll[self.page];
             let old = scroll.offset();
             scroll.scroll_by(delta);

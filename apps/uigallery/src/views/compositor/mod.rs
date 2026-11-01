@@ -2,3 +2,4 @@
 
 pub(super) mod draw;
 pub(super) mod render;
+mod reveal;
