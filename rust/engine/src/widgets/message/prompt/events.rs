@@ -40,7 +40,9 @@ impl PromptInput {
         }
         result = result.merge(r);
         result = result.merge(self.setting.handle_event(event, l.setting, theme));
-        let r = self.model_press.handle(event, l.model, self.voice);
+        // the model's trigger presses in the least target around it
+        let model = crate::widgets::hit::hit_rect(l.model, theme);
+        let r = self.model_press.handle(event, model, self.voice);
         if r.clicked {
             self.set_models_open(!self.model_open);
         }

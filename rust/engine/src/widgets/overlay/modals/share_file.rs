@@ -20,7 +20,7 @@ use crate::widgets::buttons::{Button, ButtonSize, ButtonVariant};
 use crate::widgets::form::Select;
 use crate::widgets::form::input_group::InputGroup;
 use crate::widgets::form::tokens::{Look, SelectLook};
-use crate::widgets::hit::min_target;
+use crate::widgets::hit::{MinTarget, min_target};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::{
@@ -217,14 +217,17 @@ impl ShareFile {
                 let sw = select.width_in(theme).max(f.person.select_w);
                 let sh = select.height_in(theme);
                 let p = &f.person;
-                // the press area: the drawn 22 grown to the minimum
-                // target, from the row's end (`widgets::hit`); the render
-                // draws the kit's width at its end
-                let hit_w = p.remove_w.max(min_target(theme));
-                controls[k + 1] = Rect::new(row.right() - hit_w, at, hit_w, ph);
-                // the select ends clear of the remove's press area
-                let end = row.right() - f.pad.max(hit_w);
+                // the select ends clear of the remove's press area with a
+                // pointer: the drawing is the same whatever the input
+                let pointer = MinTarget::of(theme).pointer;
+                let end = row.right() - f.pad.max(p.remove_w.max(pointer));
                 controls[k] = Rect::new(end - sw, at + (ph - sh) / 2.0, sw, sh);
+                // the press area: the drawn 22 grown to the minimum target
+                // now (44 with a finger), from the row's end, never over
+                // the select (`widgets::hit`); the render draws the kit's
+                // width at its end
+                let hit_w = p.remove_w.max(min_target(theme)).min(row.right() - end);
+                controls[k + 1] = Rect::new(row.right() - hit_w, at, hit_w, ph);
             }
             person_rows.push(row);
             at += ph;

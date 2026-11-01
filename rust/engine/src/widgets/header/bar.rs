@@ -28,6 +28,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::buttons::Button;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::tokens::Look;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::logo::{Logo, LogoKind};
@@ -329,7 +330,9 @@ impl Header {
                 // its icon button: a click gives the box the caret, and
                 // the box takes the row
                 HeaderItem::Search(w) if l.compact => {
-                    let got = self.find.handle_event(event, r);
+                    // the field folded to its icon presses in the least
+                    // target around it (44 px with a finger)
+                    let got = self.find.handle_event(event, hit_rect(r, theme));
                     if got.clicked {
                         w.input.set_focused(true);
                     }
@@ -443,7 +446,8 @@ impl Header {
                 HeaderItem::Action(w) => w.render(c, layer, r, theme),
                 HeaderItem::Search(_) if l.compact => {
                     if let Some(id) = self.slot_id(i) {
-                        c.bind_to_layer(layer, &id, [r.x, r.y, r.w, r.h]);
+                        let h = hit_rect(r, theme);
+                        c.bind_to_layer(layer, &id, [h.x, h.y, h.w, h.h]);
                     }
                     self.find.render(c, layer, r, theme);
                 }
