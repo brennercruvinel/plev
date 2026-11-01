@@ -26,7 +26,7 @@ use super::marker::Marker;
 use super::message::Message;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
-use crate::widgets::buttons::{IconButtonSize, Press, SubmitButton};
+use crate::widgets::buttons::{Press, SubmitButton, SubmitButtonSize};
 use crate::widgets::content::{Avatar, AvatarSize};
 use crate::widgets::icons;
 use crate::widgets::recipe::{
@@ -65,8 +65,7 @@ pub struct CommentThread {
     messages: Vec<Message>,
     reply: ComposeLine,
     replier: Avatar,
-    // TODO(task-104 front F): the kit's SubmitButton `isMedium` (32) as
-    // front F lands it; until then the engine's at its 36 step.
+    /// The kit's SubmitButton at its `isMedium` step.
     send: SubmitButton,
     send_focused: bool,
     close: Press,
@@ -82,7 +81,7 @@ impl CommentThread {
             messages: messages.into_iter().map(|m| m.divider(true)).collect(),
             reply: ComposeLine::new("Reply"),
             replier: Avatar::new(replier).size(AvatarSize::Md),
-            send: SubmitButton::new().size(IconButtonSize::Md),
+            send: SubmitButton::new().size(SubmitButtonSize::Md),
             send_focused: false,
             close: Press::default(),
             open: true,

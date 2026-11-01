@@ -103,8 +103,7 @@ pub struct PromptInput {
     model_press: Press,
     voice_button: IconButton,
     voice: bool,
-    // TODO(task-104 front F): the kit's SubmitButton as front F lands it;
-    // until then the engine's (`buttons::SubmitButton`), the same control.
+    /// The kit's SubmitButton at its default step.
     submit: SubmitButton,
     /// The submit button has the keyboard (it keeps no flag to read).
     submit_focused: bool,

@@ -1295,7 +1295,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 781,
+        count, 849,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {

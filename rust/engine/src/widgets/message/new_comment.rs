@@ -29,7 +29,7 @@ use super::marker::{CursorState, Marker};
 use super::tool::Tool;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::Theme;
-use crate::widgets::buttons::{IconButtonSize, SubmitButton};
+use crate::widgets::buttons::{SubmitButton, SubmitButtonSize};
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets};
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -70,8 +70,7 @@ pub struct NewComment {
     line: ComposeLine,
     tray: AttachmentTray,
     tools: Vec<Tool>,
-    // TODO(task-104 front F): the kit's SubmitButton `isMedium` (32) as
-    // front F lands it; until then the engine's at its 36 step.
+    /// The kit's SubmitButton at its `isMedium` step.
     send: SubmitButton,
     send_focused: bool,
     uploading: bool,
@@ -96,7 +95,7 @@ impl NewComment {
                 .iter()
                 .map(|(icon, label)| Tool::new(icon, label))
                 .collect(),
-            send: SubmitButton::new().size(IconButtonSize::Md),
+            send: SubmitButton::new().size(SubmitButtonSize::Md),
             send_focused: false,
             uploading: false,
             posted: 0,
