@@ -21,7 +21,7 @@ use engine::widgets::form::input_group::{Addon, InputGroup};
 use engine::widgets::form::tokens::Look;
 use engine::widgets::header::Logo;
 use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
-use engine::widgets::overlay::sheet::paint_scrim;
+use engine::widgets::overlay::sheet::{Edge, paint_panel, paint_scrim};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::widgets::shell::{Route, SafeArea};
 use engine::widgets::wake::Wake;
@@ -201,8 +201,14 @@ impl Navigation {
         self.sidebar.wake(dt)
     }
 
-    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        self.sidebar.render(c, bounds, theme);
+    /// The panel at `bounds` on its own surface, or (`surface` off) on
+    /// one the caller painted: the drawer's edge panel.
+    pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme, surface: bool) {
+        if surface {
+            self.sidebar.render(c, bounds, theme);
+        } else {
+            self.sidebar.render_parts(c, bounds, theme);
+        }
         if let Some(at) = self.sidebar.slot_rect(bounds, theme) {
             if let Some(id) = self.search.sem_id() {
                 c.bind(id, [at.x, at.y, at.w, at.h]);
@@ -378,8 +384,10 @@ impl ShowcaseView {
     }
 
     /// The panel where the dock has it: beside the page while pinned, on
-    /// the overlay layer while it floats over the page, over the drawer's
-    /// scrim.
+    /// the overlay layer while it floats over the page; as a drawer, over
+    /// its scrim on front B's edge panel (`sheet::paint_panel`, the
+    /// theme's drawer surface: its fill, its free edge's rule, corners and
+    /// shadow).
     pub(super) fn render_sidebar(&self, c: &mut Compositor, overlay: LayerId) {
         let theme = &self.theme;
         let Some(d) = self.shell.layout(theme).dock else {
@@ -395,8 +403,14 @@ impl ShowcaseView {
         let layer = if d.floats { overlay } else { LayerId::DEFAULT };
         let head = self.panel_head(panel);
         let w = self.shell.dock_window().w;
+        let drawer = d.mode == DockMode::Drawer;
+        if drawer {
+            let window = Rect::new(0.0, 0.0, self.width, self.height);
+            let t = &theme.overlay.drawer.panel;
+            paint_panel(c, overlay, panel, window, Edge::Left, t);
+        }
         c.on_layer(layer, |c| {
-            self.nav.render(c, panel, theme);
+            self.nav.render(c, panel, theme, !drawer);
             if let Some(dock) = &self.shell.dock {
                 dock.render_pin(c, head, theme, w);
             }
@@ -405,153 +419,4 @@ impl ShowcaseView {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn every_page_has_one_place_and_back() {
-        for (i, page) in PAGES.iter().enumerate() {
-            let (row, at) = place(i);
-            assert_eq!(page_at(row, at), Some(i), "{}", page.title);
-        }
-        assert_eq!(page_at(Group::ALL.len(), 0), None);
-    }
-
-    /// A finger turns the sidebar into a drawer behind the menu button
-    /// at any width; a pointer that moves turns it back.
-    #[test]
-    fn a_finger_turns_the_sidebar_into_a_drawer_and_a_pointer_back() {
-        let mut view = ShowcaseView::new(1280.0, 800.0);
-        let mode = |v: &ShowcaseView| v.shell.layout(&v.theme).dock.map(|d| d.mode);
-        assert_eq!(mode(&view), Some(DockMode::Peek));
-        assert!(view.set_touch(true));
-        assert_eq!(mode(&view), Some(DockMode::Drawer));
-        assert!(view.shell.layout(&view.theme).menu_button.is_some());
-        assert!(!view.set_touch(true), "nothing changes twice");
-        assert!(view.set_touch(false));
-        assert_eq!(mode(&view), Some(DockMode::Peek));
-    }
-
-    /// The drawer on the keyboard: Enter on the menu button opens it with
-    /// the focus on its close, Tab stays in the panel (the trap), and
-    /// Escape shuts it with the focus back on the menu button.
-    #[test]
-    fn the_open_drawer_traps_the_focus_and_gives_it_back() {
-        let mut view = ShowcaseView::new(360.0, 740.0);
-        let open = |v: &ShowcaseView| v.shell.dock.as_ref().is_some_and(|d| d.is_drawer_open());
-        let d = view.shell.dock.as_ref().expect("docked");
-        let (menu, close) = (d.menu_id().unwrap(), d.close_id().unwrap());
-        assert!(view.focus_sidebar(&menu));
-        assert!(view.handle_enter());
-        assert!(open(&view));
-        assert_eq!(view.sidebar_focus(), Some(&close));
-        for _ in 0..40 {
-            view.handle_edit_key(super::super::EditKey::Tab);
-            let at = view.sidebar_focus().cloned().expect("the focus stays in");
-            assert!(view.is_sidebar(&at) && at != menu, "{at}");
-        }
-        assert!(view.close_top_overlay(), "Escape");
-        assert!(!open(&view));
-        assert_eq!(view.sidebar_focus(), Some(&menu));
-    }
-
-    /// The window's safe area holds the pinned panel and the page off
-    /// the notch's side.
-    #[test]
-    fn the_sidebar_and_the_page_stand_inside_the_safe_area() {
-        let mut view = ShowcaseView::new(1280.0, 800.0);
-        view.pin_sidebar(true);
-        let inset = view.theme.spacing.xl;
-        view.set_safe_area(SafeArea {
-            left: inset,
-            ..SafeArea::default()
-        });
-        let l = view.shell.layout(&view.theme);
-        let dock = l.dock.expect("docked");
-        assert_eq!(dock.mode, DockMode::Pinned);
-        assert_eq!(dock.rest.x, inset);
-        assert!(l.header.x >= dock.rest.right());
-    }
-
-    /// A sidebar 200 wide (narrower than its 240) keeps every group's
-    /// label on one line, cut with an ellipsis, never broken inside the
-    /// word: each trigger is as tall as in a wide panel and each tab a
-    /// link high; a reader and an agent still hear the whole name.
-    #[test]
-    fn a_narrow_sidebar_cuts_its_labels_on_one_line() {
-        use accord::SnapshotBuilder;
-        use engine::drawing::compositor::SceneNode;
-        let theme = Theme::hoff_core();
-        let mut nav = Navigation::new(0);
-        for row in &mut nav.sidebar.rows {
-            if let HomeRow::Menu(m, _) = row {
-                *m = m.clone().open(true);
-            }
-        }
-        let tall = 1e4;
-        let narrow = Rect::new(0.0, 0.0, 200.0, tall);
-        let wide = Rect::new(0.0, 0.0, 1000.0, tall);
-        for (r, g) in Group::ALL.iter().enumerate() {
-            let at = |b| nav.trigger_rect(r, b, &theme).unwrap().h;
-            assert_eq!(at(narrow), at(wide), "{} takes one line", g.label());
-        }
-        let link_h = theme.disclosure.collapsible.rail.as_ref().unwrap().link_h;
-        for (i, page) in PAGES.iter().enumerate() {
-            let h = nav.tab_rect(i, narrow, &theme).unwrap().h;
-            assert_eq!(h, link_h, "{} takes one line", page.title);
-        }
-        // drawn: each group's label one line (no wrap width), some cut
-        let mut c = Compositor::new();
-        nav.render(&mut c, narrow, &theme);
-        let texts: Vec<_> = c
-            .layer(LayerId::DEFAULT)
-            .unwrap()
-            .nodes()
-            .iter()
-            .filter_map(|n| match n {
-                SceneNode::Text { key, .. } => Some(key.clone()),
-                _ => None,
-            })
-            .collect();
-        let mut cut = 0;
-        for g in Group::ALL {
-            let label = g.label();
-            let key = texts
-                .iter()
-                .find(|k| {
-                    let stem = k.text.trim_end_matches('…');
-                    k.text == label || (k.text.ends_with('…') && label.starts_with(stem))
-                })
-                .unwrap_or_else(|| panic!("{label} is drawn"));
-            assert_eq!(key.max_width_bits, None, "{label} does not wrap");
-            cut += usize::from(key.text != label);
-        }
-        assert!(cut > 0, "at 200 a label is cut");
-        // projected: the whole names
-        let id = SemId::name("nav").unwrap();
-        nav.sidebar = nav.sidebar.clone().sem(id.clone());
-        let mut b = SnapshotBuilder::new();
-        nav.sidebar.project(&mut b, &id, "Pages", None);
-        let snap = b.finish().unwrap();
-        let rows = id.child("row").unwrap();
-        for (r, g) in Group::ALL.iter().enumerate() {
-            let node = snap.get(&rows.key(r.to_string())).unwrap();
-            assert_eq!(node.label, g.label());
-        }
-    }
-
-    #[test]
-    fn the_current_page_marks_its_tab_and_its_group_alone() {
-        let last = PAGES.len() - 1;
-        let mut nav = Navigation::new(0);
-        nav.set_current(last);
-        let (row, at) = place(last);
-        for (r, (m, l)) in nav.menus().enumerate() {
-            assert_eq!(l.current_link(), (r == row).then_some(at));
-            if r == row {
-                assert!(m.is_open(), "navigation opens the group");
-            }
-        }
-        assert_eq!(nav.menus().count(), Group::ALL.len());
-    }
-}
+mod tests;

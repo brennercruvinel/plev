@@ -42,6 +42,7 @@ use accord::SemId;
 use crate::compose::animation::{Tween, reduced_motion};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
+use crate::widgets::overlay::sheet::{self, Edge};
 use crate::widgets::widget::Rect;
 
 /// How the panel stands beside the page.
@@ -68,7 +69,8 @@ impl DockMode {
 pub struct DockLayout {
     pub mode: DockMode,
     /// The panel settled: held to the window's left edge, its full
-    /// height.
+    /// height; as a drawer, never wider than the window less a touch
+    /// target of scrim (`sheet::edge_rect`).
     pub rest: Rect,
     /// The panel now, slid by the part not shown; `None` while it is out
     /// of the window altogether.
@@ -248,8 +250,13 @@ impl SidebarDock {
     pub fn layout(&self, theme: &Theme, window: Rect) -> DockLayout {
         let r = theme.navigation.dock;
         let mode = self.mode(theme, window.w);
-        let w = r.width.min(window.w);
-        let rest = Rect::new(window.x, window.y, w, window.h);
+        // a drawer is the edge panel of front B: the window less a touch
+        // target of scrim to close it by; peeking or pinned, the panel
+        let rest = if mode == DockMode::Drawer {
+            sheet::edge_rect(Edge::Left, r.width, window, theme)
+        } else {
+            Rect::new(window.x, window.y, r.width.min(window.w), window.h)
+        };
         // a mode the dock has not settled into yet (the window changed
         // since its last sync) stands as it will: settled at once
         let shown = if mode == DockMode::Pinned {
@@ -259,11 +266,7 @@ impl SidebarDock {
         } else {
             self.shown()
         };
-        let panel = (shown > 0.0).then(|| {
-            let mut p = rest;
-            p.x -= p.w * (1.0 - shown);
-            p
-        });
+        let panel = (shown > 0.0).then(|| sheet::slide(rest, Edge::Left, shown));
         let peek = mode == DockMode::Peek;
         DockLayout {
             mode,
