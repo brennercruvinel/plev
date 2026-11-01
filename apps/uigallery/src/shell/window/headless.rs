@@ -511,10 +511,10 @@ mod tests {
             };
             runs.push((
                 group(&export.svg, "Foundations"),
-                group(&export.svg, "Accordion"),
+                group(&export.svg, "Components"),
             ));
         }
-        for (label, at) in [("Foundations", 0usize), ("Accordion", 1)] {
+        for (label, at) in [("Foundations", 0usize), ("Components", 1)] {
             let first = if at == 0 { &runs[0].0 } else { &runs[0].1 };
             assert!(first.matches("<path d=").count() >= 9, "{label}: {first}");
             for (title, run) in ["Effects", "Typography"].iter().zip(&runs[1..]) {

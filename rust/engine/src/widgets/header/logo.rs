@@ -120,8 +120,9 @@ impl Logo {
         node
     }
 
+    /// On the layer the compositor aims at ([`Compositor::target`]).
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        self.render_to_layer(c, LayerId::DEFAULT, bounds, theme);
+        self.render_to_layer(c, c.target(), bounds, theme);
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {

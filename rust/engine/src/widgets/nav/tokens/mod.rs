@@ -19,10 +19,12 @@ use crate::styling::theme::{ControlSize, IconSize, Theme};
 use crate::widgets::content::DisclosureTile;
 
 mod data;
+mod dock;
 mod plot;
 mod sidebars;
 mod tool;
 pub use data::{CodeRecipe, StatLevel, StatRecipe};
+pub use dock::DockRecipe;
 pub use plot::{ChartRecipe, GraphRecipe};
 pub use sidebars::{CanvasRecipe, DesignRecipe, SidebarsRecipe};
 pub use tool::{
@@ -185,6 +187,9 @@ pub struct NavigationTokens {
     pub tool: ToolTokens,
     /// The SidebarPage's four sidebars: their shell and parts.
     pub sidebars: SidebarsRecipe,
+    /// Where an app's sidebar stands and how it comes and goes
+    /// ([`SidebarDock`](crate::widgets::nav::SidebarDock)).
+    pub dock: DockRecipe,
 }
 
 fn tint(c: Color, a: f32) -> Color {
@@ -283,6 +288,7 @@ impl NavigationTokens {
         // That look is read from the finished core theme, which
         // `Theme::hoff_core` writes here last (`sidebar_link_of_before`);
         // the kit link stands in until then.
+        let sidebars = SidebarsRecipe::hoff_core();
         Self {
             breadcrumb,
             link,
@@ -292,7 +298,8 @@ impl NavigationTokens {
             chart: ChartRecipe::hoff_core(),
             graph: GraphRecipe::hoff_core(),
             tool: ToolTokens::hoff_core(),
-            sidebars: SidebarsRecipe::hoff_core(),
+            dock: DockRecipe::hoff_core(sidebars.width, &link),
+            sidebars,
         }
     }
 
@@ -319,6 +326,7 @@ impl NavigationTokens {
             gap: theme.spacing.xs,
         };
         let link = Self::sidebar_link_of_before(theme);
+        let sidebars = SidebarsRecipe::derive(theme);
         Self {
             breadcrumb,
             link,
@@ -328,7 +336,8 @@ impl NavigationTokens {
             chart: ChartRecipe::derive(theme),
             graph: GraphRecipe::derive(theme),
             tool: ToolTokens::derive(theme),
-            sidebars: SidebarsRecipe::derive(theme),
+            dock: DockRecipe::derive(theme, sidebars.width, &link),
+            sidebars,
         }
     }
 

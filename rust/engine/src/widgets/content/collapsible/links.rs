@@ -99,6 +99,12 @@ impl DisclosureList {
         true
     }
 
+    /// Link `i` is the current one, or none is (the current page is in
+    /// another list): what the app says, not a press.
+    pub fn set_current(&mut self, i: Option<usize>) {
+        self.current = i.filter(|i| *i < self.links.len());
+    }
+
     /// The keyboard focus on link `i`, or on none.
     pub fn set_focused(&mut self, i: Option<usize>) {
         self.focused = i.filter(|i| *i < self.links.len());

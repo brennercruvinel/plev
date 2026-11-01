@@ -141,7 +141,7 @@ impl ShowcaseView {
 
     /// A person picks the page at `index` of the table (a digit, a
     /// sidebar link): `shell.page`, through the dispatcher.
-    fn ask_page(&mut self, index: usize) -> bool {
+    pub(in crate::views) fn ask_page(&mut self, index: usize) -> bool {
         let Some(page) = PAGES.get(index) else {
             return false;
         };
@@ -156,6 +156,9 @@ impl ShowcaseView {
     /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
         if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
+            return true;
+        }
+        if self.escape_sidebar() {
             return true;
         }
         let pane = self.pane();
@@ -488,17 +491,13 @@ impl ShowcaseView {
             }
         }
 
-        // The chrome first: sidebar navigation (a drawer is exclusive),
-        // the menu button on a phone.
-        let (shell_result, nav) = self.shell.handle_event(event, &self.theme);
-        if let Some(i) = nav {
-            self.ask_page(i);
-            return true;
+        // The chrome first: the sidebar (an open drawer is exclusive),
+        // the drawer's menu button (`navigation.rs`).
+        let (taken, changed) = self.chrome_event(event);
+        if taken {
+            return result.changed || changed;
         }
-        result = result.merge(shell_result);
-        if shell_result.handled {
-            return result.changed;
-        }
+        result.changed |= changed;
 
         // Clicks on the header band belong to the chrome: widgets scrolled
         // underneath it must not receive them.

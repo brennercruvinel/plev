@@ -258,15 +258,10 @@ fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
     assert_eq!(first.request.param, text(name));
     assert_eq!(first.request.actor, Actor::Human);
 
-    // a sidebar link is `shell.page`
-    let rect = view
-        .shell
-        .sidebar
-        .rect(&view.theme, view.width, view.height)
-        .expect("a sidebar");
-    let mode = view.shell.sidebar.mode(&view.theme, view.width);
-    let links = view.shell.sidebar.link_rects(rect, &view.theme, mode);
-    let (x, y) = links[3].center();
+    // a sidebar tab is `shell.page`
+    let panel = view.panel_rect().expect("the pinned sidebar");
+    let tab = view.nav.tab_rect(3, panel, &view.theme).expect("open");
+    let (x, y) = tab.center();
     assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
     view.handle_event(&WidgetEvent::MouseUp { x, y });
     assert_eq!(view.page_title(), PAGES[3].title);

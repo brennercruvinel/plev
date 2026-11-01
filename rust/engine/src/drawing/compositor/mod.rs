@@ -51,6 +51,9 @@ pub struct Compositor {
     /// Where each bound `SemId` sits this frame, beside the scene (see
     /// `binding`): never part of a layer hash.
     bind_table: binding::BindTable,
+    /// The layer `push` and `bind` draw on: the default one, but inside
+    /// [`Compositor::on_layer`].
+    target: LayerId,
 }
 
 impl Default for Compositor {
@@ -68,6 +71,7 @@ impl Compositor {
             invalidated: false,
             stats: RenderStats::default(),
             bind_table: binding::BindTable::default(),
+            target: LayerId::DEFAULT,
         };
         comp.layers.push(Layer::new(LayerId::DEFAULT, 0));
         comp
@@ -78,6 +82,25 @@ impl Compositor {
             layer.begin_frame();
         }
         self.bind_table.begin_frame();
+        self.target = LayerId::DEFAULT;
+    }
+
+    /// Runs `draw` with `push` and `bind` aimed at `layer`: a widget that
+    /// draws through `push` (and the widgets it composes) lands on the
+    /// layer its owner chose, as a sidebar sliding over a page that uses
+    /// layers of its own. The target before is restored after.
+    pub fn on_layer<R>(&mut self, layer: LayerId, draw: impl FnOnce(&mut Self) -> R) -> R {
+        let before = std::mem::replace(&mut self.target, layer);
+        let out = draw(self);
+        self.target = before;
+        out
+    }
+
+    /// The layer `push` and `bind` aim at now: the default one, or the
+    /// one [`Compositor::on_layer`] chose. A widget that draws to a layer
+    /// by its id passes this to land where its owner drew it.
+    pub fn target(&self) -> LayerId {
+        self.target
     }
 
     /// Request a render regardless of scene changes. Called on input, resize,

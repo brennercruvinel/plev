@@ -126,11 +126,11 @@ fn contains(r: [f32; 4], x: f32, y: f32) -> bool {
 }
 
 impl Compositor {
-    /// Binds `id` to `rect` on the default layer, the way `push` draws on
-    /// it. `rect` is `(x, y, w, h)` in logical window pixels, the same
+    /// Binds `id` to `rect` on the layer `push` draws on (the default
+    /// one, but inside [`Compositor::on_layer`]). `rect` is `(x, y, w, h)` in logical window pixels, the same
     /// rect the widget draws and hit-tests with.
     pub fn bind(&mut self, id: &SemId, rect: [f32; 4]) {
-        self.bind_to_layer(LayerId::DEFAULT, id, rect);
+        self.bind_to_layer(self.target, id, rect);
     }
 
     /// Binds `id` to `rect` on `layer`, with the clip open in that layer

@@ -73,6 +73,18 @@ fn a_click_on_a_link_makes_it_current_and_a_disabled_list_ignores_it() {
 }
 
 #[test]
+fn the_app_moves_the_current_link_or_clears_it() {
+    let mut l = list();
+    l.set_current(Some(1));
+    assert_eq!(l.current_link(), Some(1));
+    l.set_current(Some(9));
+    assert_eq!(l.current_link(), None, "no such link: none is current");
+    l.set_current(Some(0));
+    l.set_current(None);
+    assert_eq!(l.current_link(), None);
+}
+
+#[test]
 fn each_link_projects_as_a_link_with_active_and_binds_where_it_draws() {
     let theme = core();
     let l = list();
