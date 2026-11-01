@@ -253,6 +253,17 @@ fn every_part_is_named_back_and_the_projection_validates() {
         let pid = p.part_id(part).expect("an id");
         assert_eq!(p.part_of(&pid), Some(part), "{pid}");
     }
+    // the view controller's arrows take the focus a reader gives them
+    for forward in [false, true] {
+        let mut q = p.clone();
+        q.focus(Some(Part::Orbit(forward)));
+        assert_eq!(q.focused(), Some(Part::Orbit(forward)));
+        q.focus(None);
+        assert_eq!(q.focused(), None);
+    }
+    let mut q = PromptInput::new();
+    q.focus(Some(Part::Orbit(true)));
+    assert_eq!(q.focused(), None, "no controller, no focus on it");
     for p in [
         PromptInput::new().files_open(true),
         PromptInput::new().models_open(true),

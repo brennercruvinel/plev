@@ -113,6 +113,9 @@ impl PromptInput {
         if let Some(i) = premade.and_then(|p| p.focused) {
             return Some(Part::Prompt(i));
         }
+        if let Some(forward) = self.view_focus {
+            return Some(Part::Orbit(forward));
+        }
         let pressed = [
             (self.add.is_focused(), Part::Add),
             (self.setting.is_focused(), Part::Setting),
@@ -153,6 +156,10 @@ impl PromptInput {
         self.voice_button.set_focused(is(Part::Voice));
         self.submit.set_focused(is(Part::Submit));
         self.submit_focused = is(Part::Submit);
+        self.view_focus = match part {
+            Some(Part::Orbit(forward)) if self.view.is_some() => Some(forward),
+            _ => None,
+        };
         if let Some(p) = &mut self.premade {
             p.focused = match part {
                 Some(Part::Prompt(i)) if i < p.prompts.len() => Some(i),

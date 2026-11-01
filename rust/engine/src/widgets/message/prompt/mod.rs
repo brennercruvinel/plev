@@ -115,6 +115,8 @@ pub struct PromptInput {
     collapsed: bool,
     premade: Option<Premade>,
     view: Option<ViewController>,
+    /// The view controller's arrow the focus is on (`true` forward).
+    view_focus: Option<bool>,
     hovered: bool,
     /// Shows the hover at rest (a showcase card of the state).
     held_hover: bool,
@@ -154,6 +156,7 @@ impl PromptInput {
             collapsed: false,
             premade: None,
             view: None,
+            view_focus: None,
             hovered: false,
             held_hover: false,
             sent: None,
