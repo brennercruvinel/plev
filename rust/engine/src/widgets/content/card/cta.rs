@@ -32,10 +32,19 @@ impl Card {
 
         // Title, then the body paragraph, then the CTA pill.
         let title_style = ty.role(TypeRole::Title);
-        self.text(c, layer, title, &title_style, x, b.y + m.pad, text.0, None);
+        self.text(
+            c,
+            layer,
+            title,
+            &title_style,
+            x,
+            b.y + m.pad,
+            text.0,
+            Some(w),
+        );
         let style = ty.role(TypeRole::BodyLg);
         let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w));
-        let body_y = b.y + m.pad + title_style.line_height + m.gap;
+        let body_y = b.y + m.pad + Self::wrapped_h(title, &title_style, w) + m.gap;
         self.text(
             c,
             layer,
@@ -50,11 +59,13 @@ impl Card {
         // CTA pill: an `Lg` control with the `Xl` padding, base-m label,
         // faint edge ring + frozen glow.
         let bstyle = ty.run(TypeRole::BodyLg.medium());
+        let pad_x = theme.control.pad_x(ControlSize::Xl);
+        let button = &Self::fit(button, &bstyle, w - pad_x * 2.0);
         let (tw, _) = TextMeasurer::measure_styled(button, &bstyle, None);
         let btn = Rect::new(
             x,
             body_y + body_h.max(style.line_height) + theme.spacing.xl,
-            tw + theme.control.pad_x(ControlSize::Xl) * 2.0,
+            tw + pad_x * 2.0,
             theme.control.height(ControlSize::Lg),
         );
         let ring = with_alpha(glass.field_focus_border, glass.edge_soft.0[3]);

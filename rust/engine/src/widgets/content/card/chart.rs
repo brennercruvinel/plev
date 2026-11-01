@@ -36,16 +36,20 @@ impl Card {
             true,
             theme,
         );
+        // one line: the value first, the label in what it leaves
         let value_x = b.x + m.pad + m.dot + m.gap;
-        self.text(c, layer, value, &style, value_x, b.y + m.pad, text.0, None);
-        let (vw, _) = TextMeasurer::measure_styled(value, &style, None);
+        let end = b.right() - m.pad;
+        let value = Self::fit(value, &style, end - value_x);
+        self.text(c, layer, &value, &style, value_x, b.y + m.pad, text.0, None);
+        let (vw, _) = TextMeasurer::measure_styled(&value, &style, None);
         let label_style = ty.run(TypeRole::Caption.regular());
+        let label_x = value_x + vw + m.gap + m.gap_sm;
         self.text(
             c,
             layer,
-            label,
+            &Self::fit(label, &label_style, end - label_x),
             &label_style,
-            value_x + vw + m.gap + m.gap_sm,
+            label_x,
             b.y + m.pad + (style.line_height - label_style.line_height) / 2.0,
             theme.colors.text_mid.0,
             None,
