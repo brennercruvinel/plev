@@ -1,8 +1,8 @@
 //! Modals page, the hoff core kit's ModalPage (`templates/ModalPage`,
 //! the `modal` route; task-104 front B, onda 3): every modal of the
 //! template, in its groups and in the state it shows. Variations, the
-//! shared post and profile, the shared file, the quick comment (front C's)
-//! beside the delete confirm, Export with its images, video and 3D
+//! shared post and profile, the shared file, the quick comment (the
+//! message widget's) beside the delete confirm, Export with its images, video and 3D
 //! object, Settings with its five sections. Each is a widget of
 //! `engine::widgets::overlay::modals` on `theme.overlay.modals` (the
 //! delete confirm is the confirmation `Modal` with its art); the page
@@ -35,7 +35,7 @@ use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
 use super::showcase::{self, CARD_H, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
-use cards::{Confirm, Pending};
+use cards::{Confirm, Quick};
 
 /// A modal in its card: the chip naming the states it shows, whether the
 /// template fills the card, the widget.
@@ -130,14 +130,7 @@ impl ModalsPage {
                 title: "Quick comment & Delete confirm",
                 span: 2,
                 cards: vec![
-                    shown(
-                        "Comment",
-                        true,
-                        Pending {
-                            name: "QuickComment",
-                            owner: "front C, the Comments tab",
-                        },
-                    ),
+                    shown("Comment", true, Quick::new(id(3, 0).as_ref())),
                     shown("Confirm", true, Confirm::new(id(3, 1).as_ref())),
                 ],
             },
