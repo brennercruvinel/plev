@@ -391,7 +391,7 @@ fn popover_renders_under_every_theme() {
 #[test]
 fn popover_tokens_are_the_kit_s_on_core_and_the_theme_s_elsewhere() {
     let core = Theme::hoff_core();
-    assert_eq!(core.overlay, OverlayTokens::hoff_core());
+    assert_eq!(*core.overlay, OverlayTokens::hoff_core());
     let t = &core.overlay.popover;
     assert_eq!((t.radius, t.radius_menu), (20.0, 16.0));
     assert_eq!(t.clearance, KIT);
