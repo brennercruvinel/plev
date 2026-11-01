@@ -12,6 +12,7 @@ use std::ops::Range;
 
 use accord::SemId;
 
+use crate::control::input::reveal::{Cover, Span};
 use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
@@ -48,17 +49,13 @@ pub(crate) fn sync(scroll: &mut ScrollState, n: usize, theme: &Theme) {
     scroll.set_viewport(view_h(n, theme));
 }
 
-/// Scrolls `scroll` the least that shows row `i` whole.
+/// Scrolls `scroll` the least that shows row `i` whole
+/// (`reveal::nearest`, in the rows' own space).
 pub(crate) fn reveal(scroll: &mut ScrollState, i: usize, n: usize, theme: &Theme) {
     let row_h = theme.form.select.panel.row_h;
-    let view = view_h(n, theme);
-    let top = i as f32 * row_h;
-    let bottom = top + row_h;
-    if top < scroll.offset() {
-        scroll.scroll_to(top);
-    } else if bottom > scroll.offset() + view {
-        scroll.scroll_to(bottom - view);
-    }
+    let row = Span::new(i as f32 * row_h, row_h);
+    let view = Span::new(scroll.offset(), view_h(n, theme));
+    scroll.reveal(row, view, 0.0, Cover::default());
 }
 
 /// The rows a panel shows: the strip they scroll in, how far they are
