@@ -61,17 +61,17 @@ pub(super) fn asset(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         }
     }
     let mid = (t.button - t.icon) / 2.0;
-    icon(c, "plus", t.icon, k.ink, add.x + mid, add.y + mid);
+    icon(c, "kit-plus-large", t.icon, k.ink, add.x + mid, add.y + mid);
     icon(
         c,
-        "download",
+        "kit-download",
         t.icon,
         k.on_image,
         download.x + mid,
         download.y + mid,
     );
     let sx = share.x + t.label_pad;
-    icon(c, "forward", t.icon, k.on_image, sx, share.y + mid);
+    icon(c, "kit-share", t.icon, k.on_image, sx, share.y + mid);
     text(
         c,
         "Share",
@@ -153,7 +153,11 @@ pub(super) fn scene(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         shadow_drops(c, LayerId::DEFAULT, at, t.badge_radius, &t.raised);
         boxed(c, at, t.badge_radius, k.paper, k.ring);
         let mid = (t.badge - t.icon) / 2.0;
-        let name = if *video { "kit-clapperboard" } else { "image" };
+        let name = if *video {
+            "kit-clapperboard"
+        } else {
+            "kit-image"
+        };
         icon(c, name, t.icon, k.ink, at.x + mid, at.y + mid);
     }
     let title_style = t.title.style(theme);
