@@ -13,6 +13,9 @@
 //! runs it ([`Command::enter`]), a press on a row runs that one; the
 //! command run last is [`Command::ran`] for the owner to act on.
 //!
+//! Inline, the list stands on its panel; on a surface that already is
+//! one, as the dialog's sheet ([`Command::bare`]), the rows stand on it.
+//!
 //! Projected ([`Command::project`]): the search box as its field is; the
 //! list beside it (`<id>.list`, `Role::List`, its `count` the commands)
 //! with the command run last as `ran`, and in it each command shown
@@ -26,10 +29,11 @@ use crate::control::input::scroll::ScrollState;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
+use crate::widgets::content::kbd::Kbd;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::select::list::{self, Window};
 use crate::widgets::icons;
-use crate::widgets::recipe::{rounded_rect, shadow_drops, shadow_insets};
+use crate::widgets::recipe::rounded_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 /// One command: its label, a Lucide icon and a shortcut, in a group.
@@ -71,6 +75,9 @@ pub struct Command {
     /// A reader or Tab put the focus on the highlighted command.
     item_focus: bool,
     empty: String,
+    /// The list on its own panel (inline); off on a surface that already
+    /// is one, as the dialog's sheet.
+    panel: bool,
     sem: Option<SemId>,
 }
 
@@ -86,6 +93,7 @@ impl Command {
             ran: None,
             item_focus: false,
             empty: "No results found.".into(),
+            panel: true,
             sem: None,
         }
     }
@@ -124,6 +132,13 @@ impl Command {
     /// What the list says when nothing matches.
     pub fn empty(mut self, text: impl Into<String>) -> Self {
         self.empty = text.into();
+        self
+    }
+
+    /// The list straight on the surface under it, without a panel of its
+    /// own: the palette on a sheet that already is one.
+    pub fn bare(mut self) -> Self {
+        self.panel = false;
         self
     }
 
@@ -340,7 +355,9 @@ impl Command {
         let layer = LayerId::DEFAULT;
         let l = self.layout(bounds, theme);
         self.search.render(c, l.search, theme);
-        list::draw_body(c, layer, l.list, theme);
+        if self.panel {
+            list::draw_body(c, layer, l.list, theme);
+        }
         let p = &theme.form.select.panel;
         let rows = self.rows();
         if rows.is_empty() {
@@ -422,26 +439,11 @@ impl Command {
         }
         let mut end = row.right() - p.text_inset;
         if let Some(keys) = &item.shortcut {
-            let (tw, th) = TextMeasurer::measure_styled(keys, &g.hint_text, None);
-            let (w, h) = (tw.ceil() + g.hint_pad[0] * 2.0, th + g.hint_pad[1] * 2.0);
+            // A menu row's key cap, as the kit's menus draw a shortcut.
+            let cap = Kbd::new(keys.as_str());
+            let (w, h) = cap.preferred_size(theme);
             let r = Rect::new(end - w, row.y + (row.h - h) / 2.0, w, h);
-            let layer = LayerId::DEFAULT;
-            shadow_drops(c, layer, r, g.hint_radius, &g.hint_shadow);
-            c.push(rounded_rect(
-                r.x,
-                r.y,
-                r.w,
-                r.h,
-                g.hint_radius,
-                g.hint_fill.0,
-            ));
-            shadow_insets(c, layer, r, g.hint_radius, &g.hint_shadow);
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(keys, &g.hint_text, None),
-                x: r.x + g.hint_pad[0],
-                y: r.y + g.hint_pad[1],
-                color: g.hint_color.0,
-            });
+            cap.render(c, r, theme);
             end = r.x - theme.form.select.gap;
         }
         let label = Rect::new(row.x + inset, row.y, (end - row.x - inset).max(0.0), row.h);

@@ -9,7 +9,8 @@ use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
+    TypographyScale,
 };
 use super::{
     DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
@@ -17,6 +18,7 @@ use super::{
 };
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::header::tokens::HeaderTokens;
 
 /// Shade 1..9 of the colors page, paper to ink.
 pub const SHADES: [Color; 9] = [
@@ -91,6 +93,7 @@ impl TypographyScale {
             display: 48.0,
             line_height_ratio: 1.4,
             family: Some("Inter"),
+            mono_family: MONO_FAMILY,
             tracking_em: -0.02,
         }
     }
@@ -267,6 +270,7 @@ impl Theme {
             disclosure: DisclosureTokens::hoff_core(),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {

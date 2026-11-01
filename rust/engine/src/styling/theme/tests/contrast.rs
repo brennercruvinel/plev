@@ -258,6 +258,21 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, need, over(color, under), under);
     }
+    // the color picker on a card: its texts (the bare box's) on its box
+    // at rest and hovered, at AAA
+    for (bg, surface) in [
+        ("form.color.rest.fill", &f.color.rest),
+        ("form.color.hover.fill", &f.color.hover),
+    ] {
+        let under = over(surface.fill, card);
+        add(
+            "form.bare.text_color",
+            bg,
+            AAA,
+            over(f.bare.text_color, under),
+            under,
+        );
+    }
     // task-104 front C: the inline alert on a card, its runs and its
     // unread dot, and the intent's icon on its badge (ink or paper,
     // whichever reads on the fill, `contrast_text`).
@@ -889,6 +904,59 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         over(sel.calendar.today, panel),
         panel,
     );
+    // the folder picker: its labels and placeholder at AAA, its marks
+    // (the search and new-folder icons) at 3:1, on the panel, a row's
+    // hover and the search box
+    let fo = &sel.folders;
+    let fpanel = over(fo.panel.fill[0], page_bg.1);
+    let fhover = over(fo.row_hover, fpanel);
+    let fsearch = over(fo.search.fill[0], fpanel);
+    for (fg, bg, need, color, under) in [
+        (
+            "selection.folders.label",
+            "selection.folders.panel",
+            aaa,
+            fo.label,
+            fpanel,
+        ),
+        (
+            "selection.folders.label",
+            "selection.folders.row_hover",
+            aaa,
+            fo.label,
+            fhover,
+        ),
+        (
+            "selection.folders.naming_icon",
+            "selection.folders.naming",
+            LARGE,
+            fo.naming_icon,
+            over(fo.naming.fill[0], fpanel),
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.panel",
+            LARGE,
+            fo.mark,
+            fpanel,
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.row_hover",
+            LARGE,
+            fo.mark,
+            fhover,
+        ),
+        (
+            "selection.folders.mark",
+            "selection.folders.search",
+            LARGE,
+            fo.mark,
+            fsearch,
+        ),
+    ] {
+        add(fg, bg, need, over(color, under), under);
+    }
     let today = over(sel.calendar.today, card);
     add(
         "selection.calendar.today",
@@ -897,11 +965,59 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
         today,
         card,
     );
+    // task-104 front F: the headers, on their bar: the logo's ink at AAA,
+    // each action's icon at rest and hovered and the dot of news at 3:1
+    // (marks), on the bar and on the plain action's hover
+    let hd = &t.header;
+    let bar = over(hd.fill, page);
+    add(
+        "header.logo.ink",
+        "header.fill",
+        AAA,
+        over(hd.logo.ink, bar),
+        bar,
+    );
+    for (name, look) in [
+        ("header.nav", &hd.nav),
+        ("header.plain", &hd.plain),
+        ("header.framed", &hd.framed),
+    ] {
+        let r = &look.recipe;
+        let rest = over(r.rest.fill[0], bar);
+        let hover = over(r.hover.fill[0], bar);
+        add(
+            &format!("{name}.rest.text"),
+            &format!("{name}.rest.fill"),
+            LARGE,
+            over(r.rest.text, rest),
+            rest,
+        );
+        add(
+            &format!("{name}.hover.text"),
+            &format!("{name}.hover.fill"),
+            LARGE,
+            over(r.hover.text, hover),
+            hover,
+        );
+    }
+    let plain_hover = over(hd.plain.recipe.hover.fill[0], bar);
+    for (bg, under) in [
+        ("header.fill", bar),
+        ("header.plain.hover.fill", plain_hover),
+    ] {
+        add(
+            "header.dot.color",
+            bg,
+            LARGE,
+            over(hd.dot.color, under),
+            under,
+        );
+    }
     out
 }
 
-/// The pairs that fail today, 114 of the 477 (core 40, hoff 18, dark 13,
-/// light 43), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 110 of the 725 (core 41, hoff 19, dark 13,
+/// light 37), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -985,12 +1101,6 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("hoff", "colors.border_active", "colors.surface", 2.26),
     (
         "hoff",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.57,
-    ),
-    (
-        "hoff",
         "button.warning.rest.text",
         "button.warning.rest.fill",
         3.27,
@@ -1052,51 +1162,15 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ("light", "colors.border_active", "colors.surface", 2.84),
     (
         "light",
-        "button.primary.rest.text",
-        "button.primary.rest.fill",
-        4.06,
-    ),
-    (
-        "light",
-        "button.primary.active.text",
-        "button.primary.active.fill",
-        4.06,
-    ),
-    (
-        "light",
         "button.secondary.rest.text",
         "button.secondary.rest.fill",
         1.09,
     ),
     (
         "light",
-        "button.secondary.hover.text",
-        "button.secondary.hover.fill",
-        1.17,
-    ),
-    (
-        "light",
         "button.secondary.active.text",
         "button.secondary.active.fill",
         1.09,
-    ),
-    (
-        "light",
-        "button.warning.rest.text",
-        "button.warning.rest.fill",
-        2.15,
-    ),
-    (
-        "light",
-        "button.warning.hover.text",
-        "button.warning.hover.fill",
-        1.83,
-    ),
-    (
-        "light",
-        "button.warning.active.text",
-        "button.warning.active.fill",
-        2.15,
     ),
     // task-104 front A: the field. The core pairs are the kit's Field as
     // written (`components/Field/index.tsx`: the #E2E2E2 border, the
@@ -1136,6 +1210,11 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     ),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
     ("light", "form.field.error_color", "colors.surface", 4.24),
+    // task-104 front F: the kit's dot of news (#FE5938) on the hovered
+    // action's wash, and hoff's danger as that dot
+    ("core", "header.dot.color", "header.plain.hover.fill", 2.77),
+    ("hoff", "header.dot.color", "header.fill", 2.27),
+    ("hoff", "header.dot.color", "header.plain.hover.fill", 1.45),
     // task-104 front C, wave 3: the kit's prompt placeholder (a hint, as
     // the field's), and the top of its voice dot, the kit's #FF732D (its
     // bottom, #E24D03, reads)
@@ -1289,6 +1368,82 @@ fn the_core_table_and_tree_text_meets_aaa() {
     }
 }
 
+/// task-104 front D: the core page head (the kit's Layout title) reads at
+/// AAA on the page, narrow and wide: the title in the ink, the blurb in
+/// shade 7 (the kit's #7B7B7B fails it).
+#[test]
+fn the_core_page_head_meets_aaa() {
+    let t = Theme::hoff_core();
+    let page = over(t.colors.bg, [0.0; 3]);
+    let p = t.disclosure.page;
+    for head in [p.narrow, p.wide] {
+        for fg in [head.title, head.blurb] {
+            let r = ratio(over(fg, page), page);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+}
+
+/// task-104 front D: the core card's chart and legend marks read at 3:1
+/// on the card (WCAG 1.4.11): both bars, both ends of the highlighted
+/// one, its cap, the solid dot, the hollow dot's ring and the ticks. The
+/// baseline is a rule, the kit's line, and is left out.
+#[test]
+fn the_core_card_marks_meet_three_to_one() {
+    let t = Theme::hoff_core();
+    let card = over(t.glass.surface, over(t.colors.bg, [0.0; 3]));
+    let m = t.disclosure.card;
+    let marks = [
+        m.series[0],
+        m.series[1],
+        m.highlight[0],
+        m.highlight[1],
+        m.cap,
+        m.dot_solid[0],
+        m.dot_solid[1],
+        m.dot_ring,
+        m.tick,
+    ];
+    for fg in marks {
+        let r = ratio(over(fg, card), card);
+        assert!(r >= LARGE, "{fg:?} at {r:.2}");
+    }
+}
+
+/// task-104 front D: the core catalog cards' text reads at AAA: the ink
+/// and the muted text on the paper and both washes, the featured plan's
+/// title on its image, and the hover's text on a photo where it sits (the
+/// top of the explore card's title, 38 px above the foot of a 288 px
+/// photo, under the scrim at that height).
+#[test]
+fn the_core_catalog_text_meets_aaa() {
+    let t = Theme::hoff_core();
+    let k = t.disclosure.catalog.palette;
+    let page = over(t.colors.bg, [0.0; 3]);
+    for under in [k.paper, k.panel, k.wash].map(|s| over(s, page)) {
+        for fg in [k.ink, k.muted] {
+            let r = ratio(over(fg, under), under);
+            assert!(r >= AAA, "{fg:?} at {r:.2}");
+        }
+    }
+    for under in k.feature.map(|s| over(s, page)) {
+        let r = ratio(over(k.on_image, under), under);
+        assert!(r >= AAA, "on the featured plan at {r:.2}");
+    }
+    let e = &t.disclosure.catalog.explore;
+    let photo_h = e.width / e.ratio;
+    let from_foot = e.bar_pad + e.button / 2.0 + t.disclosure.catalog.tile.title.line_height / 2.0;
+    let at = 1.0 - from_foot / photo_h;
+    let [top, foot] = k.image.map(|c| c.0);
+    let mix: [f32; 4] = std::array::from_fn(|i| top[i] + (foot[i] - top[i]) * at);
+    let scrim_h = t.disclosure.catalog.tile.scrim_h;
+    let alpha = e.scrim_alpha * (1.0 - from_foot / scrim_h);
+    let mut scrim = k.scrim;
+    scrim.0[3] = alpha;
+    let under = over(scrim, over(Color(mix), page));
+    let r = ratio(over(k.on_image, under), under);
+    assert!(r >= AAA, "on a photo at {r:.2}");
+}
 /// task-104 front C, wave 3: the core prompt input's text meets AAA on
 /// every surface under it (its paper, the trigger's and a row's wash, the
 /// chosen model). The kit's model description, `#7b7b7b/70`, fails it; it

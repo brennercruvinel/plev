@@ -11,9 +11,11 @@
 //! ([`FormTokens::derive`]): the text field each of them drew before the
 //! kit, so a theme that is not the core looks as it did.
 
+mod color;
 mod edit;
 mod select;
 
+pub use color::ColorTokens;
 pub use edit::EditTokens;
 pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
 
@@ -59,6 +61,24 @@ pub struct InputRecipe {
     pub composing: Color,
     /// Opacity of the whole field when disabled.
     pub disabled_alpha: f32,
+}
+
+impl InputRecipe {
+    /// This recipe with `fill` and `border` in every state, its shadows
+    /// kept (a css `!bg` and `!border` over the box's classes).
+    pub fn pinned(&self, fill: Color, border: Color) -> Self {
+        let pin = |s: &InputSurface| InputSurface {
+            fill,
+            border,
+            shadow: s.shadow.clone(),
+        };
+        Self {
+            rest: pin(&self.rest),
+            hover: pin(&self.hover),
+            focus: pin(&self.focus),
+            ..self.clone()
+        }
+    }
 }
 
 /// The icon slots at the ends of the input box: a leading icon, the
@@ -110,6 +130,9 @@ pub struct FieldChrome {
     pub message_gap: f32,
     pub error_color: Color,
     pub helper_color: Color,
+    /// A field's width where the composition gives it one; the `Rect` it
+    /// gets always wins.
+    pub width: f32,
 }
 
 /// What takes one end of the input box, which sets the text's inset on
@@ -139,6 +162,9 @@ pub enum Look {
     Inset,
     /// A combobox's filter: the select's control as a text box.
     Combo,
+    /// The search of a top bar: the search box on the panel's tone,
+    /// edged, whatever the pointer does.
+    Header,
     /// An inline edit's box: the text alone ([`EditTokens::bare`]).
     Bare,
 }
@@ -157,14 +183,8 @@ pub struct GroupAddons {
     /// group-hover:fill-[#000]`).
     pub icon_color: Color,
     pub icon_hover: Color,
-    /// The shortcut hint (`⌘ K`): its surface, padding, text and inset
-    /// from the box's end.
-    pub hint_fill: Color,
-    pub hint_radius: f32,
-    pub hint_pad: [f32; 2],
-    pub hint_text: TextStyle,
-    pub hint_color: Color,
-    pub hint_shadow: Vec<ShadowSpec>,
+    /// The shortcut hint's inset from the box's end; the hint itself is
+    /// the search's key cap, `theme.disclosure.kbd` (`Kbd`, `Md`).
     pub hint_edge: f32,
     /// The least room between an icon or a hint and the text typed
     /// beside it, so a right-to-left text that hangs from the end never
@@ -176,6 +196,12 @@ pub struct GroupAddons {
     pub text_edge: f32,
     /// The least width of a select at the end (Invite :26 `w-25.5`).
     pub select_w: f32,
+    /// A group's width where the composition gives it one: a search, an
+    /// invite (a select at its end) and a command palette (the search
+    /// over its list). The `Rect` it gets always wins.
+    pub width: f32,
+    pub invite_width: f32,
+    pub palette_width: f32,
 }
 
 /// A one-time code (`super::otp`): its cells are the Field's input box,
@@ -208,6 +234,8 @@ pub struct FormTokens {
     pub search: InputRecipe,
     /// The inset box of an input group with a select at its end.
     pub inset: InputRecipe,
+    /// The search box of a top bar ([`Look::Header`]).
+    pub header: InputRecipe,
     pub adorn: Adornments,
     pub group: GroupAddons,
     pub field: FieldChrome,
@@ -221,6 +249,8 @@ pub struct FormTokens {
     /// The inline edit (`edit.rs`), and its bare box.
     pub edit: EditTokens,
     pub bare: InputRecipe,
+    /// The color picker (`color.rs`).
+    pub color: ColorTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -266,6 +296,7 @@ impl FormTokens {
             Look::Field => &self.input,
             Look::Search => &self.search,
             Look::Inset => &self.inset,
+            Look::Header => &self.header,
             Look::Combo => &self.combo,
             Look::Bare => &self.bare,
         }
@@ -385,27 +416,14 @@ impl FormTokens {
             placeholder: Color::rgba(123.0 / 255.0, 123.0 / 255.0, 123.0 / 255.0, 0.50),
             ..input.clone()
         };
-        // Search :21 the icon button, :41 the `⌘ K` hint: `px-1.5 py-0.5
-        // bg-[#F1F1F1] rounded-md` under a ring and two key-lights,
-        // `text-[0.75rem] leading-[1rem] font-medium text-[#7B7B7B]`,
-        // `right-2.5`.
+        // Search :21 the icon button, :41 the `⌘ K` hint (the key cap,
+        // `theme.disclosure.kbd`) at `right-2.5`.
         let group = GroupAddons {
             icon_edge: 4.0,
             icon_slot: 32.0,
             icon: 16.0,
             icon_color: gray,
             icon_hover: hex(0x000000),
-            hint_fill: hex(0xF1F1F1),
-            hint_radius: 6.0,
-            hint_pad: [6.0, 2.0],
-            hint_text: ramp.exact(12.0, 16.0, 500),
-            hint_color: gray,
-            hint_shadow: vec![
-                ShadowSpec::new([0.0, 0.0], 0.0, 1.0, black(0.11)),
-                ShadowSpec::inset([0.0, 2.0], 0.8, 0.0, Color::rgba(1.0, 1.0, 1.0, 0.27)),
-                ShadowSpec::inset([0.0, -1.0], 0.6, 0.0, black(0.20)),
-                ShadowSpec::new([0.0, 1.0], 4.2, -1.0, black(0.25)),
-            ],
             hint_edge: 10.0,
             // What Search :34 `px-12` (48) leaves past the hint's
             // `right-2.5` (10) and its `px-1.5` around `⌘ K` (about 34).
@@ -415,6 +433,13 @@ impl FormTokens {
             text_color: gray,
             text_edge: 12.0,
             select_w: 102.0,
+            // `templates/InputsPage/index.tsx:176` the Search `w-54`, :161
+            // the Invite `w-76.5`.
+            width: 216.0,
+            invite_width: 306.0,
+            // Not in the kit, which has no palette: `w-72`, between its
+            // Search and its Invite.
+            palette_width: 288.0,
         };
         let label = LabelRecipe {
             text: ramp.exact(12.0, 16.0, 500),
@@ -437,6 +462,8 @@ impl FormTokens {
             // Not in the kit (only an error line): the gray of its
             // secondary text.
             helper_color: gray,
+            // `templates/InputsPage/index.tsx:36`, `w-60`.
+            width: 240.0,
         };
 
         // Not in the kit (it has no code input): the Field's own spaces,
@@ -451,6 +478,9 @@ impl FormTokens {
             pad_y: 16.0,
             rows: 3,
         };
+        // HeaderSimple :59, the Search with `!bg-[#F8F7F7]
+        // !border-[#E2E2E2]`: both kept in every state, the focus well too.
+        let header = search.pinned(hex(0xF8F7F7), border);
         let select = SelectRecipe::hoff_core();
         let combo = select.as_input(&input);
         let edit = EditTokens::hoff_core();
@@ -460,6 +490,7 @@ impl FormTokens {
             input,
             search,
             inset,
+            header,
             adorn,
             group,
             field,
@@ -469,6 +500,7 @@ impl FormTokens {
             select,
             edit,
             bare,
+            color: ColorTokens::hoff_core(),
         }
     }
 
@@ -523,18 +555,17 @@ impl FormTokens {
             icon: theme.control.icon_for(ControlSize::Sm),
             icon_color: c.text_mid,
             icon_hover: c.text,
-            hint_fill: c.bg_hover,
-            hint_radius: theme.shape.micro,
-            hint_pad: [theme.spacing.xs * 1.5, theme.spacing.xs * 0.5],
-            hint_text: t.caption_r(),
-            hint_color: c.text_mid,
-            hint_shadow: vec![ShadowSpec::new([0.0, 0.0], 0.0, 1.0, c.divider)],
             hint_edge: theme.spacing.sm,
             addon_gap: theme.spacing.xs,
             text_color: c.text_mid,
             text_edge: theme.spacing.md,
             // As wide as its options measure.
             select_w: 0.0,
+            // A menu's width; an invite takes half a readable line, a
+            // palette two fifths of it.
+            width: theme.size.menu_w,
+            invite_width: theme.size.readable_max_w / 2.0,
+            palette_width: theme.size.readable_max_w * 0.4,
         };
         let label = LabelRecipe {
             text: t.caption_sm(),
@@ -553,6 +584,7 @@ impl FormTokens {
             message_gap: theme.spacing.sm,
             error_color: c.danger,
             helper_color: c.text_mid,
+            width: theme.size.menu_w,
         };
         let otp = OtpTokens {
             gap: field.label_gap,
@@ -572,6 +604,8 @@ impl FormTokens {
             label,
             search: input.clone(),
             inset: input.clone(),
+            // the panel's tone, edged in the active border, as the kit's
+            header: input.pinned(c.bg_panel, c.border_active),
             input,
             adorn,
             group,
@@ -582,6 +616,7 @@ impl FormTokens {
             select,
             edit,
             bare,
+            color: ColorTokens::derive(theme),
         }
     }
 }

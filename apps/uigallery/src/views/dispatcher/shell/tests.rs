@@ -385,7 +385,7 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
     assert!(view.is_shell(&sid("shell.theme")));
 
     // a page without a projection leaves the shell alone
-    view.jump_to_page("Card");
+    view.jump_to_page("Separator");
     assert!(view.semantics().is_none());
     let gallery = view.gallery_semantics().unwrap();
     let ids: Vec<&str> = gallery.nodes().keys().map(SemId::as_str).collect();

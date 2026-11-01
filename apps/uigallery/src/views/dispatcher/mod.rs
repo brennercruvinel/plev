@@ -56,6 +56,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.content_height(content, t),
                 Pane::Spinner => self.panes.spinner.content_height(content, t),
                 Pane::Stat => self.panes.stat.content_height(content, t),
+                Pane::Toolbar => self.panes.toolbar.content_height(content, t),
                 Pane::Switch => self.panes.switch.content_height(content, t),
                 Pane::Table => self.panes.table.content_height(content, t),
                 Pane::Tabs => self.panes.tabs.content_height(content, t),
@@ -101,9 +102,13 @@ impl ShowcaseView {
                 Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
                 Pane::Calendar => self.panes.calendar.content_height(content, t),
                 Pane::DatePicker => self.panes.date_picker.content_height(content, t),
+                Pane::Menus => self.panes.menus.content_height(content, t),
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.content_height(content, t),
+                Pane::Topbar => self.panes.topbar.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -184,6 +189,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.handle_event(event, content, t),
                 Pane::Spinner => self.panes.spinner.handle_event(event, content, t),
                 Pane::Stat => self.panes.stat.handle_event(event, content, t),
+                Pane::Toolbar => self.panes.toolbar.handle_event(event, content, t),
                 Pane::Switch => self.panes.switch.handle_event(event, content, t),
                 Pane::Table => self.panes.table.handle_event(event, content, t),
                 Pane::Tabs => self.panes.tabs.handle_event(event, content, t),
@@ -271,9 +277,13 @@ impl ShowcaseView {
                 Pane::ButtonGroup => self.panes.button_group.handle_event(event, content, t),
                 Pane::Calendar => self.panes.calendar.handle_event(event, content, t),
                 Pane::DatePicker => self.panes.date_picker.handle_event(event, content, t),
+                Pane::Menus => self.panes.menus.handle_event(event, content, t),
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.handle_event(event, content, t),
+                Pane::Topbar => self.panes.topbar.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -397,6 +407,8 @@ impl ShowcaseView {
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
             // task-104 front E, selection and dates (#158)
             Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
+            // task-104 front F, kit foundation
+            Some(Pane::Topbar) => self.panes.topbar.wake(dt),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -443,7 +455,7 @@ impl ShowcaseView {
                 Pane::Empty => self.panes.empty.render(c, content, theme),
                 Pane::Graph => self.panes.graph.render(c, content, theme),
                 Pane::IconButton => self.panes.icon_button.render(c, content, theme),
-                Pane::Input => self.panes.input.render(c, content, theme),
+                Pane::Input => self.panes.input.render(c, layers.overlay, content, theme),
                 Pane::NavigationMenu => self.panes.navigation_menu.render(c, content, theme),
                 Pane::Panel => self.panes.panel.render(c, content, theme),
                 Pane::PanelHeader => self.panes.panel_header.render(c, content, theme),
@@ -460,6 +472,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.render(c, content, theme),
                 Pane::Spinner => self.panes.spinner.render(c, content, theme),
                 Pane::Stat => self.panes.stat.render(c, content, theme),
+                Pane::Toolbar => self.panes.toolbar.render(c, content, theme),
                 Pane::Switch => self.panes.switch.render(c, content, theme),
                 Pane::Table => self.panes.table.render(c, content, theme),
                 Pane::Tabs => self.panes.tabs.render(c, content, theme),
@@ -575,9 +588,13 @@ impl ShowcaseView {
                 Pane::ButtonGroup => self.panes.button_group.render(c, content, theme),
                 Pane::Calendar => self.panes.calendar.render(c, content, theme),
                 Pane::DatePicker => self.panes.date_picker.render(c, content, theme),
+                Pane::Menus => self.panes.menus.render(c, content, theme),
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.render(c, content, theme),
+                Pane::Topbar => self.panes.topbar.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

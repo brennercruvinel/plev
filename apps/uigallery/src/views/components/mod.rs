@@ -39,6 +39,7 @@ pub mod switch;
 pub mod table;
 pub mod tabs;
 pub mod toast;
+pub mod toolbar;
 pub mod tooltip;
 pub mod tree;
 
@@ -87,12 +88,17 @@ pub mod table_static;
 pub mod button_group;
 pub mod calendar;
 pub mod date_picker;
+pub mod menus;
 pub mod radio_group;
 pub mod toggle;
 pub mod toggle_group;
 
+// task-104 front F, kit foundation
+pub mod home;
+pub mod topbar;
+
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
-pub(crate) use super::{EditKey, group_label, panel, text};
+pub(crate) use super::{EditKey, panel, text};
 
 use accord::SemId;
 

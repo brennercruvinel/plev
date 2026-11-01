@@ -57,16 +57,16 @@ pub fn file_menu() -> Vec<MenuEntry> {
 
 /// The kit's profile menu (`ProfileMenu/index.tsx:2-27`, the header's
 /// `UserDropdown`): four items, a rule (`nth-4`), two; the icons are the
-/// engine's nearest to the kit's paths.
+/// kit's own inline paths (`kit-*`).
 pub fn profile_menu() -> Vec<MenuEntry> {
     vec![
-        MenuEntry::item(1, "Profile").icon("info"),
-        MenuEntry::item(2, "Subscription").icon("heart"),
-        MenuEntry::item(3, "Join Discord").icon("send"),
-        MenuEntry::item(4, "Settings").icon("settings"),
+        MenuEntry::item(1, "Profile").icon("kit-profile"),
+        MenuEntry::item(2, "Subscription").icon("kit-subscription"),
+        MenuEntry::item(3, "Join Discord").icon("kit-discord"),
+        MenuEntry::item(4, "Settings").icon("kit-settings"),
         MenuEntry::Separator,
-        MenuEntry::item(5, "Updates").icon("history"),
-        MenuEntry::item(6, "Sign out").icon("x"),
+        MenuEntry::item(5, "Updates").icon("kit-updates"),
+        MenuEntry::item(6, "Sign out").icon("kit-sign-out"),
     ]
 }
 

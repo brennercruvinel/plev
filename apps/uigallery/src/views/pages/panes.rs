@@ -8,7 +8,7 @@ use super::super::components::{
     avatar, badge, breadcrumb, button, card, chart, checkbox, chip, code_block, context_menu,
     dialog, empty, graph, icon_button, input, navigation_menu, panel, panel_header, progress,
     resizable, scroll_area, select, separator, sidebar, skeleton, slider, spinner, stat, switch,
-    table, tabs, toast, tooltip, tree,
+    table, tabs, toast, toolbar, tooltip, tree,
 };
 use super::super::foundations::{effects, icons, theme, typography};
 
@@ -41,8 +41,11 @@ use super::super::components::{
 
 // task-104 front E, selection and dates (#158)
 use super::super::components::{
-    button_group, calendar, date_picker, radio_group, toggle, toggle_group,
+    button_group, calendar, date_picker, menus, radio_group, toggle, toggle_group,
 };
+
+// task-104 front F, kit foundation
+use super::super::components::{home, topbar};
 
 pub struct Panes {
     // -- foundations
@@ -79,6 +82,7 @@ pub struct Panes {
     pub slider: slider::SliderPage,
     pub spinner: spinner::SpinnerPage,
     pub stat: stat::StatPage,
+    pub toolbar: toolbar::ToolbarPage,
     pub switch: switch::SwitchPage,
     pub table: table::TablePage,
     pub tabs: tabs::TabsPage,
@@ -125,9 +129,13 @@ pub struct Panes {
     pub button_group: button_group::ButtonGroupPage,
     pub calendar: calendar::CalendarPage,
     pub date_picker: date_picker::DatePickerPage,
+    pub menus: menus::MenusPage,
     pub radio_group: radio_group::RadioGroupPage,
     pub toggle: toggle::TogglePage,
     pub toggle_group: toggle_group::ToggleGroupPage,
+    // task-104 front F, kit foundation
+    pub home: home::HomePage,
+    pub topbar: topbar::TopbarPage,
     // -- apps demo
     pub todo: todo::TodoPage,
     /// Materialized over the todo's capabilities: it operates `todo`.
@@ -194,6 +202,7 @@ impl Panes {
             slider: slider::SliderPage::new(),
             spinner: spinner::SpinnerPage::new(),
             stat: stat::StatPage::new(),
+            toolbar: toolbar::ToolbarPage::new(),
             switch: switch::SwitchPage::new(theme),
             table: table::TablePage::new(theme),
             tabs: tabs::TabsPage::new(),
@@ -239,9 +248,13 @@ impl Panes {
             button_group: button_group::ButtonGroupPage::new(),
             calendar: calendar::CalendarPage::new(),
             date_picker: date_picker::DatePickerPage::new(),
+            menus: menus::MenusPage::new(),
             radio_group: radio_group::RadioGroupPage::new(),
             toggle: toggle::TogglePage::new(),
             toggle_group: toggle_group::ToggleGroupPage::new(theme),
+            // task-104 front F, kit foundation
+            home: home::HomePage::new(),
+            topbar: topbar::TopbarPage::new(),
             todo,
             surface,
             silences: silences::SilencesPage::new(),

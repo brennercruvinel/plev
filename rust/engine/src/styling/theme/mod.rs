@@ -13,16 +13,18 @@ pub use self::scales::{
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
 };
 pub use self::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, SwatchGroup, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
+    TypographyScale,
 };
 pub use crate::widgets::buttons::tokens::{
-    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics,
+    ButtonMetrics, ButtonRecipe, ButtonSurface, ButtonTokens, IconButtonMetrics, SubmitRecipe,
 };
 // task-104: one token slot per front (A fields, B overlays, C conversation,
 // D disclosure, E selection, G navigation and data), each in its front's
 // `tokens.rs`.
 pub use crate::widgets::content::tokens::DisclosureTokens;
 pub use crate::widgets::form::tokens::FormTokens;
+pub use crate::widgets::header::tokens::HeaderTokens;
 pub use crate::widgets::message::tokens::MessageTokens;
 pub use crate::widgets::nav::tokens::NavigationTokens;
 pub use crate::widgets::overlay::tokens::OverlayTokens;
@@ -83,6 +85,9 @@ pub struct Theme {
     /// code block, chart, graph. Boxed: a theme travels by value, and its
     /// size is every test's stack.
     pub navigation: Box<NavigationTokens>,
+    /// Front F: the kit's top bars and its logo. Boxed, as the
+    /// navigation.
+    pub header: Box<HeaderTokens>,
 }
 
 /// The default plev theme is HOFF (see [`Theme::hoff`]).
@@ -133,6 +138,7 @@ impl Theme {
             disclosure: DisclosureTokens::hoff_core(),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors,
             typography: TypographyScale {
                 small: 10.0,
@@ -144,6 +150,7 @@ impl Theme {
                 display: 36.0,
                 line_height_ratio: 1.3,
                 family: None,
+                mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
             },
             spacing: SpacingScale {
@@ -382,6 +389,7 @@ impl Theme {
         self.disclosure = DisclosureTokens::derive(self);
         *self.selection = SelectionTokens::derive(self);
         *self.navigation = NavigationTokens::derive(self);
+        *self.header = HeaderTokens::derive(self);
     }
 
     /// Resolve intent to a semantic color.

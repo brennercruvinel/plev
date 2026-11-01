@@ -3,9 +3,9 @@
 //! from the person, the reader and an agent.
 
 use accord::{SemId, Value};
-use engine::control::accessibility::accesskit::Action;
+use engine::control::accessibility::accesskit::{Action, ActionData};
 
-use super::harness::{Gallery, ask, by_agent, gallery, same, sid};
+use super::harness::{Gallery, ask, ask_with, by_agent, gallery, same, sid};
 
 /// The Toggle page's toggles: icon only, off and on; labeled, off and
 /// on; with an icon and a label, off.
@@ -340,4 +340,107 @@ fn a_picked_day_and_a_turned_month_are_the_same_from_the_three() {
         state_on(&person, OPEN, "value"),
         Some(Value::Text("2026-10-21".into()))
     );
+}
+
+/// The Menus page: an item of the filter menu, one of the file menu and
+/// a folder.
+const MENU_ROWS: [&str; 3] = [
+    "menus_page.group[0].card[5][3]",
+    "menus_page.group[0].card[1][2]",
+    "menus_page.group[0].card[2][1]",
+];
+
+/// A menu row is picked the same from the person's click, the reader's
+/// press and the agent's `activate`, and its menu says it.
+#[test]
+fn a_menu_row_is_picked_the_same_from_the_three() {
+    for id in MENU_ROWS {
+        let mut person = seeing_on("Menus", id);
+        person.click(id);
+        let mut reader = gallery("Menus");
+        reader.press(id);
+        let agent = by_agent("Menus", "sel_menu", vec![ask(id, "activate")]);
+        same("Menus", &person, &reader, &agent);
+        let menu = &id[..id.rfind('[').unwrap()];
+        let picked = state_on(&person, menu, "picked");
+        assert!(
+            matches!(&picked, Some(Value::Text(t)) if !t.is_empty()),
+            "{id}: {picked:?}"
+        );
+    }
+}
+
+/// The folder picker's new-folder row, the name's box it opens, and the
+/// search box.
+const NEW_FOLDER: &str = "menus_page.group[0].card[2].new";
+const FOLDER_NAME: &str = "menus_page.group[0].card[2].name";
+const FOLDER_SEARCH: &str = "menus_page.group[0].card[2].search";
+
+/// A folder is made the same by the person (a click on New Folder, the
+/// name typed, Enter), the reader (a press, the value set, the box's
+/// press) and the agent (`activate`, `set_value`, `submit`): the box
+/// closes and the folder is the picker's last.
+#[test]
+fn a_new_folder_is_made_the_same_from_the_three() {
+    let mut person = seeing_on("Menus", NEW_FOLDER);
+    person.click(NEW_FOLDER);
+    person.type_in("Moodboard");
+    assert!(person.view.handle_enter(), "Enter adds it");
+    person.frame();
+    let mut reader = gallery("Menus");
+    reader.press(NEW_FOLDER);
+    reader.reader(
+        FOLDER_NAME,
+        Action::SetValue,
+        Some(ActionData::Value("Moodboard".into())),
+    );
+    reader.press(FOLDER_NAME);
+    let agent = by_agent(
+        "Menus",
+        "sel_folder",
+        vec![
+            ask(NEW_FOLDER, "activate"),
+            ask_with(FOLDER_NAME, "set_value", Value::Text("Moodboard".into())),
+            ask(FOLDER_NAME, "submit"),
+        ],
+    );
+    same("Menus", &person, &reader, &agent);
+    let seen = person.view.semantics().unwrap();
+    assert!(seen.get(&sid(FOLDER_NAME)).is_none(), "the box closed");
+    let last = seen.get(&sid("menus_page.group[0].card[2][4]")).unwrap();
+    assert_eq!(last.label, "Moodboard");
+}
+
+/// The search box takes typing from the person and its value from the
+/// reader and the agent, the same.
+#[test]
+fn the_folder_search_takes_its_text_the_same_from_the_three() {
+    let mut person = seeing_on("Menus", FOLDER_SEARCH);
+    person.click(FOLDER_SEARCH);
+    person.type_in("icons");
+    let mut reader = gallery("Menus");
+    reader.reader(
+        FOLDER_SEARCH,
+        Action::SetValue,
+        Some(ActionData::Value("icons".into())),
+    );
+    let agent = by_agent(
+        "Menus",
+        "sel_search",
+        vec![ask_with(
+            FOLDER_SEARCH,
+            "set_value",
+            Value::Text("icons".into()),
+        )],
+    );
+    assert_eq!(
+        state_on(&person, FOLDER_SEARCH, "text"),
+        Some(Value::Text("icons".into()))
+    );
+    for g in [&reader, &agent] {
+        assert_eq!(
+            state_on(g, FOLDER_SEARCH, "text"),
+            Some(Value::Text("icons".into()))
+        );
+    }
 }

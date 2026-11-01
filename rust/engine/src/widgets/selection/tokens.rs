@@ -24,6 +24,8 @@ use crate::styling::theme::hoff_core::{BLUE, SHADES};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::widgets::buttons::tokens::ButtonTokens;
 
+pub use super::folders::FoldersTokens;
+
 /// The kit's segmented control (`components/Tabs/index.tsx`): a well
 /// with a raised thumb that slides under the chosen segment. The toggle
 /// group draws it, and the tabs share it.
@@ -241,6 +243,7 @@ pub struct SelectionTokens {
     pub button_group: ButtonGroupTokens,
     pub radio: RadioTokens,
     pub calendar: CalendarTokens,
+    pub folders: FoldersTokens,
 }
 
 fn hex(v: u32) -> Color {
@@ -538,7 +541,9 @@ impl SelectionTokens {
             day_line: 16.0,
             day_weight: 500,
         };
+        let folders = FoldersTokens::hoff_core();
         Self {
+            folders,
             button_group,
             switch,
             checkbox,

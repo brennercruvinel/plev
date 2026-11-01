@@ -149,7 +149,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
     page(
@@ -170,7 +170,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Card",
         "clipboard",
-        "The HOFF card deck: one glass shell, six preview families with live data.",
+        "The kit's cards page: pricing, slide, asset, scene, explore and asset items.",
         Pane::Card,
     ),
     page(
@@ -301,6 +301,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Home",
+        "house",
+        "The kit's home, its branding: the logo's symbol, its wordmark and both.",
+        Pane::Home,
+    ),
+    page(
+        C,
         "Hover Card",
         "eye",
         "Rest the pointer on the handle; the card follows.",
@@ -368,6 +375,13 @@ pub const PAGES: &[Page] = &[
         "layout-grid",
         "File, Edit and View: menus in a row, one open at a time.",
         Pane::Menubar,
+    ),
+    page(
+        C,
+        "Menus",
+        "folder",
+        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        Pane::Menus,
     ),
     page(
         C,
@@ -568,10 +582,24 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Toolbar",
+        "mouse-pointer-2",
+        "The kit's toolbar page: the toolbar and its zoom panel, play mode, the video player, the view controller.",
+        Pane::Toolbar,
+    ),
+    page(
+        C,
         "Tooltip",
         "info",
         "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
+    ),
+    page(
+        C,
+        "Topbar",
+        "layout-grid",
+        "The kit's top bars: simple, with a filter or the search at the end, minimal, and the asset header with its thumbnails.",
+        Pane::Topbar,
     ),
     page(
         C,

@@ -34,6 +34,54 @@ fn body_style(theme: &Theme) -> &TextStyle {
     &theme.overlay.modal.body
 }
 
+/// The modal's sheet at `rect`, the surface any dialog stands on: its
+/// shadow, its body (the hoff glass: frost, edge-light, the solid body
+/// and the inset key-light glint; or the solid fill), then `inside`, then
+/// its stroke on a theme that draws one. Every value is
+/// `theme.overlay.modal`'s.
+pub fn sheet(
+    compositor: &mut Compositor,
+    layer: LayerId,
+    theme: &Theme,
+    rect: Rect,
+    inside: impl FnOnce(&mut Compositor),
+) {
+    let m = &theme.overlay.modal;
+    let radius = m.radius.min(rect.h / 2.0);
+    for spec in &m.shadow {
+        if let Some(node) = shadow_node(rect, radius, spec) {
+            compositor.push_to_layer(layer, node);
+        }
+    }
+    let Rect { x, y, w, h } = rect;
+    if m.glass {
+        compositor.push_to_layer(
+            layer,
+            SceneNode::BackdropBlur {
+                x,
+                y,
+                w,
+                h,
+                corner_radius: radius,
+                sigma: theme.effects.blur_sigma,
+            },
+        );
+        for node in glass_pill(rect, radius, m.border.0, m.border_w, m.fill.0, theme) {
+            compositor.push_to_layer(layer, node);
+        }
+        inset_keylight(compositor, layer, rect, radius, theme);
+    } else {
+        compositor.push_to_layer(layer, rounded_rect(x, y, w, h, radius, m.fill.0));
+    }
+    inside(compositor);
+    if !m.glass && m.border.0[3] > 0.0 {
+        compositor.push_to_layer(
+            layer,
+            rounded_rect_stroke(x, y, w, h, radius, m.border.0, m.border_w),
+        );
+    }
+}
+
 /// `text` broken into the lines it draws in `width`, each with its
 /// measured width: the shaper's own breaks (`TextMeasurer::lines`, so a
 /// CJK or Thai body wraps too), a hard break kept, and an empty text one
@@ -188,7 +236,7 @@ impl Modal {
 
     /// Sheet width in a `vw`-wide window: the modal's max, or the window
     /// less the breakpoint gutter on each side when that is narrower.
-    fn width(theme: &Theme, vw: f32) -> f32 {
+    pub fn width(theme: &Theme, vw: f32) -> f32 {
         let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
         theme.overlay.modal.max_w.min((vw - gutter * 2.0).max(0.0))
     }
@@ -365,38 +413,14 @@ impl Modal {
         if let Some(id) = &self.sem {
             compositor.bind_to_layer(layer, id, [dialog.x, dialog.y, dialog.w, dialog.h]);
         }
-        let radius = m.radius.min(dialog.h / 2.0);
-        for spec in &m.shadow {
-            if let Some(node) = shadow_node(dialog, radius, spec) {
-                compositor.push_to_layer(layer, node);
+        sheet(compositor, layer, theme, dialog, |compositor| {
+            if !Self::footed(theme) {
+                return;
             }
-        }
-        if m.glass {
-            // The hoff sheet: frost, edge-light, the solid body, the
-            // inset key-light glint.
-            compositor.push_to_layer(
-                layer,
-                SceneNode::BackdropBlur {
-                    x: dialog.x,
-                    y: dialog.y,
-                    w: dialog.w,
-                    h: dialog.h,
-                    corner_radius: radius,
-                    sigma: theme.effects.blur_sigma,
-                },
-            );
-            for node in glass_pill(dialog, radius, m.border.0, m.border_w, m.fill.0, theme) {
-                compositor.push_to_layer(layer, node);
-            }
-            inset_keylight(compositor, layer, dialog, radius, theme);
-        } else {
-            let d = dialog;
-            compositor.push_to_layer(layer, rounded_rect(d.x, d.y, d.w, d.h, radius, m.fill.0));
-        }
-        let (confirm_rect, cancel_rect) = self.button_rects(theme, dialog);
-        if Self::footed(theme) {
             // The footer band: its fill to the sheet's bottom corners
             // (clipped to the sheet), its rule on top.
+            let radius = m.radius.min(dialog.h / 2.0);
+            let (_, cancel_rect) = self.button_rects(theme, dialog);
             let top = cancel_rect.y - m.pad - m.border_w;
             compositor.push_to_layer(
                 layer,
@@ -420,14 +444,8 @@ impl Modal {
                     color: m.footer_rule.0,
                 },
             );
-        }
-        if !m.glass && m.border.0[3] > 0.0 {
-            let d = dialog;
-            compositor.push_to_layer(
-                layer,
-                rounded_rect_stroke(d.x, d.y, d.w, d.h, radius, m.border.0, m.border_w),
-            );
-        }
+        });
+        let (confirm_rect, cancel_rect) = self.button_rects(theme, dialog);
 
         // The art over the sheet's top, under the text.
         if let Some(image) = self.art {

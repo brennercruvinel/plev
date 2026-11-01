@@ -212,6 +212,16 @@ impl Sidebar {
             .fold(0.0, f32::max)
     }
 
+    /// The height that shows every row unscrolled in the mode the
+    /// sidebar takes at `vw`: the brand, the band's rows (a folded group
+    /// its caption alone) and the footer. A host that sizes the sidebar
+    /// to its content (one embedded in a page) asks for this; the
+    /// full-height column scrolls its band instead.
+    pub fn natural_h(&self, theme: &Theme, vw: f32) -> f32 {
+        let mode = self.mode(theme, vw);
+        self.brand_h(theme, mode) + self.rows_h(theme) + self.footer_h(theme, mode)
+    }
+
     fn sync_active(&mut self) {
         let active = self.active;
         for (i, link) in self.all_links_mut().enumerate() {

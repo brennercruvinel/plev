@@ -87,6 +87,7 @@ pub enum Pane {
     Table,
     Tabs,
     Toast,
+    Toolbar,
     Tooltip,
     Tree,
     // task-104: each front adds its variants under its anchor, with the page
@@ -130,9 +131,13 @@ pub enum Pane {
     ButtonGroup,
     Calendar,
     DatePicker,
+    Menus,
     RadioGroup,
     Toggle,
     ToggleGroup,
+    // task-104 front F, kit foundation
+    Home,
+    Topbar,
     // apps demo
     Todo,
     Surface,

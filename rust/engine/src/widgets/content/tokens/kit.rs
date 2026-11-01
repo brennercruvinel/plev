@@ -455,13 +455,13 @@ impl DisclosureTokens {
         // leading-[1.25rem] font-semibold`; a second line in the
         // notification's `text-[0.75rem] leading-[1rem] font-medium
         // text-[#7B7B7B]/50` (Notification/index.tsx:68), in shade 7 for
-        // AAA, right under the title's row, whose `py-4` parts them, and
-        // `py-4` below it; the tabs `gap-1` (:30) before the badge.
+        // AAA, `py-4` under the title's row, and `py-4` below it; the
+        // tabs `gap-1` (:30) before the badge.
         let header = HeaderRecipe {
             pad_x: 20.0,
-            row: 16.0 + 20.0 + 16.0,
-            blurb_gap: 0.0,
-            blurb_bottom: 16.0,
+            pad_y: 16.0,
+            row: 20.0,
+            blurb_gap: 16.0,
             title_size: 14.0,
             title_line_height: 20.0,
             title_weight: 600,
@@ -473,6 +473,42 @@ impl DisclosureTokens {
             badge_gap: 4.0,
             rule: 1.0,
             rule_color: line,
+        };
+
+        // The page's title (Layout/index.tsx:35): `px-12 py-8 border-b
+        // border-[#ECECEC] text-[2rem] leading-[2.5rem]`, and below the
+        // kit's 1420 px viewport `p-5 text-[1.5rem] leading-[2rem]`; the
+        // body's `text-[#121212]` and weight (app/layout.tsx:108). The
+        // page column is that viewport less the `pl-55` sidebar (:15),
+        // so the wide title shows from a 1200 px head. The kit's title
+        // stands alone: a blurb under it takes the comment's text, `mt-1
+        // text-[0.8125rem] leading-[1.25rem] text-[#7B7B7B]` (QuickComment/
+        // Comment/index.tsx:49), in shade 7 for AAA. The Layout's title
+        // spans the page column, padded as the page's groups are (Group/
+        // index.tsx:7, `p-12`, `p-5`): it bleeds, its title on the gutter.
+        // A badge keeps the panel head's `gap-1`.
+        let page_head = |[pad_x, pad_y]: [f32; 2], size: f32, line_height: f32| HeaderRecipe {
+            pad_x,
+            pad_y,
+            row: line_height,
+            blurb_gap: 4.0,
+            title_size: size,
+            title_line_height: line_height,
+            title_weight: 400,
+            title: ink,
+            blurb_size: 13.0,
+            blurb_line_height: 20.0,
+            blurb_weight: 400,
+            blurb: passing,
+            badge_gap: 4.0,
+            rule: 1.0,
+            rule_color: line,
+        };
+        let page = PageHeadRecipe {
+            narrow: page_head([20.0, 20.0], 24.0, 32.0),
+            wide: page_head([48.0, 32.0], 32.0, 40.0),
+            wide_from: 1420.0 - 220.0,
+            bleed: true,
         };
 
         // The kit has no split: its divider is the kit's line (`border-b
@@ -499,6 +535,9 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
+            page,
+            card: CardRecipe::hoff_core(),
+            catalog: CatalogTokens::hoff_core(),
             split,
         }
     }

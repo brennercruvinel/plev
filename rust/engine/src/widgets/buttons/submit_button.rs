@@ -1,25 +1,42 @@
-//! The submit button of the kit: a square primary surface that turns
-//! into the dark secondary one on hover, and stays dark while `active`
-//! (a request in flight). The arrow icon follows: ink on paper, paper on
-//! ink.
+//! The submit button of the kit (`components/SubmitButton`): a square
+//! pale surface that turns into the dark one on hover or press, and stays
+//! dark while `active` (a request in flight), easing back a step when
+//! hovered then. The arrow follows: ink on paper, paper on ink. Two
+//! sizes, the default and the kit's `isMedium`. Every value is
+//! `theme.button.submit`.
 //!
 //! With a [`SemId`] ([`SubmitButton::sem`]) the render binds the bounds
 //! it draws and hit-tests with, and [`SubmitButton::project`] declares
 //! the button in a semantic projection, `active` as its `busy` state.
 
 use crate::drawing::compositor::{Compositor, LayerId};
-use crate::styling::theme::{ButtonRecipe, ButtonSurface, IconButtonMetrics, Theme};
+use crate::styling::theme::{ButtonSurface, IconButtonMetrics, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use super::IconButtonSize;
 use super::press::{Press, paint_surface};
 use crate::widgets::icons;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
+/// The submit button's ladder (`theme.button.submit.sizes`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SubmitButtonSize {
+    /// 32, the kit's `isMedium` (a comment's send).
+    Md,
+    /// 40, the default (the prompt's send).
+    #[default]
+    Lg,
+}
+
+impl SubmitButtonSize {
+    pub fn metrics(self, theme: &Theme) -> IconButtonMetrics {
+        theme.button.submit.sizes[self as usize]
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct SubmitButton {
     pub icon: &'static str,
-    pub size: IconButtonSize,
+    pub size: SubmitButtonSize,
     pub disabled: bool,
     pub active: bool,
     press: Press,
@@ -30,7 +47,7 @@ impl SubmitButton {
     pub fn new() -> Self {
         Self {
             icon: "arrow-up",
-            size: IconButtonSize::Lg,
+            size: SubmitButtonSize::Lg,
             disabled: false,
             active: false,
             press: Press::default(),
@@ -75,7 +92,7 @@ impl SubmitButton {
         node
     }
 
-    pub fn size(mut self, size: IconButtonSize) -> Self {
+    pub fn size(mut self, size: SubmitButtonSize) -> Self {
         self.size = size;
         self
     }
@@ -102,23 +119,14 @@ impl SubmitButton {
         self.size.metrics(theme)
     }
 
-    /// Primary at rest; secondary hovered, pressed or active (hovered
-    /// while active eases back to the secondary hover state).
+    /// Pale at rest; dark hovered, pressed or active; hovered while
+    /// active, the dark eased back over the pale.
     fn surface<'a>(&self, theme: &'a Theme) -> &'a ButtonSurface {
-        let primary: &ButtonRecipe = &theme.button.primary;
-        let secondary: &ButtonRecipe = &theme.button.secondary;
-        if self.active {
-            if self.press.hovered {
-                &secondary.hover
-            } else {
-                &secondary.rest
-            }
-        } else if self.press.pressed {
-            &secondary.active
-        } else if self.press.hovered {
-            &secondary.rest
-        } else {
-            &primary.rest
+        let s = &theme.button.submit;
+        match (self.active, self.press.hovered || self.press.pressed) {
+            (true, true) => &s.busy_hover,
+            (true, false) | (false, true) => &s.lit,
+            (false, false) => &s.rest,
         }
     }
 
@@ -147,7 +155,7 @@ impl SubmitButton {
         }
         let m = self.metrics(theme);
         let alpha = if self.disabled {
-            theme.button.primary.disabled_alpha
+            theme.button.submit.disabled_alpha
         } else {
             1.0
         };
@@ -162,8 +170,7 @@ impl SubmitButton {
             self.press.focused,
             theme,
         );
-        // The arrow is one step under the size's icon (16 in a 40).
-        let icon = m.icon * 0.8;
+        let icon = m.icon;
         if let Some(node) = icons::icon_at(
             self.icon,
             icon,

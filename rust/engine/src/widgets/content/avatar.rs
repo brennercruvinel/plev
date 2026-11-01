@@ -148,7 +148,7 @@ impl Avatar {
         .into_iter()
         .min_by(|a, b| (a - target).abs().total_cmp(&(b - target).abs()))
         .unwrap_or(ty.body);
-        TextStyle::new(size).with_line_height(size).with_weight(600)
+        ty.exact(size, size, 600)
     }
 
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
