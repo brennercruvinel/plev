@@ -543,7 +543,7 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
 
-    /// The loop ends (the window closed, or Escape quit): the recording's
+    /// The loop ends (the window closed, or the platform's quit key): the recording's
     /// window is saved.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
