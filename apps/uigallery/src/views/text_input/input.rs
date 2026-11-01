@@ -75,6 +75,7 @@ impl ShowcaseView {
 
     /// Returns `true` when the key was consumed (and a redraw is needed).
     pub fn handle_key(&mut self, key: &str) -> bool {
+        self.arm_reveal();
         // The open palette has the characters (`palette.rs`).
         if self.palette_type(key) {
             return true;
@@ -160,6 +161,7 @@ impl ShowcaseView {
     /// select closes), then the rest of the overlay stack. Returns `false`
     /// when there was nothing to close (caller may quit).
     pub fn close_top_overlay(&mut self) -> bool {
+        self.arm_reveal();
         let was_open = self.palette_open();
         if self.overlay_holds_pointer() && self.overlay_mgr.pop_animated().is_some() {
             self.palette_closed(was_open);
@@ -213,6 +215,7 @@ impl ShowcaseView {
     /// the page leaves walks to the sidebar). A
     /// `Select` key the page does not take moves as the key without Shift.
     pub fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        self.arm_reveal();
         if self.palette_edit(key) {
             return true;
         }
@@ -268,6 +271,7 @@ impl ShowcaseView {
     /// from their intent field; the Files page presses its focused button;
     /// the Git tab submits its commit form.
     pub fn handle_enter(&mut self) -> bool {
+        self.arm_reveal();
         if self.palette_open() {
             return self.palette_enter();
         }
@@ -431,6 +435,12 @@ impl ShowcaseView {
         // does not scroll to it (`compositor/reveal.rs`)
         if matches!(event, WidgetEvent::MouseDown { .. }) {
             self.reveal.pointer();
+        }
+        if matches!(
+            event,
+            WidgetEvent::MouseDown { .. } | WidgetEvent::MouseUp { .. }
+        ) {
+            self.arm_reveal();
         }
 
         // Toasts float above everything.

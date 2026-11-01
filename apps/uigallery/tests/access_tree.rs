@@ -172,12 +172,13 @@ const SILENT: &[(&str, Why)] = &[
 ];
 
 /// The actions a reader can ask of a node: what the tree offers.
-const OFFERED: [Action; 5] = [
+const OFFERED: [Action; 6] = [
     Action::Click,
     Action::Focus,
     Action::SetValue,
     Action::Increment,
     Action::Decrement,
+    Action::ScrollIntoView,
 ];
 
 const CHROME: Chrome<'static> = Chrome {
@@ -433,7 +434,7 @@ fn every_action_the_tree_offers_is_a_request_the_dispatcher_admits() {
                             refused.push(format!("{title}: {} {}", r.target, r.action));
                         }
                     }
-                    Ok(Assist::Focus(to)) => assert_eq!(&to, id, "{title}"),
+                    Ok(Assist::Focus(to) | Assist::Reveal(to)) => assert_eq!(&to, id, "{title}"),
                     Err(e) => panic!("{title}: {id} offers {action:?} and it maps to nothing: {e}"),
                 }
             }

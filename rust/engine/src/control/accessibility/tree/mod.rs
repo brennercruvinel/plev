@@ -50,7 +50,8 @@
 //!   telling whether it is disabled), `Focus` when it is focusable and not inert,
 //!   `SetValue` when it has a setter (`action::setter`: its `set_value`,
 //!   or a select's `select`), `Increment` and `Decrement` when it
-//!   declares `increment` and `decrement`.
+//!   declares `increment` and `decrement`, `ScrollIntoView` when it is
+//!   not inert (the app scrolls it into view, `Assist::Reveal`).
 //! - an item of a collection holds, as controls of their own, the actions
 //!   its own node does not reach (`present`): its toggle as a checkbox,
 //!   every other action without a parameter as a button. They are in the
@@ -318,6 +319,11 @@ fn describe(n: &Node) -> AkNode {
     }
     if n.focusable && !n.inert {
         out.add_action(Action::Focus);
+    }
+    // any node a reader can stand on can be brought into view; an inert
+    // one is not presented
+    if !n.inert {
+        out.add_action(Action::ScrollIntoView);
     }
     if action::setter(n).is_some() {
         out.add_action(Action::SetValue);

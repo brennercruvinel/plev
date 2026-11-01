@@ -39,7 +39,7 @@ impl Access {
 
     /// What the screen reader asked, on the main thread: a request goes
     /// through the active page's dispatcher as `Actor::Assistive`, a focus
-    /// move to the page's focus.
+    /// move to the page's focus, a scroll into view to the page's scroll.
     pub(crate) fn carry_out(&mut self, view: &mut ShowcaseView) {
         let Some(bridge) = self.bridge.as_mut() else {
             return;
@@ -58,6 +58,11 @@ impl Access {
                 engine::control::accessibility::Assist::Focus(id) => {
                     if !view.assist_focus(&id) {
                         log::debug!("accessibility: no page takes focus on {id}");
+                    }
+                }
+                engine::control::accessibility::Assist::Reveal(id) => {
+                    if !view.assist_reveal(&id) {
+                        log::debug!("accessibility: no page scrolls {id} into view");
                     }
                 }
             }

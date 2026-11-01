@@ -115,6 +115,25 @@ impl Gallery {
         self.settle();
     }
 
+    /// A screen reader asks to see `id` (AccessKit's `ScrollIntoView`,
+    /// `AXScrollToVisible` on macOS), read back as the bridge does.
+    fn reader_scroll_to(&mut self, id: &SemId) {
+        let (_, shown) = self.shown();
+        let node = shown.ids.node(id).expect("the reader's tree holds it");
+        let req = ActionRequest {
+            action: Action::ScrollIntoView,
+            target_tree: TreeId::ROOT,
+            target_node: node,
+            data: None,
+        };
+        match accessibility::translate(&req, &shown) {
+            Ok(Assist::Reveal(to)) => assert!(self.view.assist_reveal(&to), "{to}"),
+            other => panic!("{id}: {other:?}"),
+        }
+        self.frame();
+        self.settle();
+    }
+
     /// Whether `id` shows in the page's window: whole, or from its start
     /// when it is taller than the window.
     fn in_view(&self, id: &SemId) -> bool {
@@ -265,6 +284,68 @@ fn every_stop_shows_at_every_window_height_from_400_to_1200() {
                 seen += 1;
             }
             assert_eq!(seen, stops, "{page} at {height}: every stop");
+        }
+    }
+}
+
+#[test]
+fn a_reader_s_scroll_into_view_shows_the_node_and_leaves_the_focus() {
+    for page in LONG {
+        let mut g = at(page, 480.0);
+        let last = last_below_fold(&g);
+        let before = g.focus_now();
+        g.reader_scroll_to(&last);
+        assert!(g.in_view(&last), "{page}: {last} scrolled into view");
+        assert_eq!(g.focus_now(), before, "{page}: the focus stays");
+        // a node of another page is not this page's to show
+        assert!(
+            !g.view
+                .assist_reveal(&SemId::parse("shell.sidebar").unwrap())
+        );
+    }
+}
+
+/// Across: no page scrolls sideways, so a stop of Tab must never land off
+/// the window's sides. A carousel projects only the slides of its page
+/// (its arrows page it, the focus never reaches a slide off it), a table
+/// drops columns by priority when narrow; at every width from a phone's
+/// to a desktop's, each stop shows within the window and its clip.
+#[test]
+fn across_every_stop_shows_within_the_window_s_width() {
+    let _reduced = Reduced::on();
+    for page in ["Carousel", "Data Table", "Table"] {
+        for width in [360.0_f32, 480.0, 768.0, 1024.0, 1280.0] {
+            let mut view = ShowcaseView::new(width, 800.0);
+            view.resize(width, 800.0, 1.0);
+            view.jump_to_page(page);
+            assert_eq!(view.page_title(), page);
+            let mut g = Gallery {
+                view,
+                c: Compositor::new(),
+            };
+            g.frame();
+            let stops = g.page_order().len();
+            assert!(stops > 0, "{page}: stops of Tab");
+            for _ in 0..stops {
+                g.tab_to_page(false);
+                let Some(now) = g.focus_now() else { break };
+                let Some(b) = g.c.binding(&now) else {
+                    continue;
+                };
+                let [x, _, w, _] = b.rect;
+                const EPS: f32 = 0.5;
+                assert!(
+                    x >= -EPS && x + w <= width + EPS,
+                    "{page} at {width}: {now} at x {x}..{} off the window",
+                    x + w
+                );
+                if let Some([cx, _, cw, _]) = b.clip {
+                    assert!(
+                        x >= cx - EPS && x + w <= cx + cw + EPS,
+                        "{page} at {width}: {now} cut by its clip"
+                    );
+                }
+            }
         }
     }
 }
