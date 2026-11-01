@@ -1,8 +1,9 @@
 //! The item of a list, in the kit's two shapes: the Folder row (an icon in
 //! a box, a label that wraps, an optional dim line under it, a wash on
 //! hover) and the AssetItem tile (a thumbnail in a bordered square well,
-//! an add mark in its corner on hover). The visual values are
-//! `theme.disclosure.item`'s.
+//! or a photo filling it, an add mark in its corner on hover). The visual
+//! values are `theme.disclosure.item`'s; the photo is a rectangle in the
+//! catalog's `image` gradient (`theme.disclosure.catalog.palette`).
 //!
 //! An item is chosen: a click on it selects it (`clicked`), as a list's
 //! row is. With a [`SemId`] ([`Item::sem`]) the render binds the bounds it
@@ -41,6 +42,7 @@ pub struct Item {
     icon: Option<&'static str>,
     icon_color: Option<Color>,
     shape: ItemShape,
+    full_image: bool,
     selected: bool,
     disabled: bool,
     press: Press,
@@ -56,6 +58,7 @@ impl Item {
             icon: None,
             icon_color: None,
             shape: ItemShape::Row,
+            full_image: false,
             selected: false,
             disabled: false,
             press: Press::default(),
@@ -71,6 +74,14 @@ impl Item {
     /// The row's leading icon, or the tile's thumbnail.
     pub fn icon(mut self, name: &'static str) -> Self {
         self.icon = Some(name);
+        self
+    }
+
+    /// The tile's photo fills it inside its border, in place of the
+    /// thumbnail (AssetItem's `fullSizeImage`, its `size-full
+    /// object-cover` in an `overflow-hidden` well).
+    pub fn full_image(mut self, on: bool) -> Self {
+        self.full_image = on;
         self
     }
 
@@ -246,7 +257,7 @@ impl Item {
         }
         match self.shape {
             ItemShape::Row => self.paint_row(c, bounds, r, alpha, theme),
-            ItemShape::Tile => self.paint_tile(c, bounds, r, alpha),
+            ItemShape::Tile => self.paint_tile(c, bounds, radius, alpha, theme),
         }
         if self.press.focused && !self.disabled {
             c.push(focus_ring_inside(bounds, radius, theme));
@@ -293,8 +304,18 @@ impl Item {
         c.pop_clip();
     }
 
-    fn paint_tile(&self, c: &mut Compositor, at: Rect, r: &ItemRecipe, alpha: f32) {
-        if let Some(name) = self.icon {
+    fn paint_tile(&self, c: &mut Compositor, at: Rect, radius: f32, alpha: f32, theme: &Theme) {
+        let r = &theme.disclosure.item;
+        if self.full_image {
+            let b = r.tile_border;
+            let [top, bottom] = theme.disclosure.catalog.palette.image;
+            c.push(gradient_fill(
+                Rect::new(at.x + b, at.y + b, at.w - b * 2.0, at.h - b * 2.0),
+                (radius - b).max(0.0),
+                faded(top, alpha),
+                faded(bottom, alpha),
+            ));
+        } else if let Some(name) = self.icon {
             let color = faded(self.icon_color.unwrap_or(r.icon_color), alpha);
             let (x, y) = (at.x + (at.w - r.thumb) / 2.0, at.y + (at.h - r.thumb) / 2.0);
             if let Some(node) = icons::icon_at(name, r.thumb, color, x, y) {
@@ -441,5 +462,42 @@ mod tests {
         let rest = paths(&tile);
         tile.set_hovered(true);
         assert_eq!(paths(&tile), rest + 1, "the plus glyph");
+    }
+
+    /// A full image fills the tile inside its border, in the catalog's
+    /// photo gradient, under the add mark.
+    #[test]
+    fn a_full_image_fills_the_tile_inside_its_border() {
+        let theme = core();
+        let at = Rect::new(10.0, 20.0, 60.0, 60.0);
+        let mut tile = Item::new("Style").shape(ItemShape::Tile).full_image(true);
+        tile.set_hovered(true);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        tile.render(&mut c, at, &theme);
+        let nodes = c
+            .layer(crate::drawing::compositor::LayerId::DEFAULT)
+            .unwrap()
+            .nodes();
+        let image = nodes
+            .iter()
+            .position(|n| matches!(n, SceneNode::GradientRect { w, .. } if *w > 50.0))
+            .expect("the photo");
+        let SceneNode::GradientRect {
+            x, y, w, h, color, ..
+        } = &nodes[image]
+        else {
+            unreachable!()
+        };
+        let edge = theme.disclosure.item.tile_border;
+        assert_eq!([*x, *y], [at.x + edge, at.y + edge]);
+        assert_eq!([*w, *h], [at.w - edge * 2.0, at.h - edge * 2.0]);
+        assert_eq!(*color, theme.disclosure.catalog.palette.image[0].0);
+        assert!(
+            nodes[image + 1..]
+                .iter()
+                .any(|n| matches!(n, SceneNode::Path { .. })),
+            "the add mark over it"
+        );
     }
 }
