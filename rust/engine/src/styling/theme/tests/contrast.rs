@@ -653,6 +653,33 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     ] {
         add(fg, bg, need, over(color, under), under);
     }
+    // the notifications dropdown: its title and a filter at rest on the
+    // card's paper, the chosen filter on its wash.
+    let nt = &t.message.notifications;
+    let sheet = over(t.message.toast.fill, card);
+    let chosen = over(nt.tab_fill, sheet);
+    for (fg, bg, color, under) in [
+        (
+            "message.notifications.title",
+            "message.toast.fill",
+            nt.title.color,
+            sheet,
+        ),
+        (
+            "message.notifications.tab",
+            "message.toast.fill",
+            nt.tab.color,
+            sheet,
+        ),
+        (
+            "message.notifications.tab_active",
+            "message.notifications.tab_fill",
+            nt.tab_active,
+            chosen,
+        ),
+    ] {
+        add(fg, bg, TEXT, over(color, under), under);
+    }
     // task-104 front B: the sheet's and the drawer's text and icons on
     // their panel over the page, a drawer link's also on its lit fill. On
     // core the kit's #7B7B7B hint and group label fail AA; they take
@@ -1189,7 +1216,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 769,
+        count, 781,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -1311,6 +1338,25 @@ fn the_core_comment_text_meets_aaa() {
         (c.quick.text.color, paper),
     ];
     for (fg, under) in pairs {
+        let r = ratio(over(fg, under), under);
+        assert!(r >= AAA, "{fg:?} at {r:.2}");
+    }
+}
+
+/// task-104 front C, wave 3: the core notifications dropdown's header
+/// meets AAA: the title and a filter at rest on the card's paper (the
+/// kit's `#7B7B7B` filter fails it and takes shade 7), the chosen one on
+/// its wash.
+#[test]
+fn the_core_notifications_header_meets_aaa() {
+    let t = Theme::hoff_core();
+    let n = &t.message.notifications;
+    let sheet = over(t.message.toast.fill, over(t.colors.surface, [0.0; 3]));
+    for (fg, under) in [
+        (n.title.color, sheet),
+        (n.tab.color, sheet),
+        (n.tab_active, over(n.tab_fill, sheet)),
+    ] {
         let r = ratio(over(fg, under), under);
         assert!(r >= AAA, "{fg:?} at {r:.2}");
     }

@@ -11,6 +11,7 @@ pub mod marker;
 #[allow(clippy::module_inception)]
 pub mod message;
 pub mod new_comment;
+pub mod notifications;
 pub mod prompt;
 pub mod questionnaire;
 pub mod quick_comment;

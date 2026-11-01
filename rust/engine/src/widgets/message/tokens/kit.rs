@@ -4,8 +4,8 @@
 use super::{
     AlertTokens, AttachmentTokens, AvatarTokens, BadgePalette, BadgeTokens, BubbleTokens,
     CommentTokens, CursorShape, IntentColors, KindColors, MarkerTokens, MessageStyle, MessageText,
-    MessageTokens, ProgressTokens, PromptTokens, ScrollerTokens, SkeletonTokens, SpinnerTokens,
-    TagTokens, ToastTokens,
+    MessageTokens, NotificationsTokens, ProgressTokens, PromptTokens, ScrollerTokens,
+    SkeletonTokens, SpinnerTokens, TagTokens, ToastTokens,
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
@@ -552,6 +552,7 @@ impl MessageTokens {
             },
             prompt: PromptTokens::hoff_core(),
             comment: CommentTokens::hoff_core(),
+            notifications: NotificationsTokens::hoff_core(),
         }
     }
 }

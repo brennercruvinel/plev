@@ -392,6 +392,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Notifications",
+        "info",
+        "The kit's notification in its variations, and the dropdown: All and Unread over a list that scrolls.",
+        Pane::Notifications,
+    ),
+    page(
+        C,
         "Pagination",
         "chevron-right",
         "Page numbers between two arrows, as many as the width holds.",

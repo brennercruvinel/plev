@@ -70,6 +70,7 @@ pub mod comments;
 pub mod marker;
 pub mod message;
 pub mod message_scroller;
+pub mod notifications;
 pub mod prompt_input;
 
 // task-104 front D, disclosure and display (#157)

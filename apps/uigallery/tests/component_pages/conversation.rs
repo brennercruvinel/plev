@@ -497,3 +497,77 @@ fn the_arrows_walk_a_conversation_and_escape_lets_go() {
     assert!(g.view.close_top_overlay(), "Escape");
     assert_eq!(focused(&g), None);
 }
+
+// wave 3: the Notifications page's comment variation and its dropdown.
+const VARIATION: &str = "notifications_page.group[0].card[0].alert";
+const DROP: &str = "notifications_page.group[1].card[0].dropdown";
+const UNREAD: &str = "notifications_page.group[1].card[0].dropdown.filter[1]";
+const DROP_ACCEPT: &str = "notifications_page.group[1].card[0].dropdown.list[2].action[1]";
+
+/// The Unread filter, from the three: the same rows shown.
+#[test]
+fn the_unread_filter_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = seen(page, UNREAD);
+    person.click(UNREAD);
+    let mut reader = gallery(page);
+    reader.press(UNREAD);
+    let agent = by_agent(page, "unread", vec![ask(UNREAD, "select")]);
+    same(page, &person, &reader, &agent);
+    assert_eq!(
+        person.value(&format!("{DROP}.list:count")),
+        Some(Value::Int(5))
+    );
+}
+
+/// Answering the invite in the dropdown reads it, from the three.
+#[test]
+fn answering_in_the_dropdown_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = seen(page, DROP_ACCEPT);
+    person.click(DROP_ACCEPT);
+    let mut reader = gallery(page);
+    reader.press(DROP_ACCEPT);
+    let agent = by_agent(page, "accept", vec![ask(DROP_ACCEPT, "activate")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// A variation read by a click, a press and `activate`.
+#[test]
+fn reading_a_variation_is_the_same_from_the_three() {
+    let page = "Notifications";
+    let mut person = gallery(page);
+    person.click(VARIATION);
+    let mut reader = gallery(page);
+    reader.press(VARIATION);
+    let agent = by_agent(page, "read", vec![ask(VARIATION, "activate")]);
+    same(page, &person, &reader, &agent);
+}
+
+/// The keyboard in the dropdown: the arrows walk its rows, End goes to
+/// the last (scrolled in), the filters are a tab list the arrows cross;
+/// Escape lets the focus go.
+#[test]
+fn the_keyboard_walks_the_dropdown() {
+    let mut g = gallery("Notifications");
+    let focused = |g: &Gallery| {
+        g.view
+            .semantics()
+            .and_then(|s| s.focused().map(ToString::to_string))
+    };
+    assert!(g.view.assist_focus(&sid(&format!("{DROP}.list[0]"))));
+    g.frame();
+    assert!(g.view.handle_nav(NavKey::Down));
+    g.frame();
+    assert_eq!(focused(&g), Some(format!("{DROP}.list[1]")));
+    assert!(g.view.handle_edit_key(EditKey::End));
+    g.frame();
+    assert_eq!(focused(&g), Some(format!("{DROP}.list[7]")));
+    assert!(g.view.assist_focus(&sid(&format!("{DROP}.filter[0]"))));
+    g.frame();
+    assert!(g.view.handle_edit_key(EditKey::Right));
+    g.frame();
+    assert_eq!(focused(&g).as_deref(), Some(UNREAD));
+    assert!(g.view.close_top_overlay(), "Escape");
+    assert_eq!(focused(&g), None);
+}
