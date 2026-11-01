@@ -1097,21 +1097,22 @@ const KNOWN: &[(&str, &str, &str, f64)] = &[
     // The active border and the field's border keep the theme's (the
     // kit's #E2E2E2 in the core): the border is not the only thing that
     // identifies the field (its label and its place do), so WCAG 1.4.11
-    // does not apply; Contrast::More holds them at 3:1. A decision
-    // pending with Brenner (task-104 option B): `Bar::AA.edge` set to
-    // `Some(MARK_AA)` takes them off this list (option A).
-    ("core", "colors.border_active", "colors.bg", 1.3),
-    ("core", "colors.border_active", "colors.surface", 1.3),
-    ("core", "form.input.rest.border", "colors.surface", 1.3),
-    ("hoff", "colors.border_active", "colors.bg", 2.2),
-    ("hoff", "colors.border_active", "colors.surface", 2.3),
-    ("hoff", "form.input.rest.border", "colors.surface", 1.6),
-    ("dark", "colors.border_active", "colors.bg", 2.2),
-    ("dark", "colors.border_active", "colors.surface", 2.0),
-    ("dark", "form.input.rest.border", "colors.surface", 1.7),
-    ("light", "colors.border_active", "colors.bg", 2.7),
-    ("light", "colors.border_active", "colors.surface", 2.8),
-    ("light", "form.input.rest.border", "colors.surface", 1.1),
+    // does not apply; focused, the field's border reaches 3:1, and
+    // Contrast::More holds them at 3:1 at rest. Brenner's decision B
+    // (task-104); `Bar::AA.edge` set to `Some(MARK_AA)` takes them off
+    // this list (option A).
+    ("core", "colors.border_active", "colors.bg", 1.26),
+    ("core", "colors.border_active", "colors.surface", 1.26),
+    ("core", "form.input.rest.border", "colors.surface", 1.26),
+    ("hoff", "colors.border_active", "colors.bg", 2.22),
+    ("hoff", "colors.border_active", "colors.surface", 2.26),
+    ("hoff", "form.input.rest.border", "colors.surface", 1.63),
+    ("dark", "colors.border_active", "colors.bg", 2.16),
+    ("dark", "colors.border_active", "colors.surface", 2.03),
+    ("dark", "form.input.rest.border", "colors.surface", 1.70),
+    ("light", "colors.border_active", "colors.bg", 2.73),
+    ("light", "colors.border_active", "colors.surface", 2.84),
+    ("light", "form.input.rest.border", "colors.surface", 1.05),
 ];
 
 #[test]

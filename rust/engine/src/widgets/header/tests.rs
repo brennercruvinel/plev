@@ -230,18 +230,26 @@ fn the_header_search_is_the_pinned_search_box() {
     let t = Theme::hoff_core();
     let (search, header) = (t.form.recipe(Look::Search), t.form.recipe(Look::Header));
     for s in [&header.rest, &header.hover, &header.focus] {
-        assert_eq!(
-            (s.fill, s.border),
-            (Color::hex(0xF8F7F7), Color::hex(0xE2E2E2))
-        );
+        assert_eq!(s.fill, Color::hex(0xF8F7F7));
     }
+    // the kit's #E2E2E2 at rest; focused, a border a person finds (3:1),
+    // hovered a step between (decision B, `FormTokens::hold_edges`)
+    use crate::styling::theme::legibility::{MARK_AA, contrast};
+    let paper = [t.colors.bg; 2];
+    assert_eq!(header.rest.border, Color::hex(0xE2E2E2));
+    assert!(contrast(header.focus.border, &paper) >= MARK_AA);
+    let hover = contrast(header.hover.border, &paper);
+    assert!(hover > contrast(header.rest.border, &paper));
     assert_eq!(header.focus.shadow, search.focus.shadow);
     assert!(!header.focus.shadow.is_empty(), "the focus well");
     assert_eq!((header.height, header.pad_x), (search.height, search.pad_x));
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let h = theme.form.recipe(Look::Header);
         assert_eq!(h.rest.fill, theme.colors.bg_panel);
-        assert_eq!(h.focus.border, theme.colors.border_active);
+        assert_eq!(h.rest.border, theme.colors.border_active);
+        // focused, the active border held at 3:1 (decision B)
+        let card = [theme.colors.bg, theme.colors.surface];
+        assert!(contrast(h.focus.border, &card) >= MARK_AA);
     }
 }
 
