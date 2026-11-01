@@ -22,7 +22,7 @@
 
 use accord::{Execution, Outcome, Role, SemId, Snapshot, SnapshotBuilder, Value};
 use engine::styling::theme::Theme;
-use engine::widgets::nav::SidebarDock;
+use engine::widgets::nav::{DockMode, SidebarDock};
 
 use super::super::super::navigation::{self, Navigation};
 use super::super::super::palette;
@@ -214,10 +214,19 @@ impl ShowcaseView {
             return seen;
         };
         let mut b = SnapshotBuilder::new();
-        if let Some(seen) = &seen {
+        // the open drawer is modal: the walk stays in its panel (the
+        // trap), the page and the menu button under its scrim out of it
+        let trapped =
+            bar.dock.is_drawer_open() && bar.dock.mode(bar.theme, bar.w) == DockMode::Drawer;
+        if let Some(seen) = seen.as_ref().filter(|_| !trapped) {
             detached::extend(&mut b, seen);
         }
         project(bar, &mut b, None);
+        if let Some(menu) = bar.dock.menu_id().filter(|_| trapped)
+            && let Some(mut node) = b.reopen(&menu)
+        {
+            node.inert(true);
+        }
         if let Some(at) = &self.sidebar_focus {
             b.focus(at.clone());
         }
@@ -298,8 +307,18 @@ impl ShowcaseView {
                 dock.toggle_pin(theme, w);
             }
             SidebarAsk::Expand => {
+                let drawer = dock.mode(theme, w) == DockMode::Drawer;
                 dock.toggle_expanded(theme, w);
-                if !dock.expanded(theme, w) {
+                let open = dock.expanded(theme, w);
+                let (menu, close) = (dock.menu_id(), dock.close_id());
+                if drawer && self.sidebar_focus.is_some() {
+                    // the keyboard follows the drawer: into it on its
+                    // close, back to the menu button when it shuts
+                    let to = if open { close } else { menu };
+                    if let Some(to) = to {
+                        self.focus_sidebar(&to);
+                    }
+                } else if !open {
                     self.blur_sidebar();
                 }
             }
@@ -319,9 +338,11 @@ impl ShowcaseView {
         }
         // a focused part that is gone (its dropdown closed) lets it go
         if let Some(at) = self.sidebar_focus.clone()
-            && self
-                .bar()
-                .is_none_or(|bar| !bar.dock.expanded(bar.theme, bar.w) || part(bar, &at).is_none())
+            && self.bar().is_none_or(|bar| {
+                // the menu button stands outside the panel
+                let p = part(bar, &at);
+                p.is_none() || (p != Some(Part::Menu) && !bar.dock.expanded(bar.theme, bar.w))
+            })
         {
             self.blur_sidebar();
         }

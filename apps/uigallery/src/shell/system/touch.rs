@@ -83,6 +83,12 @@ impl App {
     pub(crate) fn touched(&mut self, id: WindowId, touch: &winit::event::Touch) {
         let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
         let (x, y) = (touch.location.x as f32 / sf, touch.location.y as f32 / sf);
+        // a finger has no hover: the sidebar turns a drawer behind the
+        // menu button (a pointer that moves turns it back, `events`)
+        if touch.phase == TouchPhase::Started && Some(id) == self.main && self.view.set_touch(true)
+        {
+            self.invalidate_in(id);
+        }
         for event in self.finger.touch(touch.id, touch.phase, x, y) {
             match event {
                 WidgetEvent::MouseMove { x, y } => {

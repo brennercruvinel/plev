@@ -277,3 +277,22 @@ fn the_design_parts_answer_by_id() {
     };
     assert!(!sw.on);
 }
+
+/// The kit's measures in the core theme: the head is the `p-6` round a
+/// 32 logo (80, the mark 24 from the edges, the logo's own `p-1`
+/// inside), and the shell's sidebar is the `Layout`'s `!w-55`; the
+/// sidebar on its own page keeps its `w-60`.
+#[test]
+fn the_core_head_and_widths_are_the_kits() {
+    let t = Theme::hoff_core();
+    assert_eq!(head_h(&t), 80.0);
+    let logo = &t.header.logo;
+    assert_eq!(t.navigation.sidebars.head_pad + logo.pad, 24.0);
+    assert_eq!(t.navigation.dock.width, 220.0);
+    assert_eq!(t.navigation.sidebars.width, 240.0);
+    for theme in [Theme::hoff(), Theme::dark()] {
+        let s = &theme.navigation.sidebars;
+        assert_eq!(s.head_pad + theme.header.logo.pad, theme.spacing.lg);
+        assert_eq!(theme.navigation.dock.width, s.shell_w);
+    }
+}

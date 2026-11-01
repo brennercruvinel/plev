@@ -239,7 +239,7 @@ impl NavigationTokens {
             chart: ChartRecipe::hoff_core(),
             graph: GraphRecipe::hoff_core(),
             tool: ToolTokens::hoff_core(),
-            dock: DockRecipe::hoff_core(sidebars.width, &link),
+            dock: DockRecipe::hoff_core(sidebars.shell_w, &link),
             sidebars,
         }
     }
@@ -277,7 +277,7 @@ impl NavigationTokens {
             chart: ChartRecipe::derive(theme),
             graph: GraphRecipe::derive(theme),
             tool: ToolTokens::derive(theme),
-            dock: DockRecipe::derive(theme, sidebars.width, &link),
+            dock: DockRecipe::derive(theme, sidebars.shell_w, &link),
             sidebars,
         }
     }
