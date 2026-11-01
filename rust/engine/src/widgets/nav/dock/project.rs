@@ -4,7 +4,8 @@
 //! (in peek it shows or hides it, in the drawer it opens or closes it);
 //! the pin is a toggle with its state, `on`, and a `toggle`; in the
 //! drawer the menu button is a button, `expanded` while the drawer is
-//! open, with an `activate`. The panel's own links are the sidebar's,
+//! open, with an `activate`, and the open drawer's close a button whose
+//! `activate` closes it. The panel's own links are the sidebar's,
 //! projected under the panel's id by the app.
 
 use accord::{Role, SemId, SnapshotBuilder};
@@ -19,6 +20,9 @@ pub const PIN_NAME: &str = "Keep the sidebar open";
 
 /// The drawer's menu button's name.
 pub const MENU_NAME: &str = "Open the navigation";
+
+/// The open drawer's close's name.
+pub const CLOSE_NAME: &str = "Close the navigation";
 
 impl SidebarDock {
     /// Declares the panel as its id, named `label`, under `parent`, then
@@ -53,6 +57,13 @@ impl SidebarDock {
                 .state("on", self.pinned)
                 .enabled(mode != DockMode::Drawer);
             node.action("toggle").reads(format!("{pin}:on"));
+        }
+        if self.has_close(theme, w)
+            && let Some(close) = self.close_id()
+        {
+            let mut node = b.node(&close, Role::Button, CLOSE_NAME);
+            node.parent(id);
+            node.action("activate").reads(format!("{id}:expanded"));
         }
         if mode == DockMode::Drawer
             && let Some(menu) = self.menu_id()

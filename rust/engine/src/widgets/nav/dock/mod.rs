@@ -24,14 +24,15 @@
 //! `Tween` lands at once).
 //!
 //! `mod.rs` is the state and the geometry, `input.rs` the pointer, the
-//! timers and the keys, `pin.rs` the pin the dock draws in the panel's
-//! head, `project.rs` what is told to a reader and an agent.
+//! timers and the keys, `buttons.rs` the pin (the close, in the drawer)
+//! the dock draws in the panel's head and the drawer's menu button,
+//! `project.rs` what is told to a reader and an agent.
 //!
 //! [`DockRecipe`]: crate::widgets::nav::DockRecipe
 //! [`DockRecipe::fits`]: crate::widgets::nav::DockRecipe::fits
 
+mod buttons;
 mod input;
-mod pin;
 mod project;
 #[cfg(test)]
 mod tests;
@@ -116,8 +117,11 @@ pub struct SidebarDock {
     /// The mode of the last layout: a mode that changes under the panel
     /// (the window narrowed) settles it at once.
     mode: DockMode,
-    /// The pin's hover, press and focus (`pin.rs`).
+    /// The pin's, the drawer's close's and its menu button's hover,
+    /// press and focus (`buttons.rs`).
     pin_press: Press,
+    close_press: Press,
+    menu_press: Press,
     sem: Option<SemId>,
 }
 
@@ -142,6 +146,8 @@ impl SidebarDock {
             target: 0.0,
             mode: DockMode::Peek,
             pin_press: Press::default(),
+            close_press: Press::default(),
+            menu_press: Press::default(),
             sem: None,
         }
     }
@@ -157,7 +163,8 @@ impl SidebarDock {
     }
 
     /// `id` is the panel's (a navigation landmark); its pin is
-    /// `<id>.pin`, the drawer's menu button `<id>.menu`.
+    /// `<id>.pin`, the drawer's menu button `<id>.menu` and its close
+    /// `<id>.close`.
     pub fn sem(mut self, id: SemId) -> Self {
         self.sem = Some(id);
         self
@@ -173,6 +180,10 @@ impl SidebarDock {
 
     pub fn menu_id(&self) -> Option<SemId> {
         self.sem.as_ref()?.child("menu").ok()
+    }
+
+    pub fn close_id(&self) -> Option<SemId> {
+        self.sem.as_ref()?.child("close").ok()
     }
 
     pub fn is_pinned(&self) -> bool {

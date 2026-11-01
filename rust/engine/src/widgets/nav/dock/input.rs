@@ -165,6 +165,9 @@ impl SidebarDock {
             return false;
         }
         self.drawer_open = true;
+        // the button the drawer now covers keeps no hover nor press
+        self.menu_press.hovered = false;
+        self.menu_press.pressed = false;
         self.follow(theme, w, false);
         true
     }
@@ -176,6 +179,7 @@ impl SidebarDock {
         }
         self.drawer_open = false;
         self.focus = false;
+        self.close_press = Default::default();
         self.follow(theme, w, false);
         true
     }
