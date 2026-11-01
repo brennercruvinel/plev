@@ -1,4 +1,4 @@
-# plev - Agents & DEVs & Designers playing in the same canvas. 
+#  plev: agents, devs and designers playing on the same canvas.
 
 
 Uma engine de compositing GPU-first em Rust. Um único código desenha o
