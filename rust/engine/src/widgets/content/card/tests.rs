@@ -67,6 +67,7 @@ fn style(key: &crate::drawing::compositor::TextNodeKey) -> TextStyle {
         font_weight: key.font_weight,
         letter_spacing: f32::from_bits(key.letter_spacing_bits),
         font_family: key.font_family.clone(),
+        features: key.features,
         overflow_wrap: key.overflow_wrap,
     }
 }
