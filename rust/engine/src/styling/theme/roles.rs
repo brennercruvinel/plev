@@ -65,8 +65,9 @@ impl TypeRole {
         Self::Numeric,
         Self::Wordmark,
     ];
-    /// The roles that scale with their container.
-    pub const FLUID: [TypeRole; 4] = [Self::Display, Self::H1, Self::H2, Self::H3];
+    /// The roles that scale with their container: the title roles and
+    /// h6, the showcase's group title (the kit's 20/28, 16/24 narrow).
+    pub const FLUID: [TypeRole; 5] = [Self::Display, Self::H1, Self::H2, Self::H3, Self::H6];
 
     const fn index(self) -> usize {
         self as usize
@@ -183,7 +184,7 @@ pub struct TypeRoles {
     specs: [RoleSpec; TypeRole::COUNT],
     /// Size and line height of [`TypeRole::FLUID`] at `range[0]` and
     /// below; at `range[1]` and above they are the role's spec.
-    fluid_min: [[f32; 2]; 4],
+    fluid_min: [[f32; 2]; 5],
     pub range: [f32; 2],
 }
 
@@ -276,7 +277,14 @@ impl TypeRoles {
                 // wordmark: the logo's 20/20 at the heaviest embedded face.
                 s(20.0, 20.0, 600, ui),
             ],
-            fluid_min: [[40.0, 48.0], [32.0, 40.0], [28.0, 36.0], [24.0, 32.0]],
+            // h6 narrow: the kit's Group title below 1420 (Group/index.tsx:9).
+            fluid_min: [
+                [40.0, 48.0],
+                [32.0, 40.0],
+                [28.0, 36.0],
+                [24.0, 32.0],
+                [16.0, 24.0],
+            ],
             range: FLUID_RANGE,
         }
     }
@@ -325,7 +333,13 @@ impl TypeRoles {
             [size, on_grid(size * spec.line_height / spec.size)]
         };
         Self {
-            fluid_min: [min(specs[0]), min(specs[1]), min(specs[2]), min(specs[3])],
+            fluid_min: [
+                min(specs[0]),
+                min(specs[1]),
+                min(specs[2]),
+                min(specs[3]),
+                min(specs[6]),
+            ],
             specs,
             range: FLUID_RANGE,
         }
