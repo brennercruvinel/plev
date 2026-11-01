@@ -373,6 +373,7 @@ fn live_box([x, y, w, h]: [f32; 4], corner_radius: f32) -> [SceneNode; 4] {
                 font_weight: 500,
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
+                features: engine::drawing::text::TextFeatures::NONE,
             },
             x: x + 12.0,
             y: y + 12.0,

@@ -430,6 +430,9 @@ pub fn shape_report(
         if let Some(ref family) = style.font_family {
             attrs = attrs.family(Family::Name(family));
         }
+        if let Some(features) = style.features.cosmic() {
+            attrs = attrs.font_features(features);
+        }
         let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
         buffer.set_size(fs, max_width, None);
         buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);

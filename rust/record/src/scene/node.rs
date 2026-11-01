@@ -169,6 +169,9 @@ fn take_key(t: &mut Take<'_>) -> Result<TextNodeKey, SceneError> {
         font_weight: t.u16("a text's weight")?,
         letter_spacing_bits: t.u32("a text's letter spacing")?,
         font_family: t.opt_str("a text's family")?,
+        // the session format (versions 0 and 1) keeps no OpenType features:
+        // a replayed numeric run shapes its figures proportional
+        features: engine::drawing::text::TextFeatures::NONE,
     })
 }
 

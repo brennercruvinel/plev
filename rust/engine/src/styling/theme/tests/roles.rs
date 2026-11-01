@@ -146,3 +146,23 @@ fn a_run_weight_overrides_only_the_weight() {
     );
     assert_eq!(TypeRole::Label.run().style(&t), t.role(TypeRole::Label));
 }
+
+/// The numeric role turns on tabular figures (`tnum`), so a column of
+/// numbers lines up and a counting value holds still: in the core's Inter
+/// every figure is one width. The label it shares its measure with keeps
+/// the face's own figures. (The hoff's Inclusive Sans has no `tnum`, so
+/// there its figures stay the face's.)
+#[test]
+fn the_numeric_role_has_tabular_figures() {
+    use crate::drawing::text::{TextFeatures, TextMeasurer};
+    let t = Theme::hoff_core().typography;
+    let numeric = t.role(TypeRole::Numeric);
+    assert_eq!(numeric.features, TextFeatures::TABULAR);
+    assert_eq!(t.role(TypeRole::Label).features, TextFeatures::NONE);
+    let width = |s: &str| TextMeasurer::measure_styled(s, &numeric, None).0;
+    let figures: Vec<f32> = (0..10).map(|d| width(&d.to_string().repeat(8))).collect();
+    let (lo, hi) = figures
+        .iter()
+        .fold((f32::MAX, f32::MIN), |(lo, hi), w| (lo.min(*w), hi.max(*w)));
+    assert!(hi - lo < 0.01, "tabular: {figures:?}");
+}

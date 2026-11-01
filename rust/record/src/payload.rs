@@ -184,6 +184,9 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
         font_weight,
         letter_spacing_bits,
         font_family,
+        // the session format (versions 0 and 1) keeps no OpenType features:
+        // a replayed numeric run shapes its figures proportional
+        features: engine::drawing::text::TextFeatures::NONE,
     })
 }
 

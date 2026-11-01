@@ -58,6 +58,7 @@ pub(super) struct MeasureKey {
     font_weight: u16,
     letter_spacing_bits: u32,
     font_family: Option<String>,
+    features: super::TextFeatures,
     // Wrap width rounded to whole pixels (plan: "largura-bucket").
     width_bucket: Option<i32>,
 }
@@ -71,6 +72,7 @@ impl MeasureKey {
             font_weight: style.font_weight,
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
+            features: style.features,
             width_bucket: max_width.map(|w| w.round() as i32),
         }
     }
@@ -162,6 +164,9 @@ pub(super) fn attrs_for<'a>(style: &'a TextStyle, db: &Database) -> Attrs<'a> {
     if style.letter_spacing != 0.0 && style.font_size > 0.0 {
         // cosmic-text tracking is in EM; the engine API is px.
         attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
+    }
+    if let Some(features) = style.features.cosmic() {
+        attrs = attrs.font_features(features);
     }
     match style.font_family {
         Some(ref family) => attrs.family(Family::Name(family)),

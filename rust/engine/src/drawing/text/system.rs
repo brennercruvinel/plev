@@ -305,6 +305,9 @@ impl TextSystem {
         if let Some(ref family) = key.font_family {
             attrs = attrs.family(Family::Name(family));
         }
+        if let Some(features) = key.features.cosmic() {
+            attrs = attrs.font_features(features);
+        }
         buffer.set_text(
             &mut self.font_system,
             &key.text,

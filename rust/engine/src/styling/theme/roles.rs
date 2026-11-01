@@ -11,7 +11,7 @@
 //! the container they are set in, between a minimum and their full size,
 //! the `clamp()` of a css type scale (ADR 0073: ranges, not screens).
 
-use crate::drawing::text::TextStyle;
+use crate::drawing::text::{TextFeatures, TextStyle};
 
 use super::tokens::TypographyScale;
 
@@ -37,7 +37,8 @@ pub enum TypeRole {
     Small,
     Paragraph,
     Code,
-    /// Figures that line up in a column (a stat, a table cell, a clock).
+    /// Figures that line up in a column (a stat, a table cell, a clock):
+    /// the label's measure with tabular figures (`tnum`).
     Numeric,
     /// A product's name in its logo.
     Wordmark,
@@ -372,7 +373,12 @@ impl TypographyScale {
         if run.role == TypeRole::Code {
             return self.exact_mono(spec.size, spec.line_height, weight);
         }
-        self.exact(spec.size, spec.line_height, weight)
-            .with_letter_spacing(spec.tracking_em * spec.size)
+        let style = self
+            .exact(spec.size, spec.line_height, weight)
+            .with_letter_spacing(spec.tracking_em * spec.size);
+        if run.role == TypeRole::Numeric {
+            return style.with_features(TextFeatures::TABULAR);
+        }
+        style
     }
 }
