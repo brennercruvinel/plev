@@ -10,6 +10,7 @@
 
 use accord::{Request, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
+use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{EventResult, Rect, Slider, WidgetEvent};
@@ -56,8 +57,16 @@ impl SliderPage {
     }
 
     /// The value caption's gutter to the right of every slider.
+    /// The room the captions take after the sliders: the kit's two
+    /// `xxl`, or the widest caption where it asks more (a larger text, a
+    /// longer language), after its gap.
     fn gutter(theme: &Theme) -> f32 {
-        theme.spacing.xxl * 2.0
+        let style = theme.typography.run(TypeRole::Caption.regular());
+        let widest = ["100", "step 1: 100", "disabled"]
+            .iter()
+            .map(|t| TextMeasurer::measure_styled(t, &style, None).0)
+            .fold(0.0, f32::max);
+        (theme.spacing.xxl * 2.0).max((widest + theme.spacing.md).ceil())
     }
 
     fn rects(content: Rect, theme: &Theme) -> [Rect; 3] {

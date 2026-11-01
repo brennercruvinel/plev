@@ -265,6 +265,7 @@ impl MenubarPage {
         for (i, (title, (rect, panel))) in self.titles.iter().zip(live).enumerate() {
             if self.bar.menus[i].1.is_open() {
                 Self::highlight(c, rect, theme);
+                self.bar.menus[i].1.fit(panel, theme);
             }
             title.render(c, rect, theme);
             if let Some(alpha) = self.bar.menus[i].1.popover.shown(mgr) {

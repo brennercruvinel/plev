@@ -216,13 +216,15 @@ impl ShareFile {
                 };
                 let sw = select.width_in(theme).max(f.person.select_w);
                 let sh = select.height_in(theme);
-                controls[k] = Rect::new(row.right() - f.pad - sw, at + (ph - sh) / 2.0, sw, sh);
                 let p = &f.person;
                 // the press area: the drawn 22 grown to the minimum
                 // target, from the row's end (`widgets::hit`); the render
                 // draws the kit's width at its end
                 let hit_w = p.remove_w.max(min_target(theme));
                 controls[k + 1] = Rect::new(row.right() - hit_w, at, hit_w, ph);
+                // the select ends clear of the remove's press area
+                let end = row.right() - f.pad.max(hit_w);
+                controls[k] = Rect::new(end - sw, at + (ph - sh) / 2.0, sw, sh);
             }
             person_rows.push(row);
             at += ph;

@@ -23,8 +23,10 @@
 //! buttons (`<id>[close]`, `<id>[cancel]`, `<id>[confirm]`), and
 //! [`Sheet::project`] declares it: a `Role::Dialog` named by its title.
 
+mod row;
 mod tokens;
 
+pub use row::SheetRow;
 pub use tokens::{DrawerTokens, EdgePanelTokens, SheetTokens};
 
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
@@ -198,29 +200,6 @@ pub fn paint_panel(
     c.push_to_layer(layer, SceneNode::PopClip);
 }
 
-/// One option row: what it is, a hint under it, its value at the end.
-#[derive(Clone, Debug, PartialEq)]
-pub struct SheetRow {
-    pub label: String,
-    pub hint: Option<String>,
-    pub value: String,
-}
-
-impl SheetRow {
-    pub fn new(label: impl Into<String>, value: impl Into<String>) -> Self {
-        Self {
-            label: label.into(),
-            hint: None,
-            value: value.into(),
-        }
-    }
-
-    pub fn hint(mut self, hint: impl Into<String>) -> Self {
-        self.hint = Some(hint.into());
-        self
-    }
-}
-
 /// One of the sheet's three buttons.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SheetPart {
@@ -342,30 +321,6 @@ impl Sheet {
         t.pad_y + scale.run(t.title).line_height + t.gap + description + t.pad_y
     }
 
-    fn value_w(row: &SheetRow, theme: &Theme) -> f32 {
-        let style = &theme.typography.run(theme.overlay.sheet.value);
-        TextMeasurer::measure_styled(&row.value, style, None)
-            .0
-            .ceil()
-    }
-
-    /// The label's width in a row `w` wide: what the value leaves.
-    fn label_w(row: &SheetRow, theme: &Theme, w: f32) -> f32 {
-        let t = &theme.overlay.sheet;
-        (w - t.pad_x * 2.0 - Self::value_w(row, theme) - t.value_gap).max(1.0)
-    }
-
-    fn row_h(row: &SheetRow, theme: &Theme, w: f32) -> f32 {
-        let scale = &theme.typography;
-        let t = &theme.overlay.sheet;
-        let lw = Self::label_w(row, theme, w);
-        let mut text = Self::text_h(&row.label, &scale.run(t.label), lw);
-        if let Some(hint) = &row.hint {
-            text += t.gap + Self::text_h(hint, &scale.run(t.hint), lw);
-        }
-        (t.pad_y * 2.0 + text).max(t.row_min_h)
-    }
-
     fn footer_h(&self, theme: &Theme) -> f32 {
         let m = &theme.overlay.modal;
         m.pad + self.confirm.size.height(theme) + m.pad + m.border_w
@@ -373,7 +328,7 @@ impl Sheet {
 
     /// Its content's height in a panel `w` wide.
     pub fn content_h(&self, theme: &Theme, w: f32) -> f32 {
-        let rows: f32 = self.rows.iter().map(|r| Self::row_h(r, theme, w)).sum();
+        let rows: f32 = self.rows.iter().map(|r| r.height(theme, w)).sum();
         self.head_h(theme, w) + rows + self.footer_h(theme)
     }
 
@@ -406,7 +361,7 @@ impl Sheet {
         let mut y = head;
         for row in &self.rows {
             row_y.push(y);
-            y += Self::row_h(row, theme, p.w);
+            y += row.height(theme, p.w);
         }
         let btn_h = self.confirm.size.height(theme);
         let by = footer_y + m.border_w + m.pad;
@@ -537,38 +492,7 @@ impl Sheet {
                 color: t.panel.rule.0,
             };
             c.push_to_layer(layer, rule);
-            let h = Self::row_h(row, theme, panel.w);
-            let lw = Self::label_w(row, theme, panel.w);
-            let mut block = Self::text_h(&row.label, &scale.run(t.label), lw);
-            if let Some(hint) = &row.hint {
-                block += t.gap + Self::text_h(hint, &scale.run(t.hint), lw);
-            }
-            let ly = y + (h - block) / 2.0;
-            text(
-                c,
-                &row.label,
-                &scale.run(t.label),
-                lw,
-                tx,
-                ly,
-                t.label_color.0,
-            );
-            if let Some(hint) = &row.hint {
-                let hy = ly + Self::text_h(&row.label, &scale.run(t.label), lw) + t.gap;
-                text(c, hint, &scale.run(t.hint), lw, tx, hy, t.hint_color.0);
-            }
-            let vw = Self::value_w(row, theme);
-            let vx = panel.right() - t.pad_x - vw;
-            let vy = y + TextMeasurer::vertical_center(&scale.run(t.value), h);
-            text(
-                c,
-                &row.value,
-                &scale.run(t.value),
-                vw + 1.0,
-                vx,
-                vy,
-                t.value_color.0,
-            );
+            row.draw(c, layer, theme, panel.x, panel.w, *y);
         }
         c.push_to_layer(layer, SceneNode::PopClip);
 

@@ -8,6 +8,7 @@
 use accord::{Role, SemId, SnapshotBuilder};
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Kbd, KbdSize};
 use crate::widgets::form::TextField;
@@ -322,15 +323,6 @@ impl Zoom {
                     c.push_to_layer(layer, node);
                 }
             }
-            c.push_to_layer(
-                layer,
-                SceneNode::Text {
-                    key: TextNodeKey::from_style(&line.label, &label, None),
-                    x: slot_x + z.check_slot + z.check_gap,
-                    y: r.y + (r.h - label.line_height) / 2.0,
-                    color: z.label_color.0,
-                },
-            );
             let cap = Kbd::new(line.keys.as_str()).size(KbdSize::Sm);
             let (kw, kh) = cap.preferred_size(theme);
             let at = Rect::new(
@@ -338,6 +330,22 @@ impl Zoom {
                 r.y + (r.h - kh) / 2.0,
                 kw,
                 kh,
+            );
+            // the label up to the keys, cut where a narrower panel ends it
+            let tx = slot_x + z.check_slot + z.check_gap;
+            let shown = TextMeasurer::truncate_to_width(
+                &line.label,
+                &label,
+                (at.x - z.check_gap - tx).max(0.0),
+            );
+            c.push_to_layer(
+                layer,
+                SceneNode::Text {
+                    key: TextNodeKey::from_style(&shown, &label, None),
+                    x: tx,
+                    y: r.y + (r.h - label.line_height) / 2.0,
+                    color: z.label_color.0,
+                },
             );
             cap.render_to_layer(c, layer, at, theme);
         }
