@@ -1,6 +1,6 @@
 //! `OverflowWrap`: lines break between words; a word wider than the line
 //! stays whole (CSS `overflow-wrap: normal`) unless the style asks for
-//! `Anywhere`. A word broken letter by letter (the Collapsible's label,
+//! `Anywhere` or `BreakWord`. A word broken letter by letter (the Collapsible's label,
 //! the sidebar's at 220) came from the shaper's old default, which broke
 //! any word that did not fit.
 
@@ -63,6 +63,29 @@ fn a_narrow_line_breaks_between_words_never_inside_one() {
         assert!(lw <= longest + 1.5, "{line:?} is {lw}");
         assert!(words.iter().any(|w| line.contains(w.as_str())), "{line:?}");
     }
+}
+
+/// `BreakWord` draws as `Anywhere`: a word wider than the line breaks
+/// between its letters, a narrow line still breaks between words; only
+/// its min-content differs (the layout's, `compose::layout`).
+#[test]
+fn break_word_draws_as_anywhere() {
+    let any = style().with_overflow_wrap(OverflowWrap::Anywhere);
+    let brk = style().with_overflow_wrap(OverflowWrap::BreakWord);
+    for (text, w) in [
+        ("Collapsible", 30.0),
+        ("Materials imported from the shared library", 80.0),
+        ("Materials imported from the shared library", 400.0),
+    ] {
+        assert_eq!(
+            TextMeasurer::lines(text, &brk, w),
+            TextMeasurer::lines(text, &any, w),
+            "{text} at {w}"
+        );
+    }
+    assert_eq!(OverflowWrap::BreakWord.min_content(), OverflowWrap::Normal);
+    assert_eq!(OverflowWrap::Anywhere.min_content(), OverflowWrap::Anywhere);
+    assert_eq!(OverflowWrap::Normal.min_content(), OverflowWrap::Normal);
 }
 
 #[test]

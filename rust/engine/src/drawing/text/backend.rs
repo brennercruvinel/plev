@@ -25,11 +25,19 @@ pub enum OverflowWrap {
     /// `clamp_to_lines`). Its min-content width is the longest word.
     #[default]
     Normal,
-    /// CSS `anywhere` (and `break-word` as drawn): a word wider than the
-    /// line breaks between its graphemes. Its min-content width is the
-    /// widest grapheme, so a flex item may shrink to one; what a recipe
-    /// asks for text that must never run out (an editable area, a URL).
+    /// CSS `anywhere`: a word wider than the line breaks between its
+    /// graphemes. Its min-content width is the widest grapheme, so a flex
+    /// item may shrink to one; what a recipe asks for text that must
+    /// never run out whatever its room (an editable area, a message, a
+    /// URL).
     Anywhere,
+    /// CSS `break-word`: drawn as [`OverflowWrap::Anywhere`] (a word
+    /// wider than the line breaks between its graphemes), but its
+    /// min-content width is the longest word, as under
+    /// [`OverflowWrap::Normal`]: a layout never shrinks it below a word,
+    /// so a word breaks only when it cannot fit on a line of its own. What
+    /// a label asks for (a form label, a disclosure's title).
+    BreakWord,
 }
 
 impl OverflowWrap {
@@ -44,6 +52,15 @@ impl OverflowWrap {
         match self {
             OverflowWrap::Normal if !text.chars().any(no_word_bounds) => cosmic_text::Wrap::Word,
             _ => cosmic_text::Wrap::WordOrGlyph,
+        }
+    }
+
+    /// The rule the text's min-content width is measured under:
+    /// [`OverflowWrap::BreakWord`] keeps its words whole there.
+    pub fn min_content(self) -> Self {
+        match self {
+            OverflowWrap::BreakWord => OverflowWrap::Normal,
+            other => other,
         }
     }
 }

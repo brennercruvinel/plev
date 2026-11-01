@@ -157,14 +157,15 @@ impl DisclosureList {
         theme.disclosure.collapsible.rail.as_ref()
     }
 
-    /// The rows' run; a word wider than its row (a larger text, a longer
-    /// language) breaks between its letters where the row wraps.
+    /// The rows' run; a word wider than its row on its own (a larger
+    /// text, a longer language) breaks between its letters where the row
+    /// wraps (`OverflowWrap::BreakWord`).
     fn style(theme: &Theme) -> TextStyle {
         let r = &theme.disclosure.collapsible;
         theme
             .typography
             .run(r.body_type)
-            .with_overflow_wrap(OverflowWrap::Anywhere)
+            .with_overflow_wrap(OverflowWrap::BreakWord)
     }
 
     /// The width a label wraps at, in a list `w` wide.
