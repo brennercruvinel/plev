@@ -29,6 +29,7 @@ pub(super) struct ClusterKey {
     font_weight: u16,
     letter_spacing_bits: u32,
     font_family: Option<String>,
+    features: super::TextFeatures,
     overflow_wrap: OverflowWrap,
     max_width_bits: Option<u32>,
 }
@@ -42,6 +43,7 @@ impl ClusterKey {
             font_weight: style.font_weight,
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
+            features: style.features,
             overflow_wrap: style.overflow_wrap,
             max_width_bits: max_width.map(f32::to_bits),
         }

@@ -14,7 +14,9 @@ mod system;
 mod tests;
 mod vertex;
 
-pub use backend::{CosmicTextBackend, OverflowWrap, StyleRun, TextBackend, TextStyle};
+pub use backend::{
+    CosmicTextBackend, OverflowWrap, StyleRun, TextBackend, TextFeatures, TextStyle,
+};
 pub use measure::{ClusterBox, LineMetrics, ShapedText, TextMeasurer};
 pub use on_demand::{on_faces_arrived, set_faces_url};
 pub use system::TextSystem;

@@ -181,6 +181,12 @@ impl MenuTokens {
     /// cap at the row's end (`:42`), the separator `mb-4` with a
     /// full-width `h-0.25 bg-[#ECECEC]` line. It has no icon; a check
     /// would be the filter menu's (`FiltersMenu/index.tsx:19`, `size-4`).
+    /// This menu with its labels in `label`: a menu style's role over
+    /// another theme's menu.
+    pub fn labelled(self, label: TypeRun) -> Self {
+        Self { label, ..self }
+    }
+
     pub fn hoff_core_file() -> Self {
         let profile = Self::hoff_core();
         let gray = hex(0x7B7B7B);

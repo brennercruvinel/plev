@@ -64,7 +64,8 @@ fn the_slot_is_the_kit_in_core_and_derived_elsewhere() {
 // Breadcrumb
 
 /// The kit's derivation: the sidebar link's text and box, the dropdown's
-/// chevron; derived, the trail of before (base-2r, no box, a small icon).
+/// chevron; derived, the trail of before (no box, a small icon) in the
+/// kit's role at the theme's size.
 #[test]
 fn breadcrumb_recipe_is_the_kit_link_in_core_and_the_old_trail_elsewhere() {
     let kit = core().navigation.breadcrumb;
@@ -77,7 +78,8 @@ fn breadcrumb_recipe_is_the_kit_link_in_core_and_the_old_trail_elsewhere() {
 
     let t = hoff();
     let old = t.navigation.breadcrumb;
-    let base = t.typography.role(TypeRole::Body);
+    let base = t.typography.role(TypeRole::BodyStrong);
+    assert_eq!(old.text, kit.text, "the role is the component's");
     assert_eq!(old.text.style(&t.typography), base);
     assert_eq!((old.pad_x, old.pad_y), (0.0, 0.0));
     assert_eq!(old.hover_fill.0[3], 0.0);
@@ -310,14 +312,23 @@ fn breadcrumb_at_its_preferred_width_draws_every_crumb_whole() {
 // Stat
 
 /// The kit's derivation is the pricing card's price for the large stat;
-/// derived, the ramp of before.
+/// derived, the same roles at the theme's sizes.
 #[test]
 fn stat_recipe_is_the_price_in_core_and_the_old_ramp_elsewhere() {
     let kit = core().navigation.stat;
     assert_eq!(kit.lg.value, TypeRole::H2.run());
     let t = hoff();
+    assert_eq!(
+        (
+            t.navigation.stat.sm,
+            t.navigation.stat.md,
+            t.navigation.stat.lg
+        ),
+        (kit.sm, kit.md, kit.lg),
+        "the roles are the component's"
+    );
     let s = Stat::new("1.3", "GB").size(StatSize::Lg);
-    assert_eq!(s.value_style(&t), t.typography.role(TypeRole::H3));
+    assert_eq!(s.value_style(&t), t.typography.role(TypeRole::H2));
     assert_eq!(s.label_style(&t), t.typography.role(TypeRole::Body));
     let tracked = Stat::new("1.3", "GB")
         .size(StatSize::Lg)
@@ -422,9 +433,10 @@ fn chart_recipe_is_the_kit_palette_in_core_and_the_old_tones_elsewhere() {
     let t = hoff();
     let old = t.navigation.chart;
     assert_eq!(old.series, [t.colors.accent, t.colors.success]);
+    assert_eq!(old.label, kit.label, "the role is the component's");
     assert_eq!(
         old.label.style(&t.typography),
-        t.typography.run(TypeRole::Small.strong())
+        t.typography.role(TypeRole::Caption)
     );
     assert_eq!(old.meter_track, t.glass.surface_active);
 }

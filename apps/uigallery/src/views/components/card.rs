@@ -20,7 +20,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Theme, TypeRole};
 use engine::widgets::content::{CatalogCard, CatalogKind, Item, ItemShape, Plan};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::widgets::recipe::focus_ring_inside;
@@ -394,7 +394,7 @@ impl CardPage {
 fn ratio(c: &mut Compositor, at: Rect, label: &str, theme: &Theme) {
     let k = &theme.disclosure.catalog.palette;
     let tile = &theme.disclosure.item;
-    let style = theme.typography.exact(12.0, 16.0, 500);
+    let style = theme.typography.run(TypeRole::Label.run());
     c.push(rounded_rect(
         at.x,
         at.y,

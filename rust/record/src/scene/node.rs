@@ -170,9 +170,12 @@ fn take_key(t: &mut Take<'_>) -> Result<TextNodeKey, SceneError> {
         font_weight: t.u16("a text's weight")?,
         letter_spacing_bits: t.u32("a text's letter spacing")?,
         font_family: t.opt_str("a text's family")?,
-        // not in the format (it predates the rule): every text comes back
-        // `Normal`, so a recipe's `Anywhere` text whose word is wider than
-        // its line replays unbroken; a format version adds it
+        // not in the format (versions 0 and 1 predate both): every text
+        // comes back with no OpenType features, so a replayed numeric run
+        // shapes its figures proportional, and `Normal`, so a recipe's
+        // `Anywhere` text whose word is wider than its line replays
+        // unbroken; a format version adds them
+        features: engine::drawing::text::TextFeatures::NONE,
         overflow_wrap: OverflowWrap::Normal,
     })
 }

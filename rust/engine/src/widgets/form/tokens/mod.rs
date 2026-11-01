@@ -571,7 +571,7 @@ impl FormTokens {
             palette_share: 0.6,
         };
         let label = LabelRecipe {
-            text: TypeRole::Caption.strong(),
+            text: TypeRole::Label.run(),
             color: c.text,
             caption: CAPTION,
             caption_color: g.text_placeholder,
@@ -579,11 +579,11 @@ impl FormTokens {
         };
         let field = FieldChrome {
             label_gap: theme.spacing.sm,
-            link: TypeRole::Caption.regular(),
+            link: TypeRole::Label.run(),
             link_color: c.text_mid,
             link_alpha: 1.0,
             link_hover_alpha: 1.0,
-            message: TypeRole::Caption.regular(),
+            message: TypeRole::Caption.run(),
             message_gap: theme.spacing.sm,
             error_color: c.danger,
             helper_color: c.text_mid,
@@ -605,10 +605,17 @@ impl FormTokens {
         let bare = edit.bare(&input);
         Self {
             label,
-            search: input.clone(),
+            // the search and the header's field write the kit's label
+            search: InputRecipe {
+                text: TypeRole::Label.run(),
+                ..input.clone()
+            },
             inset: input.clone(),
             // the panel's tone, edged in the active border, as the kit's
-            header: input.pinned(c.bg_panel, c.border_active),
+            header: InputRecipe {
+                text: TypeRole::Label.run(),
+                ..input.pinned(c.bg_panel, c.border_active)
+            },
             input,
             adorn,
             group,

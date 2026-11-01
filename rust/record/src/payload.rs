@@ -185,8 +185,11 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
         font_weight,
         letter_spacing_bits,
         font_family,
-        // the format has no field for it: a text comes back with the
-        // engine's default rule (see `put_key` in `scene/node.rs`)
+        // the session format (versions 0 and 1) has no field for either: a
+        // text comes back with the engine's defaults, no OpenType features
+        // (a replayed numeric run shapes its figures proportional) and the
+        // default wrap rule (see `put_key` in `scene/node.rs`)
+        features: engine::drawing::text::TextFeatures::NONE,
         overflow_wrap: OverflowWrap::Normal,
     })
 }

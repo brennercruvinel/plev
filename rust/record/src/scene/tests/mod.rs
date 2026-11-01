@@ -31,6 +31,7 @@ fn text(s: &str) -> TextNodeKey {
         font_weight: 600,
         letter_spacing_bits: (-0.25f32).to_bits(),
         font_family: Some("Inter".to_owned()),
+        features: engine::drawing::text::TextFeatures::NONE,
         overflow_wrap: OverflowWrap::Normal,
     }
 }
