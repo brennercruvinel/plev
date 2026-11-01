@@ -93,8 +93,8 @@ impl AppShell {
     /// panel in [`ShellLayout::dock`]'s `panel` and gives it the events
     /// [`AppShell::route`] says are the panel's.
     pub fn docked(dock: SidebarDock, header: PanelHeader, width: f32, height: f32) -> Self {
+        // the menu button is the dock's (`SidebarDock::render_menu`)
         let mut shell = Self::new(Sidebar::new(Vec::new()), header, width, height);
-        shell.menu_button = IconButton::new("menu").variant(IconButtonVariant::Ghost);
         shell.dock = Some(dock);
         shell
     }
@@ -158,7 +158,13 @@ impl AppShell {
         };
         let page_w = (self.width - page_x - sa.right).max(0.0);
 
-        let (bw, bh) = self.menu_button.preferred_size(theme);
+        let (bw, bh) = match &self.dock {
+            Some(_) => {
+                let b = SidebarDock::menu_size(theme);
+                (b, b)
+            }
+            None => self.menu_button.preferred_size(theme),
+        };
         let top = sa.top + gutter;
         // A head that bleeds (the kit's Layout title) spans the page column
         // from the top, its title on the gutter or past the menu button;
@@ -289,7 +295,7 @@ impl AppShell {
             };
         }
         if let Some(mb) = layout.menu_button {
-            let m = self.menu_button.handle_event(event, mb);
+            let m = dock.menu_event(event, mb, theme, window.w);
             if m.clicked {
                 dock.open_drawer(theme, window.w);
                 return Route::Shell(EventResult::clicked());
@@ -315,7 +321,10 @@ impl AppShell {
         self.header
             .render_in(c, layer, layout.header, layout.header_pads, theme);
         if let Some(mb) = layout.menu_button {
-            self.menu_button.render(c, mb, theme);
+            match &self.dock {
+                Some(dock) => dock.render_menu(c, layer, mb, theme, self.dock_window().w),
+                None => self.menu_button.render(c, mb, theme),
+            }
         }
         // docked, the panel is the app's to draw
         if self.dock.is_none() {

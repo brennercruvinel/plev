@@ -1,7 +1,8 @@
 //! The sidebar as the shell's (task-104 front H, #163): `shell.sidebar`,
 //! the navigation landmark the dock declares (`expanded`, `mode`,
 //! `pinned`, a `toggle_expanded`), its pin `shell.sidebar.pin` (a toggle,
-//! `on`), in the drawer its menu button `shell.sidebar.menu`, and while
+//! `on`), in the drawer its menu button `shell.sidebar.menu` and, open,
+//! its close `shell.sidebar.close` (where the pin was), and while
 //! it shows, the HomeSidebar's parts under it: the logo (a link to the
 //! first page), each group's dropdown `shell.sidebar.row[<r>]` and, while
 //! open, its tabs `shell.sidebar.row[<r>].links[<i>]`. A tab is the
@@ -62,6 +63,7 @@ enum Part {
     Root,
     Pin,
     Menu,
+    Close,
     Logo,
     Group(usize),
     /// A tab, by its page.
@@ -90,6 +92,9 @@ fn part(bar: Bar<'_>, id: &SemId) -> Option<Part> {
     }
     if dock.menu_id().as_ref() == Some(id) {
         return Some(Part::Menu);
+    }
+    if dock.close_id().as_ref() == Some(id) {
+        return Some(Part::Close);
     }
     if bar.nav.sidebar.logo_id() == Some(id) {
         return Some(Part::Logo);
@@ -134,7 +139,9 @@ pub(super) fn execute(bar: Bar<'_>, asks: &mut Asks, action: &str, target: &SemI
             asks.sidebar = Some(SidebarAsk::Pin);
             put("on", Value::Bool(!bar.dock.is_pinned()));
         }
-        ("toggle_expanded", Some(Part::Root)) | ("activate", Some(Part::Menu)) => {
+        ("toggle_expanded", Some(Part::Root))
+        | ("activate", Some(Part::Menu))
+        | ("activate", Some(Part::Close)) => {
             asks.sidebar = Some(SidebarAsk::Expand);
             put("expanded", Value::Bool(!bar.dock.expanded(theme, w)));
         }
@@ -224,6 +231,8 @@ impl ShowcaseView {
         let theme = &self.theme;
         if let Some(dock) = self.shell.dock.as_mut() {
             dock.set_pin_focused(at == Some(Part::Pin));
+            dock.set_close_focused(at == Some(Part::Close));
+            dock.set_menu_focused(at == Some(Part::Menu));
             dock.set_focus_inside(at != Some(Part::Menu), theme, w);
         }
         true
@@ -240,6 +249,8 @@ impl ShowcaseView {
         let theme = &self.theme;
         if let Some(dock) = self.shell.dock.as_mut() {
             dock.set_pin_focused(false);
+            dock.set_close_focused(false);
+            dock.set_menu_focused(false);
             dock.set_focus_inside(false, theme, w);
         }
         true

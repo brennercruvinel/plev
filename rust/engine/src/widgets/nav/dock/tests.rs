@@ -312,6 +312,39 @@ fn a_click_on_the_pin_pins_it_and_the_drawer_has_no_pin() {
     assert!(!up.clicked && d.is_pinned());
 }
 
+/// The open drawer's close, where the pin was: drawn, bound and hit
+/// there, a button whose click asks it closed; closed, it is gone.
+#[test]
+fn the_open_drawer_closes_from_the_x_in_the_pins_place() {
+    use crate::drawing::compositor::Compositor;
+    let theme = Theme::hoff_core();
+    let r = theme.navigation.dock;
+    let mut d = dock();
+    let head = Rect::new(0.0, 0.0, r.width, 80.0);
+    let x_at = SidebarDock::pin_rect(head, &theme);
+    assert!(!d.has_close(&theme, 360.0), "a closed drawer has no close");
+    assert!(d.open_drawer(&theme, 360.0));
+    let mut c = Compositor::new();
+    d.render_pin(&mut c, head, &theme, 360.0);
+    let bound = c.binding(&d.close_id().unwrap()).map(|b| b.rect);
+    assert_eq!(bound, Some([x_at.x, x_at.y, x_at.w, x_at.h]));
+    let mut b = SnapshotBuilder::new();
+    d.project(&mut b, "Gallery", None, &theme, 360.0);
+    let snap = b.finish().unwrap();
+    let close = snap.get(&d.close_id().unwrap()).unwrap();
+    assert_eq!(close.role, Role::Button);
+    assert_eq!(close.actions[0].name.as_str(), "activate");
+    let (x, y) = x_at.center();
+    d.close_event(&WidgetEvent::MouseDown { x, y }, head, &theme, 360.0);
+    let up = d.close_event(&WidgetEvent::MouseUp { x, y }, head, &theme, 360.0);
+    assert!(
+        up.clicked && d.is_drawer_open(),
+        "the click asks; the app closes"
+    );
+    d.toggle_expanded(&theme, 360.0);
+    assert!(!d.is_drawer_open() && !d.has_close(&theme, 360.0));
+}
+
 // The dock in the app shell (`AppShell::docked`).
 
 mod shell {

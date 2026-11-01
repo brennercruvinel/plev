@@ -3,6 +3,16 @@
 use super::*;
 use crate::styling::theme::hoff_core::SHADES;
 
+/// A sub-item's height in a Dropdown's list: `h-8` (32), where the kit
+/// has `h-10` (40). Brenner's adjustment over the kit (2026-11-01): the
+/// tabs under a group read too far apart at the kit's height. The other
+/// themes take it from here (`derive.rs` keeps the rail's geometry).
+const SUB_ITEM_H: f32 = 32.0;
+
+/// How far into the last link the rail stops: the kit's `h-10` less its
+/// `bottom-8`.
+const KIT_RAIL_INTO: f32 = 40.0 - 32.0;
+
 impl DisclosureTokens {
     /// The kit, class list by class list.
     pub fn hoff_core() -> Self {
@@ -138,16 +148,20 @@ impl DisclosureTokens {
             // `text-[#7b7b7b]` otherwise, its branch `before:left-4.75
             // before:bottom-5 before:w-4 before:border-l-[1.5px]
             // before:border-b-[1.5px] before:rounded-bl-lg` (:73), the
-            // current one's chevron `size-4 -rotate-90` (:83).
+            // current one's chevron `size-4 -rotate-90` (:83). The link's
+            // height is `SUB_ITEM_H`, Brenner's adjustment over the kit;
+            // the branch and the rail's end keep the kit's relations to
+            // it (the branch reaches the link's middle, the rail stops a
+            // step, 8, into the last link).
             rail: Some(DisclosureRail {
                 x: 19.0,
                 width: 1.5,
                 color: line,
-                end: 32.0,
+                end: SUB_ITEM_H - KIT_RAIL_INTO,
                 branch_w: 16.0,
-                branch_h: 20.0,
+                branch_h: SUB_ITEM_H / 2.0,
                 branch_radius: 8.0,
-                link_h: 40.0,
+                link_h: SUB_ITEM_H,
                 link_pad: [48.0, 12.0],
                 link_rest: gray,
                 link_active: ink,

@@ -8,11 +8,12 @@
 //! how the person left them.
 //!
 //! Where the panel stands (peeking by default, pinned beside the page by
-//! the pin at the right of its head, a drawer) is the shell's dock; this
-//! is what it holds. A tab picked here comes back
+//! the pin at the right of its head, a drawer closed by the X in the same
+//! place) is the shell's dock; this is what it holds. A tab picked here comes back
 //! as its page index, and the view asks `shell.page` for it, as a key
 //! and an agent do.
 
+use accord::SemId;
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::content::{Collapsible, DisclosureList};
@@ -215,15 +216,31 @@ impl ShowcaseView {
         Rect::new(panel.x, panel.y, panel.w, body.y - panel.y)
     }
 
-    /// The pin's part of a pointer event on the panel at `panel`.
-    fn pin_event(&mut self, event: &WidgetEvent, panel: Rect) -> EventResult {
+    /// The head's buttons' part of a pointer event on the panel at
+    /// `panel`: the pin's and the open drawer's close's, merged, and the
+    /// ask a click on one makes (`toggle` on the pin, `activate` on the
+    /// close).
+    fn head_event(
+        &mut self,
+        event: &WidgetEvent,
+        panel: Rect,
+    ) -> (EventResult, Option<(SemId, &'static str)>) {
         let head = self.panel_head(panel);
         let w = self.shell.dock_window().w;
         let theme = &self.theme;
-        match self.shell.dock.as_mut() {
-            Some(dock) => dock.pin_event(event, head, theme, w),
-            None => EventResult::IGNORED,
-        }
+        let Some(dock) = self.shell.dock.as_mut() else {
+            return (EventResult::IGNORED, None);
+        };
+        let pin = dock.pin_event(event, head, theme, w);
+        let close = dock.close_event(event, head, theme, w);
+        let ask = if pin.clicked {
+            dock.pin_id().map(|id| (id, "toggle"))
+        } else if close.clicked {
+            dock.close_id().map(|id| (id, "activate"))
+        } else {
+            None
+        };
+        (pin.merge(close), ask)
     }
 
     /// The chrome's part of a pointer event: `(taken, changed)`. The dock
@@ -240,12 +257,10 @@ impl ShowcaseView {
                 let Some(bounds) = panel.or_else(|| self.panel_rect()) else {
                     return (true, false);
                 };
-                let pin = self.pin_event(event, bounds);
-                if pin.clicked {
-                    // the person's toggle, through the dispatcher
-                    if let Some(id) = self.shell.dock.as_ref().and_then(|d| d.pin_id()) {
-                        self.ask_sidebar(&id, "toggle");
-                    }
+                let (pin, ask) = self.head_event(event, bounds);
+                if let Some((id, action)) = ask {
+                    // the person's ask, through the dispatcher
+                    self.ask_sidebar(&id, action);
                     return (true, true);
                 }
                 let (r, picked) = self.nav.handle_event(event, bounds, &self.theme);
@@ -267,7 +282,7 @@ impl ShowcaseView {
                 );
                 let changed = match panel {
                     Some(bounds) if heard => {
-                        let pin = self.pin_event(event, bounds).changed;
+                        let pin = self.head_event(event, bounds).0.changed;
                         self.nav.handle_event(event, bounds, &self.theme).0.changed || pin
                     }
                     _ => false,
