@@ -105,8 +105,8 @@ impl MenubarPage {
         let bar_h = ButtonSize::Sm.height(theme) + theme.overlay.menubar.pad * 2.0;
         let open_h = frame + bar_h + theme.overlay.popover.clearance.gap + menu_h;
         let groups = [
-            (1, vec![showcase::card_height(bar_h, theme)]),
-            (1, vec![open_h]),
+            (GROUPS[0], 1, vec![showcase::card_height(bar_h, theme)]),
+            (GROUPS[1], 1, vec![open_h]),
         ];
         showcase::layout_sized(groups, content, theme)
     }

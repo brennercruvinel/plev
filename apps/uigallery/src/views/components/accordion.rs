@@ -179,7 +179,7 @@ impl AccordionPage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
         fit_layout(&spans, content, theme, |g, c, w| {
             self.groups[g].cards[c].accordion.height(w, theme)
@@ -324,11 +324,12 @@ pub(crate) struct Fitted {
     pub rule_y: f32,
 }
 
-/// The groups down `content`, each as `(span, count)`; `body_h(g, c, w)`
-/// is the height card `c` of group `g` needs at the width `w` its widget
-/// gets. The cards, the rows and the columns are the showcase's.
+/// The groups down `content`, each as `(title, span, count)`;
+/// `body_h(g, c, w)` is the height card `c` of group `g` needs at the
+/// width `w` its widget gets. The cards, the rows, the columns and the
+/// title's lines are the showcase's.
 pub(crate) fn fit_layout(
-    groups: &[(usize, usize)],
+    groups: &[(&str, usize, usize)],
     content: Rect,
     theme: &Theme,
     body_h: impl Fn(usize, usize, f32) -> f32,
@@ -336,18 +337,21 @@ pub(crate) fn fit_layout(
     let bodies: Vec<(f32, Vec<f32>)> = groups
         .iter()
         .enumerate()
-        .map(|(g, &(span, count))| {
+        .map(|(g, &(_, span, count))| {
             let w = showcase::room(showcase::card_width(span, content, theme), theme);
             (w, (0..count).map(|c| body_h(g, c, w)).collect())
         })
         .collect();
-    let sized = groups.iter().zip(&bodies).map(|(&(span, _), (_, hs))| {
-        let cards = hs
-            .iter()
-            .map(|h| showcase::card_height(*h, theme))
-            .collect();
-        (span, cards)
-    });
+    let sized = groups
+        .iter()
+        .zip(&bodies)
+        .map(|(&(title, span, _), (_, hs))| {
+            let cards = hs
+                .iter()
+                .map(|h| showcase::card_height(*h, theme))
+                .collect();
+            (title, span, cards)
+        });
     showcase::layout_sized(sized, content, theme)
         .into_iter()
         .zip(&bodies)

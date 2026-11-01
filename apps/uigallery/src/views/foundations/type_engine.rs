@@ -126,7 +126,7 @@ pub(super) fn grid(content: Rect, theme: &Theme) -> Grid {
     let heights = (0..CARDS.len())
         .map(|i| top + s.content_h(i, w - s.pad * 2.0) + s.pad)
         .collect();
-    Grid::new(SPAN, showcase::card_min_w(theme), heights)
+    Grid::new("Engine", SPAN, showcase::card_min_w(theme), heights)
 }
 
 /// The cards, drawn in `cards` (the group's layout).

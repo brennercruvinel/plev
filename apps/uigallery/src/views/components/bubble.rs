@@ -174,7 +174,7 @@ impl BubblePage {
                 .cards
                 .iter()
                 .map(|card| showcase::card_height(Self::rows(card, w, theme).iter().sum(), theme));
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

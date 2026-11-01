@@ -198,7 +198,7 @@ impl PromptInputPage {
                 let ((_, h), (above, below)) = Self::block(&card.sample, w, theme);
                 showcase::card_height(above + h + below, theme)
             });
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

@@ -21,6 +21,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::EmptyState;
 use engine::widgets::message::attachment::AttachmentKind;
 use engine::widgets::message::comment::CommentThread;
 use engine::widgets::message::compose::ComposeLine;
@@ -144,6 +145,16 @@ impl CommentsPage {
                             "Sam",
                         )),
                     ),
+                    card(
+                        "Empty: no comments yet",
+                        Sample::Empty(Box::new(
+                            EmptyState::new(
+                                "No comments yet",
+                                "Pin a comment to the scene to start a thread.",
+                            )
+                            .icon("kit-comment"),
+                        )),
+                    ),
                 ],
             },
             Group {
@@ -236,7 +247,7 @@ impl CommentsPage {
                 .cards
                 .iter()
                 .map(|card| showcase::card_height(card.sample.size(avail(w), theme).1, theme));
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

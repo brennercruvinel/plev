@@ -199,7 +199,7 @@ impl DatePickerPage {
                     showcase::card_height(Self::picker_h(&c.picker, w, theme), theme)
                 })
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

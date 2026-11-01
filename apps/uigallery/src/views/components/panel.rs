@@ -97,7 +97,7 @@ impl PanelPage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
         fit_layout(&spans, content, theme, |_, _, w| Self::panel_h(theme, w))
     }

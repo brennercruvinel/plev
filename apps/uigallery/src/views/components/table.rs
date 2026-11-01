@@ -18,7 +18,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::styling::theme::Theme;
-use engine::widgets::content::{Column, Table};
+use engine::widgets::content::{Column, EmptyState, Table};
 use engine::widgets::prelude::{Align, EventResult, Rect, WidgetEvent};
 
 use super::accordion::{Fitted, fit_layout};
@@ -39,6 +39,12 @@ fn cell(dir: &str, row: usize, col: usize) -> String {
 
 /// The columns, in order.
 const COLUMNS: usize = 4;
+
+/// What a table without rows shows under its header: the empty state,
+/// its icon the grid's.
+fn no_rows() -> EmptyState {
+    EmptyState::new("No rows yet", "Rows land here once the dataset has any.").icon("layout-grid")
+}
 
 struct Card {
     /// The chip: which states this card shows.
@@ -95,6 +101,9 @@ impl TablePage {
         let card = |title, dir, rows, shown| {
             let mut table = Table::new(columns(theme), theme);
             table.set_row_count(rows);
+            if rows == 0 {
+                table = table.empty(no_rows());
+            }
             Card {
                 title,
                 dir,
@@ -119,6 +128,7 @@ impl TablePage {
                 cards: vec![
                     card("Narrow: columns drop by priority", "screen", 500, 5),
                     card("Few rows: nothing to scroll", "accord", 3, 5),
+                    card("Empty: no rows", "accord", 0, 0),
                 ],
             },
         ];
@@ -136,7 +146,12 @@ impl TablePage {
         Self { root, groups }
     }
 
-    fn table_h(card: &Card, theme: &Theme) -> f32 {
+    /// The header and the rows it shows; without rows, the header and
+    /// its empty state `w` wide.
+    fn table_h(card: &Card, w: f32, theme: &Theme) -> f32 {
+        if card.table.row_count() == 0 {
+            return card.table.empty_height(w, theme);
+        }
         Table::header_h(theme) + card.shown as f32 * Table::row_h(theme)
     }
 
@@ -144,10 +159,10 @@ impl TablePage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
-        fit_layout(&spans, content, theme, |g, c, _| {
-            Self::table_h(&self.groups[g].cards[c], theme)
+        fit_layout(&spans, content, theme, |g, c, w| {
+            Self::table_h(&self.groups[g].cards[c], w, theme)
         })
     }
 
@@ -160,7 +175,7 @@ impl TablePage {
                 .iter()
                 .zip(&placed.cards)
                 .map(|(card, (_, body))| {
-                    Rect::new(body.x, body.y, body.w, Self::table_h(card, theme))
+                    Rect::new(body.x, body.y, body.w, Self::table_h(card, body.w, theme))
                 })
         });
         cards.collect()
@@ -220,7 +235,7 @@ impl TablePage {
             showcase::title(c, group.title, content, placed.title_y, theme);
             for (card, (rect, body)) in group.cards.iter_mut().zip(&placed.cards) {
                 showcase::card(c, *rect, card.title, theme);
-                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, theme));
+                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, body.w, theme));
                 // the rows overscan past the rect: they end at its edge
                 c.push(SceneNode::PushClip {
                     x: at.x,
@@ -340,7 +355,7 @@ mod tests {
                 for (group, placed) in page.groups.iter().zip(page.layout(content, &theme)) {
                     for (card, (rect, body)) in group.cards.iter().zip(&placed.cards) {
                         let what = format!("{w}px, {}", card.title);
-                        let h = TablePage::table_h(card, &theme);
+                        let h = TablePage::table_h(card, body.w, &theme);
                         assert!(body.x >= rect.x && body.right() <= rect.right(), "{what}");
                         assert!(body.y + h <= rect.bottom() + 0.01, "{what}: too tall");
                         let cols = card.table.column_layout(body.w, &theme);

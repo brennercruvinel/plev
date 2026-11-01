@@ -241,7 +241,7 @@ impl TypographyPage {
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let m = Metrics::of(theme);
         let grids = tables(theme, content.w)
-            .map(|table| Grid::new(1, 0.0, vec![m.height(content.w, &table)]));
+            .map(|table| Grid::new(table.title, 1, 0.0, vec![m.height(content.w, &table)]));
         let grids = grids.into_iter().chain([type_engine::grid(content, theme)]);
         showcase::layout_grids(grids, content, theme)
     }

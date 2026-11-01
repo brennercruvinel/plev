@@ -195,7 +195,7 @@ impl FormPage {
             .collect();
         let wanted = self.groups.iter().zip(&sizes).map(|(g, s)| {
             let h = s.iter().map(|(_, h)| showcase::card_height(*h, theme));
-            (g.columns, h.collect())
+            (g.title, g.columns, h.collect())
         });
         showcase::layout_sized(wanted, content, theme)
             .into_iter()

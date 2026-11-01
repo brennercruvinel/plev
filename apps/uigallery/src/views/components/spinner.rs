@@ -97,7 +97,10 @@ impl SpinnerPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Layout {
         let groups = showcase::layout_measured(
-            [(GROUPS[0].1, SIZES.len()), (GROUPS[1].1, 1)],
+            [
+                (GROUPS[0].0, GROUPS[0].1, SIZES.len()),
+                (GROUPS[1].0, GROUPS[1].1, 1),
+            ],
             content,
             theme,
             |g, c, _| match g {

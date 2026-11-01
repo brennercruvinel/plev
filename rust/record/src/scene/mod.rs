@@ -30,7 +30,8 @@
 //!           radius blur_radius offset(2) color inset u8
 //! key    := text str, font_size u32, line_height u32, max_width opt u32,
 //!           weight u16, letter_spacing u32, family opt str, style u8
-//!           (bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`;
+//!           (bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`,
+//!           bit 2 `OverflowWrap::BreakWord`;
 //!           the byte the session file's text asset ends with, task-104)
 //! asset  := 1 image: id u32, atlas_x u32, atlas_y u32, width u32,
 //!           height u32, pixels u8 (0 none, 1 then width * height * 4 of

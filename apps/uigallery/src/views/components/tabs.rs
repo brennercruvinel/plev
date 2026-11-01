@@ -151,7 +151,7 @@ impl TabsPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
+        let groups = self.groups.iter().map(|g| (g.title, g.span, g.cards.len()));
         showcase::layout_measured(groups, content, theme, |g, c, _| {
             self.groups[g].cards[c].tabs.preferred_size(theme).1
         })

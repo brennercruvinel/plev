@@ -278,7 +278,7 @@ impl CardPage {
             // The kit's heights line a row of cards up; a card alone in
             // its row is as tall as its widget (or its aspect).
             let floor = g.height.unwrap_or(0.0);
-            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights).floor(floor)
+            showcase::Grid::new(g.title, g.span, showcase::card_min_w(theme), heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
             .into_iter()

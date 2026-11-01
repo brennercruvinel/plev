@@ -381,7 +381,10 @@ impl ButtonPage {
     /// Per group: the title's top, the card rects, the rule (the
     /// showcase mold).
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let groups = self.groups.iter().map(|g| (g.columns, g.cards.len()));
+        let groups = self
+            .groups
+            .iter()
+            .map(|g| (g.title, g.columns, g.cards.len()));
         showcase::layout_measured(groups, content, theme, |g, c, _| {
             self.groups[g].cards[c].spec.preferred_size(theme).1
         })

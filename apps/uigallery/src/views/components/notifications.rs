@@ -105,10 +105,16 @@ impl NotificationsPage {
             Group {
                 title: "Notification Dropdown",
                 columns: 1,
-                cards: vec![Card {
-                    title: "Notifications",
-                    sample: Sample::Dropdown(Box::new(Notifications::new(kit_notifications()))),
-                }],
+                cards: vec![
+                    Card {
+                        title: "Notifications",
+                        sample: Sample::Dropdown(Box::new(Notifications::new(kit_notifications()))),
+                    },
+                    Card {
+                        title: "Empty: nothing yet",
+                        sample: Sample::Dropdown(Box::new(Notifications::new(Vec::new()))),
+                    },
+                ],
             },
         ];
         let root = root_id("notifications_page");
@@ -159,7 +165,7 @@ impl NotificationsPage {
                 .cards
                 .iter()
                 .map(|c| showcase::card_height(Self::size(&c.sample, w, theme).1, theme));
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

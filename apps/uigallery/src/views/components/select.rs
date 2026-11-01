@@ -202,7 +202,7 @@ impl SelectPage {
                 .entries
                 .iter()
                 .map(|e| showcase::card_height(Self::size(e, w, theme).1, theme));
-            (g.entries.len(), h.collect())
+            (g.title, g.entries.len(), h.collect())
         });
         showcase::layout_sized(wanted, content, theme)
             .into_iter()

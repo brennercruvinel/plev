@@ -299,18 +299,6 @@ pub fn breaks(title: &str, width: f32, case: &Case) -> Vec<String> {
 /// its front; a new break, or one of these spreading to another page,
 /// still fails.
 const KNOWN: &[(&str, &str, &str)] = &[
-    // targets under 24 px in another front's widget (O: the view
-    // controller, in the toolbar page and in the prompt input)
-    (
-        "Prompt Input",
-        "view.",
-        "O: the view controller's back and forward",
-    ),
-    (
-        "Toolbar",
-        "view[",
-        "O: the view controller's back and forward",
-    ),
     // at twice the size or in a longer language, another front's
     ("Typography", "wide in", "F: the specimen's sample line"),
     // an exception: code does not wrap, the editor scrolls sideways as

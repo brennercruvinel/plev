@@ -95,7 +95,10 @@ impl DropdownMenuPage {
             (3, self.shown.len(), frame + tallest),
         ];
         showcase::layout_sized(
-            groups.map(|(span, n, h)| (span, vec![h; n])),
+            groups
+                .into_iter()
+                .zip(GROUPS)
+                .map(|((span, n, h), title)| (title, span, vec![h; n])),
             content,
             theme,
         )

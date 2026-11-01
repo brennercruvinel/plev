@@ -714,6 +714,38 @@ fn a_core_table_is_the_kit_s_spec_sheet() {
     assert!(framed, "the frame holds the rows there are");
 }
 
+/// A table without rows shows its empty state under its header, framed
+/// with it, as tall as `empty_height` says; a row takes it away.
+#[test]
+fn a_table_without_rows_shows_its_empty_state() {
+    use crate::widgets::content::EmptyState;
+    let theme = core();
+    let empty = EmptyState::new("No rows yet", "Rows you add show up here.");
+    let mut t = Table::new(vec![Column::new("Style", &theme)], &theme).empty(empty);
+    let w = 300.0;
+    let h = t.empty_height(w, &theme);
+    assert!(h > Table::header_h(&theme) + theme.spacing.lg * 2.0);
+    let said = |t: &mut Table| {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        t.render_with(&mut c, Rect::new(0.0, 0.0, w, h), &theme, |_, _, _, _| {});
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let titled = nodes.iter().any(|n| {
+            matches!(n, SceneNode::Text { key, y, .. }
+            if key.text == "No rows yet" && *y > Table::header_h(&theme))
+        });
+        let framed = nodes.iter().any(|n| {
+            matches!(n, SceneNode::RoundedRect { h: fh, border_width, .. }
+            if *border_width > 0.0 && (*fh - h).abs() < 1e-3)
+        });
+        (titled, framed)
+    };
+    assert_eq!(said(&mut t), (true, true), "the state, in the frame");
+    t.set_row_count(1);
+    assert!(t.empty_shown().is_none());
+    assert!(!said(&mut t).0, "a row takes it away");
+}
+
 #[test]
 fn a_trigger_is_as_tall_as_the_kit_draws_it() {
     let theme = core();

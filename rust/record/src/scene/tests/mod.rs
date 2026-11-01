@@ -321,12 +321,25 @@ fn a_text_style_the_sender_does_not_write_is_refused() {
     assert_eq!(bytes[style], 0b11, "tabular and anywhere");
     let mut t = super::bytes::Take::new(&bytes);
     assert_eq!(super::node::take_node(&mut t), Ok(node));
-    bytes[style] = 0x80;
+    // tabular and break-word (task-104t) read back as such
+    bytes[style] = 0b101;
     let mut t = super::bytes::Take::new(&bytes);
-    assert_eq!(
-        super::node::take_node(&mut t),
-        Err(SceneError::Invalid("a text's style"))
-    );
+    let Ok(super::node::Drawn::Node(SceneNode::Text { key, .. })) = super::node::take_node(&mut t)
+    else {
+        panic!("a text node");
+    };
+    assert_eq!(key.overflow_wrap, OverflowWrap::BreakWord);
+    // a rule no sender writes (anywhere and break-word at once), and a
+    // bit no sender sets, are refused
+    for bad in [0b111, 0x80] {
+        bytes[style] = bad;
+        let mut t = super::bytes::Take::new(&bytes);
+        assert_eq!(
+            super::node::take_node(&mut t),
+            Err(SceneError::Invalid("a text's style")),
+            "{bad:#b}"
+        );
+    }
 }
 
 #[test]
