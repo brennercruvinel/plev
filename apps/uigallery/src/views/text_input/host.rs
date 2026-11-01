@@ -109,4 +109,5 @@ text_hosts! {
     Topbar => topbar,
     // task-104 front C, conversation and feedback (#156)
     PromptInput => prompt_input,
+    Comments => comments,
 }

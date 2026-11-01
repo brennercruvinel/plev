@@ -157,10 +157,12 @@ components! {
     Attachment => attachment,
     Badge => badge,
     Bubble => bubble,
+    Comments => comments,
     Marker => marker,
     Message => message,
     MessageScroller => message_scroller,
     PromptInput => prompt_input,
+    Notifications => notifications,
     Progress => progress,
     Skeleton => skeleton,
     // task-104 front D, disclosure and display (#157)

@@ -231,6 +231,13 @@ pub const PAGES: &[Page] = &[
     ),
     page(
         C,
+        "Comments",
+        "message-square",
+        "The comment cursor and pin, a thread beside its pin with its reply, the new comment in each state, the quick comment.",
+        Pane::Comments,
+    ),
+    page(
+        C,
         "Context Menu",
         "layers",
         "The kit's menus: a right click in the area opens the file menu at the pointer.",
@@ -396,6 +403,13 @@ pub const PAGES: &[Page] = &[
         "layout-grid",
         "Nav links in every state, and the rail form.",
         Pane::NavigationMenu,
+    ),
+    page(
+        C,
+        "Notifications",
+        "info",
+        "The kit's notification in its variations, and the dropdown: All and Unread over a list that scrolls.",
+        Pane::Notifications,
     ),
     page(
         C,

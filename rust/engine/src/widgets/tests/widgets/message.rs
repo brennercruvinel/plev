@@ -1798,3 +1798,10 @@ mod empty;
 
 /// The prompt input, its model menu and its line (wave 3).
 mod prompt;
+
+/// The comment popups: the thread, the new comment, the quick comment
+/// (wave 3).
+mod comments;
+
+/// The notifications dropdown (wave 3).
+mod notifications;

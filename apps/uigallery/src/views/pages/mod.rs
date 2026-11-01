@@ -111,9 +111,11 @@ pub enum Pane {
     Alert,
     Attachment,
     Bubble,
+    Comments,
     Marker,
     Message,
     MessageScroller,
+    Notifications,
     PromptInput,
     // task-104 front D, disclosure and display (#157)
     Accordion,

@@ -105,6 +105,9 @@ pub struct Alert {
     kind: Option<NotificationKind>,
     unread: bool,
     divider: bool,
+    /// A row of a list (a dropdown of them): read as a list item, not
+    /// announced as a live region.
+    listed: bool,
     actions: Vec<Button>,
     chosen: Option<usize>,
     press: Press,
@@ -123,6 +126,7 @@ impl Alert {
             kind: None,
             unread: false,
             divider: false,
+            listed: false,
             actions: Vec::new(),
             chosen: None,
             press: Press::default(),
@@ -167,6 +171,14 @@ impl Alert {
     /// kit's `border-t`; the owner leaves it off the first).
     pub fn divider(mut self, on: bool) -> Self {
         self.divider = on;
+        self
+    }
+
+    /// A row of a list of notifications (the kit's dropdown): it projects
+    /// as a list item, which a list's arrows walk, rather than as a live
+    /// status of its own.
+    pub fn listed(mut self, on: bool) -> Self {
+        self.listed = on;
         self
     }
 
@@ -258,6 +270,11 @@ impl Alert {
         for (i, b) in self.actions.iter_mut().enumerate() {
             b.set_focused(index == Some(i));
         }
+    }
+
+    /// The answer the keyboard is on, if any.
+    pub fn focused_action(&self) -> Option<usize> {
+        self.actions.iter().position(Button::is_focused)
     }
 
     /// The narrowest row whose parts still fit side by side: the padding,
@@ -513,8 +530,9 @@ impl Alert {
         }
     }
 
-    /// Declares this alert as `id`: a `Role::Alert` when destructive and a
-    /// `Role::Status` otherwise, as the toast, named by its title and its
+    /// Declares this alert as `id`: a `Role::ListItem` when
+    /// [`listed`](Self::listed), else a `Role::Alert` when destructive and
+    /// a `Role::Status` otherwise, as the toast, named by its title and its
     /// time, described by the detail and the content whole, with its
     /// `unread` state and `activate` (read it), which reads it; each
     /// answer as its button, `<id>.action[<i>]`, `selected` once chosen.
@@ -533,7 +551,9 @@ impl Alert {
                     .state("selected", self.chosen == Some(i));
             }
         }
-        let role = if self.intent == Intent::Destructive {
+        let role = if self.listed {
+            Role::ListItem
+        } else if self.intent == Intent::Destructive {
             Role::Alert
         } else {
             Role::Status
