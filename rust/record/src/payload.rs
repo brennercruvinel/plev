@@ -22,6 +22,7 @@ use std::sync::Arc;
 
 use engine::drawing::compositor::TextNodeKey;
 use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::OverflowWrap;
 use motion::LoweredAsset;
 use motion::encoding::asset_path::{pack_chunks, unpack};
 
@@ -184,9 +185,12 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
         font_weight,
         letter_spacing_bits,
         font_family,
-        // the session format (versions 0 and 1) keeps no OpenType features:
-        // a replayed numeric run shapes its figures proportional
+        // the session format (versions 0 and 1) has no field for either: a
+        // text comes back with the engine's defaults, no OpenType features
+        // (a replayed numeric run shapes its figures proportional) and the
+        // default wrap rule (see `put_key` in `scene/node.rs`)
         features: engine::drawing::text::TextFeatures::NONE,
+        overflow_wrap: OverflowWrap::Normal,
     })
 }
 

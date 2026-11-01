@@ -9,6 +9,8 @@ pub(super) mod measure;
 #[cfg(test)]
 pub(super) mod on_demand;
 #[cfg(test)]
+pub(super) mod overflow_wrap;
+#[cfg(test)]
 pub(super) mod raster;
 #[cfg(test)]
 pub(super) mod weights;

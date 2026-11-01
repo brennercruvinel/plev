@@ -203,6 +203,9 @@ pub struct GroupAddons {
     pub width: f32,
     pub invite_width: f32,
     pub palette_width: f32,
+    /// The most of the window's height a command palette's dialog takes
+    /// (the share of a `cmdk` dialog's `60vh`): its list scrolls past it.
+    pub palette_share: f32,
 }
 
 /// A one-time code (`super::otp`): its cells are the Field's input box,
@@ -436,6 +439,8 @@ impl FormTokens {
             // Not in the kit, which has no palette: `w-72`, between its
             // Search and its Invite.
             palette_width: 288.0,
+            // Not in the kit: three fifths of the window, a `60vh`.
+            palette_share: 0.6,
         };
         let label = LabelRecipe {
             text: TypeRole::Label.run(),
@@ -563,6 +568,7 @@ impl FormTokens {
             width: theme.size.menu_w,
             invite_width: theme.size.readable_max_w / 2.0,
             palette_width: theme.size.readable_max_w * 0.4,
+            palette_share: 0.6,
         };
         let label = LabelRecipe {
             text: TypeRole::Label.run(),

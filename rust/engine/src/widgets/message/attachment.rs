@@ -33,6 +33,7 @@ use crate::drawing::compositor::{Compositor, SceneNode};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{IconButton, IconButtonSize, IconButtonVariant};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, gradient_fill, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -84,7 +85,11 @@ pub enum TrayFocus {
 #[derive(Clone, Debug, PartialEq)]
 pub struct TileLayout {
     pub rect: Rect,
+    /// The remove button as drawn (the kit's `size-5`).
     pub remove: Rect,
+    /// Where a press on it lands and what it binds: `remove` grown to the
+    /// minimum target around its centre (`widgets::hit`).
+    pub remove_hit: Rect,
     /// A file tile's icon, name and detail.
     pub icon: Option<Rect>,
     pub name: Option<Placed>,
@@ -333,10 +338,12 @@ impl AttachmentTray {
                     t.remove,
                     t.remove,
                 );
+                let remove_hit = hit_rect(remove, theme);
                 let Some(_) = a.icon() else {
                     return TileLayout {
                         rect,
                         remove,
+                        remove_hit,
                         icon: None,
                         name: None,
                         detail: None,
@@ -370,6 +377,7 @@ impl AttachmentTray {
                 TileLayout {
                     rect,
                     remove,
+                    remove_hit,
                     icon: Some(icon),
                     name: placed(name, col_x, ty0, nw, &ns),
                     detail: placed(detail, col_x, ty0 + name_h, dw, &ds),
@@ -409,7 +417,7 @@ impl AttachmentTray {
         let on_remove = |x: f32, y: f32| {
             keys.iter()
                 .zip(&l.tiles)
-                .find(|(_, t)| t.remove.contains(x, y))
+                .find(|(_, t)| t.remove_hit.contains(x, y))
                 .map(|(k, _)| *k)
         };
         match *event {
@@ -497,7 +505,8 @@ impl AttachmentTray {
             // opacity 0, and the hover that follows shows it
             let rm = tl.remove;
             if let Some(id) = tile.as_ref().and_then(remove_id) {
-                c.bind(&id, [rm.x, rm.y, rm.w, rm.h]);
+                let hit = tl.remove_hit;
+                c.bind(&id, [hit.x, hit.y, hit.w, hit.h]);
             }
             if self.remove_shown(a.key) {
                 let [top, bottom] = t.remove_fill;

@@ -9,6 +9,7 @@ use crate::views::ShowcaseView;
 use accord::Snapshot;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
+use engine::styling::theme::Prefs;
 
 /// Animation steps a headless frame may take before it is drawn: the
 /// window keeps drawing while anything moves, so the frame it settles
@@ -82,6 +83,18 @@ pub fn stage_page(
     theme: &str,
     scroll: Option<f32>,
 ) -> Result<StagedPage, RenderError> {
+    stage_page_with(viewport, page, theme, scroll, Prefs::default())
+}
+
+/// [`stage_page`] as the person's `prefs` ask (a text size): the theme
+/// adapted to them (ADR 0086). A render never reads the machine's own.
+pub fn stage_page_with(
+    viewport: Viewport,
+    page: &str,
+    theme: &str,
+    scroll: Option<f32>,
+    prefs: Prefs,
+) -> Result<StagedPage, RenderError> {
     crate::views::stage_without_host();
     let mut view = ShowcaseView::new(viewport.width, viewport.height);
     view.jump_to_page(page);
@@ -92,6 +105,7 @@ pub fn stage_page(
     if view.theme_name != theme {
         return Err(RenderError::UnknownTheme(theme.to_string()));
     }
+    view.set_prefs(prefs);
     if let Some(offset) = scroll {
         view.scroll_page_to(offset);
     }

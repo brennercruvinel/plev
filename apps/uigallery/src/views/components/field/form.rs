@@ -181,7 +181,7 @@ impl FormPage {
     /// y, on the showcase's grid, a card as tall as its widget needs (at
     /// least `h-50`) and the widget centered in it, clear of the chip.
     pub(crate) fn layout(&self, content: Rect, theme: &Theme) -> Vec<Laid> {
-        let side = theme.spacing.lg;
+        let side = showcase::inset(theme);
         let sizes: Vec<Vec<(f32, f32)>> = self
             .groups
             .iter()

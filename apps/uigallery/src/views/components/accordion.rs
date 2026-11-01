@@ -7,7 +7,7 @@
 //!
 //! The cards are as tall as what they hold: an accordion opening grows
 //! its card and the row, and the groups below move down. Rows drop a
-//! column where a card would get narrower than `showcase::CARD_MIN_W`;
+//! column where a card would get narrower than the theme's least card width (`showcase::card_min_w`);
 //! the title, the card and its chip, and the rule are `showcase`'s.
 //!
 //! Projected: a group per title, `accordion_page.group[<g>]`; in it each
@@ -333,12 +333,11 @@ pub(crate) fn fit_layout(
     theme: &Theme,
     body_h: impl Fn(usize, usize, f32) -> f32,
 ) -> Vec<Fitted> {
-    let inset = theme.spacing.sm;
     let bodies: Vec<(f32, Vec<f32>)> = groups
         .iter()
         .enumerate()
         .map(|(g, &(span, count))| {
-            let w = (showcase::card_width(span, content, theme) - inset * 2.0).max(0.0);
+            let w = showcase::room(showcase::card_width(span, content, theme), theme);
             (w, (0..count).map(|c| body_h(g, c, w)).collect())
         })
         .collect();

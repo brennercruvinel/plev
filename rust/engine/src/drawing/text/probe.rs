@@ -434,6 +434,7 @@ pub fn shape_report(
             attrs = attrs.font_features(features);
         }
         let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
+        buffer.set_wrap(fs, style.overflow_wrap.cosmic(text));
         buffer.set_size(fs, max_width, None);
         buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);
         buffer.shape_until_scroll(fs, false);

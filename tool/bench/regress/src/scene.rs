@@ -194,6 +194,7 @@ pub fn bounds(layer: &Layer, viewport: Viewport) -> Option<[f32; 4]> {
                     letter_spacing: f32::from_bits(key.letter_spacing_bits),
                     font_family: key.font_family.clone(),
                     features: key.features,
+                    overflow_wrap: key.overflow_wrap,
                 };
                 let max = key.max_width_bits.map(f32::from_bits);
                 let (w, h) = TextMeasurer::measure_styled(&key.text, &style, max);

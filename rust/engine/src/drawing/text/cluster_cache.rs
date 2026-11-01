@@ -13,7 +13,7 @@ use std::mem::size_of;
 
 use lru::LruCache;
 
-use super::backend::TextStyle;
+use super::backend::{OverflowWrap, TextStyle};
 use super::measure::ClusterBox;
 
 /// Room for about 1700 lines of 70 characters, a few dozen screens.
@@ -30,6 +30,7 @@ pub(super) struct ClusterKey {
     letter_spacing_bits: u32,
     font_family: Option<String>,
     features: super::TextFeatures,
+    overflow_wrap: OverflowWrap,
     max_width_bits: Option<u32>,
 }
 
@@ -43,6 +44,7 @@ impl ClusterKey {
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
             features: style.features,
+            overflow_wrap: style.overflow_wrap,
             max_width_bits: max_width.map(f32::to_bits),
         }
     }

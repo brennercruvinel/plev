@@ -65,3 +65,27 @@ fn every_modal_projects_under_its_group() {
         assert!(under(&root, id), "{id} is the page's");
     }
 }
+
+/// The quick comment is the message widget's card: its reply takes the
+/// keys when focused, Enter posts it as a comment, Escape lets it go.
+#[test]
+fn the_quick_comment_is_the_message_card() {
+    use crate::views::text_input::host::TextHost;
+    let mut page = ModalsPage::new();
+    let root = page.root().cloned().expect("the root parses");
+    let card = card_id(Some(&root), 3, 0).expect("the card's id parses");
+    let reply = card.child("reply").expect("the reply's id");
+    assert!(page.focus(&reply));
+    assert!(page.handle_text("Nice"));
+    assert!(TextHost::handle_enter(&mut page));
+    let mut b = SnapshotBuilder::new();
+    b.node(&root, Role::Region, "Modals");
+    page.project(&mut b, &root);
+    let seen = b.finish().expect("the projection holds");
+    let list = seen
+        .get(&card.child("comments").expect("the list's id"))
+        .expect("the comments are projected");
+    assert_eq!(list.state.get("count"), Some(&accord::Value::Int(2)));
+    assert!(TextHost::handle_escape(&mut page));
+    assert!(!page.handle_text("x"), "no box has the keys");
+}

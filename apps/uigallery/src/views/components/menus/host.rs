@@ -1,5 +1,6 @@
-//! The Menus page as a text host: the folder picker's search box and the
-//! new folder's name take the keys, the input method and the clipboard.
+//! The Menus page as a text host: the folder picker's search box, the
+//! new folder's name and the zoom's level take the keys, the input method
+//! and the clipboard.
 
 use engine::styling::theme::Theme;
 use engine::widgets::prelude::Rect;
@@ -14,9 +15,9 @@ use crate::views::text_input::host::TextHost;
 impl TextHost for MenusPage {
     /// Type `s` into the focused box. `false` when none is focused.
     fn handle_text(&mut self, s: &str) -> bool {
-        self.folders_mut()
-            .and_then(Folders::field_mut)
-            .is_some_and(|f| f.insert(s))
+        let typed = self.text_field_mut().is_some_and(|f| f.insert(s));
+        self.sync_level();
+        typed
     }
 
     /// The editing keys edit the focused box; Tab is the view's.
@@ -24,34 +25,41 @@ impl TextHost for MenusPage {
         if key == EditKey::Tab {
             return false;
         }
-        self.folders_mut()
-            .and_then(Folders::field_mut)
-            .is_some_and(|f| f.edit(key.into()))
+        let edited = self.text_field_mut().is_some_and(|f| f.edit(key.into()));
+        self.sync_level();
+        edited
     }
 
     /// The input method composes in the focused box; `Disabled` drops a
     /// composition wherever one is.
     fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
-        let Some(folders) = self.folders_mut() else {
-            return false;
-        };
         let (committed, preedit, cursor) = match ime {
             ImeEvent::Disabled => {
-                let mut dropped = folders.search.end_compose();
-                if let Some(f) = folders.naming_mut() {
-                    dropped |= f.end_compose();
+                let mut dropped = self.zoom_mut().is_some_and(|z| z.field.end_compose());
+                if let Some(folders) = self.folders_mut() {
+                    dropped |= folders.search.end_compose();
+                    if let Some(f) = folders.naming_mut() {
+                        dropped |= f.end_compose();
+                    }
                 }
+                self.sync_level();
                 return dropped;
             }
             ImeEvent::Preedit(text, cursor) => ("", text, cursor),
             ImeEvent::Commit(text) => (text, "", None),
         };
-        folders
-            .field_mut()
-            .is_some_and(|f| f.compose(committed, preedit, cursor))
+        let composed = self
+            .text_field_mut()
+            .is_some_and(|f| f.compose(committed, preedit, cursor));
+        self.sync_level();
+        composed
     }
 
     fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        if let Some(z) = self.zoom().filter(|z| z.field.is_focused()) {
+            let at = self.zoom_rect(content, theme)?;
+            return Some(z.field.ime_area(z.text_rect(at, theme), theme));
+        }
         let f = self.folders()?;
         let field = f.field()?;
         let (search, name) = self.field_rects(content, theme);
@@ -77,7 +85,7 @@ impl TextHost for MenusPage {
     }
 
     fn keys(&mut self) -> Keys<'_> {
-        match self.folders_mut().and_then(Folders::field_mut) {
+        match self.text_field_mut() {
             Some(f) => Keys::Field(f),
             None => Keys::Nobody,
         }

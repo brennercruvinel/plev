@@ -21,7 +21,7 @@ use engine::widgets::overlay::drawer::Drawer;
 use engine::widgets::overlay::sheet::paint_scrim;
 use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent, rounded_rect_stroke};
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 
 const LIVE_CHIP: &str = "Default, Hover, Press, Focus";
@@ -83,9 +83,9 @@ impl DrawerPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let live = showcase::card_height(self.button.preferred_size(theme).1, theme);
-        let state = CARD_H.max(frame + self.shown.content_h(theme));
+        let state = frame + self.shown.content_h(theme);
         showcase::layout_sized([(1, vec![live]), (1, vec![state])], content, theme)
     }
 

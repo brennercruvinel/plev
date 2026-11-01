@@ -1,8 +1,8 @@
 //! Modals page, the hoff core kit's ModalPage (`templates/ModalPage`,
 //! the `modal` route; task-104 front B, onda 3): every modal of the
 //! template, in its groups and in the state it shows. Variations, the
-//! shared post and profile, the shared file, the quick comment (front C's)
-//! beside the delete confirm, Export with its images, video and 3D
+//! shared post and profile, the shared file, the quick comment (the
+//! message widget's) beside the delete confirm, Export with its images, video and 3D
 //! object, Settings with its five sections. Each is a widget of
 //! `engine::widgets::overlay::modals` on `theme.overlay.modals` (the
 //! delete confirm is the confirmation `Modal` with its art); the page
@@ -33,9 +33,9 @@ use engine::widgets::overlay::modals::variations::Variations;
 use engine::widgets::overlay::modals::{self, ModalBody};
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
-use cards::{Confirm, Pending};
+use cards::{Confirm, Quick};
 
 /// A modal in its card: the chip naming the states it shows, whether the
 /// template fills the card, the widget.
@@ -130,14 +130,7 @@ impl ModalsPage {
                 title: "Quick comment & Delete confirm",
                 span: 2,
                 cards: vec![
-                    shown(
-                        "Comment",
-                        true,
-                        Pending {
-                            name: "QuickComment",
-                            owner: "front C, the Comments tab",
-                        },
-                    ),
+                    shown("Comment", true, Quick::new(id(3, 0).as_ref())),
                     shown("Confirm", true, Confirm::new(id(3, 1).as_ref())),
                 ],
             },
@@ -170,7 +163,7 @@ impl ModalsPage {
     /// The frame a card keeps around its widget: the chip band at the top
     /// and the body's margin at the bottom.
     fn frame(theme: &Theme) -> f32 {
-        CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h
+        showcase::body_height(0.0, theme)
     }
 
     /// Each card as tall as its modal at the width its body has; a row is
@@ -179,11 +172,11 @@ impl ModalsPage {
         let frame = Self::frame(theme);
         let sized = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
-            let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
+            let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
             let heights = g
                 .cards
                 .iter()
-                .map(|s| CARD_H.max(frame + s.body.size(body_w, theme).1))
+                .map(|s| frame + s.body.size(body_w, theme).1)
                 .collect();
             (g.span, heights)
         });

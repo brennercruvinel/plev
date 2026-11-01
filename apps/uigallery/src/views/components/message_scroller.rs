@@ -134,9 +134,7 @@ impl MessageScrollerPage {
     }
 
     fn lane_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     /// The group's layout (`showcase::layout_sized`, each card as tall as

@@ -12,7 +12,7 @@ use lru::LruCache;
 
 use crate::runtime::perf::stages::{self, Stage};
 
-use super::backend::TextStyle;
+use super::backend::{OverflowWrap, TextStyle};
 use super::cluster_cache::{CLUSTER_CACHE_BUDGET, ClusterCache};
 use super::measure::LineMetrics;
 
@@ -59,6 +59,7 @@ pub(super) struct MeasureKey {
     letter_spacing_bits: u32,
     font_family: Option<String>,
     features: super::TextFeatures,
+    overflow_wrap: OverflowWrap,
     // Wrap width rounded to whole pixels (plan: "largura-bucket").
     width_bucket: Option<i32>,
 }
@@ -73,6 +74,7 @@ impl MeasureKey {
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
             features: style.features,
+            overflow_wrap: style.overflow_wrap,
             width_bucket: max_width.map(|w| w.round() as i32),
         }
     }
@@ -135,6 +137,7 @@ impl MeasureContext {
         let fs = &mut self.font_system;
         self.scratch
             .set_metrics(fs, Metrics::new(style.font_size, style.line_height));
+        self.scratch.set_wrap(fs, style.overflow_wrap.cosmic(text));
         self.scratch.set_size(fs, max_width, None);
         let attrs = attrs_for(style, fs.db());
         self.scratch

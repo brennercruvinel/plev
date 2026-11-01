@@ -97,6 +97,37 @@ fn every_theme_has_every_role_on_the_grid() {
     }
 }
 
+/// h6, the showcase's group title, is fluid: the kit's 16/24 at the
+/// range's start and below, its 20/28 at the end and above, and between
+/// them a line with no step; its full size (`role`) does not change.
+#[test]
+fn h6_scales_from_the_kit_s_narrow_group_title() {
+    let [from, to] = FLUID_RANGE;
+    let core = Theme::hoff_core().typography;
+    let at = |w: f32| core.role_at(TypeRole::H6, w);
+    assert_eq!((at(from).font_size, at(from).line_height), (16.0, 24.0));
+    assert_eq!((at(280.0).font_size, at(280.0).line_height), (16.0, 24.0));
+    assert_eq!((at(to).font_size, at(to).line_height), (20.0, 28.0));
+    assert_eq!(at(1600.0), core.role(TypeRole::H6));
+    assert_eq!(core.role(TypeRole::H6).font_size, 20.0);
+    for (name, theme) in themes() {
+        let t = &theme.typography;
+        let [min, _] = t.roles.fluid_min(TypeRole::H6).unwrap();
+        assert!(min < t.spec(TypeRole::H6).size, "{name}");
+        let mut last = t.role_at(TypeRole::H6, 272.0);
+        for w in (280..=1600).step_by(8) {
+            let s = t.role_at(TypeRole::H6, w as f32);
+            assert!(s.font_size >= last.font_size, "{name} {w}");
+            assert!(s.font_size - last.font_size < 0.1, "{name} jumps at {w}");
+            assert!(
+                s.line_height - last.line_height < 0.1,
+                "{name} jumps at {w}"
+            );
+            last = s;
+        }
+    }
+}
+
 /// A fluid role is its minimum up to the range's start, its spec from
 /// the range's end, and grows in between without a step; a fixed role
 /// is the same at every width.

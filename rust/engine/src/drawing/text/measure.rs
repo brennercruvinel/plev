@@ -223,6 +223,10 @@ impl TextMeasurer {
         if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
             return Self::measure_styled(&now, style, max_width);
         }
+        // pseudo-localization: measure what the frame will draw
+        if let std::borrow::Cow::Owned(local) = super::pseudo::localized(text) {
+            return Self::measure_styled(&local, style, max_width);
+        }
         if text.is_empty() {
             return (0.0, 0.0);
         }
@@ -357,9 +361,11 @@ impl TextMeasurer {
     /// [`truncate_to_width`](Self::truncate_to_width).
     ///
     /// Returns `text` unchanged when it already wraps into `lines` or
-    /// fewer (hard line breaks count as lines); otherwise the longest
-    /// prefix (trailing whitespace trimmed) followed by "…" that still
-    /// wraps into `lines`. `lines == 0` keeps nothing.
+    /// fewer (hard line breaks count as lines) and no line runs past
+    /// `max_width` (a word wider than the line under
+    /// `OverflowWrap::Normal`); otherwise the longest prefix (trailing
+    /// whitespace trimmed) followed by "…" that does. `lines == 0` keeps
+    /// nothing.
     pub fn clamp_to_lines(text: &str, style: &TextStyle, max_width: f32, lines: usize) -> String {
         const ELLIPSIS: &str = "\u{2026}";
         if text.is_empty() || lines == 0 {
@@ -367,7 +373,10 @@ impl TextMeasurer {
         }
         // Half a line of slack absorbs the float sum of line heights.
         let limit = style.line_height * (lines as f32 + 0.5);
-        let fits = |s: &str| Self::measure_styled(s, style, Some(max_width)).1 <= limit;
+        let fits = |s: &str| {
+            let (w, h) = Self::measure_styled(s, style, Some(max_width));
+            h <= limit && w <= max_width + 0.5
+        };
         if fits(text) {
             return text.to_string();
         }
@@ -394,8 +403,9 @@ impl TextMeasurer {
     /// same breaks a wrapped draw takes (UAX#14: between words, between
     /// CJK ideographs, at Thai word bounds; a hard break kept, an empty
     /// line kept), each with its width measured in `style`, the
-    /// whitespace at a break dropped. A word wider than `max_width` is broken where
-    /// the shaper breaks it. What a widget needs to align each line on its
+    /// whitespace at a break dropped. A word wider than `max_width` stays
+    /// whole on its line (wider than `max_width`), or breaks between its
+    /// graphemes when the style asks `OverflowWrap::Anywhere`. What a widget needs to align each line on its
     /// own (the kit's `text-center`): draw each at its own x.
     pub fn lines(text: &str, style: &TextStyle, max_width: f32) -> Vec<(String, f32)> {
         if text.is_empty() {
@@ -564,6 +574,7 @@ impl TextMeasurer {
             super::on_demand::want(text);
             let fs = &mut ctx.font_system;
             let mut buffer = Buffer::new(fs, Metrics::new(style.font_size, style.line_height));
+            buffer.set_wrap(fs, style.overflow_wrap.cosmic(text));
             buffer.set_size(fs, max_width, None);
             let attrs = attrs_for(style, fs.db());
             buffer.set_text(fs, text, &attrs, Shaping::Advanced, None);

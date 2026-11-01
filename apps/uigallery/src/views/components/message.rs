@@ -233,9 +233,7 @@ impl MessagePage {
     /// The width a card's messages take: the card's inside, up to a
     /// readable column.
     fn message_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     fn heights(card: &Card, w: f32, theme: &Theme) -> Vec<f32> {
@@ -459,7 +457,6 @@ mod tests {
                             within(*card, tall),
                             "{w}: card {g}.{i} {card:?} out of the content"
                         );
-                        assert!(card.h >= showcase::CARD_H);
                         for (m, r) in messages.iter().zip(rects) {
                             assert!(
                                 within(*r, *card),
@@ -496,7 +493,7 @@ mod tests {
         assert!(b.x > a.x);
         let long = narrow[2].cards[0].0;
         assert!(
-            long.h > showcase::CARD_H,
+            long.h > showcase::card_min_h(&theme),
             "the long text grows its card: {long:?}"
         );
     }

@@ -8,6 +8,7 @@
 use engine::drawing::compositor::{Compositor, LayerId, QuadVertex, SceneNode, TextNodeKey};
 use engine::drawing::gpu::load_image_rgba;
 use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::OverflowWrap;
 
 use super::super::*;
 
@@ -34,6 +35,7 @@ fn key(s: &str) -> TextNodeKey {
         letter_spacing_bits: 0.0f32.to_bits(),
         font_family: None,
         features: engine::drawing::text::TextFeatures::NONE,
+        overflow_wrap: OverflowWrap::Normal,
     }
 }
 

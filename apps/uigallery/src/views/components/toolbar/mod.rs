@@ -27,8 +27,13 @@ use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
 use engine::widgets::form::TextField;
 
-/// The toolbar and player cards are the kit's `h-60`; the view
-/// controller and photo cards its `h-88`.
+/// The stage heights the kit gives its demos (templates/ToolbarPage/
+/// index.tsx): `h-60` for the toolbars (:18, :24) and the players (:27,
+/// :30), `h-88` for the view controllers (:33, :36) and the photo (:43).
+/// The page declares them as floors: a card alone in its row by the kit's
+/// design (the toolbars, the photo) always keeps its stage; a row of the
+/// span-2 cards keeps it while it holds more than one, and a card that
+/// falls alone in a narrow column is as tall as its widget.
 const BAR_CARD_H: f32 = 240.0;
 const TALL_CARD_H: f32 = 352.0;
 /// The photo player's width, the kit's `w-140`.
@@ -230,23 +235,22 @@ impl ToolbarPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        // A bar that wraps in its card makes the card as tall as the mold
-        // needs to keep it clear of the chip.
+        // A card is as tall as its widget needs to keep clear of the chip
+        // (a bar that wraps grows it), and at least the kit's stage where
+        // the page declares it (BAR_CARD_H, TALL_CARD_H): always for a card
+        // the kit sets alone in its row, for the others while their row
+        // holds more than one.
         let grids = self.groups.iter().map(|g| {
-            let card_w = showcase::card_width_at(g.span, showcase::CARD_MIN_W, content, theme);
-            let room = card_w - theme.spacing.sm * 2.0;
-            let height = |c: &Card| match c.shows {
-                Shows::Bar(b) => {
-                    let bar_h = self.bars[b].size_in(room, theme).1;
-                    c.height.max(showcase::card_height(bar_h, theme))
-                }
-                _ => c.height,
+            let card_w = showcase::card_width(g.span, content, theme);
+            let probe = Rect::new(0.0, 0.0, card_w, 0.0);
+            let height = |c: &Card| {
+                let widget_h = self.widget_rect(c.shows, probe, theme).h;
+                let h = showcase::card_height(widget_h, theme);
+                if g.span == 1 { h.max(c.height) } else { h }
             };
-            showcase::Grid {
-                span: g.span,
-                min_w: showcase::CARD_MIN_W,
-                heights: g.cards.iter().map(height).collect(),
-            }
+            let floor = g.cards.iter().map(|c| c.height).fold(0.0, f32::max);
+            let heights = g.cards.iter().map(height).collect();
+            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
     }
@@ -260,7 +264,7 @@ impl ToolbarPage {
     fn widget_rect(&self, shows: Shows, card: Rect, theme: &Theme) -> Rect {
         let size = match shows {
             // In a card narrower than the bar, the bar wraps (`size_in`).
-            Shows::Bar(b) => self.bars[b].size_in(card.w - theme.spacing.sm * 2.0, theme),
+            Shows::Bar(b) => self.bars[b].size_in(showcase::room(card.w, theme), theme),
             Shows::Player(p) => {
                 // As wide as it asks (the photo's player the kit's
                 // `w-140`), never wider than the card's inside: the track
@@ -272,12 +276,12 @@ impl ToolbarPage {
                 } else {
                     min_w
                 };
-                (w.min(card.w - theme.spacing.sm * 2.0), h)
+                (w.min(showcase::room(card.w, theme)), h)
             }
             Shows::View(v) => self.views[v].preferred_size(theme),
         };
         let at = showcase::centered(size, card);
-        let inner = card.x + theme.spacing.sm;
+        let inner = card.x + showcase::inset(theme);
         Rect::new(at.x.max(inner), at.y, size.0, size.1)
     }
 

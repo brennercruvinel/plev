@@ -12,6 +12,7 @@ use std::collections::{HashMap, HashSet};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::gpu::{ImageHandle, load_image_rgba};
 use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::OverflowWrap;
 
 use super::SceneError;
 use super::asset::{self, Asset};
@@ -374,6 +375,7 @@ fn live_box([x, y, w, h]: [f32; 4], corner_radius: f32) -> [SceneNode; 4] {
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
                 features: engine::drawing::text::TextFeatures::NONE,
+                overflow_wrap: OverflowWrap::Normal,
             },
             x: x + 12.0,
             y: y + 12.0,

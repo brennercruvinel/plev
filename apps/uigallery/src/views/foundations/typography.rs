@@ -240,11 +240,8 @@ impl TypographyPage {
     /// One full-width card per table, then the engine's cards.
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let m = Metrics::of(theme);
-        let grids = tables(theme, content.w).map(|table| Grid {
-            span: 1,
-            min_w: 0.0,
-            heights: vec![m.height(content.w, &table)],
-        });
+        let grids = tables(theme, content.w)
+            .map(|table| Grid::new(1, 0.0, vec![m.height(content.w, &table)]));
         let grids = grids.into_iter().chain([type_engine::grid(content, theme)]);
         showcase::layout_grids(grids, content, theme)
     }

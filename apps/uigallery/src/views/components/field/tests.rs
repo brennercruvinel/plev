@@ -85,7 +85,7 @@ fn every_card_and_field_stays_in_place_from_280_to_1600() {
                         rect.y >= card.y && rect.bottom() <= card.bottom() + 0.5,
                         "{what}: field leaves its card's height"
                     );
-                    let inset = theme.spacing.sm;
+                    let inset = showcase::inset(&theme);
                     let text = showcase::chip_fit(spec.title, card.w - inset * 2.0, &theme);
                     let chip = showcase::chip_rect(card.x + inset, card.y + inset, &text, &theme);
                     assert!(chip.right() <= card.right(), "{what}: chip");

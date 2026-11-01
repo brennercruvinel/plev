@@ -618,7 +618,7 @@ fn shell_layout_follows_the_breakpoint() {
     assert_eq!(full.breakpoint, Breakpoint::Expanded);
     assert_eq!(full.sidebar.unwrap().w, t.size.sidebar_w);
     assert!(full.menu_button.is_none());
-    assert!(full.content.x >= t.size.sidebar_w + t.layout.gutter(Breakpoint::Expanded));
+    assert!(full.content.x >= t.size.sidebar_w + t.layout.gutter_at(1400.0 - t.size.sidebar_w));
 
     let rail = shell(800.0, 600.0).layout(&t);
     assert_eq!(rail.sidebar_mode, SidebarMode::Rail);
@@ -628,7 +628,7 @@ fn shell_layout_follows_the_breakpoint() {
     assert_eq!(phone.sidebar_mode, SidebarMode::Drawer);
     assert!(phone.sidebar.is_none());
     assert!(phone.menu_button.is_some());
-    assert_eq!(phone.content.x, t.layout.gutter(Breakpoint::Compact));
+    assert_eq!(phone.content.x, t.layout.gutter_at(390.0));
     assert!(phone.content.w > 0.0 && phone.content.h > 0.0);
 }
 

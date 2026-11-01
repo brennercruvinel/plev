@@ -8,8 +8,8 @@ use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 use engine::widgets::widget::luminance;
 
-use super::super::text;
 use super::{GitWake, NavKey};
+use crate::views::text;
 use crate::views::text_input::clipboard::Keys;
 use std::sync::mpsc::{Receiver, Sender, channel};
 

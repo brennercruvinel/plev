@@ -327,6 +327,7 @@ pub(crate) fn resolved_text_style(
         // of the theme around it, measured and drawn alike.
         font_family: family.map(str::to_owned),
         features: crate::drawing::text::TextFeatures::NONE,
+        overflow_wrap: crate::drawing::text::OverflowWrap::Normal,
     }
 }
 

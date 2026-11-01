@@ -127,6 +127,29 @@ impl Zoom {
         (field, section_rule, rows, between)
     }
 
+    /// Every row's rect in a panel at `bounds`, commands then toggles: where
+    /// a host rings the row the keyboard is on.
+    pub fn line_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        self.parts(bounds, theme).2
+    }
+
+    /// The row under `(x, y)` in a panel at `bounds`.
+    pub fn line_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
+        self.line_rects(bounds, theme)
+            .iter()
+            .position(|r| r.contains(x, y))
+    }
+
+    /// Row `i`'s title.
+    pub fn line_label(&self, i: usize) -> Option<&str> {
+        let n = self.commands.len();
+        match i.checked_sub(n) {
+            None => self.commands.get(i),
+            Some(t) => self.toggles.get(t).map(|(l, _)| l),
+        }
+        .map(|l| l.label.as_str())
+    }
+
     /// The level's text in the field: after the icon, to the field's end.
     pub fn text_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
         let z = &theme.navigation.tool.zoom;

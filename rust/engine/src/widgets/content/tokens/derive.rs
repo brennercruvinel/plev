@@ -160,13 +160,9 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
-            // the page head of before (the page frame's own)
-            page: PageHeadRecipe {
-                narrow: HeaderRecipe::page_head(theme),
-                wide: HeaderRecipe::page_head(theme),
-                wide_from: 0.0,
-                bleed: false,
-            },
+            // the page frame's own head (not the panel head, whose texts
+            // took the kit's roles), with the fluid h3 title
+            page: PageHeadRecipe::derive(theme, HeaderRecipe::page_head(theme)),
             card: CardRecipe::derive(theme),
             catalog: CatalogTokens::derive(theme),
             split,
@@ -278,6 +274,33 @@ impl DisclosureTokens {
             rows: list,
         };
         (list, table)
+    }
+}
+
+impl PageHeadRecipe {
+    /// A derived theme's page head: the panel head inside the gutter, its
+    /// title the h3 role in the text's main color, fluid with the head's
+    /// width as h3 is. The page's title so stands a step above the
+    /// showcase's group titles (h6) at every width, never smaller nor
+    /// fainter than them.
+    pub fn derive(theme: &Theme, header: HeaderRecipe) -> Self {
+        let roles = &theme.typography.roles;
+        let h3 = roles.spec(TypeRole::H3);
+        let [_, min_lh] = roles
+            .fluid_min(TypeRole::H3)
+            .unwrap_or([h3.size, h3.line_height]);
+        let titled = |line_height: f32| HeaderRecipe {
+            row: header.row.max(line_height),
+            title_type: TypeRole::H3.run(),
+            title: theme.colors.text,
+            ..header
+        };
+        PageHeadRecipe {
+            narrow: titled(min_lh),
+            wide: titled(h3.line_height),
+            range: roles.range,
+            bleed: false,
+        }
     }
 }
 
