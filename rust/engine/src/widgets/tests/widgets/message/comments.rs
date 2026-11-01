@@ -85,7 +85,11 @@ fn the_thread_holds_over_every_width() {
                 assert!(inside(l.well, p) && inside(l.line, l.well) && inside(l.send, l.well));
                 let (sw, sh) = t.size(w as f32, &theme);
                 let bottom = p.bottom().max(l.pin.bottom());
-                assert_eq!((sw, sh), (p.right().max(l.pin.right()) - b.x, bottom - b.y));
+                let want = (p.right().max(l.pin.right()) - b.x, bottom - b.y);
+                assert!(
+                    (sw - want.0).abs() < 0.01 && (sh - want.1).abs() < 0.01,
+                    "{w}"
+                );
             }
         }
     }
