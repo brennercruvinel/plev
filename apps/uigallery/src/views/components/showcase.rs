@@ -323,13 +323,40 @@ pub(crate) fn title(c: &mut Compositor, text: &str, content: Rect, y: f32, theme
     });
 }
 
+/// The kit's two cards (`components/Card/index.tsx`): the plain one,
+/// and the `isGray` one (:52, `bg-[#F8F7F7]`) whose chip takes the
+/// page's tone with an edge (:57-59, `bg-[#FCFCFC] border-[#ECECEC]`,
+/// against the plain `bg-[#F1F1F1] border-transparent`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) enum Tone {
+    #[default]
+    Plain,
+    Gray,
+}
+
 /// A card's frame and, in its top corner, the chip naming the states it
 /// shows; the page draws the widget over it.
 pub(crate) fn card(c: &mut Compositor, rect: Rect, chip_text: &str, theme: &Theme) {
+    card_in(c, rect, chip_text, Tone::Plain, theme);
+}
+
+/// [`card`] in `tone`: the gray one on the panel's tone under its frame.
+pub(crate) fn card_in(c: &mut Compositor, rect: Rect, chip_text: &str, tone: Tone, theme: &Theme) {
+    if tone == Tone::Gray {
+        let fill = theme.colors.bg_panel.0;
+        c.push(rounded_rect(
+            rect.x,
+            rect.y,
+            rect.w,
+            rect.h,
+            theme.shape.card,
+            fill,
+        ));
+    }
     card_frame(c, rect, theme);
     let inset = inset(theme);
     let text = chip_fit(chip_text, rect.w - inset * 2.0, theme);
-    chip(c, rect.x + inset, rect.y + inset, &text, theme);
+    chip_in(c, rect.x + inset, rect.y + inset, &text, tone, theme);
 }
 
 /// A chip's text cut with an ellipsis where the chip, padding included,
@@ -367,15 +394,25 @@ pub(crate) fn chip_rect(x: f32, y: f32, text: &str, theme: &Theme) -> Rect {
 /// A chip with its top-left at `(x, y)`: the pill and its label. Returns
 /// its rect.
 pub(crate) fn chip(c: &mut Compositor, x: f32, y: f32, text: &str, theme: &Theme) -> Rect {
+    chip_in(c, x, y, text, Tone::Plain, theme)
+}
+
+/// [`chip`] in `tone`: on a gray card, the page's tone in the divider's
+/// hairline.
+fn chip_in(c: &mut Compositor, x: f32, y: f32, text: &str, tone: Tone, theme: &Theme) -> Rect {
     let at = chip_rect(x, y, text, theme);
-    c.push(rounded_rect(
-        at.x,
-        at.y,
-        at.w,
-        at.h,
-        theme.shape.nav,
-        theme.colors.bg_hover.0,
-    ));
+    let radius = theme.shape.nav;
+    let fill = match tone {
+        Tone::Plain => theme.colors.bg_hover.0,
+        Tone::Gray => theme.colors.bg.0,
+    };
+    c.push(rounded_rect(at.x, at.y, at.w, at.h, radius, fill));
+    if tone == Tone::Gray {
+        let edge = theme.colors.divider.0;
+        c.push(rounded_rect_stroke(
+            at.x, at.y, at.w, at.h, radius, edge, 1.0,
+        ));
+    }
     c.push(SceneNode::Text {
         key: TextNodeKey::from_style(text, &chip_style(theme), None),
         x: at.x + theme.spacing.md,
@@ -543,5 +580,31 @@ mod tests {
         assert_eq!(title_h.fract(), 0.0, "the cards on a whole pixel");
         assert_eq!(titled.cards[0].y - bare.cards[0].y, title_h);
         assert_eq!(titled.rule_y - bare.rule_y, title_h);
+    }
+
+    /// The gray card is the plain one on the panel's tone, its chip on
+    /// the page's tone in a hairline: the same frame, chip and label at
+    /// the same places, two more nodes under and around them.
+    #[test]
+    fn the_gray_card_is_the_plain_one_on_the_panel_tone() {
+        use engine::drawing::compositor::LayerId;
+        let theme = Theme::hoff_core();
+        let rect = Rect::new(10.0, 20.0, 400.0, 240.0);
+        let nodes = |tone| {
+            let mut c = Compositor::new();
+            c.begin_frame();
+            card_in(&mut c, rect, "Simple", tone, &theme);
+            c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec()
+        };
+        let (plain, gray) = (nodes(Tone::Plain), nodes(Tone::Gray));
+        assert_eq!(gray.len(), plain.len() + 2);
+        let fill = |n: &SceneNode| match n {
+            SceneNode::RoundedRect { color, .. } => Some(*color),
+            _ => None,
+        };
+        assert_eq!(fill(&gray[0]), Some(theme.colors.bg_panel.0), "the card");
+        assert_eq!(gray[1], plain[0], "its frame");
+        assert_eq!(fill(&gray[2]), Some(theme.colors.bg.0), "the chip");
+        assert_eq!(gray.last(), plain.last(), "its label");
     }
 }

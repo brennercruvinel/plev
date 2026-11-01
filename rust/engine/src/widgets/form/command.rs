@@ -40,6 +40,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::content::kbd::Kbd;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::select::list::{self, Window};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::rounded_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -422,12 +423,20 @@ impl Command {
         Window::sized(l.list, n, view, offset, theme)
     }
 
-    /// The command under `(x, y)`.
+    /// The command a press at `(x, y)` lands on: the one under it, or the
+    /// nearest whose press area ([`hit_rect`], 44 px with a finger) holds
+    /// it, over a caption or the list's padding.
     pub fn item_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
-        match self.rows().get(self.window(bounds, theme).at(x, y)?) {
+        let rows = self.rows();
+        let item = |k: usize| match rows.get(k) {
             Some(CommandRow::Item(i)) => Some(*i),
             _ => None,
-        }
+        };
+        let list = self.layout(bounds, theme).list;
+        let k = self
+            .window(bounds, theme)
+            .near(x, y, list, theme, |k| item(k).is_some())?;
+        item(k)
     }
 
     /// The pointer: the box's own, a row hovered highlights it, a press on
@@ -555,7 +564,8 @@ impl Command {
         let g = &theme.form.group;
         let item = &self.items[i];
         if let Some(id) = self.list_id() {
-            c.bind(&id.key(i.to_string()), [row.x, row.y, row.w, row.h]);
+            let hit = hit_rect(row, theme);
+            c.bind(&id.key(i.to_string()), [hit.x, hit.y, hit.w, hit.h]);
         }
         if lit {
             let r = Rect::new(row.x + p.pad, row.y, row.w - p.pad * 2.0, row.h);

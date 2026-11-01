@@ -20,7 +20,8 @@ use engine::widgets::content::{Collapsible, DisclosureList};
 use engine::widgets::form::input_group::{Addon, InputGroup};
 use engine::widgets::form::tokens::Look;
 use engine::widgets::header::Logo;
-use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink};
+use engine::widgets::hit::hit_rect;
+use engine::widgets::nav::{DockMode, HomeRow, HomeSidebar, NavLink, SidebarDock};
 use engine::widgets::overlay::sheet::{Edge, paint_panel, paint_scrim};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 use engine::widgets::shell::{Route, SafeArea};
@@ -86,8 +87,9 @@ impl Navigation {
                 let trigger = Collapsible::new(g.label())
                     .icon(icon(*g))
                     .counter(g.pages().to_string())
+                    .grow_hit(true)
                     .open(r == open);
-                HomeRow::Menu(trigger, DisclosureList::new(titles))
+                HomeRow::Menu(trigger, DisclosureList::new(titles).grow_hit(true))
             })
             .collect();
         let mut sidebar = HomeSidebar::new(rows, "", NavLink::new("")).library(false);
@@ -211,7 +213,8 @@ impl Navigation {
         }
         if let Some(at) = self.sidebar.slot_rect(bounds, theme) {
             if let Some(id) = self.search.sem_id() {
-                c.bind(id, [at.x, at.y, at.w, at.h]);
+                let hit = hit_rect(at, theme);
+                c.bind(id, [hit.x, hit.y, hit.w, hit.h]);
             }
             self.search.render(c, at, theme);
         }
@@ -225,9 +228,70 @@ impl Navigation {
         };
         let r = self.search.handle_event(event, at, theme);
         match *event {
-            WidgetEvent::MouseDown { x, y } if at.contains(x, y) => r.merge(EventResult::clicked()),
+            WidgetEvent::MouseDown { x, y } if hit_rect(at, theme).contains(x, y) => {
+                r.merge(EventResult::clicked())
+            }
             _ => r,
         }
+    }
+
+    /// What a press in the panel at `bounds` can land on, as drawn: the
+    /// Search, and in the body each group's trigger and its open tabs.
+    fn targets(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let inside = |r: &Rect, o: Rect| {
+            let (x, y) = r.center();
+            o.contains(x, y)
+        };
+        let body = self.sidebar.body_rect(bounds, theme);
+        let l = self.sidebar.layout(bounds, theme);
+        let mut out: Vec<Rect> = self.sidebar.slot_rect(bounds, theme).into_iter().collect();
+        for (row, r) in self.sidebar.rows.iter().zip(&l.rows) {
+            let HomeRow::Menu(m, links) = row else {
+                continue;
+            };
+            let trigger = m.trigger_rect(*r, theme);
+            if inside(&trigger, body) {
+                out.push(trigger);
+            }
+            if m.is_open() {
+                let shown = m.shown_rect(*r, theme);
+                let content = m.content_rect(*r, links.height(r.w, theme), theme);
+                let open = links.link_rects(content, theme).into_iter();
+                out.extend(open.filter(|t| inside(t, body) && inside(t, shown)));
+            }
+        }
+        out
+    }
+}
+
+/// `event` where the press it makes lands among `targets` (each drawn
+/// at its rect, pressed in [`hit_rect`] around it, 44 px with a
+/// finger): a point inside one drawing and no other press area stays;
+/// one two press areas share, or in a grown margin, moves to the centre
+/// of the nearest drawing, so that part alone hears it.
+fn settle(event: &WidgetEvent, targets: &[Rect], theme: &Theme) -> WidgetEvent {
+    let (x, y) = event.pos();
+    let off = |r: &Rect| {
+        let dx = (r.x - x).max(x - r.right()).max(0.0);
+        let dy = (r.y - y).max(y - r.bottom()).max(0.0);
+        dx.hypot(dy)
+    };
+    let hits: Vec<&Rect> = targets
+        .iter()
+        .filter(|r| hit_rect(**r, theme).contains(x, y))
+        .collect();
+    let Some(owner) = hits.iter().min_by(|a, b| off(a).total_cmp(&off(b))) else {
+        return *event;
+    };
+    if hits.len() == 1 && owner.contains(x, y) {
+        return *event;
+    }
+    let (x, y) = owner.center();
+    match *event {
+        WidgetEvent::MouseMove { .. } => WidgetEvent::MouseMove { x, y },
+        WidgetEvent::MouseDown { .. } => WidgetEvent::MouseDown { x, y },
+        WidgetEvent::MouseUp { .. } => WidgetEvent::MouseUp { x, y },
+        other => other,
     }
 }
 
@@ -276,6 +340,20 @@ impl ShowcaseView {
         HomeSidebar::head_rect(panel, &self.theme)
     }
 
+    /// `event` on the panel at `panel`, settled among its press targets
+    /// (the pin or the close, the Search, the triggers, the open tabs).
+    fn settle_panel(&self, event: &WidgetEvent, panel: Rect) -> WidgetEvent {
+        let theme = &self.theme;
+        let mut targets = self.nav.targets(panel, theme);
+        let w = self.shell.dock_window().w;
+        if let Some(dock) = &self.shell.dock
+            && (dock.has_pin(theme, w) || dock.has_close(theme, w))
+        {
+            targets.push(SidebarDock::pin_rect(self.panel_head(panel), theme));
+        }
+        settle(event, &targets, theme)
+    }
+
     /// The head's part of a pointer event on the panel at `panel`: the
     /// pin's, the open drawer's close's and the Search's, merged, and the
     /// ask a click on one makes (`toggle` on the pin, `activate` on the
@@ -320,6 +398,7 @@ impl ShowcaseView {
                 let Some(bounds) = panel.or_else(|| self.panel_rect()) else {
                     return (true, false);
                 };
+                let event = &self.settle_panel(event, bounds);
                 let (pin, ask) = self.head_event(event, bounds);
                 if let Some((id, action)) = ask {
                     // the person's ask, through the dispatcher

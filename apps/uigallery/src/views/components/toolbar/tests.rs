@@ -196,6 +196,33 @@ fn at_360_every_bar_wraps_inside_its_card() {
     }
 }
 
+/// A view controller draws at its own width (the kit's pill is as wide
+/// as its arrows and ruler): a card never gets narrower than it, the row
+/// drops a column first, so at every width the pill stays inside its
+/// card's insets, even a pill wider than the theme's least card.
+#[test]
+fn a_view_controller_never_passes_its_card() {
+    let mut wide = Theme::hoff_core();
+    wide.navigation.tool.view.pad = wide.size.card_min_w;
+    for theme in [Theme::hoff_core(), wide] {
+        let page = ToolbarPage::new();
+        let inset = super::showcase::inset(&theme);
+        for w in (280..=1600).step_by(8) {
+            let content = Rect::new(0.0, 0.0, w as f32, 800.0);
+            for (shows, card, r) in page.placed(content, &theme) {
+                let Shows::View(_) = shows else { continue };
+                if r.w + inset * 2.0 > content.w {
+                    continue;
+                }
+                assert!(
+                    r.x >= card.x + inset - 0.01 && r.right() <= card.right() - inset + 0.01,
+                    "{w}: {r:?} past {card:?}"
+                );
+            }
+        }
+    }
+}
+
 /// A hovered tool's tooltip waits out the Tooltip's delay; the
 /// keyboard's focus shows it at once and rings the tool.
 #[test]
