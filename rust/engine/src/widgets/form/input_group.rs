@@ -333,8 +333,10 @@ impl InputGroup {
         self.input.handle_event_in(event, l.input, theme, slots)
     }
 
+    /// On the layer its owner aims at (`Compositor::on_layer`).
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
-        self.render_to_layer(c, LayerId::DEFAULT, bounds, theme);
+        let layer = c.target();
+        self.render_to_layer(c, layer, bounds, theme);
     }
 
     /// Draws the box, then its addons over it.

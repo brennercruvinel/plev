@@ -123,7 +123,8 @@ impl StagedPage {
 
     /// Staged again with the sidebar pinned beside the page (it peeks,
     /// out of the window, by default) and the command palette open over
-    /// it (⌘K), as asked.
+    /// it (⌘K), as asked. The compositor stays: the view's layers were
+    /// made in it, and each frame begins its layers afresh.
     pub fn stage_again(&mut self, pinned: bool, palette: bool) {
         if pinned {
             self.view.pin_sidebar(true);
@@ -131,7 +132,6 @@ impl StagedPage {
         if palette {
             self.view.toggle_palette();
         }
-        self.compositor = Compositor::new();
         self.settle();
     }
 
@@ -275,6 +275,22 @@ mod tests {
         };
         let [r, g, b, _] = t.colors.bg.to_array();
         [r, g, b].map(|c| (c * 255.0).round() as u8)
+    }
+
+    /// Staged again with the palette open, the frame draws its sheet on
+    /// a layer the compositor has: the view's layers were made in it.
+    #[test]
+    fn staged_again_the_palette_draws_on_a_layer_that_exists() {
+        let mut staged = match stage_page(DESKTOP, "Button", "core", None) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        staged.stage_again(true, true);
+        let c = staged.compositor();
+        let id = accord::SemId::parse("palette").expect("an id");
+        let bound = c.binding(&id).expect("the palette is bound");
+        let layer = c.layer(bound.layer).expect("its layer exists");
+        assert!(!layer.nodes().is_empty(), "its sheet is drawn");
     }
 
     #[test]
