@@ -30,6 +30,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::form::label::Label;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::Slot;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, focus_ring_inside};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -417,7 +418,7 @@ impl Field {
         let l = self.layout(bounds, theme);
         if l.reveal.is_some_and(|r| r.contains(x, y)) {
             Some(FieldPart::Reveal)
-        } else if l.link.is_some_and(|r| r.contains(x, y)) {
+        } else if l.link.is_some_and(|r| hit_rect(r, theme).contains(x, y)) {
             Some(FieldPart::Link)
         } else if l.label.is_some_and(|r| r.contains(x, y)) {
             Some(FieldPart::Label)
@@ -451,7 +452,7 @@ impl Field {
         }
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let over = l.link.is_some_and(|r| r.contains(x, y));
+                let over = l.link.is_some_and(|r| hit_rect(r, theme).contains(x, y));
                 let mut r = self.input.handle_event(event, l.input, theme);
                 if over != self.link_hovered {
                     self.link_hovered = over;
@@ -552,6 +553,8 @@ impl Field {
             }
         }
         if let (Some(id), Some(r)) = (self.link_id(), l.link) {
+            // a line of text presses in the minimum target (`widgets::hit`)
+            let r = hit_rect(r, theme);
             c.bind_to_layer(layer, &id, [r.x, r.y, r.w, r.h]);
         }
         // The keyboard focus on the eye (inside the box's end) or the link.

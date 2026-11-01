@@ -13,6 +13,7 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::TypeRole;
 use crate::styling::theme::{IconSize, Theme};
+use crate::widgets::hit::HitArea;
 use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
@@ -31,6 +32,9 @@ pub struct Checkbox {
     pressed: bool,
     focused: bool,
     sem: Option<SemId>,
+    /// The press area: the bounds grown to the minimum target
+    /// (`widgets::hit`), an 18 px box pressing in 24.
+    hit: HitArea,
 }
 
 impl Checkbox {
@@ -43,6 +47,7 @@ impl Checkbox {
             pressed: false,
             focused: false,
             sem: None,
+            hit: HitArea::default(),
         }
     }
 
@@ -113,6 +118,7 @@ impl Checkbox {
             }
             return EventResult::IGNORED;
         }
+        let bounds = self.hit.grow(bounds);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let inside = bounds.contains(x, y);
@@ -148,8 +154,10 @@ impl Checkbox {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        self.hit.remember(theme);
         if let Some(id) = &self.sem {
-            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            let hit = self.hit.grow(bounds);
+            compositor.bind(id, [hit.x, hit.y, hit.w, hit.h]);
         }
         let t = &theme.selection.checkbox;
         let alpha = if self.disabled { t.disabled_alpha } else { 1.0 };
