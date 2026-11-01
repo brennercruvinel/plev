@@ -20,12 +20,12 @@ use crate::styling::theme::TypeRun;
 /// field of the home and guideline sidebars.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SidebarsRecipe {
-    /// `w-60`: a sidebar on its own (`HomeSidebar`, `GuidelineSidebar`).
+    /// `w-60`: the `HomeSidebar`'s width, and the dock's panel
+    /// (`navigation.dock.width`). The kit's `Layout` narrows its shell to
+    /// `!w-55` (220) for the `GuidelineSidebar`, text links only; the
+    /// gallery's shell is the `HomeSidebar`'s rows (icon, label, count,
+    /// chevron), and at 220 "Foundations" breaks inside the word.
     pub width: f32,
-    /// The app shell's sidebar, the kit's `Layout` (`!w-55`,
-    /// `components/Layout/index.tsx:20`): the dock's panel
-    /// (`navigation.dock.width`).
-    pub shell_w: f32,
     /// `min-h-219`; 0 where a theme lets the sidebar be as tall as its rows.
     pub min_h: f32,
     /// `bg-[#FCFCFC]`, the rim `border-[#ECECEC]`.
@@ -176,7 +176,6 @@ impl SidebarsRecipe {
         let [paper, _, wash, line, _, _, shade7, _, _] = SHADES;
         Self {
             width: 240.0,
-            shell_w: 220.0,
             min_h: 876.0,
             fill: paper,
             edge: line,
@@ -217,8 +216,6 @@ impl SidebarsRecipe {
         let slot = control.height(ControlSize::Xs);
         Self {
             width: theme.size.sidebar_w,
-            // one sidebar width in a theme of its own
-            shell_w: theme.size.sidebar_w,
             min_h: 0.0,
             fill: colors.surface,
             edge: glass.edge_soft,
