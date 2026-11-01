@@ -124,6 +124,49 @@ pub struct CanvasRecipe {
     pub picture_fill: [Color; 2],
     /// The search's `p-3` band.
     pub search_pad: f32,
+    /// The design and animation sidebar's parts.
+    pub design: DesignRecipe,
+}
+
+/// `DesignAndAnimationSidebar`: its head (`p-3 pl-4`, the avatars'
+/// `size-8 border-2 -ml-2`), a group (`min-h-12 px-4 py-3`, the add
+/// button's `size-6 rounded-md`, `p-4 pt-0` round its body), the fields
+/// and value chips (`h-9 rounded-[0.625rem] bg-[#F1F1F1]`), the range
+/// (`rounded-lg`, filled `rgba(123,123,123,0.3)`), the loop's strip
+/// (`h-15 rounded-xl`, its span `rgba(18,18,18,0.35)` between 2 px
+/// handles), the tiles (`rounded-2xl`, the effects' `rounded-xl`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DesignRecipe {
+    pub head_pad: f32,
+    pub head_pad_start: f32,
+    pub avatar: f32,
+    pub avatar_ring: f32,
+    pub avatar_overlap: f32,
+    pub avatars: [Color; 2],
+    pub header_h: f32,
+    pub header: NavText,
+    pub add: f32,
+    pub add_icon: f32,
+    pub gap: f32,
+    pub stack_gap: f32,
+    pub field_h: f32,
+    pub field_radius: f32,
+    pub field_fill: Color,
+    pub field_text: NavText,
+    pub field_text_x: f32,
+    pub field_prefix_x: f32,
+    pub unit_w: f32,
+    pub chip_w: f32,
+    pub chip_w_narrow: f32,
+    pub chip_icon: f32,
+    pub range_radius: f32,
+    pub range_fill: Color,
+    pub strip_h: f32,
+    pub strip_radius: f32,
+    pub strip_span: Color,
+    pub strip_handle: f32,
+    pub tile_radius: f32,
+    pub tile_radius_small: f32,
 }
 
 impl SidebarsRecipe {
@@ -249,6 +292,7 @@ impl CanvasRecipe {
             picture: 64.0,
             picture_fill: [shade5, tint(gray, 0.5)],
             search_pad: 12.0,
+            design: DesignRecipe::hoff_core(),
         }
     }
 
@@ -301,6 +345,85 @@ impl CanvasRecipe {
             picture: core.picture,
             picture_fill: [colors.bg_hover, colors.divider],
             search_pad: space.sm,
+            design: DesignRecipe::derive(theme),
+        }
+    }
+}
+
+impl DesignRecipe {
+    pub fn hoff_core() -> Self {
+        use crate::styling::theme::hoff_core::{BLUE, ORANGE};
+        let [_, _, wash, _, _, gray, _, _, ink] = SHADES;
+        Self {
+            head_pad: 12.0,
+            head_pad_start: 16.0,
+            avatar: 32.0,
+            avatar_ring: 2.0,
+            avatar_overlap: 8.0,
+            avatars: [ORANGE, BLUE],
+            header_h: 48.0,
+            header: NavText::new(12.0, 16.0, 600),
+            add: 24.0,
+            add_icon: 16.0,
+            gap: 8.0,
+            stack_gap: 6.0,
+            field_h: 36.0,
+            field_radius: 10.0,
+            field_fill: wash,
+            field_text: NavText::new(12.0, 16.0, 500),
+            field_text_x: 30.0,
+            field_prefix_x: 10.0,
+            unit_w: 24.0,
+            chip_w: 78.0,
+            chip_w_narrow: 56.0,
+            chip_icon: 16.0,
+            range_radius: 8.0,
+            range_fill: tint(gray, 0.3),
+            strip_h: 60.0,
+            strip_radius: 12.0,
+            strip_span: tint(ink, 0.35),
+            strip_handle: 2.0,
+            tile_radius: 16.0,
+            tile_radius_small: 12.0,
+        }
+    }
+
+    pub fn derive(theme: &Theme) -> Self {
+        let (colors, glass, control, space) =
+            (&theme.colors, &theme.glass, &theme.control, &theme.spacing);
+        let core = Self::hoff_core();
+        let field = control.height(ControlSize::Md);
+        Self {
+            head_pad: space.sm,
+            head_pad_start: space.md,
+            avatar: control.height(ControlSize::Xs),
+            avatar_ring: control.edge_width * 2.0,
+            avatar_overlap: space.sm,
+            avatars: [colors.warning, colors.info],
+            header_h: control.height(ControlSize::Lg) + space.sm,
+            header: NavText::of(&theme.typography.caption_r()),
+            add: field * core.add / core.field_h,
+            add_icon: control.icon(IconSize::Sm),
+            gap: space.sm,
+            stack_gap: space.xs,
+            field_h: field,
+            field_radius: theme.shape.nav,
+            field_fill: glass.surface_hover,
+            field_text: NavText::of(&theme.typography.caption_r()),
+            field_text_x: space.xl,
+            field_prefix_x: space.sm,
+            unit_w: space.lg,
+            chip_w: field * core.chip_w / core.field_h,
+            chip_w_narrow: field * core.chip_w_narrow / core.field_h,
+            chip_icon: control.icon(IconSize::Sm),
+            range_radius: theme.shape.micro,
+            range_fill: glass.surface_active,
+            strip_h: field * core.strip_h / core.field_h,
+            strip_radius: theme.shape.nav,
+            strip_span: glass.surface_active,
+            strip_handle: control.edge_width * 2.0,
+            tile_radius: theme.radius.lg,
+            tile_radius_small: theme.shape.nav,
         }
     }
 }

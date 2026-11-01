@@ -1,12 +1,15 @@
 //! Sidebar page: the kit's SidebarPage (`templates/SidebarPage`) on the
 //! showcase mold, its two groups as the kit lays them, each sidebar in a
 //! gray card (`isGray`), centered: the scene and assets sidebar (its
-//! rows and their toggles, or its asset sections), the home sidebar (its dropdowns,
+//! rows and their toggles, or its asset sections), the design and
+//! animation sidebar (its groups, selects, switches and tiles), the home
+//! sidebar (its dropdowns,
 //! links and folders) and the guideline sidebar (the kit's own pages,
 //! this one current).
 //!
 //! Projected: a group per title, `sidebar_page.group[<g>]`; in it each
-//! sidebar a region, `sidebar_page.scene`, `sidebar_page.home` and
+//! sidebar a region, `sidebar_page.scene`, `sidebar_page.design`,
+//! `sidebar_page.home` and
 //! `sidebar_page.guideline`,
 //! with the parts each declares. A reader's `activate` (and
 //! `toggle_expanded` on a dropdown) runs the part as a press does.
@@ -16,7 +19,7 @@ use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::content::{Collapsible, DisclosureList};
 use engine::widgets::nav::{
-    GuidelineSidebar, HomeRow, HomeSidebar, NavLink, SceneItem, SceneSidebar,
+    DesignSidebar, GuidelineSidebar, HomeRow, HomeSidebar, NavLink, SceneItem, SceneSidebar,
 };
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect};
 use engine::widgets::wake::Wake;
@@ -28,6 +31,7 @@ use super::{After, Component, child_id, root_id, under};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Shows {
     Scene,
+    Design,
     Home,
     Guideline,
 }
@@ -43,6 +47,7 @@ pub struct SidebarPage {
     home: HomeSidebar,
     guideline: GuidelineSidebar,
     scene: SceneSidebar,
+    design: DesignSidebar,
     focus: Option<SemId>,
 }
 
@@ -144,10 +149,17 @@ impl SidebarPage {
         if let Some(id) = child_id(r, "scene") {
             scene = scene.sem(id);
         }
+        let mut design = DesignSidebar::kit();
+        if let Some(id) = child_id(r, "design") {
+            design = design.sem(id);
+        }
         let groups = vec![
             Group {
                 title: "Canvas Sidebar",
-                cards: vec![("Scene, Assets", Shows::Scene)],
+                cards: vec![
+                    ("Scene, Assets", Shows::Scene),
+                    ("Design, Animation", Shows::Design),
+                ],
             },
             Group {
                 title: "Home Sidebar",
@@ -160,6 +172,7 @@ impl SidebarPage {
             home,
             guideline,
             scene,
+            design,
             focus: None,
         }
     }
@@ -169,6 +182,7 @@ impl SidebarPage {
             Shows::Home => self.home.size(theme),
             Shows::Guideline => self.guideline.size(theme),
             Shows::Scene => self.scene.size(theme),
+            Shows::Design => self.design.size(theme),
         }
     }
 
@@ -207,7 +221,11 @@ impl SidebarPage {
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.home.wake(dt).merge(self.scene.wake(dt))
+        let switches = Wake::moving(self.design.tick(dt));
+        self.home
+            .wake(dt)
+            .merge(self.scene.wake(dt))
+            .merge(switches)
     }
 
     pub fn handle_event(
@@ -222,6 +240,7 @@ impl SidebarPage {
                 Shows::Home => self.home.handle_event(event, at, theme),
                 Shows::Guideline => self.guideline.handle_event(event, at, theme),
                 Shows::Scene => self.scene.handle_event(event, at, theme),
+                Shows::Design => self.design.handle_event(event, at, theme),
             };
             out = out.merge(r);
         }
@@ -252,10 +271,17 @@ impl SidebarPage {
                 Shows::Home => self.home.render(c, at, theme),
                 Shows::Guideline => self.guideline.render(c, at, theme),
                 Shows::Scene => self.scene.render(c, at, theme),
+                Shows::Design => self.design.render(c, at, theme),
             }
             c.pop_clip();
             let inset = theme.spacing.sm;
             showcase::chip(c, card.x + inset, card.y + inset, title, theme);
+        }
+        // An open select's list, over every card.
+        for (_, shows, _, at) in self.placed(content, theme) {
+            if shows == Shows::Design {
+                self.design.render_overlay(c, at, theme);
+            }
         }
     }
 
@@ -265,6 +291,7 @@ impl SidebarPage {
         self.guideline.set_focused(at);
         let part = id.and_then(|i| self.scene.part_at_id(i));
         self.scene.set_focused(part);
+        self.design.focus_id(id);
         self.focus = id.cloned();
     }
 }
@@ -297,6 +324,11 @@ impl Component for SidebarPage {
                             self.scene.project(b, id, title, Some(&at));
                         }
                     }
+                    Shows::Design => {
+                        if let Some(id) = self.design.sem_id() {
+                            self.design.project(b, id, title, Some(&at));
+                        }
+                    }
                 }
             }
         }
@@ -316,6 +348,9 @@ impl Component for SidebarPage {
             return Err(miss());
         }
         if self.home.activate(&req.target) {
+            return Ok(After::Nothing);
+        }
+        if self.design.activate(&req.target) {
             return Ok(After::Nothing);
         }
         if let Some(part) = self.scene.part_at_id(&req.target)

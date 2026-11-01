@@ -1,7 +1,7 @@
 //! The kit's SidebarPage (`templates/SidebarPage`): its four sidebars.
 //! [`HomeSidebar`] and [`GuidelineSidebar`] are the app's rails, a rim at
 //! their right; the canvas sidebars ([`SceneSidebar`], the scene and its
-//! assets, and `DesignSidebar`, design and animation) are rounded
+//! assets, and [`DesignSidebar`], design and animation) are rounded
 //! panels with a rim all round.
 //!
 //! What they share is here: the shell, the head with the logo, a group's
@@ -14,10 +14,12 @@
 //! The logo is a stand-in (a mark and the wordmark) until the Logo of
 //! front F is in the engine. TODO(task-104f): draw `Logo` here.
 
+mod design;
 mod guideline;
 mod home;
 mod scene;
 
+pub use design::{Block, BlockLayout, Body, DesignSidebar, DesignTab, End};
 pub use guideline::{GuideGroup, GuidelineSidebar};
 pub use home::{HomeLayout, HomeRow, HomeSidebar};
 pub use scene::{SceneItem, SceneLayout, ScenePart, SceneSidebar, SceneTab, Section};

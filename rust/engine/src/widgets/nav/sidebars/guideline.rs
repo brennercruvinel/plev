@@ -56,10 +56,9 @@ impl GuidelineSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
-        let mut n = 0;
-        for link in self.groups.iter_mut().flat_map(|g| g.links.iter_mut()) {
+        let links = self.groups.iter_mut().flat_map(|g| g.links.iter_mut());
+        for (n, link) in links.enumerate() {
             *link = link.clone().sem(id.key(n.to_string()));
-            n += 1;
         }
         self.sem = Some(id);
         self

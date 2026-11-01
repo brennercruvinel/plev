@@ -177,3 +177,55 @@ fn a_scene_row_selects_and_its_toggles_flip() {
     assert!(s.activate(ScenePart::Item(1)));
     assert_eq!(s.selected, Some(1));
 }
+
+/// Each tab's groups stack down the panel below the band, their ends in
+/// their title rows, the panel as tall as its groups or the kit's 876.
+#[test]
+fn the_design_groups_stack_in_each_tab() {
+    for theme in themes() {
+        for tab in [DesignTab::Design, DesignTab::Animation] {
+            let s = DesignSidebar::kit()
+                .tab(tab)
+                .sem(SemId::name("design").unwrap());
+            let (w, h) = s.size(&theme);
+            let frame = Rect::new(0.0, 0.0, w, h);
+            let l = s.layout(frame, &theme);
+            assert!(!l.is_empty());
+            for pair in l.windows(2) {
+                assert!(pair[0].body.bottom() <= pair[1].header.y + 0.01);
+            }
+            for g in &l {
+                assert!(g.end.y >= g.header.y && g.end.bottom() <= g.header.bottom());
+                assert!(g.body.right() <= frame.right() && g.body.bottom() <= frame.bottom());
+            }
+        }
+    }
+}
+
+/// A tile and a tab are picked by id, a switch flips.
+#[test]
+fn the_design_parts_answer_by_id() {
+    let mut s = DesignSidebar::kit().sem(SemId::name("design").unwrap());
+    let tile = s.tile_id(2, 1).unwrap();
+    assert!(s.activate(&tile));
+    assert!(s.focus_id(Some(&tile)));
+    let anim = SemId::name("design")
+        .unwrap()
+        .child("tabs")
+        .unwrap()
+        .key("1");
+    assert!(s.activate(&anim));
+    assert_eq!(s.current_tab(), DesignTab::Animation);
+    let blur = SemId::name("design")
+        .unwrap()
+        .child("block")
+        .unwrap()
+        .key("6")
+        .child("switch")
+        .unwrap();
+    assert!(s.activate(&blur));
+    let End::Switch(sw) = &s.blocks[6].end else {
+        panic!()
+    };
+    assert!(!sw.on);
+}

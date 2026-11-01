@@ -472,7 +472,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Sidebar",
         "layout-grid",
-        "The kit's sidebar page: the home sidebar with its dropdowns and folders, the guideline sidebar.",
+        "The kit's sidebar page: the scene and assets, design and animation, home and guideline sidebars.",
         Pane::Sidebar,
     ),
     page(
