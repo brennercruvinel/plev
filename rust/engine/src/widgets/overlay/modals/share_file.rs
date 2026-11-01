@@ -20,6 +20,7 @@ use crate::widgets::buttons::{Button, ButtonSize, ButtonVariant};
 use crate::widgets::form::Select;
 use crate::widgets::form::input_group::InputGroup;
 use crate::widgets::form::tokens::{Look, SelectLook};
+use crate::widgets::hit::min_target;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::{
@@ -196,7 +197,11 @@ impl ShareFile {
                 let sh = select.height_in(theme);
                 controls[k] = Rect::new(row.right() - f.pad - sw, at + (ph - sh) / 2.0, sw, sh);
                 let p = &f.person;
-                controls[k + 1] = Rect::new(row.right() - p.remove_w, at, p.remove_w, ph);
+                // the press area: the drawn 22 grown to the minimum
+                // target, from the row's end (`widgets::hit`); the render
+                // draws the kit's width at its end
+                let hit_w = p.remove_w.max(min_target(theme));
+                controls[k + 1] = Rect::new(row.right() - hit_w, at, hit_w, ph);
             }
             person_rows.push(row);
             at += ph;
@@ -389,7 +394,8 @@ impl ModalBody for ShareFile {
             if self.hovered != Some(i) && !self.controls.0[k].is_focused() {
                 continue;
             }
-            let r = l.controls[k];
+            let hit = l.controls[k];
+            let r = Rect::new(hit.right() - p.remove_w, hit.y, p.remove_w, hit.h);
             // `rounded-l-lg`: the end corners square under the clip.
             c.push(SceneNode::PushClip {
                 x: r.x,

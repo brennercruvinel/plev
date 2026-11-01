@@ -140,6 +140,9 @@ impl App {
             WindowEvent::CursorMoved { position, .. } => {
                 let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
                 let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
+                // a pointer moved: press areas back to the pointer's
+                // minimum (`engine::widgets::hit`)
+                engine::widgets::hit::set_touch_input(false);
                 self.set_cursor(id, (x, y));
                 if self.pointer(id, &WidgetEvent::MouseMove { x, y }) {
                     self.invalidate_in(id);
@@ -194,7 +197,11 @@ impl App {
             }
 
             // a finger (android, iOS): a tap clicks, a drag scrolls
-            WindowEvent::Touch(touch) => self.touched(id, &touch),
+            // a finger: press areas grow to the touch minimum
+            WindowEvent::Touch(touch) => {
+                engine::widgets::hit::set_touch_input(true);
+                self.touched(id, &touch);
+            }
 
             WindowEvent::MouseWheel { delta, .. } => {
                 let (x, y) = self.cursor_in(id);
