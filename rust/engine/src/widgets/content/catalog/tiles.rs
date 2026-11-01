@@ -128,7 +128,7 @@ pub(super) fn scene(card: &CatalogCard, c: &mut Compositor, b: Rect, theme: &The
         shadow_drops(c, LayerId::DEFAULT, at, t.badge_radius, &t.raised);
         boxed(c, at, t.badge_radius, k.paper, k.ring);
         let mid = (t.badge - t.icon) / 2.0;
-        let name = if *video { "video" } else { "image" };
+        let name = if *video { "kit-clapperboard" } else { "image" };
         icon(c, name, t.icon, k.ink, at.x + mid, at.y + mid);
     }
     let title_style = t.title.style(theme);

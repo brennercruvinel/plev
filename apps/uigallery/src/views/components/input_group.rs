@@ -21,13 +21,13 @@ use super::field::{FormPage, Group, card};
 
 /// The kit's Invite: who, in the inset box, and what they can do, in the
 /// select at its end.
-fn invite() -> InputGroup {
+pub(crate) fn invite() -> InputGroup {
     InputGroup::new("Email, name...")
         .look(Look::Inset)
         .end_select(Select::new(["can view", "can edit"], 0))
 }
 
-fn search() -> InputGroup {
+pub(crate) fn search() -> InputGroup {
     InputGroup::new("Search...")
         .start(Addon::Icon("search"))
         .end(Addon::Hint("⌘ K".into()))

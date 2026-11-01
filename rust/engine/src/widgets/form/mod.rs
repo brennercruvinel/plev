@@ -20,6 +20,7 @@ pub mod new_field;
 pub mod otp;
 pub mod textarea;
 pub mod tokens;
+pub mod upload_avatar;
 
 pub use checkbox::Checkbox;
 pub use select::Select;

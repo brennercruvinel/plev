@@ -273,6 +273,26 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
             under,
         );
     }
+    // the avatar upload's plus, a mark (1.4.11), on its scrim over each
+    // end of the photo and of the stand-in without one, laid on the
+    // disc's fill on a card
+    let u = &f.upload;
+    let disc = over(u.fill, card);
+    for (bg, ground) in [
+        ("form.upload.photo[0]", u.photo[0]),
+        ("form.upload.photo[1]", u.photo[1]),
+        ("form.upload.empty[0]", u.empty[0]),
+        ("form.upload.empty[1]", u.empty[1]),
+    ] {
+        let under = over(u.scrim, over(ground, disc));
+        add(
+            "form.upload.icon_color",
+            bg,
+            LARGE,
+            over(u.icon_color, under),
+            under,
+        );
+    }
     // task-104 front C: the inline alert on a card, its runs and its
     // unread dot, and the intent's icon on its badge (ink or paper,
     // whichever reads on the fill, `contrast_text`).
@@ -1067,8 +1087,8 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     out
 }
 
-/// The pairs that fail today, 110 of the 725 (core 41, hoff 19, dark 13,
-/// light 37), by theme, text and background, with the ratio the test
+/// The pairs that fail today, 116 of the 905 (core 46, hoff 19, dark 13,
+/// light 38), by theme, text and background, with the ratio the test
 /// measured (for the record; the test compares the list, not the
 /// numbers). Changing a theme's color is the design's decision (task-75
 /// phase 1 reports them); this list is how the test keeps counting until
@@ -1346,7 +1366,7 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         }
     }
     assert_eq!(
-        count, 889,
+        count, 905,
         "the pairs of the four themes (a new one is counted here)"
     );
     let listed = |p: &Pair| {
@@ -1383,6 +1403,36 @@ fn every_pair_of_the_four_themes_meets_aa_but_the_known_ones() {
         fixed.is_empty(),
         "these pairs pass now, take them off KNOWN: {fixed:?}"
     );
+}
+
+/// The avatar upload's scrim is the least share (in 8-bit steps) under
+/// which its plus reads at 3:1 on both images in every theme: one step
+/// less leaves it under on one of them.
+#[test]
+fn the_upload_scrim_is_the_least_that_reads() {
+    for (name, t) in themes() {
+        let u = &t.form.upload;
+        let page = over(t.colors.bg, [0.0; 3]);
+        let disc = over(u.fill, over(t.colors.surface, page));
+        let least = |share: f32| {
+            let scrim = Color::rgba(u.scrim.0[0], u.scrim.0[1], u.scrim.0[2], share);
+            u.photo
+                .iter()
+                .chain(&u.empty)
+                .map(|stop| {
+                    let under = over(scrim, over(*stop, disc));
+                    ratio(over(u.icon_color, under), under)
+                })
+                .fold(f64::INFINITY, f64::min)
+        };
+        let share = u.scrim.0[3];
+        assert!(least(share) >= LARGE, "{name}: {}", least(share));
+        let less = share - 1.0 / f32::from(u8::MAX);
+        assert!(
+            less < 0.0 || least(less) < LARGE,
+            "{name}: {share} is not the least"
+        );
+    }
 }
 
 /// WCAG 2.2 AAA: text (1.4.6).
