@@ -45,6 +45,8 @@ const PATH: u8 = 2;
 const STYLE_TABULAR: u8 = 1 << 0;
 /// the `style` bit of `OverflowWrap::Anywhere`.
 const STYLE_ANYWHERE: u8 = 1 << 1;
+/// the `style` bit of `OverflowWrap::BreakWord` (never with `Anywhere`'s).
+const STYLE_BREAK_WORD: u8 = 1 << 2;
 
 /// a text's wrap rule and OpenType features as one byte, 0 for the
 /// engine's defaults; the session file and the scene codec share it. the
@@ -55,22 +57,24 @@ pub(crate) fn style_bits(features: TextFeatures, wrap: OverflowWrap) -> u8 {
     let wrap = match wrap {
         OverflowWrap::Normal => 0,
         OverflowWrap::Anywhere => STYLE_ANYWHERE,
+        OverflowWrap::BreakWord => STYLE_BREAK_WORD,
     };
     wrap | if tabular_figures { STYLE_TABULAR } else { 0 }
 }
 
 /// the byte of `style_bits` read back; `None` with a bit no writer sets.
 pub(crate) fn from_style_bits(bits: u8) -> Option<(TextFeatures, OverflowWrap)> {
-    if bits & !(STYLE_TABULAR | STYLE_ANYWHERE) != 0 {
+    if bits & !(STYLE_TABULAR | STYLE_ANYWHERE | STYLE_BREAK_WORD) != 0 {
         return None;
     }
     let features = TextFeatures {
         tabular_figures: bits & STYLE_TABULAR != 0,
     };
-    let wrap = if bits & STYLE_ANYWHERE != 0 {
-        OverflowWrap::Anywhere
-    } else {
-        OverflowWrap::Normal
+    let wrap = match (bits & STYLE_ANYWHERE != 0, bits & STYLE_BREAK_WORD != 0) {
+        (false, false) => OverflowWrap::Normal,
+        (true, false) => OverflowWrap::Anywhere,
+        (false, true) => OverflowWrap::BreakWord,
+        (true, true) => return None,
     };
     Some((features, wrap))
 }
