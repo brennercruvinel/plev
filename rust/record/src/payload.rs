@@ -22,6 +22,7 @@ use std::sync::Arc;
 
 use engine::drawing::compositor::TextNodeKey;
 use engine::drawing::path::TessellatedPath;
+use engine::drawing::text::OverflowWrap;
 use motion::LoweredAsset;
 use motion::encoding::asset_path::{pack_chunks, unpack};
 
@@ -184,6 +185,9 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
         font_weight,
         letter_spacing_bits,
         font_family,
+        // the format has no field for it: a text comes back with the
+        // engine's default rule (see `put_key` in `scene/node.rs`)
+        overflow_wrap: OverflowWrap::Normal,
     })
 }
 

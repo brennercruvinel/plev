@@ -139,7 +139,9 @@ fn measure_text_node(
 
     let available_width = known.width.or(match available.width {
         AvailableSpace::Definite(w) => Some(w),
-        // Min-content: wrap as tightly as possible (widest unbreakable word).
+        // Min-content: wrap as tightly as possible. With the style's
+        // `OverflowWrap::Normal` that is the longest word; only an
+        // `Anywhere` text gets down to its widest grapheme.
         AvailableSpace::MinContent => Some(0.0),
         AvailableSpace::MaxContent => None,
     });

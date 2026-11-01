@@ -322,6 +322,7 @@ pub(crate) fn resolved_text_style(
         // The builder Style has no font-family modifier yet; when it grows
         // one, threading it here propagates to measure AND draw at once.
         font_family: None,
+        overflow_wrap: crate::drawing::text::OverflowWrap::Normal,
     }
 }
 
