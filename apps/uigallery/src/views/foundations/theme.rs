@@ -187,16 +187,15 @@ impl ThemePage {
     /// The color groups, then the palettes.
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let h = Metrics::of(theme).card_h();
-        let counts = color_groups(theme)
+        let groups = color_groups(theme);
+        let counts = groups
             .iter()
-            .map(|(_, colors)| colors.len())
-            .chain([THEMES.len()])
-            .collect::<Vec<_>>();
-        let grids = counts.into_iter().map(|n| Grid {
-            span: SPAN,
-            min_w: Self::min_w(theme),
-            heights: vec![h; n],
-        });
+            .map(|(title, colors)| (*title, colors.len()))
+            .chain([("Palettes", THEMES.len())])
+            .collect::<Vec<(&str, usize)>>();
+        let grids = counts
+            .into_iter()
+            .map(|(t, n)| Grid::new(t, SPAN, Self::min_w(theme), vec![h; n]));
         showcase::layout_grids(grids, content, theme)
     }
 

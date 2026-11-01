@@ -273,7 +273,7 @@ impl Modal {
     /// Sheet width in a `vw`-wide window: the modal's max, or the window
     /// less the breakpoint gutter on each side when that is narrower.
     pub fn width(theme: &Theme, vw: f32) -> f32 {
-        let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+        let gutter = theme.layout.gutter_at(vw);
         theme.overlay.modal.max_w.min((vw - gutter * 2.0).max(0.0))
     }
 
@@ -307,10 +307,28 @@ impl Modal {
         theme.overlay.modal.footer.0[3] > 0.0
     }
 
+    /// Whether the buttons stack, one across the sheet under the other: a
+    /// label, as it measures, has no room in the row (a footer's half, or
+    /// the row the two share at the end).
+    fn stacked(&self, theme: &Theme, w: f32) -> bool {
+        let m = &theme.overlay.modal;
+        let inner = w - m.pad * 2.0;
+        let (cw, _) = self.confirm.preferred_size(theme);
+        let (xw, _) = self.cancel.preferred_size(theme);
+        if Self::footed(theme) {
+            cw.max(xw) > (inner - m.button_gap) / 2.0
+        } else {
+            cw + m.button_gap + xw > inner
+        }
+    }
+
     /// The sheet `w` wide: its height.
     fn height(&self, theme: &Theme, w: f32) -> f32 {
         let m = &theme.overlay.modal;
-        let btn_h = self.confirm.size.height(theme);
+        let mut btn_h = self.confirm.size.height(theme);
+        if self.stacked(theme, w) {
+            btn_h = btn_h * 2.0 + m.button_gap;
+        }
         let text = self.top_pad(theme)
             + self.title_height(theme, w)
             + m.title_gap
@@ -364,6 +382,14 @@ impl Modal {
         let (cw, btn_h) = self.confirm.preferred_size(theme);
         let (xw, _) = self.cancel.preferred_size(theme);
         let by = dialog.y + dialog.h - m.pad - btn_h;
+        if self.stacked(theme, dialog.w) {
+            // across the sheet, in the row's order: the cancel, then the
+            // confirm under it
+            let w = (dialog.w - m.pad * 2.0).max(0.0);
+            let confirm = Rect::new(dialog.x + m.pad, by, w, btn_h);
+            let cancel = Rect::new(confirm.x, by - m.button_gap - btn_h, w, btn_h);
+            return (confirm, cancel);
+        }
         if Self::footed(theme) {
             // `flex-1`: the cancel first, the two sharing the band.
             let w = ((dialog.w - m.pad * 2.0 - m.button_gap) / 2.0).max(0.0);
@@ -540,99 +566,4 @@ impl Modal {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    const LONG: &str = "Are you sure you want to delete this file? It leaves every folder it is in, and nothing brings it back.";
-
-    #[test]
-    fn wrap_packs_words_into_the_width_and_keeps_a_hard_break() {
-        let theme = Theme::hoff_core();
-        let style = &body_style(&theme);
-        let lines = wrap(LONG, style, 200.0);
-        assert!(lines.len() > 1, "it wraps");
-        for (line, w) in &lines {
-            assert!(*w <= 200.0 || !line.contains(' '), "{line} fits");
-        }
-        let joined: Vec<&str> = lines.iter().map(|(l, _)| l.as_str()).collect();
-        assert_eq!(joined.join(" "), LONG, "every word, in order");
-        assert_eq!(wrap("one\ntwo", style, 200.0).len(), 2);
-        assert_eq!(
-            wrap("", style, 200.0).len(),
-            1,
-            "an empty line still holds its place"
-        );
-    }
-
-    /// On core each line of the body is centered on the sheet on its own,
-    /// and the sheet is as tall as its lines.
-    #[test]
-    fn a_centered_sheet_centers_each_line_and_grows_with_them() {
-        let theme = Theme::hoff_core();
-        let short = Modal::new("Delete file?", "Gone for good.", "Delete", "Cancel");
-        let long = Modal::new("Delete file?", LONG, "Delete", "Cancel");
-        let dialog = long.dialog_rect(&theme, 1280.0, 800.0);
-        assert!(dialog.h > short.dialog_rect(&theme, 1280.0, 800.0).h);
-        let mut c = Compositor::new();
-        c.begin_frame();
-        long.render_in(&mut c, LayerId::DEFAULT, &theme, dialog);
-        let m = &theme.overlay.modal;
-        let lines = wrap(LONG, &body_style(&theme), dialog.w - m.pad * 2.0);
-        let xs: Vec<f32> = c
-            .layer(LayerId::DEFAULT)
-            .map(|l| l.nodes().to_vec())
-            .unwrap_or_default()
-            .iter()
-            .filter_map(|n| match n {
-                SceneNode::Text { x, color, .. } if *color == m.body_color.0 => Some(*x),
-                _ => None,
-            })
-            .collect();
-        assert_eq!(xs.len(), lines.len(), "a node per line");
-        let middle = dialog.x + dialog.w / 2.0;
-        for (x, (line, w)) in xs.iter().zip(&lines) {
-            assert!((x + w / 2.0 - middle).abs() < 0.01, "{line} is centered");
-        }
-    }
-
-    /// With art the sheet's text starts under it, the art rises above the
-    /// sheet by its height less `art_bottom`, and the sheet with its art
-    /// is what is centered.
-    #[test]
-    fn the_art_rises_above_the_sheet_and_is_centered_with_it() {
-        let theme = Theme::hoff_core();
-        let m = &theme.overlay.modal;
-        let pixels = vec![255u8; 8 * 8 * 4];
-        let Ok(image) = crate::drawing::gpu::image::load_image_rgba(8, 8, pixels) else {
-            panic!("a square image loads");
-        };
-        let plain = Modal::new("Delete this file?", "Gone.", "Delete", "Cancel");
-        let art = plain.clone().art(image);
-        let bounds = Rect::new(0.0, 0.0, 1280.0, 1000.0);
-        let d = art.dialog_rect_in(&theme, bounds);
-        let over = art.overhang(&theme, d.w);
-        assert_eq!(
-            over,
-            d.w - m.art_bottom,
-            "a square art, as wide as the sheet"
-        );
-        assert_eq!(plain.overhang(&theme, d.w), 0.0);
-        let grew = art.height(&theme, d.w) - plain.height(&theme, d.w);
-        assert_eq!(grew, m.art_pad_top - m.pad, "the text starts under it");
-        let above = d.y - over - bounds.y;
-        let below = bounds.bottom() - d.bottom();
-        assert!((above - below).abs() < 0.01, "centered with its art");
-        let mut c = Compositor::new();
-        c.begin_frame();
-        art.render_in(&mut c, LayerId::DEFAULT, &theme, d);
-        let drawn = c
-            .layer(LayerId::DEFAULT)
-            .map(|l| l.nodes().to_vec())
-            .unwrap_or_default();
-        let at = drawn.iter().find_map(|n| match n {
-            SceneNode::Image { y, h, .. } => Some((*y, *h)),
-            _ => None,
-        });
-        assert_eq!(at, Some((d.y + m.art_bottom - d.w, d.w)));
-    }
-}
+mod tests;

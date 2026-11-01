@@ -143,8 +143,11 @@ impl TogglePage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        let groups = self.groups.iter().map(|g| (g.title, g.span, g.cards.len()));
+        showcase::layout_measured(groups, content, theme, |g, c, w| {
+            let toggle = &self.groups[g].cards[c].toggle;
+            Self::widget_rect(toggle, Rect::new(0.0, 0.0, w, 0.0), theme).h
+        })
     }
 
     /// The toggle's rect in its card: its intrinsic size, never wider
@@ -152,7 +155,7 @@ impl TogglePage {
     /// never narrower than an ellipsis, centered.
     fn widget_rect(toggle: &Toggle, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = toggle.preferred_size(theme);
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let w = w.min(room).max(toggle.min_width(theme));
         showcase::centered((w, h), card)
     }

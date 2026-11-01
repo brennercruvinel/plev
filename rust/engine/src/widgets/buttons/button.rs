@@ -63,10 +63,7 @@ impl ButtonSize {
 
     /// Label style, one source for measuring and drawing.
     pub fn text_style(self, theme: &Theme) -> TextStyle {
-        let m = self.metrics(theme);
-        theme
-            .typography
-            .exact(m.font_size, m.line_height, m.font_weight)
+        theme.typography.run(self.metrics(theme).text)
     }
 }
 
@@ -253,7 +250,11 @@ impl Button {
         );
 
         let style = self.size.text_style(theme);
-        let (text_w, _) = TextMeasurer::measure_styled(&self.label, &style, None);
+        // a button narrower than it asks (a phone, a larger text, a longer
+        // language) cuts its label with an ellipsis inside its padding
+        let room = (bounds.w - m.pad_x * 2.0 - self.icon_slot(&m)).max(0.0);
+        let label = TextMeasurer::truncate_to_width(&self.label, &style, room);
+        let (text_w, _) = TextMeasurer::measure_styled(&label, &style, None);
         let content_w = text_w + self.icon_slot(&m);
         let mut cx = bounds.x + (bounds.w - content_w) / 2.0;
 
@@ -277,7 +278,7 @@ impl Button {
         compositor.push_to_layer(
             layer,
             SceneNode::Text {
-                key: TextNodeKey::from_style(&self.label, &style, None),
+                key: TextNodeKey::from_style(&label, &style, None),
                 x: cx,
                 y: bounds.y + TextMeasurer::vertical_center(&style, bounds.h),
                 color: fg,

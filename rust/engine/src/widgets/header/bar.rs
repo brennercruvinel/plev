@@ -1,9 +1,14 @@
 //! A top bar of the kit: a row of parts across `theme.header`'s bar,
 //! with the free width after the part that pushes the rest away (the
 //! kit's `mr-auto`), and the parts that leave first when the row does not
-//! fit (back and forward, the kit's `max-lg:hidden`). The asset header's
-//! thumbnails float at the bar's middle (`absolute left-1/2`) while
-//! there is room between its two sides, and leave when there is not.
+//! fit (back and forward, the kit's `max-lg:hidden`; the asset header's
+//! download and share; Create, once the search is its button). The asset header's thumbnails float at the bar's
+//! middle (`absolute left-1/2`) while there is room between its two
+//! sides, and leave when there is not. The search gives way last, down
+//! to the narrowest useful field (`theme.size.field_min_w`); below that
+//! the row changes its composition: the search is its icon button (the
+//! minimal header's), and while its box has the caret it takes the row
+//! alone.
 //!
 //! The kit's three headers are constructors: [`Header::simple`] (with
 //! the filter, [`Header::simple_filters`], or the logo and the search at
@@ -23,10 +28,13 @@ use crate::styling::theme::Theme;
 use crate::widgets::buttons::Button;
 use crate::widgets::form::input_group::{Addon, InputGroup};
 use crate::widgets::form::tokens::Look;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 use super::logo::{Logo, LogoKind};
 use super::parts::{Action, ActionStyle, Avatar, Thumbs};
+
+mod layout;
 
 /// One part of the row.
 #[derive(Clone, Debug)]
@@ -48,8 +56,10 @@ pub struct HeaderSlot {
     pub grow: bool,
     /// The gap before it is the pair's (`gap-2`), not the row's.
     pub joined: bool,
-    /// It leaves when the row does not fit.
-    pub collapse: bool,
+    /// When it leaves the row that does not fit: `0` never, `1` first
+    /// (back and forward, the asset's download and share), `2` once the
+    /// search is already its button (Create).
+    pub leaves: u8,
 }
 
 fn slot(key: &'static str, item: HeaderItem) -> HeaderSlot {
@@ -58,7 +68,7 @@ fn slot(key: &'static str, item: HeaderItem) -> HeaderSlot {
         item,
         grow: false,
         joined: false,
-        collapse: false,
+        leaves: 0,
     }
 }
 
@@ -84,6 +94,10 @@ pub struct HeaderLayout {
     /// Per slot, `None` for one that left.
     pub slots: Vec<Option<Rect>>,
     pub thumbs: Option<Rect>,
+    /// The search is its icon button: the row has no room for its box.
+    pub compact: bool,
+    /// The logo shows its symbol alone: the row has no room for its name.
+    pub mark: bool,
 }
 
 /// The row's gap (`gap-4`, or the asset header's `gap-3`).
@@ -99,6 +113,8 @@ pub struct Header {
     pub thumbs: Option<Thumbs>,
     spacing: Spacing,
     focus: Option<HeaderPart>,
+    /// The search's icon button, where the row has no room for its box.
+    find: Action,
     sem: Option<SemId>,
 }
 
@@ -121,7 +137,10 @@ fn profile() -> HeaderSlot {
 }
 
 fn create() -> HeaderSlot {
-    slot("create", HeaderItem::Button(Button::new("Create")))
+    HeaderSlot {
+        leaves: 2,
+        ..slot("create", HeaderItem::Button(Button::new("Create")))
+    }
 }
 
 /// Back (disabled: nowhere to go back to) and forward, the pair that
@@ -132,7 +151,7 @@ fn arrows() -> [HeaderSlot; 2] {
         item: HeaderItem::Action(Action::new(icon, label, ActionStyle::Nav).disabled(disabled)),
         grow: false,
         joined,
-        collapse: true,
+        leaves: 1,
     };
     [
         pair("back", "arrow-left", "Back", true, false),
@@ -147,6 +166,7 @@ impl Header {
             thumbs: None,
             spacing,
             focus: None,
+            find: Action::new("search", "Search", ActionStyle::Plain),
             sem: None,
         }
     }
@@ -212,10 +232,11 @@ impl Header {
     pub fn asset(count: usize, current: usize) -> Self {
         let framed =
             |icon, label| HeaderItem::Action(Action::new(icon, label, ActionStyle::Framed));
+        let leaves = |s: HeaderSlot| HeaderSlot { leaves: 1, ..s };
         let slots = vec![
             slot("close", framed("x", "Close")).grow(),
-            slot("download", framed("download", "Download")),
-            slot("share", framed("forward", "Share")),
+            leaves(slot("download", framed("download", "Download"))),
+            leaves(slot("share", framed("forward", "Share"))),
             slot("add", HeaderItem::Button(Button::new("Add to Asset"))),
         ];
         let mut header = Self::of(slots, Spacing::Tight);
@@ -290,97 +311,6 @@ impl Header {
         })
     }
 
-    pub fn height(&self, theme: &Theme) -> f32 {
-        theme.header.height
-    }
-
-    fn gap(&self, theme: &Theme) -> f32 {
-        match self.spacing {
-            Spacing::Wide => theme.header.gap,
-            Spacing::Tight => theme.header.gap_tight,
-        }
-    }
-
-    fn item_size(item: &HeaderItem, theme: &Theme) -> (f32, f32) {
-        match item {
-            HeaderItem::Logo(l) => l.preferred_size(theme),
-            HeaderItem::Action(a) => a.size(theme),
-            HeaderItem::Search(g) => (theme.header.search_w, g.height(theme)),
-            HeaderItem::Button(b) => b.preferred_size(theme),
-            HeaderItem::Avatar(a) => a.size(theme),
-        }
-    }
-
-    /// Where each part goes in `bounds`, the bar.
-    pub fn layout(&self, bounds: Rect, theme: &Theme) -> HeaderLayout {
-        let h = &theme.header;
-        let room = (bounds.w - h.pad_x * 2.0).max(0.0);
-        let gap = self.gap(theme);
-        let sizes: Vec<_> = self
-            .slots
-            .iter()
-            .map(|s| Self::item_size(&s.item, theme))
-            .collect();
-        let width = |keep: &dyn Fn(&HeaderSlot) -> bool| {
-            let mut w = 0.0;
-            let mut first = true;
-            for (s, (sw, _)) in self.slots.iter().zip(&sizes) {
-                if !keep(s) {
-                    continue;
-                }
-                if !first {
-                    w += if s.joined { h.pair_gap } else { gap };
-                }
-                w += sw;
-                first = false;
-            }
-            w
-        };
-        let all = width(&|_| true);
-        let collapsed = all > room;
-        let keep = |s: &HeaderSlot| !(collapsed && s.collapse);
-        let used = width(&keep);
-        // The search gives way last, down to what is left of it.
-        let shrink = (used - room).max(0.0);
-        let free = (room - used).max(0.0);
-        let mid = bounds.y + bounds.h / 2.0;
-        let mut x = bounds.x + h.pad_x;
-        let mut first = true;
-        let mut slots = Vec::with_capacity(self.slots.len());
-        let (mut left_end, mut right_start) = (x, bounds.right() - h.pad_x);
-        let mut grown = false;
-        for (s, (sw, sh)) in self.slots.iter().zip(&sizes) {
-            if !keep(s) {
-                slots.push(None);
-                continue;
-            }
-            if !first {
-                x += if s.joined { h.pair_gap } else { gap };
-            }
-            first = false;
-            let w = match s.item {
-                HeaderItem::Search(_) => (sw - shrink).max(0.0),
-                _ => *sw,
-            };
-            if grown && right_start > x {
-                right_start = x;
-            }
-            slots.push(Some(Rect::new(x, mid - sh / 2.0, w, *sh)));
-            x += w;
-            if s.grow {
-                left_end = x;
-                x += free;
-                grown = true;
-            }
-        }
-        let thumbs = self.thumbs.as_ref().and_then(|t| {
-            let (tw, th) = t.size(theme);
-            let r = Rect::new(bounds.x + (bounds.w - tw) / 2.0, mid - th / 2.0, tw, th);
-            (r.x >= left_end + gap && r.right() <= right_start - gap).then_some(r)
-        });
-        HeaderLayout { slots, thumbs }
-    }
-
     /// The pointer, to every part.
     pub fn handle_event(
         &mut self,
@@ -397,6 +327,17 @@ impl Header {
             let got = match &mut s.item {
                 HeaderItem::Logo(w) => w.handle_event(event, r),
                 HeaderItem::Action(w) => w.handle_event(event, r),
+                // its icon button: a click gives the box the caret, and
+                // the box takes the row
+                HeaderItem::Search(w) if l.compact => {
+                    // the field folded to its icon presses in the least
+                    // target around it (44 px with a finger)
+                    let got = self.find.handle_event(event, hit_rect(r, theme));
+                    if got.clicked {
+                        w.input.set_focused(true);
+                    }
+                    got
+                }
                 HeaderItem::Search(w) => w.handle_event(event, r, theme),
                 HeaderItem::Button(w) => w.handle_event(event, r),
                 HeaderItem::Avatar(w) => w.handle_event(event, r),
@@ -496,8 +437,20 @@ impl Header {
                 c.bind_to_layer(layer, &id, [r.x, r.y, r.w, r.h]);
             }
             match &s.item {
+                HeaderItem::Logo(w) if l.mark => {
+                    w.clone()
+                        .kind(LogoKind::Symbol)
+                        .render_to_layer(c, layer, r, theme);
+                }
                 HeaderItem::Logo(w) => w.render_to_layer(c, layer, r, theme),
                 HeaderItem::Action(w) => w.render(c, layer, r, theme),
+                HeaderItem::Search(_) if l.compact => {
+                    if let Some(id) = self.slot_id(i) {
+                        let h = hit_rect(r, theme);
+                        c.bind_to_layer(layer, &id, [h.x, h.y, h.w, h.h]);
+                    }
+                    self.find.render(c, layer, r, theme);
+                }
                 HeaderItem::Search(w) => w.render_to_layer(c, layer, r, theme),
                 HeaderItem::Button(w) => w.render_to_layer(c, layer, r, theme),
                 HeaderItem::Avatar(w) => w.render(c, layer, r, theme),

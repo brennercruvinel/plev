@@ -276,7 +276,10 @@ impl Toolbar {
         let r = Self::recipe(theme);
         let zoom = self.layout(bounds, theme).zoom;
         let (w, h) = self.zoom.size(theme);
-        Rect::new(zoom.x + zoom.w - w, zoom.y + zoom.h + r.panel_gap, w, h)
+        // its end on the zoom's end, never past the bar's start (a bar
+        // narrower than the panel, a phone)
+        let x = (zoom.x + zoom.w - w).max(bounds.x);
+        Rect::new(x, zoom.y + zoom.h + r.panel_gap, w, h)
     }
 
     /// Hover, press and click on every part; the open panel takes what

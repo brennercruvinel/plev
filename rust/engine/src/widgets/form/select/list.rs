@@ -19,6 +19,7 @@ use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::form::tokens::PanelBody;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::recipe::{
     glass_pill, menu_shadow, rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets,
 };
@@ -115,6 +116,32 @@ impl Window {
             .clone()
             .rev()
             .find(|&i| self.row(i).contains(x, y))
+    }
+
+    /// The shown row a press at `(x, y)` lands on among those `pressable`
+    /// keeps, each pressed in [`hit_rect`] around its drawing (44 px with
+    /// a finger): the one drawn under the point, or else the nearest
+    /// whose grown area holds it, inside `panel` (the list's body, its
+    /// padding with it).
+    pub(crate) fn near(
+        &self,
+        x: f32,
+        y: f32,
+        panel: Rect,
+        theme: &Theme,
+        pressable: impl Fn(usize) -> bool,
+    ) -> Option<usize> {
+        if let Some(i) = self.at(x, y).filter(|&i| pressable(i)) {
+            return Some(i);
+        }
+        if !panel.contains(x, y) {
+            return None;
+        }
+        let off = |i: usize| (y - self.row(i).center().1).abs();
+        self.rows
+            .clone()
+            .filter(|&i| pressable(i) && hit_rect(self.row(i), theme).contains(x, y))
+            .min_by(|&a, &b| off(a).total_cmp(&off(b)))
     }
 }
 

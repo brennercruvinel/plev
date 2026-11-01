@@ -7,10 +7,11 @@
 //! value comes from the theme (`theme.disclosure.catalog`, `.item`). A
 //! photo of the kit is a rectangle in the catalog's image gradient.
 //!
-//! Each card is as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`,
-//! `h-59`, square) or as its widget needs, and each widget as wide as the
+//! Each card is as tall as its widget needs and, in a row of more than one,
+//! at least as tall as the kit's (`h-150`, `h-50`, `h-100`, `h-120`, `h-59`);
+//! the square group keeps its aspect. Each widget as wide as the
 //! kit draws it or as its card leaves: the rows drop a column where a card
-//! would get narrower than `showcase::CARD_MIN_W`.
+//! would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
 //! Projected: a group per title, `card_page.group[<g>]`; in it each card,
 //! `...card[<c>]`, a button with `selected` whose `activate` chooses it as
@@ -19,7 +20,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Theme, TypeRole};
 use engine::widgets::content::{CatalogCard, CatalogKind, Item, ItemShape, Plan};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 use engine::widgets::recipe::focus_ring_inside;
@@ -46,7 +47,8 @@ struct Card {
 struct Group {
     title: &'static str,
     span: usize,
-    /// The kit's card height (`h-150` is 600); `None` is square while
+    /// The kit's card height (`h-150` is 600), the least of a row of more
+    /// than one; `None` is square while
     /// the row keeps more than one card, and 1.8 times as wide as tall
     /// once a card takes the whole row (`aspect-square
     /// max-[1023px]:aspect-[1.8]`, CardsPage :160, where the kit's span
@@ -252,9 +254,12 @@ impl CardPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Rect>)> {
         let grids = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
-            let alone =
-                showcase::columns_at(g.span, showcase::CARD_MIN_W, content.w, theme.spacing.sm)
-                    == 1;
+            let alone = showcase::columns_at(
+                g.span,
+                showcase::card_min_w(theme),
+                content.w,
+                theme.spacing.sm,
+            ) == 1;
             let square = if alone && g.span > 1 {
                 card_w / WIDE_RATIO
             } else {
@@ -266,14 +271,14 @@ impl CardPage {
                 .iter()
                 .map(|c| {
                     let (_, h) = Self::widget_size(&c.body, room, theme);
-                    showcase::card_height(h, theme).max(g.height.unwrap_or(square))
+                    let least = if g.height.is_none() { square } else { 0.0 };
+                    showcase::card_height(h, theme).max(least)
                 })
                 .collect();
-            showcase::Grid {
-                span: g.span,
-                min_w: showcase::CARD_MIN_W,
-                heights,
-            }
+            // The kit's heights line a row of cards up; a card alone in
+            // its row is as tall as its widget (or its aspect).
+            let floor = g.height.unwrap_or(0.0);
+            showcase::Grid::new(g.title, g.span, showcase::card_min_w(theme), heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
             .into_iter()
@@ -389,7 +394,7 @@ impl CardPage {
 fn ratio(c: &mut Compositor, at: Rect, label: &str, theme: &Theme) {
     let k = &theme.disclosure.catalog.palette;
     let tile = &theme.disclosure.item;
-    let style = theme.typography.exact(12.0, 16.0, 500);
+    let style = theme.typography.run(TypeRole::Label.run());
     c.push(rounded_rect(
         at.x,
         at.y,

@@ -80,30 +80,38 @@ impl Card {
             self.dot(c, layer, av.x - off, av.y - off, true, theme);
         }
 
+        // Action pill (FollowButton): a `Sm` glass button, caption-sm, in
+        // half of what the avatar leaves at most; the name and the handle
+        // on one line each before it.
+        let text_x = av.x + av.w + m.gap + m.gap_sm;
+        let style = ty.run(TypeRole::Caption.strong());
+        let pad_x = theme.control.pad_x(ControlSize::Sm);
+        let room = (b.right() - pad - text_x) / 2.0;
+        let action = &Self::fit(action, &style, room - pad_x * 2.0);
+        let (tw, _) = TextMeasurer::measure_styled(action, &style, None);
+        let bh = theme.control.height(ControlSize::Sm);
+        let bw = (tw + pad_x * 2.0).max(bh * 2.0);
+        let btn = Rect::new(b.x + b.w - pad - bw, b.y + pad, bw, bh);
+
         // Name (base-2sm, primary) and username (caption-r, the meta
         // register text-tertiary, not the fainter placeholder tone, which
         // read gray-on-gray over the lifted card).
         let name_style = ty.role(TypeRole::BodyStrong);
-        let text_x = av.x + av.w + m.gap + m.gap_sm;
+        let name_w = btn.x - m.gap - text_x;
+        let name = &Self::fit(name, &name_style, name_w);
         self.text(c, layer, name, &name_style, text_x, b.y + pad, text.0, None);
+        let handle = ty.run(TypeRole::Caption.regular());
         self.text(
             c,
             layer,
-            username,
-            &ty.run(TypeRole::Caption.regular()),
+            &Self::fit(username, &handle, name_w),
+            &handle,
             text_x,
             b.y + pad + name_style.line_height + m.gap_sm / 2.0,
             theme.colors.text_dim.0,
             None,
         );
 
-        // Action pill (FollowButton): a `Sm` glass button, caption-sm.
-        let style = ty.run(TypeRole::Caption.strong());
-        let (tw, _) = TextMeasurer::measure_styled(action, &style, None);
-        let pad_x = theme.control.pad_x(ControlSize::Sm);
-        let bh = theme.control.height(ControlSize::Sm);
-        let bw = (tw + pad_x * 2.0).max(bh * 2.0);
-        let btn = Rect::new(b.x + b.w - pad - bw, b.y + pad, bw, bh);
         for node in glass_pill(
             btn,
             btn.h / 2.0,

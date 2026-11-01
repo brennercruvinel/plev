@@ -38,6 +38,7 @@ use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
 pub use super::text_input::keys::{ClipKey, EditKey};
 
+mod edge;
 pub(crate) mod render;
 
 /// Retained single-line text field over a [`TextInput`].
@@ -52,6 +53,8 @@ pub struct TextField {
     slots: [Slot; 2],
     /// Which input box it draws (`theme.form.recipe`).
     look: Look,
+    /// The border's fade between rest, hover and focus (`edge`).
+    edge: edge::EdgeFade,
 }
 
 impl TextField {
@@ -63,6 +66,7 @@ impl TextField {
             sem: None,
             slots: [Slot::Pad; 2],
             look: Look::Field,
+            edge: edge::EdgeFade::default(),
         }
     }
 
@@ -83,13 +87,13 @@ impl TextField {
     /// The style this field's text is measured, hit-tested and drawn
     /// with: its look's.
     pub fn style(&self, theme: &Theme) -> TextStyle {
-        self.recipe(theme).text.clone()
+        theme.typography.run(self.recipe(theme).text)
     }
 
     /// This field's height: its look's, never shorter than its line.
     pub fn box_height(&self, theme: &Theme) -> f32 {
         let r = self.recipe(theme);
-        r.height.max(r.text.line_height)
+        r.height.max(theme.typography.run(r.text).line_height)
     }
 
     /// Draw a bullet per grapheme in place of the text (a password); the
@@ -235,14 +239,16 @@ impl TextField {
 
     /// The text style the field measures, hit-tests and draws with.
     pub fn text_style(theme: &Theme) -> TextStyle {
-        theme.form.input.text.clone()
+        theme.typography.run(theme.form.input.text)
     }
 
     /// Canonical field height: the recipe's, never shorter than its line
     /// of text.
     pub fn height(theme: &Theme) -> f32 {
         let input = &theme.form.input;
-        input.height.max(input.text.line_height)
+        input
+            .height
+            .max(theme.typography.run(input.text).line_height)
     }
 
     /// Type `s` (characters or a pasted string). `false` when unfocused.
@@ -413,7 +419,12 @@ impl TextField {
     /// flip (`next`); blurred, nothing. The owner merges it with its
     /// other motion and the shell sleeps until the earliest deadline.
     pub fn wake(&mut self, dt: f32) -> Wake {
-        self.input.wake(dt)
+        let wake = self.input.wake(dt);
+        if self.edge.running() {
+            wake.merge(Wake::continuous())
+        } else {
+            wake
+        }
     }
 
     /// Hover tracks the bounds; a press inside focuses and places the
@@ -444,9 +455,12 @@ impl TextField {
             }
             return EventResult::IGNORED;
         }
+        // where a press lands: the box, grown to the least target around
+        // it (44 px with a finger, `widgets::hit`); the drawing is the box
+        let hit = crate::widgets::hit::hit_rect(bounds, theme);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let inside = bounds.contains(x, y);
+                let inside = hit.contains(x, y);
                 if inside != self.hovered {
                     self.hovered = inside;
                     EventResult::changed()
@@ -455,7 +469,7 @@ impl TextField {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if bounds.contains(x, y) {
+                if hit.contains(x, y) {
                     let style = self.style(theme);
                     let (text_x, _, text_w) = self.text_box(bounds, &style, theme, slots);
                     let fit = self.fit(&style, text_w, theme);

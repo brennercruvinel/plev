@@ -133,6 +133,13 @@ fn a_long_label_keeps_the_chevron_s_gap_from_the_counter() {
             let (cw, _) = c.counter_span(r, &theme).unwrap();
             let tile = c.tile_span(r).map_or(0.0, |(size, gap)| size + gap);
             let label_end = inner.x + tile + inner.label_w;
+            if inner.counter_below {
+                // under the label, which takes the row to the chevron
+                let chevron_x = inner.x + inner.w - r.chevron_box;
+                assert!(chevron_x - label_end >= r.chevron_gap - 0.01, "{w}px");
+                assert!(inner.stack_h > inner.label_h, "{w}px: stacked");
+                continue;
+            }
             let counter_x = inner.x + inner.w - r.chevron_box - r.chevron_gap - cw;
             assert!(counter_x - label_end >= r.chevron_gap - 0.01, "{w}px");
         }

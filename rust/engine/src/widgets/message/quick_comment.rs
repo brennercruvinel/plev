@@ -266,15 +266,37 @@ impl QuickComment {
         let row_y = line.bottom().max(avatar.bottom()) + t.tools_top;
         let tool = &t.tool;
         let (sw, sh) = self.send.preferred_size(theme);
-        let row_h = tool.size.max(sh);
+        let sw = sw.min(cw);
+        // `Send` at the tools' row's end; where the tools leave it no room
+        // (a phone, a larger text, a longer language), on a row of its
+        // own under them, its end on theirs
+        let n = self.tools.len() as f32;
+        let tools_end = cx + n * tool.size + (n - 1.0).max(0.0) * tool.gap;
+        let one_row = tools_end + tool.gap <= cx + cw - sw;
+        let row_h = if one_row {
+            tool.size.max(sh)
+        } else {
+            tool.size
+        };
         let tools = (0..self.tools.len())
             .map(|i| {
                 let x = cx + i as f32 * (tool.size + tool.gap);
                 Rect::new(x, row_y + (row_h - tool.size) / 2.0, tool.size, tool.size)
             })
             .collect();
-        let send = Rect::new(cx + cw - sw, row_y + (row_h - sh) / 2.0, sw, sh);
-        let bottom = row_y + row_h + t.comments_pad + t.pad;
+        let (send, rows_h) = if one_row {
+            (
+                Rect::new(cx + cw - sw, row_y + (row_h - sh) / 2.0, sw, sh),
+                row_h,
+            )
+        } else {
+            let below = row_y + row_h + tool.gap;
+            (
+                Rect::new(cx + cw - sw, below, sw, sh),
+                row_h + tool.gap + sh,
+            )
+        };
+        let bottom = row_y + rows_h + t.comments_pad + t.pad;
         QuickLayout {
             card: Rect::new(bounds.x, bounds.y, w, bottom - bounds.y),
             close,

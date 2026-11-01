@@ -14,7 +14,7 @@
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::widget::{Rect, with_alpha};
@@ -86,13 +86,19 @@ impl Label {
         self.disabled
     }
 
-    /// The style the label is measured and drawn with.
+    /// The style the label is measured and drawn with; wrapped, a word
+    /// wider than the line on its own (a larger text, a longer language)
+    /// breaks between its letters, and a layout never shrinks it below
+    /// its longest word (`OverflowWrap::BreakWord`).
     pub fn style(&self, theme: &Theme) -> TextStyle {
         let l = &theme.form.label;
-        match self.kind {
-            LabelKind::Field => l.text.clone(),
-            LabelKind::Caption => l.caption.clone(),
-        }
+        theme
+            .typography
+            .run(match self.kind {
+                LabelKind::Field => l.text,
+                LabelKind::Caption => l.caption,
+            })
+            .with_overflow_wrap(OverflowWrap::BreakWord)
     }
 
     fn color(&self, theme: &Theme) -> [f32; 4] {

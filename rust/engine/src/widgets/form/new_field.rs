@@ -24,6 +24,7 @@ use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::Look;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -156,17 +157,22 @@ impl NewField {
     /// Where the parts go, from the top left of `bounds`, as wide as they
     /// measure, never past its width.
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> NewFieldLayout {
+        let scale = &theme.typography;
         let e = &theme.form.edit;
         let h = e.box_h.max(e.icon);
         let room = (bounds.w - e.gap - e.icon).max(0.0);
         let text_w = if self.editing {
             let shown = [self.input.text(), self.input.input.placeholder.as_str()]
-                .map(|t| TextMeasurer::measure_styled(t, &e.text, None).0.ceil())
+                .map(|t| {
+                    TextMeasurer::measure_styled(t, &scale.run(e.text), None)
+                        .0
+                        .ceil()
+                })
                 .into_iter()
                 .fold(e.box_w, f32::max);
             shown + theme.control.focus_ring_width
         } else {
-            TextMeasurer::measure_styled(&self.value, &e.text, None)
+            TextMeasurer::measure_styled(&self.value, &scale.run(e.text), None)
                 .0
                 .ceil()
         }
@@ -180,6 +186,23 @@ impl NewField {
         );
         let whole = Rect::new(bounds.x, bounds.y, icon.right() - bounds.x, h);
         NewFieldLayout { whole, text, icon }
+    }
+
+    /// Where a press lands (WCAG 2.5.8): the value (or the box) and the
+    /// icon of `l`, each grown to the least target around its centre; at
+    /// rest the pencil's area stays inside the value's, which a press
+    /// anywhere on edits too.
+    fn hits(&self, l: &NewFieldLayout, theme: &Theme) -> (Rect, Rect) {
+        let mut icon = hit_rect(l.icon, theme);
+        if self.editing {
+            return (hit_rect(l.text, theme), icon);
+        }
+        let whole = hit_rect(l.whole, theme);
+        icon.x = icon.x.min(whole.right() - icon.w).max(whole.x);
+        icon.y = icon
+            .y
+            .clamp(whole.y, (whole.bottom() - icon.h).max(whole.y));
+        (whole, icon)
     }
 
     /// Its size in a room `w` wide.
@@ -201,9 +224,10 @@ impl NewField {
         if self.input.disabled {
             return EventResult::IGNORED;
         }
+        let (whole, icon) = self.hits(&l, theme);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let over = l.whole.contains(x, y);
+                let over = whole.contains(x, y) || icon.contains(x, y);
                 let mut r = self.input.handle_event(event, l.text, theme);
                 if over != self.hovered {
                     self.hovered = over;
@@ -212,7 +236,7 @@ impl NewField {
                 r
             }
             WidgetEvent::MouseDown { x, y } if !self.editing => {
-                if l.whole.contains(x, y) {
+                if whole.contains(x, y) {
                     self.edit();
                     EventResult::clicked()
                 } else {
@@ -220,10 +244,10 @@ impl NewField {
                 }
             }
             WidgetEvent::MouseDown { x, y } => {
-                if l.icon.contains(x, y) {
+                if icon.contains(x, y) {
                     self.save();
                     EventResult::clicked()
-                } else if l.text.contains(x, y) {
+                } else if whole.contains(x, y) {
                     self.input.handle_event(event, l.text, theme)
                 } else {
                     self.save();
@@ -240,6 +264,7 @@ impl NewField {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let layer = LayerId::DEFAULT;
         let l = self.layout(bounds, theme);
         let e = &theme.form.edit;
@@ -251,8 +276,9 @@ impl NewField {
             1.0
         };
         let fade = |color: Color| with_alpha(color, color.0[3] * faded);
+        let (whole, icon) = self.hits(&l, theme);
         if let Some(id) = self.icon_id() {
-            let r = l.icon;
+            let r = icon;
             c.bind_to_layer(layer, &id, [r.x, r.y, r.w, r.h]);
         }
         let (name, tint) = if self.editing {
@@ -269,14 +295,14 @@ impl NewField {
             self.input.render(c, l.text, theme);
         } else {
             if let Some(id) = &self.sem {
-                let r = l.whole;
+                let r = whole;
                 c.bind_to_layer(layer, id, [r.x, r.y, r.w, r.h]);
             }
-            let shown = TextMeasurer::truncate_to_width(&self.value, &e.text, l.text.w);
+            let shown = TextMeasurer::truncate_to_width(&self.value, &scale.run(e.text), l.text.w);
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&shown, &e.text, None),
+                key: TextNodeKey::from_style(&shown, &scale.run(e.text), None),
                 x: l.text.x,
-                y: l.text.y + TextMeasurer::vertical_center(&e.text, l.text.h),
+                y: l.text.y + TextMeasurer::vertical_center(&scale.run(e.text), l.text.h),
                 color: fade(e.color),
             });
         }

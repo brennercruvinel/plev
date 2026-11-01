@@ -2,7 +2,10 @@
 //! HomePage`, titled Branding): one group of three cards, a row of them
 //! wide, the logo in each, the symbol, the wordmark and both. The logo is
 //! `engine::widgets::header::Logo`; every visual value is
-//! `theme.header.logo`.
+//! `theme.header.logo`. The cards are as tall as the kit's narrowest
+//! step in narrow content and its widest in wide, on the theme's fluid
+//! line between them, never shorter than the logo in the stage's pads:
+//! no step at a width (ADR 0073).
 //!
 //! Projected: the group `home_page.group[0]`, and in it each card's logo
 //! as the link home, `home_page.group[0].card[<c>]`, described by its
@@ -10,7 +13,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Theme, fluid};
 use engine::widgets::header::{Logo, LogoKind};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
@@ -18,14 +21,12 @@ use super::showcase::{self, GroupLayout};
 use super::topbar::PRODUCT;
 use super::{After, Component, child_id, root_id, under};
 
-/// The cards' height, `h-154.5`, and `max-[1419px]:h-80` below the
-/// window the kit calls wide.
-const CARD_TALL: f32 = 618.0;
-const CARD_SHORT: f32 = 320.0;
-/// The content width of the kit's widest step: its 1419 px window less
-/// the guideline sidebar (`pl-55`, 220) and the group's padding (`p-12`,
-/// twice 48).
-const WIDE_CONTENT: f32 = 1419.0 - 220.0 - 2.0 * 48.0;
+/// The cards' height at the kit's ends (`templates/HomePage/index.tsx:15`,
+/// `h-154.5 max-[1419px]:h-80 max-[1023px]:h-60`): `h-60` in its
+/// narrowest window, `h-154.5` in its widest. The `h-80` between is a
+/// point the line passes near, not a step.
+const CARD_NARROW: f32 = 240.0;
+const CARD_WIDE: f32 = 618.0;
 /// Three to a row (`span={3}`).
 const SPAN: usize = 3;
 
@@ -74,13 +75,23 @@ impl HomePage {
         }
     }
 
+    /// The cards' height in `content`: from the kit's narrow height to
+    /// its wide one over the widths the theme's type grows across, and
+    /// at least the tallest logo with the stage's pad above and below.
+    fn card_h(&self, content: Rect, theme: &Theme) -> f32 {
+        let range = theme.typography.roles.range;
+        let fluid = fluid(content.w, range, [CARD_NARROW, CARD_WIDE]).round();
+        let logo = self
+            .cards
+            .iter()
+            .map(|c| c.logo.preferred_size(theme).1)
+            .fold(0.0, f32::max);
+        fluid.max(logo + showcase::pad(content.w, theme) * 2.0)
+    }
+
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let h = if content.w > WIDE_CONTENT {
-            CARD_TALL
-        } else {
-            CARD_SHORT
-        };
-        showcase::layout_sized([(SPAN, vec![h; self.cards.len()])], content, theme)
+        let h = self.card_h(content, theme);
+        showcase::layout_untitled(SPAN, vec![h; self.cards.len()], content, theme)
     }
 
     fn logo_rect(logo: &Logo, card: Rect, theme: &Theme) -> Rect {
@@ -189,8 +200,8 @@ impl Component for HomePage {
 mod tests {
     use super::*;
 
-    /// The template's three cards in its order, three to a row and tall
-    /// when wide, short when not, each logo centered in its card.
+    /// The template's three cards in its order, three to a row and as
+    /// tall as the kit at its ends, each logo centered in its card.
     #[test]
     fn the_page_is_the_kit_s_branding() {
         let page = HomePage::new();
@@ -200,9 +211,11 @@ mod tests {
         let wide = Rect::new(0.0, 0.0, 1200.0, 900.0);
         let cards = &page.layout(wide, &theme)[0].cards;
         assert_eq!(cards[0].y, cards[2].y, "one row");
-        assert_eq!(cards[0].h, CARD_TALL);
-        let narrow = Rect::new(0.0, 0.0, 1000.0, 900.0);
-        assert_eq!(page.layout(narrow, &theme)[0].cards[0].h, CARD_SHORT);
+        let [_, to] = theme.typography.roles.range;
+        let widest = Rect::new(0.0, 0.0, to, 900.0);
+        assert_eq!(page.layout(widest, &theme)[0].cards[0].h, CARD_WIDE);
+        let phone = Rect::new(0.0, 0.0, 320.0, 900.0);
+        assert_eq!(page.layout(phone, &theme)[0].cards[0].h, CARD_NARROW);
         for (card, rect) in page.cards.iter().zip(cards) {
             let r = HomePage::logo_rect(&card.logo, *rect, &theme);
             assert!((r.x + r.w / 2.0 - (rect.x + rect.w / 2.0)).abs() <= 0.5);
@@ -210,5 +223,26 @@ mod tests {
         }
         let [symbol, word, full] = [0, 1, 2].map(|i| page.cards[i].logo.preferred_size(&theme));
         assert!(full.0 > word.0 && word.0 > symbol.0);
+    }
+
+    /// From a phone to a wide window the cards grow a pixel at a time:
+    /// no width where the height jumps (the kit's 1419 and 1023 steps
+    /// are gone), and never less than the logo in the stage's pads.
+    #[test]
+    fn the_cards_grow_with_the_width_without_a_step() {
+        let page = HomePage::new();
+        let theme = Theme::hoff_core();
+        let mut last = 0.0;
+        for w in (280..=1800).step_by(4) {
+            let content = Rect::new(0.0, 0.0, w as f32, 900.0);
+            let h = page.layout(content, &theme)[0].cards[0].h;
+            assert!(h >= last, "{w}: it only grows");
+            if last > 0.0 {
+                assert!(h - last <= 2.0, "{w}: {last} to {h}, a step");
+            }
+            let logo = page.cards[2].logo.preferred_size(&theme).1;
+            assert!(h >= logo + showcase::pad(content.w, &theme) * 2.0, "{w}");
+            last = h;
+        }
     }
 }

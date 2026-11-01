@@ -183,7 +183,7 @@ impl SelectPage {
 
     /// The select's size in a card `card_w` wide.
     fn size(e: &Entry, card_w: f32, theme: &Theme) -> (f32, f32) {
-        let room = (card_w - theme.spacing.lg * 2.0).max(0.0);
+        let room = showcase::room(card_w, theme);
         let w = if e.fixed {
             theme.form.select.width
         } else {
@@ -202,7 +202,7 @@ impl SelectPage {
                 .entries
                 .iter()
                 .map(|e| showcase::card_height(Self::size(e, w, theme).1, theme));
-            (g.entries.len(), h.collect())
+            (g.title, g.entries.len(), h.collect())
         });
         showcase::layout_sized(wanted, content, theme)
             .into_iter()

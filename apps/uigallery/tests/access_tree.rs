@@ -631,6 +631,9 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
             "alert_page.group[3].card[0].alert[0]",
             "alert_page.group[3].card[1].alert[0]",
             "capture.status",
+            // task-104t: the empty states that read as what they show
+            "combobox_page.group[3].card[0]",
+            "comments_page.group[1].card[3].empty",
             "files.status",
             // task-104 front C, wave 3: the notification variations (the
             // dropdown's rows are list items)

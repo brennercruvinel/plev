@@ -140,8 +140,8 @@ fn measure_text_node(
     let available_width = known.width.or(match available.width {
         AvailableSpace::Definite(w) => Some(w),
         // Min-content: wrap as tightly as possible. With the style's
-        // `OverflowWrap::Normal` that is the longest word; only an
-        // `Anywhere` text gets down to its widest grapheme.
+        // `OverflowWrap::Normal` or `BreakWord` that is the longest word;
+        // only an `Anywhere` text gets down to its widest grapheme.
         AvailableSpace::MinContent => Some(0.0),
         AvailableSpace::MaxContent => None,
     });
@@ -150,7 +150,16 @@ fn measure_text_node(
         (a, b) => a.or(b),
     };
 
-    let (width, height) = TextMeasurer::measure_styled(&spec.content, &spec.style, wrap_width);
+    let min_wrap = spec.style.overflow_wrap.min_content();
+    let (width, height) = if known.width.is_none()
+        && matches!(available.width, AvailableSpace::MinContent)
+        && min_wrap != spec.style.overflow_wrap
+    {
+        let style = spec.style.clone().with_overflow_wrap(min_wrap);
+        TextMeasurer::measure_styled(&spec.content, &style, wrap_width)
+    } else {
+        TextMeasurer::measure_styled(&spec.content, &spec.style, wrap_width)
+    };
     taffy::Size {
         width: known.width.unwrap_or(width),
         height: known.height.unwrap_or(height),

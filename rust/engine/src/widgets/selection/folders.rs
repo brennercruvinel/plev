@@ -26,7 +26,7 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::{ButtonSurface, Theme};
+use crate::styling::theme::{ButtonSurface, Theme, TypeRole, TypeRun};
 use crate::widgets::buttons::paint_surface;
 use crate::widgets::form::TextField;
 use crate::widgets::form::tokens::{Look, Slot};
@@ -72,9 +72,7 @@ pub struct FoldersTokens {
     pub icon: f32,
     pub gap: f32,
     pub label: Color,
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    pub text: TypeRun,
     /// The new-folder icon and the search icon.
     pub mark: Color,
     /// The folders' colors, in turn.
@@ -147,9 +145,7 @@ impl FoldersTokens {
             icon: 20.0,
             gap: 12.0,
             label: ink,
-            font_size: 12.0,
-            line_height: 16.0,
-            font_weight: 600,
+            text: TypeRole::BodyStrong.run(),
             mark: mark_on(
                 &[SHADES[5], SHADES[6]],
                 &[
@@ -406,10 +402,7 @@ impl Folders {
     }
 
     fn style(theme: &Theme) -> TextStyle {
-        let t = &theme.selection.folders;
-        theme
-            .typography
-            .exact(t.font_size, t.line_height, t.font_weight)
+        theme.typography.run(theme.selection.folders.text)
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
@@ -492,8 +485,11 @@ impl Folders {
                 c.push(n);
             }
             let x = sx + t.slot + t.gap;
+            // one line, the row's: a longer name is cut with an ellipsis
+            let room = (r.right() - x).max(0.0);
+            let label = crate::drawing::text::TextMeasurer::truncate_to_width(label, &style, room);
             c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(label, &style, Some((r.right() - x).max(0.0))),
+                key: TextNodeKey::from_style(&label, &style, Some(room)),
                 x,
                 y: r.y + (r.h - style.line_height) / 2.0,
                 color: t.label.0,

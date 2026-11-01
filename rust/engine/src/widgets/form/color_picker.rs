@@ -334,7 +334,7 @@ impl ColorPicker {
     /// is [`height`](Self::height) tall).
     pub fn layout(&self, bounds: Rect, theme: &Theme) -> ColorPickerLayout {
         let k = &theme.form.color;
-        let style = &theme.form.bare.text;
+        let style = &theme.typography.run(theme.form.bare.text);
         let whole = Rect::new(bounds.x, bounds.y, bounds.w, self.height(theme));
         let edge = k.border_width + k.pad;
         let inner = Rect::new(
@@ -462,6 +462,7 @@ impl ColorPicker {
     }
 
     pub fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let layer = LayerId::DEFAULT;
         let k = &theme.form.color;
         let l = self.layout(bounds, theme);
@@ -521,9 +522,9 @@ impl ColorPicker {
         self.alpha.render(c, l.alpha, theme);
         let bare = &theme.form.bare;
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(PERCENT, &bare.text, None),
+            key: TextNodeKey::from_style(PERCENT, &scale.run(bare.text), None),
             x: l.suffix.x,
-            y: l.suffix.y + TextMeasurer::vertical_center(&bare.text, l.suffix.h),
+            y: l.suffix.y + TextMeasurer::vertical_center(&scale.run(bare.text), l.suffix.h),
             color: fade(bare.text_color),
         });
     }

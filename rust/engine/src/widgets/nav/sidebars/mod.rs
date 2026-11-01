@@ -85,13 +85,17 @@ pub(crate) fn caption(c: &mut Compositor, label: &str, x: f32, y: f32, w: f32, t
     let t = &theme.navigation.sidebars;
     let style = t.caption.style(&theme.typography);
     let at = x + t.caption_pad;
+    // one line, as `caption_h` lays it: cut with an ellipsis where a
+    // larger text or a longer language runs past the sidebar
+    let room = (w - t.caption_pad * 2.0).max(0.0);
+    let label = TextMeasurer::truncate_to_width(label, &style, room);
     c.push(text(
-        label,
+        &label,
         &style,
         at,
         y + t.caption_pad,
         t.caption_color.0,
-        Some((w - t.caption_pad * 2.0).max(0.0)),
+        Some(room),
     ));
 }
 
@@ -141,9 +145,7 @@ pub(crate) fn folder_row(
     if let Some(n) = icons::icon_at(icon.0, t.icon, icon.1, ix, r.y + (r.h - t.icon) / 2.0) {
         c.push(n);
     }
-    let style = theme
-        .typography
-        .exact(t.font_size, t.line_height, t.font_weight);
+    let style = theme.typography.run(t.text);
     let x = sx + t.slot + t.gap;
     // one line: a long name ends in an ellipsis, never wraps in the row
     let shown = TextMeasurer::truncate_to_width(label, &style, (r.right() - x).max(0.0));

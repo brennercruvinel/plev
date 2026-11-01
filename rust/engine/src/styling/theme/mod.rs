@@ -1,19 +1,25 @@
+mod adapt;
 mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
+pub mod legibility;
 pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
+mod text_scale;
 pub(crate) mod tokens;
 
+pub use self::adapt::{Contrast, Prefs};
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
+pub use self::legibility::Bar;
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
-    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
+    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens, fluid,
 };
+pub use self::text_scale::TextScale;
 pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
     TypographyScale,
@@ -156,6 +162,7 @@ impl Theme {
                 mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
                 roles: TypeRoles::derive([10.0, 11.0, 13.0, 16.0, 20.0, 28.0, 36.0], 0.0),
+                text_scale: TextScale::IDENTITY,
             },
             spacing: SpacingScale {
                 xs: 4.0,
@@ -183,7 +190,10 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
+        theme.hold_edges(Bar::AA);
         theme
     }
 
@@ -213,7 +223,10 @@ impl Theme {
             colors,
             ..Self::dark()
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
+        theme.hold_edges(Bar::AA);
         theme
     }
 
@@ -383,10 +396,34 @@ impl Theme {
         Some(theme)
     }
 
+    /// The root colors held to `bar` (`legibility::settle`): each color of
+    /// the palette and of the glass moved the least it must, none that
+    /// already reads. The four built-in themes take it before their
+    /// buttons and front slots derive from the palette.
+    pub(crate) fn settle_colors(&mut self, bar: Bar) {
+        legibility::settle(&mut self.colors, &mut self.glass, bar);
+    }
+
+    /// The edges of the fields (Brenner's decision B, task-104): at rest
+    /// the theme's own (the kit's pale gray), or `bar.edge` where the bar
+    /// holds the edges (more contrast); focused, strong enough to find the
+    /// field in use (3:1 on the card, WCAG 1.4.11); hovered, where the
+    /// design keeps the rest's, halfway between the two (the kit's step,
+    /// #E2E2E2 to #C4C4C4). The field fades between them
+    /// (`text_field::edge`). A border the design leaves out (transparent)
+    /// stays out. The form's own tokens already hold the focus and the
+    /// hover (`FormTokens::hold_edges`); this adds the rest where `bar`
+    /// holds the edges.
+    pub(crate) fn hold_edges(&mut self, bar: Bar) {
+        let ground = [self.colors.bg, self.colors.surface];
+        self.form.hold_edges(ground, bar.edge);
+    }
+
     /// task-104: each front's slot derived from the theme built so far
     /// (palette, glass, shapes), the last step of every constructor but
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
+        self.layout.gutter = LayoutTokens::gutter_of(&self.spacing);
         *self.form = FormTokens::derive(self);
         *self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);

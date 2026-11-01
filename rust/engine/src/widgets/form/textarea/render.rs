@@ -138,7 +138,11 @@ impl TextArea {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(m.text(), &form.field.message, Some(at.w)),
+                    key: TextNodeKey::from_style(
+                        m.text(),
+                        &theme.typography.run(form.field.message),
+                        Some(at.w),
+                    ),
                     x: at.x,
                     y: at.y,
                     color: fade(color),

@@ -178,7 +178,9 @@ mod tests {
                                 "{what}: a cell out of the code"
                             );
                             assert!(cell.bottom() <= card.bottom() + 0.5, "{what}: cell");
-                            assert!(cell.h >= theme.form.input.text.line_height);
+                            assert!(
+                                cell.h >= theme.typography.run(theme.form.input.text).line_height
+                            );
                         }
                         for pair in l.cells.windows(2) {
                             let apart = pair[0].right() <= pair[1].x + 0.01

@@ -11,7 +11,7 @@ use engine::compose::view::ViewContext;
 use engine::drawing::compositor::{Compositor, SceneNode};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::color::Color;
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Theme, TypeRole, TypeRun};
 use engine::widgets::content::{CodeBlock, CodeLine, LineKind};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
@@ -67,20 +67,23 @@ const ACTIONS: [(&str, CounterMsg); 3] = [
 
 /// Source shown in the panel; mirrors `demo_tree` below.
 const CODE: &[&str] = &[
-    "fn action(label: &str) -> Element {",
-    "    div().px(14).py(8).rounded(8).child(text(label))",
+    "fn action(label: &str, ty: &TypographyScale) -> Element {",
+    "    let style = ty.role(TypeRole::Heading);",
+    "    div().px(14).py(8).rounded(8)",
+    "        .child(text(label).text_style(&style))",
     "}",
-    "fn counter(n: i64) -> Element {",
+    "fn counter(n: i64, ty: &TypographyScale) -> Element {",
+    "    let title = ty.run(TypeRole::Title.strong());",
+    "    let count = ty.run(TypeRole::TitleLg.strong());",
     "    div().col().gap(10).p(24)",
     "        .bg(glass.surface).rounded(20)",
-    "        .child(text(\"Counter\")",
-    "            .font_size(16).font_weight(600))",
+    "        .child(text(\"Counter\").text_style(&title))",
     "        .child(div().row().wrap().gap(12)",
-    "            .child(action(\"-1\").on_click(|_| send(Dec)))",
+    "            .child(action(\"-1\", ty).on_click(|_| send(Dec)))",
     "            .child(div().px(18).py(6)",
-    "                .child(text(&n.to_string())))",
-    "            .child(action(\"+1\").on_click(|_| send(Inc)))",
-    "            .child(action(\"Reset\").on_click(|_| send(Reset))))",
+    "                .child(text(&n.to_string()).text_style(&count)))",
+    "            .child(action(\"+1\", ty).on_click(|_| send(Inc)))",
+    "            .child(action(\"Reset\", ty).on_click(|_| send(Reset))))",
     "}",
 ];
 
@@ -147,9 +150,8 @@ impl BuilderPage {
     /// derives from the content rect; only the row wraps below MIN_DEMO_W.
     fn demo_tree(&self, w: f32, theme: &Theme) -> Element {
         let (g, tc, r) = (&theme.glass, &theme.colors, theme.radius.md);
-        let t = |s: &str, fs: f32, fw: u16, c: Color| {
-            btext(s).font_size(fs).font_weight(fw).text_color(c)
-        };
+        let ty = &theme.typography;
+        let t = |s: &str, run: TypeRun, c: Color| btext(s).text_style(&ty.run(run)).text_color(c);
         let mut row = div().row().wrap().gap(12.0).align_center().pt(4.0);
         for (i, &(label, _)) in ACTIONS.iter().enumerate() {
             let hov = self.hover == Some(i);
@@ -159,23 +161,37 @@ impl BuilderPage {
             // The builder's `button` writes its label in a fixed light
             // ink, unreadable on a light theme's button: the same box, its
             // label in the theme's text.
-            let label = t(label, 14.0, 500, tc.text);
+            let label = t(label, TypeRole::Heading.run(), tc.text);
             let action = div().bg(bg).rounded(r).px(14.0).py(8.0).child(label);
             row = row.child(action.on_click(|_| {}));
             if i == 0 {
                 let pill = div().px(18.0).py(6.0).bg(g.surface_active).rounded(r);
-                row = row.child(pill.child(t(&self.state.count.to_string(), 18.0, 700, tc.text)));
+                row = row.child(pill.child(t(
+                    &self.state.count.to_string(),
+                    TypeRole::TitleLg.strong(),
+                    tc.text,
+                )));
             }
         }
         let caption = format!("tree rebuilt from state {} times", self.state.rebuilds);
+        // the card's texts wrap in its width less its padding: a phone, a
+        // larger text or a longer language takes another line
+        let room = (w - PAD * 2.0).max(1.0);
         let card = div().col().gap(10.0).p(PAD).w(w).bg(g.surface);
         card.rounded(theme.radius.lg)
             .border(1.0)
             .border_color(g.edge_soft)
-            .child(t("Counter", 16.0, 600, tc.text))
-            .child(t("State drives the tree.", 13.0, 400, tc.text_dim))
+            .child(t("Counter", TypeRole::Title.strong(), tc.text).max_width(room))
+            .child(
+                t(
+                    "State drives the tree.",
+                    TypeRole::BodyLg.run(),
+                    tc.text_dim,
+                )
+                .max_width(room),
+            )
             .child(row)
-            .child(t(&caption, 12.0, 400, g.text_faint))
+            .child(t(&caption, TypeRole::Body.run(), g.text_faint).max_width(room))
     }
 
     /// Engine geometry for the demo card at origin (ox, oy), width `w`:

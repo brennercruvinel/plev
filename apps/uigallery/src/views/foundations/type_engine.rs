@@ -12,7 +12,7 @@ use engine::styling::theme::Theme;
 use engine::styling::theme::{TypeRole, TypeRun};
 use engine::widgets::prelude::Rect;
 
-use super::super::components::showcase::{self, CARD_MIN_W, Grid};
+use super::super::components::showcase::{self, Grid};
 
 /// The cards, in order, named by their chips.
 pub(super) const CARDS: [&str; 3] = ["Weights", "Unicode", "Wrapping"];
@@ -120,17 +120,13 @@ impl Styles {
 /// The group: three cards, each as tall as its chip and content.
 pub(super) fn grid(content: Rect, theme: &Theme) -> Grid {
     let s = Styles::of(theme);
-    let w = showcase::card_width_at(SPAN, CARD_MIN_W, content, theme);
+    let w = showcase::card_width_at(SPAN, showcase::card_min_w(theme), content, theme);
     let probe = Rect::new(0.0, 0.0, w, 0.0);
     let top = s.top(probe, theme);
     let heights = (0..CARDS.len())
         .map(|i| top + s.content_h(i, w - s.pad * 2.0) + s.pad)
         .collect();
-    Grid {
-        span: SPAN,
-        min_w: CARD_MIN_W,
-        heights,
-    }
+    Grid::new("Engine", SPAN, showcase::card_min_w(theme), heights)
 }
 
 /// The cards, drawn in `cards` (the group's layout).

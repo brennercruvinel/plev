@@ -31,6 +31,7 @@ use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
 use crate::styling::theme::Theme;
 use crate::widgets::form::tokens::SelectLook;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops, shadow_insets};
 use accord::{Constraints, NodeBuilder, ParamSpec, Role, SemId, SnapshotBuilder, ValueKind};
@@ -122,11 +123,12 @@ impl Select {
 
     /// The text of the control and its options in `theme`.
     pub(super) fn text_style(&self, theme: &Theme) -> TextStyle {
+        let scale = &theme.typography;
         let r = &theme.form.select;
         if self.is_small() {
-            r.small_text.clone()
+            scale.run(r.small_text)
         } else {
-            r.text.clone()
+            scale.run(r.text)
         }
     }
 
@@ -329,10 +331,13 @@ impl Select {
         if self.open {
             self.settle(theme);
         }
+        // where a press lands: the control, grown to the least target
+        // around it (44 px with a finger, `widgets::hit`)
+        let hit = hit_rect(bounds, theme);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let mut result = EventResult::IGNORED;
-                let inside = bounds.contains(x, y);
+                let inside = hit.contains(x, y);
                 if inside != self.hovered {
                     self.hovered = inside;
                     result = EventResult::changed();
@@ -363,7 +368,7 @@ impl Select {
                     self.close();
                     return EventResult::changed();
                 }
-                if bounds.contains(x, y) {
+                if hit.contains(x, y) {
                     self.open();
                     self.settle(theme);
                     EventResult::changed()
@@ -387,7 +392,8 @@ impl Select {
     /// an ellipsis before the chevron.
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
         if let Some(id) = &self.sem {
-            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            let hit = hit_rect(bounds, theme);
+            compositor.bind(id, [hit.x, hit.y, hit.w, hit.h]);
         }
         let r = &theme.form.select;
         let alpha = if self.disabled { r.disabled_alpha } else { 1.0 };

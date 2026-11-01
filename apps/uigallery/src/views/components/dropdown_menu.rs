@@ -25,7 +25,7 @@ use engine::widgets::prelude::{
     ContextMenu, EventResult, IconButton, IconButtonVariant, MenuEntry, Rect, WidgetEvent,
 };
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, context_menu, key_under, root_id, under};
 
 /// One of the kit's menus, shown open in its card.
@@ -80,7 +80,7 @@ impl DropdownMenuPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let tallest = self
             .shown
             .iter()
@@ -92,10 +92,13 @@ impl DropdownMenuPage {
                 1,
                 showcase::card_height(self.trigger.preferred_size(theme).1, theme),
             ),
-            (3, self.shown.len(), CARD_H.max(frame + tallest)),
+            (3, self.shown.len(), frame + tallest),
         ];
         showcase::layout_sized(
-            groups.map(|(span, n, h)| (span, vec![h; n])),
+            groups
+                .into_iter()
+                .zip(GROUPS)
+                .map(|((span, n, h), title)| (title, span, vec![h; n])),
             content,
             theme,
         )
@@ -210,11 +213,16 @@ impl DropdownMenuPage {
         for (shown, card) in self.shown.iter().zip(&layout[1].cards) {
             showcase::card(c, *card, shown.chip, theme);
             let body = showcase::body(*card, theme);
-            let (w, _) = shown.menu.size(theme);
+            // as wide as it asks, never wider than the card's body (its
+            // labels cut to it)
+            let (w, h) = shown.menu.size(theme);
+            let w = w.min(body.w);
             let x = (body.x + (body.w - w) / 2.0).max(body.x).round();
-            shown.menu.render(c, LayerId::DEFAULT, theme, x, body.y);
+            let panel = Rect::new(x, body.y, w, h);
+            shown.menu.render_in(c, LayerId::DEFAULT, theme, panel, 0.0);
         }
         let (trigger, panel) = self.live(content, viewport, theme);
+        self.dropdown.fit(panel, theme);
         self.trigger.active = self.dropdown.is_open();
         self.trigger.render(c, trigger, theme);
         if let Some(alpha) = self.dropdown.popover.shown(mgr) {

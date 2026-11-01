@@ -76,7 +76,10 @@ impl TextField {
         slots: [Slot; 2],
     ) {
         if let Some(id) = &self.sem {
-            c.bind_to_layer(layer, id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            // where a press lands: a bare box shorter than a target (an
+            // inline edit's) grows its area around it (WCAG 2.5.8)
+            let r = crate::widgets::hit::hit_rect(bounds, theme);
+            c.bind_to_layer(layer, id, [r.x, r.y, r.w, r.h]);
         }
         let recipe = self.recipe(theme);
         let alpha = if self.disabled {
@@ -100,7 +103,19 @@ impl TextField {
         } else {
             &recipe.rest
         };
-        draw_box(c, layer, bounds, recipe, surface, alpha);
+        // the border fades between the states (`edge`)
+        let target = if focused {
+            2.0
+        } else if self.hovered {
+            1.0
+        } else {
+            0.0
+        };
+        let drawn = InputSurface {
+            border: self.edge.border(recipe, target, theme.duration.fast),
+            ..surface.clone()
+        };
+        draw_box(c, layer, bounds, recipe, &drawn, alpha);
 
         let (text_x, text_y, text_w) = self.text_box(bounds, &style, theme, slots);
         let fit = self.fit(&style, text_w, theme);
@@ -140,6 +155,7 @@ impl TextField {
         // masked), or the placeholder while empty; cut with an ellipsis
         // where it does not fit and is not being edited.
         let shown = self.input.shown();
+        let cut = shown.is_empty() || (fit.overflows && !focused);
         let (drawn, color, width) = if shown.is_empty() {
             (
                 TextMeasurer::truncate_to_width(&self.input.placeholder, &style, text_w),
@@ -155,7 +171,10 @@ impl TextField {
         } else {
             (shown, fade(recipe.text_color), fit.width)
         };
-        if !drawn.is_empty() {
+        // a cut text that not even its ellipsis fits (an addon that takes
+        // the field's whole width) draws nothing past the field
+        let room = !cut || TextMeasurer::measure_styled(&drawn, &style, None).0 <= text_w + 0.5;
+        if !drawn.is_empty() && room {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {

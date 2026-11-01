@@ -16,22 +16,20 @@
 //! each button's label on its own fill at rest, hovered and pressed. A
 //! disabled control is left out, as WCAG leaves it out.
 //!
-//! A pair that fails is not fixed here: a theme's color is a design
-//! decision and moves every baseline. The pairs that fail today are listed
-//! in `KNOWN`, with their ratio; the test fails when one of them starts
-//! passing (take it off the list) and when a pair that passed starts
-//! failing.
+//! A pair that fails is fixed at its token, by the formula the themes
+//! share (`theme::legibility`: the color moves the least it must). Only
+//! an exception WCAG grants may stay, listed in `KNOWN` with its reason.
 
 use crate::styling::color::Color;
 use crate::styling::theme::{ButtonRecipe, Intent, Theme};
 
 /// WCAG 2.2 AA: text (1.4.3).
-const TEXT: f64 = 4.5;
+pub(super) const TEXT: f64 = 4.5;
 /// WCAG 2.2 AA: large text (1.4.3) and non-text contrast (1.4.11).
-const LARGE: f64 = 3.0;
+pub(super) const LARGE: f64 = 3.0;
 
 /// The four themes the gallery cycles with `T`.
-fn themes() -> [(&'static str, Theme); 4] {
+pub(super) fn themes() -> [(&'static str, Theme); 4] {
     [
         ("core", Theme::hoff_core()),
         ("hoff", Theme::hoff()),
@@ -75,16 +73,16 @@ fn ratio(a: [f64; 3], b: [f64; 3]) -> f64 {
 
 /// One pair as the window shows it.
 #[derive(Debug)]
-struct Pair {
-    theme: &'static str,
-    fg: String,
-    bg: String,
-    need: f64,
-    ratio: f64,
+pub(super) struct Pair {
+    pub(super) theme: &'static str,
+    pub(super) fg: String,
+    pub(super) bg: String,
+    pub(super) need: f64,
+    pub(super) ratio: f64,
 }
 
 /// Every pair of one theme (see the module docs for which).
-fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
+pub(super) fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     let c = &t.colors;
     let g = &t.glass;
     let page = over(c.bg, [0.0; 3]);
@@ -1087,245 +1085,34 @@ fn pairs(theme: &'static str, t: &Theme) -> Vec<Pair> {
     out
 }
 
-/// The pairs that fail today, 116 of the 905 (core 46, hoff 19, dark 13,
-/// light 38), by theme, text and background, with the ratio the test
-/// measured (for the record; the test compares the list, not the
-/// numbers). Changing a theme's color is the design's decision (task-75
-/// phase 1 reports them); this list is how the test keeps counting until
-/// then.
+/// The pairs that may fail, each with the reason WCAG grants it.
+/// task-104 front M moved every other color under its bar the least it
+/// must (`theme::legibility`), on the four themes' palettes and on the
+/// kit's tokens the fronts copy (116 pairs failed before it: core 46,
+/// hoff 19, dark 13, light 38). What WCAG leaves out is not measured: a
+/// disabled control's text (1.4.3) and decoration. A pair listed here
+/// must say why; the test fails when a listed pair starts passing and
+/// when a pair that passed starts failing.
 const KNOWN: &[(&str, &str, &str, f64)] = &[
-    ("core", "colors.text_mid", "colors.bg", 4.13),
-    ("core", "colors.text_dim", "colors.bg", 4.13),
-    ("core", "glass.text_default", "colors.bg", 4.13),
-    ("core", "glass.text_faint", "colors.bg", 4.13),
-    ("core", "glass.text_placeholder", "colors.bg", 1.61),
-    ("core", "colors.text_mid", "colors.surface", 4.13),
-    ("core", "colors.text_dim", "colors.surface", 4.13),
-    ("core", "glass.text_default", "colors.surface", 4.13),
-    ("core", "glass.text_faint", "colors.surface", 4.13),
-    ("core", "glass.text_placeholder", "colors.surface", 1.61),
-    ("core", "colors.text_mid", "colors.bg_panel", 3.96),
-    ("core", "colors.text_dim", "colors.bg_panel", 3.96),
-    ("core", "glass.text_default", "colors.bg_panel", 3.96),
-    ("core", "glass.text_faint", "colors.bg_panel", 3.96),
-    ("core", "glass.text_placeholder", "colors.bg_panel", 1.61),
-    ("core", "colors.text_mid", "colors.bg_hover", 3.75),
-    ("core", "colors.text_dim", "colors.bg_hover", 3.75),
-    ("core", "glass.text_default", "colors.bg_hover", 3.75),
-    ("core", "glass.text_faint", "colors.bg_hover", 3.75),
-    ("core", "glass.text_placeholder", "colors.bg_hover", 1.60),
-    ("core", "colors.text_mid", "glass.popover", 4.13),
-    ("core", "colors.text_dim", "glass.popover", 4.13),
-    ("core", "glass.text_default", "glass.popover", 4.13),
-    ("core", "glass.text_faint", "glass.popover", 4.13),
-    ("core", "glass.text_placeholder", "glass.popover", 1.61),
-    ("core", "colors.success", "colors.bg", 2.41),
+    // The active border and the field's border keep the theme's (the
+    // kit's #E2E2E2 in the core): the border is not the only thing that
+    // identifies the field (its label and its place do), so WCAG 1.4.11
+    // does not apply; focused, the field's border reaches 3:1, and
+    // Contrast::More holds them at 3:1 at rest. Brenner's decision B
+    // (task-104); `Bar::AA.edge` set to `Some(MARK_AA)` takes them off
+    // this list (option A).
     ("core", "colors.border_active", "colors.bg", 1.26),
-    ("core", "colors.success", "colors.surface", 2.41),
     ("core", "colors.border_active", "colors.surface", 1.26),
-    (
-        "core",
-        "button.warning.rest.text",
-        "button.warning.rest.fill[0]",
-        3.37,
-    ),
-    (
-        "core",
-        "button.warning.rest.text",
-        "button.warning.rest.fill[1]",
-        3.65,
-    ),
-    (
-        "core",
-        "button.warning.hover.text",
-        "button.warning.hover.fill[0]",
-        2.70,
-    ),
-    (
-        "core",
-        "button.warning.hover.text",
-        "button.warning.hover.fill[1]",
-        2.86,
-    ),
-    (
-        "core",
-        "button.warning.active.text",
-        "button.warning.active.fill[0]",
-        3.37,
-    ),
-    (
-        "core",
-        "button.warning.active.text",
-        "button.warning.active.fill[1]",
-        3.65,
-    ),
-    ("hoff", "glass.text_placeholder", "colors.bg", 3.86),
-    ("hoff", "glass.text_placeholder", "colors.surface", 3.95),
-    ("hoff", "glass.text_placeholder", "colors.bg_panel", 3.39),
-    ("hoff", "colors.text_dim", "colors.bg_hover", 4.45),
-    ("hoff", "glass.text_faint", "colors.bg_hover", 3.76),
-    ("hoff", "glass.text_placeholder", "colors.bg_hover", 2.73),
-    ("hoff", "glass.text_placeholder", "glass.popover", 3.39),
-    ("hoff", "colors.danger", "colors.bg", 2.27),
+    ("core", "form.input.rest.border", "colors.surface", 1.26),
     ("hoff", "colors.border_active", "colors.bg", 2.22),
-    ("hoff", "colors.danger", "colors.surface", 2.34),
     ("hoff", "colors.border_active", "colors.surface", 2.26),
-    (
-        "hoff",
-        "button.warning.rest.text",
-        "button.warning.rest.fill",
-        3.27,
-    ),
-    (
-        "hoff",
-        "button.warning.hover.text",
-        "button.warning.hover.fill",
-        3.40,
-    ),
-    (
-        "hoff",
-        "button.warning.active.text",
-        "button.warning.active.fill",
-        3.27,
-    ),
-    ("dark", "colors.text_dim", "colors.bg", 2.82),
-    ("dark", "colors.text_dim", "colors.surface", 2.66),
-    ("dark", "glass.text_placeholder", "colors.surface", 4.50),
-    ("dark", "colors.text_dim", "colors.bg_panel", 2.53),
-    ("dark", "glass.text_placeholder", "colors.bg_panel", 4.33),
-    ("dark", "colors.text_dim", "colors.bg_hover", 2.33),
-    ("dark", "glass.text_placeholder", "colors.bg_hover", 4.05),
-    ("dark", "colors.text_dim", "glass.popover", 2.53),
-    ("dark", "glass.text_placeholder", "glass.popover", 4.33),
+    ("hoff", "form.input.rest.border", "colors.surface", 1.63),
     ("dark", "colors.border_active", "colors.bg", 2.16),
     ("dark", "colors.border_active", "colors.surface", 2.03),
-    ("light", "colors.text_dim", "colors.bg", 4.50),
-    ("light", "glass.text_active", "colors.bg", 3.50),
-    ("light", "glass.text_default", "colors.bg", 2.11),
-    ("light", "glass.text_faint", "colors.bg", 1.60),
-    ("light", "glass.text_placeholder", "colors.bg", 1.31),
-    ("light", "glass.text_active", "colors.surface", 3.53),
-    ("light", "glass.text_default", "colors.surface", 2.12),
-    ("light", "glass.text_faint", "colors.surface", 1.61),
-    ("light", "glass.text_placeholder", "colors.surface", 1.31),
-    ("light", "colors.text_dim", "colors.bg_panel", 4.12),
-    ("light", "glass.text_active", "colors.bg_panel", 3.45),
-    ("light", "glass.text_default", "colors.bg_panel", 2.10),
-    ("light", "glass.text_faint", "colors.bg_panel", 1.60),
-    ("light", "glass.text_placeholder", "colors.bg_panel", 1.30),
-    ("light", "colors.text_dim", "colors.bg_hover", 3.84),
-    ("light", "glass.text_active", "colors.bg_hover", 3.41),
-    ("light", "glass.text_default", "colors.bg_hover", 2.09),
-    ("light", "glass.text_faint", "colors.bg_hover", 1.59),
-    ("light", "glass.text_placeholder", "colors.bg_hover", 1.30),
-    ("light", "colors.text_dim", "glass.popover", 4.12),
-    ("light", "glass.text_active", "glass.popover", 3.45),
-    ("light", "glass.text_default", "glass.popover", 2.10),
-    ("light", "glass.text_faint", "glass.popover", 1.60),
-    ("light", "glass.text_placeholder", "glass.popover", 1.30),
-    ("light", "glass.text_gradient[1]", "colors.bg", 1.89),
-    ("light", "colors.warning", "colors.bg", 2.15),
-    ("light", "colors.info", "colors.bg", 2.76),
-    ("light", "colors.border_active", "colors.bg", 2.73),
-    ("light", "glass.text_gradient[1]", "colors.surface", 1.89),
-    ("light", "colors.warning", "colors.surface", 2.24),
-    ("light", "colors.info", "colors.surface", 2.87),
-    ("light", "colors.border_active", "colors.surface", 2.84),
-    (
-        "light",
-        "button.secondary.rest.text",
-        "button.secondary.rest.fill",
-        1.09,
-    ),
-    (
-        "light",
-        "button.secondary.active.text",
-        "button.secondary.active.fill",
-        1.09,
-    ),
-    // task-104 front A: the field. The core pairs are the kit's Field as
-    // written (`components/Field/index.tsx`: the #E2E2E2 border, the
-    // #7B7B7B placeholder, the #FE5938 error, the link at opacity-70) and
-    // the helper in the kit's secondary gray; the others are the glass
-    // field every theme drew before the kit.
-    (
-        "core",
-        "form.input.placeholder",
-        "form.input.rest.fill",
-        4.13,
-    ),
-    ("core", "form.input.rest.border", "colors.surface", 1.26),
-    ("core", "form.field.link_color", "colors.surface", 2.13),
-    ("core", "form.field.error_color", "colors.surface", 3.05),
-    ("core", "form.field.helper_color", "colors.surface", 4.13),
-    (
-        "hoff",
-        "form.input.placeholder",
-        "form.input.rest.fill",
-        2.76,
-    ),
-    ("hoff", "form.input.rest.border", "colors.surface", 1.63),
-    ("hoff", "form.field.error_color", "colors.surface", 2.34),
-    (
-        "dark",
-        "form.input.placeholder",
-        "form.input.rest.fill",
-        2.96,
-    ),
     ("dark", "form.input.rest.border", "colors.surface", 1.70),
-    (
-        "light",
-        "form.input.placeholder",
-        "form.input.rest.fill",
-        1.31,
-    ),
+    ("light", "colors.border_active", "colors.bg", 2.73),
+    ("light", "colors.border_active", "colors.surface", 2.84),
     ("light", "form.input.rest.border", "colors.surface", 1.05),
-    ("light", "form.field.error_color", "colors.surface", 4.24),
-    // task-104 front F: the kit's dot of news (#FE5938) on the hovered
-    // action's wash, and hoff's danger as that dot
-    ("core", "header.dot.color", "header.plain.hover.fill", 2.77),
-    ("hoff", "header.dot.color", "header.fill", 2.27),
-    ("hoff", "header.dot.color", "header.plain.hover.fill", 1.45),
-    // task-104 front C, wave 3: the kit's prompt placeholder (a hint, as
-    // the field's), and the top of its voice dot, the kit's #FF732D (its
-    // bottom, #E24D03, reads)
-    (
-        "core",
-        "message.prompt.placeholder",
-        "message.prompt.fill",
-        4.13,
-    ),
-    (
-        "core",
-        "message.prompt.voice.dot_fill[0]",
-        "message.prompt.fill",
-        2.64,
-    ),
-    (
-        "light",
-        "message.prompt.voice.dot_fill[0]",
-        "message.prompt.fill",
-        2.60,
-    ),
-    // the comment popups' hints, the kit's #7B7B7B (`placeholder:text-secondary`)
-    (
-        "core",
-        "message.comment.reply.placeholder",
-        "message.comment.reply.well",
-        3.75,
-    ),
-    (
-        "core",
-        "message.comment.new.placeholder",
-        "message.comment.new.fill",
-        4.13,
-    ),
-    (
-        "core",
-        "message.comment.quick.placeholder",
-        "message.comment.quick.fill",
-        4.13,
-    ),
 ];
 
 #[test]
@@ -1436,7 +1223,7 @@ fn the_upload_scrim_is_the_least_that_reads() {
 }
 
 /// WCAG 2.2 AAA: text (1.4.6).
-const AAA: f64 = 7.0;
+pub(super) const AAA: f64 = 7.0;
 
 /// task-104 front B, onda 3: the core modals' text meets AAA on every
 /// surface under it (the paper, a sunk band, the hover), and their marks

@@ -6,7 +6,6 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::{Breakpoint, ControlSize, Elevation, Intent, SidebarMode, Theme};
 
 use crate::widgets::prelude::*;
@@ -170,9 +169,9 @@ fn stat_height_is_two_ramp_lines_plus_the_gap() {
     let (_, h) = s.preferred_size(&t);
     assert_eq!(
         h,
-        t.typography.role(TypeRole::Title).line_height
+        t.typography.run(t.navigation.stat.md.value).line_height
             + t.spacing.xs
-            + t.typography.run(TypeRole::Caption.regular()).line_height
+            + t.typography.run(t.navigation.stat.md.label).line_height
     );
     let hero = Stat::new("1.3", "GB").size(StatSize::Lg);
     assert!(hero.preferred_size(&t).1 > h);
@@ -619,7 +618,7 @@ fn shell_layout_follows_the_breakpoint() {
     assert_eq!(full.breakpoint, Breakpoint::Expanded);
     assert_eq!(full.sidebar.unwrap().w, t.size.sidebar_w);
     assert!(full.menu_button.is_none());
-    assert!(full.content.x >= t.size.sidebar_w + t.layout.gutter(Breakpoint::Expanded));
+    assert!(full.content.x >= t.size.sidebar_w + t.layout.gutter_at(1400.0 - t.size.sidebar_w));
 
     let rail = shell(800.0, 600.0).layout(&t);
     assert_eq!(rail.sidebar_mode, SidebarMode::Rail);
@@ -629,7 +628,7 @@ fn shell_layout_follows_the_breakpoint() {
     assert_eq!(phone.sidebar_mode, SidebarMode::Drawer);
     assert!(phone.sidebar.is_none());
     assert!(phone.menu_button.is_some());
-    assert_eq!(phone.content.x, t.layout.gutter(Breakpoint::Compact));
+    assert_eq!(phone.content.x, t.layout.gutter_at(390.0));
     assert!(phone.content.w > 0.0 && phone.content.h > 0.0);
 }
 

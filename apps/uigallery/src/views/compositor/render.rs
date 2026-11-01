@@ -1,14 +1,13 @@
 //! Frame side of the gallery: the animation tick and the scene build
-//! (chrome, the clipped page, the alias note or placeholder, the active
-//! overlay, the toasts).
+//! (chrome, the clipped page or placeholder, the active overlay, the
+//! toasts).
 
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use engine::styling::theme::TypeRole;
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::prelude::{Rect, Wake};
 
 use super::super::components::scroll_area::ScrollAreaPage;
-use super::super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
+use super::super::{ActiveOverlay, Layers, Pane, ShowcaseView};
 
 impl ShowcaseView {
     // -- Animation -------------------------------------------------------------
@@ -129,7 +128,6 @@ impl ShowcaseView {
                 viewport.h
             },
         });
-        self.render_note(c, content, &theme);
         self.page_render(c, layers, content, &theme);
         c.push(SceneNode::PopClip);
 
@@ -180,28 +178,6 @@ impl ShowcaseView {
         if self.reveal_focus(c) {
             self.render(c);
         }
-    }
-
-    /// The note an alias page shows above the shared example: which
-    /// page's example it is, and what its own still lacks.
-    fn render_note(
-        &self,
-        c: &mut Compositor,
-        content: Rect,
-        theme: &engine::styling::theme::Theme,
-    ) {
-        let Body::Alias { pane, gap } = self.current().body else {
-            return;
-        };
-        let owner = PAGES[pages::index_of(pane)].title;
-        let note = format!("shares the {owner} example. still missing: {gap}.");
-        let style = theme.typography.run(TypeRole::Caption.regular());
-        c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&note, &style, Some(content.w)),
-            x: content.x,
-            y: content.y - self.note_h(),
-            color: theme.glass.text_placeholder.0,
-        });
     }
 }
 

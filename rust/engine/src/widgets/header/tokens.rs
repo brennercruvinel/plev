@@ -11,6 +11,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::legibility::{self, MARK_AA};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
 
@@ -231,10 +232,12 @@ impl HeaderTokens {
             nav,
             plain,
             framed,
+            // the kit's red deepens the least it must to read as a mark
+            // on the bar and on the plain action's #F1F1F1 hover (1.4.11)
             dot: DotTokens {
                 size: 4.0,
                 inset: 4.0,
-                color: hex(0xFE5938),
+                color: legibility::reach(hex(0xFE5938), MARK_AA, &[&[paper], &[paper, shade3]]),
             },
             search_w: 260.0,
             avatar: AvatarTokens {
@@ -319,8 +322,13 @@ impl HeaderTokens {
             nav,
             plain: look(&b.toolbar, &kit.plain),
             framed: look(&b.outline, &kit.framed),
+            // the danger mark, on the bar and on the plain action's hover
             dot: DotTokens {
-                color: c.danger,
+                color: legibility::reach(
+                    c.danger,
+                    MARK_AA,
+                    &[&[c.bg], &[c.bg, b.toolbar.hover.fill[0]]],
+                ),
                 ..kit.dot
             },
             avatar: AvatarTokens {

@@ -119,7 +119,7 @@ fn rules_texts(cut: u32) -> Vec<String> {
 fn the_rules_review_fits_its_column_at_the_default_window() {
     let (view, c) = gallery(RULES);
     let card = rect(&c, "proposed.card");
-    assert_eq!((card.x, card.w), (736.0, 424.0), "the right half");
+    assert_eq!((card.x, card.w), (736.0, 426.0), "the right half");
     inside(&c, "proposed.card");
     let snap = view.semantics().expect("the page projects");
     for cut in [1, 2] {
@@ -268,15 +268,18 @@ fn the_claudes_review_fixture_is_the_first_rounds_structure() {
     // 43), which grows its card by 9; the page past the kit's sidebar,
     // `w-60` (task-104h), 8 px wider than the old 248, the half 4 more;
     // the text without a style in the scale's body role, 12/16 in the
-    // core (task-104f), so the title and the file name are one 16 line
+    // core (task-104f), so the title and the file name are one 16 line;
+    // the page's gutter fluid with the page's width, between the kit's
+    // p-5 and p-12 (38 here, the half 2 narrower), and no lg under a head
+    // that bleeds, the head itself fluid (task-104j): a pixel lower
     for (id, [x, y, w, h]) in [
-        ("review.root", [736.0, 221.0, 424.0, f32::NAN]),
-        ("review.title", [736.0, 221.0, 424.0, 16.0]),
-        ("review.video_card", [736.0, 249.0, 424.0, 372.0]),
-        ("review.video_file", [736.0, 249.0, 424.0, 16.0]),
-        ("review.video_duration", [736.0, 273.0, 63.0, 52.0]),
-        ("review.video_original", [736.0, 333.0, 424.0, 140.0]),
-        ("review.video_result", [736.0, 481.0, 424.0, 140.0]),
+        ("review.root", [736.0, 222.0, 426.0, f32::NAN]),
+        ("review.title", [736.0, 222.0, 426.0, 16.0]),
+        ("review.video_card", [736.0, 250.0, 426.0, 372.0]),
+        ("review.video_file", [736.0, 250.0, 426.0, 16.0]),
+        ("review.video_duration", [736.0, 274.0, 63.0, 52.0]),
+        ("review.video_original", [736.0, 334.0, 426.0, 140.0]),
+        ("review.video_result", [736.0, 482.0, 426.0, 140.0]),
     ] {
         let r = rect(&c, id);
         let near = |a: f32, b: f32| b.is_nan() || (a - b).abs() < 0.5;

@@ -213,9 +213,7 @@ impl AttachmentPage {
     /// The width a card's tray takes: the card's inside, up to a readable
     /// column.
     fn tray_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     /// Per group its layout, and per card the tray's rect, centered.
@@ -226,7 +224,7 @@ impl AttachmentPage {
                 .cards
                 .iter()
                 .map(|card| showcase::card_height(card.tray.height(w, theme), theme));
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

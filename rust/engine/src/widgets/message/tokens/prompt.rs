@@ -11,7 +11,8 @@
 use super::MessageText;
 use crate::styling::color::Color;
 use crate::styling::theme::TypeRole;
-use crate::styling::theme::hoff_core::{ORANGE, SHADES};
+use crate::styling::theme::hoff_core::{self, ORANGE, SHADES};
+use crate::styling::theme::legibility::{self, MARK_AA};
 use crate::styling::theme::{ShadowSpec, Theme};
 
 /// A floating panel of the kit: the model menu's listbox and the
@@ -200,13 +201,13 @@ impl PromptTokens {
             shadow: raised_shadow(),
             // :44 `!h-6 mt-2 mb-8 pl-2 text-[0.9375rem] leading-[1.5rem]
             // text-[#121212] placeholder:text-[#7b7b7b]`. The placeholder
-            // is 4.1:1 on paper: a hint, kept as the kit's and listed
-            // with the theme's placeholders (styling/theme/tests/contrast.rs)
+            // is 4.1:1 on paper: the gray where it is text, which reads at
+            // AA (`hoff_core::secondary_text`)
             text: MessageText {
                 run: TypeRole::Title.regular(),
                 color: ink,
             },
-            placeholder: shade6,
+            placeholder: hoff_core::secondary_text(),
             text_top: 8.0,
             text_bottom: 32.0,
             text_inset: 8.0,
@@ -299,7 +300,10 @@ impl PromptTokens {
                 ring_width: 1.0,
                 ring_color: Color([ORANGE.0[0], ORANGE.0[1], ORANGE.0[2], 0.1]),
                 dot: 8.0,
-                dot_fill: [Color::hex(0xFF732D), Color::hex(0xE24D03)],
+                // its top, #FF732D, 2.6:1 on paper, deepens the least
+                // it must to read as a mark (1.4.11, `legibility`)
+                dot_fill: [Color::hex(0xFF732D), Color::hex(0xE24D03)]
+                    .map(|end| legibility::reach(end, MARK_AA, &[&[paper]])),
                 inset: 24.0,
                 dim: 0.3,
                 text_room: 40.0,
@@ -408,6 +412,13 @@ impl PromptTokens {
                 row_hover_border: c.divider,
                 footer_fill: c.bg_panel,
                 ..kit.premade.clone()
+            },
+            voice: VoiceTokens {
+                dot_fill: kit
+                    .voice
+                    .dot_fill
+                    .map(|end| legibility::reach(end, MARK_AA, &[&[paper]])),
+                ..kit.voice
             },
             ..kit
         }

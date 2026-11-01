@@ -37,6 +37,7 @@ mod tests;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 pub use links::DisclosureList;
@@ -68,6 +69,9 @@ pub struct Collapsible {
     /// not fit (a sidebar's row), instead of wrapping; the projected name
     /// is the whole title either way.
     truncate: bool,
+    /// The trigger is pressed and bound in [`hit_rect`] around its
+    /// drawing ([`Collapsible::grow_hit`]).
+    grow_hit: bool,
     press: Press,
     motion: DisclosureMotion,
     /// The revealed fraction, 0 closed to 1 open, eased.
@@ -86,6 +90,11 @@ struct Inner {
     h: f32,
     label_w: f32,
     label_h: f32,
+    /// The label and, when it went under it, the counter: what is
+    /// centered on the row.
+    stack_h: f32,
+    /// The counter stands under the label, at its start.
+    counter_below: bool,
 }
 
 impl Collapsible {
@@ -102,6 +111,7 @@ impl Collapsible {
             current: false,
             first: false,
             truncate: false,
+            grow_hit: false,
             press: Press::default(),
             motion,
             reveal: Tween::new(0.0, motion.reveal, motion.reveal_easing),
@@ -154,6 +164,16 @@ impl Collapsible {
     /// what [`Collapsible::project`] names.
     pub fn truncate(mut self, on: bool) -> Self {
         self.truncate = on;
+        self
+    }
+
+    /// The trigger's press area, and its binding, grow to the minimum
+    /// around its drawing ([`hit_rect`]: 24 px, 44 with a finger), which
+    /// does not change. For a host that stacks it among other grown
+    /// targets (a sidebar's rows) and settles a press two of them share;
+    /// off, the press area is the drawing.
+    pub fn grow_hit(mut self, on: bool) -> Self {
+        self.grow_hit = on;
         self
     }
 
@@ -260,8 +280,14 @@ impl Collapsible {
         }
     }
 
+    /// The title's run; wrapped, a word wider than its line on its own
+    /// (a larger text, a longer language) breaks inside, and its
+    /// min-content is its longest word (`OverflowWrap::BreakWord`).
     fn label_style(r: &DisclosureRecipe, theme: &Theme) -> TextStyle {
-        theme.typography.run(r.text_type)
+        theme
+            .typography
+            .run(r.text_type)
+            .with_overflow_wrap(crate::drawing::text::OverflowWrap::BreakWord)
     }
 
     /// The divider's share of the height: none on the first section.
@@ -291,9 +317,13 @@ impl Collapsible {
     }
 
     /// The label wraps (or, truncated, is cut) in what the tile, the
-    /// counter and the chevron leave; a counter stands as far from the label as the chevron from
-    /// the counter (the kit's `ml-3`, Dropdown :59), so a long label
-    /// never runs into it.
+    /// counter and the chevron leave; a counter stands as far from the
+    /// label as the chevron from the counter (the kit's `ml-3`, Dropdown
+    /// :59), so a long label never runs into it. Where that room is
+    /// narrower than the label's longest word (its min-content: a larger
+    /// text, a longer language, a phone), the counter goes under the
+    /// label, as far below it, and the label takes the row: a word breaks
+    /// only when it cannot fit on a line of its own.
     fn inner(&self, trigger: Rect, theme: &Theme) -> Inner {
         let r = self.recipe(theme);
         let [top, right, _, left] = r.pad;
@@ -302,20 +332,26 @@ impl Collapsible {
         let w = (trigger.w - bw * 2.0 - left - right).max(0.0);
         let tile = self.tile_span(r);
         let counter = self.counter_span(r, theme);
-        let label_w = (w
-            - tile.map_or(0.0, |(size, gap)| size + gap)
-            - counter.map_or(0.0, |(cw, _)| cw + r.chevron_gap)
-            - r.chevron_gap
-            - r.chevron_box)
+        let row = (w - tile.map_or(0.0, |(size, gap)| size + gap) - r.chevron_gap - r.chevron_box)
             .max(0.0);
+        let beside = (row - counter.map_or(0.0, |(cw, _)| cw + r.chevron_gap)).max(0.0);
         let style = Self::label_style(r, theme);
+        let counter_below = counter.is_some()
+            && !self.truncate
+            && beside < Self::longest_word(&self.title, &style)
+            && row > beside;
+        let label_w = if counter_below { row } else { beside };
         let label_h = if self.truncate {
             style.line_height
         } else {
             let (_, text_h) = TextMeasurer::measure_styled(&self.title, &style, Some(label_w));
             text_h.max(style.line_height)
         };
-        let h = label_h
+        let stack_h = match counter {
+            Some((_, ch)) if counter_below => label_h + r.chevron_gap + ch,
+            _ => label_h,
+        };
+        let h = stack_h
             .max(r.chevron_box)
             .max(tile.map_or(0.0, |(size, _)| size))
             .max(counter.map_or(0.0, |(_, ch)| ch));
@@ -326,7 +362,18 @@ impl Collapsible {
             h,
             label_w,
             label_h,
+            stack_h,
+            counter_below,
         }
+    }
+
+    /// The label's min-content width: its longest word, as `BreakWord`
+    /// measures it (`OverflowWrap::min_content`).
+    fn longest_word(title: &str, style: &TextStyle) -> f32 {
+        let whole = style
+            .clone()
+            .with_overflow_wrap(style.overflow_wrap.min_content());
+        TextMeasurer::measure_styled(title, &whole, Some(0.0)).0
     }
 
     /// The trigger's height at width `w`, its divider included: the
@@ -356,6 +403,17 @@ impl Collapsible {
         let divider = self.divider_h(r);
         let h = self.trigger_height(bounds.w, theme) - divider;
         Rect::new(bounds.x, bounds.y + divider, bounds.w, h)
+    }
+
+    /// Where a press lands on the trigger in `bounds`, and what it binds:
+    /// the trigger, grown to the minimum with [`Collapsible::grow_hit`].
+    pub fn press_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let trigger = self.trigger_rect(bounds, theme);
+        if self.grow_hit {
+            hit_rect(trigger, theme)
+        } else {
+            trigger
+        }
     }
 
     /// Where the content goes at full size, `content_h` tall; the render
@@ -391,7 +449,7 @@ impl Collapsible {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let trigger = self.trigger_rect(bounds, theme);
+        let trigger = self.press_rect(bounds, theme);
         let r = self.press.handle(event, trigger, self.disabled);
         if r.clicked {
             self.toggle();

@@ -22,8 +22,9 @@
 //! an `activate` that picks it as a press does, the menu's `picked` the
 //! last pick.
 
-use accord::{Request, Role, SemId, SnapshotBuilder, Value};
+use accord::SemId;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
 use engine::widgets::form::TextField;
@@ -37,12 +38,12 @@ use engine::widgets::selection::{FolderRow, Folders};
 use super::context_menu::{file_menu, filter_menu, profile_menu};
 use super::showcase::{self, GroupLayout};
 use super::toolbar::kit_zoom;
-use super::{After, Component, child_id, key_under, root_id, under};
+use super::{child_id, key_under, root_id};
 
-/// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20).
+/// The template's card: `min-h-121.5` (MenuPage/index.tsx:20), the
+/// least height of a row of more than one; a card alone in its row is
+/// only as tall as it holds.
 const CARD_MIN_H: f32 = 486.0;
-const CARD_TOP: f32 = 80.0;
-const CARD_BOTTOM: f32 = 64.0;
 /// `RowCards` of `span={3}`: three to a row.
 const SPAN: usize = 3;
 
@@ -191,25 +192,42 @@ impl MenusPage {
         }
     }
 
+    /// The line under a menu that says its last pick: one caption line
+    /// and the gap above it.
+    fn pick_line(theme: &Theme) -> f32 {
+        theme.spacing.sm + Self::caption(theme).line_height
+    }
+
+    fn caption(theme: &Theme) -> TextStyle {
+        theme.typography.run(TypeRole::Caption.regular())
+    }
+
+    /// Each card as tall as its menu and the pick's line under it, in the
+    /// showcase's frame (the chip's band above, as much below); a row of
+    /// more than one at least the template's `min-h-121.5`, a card alone
+    /// in its row only as tall as it holds.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let pick = Self::pick_line(theme);
         let heights = self
             .cards
             .iter()
-            .map(|c| (CARD_TOP + Self::size(&c.body, theme).1 + CARD_BOTTOM).max(CARD_MIN_H))
+            .map(|c| showcase::card_height(Self::size(&c.body, theme).1 + pick, theme))
             .collect();
-        showcase::layout_sized([(SPAN, heights)], content, theme)
+        let grid = showcase::Grid::new("", SPAN, showcase::card_min_w(theme), heights)
+            .floor(CARD_MIN_H)
+            .untitled();
+        showcase::layout_grids([grid], content, theme)
     }
 
-    /// The card's widget: centered across, `pt-20` from the card's top.
+    /// The card's widget: centered across, at the top of the card's body
+    /// (under the chip), never wider than the body. The widgets that lay
+    /// out in a rect (the zoom, the folders, the models) take that width;
+    /// a context menu keeps its recipe's, which the narrowest card holds.
     fn widget_rect(body: &Body, card: Rect, theme: &Theme) -> Rect {
         let (w, h) = Self::size(body, theme);
-        let w = w.min(card.w - theme.spacing.sm * 2.0);
-        Rect::new(
-            (card.x + (card.w - w) / 2.0).round(),
-            card.y + CARD_TOP,
-            w,
-            h,
-        )
+        let room = showcase::body(card, theme);
+        let w = w.min(room.w);
+        Rect::new((room.x + (room.w - w) / 2.0).round(), room.y, w, h)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
@@ -420,7 +438,7 @@ impl MenusPage {
             let at = Self::widget_rect(&card.body, *rect, theme);
             let (r, spot) = match &mut card.body {
                 Body::Menu(m) => {
-                    let (r, id) = m.handle_event(event, at.x, at.y, theme);
+                    let (r, id) = m.handle_event_in(event, at, 0.0, theme);
                     (r, id.map(Spot::Item))
                 }
                 Body::Folders(f) => {
@@ -462,7 +480,7 @@ impl MenusPage {
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
-        let caption = theme.typography.run(TypeRole::Caption.regular());
+        let caption = Self::caption(theme);
         for (i, (card, rect)) in self.cards.iter().zip(&layout[0].cards).enumerate() {
             showcase::card(c, *rect, card.title, theme);
             let at = Self::widget_rect(&card.body, *rect, theme);
@@ -479,7 +497,7 @@ impl MenusPage {
                 }
                 Body::Models(m) => m.render(c, LayerId::DEFAULT, at, theme),
                 Body::Menu(m) => {
-                    m.render(c, LayerId::DEFAULT, theme, at.x, at.y);
+                    m.render_in(c, LayerId::DEFAULT, theme, at, 0.0);
                     if let Some(Spot::Item(id)) = ring {
                         let rects = m.entry_rects(at.x, at.y, theme);
                         let row = m
@@ -488,7 +506,7 @@ impl MenusPage {
                             .position(|e| matches!(e, MenuEntry::Item { id: x, .. } if *x == id));
                         if let Some(r) = row.and_then(|r| rects.get(r)) {
                             let t = m.tokens(theme);
-                            let row = Rect::new(r.x + t.pad, r.y, r.w - t.pad * 2.0, r.h);
+                            let row = Rect::new(r.x + t.pad, r.y, at.w - t.pad * 2.0, r.h);
                             c.push(focus_ring(row, t.item_radius, theme));
                         }
                     }
@@ -496,11 +514,13 @@ impl MenusPage {
                 Body::Folders(f) => f.render(c, at, theme),
             }
             if let Some(picked) = &card.picked {
+                // one line under the menu, cut to the body's width
                 let body = showcase::body(*rect, theme);
+                let line = TextMeasurer::truncate_to_width(picked, &caption, body.w);
                 c.push(SceneNode::Text {
-                    key: TextNodeKey::from_style(picked, &caption, Some(body.w)),
+                    key: TextNodeKey::from_style(&line, &caption, None),
                     x: body.x,
-                    y: body.bottom() - caption.line_height,
+                    y: at.bottom() + theme.spacing.sm,
                     color: theme.colors.text_mid.0,
                 });
             }
@@ -508,145 +528,7 @@ impl MenusPage {
     }
 }
 
-impl Component for MenusPage {
-    fn root(&self) -> Option<&SemId> {
-        self.root.as_ref()
-    }
-
-    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
-        let Some(group) = group_id(root) else {
-            return;
-        };
-        b.node(&group, Role::Group, "Menu").parent(root);
-        for card in &self.cards {
-            match &card.body {
-                Body::Menu(m) => {
-                    let Some(id) = m.sem_id() else {
-                        continue;
-                    };
-                    for e in &m.entries {
-                        if let MenuEntry::Item {
-                            id: item,
-                            label,
-                            shortcut,
-                            checked,
-                            ..
-                        } = e
-                        {
-                            let mut node = b.node(id.key(item.to_string()), Role::MenuItem, label);
-                            node.parent(id);
-                            if let Some(keys) = shortcut {
-                                node.description(keys.as_str());
-                            }
-                            if let Some(on) = checked {
-                                node.state("checked", *on);
-                            }
-                            node.action("activate");
-                        }
-                    }
-                    let mut node = b.node(id, Role::Menu, card.title);
-                    node.parent(&group);
-                    node.state("picked", card.picked.clone().unwrap_or_default());
-                }
-                Body::Folders(f) => {
-                    if let Some(id) = f.sem_id() {
-                        f.project(b, id, card.title, Some(&group));
-                        if let Some(mut node) = b.reopen(id) {
-                            node.state("picked", card.picked.clone().unwrap_or_default());
-                        }
-                    }
-                }
-                Body::Zoom(z) => {
-                    if let Some(id) = z.sem_id() {
-                        z.project(b, id, Some(&group));
-                        if let Some(mut node) = b.reopen(id) {
-                            node.state("picked", card.picked.clone().unwrap_or_default());
-                        }
-                    }
-                }
-                Body::Models(m) => {
-                    if let Some(id) = m.sem_id() {
-                        let mut node = m.project(b, id, card.title, Some(&group));
-                        node.state("picked", card.picked.clone().unwrap_or_default());
-                    }
-                }
-            }
-        }
-        let focused = self
-            .focus
-            .and_then(|(c, spot)| match (&self.cards[c].body, spot) {
-                (Body::Menu(m), Spot::Item(id)) => Some(m.sem_id()?.key(id.to_string())),
-                (Body::Folders(f), Spot::Row(r)) => f.row_id(r),
-                (Body::Zoom(z), Spot::Line(i)) => {
-                    Some(z.sem_id()?.child("line").ok()?.key(i.to_string()))
-                }
-                (Body::Models(m), Spot::Line(i)) => m.option_id(i),
-                _ => None,
-            });
-        let field = self.text_field().and_then(|f| f.sem_id().cloned());
-        if let Some(id) = focused.or(field) {
-            b.focus(&id);
-        }
-    }
-
-    /// An item's or a folder's `activate` picks it, as its press does; a
-    /// box's `set_value` puts its text; the name's `submit` adds the
-    /// folder, as Enter does.
-    fn run(&mut self, req: &Request) -> Result<After, String> {
-        let refuse = || format!("the page has no {} on {}", req.action, req.target);
-        let f = self.folders();
-        let search = f.and_then(|f| f.search.sem_id().cloned());
-        let name = f.and_then(|f| f.naming()?.sem_id().cloned());
-        let target = Some(&req.target);
-        match (req.action.as_str(), &req.param) {
-            ("set_value", Some(Value::Text(text))) if target == search.as_ref() => {
-                let f = self.folders_mut().ok_or_else(refuse)?;
-                f.search.set_text(text);
-                Ok(After::Nothing)
-            }
-            ("set_value", Some(Value::Text(text))) if target == name.as_ref() => {
-                let f = self.folders_mut().and_then(Folders::naming_mut);
-                f.ok_or_else(refuse)?.set_text(text);
-                Ok(After::Nothing)
-            }
-            ("submit", _) if target == name.as_ref() && self.commit_name() => Ok(After::Nothing),
-            ("activate", _) => match self.at(&req.target) {
-                Some((c, spot)) if self.pick(c, spot) => Ok(After::Nothing),
-                _ => Err(refuse()),
-            },
-            _ => Err(refuse()),
-        }
-    }
-
-    /// A row, an item or a box takes the focus (its ring, or the box's
-    /// caret); another node of the page takes it from them.
-    fn focus(&mut self, id: &SemId) -> bool {
-        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
-            return false;
-        }
-        let f = self.folders();
-        let search = f.and_then(|f| f.search.sem_id()) == Some(id);
-        let name = f.and_then(|f| f.naming()?.sem_id().cloned()).as_ref() == Some(id);
-        if let Some(f) = self.folders_mut() {
-            if search || name {
-                f.focus_field(name);
-            } else {
-                f.blur_fields();
-            }
-        }
-        if let Some(z) = self.zoom_mut().filter(|z| z.field.is_focused()) {
-            z.field.unfocus();
-            z.sync_level();
-        }
-        self.set_focus(self.at(id));
-        true
-    }
-
-    fn blur(&mut self) -> bool {
-        self.handle_escape()
-    }
-}
-
+mod component;
 mod host;
 #[cfg(test)]
 mod tests;

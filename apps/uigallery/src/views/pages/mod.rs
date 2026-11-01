@@ -1,12 +1,13 @@
 //! The gallery's pages: the sidebar tree (three groups) and, per page,
 //! the title, icon and blurb the chrome shows and what the page body is.
 //! A page is backed by a [`Pane`] (a module with state under
-//! `components/`, `foundations/` or `apps/`), shares one with a note on
-//! what its own example still lacks, or is a placeholder for a widget
-//! `comps` does not have yet. `PAGES` is the one list; the sidebar, the
-//! digit hotkeys and the launch argument all index it. The table itself
-//! is `table.rs`; this file is the types and the lookups.
+//! `components/`, `foundations/` or `apps/`) or is a placeholder for a
+//! widget `comps` does not have yet. `PAGES` is the one list; the
+//! sidebar, the digit hotkeys and the launch argument all index it. The
+//! table itself is `table.rs`, its entries made by `build.rs`; this file
+//! is the types and the lookups.
 
+mod build;
 pub(super) mod panes;
 mod table;
 #[cfg(test)]
@@ -167,9 +168,6 @@ impl Pane {
 pub enum Body {
     /// The page is this pane.
     Pane(Pane),
-    /// The page shows another pane's example; `gap` says what its own
-    /// example still needs (shown as a note above the content).
-    Alias { pane: Pane, gap: &'static str },
     /// No widget in `comps` yet: an empty page that keeps the slot.
     Placeholder,
 }
@@ -187,7 +185,7 @@ impl Page {
     /// The pane behind the page, if any (none for a placeholder).
     pub fn pane(&self) -> Option<Pane> {
         match self.body {
-            Body::Pane(p) | Body::Alias { pane: p, .. } => Some(p),
+            Body::Pane(p) => Some(p),
             Body::Placeholder => None,
         }
     }
@@ -198,12 +196,4 @@ pub fn find(name: &str) -> Option<usize> {
     PAGES
         .iter()
         .position(|p| p.title.eq_ignore_ascii_case(name))
-}
-
-/// Index of the page that is exactly this pane (not an alias of it).
-pub fn index_of(pane: Pane) -> usize {
-    PAGES
-        .iter()
-        .position(|p| p.body == Body::Pane(pane))
-        .expect("every pane has a page")
 }

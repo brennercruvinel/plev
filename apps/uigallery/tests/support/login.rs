@@ -34,6 +34,7 @@ fn key(text: &str, size: f32) -> TextNodeKey {
         font_weight: 400,
         letter_spacing_bits: 0.0f32.to_bits(),
         font_family: None,
+        features: engine::drawing::text::TextFeatures::NONE,
         overflow_wrap: OverflowWrap::Normal,
     }
 }

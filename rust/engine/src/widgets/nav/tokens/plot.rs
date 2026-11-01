@@ -125,11 +125,11 @@ impl ChartRecipe {
         let (colors, glass, control) = (&theme.colors, &theme.glass, &theme.control);
         let text = colors.text;
         Self {
-            label: TypeRole::Small.strong(),
+            label: TypeRole::Caption.run(),
             label_color: glass.text_faint,
-            center: TypeRole::Title.run(),
+            center: TypeRole::H5.run(),
             center_color: text,
-            legend: TypeRole::Caption.regular(),
+            legend: TypeRole::Label.run(),
             legend_color: colors.text_mid,
             grid: colors.divider,
             grid_v_alpha: 0.6,
@@ -151,7 +151,7 @@ impl ChartRecipe {
             swatch_radius: theme.shape.micro / 2.0,
             meter_track: glass.surface_active,
             meter_fill: colors.accent,
-            row: TypeRole::Caption.regular(),
+            row: TypeRole::Caption.run(),
             row_name: colors.text_mid,
             row_value: colors.text_dim,
             row_gap: theme.spacing.sm,

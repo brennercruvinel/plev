@@ -17,11 +17,17 @@
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
-use engine::widgets::content::{Column, Table};
+use engine::widgets::content::{Column, EmptyState, Table};
 use engine::widgets::prelude::{Align, EventResult, Rect, WidgetEvent};
 
 use super::accordion::{Fitted, fit_layout};
 use super::{After, Component, child_id, key_under, root_id, showcase, under};
+
+/// What a table without rows shows under its header: the empty state,
+/// its icon the grid's.
+fn no_rows() -> EmptyState {
+    EmptyState::new("No rows yet", "Rows you add to the sheet show up here.").icon("layout-grid")
+}
 
 /// A row of the sheet: style, font, weight, size and line height, letter
 /// spacing.
@@ -111,6 +117,9 @@ impl TableStaticPage {
         let card = |title, rows: &'static [Row]| {
             let mut table = Table::new(columns(theme), theme);
             table.set_row_count(rows.len());
+            if rows.is_empty() {
+                table = table.empty(no_rows());
+            }
             Card { title, rows, table }
         };
         let mut groups = vec![
@@ -133,6 +142,7 @@ impl TableStaticPage {
                     card("Narrow: columns drop by priority", &SHEET[..4]),
                     card("Long content: cells cut", LONG),
                     card("One row: the frame holds it", &SHEET[..1]),
+                    card("Empty: no rows", &[]),
                 ],
             },
         ];
@@ -150,8 +160,12 @@ impl TableStaticPage {
         Self { root, groups }
     }
 
-    /// Every row in the table's rect.
-    fn table_h(card: &Card, theme: &Theme) -> f32 {
+    /// Every row in the table's rect; without rows, its header and its
+    /// empty state `w` wide.
+    fn table_h(card: &Card, w: f32, theme: &Theme) -> f32 {
+        if card.rows.is_empty() {
+            return card.table.empty_height(w, theme);
+        }
         Table::header_h(theme) + card.rows.len() as f32 * Table::row_h(theme)
     }
 
@@ -159,10 +173,10 @@ impl TableStaticPage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
-        fit_layout(&spans, content, theme, |g, c, _| {
-            Self::table_h(&self.groups[g].cards[c], theme)
+        fit_layout(&spans, content, theme, |g, c, w| {
+            Self::table_h(&self.groups[g].cards[c], w, theme)
         })
     }
 
@@ -204,7 +218,7 @@ impl TableStaticPage {
         let layout = self.layout(content, theme);
         for (group, placed) in self.groups.iter_mut().zip(&layout) {
             for (card, (_, body)) in group.cards.iter_mut().zip(&placed.cards) {
-                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, theme));
+                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, body.w, theme));
                 result = result.merge(card.table.handle_event(event, at, theme));
             }
         }
@@ -219,7 +233,7 @@ impl TableStaticPage {
             showcase::title(c, group.title, content, placed.title_y, theme);
             for (card, (rect, body)) in group.cards.iter_mut().zip(&placed.cards) {
                 showcase::card(c, *rect, card.title, theme);
-                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, theme));
+                let at = Rect::new(body.x, body.y, body.w, Self::table_h(card, body.w, theme));
                 let rows = card.rows;
                 card.table.render_with(c, at, theme, |c, row, cell, col| {
                     let color = if col == 0 { look.cell } else { look.cell_dim };
@@ -317,7 +331,7 @@ mod tests {
                 for (group, placed) in page.groups.iter().zip(page.layout(content, &theme)) {
                     for (card, (rect, body)) in group.cards.iter().zip(&placed.cards) {
                         let what = format!("{w}px, {}", card.title);
-                        let h = TableStaticPage::table_h(card, &theme);
+                        let h = TableStaticPage::table_h(card, body.w, &theme);
                         assert!(body.x >= rect.x && body.right() <= rect.right(), "{what}");
                         assert!(body.y + h <= rect.bottom() + 0.01, "{what}: too tall");
                         let cols = card.table.column_layout(body.w, &theme);

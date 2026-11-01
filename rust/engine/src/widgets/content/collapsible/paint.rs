@@ -62,7 +62,8 @@ impl Collapsible {
         }
         let trigger = self.trigger_rect(bounds, theme);
         if let Some(id) = &self.sem {
-            c.bind(id, [trigger.x, trigger.y, trigger.w, trigger.h]);
+            let at = self.press_rect(bounds, theme);
+            c.bind(id, [at.x, at.y, at.w, at.h]);
         }
         self.paint_trigger(c, trigger, r, alpha, theme);
 
@@ -154,7 +155,7 @@ impl Collapsible {
         }
 
         let style = Self::label_style(r, theme);
-        let label_y = inner.y + (inner.h - inner.label_h) / 2.0;
+        let label_y = inner.y + (inner.h - inner.stack_h) / 2.0;
         c.push_clip(x, label_y, inner.label_w, inner.label_h);
         let key = if self.truncate {
             let shown = TextMeasurer::truncate_to_width(&self.title, &style, inner.label_w);
@@ -171,7 +172,13 @@ impl Collapsible {
         c.pop_clip();
 
         let box_x = inner.x + inner.w - r.chevron_box;
-        self.paint_counter(c, r, box_x - r.chevron_gap, &inner, alpha, theme);
+        if inner.counter_below {
+            let y = label_y + inner.label_h + r.chevron_gap;
+            self.paint_counter(c, r, Spot::Under(x, y), &inner, alpha, theme);
+        } else {
+            let right = box_x - r.chevron_gap;
+            self.paint_counter(c, r, Spot::Beside(right), &inner, alpha, theme);
+        }
         let box_y = inner.y + (inner.h - r.chevron_box) / 2.0;
         let inset = (r.chevron_box - r.chevron) / 2.0;
         if let Some(node) = turned(
@@ -186,13 +193,13 @@ impl Collapsible {
         }
     }
 
-    /// The counter's pill, its right edge at `right`, centered on the
-    /// trigger's row: drop shadows, fill, inset shadows, the count.
+    /// The counter's pill at `spot`: drop shadows, fill, inset shadows,
+    /// the count.
     fn paint_counter(
         &self,
         c: &mut Compositor,
         r: &DisclosureRecipe,
-        right: f32,
+        spot: Spot,
         inner: &super::Inner,
         alpha: f32,
         theme: &Theme,
@@ -205,7 +212,10 @@ impl Collapsible {
         ) else {
             return;
         };
-        let at = Rect::new(right - w, inner.y + (inner.h - h) / 2.0, w, h);
+        let at = match spot {
+            Spot::Beside(right) => Rect::new(right - w, inner.y + (inner.h - h) / 2.0, w, h),
+            Spot::Under(x, y) => Rect::new(x, y, w, h),
+        };
         let shadow: Vec<_> = counter
             .shadow
             .iter()
@@ -233,6 +243,14 @@ impl Collapsible {
             color: faded(counter.text, alpha),
         });
     }
+}
+
+/// Where the counter's pill goes: its right edge at `.0`, centered on
+/// the trigger's row; or its top-left at `(.0, .1)`, under the label.
+#[derive(Clone, Copy)]
+enum Spot {
+    Beside(f32),
+    Under(f32, f32),
 }
 
 fn faded(c: Color, alpha: f32) -> [f32; 4] {

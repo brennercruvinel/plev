@@ -25,11 +25,19 @@ pub enum OverflowWrap {
     /// `clamp_to_lines`). Its min-content width is the longest word.
     #[default]
     Normal,
-    /// CSS `anywhere` (and `break-word` as drawn): a word wider than the
-    /// line breaks between its graphemes. Its min-content width is the
-    /// widest grapheme, so a flex item may shrink to one; what a recipe
-    /// asks for text that must never run out (an editable area, a URL).
+    /// CSS `anywhere`: a word wider than the line breaks between its
+    /// graphemes. Its min-content width is the widest grapheme, so a flex
+    /// item may shrink to one; what a recipe asks for text that must
+    /// never run out whatever its room (an editable area, a message, a
+    /// URL).
     Anywhere,
+    /// CSS `break-word`: drawn as [`OverflowWrap::Anywhere`] (a word
+    /// wider than the line breaks between its graphemes), but its
+    /// min-content width is the longest word, as under
+    /// [`OverflowWrap::Normal`]: a layout never shrinks it below a word,
+    /// so a word breaks only when it cannot fit on a line of its own. What
+    /// a label asks for (a form label, a disclosure's title).
+    BreakWord,
 }
 
 impl OverflowWrap {
@@ -44,6 +52,15 @@ impl OverflowWrap {
         match self {
             OverflowWrap::Normal if !text.chars().any(no_word_bounds) => cosmic_text::Wrap::Word,
             _ => cosmic_text::Wrap::WordOrGlyph,
+        }
+    }
+
+    /// The rule the text's min-content width is measured under:
+    /// [`OverflowWrap::BreakWord`] keeps its words whole there.
+    pub fn min_content(self) -> Self {
+        match self {
+            OverflowWrap::BreakWord => OverflowWrap::Normal,
+            other => other,
         }
     }
 }
@@ -76,9 +93,41 @@ pub struct TextStyle {
     /// stays for call sites that need explicit tracking.
     pub letter_spacing: f32,
     pub font_family: Option<String>,
+    /// OpenType features the run turns on beyond the face's defaults.
+    pub features: TextFeatures,
     /// What a word wider than the line does; [`OverflowWrap::Normal`]
     /// unless the recipe asks.
     pub overflow_wrap: OverflowWrap,
+}
+
+/// The OpenType features a run turns on beyond its face's defaults; the
+/// shaper applies them, and they are part of the shaping key.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub struct TextFeatures {
+    /// `tnum`: every figure as wide as every other, so numbers line up
+    /// in a column and a counting value does not shift its neighbours.
+    pub tabular_figures: bool,
+}
+
+impl TextFeatures {
+    pub const NONE: Self = Self {
+        tabular_figures: false,
+    };
+    pub const TABULAR: Self = Self {
+        tabular_figures: true,
+    };
+
+    /// The features as the shaper takes them; `None` when there are none.
+    pub(crate) fn cosmic(self) -> Option<cosmic_text::FontFeatures> {
+        if self == Self::NONE {
+            return None;
+        }
+        let mut f = cosmic_text::FontFeatures::new();
+        if self.tabular_figures {
+            f.enable(cosmic_text::FeatureTag::new(b"tnum"));
+        }
+        Some(f)
+    }
 }
 
 impl TextStyle {
@@ -89,6 +138,7 @@ impl TextStyle {
             font_weight: 400,
             letter_spacing: 0.0,
             font_family: None,
+            features: TextFeatures::NONE,
             overflow_wrap: OverflowWrap::Normal,
         }
     }
@@ -118,6 +168,11 @@ impl TextStyle {
     /// `em * font_size`).
     pub fn with_letter_spacing(mut self, letter_spacing: f32) -> Self {
         self.letter_spacing = letter_spacing;
+        self
+    }
+
+    pub fn with_features(mut self, features: TextFeatures) -> Self {
+        self.features = features;
         self
     }
 }

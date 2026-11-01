@@ -117,3 +117,28 @@ fn the_filter_shows_the_unread_and_keys_them_in_order() {
     );
     assert!(seen.get(&list.key("3")).is_some() && seen.get(&list.key("4")).is_none());
 }
+
+/// With nothing to show, the list says so (the empty state, as tall as it
+/// needs, inside the dropdown); under Unread with every row read, it says
+/// they are all read.
+#[test]
+fn an_empty_list_shows_its_empty_state() {
+    for theme in themes() {
+        let mut n = Notifications::new(Vec::new());
+        let (w, h) = n.size(400.0, &theme);
+        let mut c = Compositor::new();
+        c.begin_frame();
+        n.render(&mut c, Rect::new(0.0, 0.0, w, h), &theme);
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let said = n.empty_state().title;
+        let list = n.layout(Rect::new(0.0, 0.0, w, h), &theme).list;
+        let drawn = nodes.iter().any(|node| {
+            matches!(node, SceneNode::Text { key, y, .. }
+            if key.text == said && *y >= list.y && *y < list.bottom())
+        });
+        assert!(drawn, "'{said}' in the list");
+        let all = n.empty_state().title;
+        assert!(n.set_filter(1));
+        assert_ne!(n.empty_state().title, all, "unread says another thing");
+    }
+}

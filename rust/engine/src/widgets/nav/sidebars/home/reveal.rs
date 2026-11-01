@@ -5,6 +5,7 @@ use accord::SemId;
 
 use super::{HomeRow, HomeSidebar};
 use crate::control::input::reveal::{Cover, Span, nearest};
+use crate::control::input::scroll::ScrollState;
 use crate::styling::theme::Theme;
 use crate::widgets::widget::Rect;
 
@@ -43,8 +44,11 @@ impl HomeSidebar {
 
     /// Focus into view (WCAG 2.4.11) in the body: scrolls it the least
     /// that shows the part `id` names whole, with a spacing step round
-    /// its ring (`reveal::nearest`, the page's rule, task-104 front I);
-    /// at once, so reduced motion is the same. `true` when it moved.
+    /// its ring (`reveal::nearest`, the page's rule, task-104 front I),
+    /// gliding there with the page's spring and the theme's motion
+    /// (`reveal::Glide`, the page's own), at once with reduced motion. `true`
+    /// when it moves: the body is there already, or on its way
+    /// ([`HomeSidebar::wake`] carries it).
     pub fn reveal(&mut self, id: &SemId, bounds: Rect, theme: &Theme) -> bool {
         let Some(r) = self.part_rect(id, bounds, theme) else {
             return false;
@@ -56,6 +60,40 @@ impl HomeSidebar {
             theme.spacing.sm,
             Cover::default(),
         );
-        by != 0.0 && self.scroll_by(by, bounds, theme)
+        let from = self.scroll_offset(bounds, theme);
+        self.glide_max = self.max_scroll(bounds, theme);
+        let to = (from + by).clamp(0.0, self.glide_max);
+        if to == from {
+            return false;
+        }
+        let mut scroll = self.glide_scroll(from);
+        self.glide.to(&mut scroll, to, &theme.motion);
+        self.scroll = scroll.offset();
+        true
+    }
+
+    /// Whether the body glides toward a focus.
+    pub fn revealing(&self) -> bool {
+        self.glide.is_gliding()
+    }
+
+    /// The glide advanced by `dt`: `true` while it still moves.
+    pub(super) fn glide_tick(&mut self, dt: f32) -> bool {
+        if !self.glide.is_gliding() {
+            return false;
+        }
+        let mut scroll = self.glide_scroll(self.scroll);
+        let moving = self.glide.tick(&mut scroll, dt);
+        self.scroll = scroll.offset();
+        moving
+    }
+
+    /// A scroll state for the glide to drive: the body's reach as it was
+    /// when the glide started, at `offset`.
+    fn glide_scroll(&self, offset: f32) -> ScrollState {
+        let mut scroll = ScrollState::new();
+        scroll.set_content(self.glide_max);
+        scroll.scroll_to(offset);
+        scroll
     }
 }

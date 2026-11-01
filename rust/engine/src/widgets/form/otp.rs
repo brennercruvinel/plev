@@ -36,6 +36,7 @@ use crate::widgets::form::label::Label;
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::text_field::render::draw_box;
 use crate::widgets::form::text_input::{Accept, Chars};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, rounded_rect};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
@@ -189,7 +190,9 @@ impl InputOtp {
     /// text and its two borders.
     fn least(theme: &Theme) -> f32 {
         let r = &theme.form.input;
-        ((r.text.line_height + r.border_width * 2.0) / TextField::height(theme)).min(1.0)
+        ((theme.typography.run(r.text).line_height + r.border_width * 2.0)
+            / TextField::height(theme))
+        .min(1.0)
     }
 
     /// The narrowest the code lays out in without leaving its width: its
@@ -256,7 +259,11 @@ impl InputOtp {
             }
         }
         let message = self.message.as_ref().map(|m| {
-            let (w, h) = TextMeasurer::measure_styled(m.text(), &f.message, Some(bounds.w));
+            let (w, h) = TextMeasurer::measure_styled(
+                m.text(),
+                &theme.typography.run(f.message),
+                Some(bounds.w),
+            );
             Rect::new(
                 bounds.x,
                 y + cell + f.message_gap,
@@ -284,12 +291,15 @@ impl InputOtp {
         l.cells.iter().fold(0.0, |r, c| r.max(c.right()))
     }
 
-    /// The cell at `(x, y)`.
+    /// The cell at `(x, y)`: the one across from it on the row's press
+    /// area (`widgets::hit`, 44 px tall with a finger).
     pub fn cell_at(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> Option<usize> {
-        self.layout(bounds, theme)
-            .cells
-            .iter()
-            .position(|r| r.contains(x, y))
+        let l = self.layout(bounds, theme);
+        let row = hit_rect(l.row()?, theme);
+        if !row.contains(x, y) {
+            return None;
+        }
+        l.cells.iter().position(|r| x >= r.x && x <= r.right())
     }
 
     /// The characters of the value as drawn (the composition in it, a
@@ -331,7 +341,7 @@ impl InputOtp {
     pub fn on_row(&self, x: f32, y: f32, bounds: Rect, theme: &Theme) -> bool {
         self.layout(bounds, theme)
             .row()
-            .is_some_and(|r| r.contains(x, y))
+            .is_some_and(|r| hit_rect(r, theme).contains(x, y))
     }
 
     /// The pointer: hover by cell; a press on a filled cell focuses the
@@ -404,6 +414,7 @@ impl InputOtp {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let l = self.layout(bounds, theme);
         let form = &theme.form;
         let r = &form.input;
@@ -417,6 +428,8 @@ impl InputOtp {
             label.draw(c, layer, at.x, at.y, Some(at.w), theme);
         }
         if let (Some(id), Some(row)) = (&self.sem, l.row()) {
+            // where a press lands: the row, grown to the least target
+            let row = hit_rect(row, theme);
             c.bind_to_layer(layer, id, [row.x, row.y, row.w, row.h]);
         }
         let focused = self.input.is_focused();
@@ -426,7 +439,7 @@ impl InputOtp {
         let composing = self.input.input.composed().map(|(text, span)| {
             text[..span.start].chars().count()..text[..span.end].chars().count()
         });
-        let style = &r.text;
+        let style = &scale.run(r.text);
         for (i, cell) in l.cells.iter().enumerate() {
             let surface = if focused && i == active {
                 &r.focus
@@ -501,7 +514,11 @@ impl InputOtp {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(m.text(), &form.field.message, Some(at.w)),
+                    key: TextNodeKey::from_style(
+                        m.text(),
+                        &scale.run(form.field.message),
+                        Some(at.w),
+                    ),
                     x: at.x,
                     y: at.y,
                     color: fade(color),

@@ -2,9 +2,10 @@
 //! of them: its size, its events, its draw, its projection, the part a
 //! reader names, the line it types in.
 
-use accord::{SemId, SnapshotBuilder, Value};
+use accord::{Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
+use engine::widgets::content::EmptyState;
 use engine::widgets::message::comment::CommentThread;
 use engine::widgets::message::compose::ComposeLine;
 use engine::widgets::message::marker::Marker;
@@ -17,6 +18,9 @@ pub(super) enum Sample {
     Thread(Box<CommentThread>),
     New(Box<NewComment>),
     Quick(Box<QuickComment>),
+    /// A thread with nothing said yet: the empty state, as wide as a
+    /// thread.
+    Empty(Box<EmptyState>),
 }
 
 impl Sample {
@@ -41,6 +45,7 @@ impl Sample {
                 Some(i) => Sample::Quick(Box::new((*q).sem(i))),
                 None => Sample::Quick(q),
             },
+            Sample::Empty(e) => Sample::Empty(e),
         };
     }
 
@@ -50,6 +55,11 @@ impl Sample {
             Sample::Thread(t) => t.size(avail, theme),
             Sample::New(n) => n.size(avail, theme),
             Sample::Quick(q) => q.size(avail, theme),
+            Sample::Empty(e) => {
+                let w = theme.message.comment.popup_w.min(avail);
+                let h = e.height(Rect::new(0.0, 0.0, w, 0.0), theme);
+                (w, h + theme.spacing.lg * 2.0)
+            }
         }
     }
 
@@ -59,6 +69,7 @@ impl Sample {
             Sample::Thread(t) => t.handle_event(event, at, theme),
             Sample::New(n) => n.handle_event(event, at, theme),
             Sample::Quick(q) => q.handle_event(event, at, theme),
+            Sample::Empty(_) => EventResult::IGNORED,
         }
     }
 
@@ -68,12 +79,13 @@ impl Sample {
             Sample::Thread(t) => t.render(c, at, theme),
             Sample::New(n) => n.render(c, at, theme),
             Sample::Quick(q) => q.render(c, at, theme),
+            Sample::Empty(e) => e.render(c, at, theme),
         }
     }
 
     pub fn wake(&mut self, dt: f32) -> Wake {
         match self {
-            Sample::Marker(_) => Wake::idle(),
+            Sample::Marker(_) | Sample::Empty(_) => Wake::idle(),
             Sample::Thread(t) => t.wake(dt),
             Sample::New(n) => n.wake(dt),
             Sample::Quick(q) => q.wake(dt),
@@ -82,7 +94,7 @@ impl Sample {
 
     pub fn line(&self) -> Option<&ComposeLine> {
         match self {
-            Sample::Marker(_) => None,
+            Sample::Marker(_) | Sample::Empty(_) => None,
             Sample::Thread(t) => Some(t.reply()),
             Sample::New(n) => Some(n.line()),
             Sample::Quick(q) => Some(q.line()),
@@ -91,7 +103,7 @@ impl Sample {
 
     pub fn line_mut(&mut self) -> Option<&mut ComposeLine> {
         match self {
-            Sample::Marker(_) => None,
+            Sample::Marker(_) | Sample::Empty(_) => None,
             Sample::Thread(t) => Some(t.reply_mut()),
             Sample::New(n) => Some(n.line_mut()),
             Sample::Quick(q) => Some(q.line_mut()),
@@ -101,7 +113,7 @@ impl Sample {
     /// Where its line is, in a box at `at`.
     pub fn line_rect(&self, at: Rect, theme: &Theme) -> Option<Rect> {
         match self {
-            Sample::Marker(_) => None,
+            Sample::Marker(_) | Sample::Empty(_) => None,
             Sample::Thread(t) => t.is_open().then(|| t.layout(at, theme).line),
             Sample::New(n) => Some(n.layout(at, theme).line),
             Sample::Quick(q) => Some(q.layout(at, theme).line),
@@ -110,7 +122,7 @@ impl Sample {
 
     pub fn ime_area(&self, at: Rect, theme: &Theme) -> Option<Rect> {
         match self {
-            Sample::Marker(_) => None,
+            Sample::Marker(_) | Sample::Empty(_) => None,
             Sample::Thread(t) => Some(t.ime_area(at, theme)),
             Sample::New(n) => Some(n.ime_area(at, theme)),
             Sample::Quick(q) => Some(q.ime_area(at, theme)),
@@ -140,6 +152,7 @@ impl Sample {
                 q.focus(None);
                 had
             }
+            Sample::Empty(_) => false,
         }
     }
 
@@ -166,6 +179,7 @@ impl Sample {
                     q.focus(Some(part));
                 }
             }
+            Sample::Empty(_) => {}
         }
     }
 
@@ -175,6 +189,7 @@ impl Sample {
             Sample::Thread(t) => t.focused().and_then(|p| t.part_id(p)),
             Sample::New(n) => n.focused().and_then(|p| n.part_id(p)),
             Sample::Quick(q) => q.focused().and_then(|p| q.part_id(p)),
+            Sample::Empty(_) => None,
         }
     }
 
@@ -200,6 +215,13 @@ impl Sample {
                     q.project(b, id, Some(card));
                 }
             }
+            // the card names it; its title and line are what it says
+            Sample::Empty(e) => {
+                if let Ok(id) = card.child("empty") {
+                    let mut node = b.node(&id, Role::Status, &e.title);
+                    node.parent(card).description(e.message.as_str());
+                }
+            }
         }
     }
 
@@ -223,6 +245,7 @@ impl Sample {
             Sample::Thread(t) => t.part_of(target).map(|p| t.act(p, action, param)),
             Sample::New(n) => n.part_of(target).map(|p| n.act(p, action, param)),
             Sample::Quick(q) => q.part_of(target).map(|p| q.act(p, action, param)),
+            Sample::Empty(_) => None,
         }
     }
 }

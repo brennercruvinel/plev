@@ -95,7 +95,9 @@ impl PromptInput {
             1.0
         };
         if let Some(id) = self.model.sem_id() {
-            c.bind_to_layer(layer, id, [r.x, r.y, r.w, r.h]);
+            // where a press lands: the trigger grown to the least target
+            let h = crate::widgets::hit::hit_rect(r, theme);
+            c.bind_to_layer(layer, id, [h.x, h.y, h.w, h.h]);
         }
         if !self.voice && (self.model_press.hovered || self.model_open) {
             c.push_to_layer(layer, rounded_rect(r.x, r.y, r.w, r.h, t.radius, t.hover.0));

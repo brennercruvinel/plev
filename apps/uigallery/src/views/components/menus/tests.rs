@@ -1,6 +1,8 @@
 //! The Menus page's tests.
+use super::super::Component;
 use super::*;
 use crate::views::text_input::host::TextHost;
+use accord::{Request, Role, SnapshotBuilder};
 
 /// The width sweep, 280 to 1600 every 8 px under the core and the
 /// hoff themes: every card in the content and apart, every menu inside
@@ -22,7 +24,7 @@ fn every_menu_fits_its_card_from_narrow_to_wide() {
                 {
                     assert!(next.x >= r.right(), "{w}: cards overlap");
                 }
-                let inset = theme.spacing.sm;
+                let inset = showcase::inset(&theme);
                 let chip = showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                 let b = MenusPage::widget_rect(&card.body, *r, &theme);
                 assert!(
@@ -31,8 +33,30 @@ fn every_menu_fits_its_card_from_narrow_to_wide() {
                     card.title
                 );
                 assert!(b.y >= chip.bottom() && b.bottom() <= r.bottom(), "{w}");
+                let room = showcase::body(*r, &theme);
+                assert!(
+                    b.bottom() + MenusPage::pick_line(&theme) <= room.bottom() + 0.5,
+                    "{w}: the pick's line under {}",
+                    card.title
+                );
             }
         }
+    }
+}
+
+/// In one column every card is as tall as its menu and the pick's line
+/// in the showcase's frame, and no taller: the template's 486 px stage
+/// is gone.
+#[test]
+fn a_card_is_as_tall_as_its_menu() {
+    let theme = Theme::hoff_core();
+    let page = MenusPage::new();
+    let content = Rect::new(0.0, 0.0, 328.0, 800.0);
+    let at = &page.layout(content, &theme)[0];
+    for (card, r) in page.cards.iter().zip(&at.cards) {
+        let h = MenusPage::size(&card.body, &theme).1 + MenusPage::pick_line(&theme);
+        assert_eq!(r.h, showcase::card_height(h, &theme), "{}", card.title);
+        assert!(r.h < 486.0, "{}: {}", card.title, r.h);
     }
 }
 

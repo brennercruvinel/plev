@@ -162,7 +162,7 @@ impl ChartPage {
     /// is a hairline's track, the labeled bars a row per item.
     fn plot_size(plot: &Plot, card_w: f32, theme: &Theme) -> (f32, f32) {
         let k = &theme.navigation.chart;
-        let w = (card_w - theme.spacing.sm * 2.0).max(0.0);
+        let w = showcase::room(card_w, theme);
         let row_h = theme.control.height(ControlSize::Xs);
         let h = match plot {
             Plot::Meter(_) => theme.spacing.sm,
@@ -180,7 +180,7 @@ impl ChartPage {
                 .iter()
                 .map(|c| showcase::card_height(Self::plot_size(&c.plot, w, theme).1, theme))
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

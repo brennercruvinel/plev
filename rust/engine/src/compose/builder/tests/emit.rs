@@ -50,6 +50,22 @@ fn text_font_size_changes_size_and_line_height() {
     assert_eq!(key.line_height_bits, (32.0_f32 * 1.3).to_bits());
 }
 
+/// A text set in a role of the theme's scale carries the role's size,
+/// line height, weight and tracking, not the builder's 1.3 lead.
+#[test]
+fn text_style_sets_the_role_s_measures() {
+    use crate::styling::theme::{Theme, TypeRole};
+    let style = Theme::hoff_core().typography.run(TypeRole::Title.strong());
+    let nodes = text("Hi").text_style(&style).render(&mut test_cx());
+    let SceneNode::Text { key, .. } = &nodes[0] else {
+        panic!("Expected Text, got {:?}", nodes[0]);
+    };
+    assert_eq!(key.font_size_bits, 15.0_f32.to_bits());
+    assert_eq!(key.line_height_bits, 24.0_f32.to_bits());
+    assert_eq!(key.font_weight, 600);
+    assert_eq!(key.letter_spacing_bits, style.letter_spacing.to_bits());
+}
+
 #[test]
 fn text_color_applied() {
     let el = text("Hi").text_color("red");

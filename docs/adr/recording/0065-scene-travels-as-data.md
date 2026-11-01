@@ -8,11 +8,11 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [agents, rendering, recording, semantics]
-relations: [adr-0062, task-59, task-61, task-76, task-79]
+relations: [adr-0037, adr-0062, task-59, task-61, task-76, task-79, task-104]
 evidence: [919655eb, dc9e146e, 7728da47]
 source: docs/adr/recording/0065-scene-travels-as-data.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-01
 review: reviewed
 ---
 
@@ -122,6 +122,17 @@ keeps assets once per content, and tests against the gallery):
   `PartialEq`. a text key is read back field by field, never through
   `TextNodeKey::new`, which takes the string the source has now under
   hot reload.
+- a text key ends with its style byte (added on 2026-11-01, task-104):
+  bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`, bit 2
+  `OverflowWrap::BreakWord`, the byte the
+  session file's text asset ends with (adr-0037, version 2), so a
+  mirrored textarea breaks its words and a mirrored counter keeps its
+  figures as the app draws them; before, the mirror drew every text
+  with `Normal` and no features. it is written for every text (a node
+  has no length to leave it out by), one byte per text node. the codec
+  has no version of its own: the mirror is built with the app it
+  watches, and nothing keeps these bytes, so a receiver built before the
+  byte does not read a sender built after it.
 
 ### what travels and what does not
 

@@ -5,14 +5,21 @@
 //! asset := kind u8, len u32, payload
 //! text  (0) := text_len u32, utf8, font_size f32 bits u32, line_height
 //!              u32, has_max_width u8 (then u32), font_weight u16,
-//!              letter_spacing u32, has_family u8 (then len u16, utf8)
+//!              letter_spacing u32, has_family u8 (then len u16, utf8),
+//!              then, from version 2, style u8 (see `style_bits`) only
+//!              when it is not 0
 //! image (1) := width u32, height u32, has_pixels u8 (then width * height
 //!              * 4 bytes of RGBA8)
 //! path  (2) := piece_count u32, (len u32, piece)*; each piece is a
 //!              `motion::encoding::asset_path` payload (twips vertices, one color,
 //!              u16 indices), so a path of any size fits
 //!
-//! a text key is kept bit for bit. a path comes back on the twips grid
+//! a text key is kept bit for bit. its wrap rule and its OpenType
+//! features are the `style` byte, which a text with the engine's
+//! defaults (`OverflowWrap::Normal`, `TextFeatures::NONE`) leaves out, so
+//! version 2 costs such a text nothing; a file of version 0 or 1 has no
+//! byte and its texts read with those defaults, as they were drawn when
+//! the engine had neither. a path comes back on the twips grid
 //! with the color of its first vertex, as monster keeps paths. an image
 //! without pixels comes back with its size only and draws nothing: the
 //! engine keeps an image's pixels until they reach the GPU, not after, so
@@ -22,7 +29,7 @@ use std::sync::Arc;
 
 use engine::drawing::compositor::TextNodeKey;
 use engine::drawing::path::TessellatedPath;
-use engine::drawing::text::OverflowWrap;
+use engine::drawing::text::{OverflowWrap, TextFeatures};
 use motion::LoweredAsset;
 use motion::encoding::asset_path::{pack_chunks, unpack};
 
@@ -33,6 +40,44 @@ use crate::visuals::reader::Asset;
 const TEXT: u8 = 0;
 const IMAGE: u8 = 1;
 const PATH: u8 = 2;
+
+/// the `style` bit of `TextFeatures::tabular_figures` (`tnum`).
+const STYLE_TABULAR: u8 = 1 << 0;
+/// the `style` bit of `OverflowWrap::Anywhere`.
+const STYLE_ANYWHERE: u8 = 1 << 1;
+/// the `style` bit of `OverflowWrap::BreakWord` (never with `Anywhere`'s).
+const STYLE_BREAK_WORD: u8 = 1 << 2;
+
+/// a text's wrap rule and OpenType features as one byte, 0 for the
+/// engine's defaults; the session file and the scene codec share it. the
+/// patterns are exhaustive, so a feature or a rule the engine adds stops
+/// the build here until the formats give it a bit.
+pub(crate) fn style_bits(features: TextFeatures, wrap: OverflowWrap) -> u8 {
+    let TextFeatures { tabular_figures } = features;
+    let wrap = match wrap {
+        OverflowWrap::Normal => 0,
+        OverflowWrap::Anywhere => STYLE_ANYWHERE,
+        OverflowWrap::BreakWord => STYLE_BREAK_WORD,
+    };
+    wrap | if tabular_figures { STYLE_TABULAR } else { 0 }
+}
+
+/// the byte of `style_bits` read back; `None` with a bit no writer sets.
+pub(crate) fn from_style_bits(bits: u8) -> Option<(TextFeatures, OverflowWrap)> {
+    if bits & !(STYLE_TABULAR | STYLE_ANYWHERE | STYLE_BREAK_WORD) != 0 {
+        return None;
+    }
+    let features = TextFeatures {
+        tabular_figures: bits & STYLE_TABULAR != 0,
+    };
+    let wrap = match (bits & STYLE_ANYWHERE != 0, bits & STYLE_BREAK_WORD != 0) {
+        (false, false) => OverflowWrap::Normal,
+        (true, false) => OverflowWrap::Anywhere,
+        (false, true) => OverflowWrap::BreakWord,
+        (true, true) => return None,
+    };
+    Some((features, wrap))
+}
 
 /// appends one asset: kind, length, payload.
 pub(crate) fn put_asset(buf: &mut Vec<u8>, asset: &Asset) -> Result<(), FileError> {
@@ -94,6 +139,10 @@ fn put_text(buf: &mut Vec<u8>, key: &TextNodeKey) -> Result<(), FileError> {
         }
         None => buf.push(0),
     }
+    match style_bits(key.features, key.overflow_wrap) {
+        0 => {}
+        style => buf.push(style),
+    }
     Ok(())
 }
 
@@ -124,14 +173,15 @@ pub(crate) enum Read {
 }
 
 /// reads one asset: kind, length, a payload that must end where its
-/// length says.
-pub(crate) fn read_asset(c: &mut Cur<'_>, asset: usize) -> Result<Read, FileError> {
+/// length says. `styled` is a file of version 2 on, whose text may end
+/// with its `style` byte.
+pub(crate) fn read_asset(c: &mut Cur<'_>, asset: usize, styled: bool) -> Result<Read, FileError> {
     let bad = |reason| FileError::Asset { asset, reason };
     let kind = c.u8("asset kind")?;
     let len = usize::try_from(c.u32("asset length")?).map_err(|_| bad("length"))?;
     let mut p = Cur::new(c.take(len, "asset payload")?);
     let out = match kind {
-        TEXT => Read::Ready(LoweredAsset::TextStyle(read_text(&mut p)?)),
+        TEXT => Read::Ready(LoweredAsset::TextStyle(read_text(&mut p, asset, styled)?)),
         IMAGE => {
             let width = p.u32("image width")?;
             let height = p.u32("image height")?;
@@ -157,7 +207,7 @@ pub(crate) fn read_asset(c: &mut Cur<'_>, asset: usize) -> Result<Read, FileErro
     Ok(out)
 }
 
-fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
+fn read_text(p: &mut Cur<'_>, asset: usize, styled: bool) -> Result<TextNodeKey, FileError> {
     let len = usize::try_from(p.u32("text length")?).map_err(|_| FileError::Truncated("text"))?;
     let text = p.text(len, "text")?;
     let font_size_bits = p.u32("font size")?;
@@ -175,6 +225,20 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
             Some(p.text(len, "family")?)
         }
     };
+    // the defaults when the byte is not there: a file before version 2,
+    // or a text of the defaults. the writer never writes a 0, so a 0 is
+    // refused like an unknown bit, and the bytes of a text stay one form.
+    let (features, overflow_wrap) = match (styled, p.rest()) {
+        (true, 1..) => match p.u8("text style")? {
+            0 => None,
+            bits => from_style_bits(bits),
+        }
+        .ok_or(FileError::Asset {
+            asset,
+            reason: "a text style the writer does not write",
+        })?,
+        _ => (TextFeatures::NONE, OverflowWrap::Normal),
+    };
     // a literal, not `TextNodeKey::new`: the key comes back bit for bit,
     // never through the hot reload lookup of the text.
     Ok(TextNodeKey {
@@ -185,9 +249,8 @@ fn read_text(p: &mut Cur<'_>) -> Result<TextNodeKey, FileError> {
         font_weight,
         letter_spacing_bits,
         font_family,
-        // the format has no field for it: a text comes back with the
-        // engine's default rule (see `put_key` in `scene/node.rs`)
-        overflow_wrap: OverflowWrap::Normal,
+        features,
+        overflow_wrap,
     })
 }
 

@@ -29,6 +29,7 @@ use crate::styling::theme::Theme;
 use crate::widgets::form::select::list::{self, Row, Window};
 use crate::widgets::form::text_field::TextField;
 use crate::widgets::form::tokens::{Look, Slot};
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
@@ -298,6 +299,12 @@ impl Combobox {
         scroll
     }
 
+    /// The list's rect below the control, open or not: where a picture
+    /// of the open state (a showcase card) draws it.
+    pub fn list_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        self.panel(bounds, theme).0
+    }
+
     /// The list's rect while open.
     pub fn dropdown_rect(&self, bounds: Rect, theme: &Theme) -> Option<Rect> {
         self.is_open().then(|| self.panel(bounds, theme).0)
@@ -341,7 +348,7 @@ impl Combobox {
                 {
                     return EventResult::changed();
                 }
-                if control.contains(x, y) && !self.is_open() {
+                if hit_rect(control, theme).contains(x, y) && !self.is_open() {
                     self.open();
                     return EventResult::clicked();
                 }
@@ -424,21 +431,36 @@ impl Combobox {
     /// Draws the open list on `layer` (an overlay, so it floats over what
     /// is below the control); nothing while closed.
     pub fn render_dropdown(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
-        if !self.is_open() {
-            return;
+        if self.is_open() {
+            self.render_list(c, layer, bounds, theme);
         }
+    }
+
+    /// The list on `layer` below the control at `bounds`, open or not:
+    /// the matches for the text in the box, or the row saying there are
+    /// none. What the open dropdown draws, and a picture of that state.
+    pub fn render_list(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let (dd, window) = self.panel(bounds, theme);
         list::draw_body(c, layer, dd, theme);
         let m = self.matches();
         if m.is_empty() {
             let p = &theme.form.select.panel;
             let row = window.row(0);
+            // one row, as an option's: cut with an ellipsis where it is
+            // wider (a larger text, a longer language)
+            let style = scale.run(p.text);
+            let said = TextMeasurer::truncate_to_width(
+                &self.empty,
+                &style,
+                (row.right() - dd.x - p.text_inset * 2.0).max(0.0),
+            );
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(&self.empty, &p.text, Some(row.w)),
+                    key: TextNodeKey::from_style(&said, &style, None),
                     x: dd.x + p.text_inset,
-                    y: row.y + TextMeasurer::vertical_center(&p.text, p.row_h),
+                    y: row.y + TextMeasurer::vertical_center(&scale.run(p.text), p.row_h),
                     color: p.text_color.0,
                 },
             );
@@ -456,7 +478,7 @@ impl Combobox {
                 selected: self.selected == Some(m[k]),
                 highlighted: lit == Some(m[k]),
             },
-            &theme.form.select.panel.text,
+            &scale.run(theme.form.select.panel.text),
             theme,
         );
     }

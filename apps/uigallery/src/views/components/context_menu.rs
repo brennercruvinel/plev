@@ -22,7 +22,7 @@ use engine::widgets::overlay::tokens::MenuStyle;
 use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
 use engine::widgets::recipe::focus_ring_inside;
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 
 /// The kit's file menu (`FileMenu/index.tsx:2-31`): each title, its keys,
@@ -148,18 +148,22 @@ impl ContextMenuPage {
         }
     }
 
-    /// The live card, `h-50`, then the kit's menus, each card as tall as
-    /// the tallest menu below its chip.
+    /// The live card, the theme's least card height (the area a right
+    /// click opens the menu in, `h-50`), then the kit's menus, each card
+    /// as tall as the tallest menu below its chip.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let tallest = self
             .shown
             .iter()
             .map(|s| s.menu.size(theme).1)
             .fold(0.0, f32::max);
-        let h = CARD_H.max(frame + tallest);
+        let h = frame + tallest;
         showcase::layout_sized(
-            [(1, vec![CARD_H]), (3, vec![h; self.shown.len()])],
+            [
+                (GROUPS[0], 1, vec![showcase::card_min_h(theme)]),
+                (GROUPS[1], 3, vec![h; self.shown.len()]),
+            ],
             content,
             theme,
         )
@@ -215,9 +219,13 @@ impl ContextMenuPage {
         for (shown, card) in self.shown.iter().zip(&layout[1].cards) {
             showcase::card(c, *card, shown.chip, theme);
             let body = showcase::body(*card, theme);
-            let (w, _) = shown.menu.size(theme);
+            // as wide as it asks, never wider than the card's body (its
+            // labels cut to it)
+            let (w, h) = shown.menu.size(theme);
+            let w = w.min(body.w);
             let x = (body.x + (body.w - w) / 2.0).max(body.x).round();
-            shown.menu.render(c, LayerId::DEFAULT, theme, x, body.y);
+            let panel = Rect::new(x, body.y, w, h);
+            shown.menu.render_in(c, LayerId::DEFAULT, theme, panel, 0.0);
         }
     }
 }

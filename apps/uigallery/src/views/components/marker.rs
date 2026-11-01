@@ -206,7 +206,7 @@ impl MarkerPage {
                 let h = Self::canvas_h(card, w, theme).max(Self::row_h(card, theme));
                 showcase::card_height(h, theme)
             });
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

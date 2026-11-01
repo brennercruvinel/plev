@@ -26,7 +26,7 @@ use engine::widgets::prelude::{
     Avatar, AvatarSize, Button, ButtonSize, ButtonVariant, EventResult, Rect, WidgetEvent,
 };
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 
 /// Who the card shows.
@@ -131,21 +131,23 @@ impl HoverCardPage {
     /// handle, the gap and the panel.
     fn card_h(&self, g: usize, content: Rect, theme: &Theme) -> f32 {
         if !self.groups[g].pinned {
-            return CARD_H;
+            // the live stage: its panel floats over the page
+            return showcase::card_min_h(theme);
         }
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let handle = ButtonSize::Sm.height(theme);
         let gap = theme.overlay.popover.clearance.gap;
         let narrowest = content.w - frame;
-        CARD_H.max(frame + handle + gap + Self::panel_size(theme, narrowest).1)
+        frame + handle + gap + Self::panel_size(theme, narrowest).1
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let spans = self.groups.iter().enumerate().map(|(g, group)| {
             let h = self.card_h(g, content, theme);
-            (group.columns, group.cards.len(), h)
+            (group.title, group.columns, group.cards.len(), h)
         });
-        showcase::layout_sized(spans.map(|(span, n, h)| (span, vec![h; n])), content, theme)
+        let groups = spans.map(|(title, span, n, h)| (title, span, vec![h; n]));
+        showcase::layout_sized(groups, content, theme)
     }
 
     /// Every card's handle and where its panel goes: in its card's body

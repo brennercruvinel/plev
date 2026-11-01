@@ -181,7 +181,7 @@ impl FormPage {
     /// y, on the showcase's grid, a card as tall as its widget needs (at
     /// least `h-50`) and the widget centered in it, clear of the chip.
     pub(crate) fn layout(&self, content: Rect, theme: &Theme) -> Vec<Laid> {
-        let side = theme.spacing.lg;
+        let side = showcase::inset(theme);
         let sizes: Vec<Vec<(f32, f32)>> = self
             .groups
             .iter()
@@ -195,7 +195,7 @@ impl FormPage {
             .collect();
         let wanted = self.groups.iter().zip(&sizes).map(|(g, s)| {
             let h = s.iter().map(|(_, h)| showcase::card_height(*h, theme));
-            (g.columns, h.collect())
+            (g.title, g.columns, h.collect())
         });
         showcase::layout_sized(wanted, content, theme)
             .into_iter()

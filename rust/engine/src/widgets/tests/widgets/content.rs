@@ -64,6 +64,33 @@ fn card_default_width_is_hoff_368() {
     }
 }
 
+/// A card's height follows the width it gets: the preferred size is the
+/// height at its own width, every width from 280 to 1600 holds at least a
+/// line, and a wrapping text (the profile's bio) grows the card in a
+/// narrow column.
+#[test]
+fn a_card_is_as_tall_as_its_content_at_its_width() {
+    let theme = hoff();
+    let line = theme.typography.role(TypeRole::Body).line_height;
+    for card in sample_cards() {
+        let (w, h) = card.preferred_size(&theme);
+        assert_eq!(card.height_for(w, &theme), h);
+        for w in (280..=1600).step_by(8) {
+            let at = card.height_for(w as f32, &theme);
+            assert!(at.is_finite() && at > line, "{w}: {at}");
+        }
+    }
+    let long = Card::new(CardVariant::Profile {
+        name: "Artur".into(),
+        username: "@artur".into(),
+        bio: "Designs dark glass for the people who read the small print twice.".into(),
+        action: "Follow".into(),
+        online: true,
+        avatar: None,
+    });
+    assert!(long.height_for(280.0, &theme) > long.height_for(1200.0, &theme));
+}
+
 #[test]
 fn card_deck_shell_is_the_discreet_post_lift() {
     let theme = Theme::hoff();
@@ -532,7 +559,7 @@ fn disclosure_tokens_derived_from_the_core_palette_are_the_kit() {
 #[test]
 fn rows_and_tables_keep_their_look_outside_the_core() {
     use crate::styling::theme::ControlSize;
-    use crate::widgets::content::HeaderRecipe;
+    use crate::widgets::content::{HeaderRecipe, PageHeadRecipe};
     use crate::widgets::nav::PanelHeader;
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let (list, table) = (theme.disclosure.list, theme.disclosure.table);
@@ -552,7 +579,8 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         );
         assert_eq!(Table::cell_pad(&theme), theme.spacing.md);
         let tree = theme.disclosure.tree;
-        let body = theme.typography.role(TypeRole::Body);
+        // the kit's label role, at the theme's size
+        let body = theme.typography.role(TypeRole::Label);
         let gap = theme.spacing.xs;
         assert_eq!(tree.row_h, (body.line_height + gap * 2.0).round());
         assert_eq!(
@@ -573,25 +601,46 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!(Panel::pad(&theme), theme.spacing.lg);
         assert_eq!(
             Panel::label_style(&theme),
-            theme.typography.run(TypeRole::Caption.strong())
+            theme.typography.role(TypeRole::Label)
         );
         assert_eq!(theme.disclosure.panel.radius, theme.shape.card);
         assert_eq!(theme.disclosure.panel.label, g.text_faint);
         let xl = theme.control.height(ControlSize::Xl);
         let head = PanelHeader::new("Changes");
         assert_eq!(head.height(&theme), xl);
+        // unframed, the head is the page head of before (the page frame's)
         let blurb = theme.typography.role(TypeRole::Body).line_height;
         let with = PanelHeader::new("Changes").blurb("a blurb");
         assert_eq!(with.height(&theme), xl + blurb + theme.spacing.xs);
+        // A page head (the shell's, unframed) titles in h3, a framed
+        // panel head in the kit's roles.
         assert_eq!(
             head.title_style(&theme),
-            theme.typography.role(TypeRole::Title)
+            theme.typography.role(TypeRole::H3)
         );
-        assert_eq!(theme.disclosure.header, HeaderRecipe::page_head(&theme));
+        assert_eq!(
+            HeaderRecipe::page_head(&theme).title_type,
+            TypeRole::Title.run()
+        );
+        assert_eq!(
+            PanelHeader::new("Changes").framed().title_style(&theme),
+            theme.typography.run(TypeRole::Heading.strong())
+        );
+        // the panel's head is the page head of before in the kit's roles
+        let kit = Theme::hoff_core().disclosure.header;
+        assert_eq!(
+            theme.disclosure.header,
+            HeaderRecipe {
+                title_type: kit.title_type,
+                blurb_type: kit.blurb_type,
+                ..HeaderRecipe::page_head(&theme)
+            }
+        );
+        // the page head is the page frame's own, fluid with its h3 title
         let page = theme.disclosure.page;
         assert_eq!(
-            (page.narrow, page.wide),
-            (theme.disclosure.header, theme.disclosure.header)
+            page,
+            PageHeadRecipe::derive(&theme, HeaderRecipe::page_head(&theme))
         );
         assert!(!page.bleed && !head.bleeds(&theme));
         assert_eq!(PanelHeader::pad(&theme), theme.spacing.md);
@@ -602,7 +651,7 @@ fn rows_and_tables_keep_their_look_outside_the_core() {
         assert_eq!((split.rest, split.active), (g.edge_soft, g.surface_active));
         assert_eq!(
             Table::cell_style(&theme),
-            theme.typography.role(TypeRole::Body)
+            theme.typography.role(TypeRole::Caption)
         );
         let mut c = Compositor::new();
         c.begin_frame();
@@ -663,6 +712,38 @@ fn a_core_table_is_the_kit_s_spec_sheet() {
         if *border_width == 1.0 && (*h - (head + 3.0 * row_h)).abs() < 1e-3)
     });
     assert!(framed, "the frame holds the rows there are");
+}
+
+/// A table without rows shows its empty state under its header, framed
+/// with it, as tall as `empty_height` says; a row takes it away.
+#[test]
+fn a_table_without_rows_shows_its_empty_state() {
+    use crate::widgets::content::EmptyState;
+    let theme = core();
+    let empty = EmptyState::new("No rows yet", "Rows you add show up here.");
+    let mut t = Table::new(vec![Column::new("Style", &theme)], &theme).empty(empty);
+    let w = 300.0;
+    let h = t.empty_height(w, &theme);
+    assert!(h > Table::header_h(&theme) + theme.spacing.lg * 2.0);
+    let said = |t: &mut Table| {
+        let mut c = Compositor::new();
+        c.begin_frame();
+        t.render_with(&mut c, Rect::new(0.0, 0.0, w, h), &theme, |_, _, _, _| {});
+        let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+        let titled = nodes.iter().any(|n| {
+            matches!(n, SceneNode::Text { key, y, .. }
+            if key.text == "No rows yet" && *y > Table::header_h(&theme))
+        });
+        let framed = nodes.iter().any(|n| {
+            matches!(n, SceneNode::RoundedRect { h: fh, border_width, .. }
+            if *border_width > 0.0 && (*fh - h).abs() < 1e-3)
+        });
+        (titled, framed)
+    };
+    assert_eq!(said(&mut t), (true, true), "the state, in the frame");
+    t.set_row_count(1);
+    assert!(t.empty_shown().is_none());
+    assert!(!said(&mut t).0, "a row takes it away");
 }
 
 #[test]
@@ -928,10 +1009,12 @@ fn the_page_starts_under_the_blurb_at_every_width() {
 }
 
 /// The core's page head is the kit's Layout title (Layout/index.tsx:35):
-/// across the page column, `px-12 py-8` 32/40 from a 1200 px head, `p-5`
-/// 24/32 below it, the rule at its foot; the title on the page's gutter.
+/// across the page column, `px-12 py-8` 32/40 wide and `p-5` 24/32 narrow,
+/// growing between them with the head's width; the rule at its foot; the
+/// title on the page's gutter.
 #[test]
 fn the_core_page_head_is_the_kit_s_layout_title() {
+    use crate::styling::theme::FLUID_RANGE;
     use crate::widgets::nav::{NavLink, PanelHeader, Sidebar};
     use crate::widgets::shell::AppShell;
     let theme = core();
@@ -939,13 +1022,37 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
     assert_eq!((page.wide.pad_x, page.wide.pad_y), (48.0, 32.0));
     assert_eq!(page.wide.title_type, TypeRole::H3.run());
     assert_eq!((page.narrow.pad_x, page.narrow.pad_y), (20.0, 20.0));
-    assert_eq!(page.narrow.title_type, TypeRole::H5.regular());
-    assert_eq!(page.wide_from, 1200.0);
-    assert_eq!(page.at(1200.0), page.wide);
-    assert_eq!(page.at(1199.0), page.narrow);
+    assert_eq!(page.narrow.title_type, TypeRole::H3.run());
+    assert_eq!((page.narrow.row, page.wide.row), (32.0, 40.0));
+    assert_eq!(page.range, FLUID_RANGE);
+    assert_eq!(page.at(1280.0), page.wide);
+    assert_eq!(page.at(360.0), page.narrow);
+    // Between the ends the head grows by a line, as h3 does: its title
+    // is h3 at the head's width (the kit's 24/32 narrow, 32/40 wide), its
+    // row h3's line on a whole pixel, with no step anywhere.
+    let mut prev = page.at(272.0);
+    let mut prev_title = theme.typography.run_at(prev.title_type, 272.0);
+    for w in (280..=1600).step_by(8) {
+        let at = page.at(w as f32);
+        let title = theme.typography.run_at(at.title_type, w as f32);
+        let h3 = theme.typography.role_at(TypeRole::H3, w as f32);
+        assert_eq!(title, h3, "{w}");
+        assert_eq!(at.row, h3.line_height.round(), "{w}");
+        for (a, b) in [
+            (prev.pad_x, at.pad_x),
+            (prev.pad_y, at.pad_y),
+            (prev.row, at.row),
+            (prev_title.font_size, title.font_size),
+        ] {
+            assert!(b >= a && b - a <= 1.0, "{w}: no step ({a} to {b})");
+        }
+        (prev, prev_title) = (at, title);
+    }
+    let narrow = theme.typography.run_at(page.narrow.title_type, 360.0);
+    assert_eq!((narrow.font_size, narrow.line_height), (24.0, 32.0));
     let head = PanelHeader::new("Cards");
     assert_eq!(head.height_for(1400.0, &theme), 32.0 + 40.0 + 32.0 + 1.0);
-    assert_eq!(head.height_for(800.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
+    assert_eq!(head.height_for(360.0, &theme), 20.0 + 32.0 + 20.0 + 1.0);
     for w in [360.0, 800.0, 1280.0, 1600.0] {
         let sidebar = Sidebar::new(vec![NavLink::new("Cards")]);
         let shell = AppShell::new(sidebar, head.clone(), w, 900.0);
@@ -956,11 +1063,15 @@ fn the_core_page_head_is_the_kit_s_layout_title() {
             (page_x, w),
             "{w}: it bleeds"
         );
-        let gutter = theme.layout.gutter(l.breakpoint);
+        let gutter = theme.layout.gutter_at(w - page_x);
         if l.menu_button.is_none() {
             assert_eq!(l.header_pads[0], gutter, "{w}: the title on the gutter");
         }
-        assert_eq!(l.content.y, l.header.y + l.header.h + theme.spacing.lg);
+        assert_eq!(
+            l.content.y,
+            l.header.y + l.header.h,
+            "{w}: the page under the rule"
+        );
         let mut c = Compositor::new();
         c.begin_frame();
         shell

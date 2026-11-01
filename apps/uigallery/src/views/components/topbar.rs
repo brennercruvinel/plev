@@ -13,16 +13,13 @@
 //! thumbnails, Escape blurs.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::header::Header;
-use engine::widgets::prelude::{
-    EventResult, Rect, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
-};
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::showcase::{self, GroupLayout};
+use super::showcase::{self, GroupLayout, Tone};
 use super::{After, Component, EditKey, child_id, root_id, under};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
@@ -30,11 +27,6 @@ use crate::views::text_input::host::TextHost;
 
 /// The product the kit's logo spells.
 pub(crate) const PRODUCT: &str = "Plev";
-
-/// A card's padding around its header, `py-20` and `px-10`: page values
-/// of the template, as the showcase's own.
-const CARD_PAD_Y: f32 = 80.0;
-const CARD_PAD_X: f32 = 40.0;
 
 struct Card {
     title: &'static str,
@@ -49,51 +41,6 @@ pub struct TopbarPage {
 /// `topbar_page.group[0]`.
 fn group_id(root: &SemId) -> Option<SemId> {
     child_id(Some(root), "group").map(|g| g.key("0"))
-}
-
-/// A grey card (`isGray`): the panel tone, its hairline, and the chip in
-/// the page's tone with an edge (`bg-[#FCFCFC] border-[#ECECEC]`).
-pub(crate) fn gray_card(c: &mut Compositor, rect: Rect, title: &str, theme: &Theme) {
-    let (radius, edge) = (theme.shape.card, theme.colors.divider.0);
-    c.push(rounded_rect(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h,
-        radius,
-        theme.colors.bg_panel.0,
-    ));
-    c.push(rounded_rect_stroke(
-        rect.x, rect.y, rect.w, rect.h, radius, edge, 1.0,
-    ));
-    let inset = theme.spacing.sm;
-    let text = showcase::chip_fit(title, rect.w - inset * 2.0, theme);
-    let at = showcase::chip_rect(rect.x + inset, rect.y + inset, &text, theme);
-    c.push(rounded_rect(
-        at.x,
-        at.y,
-        at.w,
-        at.h,
-        theme.shape.nav,
-        theme.colors.bg.0,
-    ));
-    c.push(rounded_rect_stroke(
-        at.x,
-        at.y,
-        at.w,
-        at.h,
-        theme.shape.nav,
-        edge,
-        1.0,
-    ));
-    let style = showcase::chip_style(theme);
-    let (_, th) = TextMeasurer::measure_styled(&text, &style, None);
-    c.push(SceneNode::Text {
-        key: TextNodeKey::from_style(&text, &style, None),
-        x: at.x + theme.spacing.md,
-        y: at.y + (at.h - th.max(style.line_height)) / 2.0,
-        color: theme.colors.text.0,
-    });
 }
 
 impl TopbarPage {
@@ -133,22 +80,31 @@ impl TopbarPage {
         Self { root, cards }
     }
 
+    /// Each card as tall as its bar in the showcase's frame (the chip's
+    /// band above and below it), the bar in its middle; the template's
+    /// `py-20` was a fixed stage.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let heights = self
             .cards
             .iter()
-            .map(|c| c.header.height(theme) + CARD_PAD_Y * 2.0)
+            .map(|c| showcase::card_height(c.header.height(theme), theme))
             .collect();
-        showcase::layout_sized([(1, heights)], content, theme)
+        showcase::layout_untitled(1, heights, content, theme)
     }
 
-    /// The header's bar inside its card.
+    /// The header's bar inside its card. Across, the stage gives the bar
+    /// the room it asks for: the group's padding at each side (the
+    /// template's `px-10`) while the card has it, less as the card
+    /// narrows, down to the body's margin; below that the header changes
+    /// its own row (its parts leave, its search becomes a button).
     fn bar(card: Rect, header: &Header, theme: &Theme) -> Rect {
         let h = header.height(theme);
+        let spare = (card.w - header.preferred_width(theme)) / 2.0;
+        let pad_x = spare.clamp(theme.spacing.md, showcase::pad(card.w, theme));
         Rect::new(
-            card.x + CARD_PAD_X,
+            card.x + pad_x,
             card.y + (card.h - h) / 2.0,
-            (card.w - CARD_PAD_X * 2.0).max(0.0),
+            (card.w - pad_x * 2.0).max(0.0),
             h,
         )
     }
@@ -183,7 +139,7 @@ impl TopbarPage {
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
         for (card, rect) in self.cards.iter().zip(&layout[0].cards) {
-            gray_card(c, *rect, card.title, theme);
+            showcase::card_in(c, *rect, card.title, Tone::Gray, theme);
             card.header
                 .render(c, Self::bar(*rect, &card.header, theme), theme);
         }
@@ -381,11 +337,73 @@ mod tests {
             .zip(&page.layout(content, &theme)[0].cards)
         {
             let bar = TopbarPage::bar(*rect, &card.header, &theme);
-            assert_eq!(bar.w, rect.w - CARD_PAD_X * 2.0);
+            assert_eq!(bar.w, rect.w - showcase::pad(rect.w, &theme) * 2.0);
             assert!((bar.y + bar.h / 2.0 - (rect.y + rect.h / 2.0)).abs() < 0.01);
             assert!(card.header.sem_id().is_some(), "{}", card.title);
         }
-        assert!(page.content_height(content, &theme) > 5.0 * (CARD_PAD_Y * 2.0));
+        let bars = 5.0 * page.cards[0].header.height(&theme);
+        assert!(page.content_height(content, &theme) > bars);
+    }
+
+    /// From 280 to 1600 every 8 px: every bar inside its card, every part
+    /// inside its bar, none over another. Where the search's box has no
+    /// room it is its icon button.
+    #[test]
+    fn no_header_breaks_from_narrow_to_wide() {
+        let page = TopbarPage::new();
+        for theme in [Theme::hoff_core(), Theme::hoff()] {
+            for w in (280..=1600).step_by(8) {
+                let content = Rect::new(0.0, 0.0, w as f32, 900.0);
+                let layout = page.layout(content, &theme);
+                for (card, rect) in page.cards.iter().zip(&layout[0].cards) {
+                    let bar = TopbarPage::bar(*rect, &card.header, &theme);
+                    let at = format!("{w}: {}", card.title);
+                    assert!(bar.x >= rect.x && bar.right() <= rect.right(), "{at}");
+                    let l = card.header.layout(bar, &theme);
+                    let mut parts: Vec<Rect> = l.slots.iter().flatten().copied().collect();
+                    parts.extend(l.thumbs);
+                    for (i, r) in parts.iter().enumerate() {
+                        assert!(
+                            r.x >= bar.x - 0.5 && r.right() <= bar.right() + 0.5,
+                            "{at}: a part out of its bar"
+                        );
+                        for o in &parts[i + 1..] {
+                            let apart = r.right() <= o.x + 0.5 || o.right() <= r.x + 0.5;
+                            assert!(apart, "{at}: parts overlap ({r:?}, {o:?})");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// At a phone's width the search is its icon button; a click on it
+    /// gives the box the caret and the row, the typed text goes there,
+    /// and Escape gives the row back.
+    #[test]
+    fn a_narrow_search_is_a_button_that_opens_the_box() {
+        let mut page = TopbarPage::new();
+        let theme = Theme::hoff_core();
+        let content = Rect::new(0.0, 0.0, 328.0, 900.0);
+        let card = page.layout(content, &theme)[0].cards[0];
+        let header = &page.cards[0].header;
+        let bar = TopbarPage::bar(card, header, &theme);
+        let l = header.layout(bar, &theme);
+        assert!(l.compact, "no room for the box at 328");
+        let i = header.slots.iter().position(|s| s.key == "search").unwrap();
+        let (x, y) = l.slots[i].unwrap().center();
+        page.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme);
+        page.handle_event(&WidgetEvent::MouseUp { x, y }, content, &theme);
+        let header = &page.cards[0].header;
+        let open = header.layout(bar, &theme);
+        assert!(!open.compact);
+        let r = open.slots[i].unwrap();
+        assert_eq!(open.slots.iter().flatten().count(), 1, "the box alone");
+        assert!(r.w > theme.size.field_min_w.min(theme.header.search_w));
+        assert!(page.handle_text("chairs"));
+        assert!(page.handle_escape());
+        let header = &page.cards[0].header;
+        assert!(header.layout(bar, &theme).compact);
     }
 
     /// A click in a search puts the caret there and the typed text goes

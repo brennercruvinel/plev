@@ -205,9 +205,11 @@ pub(crate) fn leaf(
             let label = node.label.as_deref().unwrap_or_default();
             let (tw, _) = TextMeasurer::measure_styled(label, &style, None);
             let side = theme.control.box_size;
+            // a row as tall as its press area (WCAG 2.5.8): rows of
+            // checkboxes stacked never overlap where a press lands
             Leaf::Fixed(
                 (side + theme.control.inline_gap + tw).ceil(),
-                side.max(style.line_height),
+                side.max(style.line_height).max(theme.control.min_target),
             )
         }
         Some(Component::Button | Component::IconButton | Component::Chip) => match widget {

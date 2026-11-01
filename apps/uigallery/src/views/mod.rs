@@ -30,14 +30,13 @@ pub(crate) use apps::surface::asking::stage_without_host;
 pub(crate) use compositor::draw::{group_label, panel, text, with_alpha};
 
 use dispatcher::keyboard::Walk;
-use engine::styling::theme::TypeRole;
 
 use winit::keyboard::{Key, ModifiersState};
 
 use engine::control::input::reveal::{FocusReveal, Glide};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Prefs, Theme};
 use engine::widgets::form::command_dialog::CommandDialog;
 use engine::widgets::nav::{PanelHeader, SidebarDock};
 use engine::widgets::overlay::drawer::Drawer;
@@ -120,6 +119,9 @@ pub struct ShowcaseView {
     pub scale_factor: f32,
     pub theme: Theme,
     pub theme_name: String,
+    /// The person's preferences (ADR 0086): `theme` is the named theme
+    /// adapted to them.
+    prefs: Prefs,
     /// Index into [`PAGES`].
     pub page: usize,
     /// The app chrome: the dock that places the sidebar (peeking from
@@ -210,6 +212,7 @@ impl ShowcaseView {
             panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
+            prefs: Prefs::default(),
             page: 0,
             page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
@@ -318,11 +321,14 @@ impl ShowcaseView {
     }
 
     /// Content area the shell hands the page: past the sidebar, under
-    /// the header, inside the gutter, never narrower than a card.
+    /// the header, inside the gutter, never narrower than a card. Its
+    /// height is the window's (a low window gives a short viewport that
+    /// scrolls; a floor here would place menus and panels past the
+    /// window's bottom).
     fn content_rect(&self) -> Rect {
         let mut r = self.shell.layout(&self.theme).content;
         r.w = r.w.max(self.theme.size.card_min_w);
-        r.h = r.h.max(self.theme.size.field_min_w);
+        r.h = r.h.max(0.0);
         r
     }
 
@@ -349,28 +355,24 @@ impl ShowcaseView {
         self.pane().is_some_and(Pane::is_app)
     }
 
-    /// Height of the note an alias page shows above the shared example
-    /// (zero for the other pages).
-    fn note_h(&self) -> f32 {
-        match self.current().body {
-            Body::Alias { .. } => {
-                self.theme
-                    .typography
-                    .run(TypeRole::Caption.regular())
-                    .line_height
-                    + self.theme.spacing.xl
-            }
-            _ => 0.0,
-        }
-    }
-
     /// Current page scroll offset of the active page.
     pub fn page_offset(&self) -> f32 {
         self.page_scroll[self.page].offset()
     }
 
-    /// Content rect shifted up by the page scroll offset and down by
-    /// the alias note. Pages lay out, hit-test and render against this
+    /// The window height that shows the whole active page at the current
+    /// width, header and gutter included (a sweep's tall frame); the
+    /// window's own for an app, which fills whatever it gets.
+    pub fn page_height(&self) -> f32 {
+        if self.is_app() {
+            return self.height;
+        }
+        let content = self.content_rect();
+        let chrome = self.height - content.h;
+        (chrome + self.pane_content_height(content)).max(self.height)
+    }
+
+    /// Content rect shifted up by the page scroll offset. Pages lay out, hit-test and render against this
     /// rect so events and pixels always agree; the render clips it back
     /// to the content viewport.
     fn page_rect(&self) -> Rect {
@@ -379,22 +381,20 @@ impl ShowcaseView {
         }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
-        rect.y += self.note_h();
-        rect.h -= self.note_h();
         rect
     }
 
     /// Sync the active page's scroll limits with the viewport.
     fn sync_page_scroll(&mut self) {
         let content = self.content_rect();
-        let height = self.page_content_height(content);
+        let height = self.pane_content_height(content);
         let scroll = &mut self.page_scroll[self.page];
         scroll.set_viewport(content.h);
         scroll.set_content(height);
     }
 
     fn set_theme(&mut self, name: &str) {
-        if let Some(theme) = foundations::theme::resolve(name) {
+        if let Some(theme) = foundations::theme::resolve(name).map(|t| t.adapted(&self.prefs)) {
             self.panes.editor.set_theme(&theme);
             self.panes.git.set_theme(&theme);
             self.nav.set_theme(&theme);
@@ -403,9 +403,30 @@ impl ShowcaseView {
         }
     }
 
+    /// The theme adapted again when the system's contrast changed since
+    /// (the window reads it when it takes the focus).
+    pub fn follow_contrast(&mut self) {
+        let contrast = engine::styling::theme::Contrast::from_system();
+        self.set_prefs(self.prefs.with_contrast(contrast));
+    }
+
     /// Apply a theme by name (launch argument / snapshot tooling).
     pub fn apply_theme(&mut self, name: &str) {
         self.set_theme(name);
+    }
+
+    /// The person's preferences (the system's text size, a launch
+    /// argument): the theme is adapted to them again.
+    pub fn set_prefs(&mut self, prefs: Prefs) {
+        if prefs != self.prefs {
+            self.prefs = prefs;
+            let name = self.theme_name.clone();
+            self.set_theme(&name);
+        }
+    }
+
+    pub fn prefs(&self) -> &Prefs {
+        &self.prefs
     }
 
     /// Scroll the active page to `offset` px once it has laid out

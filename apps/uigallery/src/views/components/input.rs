@@ -96,11 +96,7 @@ impl InputPage {
     /// Each card's label and field, `w-60` wide at most, in a card
     /// `card_w` wide: the label's size and the field's.
     fn sizes(&self, card_w: f32, theme: &Theme) -> [((f32, f32), (f32, f32)); COUNT] {
-        let w = theme
-            .form
-            .field
-            .width
-            .min((card_w - theme.spacing.lg * 2.0).max(0.0));
+        let w = theme.form.field.width.min(showcase::room(card_w, theme));
         let field = (w, TextField::height(theme));
         std::array::from_fn(|i| (self.labels[i].size(Some(w), theme), field))
     }
@@ -113,7 +109,7 @@ impl InputPage {
         let heights = self
             .sizes(card_w, theme)
             .map(|((_, lh), (_, fh))| showcase::card_height(lh + gap + fh, theme));
-        let wanted = std::iter::once((COUNT, heights.to_vec()));
+        let wanted = std::iter::once((TITLE, COUNT, heights.to_vec()));
         let mut grid = showcase::layout_sized(wanted, content, theme);
         grid.pop().expect("one group")
     }

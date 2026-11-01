@@ -31,6 +31,7 @@ fn text(s: &str) -> TextNodeKey {
         font_weight: 600,
         letter_spacing_bits: (-0.25f32).to_bits(),
         font_family: Some("Inter".to_owned()),
+        features: engine::drawing::text::TextFeatures::NONE,
         overflow_wrap: OverflowWrap::Normal,
     }
 }
@@ -87,8 +88,14 @@ fn every_node() -> Vec<SceneNode> {
             border_width: 0.0,
             border_color: [0.0; 4],
         },
+        // a textarea's rule and a counter's figures (task-104): the key
+        // travels with both.
         SceneNode::Text {
-            key: text("olá, mundo"),
+            key: TextNodeKey {
+                features: engine::drawing::text::TextFeatures::TABULAR,
+                overflow_wrap: OverflowWrap::Anywhere,
+                ..text("olá, mundo 1 024")
+            },
             x: 12.0,
             y: 13.0,
             color: [0.9, 0.9, 0.9, 1.0],
@@ -288,6 +295,51 @@ fn a_text_comes_back_with_every_field_of_its_key() {
     };
     assert_eq!(keys(&b), keys(&a));
     assert_eq!(keys(&a).len(), 3);
+    assert!(
+        keys(&b)
+            .iter()
+            .any(|k| k.overflow_wrap == OverflowWrap::Anywhere
+                && k.features == engine::drawing::text::TextFeatures::TABULAR),
+        "the wrap rule and the figures travel"
+    );
+}
+
+/// a text's style byte with a bit no sender sets is refused, not read as
+/// the defaults.
+#[test]
+fn a_text_style_the_sender_does_not_write_is_refused() {
+    let text = every_node()
+        .into_iter()
+        .find(|n| matches!(n, SceneNode::Text { key, .. } if key.overflow_wrap == OverflowWrap::Anywhere))
+        .expect("the textarea's text");
+    let node = super::node::Drawn::Node(text);
+    let mut b = super::bytes::Put::default();
+    super::node::put_node(&mut b, &node);
+    let mut bytes = b.0;
+    // the style byte sits before the place (2 f32) and the color (4 f32).
+    let style = bytes.len() - 25;
+    assert_eq!(bytes[style], 0b11, "tabular and anywhere");
+    let mut t = super::bytes::Take::new(&bytes);
+    assert_eq!(super::node::take_node(&mut t), Ok(node));
+    // tabular and break-word (task-104t) read back as such
+    bytes[style] = 0b101;
+    let mut t = super::bytes::Take::new(&bytes);
+    let Ok(super::node::Drawn::Node(SceneNode::Text { key, .. })) = super::node::take_node(&mut t)
+    else {
+        panic!("a text node");
+    };
+    assert_eq!(key.overflow_wrap, OverflowWrap::BreakWord);
+    // a rule no sender writes (anywhere and break-word at once), and a
+    // bit no sender sets, are refused
+    for bad in [0b111, 0x80] {
+        bytes[style] = bad;
+        let mut t = super::bytes::Take::new(&bytes);
+        assert_eq!(
+            super::node::take_node(&mut t),
+            Err(SceneError::Invalid("a text's style")),
+            "{bad:#b}"
+        );
+    }
 }
 
 #[test]

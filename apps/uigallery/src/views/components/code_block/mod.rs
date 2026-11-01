@@ -120,7 +120,7 @@ impl CodeBlockPage {
     /// The block's size in a card `card_w` wide: the card's width less
     /// its inset on both sides, as tall as its code wraps there.
     fn widget_size(block: &CodeBlock, card_w: f32, theme: &Theme) -> (f32, f32) {
-        let w = (card_w - theme.spacing.sm * 2.0).max(0.0);
+        let w = showcase::room(card_w, theme);
         (w, block.height_for(w, theme))
     }
 
@@ -132,7 +132,7 @@ impl CodeBlockPage {
                 .iter()
                 .map(|c| showcase::card_height(Self::widget_size(&c.block, w, theme).1, theme))
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

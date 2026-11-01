@@ -181,7 +181,7 @@ impl BadgePage {
                 .cards
                 .iter()
                 .map(|card| showcase::card_height(Self::flowed(card, w, theme).1, theme));
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

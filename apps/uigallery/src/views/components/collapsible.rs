@@ -6,7 +6,7 @@
 //!
 //! The cards are as tall as what they hold, so a collapsible opening
 //! grows its card, its row and moves the groups below; the rows drop a
-//! column where a card would get narrower than `showcase::CARD_MIN_W`.
+//! column where a card would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
 //! Projected: a group per title, `collapsible_page.group[<g>]`; in it each
 //! card's trigger, `...card[<c>]`, a button with `expanded` whose
@@ -174,7 +174,7 @@ impl CollapsiblePage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
         fit_layout(&spans, content, theme, |g, c, w| {
             Self::card_height(&self.groups[g].cards[c], w, theme)
@@ -529,6 +529,56 @@ mod tests {
         assert_eq!(toggled, Ok(After::Nothing));
         assert_eq!(wake, Wake::idle());
         assert_eq!(page.groups[0].cards[0].trigger.revealed(), 1.0);
+    }
+
+    /// The kit's long title beside its counter, at 280 and 360 and at
+    /// the person's text sizes up to twice: it wraps between words (its
+    /// rule is `BreakWord`, whose min-content is the longest word) and
+    /// never leaves a line of one letter.
+    #[test]
+    fn the_long_title_breaks_between_words_beside_its_counter() {
+        use engine::drawing::compositor::{LayerId, SceneNode};
+        use engine::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
+        use engine::styling::theme::{Prefs, TextScale};
+        let words: Vec<&str> = LONG_TITLE.split(' ').collect();
+        for scale in [1.0, 1.5, 2.0] {
+            let prefs = Prefs::default().with_text_scale(TextScale::new(scale));
+            let theme = Theme::hoff_core().adapted(&prefs);
+            let page = CollapsiblePage::new(&theme);
+            for w in [280.0, 360.0] {
+                let mut c = Compositor::new();
+                c.begin_frame();
+                page.render(&mut c, Rect::new(0.0, 0.0, w, 2000.0), &theme);
+                let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes().to_vec();
+                let key = nodes
+                    .iter()
+                    .find_map(|n| match n {
+                        SceneNode::Text { key, .. } if key.text == LONG_TITLE => Some(key.clone()),
+                        _ => None,
+                    })
+                    .expect("the long title is drawn whole, wrapped");
+                assert_eq!(key.overflow_wrap, OverflowWrap::BreakWord);
+                let mut style = TextStyle::new(f32::from_bits(key.font_size_bits))
+                    .with_line_height(f32::from_bits(key.line_height_bits))
+                    .with_weight(key.font_weight)
+                    .with_letter_spacing(f32::from_bits(key.letter_spacing_bits))
+                    .with_overflow_wrap(key.overflow_wrap);
+                if let Some(family) = &key.font_family {
+                    style = style.with_family(family);
+                }
+                let max_w = key.max_width_bits.map(f32::from_bits).expect("wrapped");
+                let lines = TextMeasurer::lines(LONG_TITLE, &style, max_w);
+                let at = format!("x{scale} @{w}: {lines:?} in {max_w}");
+                assert!(lines.len() > 1, "{at}: it wraps");
+                for (line, _) in &lines {
+                    assert!(line.chars().count() > 1, "{at}: a line of one letter");
+                    assert!(
+                        line.split(' ').all(|word| words.contains(&word)),
+                        "{at}: a word broken"
+                    );
+                }
+            }
+        }
     }
 
     #[test]

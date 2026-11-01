@@ -46,7 +46,9 @@ impl StatRecipe {
     /// and the small step down the `TypographyPage` ramp (h5 24/32
     /// medium over the 15/24 body; 15/24 semibold over 12/16).
     pub fn hoff_core() -> Self {
-        let [_, _, _, _, _, gray, _, _, ink] = SHADES;
+        let [_, _, _, _, _, _, _, _, ink] = SHADES;
+        // the kit's #7B7B7B where it is text: the gray that reads at AA
+        let gray = crate::styling::theme::hoff_core::secondary_text();
         Self {
             sm: StatLevel {
                 value: TypeRole::Title.strong(),
@@ -72,25 +74,25 @@ impl StatRecipe {
         }
     }
 
-    /// The stat of before: base-m over small, title over caption,
-    /// headline over base-2r, the unit a ramp step under its value; the
-    /// value in the text tone, the unit mid, the label dim.
+    /// The kit's roles at the theme's sizes (a text's role is its
+    /// component's); the value in the text tone, the unit mid, the label
+    /// dim.
     pub fn derive(theme: &Theme) -> Self {
         let (colors, sp) = (&theme.colors, &theme.spacing);
         Self {
             sm: StatLevel {
-                value: TypeRole::BodyLg.medium(),
-                unit: TypeRole::Caption.regular(),
-                label: TypeRole::Small.run(),
+                value: TypeRole::Title.strong(),
+                unit: TypeRole::Label.run(),
+                label: TypeRole::Caption.run(),
             },
             md: StatLevel {
-                value: TypeRole::Title.run(),
-                unit: TypeRole::Body.run(),
-                label: TypeRole::Caption.regular(),
+                value: TypeRole::H5.run(),
+                unit: TypeRole::Title.run(),
+                label: TypeRole::Body.run(),
             },
             lg: StatLevel {
-                value: TypeRole::H3.run(),
-                unit: TypeRole::Title.run(),
+                value: TypeRole::H2.run(),
+                unit: TypeRole::H5.run(),
                 label: TypeRole::Body.run(),
             },
             value: colors.text,
@@ -140,7 +142,7 @@ impl CodeRecipe {
     /// `#F1F1F1`.
     pub fn hoff_core() -> Self {
         use crate::styling::theme::hoff_core::{GREEN, RED};
-        let [_, well, wash, line, _, gray, dark, _, ink] = SHADES;
+        let [_, well, wash, line, _, _, dark, _, ink] = SHADES;
         Self {
             text: TypeRole::Code.run(),
             caption: TypeRole::Caption.run(),
@@ -151,7 +153,8 @@ impl CodeRecipe {
             fill: well,
             border: line,
             code: dark,
-            caption_color: gray,
+            // the kit's #7B7B7B, as text the gray that reads at AA
+            caption_color: crate::styling::theme::hoff_core::secondary_text(),
             row_ink: ink,
             added: tint(GREEN, 0.10),
             removed: tint(RED, 0.10),
@@ -166,7 +169,7 @@ impl CodeRecipe {
         let (colors, glass) = (&theme.colors, &theme.glass);
         Self {
             text: TypeRole::Code.run(),
-            caption: TypeRole::Caption.strong(),
+            caption: TypeRole::Caption.run(),
             pad: theme.spacing.md,
             caption_gap: theme.spacing.xs,
             radius: theme.shape.nav,

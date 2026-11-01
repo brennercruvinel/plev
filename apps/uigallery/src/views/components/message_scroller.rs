@@ -134,9 +134,7 @@ impl MessageScrollerPage {
     }
 
     fn lane_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     /// The group's layout (`showcase::layout_sized`, each card as tall as
@@ -148,7 +146,7 @@ impl MessageScrollerPage {
             .iter()
             .map(|card| showcase::card_height(card.scroller.height(w, theme), theme))
             .collect();
-        let group = showcase::layout_sized([(COLUMNS, cards)], content, theme)
+        let group = showcase::layout_sized([(GROUP, COLUMNS, cards)], content, theme)
             .pop()
             .expect("one group");
         let threads = group
