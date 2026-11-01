@@ -18,13 +18,18 @@
 //! with its `.switch`, `.select[<i>]`, `.tabs` and `.tile[<i>]`.
 
 mod paint;
+mod project;
 
-use accord::{Role, SemId, SnapshotBuilder};
+use project::size_rects;
+
+use accord::SemId;
 
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Button;
 use crate::widgets::form::Select;
 use crate::widgets::form::Switch;
+use crate::widgets::form::TextField;
+use crate::widgets::form::tokens::Look;
 use crate::widgets::form::tokens::SelectLook;
 use crate::widgets::nav::Tabs;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -49,7 +54,7 @@ pub enum End {
 #[derive(Clone, Debug)]
 pub enum Body {
     None,
-    Artboard(Select, [String; 2]),
+    Artboard(Select, [TextField; 2]),
     Tiles {
         n: usize,
         cols: usize,
@@ -96,6 +101,11 @@ fn block(title: &str, tab: DesignTab, end: End, body: Body) -> Block {
         end,
         body,
     }
+}
+
+/// The artboard's width or height: the form's bare field (front A).
+fn size_field(value: &str) -> TextField {
+    TextField::new("").look(Look::Bare).with_text(value)
 }
 
 fn tiles(n: usize, cols: usize, well: bool, small: bool) -> Body {
@@ -145,7 +155,7 @@ impl DesignSidebar {
                 "Artboard",
                 Design,
                 End::Add,
-                Body::Artboard(artboard, ["800".into(), "600".into()]),
+                Body::Artboard(artboard, ["800", "600"].map(size_field)),
             ),
             block("Materials", Design, End::Add, tiles(4, 2, true, false)),
             block("Styles", Design, End::Add, tiles(2, 2, false, false)),
@@ -211,9 +221,14 @@ impl DesignSidebar {
             let selects = child(&at, "select");
             let select_id = |i: usize| selects.as_ref().map(|f| f.key(i.to_string()));
             match &mut block.body {
-                Body::Artboard(s, _) => {
+                Body::Artboard(s, fields) => {
                     if let Some(sid) = select_id(0) {
                         *s = s.clone().sem(sid);
+                    }
+                    for (f, name) in fields.iter_mut().zip(["width", "height"]) {
+                        if let Some(fid) = child(&at, name) {
+                            *f = f.clone().sem(fid);
+                        }
                     }
                 }
                 Body::Lens(list) => {
@@ -438,6 +453,17 @@ impl DesignSidebar {
             {
                 out = out.merge(t.handle_event(event, r, theme));
             }
+            if let Body::Artboard(s, fields) = &mut block.body {
+                let rects = size_rects(l.body, s.height_in(theme), theme);
+                let press = matches!(event, WidgetEvent::MouseDown { .. });
+                for (f, at) in fields.iter_mut().zip(rects) {
+                    if (press && at.contains(x, y)) || (!press && f.is_focused()) {
+                        out = out.merge(f.handle_event(event, at, theme));
+                    } else if press && f.is_focused() {
+                        f.unfocus();
+                    }
+                }
+            }
             if let Body::Tiles {
                 n, cols, picked, ..
             } = &mut block.body
@@ -551,72 +577,5 @@ impl DesignSidebar {
             }
         }
         false
-    }
-
-    /// A `Role::Region` named `label`: the Share button, the tabs, and
-    /// per group of the current tab a `Role::Group` with its switch,
-    /// selects, tabs and tiles.
-    #[track_caller]
-    pub fn project(
-        &self,
-        b: &mut SnapshotBuilder,
-        id: &SemId,
-        label: &str,
-        parent: Option<&SemId>,
-    ) {
-        let mut node = b.node(id, Role::Region, label);
-        if let Some(parent) = parent {
-            node.parent(parent);
-        }
-        if let Some(at) = self.share.sem_id() {
-            let mut node = b.node(at, Role::Button, "Share");
-            node.parent(id).action("activate");
-        }
-        if let Some(at) = self.tabs.sem_id() {
-            self.tabs.project(b, at, "Design or animation", Some(id));
-        }
-        let tab = self.current_tab();
-        for (bi, block) in self.blocks.iter().enumerate().filter(|(_, b)| b.tab == tab) {
-            let Some(at) = id.child("block").ok().map(|f| f.key(bi.to_string())) else {
-                continue;
-            };
-            b.node(&at, Role::Group, block.title.as_str()).parent(id);
-            if let End::Switch(s) = &block.end
-                && let Some(sid) = s.sem_id()
-            {
-                s.project(b, sid, block.title.as_str(), Some(&at));
-            }
-            match &block.body {
-                Body::Artboard(s, _) => {
-                    if let Some(sid) = s.sem_id() {
-                        s.project(b, sid, "Artboard size", Some(&at));
-                    }
-                }
-                Body::Lens(list) => {
-                    for s in list {
-                        if let Some(sid) = s.sem_id() {
-                            s.project(b, sid, s.selected_label().unwrap_or("Lens"), Some(&at));
-                        }
-                    }
-                }
-                Body::Camera(t, _) | Body::Loop(t, _) => {
-                    if let Some(tid) = t.sem_id() {
-                        t.project(b, tid, block.title.as_str(), Some(&at));
-                    }
-                }
-                Body::Tiles { n, picked, .. } => {
-                    for i in 0..*n {
-                        let Some(tid) = self.tile_id(bi, i) else {
-                            continue;
-                        };
-                        let name = format!("{} {}", block.title, i + 1);
-                        let mut node = b.node(&tid, Role::Button, name);
-                        node.parent(&at).state("selected", *picked == Some(i));
-                        node.action("activate");
-                    }
-                }
-                _ => {}
-            }
-        }
     }
 }

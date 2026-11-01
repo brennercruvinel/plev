@@ -15,6 +15,8 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use crate::widgets::content::{Collapsible, DisclosureList};
+use crate::widgets::form::TextField;
+use crate::widgets::form::tokens::Look;
 use crate::widgets::icons;
 use crate::widgets::nav::NavLink;
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
@@ -50,7 +52,8 @@ pub struct HomeSidebar {
     pub folders: Vec<String>,
     /// The new folder's field is open, with what was typed in it.
     pub naming: bool,
-    pub name: String,
+    /// The new folder's name, the form's bare field (front A).
+    pub name: TextField,
     hovered: Option<FolderRow>,
     focused: Option<FolderRow>,
     sem: Option<SemId>,
@@ -71,7 +74,7 @@ impl HomeSidebar {
             scenes,
             folders: Vec::new(),
             naming: false,
-            name: String::new(),
+            name: TextField::new("Untitled Folder").look(Look::Bare),
             hovered: None,
             focused: None,
             sem: None,
@@ -104,6 +107,9 @@ impl HomeSidebar {
                 }
                 HomeRow::Link(link) => *link = link.clone().sem(at),
             }
+        }
+        if let Ok(n) = id.child("name") {
+            self.name = self.name.clone().sem(n);
         }
         if let Ok(s) = id.child("scenes") {
             self.scenes = self.scenes.clone().sem(s);
@@ -242,6 +248,31 @@ impl HomeSidebar {
             .any(|r| self.folder_id(r).as_ref() == Some(id))
     }
 
+    /// Where the name is typed: the field after its folder mark.
+    pub fn name_rect(f: Rect, theme: &Theme) -> Rect {
+        let t = &theme.navigation.sidebars;
+        let x = f.x + t.field_text_x;
+        Rect::new(x, f.y, (f.right() - x - t.field_icon_x).max(0.0), f.h)
+    }
+
+    /// The text fields shown now: the name, while it is being given.
+    pub fn text_fields(&mut self) -> Vec<&mut TextField> {
+        if self.naming {
+            vec![&mut self.name]
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Their rects, in the same order.
+    pub fn field_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let l = self.layout(bounds, theme);
+        l.field
+            .map(|f| Self::name_rect(f, theme))
+            .into_iter()
+            .collect()
+    }
+
     pub fn wake(&mut self, dt: f32) -> Wake {
         let mut wake = Wake::idle();
         for row in &mut self.rows {
@@ -275,6 +306,16 @@ impl HomeSidebar {
         }
         out = out.merge(self.scenes.handle_event(event, l.scenes));
         let (x, y) = event.pos();
+        if let Some(f) = l.field {
+            let at = Self::name_rect(f, theme);
+            let press = matches!(event, WidgetEvent::MouseDown { .. });
+            if (press && f.contains(x, y)) || (!press && self.name.is_focused()) {
+                out = out.merge(self.name.handle_event(event, at, theme));
+            } else if press && self.name.is_focused() {
+                self.name.unfocus();
+                out = out.merge(EventResult::changed());
+            }
+        }
         let hit = self
             .folder_rows()
             .find(|r| Self::folder_rect(*r, &l).contains(x, y));
@@ -356,24 +397,24 @@ impl HomeSidebar {
             {
                 c.push(n);
             }
-            let style = theme
-                .typography
-                .exact(ft.font_size, ft.line_height, ft.font_weight);
-            let (shown, color) = if self.name.is_empty() {
-                ("Untitled Folder", t.field_placeholder)
+            let at = Self::name_rect(f, theme);
+            if self.name.is_empty() && !self.name.is_focused() {
+                let style = theme
+                    .typography
+                    .exact(ft.font_size, ft.line_height, ft.font_weight);
+                let y = f.y + (f.h - style.line_height) / 2.0;
+                let shown = "Untitled Folder";
+                c.push(text(
+                    shown,
+                    &style,
+                    at.x,
+                    y,
+                    t.field_placeholder.0,
+                    Some(at.w),
+                ));
             } else {
-                (self.name.as_str(), ft.label)
-            };
-            let x = f.x + t.field_text_x;
-            let y = f.y + (f.h - style.line_height) / 2.0;
-            c.push(text(
-                shown,
-                &style,
-                x,
-                y,
-                color.0,
-                Some((f.right() - x).max(0.0)),
-            ));
+                self.name.render(c, at, theme);
+            }
             if self.focused == Some(FolderRow::New) {
                 c.push(focus_ring(f, t.field_radius, theme));
             }
@@ -431,6 +472,11 @@ impl HomeSidebar {
                 node.state("expanded", self.naming);
             }
             node.action("activate");
+        }
+        if self.naming
+            && let Some(at) = self.name.sem_id()
+        {
+            self.name.project(b, at, "Folder name", Some(id));
         }
     }
 }

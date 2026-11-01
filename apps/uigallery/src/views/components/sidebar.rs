@@ -25,7 +25,12 @@ use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect};
 use engine::widgets::wake::Wake;
 
 use super::showcase::{self, GroupLayout};
-use super::{After, Component, child_id, root_id, under};
+use super::{After, Component, EditKey, child_id, root_id, under};
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
+use accord::Value;
+use engine::widgets::form::TextField;
 
 /// What a card shows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -285,7 +290,26 @@ impl SidebarPage {
         }
     }
 
+    /// The text fields shown now, in every sidebar.
+    fn fields(&mut self) -> Vec<&mut TextField> {
+        let mut out = self.home.text_fields();
+        out.extend(self.scene.text_fields());
+        out.extend(self.design.text_fields());
+        out
+    }
+
+    fn focused_field(&mut self) -> Option<&mut TextField> {
+        self.fields().into_iter().find(|f| f.is_focused())
+    }
+
     fn set_focus(&mut self, id: Option<&SemId>) {
+        for f in self.fields() {
+            if id.is_some() && f.sem_id() == id {
+                f.focus();
+            } else {
+                f.unfocus();
+            }
+        }
         self.home.focus_id(id);
         let at = id.and_then(|i| self.guideline.position(i));
         self.guideline.set_focused(at);
@@ -343,12 +367,28 @@ impl Component for SidebarPage {
         let miss = || format!("the sidebar page has no {} on {}", req.action, req.target);
         if !matches!(
             req.action.as_str(),
-            "activate" | "toggle_expanded" | "toggle" | "select"
+            "activate" | "toggle_expanded" | "toggle" | "select" | "set_value"
         ) {
             return Err(miss());
         }
         if self.home.activate(&req.target) {
             return Ok(After::Nothing);
+        }
+        if req.action.as_str() == "set_value" {
+            let Some(Value::Text(text)) = &req.param else {
+                return Err(miss());
+            };
+            let field = self
+                .fields()
+                .into_iter()
+                .find(|f| f.sem_id() == Some(&req.target));
+            return match field {
+                Some(f) => {
+                    f.set_text(text);
+                    Ok(After::Nothing)
+                }
+                None => Err(miss()),
+            };
         }
         if self.design.activate(&req.target) {
             return Ok(After::Nothing);
@@ -395,6 +435,78 @@ impl Component for SidebarPage {
         let had = self.focus.is_some();
         self.set_focus(None);
         had
+    }
+}
+
+/// The sidebars' fields take the keys: the new folder's name, the
+/// scene's search, the artboard's width and height.
+impl TextHost for SidebarPage {
+    fn handle_text(&mut self, s: &str) -> bool {
+        self.focused_field().is_some_and(|f| f.insert(s))
+    }
+
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        key != EditKey::Tab && self.focused_field().is_some_and(|f| f.edit(key.into()))
+    }
+
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        if let ImeEvent::Disabled = ime {
+            return self
+                .fields()
+                .into_iter()
+                .fold(false, |any, f| f.end_compose() || any);
+        }
+        let Some(field) = self.focused_field() else {
+            return false;
+        };
+        match ime {
+            ImeEvent::Preedit(text, cursor) => field.compose("", text, cursor),
+            ImeEvent::Commit(text) => field.compose(text, "", None),
+            ImeEvent::Disabled => false,
+        }
+    }
+
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        for (_, shows, _, at) in self.placed(content, theme) {
+            let (rects, focused): (Vec<Rect>, Vec<bool>) = match shows {
+                Shows::Home => (
+                    self.home.field_rects(at, theme),
+                    vec![self.home.naming && self.home.name.is_focused()],
+                ),
+                Shows::Scene => (
+                    self.scene.field_rects(at, theme),
+                    vec![self.scene.search.input.is_focused()],
+                ),
+                Shows::Design => (
+                    self.design.field_rects(at, theme),
+                    self.design.focused_fields(),
+                ),
+                Shows::Guideline => continue,
+            };
+            if let Some(i) = focused.iter().position(|f| *f) {
+                return rects.get(i).copied();
+            }
+        }
+        None
+    }
+
+    fn right_click(&mut self, _x: f32, _y: f32, _content: Rect, _theme: &Theme) -> bool {
+        false
+    }
+
+    fn keys(&mut self) -> Keys<'_> {
+        match self.focused_field() {
+            Some(f) => Keys::Field(f),
+            None => Keys::Nobody,
+        }
+    }
+
+    fn handle_escape(&mut self) -> bool {
+        let Some(field) = self.focused_field() else {
+            return false;
+        };
+        field.unfocus();
+        true
     }
 }
 
@@ -466,5 +578,24 @@ mod tests {
         assert!(page.blur());
         let r = req(&page, "sidebar_page.nothing", "activate");
         assert!(page.run(&r).is_err());
+    }
+
+    /// A reader's focus on a field gives it the keys; typing and
+    /// `set_value` reach the artboard's width, Escape leaves it.
+    #[test]
+    fn the_sidebars_fields_take_the_keys() {
+        let mut page = SidebarPage::new();
+        let width = id("sidebar_page.design.block[1].width");
+        assert!(page.focus(&width));
+        assert!(page.handle_edit_key(EditKey::Backspace));
+        assert!(page.handle_text("5"));
+        assert_eq!(page.fields()[1].text(), "805");
+        let mut r = req(&page, "sidebar_page.scene.search", "set_value");
+        r.param = Some(Value::Text("robot".into()));
+        page.run(&r).unwrap();
+        assert_eq!(page.scene.search.input.text(), "robot");
+        assert!(page.handle_escape());
+        assert!(!page.handle_text("x"));
+        seen(&page);
     }
 }

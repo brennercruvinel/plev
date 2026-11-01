@@ -12,7 +12,7 @@
 //! are their stand-in gradient.
 //!
 //! With a [`SemId`]: `<id>.panel`, `<id>.project`, the tabs `<id>.tabs`,
-//! the rows `<id>.item[<i>]` and their toggles `<id>.item[<i>].lock`,
+//! the search `<id>.search`, the rows `<id>.item[<i>]` and their toggles `<id>.item[<i>].lock`,
 //! `.hide`, `.mark`, the sections `<id>.section[<s>]`.
 
 use accord::{Role, SemId, SnapshotBuilder};
@@ -156,6 +156,9 @@ impl SceneSidebar {
     }
 
     pub fn sem(mut self, id: SemId) -> Self {
+        if let Ok(f) = id.child("search") {
+            self.search = self.search.clone().sem(f);
+        }
         if let Ok(t) = id.child("tabs") {
             self.tabs = self.tabs.clone().sem(t);
         }
@@ -336,6 +339,17 @@ impl SceneSidebar {
         Some(t.map_or(ScenePart::Item(i), |t| ScenePart::Toggle(i, t)))
     }
 
+    /// The text fields: the search's.
+    pub fn text_fields(&mut self) -> Vec<&mut crate::widgets::form::TextField> {
+        vec![&mut self.search.input]
+    }
+
+    /// Their rects, in the same order: where the search's text goes.
+    pub fn field_rects(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
+        let l = self.layout(bounds, theme);
+        vec![self.search.layout(l.search, theme).input]
+    }
+
     /// Keyboard focus on a part, or none.
     pub fn set_focused(&mut self, part: Option<ScenePart>) {
         self.focused = part;
@@ -412,6 +426,9 @@ impl SceneSidebar {
             if let Some(at) = self.part_id(part) {
                 b.node(&at, Role::Button, name).parent(id);
             }
+        }
+        if let Some(at) = self.search.sem_id() {
+            self.search.project(b, at, "Search", Some(id));
         }
         if let Some(at) = self.tabs.sem_id() {
             self.tabs.project(b, at, "Scene or assets", Some(id));

@@ -109,6 +109,8 @@ text_hosts! {
     Topbar => topbar,
     // task-104 front C, conversation and feedback (#156)
     PromptInput => prompt_input,
-    // task-104 front G, navigation and data: the zoom level's field
+    // task-104 front G, navigation and data: the zoom level's field, the
+    // sidebars' fields
     Toolbar => toolbar,
+    Sidebar => sidebar,
 }

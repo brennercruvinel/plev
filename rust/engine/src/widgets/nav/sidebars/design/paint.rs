@@ -178,15 +178,13 @@ impl DesignSidebar {
                         k.subtle.0,
                         None,
                     ));
-                    let room = Some((f.w - d.field_text_x).max(0.0));
-                    c.push(text(
-                        value,
-                        &style,
+                    let at = Rect::new(
                         f.x + d.field_text_x,
-                        mid(f),
-                        k.ink.0,
-                        room,
-                    ));
+                        f.y,
+                        (f.w - d.field_text_x).max(0.0),
+                        f.h,
+                    );
+                    value.render(c, at, theme);
                 }
                 let unit = Rect::new(r.right() - d.unit_w, y, d.unit_w, d.field_h);
                 let uw = crate::drawing::text::TextMeasurer::measure_styled("px", &style, None).0;
