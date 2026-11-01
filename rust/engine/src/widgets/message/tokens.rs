@@ -29,9 +29,15 @@ use crate::styling::theme::{Intent, ShadowSpec, Theme};
 
 /// `MessageTokens::hoff_core`, the kit's values with their file:line.
 mod kit;
+/// The prompt input and its menus.
+mod prompt;
 /// The status pieces: the badge, the avatar's online dot.
 mod status;
 
+pub use prompt::{
+    ChoiceTokens, MenuRowTokens, PanelTokens, PremadeTokens, PromptTokens, TriggerTokens,
+    VoiceTokens,
+};
 pub use status::{
     AvatarTokens, BadgePalette, BadgeTokens, ProgressTokens, SkeletonTokens, SpinnerTokens,
     TagTokens,
@@ -328,6 +334,9 @@ pub struct MessageTokens {
     pub skeleton: SkeletonTokens,
     pub progress: ProgressTokens,
     pub spinner: SpinnerTokens,
+    /// The prompt input, its model and add-files menus, its premade
+    /// prompts (task-104 wave 3).
+    pub prompt: PromptTokens,
 }
 
 impl MessageTokens {
@@ -548,6 +557,7 @@ impl MessageTokens {
                 ),
                 ..kit.spinner
             },
+            prompt: PromptTokens::derive(theme),
         }
     }
 }

@@ -18,6 +18,7 @@ use super::{
 };
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::header::tokens::HeaderTokens;
 
 /// Shade 1..9 of the colors page, paper to ink.
 pub const SHADES: [Color; 9] = [
@@ -269,6 +270,7 @@ impl Theme {
             disclosure: DisclosureTokens::hoff_core(),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors,
             typography: TypographyScale::hoff_core(),
             spacing: SpacingScale {

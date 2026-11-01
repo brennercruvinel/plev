@@ -49,12 +49,24 @@ fn menu_tokens_are_the_kit_s_three_on_core_and_the_theme_s_menu_elsewhere() {
         geometry(o.menu_for(MenuStyle::Filter)),
         (180.0, 36.0, 16.0, 17.0)
     );
+    assert_eq!(
+        geometry(o.menu_for(MenuStyle::Upload)),
+        (204.0, 40.0, 20.0, 16.0)
+    );
+    let up = &o.upload_menu;
+    assert_eq!((up.label.font_size, up.label.font_weight), (13.0, 500));
+    assert_eq!(
+        up.item_pad_x + up.icon + up.gap,
+        8.0 + 24.0 + 10.0,
+        "px-2, size-6, gap-2.5"
+    );
     assert_eq!(o.file_menu.label.font_weight, 500);
     assert_eq!(o.filter_menu.icon, 16.0, "the check's size-4");
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {
         let o = &theme.overlay;
         assert_eq!(o.file_menu, o.menu, "the theme's menu, for every style");
         assert_eq!(o.filter_menu, o.menu);
+        assert_eq!(o.upload_menu, o.menu);
         assert_eq!(o.menu, MenuTokens::derive(&theme));
     }
 }

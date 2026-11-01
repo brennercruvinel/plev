@@ -56,6 +56,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.content_height(content, t),
                 Pane::Spinner => self.panes.spinner.content_height(content, t),
                 Pane::Stat => self.panes.stat.content_height(content, t),
+                Pane::Toolbar => self.panes.toolbar.content_height(content, t),
                 Pane::Switch => self.panes.switch.content_height(content, t),
                 Pane::Table => self.panes.table.content_height(content, t),
                 Pane::Tabs => self.panes.tabs.content_height(content, t),
@@ -85,6 +86,7 @@ impl ShowcaseView {
                 Pane::Marker => self.panes.marker.content_height(content, t),
                 Pane::Message => self.panes.message.content_height(content, t),
                 Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
+                Pane::PromptInput => self.panes.prompt_input.content_height(content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.content_height(content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.content_height(content, t),
@@ -102,6 +104,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
                 Pane::Toggle => self.panes.toggle.content_height(content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.content_height(content, t),
+                Pane::Topbar => self.panes.topbar.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -182,6 +187,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.handle_event(event, content, t),
                 Pane::Spinner => self.panes.spinner.handle_event(event, content, t),
                 Pane::Stat => self.panes.stat.handle_event(event, content, t),
+                Pane::Toolbar => self.panes.toolbar.handle_event(event, content, t),
                 Pane::Switch => self.panes.switch.handle_event(event, content, t),
                 Pane::Table => self.panes.table.handle_event(event, content, t),
                 Pane::Tabs => self.panes.tabs.handle_event(event, content, t),
@@ -253,6 +259,7 @@ impl ShowcaseView {
                 Pane::MessageScroller => {
                     self.panes.message_scroller.handle_event(event, content, t)
                 }
+                Pane::PromptInput => self.panes.prompt_input.handle_event(event, content, t),
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.handle_event(event, content, t),
                 Pane::AspectRatio => self.panes.aspect_ratio.handle_event(event, content, t),
@@ -270,6 +277,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.handle_event(event, content, t),
                 Pane::Toggle => self.panes.toggle.handle_event(event, content, t),
                 Pane::ToggleGroup => self.panes.toggle_group.handle_event(event, content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.handle_event(event, content, t),
+                Pane::Topbar => self.panes.topbar.handle_event(event, content, t),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);
@@ -385,11 +395,14 @@ impl ShowcaseView {
             }
             // task-104 front C, conversation and feedback (#156)
             Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
+            Some(Pane::PromptInput) => self.panes.prompt_input.wake(dt),
             // task-104 front D, disclosure and display (#157)
             Some(Pane::Accordion) => self.panes.accordion.wake(dt),
             Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
             // task-104 front E, selection and dates (#158)
             Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
+            // task-104 front F, kit foundation
+            Some(Pane::Topbar) => self.panes.topbar.wake(dt),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
@@ -453,6 +466,7 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.render(c, content, theme),
                 Pane::Spinner => self.panes.spinner.render(c, content, theme),
                 Pane::Stat => self.panes.stat.render(c, content, theme),
+                Pane::Toolbar => self.panes.toolbar.render(c, content, theme),
                 Pane::Switch => self.panes.switch.render(c, content, theme),
                 Pane::Table => self.panes.table.render(c, content, theme),
                 Pane::Tabs => self.panes.tabs.render(c, content, theme),
@@ -548,6 +562,11 @@ impl ShowcaseView {
                 Pane::Marker => self.panes.marker.render(c, content, theme),
                 Pane::Message => self.panes.message.render(c, content, theme),
                 Pane::MessageScroller => self.panes.message_scroller.render(c, content, theme),
+                Pane::PromptInput => {
+                    self.panes
+                        .prompt_input
+                        .render(c, layers.overlay, content, theme)
+                }
                 // task-104 front D, disclosure and display (#157)
                 Pane::Accordion => self.panes.accordion.render(c, content, theme),
                 Pane::AspectRatio => self.panes.aspect_ratio.render(c, content, theme),
@@ -565,6 +584,9 @@ impl ShowcaseView {
                 Pane::RadioGroup => self.panes.radio_group.render(c, content, theme),
                 Pane::Toggle => self.panes.toggle.render(c, content, theme),
                 Pane::ToggleGroup => self.panes.toggle_group.render(c, content, theme),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.render(c, content, theme),
+                Pane::Topbar => self.panes.topbar.render(c, content, theme),
                 Pane::Todo => {
                     let inert = self.overlay_holds_pointer();
                     self.panes.todo.set_inert(inert);

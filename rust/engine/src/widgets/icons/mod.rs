@@ -111,7 +111,8 @@ pub fn icon_path(
             .iter()
             .map(|v| QuadVertex {
                 position: [v.position[0] + x, v.position[1] + y],
-                color,
+                // a faint part keeps its share of the tint
+                color: [color[0], color[1], color[2], color[3] * v.color[3]],
             })
             .collect();
 
@@ -181,6 +182,15 @@ fn tessellate_icon(shapes: &[Shape], size: f32) -> CachedIcon {
             },
             Shape::Polygon(points) => match poly_path(points, s, true) {
                 Some(pb) => pb.stroke_round(WHITE, width),
+                None => continue,
+            },
+            // a kit glyph fills its path, scaled from its own viewBox
+            Shape::Fill(view, d) => match parse_svg_path(d, size / view) {
+                Some(pb) => pb.fill(WHITE),
+                None => continue,
+            },
+            Shape::Faint(view, share, d) => match parse_svg_path(d, size / view) {
+                Some(pb) => pb.fill([1.0, 1.0, 1.0, *share]),
                 None => continue,
             },
             Shape::Rect(x, y, w, h, rx) => {

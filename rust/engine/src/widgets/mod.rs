@@ -15,6 +15,7 @@
 //!
 //! Categories (docs/ref/architecture/component-catalog.md):
 //! - [`buttons`]: button, icon button, chip, badge
+//! - [`header`]: the kit's top bars and its logo (task-104 front F)
 //! - [`form`]: text field, checkbox, switch, slider, select
 //! - [`nav`]: tabs, nav link, sidebar, panel header, breadcrumb, split
 //!   pane
@@ -57,6 +58,7 @@ pub mod overlay;
 pub mod shell;
 
 pub mod buttons;
+pub mod header;
 #[cfg(test)]
 mod tests;
 pub mod widget;

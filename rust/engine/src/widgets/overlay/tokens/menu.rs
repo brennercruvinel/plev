@@ -73,6 +73,8 @@ pub enum MenuStyle {
     File,
     /// Compact rows with a leading check (`FiltersMenu`).
     Filter,
+    /// Tall rows with a leading icon in larger text (`Upload`).
+    Upload,
 }
 
 /// A menu (the context menu, the dropdown menu's panel): its surface, its
@@ -218,6 +220,29 @@ impl MenuTokens {
             icon_hover: gray,
             sep_h: 17.0,
             sep_color: hex(0xE2E2E2),
+            ..profile
+        }
+    }
+
+    /// The kit's upload menu (`Upload/index.tsx:30`, `:33`, `:37`): `w-51
+    /// p-2 rounded-[1.25rem] bg-[#FCFCFC] border border-[#E2E2E2]
+    /// shadow-2xl`, rows `gap-2.5 h-10 px-2 rounded-xl text-[0.8125rem]
+    /// font-medium hover:bg-[#F1F1F1]`, the icon `size-5 fill-[#7B7B7B]
+    /// group-hover:fill-[#000]` centered in a `size-6` slot: the slot's
+    /// two pixels on each side go to the row's padding and the gap.
+    pub fn hoff_core_upload() -> Self {
+        let profile = Self::hoff_core();
+        let slot = 24.0;
+        let icon = 20.0;
+        let side = (slot - icon) / 2.0;
+        Self {
+            border: hex(0xE2E2E2),
+            min_w: 204.0,
+            item_pad_x: 8.0 + side,
+            icon,
+            gap: 10.0 + side,
+            // No leading: the preflight's 1.5.
+            label: TypographyScale::hoff_core().exact(13.0, 19.5, 500),
             ..profile
         }
     }
