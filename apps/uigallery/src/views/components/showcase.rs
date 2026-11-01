@@ -53,6 +53,13 @@ pub(crate) fn title_gap(theme: &Theme) -> f32 {
     theme.spacing.lg
 }
 
+/// The band a group's title takes above its cards in a group `width`
+/// wide: its line, on a whole pixel so the cards under it land on one,
+/// and the gap.
+pub(crate) fn title_band(width: f32, theme: &Theme) -> f32 {
+    title_style(width, theme).line_height.round() + title_gap(theme)
+}
+
 /// The group title's text style in a group `width` wide: the h6 role
 /// (the kit's 20/28 medium), fluid with the width where the theme makes
 /// it so.
@@ -226,7 +233,7 @@ pub(crate) fn layout_grids(
 ) -> Vec<GroupLayout> {
     let pad = pad(content.w, theme);
     let gap = theme.spacing.sm;
-    let title_h = title_style(content.w, theme).line_height + title_gap(theme);
+    let title_h = title_band(content.w, theme);
     let mut y = content.y;
     let mut out = Vec::new();
     for Grid {
@@ -528,7 +535,8 @@ mod tests {
         let bare = &layout_grids([grid().untitled()], content, &theme)[0];
         assert_eq!(bare.cards[0].y, bare.title_y);
         assert_eq!(bare.title_y, pad(content.w, &theme));
-        let title_h = title_style(content.w, &theme).line_height + title_gap(&theme);
+        let title_h = title_band(content.w, &theme);
+        assert_eq!(title_h.fract(), 0.0, "the cards on a whole pixel");
         assert_eq!(titled.cards[0].y - bare.cards[0].y, title_h);
         assert_eq!(titled.rule_y - bare.rule_y, title_h);
     }
