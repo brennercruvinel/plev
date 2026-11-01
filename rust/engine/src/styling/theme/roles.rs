@@ -372,7 +372,9 @@ impl TypographyScale {
         if run.role == TypeRole::Code {
             return self.exact_mono(spec.size, spec.line_height, weight);
         }
-        self.exact(spec.size, spec.line_height, weight)
-            .with_letter_spacing(spec.tracking_em * spec.size)
+        let style = self.exact(spec.size, spec.line_height, weight);
+        // the tracking is in em: of the size drawn, the text scale's
+        let tracking = spec.tracking_em * style.font_size;
+        style.with_letter_spacing(tracking)
     }
 }

@@ -67,7 +67,7 @@ impl MessageText {
 
     /// The run's line height in `typography`.
     pub fn line_height(&self, typography: &TypographyScale) -> f32 {
-        typography.spec(self.run.role).line_height
+        self.style(typography).line_height
     }
 
     fn recolor(self, color: Color) -> Self {
