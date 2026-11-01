@@ -485,10 +485,12 @@ impl TextHost for SidebarPage {
 
     fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
         if let ImeEvent::Disabled = ime {
-            return self
-                .fields()
-                .into_iter()
-                .fold(false, |any, f| f.end_compose() || any);
+            // every field ends its composition: no short circuit
+            let mut ended = false;
+            for f in self.fields() {
+                ended |= f.end_compose();
+            }
+            return ended;
         }
         let Some(field) = self.focused_field() else {
             return false;
