@@ -1,6 +1,8 @@
 //! Unit tests of the text system: measurement and raster.
 
 #[cfg(test)]
+pub(super) mod features;
+#[cfg(test)]
 pub(super) mod lines;
 #[cfg(test)]
 pub(super) mod measure;

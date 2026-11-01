@@ -335,6 +335,7 @@ impl Viewer {
                 font_weight: 500,
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
+                features: engine::drawing::text::TextFeatures::NONE,
                 overflow_wrap: OverflowWrap::Normal,
             };
             let width = 6.0 * label.text.chars().count() as f32 + 6.0;

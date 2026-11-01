@@ -160,7 +160,9 @@ impl DisclosureTokens {
             tree,
             panel,
             header,
-            page: PageHeadRecipe::derive(theme, header),
+            // the page frame's own head (not the panel head, whose texts
+            // took the kit's roles), with the fluid h3 title
+            page: PageHeadRecipe::derive(theme, HeaderRecipe::page_head(theme)),
             card: CardRecipe::derive(theme),
             catalog: CatalogTokens::derive(theme),
             split,
@@ -173,15 +175,21 @@ impl DisclosureTokens {
     /// padding left and right, the blurb `xs` under that row with nothing
     /// below it, the glass default title, the dim blurb, `sm` before the
     /// badge, no rule.
+    /// The texts keep the kit's roles (a text's role is its component's,
+    /// the theme sizes it): the label, the head's strong title and its blurb.
     fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
-        let caption_run = TypeRole::Caption.strong();
         let panel = PanelRecipe {
             radius: theme.shape.card,
             pad: theme.spacing.lg,
-            label_type: caption_run,
+            label_type: TypeRole::Label.run(),
             label: theme.glass.text_faint,
         };
-        (panel, HeaderRecipe::page_head(theme))
+        let header = HeaderRecipe {
+            title_type: TypeRole::Heading.strong(),
+            blurb_type: TypeRole::Label.run(),
+            ..HeaderRecipe::page_head(theme)
+        };
+        (panel, header)
     }
 
     /// The tree every theme drew before the kit, value for value: body
@@ -189,14 +197,14 @@ impl DisclosureTokens {
     /// glyph, an `lg` indent, `Sm` icons an `xs` apart and two before the
     /// label; the glass washes under a row in the nav radius, inset half
     /// a gap and an edge; the label mid, the selected one in the text
-    /// tone, the chevron dim, the icon mid.
+    /// tone, the chevron dim, the icon mid. The label is the kit's role.
     fn tree(theme: &Theme) -> TreeRecipe {
         let (colors, glass) = (&theme.colors, &theme.glass);
-        let body_run = TypeRole::Body.run();
+        let label_run = TypeRole::Label.run();
         let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
         let gap = theme.spacing.xs;
         TreeRecipe {
-            row_h: (theme.typography.run(body_run).line_height + gap * 2.0).round(),
+            row_h: (theme.typography.run(label_run).line_height + gap * 2.0).round(),
             pad_x: theme.spacing.sm,
             indent: theme.spacing.lg,
             chevron: icon,
@@ -215,7 +223,7 @@ impl DisclosureTokens {
                 fill: glass.surface_active,
                 border: NONE,
             },
-            text_type: body_run,
+            text_type: label_run,
             label: colors.text_mid,
             label_selected: colors.text,
             chevron_color: colors.text_dim,
@@ -248,8 +256,8 @@ impl DisclosureTokens {
             rule: 0.0,
             rule_color: NONE,
         };
-        let caption_run = TypeRole::Caption.strong();
-        let body_run = TypeRole::Body.run();
+        // the kit's roles: caption titles and caption cells
+        let caption_run = TypeRole::Caption.run();
         let table = TableRecipe {
             frame: 0.0,
             frame_color: NONE,
@@ -260,7 +268,7 @@ impl DisclosureTokens {
             rule: theme.control.edge_width,
             rule_color: colors.divider,
             cell_pad: theme.spacing.md,
-            cell_type: body_run,
+            cell_type: caption_run,
             cell: colors.text_mid,
             cell_dim: glass.text_faint,
             rows: list,

@@ -74,25 +74,25 @@ impl StatRecipe {
         }
     }
 
-    /// The stat of before: base-m over small, title over caption,
-    /// headline over base-2r, the unit a ramp step under its value; the
-    /// value in the text tone, the unit mid, the label dim.
+    /// The kit's roles at the theme's sizes (a text's role is its
+    /// component's); the value in the text tone, the unit mid, the label
+    /// dim.
     pub fn derive(theme: &Theme) -> Self {
         let (colors, sp) = (&theme.colors, &theme.spacing);
         Self {
             sm: StatLevel {
-                value: TypeRole::BodyLg.medium(),
-                unit: TypeRole::Caption.regular(),
-                label: TypeRole::Small.run(),
+                value: TypeRole::Title.strong(),
+                unit: TypeRole::Label.run(),
+                label: TypeRole::Caption.run(),
             },
             md: StatLevel {
-                value: TypeRole::Title.run(),
-                unit: TypeRole::Body.run(),
-                label: TypeRole::Caption.regular(),
+                value: TypeRole::H5.run(),
+                unit: TypeRole::Title.run(),
+                label: TypeRole::Body.run(),
             },
             lg: StatLevel {
-                value: TypeRole::H3.run(),
-                unit: TypeRole::Title.run(),
+                value: TypeRole::H2.run(),
+                unit: TypeRole::H5.run(),
                 label: TypeRole::Body.run(),
             },
             value: colors.text,
@@ -169,7 +169,7 @@ impl CodeRecipe {
         let (colors, glass) = (&theme.colors, &theme.glass);
         Self {
             text: TypeRole::Code.run(),
-            caption: TypeRole::Caption.strong(),
+            caption: TypeRole::Caption.run(),
             pad: theme.spacing.md,
             caption_gap: theme.spacing.xs,
             radius: theme.shape.nav,
