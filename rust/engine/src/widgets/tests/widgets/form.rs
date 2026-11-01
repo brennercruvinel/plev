@@ -243,7 +243,11 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         (lift.offset, lift.blur, lift.spread),
         ([0.0, 1.0], 4.0, -1.0)
     );
-    assert_eq!(core.form.field.error_color, Color::hex(0xFE5938));
+    // the kit's #FE5938, deepened to read as text (AA)
+    assert_eq!(
+        core.form.field.error_color,
+        crate::styling::theme::hoff_core::red_text()
+    );
     assert_eq!(TextField::height(&core), 48.0);
 
     for theme in [Theme::hoff(), Theme::dark(), Theme::light()] {

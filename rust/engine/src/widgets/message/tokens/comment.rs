@@ -16,7 +16,7 @@ use super::MessageText;
 use super::prompt::{raised_shadow, shadow_2xl};
 use crate::styling::color::Color;
 use crate::styling::theme::TypeRole;
-use crate::styling::theme::hoff_core::SHADES;
+use crate::styling::theme::hoff_core::{self, SHADES};
 use crate::styling::theme::{ShadowSpec, Theme};
 
 /// A square icon button the kit draws bare: nothing at rest, a wash on
@@ -174,7 +174,7 @@ impl CommentTokens {
                 well_pad: 6.0,
                 line_pad: 8.0,
                 text: comment,
-                placeholder: shade6,
+                placeholder: hoff_core::secondary_text(),
             },
             // components/NewComment/index.tsx:12 `gap-4`, :14 `mt-2.5`,
             // :18 `w-70 rounded-xl bg-[#FCFCFC] border border-[#ECECEC]`
@@ -195,7 +195,7 @@ impl CommentTokens {
                 pad: 8.0,
                 line_pad: 8.0,
                 text: comment,
-                placeholder: shade6,
+                placeholder: hoff_core::secondary_text(),
                 tray_pad_x: 16.0,
                 tray_pad_bottom: 8.0,
                 tools_top: 8.0,
@@ -260,7 +260,7 @@ impl CommentTokens {
                     run: TypeRole::Paragraph.run(),
                     color: ink,
                 },
-                placeholder: shade6,
+                placeholder: hoff_core::secondary_text(),
                 line_gap: 4.0,
                 tools_top: 16.0,
                 tool: ToolTokens {

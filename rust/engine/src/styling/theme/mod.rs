@@ -3,15 +3,17 @@ mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
+pub mod legibility;
 pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
 mod text_scale;
 pub(crate) mod tokens;
 
-pub use self::adapt::Prefs;
+pub use self::adapt::{Contrast, Prefs};
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
+pub use self::legibility::Bar;
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
@@ -188,7 +190,10 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::derive(Color::rgba(0.0, 0.0, 0.0, 0.5)),
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
+        theme.hold_edges(Bar::AA);
         theme
     }
 
@@ -218,7 +223,10 @@ impl Theme {
             colors,
             ..Self::dark()
         };
+        theme.settle_colors(Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
+        theme.hold_edges(Bar::AA);
         theme
     }
 
@@ -386,6 +394,40 @@ impl Theme {
         };
         theme.derive_front_slots();
         Some(theme)
+    }
+
+    /// The root colors held to `bar` (`legibility::settle`): each color of
+    /// the palette and of the glass moved the least it must, none that
+    /// already reads. The four built-in themes take it before their
+    /// buttons and front slots derive from the palette.
+    pub(crate) fn settle_colors(&mut self, bar: Bar) {
+        legibility::settle(&mut self.colors, &mut self.glass, bar);
+    }
+
+    /// The edges of the fields held at `bar.edge` on the card (WCAG
+    /// 1.4.11), each moved the least it must; nothing where `bar` keeps
+    /// the theme's own (`Bar::AA`, decision pending), and no border the
+    /// design leaves out (a transparent one).
+    pub(crate) fn hold_edges(&mut self, bar: Bar) {
+        let Some(need) = bar.edge else {
+            return;
+        };
+        let (bg, card) = (self.colors.bg, self.colors.surface);
+        let f = &mut *self.form;
+        for input in [
+            &mut f.input,
+            &mut f.search,
+            &mut f.inset,
+            &mut f.header,
+            &mut f.combo,
+            &mut f.bare,
+        ] {
+            for s in [&mut input.rest, &mut input.hover, &mut input.focus] {
+                if s.border.0[3] > 0.0 {
+                    s.border = legibility::reach(s.border, need, &[&[bg, card]]);
+                }
+            }
+        }
     }
 
     /// task-104: each front's slot derived from the theme built so far
