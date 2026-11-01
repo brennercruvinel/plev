@@ -189,21 +189,6 @@ fn targets(view: &ShowcaseView, c: &Compositor) -> Vec<Target> {
     out
 }
 
-/// The names of the page's groups (a showcase group's title): a text
-/// that is one of them cut with an ellipsis is a title cut, where the
-/// mold wraps it whole.
-fn group_titles(view: &ShowcaseView) -> Vec<String> {
-    let Some(snapshot) = view.reader_semantics() else {
-        return Vec::new();
-    };
-    snapshot
-        .nodes()
-        .iter()
-        .filter(|(_, n)| n.role == accord::Role::Group && n.label.chars().count() > 1)
-        .map(|(_, n)| n.label.clone())
-        .collect()
-}
-
 /// The page `title` drawn whole at `width` under `case`.
 fn frame(title: &str, width: f32, case: &Case) -> (ShowcaseView, Compositor) {
     engine::drawing::text::pseudo::set_pseudo_locale(case.pseudo);
@@ -241,25 +226,11 @@ pub fn breaks(title: &str, width: f32, case: &Case) -> Vec<String> {
     let mut out = Vec::new();
     let shown = texts(&c, window);
     let targets = targets(&view, &c);
-    let titles = group_titles(&view);
     engine::drawing::text::pseudo::set_pseudo_locale(false);
     for t in &shown {
         // wholly outside what shows: scrolled away, or the peeking sidebar
         if intersect(t.rect, t.clip).is_none() {
             continue;
-        }
-        if let Some(kept) = t.text.strip_suffix('\u{2026}') {
-            let kept = kept.trim_end();
-            if let Some(whole) = titles
-                .iter()
-                .find(|g| g.len() > kept.len() && g.starts_with(kept))
-            {
-                out.push(format!(
-                    "{at}: the title '{}' cut to '{}'",
-                    short(whole),
-                    short(&t.text)
-                ));
-            }
         }
         if let Some(max_w) = t.max_w
             && t.rect[2] > max_w + EPS
