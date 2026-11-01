@@ -123,7 +123,8 @@ keeps assets once per content, and tests against the gallery):
   `TextNodeKey::new`, which takes the string the source has now under
   hot reload.
 - a text key ends with its style byte (added on 2026-11-01, task-104):
-  bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`, the byte the
+  bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`, bit 2
+  `OverflowWrap::BreakWord`, the byte the
   session file's text asset ends with (adr-0037, version 2), so a
   mirrored textarea breaks its words and a mirrored counter keeps its
   figures as the app draws them; before, the mirror drew every text

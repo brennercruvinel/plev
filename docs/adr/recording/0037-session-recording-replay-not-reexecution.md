@@ -181,8 +181,8 @@ B := id_count u32, (len u16, utf8)*, chunk_count u32 (the index's),
 text asset (kind 0 of A) := text_len u32, utf8, font_size u32,
      line_height u32, max_width opt u32, weight u16, letter_spacing
      u32, family opt (u16 len, utf8), then from version 2 style u8
-     (bit 0 tabular figures, bit 1 OverflowWrap::Anywhere), only when
-     it is not 0
+     (bit 0 tabular figures, bit 1 OverflowWrap::Anywhere, bit 2
+     OverflowWrap::BreakWord, never with bit 1), only when it is not 0
 ```
 
 - the version says which sections a file has (added on 2026-09-23, task-63
@@ -210,7 +210,7 @@ text asset (kind 0 of A) := text_len u32, utf8, font_size u32,
   word past the line and a replayed number shifted its neighbours: the
   replay did not draw what the app drew. what entered:
   - one `style` byte at the end of a text asset, bit 0 tabular figures,
-    bit 1 `Anywhere`, written only when it is not 0. a text at the
+    bit 1 `Anywhere`, bit 2 `BreakWord` (never with bit 1), written only when it is not 0. a text at the
     engine's defaults (`Normal`, `TextFeatures::NONE`) carries no byte
     and costs nothing; a styled text costs one byte per asset (an asset
     is held once per content, so a counter costs a byte per value it
