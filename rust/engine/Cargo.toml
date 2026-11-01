@@ -138,7 +138,7 @@ proc-macro2 = { workspace = true, optional = true }
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 # Response: the Noto files fetched on demand (drawing/text/on_demand.rs)
-web-sys = { workspace = true, features = ["Response", "MediaQueryList"] }
+web-sys = { workspace = true, features = ["Response", "MediaQueryList", "CssStyleDeclaration"] }
 js-sys.workspace = true
 console_log.workspace = true
 console_error_panic_hook.workspace = true

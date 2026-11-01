@@ -127,7 +127,8 @@ fn live_text(text: &str) -> String {
     if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
         return now;
     }
-    text.to_string()
+    // pseudo-localization (a test mode): draw what was measured
+    crate::drawing::text::pseudo::localized(text).into_owned()
 }
 
 impl TextNodeKey {

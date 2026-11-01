@@ -3,7 +3,9 @@
 //! the frame do with them.
 
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
+use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::{Intent, Theme};
+use engine::widgets::content::kbd::Kbd;
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::overlay::popover::{Line, render_line, render_panel};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
@@ -12,12 +14,25 @@ use super::super::showcase::{self, GroupLayout};
 use super::{Card, PRESETS, PopoverPage, Spot};
 
 impl PopoverPage {
-    /// The panel's size: the kit's small width, the presets stacked.
+    /// The panel's size: the kit's small width, or what its widest line
+    /// takes where that is wider (a longer language, a larger text
+    /// size), the presets stacked.
     fn panel_size(theme: &Theme) -> (f32, f32) {
         let t = &theme.overlay.popover;
+        let l = &t.line;
+        let style = theme.typography.run(l.label);
+        let widest = PRESETS
+            .iter()
+            .map(|(label, _, keys)| {
+                let (text_w, _) = TextMeasurer::measure_styled(label, &style, None);
+                let (keys_w, _) = Kbd::new(*keys).preferred_size(theme);
+                text_w + keys_w.max(l.key_min_w)
+            })
+            .fold(0.0, f32::max);
+        let line_w = widest + l.slot + l.slot_gap + theme.control.inline_gap + l.pad_x * 2.0;
         (
-            t.widths[0],
-            t.line.height * PRESETS.len() as f32 + t.pad * 2.0,
+            t.widths[0].max((line_w + t.pad * 2.0).ceil()),
+            l.height * PRESETS.len() as f32 + t.pad * 2.0,
         )
     }
 

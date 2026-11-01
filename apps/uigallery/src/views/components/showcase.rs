@@ -309,10 +309,14 @@ pub(crate) fn centered((w, h): (f32, f32), card: Rect) -> Rect {
     )
 }
 
-/// A group's title at its layout's `title_y`.
+/// A group's title at its layout's `title_y`, on the one line the layout
+/// gives it: cut with an ellipsis where it is wider than the content (a
+/// phone, a larger text size); its projection keeps the whole title.
 pub(crate) fn title(c: &mut Compositor, text: &str, content: Rect, y: f32, theme: &Theme) {
+    let style = title_style(content.w, theme);
+    let text = TextMeasurer::truncate_to_width(text, &style, content.w);
     c.push(SceneNode::Text {
-        key: TextNodeKey::from_style(text, &title_style(content.w, theme), None),
+        key: TextNodeKey::from_style(&text, &style, None),
         x: content.x,
         y,
         color: theme.colors.text.0,
