@@ -105,8 +105,8 @@ impl AppShell {
     }
 
     /// The window the dock places its panel in: the shell's, inside the
-    /// safe area's sides.
-    fn dock_window(&self) -> Rect {
+    /// safe area's sides. Its width is what the dock's asks take.
+    pub fn dock_window(&self) -> Rect {
         let sa = self.safe_area;
         let w = (self.width - sa.left - sa.right).max(0.0);
         Rect::new(sa.left, 0.0, w, self.height)

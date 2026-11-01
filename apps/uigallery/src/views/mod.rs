@@ -1,5 +1,5 @@
-//! Showcase view: the app chrome (sidebar tree by breakpoint, header)
-//! around one page at a time. This file holds the view's state and
+//! Showcase view: the app chrome (the kit's sidebar where the shell's
+//! dock puts it, the header) around one page at a time. This file holds the view's state and
 //! layout; `input.rs` routes events, `render.rs` builds the frame,
 //! `pages.rs` is the page table (the sidebar tree), `panes.rs` holds the
 //! pages' state, `dispatch.rs` routes layout, events, ticks and drawing
@@ -10,6 +10,7 @@
 mod apps;
 mod components;
 mod foundations;
+mod navigation;
 mod pages;
 
 pub mod compositor;
@@ -34,7 +35,7 @@ use winit::keyboard::{Key, ModifiersState};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
 use engine::styling::theme::Theme;
-use engine::widgets::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
+use engine::widgets::nav::{PanelHeader, SidebarDock};
 use engine::widgets::overlay::drawer::Drawer;
 use engine::widgets::overlay::sheet::Sheet;
 use engine::widgets::overlay::{OverlayId, OverlayManager};
@@ -106,9 +107,13 @@ pub struct ShowcaseView {
     pub theme_name: String,
     /// Index into [`PAGES`].
     pub page: usize,
-    /// The app chrome: sidebar by breakpoint (full, rail, drawer), the
-    /// page header, and the content rect the page lays out in.
+    /// The app chrome: the dock that places the sidebar (pinned beside
+    /// the page, a drawer where the window cannot hold both), the page
+    /// header, and the content rect the page lays out in.
     pub shell: AppShell,
+    /// The sidebar the dock places: the kit's HomeSidebar over the page
+    /// table.
+    pub nav: navigation::Navigation,
     /// Page-level vertical scroll, one per page: HOFF pages are taller
     /// than the window (Card, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
@@ -150,36 +155,15 @@ struct Layers {
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
         let theme = Theme::hoff_core();
-        let links = PAGES
-            .iter()
-            .enumerate()
-            .map(|(i, p)| {
-                let link = NavLink::new(p.title).icon(p.icon);
-                if i < HOTKEY_PAGES {
-                    link.shortcut(format!("{}", (i + 1) % 10))
-                } else {
-                    link
-                }
-            })
-            .collect();
-        let groups = Group::ALL
-            .iter()
-            .map(|g| NavGroup::new(g.label(), g.pages()))
-            .collect();
-        let sidebar = Sidebar::new(links)
-            .groups(groups)
-            .brand("plev", "HOFF DESIGN SYSTEM")
-            .footer(vec![
-                "T  cycle core / hoff / dark / light".into(),
-                "Esc  close overlays".into(),
-            ]);
         let first = &PAGES[0];
         let header = PanelHeader::new(first.title).blurb(first.blurb);
+        let dock = SidebarDock::new().pinned(true);
         Self {
             width,
             height,
             scale_factor: 1.0,
-            shell: AppShell::new(sidebar, header, width, height),
+            shell: AppShell::docked(dock, header, width, height),
+            nav: navigation::Navigation::new(0),
             panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
@@ -270,7 +254,7 @@ impl ShowcaseView {
         let index = index.min(PAGES.len() - 1);
         self.page = index;
         let page = &PAGES[index];
-        self.shell.sidebar.set_active(index);
+        self.nav.set_current(index);
         self.shell.header = PanelHeader::new(page.title).blurb(page.blurb);
     }
 

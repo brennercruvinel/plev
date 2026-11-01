@@ -110,13 +110,13 @@ fn rules_texts(cut: u32) -> Vec<String> {
 }
 
 /// The acceptance of the layout: the rules' review at 1200x800 (the
-/// surface in the right half, a card 420 wide): every node inside the
+/// surface in the right half, a card 424 wide): every node inside the
 /// card, the buttons of a cut included, and every text of a cut whole.
 #[test]
 fn the_rules_review_fits_its_column_at_the_default_window() {
     let (view, c) = gallery(RULES);
     let card = rect(&c, "proposed.card");
-    assert_eq!((card.x, card.w), (740.0, 420.0), "the right half");
+    assert_eq!((card.x, card.w), (736.0, 424.0), "the right half");
     inside(&c, "proposed.card");
     let snap = view.semantics().expect("the page projects");
     for cut in [1, 2] {
@@ -260,15 +260,16 @@ fn the_claudes_review_fixture_is_the_first_rounds_structure() {
     // draws them today: the page's head the core kit's Layout title, as
     // tall as its blurb wraps, and the content lg below it (task-104d), and the duration the core kit's stat (task-104g,
     // the medium readout, 32 + 4 + 16 px tall, where the round saw 58 by
-    // 43), which grows its card by 9
+    // 43), which grows its card by 9; the page past the kit's sidebar,
+    // `w-60` (task-104h), 8 px wider than the old 248, the half 4 more
     for (id, [x, y, w, h]) in [
-        ("review.root", [740.0, 221.0, 420.0, f32::NAN]),
-        ("review.title", [740.0, 221.0, 420.0, 23.0]),
-        ("review.video_card", [740.0, 256.0, 420.0, 378.0]),
-        ("review.video_file", [740.0, 256.0, 420.0, 22.0]),
-        ("review.video_duration", [740.0, 287.0, 63.0, 52.0]),
-        ("review.video_original", [740.0, 347.0, 420.0, 140.0]),
-        ("review.video_result", [740.0, 495.0, 420.0, 140.0]),
+        ("review.root", [736.0, 221.0, 424.0, f32::NAN]),
+        ("review.title", [736.0, 221.0, 424.0, 23.0]),
+        ("review.video_card", [736.0, 256.0, 424.0, 378.0]),
+        ("review.video_file", [736.0, 256.0, 424.0, 22.0]),
+        ("review.video_duration", [736.0, 287.0, 63.0, 52.0]),
+        ("review.video_original", [736.0, 347.0, 424.0, 140.0]),
+        ("review.video_result", [736.0, 495.0, 424.0, 140.0]),
     ] {
         let r = rect(&c, id);
         let near = |a: f32, b: f32| b.is_nan() || (a - b).abs() < 0.5;

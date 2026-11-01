@@ -19,36 +19,47 @@ fn starts_on_the_first_page_with_the_core_theme() {
     );
 }
 
-// -- Sidebar responsiveness (the tree overflows short windows) ----------
+// -- The sidebar (the kit's HomeSidebar where the dock puts it) ----------
 
-/// The sidebar's link rects at the current viewport.
-fn link_rects(view: &ShowcaseView) -> Vec<Rect> {
-    let sb = &view.shell.sidebar;
-    let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
-    sb.link_rects(rect, &view.theme, sb.mode(&view.theme, view.width))
+/// The panel's rect now.
+fn panel(view: &ShowcaseView) -> Rect {
+    view.panel_rect().expect("the panel shows")
 }
 
-fn band(view: &ShowcaseView) -> Rect {
-    let sb = &view.shell.sidebar;
-    let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
-    sb.band(rect, &view.theme, sb.mode(&view.theme, view.width))
+/// Page `i`'s tab in the panel, while its group is open.
+fn tab(view: &ShowcaseView, i: usize) -> Option<Rect> {
+    view.nav.tab_rect(i, panel(view), &view.theme)
+}
+
+/// A press and a release at the middle of `r`.
+fn click(view: &mut ShowcaseView, r: Rect) -> bool {
+    let (x, y) = r.center();
+    view.handle_event(&WidgetEvent::MouseDown { x, y });
+    view.handle_event(&WidgetEvent::MouseUp { x, y })
+}
+
+/// Runs the view's clock until the motions land.
+fn settle(view: &mut ShowcaseView) {
+    for _ in 0..120 {
+        view.wake(1.0 / 60.0);
+    }
 }
 
 #[test]
 fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
-    // Short: the links overflow the band, the rail becomes scrollable.
+    // Short, on a component: its group open, the tabs overflow the body.
     let mut view = ShowcaseView::new(1280.0, 500.0);
+    view.jump_to_page("Button");
+    settle(&mut view);
     let mut c = Compositor::new();
     view.render(&mut c);
-    let last_before = link_rects(&view).last().unwrap().y;
-    let band_bottom = band(&view).bottom();
-    assert!(
-        last_before + view.theme.navigation.sidebar_link.height > band_bottom,
-        "500px window: the last link must start below the visible band"
-    );
+    let body = engine::widgets::nav::HomeSidebar::body_rect(panel(&view), &view.theme);
+    let button = super::pages::find("Button").unwrap();
+    let before = tab(&view, button).unwrap().y;
+    assert!(view.nav.sidebar.max_scroll(panel(&view), &view.theme) > 0.0);
 
-    // Wheel over the rail scrolls the rail, not the page.
-    let (bx, by) = band(&view).center();
+    // Wheel over the panel scrolls the panel, not the page.
+    let (bx, by) = body.center();
     let changed = view.handle_event(&WidgetEvent::Scroll {
         x: bx,
         y: by,
@@ -56,107 +67,111 @@ fn sidebar_scrolls_in_short_windows_and_stays_put_in_tall_ones() {
     });
     assert!(changed, "sidebar scroll must request a redraw");
     assert_eq!(view.page_offset(), 0.0, "page must not scroll");
-    let last_after = link_rects(&view).last().unwrap().y;
-    assert!(last_after < last_before, "links must move up");
+    assert!(tab(&view, button).unwrap().y < before, "tabs must move up");
 
-    // Tall, with the Components group folded: everything fits, nothing
-    // moves.
+    // Tall, on the first page: only Foundations open, everything fits,
+    // nothing moves.
     let mut tall = ShowcaseView::new(1280.0, 1100.0);
     tall.render(&mut c);
-    let sb = &tall.shell.sidebar;
-    let rect = sb.rect(&tall.theme, tall.width, tall.height).unwrap();
-    let caption = sb.group_rects(rect, &tall.theme, sb.mode(&tall.theme, tall.width))[1];
-    let (x, y) = caption.center();
-    assert!(tall.handle_event(&WidgetEvent::MouseDown { x, y }));
-    let (bx, by) = band(&tall).center();
-    let before = link_rects(&tall)[0].y;
+    let body = engine::widgets::nav::HomeSidebar::body_rect(panel(&tall), &tall.theme);
+    let (bx, by) = body.center();
+    let before = tab(&tall, 0).unwrap().y;
     let changed = tall.handle_event(&WidgetEvent::Scroll {
         x: bx,
         y: by,
         delta: 200.0,
     });
     assert!(!changed, "nothing to scroll: no redraw");
-    assert_eq!(link_rects(&tall)[0].y, before);
+    assert_eq!(tab(&tall, 0).unwrap().y, before);
 }
 
 #[test]
-fn sidebar_links_clip_to_their_band_and_do_not_hit_outside_it() {
+fn sidebar_body_clips_under_the_logo_and_does_not_hit_there() {
     let mut view = ShowcaseView::new(1280.0, 500.0);
+    view.jump_to_page("Button");
+    settle(&mut view);
+    let p = panel(&view);
+    let body = engine::widgets::nav::HomeSidebar::body_rect(p, &view.theme);
+    let (bx, by) = body.center();
+    view.handle_event(&WidgetEvent::Scroll {
+        x: bx,
+        y: by,
+        delta: 400.0,
+    });
     let mut c = Compositor::new();
     view.render(&mut c);
-    let band = band(&view);
-    let overlay = view.layers.unwrap().overlay;
-    let has_band_clip = c.layer(overlay).unwrap().nodes().iter().any(|n| {
+    let has_body_clip = c.layer(LayerId::DEFAULT).unwrap().nodes().iter().any(|n| {
         matches!(n, SceneNode::PushClip { x, y, w, h }
-                if *x == band.x && *y == band.y && *w == band.w && *h == band.h)
+                if *x == body.x && *y == body.y && *w == body.w && *h == body.h)
     });
-    assert!(has_band_clip, "sidebar links must be clipped to the band");
-
-    // A point below the band (footer zone) must not hover a link that
-    // scrolled-space-wise would live there.
-    let below = band.bottom() + 2.0;
-    assert!(below < view.height, "test point must be inside the window");
     assert!(
-        !view.handle_event(&WidgetEvent::MouseMove { x: 100.0, y: below }),
-        "footer zone must not hover a clipped link"
+        has_body_clip,
+        "the pinned sidebar's body clips under the logo"
     );
-    assert!(view.shell.sidebar.links.iter().all(|l| !l.is_hovered()));
+
+    // A tab scrolled under the logo is not there: a press on the head,
+    // off the logo, picks nothing.
+    let under = (0..PAGES.len())
+        .find(|i| tab(&view, *i).is_some_and(|r| r.y >= p.y && r.bottom() <= body.y))
+        .expect("a tab scrolled under the logo");
+    let r = tab(&view, under).unwrap();
+    let at = Rect::new(p.right() - 4.0, r.y, 2.0, r.h);
+    click(&mut view, at);
+    assert_eq!(view.page_title(), "Button");
 }
 
 #[test]
-fn sidebar_labels_fit_their_slot_in_the_ui_font() {
-    // Every page title fits the full sidebar's link width with the
-    // icon slot, the shortcut hint and the paddings taken out.
-    let view = ShowcaseView::new(1280.0, 800.0);
-    let t = &view.theme;
-    let link_w = link_rects(&view)[0].w;
-    let r = &t.navigation.sidebar_link;
-    let style = r.label.style(&t.typography);
-    let (hint_w, _) = engine::drawing::text::TextMeasurer::measure_styled(
-        "14",
-        &r.hint.style(&t.typography),
-        None,
-    );
-    let slot =
-        link_w - r.pad_start - r.pad_end - r.icon_box() - r.icon_gap - hint_w - r.trailing_gap;
-    for page in PAGES {
-        let (w, _) = engine::drawing::text::TextMeasurer::measure_styled(page.title, &style, None);
-        assert!(
-            w <= slot,
-            "{} label measures {w:.1}px, over the {slot:.1}px slot",
-            page.title
-        );
+fn sidebar_tabs_fit_one_line_in_the_ui_font() {
+    // Every tab keeps the kit's height: no title wraps in the rail list.
+    let mut view = ShowcaseView::new(1280.0, 4000.0);
+    for g in 0..Group::ALL.len() {
+        if let Some(r) = view.nav.trigger_rect(g, panel(&view), &view.theme)
+            && !view.nav.menus().nth(g).unwrap().0.is_open()
+        {
+            click(&mut view, r);
+        }
+    }
+    settle(&mut view);
+    let rail = view.theme.disclosure.collapsible.rail.unwrap();
+    for (i, page) in PAGES.iter().enumerate() {
+        let r = tab(&view, i).expect("every group open");
+        assert_eq!(r.h, rail.link_h, "{} wraps", page.title);
     }
 }
 
 #[test]
-fn sidebar_follows_the_breakpoint() {
-    let t = Theme::hoff();
-    // Desktop: the full sidebar takes its token width from the page.
+fn sidebar_is_pinned_where_it_fits_and_a_drawer_where_it_does_not() {
+    let t = Theme::hoff_core();
+    let r = t.navigation.dock;
+    // Wide: pinned beside the page, at the kit's width.
     let wide = ShowcaseView::new(1400.0, 900.0);
-    assert_eq!(wide.page_x(), t.size.sidebar_w);
-    // Narrow desktop window: the rail.
-    let medium = ShowcaseView::new(800.0, 700.0);
-    assert_eq!(medium.page_x(), t.size.sidebar_rail_w);
+    assert_eq!(wide.page_x(), r.width);
     // Phone: a drawer behind the menu button; the page spans the width.
     let mut phone = ShowcaseView::new(390.0, 844.0);
     assert_eq!(phone.page_x(), 0.0);
+    assert!(phone.panel_rect().is_none(), "the drawer starts shut");
     let mb = phone
         .shell
         .layout(&t)
         .menu_button
         .expect("menu button on a phone");
-    let (x, y) = mb.center();
-    phone.handle_event(&WidgetEvent::MouseDown { x, y });
-    assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
-    assert!(phone.shell.sidebar.drawer_open);
+    phone.handle_event(&WidgetEvent::MouseMove {
+        x: mb.center().0,
+        y: mb.center().1,
+    });
+    assert!(click(&mut phone, mb));
+    assert!(phone.shell.dock.as_ref().unwrap().is_drawer_open());
+    settle(&mut phone);
     // Navigating from the drawer switches the page and closes it.
-    let rects = link_rects(&phone);
-    let (x, y) = rects[2].center();
-    phone.handle_event(&WidgetEvent::MouseDown { x, y });
-    assert!(phone.handle_event(&WidgetEvent::MouseUp { x, y }));
+    let icons = super::pages::find("Icons").unwrap();
+    let r = tab(&phone, icons).expect("Foundations open");
+    click(&mut phone, r);
     assert_eq!(phone.page_title(), "Icons");
-    assert!(!phone.shell.sidebar.drawer_open);
+    assert!(!phone.shell.dock.as_ref().unwrap().is_drawer_open());
+    // Escape closes it too.
+    click(&mut phone, mb);
+    assert!(phone.close_top_overlay());
+    assert!(!phone.shell.dock.as_ref().unwrap().is_drawer_open());
     // Every page renders on the phone.
     for (i, page) in PAGES.iter().enumerate() {
         phone.set_page(i);
@@ -268,36 +283,37 @@ fn todo_add_field_takes_typing_enter_and_escape_through_the_chrome() {
 }
 
 #[test]
-fn sidebar_offers_one_nav_link_per_page_under_three_captions() {
+fn sidebar_offers_one_tab_per_page_under_three_dropdowns() {
     let view = ShowcaseView::new(1200.0, 800.0);
-    let rects = link_rects(&view);
-    assert_eq!(rects.len(), PAGES.len());
-    assert!(
-        rects
-            .iter()
-            .all(|r| r.h == view.theme.navigation.sidebar_link.height)
-    );
-    let sb = &view.shell.sidebar;
-    assert_eq!(sb.groups.len(), Group::ALL.len());
+    assert_eq!(view.nav.menus().count(), Group::ALL.len());
+    let lens: Vec<usize> = view.nav.menus().map(|(_, l)| l.len()).collect();
+    let groups: Vec<usize> = Group::ALL.iter().map(|g| g.pages()).collect();
+    assert_eq!(lens, groups);
     assert_eq!(
-        sb.groups.iter().map(|g| g.len).sum::<usize>(),
+        lens.iter().sum::<usize>(),
         PAGES.len(),
         "the groups partition the pages"
     );
 }
 
 #[test]
-fn folding_the_components_group_hides_its_links_and_navigation_unfolds_it() {
+fn folding_a_group_hides_its_tabs_and_navigation_opens_it() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    let sb = &view.shell.sidebar;
-    let rect = sb.rect(&view.theme, view.width, view.height).unwrap();
-    let captions = sb.group_rects(rect, &view.theme, sb.mode(&view.theme, view.width));
-    let (x, y) = captions[1].center();
-    assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
-    let first_component = Group::Foundations.pages();
-    assert_eq!(link_rects(&view)[first_component].h, 0.0, "folded");
+    assert!(tab(&view, 0).is_some(), "the current group starts open");
+    let foundations = view.nav.trigger_rect(0, panel(&view), &view.theme).unwrap();
+    assert!(click(&mut view, foundations));
+    assert!(tab(&view, 0).is_none(), "folded");
     view.jump_to_page("button");
-    assert!(view.shell.sidebar.groups[1].expanded, "navigating unfolds");
+    let (m, l) = view.nav.menus().nth(1).unwrap();
+    assert!(m.is_open(), "navigating opens");
+    let button = super::pages::find("button").unwrap();
+    assert_eq!(l.current_link(), Some(super::navigation::place(button).1));
+    // a tab picked asks the page
+    settle(&mut view);
+    let checkbox = super::pages::find("checkbox").unwrap();
+    let r = tab(&view, checkbox).unwrap();
+    assert!(click(&mut view, r));
+    assert_eq!(view.page_title(), PAGES[checkbox].title);
 }
 
 #[test]
@@ -409,7 +425,7 @@ fn probe_scroll_over_virtual_list_reports_change_and_shifts_rows() {
 #[test]
 fn probe_hover_over_sidebar_reports_change() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    let rect = link_rects(&view)[2];
+    let rect = tab(&view, 2).unwrap();
     let (cx, cy) = rect.center();
     assert!(
         view.handle_event(&WidgetEvent::MouseMove { x: cx, y: cy }),
@@ -448,7 +464,7 @@ fn probe_hover_over_buttons_reports_change() {
 #[test]
 fn probe_click_sidebar_switches_page_and_reports_change() {
     let mut view = ShowcaseView::new(1200.0, 800.0);
-    let rect = link_rects(&view)[3];
+    let rect = tab(&view, 3).unwrap();
     let (cx, cy) = rect.center();
     view.handle_event(&WidgetEvent::MouseDown { x: cx, y: cy });
     assert!(view.handle_event(&WidgetEvent::MouseUp { x: cx, y: cy }));

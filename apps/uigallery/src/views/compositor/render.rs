@@ -27,6 +27,7 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
+        wake = wake.merge(self.sidebar_wake(dt));
         // The git tab always ticks (its caret and toasts keep time
         // whichever page shows); only the page on screen asks the loop
         // for frames. Worker events land through `apply_git`.
@@ -79,10 +80,11 @@ impl ShowcaseView {
         let layers = self.ensure_layers(c);
         let theme = self.theme.clone();
 
-        // The chrome: header on the default layer, the sidebar on the
-        // overlay layer so a drawer sits above the content.
+        // The chrome: the header on the default layer; the sidebar beside
+        // the page, or on the overlay layer while it floats over it.
         self.shell
             .render(c, LayerId::DEFAULT, layers.overlay, &theme);
+        self.render_sidebar(c, layers.overlay);
 
         // Keep the page scroll clamped to the current viewport/content
         // (resize can shrink content; the offset must follow).
