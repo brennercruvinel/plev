@@ -62,7 +62,8 @@ impl Collapsible {
         }
         let trigger = self.trigger_rect(bounds, theme);
         if let Some(id) = &self.sem {
-            c.bind(id, [trigger.x, trigger.y, trigger.w, trigger.h]);
+            let at = self.press_rect(bounds, theme);
+            c.bind(id, [at.x, at.y, at.w, at.h]);
         }
         self.paint_trigger(c, trigger, r, alpha, theme);
 

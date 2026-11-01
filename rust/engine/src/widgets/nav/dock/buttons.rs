@@ -16,12 +16,17 @@
 //!
 //! Their box is the recipe's (`button`, `button_radius`, `button_icon`,
 //! the navigation link's icon box), their tones the link's surfaces: at
-//! rest the bare icon, the hover and the press their fill.
+//! rest the bare icon, the hover and the press their fill. Each is
+//! pressed and bound in [`hit_rect`] around that box (44 px with a
+//! finger), which is what draws.
+
+use accord::SemId;
 
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring, rounded_rect, rounded_rect_stroke};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -74,7 +79,7 @@ impl SidebarDock {
     ) -> EventResult {
         let off = !self.has_pin(theme, w);
         self.pin_press
-            .handle(event, Self::pin_rect(head, theme), off)
+            .handle(event, hit_rect(Self::pin_rect(head, theme), theme), off)
     }
 
     /// A pointer event on the open drawer's close in `head`. `clicked`
@@ -89,7 +94,7 @@ impl SidebarDock {
     ) -> EventResult {
         let off = !self.has_close(theme, w);
         self.close_press
-            .handle(event, Self::pin_rect(head, theme), off)
+            .handle(event, hit_rect(Self::pin_rect(head, theme), theme), off)
     }
 
     /// A pointer event on the drawer's menu button at `at` (the shell's
@@ -103,7 +108,7 @@ impl SidebarDock {
         w: f32,
     ) -> EventResult {
         let off = self.mode(theme, w) != DockMode::Drawer;
-        self.menu_press.handle(event, at, off)
+        self.menu_press.handle(event, hit_rect(at, theme), off)
     }
 
     /// The keyboard focus on the pin, or off it.
@@ -127,7 +132,7 @@ impl SidebarDock {
         if self.has_close(theme, w) {
             self.paint(c, at, &self.close_press, false, CLOSE, None, theme);
             if let Some(id) = self.close_id() {
-                c.bind(&id, [at.x, at.y, at.w, at.h]);
+                bind(c, &id, at, theme);
             }
             return;
         }
@@ -137,7 +142,7 @@ impl SidebarDock {
         let icon = if self.pinned { PIN_CLOSE } else { PIN_OPEN };
         self.paint(c, at, &self.pin_press, self.pinned, icon, None, theme);
         if let Some(id) = self.pin_id() {
-            c.bind(&id, [at.x, at.y, at.w, at.h]);
+            bind(c, &id, at, theme);
         }
     }
 
@@ -159,7 +164,7 @@ impl SidebarDock {
                 theme,
             );
             if let Some(id) = self.menu_id() {
-                c.bind(&id, [at.x, at.y, at.w, at.h]);
+                bind(c, &id, at, theme);
             }
         });
     }
@@ -221,4 +226,10 @@ impl SidebarDock {
             c.push(focus_ring(at, r.button_radius, theme));
         }
     }
+}
+
+/// Binds `id` where a press on the button drawn at `at` lands.
+fn bind(c: &mut Compositor, id: &SemId, at: Rect, theme: &Theme) {
+    let hit = hit_rect(at, theme);
+    c.bind(id, [hit.x, hit.y, hit.w, hit.h]);
 }

@@ -25,6 +25,7 @@ impl Card {
         let ty = &theme.typography;
         let title_style = ty.role(TypeRole::Title);
 
+        let inner = b.w - m.pad * 2.0;
         self.text(
             c,
             layer,
@@ -33,12 +34,12 @@ impl Card {
             b.x + m.pad,
             b.y + m.pad,
             text.0,
-            None,
+            Some(inner),
         );
 
         let row_h = Self::list_row_h(theme);
         let radio_d = theme.control.box_size;
-        let mut y = b.y + m.pad + title_style.line_height + m.gap;
+        let mut y = b.y + m.pad + Self::wrapped_h(title, &title_style, inner) + m.gap;
         for row in rows {
             let r = Rect::new(b.x + m.pad, y, b.w - m.pad * 2.0, row_h);
             // Row: nav radius, strong rim (active = the active border),
@@ -73,8 +74,11 @@ impl Card {
 
             let content_x = radio.x + radio.w + m.gap + m.gap_sm;
             // Trailing value: caption-sm, primary, right aligned.
+            // never past the row's middle: the label keeps the rest
             let trailing_style = ty.run(TypeRole::Caption.strong());
-            let (tw, _) = TextMeasurer::measure_styled(&row.trailing, &trailing_style, None);
+            let half = (r.right() - m.pad - content_x) / 2.0;
+            let trailing = Self::fit(&row.trailing, &trailing_style, half);
+            let (tw, _) = TextMeasurer::measure_styled(&trailing, &trailing_style, None);
             let trailing_x = r.x + r.w - m.pad - tw;
             let content_w = (trailing_x - m.gap * 2.0 - content_x).max(0.0);
             match row.progress {
@@ -86,7 +90,7 @@ impl Card {
                     self.text(
                         c,
                         layer,
-                        &row.label,
+                        &Self::fit(&row.label, &label_style, content_w),
                         &label_style,
                         content_x,
                         top,
@@ -125,7 +129,7 @@ impl Card {
                         self.text(
                             c,
                             layer,
-                            &row.label,
+                            &Self::fit(&row.label, &style, content_w),
                             &style,
                             content_x,
                             r.y + TextMeasurer::vertical_center(&style, r.h),
@@ -139,7 +143,7 @@ impl Card {
             self.text(
                 c,
                 layer,
-                &row.trailing,
+                &trailing,
                 &trailing_style,
                 trailing_x,
                 r.y + TextMeasurer::vertical_center(&trailing_style, r.h),

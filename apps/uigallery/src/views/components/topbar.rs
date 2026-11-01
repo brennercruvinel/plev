@@ -13,16 +13,13 @@
 //! thumbnails, Escape blurs.
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextMeasurer;
+use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;
 use engine::widgets::form::TextField;
 use engine::widgets::header::Header;
-use engine::widgets::prelude::{
-    EventResult, Rect, Wake, WidgetEvent, rounded_rect, rounded_rect_stroke,
-};
+use engine::widgets::prelude::{EventResult, Rect, Wake, WidgetEvent};
 
-use super::showcase::{self, GroupLayout};
+use super::showcase::{self, GroupLayout, Tone};
 use super::{After, Component, EditKey, child_id, root_id, under};
 use crate::views::ImeEvent;
 use crate::views::text_input::clipboard::Keys;
@@ -44,51 +41,6 @@ pub struct TopbarPage {
 /// `topbar_page.group[0]`.
 fn group_id(root: &SemId) -> Option<SemId> {
     child_id(Some(root), "group").map(|g| g.key("0"))
-}
-
-/// A grey card (`isGray`): the panel tone, its hairline, and the chip in
-/// the page's tone with an edge (`bg-[#FCFCFC] border-[#ECECEC]`).
-pub(crate) fn gray_card(c: &mut Compositor, rect: Rect, title: &str, theme: &Theme) {
-    let (radius, edge) = (theme.shape.card, theme.colors.divider.0);
-    c.push(rounded_rect(
-        rect.x,
-        rect.y,
-        rect.w,
-        rect.h,
-        radius,
-        theme.colors.bg_panel.0,
-    ));
-    c.push(rounded_rect_stroke(
-        rect.x, rect.y, rect.w, rect.h, radius, edge, 1.0,
-    ));
-    let inset = showcase::inset(theme);
-    let text = showcase::chip_fit(title, rect.w - inset * 2.0, theme);
-    let at = showcase::chip_rect(rect.x + inset, rect.y + inset, &text, theme);
-    c.push(rounded_rect(
-        at.x,
-        at.y,
-        at.w,
-        at.h,
-        theme.shape.nav,
-        theme.colors.bg.0,
-    ));
-    c.push(rounded_rect_stroke(
-        at.x,
-        at.y,
-        at.w,
-        at.h,
-        theme.shape.nav,
-        edge,
-        1.0,
-    ));
-    let style = showcase::chip_style(theme);
-    let (_, th) = TextMeasurer::measure_styled(&text, &style, None);
-    c.push(SceneNode::Text {
-        key: TextNodeKey::from_style(&text, &style, None),
-        x: at.x + theme.spacing.md,
-        y: at.y + (at.h - th.max(style.line_height)) / 2.0,
-        color: theme.colors.text.0,
-    });
 }
 
 impl TopbarPage {
@@ -187,7 +139,7 @@ impl TopbarPage {
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
         for (card, rect) in self.cards.iter().zip(&layout[0].cards) {
-            gray_card(c, *rect, card.title, theme);
+            showcase::card_in(c, *rect, card.title, Tone::Gray, theme);
             card.header
                 .render(c, Self::bar(*rect, &card.header, theme), theme);
         }
