@@ -22,7 +22,7 @@ use engine::styling::theme::Theme;
 use engine::widgets::overlay::sheet::{Edge, Sheet, SheetRow, edge_rect, paint_scrim};
 use engine::widgets::prelude::{Button, EventResult, Rect, WidgetEvent};
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 
 const LIVE_CHIP: &str = "Default, Hover, Press, Focus";
@@ -104,9 +104,9 @@ impl SheetPage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let card_w = showcase::card_width(2, content, theme);
-        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
+        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
         let tallest = self
             .shown
             .iter()
@@ -116,7 +116,7 @@ impl SheetPage {
         let live = showcase::card_height(button_h.fold(0.0, f32::max), theme);
         let groups = [
             (2, vec![live; self.buttons.len()]),
-            (2, vec![CARD_H.max(frame + tallest); self.shown.len()]),
+            (2, vec![frame + tallest; self.shown.len()]),
         ];
         showcase::layout_sized(groups, content, theme)
     }

@@ -107,7 +107,8 @@ impl ProgressPage {
     /// card's body.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<(showcase::GroupLayout, Vec<Rect>)> {
         let groups = self.groups.iter().map(|g| (g.columns, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        let bar_h = ProgressBar::preferred_size(theme).1;
+        showcase::layout_measured(groups, content, theme, |_, _, _| bar_h)
             .into_iter()
             .zip(&self.groups)
             .map(|(placed, group)| {

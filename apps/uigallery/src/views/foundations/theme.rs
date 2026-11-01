@@ -192,11 +192,9 @@ impl ThemePage {
             .map(|(_, colors)| colors.len())
             .chain([THEMES.len()])
             .collect::<Vec<_>>();
-        let grids = counts.into_iter().map(|n| Grid {
-            span: SPAN,
-            min_w: Self::min_w(theme),
-            heights: vec![h; n],
-        });
+        let grids = counts
+            .into_iter()
+            .map(|n| Grid::new(SPAN, Self::min_w(theme), vec![h; n]));
         showcase::layout_grids(grids, content, theme)
     }
 

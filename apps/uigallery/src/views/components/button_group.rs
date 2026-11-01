@@ -222,13 +222,16 @@ impl ButtonGroupPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, w| {
+            let group = &self.groups[g].cards[c].group;
+            Self::widget_rect(group, Rect::new(0.0, 0.0, w, 0.0), theme).h
+        })
     }
 
     /// The group's rect in its card: as wide as it needs within the card
     /// less its inset, wrapping below that, centered.
     fn widget_rect(group: &ButtonGroup, card: Rect, theme: &Theme) -> Rect {
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         showcase::centered(group.size_within(room, theme), card)
     }
 
@@ -415,7 +418,7 @@ mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let b = ButtonGroupPage::widget_rect(&card.group, *r, &theme);

@@ -6,7 +6,7 @@
 //!
 //! The cards are as tall as what they hold, so a collapsible opening
 //! grows its card, its row and moves the groups below; the rows drop a
-//! column where a card would get narrower than `showcase::CARD_MIN_W`.
+//! column where a card would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
 //! Projected: a group per title, `collapsible_page.group[<g>]`; in it each
 //! card's trigger, `...card[<c>]`, a button with `expanded` whose

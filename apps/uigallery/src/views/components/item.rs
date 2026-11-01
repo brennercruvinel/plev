@@ -5,7 +5,7 @@
 //! from the theme (`theme.disclosure.item`).
 //!
 //! The cards are as tall as what they hold; the rows drop a column where
-//! a card would get narrower than `showcase::CARD_MIN_W`.
+//! a card would get narrower than the theme's least card width (`showcase::card_min_w`).
 //!
 //! Projected: a group per title, `item_page.group[<g>]`; in it each card,
 //! `...card[<c>]`, a group named by its chip; in that the items,

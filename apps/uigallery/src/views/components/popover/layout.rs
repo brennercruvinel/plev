@@ -10,7 +10,7 @@ use engine::widgets::overlay::OverlayManager;
 use engine::widgets::overlay::popover::{Line, render_line, render_panel};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-use super::super::showcase::{self, CARD_H, GroupLayout};
+use super::super::showcase::{self, GroupLayout};
 use super::{Card, PRESETS, PopoverPage, Spot};
 
 impl PopoverPage {
@@ -47,7 +47,8 @@ impl PopoverPage {
     fn card_h(&self, g: usize, theme: &Theme) -> f32 {
         let group = &self.groups[g];
         if !group.pinned {
-            return CARD_H;
+            // the live stage: its panel floats over the page
+            return showcase::card_min_h(theme);
         }
         let trigger_h = group
             .cards
@@ -57,8 +58,8 @@ impl PopoverPage {
         let gap = theme.overlay.popover.clearance.gap;
         let body = trigger_h + gap + Self::panel_size(theme).1;
         // The body's margins: what `showcase::body` takes off a card.
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
-        CARD_H.max(frame + body)
+        let frame = showcase::body_height(0.0, theme);
+        frame + body
     }
 
     /// The groups in the showcase mold, each at its cards' height.

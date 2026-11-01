@@ -99,7 +99,7 @@ impl DockRecipe {
     /// would get. A rule on the content, not on the screen's class.
     pub fn fits(&self, w: f32, theme: &Theme) -> bool {
         let page = w - self.width;
-        let gutter = theme.layout.gutter(theme.layout.breakpoint(page.max(0.0)));
+        let gutter = theme.layout.gutter_at(page.max(0.0));
         page >= self.content_min_w + gutter * 2.0
     }
 }

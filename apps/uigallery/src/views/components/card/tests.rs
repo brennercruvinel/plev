@@ -105,9 +105,10 @@ fn the_square_cards_widen_alone_in_their_row() {
     };
     let wide = last(1200.0);
     assert!((wide.w - wide.h).abs() < 0.5, "square: {wide:?}");
-    // Alone at 600 (two would be narrower than a card may get); at 320
-    // the card's own floor (`h-50`) holds it taller than 1.8.
-    let narrow = last(600.0);
+    // Alone at 560 (two would be narrower than the theme's least card
+    // width); at 320 the card's own floor (`h-50`) holds it taller than
+    // 1.8.
+    let narrow = last(560.0);
     assert!(
         (narrow.w / narrow.h - WIDE_RATIO).abs() < 0.01,
         "{narrow:?}"

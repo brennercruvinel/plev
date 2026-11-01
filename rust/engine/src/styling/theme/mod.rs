@@ -15,7 +15,7 @@ pub use self::intent::{Intent, MotionPhysics};
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
-    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
+    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens, fluid,
 };
 pub use self::text_scale::TextScale;
 pub use self::tokens::{
@@ -392,6 +392,7 @@ impl Theme {
     /// (palette, glass, shapes), the last step of every constructor but
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
+        self.layout.gutter = LayoutTokens::gutter_of(&self.spacing);
         *self.form = FormTokens::derive(self);
         *self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);

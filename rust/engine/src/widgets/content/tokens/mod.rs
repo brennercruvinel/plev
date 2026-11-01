@@ -21,9 +21,8 @@
 
 use crate::compose::animation::Easing;
 use crate::styling::color::Color;
-use crate::styling::theme::Theme;
-use crate::styling::theme::TypeRun;
 use crate::styling::theme::scales::ShadowSpec;
+use crate::styling::theme::{Theme, TypeRun, fluid};
 
 /// A trigger's surface in one state: its fill and its border color
 /// (alpha 0 is none).
@@ -372,24 +371,33 @@ pub struct HeaderRecipe {
 }
 
 /// A page's head, the one the shell draws: its look narrow and wide, the
-/// head width from which the wide one shows, and whether it spans the
-/// page column (its rule edge to edge, its title on the page's gutter)
-/// rather than sitting inside the gutter.
+/// head widths it grows from one to the other between (its padding and
+/// its row on a straight line; its title a role the head resolves at its
+/// width, so a fluid role grows on the same line), and whether
+/// it spans the page column (its rule edge to edge, its title on the
+/// page's gutter) rather than sitting inside the gutter.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct PageHeadRecipe {
     pub narrow: HeaderRecipe,
     pub wide: HeaderRecipe,
-    pub wide_from: f32,
+    pub range: [f32; 2],
     pub bleed: bool,
 }
 
 impl PageHeadRecipe {
-    /// The look of a head `width` wide.
+    /// The look of a head `width` wide: `narrow` up to `range[0]`, `wide`
+    /// from `range[1]`, and between them the paddings and the row on their
+    /// line, on whole pixels so the page under the head starts on one;
+    /// the title's run, the colors and the rest are `wide`'s (the head
+    /// resolves the run at its width: `TypographyScale::run_at`).
     pub fn at(&self, width: f32) -> HeaderRecipe {
-        if width >= self.wide_from {
-            self.wide
-        } else {
-            self.narrow
+        let (n, w) = (&self.narrow, &self.wide);
+        let f = |a: f32, b: f32| fluid(width, self.range, [a, b]).round();
+        HeaderRecipe {
+            pad_x: f(n.pad_x, w.pad_x),
+            pad_y: f(n.pad_y, w.pad_y),
+            row: f(n.row, w.row),
+            ..*w
         }
     }
 }

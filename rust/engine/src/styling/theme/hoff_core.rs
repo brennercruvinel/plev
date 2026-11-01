@@ -312,7 +312,7 @@ impl Theme {
             control,
             size: SizeTokens::hoff(),
             duration: DurationScale::hoff(),
-            layout: LayoutTokens::hoff(),
+            layout: LayoutTokens::hoff_core(),
             shadows: ShadowTokens::hoff_core(),
         };
         // The sidebar keeps its look of before until it moves to the kit

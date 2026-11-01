@@ -133,7 +133,6 @@ impl AppShell {
     pub fn layout(&self, theme: &Theme) -> ShellLayout {
         let sa = self.safe_area;
         let bp = theme.layout.breakpoint(self.width);
-        let gutter = theme.layout.gutter(bp);
         // `drawer`: the menu button is wanted
         let (mode, sidebar, page_x, drawer, dock) = match &self.dock {
             Some(d) => {
@@ -157,6 +156,9 @@ impl AppShell {
             }
         };
         let page_w = (self.width - page_x - sa.right).max(0.0);
+        // The gutter is the page's own: it grows with the width the page
+        // gets, not with the window's class.
+        let gutter = theme.layout.gutter_at(page_w);
 
         let (bw, bh) = match &self.dock {
             Some(_) => {
@@ -193,8 +195,15 @@ impl AppShell {
             let header = Rect::new(header_x, top, w, h);
             (header, pads)
         };
-        // The page starts `lg` under the head, whichever it is.
-        let content_y = header.y + header.h + theme.spacing.lg;
+        // A head that bleeds ends on its rule and the page's first group
+        // pads itself under it (the kit's Layout); a head inside the
+        // gutter keeps `lg` under it.
+        let under = if self.header.bleeds(theme) {
+            0.0
+        } else {
+            theme.spacing.lg
+        };
+        let content_y = header.y + header.h + under;
         // The menu button centers on the title's band in a head that
         // bleeds; elsewhere on the one-line head, as it always did.
         let menu_button = drawer.then(|| {

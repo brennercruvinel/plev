@@ -133,7 +133,7 @@ impl StatPage {
     /// the delta wraps), never narrower than its value row; as tall as it
     /// is at that width.
     fn widget_size(stat: &Stat, card_w: f32, theme: &Theme) -> (f32, f32) {
-        let room = card_w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card_w, theme);
         let w = stat
             .preferred_size(theme)
             .0

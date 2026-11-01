@@ -324,9 +324,7 @@ impl AlertPage {
     /// The width a card's alerts take: the card's inside, up to a
     /// readable column.
     fn alert_w(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.sm * 2.0)
-            .max(0.0)
-            .min(theme.size.readable_max_w)
+        showcase::room(card_w, theme).min(theme.size.readable_max_w)
     }
 
     fn heights(card: &Card, w: f32, theme: &Theme) -> Vec<f32> {
@@ -545,7 +543,6 @@ mod tests {
                     for (i, (card, rects)) in placed.cards.iter().enumerate() {
                         let tall = Rect::new(content.x, card.y, content.w, card.h);
                         assert!(within(*card, tall), "{w}: card {g}.{i} out of the content");
-                        assert!(card.h >= showcase::CARD_H);
                         for (a, r) in group.cards[i].alerts.iter().zip(rects) {
                             assert!(within(*r, *card), "{w}: alert {r:?} out of {g}.{i}");
                             assert!(r.w >= a.min_width(&theme), "{w}: {g}.{i} too narrow");

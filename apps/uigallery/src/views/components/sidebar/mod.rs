@@ -196,14 +196,15 @@ impl SidebarPage {
     /// Two cards a row (`span={2}`), each as tall as its sidebar asks.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let min_w = theme.navigation.sidebars.width + theme.spacing.md * 2.0;
-        let grids = self.groups.iter().map(|g| showcase::Grid {
-            span: 2,
-            min_w,
-            heights: g
-                .cards
-                .iter()
-                .map(|(_, s)| showcase::card_height(self.size(*s, theme).1, theme))
-                .collect(),
+        let grids = self.groups.iter().map(|g| {
+            showcase::Grid::new(
+                2,
+                min_w,
+                g.cards
+                    .iter()
+                    .map(|(_, s)| showcase::card_height(self.size(*s, theme).1, theme))
+                    .collect(),
+            )
         });
         showcase::layout_grids(grids, content, theme)
     }
@@ -278,7 +279,7 @@ impl SidebarPage {
                 Shows::Design => self.design.render(c, at, theme),
             }
             c.pop_clip();
-            let inset = theme.spacing.sm;
+            let inset = showcase::inset(theme);
             showcase::chip(c, card.x + inset, card.y + inset, title, theme);
         }
         // An open select's list, over every card.

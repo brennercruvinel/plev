@@ -143,7 +143,7 @@ impl GraphPage {
     /// The canvas's size in a card `card_w` wide: the card's width less
     /// its inset, one and a half least card widths tall.
     fn canvas_size(card_w: f32, theme: &Theme) -> (f32, f32) {
-        let w = (card_w - theme.spacing.sm * 2.0).max(0.0);
+        let w = showcase::room(card_w, theme);
         (w, theme.size.card_min_w * 1.5)
     }
 

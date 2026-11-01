@@ -359,6 +359,19 @@ impl Element {
         self
     }
 
+    /// A text in a resolved style of the theme's scale
+    /// (`theme.typography.run(TypeRole::Title.strong())`): its size, line
+    /// height, weight and tracking. The face stays the theme's, as every
+    /// builder text's.
+    pub fn text_style(self, style: &crate::drawing::text::TextStyle) -> Self {
+        let mut el = self
+            .font_size(style.font_size)
+            .line_height(style.line_height)
+            .font_weight(style.font_weight);
+        el.style.letter_spacing = style.letter_spacing;
+        el
+    }
+
     pub fn max_width(mut self, mw: impl IntoF32) -> Self {
         if let ElementKind::Text {
             ref mut max_width, ..
