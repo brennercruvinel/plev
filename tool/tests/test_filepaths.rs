@@ -25,7 +25,6 @@ const LIMIT: usize = 639;
 /// lines each had then: debt, frozen. A split that brings one under the
 /// limit removes it from here.
 const FROZEN: &[(&str, usize)] = &[
-    ("rust/engine/src/widgets/content/card.rs", 1343),
     ("apps/urnadbapp/src/view/explorer/mod.rs", 1019),
     ("apps/urnadbapp/src/backend/sources/reader.rs", 794),
     ("apps/urnadbapp/src/view/search.rs", 752),

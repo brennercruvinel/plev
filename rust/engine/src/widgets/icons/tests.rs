@@ -16,16 +16,40 @@ fn every_icon_tessellates_with_vertices() {
     }
 }
 
-/// `icon_names` documents its result as sorted, and it returns the table
-/// verbatim - so the table is what has to stay sorted. Nothing enforced
+/// `icon_names` documents its result as sorted, and it returns the tables
+/// verbatim, one after the other - so each table is what has to stay
+/// sorted, and the tables have to come in name order. Nothing enforced
 /// that before, and an icon appended at the end would have made the doc
 /// quietly false for every caller that renders the set as a list.
 #[test]
-fn the_icon_table_is_sorted_by_name() {
+fn each_icon_table_is_sorted_by_name() {
+    for (i, table) in data::tables().into_iter().enumerate() {
+        let names: Vec<&str> = table.iter().map(|(n, _)| *n).collect();
+        let mut sorted = names.clone();
+        sorted.sort_unstable();
+        assert_eq!(
+            names, sorted,
+            "icon table {i} must stay in alphabetical order"
+        );
+    }
     let names = icon_names();
     let mut sorted = names.clone();
     sorted.sort_unstable();
-    assert_eq!(names, sorted, "ICONS must stay in alphabetical order");
+    assert_eq!(names, sorted, "the tables must come in name order");
+}
+
+/// A name in two tables would leave the second entry unreachable: the
+/// lookup takes the first match.
+#[test]
+fn no_icon_name_is_in_two_tables() {
+    let mut seen = std::collections::HashMap::new();
+    for (i, table) in data::tables().into_iter().enumerate() {
+        for (name, _) in table {
+            if let Some(first) = seen.insert(*name, i) {
+                panic!("icon '{name}' is in tables {first} and {i}");
+            }
+        }
+    }
 }
 
 #[test]
@@ -148,7 +172,7 @@ fn the_tessellation_cost() {
     for size in sizes {
         let mut times = Vec::new();
         let (mut vertices, mut indices, mut widest) = (0, 0, 0u32);
-        for (_, shapes) in ICONS {
+        for (_, shapes) in icons() {
             let mut best = Duration::MAX;
             let mut icon = None;
             for _ in 0..ROUNDS {
@@ -181,7 +205,7 @@ fn the_tessellation_cost() {
     }
     println!(
         "| all | {} | {:.0} | | | | | {all_cache} | {all_baked} |",
-        ICONS.len() * sizes.len(),
+        icons().count() * sizes.len(),
         all_time.as_secs_f64() * 1e6
     );
 
