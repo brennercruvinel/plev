@@ -135,6 +135,8 @@ impl Gallery {
         seen.nodes()
             .values()
             .filter(|n| matches!(n.role, Role::List | Role::Table))
+            // an empty one (its empty state says so) has nothing to stop on
+            .filter(|w| seen.nodes().values().any(|n| n.parent.as_ref() == Some(&w.id)))
             .map(|w| {
                 let under = order.iter().filter(|id| inside(&seen, id, &w.id));
                 (w.id.to_string(), under.map(|id| id.to_string()).collect())
@@ -248,7 +250,8 @@ impl Gallery {
 /// one a screen reader walks, and wraps (through the sidebar, which the
 /// keyboard walks after the page); Shift-Tab walks it back; the
 /// focus is never nowhere once Tab took it, and the control that has it
-/// shows its ring. A list and a table are one stop each.
+/// shows its ring. A list and a table are one stop each (an empty one
+/// none).
 #[test]
 fn tab_walks_every_component_page_in_the_projection_s_order_with_the_ring_on() {
     let mut unreachable = Vec::new();

@@ -447,10 +447,18 @@ impl Combobox {
         if m.is_empty() {
             let p = &theme.form.select.panel;
             let row = window.row(0);
+            // one row, as an option's: cut with an ellipsis where it is
+            // wider (a larger text, a longer language)
+            let style = scale.run(p.text);
+            let said = TextMeasurer::truncate_to_width(
+                &self.empty,
+                &style,
+                (row.right() - dd.x - p.text_inset * 2.0).max(0.0),
+            );
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(&self.empty, &scale.run(p.text), Some(row.w)),
+                    key: TextNodeKey::from_style(&said, &style, None),
                     x: dd.x + p.text_inset,
                     y: row.y + TextMeasurer::vertical_center(&scale.run(p.text), p.row_h),
                     color: p.text_color.0,
