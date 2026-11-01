@@ -143,7 +143,7 @@ impl DialogPage {
             .collect();
         let button_h = self.open.preferred_size(theme).1;
         let live = showcase::card_height(button_h, theme);
-        let groups = [(2, vec![live; 2]), (2, heights)];
+        let groups = [(GROUPS[0], 2, vec![live; 2]), (GROUPS[1], 2, heights)];
         showcase::layout_sized(groups, content, theme)
     }
 

@@ -93,7 +93,11 @@ impl AlertDialogPage {
             })
             .collect();
         let live = showcase::card_height(self.button.preferred_size(theme).1, theme);
-        showcase::layout_sized([(1, vec![live]), (2, heights)], content, theme)
+        showcase::layout_sized(
+            [(GROUPS[0], 1, vec![live]), (GROUPS[1], 2, heights)],
+            content,
+            theme,
+        )
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {

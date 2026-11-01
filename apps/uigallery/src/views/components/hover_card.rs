@@ -144,9 +144,10 @@ impl HoverCardPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let spans = self.groups.iter().enumerate().map(|(g, group)| {
             let h = self.card_h(g, content, theme);
-            (group.columns, group.cards.len(), h)
+            (group.title, group.columns, group.cards.len(), h)
         });
-        showcase::layout_sized(spans.map(|(span, n, h)| (span, vec![h; n])), content, theme)
+        let groups = spans.map(|(title, span, n, h)| (title, span, vec![h; n]));
+        showcase::layout_sized(groups, content, theme)
     }
 
     /// Every card's handle and where its panel goes: in its card's body

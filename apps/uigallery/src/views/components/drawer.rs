@@ -86,7 +86,11 @@ impl DrawerPage {
         let frame = showcase::body_height(0.0, theme);
         let live = showcase::card_height(self.button.preferred_size(theme).1, theme);
         let state = frame + self.shown.content_h(theme);
-        showcase::layout_sized([(1, vec![live]), (1, vec![state])], content, theme)
+        showcase::layout_sized(
+            [(GROUPS[0], 1, vec![live]), (GROUPS[1], 1, vec![state])],
+            content,
+            theme,
+        )
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {

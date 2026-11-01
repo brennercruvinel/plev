@@ -150,7 +150,7 @@ impl StatPage {
                 .iter()
                 .map(|c| showcase::card_height(Self::widget_size(&c.stat, w, theme).1, theme))
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

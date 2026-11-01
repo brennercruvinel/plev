@@ -256,7 +256,7 @@ impl ToolbarPage {
             };
             let floor = g.cards.iter().map(|c| c.height).fold(0.0, f32::max);
             let heights = g.cards.iter().map(height).collect();
-            showcase::Grid::new(g.span, min_w, heights).floor(floor)
+            showcase::Grid::new(g.title, g.span, min_w, heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
     }

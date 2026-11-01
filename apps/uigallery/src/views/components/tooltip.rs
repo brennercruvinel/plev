@@ -92,8 +92,8 @@ impl TooltipPage {
         let kit = showcase::card_height(bubble_h, theme);
         showcase::layout_sized(
             [
-                (1, vec![showcase::card_height(button_h, theme)]),
-                (2, vec![kit; self.shown.len()]),
+                (GROUPS[0], 1, vec![showcase::card_height(button_h, theme)]),
+                (GROUPS[1], 2, vec![kit; self.shown.len()]),
             ],
             content,
             theme,

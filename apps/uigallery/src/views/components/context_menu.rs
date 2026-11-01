@@ -161,8 +161,8 @@ impl ContextMenuPage {
         let h = frame + tallest;
         showcase::layout_sized(
             [
-                (1, vec![showcase::card_min_h(theme)]),
-                (3, vec![h; self.shown.len()]),
+                (GROUPS[0], 1, vec![showcase::card_min_h(theme)]),
+                (GROUPS[1], 3, vec![h; self.shown.len()]),
             ],
             content,
             theme,

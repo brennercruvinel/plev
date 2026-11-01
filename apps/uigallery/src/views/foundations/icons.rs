@@ -63,9 +63,17 @@ impl IconsPage {
         let side = showcase::card_width_at(SPAN, min_w, content, theme);
         let badge_side = showcase::card_width_at(BADGE_SPAN, min_w, content, theme);
         let grids = SIZES
-            .map(|_| Grid::new(SPAN, min_w, vec![side; self.names.len()]))
+            .map(|size| {
+                let title = format!("Icon {}", theme.control.icon(size));
+                Grid::new(&title, SPAN, min_w, vec![side; self.names.len()])
+            })
             .into_iter()
-            .chain([Grid::new(BADGE_SPAN, min_w, vec![badge_side; BADGES.len()])]);
+            .chain([Grid::new(
+                "Notification Icons",
+                BADGE_SPAN,
+                min_w,
+                vec![badge_side; BADGES.len()],
+            )]);
         showcase::layout_grids(grids, content, theme)
     }
 

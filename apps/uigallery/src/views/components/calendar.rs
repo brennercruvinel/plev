@@ -200,7 +200,7 @@ impl CalendarPage {
                 .iter()
                 .map(|card| showcase::card_height(card.calendar.size_within(room, theme).1, theme))
                 .collect();
-            (group.span, heights)
+            (group.title, group.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

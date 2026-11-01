@@ -250,7 +250,7 @@ impl MessagePage {
                 let stack: f32 = Self::heights(card, w, theme).iter().sum();
                 showcase::card_height(stack, theme)
             });
-            (g.columns, cards.collect())
+            (g.title, g.columns, cards.collect())
         });
         showcase::layout_sized(sized, content, theme)
             .into_iter()

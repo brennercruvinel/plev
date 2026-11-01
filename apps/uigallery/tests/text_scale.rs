@@ -11,6 +11,8 @@
 //! - no two actionable nodes overlap, unless one holds the other (a row
 //!   and its button);
 //! - every actionable node is at least 24 px on each side (WCAG 2.5.8).
+//! - a group's title is never cut with an ellipsis: the showcase mold
+//!   wraps it whole and pushes its cards down.
 //!
 //! The same sweep runs with every text pseudo-localized, a translation
 //! 1.4 times as long (`--pseudo-locale`), as designed and at twice the

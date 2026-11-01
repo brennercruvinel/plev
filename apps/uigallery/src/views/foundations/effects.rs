@@ -109,8 +109,11 @@ impl EffectsPage {
     /// Depths, then the compositor samples, in square cards.
     fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let side = showcase::card_width_at(SPAN, Self::min_w(theme), content, theme);
-        let counts = [depths(theme).len(), SAMPLES.len()];
-        let grids = counts.map(|n| Grid::new(SPAN, Self::min_w(theme), vec![side; n]));
+        let counts = [
+            ("Depths", depths(theme).len()),
+            ("Compositor", SAMPLES.len()),
+        ];
+        let grids = counts.map(|(t, n)| Grid::new(t, SPAN, Self::min_w(theme), vec![side; n]));
         showcase::layout_grids(grids, content, theme)
     }
 

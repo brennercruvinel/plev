@@ -183,7 +183,7 @@ impl NavigationMenuPage {
                 .iter()
                 .map(|c| showcase::card_height(Self::column_h(Self::rows(&c.shows), theme), theme))
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(groups, content, theme)
     }

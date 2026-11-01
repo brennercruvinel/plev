@@ -109,7 +109,7 @@ impl InputPage {
         let heights = self
             .sizes(card_w, theme)
             .map(|((_, lh), (_, fh))| showcase::card_height(lh + gap + fh, theme));
-        let wanted = std::iter::once((COUNT, heights.to_vec()));
+        let wanted = std::iter::once((TITLE, COUNT, heights.to_vec()));
         let mut grid = showcase::layout_sized(wanted, content, theme);
         grid.pop().expect("one group")
     }

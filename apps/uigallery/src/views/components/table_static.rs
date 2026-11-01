@@ -173,7 +173,7 @@ impl TableStaticPage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
         fit_layout(&spans, content, theme, |g, c, w| {
             Self::table_h(&self.groups[g].cards[c], w, theme)

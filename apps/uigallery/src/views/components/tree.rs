@@ -138,9 +138,12 @@ impl TreePage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Fitted> {
-        fit_layout(&[(2, self.cards.len())], content, theme, |_, c, _| {
-            self.cards[c].tree.content_height(theme)
-        })
+        fit_layout(
+            &[(GROUP, 2, self.cards.len())],
+            content,
+            theme,
+            |_, c, _| self.cards[c].tree.content_height(theme),
+        )
     }
 
     /// Each tree's rect.

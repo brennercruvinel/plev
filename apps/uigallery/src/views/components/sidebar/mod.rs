@@ -198,6 +198,7 @@ impl SidebarPage {
         let min_w = theme.navigation.sidebars.width + theme.spacing.md * 2.0;
         let grids = self.groups.iter().map(|g| {
             showcase::Grid::new(
+                g.title,
                 2,
                 min_w,
                 g.cards

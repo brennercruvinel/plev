@@ -151,7 +151,7 @@ impl GraphPage {
         let groups = self.groups.iter().map(|g| {
             let w = showcase::card_width(g.span, content, theme);
             let h = showcase::card_height(Self::canvas_size(w, theme).1, theme);
-            (g.span, vec![h; g.cards.len()])
+            (g.title, g.span, vec![h; g.cards.len()])
         });
         showcase::layout_sized(groups, content, theme)
     }

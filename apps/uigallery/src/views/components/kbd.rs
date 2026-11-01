@@ -238,7 +238,7 @@ impl KbdPage {
         let spans: Vec<_> = self
             .groups
             .iter()
-            .map(|g| (g.columns, g.cards.len()))
+            .map(|g| (g.title, g.columns, g.cards.len()))
             .collect();
         let fitted = fit_layout(&spans, content, theme, |g, c, w| {
             let card = &self.groups[g].cards[c];

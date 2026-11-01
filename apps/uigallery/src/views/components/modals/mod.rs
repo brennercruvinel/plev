@@ -178,7 +178,7 @@ impl ModalsPage {
                 .iter()
                 .map(|s| frame + s.body.size(body_w, theme).1)
                 .collect();
-            (g.span, heights)
+            (g.title, g.span, heights)
         });
         showcase::layout_sized(sized, content, theme)
     }

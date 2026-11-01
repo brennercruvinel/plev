@@ -213,7 +213,7 @@ impl MenusPage {
             .iter()
             .map(|c| showcase::card_height(Self::size(&c.body, theme).1 + pick, theme))
             .collect();
-        let grid = showcase::Grid::new(SPAN, showcase::card_min_w(theme), heights)
+        let grid = showcase::Grid::new("", SPAN, showcase::card_min_w(theme), heights)
             .floor(CARD_MIN_H)
             .untitled();
         showcase::layout_grids([grid], content, theme)

@@ -80,7 +80,7 @@ impl ResizablePage {
     }
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<Fitted> {
-        let spans = [(1, 1), (1, 1)];
+        let spans = [(GROUPS[0], 1, 1), (GROUPS[1], 1, 1)];
         fit_layout(&spans, content, theme, |_, _, _| Self::split_h(theme))
     }
 

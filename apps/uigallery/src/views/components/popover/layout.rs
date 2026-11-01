@@ -65,8 +65,10 @@ impl PopoverPage {
     /// The groups in the showcase mold, each at its cards' height.
     pub(super) fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().enumerate();
-        let spans = groups.map(|(g, gr)| (gr.columns, gr.cards.len(), self.card_h(g, theme)));
-        showcase::layout_sized(spans.map(|(span, n, h)| (span, vec![h; n])), content, theme)
+        let spans =
+            groups.map(|(g, gr)| (gr.title, gr.columns, gr.cards.len(), self.card_h(g, theme)));
+        let groups = spans.map(|(title, span, n, h)| (title, span, vec![h; n]));
+        showcase::layout_sized(groups, content, theme)
     }
 
     /// The trigger's rect in its card: centered in the live card, at its
