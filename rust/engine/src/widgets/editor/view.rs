@@ -178,6 +178,14 @@ impl EditorView {
     }
 
     /// Scroll the minimum amount that brings the primary cursor into view.
+    ///
+    /// The one reveal that does not go through
+    /// `control::input::reveal::nearest`, on purpose: a line's place is
+    /// taken in `f64` (`line_y`), and a million lines down an `f32` cannot
+    /// tell a line from its neighbour, while `nearest` reckons in `f32`.
+    /// For a line no taller than the view the rule is the same; a view
+    /// shorter than a line still shows the line's end coming from above,
+    /// where `nearest` shows its start.
     pub fn scroll_to_cursor(&mut self) {
         let head = self.document.selections().primary().head;
         let line = self.document.rope().byte_to_line(head);
