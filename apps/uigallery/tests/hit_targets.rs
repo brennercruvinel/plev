@@ -88,18 +88,7 @@ fn cut_by(r: [f32; 4], p: [f32; 4]) -> bool {
 /// What falls short and is another front's, `(page, part of the id,
 /// why)`: left out of the failure and printed, as the text-scale sweep's
 /// `KNOWN`.
-const OWNED: &[(&str, &str, &str)] = &[
-    (
-        "Toolbar",
-        "view[",
-        "O: the view controller's back and forward",
-    ),
-    (
-        "Prompt Input",
-        ".view.",
-        "O: the view controller's back and forward, in the prompt",
-    ),
-];
+const OWNED: &[(&str, &str, &str)] = &[];
 
 fn owned(line: &str) -> bool {
     OWNED

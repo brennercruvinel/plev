@@ -112,3 +112,25 @@ fn a_switch_and_a_checkbox_press_and_bind_in_the_minimum() {
         assert!(switch.on, "pressed above the track");
     });
 }
+
+/// The view controller's 16 px arrows press in the least target around
+/// them and bind it; the arrows draw where they did.
+#[test]
+fn the_view_controller_s_arrows_press_in_the_minimum() {
+    use crate::widgets::nav::ViewController;
+    let theme = Theme::default();
+    let bounds = Rect::new(40.0, 40.0, 400.0, 200.0);
+    both(|min| {
+        for upright in [false, true] {
+            let v = ViewController::new(upright);
+            let (back, forward) = v.arrow_rects(bounds, &theme);
+            let (pb, pf) = v.press_rects(bounds, &theme);
+            for (drawn, press) in [(back, pb), (forward, pf)] {
+                assert!(drawn.w < min, "drawn small");
+                assert!(press.w >= min - 0.01 && press.h >= min - 0.01);
+                assert_eq!(press.center(), drawn.center(), "around the arrow");
+            }
+            assert!(pb.right() <= pf.x || pb.bottom() <= pf.y || pf.bottom() <= pb.y);
+        }
+    });
+}

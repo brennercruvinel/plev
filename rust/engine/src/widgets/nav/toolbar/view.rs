@@ -9,6 +9,7 @@ use accord::{Role, SemId, SnapshotBuilder};
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke, shadow_drops};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -70,6 +71,14 @@ impl ViewController {
         (back, forward)
     }
 
+    /// Where a press lands on the back and the forward arrow in a pill at
+    /// `bounds`' top-left: each drawn arrow grown to the least target
+    /// around it (`widgets::hit`, 44 px with a finger); what each binds.
+    pub fn press_rects(&self, bounds: Rect, theme: &Theme) -> (Rect, Rect) {
+        let (back, forward, _) = self.parts(bounds, theme);
+        (hit_rect(back, theme), hit_rect(forward, theme))
+    }
+
     /// The back arrow, the forward arrow and the ruler's start, in a
     /// pill at `bounds`' top-left.
     fn parts(&self, bounds: Rect, theme: &Theme) -> (Rect, Rect, f32) {
@@ -95,7 +104,7 @@ impl ViewController {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let (back, forward, _) = self.parts(bounds, theme);
+        let (back, forward) = self.press_rects(bounds, theme);
         let a = self.back.handle(event, back, false);
         let b = self.forward.handle(event, forward, false);
         EventResult {
@@ -113,6 +122,7 @@ impl ViewController {
         let (back, forward, start) = self.parts(bounds, theme);
         if let Some(id) = &self.sem {
             c.bind_to_layer(layer, id, [pill.x, pill.y, pill.w, pill.h]);
+            let (back, forward) = self.press_rects(bounds, theme);
             for (name, r) in [("back", back), ("forward", forward)] {
                 if let Ok(arrow) = id.child(name) {
                     c.bind_to_layer(layer, &arrow, [r.x, r.y, r.w, r.h]);
