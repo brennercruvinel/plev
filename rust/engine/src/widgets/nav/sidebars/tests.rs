@@ -34,11 +34,11 @@ fn guideline() -> GuidelineSidebar {
     GuidelineSidebar::new()
         .group(
             "Foundations",
-            &[("Branding", "venetian-mask"), ("Colors", "swatch-book")],
+            &[("Branding", "kit-branding"), ("Colors", "kit-colors")],
         )
         .group(
             "Components",
-            &[("Buttons", "mouse-pointer-2"), ("Sidebar", "panel-left")],
+            &[("Buttons", "kit-buttons"), ("Sidebar", "kit-sidebar")],
         )
         .current(3)
         .sem(SemId::name("guide").unwrap())
@@ -132,8 +132,8 @@ fn scene() -> SceneSidebar {
     SceneSidebar::new("Robot 2.0", "3D Design Project")
         .items(
             vec![
-                SceneItem::new("Camera 1", "focus"),
-                SceneItem::new("Dome Light", "sun"),
+                SceneItem::new("Camera 1", "kit-camera"),
+                SceneItem::new("Dome Light", "kit-dome-light"),
                 SceneItem::new("Robot", "box"),
             ],
             Some(2),

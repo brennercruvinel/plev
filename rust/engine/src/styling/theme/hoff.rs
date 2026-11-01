@@ -146,11 +146,11 @@ impl Theme {
         // placeholders: the recipes are derived again below, from the theme
         let dark = Self::dark().colors;
         let mut theme = Self {
-            button: ButtonTokens::derive(&dark),
+            button: Box::new(ButtonTokens::derive(&dark)),
             form: Box::new(FormTokens::hoff_core()),
-            overlay: OverlayTokens::hoff_core(),
+            overlay: Box::new(OverlayTokens::hoff_core()),
             message: Box::new(MessageTokens::hoff_core()),
-            disclosure: DisclosureTokens::hoff_core(),
+            disclosure: Box::new(DisclosureTokens::hoff_core()),
             selection: Box::new(SelectionTokens::hoff_core()),
             navigation: Box::new(NavigationTokens::hoff_core()),
             header: Box::new(HeaderTokens::hoff_core()),
@@ -247,7 +247,7 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff(),
         };
-        theme.button = ButtonTokens::derive(&theme.colors);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }
@@ -317,7 +317,7 @@ impl Theme {
         };
         // Its own buttons, from its own palette: the dark theme's would
         // put a pale call to action on the pale page.
-        theme.button = ButtonTokens::derive(&theme.colors);
+        *theme.button = ButtonTokens::derive(&theme.colors);
         theme.derive_front_slots();
         theme
     }

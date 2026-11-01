@@ -29,10 +29,10 @@ pub struct ColorTokens {
     /// (`bg-[#FCFCFC]`), and the swatch's border (`border-[#323232]/10`).
     pub swatch_base: Color,
     pub swatch_border: Color,
-    /// The opacity's part: its width (`w-16`; 0, as wide as `100 %`
-    /// measures), its inset on either side (`px-3`), the room between
-    /// the number and its `%` (`gap-2`) and the divider before it
-    /// (`border-l border-[#323232]/10`).
+    /// The opacity's part: its width (`w-16`, never under what `100 %`
+    /// and the insets measure; 0, as wide as that), its inset on either
+    /// side (`px-3`), the room between the number and its `%` (`gap-2`)
+    /// and the divider before it (`border-l border-[#323232]/10`).
     pub alpha_w: f32,
     pub alpha_pad: f32,
     pub alpha_gap: f32,

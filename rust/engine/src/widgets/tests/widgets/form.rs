@@ -1550,7 +1550,7 @@ fn a_color_picker_takes_a_press_in_the_part_pressed() {
 
 /// The parts sit in the box in order, swatch, hex, divider, opacity and
 /// its `%`, from a narrow box to a wide one in every theme; the kit's
-/// box is 38 tall with a 28 swatch, its opacity part 64 wide.
+/// box is 38 tall with a 28 swatch, its opacity part at least 64 wide.
 #[test]
 fn a_color_picker_lays_its_parts_in_the_box() {
     for theme in [
@@ -1579,7 +1579,40 @@ fn a_color_picker_lays_its_parts_in_the_box() {
     }
     let core = Theme::hoff_core();
     let l = picker().layout(Rect::new(0.0, 0.0, 218.0, 0.0), &core);
-    assert_eq!((l.whole.h, l.swatch.w, l.alpha_part.w), (38.0, 28.0, 64.0));
+    assert_eq!((l.whole.h, l.swatch.w), (38.0, 28.0));
+    assert!(l.alpha_part.w >= 64.0, "the kit's w-16: {}", l.alpha_part.w);
+}
+
+/// From 200 to 400 px across (208, the Background group of the kit's
+/// Design sidebar), in every theme, the opacity shows `100 %` whole, and
+/// its number keeps room for the caret after it.
+#[test]
+fn a_color_picker_shows_its_whole_opacity_from_200_to_400() {
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        let style = &theme.form.bare.text;
+        let measure = |t: &str| TextMeasurer::measure_styled(t, style, None).0;
+        let number = measure("100") + theme.control.focus_ring_width;
+        let p = picker();
+        for w in 200u16..=400 {
+            let at = Rect::new(0.0, 0.0, f32::from(w), 0.0);
+            let drawn: Vec<String> = texts(&nodes_of(|c| p.render(c, at, &theme)))
+                .into_iter()
+                .map(|(t, ..)| t)
+                .collect();
+            assert!(
+                drawn.iter().any(|t| t == "100") && drawn.iter().any(|t| t == "%"),
+                "{w}: {drawn:?}"
+            );
+            let l = p.layout(at, &theme);
+            assert!(l.alpha.w >= number, "{w}: {} < {number}", l.alpha.w);
+            assert!(l.suffix.w >= measure("%"), "{w}: {:?}", l.suffix);
+        }
+    }
 }
 
 /// The swatch paints the color at its opacity over its base.
@@ -1616,5 +1649,106 @@ fn a_color_picker_projects_its_value_and_texts() {
     for (id, name) in [("s.color.hex", "Hex"), ("s.color.alpha", "Opacity")] {
         let node = snap.get(&SemId::parse(id).unwrap()).unwrap();
         assert_eq!((node.role, node.label.as_str()), (Role::TextInput, name));
+    }
+}
+
+// Upload avatar
+
+fn upload(photo: bool) -> crate::widgets::form::upload_avatar::UploadAvatar {
+    let a = crate::widgets::form::upload_avatar::UploadAvatar::new();
+    let a = if photo { a.with_photo(None) } else { a };
+    a.sem(SemId::parse("s.avatar").unwrap())
+}
+
+/// A press on the disc asks for a file, once for the owner to take; a
+/// press on a corner of its square is off the disc; the owner's answer
+/// puts a photo in.
+#[test]
+fn an_upload_avatar_asks_on_a_press_and_takes_the_choice() {
+    let theme = Theme::hoff_core();
+    let at = Rect::new(10.0, 10.0, 200.0, 0.0);
+    let mut a = upload(false);
+    let d = a.disc(at, &theme);
+    assert_eq!((d.w, d.h), (48.0, 48.0));
+    assert!(
+        !a.handle_event(&down(d.x + 1.0, d.y + 1.0), at, &theme)
+            .clicked,
+        "a corner"
+    );
+    let (x, y) = d.center();
+    assert!(a.handle_event(&down(x, y), at, &theme).clicked);
+    assert!(a.is_asking());
+    assert!(a.take_ask() && !a.take_ask(), "once");
+    assert!(!a.has_photo());
+    a.chosen(None);
+    assert!(a.has_photo());
+    let mut off = upload(true).disabled(true);
+    assert!(!off.activate());
+    assert!(!off.handle_event(&down(x, y), at, &theme).clicked);
+}
+
+/// Hovered or focused, the scrim and the plus show over the photo; the
+/// focus adds its ring; at rest neither.
+#[test]
+fn an_upload_avatar_shows_its_plus_hovered_or_focused() {
+    let theme = Theme::hoff_core();
+    let at = Rect::new(0.0, 0.0, 48.0, 48.0);
+    let scrim = theme.form.upload.scrim.0;
+    let shows = |a: &crate::widgets::form::upload_avatar::UploadAvatar| {
+        let nodes = nodes_of(|c| a.render(c, at, &theme));
+        let scrim = nodes
+            .iter()
+            .any(|n| matches!(n, SceneNode::RoundedRect { color, .. } if *color == scrim));
+        let plus = nodes.iter().any(|n| matches!(n, SceneNode::Path { .. }));
+        (scrim, plus)
+    };
+    let mut a = upload(true);
+    assert_eq!(shows(&a), (false, false));
+    a.handle_event(&WidgetEvent::MouseMove { x: 24.0, y: 24.0 }, at, &theme);
+    assert_eq!(shows(&a), (true, true));
+    a.handle_event(&WidgetEvent::MouseMove { x: 400.0, y: 24.0 }, at, &theme);
+    a.set_focused(true);
+    assert_eq!(shows(&a), (true, true));
+}
+
+/// A photo stands as the theme's gradient, none as the stand-in, in
+/// every theme; the disc keeps its side down to a narrow room.
+#[test]
+fn an_upload_avatar_paints_its_photo_or_the_stand_in() {
+    for theme in [
+        Theme::hoff_core(),
+        Theme::hoff(),
+        Theme::dark(),
+        Theme::light(),
+    ] {
+        let t = &theme.form.upload;
+        for (photo, want) in [(true, t.photo), (false, t.empty)] {
+            let a = upload(photo);
+            let at = Rect::new(0.0, 0.0, 300.0, 0.0);
+            let nodes = nodes_of(|c| a.render(c, at, &theme));
+            assert!(nodes.iter().any(|n| matches!(n,
+                SceneNode::GradientRect { color, color2, .. }
+                    if *color == want[0].0 && *color2 == want[1].0)));
+        }
+        let a = upload(true);
+        assert_eq!(a.disc(Rect::new(0.0, 0.0, 20.0, 0.0), &theme).w, 20.0);
+    }
+}
+
+/// A reader finds a button named for what it does, its photo state and
+/// its `activate`.
+#[test]
+fn an_upload_avatar_projects_a_button() {
+    let parent = SemId::parse("s").unwrap();
+    for (photo, name) in [(true, "Replace avatar"), (false, "Upload avatar")] {
+        let a = upload(photo);
+        let mut b = SnapshotBuilder::new();
+        b.node(parent.clone(), Role::Group, "s");
+        a.project(&mut b, a.sem_id().unwrap(), Some(&parent));
+        let snap = b.finish().expect("a valid projection");
+        let node = snap.get(&SemId::parse("s.avatar").unwrap()).unwrap();
+        assert_eq!((node.role, node.label.as_str()), (Role::Button, name));
+        let at = accord::StateRef::parse("s.avatar:photo").unwrap();
+        assert_eq!(snap.value(&at), Some(&Value::Bool(photo)));
     }
 }

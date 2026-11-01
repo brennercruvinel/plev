@@ -108,6 +108,32 @@ fn the_hover_shows_the_actions() {
     }
 }
 
+/// The explore card's three actions and the video scene's badge draw the
+/// kit's own glyphs (`kit-*`): an unknown name would draw nothing.
+#[test]
+fn the_explore_actions_and_the_video_badge_are_the_kit_s_glyphs() {
+    let t = core();
+    let glyphs = |mut card: CatalogCard| {
+        let (w, h) = card.size(1000.0, &t);
+        let b = Rect::new(0.0, 0.0, w, h);
+        card.set_hovered(true);
+        nodes(&card, b, &t)
+            .iter()
+            .filter(|n| matches!(n, SceneNode::Path { .. }))
+            .count()
+    };
+    for name in ["kit-text", "kit-screen", "kit-likes", "kit-clapperboard"] {
+        assert!(icons::has_icon(name), "{name}");
+    }
+    assert_eq!(glyphs(all().remove(4)), 3);
+    let video = CatalogCard::new(CatalogKind::Scene {
+        title: "Futuristic Humanoid Robot".into(),
+        category: "Untitled Folder".into(),
+        video: true,
+    });
+    assert_eq!(glyphs(video), 1);
+}
+
 /// A click chooses a card; on a pricing card its plan's button does, and
 /// the plan in use takes no click.
 #[test]

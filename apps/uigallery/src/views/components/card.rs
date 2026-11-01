@@ -209,7 +209,7 @@ impl CardPage {
                     ),
                     card(
                         "Style, Add",
-                        Body::Item(Item::new("Style").shape(ItemShape::Tile).icon("image")),
+                        Body::Item(Item::new("Style").shape(ItemShape::Tile).full_image(true)),
                     ),
                 ],
             },
