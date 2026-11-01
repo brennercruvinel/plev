@@ -473,6 +473,73 @@ mod tests {
         assert!(l.header.x >= dock.rest.right());
     }
 
+    /// A sidebar 200 wide (narrower than its 240) keeps every group's
+    /// label on one line, cut with an ellipsis, never broken inside the
+    /// word: each trigger is as tall as in a wide panel and each tab a
+    /// link high; a reader and an agent still hear the whole name.
+    #[test]
+    fn a_narrow_sidebar_cuts_its_labels_on_one_line() {
+        use accord::SnapshotBuilder;
+        use engine::drawing::compositor::SceneNode;
+        let theme = Theme::hoff_core();
+        let mut nav = Navigation::new(0);
+        for row in &mut nav.sidebar.rows {
+            if let HomeRow::Menu(m, _) = row {
+                *m = m.clone().open(true);
+            }
+        }
+        let tall = 1e4;
+        let narrow = Rect::new(0.0, 0.0, 200.0, tall);
+        let wide = Rect::new(0.0, 0.0, 1000.0, tall);
+        for (r, g) in Group::ALL.iter().enumerate() {
+            let at = |b| nav.trigger_rect(r, b, &theme).unwrap().h;
+            assert_eq!(at(narrow), at(wide), "{} takes one line", g.label());
+        }
+        let link_h = theme.disclosure.collapsible.rail.as_ref().unwrap().link_h;
+        for (i, page) in PAGES.iter().enumerate() {
+            let h = nav.tab_rect(i, narrow, &theme).unwrap().h;
+            assert_eq!(h, link_h, "{} takes one line", page.title);
+        }
+        // drawn: each group's label one line (no wrap width), some cut
+        let mut c = Compositor::new();
+        nav.render(&mut c, narrow, &theme);
+        let texts: Vec<_> = c
+            .layer(LayerId::DEFAULT)
+            .unwrap()
+            .nodes()
+            .iter()
+            .filter_map(|n| match n {
+                SceneNode::Text { key, .. } => Some(key.clone()),
+                _ => None,
+            })
+            .collect();
+        let mut cut = 0;
+        for g in Group::ALL {
+            let label = g.label();
+            let key = texts
+                .iter()
+                .find(|k| {
+                    let stem = k.text.trim_end_matches('…');
+                    k.text == label || (k.text.ends_with('…') && label.starts_with(stem))
+                })
+                .unwrap_or_else(|| panic!("{label} is drawn"));
+            assert_eq!(key.max_width_bits, None, "{label} does not wrap");
+            cut += usize::from(key.text != label);
+        }
+        assert!(cut > 0, "at 200 a label is cut");
+        // projected: the whole names
+        let id = SemId::name("nav").unwrap();
+        nav.sidebar = nav.sidebar.clone().sem(id.clone());
+        let mut b = SnapshotBuilder::new();
+        nav.sidebar.project(&mut b, &id, "Pages", None);
+        let snap = b.finish().unwrap();
+        let rows = id.child("row").unwrap();
+        for (r, g) in Group::ALL.iter().enumerate() {
+            let node = snap.get(&rows.key(r.to_string())).unwrap();
+            assert_eq!(node.label, g.label());
+        }
+    }
+
     #[test]
     fn the_current_page_marks_its_tab_and_its_group_alone() {
         let last = PAGES.len() - 1;
