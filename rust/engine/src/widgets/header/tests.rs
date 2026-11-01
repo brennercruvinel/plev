@@ -242,3 +242,27 @@ fn the_header_search_is_the_pinned_search_box() {
         assert_eq!(h.focus.border, theme.colors.border_active);
     }
 }
+
+/// Another product's mark: its name and its symbol, on one logo or on a
+/// header's, which keeps its kind; the theme's symbol otherwise.
+#[test]
+fn a_logo_takes_another_name_and_symbol() {
+    let t = Theme::hoff_core();
+    let logo = Logo::new("Hoff").symbol("box");
+    assert_eq!((logo.name.as_str(), logo.symbol), ("Hoff", Some("box")));
+    assert_eq!(Logo::new("Hoff").symbol, None);
+    let mut c = Compositor::new();
+    logo.render(&mut c, Rect::new(0.0, 0.0, 200.0, 40.0), &t);
+    let h = Header::minimal("Brainwave")
+        .sem(SemId::parse("page.minimal").expect("an id"))
+        .with_logo(logo);
+    let swapped = h.slots.iter().find_map(|s| match &s.item {
+        HeaderItem::Logo(l) => Some((l.name.clone(), l.symbol, l.kind, l.sem_id().cloned())),
+        _ => None,
+    });
+    let kept = Some(id("page.minimal.logo"));
+    assert_eq!(
+        swapped,
+        Some(("Hoff".into(), Some("box"), LogoKind::Symbol, kept))
+    );
+}
