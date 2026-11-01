@@ -404,30 +404,19 @@ impl Theme {
         legibility::settle(&mut self.colors, &mut self.glass, bar);
     }
 
-    /// The edges of the fields held at `bar.edge` on the card (WCAG
-    /// 1.4.11), each moved the least it must; nothing where `bar` keeps
-    /// the theme's own (`Bar::AA`, decision pending), and no border the
-    /// design leaves out (a transparent one).
+    /// The edges of the fields (Brenner's decision B, task-104): at rest
+    /// the theme's own (the kit's pale gray), or `bar.edge` where the bar
+    /// holds the edges (more contrast); focused, strong enough to find the
+    /// field in use (3:1 on the card, WCAG 1.4.11); hovered, where the
+    /// design keeps the rest's, halfway between the two (the kit's step,
+    /// #E2E2E2 to #C4C4C4). The field fades between them
+    /// (`text_field::edge`). A border the design leaves out (transparent)
+    /// stays out. The form's own tokens already hold the focus and the
+    /// hover (`FormTokens::hold_edges`); this adds the rest where `bar`
+    /// holds the edges.
     pub(crate) fn hold_edges(&mut self, bar: Bar) {
-        let Some(need) = bar.edge else {
-            return;
-        };
-        let (bg, card) = (self.colors.bg, self.colors.surface);
-        let f = &mut *self.form;
-        for input in [
-            &mut f.input,
-            &mut f.search,
-            &mut f.inset,
-            &mut f.header,
-            &mut f.combo,
-            &mut f.bare,
-        ] {
-            for s in [&mut input.rest, &mut input.hover, &mut input.focus] {
-                if s.border.0[3] > 0.0 {
-                    s.border = legibility::reach(s.border, need, &[&[bg, card]]);
-                }
-            }
-        }
+        let ground = [self.colors.bg, self.colors.surface];
+        self.form.hold_edges(ground, bar.edge);
     }
 
     /// task-104: each front's slot derived from the theme built so far

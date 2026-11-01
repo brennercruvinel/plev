@@ -255,7 +255,16 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         let glass = &theme.glass;
         assert_eq!(input.rest.fill, glass.field);
         assert_eq!(input.hover.fill, glass.surface_active);
-        assert_eq!(input.focus.border, glass.field_focus_border);
+        // the glass's focus border, held at 3:1 on the card (decision B)
+        let card = [theme.colors.bg, theme.colors.surface];
+        assert_eq!(
+            input.focus.border,
+            crate::styling::theme::legibility::reach(
+                glass.field_focus_border,
+                crate::styling::theme::legibility::MARK_AA,
+                &[&card]
+            )
+        );
         assert_eq!(input.rest.border, glass.edge_soft);
         assert_eq!(input.pad_x, theme.spacing.md);
         assert_eq!(input.radius, theme.shape.nav);

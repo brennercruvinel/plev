@@ -37,8 +37,9 @@ impl Bar {
     /// The edges keep the theme's: the field's border is not the only
     /// thing that tells a person the field is there (its label and its
     /// place do), so WCAG 1.4.11 does not ask 3:1 of it, and more contrast
-    /// strengthens it. A decision pending with Brenner (task-104, option
-    /// B): `Some(MARK_AA)` here holds them at 3:1 in every theme (A).
+    /// strengthens it; focused, a field's border reaches 3:1 in every bar
+    /// (`FormTokens::hold_edges`). Brenner's decision B (task-104);
+    /// `Some(MARK_AA)` here would hold them at 3:1 at rest too (A).
     pub const AA: Self = Self {
         text: TEXT_AA,
         mark: MARK_AA,
