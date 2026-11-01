@@ -71,3 +71,6 @@ mod navigation;
 /// Front I, focus into view (WCAG 2.4.11): Tab, a reader's focus and an
 /// agent's bring a control under the fold into the page's window.
 mod reveal;
+
+/// Task-104 front L, page fixes: no page shows the text of its making.
+mod placeholders;

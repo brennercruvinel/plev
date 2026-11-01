@@ -7,15 +7,18 @@
 //! The file, filter and profile menus are front B's (`context_menu`'s
 //! entries, its `ContextMenu` in the kit's recipes); the upload menu is
 //! the same menu in the profile's recipe, with its icons; the folder
-//! picker is `engine::widgets::selection::Folders`. The zoom options are
-//! front G's and the AI model picker front C's: until they arrive their
-//! cards name them.
+//! picker is `engine::widgets::selection::Folders`; the zoom options are
+//! the toolbar's zoom panel (`engine::widgets::nav::Zoom`, the Toolbar
+//! page's `kit_zoom`) and the AI model picker the prompt's
+//! (`engine::widgets::message::select_ai::SelectAi`, the kit's four models).
 //!
 //! The menus operate: the pointer lights a row, a press picks it (a
-//! filter moves its check within its section), and the card's menu says
-//! the last pick. Projected: `menus_page.group[0]`, and in it each card's
-//! menu `menus_page.group[0].card[<c>]`, a `Role::Menu` of items
-//! `<card>[<id>]` (a `Role::Group` of buttons for the folders), each with
+//! filter moves its check within its section, a zoom command takes the
+//! check, a zoom toggle flips, a model is chosen), and the card's menu
+//! says the last pick. Projected: `menus_page.group[0]`, and in it each
+//! card's menu `menus_page.group[0].card[<c>]`, a `Role::Menu` of items
+//! `<card>[<id>]` (the zoom's rows `<card>.line[<i>]`, the models
+//! `<card>[<i>]`; a `Role::Group` of buttons for the folders), each with
 //! an `activate` that picks it as a press does, the menu's `picked` the
 //! last pick.
 
@@ -23,13 +26,17 @@ use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
 use engine::styling::theme::TypeRole;
+use engine::widgets::form::TextField;
+use engine::widgets::message::select_ai::SelectAi;
+use engine::widgets::nav::Zoom;
 use engine::widgets::overlay::tokens::MenuStyle;
 use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
-use engine::widgets::recipe::focus_ring;
+use engine::widgets::recipe::{focus_ring, focus_ring_inside};
 use engine::widgets::selection::{FolderRow, Folders};
 
 use super::context_menu::{file_menu, filter_menu, profile_menu};
 use super::showcase::{self, GroupLayout};
+use super::toolbar::kit_zoom;
 use super::{After, Component, child_id, key_under, root_id, under};
 
 /// The template's card: `min-h-121.5 pt-20 pb-16` (MenuPage/index.tsx:20).
@@ -58,10 +65,10 @@ const FOLDERS: [&str; 4] = [
 ];
 
 enum Body {
-    /// Another front's component, named until it arrives.
-    Pending(&'static str),
+    Zoom(Box<Zoom>),
     Menu(ContextMenu),
     Folders(Box<Folders>),
+    Models(Box<SelectAi>),
 }
 
 struct Card {
@@ -72,12 +79,13 @@ struct Card {
     picked: Option<String>,
 }
 
-/// What the keyboard or a reader focused: a menu's item (by id) or a
-/// folder row, in card `c`.
+/// What the keyboard or a reader focused: a menu's item (by id), a
+/// folder row, or a zoom row or a model (by index), in card `c`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Spot {
     Item(u64),
     Row(FolderRow),
+    Line(usize),
 }
 
 pub struct MenusPage {
@@ -144,10 +152,10 @@ impl MenusPage {
             picked: None,
         };
         let mut cards = vec![
-            card("Zoom view options", Body::Pending("Zoom, from front G")),
+            card("Zoom view options", Body::Zoom(Box::new(kit_zoom()))),
             card("File menu", menu(file_menu(), MenuStyle::File)),
             card("File menu", Body::Folders(Box::new(Folders::new(FOLDERS)))),
-            card("Select AI model", Body::Pending("SelectAI, from front C")),
+            card("Select AI model", Body::Models(Box::new(SelectAi::kit()))),
             card("Upload", menu(upload_menu(), MenuStyle::Upload)),
             card("Filter menu", menu(filter_menu(), MenuStyle::Filter)),
             card("Profile menu", menu(profile_menu(), MenuStyle::Profile)),
@@ -158,10 +166,12 @@ impl MenusPage {
                 let Some(id) = card_id(root, c) else {
                     continue;
                 };
-                card.body = match std::mem::replace(&mut card.body, Body::Pending("")) {
+                let body = std::mem::replace(&mut card.body, Body::Menu(ContextMenu::new(vec![])));
+                card.body = match body {
+                    Body::Zoom(z) => Body::Zoom(Box::new((*z).sem(id))),
                     Body::Menu(m) => Body::Menu(m.sem(id)),
                     Body::Folders(f) => Body::Folders(Box::new((*f).sem(id))),
-                    pending => pending,
+                    Body::Models(m) => Body::Models(Box::new((*m).sem(id))),
                 };
             }
         }
@@ -174,9 +184,10 @@ impl MenusPage {
 
     fn size(body: &Body, theme: &Theme) -> (f32, f32) {
         match body {
-            Body::Pending(_) => (0.0, 0.0),
+            Body::Zoom(z) => z.size(theme),
             Body::Menu(m) => m.size(theme),
             Body::Folders(f) => f.size(theme),
+            Body::Models(m) => m.size(theme),
         }
     }
 
@@ -218,6 +229,17 @@ impl MenusPage {
                 return true;
             }
             (Body::Folders(f), Spot::Row(FolderRow::Folder(i))) => f.folders.get(i).cloned(),
+            (Body::Zoom(z), Spot::Line(i)) => {
+                let label = z.line_label(i).map(str::to_owned);
+                if label.is_some() {
+                    z.choose(i);
+                }
+                label
+            }
+            (Body::Models(m), Spot::Line(i)) => m
+                .choose(i)
+                .then(|| m.chosen_title().map(str::to_owned))
+                .flatten(),
             _ => None,
         };
         let moved = picked.is_some();
@@ -239,7 +261,11 @@ impl MenusPage {
                     Some(Spot::Row(r)) => Some(r),
                     _ => None,
                 }),
-                Body::Pending(_) => {}
+                Body::Models(m) => m.set_focused(match spot {
+                    Some(Spot::Line(i)) => Some(i),
+                    _ => None,
+                }),
+                Body::Zoom(_) => {}
             }
         }
         self.focus = at;
@@ -257,7 +283,15 @@ impl MenusPage {
                     label(m, item).map(|_| (c, Spot::Item(item)))
                 }
                 Body::Folders(f) => f.row_at_id(id).map(|r| (c, Spot::Row(r))),
-                Body::Pending(_) => None,
+                Body::Zoom(z) => {
+                    let family = z.sem_id()?.child("line").ok()?;
+                    let i = key_under(&family, id)?.parse::<usize>().ok()?;
+                    z.line_label(i).map(|_| (c, Spot::Line(i)))
+                }
+                Body::Models(m) => {
+                    let i = key_under(m.sem_id()?, id)?.parse::<usize>().ok()?;
+                    (i < m.choices().len()).then_some((c, Spot::Line(i)))
+                }
             })
     }
 
@@ -267,6 +301,42 @@ impl MenusPage {
             Body::Folders(f) => Some(f.as_ref()),
             _ => None,
         })
+    }
+
+    /// The zoom panel, where it is.
+    fn zoom(&self) -> Option<&Zoom> {
+        self.cards.iter().find_map(|c| match &c.body {
+            Body::Zoom(z) => Some(z.as_ref()),
+            _ => None,
+        })
+    }
+
+    fn zoom_mut(&mut self) -> Option<&mut Zoom> {
+        self.cards.iter_mut().find_map(|c| match &mut c.body {
+            Body::Zoom(z) => Some(z.as_mut()),
+            _ => None,
+        })
+    }
+
+    /// The box that has the keys: the folder picker's search or name, or
+    /// the zoom's level.
+    fn text_field(&self) -> Option<&TextField> {
+        let level = self.zoom().map(|z| &z.field).filter(|f| f.is_focused());
+        self.folders().and_then(Folders::field).or(level)
+    }
+
+    fn text_field_mut(&mut self) -> Option<&mut TextField> {
+        if self.zoom().is_some_and(|z| z.field.is_focused()) {
+            return self.zoom_mut().map(|z| &mut z.field);
+        }
+        self.folders_mut().and_then(Folders::field_mut)
+    }
+
+    /// The zoom's level is what its box holds.
+    fn sync_level(&mut self) {
+        if let Some(z) = self.zoom_mut() {
+            z.sync_level();
+        }
     }
 
     fn folders_card(&self) -> Option<usize> {
@@ -306,13 +376,28 @@ impl MenusPage {
         (Some(l.search), l.name)
     }
 
+    /// The zoom panel's rect in `content`.
+    fn zoom_rect(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        let c = self
+            .cards
+            .iter()
+            .position(|c| matches!(c.body, Body::Zoom(_)))?;
+        let card = self.layout(content, theme)[0].cards[c];
+        Some(Self::widget_rect(&self.cards[c].body, card, theme))
+    }
+
     /// Escape: an open name's box closes, then the field or the row that
     /// has the focus lets it go.
     pub fn handle_escape(&mut self) -> bool {
         if self.folders_mut().is_some_and(Folders::cancel_naming) {
             return true;
         }
-        let field = self.folders_mut().is_some_and(Folders::blur_fields);
+        let mut field = self.folders_mut().is_some_and(Folders::blur_fields);
+        if let Some(z) = self.zoom_mut().filter(|z| z.field.is_focused()) {
+            z.field.unfocus();
+            z.sync_level();
+            field = true;
+        }
         let had = self.focus.is_some();
         self.set_focus(None);
         field || had
@@ -342,7 +427,27 @@ impl MenusPage {
                     let (r, row) = f.handle_event(event, at, theme);
                     (r, row.map(Spot::Row))
                 }
-                Body::Pending(_) => (EventResult::IGNORED, None),
+                Body::Zoom(z) => {
+                    let (x, y) = event.pos();
+                    let row = z.line_at(x, y, at, theme);
+                    let r = z.handle_event(event, at, theme);
+                    if r.changed && z.field.is_focused() {
+                        z.sync_level();
+                    }
+                    // the panel ran the row itself: the card only says it
+                    let label = row.filter(|_| r.clicked).and_then(|i| z.line_label(i));
+                    if let Some(label) = label {
+                        card.picked = Some(label.to_owned());
+                    }
+                    (r, None)
+                }
+                Body::Models(m) => {
+                    let r = m.handle_event(event, at, theme);
+                    if r.clicked {
+                        card.picked = m.chosen_title().map(str::to_owned);
+                    }
+                    (r, None)
+                }
             };
             result = result.merge(r);
             if let Some(spot) = spot {
@@ -361,19 +466,21 @@ impl MenusPage {
         for (i, (card, rect)) in self.cards.iter().zip(&layout[0].cards).enumerate() {
             showcase::card(c, *rect, card.title, theme);
             let at = Self::widget_rect(&card.body, *rect, theme);
+            let ring = self.focus.filter(|f| f.0 == i).map(|f| f.1);
             match &card.body {
-                Body::Pending(name) => {
-                    let body = showcase::body(*rect, theme);
-                    c.push(SceneNode::Text {
-                        key: TextNodeKey::from_style(name, &caption, Some(body.w)),
-                        x: body.x,
-                        y: rect.y + CARD_TOP,
-                        color: theme.colors.text_mid.0,
-                    });
+                Body::Zoom(z) => {
+                    z.render_to_layer(c, LayerId::DEFAULT, at, theme);
+                    if let Some(Spot::Line(l)) = ring
+                        && let Some(r) = z.line_rects(at, theme).get(l)
+                    {
+                        let radius = theme.navigation.tool.zoom.line_radius;
+                        c.push(focus_ring_inside(*r, radius, theme));
+                    }
                 }
+                Body::Models(m) => m.render(c, LayerId::DEFAULT, at, theme),
                 Body::Menu(m) => {
                     m.render(c, LayerId::DEFAULT, theme, at.x, at.y);
-                    if let Some((_, Spot::Item(id))) = self.focus.filter(|f| f.0 == i) {
+                    if let Some(Spot::Item(id)) = ring {
                         let rects = m.entry_rects(at.x, at.y, theme);
                         let row = m
                             .entries
@@ -449,7 +556,20 @@ impl Component for MenusPage {
                         }
                     }
                 }
-                Body::Pending(_) => {}
+                Body::Zoom(z) => {
+                    if let Some(id) = z.sem_id() {
+                        z.project(b, id, Some(&group));
+                        if let Some(mut node) = b.reopen(id) {
+                            node.state("picked", card.picked.clone().unwrap_or_default());
+                        }
+                    }
+                }
+                Body::Models(m) => {
+                    if let Some(id) = m.sem_id() {
+                        let mut node = m.project(b, id, card.title, Some(&group));
+                        node.state("picked", card.picked.clone().unwrap_or_default());
+                    }
+                }
             }
         }
         let focused = self
@@ -457,9 +577,13 @@ impl Component for MenusPage {
             .and_then(|(c, spot)| match (&self.cards[c].body, spot) {
                 (Body::Menu(m), Spot::Item(id)) => Some(m.sem_id()?.key(id.to_string())),
                 (Body::Folders(f), Spot::Row(r)) => f.row_id(r),
+                (Body::Zoom(z), Spot::Line(i)) => {
+                    Some(z.sem_id()?.child("line").ok()?.key(i.to_string()))
+                }
+                (Body::Models(m), Spot::Line(i)) => m.option_id(i),
                 _ => None,
             });
-        let field = self.folders().and_then(|f| f.field()?.sem_id().cloned());
+        let field = self.text_field().and_then(|f| f.sem_id().cloned());
         if let Some(id) = focused.or(field) {
             b.focus(&id);
         }
@@ -509,6 +633,10 @@ impl Component for MenusPage {
             } else {
                 f.blur_fields();
             }
+        }
+        if let Some(z) = self.zoom_mut().filter(|z| z.field.is_focused()) {
+            z.field.unfocus();
+            z.sync_level();
         }
         self.set_focus(self.at(id));
         true

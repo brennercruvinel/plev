@@ -1,15 +1,18 @@
 //! The two cards of the Modals page that are not a modal of
 //! `engine::widgets::overlay::modals`: the delete confirm, which is the
 //! confirmation `Modal` with the kit's art (the Alert Dialog page's), and
-//! the quick comment, which is front C's.
+//! the quick comment, which is the message widget's.
 
 use accord::{Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::feedback::{Modal, ModalAction};
-use engine::widgets::overlay::modals::{self, ModalBody};
+use engine::widgets::form::TextField;
+use engine::widgets::message::quick_comment::{QuickComment, QuickPart};
+use engine::widgets::overlay::modals::ModalBody;
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
+use super::super::comments::kit_quick_comment;
 use super::super::dialog;
 
 /// The kit's `DeleteFile` as the ModalPage shows it: the destructive
@@ -113,67 +116,97 @@ impl ModalBody for Confirm {
     }
 }
 
-/// The kit's `QuickComment`: front C's widget (the Comments tab); until
-/// it lands the card names it.
-// TODO(task-104 front C): draw front C's QuickComment here once it is in
-// `engine::widgets`, as the kit's ModalPage does.
-pub(super) struct Pending {
-    pub(super) name: &'static str,
-    pub(super) owner: &'static str,
+/// The kit's `QuickComment` as the ModalPage shows it: the message
+/// widget's card (`engine::widgets::message::quick_comment`), the same
+/// sample the Comments page holds. Its parts are under the card's id; the
+/// reply line takes the keys while it has the focus.
+pub(super) struct Quick {
+    card: QuickComment,
 }
 
-impl Pending {
-    fn line(&self) -> String {
-        format!("{}: {}", self.name, self.owner)
+impl Quick {
+    pub(super) fn new(id: Option<&SemId>) -> Self {
+        let mut card = kit_quick_comment();
+        if let Some(id) = id {
+            card = card.sem(id.clone());
+        }
+        Self { card }
+    }
+
+    fn typing(&self) -> bool {
+        self.card.focused() == Some(QuickPart::Reply)
     }
 }
 
-impl ModalBody for Pending {
+impl ModalBody for Quick {
     fn title(&self) -> &str {
-        self.name
+        "Shop House Icon"
     }
 
     fn size(&self, w: f32, theme: &Theme) -> (f32, f32) {
-        let style = &modals::tokens(theme).share_post.title;
-        (w, style.line_height)
+        self.card.size(w, theme)
     }
 
-    fn handle_event(&mut self, _event: &WidgetEvent, _rect: Rect, _theme: &Theme) -> EventResult {
-        EventResult::IGNORED
+    fn handle_event(&mut self, event: &WidgetEvent, rect: Rect, theme: &Theme) -> EventResult {
+        self.card.handle_event(event, rect, theme)
     }
 
     fn render(&self, c: &mut Compositor, rect: Rect, theme: &Theme) {
-        let t = modals::tokens(theme);
-        let style = &t.share_post.date;
-        let y = modals::middle(style, rect.y, rect.h);
-        let line = self.line();
-        modals::text_centered(
-            c,
-            &line,
-            style,
-            rect.x + rect.w / 2.0,
-            y,
-            rect.w,
-            t.ink.muted,
-        );
+        self.card.render(c, rect, theme);
     }
 
     fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: &SemId) {
-        b.node(id, Role::Group, self.name)
-            .parent(parent)
-            .description(self.line());
+        self.card.project(b, id, Some(parent));
+        if let Some(at) = self.card.focused().and_then(|p| self.card.part_id(p)) {
+            b.focus(&at);
+        }
     }
 
     fn run(
         &mut self,
-        _target: &SemId,
-        _action: &str,
-        _param: Option<&Value>,
+        target: &SemId,
+        action: &str,
+        param: Option<&Value>,
     ) -> Option<Result<bool, String>> {
-        None
+        let part = self.card.part_of(target)?;
+        Some(self.card.act(part, action, param).map(|()| false))
     }
 
-    fn focus(&mut self, _id: Option<&SemId>) -> bool {
-        false
+    fn focus(&mut self, id: Option<&SemId>) -> bool {
+        let part = id.and_then(|id| self.card.part_of(id));
+        self.card.focus(part);
+        part.is_some()
+    }
+
+    fn text_mut(&mut self) -> Option<&mut TextField> {
+        if !self.typing() {
+            return None;
+        }
+        Some(self.card.line_mut().field_mut())
+    }
+
+    fn ime_area(&self, rect: Rect, theme: &Theme) -> Option<Rect> {
+        self.typing().then(|| self.card.ime_area(rect, theme))
+    }
+
+    /// Enter posts the reply, as `Send` does.
+    fn enter(&mut self) -> bool {
+        self.typing() && self.card.send()
+    }
+
+    fn escape_text(&mut self) -> bool {
+        let typing = self.typing();
+        if typing {
+            self.card.focus(None);
+        }
+        typing
+    }
+
+    fn end_compose(&mut self) -> bool {
+        self.card.line_mut().end_compose()
+    }
+
+    fn tick(&mut self, dt: f32) -> bool {
+        self.card.wake(dt).now
     }
 }
