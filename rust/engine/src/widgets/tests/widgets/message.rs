@@ -1326,12 +1326,14 @@ fn the_marker_carries_the_kit_in_core_and_derives_elsewhere() {
         (derived.pin_unread.0[1] - want).abs() < 1e-5,
         "the info accent over paper"
     );
-    // the light theme's info accent is under 3:1 on its paper: the unread
-    // mark takes its accent, a blue that reads
+    // the light theme's info accent reads at 3:1 on its paper since its
+    // palette keeps that bar (`theme::legibility`): the unread mark takes it
     let light = Theme::light();
     let lit = MessageTokens::derive(&light);
-    assert_eq!(lit.marker.pin_unread, light.colors.accent);
-    assert_eq!(lit.alert.unread, light.colors.accent);
+    for mark in [lit.marker.pin_unread, lit.alert.unread] {
+        let near = |a: f32, b: f32| (a - b).abs() < 1e-5;
+        assert!((0..3).all(|i| near(mark.0[i], light.colors.info.0[i])));
+    }
     assert_eq!(derived.avatar, kit.avatar);
 }
 

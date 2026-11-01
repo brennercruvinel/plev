@@ -2,6 +2,7 @@
 //! their toggles or the asset sections, the search at the foot.
 
 use crate::drawing::compositor::Compositor;
+use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
 use crate::widgets::icons;
 use crate::widgets::recipe::{
@@ -174,14 +175,11 @@ impl SceneSidebar {
         let style = k.label.style(&theme.typography);
         let lx = tile.right() + k.label_gap;
         let ly = r.y + (r.h - style.line_height) / 2.0;
-        c.push(text(
-            &item.title,
-            &style,
-            lx,
-            ly,
-            k.ink.0,
-            Some((end - lx).max(0.0)),
-        ));
+        // one line, as a layer's row: a name longer than the room left by
+        // the toggles is cut with an ellipsis (its projection keeps it)
+        let room = (end - lx).max(0.0);
+        let title = TextMeasurer::truncate_to_width(&item.title, &style, room);
+        c.push(text(&title, &style, lx, ly, k.ink.0, Some(room)));
         for t in shown {
             let (_, off, on) = TOGGLES[t];
             let lit = item.on[t] || self.hovered == Some(ScenePart::Toggle(i, t));

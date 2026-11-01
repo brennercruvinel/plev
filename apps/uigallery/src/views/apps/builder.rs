@@ -174,18 +174,24 @@ impl BuilderPage {
             }
         }
         let caption = format!("tree rebuilt from state {} times", self.state.rebuilds);
+        // the card's texts wrap in its width less its padding: a phone, a
+        // larger text or a longer language takes another line
+        let room = (w - PAD * 2.0).max(1.0);
         let card = div().col().gap(10.0).p(PAD).w(w).bg(g.surface);
         card.rounded(theme.radius.lg)
             .border(1.0)
             .border_color(g.edge_soft)
-            .child(t("Counter", TypeRole::Title.strong(), tc.text))
-            .child(t(
-                "State drives the tree.",
-                TypeRole::BodyLg.run(),
-                tc.text_dim,
-            ))
+            .child(t("Counter", TypeRole::Title.strong(), tc.text).max_width(room))
+            .child(
+                t(
+                    "State drives the tree.",
+                    TypeRole::BodyLg.run(),
+                    tc.text_dim,
+                )
+                .max_width(room),
+            )
             .child(row)
-            .child(t(&caption, TypeRole::Body.run(), g.text_faint))
+            .child(t(&caption, TypeRole::Body.run(), g.text_faint).max_width(room))
     }
 
     /// Engine geometry for the demo card at origin (ox, oy), width `w`:

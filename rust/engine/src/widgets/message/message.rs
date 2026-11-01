@@ -26,7 +26,7 @@ use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 use super::tokens::{MessageStyle, MessageText};
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::gpu::image::ImageHandle;
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::{Button, ButtonSize, ButtonVariant};
 use crate::widgets::content::{Avatar, AvatarSize};
@@ -291,7 +291,7 @@ impl Message {
         let mut y = top + line_h;
 
         // The body, wrapped against the column (and clamped).
-        let body_style = s.body.style(ty);
+        let body_style = body_style(&s.body, ty);
         let text = match s.body_lines {
             _ if col_w <= 0.0 => String::new(),
             Some(lines) => TextMeasurer::clamp_to_lines(&self.body, &body_style, col_w, lines),
@@ -371,8 +371,14 @@ impl Message {
             c.push(node);
         }
         run(c, l.time.as_ref(), &s.time, ty, None);
-        let wrap = l.body.as_ref().map(|b| b.rect.w);
-        run(c, l.body.as_ref(), &s.body, ty, wrap);
+        if let Some(p) = &l.body {
+            c.push(SceneNode::Text {
+                key: TextNodeKey::from_style(&p.text, &body_style(&s.body, ty), Some(p.rect.w)),
+                x: p.rect.x,
+                y: p.rect.y,
+                color: s.body.color.0,
+            });
+        }
         if let (Some(chip), Some(rect)) = (&self.reaction, l.reaction) {
             chip.render(c, rect, theme);
         }
@@ -429,6 +435,13 @@ impl Message {
 /// `<id>.reaction`, the like chip's id under its message.
 fn reaction_id(id: &SemId) -> Option<SemId> {
     id.child("reaction").ok()
+}
+
+/// The body's style: its run, and a word wider than the column (a
+/// link, a long name, a larger text) broken between its letters, as the
+/// web's `overflow-wrap: anywhere` breaks a comment.
+fn body_style(spec: &MessageText, ty: &crate::styling::theme::TypographyScale) -> TextStyle {
+    spec.style(ty).with_overflow_wrap(OverflowWrap::Anywhere)
 }
 
 pub(crate) fn width(text: &str, style: &TextStyle) -> f32 {

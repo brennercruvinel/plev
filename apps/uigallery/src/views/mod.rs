@@ -422,6 +422,13 @@ impl ShowcaseView {
         }
     }
 
+    /// The theme adapted again when the system's contrast changed since
+    /// (the window reads it when it takes the focus).
+    pub fn follow_contrast(&mut self) {
+        let contrast = engine::styling::theme::Contrast::from_system();
+        self.set_prefs(self.prefs.with_contrast(contrast));
+    }
+
     /// Apply a theme by name (launch argument / snapshot tooling).
     pub fn apply_theme(&mut self, name: &str) {
         self.set_theme(name);

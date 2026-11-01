@@ -418,7 +418,10 @@ impl CapturePage {
         y += frame_h + theme.spacing.md;
         let meter = Rect::new(x + pad, y, frame_w, theme.spacing.lg);
         y += meter.h + theme.spacing.sm;
-        let status_h = Self::line_style(theme).line_height;
+        // the status wraps in the card: as many lines as it takes
+        let line = Self::line_style(theme);
+        let said = TextMeasurer::measure_styled(&self.status_text(), &line, Some(inner_w.max(1.0)));
+        let status_h = said.1.max(line.line_height);
         let status = Rect::new(x + pad, y, inner_w, status_h);
         y += status_h;
         Layout {
@@ -568,7 +571,7 @@ impl CapturePage {
         ProgressBar::new(self.level).render(c, l.meter, theme);
         let status = self.status_text();
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&status, &small, None),
+            key: TextNodeKey::from_style(&status, &small, Some(l.status.w.max(1.0))),
             x: l.status.x,
             y: l.status.y,
             color: theme.colors.text_mid.0,

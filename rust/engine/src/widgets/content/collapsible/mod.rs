@@ -275,8 +275,13 @@ impl Collapsible {
         }
     }
 
+    /// The title's run; wrapped, a word wider than its line (a larger
+    /// text, a longer language) breaks inside.
     fn label_style(r: &DisclosureRecipe, theme: &Theme) -> TextStyle {
-        theme.typography.run(r.text_type)
+        theme
+            .typography
+            .run(r.text_type)
+            .with_overflow_wrap(crate::drawing::text::OverflowWrap::Anywhere)
     }
 
     /// The divider's share of the height: none on the first section.

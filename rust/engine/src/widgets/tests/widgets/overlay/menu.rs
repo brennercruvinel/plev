@@ -155,3 +155,58 @@ fn the_menubar_is_the_kit_s_toolbar_on_core_and_the_theme_s_surface_elsewhere() 
         assert_eq!(theme.overlay.menubar, MenubarTokens::derive(&theme));
     }
 }
+
+/// A low window (task-104p): the placement caps the menu to the room
+/// under its trigger; the rows scroll inside the panel, clipped there,
+/// the wheel moves them within their range, and a row the keys highlight
+/// scrolls in the least that shows it.
+#[test]
+fn a_capped_menu_scrolls_its_rows_and_reveals_the_highlight() {
+    use crate::widgets::overlay::dropdown_menu::DropdownMenu;
+    let theme = Theme::hoff_core();
+    let entries = (1..=12)
+        .map(|i| MenuEntry::item(i, format!("Item {i}")))
+        .collect();
+    let mut menu = DropdownMenu::new(entries);
+    menu.open();
+    let (w, h) = menu.menu.size(&theme);
+    let trigger = Rect::new(10.0, 10.0, 40.0, 30.0);
+    let bounds = Rect::new(0.0, 0.0, 400.0, 200.0);
+    let p = menu.placement(trigger, bounds, &theme);
+    assert!(p.capped && p.rect.h < h, "the room caps it");
+    let panel = p.rect;
+    let max = menu.menu.max_offset(panel, &theme);
+    assert!(max > 0.0);
+
+    // the wheel scrolls, held to the range
+    let (cx, cy) = (panel.x + w / 2.0, panel.y + panel.h / 2.0);
+    let wheel = |by| WidgetEvent::Scroll {
+        x: cx,
+        y: cy,
+        delta: by,
+    };
+    let (r, _) = menu.handle_event(&wheel(1000.0), trigger, panel, &theme);
+    assert!(r.changed);
+    assert_eq!(menu.offset(), max);
+    menu.handle_event(&wheel(-1000.0), trigger, panel, &theme);
+    assert_eq!(menu.offset(), 0.0);
+
+    // the last row highlighted by the keys scrolls in, whole
+    menu.highlight(Some(12));
+    assert!(menu.fit(panel, &theme));
+    let view = menu.menu.rows_view(panel, &theme);
+    let rows = menu
+        .menu
+        .entry_rects(panel.x, panel.y - menu.offset(), &theme);
+    let last = rows[11];
+    assert!(last.y >= view.y - 0.01 && last.bottom() <= view.bottom() + 0.01);
+
+    // the rows draw under a clip of the strip, and bind under it
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let id = SemId::parse("menu").unwrap();
+    menu.menu = menu.menu.clone().sem(id.clone());
+    menu.render(&mut c, LayerId::DEFAULT, panel, &theme);
+    let clipped = c.binding(&id.key("12")).and_then(|b| b.clip);
+    assert_eq!(clipped, Some([view.x, view.y, view.w, view.h]));
+}

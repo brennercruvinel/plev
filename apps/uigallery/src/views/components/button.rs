@@ -387,8 +387,11 @@ impl ButtonPage {
         })
     }
 
+    /// The widget centered in its card at the size it asks, never wider
+    /// than the card's room (a button cuts its label to it).
     fn widget_rect(spec: &Spec, card: Rect, theme: &Theme) -> Rect {
-        showcase::centered(spec.preferred_size(theme), card)
+        let (w, h) = spec.preferred_size(theme);
+        showcase::centered((w.min(showcase::room(card.w, theme)), h), card)
     }
 
     /// Center of the first card's widget (the view tests probe hover
