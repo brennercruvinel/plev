@@ -12,6 +12,11 @@
 //! kit's `overflow-y-auto scrollbar-none`: a wheel, no bar); the logo
 //! stays.
 //!
+//! Every row is one line: a label that does not fit the width ends in an
+//! ellipsis (the dropdowns and their links are truncated, as a nav link
+//! and a folder are), so a narrow sidebar never breaks a word; the
+//! projected names are whole.
+//!
 //! With a [`SemId`] the rows are `<id>.row[<r>]` (a dropdown's links
 //! `<id>.row[<r>].links[<i>]`), the scenes link `<id>.scenes`, the new
 //! folder `<id>.new` and the folders `<id>.folder[<i>]`.
@@ -87,6 +92,13 @@ fn row_h(row: &HomeRow, w: f32, theme: &Theme) -> f32 {
 
 impl HomeSidebar {
     pub fn new(rows: Vec<HomeRow>, caption: impl Into<String>, scenes: NavLink) -> Self {
+        let rows = rows
+            .into_iter()
+            .map(|row| match row {
+                HomeRow::Menu(m, links) => HomeRow::Menu(m.truncate(true), links.truncate(true)),
+                link => link,
+            })
+            .collect();
         Self {
             rows,
             logo: Logo::new(PRODUCT),

@@ -155,3 +155,39 @@ fn a_disabled_trigger_draws_the_rest_surface() {
         assert_eq!(open.surface(&r), &r.open);
     }
 }
+
+/// Truncated, the label and the links keep one line however narrow (the
+/// height of a wide trigger, the kit's link), and the projected names
+/// are whole.
+#[test]
+fn a_truncated_label_keeps_one_line_and_its_whole_name() {
+    let theme = core();
+    let long = "Assets imported from the shared library";
+    let c = Collapsible::new(long)
+        .icon("folder")
+        .counter("112")
+        .truncate(true);
+    assert_eq!(
+        c.trigger_height(120.0, &theme),
+        c.trigger_height(800.0, &theme)
+    );
+    assert!(
+        Collapsible::new(long)
+            .icon("folder")
+            .trigger_height(120.0, &theme)
+            > c.trigger_height(120.0, &theme),
+        "untruncated, it wraps"
+    );
+    let link_h = theme.disclosure.collapsible.rail.as_ref().unwrap().link_h;
+    let links = DisclosureList::new([long])
+        .truncate(true)
+        .sem(SemId::parse("d.links").unwrap());
+    assert_eq!(links.height(80.0, &theme), link_h);
+    let id = SemId::parse("d").unwrap();
+    let mut b = SnapshotBuilder::new();
+    c.project(&mut b, &id, None);
+    links.project(&mut b, None);
+    let snap = b.finish().unwrap();
+    assert_eq!(snap.get(&id).unwrap().label, long);
+    assert_eq!(snap.get(&links.link_id(0).unwrap()).unwrap().label, long);
+}
