@@ -29,7 +29,7 @@ use crate::views::text_input::clipboard::Keys;
 use crate::views::text_input::host::TextHost;
 
 /// The product the kit's logo spells.
-pub(crate) const PRODUCT: &str = "Brainwave";
+pub(crate) const PRODUCT: &str = "Plev";
 
 /// A card's padding around its header, `py-20` and `px-10`: page values
 /// of the template, as the showcase's own.
