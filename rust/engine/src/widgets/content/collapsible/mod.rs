@@ -37,6 +37,7 @@ mod tests;
 use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::buttons::Press;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::wake::Wake;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 pub use links::DisclosureList;
@@ -68,6 +69,9 @@ pub struct Collapsible {
     /// not fit (a sidebar's row), instead of wrapping; the projected name
     /// is the whole title either way.
     truncate: bool,
+    /// The trigger is pressed and bound in [`hit_rect`] around its
+    /// drawing ([`Collapsible::grow_hit`]).
+    grow_hit: bool,
     press: Press,
     motion: DisclosureMotion,
     /// The revealed fraction, 0 closed to 1 open, eased.
@@ -102,6 +106,7 @@ impl Collapsible {
             current: false,
             first: false,
             truncate: false,
+            grow_hit: false,
             press: Press::default(),
             motion,
             reveal: Tween::new(0.0, motion.reveal, motion.reveal_easing),
@@ -154,6 +159,16 @@ impl Collapsible {
     /// what [`Collapsible::project`] names.
     pub fn truncate(mut self, on: bool) -> Self {
         self.truncate = on;
+        self
+    }
+
+    /// The trigger's press area, and its binding, grow to the minimum
+    /// around its drawing ([`hit_rect`]: 24 px, 44 with a finger), which
+    /// does not change. For a host that stacks it among other grown
+    /// targets (a sidebar's rows) and settles a press two of them share;
+    /// off, the press area is the drawing.
+    pub fn grow_hit(mut self, on: bool) -> Self {
+        self.grow_hit = on;
         self
     }
 
@@ -358,6 +373,17 @@ impl Collapsible {
         Rect::new(bounds.x, bounds.y + divider, bounds.w, h)
     }
 
+    /// Where a press lands on the trigger in `bounds`, and what it binds:
+    /// the trigger, grown to the minimum with [`Collapsible::grow_hit`].
+    pub fn press_rect(&self, bounds: Rect, theme: &Theme) -> Rect {
+        let trigger = self.trigger_rect(bounds, theme);
+        if self.grow_hit {
+            hit_rect(trigger, theme)
+        } else {
+            trigger
+        }
+    }
+
     /// Where the content goes at full size, `content_h` tall; the render
     /// clips it to what is revealed.
     pub fn content_rect(&self, bounds: Rect, content_h: f32, theme: &Theme) -> Rect {
@@ -391,7 +417,7 @@ impl Collapsible {
         bounds: Rect,
         theme: &Theme,
     ) -> EventResult {
-        let trigger = self.trigger_rect(bounds, theme);
+        let trigger = self.press_rect(bounds, theme);
         let r = self.press.handle(event, trigger, self.disabled);
         if r.clicked {
             self.toggle();

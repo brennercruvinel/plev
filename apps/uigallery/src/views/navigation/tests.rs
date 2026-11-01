@@ -275,6 +275,152 @@ fn every_sidebar_and_palette_control_is_at_least_24_px() {
     );
 }
 
+/// With a finger (`hit::set_touch_input`) every press area of the
+/// sidebar (the pin, the menu button, the close, the Search, the
+/// groups' triggers and their tabs) and of the palette (its commands)
+/// is at least the touch minimum on each side, around the same centre
+/// as with a pointer, and the frame draws exactly what it draws with a
+/// pointer: the press area grows, the drawing stays.
+#[test]
+fn with_a_finger_the_sidebar_and_the_palette_press_in_44_px_drawn_the_same() {
+    use engine::drawing::compositor::SceneNode;
+    use engine::widgets::hit::set_touch_input;
+    struct Pointer;
+    impl Drop for Pointer {
+        fn drop(&mut self) {
+            set_touch_input(false);
+        }
+    }
+    let _back = Pointer;
+    type Frame = (Vec<Vec<SceneNode>>, Vec<(SemId, [f32; 4])>);
+    // one compositor per view: its overlay layer lives in the first
+    fn frame(v: &mut ShowcaseView, c: &mut Compositor, touch: bool, roots: &[&str]) -> Frame {
+        set_touch_input(touch);
+        v.render(c);
+        let snap = v.gallery_semantics().expect("a projection");
+        let mut bound = Vec::new();
+        for (id, node) in snap.nodes() {
+            let s = id.as_str();
+            let under = roots.iter().any(|r| s.starts_with(r));
+            let part = s != "shell.sidebar" && s != "shell.sidebar.logo";
+            if under
+                && part
+                && !node.actions.is_empty()
+                && let Some(b) = c.binding(id)
+            {
+                bound.push((id.clone(), b.rect));
+            }
+        }
+        let nodes = c.layers().iter().map(|l| l.nodes().to_vec()).collect();
+        (nodes, bound)
+    }
+    fn check(v: &mut ShowcaseView, c: &mut Compositor, what: &str, roots: &[&str]) -> usize {
+        let (drawn, pointer) = frame(v, c, false, roots);
+        let (touched, finger) = frame(v, c, true, roots);
+        assert!(
+            drawn == touched,
+            "{what}: a finger draws what a pointer does"
+        );
+        assert_eq!(pointer.len(), finger.len(), "{what}");
+        let min = v.theme.control.min_touch_target;
+        let centre = |[x, y, w, h]: [f32; 4]| (x + w / 2.0, y + h / 2.0);
+        for ((id, p), (_, f)) in pointer.iter().zip(&finger) {
+            let [_, _, w, h] = *f;
+            eprintln!("touch {what} {id} {w:.1}x{h:.1}");
+            assert!(w >= min - 0.01 && h >= min - 0.01, "{what} {id}: {w}x{h}");
+            let (a, b) = (centre(*p), centre(*f));
+            assert!(
+                (a.0 - b.0).abs() < 0.01 && (a.1 - b.1).abs() < 0.01,
+                "{what} {id}"
+            );
+        }
+        finger.len()
+    }
+    let sidebar = ["shell.sidebar"];
+    let mut pinned = ShowcaseView::new(1280.0, 800.0);
+    pinned.pin_sidebar(true);
+    let n = check(&mut pinned, &mut Compositor::new(), "pinned", &sidebar);
+    assert!(n > 10, "the pin, the Search, the groups and a group's tabs");
+
+    let mut narrow = ShowcaseView::new(360.0, 740.0);
+    let mut c = Compositor::new();
+    assert!(
+        check(&mut narrow, &mut c, "closed", &sidebar) >= 1,
+        "the menu"
+    );
+    let menu = narrow.shell.dock.as_ref().unwrap().menu_id().unwrap();
+    assert!(narrow.ask_sidebar(&menu, "activate"));
+    narrow.sidebar_wake(10.0);
+    assert!(
+        check(&mut narrow, &mut c, "drawer", &sidebar) > 10,
+        "the close and the rows"
+    );
+
+    let mut palette = ShowcaseView::new(1280.0, 800.0);
+    assert!(palette.handle_chord("k", true));
+    let n = check(
+        &mut palette,
+        &mut Compositor::new(),
+        "palette",
+        &["palette"],
+    );
+    assert!(n > 5, "the commands");
+}
+
+/// A tap where two grown press areas meet lands on the nearer drawing
+/// alone: on a group's trigger by the seam with its first tab, it opens
+/// or closes the group and picks no page; on a tab by the seam with the
+/// one above, it picks that tab; in the margin above the first trigger,
+/// outside its drawing, it still presses the trigger.
+#[test]
+fn a_finger_on_a_seam_presses_the_nearer_row_alone() {
+    use engine::compose::animation::set_reduced_motion;
+    use engine::widgets::hit::set_touch_input;
+    struct Back;
+    impl Drop for Back {
+        fn drop(&mut self) {
+            set_touch_input(false);
+            set_reduced_motion(false);
+        }
+    }
+    let _back = Back;
+    set_reduced_motion(true);
+    set_touch_input(true);
+    let mut view = ShowcaseView::new(1280.0, 800.0);
+    view.pin_sidebar(true);
+    let tap = |v: &mut ShowcaseView, x: f32, y: f32| {
+        v.handle_event(&WidgetEvent::MouseDown { x, y });
+        v.handle_event(&WidgetEvent::MouseUp { x, y });
+    };
+    let open = |v: &ShowcaseView| v.nav.menus().next().is_some_and(|(m, _)| m.is_open());
+    let panel = view.panel_rect().expect("pinned");
+    let trigger = view.nav.trigger_rect(0, panel, &view.theme).unwrap();
+    let (first, second) = (page_at(0, 0).unwrap(), page_at(0, 1).unwrap());
+    let tab = view.nav.tab_rect(second, panel, &view.theme).unwrap();
+    let above = view.nav.tab_rect(first, panel, &view.theme).unwrap();
+    assert!(open(&view));
+    let min = view.theme.control.min_touch_target;
+    assert!(
+        above.h < min && tab.y - above.bottom() < (min - above.h) / 2.0,
+        "a shared margin"
+    );
+    // the second tab, a pixel under the seam with the first
+    tap(&mut view, tab.center().0, tab.y + 1.0);
+    let title = view.current().title;
+    assert_eq!(title, PAGES[second].title, "the nearer tab");
+    assert!(open(&view));
+    // the trigger, a pixel above its bottom: the group closes, no page
+    let x = trigger.center().0;
+    tap(&mut view, x, trigger.bottom() - 1.0);
+    assert!(!open(&view), "the trigger alone");
+    assert_eq!(view.current().title, title);
+    // above the trigger, outside its drawing, in its grown margin
+    let y = trigger.y - 1.0;
+    assert!(!trigger.contains(x, y) && hit_rect(trigger, &view.theme).contains(x, y));
+    tap(&mut view, x, y);
+    assert!(open(&view), "the margin presses it");
+}
+
 /// The width sweep (#163's acceptance): from 280 to 1600 every 8 px, in
 /// core and hoff, pinned or not, the chrome cuts nothing. The panel, its
 /// rows and their labels (one line each) stand inside the window; the
