@@ -307,6 +307,10 @@ impl SilencesPage {
             let seg = cut.segment();
             let range = format!("{} to {}", clock(seg.start), clock(seg.end));
             let rstyle = range_style(theme);
+            // each a line beside the thumbnail, cut to the row (the
+            // projection says them whole)
+            let room = (at.right() - parts.text.0).max(0.0);
+            let range = TextMeasurer::truncate_to_width(&range, &rstyle, room);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&range, &rstyle, None),
                 x: parts.text.0,
@@ -315,6 +319,7 @@ impl SilencesPage {
             });
             let detail = format!("{:.1} s of silence", seg.duration());
             let dstyle = detail_style(theme);
+            let detail = TextMeasurer::truncate_to_width(&detail, &dstyle, room);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(&detail, &dstyle, None),
                 x: parts.text.0,

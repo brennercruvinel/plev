@@ -346,13 +346,10 @@ impl ToolbarPage {
                     Shows::View(v) => self.views[v].render_to_layer(c, layer, w, theme),
                 }
                 c.pop_clip();
-                showcase::chip(
-                    c,
-                    rect.x + theme.spacing.sm,
-                    rect.y + theme.spacing.sm,
-                    card.title,
-                    theme,
-                );
+                // the chip cut to its card, as `showcase::card` cuts it
+                let inset = showcase::inset(theme);
+                let chip = showcase::chip_fit(card.title, rect.w - inset * 2.0, theme);
+                showcase::chip(c, rect.x + inset, rect.y + inset, &chip, theme);
             }
             if g != last {
                 showcase::rule(c, content, at.rule_y, theme);
