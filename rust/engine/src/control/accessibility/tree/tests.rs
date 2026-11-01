@@ -261,6 +261,10 @@ fn focusable_nodes_take_focus_and_inert_ones_are_hidden() {
     assert!(n("modal.ok").supports_action(Action::Focus));
     assert!(n("modal.ok").supports_action(Action::Click));
     assert!(!n("modal").supports_action(Action::Focus), "not focusable");
+    // into view: any node presented, focusable or not; an inert one is not
+    assert!(n("modal").supports_action(Action::ScrollIntoView));
+    assert!(n("modal.ok").supports_action(Action::ScrollIntoView));
+    assert!(!n("page.go").supports_action(Action::ScrollIntoView));
 }
 
 #[test]

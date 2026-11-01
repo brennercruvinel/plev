@@ -270,7 +270,7 @@ impl NewComment {
         let w = t.w.min(bounds.right() - x).max(0.0);
         let bounds = Rect::new(bounds.x, top, bounds.w, bounds.h);
         let edge = t.border_width + t.pad + t.line_pad;
-        let line_h = ComposeLine::height(&Self::look(theme));
+        let line_h = ComposeLine::height(&Self::look(theme), theme);
         let line = Rect::new(x + edge, bounds.y + edge, (w - edge * 2.0).max(0.0), line_h);
         let mut y = line.bottom() + t.line_pad + t.pad;
         let (mut tray, mut rule, mut tools, mut send) = (None, None, Vec::new(), None);

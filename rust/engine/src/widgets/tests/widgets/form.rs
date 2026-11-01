@@ -3,6 +3,7 @@
 use super::*;
 use crate::drawing::text::TextMeasurer;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::widgets::form::field::{Field, FieldPart};
 use crate::widgets::form::text_input::MASK;
 use accord::{Role, SemId, SnapshotBuilder, Value};
@@ -254,7 +255,7 @@ fn the_core_field_is_the_kit_and_the_others_keep_their_glass() {
         assert_eq!(input.rest.border, glass.edge_soft);
         assert_eq!(input.pad_x, theme.spacing.md);
         assert_eq!(input.radius, theme.shape.nav);
-        assert_eq!(input.text, theme.typography.body());
+        assert_eq!(input.text, theme.typography.role(TypeRole::BodyLg));
         assert_eq!(
             TextField::height(&theme),
             theme.control.height(crate::styling::theme::ControlSize::Md)

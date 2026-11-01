@@ -15,6 +15,7 @@ use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::Rect;
 
 use super::super::super::fixed_page::worker::Worker;
@@ -89,7 +90,7 @@ fn inside(c: &Compositor, root: &str) {
 /// Each text of `ids` at least as wide as its longest word, as the page
 /// projects what it shows.
 fn whole_words(c: &Compositor, snap: &Snapshot, theme: &Theme, ids: &[String]) {
-    let style = theme.typography.body();
+    let style = theme.typography.role(TypeRole::BodyLg);
     for id in ids {
         let shown = &snap.get(&sid(id)).expect("projected").label;
         let word = shown
@@ -265,15 +266,17 @@ fn the_claudes_review_fixture_is_the_first_rounds_structure() {
     // tall as its blurb wraps, and the content lg below it (task-104d), and the duration the core kit's stat (task-104g,
     // the medium readout, 32 + 4 + 16 px tall, where the round saw 58 by
     // 43), which grows its card by 9; the page past the sidebar, the
-    // kit's Layout `!w-55` (task-104h), 20 px under `w-60`, the half 10 more
+    // kit's Layout `!w-55` (task-104h), 20 px under `w-60`, the half 10 more;
+    // the text without a style in the scale's body role, 12/16 in the
+    // core (task-104f), so the title and the file name are one 16 line
     for (id, [x, y, w, h]) in [
         ("review.root", [726.0, 221.0, 434.0, f32::NAN]),
-        ("review.title", [726.0, 221.0, 434.0, 23.0]),
-        ("review.video_card", [726.0, 256.0, 434.0, 378.0]),
-        ("review.video_file", [726.0, 256.0, 434.0, 22.0]),
-        ("review.video_duration", [726.0, 287.0, 63.0, 52.0]),
-        ("review.video_original", [726.0, 347.0, 434.0, 140.0]),
-        ("review.video_result", [726.0, 495.0, 434.0, 140.0]),
+        ("review.title", [726.0, 221.0, 434.0, 16.0]),
+        ("review.video_card", [726.0, 249.0, 434.0, 372.0]),
+        ("review.video_file", [726.0, 249.0, 434.0, 16.0]),
+        ("review.video_duration", [726.0, 273.0, 63.0, 52.0]),
+        ("review.video_original", [726.0, 333.0, 434.0, 140.0]),
+        ("review.video_result", [726.0, 481.0, 434.0, 140.0]),
     ] {
         let r = rect(&c, id);
         let near = |a: f32, b: f32| b.is_nan() || (a - b).abs() < 0.5;

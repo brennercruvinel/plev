@@ -36,6 +36,7 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 
+use engine::styling::theme::TypeRole;
 use std::path::PathBuf;
 
 use accord::Value;
@@ -207,11 +208,11 @@ impl FilesPage {
     }
 
     fn hint_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_m()
+        theme.typography.run(TypeRole::BodyLg.medium())
     }
 
     fn status_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
+        theme.typography.run(TypeRole::Caption.regular())
     }
 
     /// The files received as the kit's attachment tiles: each its name,

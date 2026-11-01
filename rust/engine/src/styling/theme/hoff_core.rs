@@ -5,6 +5,7 @@
 //! measured shadow stacks of its depths page.
 
 use super::intent::MotionPhysics;
+use super::roles::TypeRoles;
 use super::scales::{
     ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
@@ -91,10 +92,10 @@ impl TypographyScale {
             title_sm: 20.0,
             title: 32.0,
             display: 48.0,
-            line_height_ratio: 1.4,
             family: Some("Inter"),
             mono_family: MONO_FAMILY,
             tracking_em: -0.02,
+            roles: TypeRoles::hoff_core(),
         }
     }
 }

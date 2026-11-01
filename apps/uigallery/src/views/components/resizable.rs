@@ -18,6 +18,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::{EventResult, Rect, SplitDirection, SplitPane, WidgetEvent};
 
 use super::accordion::{Fitted, fit_layout};
@@ -118,7 +119,7 @@ impl ResizablePage {
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
         let rects = self.rects(content, theme);
-        let style = theme.typography.base_2r();
+        let style = theme.typography.role(TypeRole::Body);
         let pad = theme.spacing.lg;
         for (g, placed) in layout.iter().enumerate() {
             showcase::title(c, GROUPS[g], content, placed.title_y, theme);

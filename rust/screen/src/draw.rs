@@ -24,6 +24,7 @@ use engine::compose::layout::TextMeasureSpec;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::drawing::gpu::image::ImageHandle;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Elevation, Theme};
 use engine::widgets::Rect;
 use engine::widgets::buttons::Badge;
@@ -83,9 +84,10 @@ pub(crate) fn closed(node: &Node, shown: &Snapshot) -> bool {
 }
 
 fn text_style(node: &Node, theme: &Theme) -> TextStyle {
-    node.props
-        .typography
-        .map_or_else(|| theme.typography.body(), |t| token::typography(t, theme))
+    node.props.typography.map_or_else(
+        || theme.typography.role(TypeRole::BodyLg),
+        |t| token::typography(t, theme),
+    )
 }
 
 fn stat(node: &Node, shown: &Snapshot) -> Stat {
@@ -111,7 +113,11 @@ fn badge(node: &Node, shown: &Snapshot) -> Badge {
 /// its children.
 fn dialog_metrics(node: &Node, theme: &Theme) -> (f32, TextStyle, f32) {
     let pad = token::spacing(node.props.padding.unwrap_or(SpacingToken::Lg), theme);
-    (pad, theme.typography.title(), theme.spacing.sm)
+    (
+        pad,
+        theme.typography.role(TypeRole::Title),
+        theme.spacing.sm,
+    )
 }
 
 /// the height a chart, an image or an empty state takes when nothing else
@@ -195,7 +201,7 @@ pub(crate) fn leaf(
             Leaf::Fixed(w, h)
         }
         Some(Component::Checkbox) => {
-            let style = theme.typography.base_2r();
+            let style = theme.typography.role(TypeRole::Body);
             let label = node.label.as_deref().unwrap_or_default();
             let (tw, _) = TextMeasurer::measure_styled(label, &style, None);
             let side = theme.control.box_size;
@@ -359,7 +365,7 @@ pub(crate) fn draw(
         (_, Widget::Chip(b)) => b.render(c, rect, theme),
         (_, Widget::Table(Some(t))) => {
             let rows = list_of(node.value("rows", shown));
-            let style = theme.typography.base_2r();
+            let style = theme.typography.role(TypeRole::Body);
             let ink = ink(node, theme).unwrap_or(theme.colors.text_mid.0);
             // a table bounded in height (`size.max`, task-96) holds more
             // rows than its rect shows, and the list under it draws its
@@ -399,8 +405,8 @@ fn ink(node: &Node, theme: &Theme) -> Option<[f32; 4]> {
 /// value on the right, on a line above the track, and the track under
 /// them. the value is the widget's, so a drag shows where it is going.
 fn slider(c: &mut Compositor, node: &Node, s: &Slider, rect: Rect, theme: &Theme) {
-    let label_style = theme.typography.caption_sm();
-    let value_style = theme.typography.caption_r();
+    let label_style = theme.typography.run(TypeRole::Caption.strong());
+    let value_style = theme.typography.run(TypeRole::Caption.regular());
     let own = ink(node, theme);
     let value = text_of(&Value::Num(f64::from(s.value())));
     let (vw, _) = TextMeasurer::measure_styled(&value, &value_style, None);
@@ -478,7 +484,7 @@ fn image(c: &mut Compositor, node: &Node, rect: Rect, theme: &Theme, picture: Op
             return;
         }
     }
-    let style = theme.typography.caption_r();
+    let style = theme.typography.run(TypeRole::Caption.regular());
     let label = node.label.as_deref().unwrap_or_default();
     let (w, h) = TextMeasurer::measure_styled(label, &style, Some(rect.w));
     let at = Rect::new(

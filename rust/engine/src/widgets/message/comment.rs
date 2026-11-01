@@ -261,7 +261,7 @@ impl CommentThread {
         let well_x = avatar.right() + r.gap;
         let well_w = (x + w - s.border_width - r.pad - well_x).max(0.0);
         let (send_w, send_h) = self.send.preferred_size(theme);
-        let line_h = ComposeLine::height(&Self::look(theme));
+        let line_h = ComposeLine::height(&Self::look(theme), theme);
         let well_h = r.well_pad * 2.0 + (r.line_pad * 2.0 + line_h).max(send_h);
         let well = Rect::new(well_x, reply_y, well_w, well_h);
         let send = Rect::new(

@@ -363,6 +363,7 @@ mod tests {
     use crate::drawing::text::TextMeasurer;
     use crate::styling::color::Color;
     use crate::styling::theme::Theme;
+    use crate::styling::theme::TypeRole;
 
     use super::{CodeBlock, CodeLine, LineKind};
     use crate::widgets::widget::Rect;
@@ -452,8 +453,9 @@ mod tests {
             other => panic!("{other:?}"),
         }
         assert_eq!(texts(&drawn)[0].2, theme.glass.text_faint.0, "the caption");
-        let caption = theme.typography.caption_sm().line_height + theme.spacing.xs;
-        let line = theme.typography.mono().line_height;
+        let caption =
+            theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.xs;
+        let line = theme.typography.role(TypeRole::Code).line_height;
         assert_eq!(
             block.height_for(300.0, &theme),
             pad + caption + line + pad,

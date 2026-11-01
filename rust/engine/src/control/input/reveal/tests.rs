@@ -200,8 +200,9 @@ fn the_glide_moves_with_the_theme_s_motion_and_lands_on_the_offset() {
 
 #[test]
 fn a_glide_far_down_a_long_page_lands_on_its_offset() {
-    // an f32 offset thousands of pixels down rounds coarser than the
-    // spring's rest test: the glide still lands, and soon
+    // thousands of pixels down, where an f32 rounds coarser than the
+    // spring's rest test: the glide lands, and soon (the spring steps its
+    // displacement, `compose::animation::Spring`)
     let mut s = ScrollState::new();
     s.set_viewport(400.0);
     s.set_content(20_000.0);
@@ -262,4 +263,24 @@ fn a_focus_that_moves_asks_once_and_the_pointer_s_never_asks() {
     assert_eq!(f.seen(), None);
     assert_eq!(f.moved(Some(&sid("other.a"))), None, "a page shows as left");
     assert_eq!(f.moved(Some(&sid("other.b"))), Some(sid("other.b")));
+}
+
+/// The geometry is one axis: on x, a wide table's column off the right
+/// edge of its strip scrolls left the least that shows it, a column off
+/// the left edge back, and one in the strip stays (task-104 front I).
+#[test]
+fn the_same_rule_holds_across_a_wide_table() {
+    // a strip 600 wide at x 200, its columns 1800 wide in all
+    let strip = Span::new(200.0, 600.0);
+    let mut columns = ScrollState::new();
+    columns.set_viewport(strip.len);
+    columns.set_content(1800.0);
+    let column = |x: f32| Span::new(x, 160.0);
+    assert_eq!(columns.reveal(column(900.0), strip, MARGIN, NONE), 280.0);
+    assert_eq!(columns.offset(), 280.0);
+    // the same column, now at 620 on screen, is in the strip
+    assert_eq!(columns.reveal(column(620.0), strip, MARGIN, NONE), 0.0);
+    // the first column, now at -80, comes back with its margin
+    assert_eq!(columns.reveal(column(-80.0), strip, MARGIN, NONE), -280.0);
+    assert_eq!(columns.offset(), 0.0);
 }

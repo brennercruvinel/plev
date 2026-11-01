@@ -37,9 +37,19 @@ impl<const N: usize> SpringInterpolate for [f32; N] {
     }
 }
 
+/// A damped spring toward a target.
+///
+/// Its state is the displacement from the target, not the absolute value:
+/// the motion decays in a number that shrinks toward zero, where `f32`
+/// keeps its precision, and the value (`target + displacement`) is only
+/// rounded on the way out. Stepping the absolute value instead rounds it
+/// to the target's scale each tick: a thousand pixels down an `f32` holds
+/// steps of about 0.0001, and the spring can hover one step off its target
+/// with a velocity the step itself feeds, never under the rest threshold.
 #[derive(Clone, Debug)]
 pub struct Spring<T: SpringInterpolate> {
-    value: T,
+    /// `value - target`.
+    displacement: T,
     velocity: T,
     target: T,
     pub stiffness: f32,
@@ -55,7 +65,7 @@ impl<T: SpringInterpolate> Spring<T> {
         T: Default,
     {
         Self {
-            value: initial.clone(),
+            displacement: T::default(),
             velocity: T::default(),
             target: initial,
             stiffness: 100.0,
@@ -80,6 +90,8 @@ impl<T: SpringInterpolate> Spring<T> {
     }
 
     pub fn set_target(&mut self, target: T) {
+        let value = self.get();
+        self.displacement = value.sub(&target);
         self.target = target;
         self.at_rest = false;
     }
@@ -101,7 +113,7 @@ impl<T: SpringInterpolate> Spring<T> {
             return;
         }
         if super::reduced_motion() {
-            self.value = self.target.clone();
+            self.displacement = self.displacement.scale(0.0);
             self.velocity = self.velocity.scale(0.0);
             self.at_rest = true;
             return;
@@ -115,7 +127,7 @@ impl<T: SpringInterpolate> Spring<T> {
         let gamma_sq = gamma * gamma;
         let disc = gamma_sq - omega_0_sq;
 
-        let displacement = self.value.sub(&self.target);
+        let displacement = self.displacement.clone();
 
         let (pos_pos, pos_vel, vel_pos, vel_vel) = if disc < -1e-6 {
             let omega_d = (-disc).sqrt();
@@ -159,20 +171,21 @@ impl<T: SpringInterpolate> Spring<T> {
             .scale(vel_pos)
             .add(&self.velocity.scale(vel_vel));
 
-        self.value = self.target.add(&new_disp);
         self.velocity = new_vel;
 
         if new_disp.magnitude_sq() < self.rest_threshold * self.rest_threshold
             && self.velocity.magnitude_sq() < self.rest_threshold * self.rest_threshold
         {
-            self.value = self.target.clone();
+            self.displacement = new_disp.scale(0.0);
             self.velocity = new_disp.scale(0.0);
             self.at_rest = true;
+        } else {
+            self.displacement = new_disp;
         }
     }
 
     pub fn get(&self) -> T {
-        self.value.clone()
+        self.target.add(&self.displacement)
     }
 
     pub fn is_animating(&self) -> bool {

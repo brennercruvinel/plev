@@ -22,6 +22,7 @@
 use accord::{Request, Role, SemId, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::overlay::tokens::MenuStyle;
 use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
 use engine::widgets::recipe::focus_ring;
@@ -356,7 +357,7 @@ impl MenusPage {
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let layout = self.layout(content, theme);
-        let caption = theme.typography.caption_r();
+        let caption = theme.typography.run(TypeRole::Caption.regular());
         for (i, (card, rect)) in self.cards.iter().zip(&layout[0].cards).enumerate() {
             showcase::card(c, *rect, card.title, theme);
             let at = Self::widget_rect(&card.body, *rect, theme);

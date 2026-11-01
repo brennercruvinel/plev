@@ -148,15 +148,18 @@ impl SelectAi {
         self.pressed = None;
     }
 
-    fn row_h(t: &ChoiceTokens) -> f32 {
-        t.pad_y * 2.0 + t.title.line_height + t.description_gap + t.description.line_height
+    fn row_h(t: &ChoiceTokens, theme: &Theme) -> f32 {
+        t.pad_y * 2.0
+            + t.title.line_height(&theme.typography)
+            + t.description_gap
+            + t.description.line_height(&theme.typography)
     }
 
     /// The panel's size: its width, and as tall as its rows.
     pub fn size(&self, theme: &Theme) -> (f32, f32) {
         let p = &theme.message.prompt;
         let inset = p.panel.border_width + p.panel.pad;
-        let rows = Self::row_h(&p.choice) * self.choices.len() as f32;
+        let rows = Self::row_h(&p.choice, theme) * self.choices.len() as f32;
         (p.panel.w, inset * 2.0 + rows)
     }
 
@@ -164,7 +167,7 @@ impl SelectAi {
     pub fn rows(&self, bounds: Rect, theme: &Theme) -> Vec<Rect> {
         let p = &theme.message.prompt;
         let inner = bounds.inset(p.panel.border_width + p.panel.pad);
-        let h = Self::row_h(&p.choice);
+        let h = Self::row_h(&p.choice, theme);
         (0..self.choices.len())
             .map(|i| Rect::new(inner.x, inner.y + i as f32 * h, inner.w, h))
             .collect()
@@ -250,7 +253,7 @@ impl SelectAi {
             let room = (row.w - t.pad_x * 2.0).max(0.0);
             let y = row.y + t.pad_y;
             line(c, layer, &choice.title, &t.title, x, y, room, theme);
-            let y = y + t.title.line_height + t.description_gap;
+            let y = y + t.title.line_height(&theme.typography) + t.description_gap;
             line(
                 c,
                 layer,

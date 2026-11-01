@@ -2,12 +2,14 @@ mod color_space;
 pub mod hoff;
 pub mod hoff_core;
 mod intent;
+pub(crate) mod roles;
 pub(crate) mod scales;
 mod tests;
 pub(crate) mod tokens;
 
 pub use self::color_space::Oklch;
 pub use self::intent::{Intent, MotionPhysics};
+pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
     LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
@@ -150,10 +152,10 @@ impl Theme {
                 title_sm: 20.0,
                 title: 28.0,
                 display: 36.0,
-                line_height_ratio: 1.3,
                 family: None,
                 mono_family: MONO_FAMILY,
                 tracking_em: 0.0,
+                roles: TypeRoles::derive([10.0, 11.0, 13.0, 16.0, 20.0, 28.0, 36.0], 0.0),
             },
             spacing: SpacingScale {
                 xs: 4.0,

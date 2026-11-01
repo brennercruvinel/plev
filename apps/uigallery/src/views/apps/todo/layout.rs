@@ -6,6 +6,7 @@
 
 use crate::domain::todo::Filter;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Theme, TypographyScale};
 use engine::widgets::form::TextField;
 use engine::widgets::prelude::Rect;
@@ -25,7 +26,7 @@ pub(super) const STRIKE_H: f32 = 1.5;
 const COUNTER_GAP: f32 = 16.0;
 
 pub(super) fn item_style() -> TextStyle {
-    TypographyScale::hoff().base_2r()
+    TypographyScale::hoff().role(TypeRole::Body)
 }
 
 /// The filters as the kit's small toggle group, one segment per
@@ -35,7 +36,7 @@ pub(super) fn filter_group() -> ToggleGroup {
 }
 
 pub(super) fn counter_style() -> TextStyle {
-    TypographyScale::hoff().caption_r()
+    TypographyScale::hoff().run(TypeRole::Caption.regular())
 }
 
 /// One frame of geometry: card, add field, scrollable list viewport and

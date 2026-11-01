@@ -11,6 +11,7 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{IconSize, Theme};
 use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
@@ -200,7 +201,7 @@ impl Checkbox {
 
         if let Some(label) = &self.label {
             // Label: base-2r.
-            let style = theme.typography.base_2r();
+            let style = theme.typography.role(TypeRole::Body);
             compositor.push(SceneNode::Text {
                 key: TextNodeKey::from_style(label, &style, None),
                 x: r.right() + theme.control.inline_gap,

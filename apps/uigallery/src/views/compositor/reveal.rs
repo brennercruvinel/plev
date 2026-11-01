@@ -6,13 +6,19 @@
 //! motion). A focus the pointer moved stays put: the click is where the
 //! person looks.
 //!
-//! It runs after the page drew, for any actor: the rect is the focused
+//! It runs after the page drew, on the frames after something that can
+//! move the focus (`arm_reveal`: a key, the pointer, a reader's or an
+//! agent's request through `assist_focus` and `act`), never on a frame
+//! that only animates: the projection it reads the focus from is built
+//! once per such input, not per frame. For any actor, the rect is the focused
 //! node's binding in this frame (where it draws and is hit), or the union
 //! of its bound descendants'. A widget that scrolls inside the page (a
 //! list, a table, a message thread) brings its row into its own window
 //! when it takes the focus, before the draw; the page then shows that
 //! row in its window, so the inner container scrolls first and the outer
 //! one after, as `engine::control::input::reveal::reveal_nested` orders.
+//! A reader's `ScrollIntoView` (`assist_reveal`) takes the same way for
+//! any node of the page, focused or not.
 //! The page's window already starts under the header band, so nothing
 //! fixed covers it (`Cover::default()`).
 
@@ -48,7 +54,7 @@ impl ShowcaseView {
     /// `true` when the page jumped there (reduced motion) and the frame
     /// must be drawn again at the new offset; a glide moves on `wake`.
     pub(in crate::views) fn reveal_focus(&mut self, c: &Compositor) -> bool {
-        if self.is_app() {
+        if !std::mem::take(&mut self.reveal_armed) || self.is_app() {
             return false;
         }
         let snapshot = self.semantics();
@@ -56,7 +62,8 @@ impl ShowcaseView {
             .as_ref()
             .and_then(Snapshot::focused)
             .filter(|id| !self.is_overlay(id));
-        let Some(id) = self.reveal.moved(focused) else {
+        let moved = self.reveal.moved(focused);
+        let Some(id) = self.pending_reveal.take().or(moved) else {
             return false;
         };
         let Some(rect) = snapshot.as_ref().and_then(|s| drawn(s, c, &id)) else {
@@ -75,6 +82,24 @@ impl ShowcaseView {
         !self.glide.is_gliding()
     }
 
+    /// A screen reader's `ScrollIntoView` (AccessKit's, `AXScrollToVisible`
+    /// on macOS) on a node of the active page: the next frame scrolls the
+    /// page the least that shows it, as for a focus, and the focus stays.
+    /// `false` for a node that is not the page's.
+    pub fn assist_reveal(&mut self, id: &SemId) -> bool {
+        if self.is_app() || !self.is_component(id) {
+            return false;
+        }
+        self.pending_reveal = Some(id.clone());
+        self.arm_reveal();
+        true
+    }
+
+    /// Something that can move the focus ran: the next frame looks.
+    pub(in crate::views) fn arm_reveal(&mut self) {
+        self.reveal_armed = true;
+    }
+
     /// The glide toward a focus, advanced by `dt`: `true` while it moves.
     pub(in crate::views) fn reveal_tick(&mut self, dt: f32) -> bool {
         if !self.glide.is_gliding() {
@@ -89,5 +114,34 @@ impl ShowcaseView {
     /// asks the loop for the next one (`shell/window/pace`).
     pub fn revealing(&self) -> bool {
         self.glide.is_gliding()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use accord::SemId;
+    use engine::drawing::compositor::Compositor;
+
+    use super::super::super::ShowcaseView;
+
+    /// The focus is read on the frame after an input that can move it,
+    /// and on no frame that only animates.
+    #[test]
+    fn only_a_frame_after_an_input_reads_the_focus() {
+        let mut view = ShowcaseView::new(1280.0, 480.0);
+        view.jump_to_page("Input");
+        let mut c = Compositor::new();
+        view.render(&mut c);
+        assert!(!view.reveal_armed, "a frame takes the arm");
+        view.wake(1.0 / 60.0);
+        view.render(&mut c);
+        assert!(!view.reveal_armed, "animating arms nothing");
+        let id = SemId::parse("input_page.group[0].card[0]").ok();
+        if let Some(id) = id {
+            view.assist_focus(&id);
+        }
+        assert!(view.reveal_armed, "a reader's focus arms it");
+        view.render(&mut c);
+        assert!(!view.reveal_armed);
     }
 }

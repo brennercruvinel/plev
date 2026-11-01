@@ -12,6 +12,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, IconSize, ShadowSpec, Theme, TypographyScale};
 
 use super::{InputRecipe, InputSurface};
@@ -274,7 +275,7 @@ impl SelectRecipe {
         let c = &theme.colors;
         let edge = theme.control.edge_width_strong;
         let option_h = theme.control.height(ControlSize::Md);
-        let text = theme.typography.base_2m();
+        let text = theme.typography.run(TypeRole::Body.medium());
         let pad_x = theme.spacing.lg;
         let filled = SelectSurfaces {
             rest: surface(g.field, g.edge_soft),
@@ -301,7 +302,7 @@ impl SelectRecipe {
             height: option_h,
             width: theme.size.menu_w,
             small_height: theme.control.height(ControlSize::Sm),
-            small_text: theme.typography.caption_r(),
+            small_text: theme.typography.run(TypeRole::Caption.regular()),
             pad_start: pad_x,
             pad_end: pad_x,
             gap: theme.spacing.xs,

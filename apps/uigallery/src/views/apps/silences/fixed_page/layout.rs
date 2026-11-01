@@ -6,6 +6,7 @@
 
 use crate::domain::silences::Segment;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
 
@@ -79,23 +80,23 @@ pub(super) fn caption_style(theme: &Theme) -> TextStyle {
 }
 
 pub(super) fn value_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn range_style(theme: &Theme) -> TextStyle {
-    theme.typography.base_m()
+    theme.typography.run(TypeRole::BodyLg.medium())
 }
 
 pub(super) fn detail_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn status_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn time_style(theme: &Theme) -> TextStyle {
-    theme.typography.small_r()
+    theme.typography.role(TypeRole::Small)
 }
 
 /// The band's height: a control's, so a mark is a target.
@@ -317,7 +318,8 @@ pub(crate) fn row_parts(
     let (tw, th) = thumb_size(theme);
     let (aw, ah) = apply.preferred_size(theme);
     let (rw, rh) = reject.preferred_size(theme);
-    let badge_h = theme.typography.caption_sm().line_height + theme.spacing.xs * 1.5;
+    let badge_h =
+        theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.xs * 1.5;
     // the band the controls are centered in: the row, or its second line
     let (thumb, controls) = if stacked {
         let thumb = Rect::new(row.x, row.y + theme.spacing.sm, tw, th);

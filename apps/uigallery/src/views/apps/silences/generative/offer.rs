@@ -21,6 +21,7 @@ use accord::{
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::{TextMeasurer, TextStyle};
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::{Button, ButtonSize, EventResult, Rect, WidgetEvent};
 use offers::compose::{Chain, Composer, Composite, Found, Shape, Target};
 use plevir::IrNode;
@@ -71,7 +72,7 @@ pub struct Offer {
 }
 
 fn style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_sm()
+    theme.typography.run(TypeRole::Caption.strong())
 }
 
 fn bounds(r: Rect) -> [f32; 4] {

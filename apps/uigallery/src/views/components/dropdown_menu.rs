@@ -17,6 +17,7 @@
 
 use accord::{Request, Role, SemId, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{Intent, Theme};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::overlay::dropdown_menu::DropdownMenu;
@@ -197,7 +198,7 @@ impl DropdownMenuPage {
         let live = layout[0].cards[0];
         showcase::card(c, live, LIVE_CHIP, theme);
         if let Some(picked) = &self.picked {
-            let style = theme.typography.caption_r();
+            let style = theme.typography.run(TypeRole::Caption.regular());
             let body = showcase::body(live, theme);
             c.push(SceneNode::Text {
                 key: TextNodeKey::from_style(picked, &style, Some(body.w)),

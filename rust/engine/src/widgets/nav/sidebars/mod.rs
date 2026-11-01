@@ -78,7 +78,7 @@ pub(crate) fn logo_rect(logo: &Logo, frame: Rect, pad: f32, theme: &Theme) -> Re
 /// A caption's height: its run in its padding, and the gap under it.
 pub(crate) fn caption_h(theme: &Theme) -> f32 {
     let t = &theme.navigation.sidebars;
-    t.caption_pad * 2.0 + t.caption.line_height + t.caption_gap
+    t.caption_pad * 2.0 + theme.typography.run(t.caption).line_height + t.caption_gap
 }
 
 pub(crate) fn caption(c: &mut Compositor, label: &str, x: f32, y: f32, w: f32, theme: &Theme) {

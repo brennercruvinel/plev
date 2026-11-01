@@ -476,7 +476,7 @@ impl PromptInput {
         let t = &theme.message.prompt;
         let w = avail.min(t.max_w).max(0.0);
         let line = if self.shows_line() {
-            t.text_top + t.text.line_height + t.text_bottom
+            t.text_top + t.text.line_height(&theme.typography) + t.text_bottom
         } else {
             0.0
         };
@@ -523,7 +523,7 @@ impl PromptInput {
                 inner.x + t.text_inset,
                 inner.y + t.text_top,
                 (inner.w - t.text_inset - room).max(0.0),
-                t.text.line_height,
+                t.text.line_height(&theme.typography),
             )
         });
         let row_y = text.map_or(inner.y, |r| r.bottom() + t.text_bottom);

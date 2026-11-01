@@ -203,8 +203,10 @@ impl Notifications {
 
     fn header_h(theme: &Theme) -> f32 {
         let t = &theme.message.notifications;
-        let tab = t.tab.line_height + t.tab_pad_y * 2.0;
-        t.header_pad_y * 2.0 + t.title.line_height.max(tab) + theme.message.divider_width
+        let tab = t.tab.line_height(&theme.typography) + t.tab_pad_y * 2.0;
+        t.header_pad_y * 2.0
+            + t.title.line_height(&theme.typography).max(tab)
+            + theme.message.divider_width
     }
 
     /// The shown rows' height, all of them, `w` wide.
@@ -231,8 +233,8 @@ impl Notifications {
         let (w, h) = self.size(bounds.w, theme);
         let card = Rect::new(bounds.x, bounds.y, w, h);
         let inner = card.inset(edge);
-        let tab_h = t.tab.line_height + t.tab_pad_y * 2.0;
-        let row_h = t.title.line_height.max(tab_h);
+        let tab_h = t.tab.line_height(&theme.typography) + t.tab_pad_y * 2.0;
+        let row_h = t.title.line_height(&theme.typography).max(tab_h);
         let top = inner.y + t.header_pad_y;
         let style = t.tab.style(&theme.typography);
         let mut x = inner.right() - t.header_pad_x;
@@ -246,9 +248,9 @@ impl Notifications {
         let title_x = inner.x + t.header_pad_x;
         let title = Rect::new(
             title_x,
-            top + (row_h - t.title.line_height) / 2.0,
+            top + (row_h - t.title.line_height(&theme.typography)) / 2.0,
             (filters[0].x - t.tab_gap - title_x).max(0.0),
-            t.title.line_height,
+            t.title.line_height(&theme.typography),
         );
         let rule_y = top + row_h + t.header_pad_y;
         let rule = Rect::new(inner.x, rule_y, inner.w, theme.message.divider_width);

@@ -40,6 +40,7 @@
 //! takes the last change back; an intent that is no change proposes a
 //! surface, as before.
 
+use engine::styling::theme::TypeRole;
 use std::time::Duration;
 
 use accord::{Request, Role, SemError, SemId, SnapshotBuilder, Value};
@@ -219,7 +220,7 @@ pub(crate) enum Op {
 }
 
 fn message_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_sm()
+    theme.typography.run(TypeRole::Caption.strong())
 }
 
 fn bounds(r: Rect) -> [f32; 4] {
@@ -451,7 +452,7 @@ impl Proposing {
     /// The width the proposer takes: its widest option, the paddings and
     /// the chevron, as the select draws them.
     fn proposer_w(&self, theme: &Theme) -> f32 {
-        let style = theme.typography.base_2m();
+        let style = theme.typography.run(TypeRole::Body.medium());
         let text = self
             .proposer
             .options

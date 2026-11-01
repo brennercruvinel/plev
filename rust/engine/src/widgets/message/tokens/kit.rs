@@ -9,6 +9,7 @@ use super::{
 };
 use crate::styling::color::Color;
 use crate::styling::theme::ShadowSpec;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::{BLUE, GREEN, RED, SHADES};
 
 impl MessageTokens {
@@ -37,17 +38,13 @@ impl MessageTokens {
                 // :24 `text-[0.75rem] leading-[1rem] font-medium`, the
                 // ink of app/layout.tsx:108
                 name: MessageText {
-                    size: 12.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Label.run(),
                     color: ink,
                 },
                 // :26 `ml-2 text-[0.6875rem] text-[#7B7B7B]`, leading
                 // and weight inherited from :24
                 time: MessageText {
-                    size: 11.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Caption.run(),
                     color: shade6,
                 },
                 time_gap: 8.0,
@@ -56,9 +53,7 @@ impl MessageTokens {
                 seal_gap: 4.0,
                 // :30 `mt-1 text-[0.8125rem] leading-[1.22rem]`, in ink
                 body: MessageText {
-                    size: 13.0,
-                    line_height: 19.52,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: ink,
                 },
                 body_gap: 4.0,
@@ -76,9 +71,7 @@ impl MessageTokens {
                 // :42 `text-[0.8125rem] leading-[1rem] font-semibold
                 // text-[#121212]`
                 name: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 600,
+                    run: TypeRole::BodyLg.strong(),
                     color: ink,
                 },
                 // :45 `ml-1 text-[0.75rem] leading-[1rem]`. The kit
@@ -86,9 +79,7 @@ impl MessageTokens {
                 // the time keeps the full muted tone (4.13:1) until the
                 // contrast decision of task-104.
                 time: MessageText {
-                    size: 12.0,
-                    line_height: 16.0,
-                    weight: 400,
+                    run: TypeRole::Body.run(),
                     color: shade6,
                 },
                 time_gap: 4.0,
@@ -97,9 +88,7 @@ impl MessageTokens {
                 // :49 `mt-1 line-clamp-3 text-[0.8125rem]
                 // leading-[1.25rem] text-[#7B7B7B]`
                 body: MessageText {
-                    size: 13.0,
-                    line_height: 20.0,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: shade6,
                 },
                 body_gap: 4.0,
@@ -131,9 +120,7 @@ impl MessageTokens {
                 shadow: ShadowSpec::new([0.0, 2.0], 2.0, 0.0, Color::rgba(0.0, 0.0, 0.0, 0.15)),
                 // the thread's body run (Comment/Message/index.tsx:30)
                 text: MessageText {
-                    size: 13.0,
-                    line_height: 19.52,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: ink,
                 },
                 // the kit draws no text bubble; four fifths of the row
@@ -164,9 +151,7 @@ impl MessageTokens {
                 edge: 2.0 * 19.52,
                 // the quick comment's muted body (QuickComment/Comment:49)
                 empty: MessageText {
-                    size: 13.0,
-                    line_height: 20.0,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: shade6,
                 },
             },
@@ -208,9 +193,7 @@ impl MessageTokens {
                 },
                 // :65 `text-[0.8125rem] leading-[1rem] font-semibold`
                 title: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 600,
+                    run: TypeRole::BodyLg.strong(),
                     color: ink,
                 },
                 // :64 `-mt-0.5 mb-1.5`
@@ -221,26 +204,20 @@ impl MessageTokens {
                 // takes shade 7, the darkest gray under ink that still
                 // reads as secondary, and passes AAA (task-104 contrast)
                 time: MessageText {
-                    size: 12.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Label.run(),
                     color: shade7,
                 },
                 time_gap: 4.0,
                 // :75 `truncate text-[0.8125rem] leading-[1rem]`
                 detail: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 400,
+                    run: TypeRole::BodyLg.run(),
                     color: ink,
                 },
                 // :99 `mt-2 line-clamp-2 text-[0.8125rem]
                 // leading-[1.2188rem] text-[#7B7B7B]/80`; shade 7 for
                 // AAA, as the time
                 content: MessageText {
-                    size: 13.0,
-                    line_height: 19.5,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: shade7,
                 },
                 content_gap: 8.0,
@@ -289,17 +266,13 @@ impl MessageTokens {
                 // :53 `text-[0.8125rem] font-medium text-[#121212]`, at
                 // the kit's 16 line
                 name: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::BodyLg.medium(),
                     color: ink,
                 },
                 // the notification's time run (Notification:68), in
                 // shade 7 for AAA as there
                 detail: MessageText {
-                    size: 12.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Label.run(),
                     color: shade7,
                 },
                 // the kit draws no file tile: it grows with its name up
@@ -405,9 +378,7 @@ impl MessageTokens {
                     radius: 12.0,
                     border_width: 1.0,
                     text: MessageText {
-                        size: 11.0,
-                        line_height: 16.0,
-                        weight: 500,
+                        run: TypeRole::Caption.run(),
                         color: ink,
                     },
                     fill: shade3,

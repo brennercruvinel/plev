@@ -151,15 +151,7 @@ pub fn reveal_nested(target: Span, chain: &mut [Scroller<'_>], margin: f32) -> f
 #[derive(Clone, Debug, Default)]
 pub struct Glide {
     spring: Option<Spring<f32>>,
-    target: f32,
 }
-
-/// How near the offset counts as there, in logical pixels: well under
-/// what a display shows. The spring's own rest test is absolute (a
-/// thousandth of a pixel) and an `f32` offset thousands of pixels down
-/// rounds coarser than that, so the spring can hover a rounding step
-/// away forever; the glide lands once it is this close and this still.
-const LANDED: f32 = 0.05;
 
 impl Glide {
     /// Glides `scroll` to `offset` (clamped to its limits). With the
@@ -177,7 +169,6 @@ impl Glide {
             .unwrap_or_else(|| Spring::new(scroll.offset()).with_motion(motion));
         spring.set_target(target);
         self.spring = Some(spring);
-        self.target = target;
     }
 
     /// Advances the glide by `dt` seconds onto `scroll`. `true` while it
@@ -186,15 +177,11 @@ impl Glide {
         let Some(spring) = self.spring.as_mut() else {
             return false;
         };
-        let before = spring.get();
         spring.tick(dt);
-        let now = spring.get();
-        let still = (now - before).abs() < LANDED && (now - self.target).abs() < LANDED;
-        if spring.is_animating() && !still {
-            scroll.scroll_to(now);
+        scroll.scroll_to(spring.get());
+        if spring.is_animating() {
             return true;
         }
-        scroll.scroll_to(self.target);
         self.spring = None;
         false
     }

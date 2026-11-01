@@ -263,8 +263,11 @@ impl SceneSidebar {
         let panel = Rect::new(x + w - c.button, top, c.button, c.button);
         let head_row = c.button.max(self.logo.preferred_size(theme).1);
         let title_y = top + head_row + c.head_gap;
-        let subtitle_y = title_y + c.title.line_height + c.subtitle_pad;
-        let head_rule = subtitle_y + c.subtitle.line_height + c.subtitle_pad + c.head_pad_b;
+        let subtitle_y = title_y + theme.typography.run(c.title).line_height + c.subtitle_pad;
+        let head_rule = subtitle_y
+            + theme.typography.run(c.subtitle).line_height
+            + c.subtitle_pad
+            + c.head_pad_b;
         let tabs_y = head_rule + t.edge_width + c.band_pad_y;
         let tabs = Rect::new(x, tabs_y, w, Tabs::height(theme));
         let tabs_rule = tabs.bottom() + c.band_pad_y;
@@ -309,7 +312,7 @@ impl SceneSidebar {
             x,
             title_y,
             tw + c.title_gap + c.chevron_tile,
-            c.title.line_height,
+            theme.typography.run(c.title).line_height,
         );
         SceneLayout {
             panel,

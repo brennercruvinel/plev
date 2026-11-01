@@ -15,6 +15,7 @@
 use super::MessageText;
 use super::prompt::{raised_shadow, shadow_2xl};
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core::SHADES;
 use crate::styling::theme::{ShadowSpec, Theme};
 
@@ -143,9 +144,7 @@ impl CommentTokens {
     pub fn hoff_core() -> Self {
         let [paper, _, shade3, shade4, shade5, shade6, shade7, _, ink] = SHADES;
         let comment = MessageText {
-            size: 13.0,
-            line_height: 16.0,
-            weight: 400,
+            run: TypeRole::BodyLg.run(),
             color: ink,
         };
         Self {
@@ -227,15 +226,11 @@ impl CommentTokens {
                 header_gap: 12.0,
                 header_bottom: 8.0,
                 title: MessageText {
-                    size: 14.0,
-                    line_height: 20.0,
-                    weight: 600,
+                    run: TypeRole::Heading.strong(),
                     color: ink,
                 },
                 subtitle: MessageText {
-                    size: 11.0,
-                    line_height: 16.0,
-                    weight: 500,
+                    run: TypeRole::Caption.run(),
                     color: shade7,
                 },
                 preview_fill: shade3,
@@ -258,15 +253,11 @@ impl CommentTokens {
                 comments_pad: 12.0,
                 reply_top: 16.0,
                 name: MessageText {
-                    size: 13.0,
-                    line_height: 16.0,
-                    weight: 600,
+                    run: TypeRole::BodyLg.strong(),
                     color: ink,
                 },
                 text: MessageText {
-                    size: 13.0,
-                    line_height: 20.0,
-                    weight: 400,
+                    run: TypeRole::Paragraph.run(),
                     color: ink,
                 },
                 placeholder: shade6,

@@ -12,6 +12,7 @@ use crate::domain::todo::Filter;
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::icons;
 use engine::widgets::prelude::{Rect, rounded_rect};
 
@@ -53,8 +54,7 @@ impl TodoPage {
             text(
                 c,
                 msg,
-                13.0,
-                400,
+                TypeRole::Body,
                 (l.list.x + 2.0, l.list.y + 10.0),
                 g.text_placeholder.0,
                 theme,

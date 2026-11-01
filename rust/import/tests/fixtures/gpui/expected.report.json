@@ -11,10 +11,10 @@
     }
   ],
   "counts": {
-    "approximated": 3,
+    "approximated": 2,
     "impossible": 6,
     "supported": 8,
-    "transformed": 9
+    "transformed": 10
   },
   "entries": [
     {
@@ -185,11 +185,11 @@
     },
     {
       "at": "separator.rs:148",
-      "category": "approximated",
+      "category": "transformed",
       "construct": ".text_xs()",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "separator.root.box.label"
+      "node": "separator.root.box.label",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "separator.rs:149",

@@ -5,6 +5,7 @@
 
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::{ButtonSurface, ControlSize, IconSize, Theme, TypographyScale};
 
@@ -269,7 +270,7 @@ impl MenuTokens {
             item_radius: theme.shape.item,
             icon: control.icon(IconSize::Sm),
             gap: control.inline_gap,
-            label: theme.typography.base_2sm(),
+            label: theme.typography.role(TypeRole::BodyStrong),
             text: glass.text_default,
             text_hover: glass.text_active,
             icon_color: glass.text_default,

@@ -31,6 +31,7 @@ mod stat;
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::drawing::gpu::image::ImageHandle;
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{ControlSize, Theme};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
 
@@ -192,17 +193,18 @@ impl Card {
                 m.pad
                     + Self::ruler_h(theme)
                     + m.gap
-                    + ty.headline().line_height
+                    + ty.role(TypeRole::H3).line_height
                     + m.gap_sm
-                    + ty.base_2r().line_height
+                    + ty.role(TypeRole::Body).line_height
                     + m.pad
             }
             CardVariant::Profile { bio, .. } => {
                 let inner = Self::profile_pad(theme);
                 let avatar = Self::avatar_size(theme);
                 let bio_w = w - inner * 2.0 - avatar - m.gap * 2.0;
-                let (_, bio_h) = TextMeasurer::measure_styled(bio, &ty.body_2r(), Some(bio_w));
-                inner + avatar + m.gap + bio_h.max(ty.body_2r().line_height) + inner
+                let (_, bio_h) =
+                    TextMeasurer::measure_styled(bio, &ty.role(TypeRole::Paragraph), Some(bio_w));
+                inner + avatar + m.gap + bio_h.max(ty.role(TypeRole::Paragraph).line_height) + inner
             }
             CardVariant::Media { .. } => {
                 let (_, box_h) = Self::media_box(theme, w);
@@ -211,16 +213,16 @@ impl Card {
                     + m.gap
                     + box_h
                     + m.pad
-                    + ty.title().line_height
+                    + ty.role(TypeRole::Title).line_height
                     + m.gap_sm
-                    + ty.base_2r().line_height
+                    + ty.role(TypeRole::Body).line_height
                     + m.pad
             }
             CardVariant::List { rows, .. } => {
                 let row_h = Self::list_row_h(theme);
                 let n = rows.len() as f32;
                 m.pad
-                    + ty.title().line_height
+                    + ty.role(TypeRole::Title).line_height
                     + m.gap
                     + n * row_h
                     + (n - 1.0).max(0.0) * m.gap
@@ -228,7 +230,7 @@ impl Card {
             }
             CardVariant::Chart { .. } => {
                 m.pad
-                    + ty.base_m().line_height
+                    + ty.run(TypeRole::BodyLg.medium()).line_height
                     + m.gap
                     + Self::chart_h(theme)
                     + m.gap
@@ -237,10 +239,10 @@ impl Card {
             }
             CardVariant::Cta { body, .. } => {
                 let inset = Self::cta_inset(theme);
-                let style = ty.body();
+                let style = ty.role(TypeRole::BodyLg);
                 let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w - inset * 2.0));
                 m.pad
-                    + ty.title().line_height
+                    + ty.role(TypeRole::Title).line_height
                     + m.gap
                     + body_h.max(style.line_height)
                     + theme.spacing.xl

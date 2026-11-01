@@ -4,6 +4,7 @@
 
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{SidebarMode, Theme};
 
 use crate::widgets::icons;
@@ -47,7 +48,7 @@ impl Sidebar {
         // Brand block.
         if !self.brand.is_empty() && mode != SidebarMode::Rail {
             let pad = theme.spacing.xl;
-            let title = theme.typography.title();
+            let title = theme.typography.role(TypeRole::Title);
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
@@ -58,7 +59,7 @@ impl Sidebar {
                 },
             );
             if !self.tagline.is_empty() {
-                let small = theme.typography.small_sm();
+                let small = theme.typography.run(TypeRole::Small.strong());
                 c.push_to_layer(
                     layer,
                     SceneNode::Text {
@@ -138,7 +139,7 @@ impl Sidebar {
 
         // Footer hints.
         if !self.footer.is_empty() && mode != SidebarMode::Rail {
-            let style = theme.typography.caption_r();
+            let style = theme.typography.run(TypeRole::Caption.regular());
             let pad = theme.spacing.xl;
             let mut y = rect.y + rect.h - self.footer_h(theme, mode) + theme.spacing.lg;
             for line in &self.footer {
@@ -168,7 +169,7 @@ impl Sidebar {
         theme: &Theme,
         mode: SidebarMode,
     ) {
-        let style = theme.typography.caption_sm();
+        let style = theme.typography.run(TypeRole::Caption.strong());
         let color = theme.glass.text_placeholder.0;
         let icon = if group.expanded {
             "chevron-down"

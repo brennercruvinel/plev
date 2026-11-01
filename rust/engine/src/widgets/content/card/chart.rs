@@ -5,6 +5,7 @@ use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::drawing::text::TextMeasurer;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 use crate::widgets::widget::Rect;
 
 impl Card {
@@ -26,7 +27,7 @@ impl Card {
         let ty = &theme.typography;
 
         // Legend: solid dot + value (base-m primary) + label (caption-r).
-        let style = ty.base_m();
+        let style = ty.run(TypeRole::BodyLg.medium());
         self.dot(
             c,
             layer,
@@ -38,7 +39,7 @@ impl Card {
         let value_x = b.x + m.pad + m.dot + m.gap;
         self.text(c, layer, value, &style, value_x, b.y + m.pad, text.0, None);
         let (vw, _) = TextMeasurer::measure_styled(value, &style, None);
-        let label_style = ty.caption_r();
+        let label_style = ty.run(TypeRole::Caption.regular());
         self.text(
             c,
             layer,

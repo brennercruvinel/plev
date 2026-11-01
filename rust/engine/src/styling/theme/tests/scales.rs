@@ -4,6 +4,7 @@
 //! theme copy; they guard the same numbers here, at the single source.
 
 use super::super::*;
+use crate::styling::theme::TypeRole;
 
 fn close(a: f32, b: f32) -> bool {
     (a - b).abs() < 1e-6
@@ -273,21 +274,21 @@ fn every_named_theme_carries_every_scale() {
 }
 
 #[test]
-fn headline_and_mono_come_from_the_ramp() {
+fn headings_and_mono_come_from_the_ramp() {
     let ty = Theme::hoff().typography;
-    let h = ty.headline();
-    assert_eq!(h.font_size, 32.0);
-    assert_eq!(h.line_height, 40.0);
-    assert_eq!(h.font_weight, 500);
-    let m = ty.mono();
+    // h1 is the ramp's headline (`=headline`, 32), h6 its title (20).
+    let h = ty.role(TypeRole::H1);
+    assert_eq!((h.font_size, h.line_height), (32.0, 40.0));
+    assert_eq!(ty.role(TypeRole::H6).font_size, 20.0);
+    let m = ty.role(TypeRole::Code);
     assert_eq!(m.font_size, 14.0);
     assert_eq!(m.font_weight, 400);
     assert_eq!(m.font_family.as_deref(), Some(MONO_FAMILY));
     assert_eq!(m.letter_spacing, 0.0, "a mono face keeps its grid");
-    let core = Theme::hoff_core().typography.mono();
+    let core = Theme::hoff_core().typography.role(TypeRole::Code);
     assert_eq!(core.font_family.as_deref(), Some(MONO_FAMILY));
     assert_eq!(core.letter_spacing, 0.0, "core's tracking is Inter's");
-    let r = ty.readout();
+    let r = ty.role(TypeRole::Small);
     assert_eq!(r.font_size, 10.0);
 }
 
