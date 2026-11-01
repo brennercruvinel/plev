@@ -17,6 +17,7 @@ use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 use crate::styling::color::Color;
 use crate::styling::theme::Theme;
+use crate::widgets::hit::hit_rect;
 use crate::widgets::icons;
 use crate::widgets::recipe::{focus_ring_inside, rounded_rect_stroke};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent};
@@ -32,6 +33,9 @@ pub struct DisclosureList {
     disabled: bool,
     /// Each label on one line, cut with an ellipsis (a sidebar's rows).
     truncate: bool,
+    /// Each link is pressed and bound in [`hit_rect`] around its drawing
+    /// ([`DisclosureList::grow_hit`]).
+    grow_hit: bool,
     sem: Option<SemId>,
 }
 
@@ -64,6 +68,35 @@ impl DisclosureList {
     pub fn truncate(mut self, on: bool) -> Self {
         self.truncate = on;
         self
+    }
+
+    /// Each link's press area, and its binding, grow to the minimum
+    /// around its drawing ([`hit_rect`]: 24 px, 44 with a finger), which
+    /// does not change; a press two grown links share is the nearer
+    /// link's. Off, the press area is the drawing.
+    pub fn grow_hit(mut self, on: bool) -> Self {
+        self.grow_hit = on;
+        self
+    }
+
+    /// Where a press on link `at` lands, and what it binds.
+    fn press_rect(&self, at: Rect, theme: &Theme) -> Rect {
+        if self.grow_hit {
+            hit_rect(at, theme)
+        } else {
+            at
+        }
+    }
+
+    /// The link a press at `(x, y)` lands on: the one drawn under it, or
+    /// else the nearest whose grown area holds it.
+    fn link_at(&self, rects: &[Rect], x: f32, y: f32, theme: &Theme) -> Option<usize> {
+        rects.iter().position(|r| r.contains(x, y)).or_else(|| {
+            let off = |r: &Rect| (y - r.center().1).abs();
+            (0..rects.len())
+                .filter(|&i| self.press_rect(rects[i], theme).contains(x, y))
+                .min_by(|&a, &b| off(&rects[a]).total_cmp(&off(&rects[b])))
+        })
     }
 
     /// The stem of the links' ids: link `i` is `<id>[<i>]`.
@@ -189,7 +222,7 @@ impl DisclosureList {
         }
         let rects = self.link_rects(bounds, theme);
         let (x, y) = event.pos();
-        let at = rects.iter().position(|r| r.contains(x, y));
+        let at = self.link_at(&rects, x, y, theme);
         match *event {
             WidgetEvent::MouseMove { .. } if at != self.hovered => {
                 self.hovered = at;
@@ -241,7 +274,8 @@ impl DisclosureList {
         let [pad_left, pad_right] = rail.link_pad;
         for (i, (label, at)) in self.links.iter().zip(&rects).enumerate() {
             if let Some(id) = self.link_id(i) {
-                c.bind(&id, [at.x, at.y, at.w, at.h]);
+                let p = self.press_rect(*at, theme);
+                c.bind(&id, [p.x, p.y, p.w, p.h]);
             }
             // The branch: a rounded box whose top and right edges fall
             // outside the clip, leaving its left edge, its bottom edge and

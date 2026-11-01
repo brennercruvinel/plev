@@ -27,6 +27,8 @@ mod media;
 mod parts;
 mod profile;
 mod stat;
+#[cfg(test)]
+mod tests;
 
 use crate::drawing::compositor::{Compositor, LayerId};
 use crate::drawing::gpu::image::ImageHandle;
@@ -196,16 +198,11 @@ impl Card {
         let m = Metrics::of(theme);
         let ty = &theme.typography;
         let h = match &self.variant {
-            CardVariant::Stat { .. } => {
-                // Ruler, headline, dot label, each separated by a gap.
-                m.pad
-                    + Self::ruler_h(theme)
-                    + m.gap
-                    + ty.role(TypeRole::H3).line_height
-                    + m.gap_sm
-                    + ty.role(TypeRole::Body).line_height
-                    + m.pad
-            }
+            CardVariant::Stat {
+                value,
+                label,
+                delta,
+            } => Self::stat_h(w, theme, value, label, delta.as_ref()),
             CardVariant::Profile { bio, .. } => {
                 let inner = Self::profile_pad(theme);
                 let avatar = Self::avatar_size(theme);
@@ -214,23 +211,25 @@ impl Card {
                     TextMeasurer::measure_styled(bio, &ty.role(TypeRole::Paragraph), Some(bio_w));
                 inner + avatar + m.gap + bio_h.max(ty.role(TypeRole::Paragraph).line_height) + inner
             }
-            CardVariant::Media { .. } => {
+            CardVariant::Media { title, caption, .. } => {
                 let (_, box_h) = Self::media_box(theme, w);
+                let inner = w - m.pad * 2.0;
                 m.pad
                     + Self::browser_dot(theme)
                     + m.gap
                     + box_h
                     + m.pad
-                    + ty.role(TypeRole::Title).line_height
+                    + Self::wrapped_h(title, &ty.role(TypeRole::Title), inner)
                     + m.gap_sm
-                    + ty.role(TypeRole::Body).line_height
+                    + Self::wrapped_h(caption, &ty.role(TypeRole::Body), inner)
                     + m.pad
             }
-            CardVariant::List { rows, .. } => {
+            CardVariant::List { title, rows } => {
                 let row_h = Self::list_row_h(theme);
                 let n = rows.len() as f32;
+                let inner = w - m.pad * 2.0;
                 m.pad
-                    + ty.role(TypeRole::Title).line_height
+                    + Self::wrapped_h(title, &ty.role(TypeRole::Title), inner)
                     + m.gap
                     + n * row_h
                     + (n - 1.0).max(0.0) * m.gap
@@ -245,13 +244,13 @@ impl Card {
                     + Self::axis_h(theme)
                     + m.pad
             }
-            CardVariant::Cta { body, .. } => {
+            CardVariant::Cta { title, body, .. } => {
                 let inset = Self::cta_inset(theme);
                 let style = ty.role(TypeRole::BodyLg);
-                let (_, body_h) =
-                    TextMeasurer::measure_styled(body, &style, Some((w - inset * 2.0).max(0.0)));
+                let inner = (w - inset * 2.0).max(0.0);
+                let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(inner));
                 m.pad
-                    + ty.role(TypeRole::Title).line_height
+                    + Self::wrapped_h(title, &ty.role(TypeRole::Title), inner)
                     + m.gap
                     + body_h.max(style.line_height)
                     + theme.spacing.xl

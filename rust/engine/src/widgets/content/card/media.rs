@@ -128,11 +128,12 @@ impl Card {
         }
         if let Some(badge) = badge {
             let style = ty.run(TypeRole::Caption.strong());
-            let (bw, _) = TextMeasurer::measure_styled(badge, &style, None);
+            let badge = Self::fit(badge, &style, box_r.w - m.gap * 2.0);
+            let (bw, _) = TextMeasurer::measure_styled(&badge, &style, None);
             self.text(
                 c,
                 layer,
-                badge,
+                &badge,
                 &style,
                 box_r.x + box_r.w - m.gap - bw,
                 box_r.y + m.gap,
@@ -143,6 +144,7 @@ impl Card {
 
         // Title + caption.
         let title_style = ty.role(TypeRole::Title);
+        let inner = b.w - m.pad * 2.0;
         let ty0 = box_r.y + box_r.h + m.pad;
         self.text(
             c,
@@ -152,7 +154,7 @@ impl Card {
             b.x + m.pad,
             ty0,
             text.0,
-            None,
+            Some(inner),
         );
         self.text(
             c,
@@ -160,9 +162,9 @@ impl Card {
             caption,
             &ty.role(TypeRole::Body),
             b.x + m.pad,
-            ty0 + title_style.line_height + m.gap_sm,
+            ty0 + Self::wrapped_h(title, &title_style, inner) + m.gap_sm,
             theme.colors.text_mid.0,
-            None,
+            Some(inner),
         );
     }
 }

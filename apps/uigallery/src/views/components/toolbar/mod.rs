@@ -241,7 +241,13 @@ impl ToolbarPage {
         // the kit sets alone in its row, for the others while their row
         // holds more than one.
         let grids = self.groups.iter().map(|g| {
-            let card_w = showcase::card_width(g.span, content, theme);
+            // A card is never narrower than the widget it holds, which
+            // draws at its own width (the kit's ViewController is `flex
+            // gap-3 px-5` with no width, components/ViewController/
+            // index.tsx:8-11): the row drops a column first.
+            let widest = g.cards.iter().map(|c| self.least_w(c.shows, theme));
+            let min_w = widest.fold(showcase::card_min_w(theme), f32::max);
+            let card_w = showcase::card_width_at(g.span, min_w, content, theme);
             let probe = Rect::new(0.0, 0.0, card_w, 0.0);
             let height = |c: &Card| {
                 let widget_h = self.widget_rect(c.shows, probe, theme).h;
@@ -250,13 +256,23 @@ impl ToolbarPage {
             };
             let floor = g.cards.iter().map(|c| c.height).fold(0.0, f32::max);
             let heights = g.cards.iter().map(height).collect();
-            showcase::Grid::new(g.span, showcase::card_min_w(theme), heights).floor(floor)
+            showcase::Grid::new(g.span, min_w, heights).floor(floor)
         });
         showcase::layout_grids(grids, content, theme)
     }
 
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
         showcase::content_height(&self.layout(content, theme), content)
+    }
+
+    /// The narrowest card `shows` fits in: a view controller's pill, at
+    /// its own width, inside the card's insets; a bar and a player give
+    /// way to the card (they wrap, their track shrinks).
+    fn least_w(&self, shows: Shows, theme: &Theme) -> f32 {
+        match shows {
+            Shows::View(v) => self.views[v].preferred_size(theme).0 + showcase::inset(theme) * 2.0,
+            Shows::Bar(_) | Shows::Player(_) => 0.0,
+        }
     }
 
     /// The widget's rect in its card: centered, at the card's inner

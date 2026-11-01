@@ -4,7 +4,7 @@
 
 use super::{Card, Metrics};
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
-use crate::drawing::text::TextStyle;
+use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::recipe::{glass_pill, inset_keylight};
 use crate::widgets::widget::{Rect, with_alpha};
@@ -54,6 +54,23 @@ impl Card {
                 color,
             },
         );
+    }
+
+    /// How tall `s` is in `style` wrapped at `w`: one line at least.
+    pub(super) fn wrapped_h(s: &str, style: &TextStyle, w: f32) -> f32 {
+        let (_, h) = TextMeasurer::measure_styled(s, style, Some(w.max(0.0)));
+        h.max(style.line_height)
+    }
+
+    /// `s` on one line no wider than `w`, cut with an ellipsis; nothing
+    /// where not even the ellipsis fits.
+    pub(super) fn fit(s: &str, style: &TextStyle, w: f32) -> String {
+        let cut = TextMeasurer::truncate_to_width(s, style, w.max(0.0));
+        if TextMeasurer::measure_styled(&cut, style, None).0 <= w {
+            cut
+        } else {
+            String::new()
+        }
     }
 
     /// Legend / online dot: the card's hollow dot (`theme.disclosure.
