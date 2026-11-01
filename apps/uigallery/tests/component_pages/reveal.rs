@@ -115,6 +115,25 @@ impl Gallery {
         self.settle();
     }
 
+    /// A screen reader asks to see `id` (AccessKit's `ScrollIntoView`,
+    /// `AXScrollToVisible` on macOS), read back as the bridge does.
+    fn reader_scroll_to(&mut self, id: &SemId) {
+        let (_, shown) = self.shown();
+        let node = shown.ids.node(id).expect("the reader's tree holds it");
+        let req = ActionRequest {
+            action: Action::ScrollIntoView,
+            target_tree: TreeId::ROOT,
+            target_node: node,
+            data: None,
+        };
+        match accessibility::translate(&req, &shown) {
+            Ok(Assist::Reveal(to)) => assert!(self.view.assist_reveal(&to), "{to}"),
+            other => panic!("{id}: {other:?}"),
+        }
+        self.frame();
+        self.settle();
+    }
+
     /// Whether `id` shows in the page's window: whole, or from its start
     /// when it is taller than the window.
     fn in_view(&self, id: &SemId) -> bool {
@@ -266,5 +285,22 @@ fn every_stop_shows_at_every_window_height_from_400_to_1200() {
             }
             assert_eq!(seen, stops, "{page} at {height}: every stop");
         }
+    }
+}
+
+#[test]
+fn a_reader_s_scroll_into_view_shows_the_node_and_leaves_the_focus() {
+    for page in LONG {
+        let mut g = at(page, 480.0);
+        let last = last_below_fold(&g);
+        let before = g.focus_now();
+        g.reader_scroll_to(&last);
+        assert!(g.in_view(&last), "{page}: {last} scrolled into view");
+        assert_eq!(g.focus_now(), before, "{page}: the focus stays");
+        // a node of another page is not this page's to show
+        assert!(
+            !g.view
+                .assist_reveal(&SemId::parse("shell.sidebar").unwrap())
+        );
     }
 }

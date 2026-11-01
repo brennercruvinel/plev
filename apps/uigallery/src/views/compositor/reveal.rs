@@ -17,6 +17,8 @@
 //! when it takes the focus, before the draw; the page then shows that
 //! row in its window, so the inner container scrolls first and the outer
 //! one after, as `engine::control::input::reveal::reveal_nested` orders.
+//! A reader's `ScrollIntoView` (`assist_reveal`) takes the same way for
+//! any node of the page, focused or not.
 //! The page's window already starts under the header band, so nothing
 //! fixed covers it (`Cover::default()`).
 
@@ -60,7 +62,8 @@ impl ShowcaseView {
             .as_ref()
             .and_then(Snapshot::focused)
             .filter(|id| !self.is_overlay(id));
-        let Some(id) = self.reveal.moved(focused) else {
+        let moved = self.reveal.moved(focused);
+        let Some(id) = self.pending_reveal.take().or(moved) else {
             return false;
         };
         let Some(rect) = snapshot.as_ref().and_then(|s| drawn(s, c, &id)) else {
@@ -77,6 +80,19 @@ impl ShowcaseView {
         }
         self.glide.to(scroll, to, &self.theme.motion);
         !self.glide.is_gliding()
+    }
+
+    /// A screen reader's `ScrollIntoView` (AccessKit's, `AXScrollToVisible`
+    /// on macOS) on a node of the active page: the next frame scrolls the
+    /// page the least that shows it, as for a focus, and the focus stays.
+    /// `false` for a node that is not the page's.
+    pub fn assist_reveal(&mut self, id: &SemId) -> bool {
+        if self.is_app() || !self.is_component(id) {
+            return false;
+        }
+        self.pending_reveal = Some(id.clone());
+        self.arm_reveal();
+        true
     }
 
     /// Something that can move the focus ran: the next frame looks.

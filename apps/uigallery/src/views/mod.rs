@@ -132,6 +132,9 @@ pub struct ShowcaseView {
     /// the pointer, a reader's or an agent's request): the next frame
     /// looks where the focus is. A frame that only animates does not.
     reveal_armed: bool,
+    /// A node a screen reader asked to see (`ScrollIntoView`), shown at
+    /// the next frame whether or not it has the focus.
+    pending_reveal: Option<accord::SemId>,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -195,6 +198,7 @@ impl ShowcaseView {
             reveal: FocusReveal::new(),
             glide: Glide::default(),
             reveal_armed: false,
+            pending_reveal: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
@@ -284,6 +288,7 @@ impl ShowcaseView {
             self.reveal.reset();
             self.glide.stop();
             self.reveal_armed = true;
+            self.pending_reveal = None;
         }
         self.page = index;
         let page = &PAGES[index];
