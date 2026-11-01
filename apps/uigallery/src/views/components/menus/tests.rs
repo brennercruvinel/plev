@@ -22,7 +22,7 @@ fn every_menu_fits_its_card_from_narrow_to_wide() {
                 {
                     assert!(next.x >= r.right(), "{w}: cards overlap");
                 }
-                let inset = theme.spacing.sm;
+                let inset = showcase::inset(&theme);
                 let chip = showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                 let b = MenusPage::widget_rect(&card.body, *r, &theme);
                 assert!(
@@ -103,4 +103,64 @@ fn the_name_box_takes_typing_enter_adds_and_escape_cancels() {
     let f = page.folders().unwrap();
     assert_eq!((f.folders.len(), f.naming().is_none()), (5, true));
     assert!(!page.handle_text("x"), "no box has the keys");
+}
+
+/// `activate` on `target`, seen at the page's projection (which must be
+/// a valid tree).
+fn activate(page: &MenusPage, target: SemId) -> Request {
+    let root = page.root.clone().unwrap();
+    let mut b = SnapshotBuilder::new();
+    b.node(&root, Role::Region, "Menus");
+    page.project(&mut b, &root);
+    let snap = b.finish().expect("the page projects a valid tree");
+    Request {
+        actor: accord::Actor::Test {
+            name: "menus".into(),
+        },
+        target,
+        action: accord::ActionName::parse("activate").expect("an action name"),
+        param: None,
+        observed: accord::Observation {
+            revision: snap.revision(),
+            values: Vec::new(),
+        },
+        ask: None,
+    }
+}
+
+/// The zoom options and the AI model picker are the toolbar's zoom panel
+/// and the prompt's model menu: a press on a zoom row takes the check and
+/// the card says it, a model's `activate` chooses it, and no card draws a
+/// placeholder.
+#[test]
+fn the_zoom_and_the_models_are_the_real_widgets() {
+    let theme = Theme::hoff_core();
+    let mut page = MenusPage::new();
+    let content = Rect::new(0.0, 0.0, 1200.0, 900.0);
+    let layout = page.layout(content, &theme);
+    let Body::Zoom(z) = &page.cards[0].body else {
+        panic!("the zoom panel")
+    };
+    let at = MenusPage::widget_rect(&page.cards[0].body, layout[0].cards[0], &theme);
+    let (x, y) = z.line_rects(at, &theme)[4].center();
+    page.handle_event(&WidgetEvent::MouseDown { x, y }, content, &theme);
+    page.handle_event(&WidgetEvent::MouseUp { x, y }, content, &theme);
+    let Body::Zoom(z) = &page.cards[0].body else {
+        unreachable!()
+    };
+    assert!(z.checked(4));
+    assert_eq!(page.cards[0].picked.as_deref(), Some("Zoom to fit"));
+
+    let Body::Models(_) = &page.cards[3].body else {
+        panic!("the model picker")
+    };
+    let root = page.root.clone().unwrap();
+    let model = card_id(&root, 3).unwrap().key("2");
+    assert!(page.focus(&model));
+    assert_eq!(page.focus, Some((3, Spot::Line(2))));
+    assert!(page.run(&activate(&page, model)).is_ok());
+    assert_eq!(page.cards[3].picked.as_deref(), Some("Kling AI"));
+    let line = card_id(&root, 0).unwrap().child("line").unwrap().key("5");
+    assert!(page.run(&activate(&page, line)).is_ok());
+    assert_eq!(page.cards[0].picked.as_deref(), Some("Comments"));
 }

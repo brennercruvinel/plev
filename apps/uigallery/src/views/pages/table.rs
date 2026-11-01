@@ -380,7 +380,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Menus",
         "folder",
-        "The kit's menu page: file, folders, upload, filters and profile, each open in its card.",
+        "The kit's menu page: zoom, file, folders, AI model, upload, filters and profile, each open in its card.",
         Pane::Menus,
     ),
     page(
@@ -401,7 +401,7 @@ pub const PAGES: &[Page] = &[
         C,
         "Modals",
         "layers",
-        "The kit's modals: variations, sharing a post, a profile and a file, a delete confirm, export and settings with their sections.",
+        "The kit's modals: variations, sharing a post, a profile and a file, a quick comment, a delete confirm, export and settings with their sections.",
         Pane::Modals,
     ),
     page(

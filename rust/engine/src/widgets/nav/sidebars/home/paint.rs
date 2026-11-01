@@ -98,9 +98,7 @@ impl HomeSidebar {
             }
             let at = Self::name_rect(f, theme);
             if self.name.is_empty() && !self.name.is_focused() {
-                let style = theme
-                    .typography
-                    .exact(ft.font_size, ft.line_height, ft.font_weight);
+                let style = theme.typography.run(ft.text);
                 let y = f.y + (f.h - style.line_height) / 2.0;
                 let shown = "Untitled Folder";
                 c.push(text(

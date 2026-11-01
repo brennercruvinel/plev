@@ -14,7 +14,7 @@ pub use self::legibility::Bar;
 pub use self::roles::{FLUID_RANGE, RoleSpec, TypeRole, TypeRoles, TypeRun};
 pub use self::scales::{
     Breakpoint, ControlSize, ControlTokens, Density, DurationScale, Elevation, IconSize,
-    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens,
+    LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SidebarMode, SizeTokens, fluid,
 };
 pub use self::tokens::{
     ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, SwatchGroup,
@@ -401,6 +401,7 @@ impl Theme {
     /// (palette, glass, shapes), the last step of every constructor but
     /// `hoff_core`, which copies the kit.
     pub(crate) fn derive_front_slots(&mut self) {
+        self.layout.gutter = LayoutTokens::gutter_of(&self.spacing);
         *self.form = FormTokens::derive(self);
         *self.overlay = OverlayTokens::derive(self);
         *self.message = MessageTokens::derive(self);

@@ -21,12 +21,10 @@ pub use edit::EditTokens;
 pub use select::{PanelBody, SelectLook, SelectPanel, SelectRecipe, SelectSurfaces};
 pub use upload::UploadTokens;
 
-use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
-use crate::styling::theme::TypeRole;
 use crate::styling::theme::hoff_core;
 use crate::styling::theme::legibility::{self, MARK_AA, TEXT_AA};
-use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypographyScale};
+use crate::styling::theme::{ControlSize, ShadowSpec, Theme, TypeRole, TypeRun};
 
 /// One state of the input box.
 #[derive(Clone, Debug, PartialEq)]
@@ -56,7 +54,7 @@ pub struct InputRecipe {
     pub radius: f32,
     pub border_width: f32,
     /// The one style the text is measured, hit-tested and drawn with.
-    pub text: TextStyle,
+    pub text: TypeRun,
     pub text_color: Color,
     pub placeholder: Color,
     pub caret: Color,
@@ -110,9 +108,9 @@ pub struct Adornments {
 /// caption (the uppercase group heading of the HOFF accordion).
 #[derive(Clone, Debug, PartialEq)]
 pub struct LabelRecipe {
-    pub text: TextStyle,
+    pub text: TypeRun,
     pub color: Color,
-    pub caption: TextStyle,
+    pub caption: TypeRun,
     pub caption_color: Color,
     /// Opacity of a disabled label (the control's).
     pub disabled_alpha: f32,
@@ -124,13 +122,13 @@ pub struct FieldChrome {
     /// Between the label row and the box (`mb-2`).
     pub label_gap: f32,
     /// The link at the end of the label row ("Forgot password?").
-    pub link: TextStyle,
+    pub link: TypeRun,
     pub link_color: Color,
     /// The link's opacity at rest and hovered (`opacity-70`, `hover:opacity-100`).
     pub link_alpha: f32,
     pub link_hover_alpha: f32,
     /// The message line under the box: an error, or a helper.
-    pub message: TextStyle,
+    pub message: TypeRun,
     /// Between the box and the message (`mt-2`).
     pub message_gap: f32,
     pub error_color: Color,
@@ -280,9 +278,7 @@ const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
 
 /// A section's caption: the scale's strong body (12/16 semibold in the
 /// core), in the theme's own face and tracking.
-fn caption(t: &TypographyScale) -> TextStyle {
-    t.role(TypeRole::BodyStrong)
-}
+const CAPTION: TypeRun = TypeRole::BodyStrong.run();
 
 impl FormTokens {
     /// The text's inset from an end of the input box that `slot` takes.
@@ -312,7 +308,6 @@ impl FormTokens {
     /// (`components/Field/index.tsx`; the body's `text-[#121212]
     /// tracking-[-0.02em]`, `app/layout.tsx:108`).
     pub fn hoff_core() -> Self {
-        let ramp = TypographyScale::hoff_core();
         let gray = hex(0x7B7B7B);
         // The gray where it is text (a placeholder, a hint, a link), and
         // the kit's red and hairline where they must read (WCAG AA, 1.4.3
@@ -345,7 +340,7 @@ impl FormTokens {
             border_width: 1.5,
             // :66 `text-[0.8125rem] leading-[1rem] text-[#000]
             // placeholder:text-[#7B7B7B]`.
-            text: ramp.exact(13.0, 16.0, 400),
+            text: TypeRole::BodyLg.run(),
             text_color: hex(0x000000),
             placeholder: quiet,
             // Not in the kit (the browser's caret and selection): the
@@ -401,7 +396,7 @@ impl FormTokens {
             height: 40.0,
             pad_x: 48.0,
             border_width: 1.0,
-            text: ramp.exact(12.0, 16.0, 500),
+            text: TypeRole::Label.run(),
             ..input.clone()
         };
         // Invite :22, the Field with `!h-10 !pl-4 !bg-[#F8F7F7]
@@ -460,9 +455,9 @@ impl FormTokens {
             palette_share: 0.6,
         };
         let label = LabelRecipe {
-            text: ramp.exact(12.0, 16.0, 500),
+            text: TypeRole::Label.run(),
             color: ink,
-            caption: caption(&ramp),
+            caption: CAPTION,
             // Not in the kit: the core glass's placeholder tone, as the
             // caption draws in every other theme
             // (as opaque as it must be to read, WCAG AA).
@@ -471,7 +466,7 @@ impl FormTokens {
         };
         let field = FieldChrome {
             label_gap: 8.0,
-            link: ramp.exact(12.0, 16.0, 500),
+            link: TypeRole::Label.run(),
             // The kit's gray at 70% reads 2.1:1, and in linear light no
             // tone at 70% reaches AA on paper: the ink, at the least share
             // that reads (`legibility::reach`), lit whole under the
@@ -484,7 +479,7 @@ impl FormTokens {
             )
             .0[3],
             link_hover_alpha: 1.0,
-            message: ramp.exact(11.0, 16.0, 500),
+            message: TypeRole::Caption.run(),
             message_gap: 8.0,
             error_color: hoff_core::red_text(),
             // Not in the kit (only an error line): the gray of its
@@ -565,7 +560,7 @@ impl FormTokens {
             pad_x: theme.spacing.md,
             radius: theme.shape.nav,
             border_width: theme.control.edge_width,
-            text: t.role(TypeRole::BodyLg),
+            text: TypeRole::BodyLg.run(),
             text_color: c.text,
             placeholder,
             caret: c.accent,
@@ -605,19 +600,19 @@ impl FormTokens {
             palette_share: 0.6,
         };
         let label = LabelRecipe {
-            text: t.run(TypeRole::Caption.strong()),
+            text: TypeRole::Caption.strong(),
             color: c.text,
-            caption: caption(&theme.typography),
+            caption: CAPTION,
             caption_color: g.text_placeholder,
             disabled_alpha: g.disabled_alpha,
         };
         let field = FieldChrome {
             label_gap: theme.spacing.sm,
-            link: t.run(TypeRole::Caption.regular()),
+            link: TypeRole::Caption.regular(),
             link_color: c.text_mid,
             link_alpha: 1.0,
             link_hover_alpha: 1.0,
-            message: t.run(TypeRole::Caption.regular()),
+            message: TypeRole::Caption.regular(),
             message_gap: theme.spacing.sm,
             error_color: legibility::reach(c.danger, TEXT_AA, &[card]),
             helper_color: c.text_mid,
@@ -630,7 +625,7 @@ impl FormTokens {
         // The text centered in one box's height, as the field draws it,
         // and three lines at rest, as the kit's.
         let area = AreaTokens {
-            pad_y: ((input.height - input.text.line_height) / 2.0).max(0.0),
+            pad_y: ((input.height - t.run(input.text).line_height) / 2.0).max(0.0),
             rows: 3,
         };
         let select = SelectRecipe::derive(theme);

@@ -361,7 +361,20 @@ fn the_note_card_by_pixel() {
     let reply = run(&b.runs, "Reply");
     let open = (run(&a.runs, "Open"), run(&b.runs, "Open"));
     assert!(reply.y > mb.y);
-    assert_ne!(open.0.size, open.1.size, "the button's own label style");
+    use engine::widgets::buttons::ButtonSize;
+    let ladder = [
+        ButtonSize::Xs,
+        ButtonSize::Sm,
+        ButtonSize::Md,
+        ButtonSize::Lg,
+    ];
+    assert!(
+        ladder
+            .iter()
+            .any(|b| b.text_style(&theme).font_size == open.1.size),
+        "the button's own label style: {} not on the theme's button ladder",
+        open.1.size
+    );
 
     // the card: the builder's is 408 px tall, the IR's 228: 160 of preview,
     // 16 of bottom padding (32 read as the smallest side, 16), the field's

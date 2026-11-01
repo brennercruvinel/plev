@@ -174,7 +174,7 @@ impl PromptInputPage {
 
     /// A widget's inside in a card: the card less its `md` margins.
     fn avail(card_w: f32, theme: &Theme) -> f32 {
-        (card_w - theme.spacing.md * 2.0).max(0.0)
+        showcase::room(card_w, theme)
     }
 
     /// A sample's block in a card `w` wide: its size, and for a prompt the

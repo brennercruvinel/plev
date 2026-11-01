@@ -189,7 +189,9 @@ impl InputOtp {
     /// text and its two borders.
     fn least(theme: &Theme) -> f32 {
         let r = &theme.form.input;
-        ((r.text.line_height + r.border_width * 2.0) / TextField::height(theme)).min(1.0)
+        ((theme.typography.run(r.text).line_height + r.border_width * 2.0)
+            / TextField::height(theme))
+        .min(1.0)
     }
 
     /// The narrowest the code lays out in without leaving its width: its
@@ -256,7 +258,11 @@ impl InputOtp {
             }
         }
         let message = self.message.as_ref().map(|m| {
-            let (w, h) = TextMeasurer::measure_styled(m.text(), &f.message, Some(bounds.w));
+            let (w, h) = TextMeasurer::measure_styled(
+                m.text(),
+                &theme.typography.run(f.message),
+                Some(bounds.w),
+            );
             Rect::new(
                 bounds.x,
                 y + cell + f.message_gap,
@@ -404,6 +410,7 @@ impl InputOtp {
     }
 
     pub fn render_to_layer(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         let l = self.layout(bounds, theme);
         let form = &theme.form;
         let r = &form.input;
@@ -426,7 +433,7 @@ impl InputOtp {
         let composing = self.input.input.composed().map(|(text, span)| {
             text[..span.start].chars().count()..text[..span.end].chars().count()
         });
-        let style = &r.text;
+        let style = &scale.run(r.text);
         for (i, cell) in l.cells.iter().enumerate() {
             let surface = if focused && i == active {
                 &r.focus
@@ -501,7 +508,11 @@ impl InputOtp {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(m.text(), &form.field.message, Some(at.w)),
+                    key: TextNodeKey::from_style(
+                        m.text(),
+                        &scale.run(form.field.message),
+                        Some(at.w),
+                    ),
                     x: at.x,
                     y: at.y,
                     color: fade(color),

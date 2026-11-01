@@ -25,7 +25,7 @@ use std::cell::{Cell, RefCell};
 
 use accord::{SemId, SnapshotBuilder};
 
-use crate::drawing::text::TextStyle;
+use crate::drawing::text::{OverflowWrap, TextStyle};
 use crate::styling::theme::Theme;
 use crate::widgets::form::field::Message;
 use crate::widgets::form::label::Label;
@@ -143,8 +143,13 @@ impl TextArea {
         self.hovered
     }
 
+    /// The field's text style; a word wider than the area breaks inside
+    /// (CSS gives a `textarea` `overflow-wrap: break-word`): typed text
+    /// never runs out of the box.
     pub(crate) fn style(&self, theme: &Theme) -> TextStyle {
-        self.input.style(theme)
+        self.input
+            .style(theme)
+            .with_overflow_wrap(OverflowWrap::Anywhere)
     }
 
     /// The text as laid out: the field's, the composition in it while
@@ -199,7 +204,7 @@ impl TextArea {
         let message = self.message.as_ref().map(|m| {
             let (w, h) = crate::drawing::text::TextMeasurer::measure_styled(
                 m.text(),
-                &f.message,
+                &theme.typography.run(f.message),
                 Some(bounds.w),
             );
             Rect::new(

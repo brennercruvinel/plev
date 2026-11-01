@@ -17,6 +17,7 @@ use crate::styling::theme::{ButtonSurface, MotionPhysics, Theme};
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use crate::widgets::buttons::paint_surface;
+use crate::widgets::hit::HitArea;
 use crate::widgets::recipe::focus_ring;
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, mix};
 
@@ -34,6 +35,9 @@ pub struct Switch {
     /// Knob position progress: 0.0 = off, 1.0 = on.
     knob: Spring<f32>,
     sem: Option<SemId>,
+    /// The press area: the bounds grown to the minimum target
+    /// (`widgets::hit`), the 40x22 track pressing in 40x24.
+    hit: HitArea,
 }
 
 impl Switch {
@@ -46,6 +50,7 @@ impl Switch {
             focused: false,
             knob: Spring::new(if on { 1.0 } else { 0.0 }),
             sem: None,
+            hit: HitArea::default(),
         }
     }
 
@@ -139,6 +144,7 @@ impl Switch {
             }
             return EventResult::IGNORED;
         }
+        let bounds = self.hit.grow(bounds);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
                 let inside = bounds.contains(x, y);
@@ -174,8 +180,10 @@ impl Switch {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
+        self.hit.remember(theme);
         if let Some(id) = &self.sem {
-            compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
+            let hit = self.hit.grow(bounds);
+            compositor.bind(id, [hit.x, hit.y, hit.w, hit.h]);
         }
         let s = &theme.selection.switch;
         let alpha = if self.disabled { s.disabled_alpha } else { 1.0 };

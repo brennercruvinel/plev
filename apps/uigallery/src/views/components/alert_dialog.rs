@@ -19,7 +19,7 @@ use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
 use engine::widgets::prelude::{Button, ButtonVariant, EventResult, Modal, Rect, WidgetEvent};
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, dialog, root_id, under};
 
 const LIVE_CHIP: &str = "Default, Hover, Press, Focus";
@@ -77,10 +77,10 @@ impl AlertDialogPage {
     /// The live card holds the button; a shown dialog's card is as tall
     /// as the dialog at the card's width.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         // The body a shown dialog's card will have at this width.
         let card_w = showcase::card_width(2, content, theme);
-        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, CARD_H), theme).w;
+        let body_w = showcase::body(Rect::new(0.0, 0.0, card_w, 0.0), theme).w;
         let probe = Rect::new(0.0, 0.0, body_w, f32::MAX / 4.0);
         // Each card as tall as its sheet and the art that rises above it;
         // a row is as tall as its tallest card.
@@ -89,7 +89,7 @@ impl AlertDialogPage {
             .iter()
             .map(|s| {
                 let d = s.modal.dialog_rect_in(theme, probe);
-                CARD_H.max(frame + d.h + s.modal.overhang(theme, d.w))
+                frame + d.h + s.modal.overhang(theme, d.w)
             })
             .collect();
         let live = showcase::card_height(self.button.preferred_size(theme).1, theme);

@@ -22,7 +22,7 @@ use engine::widgets::overlay::tokens::MenuStyle;
 use engine::widgets::prelude::{ContextMenu, EventResult, MenuEntry, Rect, WidgetEvent};
 use engine::widgets::recipe::focus_ring_inside;
 
-use super::showcase::{self, CARD_H, GroupLayout};
+use super::showcase::{self, GroupLayout};
 use super::{After, Component, child_id, root_id, under};
 
 /// The kit's file menu (`FileMenu/index.tsx:2-31`): each title, its keys,
@@ -148,18 +148,22 @@ impl ContextMenuPage {
         }
     }
 
-    /// The live card, `h-50`, then the kit's menus, each card as tall as
-    /// the tallest menu below its chip.
+    /// The live card, the theme's least card height (the area a right
+    /// click opens the menu in, `h-50`), then the kit's menus, each card
+    /// as tall as the tallest menu below its chip.
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
-        let frame = CARD_H - showcase::body(Rect::new(0.0, 0.0, 0.0, CARD_H), theme).h;
+        let frame = showcase::body_height(0.0, theme);
         let tallest = self
             .shown
             .iter()
             .map(|s| s.menu.size(theme).1)
             .fold(0.0, f32::max);
-        let h = CARD_H.max(frame + tallest);
+        let h = frame + tallest;
         showcase::layout_sized(
-            [(1, vec![CARD_H]), (3, vec![h; self.shown.len()])],
+            [
+                (1, vec![showcase::card_min_h(theme)]),
+                (3, vec![h; self.shown.len()]),
+            ],
             content,
             theme,
         )

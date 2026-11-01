@@ -63,17 +63,9 @@ impl IconsPage {
         let side = showcase::card_width_at(SPAN, min_w, content, theme);
         let badge_side = showcase::card_width_at(BADGE_SPAN, min_w, content, theme);
         let grids = SIZES
-            .map(|_| Grid {
-                span: SPAN,
-                min_w,
-                heights: vec![side; self.names.len()],
-            })
+            .map(|_| Grid::new(SPAN, min_w, vec![side; self.names.len()]))
             .into_iter()
-            .chain([Grid {
-                span: BADGE_SPAN,
-                min_w,
-                heights: vec![badge_side; BADGES.len()],
-            }]);
+            .chain([Grid::new(BADGE_SPAN, min_w, vec![badge_side; BADGES.len()])]);
         showcase::layout_grids(grids, content, theme)
     }
 

@@ -208,7 +208,7 @@ impl CalendarPage {
     /// The width a calendar gets in a card `card_w` wide: the card less
     /// its inset on both sides.
     fn room(card_w: f32, theme: &Theme) -> f32 {
-        card_w - theme.spacing.sm * 2.0
+        showcase::room(card_w, theme)
     }
 
     /// The calendar's rect in its card, centered.
@@ -494,7 +494,7 @@ mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let b = CalendarPage::calendar_rect(&card.calendar, *r, &theme);
@@ -512,10 +512,7 @@ mod tests {
                             assert!(d.x >= b.x - 0.5 && d.right() <= b.right() + 0.5, "{w}");
                             assert!(d.bottom() <= b.bottom() + 0.5, "{w}");
                         }
-                        let style =
-                            theme
-                                .typography
-                                .exact(t.title_size, t.title_line, t.title_weight);
+                        let style = theme.typography.run(t.title);
                         for m in 1..=12 {
                             let title = Calendar::new(2026, m).title();
                             let (tw, _) = engine::drawing::text::TextMeasurer::measure_styled(

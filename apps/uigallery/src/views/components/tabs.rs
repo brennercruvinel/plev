@@ -152,14 +152,16 @@ impl TabsPage {
 
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| (g.span, g.cards.len()));
-        showcase::layout(groups, content, theme)
+        showcase::layout_measured(groups, content, theme, |g, c, _| {
+            self.groups[g].cards[c].tabs.preferred_size(theme).1
+        })
     }
 
     /// The strip's rect in its card: its own width within the card less
     /// its inset on both sides (the labels truncate), never narrower than
     /// its ellipses, centered.
     fn strip_rect(tabs: &Tabs, card: Rect, theme: &Theme) -> Rect {
-        let room = card.w - theme.spacing.sm * 2.0;
+        let room = showcase::room(card.w, theme);
         let (w, h) = tabs.preferred_size(theme);
         showcase::centered((w.min(room).max(tabs.min_width(theme)), h), card)
     }
@@ -293,7 +295,7 @@ mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let b = TabsPage::strip_rect(&card.tabs, *r, &theme);

@@ -190,7 +190,7 @@ impl DatePickerPage {
     fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
         let groups = self.groups.iter().map(|g| {
             let card_w = showcase::card_width(g.span, content, theme);
-            let body_w = (card_w - theme.spacing.md * 2.0).max(0.0);
+            let body_w = showcase::room(card_w, theme);
             let heights = g
                 .cards
                 .iter()
@@ -424,7 +424,7 @@ mod tests {
                         {
                             assert!(next.x >= r.right(), "{w}: cards overlap");
                         }
-                        let inset = theme.spacing.sm;
+                        let inset = showcase::inset(&theme);
                         let chip =
                             showcase::chip_rect(r.x + inset, r.y + inset, card.title, &theme);
                         let (field, room) = DatePickerPage::places(&card.picker, *r, &theme);

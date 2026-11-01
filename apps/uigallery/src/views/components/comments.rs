@@ -70,6 +70,20 @@ const LONG: &str = "These draggable sliders look really cool. Maybe these could 
 const SCRIPTS: &str =
     "Olá! مرحبا بالعالم · שלום עולם · नमस्ते दुनिया · 你好世界 · こんにちは · 안녕하세요 🎉👍🏽";
 
+/// The kit's quick comment (`components/QuickComment`): the shop house
+/// icon, Randomdash's comment liked twice, the reply to it. The Modals
+/// page shows the same card.
+pub(crate) fn kit_quick_comment() -> QuickComment {
+    QuickComment::new(
+        "Shop House Icon",
+        "3D Objects",
+        vec![Message::new("Randomdash", "1h", LONG).reaction("2")],
+        "Tran Mau Tri Tam",
+        "Reply to @randomfash",
+    )
+    .verified(true)
+}
+
 fn luna() -> Message {
     Message::new("Luna Starfield", "2s", LUNA).verified(true)
 }
@@ -171,16 +185,7 @@ impl CommentsPage {
                 columns: 2,
                 cards: vec![card(
                     "Shop House Icon",
-                    Sample::Quick(Box::new(
-                        QuickComment::new(
-                            "Shop House Icon",
-                            "3D Objects",
-                            vec![Message::new("Randomdash", "1h", LONG).reaction("2")],
-                            "Tran Mau Tri Tam",
-                            "Reply to @randomfash",
-                        )
-                        .verified(true),
-                    )),
+                    Sample::Quick(Box::new(kit_quick_comment())),
                 )],
             },
             Group {

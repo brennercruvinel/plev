@@ -46,7 +46,7 @@ struct Metrics {
 impl Metrics {
     fn of(theme: &Theme, vw: f32) -> Self {
         let bp = theme.layout.breakpoint(vw);
-        let margin = theme.layout.gutter(bp).min(theme.spacing.md);
+        let margin = theme.layout.gutter_at(vw).min(theme.spacing.md);
         let width = match bp {
             Breakpoint::Compact => (vw - margin * 2.0).max(0.0),
             _ => theme.size.toast_w.min((vw - margin * 2.0).max(0.0)),

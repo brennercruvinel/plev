@@ -80,7 +80,7 @@ impl HomePage {
         } else {
             CARD_SHORT
         };
-        showcase::layout_sized([(SPAN, vec![h; self.cards.len()])], content, theme)
+        showcase::layout_untitled(SPAN, vec![h; self.cards.len()], content, theme)
     }
 
     fn logo_rect(logo: &Logo, card: Rect, theme: &Theme) -> Rect {

@@ -424,6 +424,7 @@ impl Combobox {
     /// Draws the open list on `layer` (an overlay, so it floats over what
     /// is below the control); nothing while closed.
     pub fn render_dropdown(&self, c: &mut Compositor, layer: LayerId, bounds: Rect, theme: &Theme) {
+        let scale = &theme.typography;
         if !self.is_open() {
             return;
         }
@@ -436,9 +437,9 @@ impl Combobox {
             c.push_to_layer(
                 layer,
                 SceneNode::Text {
-                    key: TextNodeKey::from_style(&self.empty, &p.text, Some(row.w)),
+                    key: TextNodeKey::from_style(&self.empty, &scale.run(p.text), Some(row.w)),
                     x: dd.x + p.text_inset,
-                    y: row.y + TextMeasurer::vertical_center(&p.text, p.row_h),
+                    y: row.y + TextMeasurer::vertical_center(&scale.run(p.text), p.row_h),
                     color: p.text_color.0,
                 },
             );
@@ -456,7 +457,7 @@ impl Combobox {
                 selected: self.selected == Some(m[k]),
                 highlighted: lit == Some(m[k]),
             },
-            &theme.form.select.panel.text,
+            &scale.run(theme.form.select.panel.text),
             theme,
         );
     }

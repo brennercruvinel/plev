@@ -182,9 +182,17 @@ impl Card {
     }
 
     /// Intrinsic size: the given (or default) width, height from the
-    /// variant's content.
+    /// variant's content ([`Card::height_for`] that width).
     pub fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
         let w = self.width_for(theme);
+        (w, self.height_for(w, theme))
+    }
+
+    /// How tall the card is `w` wide: its blocks stacked, the texts that
+    /// wrap (the profile's bio, the call to action's body) wrapped in the
+    /// width they get there, the media box at its aspect. A grid gives
+    /// each card its column and asks this, rather than a fixed height.
+    pub fn height_for(&self, w: f32, theme: &Theme) -> f32 {
         let m = Metrics::of(theme);
         let ty = &theme.typography;
         let h = match &self.variant {
@@ -201,7 +209,7 @@ impl Card {
             CardVariant::Profile { bio, .. } => {
                 let inner = Self::profile_pad(theme);
                 let avatar = Self::avatar_size(theme);
-                let bio_w = w - inner * 2.0 - avatar - m.gap * 2.0;
+                let bio_w = (w - inner * 2.0 - avatar - m.gap * 2.0).max(0.0);
                 let (_, bio_h) =
                     TextMeasurer::measure_styled(bio, &ty.role(TypeRole::Paragraph), Some(bio_w));
                 inner + avatar + m.gap + bio_h.max(ty.role(TypeRole::Paragraph).line_height) + inner
@@ -240,7 +248,8 @@ impl Card {
             CardVariant::Cta { body, .. } => {
                 let inset = Self::cta_inset(theme);
                 let style = ty.role(TypeRole::BodyLg);
-                let (_, body_h) = TextMeasurer::measure_styled(body, &style, Some(w - inset * 2.0));
+                let (_, body_h) =
+                    TextMeasurer::measure_styled(body, &style, Some((w - inset * 2.0).max(0.0)));
                 m.pad
                     + ty.role(TypeRole::Title).line_height
                     + m.gap
@@ -250,7 +259,7 @@ impl Card {
                     + theme.spacing.xxl
             }
         };
-        (w, h.ceil())
+        h.ceil()
     }
 
     pub fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {

@@ -1,6 +1,8 @@
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
+use crate::drawing::text::OverflowWrap;
+
 // PartialEq is the monster codec prerequisite (docs/ref/architecture/monster-format-v0.md): structural
 // round-trip tests compare decoded scenes against originals.
 #[derive(Clone, Debug, PartialEq)]
@@ -114,6 +116,9 @@ pub struct TextNodeKey {
     /// different glyph positions.
     pub letter_spacing_bits: u32,
     pub font_family: Option<String>,
+    /// What a word wider than `max_width` does (CSS `overflow-wrap`):
+    /// part of the shaping, so of the key.
+    pub overflow_wrap: OverflowWrap,
 }
 
 /// The string as the source has it now (literal hot reload), else as given.
@@ -135,6 +140,7 @@ impl TextNodeKey {
             font_weight: 400,
             letter_spacing_bits: 0.0_f32.to_bits(),
             font_family: None,
+            overflow_wrap: OverflowWrap::Normal,
         }
     }
 
@@ -154,6 +160,7 @@ impl TextNodeKey {
             font_weight: style.font_weight,
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
+            overflow_wrap: style.overflow_wrap,
         }
     }
 

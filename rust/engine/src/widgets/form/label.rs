@@ -89,10 +89,10 @@ impl Label {
     /// The style the label is measured and drawn with.
     pub fn style(&self, theme: &Theme) -> TextStyle {
         let l = &theme.form.label;
-        match self.kind {
-            LabelKind::Field => l.text.clone(),
-            LabelKind::Caption => l.caption.clone(),
-        }
+        theme.typography.run(match self.kind {
+            LabelKind::Field => l.text,
+            LabelKind::Caption => l.caption,
+        })
     }
 
     fn color(&self, theme: &Theme) -> [f32; 4] {

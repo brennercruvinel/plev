@@ -180,6 +180,7 @@ impl ControlTokens {
             icons: [16.0, 20.0, 24.0],
             // Not the kit's: WCAG 2.5.8 / the apple HIG.
             min_touch_target: 44.0,
+            min_target: 24.0,
             // `border` on the card (components/Card/index.tsx:36) and
             // `border-[1.5px]` on the field (Field :66).
             edge_width: 1.0,
@@ -341,7 +342,7 @@ impl Theme {
             control,
             size: SizeTokens::hoff(),
             duration: DurationScale::hoff(),
-            layout: LayoutTokens::hoff(),
+            layout: LayoutTokens::hoff_core(),
             shadows: ShadowTokens::hoff_core(),
         };
         // The kit's secondary gray (#7B7B7B) as text, its placeholder ink

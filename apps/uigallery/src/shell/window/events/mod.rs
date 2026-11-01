@@ -140,6 +140,9 @@ impl App {
             WindowEvent::CursorMoved { position, .. } => {
                 let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
                 let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
+                // a pointer moved: press areas back to the pointer's
+                // minimum (`engine::widgets::hit`)
+                engine::widgets::hit::set_touch_input(false);
                 self.set_cursor(id, (x, y));
                 // a pointer that moves (winit tells a finger apart, as a
                 // `Touch`): the sidebar peeks again where it fits
@@ -200,7 +203,11 @@ impl App {
             }
 
             // a finger (android, iOS): a tap clicks, a drag scrolls
-            WindowEvent::Touch(touch) => self.touched(id, &touch),
+            // a finger: press areas grow to the touch minimum
+            WindowEvent::Touch(touch) => {
+                engine::widgets::hit::set_touch_input(true);
+                self.touched(id, &touch);
+            }
 
             WindowEvent::MouseWheel { delta, .. } => {
                 let (x, y) = self.cursor_in(id);
@@ -240,7 +247,14 @@ impl App {
                     target_os = "ios"
                 )))]
                 self.focus_changed(id, on);
-                #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+                // the browser has no bridge to read them again
+                // (`Bridge::process_event`): the page reads them here
+                #[cfg(target_arch = "wasm32")]
+                if on {
+                    engine::control::accessibility::reduced_motion::follow_system();
+                    engine::control::accessibility::preference::follow_contrast();
+                }
+                #[cfg(any(target_os = "android", target_os = "ios"))]
                 let _ = on;
             }
 
