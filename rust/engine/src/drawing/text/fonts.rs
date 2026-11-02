@@ -31,7 +31,7 @@
 //! named family has nearest ([`matched_weight`]); a glyph past its range
 //! falls back like any other.
 //!
-//! The non-Latin scripts (docs/adr/rendering/0071-embedded-fonts-by-script.md) come from
+//! The non-Latin scripts (docs/adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md) come from
 //! Noto Sans subsets, Regular and Bold: Arabic, Hebrew, Devanagari, SC, JP,
 //! KR. No family names them: a word whose glyphs the requested face lacks
 //! reaches cosmic-text's last fallback step, every face in the database

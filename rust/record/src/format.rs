@@ -1,7 +1,7 @@
 //! the session container: a `.monster` file whose magic is `MONS`
 //! (an animation keeps `MON0`; tools dispatch on the magic, see `probe`).
 //! little-endian, byte-aligned, a sha256 per section, the discipline of
-//! the monster container (docs/adr/recording/0037-session-recording-replay-not-reexecution.md).
+//! the monster container (docs/adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md).
 //!
 //! file := header section_payload*
 //! header :=

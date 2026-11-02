@@ -1,5 +1,5 @@
 //! the session inspector (task-64 phase a,
-//! docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md).
+//! docs/adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md).
 //!
 //! a recorded session (`record::Session`, a `.monster` whose magic is `MONS`)
 //! holds who observed what, the state the app projected at every step, and
@@ -29,7 +29,7 @@
 //! it only reads. the inspector borrows the session and nothing else; it
 //! holds no app and takes nothing that could run an action, so reading a
 //! session can never create a request (replay, never re-execution:
-//! docs/adr/recording/0037-session-recording-replay-not-reexecution.md). `text` renders
+//! docs/adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md). `text` renders
 //! every answer as plain english, the way the `plev-inspect` binary prints
 //! it; every model type is also `Serialize`, for its `--json`.
 

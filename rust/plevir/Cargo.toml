@@ -1,5 +1,5 @@
 # plevir: the plev IR and its verifier (task-68,
-# docs/adr/generated/0049-plev-ir-typed-and-verified.md). pure on purpose, like accord: it
+# docs/adr/Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md). pure on purpose, like accord: it
 # depends on accord and serde only, never on engine (its widgets included) or socket. the
 # component and token vocabulary is declared here as data; binding it to
 # the engine's widgets and the theme is the materializer's job (task-69).

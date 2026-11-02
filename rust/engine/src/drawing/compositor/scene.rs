@@ -3,7 +3,7 @@ use std::hash::{Hash, Hasher};
 
 use crate::drawing::text::OverflowWrap;
 
-// PartialEq is the monster codec prerequisite (docs/ref/architecture/monster-format-v0.md): structural
+// PartialEq is the monster codec prerequisite (docs/Research/Importing/monster-format-v0.md): structural
 // round-trip tests compare decoded scenes against originals.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SceneNode {

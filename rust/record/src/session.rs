@@ -2,7 +2,7 @@
 //! time. it answers what happened and never makes anything happen again:
 //! it holds no dispatcher and no app, it takes nothing it could run, and
 //! every answer is a copy or a borrow of what was recorded. replay never
-//! creates a request (docs/adr/recording/0037-session-recording-replay-not-reexecution.md).
+//! creates a request (docs/adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md).
 
 use std::collections::HashMap;
 

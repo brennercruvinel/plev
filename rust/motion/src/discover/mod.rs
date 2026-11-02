@@ -1,4 +1,4 @@
-//! encoder mode B (docs/ref/architecture/monster-format-v0.md "encoder modes"): delta
+//! encoder mode B (docs/Research/Importing/monster-format-v0.md "encoder modes"): delta
 //! discovery from a sampled frame sequence. the author declares
 //! nothing; the encoder diffs consecutive snapshots, the h264 essence.
 //! slot transitions become place | replace | remove ops (the scene is

@@ -1,4 +1,4 @@
-# accord: the semantic contract (task-57, docs/adr/semantics/0032-semantic-contract-as-pure-projection.md).
+# accord: the semantic contract (task-57, docs/adr/Semantics/0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md).
 # pure on purpose: no gpu, no window, no text stack, so an agent, the
 # recorder, a headless tool or a cli can link it without the render stack.
 [package]

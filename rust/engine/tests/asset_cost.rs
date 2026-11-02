@@ -1,6 +1,6 @@
 //! What the engine parses, validates and decodes at runtime, measured
 //! (task-72 phase 1, the probe behind the inventory in
-//! docs/tasks/task-72-ui-asset-compiler/README.md): each WGSL
+//! docs/Tasks/task-72-ui-asset-compiler/README.md): each WGSL
 //! shader through naga (the parse and the validation `wgpu-core` runs in
 //! `create_shader_module` before the backend sees the module), the
 //! phases of a headless renderer (device, the context's pipelines, the

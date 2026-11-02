@@ -7,7 +7,7 @@
 A header is YAML restricted to one `key: value` per line, where a value is
 a bare word, a JSON string, `null` or an inline list `[a, "b c"]`, so the
 standard library reads it and any YAML reader agrees. The fields and their
-vocabularies are docs/ref/operations/docs-conventions.md.
+vocabularies are docs/Research/Workflows/docs-conventions.md.
 """
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -30,18 +30,21 @@ STATES = {'active', 'reference', 'proposed', 'accepted', 'superseded', 'pending'
           'in-progress', 'done', 'draft'}
 BASES = {'header', 'text', 'git', 'reconstructed', 'editorial', 'undated', 'generated'}
 REVIEWS = {'pending', 'reviewed', 'generated'}
-THEMES = {'generated', 'importing', 'interface', 'recording', 'rendering', 'semantics',
-          'structure', 'workflows'}
+# the themes adr/ and Research/ share: a decision and what was learned about
+# the same subject sit under the same name in both trees
+THEMES = {'Ecosystem', 'Generative', 'Importing', 'Interface', 'Recording', 'Rendering',
+          'Semantics', 'Structure', 'Workflows'}
 SKIP = {'docs/adr/TEMPLATE.md'}
 HOMES = {
-    'tasks': ('Tasks', 'One folder per task: the plan, the execution, the delivery and what stayed open. '
+    'Tasks': ('Tasks', 'One folder per task: the plan, the execution, the delivery and what stayed open. '
               'A long task keeps its phases as pages beside its README.'),
-    'experiments': ('Experiments', 'What was measured or tested: the question, the setup, the results '
+    'Experiments': ('Experiments', 'What was measured or tested: the question, the setup, the results '
                     'and their limits, with the task pages that hold the full record.'),
-    'research': ('Research', 'The references studied, the comparisons, the thesis and the paper drafts.'),
-    'learnings': ('Learnings', 'What the problems and the implementations taught.'),
-    'ref': ('Reference', 'How each subsystem is built, how to operate the repository, the platforms, '
-            'and the conventions of this archive.'),
+    'Research': ('Research', 'What we know, by the themes the ADRs use: the references studied, the '
+                 'comparisons, the thesis and the program, how each subsystem was designed and how '
+                 'to work on the repository.'),
+    'Learnings': ('Learnings', 'What the problems taught that is not the context of one decision. '
+                  'A learning that belongs to an ADR lives in that ADR\'s folder.'),
 }
 
 
@@ -228,16 +231,27 @@ def check(root):
     for path, (m, body) in pages.items():
         parts = path.split('/')
         if parts[1] == 'adr' and path != 'docs/adr/README.md':
-            n = re.match(r'docs/adr/([a-z]+)/(\d{4})-[a-z0-9-]+\.md$', path)
+            n = re.match(r'docs/adr/([A-Za-z]+)/((\d{4})-[a-z0-9-]+)/([a-z0-9-]+)\.md$', path)
             if not n or n[1] not in THEMES:
-                errors.append(f'{path}: an ADR is adr/<theme>/NNNN-kebab.md, theme one of {sorted(THEMES)}')
+                errors.append(f'{path}: an ADR is adr/<Theme>/NNNN-kebab/NNNN-kebab.md, '
+                              f'the theme one of {sorted(THEMES)}')
                 continue
-            numbers[n[2]].append(path)
-            if m.get('id') != f'adr-{n[2]}':
-                errors.append(f'{path}: the id of ADR {n[2]} is adr-{n[2]}')
-            if f'{n[1]}/{Path(path).name})' not in adr_index:
+            if n[4] != n[2]:
+                # a page beside the record: a learning of that decision
+                if m.get('type') != 'learning' or f'adr-{n[3]}' not in m.get('relations', []):
+                    errors.append(f'{path}: a page in the folder of ADR {n[3]} is a learning '
+                                  f'that relates adr-{n[3]}')
+                continue
+            numbers[n[3]].append(path)
+            if m.get('id') != f'adr-{n[3]}':
+                errors.append(f'{path}: the id of ADR {n[3]} is adr-{n[3]}')
+            if f'({n[1]}/{n[2]}/{n[2]}.md)' not in adr_index:
                 errors.append(f'{path}: not listed in docs/adr/README.md')
-        if parts[1] in ('tasks', 'experiments') and path != f'docs/{parts[1]}/README.md':
+        if parts[1] == 'Research' and path != 'docs/Research/README.md':
+            if len(parts) != 4 or parts[2] not in THEMES:
+                errors.append(f'{path}: research lives in Research/<Theme>/<name>.md, '
+                              f'the theme one of {sorted(THEMES)}')
+        if parts[1] in ('Tasks', 'Experiments') and path != f'docs/{parts[1]}/README.md':
             if len(parts) != 4:
                 errors.append(f'{path}: each one lives in its own folder, {parts[1]}/<name>/README.md')
             elif parts[3] != 'README.md':
