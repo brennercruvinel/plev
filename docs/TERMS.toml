@@ -1,7 +1,8 @@
 # the names of the tree. the 2026-10 reorganization (migration.toml in the
 # history of the branch that made it) renamed crates and moved modules; this
 # glossary says, for every name that changed, what it is called now and
-# where it lives. older pages under docs/Tasks, docs/adr and docs/Research keep the names of their time.
+# where it lives. older pages under docs/Tasks, docs/adr and docs/Research keep the names of their time;
+# [docs] says where a path of the archive that an old page or commit cites lives now.
 
 [crates]
 # former name = { now = "<package>", at = "<directory>" }
@@ -522,3 +523,22 @@ prime = { now = "primes", at = "demo/primes" }
 "shown" = "socket::shown"
 "sink" = "socket::sink"
 "traffic" = "socket::traffic"
+
+[docs]
+# a path of the archive before 2026-11 = where that page lives now. <Theme>
+# is one of Ecosystem, Importing, Interface, Recording, Rendering, Semantics,
+# Structure, Synthesis, Workflows; Research/ adds Exploring, the experiments.
+"docs/adr/<theme>/NNNN-<slug>.md" = "docs/adr/<Theme>/NNNN-<slug>/NNNN-<slug>.md"
+"docs/adr/generated/" = "docs/adr/Synthesis/"
+"docs/adr/README.md" = "docs/adr/adr.md"
+"docs/tasks/<task>/README.md" = "docs/Tasks/<task>/<task>.md"
+"docs/tasks/README.md" = "docs/Tasks/Tasks.md"
+"docs/experiments/<slug>/README.md" = "docs/Research/Exploring/<slug>.md"
+"docs/research/<name>.md" = "docs/Research/<Theme>/<name>.md"
+"docs/research/README.md" = "docs/Research/Research.md"
+"docs/ref/architecture/<name>.md" = "docs/Research/<Theme>/<name>.md"
+"docs/ref/operations/<name>.md" = "docs/Research/Workflows/<name>.md"
+"docs/ref/platforms/<name>.md" = "docs/Research/<Theme>/<name>.md"
+"docs/learnings/general.md" = "split beside the ADRs its entries speak to (docs/adr/<Theme>/NNNN-<slug>/learned-<slug>.md); the way of working in docs/Research/Workflows/autonomous-cycle-learnings.md"
+"docs/learnings/<name>.md" = "docs/adr/<Theme>/NNNN-<slug>/<name>.md, beside the decision it led to"
+"docs/img/task-69-checkpoint-b/" = "docs/Tasks/task-69-ephemeral-generative-surfaces/img/"

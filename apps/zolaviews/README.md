@@ -41,8 +41,8 @@ restarts `zola serve`, which is faster than its per-file rebuilds).
 | docs/ | the book |
 |---|---|
 | `README.md` | the home: the docs' own start, recent records, the parts |
-| an index README (`tasks/`, `adr/`, ...) | a collection: cards, newest first, its written index folded below |
-| a task or experiment with phases | a document: its text, then its phases as cards |
-| a task or experiment without phases, any other page | an article: dates, reading time, status, tags, related, linked from, previous and next |
+| an index, the note named like its folder (`Tasks/Tasks.md`, `adr/adr.md`, `Research/Research.md`) | a collection: cards, newest first, its written index folded below |
+| a task or an ADR with pages beside its note (phases, learnings) | a document: its text, then those pages as cards |
+| a task or an ADR without pages beside it, any other page | an article: dates, reading time, status, tags, related, linked from, previous and next; the Related list docbase.py writes is dropped for the one the book draws |
 | `status: superseded` | the theme's Archived statement and a red accent |
 | `ATLAS.toml`, `TERMS.toml` | one page each, a section per table |

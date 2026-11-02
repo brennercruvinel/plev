@@ -30,7 +30,7 @@
     "reconstruction"
    ],
    "source_revision": "ec0a224c",
-   "revised": "2026-10-31",
+   "revised": "2026-11-02",
    "review": "reviewed",
    "headings": [
     {
@@ -62,6 +62,11 @@
      "level": 3,
      "title": "Recovered material",
      "anchor": "recovered-material"
+    },
+    {
+     "level": 2,
+     "title": "2026-11-02",
+     "anchor": "2026-11-02"
     },
     {
      "level": 2,

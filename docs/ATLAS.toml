@@ -32,7 +32,7 @@ root = "virtual workspace (Cargo.toml = members + workspace.package/deps/lints/p
 engine = "rust/engine"
 libraries = "rust (accord, claude, editor, engine, gitdrv, import, llmrun, macros, markup, motion, offers, plevir, record, replay, screen, socket, unions)"
 apps = "apps (agenteval, idestudio, inspector, mirroring, uigallery, urnadbapp)"
-sites = "apps/quartzweb (a submodule, the tiamatio/quartz fork) and apps/zolaviews (a Zola site; its Ametrine theme a Codeberg submodule): docs/ read as a book, not crates; zolaviews runs with node apps/zolaviews/plev/book.mjs --serve --port 1112"
+sites = "apps/quartzweb (a submodule, the tiamatio/quartz fork, branch plev) and apps/zolaviews (a Zola site; its Ametrine theme a Codeberg submodule): docs/ read as a book, not crates. both read a folder's note (adr/adr.md, Tasks/<task>/<task>.md) as its folder's page, lowercase the URLs, and drop the Related list docbase.py writes for the one they draw; zolaviews runs with node apps/zolaviews/plev/book.mjs --serve, quartzweb with npx quartz build --serve (localhost:8080); docs/ also opens as an Obsidian vault"
 demos = "demo (one crate per demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker)"
 tooling = "tool (bench/measure and bench/regress: the measurement and the structural regression; tasks: the scripts; tests: the architecture tests)"
 data = "data (media/lottie: the lottie references the importer and the gates read; graphs/<format>: the graph inputs a demo draws, d3 and cytoscape, from the gramorph corpus)"
